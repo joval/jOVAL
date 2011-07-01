@@ -25,7 +25,6 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -58,12 +57,9 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
-import com.sun.xml.internal.txw2.output.IndentingXMLStreamWriter;
-
 import org.joval.intf.oval.IResults;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
-import org.joval.xml.EmptyNamespaceContext;
 
 /**
  * The purpose of this class is to mirror the apparent relational storage structure used by Ovaldi to generate the system-
@@ -127,27 +123,17 @@ class Results implements IResults {
     /**
      * Serialize to an XML File.
      */
-    public void writeXML(File f, boolean noNamespaces) {
+    public void writeXML(File f) {
 	OutputStream out = null;
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS));
 	    Marshaller marshaller = ctx.createMarshaller();
 	    out = new FileOutputStream(f);
-	    if (noNamespaces) {
-		XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(out);
-		IndentingXMLStreamWriter indentingWriter = new IndentingXMLStreamWriter(writer);
-		indentingWriter.setIndentStep("  ");
-		indentingWriter.setNamespaceContext(new EmptyNamespaceContext());
-		marshaller.marshal(getOvalResults(), indentingWriter);
-	    } else {
-		marshaller.setProperty("jaxb.formatted.output", new Boolean(true));
-		marshaller.marshal(getOvalResults(), out);
-	    }
+	    marshaller.setProperty("jaxb.formatted.output", new Boolean(true));
+	    marshaller.marshal(getOvalResults(), out);
 	} catch (JAXBException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
 	} catch (FactoryConfigurationError e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
-	} catch (XMLStreamException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
 	} catch (FileNotFoundException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);

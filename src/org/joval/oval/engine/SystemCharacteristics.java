@@ -23,7 +23,6 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 
 import oval.schemas.common.GeneratorType;
@@ -40,13 +39,10 @@ import oval.schemas.systemcharacteristics.core.SystemDataType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
-import com.sun.xml.internal.txw2.output.IndentingXMLStreamWriter;
-
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
-import org.joval.xml.EmptyNamespaceContext;
 
 /**
  * The purpose of this class is to mirror the apparent relational storage structure used by Ovaldi to generate the system-
@@ -330,28 +326,17 @@ public class SystemCharacteristics implements ISystemCharacteristics {
     /**
      * Serialize.
      */
-    public void write(File f, boolean noNamespaces) {
+    public void write(File f) {
 	OutputStream out = null;
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS));
 	    Marshaller marshaller = ctx.createMarshaller();
 	    out = new FileOutputStream(f);
-
-	    if (noNamespaces) {
-		XMLStreamWriter writer = XMLOutputFactory.newInstance().createXMLStreamWriter(out);
-		IndentingXMLStreamWriter indentingWriter = new IndentingXMLStreamWriter(writer);
-		indentingWriter.setIndentStep("  ");
-		indentingWriter.setNamespaceContext(new EmptyNamespaceContext());
-		marshaller.marshal(getOvalSystemCharacteristics(), indentingWriter);
-	    } else {
-		marshaller.setProperty("jaxb.formatted.output", new Boolean(true));
-		marshaller.marshal(getOvalSystemCharacteristics(), out);
-	    }
+	    marshaller.setProperty("jaxb.formatted.output", new Boolean(true));
+	    marshaller.marshal(getOvalSystemCharacteristics(), out);
 	} catch (JAXBException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
 	} catch (FactoryConfigurationError e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
-	} catch (XMLStreamException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
 	} catch (FileNotFoundException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);

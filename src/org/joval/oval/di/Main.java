@@ -309,8 +309,6 @@ public class Main implements IObserver {
     private static int OK	= 0;
     private static int ERR	= 1;
 
-    private boolean noNamespaces = false;
-
     private Main() {
 	try {
 	    InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("jovaldi.logging.properties");
@@ -391,7 +389,7 @@ public class Main implements IObserver {
 	    if (state.inputFile == null) {
 		engine = new Engine(defs, state.plugin);
 		print(getMessage("MESSAGE_CREATING_SYSTEMCHARACTERISTICS"));
-		engine.setSystemCharacteristicsOutputFile(state.dataFile, noNamespaces);
+		engine.setSystemCharacteristicsOutputFile(state.dataFile);
 	    } else {
 		print(" ** parsing " + state.inputFile.toString() + " for analysis.");
 		if (!validateSchema(state.inputFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
@@ -436,7 +434,7 @@ public class Main implements IObserver {
 	    print(getMessage("MESSAGE_DEFINITIONS_EVALUATED"));
 	    print("");
 	    print(getMessage("MESSAGE_SAVING_RESULTS", state.resultsXML.toString()));
-	    results.writeXML(state.resultsXML, noNamespaces);
+	    results.writeXML(state.resultsXML);
 	    if (state.applyTransform) {
 		print(getMessage("MESSAGE_RUNNING_TRANSFORM", state.getXMLTransform().toString()));
 		results.writeTransform(state.getXMLTransform(), state.resultsTransform);

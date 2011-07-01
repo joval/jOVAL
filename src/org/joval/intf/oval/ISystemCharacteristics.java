@@ -70,5 +70,5 @@ public interface ISystemCharacteristics {
     /**
      * Serialize the contents of this structure to an XML file.
      */
-    public void write(File f, boolean noNamespaces);
+    public void write(File f);
 }

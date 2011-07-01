@@ -121,7 +121,6 @@ public class Engine implements IProducer {
     private Variables externalVariables = null;
     private SystemCharacteristics sc = null;
     private File scOutputFile = null;
-    private boolean scNoNamespaces = false;
     private IPlugin plugin;
     private Results results;
     private oval.schemas.results.core.ObjectFactory resultsFactory;
@@ -167,9 +166,8 @@ public class Engine implements IProducer {
     /**
      * Set the file to which to save collected SystemCharacteristics data.
      */
-    public void setSystemCharacteristicsOutputFile(File f, boolean noNamespaces) {
+    public void setSystemCharacteristicsOutputFile(File f) {
 	scOutputFile = f;
-	scNoNamespaces = noNamespaces;
     }
 
     /**
@@ -207,7 +205,7 @@ public class Engine implements IProducer {
 		scan();
 		if (scOutputFile != null) {
 		    producer.sendNotify(this, MESSAGE_SYSTEMCHARACTERISTICS, scOutputFile.toString());
-		    sc.write(scOutputFile, scNoNamespaces);
+		    sc.write(scOutputFile);
 		}
 	    }
 	    results = new Results(definitions, sc);

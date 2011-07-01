@@ -30,7 +30,7 @@ public interface IResults {
     /**
      * Serialize the contents of this IResults to a file.
      */
-    void writeXML(File f, boolean noNamespaces);
+    void writeXML(File f);
 
     /**
      * Serialize the contents of this IResults to the output file, after applying the given XSL transform.

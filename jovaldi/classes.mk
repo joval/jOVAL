@@ -24,5 +24,4 @@ CLASSES=\
 	org.joval.util.JOVALSystem					\
 	org.joval.util.Producer						\
 	org.joval.util.StringTools					\
-	org.joval.util.Version						\
-	org.joval.xml.EmptyNamespaceContext
+	org.joval.util.Version
