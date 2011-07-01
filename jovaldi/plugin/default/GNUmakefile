@@ -7,7 +7,7 @@ include $(TOP)/common.mk
 
 PRODUCTNAME=plugin
 
-API=$(JOVAL)/jOVAL.jar;$(OVAL)/oval-schema-5.9.jar
+API=$(JOVAL)/jOVAL.jar$(CLN)$(OVAL)/oval-schema-5.9.jar
 SHARED=plugin-shared.jar
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)$(CLN)$(SHARED)"
 RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(SHARED)$(CLN)plugin.jar"

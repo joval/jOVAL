@@ -7,7 +7,7 @@ include $(TOP)/common.mk
 
 PRODUCTNAME=plugin-shared
 
-API=$(JOVAL)/jOVAL.jar;$(OVAL)/oval-schema-5.9.jar
+API=$(JOVAL)/jOVAL.jar$(CLN)$(OVAL)/oval-schema-5.9.jar
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)$(CLN)$(DEPS)"
 
 include classes.mk
