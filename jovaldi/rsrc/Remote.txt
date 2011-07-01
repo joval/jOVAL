@@ -1,4 +1,4 @@
-Copyright (C) 2011 jOVAL.org.  All rights reserved.                                                 |
+Copyright (C) 2011 jOVAL.org.  All rights reserved.
 
 NOTES ON USING THE REMOTE PLUGIN TO SCAN WINDOWS MACHINES
 
