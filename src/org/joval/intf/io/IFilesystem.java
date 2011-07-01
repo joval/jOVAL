@@ -15,10 +15,6 @@ import java.util.List;
  * @version %I% %G%
  */
 public interface IFilesystem {
-    int BEHAVIOR_RECURSE_NONE	= 0;
-    int BEHAVIOR_RECURSE_UP	= 1;
-    int BEHAVIOR_RECURSE_DOWN	= 2;
-
     /**
      * Get the char delimiter for pathnames.
      */

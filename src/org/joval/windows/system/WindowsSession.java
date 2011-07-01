@@ -1,4 +1,5 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
+// This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 package org.joval.windows.system;
 
@@ -21,6 +22,8 @@ import org.joval.windows.registry.Registry;
 import org.joval.windows.wmi.WmiProvider;
 
 /**
+ * Windows implementation of ISession for local machines.
+ *
  * @author David A. Solin
  * @version %I% %G%
  */

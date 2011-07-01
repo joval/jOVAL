@@ -13,7 +13,8 @@ import org.vngx.jsch.userauth.IdentityFile;
 import org.joval.intf.identity.ICredential;
 
 /**
- * A representation of an abstract credential.  This can either be a username/password pair, or a certificate passphrase.
+ * A representation of an abstract credential.  This can either be a username/password pair, or a username, certificate
+ * file and cert passphrase.
  *
  * @author David A. Solin
  * @version %I% %G%

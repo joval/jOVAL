@@ -16,7 +16,7 @@ import org.joval.intf.system.ISession;
 import org.joval.util.JOVALSystem;
 
 /**
- * A representation of an environment retrieved via SSH.
+ * A representation of an environment on a Unix machine.
  *
  * @author David A. Solin
  * @version %I% %G%

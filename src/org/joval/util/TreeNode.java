@@ -11,7 +11,7 @@ import java.util.Vector;
 
 /**
  * A class that represents a tree structure and its nodes, with String representations
- * using a specified delimiter.  Used by the Windows Filesystem class to keep track of
+ * using a specified delimiter.  Used by the CachineFilesystem base class to keep track of
  * previously-visited files.
  *
  * @author David A. Solin

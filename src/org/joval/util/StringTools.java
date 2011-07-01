@@ -9,7 +9,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 /**
- * An embarassingly stupid class.
+ * Apparently there are still a few things that haven't yet been packed into java.lang.String!
  *
  * @author David A. Solin
  * @version %I% %G%

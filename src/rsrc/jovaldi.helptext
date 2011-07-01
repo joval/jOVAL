@@ -33,5 +33,5 @@ Other Options:
    -z           = return md5 of current oval-definitions file.
 
 General Plugin Options:
-   -j <string>  = name of the jovaldi plugin to use for the scan. DEFAULT="local"
+   -j <string>  = name of the jovaldi plugin to use for the scan. Valid choices are "default" and "remote". DEFAULT="default"
    -k <string>  = arguments for the plugin.  If passing in multiple args, the string must be quoted.

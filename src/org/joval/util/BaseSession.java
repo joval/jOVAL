@@ -21,6 +21,8 @@ import org.joval.intf.system.ISession;
 import org.joval.util.JOVALSystem;
 
 /**
+ * Base class for the Windows and Unix local ISession implementations.
+ *
  * @author David A. Solin
  * @version %I% %G%
  */

@@ -9,6 +9,12 @@ import java.util.logging.Level;
 
 import org.joval.util.JOVALSystem;
 
+/**
+ * Simple utility for computing checksums.
+ *
+ * @author David A. Solin
+ * @version %I% %G%
+ */
 public class Checksum {
     public static String getMD5Checksum(File f) throws IOException {
 	InputStream in = null;
