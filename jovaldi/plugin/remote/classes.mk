@@ -24,7 +24,6 @@ REMOTE=\
 	org.joval.windows.remote.wmi.WmiConnection			\
 	org.joval.windows.remote.wmi.process.ICreateFlags		\
 	org.joval.windows.remote.wmi.process.IShowWindow		\
-	org.joval.windows.remote.wmi.process.Launcher			\
 	org.joval.windows.remote.wmi.process.SWbemSecurity		\
 	org.joval.windows.remote.wmi.process.Win32Process		\
 	org.joval.windows.remote.wmi.process.Win32ProcessStartup	\
