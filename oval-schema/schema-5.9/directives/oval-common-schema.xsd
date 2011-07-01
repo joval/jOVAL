@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-common-5"
+            elementFormDefault="qualified"
+            version="5.9">
+   <xsd:element name="deprecated_info" type="oval:DeprecatedInfoType"/>
+   <xsd:element name="element_mapping" type="oval:ElementMapType"/>
+   <xsd:complexType name="ElementMapType">
+      <xsd:sequence>
+         <xsd:element name="test" type="oval:ElementMapItemType" minOccurs="1"/>
+         <xsd:element name="object" type="oval:ElementMapItemType" minOccurs="0"/>
+         <xsd:element name="state" type="oval:ElementMapItemType" minOccurs="0"/>
+         <xsd:element name="item" type="oval:ElementMapItemType" minOccurs="0"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="ElementMapItemType">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:NCName">
+            <xsd:attribute name="target_namespace" type="xsd:anyURI" use="optional"/>
+         </xsd:extension>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="DeprecatedInfoType">
+      <xsd:sequence>
+         <xsd:element name="version" type="xsd:decimal"/>
+         <xsd:element name="reason" type="xsd:string"/>
+         <xsd:element name="comment" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="GeneratorType">
+      <xsd:sequence>
+         <xsd:element name="product_name" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+         <xsd:element name="product_version" type="xsd:string" minOccurs="0" maxOccurs="1"/>
+         <xsd:element name="schema_version" type="xsd:decimal"/>
+         <xsd:element name="timestamp" type="xsd:dateTime"/>
+         <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="MessageType">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:string">
+            <xsd:attribute name="level" type="oval:MessageLevelEnumeration" use="optional" default="info"/>
+         </xsd:extension>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:simpleType name="CheckEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="all"/>
+         <xsd:enumeration value="at least one"/>
+         <xsd:enumeration value="none exist"/>
+         <xsd:enumeration value="none satisfy"/>
+         <xsd:enumeration value="only one"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="ClassEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="compliance"/>
+         <xsd:enumeration value="inventory"/>
+         <xsd:enumeration value="miscellaneous"/>
+         <xsd:enumeration value="patch"/>
+         <xsd:enumeration value="vulnerability"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="SimpleDatatypeEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="binary"/>
+         <xsd:enumeration value="boolean"/>
+         <xsd:enumeration value="evr_string"/>
+         <xsd:enumeration value="fileset_revision"/>
+         <xsd:enumeration value="float"/>
+         <xsd:enumeration value="ios_version"/>
+         <xsd:enumeration value="int"/>
+         <xsd:enumeration value="ipv4_address"/>
+         <xsd:enumeration value="ipv6_address"/>
+         <xsd:enumeration value="string"/>
+         <xsd:enumeration value="version"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="ComplexDatatypeEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="record"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="DatatypeEnumeration">
+      <xsd:union memberTypes="oval:SimpleDatatypeEnumeration oval:ComplexDatatypeEnumeration"/>
+   </xsd:simpleType>
+   <xsd:simpleType name="ExistenceEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="all_exist"/>
+         <xsd:enumeration value="any_exist"/>
+         <xsd:enumeration value="at_least_one_exists"/>
+         <xsd:enumeration value="none_exist"/>
+         <xsd:enumeration value="only_one_exists"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="FamilyEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="catos"/>
+         <xsd:enumeration value="ios"/>
+         <xsd:enumeration value="macos"/>
+         <xsd:enumeration value="pixos"/>
+         <xsd:enumeration value="undefined"/>
+         <xsd:enumeration value="unix"/>
+         <xsd:enumeration value="vmware_infrastructure"/>
+         <xsd:enumeration value="windows"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="MessageLevelEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="debug"/>
+         <xsd:enumeration value="error"/>
+         <xsd:enumeration value="fatal"/>
+         <xsd:enumeration value="info"/>
+         <xsd:enumeration value="warning"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="OperationEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="equals"/>
+         <xsd:enumeration value="not equal"/>
+         <xsd:enumeration value="case insensitive equals"/>
+         <xsd:enumeration value="case insensitive not equal"/>
+         <xsd:enumeration value="greater than"/>
+         <xsd:enumeration value="less than"/>
+         <xsd:enumeration value="greater than or equal"/>
+         <xsd:enumeration value="less than or equal"/>
+         <xsd:enumeration value="bitwise and"/>
+         <xsd:enumeration value="bitwise or"/>
+         <xsd:enumeration value="pattern match"/>
+         <xsd:enumeration value="subset of"/>
+         <xsd:enumeration value="superset of"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="OperatorEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="AND"/>
+         <xsd:enumeration value="ONE"/>
+         <xsd:enumeration value="OR"/>
+         <xsd:enumeration value="XOR"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="DefinitionIDPattern">
+      <xsd:restriction base="xsd:string">
+         <xsd:pattern value="oval:[A-Za-z0-9_\-\.]+:def:[1-9][0-9]*"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="ObjectIDPattern">
+      <xsd:restriction base="xsd:string">
+         <xsd:pattern value="oval:[A-Za-z0-9_\-\.]+:obj:[1-9][0-9]*"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="StateIDPattern">
+      <xsd:restriction base="xsd:string">
+         <xsd:pattern value="oval:[A-Za-z0-9_\-\.]+:ste:[1-9][0-9]*"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="TestIDPattern">
+      <xsd:restriction base="xsd:string">
+         <xsd:pattern value="oval:[A-Za-z0-9_\-\.]+:tst:[1-9][0-9]*"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="VariableIDPattern">
+      <xsd:restriction base="xsd:string">
+         <xsd:pattern value="oval:[A-Za-z0-9_\-\.]+:var:[1-9][0-9]*"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="ItemIDPattern">
+      <xsd:restriction base="xsd:integer"/>
+   </xsd:simpleType>
+   <xsd:simpleType name="EmptyStringType">
+      <xsd:restriction base="xsd:string">
+         <xsd:maxLength value="0"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="NonEmptyStringType">
+      <xsd:restriction base="xsd:string">
+         <xsd:minLength value="1"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+</xsd:schema>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:pixos-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#pixos"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#pixos"
+            elementFormDefault="qualified"
+            version="5.9">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+               schemaLocation="oval-system-characteristics-schema.xsd"/>
+   <xsd:element name="line_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="show_subcommand" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="config_line" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="version_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="pix_release" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pix_major_release" type="oval-sc:EntityItemVersionType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pix_minor_release" type="oval-sc:EntityItemVersionType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pix_build" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+</xsd:schema>

@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+            xmlns:hpux-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#hpux"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+            jxb:version="1.0"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#hpux"
+            elementFormDefault="qualified"
+            version="5.9">
+   <xsd:annotation>
+      <xsd:appinfo>
+         <jxb:schemaBindings>
+            <jxb:package name="org.joval.oval.schemas.definitions.hpux"/>
+         </jxb:schemaBindings>
+      </xsd:appinfo>
+   </xsd:annotation>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
+               schemaLocation="oval-common-schema.xsd"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+               schemaLocation="oval-definitions-schema.xsd"/>
+   <xsd:element name="getconf_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="getconf_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="parameter_name" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="pathname" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="getconf_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="parameter_name" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pathname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="output" type="oval-def:EntityStateAnySimpleType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="ndd_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="ndd_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="device" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="parameter" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="ndd_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="device" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="parameter" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="value" type="oval-def:EntityStateAnySimpleType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="patch53_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="patch53_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="behaviors" type="hpux-def:Patch53Behaviors" minOccurs="0" maxOccurs="1"/>
+                        <xsd:element name="swtype" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="area_patched" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="patch_base" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="patch53_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="swtype" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="area_patched" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="patch_base" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="Patch53Behaviors">
+      <xsd:attribute name="supersedence" use="optional" default="false">
+         <xsd:simpleType>
+            <xsd:restriction base="xsd:boolean"/>
+         </xsd:simpleType>
+      </xsd:attribute>
+   </xsd:complexType>
+   <xsd:element name="patch_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="patch_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:element name="patch_name" type="oval-def:EntityObjectStringType"/>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="patch_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="patch_name" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="swtype" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="area_patched" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="patch_base" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="swlist_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="swlist_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="swlist" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="swlist_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="swlist" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="bundle" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="fileset" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="version" minOccurs="0" maxOccurs="1">
+                     <xsd:complexType>
+                        <xsd:simpleContent>
+                           <xsd:restriction base="oval-def:EntityStateAnySimpleType">
+                              <xsd:attribute name="datatype" use="optional" default="string">
+                                 <xsd:simpleType>
+                                    <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                       <xsd:enumeration value="string"/>
+                                       <xsd:enumeration value="fileset_revision"/>
+                                    </xsd:restriction>
+                                 </xsd:simpleType>
+                              </xsd:attribute>
+                           </xsd:restriction>
+                        </xsd:simpleContent>
+                     </xsd:complexType>
+                  </xsd:element>
+                  <xsd:element name="title" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="vendor" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="trusted_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="trusted_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="username" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="trusted_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="username" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="uid" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="password" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="account_owner" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="boot_auth" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="audit_id" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="audit_flag" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pw_change_min" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pw_max_size" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pw_expiration" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pw_life" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pw_change_s" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pw_change_u" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="acct_expire" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="max_llogin" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="exp_warning" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="usr_chg_pw" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="gen_pw" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="pw_restrict" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pw_null" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pw_gen_char" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pw_gen_let" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="login_time" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pw_changer" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="login_time_s" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="login_time_u" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="login_tty_s" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="login_tty_u" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="num_u_logins" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="max_u_logins" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="lock_flag" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+</xsd:schema>
