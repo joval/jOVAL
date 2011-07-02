@@ -40,7 +40,9 @@ clean:
 	rm -f $(PRODUCTNAME).jar
 
 resources:
+	rm -f $(BUILD)/*.properties*
 	cp $(SRC)/rsrc/plugin-remote/* $(BUILD)
+	echo version=$(JOVAL_VERSION) >> $(BUILD)/plugin.resources.properties
 
 classes: classdirs $(CLASS_FILES)
 

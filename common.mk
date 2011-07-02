@@ -4,7 +4,7 @@
 Default: all
 
 ifeq (cygwin, $(findstring cygwin,$(SHELL)))
-    JAVA_HOME=$(TOP)/../../tools/jdk160_25
+    JAVA_HOME=$(TOP)/../../tools/jdk160_26
 endif
 
 ifndef JAVA_HOME
@@ -22,8 +22,10 @@ SPACE:=$(NULL) # end of the line
 SHELL=/bin/sh
 CWD=$(shell pwd)
 
+JOVAL_VERSION=0.A.4
 OVAL_SCHEMA_VERSION=5.9
 
+JRE_HOME=$(TOP)/../../tools/jre160_26
 JAVA=$(JAVA_HOME)/bin/java
 JAVAC=$(JAVA_HOME)/bin/javac
 JAR=$(JAVA_HOME)/bin/jar

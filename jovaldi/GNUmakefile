@@ -5,8 +5,8 @@ TOP=..
 
 include $(TOP)/common.mk
 
-VERSION=0.A.4
 PRODUCTNAME=jOVAL
+ZIPNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_Windows_x86
 
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SCHEMALIB)$(CLN)$(SRC)"
 #PLUGIN_DIRS=plugin/shared plugin/default plugin/remote
@@ -41,6 +41,7 @@ $(PRODUCTNAME).jar: classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 dist-clean: clean
+	rm -f $(ZIPNAME).zip
 	rm -rf $(DIST)
 	@$(MAKE) --keep-going --directory=plugin/shared dist-clean
 	@$(MAKE) --keep-going --directory=plugin/default dist-clean
@@ -54,8 +55,9 @@ clean:
 	@$(MAKE) --keep-going --directory=plugin/remote clean
 
 resources:
+	rm -f $(BUILD)/joval*
 	cp $(SRC)/rsrc/joval* $(BUILD)
-	echo "version=$(VERSION)" >> $(BUILD)/joval.system.properties
+	echo "version=$(JOVAL_VERSION)" >> $(BUILD)/joval.system.properties
 	echo "build.date=`date`" >> $(BUILD)/joval.system.properties
 
 classes: classdirs $(CLASS_FILES)
@@ -67,3 +69,16 @@ $(BUILD)/%.class: $(SRC)/%.java
 
 $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
+
+release-win32: install
+	mkdir -p $(DIST)
+	mkdir -p $(DIST)/lib
+	cp $(SCHEMALIB) $(DIST)/lib
+	cp jOVAL.jar $(DIST)/lib
+	mkdir -p $(DIST)/plugin/default
+	cp -R plugin/default/dist/* $(DIST)/plugin/default
+	mkdir -p $(DIST)/plugin/remote
+	cp -R plugin/remote/dist/* $(DIST)/plugin/remote
+	cp -R $(RSRC)/* $(DIST)
+	cp -R $(JRE_HOME) $(DIST)
+	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME).zip -C $(DIST) .

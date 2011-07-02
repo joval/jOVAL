@@ -10,9 +10,8 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 
 /**
- * A class that represents a tree structure and its nodes, with String representations
- * using a specified delimiter.  Used by the CachineFilesystem base class to keep track of
- * previously-visited files.
+ * A class that represents a tree structure and its nodes, with String representations using a specified delimiter.
+ * Used by the CachingFilesystem base class to keep track of previously-visited files.
  *
  * @author David A. Solin
  * @version %I% %G%
