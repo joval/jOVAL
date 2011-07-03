@@ -2,7 +2,8 @@ Copyright (C) 2011 jOVAL.org.  All rights reserved.
 
 NOTES ON USING THE REMOTE PLUGIN TO SCAN WINDOWS MACHINES
 
-Windows 7 ships with remote management completely disabled. To scan Windows 7 machines, follow these steps:
+Windows 7 ships with remote management completely disabled. To scan Windows 7 machines, follow
+these steps:
 
 First, you must start the Remote Registry service:
   Control Panel->System and Security->Administrative Tools->Services
@@ -15,21 +16,24 @@ Alternatively:
   1. Start Powershell as Administrator
   2. Run the commandlet: Enable-PSRemoting
 
-Next, the Windows Firewall must be configured in order to allow remote access to COM servers.  The following article
-explains how this is accomplished:
+Next, the Windows Firewall must be configured in order to allow remote access to COM servers.
+The following article explains how this is accomplished:
 
 http://msdn.microsoft.com/en-us/library/aa822854%28v=vs.85%29.aspx
 
-These are, more or less, the rules you'll need to allow incoming connections to arbitrary DCOM servers:
+These are, more or less, the rules you'll need to allow incoming connections to arbitrary DCOM
+servers:
   netsh advfirewall firewall add rule dir=in name="DCOM" service=rpcss action=allow protocol=TCP localport=135
   netsh advfirewall firewall add rule dir=in name ="UnsecApp" [remoteip=<range>] action=allow
 
-Since access to WMI is specifically required, the following utility can be helpful in debugging problems with remote WMI access:
+Since access to WMI is specifically required, the following utility can be helpful in debugging
+problems with remote WMI access:
   http://www.microsoft.com/downloads/en/details.aspx?familyid=d7ba3cd6-18d1-4d05-b11e-4c64192ae97d&displaylang=en
 
-At this point, you will be able to browse a remote registry.  In order to use DCOM components like WMI, you will need to be
-able to register them remotely.  This requires you to have permission to do so, which in some cases /MAY/ require you to change
-ownership of the relevant registry class from the TrustedInstaller to the Administrators group:
+At this point, you will be able to browse a remote registry.  In order to use DCOM components
+like WMI, you will need to be able to register them remotely.  This requires you to have
+permission to do so, which in some cases /MAY/ require you to change ownership of the relevant
+registry class from the TrustedInstaller to the Administrators group:
   1. Launch 'regedit.exe' as 'Administrator'
   2. Find the following registry key: 'HKEY_CLASSES_ROOT\CLSID\{76A64158-CB41-11D1-8B02-00600806D9B6}'
   3. Right click and select 'Permissions'

@@ -7,6 +7,7 @@ include $(TOP)/common.mk
 
 PRODUCTNAME=jOVAL
 ZIPNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_Windows_x86
+TARNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_`uname -s`_`uname -p`
 
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SCHEMALIB)$(CLN)$(SRC)"
 #PLUGIN_DIRS=plugin/shared plugin/default plugin/remote
@@ -42,6 +43,7 @@ $(PRODUCTNAME).jar: classes resources
 
 dist-clean: clean
 	rm -f $(ZIPNAME).zip
+	rm -f $(TARNAME).tar.gz
 	rm -rf $(DIST)
 	@$(MAKE) --keep-going --directory=plugin/shared dist-clean
 	@$(MAKE) --keep-going --directory=plugin/default dist-clean
@@ -70,15 +72,21 @@ $(BUILD)/%.class: $(SRC)/%.java
 $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
 
-release-win32: install
+dist: install
 	mkdir -p $(DIST)
 	mkdir -p $(DIST)/lib
+	cp $(PRODUCTNAME).jar $(DIST)/lib
 	cp $(SCHEMALIB) $(DIST)/lib
-	cp jOVAL.jar $(DIST)/lib
 	mkdir -p $(DIST)/plugin/default
 	cp -R plugin/default/dist/* $(DIST)/plugin/default
 	mkdir -p $(DIST)/plugin/remote
 	cp -R plugin/remote/dist/* $(DIST)/plugin/remote
 	cp -R $(RSRC)/* $(DIST)
 	cp -R $(JRE_HOME) $(DIST)
+
+release-win32: dist
 	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME).zip -C $(DIST) .
+
+release-tar: dist
+	tar -cvf $(TARNAME).tar -C $(DIST) .
+	gzip $(TARNAME).tar
