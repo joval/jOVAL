@@ -95,7 +95,7 @@ public class RemotePlugin extends BasePlugin {
 	//
 	// Configure for both scanning and analysis.
 	//
-	} else {
+	} else if (hostname != null) {
 	    try {
 		session = sessionFactory.createSession(hostname);
 	    } catch (UnknownHostException e) {
@@ -141,6 +141,9 @@ public class RemotePlugin extends BasePlugin {
 		}
 	    }
 	    return true;
+	} else {
+	    err = getMessage("ERROR_HOSTNAME");
+	    return false;
 	}
     }
 }
