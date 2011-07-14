@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:apache-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#apache"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+            jxb:version="1.0"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#apache"
+            elementFormDefault="qualified"
+            version="5.9">
+   <xsd:annotation>
+      <xsd:appinfo>
+         <jxb:schemaBindings>
+            <jxb:package name="oval.schemas.systemcharacteristics.apache"/>
+         </jxb:schemaBindings>
+      </xsd:appinfo>
+   </xsd:annotation>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+               schemaLocation="oval-system-characteristics-schema.xsd"/>
+   <xsd:element name="httpd_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="path" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="binary_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="version" type="oval-sc:EntityItemVersionType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+</xsd:schema>

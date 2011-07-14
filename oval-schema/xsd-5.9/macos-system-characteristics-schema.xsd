@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:macos-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+            jxb:version="1.0"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos"
+            elementFormDefault="qualified"
+            version="5.9">
+   <xsd:annotation>
+      <xsd:appinfo>
+         <jxb:schemaBindings>
+            <jxb:package name="oval.schemas.systemcharacteristics.macos"/>
+         </jxb:schemaBindings>
+      </xsd:appinfo>
+   </xsd:annotation>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+               schemaLocation="oval-system-characteristics-schema.xsd"/>
+   <xsd:element name="accountinfo_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="username" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="password" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="uid" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="gid" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="realname" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="home_dir" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="login_shell" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="diskutil_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="device" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="filepath" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="uread" type="macos-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="uwrite" type="macos-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="uexec" type="macos-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="gread" type="macos-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="gwrite" type="macos-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="gexec" type="macos-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="oread" type="macos-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="owrite" type="macos-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="oexec" type="macos-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="inetlisteningserver_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="program_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="local_address" type="oval-sc:EntityItemIPAddressStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="local_full_address" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="local_port" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="foreign_address" type="oval-sc:EntityItemIPAddressStringType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="foreign_full_address" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="foreign_port" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pid" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="protocol" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="user_id" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="nvram_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="nvram_var" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="nvram_value" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="plist_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="key" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="app_id" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="filepath" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="instance" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="type" type="macos-sc:EntityItemPlistTypeType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="pwpolicy_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="username" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="userpass" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="directory_node" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="maxChars" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="maxFailedLoginAttempts" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minChars" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="passwordCannotBeName" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="requiresAlpha" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="requiresNumeric" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="pwpolicy59_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="target_user" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="username" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="userpass" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="directory_node" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="maxChars" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="maxFailedLoginAttempts" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minChars" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="passwordCannotBeName" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="requiresAlpha" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="requiresNumeric" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="EntityItemPermissionCompareType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="more"/>
+            <xsd:enumeration value="less"/>
+            <xsd:enumeration value="same"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemPlistTypeType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="CFString"/>
+            <xsd:enumeration value="CFNumber"/>
+            <xsd:enumeration value="CFBoolean"/>
+            <xsd:enumeration value="CFDate"/>
+            <xsd:enumeration value="CFData"/>
+            <xsd:enumeration value="CFArray"/>
+            <xsd:enumeration value="CFDictionary"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+</xsd:schema>

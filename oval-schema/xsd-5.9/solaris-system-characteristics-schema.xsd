@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:sol-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#solaris"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+            jxb:version="1.0"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#solaris"
+            elementFormDefault="qualified"
+            version="5.9">
+   <xsd:annotation>
+      <xsd:appinfo>
+         <jxb:schemaBindings>
+            <jxb:package name="oval.schemas.systemcharacteristics.solaris"/>
+         </jxb:schemaBindings>
+      </xsd:appinfo>
+   </xsd:annotation>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+               schemaLocation="oval-system-characteristics-schema.xsd"/>
+   <xsd:element name="isainfo_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="bits" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="kernel_isa" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="application_isa" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="ndd_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="device" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="instance" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="parameter" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="package_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="pkginst" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="category" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="version" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="vendor" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="description" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="packagecheck_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="pkginst" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="filepath" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="checksum_differs" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_differs" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="mtime_differs" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="uread" type="sol-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="uwrite" type="sol-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="uexec" type="sol-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="gread" type="sol-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="gwrite" type="sol-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="gexec" type="sol-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="oread" type="sol-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="owrite" type="sol-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="oexec" type="sol-sc:EntityItemPermissionCompareType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="patch_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="base" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="version" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="smf_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="fmri" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="service_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="service_state" type="sol-sc:EntityItemSmfServiceStateType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="protocol" type="sol-sc:EntityItemSmfProtocolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="server_executable" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="server_arguements" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="exec_as_user" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="EntityItemPermissionCompareType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="more"/>
+            <xsd:enumeration value="less"/>
+            <xsd:enumeration value="same"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemSmfProtocolType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="tcp"/>
+            <xsd:enumeration value="tcp6"/>
+            <xsd:enumeration value="tcp6only"/>
+            <xsd:enumeration value="udp"/>
+            <xsd:enumeration value="udp6"/>
+            <xsd:enumeration value="udp6only"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemSmfServiceStateType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="DEGRADED"/>
+            <xsd:enumeration value="DISABLED"/>
+            <xsd:enumeration value="MAINTENANCE"/>
+            <xsd:enumeration value="LEGACY-RUN"/>
+            <xsd:enumeration value="OFFLINE"/>
+            <xsd:enumeration value="ONLINE"/>
+            <xsd:enumeration value="UNINITIALIZED"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+</xsd:schema>

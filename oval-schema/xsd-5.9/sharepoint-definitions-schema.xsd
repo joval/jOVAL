@@ -1,0 +1,950 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+            xmlns:sp-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#sharepoint"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+            jxb:version="1.0"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#sharepoint"
+            elementFormDefault="qualified"
+            version="5.9">
+   <xsd:annotation>
+      <xsd:appinfo>
+         <jxb:schemaBindings>
+            <jxb:package name="oval.schemas.definitions.sharepoint"/>
+         </jxb:schemaBindings>
+      </xsd:appinfo>
+   </xsd:annotation>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+               schemaLocation="oval-definitions-schema.xsd"/>
+   <xsd:element name="spwebapplication_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spwebapplication_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="webapplicationurl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spwebapplication_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="webapplicationurl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="allowparttopartcommunication" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="allowaccesstowebpartcatalog" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="blockedfileextention" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="defaultquotatemplate" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="externalworkflowparticipantsenabled" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="recyclebinenabled" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="automaticallydeleteunusedsitecollections"
+                               type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="selfservicesitecreationenabled" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="secondstagerecyclebinquota" type="oval-def:EntityStateIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="recyclebinretentionperiod" type="oval-def:EntityStateIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="outboundmailserverinstance" type="oval-def:EntityStateStringType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="outboundmailsenderaddress" type="oval-def:EntityStateStringType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="outboundmailreplytoaddress" type="oval-def:EntityStateStringType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="secvalexpires" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="timeout" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="isadministrationwebapplication" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="applicationpoolname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="applicationpoolusername" type="oval-def:EntityStateStringType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="openitems" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="addlistitems" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="approveitems" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="deletelistitems" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="deleteversions" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="editlistitems" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="managelists" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="viewversions" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="viewlistitems" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="cancelcheckout" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="createalerts" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="viewformpages" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="viewpages" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="addandcustomizepages" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="applystylesheets" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="applythemeandborder" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="browsedirectories" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="browseuserinfo" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="creategroups" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="createsscsite" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="editmyuserinfo" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="enumeratepermissions" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="managealerts" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="managepermissions" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="managesubwebs" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="manageweb" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="open" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="useclientintegration" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="useremoteapis" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="viewusagedata" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="managepersonalviews" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="adddelprivatewebparts" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="updatepersonalwebparts" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spgroup_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spgroup_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="sitecollectionurl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spgroup_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="sitecollectionurl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="gname" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="autoacceptrequesttojoinleave" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="allowmemberseditmembership" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="onlyallowmembersviewmembership" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spweb_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spweb_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="webcollectionurl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="sitecollectionurl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spweb_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="webcollectionurl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sitecollectionurl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="secondarysitecolladmin" type="oval-def:EntityStateStringType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="secondsitecolladminenabled" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="allowanonymousaccess" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="splist_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="splist_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="spsiteurl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="splist_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="spsiteurl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="irmenabled" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="enableversioning" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="nocrawl" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spantivirussettings_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spantivirussettings_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="spwebservicename" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="spfarmname" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spantivirussettings_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="spwebservicename" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="spfarmname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="allowdownload" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="cleaningenabled" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="downloadscanenabled" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="numberofthreads" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="skipsearchcrawl" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="timeout" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="uploadscanenabled" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="vendorupdatecount" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spsiteadministration_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spsiteadministration_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="sitecollectionurl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spsiteadministration_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="sitecollectionurl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="storagemaxlevel" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="storagewarninglevel" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spsite_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spsite_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="sitecollectionurl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spsite_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="sitecollectionurl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="quotaname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="url" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spcrawlrule_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spcrawlrule_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="spsiteurl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spcrawlrule_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="spsiteurl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="crawlashttp" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="enabled" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="followcomplexurls" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="path" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="priority" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="suppressindexing" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="accountname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spjobdefinition_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spjobdefinition_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="webappuri" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spjobdefinition_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="webappuri" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="displayname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="isdisabled" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="retry" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="title" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="bestbet_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="bestbet_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="sitecollectionurl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="bestbeturl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="bestbet_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="sitecollectionurl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="bestbeturl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="title" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="description" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="infopolicycoll_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="infopolicycoll_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="sitecollectionurl" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="id" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="infopolicycoll_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="sitecollectionurl" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="id" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="name" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="description" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="longdescription" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spdiagnosticsservice_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spdiagnosticsservice_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="farmname" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spdiagnosticsservice_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="farmname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="displayname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="logcutinterval" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="loglocation" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="logstokeep" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="required" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="typename" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spdiagnosticslevel_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spdiagnosticslevel_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="farmname" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spdiagnosticslevel_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="farmname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="eventseverity" type="sp-def:EntityStateEventSeverityType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="hidden" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="levelid" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="levelname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="traceseverity" type="sp-def:EntityStateTraceSeverityType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sppolicyfeature_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sppolicyfeature_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="farmname" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sppolicyfeature_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="farmname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="configpage" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="defaultcustomdata" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="description" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="globalconfigpage" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="globalcustomdata" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="group" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="name" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="publisher" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="state" type="sp-def:EntityStatePolicyFeatureStateType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sppolicy_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sppolicy_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="webappuri" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="urlzone" type="sp-def:EntityObjectUrlZoneType"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sppolicy_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="webappuri" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="urlzone" type="sp-def:EntityStateUrlZoneType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="displayname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="issystemuser" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="username" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="policyroletype" type="sp-def:EntityStatePolicyRoleType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="EntityObjectUrlZoneType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityObjectStringType">
+            <xsd:enumeration value="Custom"/>
+            <xsd:enumeration value="Default"/>
+            <xsd:enumeration value="Extranet"/>
+            <xsd:enumeration value="Intranet"/>
+            <xsd:enumeration value="Internet"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateEventSeverityType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:enumeration value="Error"/>
+            <xsd:enumeration value="ErrorCritical"/>
+            <xsd:enumeration value="ErrorSecurityBreach"/>
+            <xsd:enumeration value="ErrorServiceUnavailable"/>
+            <xsd:enumeration value="FailureAudit"/>
+            <xsd:enumeration value="Information"/>
+            <xsd:enumeration value="None"/>
+            <xsd:enumeration value="Success"/>
+            <xsd:enumeration value="SuccessAudit"/>
+            <xsd:enumeration value="Warning"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateTraceSeverityType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:enumeration value="High"/>
+            <xsd:enumeration value="Medium"/>
+            <xsd:enumeration value="Monitorable"/>
+            <xsd:enumeration value="None"/>
+            <xsd:enumeration value="Unexpected"/>
+            <xsd:enumeration value="Verbose"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStatePolicyRoleType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:enumeration value="DenyAll"/>
+            <xsd:enumeration value="DenyWrite"/>
+            <xsd:enumeration value="FullControl"/>
+            <xsd:enumeration value="FullRead"/>
+            <xsd:enumeration value="None"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStatePolicyFeatureStateType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:enumeration value="Hidden"/>
+            <xsd:enumeration value="Visible"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateUrlZoneType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:enumeration value="Custom"/>
+            <xsd:enumeration value="Default"/>
+            <xsd:enumeration value="Extranet"/>
+            <xsd:enumeration value="Intranet"/>
+            <xsd:enumeration value="Internet"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+</xsd:schema>
