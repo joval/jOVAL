@@ -228,13 +228,9 @@ class Definitions implements IDefinitions {
      */
     public void filterDefinitions(DefinitionFilter filter, List<DefinitionType> allowed, List<DefinitionType> disallowed) {
 	for (DefinitionType dt : definitions.values()) {
-boolean special = false;
-if(dt.getId().equals("oval:org.mitre.oval:def:11846"))special=true;
 	    if (filter.accept(dt.getId())) {
-if(special)System.out.println("DAS: allowed");
 		allowed.add(dt);
 	    } else {
-if(special)System.out.println("DAS: disallowed");
 		disallowed.add(dt);
 	    }
 	}

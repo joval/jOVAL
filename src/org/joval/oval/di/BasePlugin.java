@@ -29,6 +29,7 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.plugin.adapter.independent.FamilyAdapter;
 import org.joval.plugin.adapter.independent.Textfilecontent54Adapter;
 import org.joval.plugin.adapter.linux.RpminfoAdapter;
+import org.joval.plugin.adapter.unix.UnameAdapter;
 import org.joval.plugin.adapter.windows.FileAdapter;
 import org.joval.plugin.adapter.windows.RegistryAdapter;
 import org.joval.plugin.adapter.windows.WmiAdapter;
@@ -118,6 +119,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	      case ISession.UNIX: {
 		info = new UnixSystemInfo(session).getSystemInfo();
 		adapters.add(new RpminfoAdapter(session));
+		adapters.add(new UnameAdapter(session));
 		break;
 	      }
 	    }

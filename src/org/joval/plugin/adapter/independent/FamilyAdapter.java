@@ -65,7 +65,10 @@ public class FamilyAdapter implements IAdapter {
 
     public void scan(ISystemCharacteristics sc) throws OvalException {
 	Iterator<ObjectType> iter = definitions.iterateObjects(FamilyObject.class);
-	while (iter.hasNext()) {
+	for (int i=0; iter.hasNext(); i++) {
+	    if (i > 0) {
+		throw new OvalException(JOVALSystem.getMessage("ERROR_FAMILY_OVERFLOW"));
+	    }
 	    FamilyObject fObj = (FamilyObject)iter.next();
 	    ctx.status(fObj.getId());
 	    FamilyItem item = independentFactory.createFamilyItem();
@@ -105,13 +108,12 @@ public class FamilyAdapter implements IAdapter {
 	    fState = definitions.getState(stateId, FamilyState.class);
 	}
 
-	boolean result = false;
 	ItemType it = sc.getItemsByObjectId(objectId).get(0);
 	if (!(it instanceof FamilyItem)) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
 							   FamilyItem.class.getName(), it.getClass().getName()));
 	}
-	FamilyItem item = (FamilyItem)sc.getItemsByObjectId(objectId).get(0);
+	FamilyItem item = (FamilyItem)it;
 	if (OperationEnumeration.CASE_INSENSITIVE_EQUALS == fState.getFamily().getOperation()) {
 	    if (((String)item.getFamily().getValue()).equalsIgnoreCase((String)fState.getFamily().getValue())) {
 		testResult.setResult(ResultEnumeration.TRUE);

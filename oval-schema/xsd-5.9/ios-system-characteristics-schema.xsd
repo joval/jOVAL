@@ -4,9 +4,18 @@
             xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
             xmlns:ios-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#ios"
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+            jxb:version="1.0"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#ios"
             elementFormDefault="qualified"
             version="5.9">
+   <xsd:annotation>
+      <xsd:appinfo>
+         <jxb:schemaBindings>
+            <jxb:package name="oval.schemas.systemcharacteristics.ios"/>
+         </jxb:schemaBindings>
+      </xsd:appinfo>
+   </xsd:annotation>
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
                schemaLocation="oval-system-characteristics-schema.xsd"/>
    <xsd:element name="global_item" substitutionGroup="oval-sc:item">

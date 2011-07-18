@@ -27,6 +27,7 @@ SHARED=\
 	org.joval.plugin.adapter.independent.FamilyAdapter		\
 	org.joval.plugin.adapter.independent.Textfilecontent54Adapter	\
 	org.joval.plugin.adapter.linux.RpminfoAdapter			\
+	org.joval.plugin.adapter.unix.UnameAdapter			\
 	org.joval.plugin.adapter.windows.FileAdapter			\
 	org.joval.plugin.adapter.windows.RegistryAdapter		\
 	org.joval.plugin.adapter.windows.WmiAdapter			\

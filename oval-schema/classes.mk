@@ -15,6 +15,45 @@ CLASSES=	\
 	oval.schemas.common.OperatorEnumeration	\
 	oval.schemas.common.package-info	\
 	oval.schemas.common.SimpleDatatypeEnumeration	\
+	oval.schemas.definitions.aix.EntityStateFilesetStateType	\
+	oval.schemas.definitions.aix.EntityStateFixInstallationStatusType	\
+	oval.schemas.definitions.aix.EntityStateInterimFixStateType	\
+	oval.schemas.definitions.aix.FilesetObject	\
+	oval.schemas.definitions.aix.FilesetState	\
+	oval.schemas.definitions.aix.FilesetTest	\
+	oval.schemas.definitions.aix.FixObject	\
+	oval.schemas.definitions.aix.FixState	\
+	oval.schemas.definitions.aix.FixTest	\
+	oval.schemas.definitions.aix.InterimFixObject	\
+	oval.schemas.definitions.aix.InterimFixState	\
+	oval.schemas.definitions.aix.InterimFixTest	\
+	oval.schemas.definitions.aix.NoObject	\
+	oval.schemas.definitions.aix.NoState	\
+	oval.schemas.definitions.aix.NoTest	\
+	oval.schemas.definitions.aix.ObjectFactory	\
+	oval.schemas.definitions.aix.OslevelObject	\
+	oval.schemas.definitions.aix.OslevelState	\
+	oval.schemas.definitions.aix.OslevelTest	\
+	oval.schemas.definitions.aix.package-info	\
+	oval.schemas.definitions.apache.HttpdObject	\
+	oval.schemas.definitions.apache.HttpdState	\
+	oval.schemas.definitions.apache.HttpdTest	\
+	oval.schemas.definitions.apache.ObjectFactory	\
+	oval.schemas.definitions.apache.package-info	\
+	oval.schemas.definitions.catos.LineObject	\
+	oval.schemas.definitions.catos.LineState	\
+	oval.schemas.definitions.catos.LineTest	\
+	oval.schemas.definitions.catos.ModuleObject	\
+	oval.schemas.definitions.catos.ModuleState	\
+	oval.schemas.definitions.catos.ModuleTest	\
+	oval.schemas.definitions.catos.ObjectFactory	\
+	oval.schemas.definitions.catos.package-info	\
+	oval.schemas.definitions.catos.Version55Object	\
+	oval.schemas.definitions.catos.Version55State	\
+	oval.schemas.definitions.catos.Version55Test	\
+	oval.schemas.definitions.catos.VersionObject	\
+	oval.schemas.definitions.catos.VersionState	\
+	oval.schemas.definitions.catos.VersionTest	\
 	oval.schemas.definitions.core.AffectedType	\
 	oval.schemas.definitions.core.ArithmeticEnumeration	\
 	oval.schemas.definitions.core.ArithmeticFunctionType	\
@@ -88,6 +127,51 @@ CLASSES=	\
 	oval.schemas.definitions.core.VariableComponentType	\
 	oval.schemas.definitions.core.VariablesType	\
 	oval.schemas.definitions.core.VariableType	\
+	oval.schemas.definitions.esx.EntityStateClassificationType	\
+	oval.schemas.definitions.esx.EntityStateSupportLevelType	\
+	oval.schemas.definitions.esx.ObjectFactory	\
+	oval.schemas.definitions.esx.package-info	\
+	oval.schemas.definitions.esx.Patch56Behaviors	\
+	oval.schemas.definitions.esx.Patch56Object	\
+	oval.schemas.definitions.esx.Patch56State	\
+	oval.schemas.definitions.esx.Patch56Test	\
+	oval.schemas.definitions.esx.PatchBehaviors	\
+	oval.schemas.definitions.esx.PatchObject	\
+	oval.schemas.definitions.esx.PatchState	\
+	oval.schemas.definitions.esx.PatchTest	\
+	oval.schemas.definitions.esx.VersionObject	\
+	oval.schemas.definitions.esx.VersionState	\
+	oval.schemas.definitions.esx.VersionTest	\
+	oval.schemas.definitions.esx.ViSdkManagedEntityBehaviors	\
+	oval.schemas.definitions.esx.VisdkmanagedobjectObject	\
+	oval.schemas.definitions.esx.VisdkmanagedobjectState	\
+	oval.schemas.definitions.esx.VisdkmanagedobjectTest	\
+	oval.schemas.definitions.freebsd.ObjectFactory	\
+	oval.schemas.definitions.freebsd.package-info	\
+	oval.schemas.definitions.freebsd.PortinfoObject	\
+	oval.schemas.definitions.freebsd.PortinfoState	\
+	oval.schemas.definitions.freebsd.PortinfoTest	\
+	oval.schemas.definitions.hpux.GetconfObject	\
+	oval.schemas.definitions.hpux.GetconfState	\
+	oval.schemas.definitions.hpux.GetconfTest	\
+	oval.schemas.definitions.hpux.NddObject	\
+	oval.schemas.definitions.hpux.NddState	\
+	oval.schemas.definitions.hpux.NddTest	\
+	oval.schemas.definitions.hpux.ObjectFactory	\
+	oval.schemas.definitions.hpux.package-info	\
+	oval.schemas.definitions.hpux.Patch53Behaviors	\
+	oval.schemas.definitions.hpux.Patch53Object	\
+	oval.schemas.definitions.hpux.Patch53State	\
+	oval.schemas.definitions.hpux.Patch53Test	\
+	oval.schemas.definitions.hpux.PatchObject	\
+	oval.schemas.definitions.hpux.PatchState	\
+	oval.schemas.definitions.hpux.PatchTest	\
+	oval.schemas.definitions.hpux.SwlistObject	\
+	oval.schemas.definitions.hpux.SwlistState	\
+	oval.schemas.definitions.hpux.SwlistTest	\
+	oval.schemas.definitions.hpux.TrustedObject	\
+	oval.schemas.definitions.hpux.TrustedState	\
+	oval.schemas.definitions.hpux.TrustedTest	\
 	oval.schemas.definitions.independent.EntityObjectEngineType	\
 	oval.schemas.definitions.independent.EntityObjectHashTypeType	\
 	oval.schemas.definitions.independent.EntityObjectVariableRefType	\
@@ -141,6 +225,30 @@ CLASSES=	\
 	oval.schemas.definitions.independent.XmlfilecontentObject	\
 	oval.schemas.definitions.independent.XmlfilecontentState	\
 	oval.schemas.definitions.independent.XmlfilecontentTest	\
+	oval.schemas.definitions.ios.EntityStateTrainIdentifierType	\
+	oval.schemas.definitions.ios.GlobalObject	\
+	oval.schemas.definitions.ios.GlobalState	\
+	oval.schemas.definitions.ios.GlobalTest	\
+	oval.schemas.definitions.ios.InterfaceObject	\
+	oval.schemas.definitions.ios.InterfaceState	\
+	oval.schemas.definitions.ios.InterfaceTest	\
+	oval.schemas.definitions.ios.LineObject	\
+	oval.schemas.definitions.ios.LineState	\
+	oval.schemas.definitions.ios.LineTest	\
+	oval.schemas.definitions.ios.ObjectFactory	\
+	oval.schemas.definitions.ios.package-info	\
+	oval.schemas.definitions.ios.SnmpObject	\
+	oval.schemas.definitions.ios.SnmpState	\
+	oval.schemas.definitions.ios.SnmpTest	\
+	oval.schemas.definitions.ios.TclshObject	\
+	oval.schemas.definitions.ios.TclshState	\
+	oval.schemas.definitions.ios.TclshTest	\
+	oval.schemas.definitions.ios.Version55Object	\
+	oval.schemas.definitions.ios.Version55State	\
+	oval.schemas.definitions.ios.Version55Test	\
+	oval.schemas.definitions.ios.VersionObject	\
+	oval.schemas.definitions.ios.VersionState	\
+	oval.schemas.definitions.ios.VersionTest	\
 	oval.schemas.definitions.linux.DpkginfoObject	\
 	oval.schemas.definitions.linux.DpkginfoState	\
 	oval.schemas.definitions.linux.DpkginfoTest	\
@@ -174,6 +282,119 @@ CLASSES=	\
 	oval.schemas.definitions.linux.SlackwarepkginfoObject	\
 	oval.schemas.definitions.linux.SlackwarepkginfoState	\
 	oval.schemas.definitions.linux.SlackwarepkginfoTest	\
+	oval.schemas.definitions.macos.AccountinfoObject	\
+	oval.schemas.definitions.macos.AccountinfoState	\
+	oval.schemas.definitions.macos.AccountinfoTest	\
+	oval.schemas.definitions.macos.DiskutilObject	\
+	oval.schemas.definitions.macos.DiskutilState	\
+	oval.schemas.definitions.macos.DiskutilTest	\
+	oval.schemas.definitions.macos.EntityStatePermissionCompareType	\
+	oval.schemas.definitions.macos.EntityStatePlistTypeType	\
+	oval.schemas.definitions.macos.InetlisteningserversObject	\
+	oval.schemas.definitions.macos.InetlisteningserversState	\
+	oval.schemas.definitions.macos.InetlisteningserversTest	\
+	oval.schemas.definitions.macos.NvramObject	\
+	oval.schemas.definitions.macos.NvramState	\
+	oval.schemas.definitions.macos.NvramTest	\
+	oval.schemas.definitions.macos.ObjectFactory	\
+	oval.schemas.definitions.macos.package-info	\
+	oval.schemas.definitions.macos.PlistObject	\
+	oval.schemas.definitions.macos.PlistState	\
+	oval.schemas.definitions.macos.PlistTest	\
+	oval.schemas.definitions.macos.Pwpolicy59Object	\
+	oval.schemas.definitions.macos.Pwpolicy59State	\
+	oval.schemas.definitions.macos.Pwpolicy59Test	\
+	oval.schemas.definitions.macos.PwpolicyObject	\
+	oval.schemas.definitions.macos.PwpolicyState	\
+	oval.schemas.definitions.macos.PwpolicyTest	\
+	oval.schemas.definitions.pixos.LineObject	\
+	oval.schemas.definitions.pixos.LineState	\
+	oval.schemas.definitions.pixos.LineTest	\
+	oval.schemas.definitions.pixos.ObjectFactory	\
+	oval.schemas.definitions.pixos.package-info	\
+	oval.schemas.definitions.pixos.VersionObject	\
+	oval.schemas.definitions.pixos.VersionState	\
+	oval.schemas.definitions.pixos.VersionTest	\
+	oval.schemas.definitions.sharepoint.BestbetObject	\
+	oval.schemas.definitions.sharepoint.BestbetState	\
+	oval.schemas.definitions.sharepoint.BestbetTest	\
+	oval.schemas.definitions.sharepoint.EntityObjectUrlZoneType	\
+	oval.schemas.definitions.sharepoint.EntityStateEventSeverityType	\
+	oval.schemas.definitions.sharepoint.EntityStatePolicyFeatureStateType	\
+	oval.schemas.definitions.sharepoint.EntityStatePolicyRoleType	\
+	oval.schemas.definitions.sharepoint.EntityStateTraceSeverityType	\
+	oval.schemas.definitions.sharepoint.EntityStateUrlZoneType	\
+	oval.schemas.definitions.sharepoint.InfopolicycollObject	\
+	oval.schemas.definitions.sharepoint.InfopolicycollState	\
+	oval.schemas.definitions.sharepoint.InfopolicycollTest	\
+	oval.schemas.definitions.sharepoint.ObjectFactory	\
+	oval.schemas.definitions.sharepoint.package-info	\
+	oval.schemas.definitions.sharepoint.SpantivirussettingsObject	\
+	oval.schemas.definitions.sharepoint.SpantivirussettingsState	\
+	oval.schemas.definitions.sharepoint.SpantivirussettingsTest	\
+	oval.schemas.definitions.sharepoint.SpcrawlruleObject	\
+	oval.schemas.definitions.sharepoint.SpcrawlruleState	\
+	oval.schemas.definitions.sharepoint.SpcrawlruleTest	\
+	oval.schemas.definitions.sharepoint.SpdiagnosticslevelObject	\
+	oval.schemas.definitions.sharepoint.SpdiagnosticslevelState	\
+	oval.schemas.definitions.sharepoint.SpdiagnosticslevelTest	\
+	oval.schemas.definitions.sharepoint.SpdiagnosticsserviceObject	\
+	oval.schemas.definitions.sharepoint.SpdiagnosticsserviceState	\
+	oval.schemas.definitions.sharepoint.SpdiagnosticsserviceTest	\
+	oval.schemas.definitions.sharepoint.SpgroupObject	\
+	oval.schemas.definitions.sharepoint.SpgroupState	\
+	oval.schemas.definitions.sharepoint.SpgroupTest	\
+	oval.schemas.definitions.sharepoint.SpjobdefinitionObject	\
+	oval.schemas.definitions.sharepoint.SpjobdefinitionState	\
+	oval.schemas.definitions.sharepoint.SpjobdefinitionTest	\
+	oval.schemas.definitions.sharepoint.SplistObject	\
+	oval.schemas.definitions.sharepoint.SplistState	\
+	oval.schemas.definitions.sharepoint.SplistTest	\
+	oval.schemas.definitions.sharepoint.SppolicyfeatureObject	\
+	oval.schemas.definitions.sharepoint.SppolicyfeatureState	\
+	oval.schemas.definitions.sharepoint.SppolicyfeatureTest	\
+	oval.schemas.definitions.sharepoint.SppolicyObject	\
+	oval.schemas.definitions.sharepoint.SppolicyState	\
+	oval.schemas.definitions.sharepoint.SppolicyTest	\
+	oval.schemas.definitions.sharepoint.SpsiteadministrationObject	\
+	oval.schemas.definitions.sharepoint.SpsiteadministrationState	\
+	oval.schemas.definitions.sharepoint.SpsiteadministrationTest	\
+	oval.schemas.definitions.sharepoint.SpsiteObject	\
+	oval.schemas.definitions.sharepoint.SpsiteState	\
+	oval.schemas.definitions.sharepoint.SpsiteTest	\
+	oval.schemas.definitions.sharepoint.SpwebapplicationObject	\
+	oval.schemas.definitions.sharepoint.SpwebapplicationState	\
+	oval.schemas.definitions.sharepoint.SpwebapplicationTest	\
+	oval.schemas.definitions.sharepoint.SpwebObject	\
+	oval.schemas.definitions.sharepoint.SpwebState	\
+	oval.schemas.definitions.sharepoint.SpwebTest	\
+	oval.schemas.definitions.solaris.EntityStatePermissionCompareType	\
+	oval.schemas.definitions.solaris.EntityStateSmfProtocolType	\
+	oval.schemas.definitions.solaris.EntityStateSmfServiceStateType	\
+	oval.schemas.definitions.solaris.IsainfoObject	\
+	oval.schemas.definitions.solaris.IsainfoState	\
+	oval.schemas.definitions.solaris.IsainfoTest	\
+	oval.schemas.definitions.solaris.NddObject	\
+	oval.schemas.definitions.solaris.NddState	\
+	oval.schemas.definitions.solaris.NddTest	\
+	oval.schemas.definitions.solaris.ObjectFactory	\
+	oval.schemas.definitions.solaris.package-info	\
+	oval.schemas.definitions.solaris.PackageCheckBehaviors	\
+	oval.schemas.definitions.solaris.PackagecheckObject	\
+	oval.schemas.definitions.solaris.PackagecheckState	\
+	oval.schemas.definitions.solaris.PackagecheckTest	\
+	oval.schemas.definitions.solaris.PackageObject	\
+	oval.schemas.definitions.solaris.PackageState	\
+	oval.schemas.definitions.solaris.PackageTest	\
+	oval.schemas.definitions.solaris.Patch54Object	\
+	oval.schemas.definitions.solaris.Patch54Test	\
+	oval.schemas.definitions.solaris.PatchBehaviors	\
+	oval.schemas.definitions.solaris.PatchObject	\
+	oval.schemas.definitions.solaris.PatchState	\
+	oval.schemas.definitions.solaris.PatchTest	\
+	oval.schemas.definitions.solaris.SmfObject	\
+	oval.schemas.definitions.solaris.SmfState	\
+	oval.schemas.definitions.solaris.SmfTest	\
 	oval.schemas.definitions.unix.DnscacheObject	\
 	oval.schemas.definitions.unix.DnscacheState	\
 	oval.schemas.definitions.unix.DnscacheTest	\
@@ -411,6 +632,24 @@ CLASSES=	\
 	oval.schemas.results.core.TestedVariableType	\
 	oval.schemas.results.core.TestsType	\
 	oval.schemas.results.core.TestType	\
+	oval.schemas.systemcharacteristics.aix.EntityItemFilesetStateType	\
+	oval.schemas.systemcharacteristics.aix.EntityItemFixInstallationStatusType	\
+	oval.schemas.systemcharacteristics.aix.EntityItemInterimFixStateType	\
+	oval.schemas.systemcharacteristics.aix.FilesetItem	\
+	oval.schemas.systemcharacteristics.aix.FixItem	\
+	oval.schemas.systemcharacteristics.aix.InterimFixItem	\
+	oval.schemas.systemcharacteristics.aix.NoItem	\
+	oval.schemas.systemcharacteristics.aix.ObjectFactory	\
+	oval.schemas.systemcharacteristics.aix.OslevelItem	\
+	oval.schemas.systemcharacteristics.aix.package-info	\
+	oval.schemas.systemcharacteristics.apache.HttpdItem	\
+	oval.schemas.systemcharacteristics.apache.ObjectFactory	\
+	oval.schemas.systemcharacteristics.apache.package-info	\
+	oval.schemas.systemcharacteristics.catos.LineItem	\
+	oval.schemas.systemcharacteristics.catos.ModuleItem	\
+	oval.schemas.systemcharacteristics.catos.ObjectFactory	\
+	oval.schemas.systemcharacteristics.catos.package-info	\
+	oval.schemas.systemcharacteristics.catos.VersionItem	\
 	oval.schemas.systemcharacteristics.core.CollectedObjectsType	\
 	oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType	\
 	oval.schemas.systemcharacteristics.core.EntityItemBinaryType	\
@@ -441,6 +680,23 @@ CLASSES=	\
 	oval.schemas.systemcharacteristics.core.SystemDataType	\
 	oval.schemas.systemcharacteristics.core.SystemInfoType	\
 	oval.schemas.systemcharacteristics.core.VariableValueType	\
+	oval.schemas.systemcharacteristics.esx.EntityItemClassificationType	\
+	oval.schemas.systemcharacteristics.esx.EntityItemSupportLevelType	\
+	oval.schemas.systemcharacteristics.esx.ObjectFactory	\
+	oval.schemas.systemcharacteristics.esx.package-info	\
+	oval.schemas.systemcharacteristics.esx.PatchItem	\
+	oval.schemas.systemcharacteristics.esx.VersionItem	\
+	oval.schemas.systemcharacteristics.esx.VisdkmanagedobjectItem	\
+	oval.schemas.systemcharacteristics.freebsd.ObjectFactory	\
+	oval.schemas.systemcharacteristics.freebsd.package-info	\
+	oval.schemas.systemcharacteristics.freebsd.PortinfoItem	\
+	oval.schemas.systemcharacteristics.hpux.GetconfItem	\
+	oval.schemas.systemcharacteristics.hpux.NddItem	\
+	oval.schemas.systemcharacteristics.hpux.ObjectFactory	\
+	oval.schemas.systemcharacteristics.hpux.package-info	\
+	oval.schemas.systemcharacteristics.hpux.PatchItem	\
+	oval.schemas.systemcharacteristics.hpux.SwlistItem	\
+	oval.schemas.systemcharacteristics.hpux.TrustedItem	\
 	oval.schemas.systemcharacteristics.independent.EntityItemEngineType	\
 	oval.schemas.systemcharacteristics.independent.EntityItemFamilyType	\
 	oval.schemas.systemcharacteristics.independent.EntityItemHashTypeType	\
@@ -460,6 +716,14 @@ CLASSES=	\
 	oval.schemas.systemcharacteristics.independent.TextfilecontentItem	\
 	oval.schemas.systemcharacteristics.independent.VariableItem	\
 	oval.schemas.systemcharacteristics.independent.XmlfilecontentItem	\
+	oval.schemas.systemcharacteristics.ios.GlobalItem	\
+	oval.schemas.systemcharacteristics.ios.InterfaceItem	\
+	oval.schemas.systemcharacteristics.ios.LineItem	\
+	oval.schemas.systemcharacteristics.ios.ObjectFactory	\
+	oval.schemas.systemcharacteristics.ios.package-info	\
+	oval.schemas.systemcharacteristics.ios.SnmpItem	\
+	oval.schemas.systemcharacteristics.ios.TclshItem	\
+	oval.schemas.systemcharacteristics.ios.VersionItem	\
 	oval.schemas.systemcharacteristics.linux.DpkginfoItem	\
 	oval.schemas.systemcharacteristics.linux.EntityItemFileSystemTypeType	\
 	oval.schemas.systemcharacteristics.linux.EntityItemProtocolType	\
@@ -474,6 +738,54 @@ CLASSES=	\
 	oval.schemas.systemcharacteristics.linux.SelinuxbooleanItem	\
 	oval.schemas.systemcharacteristics.linux.SelinuxsecuritycontextItem	\
 	oval.schemas.systemcharacteristics.linux.SlackwarepkginfoItem	\
+	oval.schemas.systemcharacteristics.macos.AccountinfoItem	\
+	oval.schemas.systemcharacteristics.macos.DiskutilItem	\
+	oval.schemas.systemcharacteristics.macos.EntityItemPermissionCompareType	\
+	oval.schemas.systemcharacteristics.macos.EntityItemPlistTypeType	\
+	oval.schemas.systemcharacteristics.macos.InetlisteningserverItem	\
+	oval.schemas.systemcharacteristics.macos.NvramItem	\
+	oval.schemas.systemcharacteristics.macos.ObjectFactory	\
+	oval.schemas.systemcharacteristics.macos.package-info	\
+	oval.schemas.systemcharacteristics.macos.PlistItem	\
+	oval.schemas.systemcharacteristics.macos.Pwpolicy59Item	\
+	oval.schemas.systemcharacteristics.macos.PwpolicyItem	\
+	oval.schemas.systemcharacteristics.pixos.LineItem	\
+	oval.schemas.systemcharacteristics.pixos.ObjectFactory	\
+	oval.schemas.systemcharacteristics.pixos.package-info	\
+	oval.schemas.systemcharacteristics.pixos.VersionItem	\
+	oval.schemas.systemcharacteristics.sharepoint.BestbetItem	\
+	oval.schemas.systemcharacteristics.sharepoint.EntityItemEventSeverityType	\
+	oval.schemas.systemcharacteristics.sharepoint.EntityItemPolicyFeatureStateType	\
+	oval.schemas.systemcharacteristics.sharepoint.EntityItemPolicyRoleType	\
+	oval.schemas.systemcharacteristics.sharepoint.EntityItemTraceSeverityType	\
+	oval.schemas.systemcharacteristics.sharepoint.EntityItemUrlZoneType	\
+	oval.schemas.systemcharacteristics.sharepoint.InfopolicycollItem	\
+	oval.schemas.systemcharacteristics.sharepoint.ObjectFactory	\
+	oval.schemas.systemcharacteristics.sharepoint.package-info	\
+	oval.schemas.systemcharacteristics.sharepoint.SpantivirussettingsItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SpcrawlruleItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SpdiagnosticslevelItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SpdiagnosticsserviceItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SpgroupItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SpjobdefinitionItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SplistItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SppolicyfeatureItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SppolicyItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SpsiteadministrationItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SpsiteItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SpwebapplicationItem	\
+	oval.schemas.systemcharacteristics.sharepoint.SpwebItem	\
+	oval.schemas.systemcharacteristics.solaris.EntityItemPermissionCompareType	\
+	oval.schemas.systemcharacteristics.solaris.EntityItemSmfProtocolType	\
+	oval.schemas.systemcharacteristics.solaris.EntityItemSmfServiceStateType	\
+	oval.schemas.systemcharacteristics.solaris.IsainfoItem	\
+	oval.schemas.systemcharacteristics.solaris.NddItem	\
+	oval.schemas.systemcharacteristics.solaris.ObjectFactory	\
+	oval.schemas.systemcharacteristics.solaris.package-info	\
+	oval.schemas.systemcharacteristics.solaris.PackagecheckItem	\
+	oval.schemas.systemcharacteristics.solaris.PackageItem	\
+	oval.schemas.systemcharacteristics.solaris.PatchItem	\
+	oval.schemas.systemcharacteristics.solaris.SmfItem	\
 	oval.schemas.systemcharacteristics.unix.DnscacheItem	\
 	oval.schemas.systemcharacteristics.unix.EntityItemCapabilityType	\
 	oval.schemas.systemcharacteristics.unix.EntityItemEncryptMethodType	\
@@ -579,3 +891,4 @@ CLASSES=	\
 	org.w3c.xml.signature.TransformType	\
 	org.w3c.xml.signature.X509DataType	\
 	org.w3c.xml.signature.X509IssuerSerialType
+

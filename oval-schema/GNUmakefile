@@ -7,7 +7,7 @@ include $(TOP)/common.mk
 
 PRODUCTNAME=oval-schema-$(OVAL_SCHEMA_VERSION)
 
-SCHEMADIR=schema-$(OVAL_SCHEMA_VERSION)
+SCHEMADIR=xsd-$(OVAL_SCHEMA_VERSION)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(GENSRC)"
 
 include classes.mk
