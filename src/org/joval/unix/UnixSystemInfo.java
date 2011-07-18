@@ -36,6 +36,7 @@ public class UnixSystemInfo {
     private ISession session;
     private ObjectFactory coreFactory;
     private SystemInfoType info;
+    private UnixFlavor flavor = UnixFlavor.UNKNOWN;
 
     /**
      * Create a plugin for scanning or test evaluation.
@@ -52,11 +53,24 @@ public class UnixSystemInfo {
 
 	info = coreFactory.createSystemInfoType();
 	try {
-	    IProcess p = session.createProcess("hostname");
+	    IProcess p = session.createProcess("uname -s");
 	    p.start();
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    String osName = reader.readLine();
+	    reader.close();
+	    for (UnixFlavor f : UnixFlavor.values()) {
+		if (f.osName().equals(osName)) {
+		    flavor = f;
+		    break;
+		}
+	    }
+
+	    p = session.createProcess("hostname");
+	    p.start();
+	    reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    info.setPrimaryHostName(reader.readLine());
 	    reader.close();
+
 
 	    p = session.createProcess("uname -r");
 	    p.start();
@@ -68,13 +82,13 @@ public class UnixSystemInfo {
 	    List<String> releaseFiles = fs.search("^/etc/.*-release$");
 	    if (releaseFiles.size() > 0) {
 		p = session.createProcess("cat " + releaseFiles.get(0));
+		p.start();
+    		reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		info.setOsName(reader.readLine());
+		reader.close();
 	    } else {
-		p = session.createProcess("uname -s");
+		info.setOsName(osName);
 	    }
-	    p.start();
-    	    reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	    info.setOsName(reader.readLine());
-	    reader.close();
 
 	    p = session.createProcess("uname -p");
 	    p.start();
@@ -82,95 +96,23 @@ public class UnixSystemInfo {
 	    info.setArchitecture(reader.readLine());
 	    reader.close();
 
-	    Vector<Interface> interfaces = new Vector<Interface>();
-	    Vector<String> lines = new Vector<String>();
-	    String line = null;
-	    p = session.createProcess("/sbin/ifconfig -a");
-	    p.start();
-    	    reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	    while ((line = reader.readLine()) != null) {
-		if (line.trim().length() == 0) {
-		    if (lines.size() > 0) {
-			interfaces.add(new Interface(lines));
-			lines = new Vector<String>();
-		    }
-		} else {
-		    lines.add(line);
-		}
-	    }
-	    reader.close();
-	    
 	    InterfacesType interfacesType = coreFactory.createInterfacesType();
-	    Iterator<Interface>iter = interfaces.iterator();
-	    while (iter.hasNext()) {
-		Interface intf = iter.next();
-		InterfaceType interfaceType = coreFactory.createInterfaceType();
-		interfaceType.setMacAddress(intf.getMacAddress());
-		interfaceType.setInterfaceName(intf.getDescription());
-		EntityItemIPAddressStringType ipAddressType = coreFactory.createEntityItemIPAddressStringType();
-		ipAddressType.setValue(intf.getIpV4Address());
-		interfaceType.setIpAddress(ipAddressType);
-		interfacesType.getInterface().add(interfaceType);
+	    List<NetworkInterface> interfaces = NetworkInterface.getInterfaces(flavor, session);
+	    for (NetworkInterface intf : interfaces) {
+		if (intf.getIpV4Address() != null) {
+		    InterfaceType interfaceType = coreFactory.createInterfaceType();
+		    interfaceType.setMacAddress(intf.getMacAddress());
+		    interfaceType.setInterfaceName(intf.getDescription());
+		    EntityItemIPAddressStringType ipAddressType = coreFactory.createEntityItemIPAddressStringType();
+		    ipAddressType.setValue(intf.getIpV4Address());
+		    interfaceType.setIpAddress(ipAddressType);
+		    interfacesType.getInterface().add(interfaceType);
+		}
 	    }
 	    info.setInterfaces(interfacesType);
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PLUGIN_INTERFACE"), e);
 	}
 	return info;
-    }
-
-    // Private
-
-    class Interface {
-	String mac, ip4, ip6, description;
-
-	Interface(Vector<String> lines) {
-	    StringTokenizer tok = new StringTokenizer(lines.get(0));
-	    description = tok.nextToken();
-	    while(tok.hasMoreTokens()) {
-		if ("HWaddr".equalsIgnoreCase(tok.nextToken()) && tok.hasMoreTokens()) {
-		    mac = tok.nextToken();
-		}
-	    }
-	    if (lines.size() > 1) {
-		String line2 = lines.get(1).trim();
-		if (line2.toUpperCase().startsWith("INET ADDR:")) {
-		    tok = new StringTokenizer(line2.substring(10));
-		    ip4 = tok.nextToken();
-		}
-	    }
-	    if (lines.size() > 2) {
-		String line3 = lines.get(2).trim();
-		if (line3.toUpperCase().startsWith("INET6 ADDR:")) {
-		    tok = new StringTokenizer(line3.substring(11));
-		    ip6 = tok.nextToken();
-		}
-	    }
-	    if (mac == null) {
-		mac = "";
-	    }
-	    if (ip4 == null) {
-		ip4 = "";
-	    }
-	    if (ip6 == null) {
-		ip6 = "";
-	    }
-	}
-
-	String getMacAddress() {
-	    return mac;
-	}
-
-	String getIpV4Address() {
-	    return ip4;
-	}
-
-	String getIpV6Address() {
-	    return ip6;
-	}
-
-	String getDescription() {
-	    return description;
-	}
     }
 }

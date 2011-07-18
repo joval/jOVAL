@@ -36,6 +36,8 @@ SHARED=\
 	org.joval.test.PE						\
 	org.joval.test.Reg						\
 	org.joval.test.WMI						\
+	org.joval.unix.NetworkInterface					\
+	org.joval.unix.UnixFlavor					\
 	org.joval.unix.UnixSystemInfo					\
 	org.joval.unix.system.Environment				\
 	org.joval.util.Base64						\
