@@ -40,6 +40,12 @@ public class SmbFileProxy implements IFile {
     // Implement IFile
 
     /**
+     * Does nothing in this implementation.
+     */
+    public void close() throws IOException {
+    }
+
+    /**
      * Not really supported by this implementation.
      */
     public long accessTime() throws IOException {

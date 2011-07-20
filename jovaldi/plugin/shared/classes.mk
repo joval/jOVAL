@@ -25,8 +25,10 @@ SHARED=\
 	org.joval.io.StreamTool						\
 	org.joval.oval.di.BasePlugin					\
 	org.joval.plugin.adapter.independent.FamilyAdapter		\
+	org.joval.plugin.adapter.independent.TextfilecontentAdapter	\
 	org.joval.plugin.adapter.independent.Textfilecontent54Adapter	\
 	org.joval.plugin.adapter.linux.RpminfoAdapter			\
+	org.joval.plugin.adapter.unix.ProcessAdapter			\
 	org.joval.plugin.adapter.unix.UnameAdapter			\
 	org.joval.plugin.adapter.windows.FileAdapter			\
 	org.joval.plugin.adapter.windows.RegistryAdapter		\

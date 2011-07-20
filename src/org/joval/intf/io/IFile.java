@@ -41,6 +41,11 @@ public interface IFile {
     int FILE_TYPE_REMOTE = 0x8000;
 
     /**
+     * Release any resources associated with the IFile.
+     */
+    public void close() throws IOException;
+
+    /**
      * Get the time that the file was last accessed.
      */
     public long accessTime() throws IOException;

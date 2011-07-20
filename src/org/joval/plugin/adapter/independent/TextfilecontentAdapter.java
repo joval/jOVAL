@@ -34,9 +34,9 @@ import oval.schemas.definitions.core.ObjectRefType;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.StateRefType;
 import oval.schemas.definitions.core.StateType;
-import oval.schemas.definitions.independent.Textfilecontent54Object;
-import oval.schemas.definitions.independent.Textfilecontent54State;
-import oval.schemas.definitions.independent.Textfilecontent54Test;
+import oval.schemas.definitions.independent.TextfilecontentObject;
+import oval.schemas.definitions.independent.TextfilecontentState;
+import oval.schemas.definitions.independent.TextfilecontentTest;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -65,17 +65,15 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
 /**
- * Evaluates Textfilecontent54Test OVAL tests.
- *
- * DAS: Specify a maximum file size supported for multi-line behavior support.
+ * Evaluates TextfilecontentTest OVAL tests.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Textfilecontent54Adapter extends BaseFileAdapter {
+public class TextfilecontentAdapter extends BaseFileAdapter {
     protected ObjectFactory independentFactory;
 
-    public Textfilecontent54Adapter(IFilesystem fs) {
+    public TextfilecontentAdapter(IFilesystem fs) {
 	super(fs);
 	independentFactory = new ObjectFactory();
     }
@@ -83,23 +81,21 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
     // Implement IAdapter
 
     public Class getObjectClass() {
-	return Textfilecontent54Object.class;
+	return TextfilecontentObject.class;
     }
 
     public Class getTestClass() {
-	return Textfilecontent54Test.class;
+	return TextfilecontentTest.class;
     }
 
     public void evaluate(TestType testResult, ISystemCharacteristics sc) throws OvalException {
 	String testId = testResult.getTestId();
-	Textfilecontent54Test testDefinition = definitions.getTest(testId, Textfilecontent54Test.class);
+	TextfilecontentTest testDefinition = definitions.getTest(testId, TextfilecontentTest.class);
 	String objectId = testDefinition.getObject().getObjectRef();
-	Textfilecontent54State state = null;
+	TextfilecontentState state = null;
 	if (testDefinition.isSetState() && testDefinition.getState().get(0).isSetStateRef()) {
 	    String stateId = testDefinition.getState().get(0).getStateRef();
-	    state = definitions.getState(stateId, Textfilecontent54State.class);
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_MISSING", testId));
+	    state = definitions.getState(stateId, TextfilecontentState.class);
 	}
 
 	for (VariableValueType var : sc.getVariablesByObjectId(objectId)) {
@@ -109,7 +105,6 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	    testResult.getTestedVariable().add(testedVariable);
 	}
 
-	boolean result = false;
 	int trueCount=0, falseCount=0, errorCount=0;
 	if (sc.getObject(objectId).getFlag() == FlagEnumeration.ERROR) {
 	    errorCount++;
@@ -118,58 +113,34 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	if (testDefinition.getCheckExistence() != ExistenceEnumeration.AT_LEAST_ONE_EXISTS) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE" , testDefinition.getCheckExistence()));
 	}
-	if (state.isSetText()) {
-	    if (OperationEnumeration.PATTERN_MATCH == state.getText().getOperation()) {
-		String pattern = (String)state.getText().getValue();
-		for (ItemType it : sc.getItemsByObjectId(objectId)) {
-		    if (it instanceof TextfilecontentItem) {
-			TextfilecontentItem item = (TextfilecontentItem)it;
-			TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-			testedItem.setItemId(item.getId());
-			switch(item.getStatus()) {
-			  case EXISTS:
-			    if (item.getPattern().getValue().equals(pattern)) {
-				testedItem.setResult(ResultEnumeration.TRUE);
-				trueCount++;
-			    } else {
-				testedItem.setResult(ResultEnumeration.FALSE);
-				falseCount++;
-			    }
-			    break;
-			  case DOES_NOT_EXIST:
-			    testedItem.setResult(ResultEnumeration.NOT_APPLICABLE);
-			    break;
-			  case ERROR:
-			    testedItem.setResult(ResultEnumeration.ERROR);
-			    errorCount++;
-			    break;
-			  default:
-			    testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-			    break;
-			}
-			testResult.getTestedItem().add(testedItem);
-		    } else {
-			throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-                				TextfilecontentItem.class.getName(), it.getClass().getName()));
-		    }
+
+	for (ItemType it : sc.getItemsByObjectId(objectId)) {
+	    if (it instanceof TextfilecontentItem) {
+		TextfilecontentItem item = (TextfilecontentItem)it;
+		TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
+		testedItem.setItemId(item.getId());
+		if (match(state, item)) {
+		    trueCount++;
+		    testedItem.setResult(ResultEnumeration.TRUE);
+		} else {
+		    falseCount++;
+		    testedItem.setResult(ResultEnumeration.FALSE);
 		}
+		testResult.getTestedItem().add(testedItem);
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getText().getOperation()));
+		throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
+					TextfilecontentItem.class.getName(), it.getClass().getName()));
 	    }
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_BAD", state.getId()));
 	}
 
-	if (errorCount > 0) {
-	    testResult.setResult(ResultEnumeration.ERROR);
-	} else if (result) {
+	if (trueCount > 0) {
 	    testResult.setResult(ResultEnumeration.TRUE);
 	} else {
 	    testResult.setResult(ResultEnumeration.FALSE);
 	}
     }
 
-    // Private
+    // Overrides
 
     protected void preScan() {}
 
@@ -180,9 +151,9 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
     }
 
     protected ItemType createFileItem(ObjectType obj, IFile file) throws NoSuchElementException, IOException, OvalException {
-	Textfilecontent54Object tfcObj = null;
-	if (obj instanceof Textfilecontent54Object) {
-	    tfcObj = (Textfilecontent54Object)obj;
+	TextfilecontentObject tfcObj = null;
+	if (obj instanceof TextfilecontentObject) {
+	    tfcObj = (TextfilecontentObject)obj;
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
 							   getObjectClass().getName(), obj.getClass().getName()));
@@ -198,24 +169,7 @@ throw new NoSuchElementException(path);
 //	    dirExists = fs.getFile(dirPath).exists();
 	}
 
-	if (tfcObj.isSetFilepath()) {
-	    EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
-	    filepathType.setValue(path);
-	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
-	    pathType.setValue(dirPath);
-	    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
-	    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
-	    if (!fileExists) {
-		filepathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		if (!dirExists) {
-		    pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		}
-	    }
-	    tfcItem.setFilepath(filepathType);
-	    tfcItem.setPath(pathType);
-	    tfcItem.setFilename(filenameType);
-	} else if (tfcObj.isSetFilename()) {
+	if (tfcObj.isSetFilename()) {
 	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
 	    pathType.setValue(dirPath);
 	    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
@@ -248,58 +202,45 @@ throw new NoSuchElementException(path);
 
     // Private
 
+    private boolean match(TextfilecontentState state, TextfilecontentItem item) {
+	if (state == null) {
+	    return item.getSubexpression().size() > 0; // existence check only -- the item found matching lines
+	} else {
+	    Pattern p = Pattern.compile((String)state.getSubexpression().getValue());
+	    for (EntityItemAnySimpleType simpleType : item.getSubexpression()) {
+		String subexpression = (String)simpleType.getValue();
+		if (p.matcher(subexpression).find()) {
+		    return true;
+		}
+	    }
+	    return false;
+	}
+    }
+
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    private void setItem(TextfilecontentItem item, Textfilecontent54Object tfcObj, IFile file) throws IOException {
+    private void setItem(TextfilecontentItem item, TextfilecontentObject tfcObj, IFile file) throws IOException {
 	InputStream in = null;
 	try {
-	    int flags = 0;
-	    if (tfcObj.isSetBehaviors()) {
-		if (tfcObj.getBehaviors().isMultiline()) {
-		    flags |= Pattern.MULTILINE;
-		}
-		if (tfcObj.getBehaviors().isIgnoreCase()) {
-		    flags |= Pattern.CASE_INSENSITIVE;
-		}
-		if (tfcObj.getBehaviors().isSingleline()) {
-		    flags |= Pattern.DOTALL;
-		}
-	    } else {
-		flags = Pattern.MULTILINE;
-	    }
-	    Pattern p = Pattern.compile((String)tfcObj.getPattern().getValue(), flags);
-
-	    EntityItemStringType patternType = coreFactory.createEntityItemStringType();
-	    patternType.setValue(p.toString());
-	    item.setPattern(patternType);
-	    EntityItemIntType instanceType = coreFactory.createEntityItemIntType();
-	    instanceType.setDatatype(tfcObj.getInstance().getDatatype());
-	    instanceType.setValue(tfcObj.getInstance().getValue());
-	    item.setInstance(instanceType);
+	    Pattern p = Pattern.compile((String)tfcObj.getLine().getValue());
+	    EntityItemStringType lineType = coreFactory.createEntityItemStringType();
+	    lineType.setValue(p.toString());
+	    item.setLine(lineType);
 
 	    //
-	    // Read the whole file into a buffer and search for the pattern
+	    // Read the file line-by-line and search for the pattern.  Add matching lines as subexpression elements.
 	    //
-	    String text = null;
-	    byte[] buff = new byte[256];
-	    int len = 0;
-	    StringBuffer sb = new StringBuffer();
 	    in = file.getInputStream();
-	    while ((len = in.read(buff)) > 0) {
-		sb.append(toCharArray(buff), 0, len);
-	    }
-	    String s = sb.toString();
-	    Matcher m = p.matcher(s);
-	    if (m.find()) {
-		MatchResult mr = m.toMatchResult();
-		text = s.substring(mr.start(), mr.end());
-	    }
-
-	    if (text != null) {
-		EntityItemAnySimpleType textType = coreFactory.createEntityItemAnySimpleType();
-		textType.setValue(text);
-		item.setText(textType);
+	    BufferedReader br = new BufferedReader(new InputStreamReader(in));
+	    String line = null;
+	    while ((line = br.readLine()) != null) {
+		Matcher m = p.matcher(line);
+		if (m.find()) {
+		    EntityItemAnySimpleType subexpressionType = coreFactory.createEntityItemAnySimpleType();
+		    subexpressionType.setValue(line);
+		    item.getSubexpression().add(subexpressionType);
+		}
 	    }
 	} catch (PatternSyntaxException e) {
 	    MessageType msg = new MessageType();
@@ -315,13 +256,5 @@ throw new NoSuchElementException(path);
 		}
 	    }
 	}
-    }
-
-    private char[] toCharArray(byte[] buff) {
-	char[] ca = new char[buff.length];
-	for (int i=0; i < buff.length; i++) {
-	    ca[i] = (char)buff[i];
-	}
-	return ca;
     }
 }

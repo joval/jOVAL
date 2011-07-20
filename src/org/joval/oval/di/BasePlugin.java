@@ -27,8 +27,10 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.plugin.adapter.independent.FamilyAdapter;
+import org.joval.plugin.adapter.independent.TextfilecontentAdapter;
 import org.joval.plugin.adapter.independent.Textfilecontent54Adapter;
 import org.joval.plugin.adapter.linux.RpminfoAdapter;
+import org.joval.plugin.adapter.unix.ProcessAdapter;
 import org.joval.plugin.adapter.unix.UnameAdapter;
 import org.joval.plugin.adapter.windows.FileAdapter;
 import org.joval.plugin.adapter.windows.RegistryAdapter;
@@ -91,11 +93,16 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    // If there is no session, then the IPlugin is being invoked to perform analysis on a pre-existing
 	    // System-Characteristics file.  Therefore, all adapters are added, but without resources for data retrieval.
 	    //
+	    adapters.add(new TextfilecontentAdapter(null));
 	    adapters.add(new Textfilecontent54Adapter(null));
 	    adapters.add(new WmiAdapter(null));
 	    adapters.add(new FileAdapter(null, null));
 	    adapters.add(new RegistryAdapter(null));
+	    adapters.add(new RpminfoAdapter(null));
+	    adapters.add(new ProcessAdapter(null));
+	    adapters.add(new UnameAdapter(null));
 	} else if (session.connect()) {
+	    adapters.add(new TextfilecontentAdapter(session.getFilesystem()));
 	    adapters.add(new Textfilecontent54Adapter(session.getFilesystem()));
 
 	    switch(session.getType()) {
@@ -119,6 +126,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	      case ISession.UNIX: {
 		info = new UnixSystemInfo(session).getSystemInfo();
 		adapters.add(new RpminfoAdapter(session));
+		adapters.add(new ProcessAdapter(session));
 		adapters.add(new UnameAdapter(session));
 		break;
 	      }

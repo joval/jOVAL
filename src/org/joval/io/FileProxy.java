@@ -34,6 +34,12 @@ public class FileProxy implements IFile {
     // Implement IFile
 
     /**
+     * Does nothing in this implementation.
+     */
+    public void close() throws IOException {
+    }
+
+    /**
      * Not really supported in this implementation.
      */
     public long accessTime() throws IOException {

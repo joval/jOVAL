@@ -453,7 +453,7 @@ public class Engine implements IProducer {
 	oval.schemas.results.core.CriteriaType criteriaResult = resultsFactory.createCriteriaType();
 	criteriaResult.setOperator(criteriaDefinition.getOperator());
 
-	int trueCount=0, falseCount=0, errorCount=0;
+	int trueCount=0, falseCount=0, errorCount=0, unknownCount=0, skippedCount=0;
 	OperatorEnumeration operator = criteriaDefinition.getOperator();
 	for (Object child : criteriaDefinition.getCriteriaOrCriterionOrExtendDefinition()) {
 	    Object resultObject = null;
@@ -466,6 +466,12 @@ public class Engine implements IProducer {
 		    break;
 		  case FALSE:
 		    falseCount++;
+		    break;
+		  case UNKNOWN:
+		    unknownCount++;
+		    break;
+		  case NOT_EVALUATED:
+		    skippedCount++;
 		    break;
 		  case ERROR:
 		    errorCount++;
@@ -482,6 +488,9 @@ public class Engine implements IProducer {
 		  case FALSE:
 		    falseCount++;
 		    break;
+		  case NOT_EVALUATED:
+		    skippedCount++;
+		    break;
 		  case ERROR:
 		    errorCount++;
 		    break;
@@ -497,6 +506,7 @@ public class Engine implements IProducer {
 		edtResult.setVersion(defDefinition.getVersion());
 		if (edtDefinition.isSetNegate() && edtDefinition.isNegate()) {
 		    edtResult.setNegate(true);
+		    edtResult.setResult(defResult.getResult()); // Overridden for true and false, below
 		    switch(defResult.getResult()) {
 		      case TRUE:
 			falseCount++;
@@ -506,10 +516,14 @@ public class Engine implements IProducer {
 			trueCount++;
 			edtResult.setResult(ResultEnumeration.TRUE);
 			break;
+		      case UNKNOWN:
+			unknownCount++;
+			break;
+		      case NOT_EVALUATED:
+			skippedCount++;
+			break;
 		      case ERROR:
-			errorCount++; // NB: switch fall-thru
-		      default:
-			edtResult.setResult(defResult.getResult());
+			errorCount++;
 			break;
 		    }
 		} else {
@@ -519,6 +533,12 @@ public class Engine implements IProducer {
 			break;
 		      case FALSE:
 			falseCount++;
+			break;
+		      case UNKNOWN:
+			unknownCount++;
+			break;
+		      case NOT_EVALUATED:
+			skippedCount++;
 			break;
 		      case ERROR:
 			errorCount++;
@@ -534,42 +554,40 @@ public class Engine implements IProducer {
 	}
 
 	ResultEnumeration result = ResultEnumeration.UNKNOWN;
-	if (trueCount + falseCount > 0) {
-	    switch(criteriaDefinition.getOperator()) {
-	      case AND:
-		if (falseCount == 0) {
-		    if (errorCount == 0) {
-			result = ResultEnumeration.TRUE;
-		    } else {
-			result = ResultEnumeration.ERROR;
-		    }
-		} else {
-		    result = ResultEnumeration.FALSE;
-		}
-		break;
-	      case OR:
-		if (trueCount > 0) {
-		    result = ResultEnumeration.TRUE;
-		} else if (errorCount == 0) {
-		    result = ResultEnumeration.FALSE;
-		} else {
-		    result = ResultEnumeration.ERROR;
-		}
-		break;
-	      case ONE:
-		if (trueCount == 1 && errorCount == 0) {
-		    result = ResultEnumeration.TRUE;
-		} else {
-		    result = ResultEnumeration.FALSE;
-		}
-		break;
-	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATOR", criteriaDefinition.getOperator()));
+	switch(criteriaDefinition.getOperator()) {
+	  case AND:
+	    if (falseCount > 0) {
+		result = ResultEnumeration.FALSE;
+	    } else if (trueCount > 0 && errorCount == 0 && skippedCount == 0 && unknownCount == 0) {
+		result = ResultEnumeration.TRUE;
+	    } else if (errorCount > 0) {
+		result = ResultEnumeration.ERROR;
 	    }
-	} else if (errorCount > 0) {
-	    result = ResultEnumeration.ERROR;
-	} else {
-	    result = ResultEnumeration.NOT_EVALUATED;
+	    break;
+	  case OR:
+	    if (trueCount > 0) {
+		result = ResultEnumeration.TRUE;
+	    } else if (errorCount == 0 && skippedCount == 0 && unknownCount == 0) {
+		result = ResultEnumeration.FALSE;
+	    } else if (errorCount > 0) {
+		result = ResultEnumeration.ERROR;
+	    }
+	    break;
+	  case ONE:
+	    if (errorCount == 0 && skippedCount == 0 && unknownCount == 0) {
+		if (trueCount == 1) {
+		    result = ResultEnumeration.TRUE;
+		} else {
+		    result = ResultEnumeration.FALSE;
+		}
+	    } else if (trueCount > 1) {
+		result = ResultEnumeration.FALSE;
+	    } else if (errorCount > 0) {
+		result = ResultEnumeration.ERROR;
+	    }
+	    break;
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATOR", criteriaDefinition.getOperator()));
 	}
 	if (criteriaDefinition.isSetNegate() && criteriaDefinition.isNegate()) {
 	    criteriaResult.setNegate(true);

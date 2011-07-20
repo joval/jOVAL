@@ -40,13 +40,17 @@ class SftpFile implements IFile {
 	this.path = path;
     }
 
-    protected void finalize() throws Throwable {
-	if (cs.isConnected()) {
-	    cs.disconnect();
+    // Implement IFile
+
+    public void close() throws IOException {
+	try {
+	    if (cs.isConnected()) {
+		cs.disconnect();
+	    }
+	} catch (Throwable e) {
+	    throw new IOException(e);
 	}
     }
-
-    // Implement IFile
 
     public long accessTime() throws IOException {
 	if (exists()) {

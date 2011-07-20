@@ -137,8 +137,13 @@
                   <xsd:element name="name" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="category" type="oval-def:EntityStateStringType" minOccurs="0"
                                maxOccurs="1"/>
-                  <xsd:element name="version" type="oval-def:EntityStateStringType" minOccurs="0"
-                               maxOccurs="1"/>
+                  <xsd:element name="version" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1">
+                     <xsd:annotation>
+                        <xsd:appinfo>
+                           <jxb:property name="package_version" />
+                        </xsd:appinfo>
+                     </xsd:annotation>
+                  </xsd:element>
                   <xsd:element name="vendor" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="description" type="oval-def:EntityStateStringType" minOccurs="0"
                                maxOccurs="1"/>
@@ -257,7 +262,13 @@
                      <xsd:sequence>
                         <xsd:element name="behaviors" type="sol-def:PatchBehaviors" minOccurs="0" maxOccurs="1"/>
                         <xsd:element name="base" type="oval-def:EntityObjectIntType"/>
-                        <xsd:element name="version" type="oval-def:EntityObjectIntType"/>
+                        <xsd:element name="version" type="oval-def:EntityObjectIntType">
+                           <xsd:annotation>
+                              <xsd:appinfo>
+                                 <jxb:property name="patch_version" />
+                              </xsd:appinfo>
+                           </xsd:annotation>
+			</xsd:element>
                         <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
                      </xsd:sequence>
                   </xsd:choice>
@@ -286,7 +297,13 @@
             <xsd:extension base="oval-def:StateType">
                <xsd:sequence>
                   <xsd:element name="base" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
-                  <xsd:element name="version" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="version" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1">
+                     <xsd:annotation>
+                        <xsd:appinfo>
+                           <jxb:property name="patch_version" />
+                        </xsd:appinfo>
+                     </xsd:annotation>
+                  </xsd:element>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>

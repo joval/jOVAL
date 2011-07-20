@@ -9,6 +9,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -120,56 +121,88 @@ public class UnameAdapter implements IAdapter {
 	    uState = definitions.getState(stateId, UnameState.class);
 	}
 
+	List<ItemType> items = sc.getItemsByObjectId(objectId);
+	if (items.size() < 1) {
+	    testResult.setResult(ResultEnumeration.ERROR);
+	    MessageType msg = new MessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALSystem.getMessage("ERROR_NO_ITEMS", objectId));
+	    testResult.getMessage().add(msg);
+	    return;
+	}
 	ItemType it = sc.getItemsByObjectId(objectId).get(0);
 	if (!(it instanceof UnameItem)) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
 							   UnameItem.class.getName(), it.getClass().getName()));
 	}
 	UnameItem item = (UnameItem)it;
+	TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
+	testedItem.setItemId(item.getId());
 
 	if (uState.isSetMachineClass()) {
-	    testResult.setResult(compareTypes(uState.getMachineClass(), item.getMachineClass()));
+	    if (compareTypes(uState.getMachineClass(), item.getMachineClass())) {
+		testResult.setResult(ResultEnumeration.TRUE);
+	    } else {
+		testResult.setResult(ResultEnumeration.FALSE);
+		testedItem.setResult(ResultEnumeration.FALSE);
+	    }
 	} else if (uState.isSetNodeName()) {
-	    testResult.setResult(compareTypes(uState.getNodeName(), item.getNodeName()));
+	    if (compareTypes(uState.getNodeName(), item.getNodeName())) {
+		testResult.setResult(ResultEnumeration.TRUE);
+	    } else {
+		testResult.setResult(ResultEnumeration.FALSE);
+		testedItem.setResult(ResultEnumeration.FALSE);
+	    }
 	} else if (uState.isSetOsName()) {
-	    testResult.setResult(compareTypes(uState.getOsName(), item.getOsName()));
+	    if (compareTypes(uState.getOsName(), item.getOsName())) {
+		testResult.setResult(ResultEnumeration.TRUE);
+	    } else {
+		testResult.setResult(ResultEnumeration.FALSE);
+		testedItem.setResult(ResultEnumeration.FALSE);
+	    }
 	} else if (uState.isSetOsRelease()) {
-	    testResult.setResult(compareTypes(uState.getOsRelease(), item.getOsRelease()));
+	    if (compareTypes(uState.getOsRelease(), item.getOsRelease())) {
+		testResult.setResult(ResultEnumeration.TRUE);
+	    } else {
+		testResult.setResult(ResultEnumeration.FALSE);
+		testedItem.setResult(ResultEnumeration.FALSE);
+	    }
 	} else if (uState.isSetOsVersion()) {
-	    testResult.setResult(compareTypes(uState.getOsVersion(), item.getOsVersion()));
+	    if (compareTypes(uState.getOsVersion(), item.getOsVersion())) {
+		testResult.setResult(ResultEnumeration.TRUE);
+	    } else {
+		testResult.setResult(ResultEnumeration.FALSE);
+		testedItem.setResult(ResultEnumeration.FALSE);
+	    }
 	} else if (uState.isSetProcessorType()) {
-	    testResult.setResult(compareTypes(uState.getProcessorType(), item.getProcessorType()));
+	    if (compareTypes(uState.getProcessorType(), item.getProcessorType())) {
+		testResult.setResult(ResultEnumeration.TRUE);
+	    } else {
+		testResult.setResult(ResultEnumeration.FALSE);
+		testedItem.setResult(ResultEnumeration.FALSE);
+	    }
 	} else {
 	    testResult.setResult(ResultEnumeration.ERROR);
+	    testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
 	    MessageType msg = new MessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALSystem.getMessage("ERROR_UNAME_STATE_EMPTY", stateId));
 	    testResult.getMessage().add(msg);
 	}
+
+	testResult.getTestedItem().add(testedItem);
     }
 
     // Internal
 
-    private ResultEnumeration compareTypes(EntityStateStringType state, EntityItemStringType item) throws OvalException {
+    private boolean compareTypes(EntityStateStringType state, EntityItemStringType item) throws OvalException {
 	switch (state.getOperation()) {
 	  case CASE_INSENSITIVE_EQUALS:
-	    if (((String)item.getValue()).equalsIgnoreCase((String)state.getValue())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ((String)item.getValue()).equalsIgnoreCase((String)state.getValue());
 	  case EQUALS:
-	    if (((String)item.getValue()).equals((String)state.getValue())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ((String)item.getValue()).equals((String)state.getValue());
 	  case PATTERN_MATCH:
-	    if (Pattern.matches((String)state.getValue(), (String)item.getValue())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find();
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getOperation()));
 	}
