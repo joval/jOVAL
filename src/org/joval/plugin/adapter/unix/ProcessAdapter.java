@@ -80,6 +80,7 @@ public class ProcessAdapter implements IAdapter {
     }
 
     public void scan(ISystemCharacteristics sc) throws OvalException {
+	ctx.status("Retrieving process list");
 	scanProcesses();
 
 	Iterator<ObjectType> iter = definitions.iterateObjects(ProcessObject.class);

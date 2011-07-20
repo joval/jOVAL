@@ -150,7 +150,8 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	return independentFactory.createTextfilecontentItem((TextfilecontentItem)item);
     }
 
-    protected ItemType createFileItem(ObjectType obj, IFile file) throws NoSuchElementException, IOException, OvalException {
+    protected List<ItemType> createFileItems(ObjectType obj, IFile file) throws NoSuchElementException,
+										IOException, OvalException {
 	TextfilecontentObject tfcObj = null;
 	if (obj instanceof TextfilecontentObject) {
 	    tfcObj = (TextfilecontentObject)obj;
@@ -179,9 +180,9 @@ throw new NoSuchElementException(path);
 		tfcItem.setFilename(filenameType);
 	    } else if (dirExists) {
 /* -- Ovaldi does nothing
-		fItem.setPath(pathType);
+		tfcItem.setPath(pathType);
 		filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		fItem.setFilename(windowsFactory.createFileItemFilename(filenameType));
+		tfcItem.setFilename(windowsFactory.createFileItemFilename(filenameType));
 */
 	    } else {
 		pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
@@ -191,13 +192,14 @@ throw new NoSuchElementException(path);
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_TEXTFILECONTENT_SPEC", tfcObj.getId()));
 	}
 
+	List<ItemType> tfcList = null;
 	if (fileExists) {
-	    setItem(tfcItem, tfcObj, file);
+	    tfcList = getItems(tfcItem, tfcObj, file);
 	} else if (!dirExists) {
 	    throw new NoSuchElementException("No file or parent directory");
 	}
 
-	return tfcItem;
+	return tfcList;
     }
 
     // Private
@@ -207,26 +209,18 @@ throw new NoSuchElementException(path);
 	    return item.getSubexpression().size() > 0; // existence check only -- the item found matching lines
 	} else {
 	    Pattern p = Pattern.compile((String)state.getSubexpression().getValue());
-	    for (EntityItemAnySimpleType simpleType : item.getSubexpression()) {
-		String subexpression = (String)simpleType.getValue();
-		if (p.matcher(subexpression).find()) {
-		    return true;
-		}
-	    }
-	    return false;
+	    return p.matcher((String)item.getLine().getValue()).find();
 	}
     }
 
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    private void setItem(TextfilecontentItem item, TextfilecontentObject tfcObj, IFile file) throws IOException {
+    private List<ItemType> getItems(TextfilecontentItem baseItem, TextfilecontentObject tfcObj, IFile file) throws IOException {
 	InputStream in = null;
+	List<ItemType> items = new Vector<ItemType>();
 	try {
 	    Pattern p = Pattern.compile((String)tfcObj.getLine().getValue());
-	    EntityItemStringType lineType = coreFactory.createEntityItemStringType();
-	    lineType.setValue(p.toString());
-	    item.setLine(lineType);
 
 	    //
 	    // Read the file line-by-line and search for the pattern.  Add matching lines as subexpression elements.
@@ -237,16 +231,17 @@ throw new NoSuchElementException(path);
 	    while ((line = br.readLine()) != null) {
 		Matcher m = p.matcher(line);
 		if (m.find()) {
-		    EntityItemAnySimpleType subexpressionType = coreFactory.createEntityItemAnySimpleType();
-		    subexpressionType.setValue(line);
-		    item.getSubexpression().add(subexpressionType);
+		    TextfilecontentItem item = independentFactory.createTextfilecontentItem();
+		    item.setPath(baseItem.getPath());
+		    item.setFilename(baseItem.getFilename());
+		    EntityItemStringType lineType = coreFactory.createEntityItemStringType();
+		    lineType.setValue(line);
+		    item.setLine(lineType);
+		    items.add(item);
 		}
 	    }
 	} catch (PatternSyntaxException e) {
-	    MessageType msg = new MessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    item.getMessage().add(msg);
+	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	} finally {
 	    if (in != null) {
 		try {
@@ -256,5 +251,6 @@ throw new NoSuchElementException(path);
 		}
 	    }
 	}
+	return items;
     }
 }

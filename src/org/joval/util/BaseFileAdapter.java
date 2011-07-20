@@ -39,7 +39,7 @@ import org.joval.util.Version;
 
 /**
  * Base class for IFile-based IAdapters. Subclasses need only implement getObjectClass, getTestClass, evaluate,
- * createFileItem and createStorageItem methods.
+ * createFileItems and createStorageItem methods.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -66,7 +66,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 
     /**
      * A generic implementation of the IAdapter.scan method for File-type objects.  Subclasses need only implement the
-     * createFileItem and createStorageItem methods.
+     * createFileItems and createStorageItem methods.
      */
     public void scan(ISystemCharacteristics sc) throws OvalException {
 	try {
@@ -117,7 +117,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 
     protected abstract JAXBElement<? extends ItemType> createStorageItem(ItemType item);
 
-    protected abstract ItemType createFileItem(ObjectType obj, IFile file) throws NoSuchElementException,
+    protected abstract List<ItemType> createFileItems(ObjectType obj, IFile file) throws NoSuchElementException,
 										  IOException, OvalException;
 
     // Internal
@@ -139,7 +139,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 	List<ItemType> items = new Vector<ItemType>();
 	for (String path : getPathList(obj, variableValueTypes)) {
 	    try {
-		items.add(createFileItem(obj, fs.getFile(path)));
+		IFile f = fs.getFile(path);
+		items.addAll(createFileItems(obj, f));
+		f.close();
 	    } catch (NoSuchElementException e) {
 		// skip it
 	    } catch (IOException e) {
@@ -158,11 +160,22 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    return list;
 	}
 
-	list = new Vector<String>();
+	//
+	// Handle the possibility of a legacy-style FileAdapter, like Textfilecontent (pre-54).
+	//
+	boolean legacy = false;
+	Method isSetFilepath=null, getFilepath=null;
 	try {
-	    Method isSetFilepath, getFilepath, isSetFilename, getFilename, isSetPath, getPath, isSetBehaviors, getBehaviors;
 	    isSetFilepath = obj.getClass().getMethod("isSetFilepath");
 	    getFilepath = obj.getClass().getMethod("getFilepath");
+	} catch (NoSuchMethodException e) {
+	    legacy = true;
+	}
+
+	list = new Vector<String>();
+	try {
+	    Method isSetFilename, getFilename, isSetPath, getPath, isSetBehaviors, getBehaviors;
+	    
 	    isSetFilename = obj.getClass().getMethod("isSetFilename");
 	    getFilename = obj.getClass().getMethod("getFilename");
 	    isSetPath = obj.getClass().getMethod("isSetPath");
@@ -170,7 +183,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    isSetBehaviors = obj.getClass().getMethod("isSetBehaviors");
 	    getBehaviors = obj.getClass().getMethod("getBehaviors");
 
-	    if (((Boolean)isSetFilepath.invoke(obj)).booleanValue()) {
+	    if (!legacy && ((Boolean)isSetFilepath.invoke(obj)).booleanValue()) {
 		EntityObjectStringType filepath = (EntityObjectStringType)getFilepath.invoke(obj);
 		if (filepath.isSetVarRef()) {
 		    String resolved = ctx.resolve(filepath.getVarRef(), variables);
@@ -279,6 +292,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		if (f.exists() && f.isDirectory()) {
 		    results.add(path);
 		    if ("up".equals(recurseDirection)) {
+			f.close();
 		        int ptr = path.lastIndexOf(fs.getDelimString());
 			if (ptr != -1) {
 			    Vector<String> v = new Vector<String>();
@@ -287,6 +301,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			}
 		    } else { // recurse down
 			String[] children = f.list();
+			f.close();
 			Vector<String> v = new Vector<String>();
 			for (int i=0; i < children.length; i++) {
 			    v.add(path + children[i] + fs.getDelimString());

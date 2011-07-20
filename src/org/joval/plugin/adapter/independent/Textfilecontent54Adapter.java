@@ -179,7 +179,8 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	return independentFactory.createTextfilecontentItem((TextfilecontentItem)item);
     }
 
-    protected ItemType createFileItem(ObjectType obj, IFile file) throws NoSuchElementException, IOException, OvalException {
+    protected List<ItemType> createFileItems(ObjectType obj, IFile file) throws NoSuchElementException,
+										IOException, OvalException {
 	Textfilecontent54Object tfcObj = null;
 	if (obj instanceof Textfilecontent54Object) {
 	    tfcObj = (Textfilecontent54Object)obj;
@@ -243,7 +244,9 @@ throw new NoSuchElementException(path);
 	    throw new NoSuchElementException("No file or parent directory");
 	}
 
-	return tfcItem;
+	List<ItemType> tfcList = new Vector<ItemType>();
+	tfcList.add(tfcItem);
+	return tfcList;
     }
 
     // Private

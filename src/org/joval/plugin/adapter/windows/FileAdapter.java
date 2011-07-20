@@ -256,7 +256,8 @@ public class FileAdapter extends BaseFileAdapter {
 	return windowsFactory.createFileItem((FileItem)item);
     }
 
-    protected ItemType createFileItem(ObjectType obj, IFile file) throws NoSuchElementException, IOException, OvalException {
+    protected List<ItemType> createFileItems(ObjectType obj, IFile file) throws NoSuchElementException,
+										IOException, OvalException {
 	FileObject fObj = null;
 	if (obj instanceof FileObject) {
 	    fObj = (FileObject)obj;
@@ -329,7 +330,9 @@ throw new NoSuchElementException(path);
 	    throw new NoSuchElementException("No file or parent directory");
 	}
 
-	return fItem;
+	List<ItemType> fList = new Vector<ItemType>();
+	fList.add(fItem);
+	return fList;
     }
 
     /**
