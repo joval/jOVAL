@@ -8,12 +8,15 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.vngx.jsch.ChannelExec;
 import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.exception.JSchException;
 
 import org.joval.intf.system.IProcess;
+import org.joval.util.JOVALSystem;
 
 /**
  * A representation of a process.
@@ -33,6 +36,7 @@ class SshProcess implements IProcess {
 
     public void start() throws Exception {
 	ce.connect();
+//	new Monitor(this).start();
     }
 
     public InputStream getInputStream() {
@@ -73,21 +77,28 @@ class SshProcess implements IProcess {
 	return ce.getExitStatus();
     }
 
-    public void destroy() {
-	if (ce.isConnected()) {
-	    try {
-		ce.sendSignal("KILL");
-	    } catch (Exception e) {
-	    } finally {
-		ce.disconnect();
-	    }
+    public synchronized void destroy() {
+	try {
+	    ce.sendSignal("KILL");
+	} catch (Exception e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	} finally {
+	    cleanup();
 	}
     }
 
     // Private
 
-    private class Monitor implements Runnable {
-	private SshProcess p;
+    private synchronized void cleanup() {
+	if (ce.isConnected()) {
+	    ce.disconnect();
+	}
+    }
+
+    // Private
+
+    class Monitor implements Runnable {
+	SshProcess p;
 
 	Monitor(SshProcess p) {
 	    this.p = p;
@@ -99,13 +110,10 @@ class SshProcess implements IProcess {
 
 	public void run() {
 	    try {
-		p.waitFor(3600000); // 1 hour
-		if (p.ce.isConnected()) {
-		    p.destroy();
-		} else {
-		    p.ce.disconnect();
-		}
+		p.waitFor(3600000);
 	    } catch (InterruptedException e) {
+	    } finally {
+		p.cleanup();
 	    }
 	}
     }

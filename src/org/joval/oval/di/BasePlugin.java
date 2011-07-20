@@ -33,7 +33,6 @@ import org.joval.plugin.adapter.linux.RpminfoAdapter;
 import org.joval.plugin.adapter.solaris.PatchAdapter;
 import org.joval.plugin.adapter.unix.ProcessAdapter;
 import org.joval.plugin.adapter.unix.UnameAdapter;
-import org.joval.plugin.adapter.windows.FileAdapter;
 import org.joval.plugin.adapter.windows.RegistryAdapter;
 import org.joval.plugin.adapter.windows.WmiAdapter;
 import org.joval.unix.UnixSystemInfo;
@@ -97,7 +96,8 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    adapters.add(new TextfilecontentAdapter(null));
 	    adapters.add(new Textfilecontent54Adapter(null));
 	    adapters.add(new WmiAdapter(null));
-	    adapters.add(new FileAdapter(null, null));
+	    adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(null));
+	    adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(null, null));
 	    adapters.add(new RegistryAdapter(null));
 	    adapters.add(new RpminfoAdapter(null));
 	    adapters.add(new PatchAdapter(null));
@@ -120,7 +120,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		    throw new RuntimeException(getMessage("ERROR_INFO"), e);
 		}
 		adapters.add(new WmiAdapter(win.getWmiProvider()));
-		adapters.add(new FileAdapter(win.getFilesystem(), win.getWmiProvider()));
+		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win.getFilesystem(), win.getWmiProvider()));
 		adapters.add(new RegistryAdapter(win.getRegistry()));
 		break;
 	      }
@@ -129,6 +129,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		info = new UnixSystemInfo(session).getSystemInfo();
 		adapters.add(new RpminfoAdapter(session));
 		adapters.add(new PatchAdapter(session));
+		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(session));
 		adapters.add(new ProcessAdapter(session));
 		adapters.add(new UnameAdapter(session));
 		break;

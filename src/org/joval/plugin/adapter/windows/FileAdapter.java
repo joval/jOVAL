@@ -178,7 +178,7 @@ public class FileAdapter extends BaseFileAdapter {
 		    testedItem.setItemId(item.getId());
 		    switch(item.getStatus()) {
 		      case EXISTS:
-			ResultEnumeration matchResult = match(state, item);
+			ResultEnumeration matchResult = compare(state, item);
 			switch(matchResult) {
 			  case TRUE:
 			    trueCount++;
@@ -262,16 +262,17 @@ public class FileAdapter extends BaseFileAdapter {
 	if (obj instanceof FileObject) {
 	    fObj = (FileObject)obj;
 	} else {
-	    throw new OvalException("Not a FileObject: " + obj.getClass().getName());
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
+							   getObjectClass().getName(), obj.getClass().getName()));
 	}
-	String path = file.getLocalName();
+
 	FileItem fItem = windowsFactory.createFileItem();
+	String path = file.getLocalName();
 	boolean fileExists = file.exists();
 	boolean dirExists = fileExists;
 	String dirPath = path.substring(0, path.lastIndexOf(fs.getDelimString()));
 	if (!fileExists) {
-throw new NoSuchElementException(path);
-//	    dirExists = fs.getFile(dirPath).exists();
+	    throw new NoSuchElementException(path);
 	}
 
 	if (fObj.isSetFilepath()) {
@@ -300,14 +301,13 @@ throw new NoSuchElementException(path);
 	    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
 	    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
 	    if (fileExists) {
+		fItem.setFilepath(filepathType);
 		fItem.setPath(pathType);
 		fItem.setFilename(windowsFactory.createFileItemFilename(filenameType));
 	    } else if (dirExists) {
-/* -- Ovaldi does nothing
 		fItem.setPath(pathType);
 		filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		fItem.setFilename(windowsFactory.createFileItemFilename(filenameType));
-*/
 	    } else {
 		pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		fItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
@@ -565,7 +565,7 @@ throw new NoSuchElementException(path);
 		try {
 		    ra.close();
 		} catch (IOException e) {
-		    ctx.log(Level.WARNING, "Problem closing file " + file.toString(), e);
+		    ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", file.toString()), e);
 		}
 	    }
 	}
@@ -598,7 +598,7 @@ throw new NoSuchElementException(path);
 	return null;
     }
 
-    private ResultEnumeration match(FileState state, FileItem item) throws OvalException {
+    private ResultEnumeration compare(FileState state, FileItem item) throws OvalException {
 	ResultEnumeration result = ResultEnumeration.UNKNOWN;
 	if (state == null) {
 	    result = ResultEnumeration.TRUE; // existence check
@@ -615,7 +615,7 @@ throw new NoSuchElementException(path);
 		result = ResultEnumeration.NOT_APPLICABLE;
 	    }
 	} else {
-	    throw new OvalException("Unsupported state type, ID=" + state.getId());
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_STATE", state.getId()));
 	}
 	return result;
     }

@@ -138,14 +138,21 @@ public abstract class BaseFileAdapter implements IAdapter {
     final List<? extends ItemType> getItems(ObjectType obj, List<VariableValueType> variableValueTypes) throws OvalException {
 	List<ItemType> items = new Vector<ItemType>();
 	for (String path : getPathList(obj, variableValueTypes)) {
+	    IFile f = null;
 	    try {
-		IFile f = fs.getFile(path);
+		f = fs.getFile(path);
 		items.addAll(createFileItems(obj, f));
-		f.close();
 	    } catch (NoSuchElementException e) {
 		// skip it
 	    } catch (IOException e) {
 		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
+	    } finally {
+		if (f != null) {
+		    try {
+			f.close();
+		    } catch (IOException e) {
+		    }
+		}
 	    }
 	}
 	return items;
@@ -243,7 +250,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    } else {
 			throw new OvalException(JOVALSystem.getMessage("ERROR_FILENAME_TYPE", oFilename.getClass().getName()));
 		    }
-		    if (filename.isSetValue()) {
+		    if (filename == null) {
+			// False positive for isSetFilename -- happens with nil
+		    } else if (filename.isSetValue()) {
 			List<String> files = new Vector<String>();
 			for (String pathString : list) {
 			    files.add(pathString + fs.getDelimString() + (String)filename.getValue());

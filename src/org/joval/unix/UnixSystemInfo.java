@@ -71,7 +71,6 @@ public class UnixSystemInfo {
 	    info.setPrimaryHostName(reader.readLine());
 	    reader.close();
 
-
 	    p = session.createProcess("uname -r");
 	    p.start();
 	    reader = new BufferedReader(new InputStreamReader(p.getInputStream()));

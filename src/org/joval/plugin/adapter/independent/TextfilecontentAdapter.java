@@ -166,26 +166,45 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	boolean dirExists = fileExists;
 	String dirPath = path.substring(0, path.lastIndexOf(fs.getDelimString()));
 	if (!fileExists) {
-throw new NoSuchElementException(path);
-//	    dirExists = fs.getFile(dirPath).exists();
+	    throw new NoSuchElementException(path);
 	}
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	if (tfcObj.isSetFilename()) {
+	    EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
+	    filepathType.setValue(path);
 	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
 	    pathType.setValue(dirPath);
 	    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
 	    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
 	    if (fileExists) {
+		tfcItem.setFilepath(filepathType);
 		tfcItem.setPath(pathType);
 		tfcItem.setFilename(filenameType);
 	    } else if (dirExists) {
-/* -- Ovaldi does nothing
 		tfcItem.setPath(pathType);
 		filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		tfcItem.setFilename(windowsFactory.createFileItemFilename(filenameType));
-*/
+		tfcItem.setFilename(filenameType);
 	    } else {
 		pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		tfcItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		tfcItem.setPath(pathType);
 	    }
 	} else {
@@ -247,7 +266,7 @@ throw new NoSuchElementException(path);
 		try {
 		    in.close();
 		} catch (IOException e) {
-		    ctx.log(Level.WARNING, "Error closing stream: " + file.toString(), e);
+		    ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", file.toString()), e);
 		}
 	    }
 	}

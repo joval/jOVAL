@@ -334,11 +334,11 @@ public class PatchAdapter implements IAdapter {
 	}
 
 	String getBaseString() {
-	    return new Integer(base).toString();
+	    return Integer.toString(base);
 	}
 
 	String getVersionString() {
-	    return new Integer(version).toString();
+	    return Integer.toString(version);
 	}
     }
 }

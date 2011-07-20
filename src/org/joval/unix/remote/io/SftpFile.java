@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -149,13 +150,16 @@ class SftpFile implements IFile {
     public String[] list() throws IOException {
 	try {
 	    List<ChannelSftp.LsEntry> list = cs.ls(path);
-	    String[] children = new String[list.size()];
+	    String[] children = new String[0];
+	    ArrayList<String> al = new ArrayList<String>();
 	    Iterator<ChannelSftp.LsEntry> iter = list.iterator();
-	    for(int i=0; iter.hasNext(); i++) {
+	    while (iter.hasNext()) {
 		ChannelSftp.LsEntry entry = iter.next();
-		children[i] = entry.getFilename();
+		if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
+		    al.add(entry.getFilename());
+		}
 	    }
-	    return children;
+	    return al.toArray(children);
 	} catch (SftpException e) {
 	    throw new IOException(e);
 	}
