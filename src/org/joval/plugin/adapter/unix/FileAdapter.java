@@ -23,6 +23,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
+import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.unix.FileObject;
@@ -38,9 +39,6 @@ import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.unix.ObjectFactory;
 import oval.schemas.systemcharacteristics.unix.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestedItemType;
-import oval.schemas.results.core.TestedVariableType;
-import oval.schemas.results.core.TestType;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
@@ -189,17 +187,17 @@ public class FileAdapter extends BaseFileAdapter {
     private void setItem(FileItem item, IFile file) throws IOException {
 	EntityItemIntType aTime = coreFactory.createEntityItemIntType();
 	aTime.setValue(Long.toString(file.accessTime()/1000L));
-	aTime.setDatatype(DATATYPE_INT);
+	aTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setATime(aTime);
 
 	EntityItemIntType cTime = coreFactory.createEntityItemIntType();
 	cTime.setStatus(StatusEnumeration.NOT_COLLECTED);
-	cTime.setDatatype(DATATYPE_INT);
+	cTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setCTime(cTime);
 
 	EntityItemIntType mTime = coreFactory.createEntityItemIntType();
 	mTime.setValue(Long.toString(file.lastModified()/1000L));
-	mTime.setDatatype(DATATYPE_INT);
+	mTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setMTime(mTime);
 
 	try {
@@ -211,77 +209,77 @@ public class FileAdapter extends BaseFileAdapter {
 
 	    EntityItemIntType userId = coreFactory.createEntityItemIntType();
 	    userId.setValue(Integer.toString(ls.getUserId()));
-	    userId.setDatatype(DATATYPE_INT);
+	    userId.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    item.setUserId(userId);
 
 	    EntityItemIntType groupId = coreFactory.createEntityItemIntType();
 	    groupId.setValue(Integer.toString(ls.getGroupId()));
-	    groupId.setDatatype(DATATYPE_INT);
+	    groupId.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    item.setGroupId(groupId);
 
 	    EntityItemBoolType uRead = coreFactory.createEntityItemBoolType();
 	    uRead.setValue(Boolean.toString(ls.uRead()));
-	    uRead.setDatatype(DATATYPE_BOOL);
+	    uRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setUread(uRead);
 
 	    EntityItemBoolType uWrite = coreFactory.createEntityItemBoolType();
 	    uWrite.setValue(Boolean.toString(ls.uWrite()));
-	    uWrite.setDatatype(DATATYPE_BOOL);
+	    uWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setUwrite(uWrite);
 
 	    EntityItemBoolType uExec = coreFactory.createEntityItemBoolType();
 	    uExec.setValue(Boolean.toString(ls.uExec()));
-	    uExec.setDatatype(DATATYPE_BOOL);
+	    uExec.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setUexec(uExec);
 
 	    EntityItemBoolType sUid = coreFactory.createEntityItemBoolType();
 	    sUid.setValue(Boolean.toString(ls.sUid()));
-	    sUid.setDatatype(DATATYPE_BOOL);
+	    sUid.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setSuid(sUid);
 
 	    EntityItemBoolType gRead = coreFactory.createEntityItemBoolType();
 	    gRead.setValue(Boolean.toString(ls.gRead()));
-	    gRead.setDatatype(DATATYPE_BOOL);
+	    gRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setGread(gRead);
 
 	    EntityItemBoolType gWrite = coreFactory.createEntityItemBoolType();
 	    gWrite.setValue(Boolean.toString(ls.gWrite()));
-	    gWrite.setDatatype(DATATYPE_BOOL);
+	    gWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setGwrite(gWrite);
 
 	    EntityItemBoolType gExec = coreFactory.createEntityItemBoolType();
 	    gExec.setValue(Boolean.toString(ls.gExec()));
-	    gExec.setDatatype(DATATYPE_BOOL);
+	    gExec.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setGexec(gExec);
 
 	    EntityItemBoolType sGid = coreFactory.createEntityItemBoolType();
 	    sGid.setValue(Boolean.toString(ls.sGid()));
-	    sGid.setDatatype(DATATYPE_BOOL);
+	    sGid.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setSgid(sGid);
 
 	    EntityItemBoolType oRead = coreFactory.createEntityItemBoolType();
 	    oRead.setValue(Boolean.toString(ls.oRead()));
-	    oRead.setDatatype(DATATYPE_BOOL);
+	    oRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setOread(oRead);
 
 	    EntityItemBoolType oWrite = coreFactory.createEntityItemBoolType();
 	    oWrite.setValue(Boolean.toString(ls.oWrite()));
-	    oWrite.setDatatype(DATATYPE_BOOL);
+	    oWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setOwrite(oWrite);
 
 	    EntityItemBoolType oExec = coreFactory.createEntityItemBoolType();
 	    oExec.setValue(Boolean.toString(ls.oExec()));
-	    oExec.setDatatype(DATATYPE_BOOL);
+	    oExec.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setOexec(oExec);
 
 	    EntityItemBoolType sticky = coreFactory.createEntityItemBoolType();
 	    sticky.setValue(Boolean.toString(ls.sticky()));
-	    sticky.setDatatype(DATATYPE_BOOL);
+	    sticky.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setSticky(sticky);
 
 	    EntityItemBoolType aclType = coreFactory.createEntityItemBoolType();
 	    aclType.setValue(Boolean.toString(ls.hasExtendedAcl()));
-	    aclType.setDatatype(DATATYPE_BOOL);
+	    aclType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setHasExtendedAcl(aclType);
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);

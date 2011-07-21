@@ -16,16 +16,10 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.ExistenceEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.OperationEnumeration;
 import oval.schemas.definitions.core.EntityStateIntType;
 import oval.schemas.definitions.core.EntityStateStringType;
 import oval.schemas.definitions.core.ObjectComponentType;
-import oval.schemas.definitions.core.ObjectRefType;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateRefType;
 import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.unix.ProcessObject;
 import oval.schemas.definitions.unix.ProcessState;
@@ -38,9 +32,6 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.unix.ProcessItem;
 import oval.schemas.systemcharacteristics.unix.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestedItemType;
-import oval.schemas.results.core.TestedVariableType;
-import oval.schemas.results.core.TestType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
@@ -99,7 +90,7 @@ public class ProcessAdapter implements IAdapter {
 	ctx.status("Retrieving process list");
 	scanProcesses();
 
-	Iterator<ObjectType> iter = definitions.iterateObjects(ProcessObject.class);
+	Iterator<ObjectType> iter = definitions.iterateLeafObjects(ProcessObject.class);
 	while (iter.hasNext()) {
 	    ProcessObject pObj = (ProcessObject)iter.next();
 	    ctx.status(pObj.getId());

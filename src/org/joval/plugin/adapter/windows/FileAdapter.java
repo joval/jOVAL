@@ -18,7 +18,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
@@ -187,19 +186,19 @@ public class FileAdapter extends BaseFileAdapter {
 	    fItem.setStatus(StatusEnumeration.EXISTS);
 	    EntityItemIntType sizeType = coreFactory.createEntityItemIntType();
 	    sizeType.setValue(new Long(file.length()).toString());
-	    sizeType.setDatatype(DATATYPE_INT);
+	    sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    fItem.setSize(sizeType);
 	    EntityItemIntType aTimeType = coreFactory.createEntityItemIntType();
 	    aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    aTimeType.setDatatype(DATATYPE_INT);
+	    aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    fItem.setATime(aTimeType);
 	    EntityItemIntType mTimeType = coreFactory.createEntityItemIntType();
 	    mTimeType.setValue(toWindowsTimestamp(file.lastModified()));
-	    mTimeType.setDatatype(DATATYPE_INT);
+	    mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    fItem.setMTime(mTimeType);
 	    EntityItemIntType cTimeType = coreFactory.createEntityItemIntType();
 	    cTimeType.setValue(toWindowsTimestamp(file.createTime()));
-	    cTimeType.setDatatype(DATATYPE_INT);
+	    cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    fItem.setCTime(cTimeType);
 	    EntityItemFileTypeType typeType = windowsFactory.createEntityItemFileTypeType();
 	    switch(file.getType()) {
@@ -288,7 +287,7 @@ public class FileAdapter extends BaseFileAdapter {
 		//
 		EntityItemVersionType versionType = coreFactory.createEntityItemVersionType();
 		versionType.setValue(vffi.getFileVersion().toString());
-		versionType.setDatatype(DATATYPE_VERSION);
+		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 		fItem.setVersion(versionType);
 
 		//
@@ -372,7 +371,7 @@ public class FileAdapter extends BaseFileAdapter {
 		} else {
 		    productVersionType.setValue(productVersion);
 		}
-		productVersionType.setDatatype(DATATYPE_VERSION);
+		productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 		fItem.setProductVersion(productVersionType);
 		EntityItemStringType developmentClassType = coreFactory.createEntityItemStringType();
 		if (fileVersion == null) {
@@ -392,7 +391,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    } else {
 		ctx.log(Level.INFO, JOVALSystem.getMessage("STATUS_EMPTY_FILE", file.toString()));
 		EntityItemVersionType versionType = coreFactory.createEntityItemVersionType();
-		versionType.setDatatype(DATATYPE_VERSION);
+		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 		versionType.setStatus(StatusEnumeration.ERROR);  //DAS: this is what Ovaldi does
 		fItem.setVersion(versionType);
 		MessageType msg = new MessageType();

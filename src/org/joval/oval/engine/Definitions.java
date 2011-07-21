@@ -6,6 +6,8 @@ package org.joval.oval.engine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -50,6 +52,9 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 class Definitions implements IDefinitions {
+    private static final int LEAF	= 1;
+    private static final int SET	= 2;
+
     private static List<String> schematronValidationErrors = null;
 
     /**
@@ -184,7 +189,17 @@ class Definitions implements IDefinitions {
 	}
     }
 
-    public VariableType getVariable(String id) throws OvalException {
+    public Iterator<ObjectType> iterateLeafObjects(Class type) {
+	return new SpecifiedObjectIterator(type, LEAF);
+    }
+
+    // Internal
+
+    Iterator<ObjectType> iterateSetObjects() {
+	return new SpecifiedObjectIterator(ObjectType.class, SET);
+    }
+
+    VariableType getVariable(String id) throws OvalException {
 	VariableType variable = variables.get(id);
 	if (variable == null) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_VARIABLE", id));
@@ -193,29 +208,35 @@ class Definitions implements IDefinitions {
 	}
     }
 
-    public <T extends StateType> T getState(String id, Class<T> type) throws OvalException {
+    /**
+     * Type-checked retrieval of a StateType.
+     */
+    StateType getState(String id, Class type) throws OvalException {
 	StateType state = states.get(id);
 	if (state == null) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_STATE", id));
 	} else if (type.isInstance(state)) {
-	    return type.cast(state);
+	    return state;
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", type.getName(), state.getClass().getName()));
 	}
     }
 
-    public <T extends TestType> T getTest(String id, Class<T> type) throws OvalException {
+    /**
+     * Type-checked retrieval of a TestType.
+     */
+    TestType getTest(String id, Class type) throws OvalException {
 	TestType test = tests.get(id);
 	if (test == null) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_TEST", id));
 	} else if (type.isInstance(test)) {
-	    return type.cast(test);
+	    return test;
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", type.getName(), test.getClass().getName()));
 	}
     }
 
-    public DefinitionType getDefinition(String id) throws OvalException {
+    DefinitionType getDefinition(String id) throws OvalException {
 	DefinitionType definition = definitions.get(id);
 	if (definition == null) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_DEFINITION", id));
@@ -226,7 +247,7 @@ class Definitions implements IDefinitions {
     /**
      * Sort all DefinitionTypes into two lists according to whether the filter allows/disallows them.
      */
-    public void filterDefinitions(DefinitionFilter filter, List<DefinitionType> allowed, List<DefinitionType> disallowed) {
+    void filterDefinitions(DefinitionFilter filter, List<DefinitionType> allowed, List<DefinitionType> disallowed) {
 	for (DefinitionType dt : definitions.values()) {
 	    if (filter.accept(dt.getId())) {
 		allowed.add(dt);
@@ -236,19 +257,13 @@ class Definitions implements IDefinitions {
 	}
     }
 
-    public Iterator <ObjectType>iterateObjects() {
+    Iterator <ObjectType>iterateObjects() {
 	return objects.values().iterator();
     }
 
-    public Iterator<ObjectType> iterateObjects(Class type) {
-	return new SpecifiedObjectIterator(type);
-    }
-
-    public Iterator <VariableType>iterateVariables() {
+    Iterator <VariableType>iterateVariables() {
 	return variables.values().iterator();
     }
-
-    // Internal
 
     ObjectType getObject(String id) throws OvalException {
 	ObjectType object = objects.get(id);
@@ -268,13 +283,29 @@ class Definitions implements IDefinitions {
 
     // Private
 
+
+    private boolean isSet(ObjectType obj) {
+        try {
+            Method isSetSet = obj.getClass().getMethod("isSetSet");
+            return ((Boolean)isSetSet.invoke(obj)).booleanValue();
+        } catch (NoSuchMethodException e) {
+        } catch (IllegalAccessException e) {
+            JOVALSystem.getLogger().log(Level.SEVERE, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+        } catch (InvocationTargetException e) {
+            JOVALSystem.getLogger().log(Level.SEVERE, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+        }
+        return false;
+    }
+
     class SpecifiedObjectIterator implements Iterator<ObjectType> {
 	Iterator <ObjectType>iter;
 	Class type;
 	ObjectType next;
+	int flags;
 
-	SpecifiedObjectIterator(Class type) {
+	SpecifiedObjectIterator(Class type, int flags) {
 	    this.type = type;
+	    this.flags = flags;
 	    iter = objects.values().iterator();
 	}
 
@@ -299,7 +330,12 @@ class Definitions implements IDefinitions {
 	    while (true) {
 		ObjectType temp = iter.next();
 		if (type.isInstance(temp)) {
-		    return temp;
+		    boolean isSet = isSet(temp);
+		    if ((flags & LEAF) == LEAF && !isSet) {
+			return temp;
+		    } else if ((flags & SET) == SET && isSet) {
+			return temp;
+		    }
 		}
 	    }
 	}

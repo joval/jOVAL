@@ -17,8 +17,9 @@ import org.joval.oval.OvalException;
 import org.joval.intf.oval.ISystemCharacteristics;
 
 /**
- * The interface for implementing a jOVAL plug-in adapter.  An adapter operates on a pair of classes, an ObjectType subclass
- * and a TestType subclass.  The jOVAL engine uses adapters to retrieve object data from hosts, and to compare items.
+ * The interface for implementing a jOVAL plug-in adapter.  An adapter operates on a set of classes: a TestType subclass, an
+ * ObjectType subclass, a StateType cubclass and an ItemType subclass.  The jOVAL engine uses adapters to retrieve item data
+ * about objects from hosts, and to compare items to states.
  *
  * @author David A. Solin
  * @version %I% %G%

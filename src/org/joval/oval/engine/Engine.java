@@ -343,7 +343,7 @@ public class Engine implements IProducer {
 	//
 	// Now that we have retrieved all the information we can, handle any Set objects.
 	//
-	Iterator<ObjectType> objectIter = definitions.iterateObjects();
+	Iterator<ObjectType> objectIter = definitions.iterateSetObjects();
 	while(objectIter.hasNext()) {
 	    ObjectType obj = objectIter.next();
 	    String objectId = obj.getId();
@@ -1049,11 +1049,15 @@ public class Engine implements IProducer {
 	try {
 	    Method getObject = test.getClass().getMethod("getObject");
 	    ObjectRefType objectRef = (ObjectRefType)getObject.invoke(test);
-	    return objectRef.getObjectRef();
+	    if (objectRef != null) {
+		return objectRef.getObjectRef();
+	    }
 	} catch (NoSuchMethodException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	} catch (IllegalAccessException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	} catch (InvocationTargetException e) {
-	} catch (Exception e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	}
 	return null;
     }
@@ -1062,15 +1066,17 @@ public class Engine implements IProducer {
 	try {
 	    Method getObject = test.getClass().getMethod("getState");
 	    Object o = getObject.invoke(test);
-	    if (o instanceof List) {
-		return ((List<StateRefType>)o).get(0).getStateRef();
+	    if (o instanceof List && ((List)o).size() > 0) {
+		return ((StateRefType)((List)o).get(0)).getStateRef();
 	    } else if (o instanceof StateRefType) {
 		return ((StateRefType)o).getStateRef();
 	    }
 	} catch (NoSuchMethodException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	} catch (IllegalAccessException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	} catch (InvocationTargetException e) {
-	} catch (Exception e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	}
 	return null;
     }
@@ -1084,8 +1090,11 @@ public class Engine implements IProducer {
 		objectSet = (Set)getSet.invoke(obj);
 	    }
 	} catch (NoSuchMethodException e) {
+	    // Object doesn't support Sets; no big deal.
 	} catch (IllegalAccessException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	} catch (InvocationTargetException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	}
 	return objectSet;
     }

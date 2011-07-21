@@ -90,7 +90,7 @@ public class RpminfoAdapter implements IAdapter {
      * createFileItem and createStorageItem methods.
      */
     public void scan(ISystemCharacteristics sc) throws OvalException {
-	Iterator <ObjectType>iter = definitions.iterateObjects(getObjectClass());
+	Iterator <ObjectType>iter = definitions.iterateLeafObjects(getObjectClass());
 	while (iter.hasNext()) {
 	    RpminfoObject obj = (RpminfoObject)iter.next();
 	    if (obj.isSetSet()) {

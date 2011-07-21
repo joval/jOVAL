@@ -81,7 +81,7 @@ public class PatchAdapter implements IAdapter {
 	ctx.status("Retrieving revision list");
 	scanRevisions();
 
-	Iterator<ObjectType> iter = definitions.iterateObjects(PatchObject.class);
+	Iterator<ObjectType> iter = definitions.iterateLeafObjects(PatchObject.class);
 	while (iter.hasNext()) {
 	    PatchObject pObj = (PatchObject)iter.next();
 	    ctx.status(pObj.getId());

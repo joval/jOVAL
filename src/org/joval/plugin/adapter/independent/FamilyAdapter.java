@@ -64,7 +64,7 @@ public class FamilyAdapter implements IAdapter {
     }
 
     public void scan(ISystemCharacteristics sc) throws OvalException {
-	Iterator<ObjectType> iter = definitions.iterateObjects(FamilyObject.class);
+	Iterator<ObjectType> iter = definitions.iterateLeafObjects(FamilyObject.class);
 	for (int i=0; iter.hasNext(); i++) {
 	    if (i > 0) {
 		throw new OvalException(JOVALSystem.getMessage("ERROR_FAMILY_OVERFLOW"));

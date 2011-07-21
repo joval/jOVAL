@@ -111,7 +111,7 @@ public class RegistryAdapter implements IAdapter {
     public void scan(ISystemCharacteristics sc) throws OvalException {
 	try {
 	    registry.connect();
-	    Iterator <ObjectType>iter = definitions.iterateObjects(RegistryObject.class);
+	    Iterator <ObjectType>iter = definitions.iterateLeafObjects(RegistryObject.class);
 	    while (iter.hasNext()) {
 		RegistryObject rObj = (RegistryObject)iter.next();
 		if (rObj.isSetSet()) {

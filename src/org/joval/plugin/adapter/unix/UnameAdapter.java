@@ -17,12 +17,9 @@ import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.OperationEnumeration;
 import oval.schemas.definitions.core.EntityStateStringType;
 import oval.schemas.definitions.core.ObjectComponentType;
-import oval.schemas.definitions.core.ObjectRefType;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateRefType;
 import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.unix.UnameObject;
 import oval.schemas.definitions.unix.UnameState;
@@ -33,9 +30,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.unix.UnameItem;
 import oval.schemas.systemcharacteristics.unix.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestedItemType;
-import oval.schemas.results.core.TestedVariableType;
-import oval.schemas.results.core.TestType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
@@ -89,7 +83,7 @@ public class UnameAdapter implements IAdapter {
     }
 
     public void scan(ISystemCharacteristics sc) throws OvalException {
-	Iterator<ObjectType> iter = definitions.iterateObjects(UnameObject.class);
+	Iterator<ObjectType> iter = definitions.iterateLeafObjects(UnameObject.class);
 	for (int i=0; iter.hasNext(); i++) {
 	    if (i > 0) {
 		throw new OvalException(JOVALSystem.getMessage("ERROR_UNAME_OVERFLOW"));

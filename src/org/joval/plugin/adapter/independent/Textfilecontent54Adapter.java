@@ -3,18 +3,11 @@
 
 package org.joval.plugin.adapter.independent;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.FileNotFoundException;
 import java.math.BigInteger;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
@@ -22,13 +15,9 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.definitions.core.EntityObjectStringType;
-import oval.schemas.definitions.core.EntityStateAnySimpleType;
-import oval.schemas.definitions.core.EntityStateStringType;
+import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.independent.Textfilecontent54Object;
@@ -37,17 +26,10 @@ import oval.schemas.definitions.independent.Textfilecontent54Test;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.ObjectFactory;
 import oval.schemas.systemcharacteristics.independent.TextfilecontentItem;
 import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestedItemType;
-import oval.schemas.results.core.TestedVariableType;
-import oval.schemas.results.core.TestType;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
@@ -55,11 +37,9 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.ISystemCharacteristics;
-import org.joval.io.StreamTool;
 import org.joval.oval.OvalException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
-import org.joval.util.Version;
 
 /**
  * Evaluates Textfilecontent54Test OVAL tests.
@@ -161,7 +141,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	    patternType.setValue(p.toString());
 	    item.setPattern(patternType);
 	    EntityItemIntType instanceType = coreFactory.createEntityItemIntType();
-	    instanceType.setDatatype(tfcObj.getInstance().getDatatype());
+	    instanceType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    instanceType.setValue(tfcObj.getInstance().getValue());
 	    item.setInstance(instanceType);
 

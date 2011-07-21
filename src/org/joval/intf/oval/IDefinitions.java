@@ -15,8 +15,7 @@ import oval.schemas.definitions.core.VariableType;
 import org.joval.oval.OvalException;
 
 /**
- * Interface defining an index on an OvalDefinitions object.  This facilitates fast retrieval of important structures, and
- * classes of structures.
+ * Interface defining an index of an OvalDefinitions object.  This facilitates fast retrieval of objects.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -35,50 +34,7 @@ public interface IDefinitions {
     public <T extends ObjectType> T getObject(String id, Class<T> type) throws OvalException;
 
     /**
-     * Get a VariableType with the specified ID.
-     *
-     * @throws OvalException if not found.
+     * Returns an Iterator over all the non-Set ObjectType instances of the class denoted by the class argument.
      */
-    public VariableType getVariable(String id) throws OvalException;
-
-    /**
-     * Get a StateType of the specified class, with the specified ID.
-     *
-     * @throws OvalException if not found, or if there is a type mismatch.
-     */
-    public <T extends StateType> T getState(String id, Class<T> type) throws OvalException;
-
-    /**
-     * Get a TestType of the specified class, with the specified ID.
-     *
-     * @throws OvalException if not found, or if there is a type mismatch.
-     */
-    public <T extends TestType> T getTest(String id, Class<T> type) throws OvalException;
-
-    /**
-     * Get a DefinitionType with the specified ID.
-     *
-     * @throws OvalException if not found.
-     */
-    public DefinitionType getDefinition(String id) throws OvalException;
-
-    /**
-     * Returns an Iterator over all the ObjectTypes defined in the IDefinitions.
-     *
-     * @throws OvalException if not found.
-     */
-    public Iterator <ObjectType>iterateObjects();
-
-    /**
-     * Returns an Iterator over all the ObjectType instances of the class denoted by the class argument.  This is used
-     * by the Engine classes to pre-fetch all the objects handled by a given IAdapter all at once.
-     */
-    public Iterator<ObjectType> iterateObjects(Class type);
-
-    /**
-     * Returns an Iterator over all the VariableTypes defined in the IDefinitions.
-     *
-     * @throws OvalException if not found.
-     */
-    public Iterator <VariableType>iterateVariables();
+    public Iterator<ObjectType> iterateLeafObjects(Class type);
 }

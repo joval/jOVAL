@@ -102,7 +102,7 @@ public class WmiAdapter implements IAdapter {
     public void scan(ISystemCharacteristics sc) throws OvalException {
 	try {
 	    wmi.connect();
-	    Iterator <ObjectType>iter = definitions.iterateObjects(WmiObject.class);
+	    Iterator <ObjectType>iter = definitions.iterateLeafObjects(WmiObject.class);
 	    while (iter.hasNext()) {
 		WmiObject wObj = (WmiObject)iter.next();
 		if (wObj.isSetSet()) {

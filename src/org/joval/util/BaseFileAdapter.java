@@ -49,11 +49,6 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public abstract class BaseFileAdapter implements IAdapter {
-    protected static final String DATATYPE_INT		= "int";
-    protected static final String DATATYPE_BOOL		= "boolean";
-    protected static final String DATATYPE_STRING	= "string";
-    protected static final String DATATYPE_VERSION	= "version";
-
     protected IAdapterContext ctx;
     protected IDefinitions definitions;
     protected IFilesystem fs;
@@ -78,33 +73,28 @@ public abstract class BaseFileAdapter implements IAdapter {
      * createFileItems and createStorageItem methods.
      */
     public void scan(ISystemCharacteristics sc) throws OvalException {
-	Iterator <ObjectType>iter = definitions.iterateObjects(getObjectClass());
+	Iterator <ObjectType>iter = definitions.iterateLeafObjects(getObjectClass());
 	while (iter.hasNext()) {
 	    ObjectType obj = iter.next();
-	    if (isSet(obj)) {
-		// Set objects can be skipped, they only contain references to objects that will be scaned elsewhere.
-		continue;
+	    ctx.status(obj.getId());
+	    List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
+	    List<? extends ItemType> items = getItems(obj, variableValueTypes);
+	    if (items.size() == 0) {
+		MessageType msg = new MessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue("Could not resolve any items for object");
+		sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
 	    } else {
-		ctx.status(obj.getId());
-		List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
-		List<? extends ItemType> items = getItems(obj, variableValueTypes);
-		if (items.size() == 0) {
-		    MessageType msg = new MessageType();
-		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue("Could not resolve any items for object");
-		    sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
-		} else {
-		    sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-		    for (ItemType itemType : items) {
-			JAXBElement<? extends ItemType> storageItem = createStorageItem(itemType);
-			BigInteger itemId = sc.storeItem(storageItem);
-			sc.relateItem(obj.getId(), itemId);
-		    }
+		sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+		for (ItemType itemType : items) {
+		    JAXBElement<? extends ItemType> storageItem = createStorageItem(itemType);
+		    BigInteger itemId = sc.storeItem(storageItem);
+		    sc.relateItem(obj.getId(), itemId);
 		}
-		for (VariableValueType var : variableValueTypes) {
-		    sc.storeVariable(var);
-		    sc.relateVariable(obj.getId(), var.getVariableId());
-		}
+	    }
+	    for (VariableValueType var : variableValueTypes) {
+		sc.storeVariable(var);
+		sc.relateVariable(obj.getId(), var.getVariableId());
 	    }
 	}
     }
@@ -133,19 +123,6 @@ public abstract class BaseFileAdapter implements IAdapter {
     protected abstract List<? extends ItemType> getItems(ItemType base, ObjectType obj, IFile f) throws IOException;
 
     // Internal
-
-    final boolean isSet(ObjectType obj) {
-	try {
-	    Method isSetSet = obj.getClass().getMethod("isSetSet");
-	    return ((Boolean)isSetSet.invoke(obj)).booleanValue();
-	} catch (NoSuchMethodException e) {
-	} catch (IllegalAccessException e) {
-       	    ctx.log(Level.SEVERE, e.getMessage(), e);
-	} catch (InvocationTargetException e) {
-       	    ctx.log(Level.SEVERE, e.getMessage(), e);
-	}
-	return false;
-    }
 
     final List<? extends ItemType> getItems(ObjectType obj, List<VariableValueType> variableValueTypes) throws OvalException {
 	if (!obj.getClass().getName().equals(getObjectClass().getName())) {
