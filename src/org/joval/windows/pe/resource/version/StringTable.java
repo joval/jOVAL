@@ -22,17 +22,20 @@ public class StringTable {
 
     StringTable(short length, byte[] buff, int offset, int fileOffset) throws IOException {
 	this.length = length;
-	int end		= offset + length;
-	offset += 2; // length of length was not added to offset when initialized
-	valueLength	= LittleEndian.getUShort(buff, offset);
+	int end = offset + length; // this is the index of the last byte in the buffer that's part of the table
+	if (end >= buff.length) {
+	    end = buff.length - 1;
+	}
+	offset += 2;	// length of length was not added to offset when initialized
+	valueLength = LittleEndian.getUShort(buff, offset);
 	offset += 2;
-	type		= LittleEndian.getUShort(buff, offset);
+	type = LittleEndian.getUShort(buff, offset);
 	offset += 2;
-	key		= LittleEndian.getSzUTF16LEString(buff, offset, -1);
+	key = LittleEndian.getSzUTF16LEString(buff, offset, -1);
 	offset += 18; // 8 double-byte chars plus a double-byte null
-	padding		= LittleEndian.get32BitAlignPadding(buff, offset, fileOffset);
+	padding = LittleEndian.get32BitAlignPadding(buff, offset, fileOffset);
 	offset += padding.length;
-	children	= new Vector<StringStructure>();
+	children = new Vector<StringStructure>();
 	while (offset < end) {
 	    StringStructure str = new StringStructure(buff, offset, fileOffset);
 	    children.add(str);

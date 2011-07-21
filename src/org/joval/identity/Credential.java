@@ -44,7 +44,11 @@ public class Credential implements ICredential {
     public Credential(String username, File privateKey, String passphrase) throws JSchException {
 	this.username = username;
 	Identity id = IdentityFile.newInstance(privateKey.getPath(), null);
-	IdentityManager.getManager().addIdentity(id, passphrase.getBytes());
+	if (passphrase == null) {
+	    IdentityManager.getManager().addIdentity(id, null);
+	} else {
+	    IdentityManager.getManager().addIdentity(id, passphrase.getBytes());
+	}
 	this.passphrase = passphrase;
     }
 
