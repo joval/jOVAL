@@ -179,76 +179,24 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	return independentFactory.createTextfilecontentItem((TextfilecontentItem)item);
     }
 
-    protected List<ItemType> createFileItems(ObjectType obj, IFile file) throws NoSuchElementException,
-										IOException, OvalException {
-	Textfilecontent54Object tfcObj = null;
-	if (obj instanceof Textfilecontent54Object) {
-	    tfcObj = (Textfilecontent54Object)obj;
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-							   getObjectClass().getName(), obj.getClass().getName()));
-	}
+    protected Object convertFilename(EntityItemStringType filename) {
+	return filename;
+    }
 
-	TextfilecontentItem tfcItem = independentFactory.createTextfilecontentItem();
-	String path = file.getLocalName();
-	boolean fileExists = file.exists();
-	boolean dirExists = fileExists;
-	String dirPath = path.substring(0, path.lastIndexOf(fs.getDelimString()));
-	if (!fileExists) {
-	    throw new NoSuchElementException(path);
-	}
+    protected ItemType createFileItem() {
+	return independentFactory.createTextfilecontentItem();
+    }
 
-	if (tfcObj.isSetFilepath()) {
-	    EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
-	    filepathType.setValue(path);
-	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
-	    pathType.setValue(dirPath);
-	    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
-	    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
-	    if (!fileExists) {
-		filepathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		if (!dirExists) {
-		    pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		    tfcItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		}
-	    }
-	    tfcItem.setFilepath(filepathType);
-	    tfcItem.setPath(pathType);
-	    tfcItem.setFilename(filenameType);
-	} else if (tfcObj.isSetFilename()) {
-	    EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
-	    filepathType.setValue(path);
-	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
-	    pathType.setValue(dirPath);
-	    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
-	    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
-	    if (fileExists) {
-		tfcItem.setFilepath(filepathType);
-		tfcItem.setPath(pathType);
-		tfcItem.setFilename(filenameType);
-	    } else if (dirExists) {
-		tfcItem.setPath(pathType);
-		filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		tfcItem.setFilename(filenameType);
-	    } else {
-		pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		tfcItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		tfcItem.setPath(pathType);
-	    }
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_TEXTFILECONTENT_SPEC", tfcObj.getId()));
+    /**
+     * Parse the file as specified by the Object, and decorate the Item.
+     */
+    protected List<? extends ItemType> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
+	List<ItemType> list = new Vector<ItemType>();
+	if (base instanceof TextfilecontentItem && obj instanceof Textfilecontent54Object) {
+	    setItem((TextfilecontentItem)base, (Textfilecontent54Object)obj, f);
+	    list.add(base);
 	}
-
-	if (fileExists) {
-	    setItem(tfcItem, tfcObj, file);
-	} else if (!dirExists) {
-	    throw new NoSuchElementException("No file or parent directory");
-	}
-
-	List<ItemType> tfcList = new Vector<ItemType>();
-	tfcList.add(tfcItem);
-	return tfcList;
+	return list;
     }
 
     // Private

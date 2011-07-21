@@ -22,11 +22,15 @@ import oval.schemas.common.OperationEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.ObjectComponentType;
 import oval.schemas.definitions.core.ObjectType;
+import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
+import oval.schemas.systemcharacteristics.core.EntityItemIntType;
+import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.ObjectFactory;
+import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
-
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
@@ -45,6 +49,11 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public abstract class BaseFileAdapter implements IAdapter {
+    protected static final String DATATYPE_INT		= "int";
+    protected static final String DATATYPE_BOOL		= "boolean";
+    protected static final String DATATYPE_STRING	= "string";
+    protected static final String DATATYPE_VERSION	= "version";
+
     protected IAdapterContext ctx;
     protected IDefinitions definitions;
     protected IFilesystem fs;
@@ -117,8 +126,20 @@ public abstract class BaseFileAdapter implements IAdapter {
 
     protected abstract JAXBElement<? extends ItemType> createStorageItem(ItemType item);
 
-    protected abstract List<ItemType> createFileItems(ObjectType obj, IFile file) throws NoSuchElementException,
-										  IOException, OvalException;
+    /**
+     * Return either an EntityItemStringType or a JAXBElement<EntityItemStringType>, as appropriate for the relevant ItemType.
+     */
+    protected abstract Object convertFilename(EntityItemStringType filename);
+
+    /**
+     * Create and return an instance of the appropriate ItemType.
+     */
+    protected abstract ItemType createFileItem();
+
+    /**
+     * Return a list of items to associate with the given ObjectType, based on information gathered from the IFile.
+     */
+    protected abstract List<? extends ItemType> getItems(ItemType base, ObjectType obj, IFile f) throws IOException;
 
     // Internal
 
@@ -136,14 +157,90 @@ public abstract class BaseFileAdapter implements IAdapter {
     }
 
     final List<? extends ItemType> getItems(ObjectType obj, List<VariableValueType> variableValueTypes) throws OvalException {
+	if (!obj.getClass().getName().equals(getObjectClass().getName())) {
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
+							   getObjectClass().getName(), obj.getClass().getName()));
+	}
+	ItemType it = createFileItem();
 	List<ItemType> items = new Vector<ItemType>();
 	for (String path : getPathList(obj, variableValueTypes)) {
 	    IFile f = null;
 	    try {
+		ReflectedFileObject fObj = new ReflectedFileObject(obj);
+		ReflectedFileItem fItem = new ReflectedFileItem(it);
+	
 		f = fs.getFile(path);
-		items.addAll(createFileItems(obj, f));
+		boolean fileExists = f.exists();
+		boolean dirExists = fileExists;
+		String dirPath = path.substring(0, path.lastIndexOf(fs.getDelimString()));
+		if (!fileExists) {
+		    throw new NoSuchElementException(path);
+		}
+
+		if (fObj.isSetFilepath()) {
+		    EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
+		    filepathType.setValue(path);
+		    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
+		    pathType.setValue(dirPath);
+		    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
+		    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
+		    if (!fileExists) {
+			filepathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			if (!dirExists) {
+			    pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			    fItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			}
+		    }
+		    fItem.setFilepath(filepathType);
+		    fItem.setPath(pathType);
+		    fItem.setFilename(filenameType);
+		} else if (fObj.isSetFilename()) {
+		    EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
+		    filepathType.setValue(path);
+		    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
+		    pathType.setValue(dirPath);
+		    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
+		    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
+		    if (fileExists) {
+			fItem.setFilepath(filepathType);
+			fItem.setPath(pathType);
+			fItem.setFilename(filenameType);
+		    } else if (dirExists) {
+			fItem.setPath(pathType);
+			filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			fItem.setFilename(filenameType);
+		    } else {
+			pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			fItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+			fItem.setPath(pathType);
+		    }
+		} else if (fObj.isSetPath()) {
+		    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
+		    pathType.setValue(dirPath);
+		    if (!fileExists) {
+			pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    }
+		    fItem.setPath(pathType);
+		} else {
+		    throw new OvalException(JOVALSystem.getMessage("ERROR_TEXTFILECONTENT_SPEC", obj.getId()));
+		}
+
+		if (fileExists) {
+		    items.addAll(getItems(it, obj, f));
+		} else if (!dirExists) {
+		    throw new NoSuchElementException("No file or parent directory");
+		}
 	    } catch (NoSuchElementException e) {
 		// skip it
+	    } catch (NoSuchMethodException e) {
+		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
+	    } catch (IllegalAccessException e) {
+		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
+	    } catch (IllegalArgumentException e) {
+		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
+	    } catch (InvocationTargetException e) {
+		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
 	    } catch (IOException e) {
 		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
 	    } finally {
@@ -167,31 +264,12 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    return list;
 	}
 
-	//
-	// Handle the possibility of a legacy-style FileAdapter, like Textfilecontent (pre-54).
-	//
-	boolean legacy = false;
-	Method isSetFilepath=null, getFilepath=null;
-	try {
-	    isSetFilepath = obj.getClass().getMethod("isSetFilepath");
-	    getFilepath = obj.getClass().getMethod("getFilepath");
-	} catch (NoSuchMethodException e) {
-	    legacy = true;
-	}
-
 	list = new Vector<String>();
 	try {
-	    Method isSetFilename, getFilename, isSetPath, getPath, isSetBehaviors, getBehaviors;
-	    
-	    isSetFilename = obj.getClass().getMethod("isSetFilename");
-	    getFilename = obj.getClass().getMethod("getFilename");
-	    isSetPath = obj.getClass().getMethod("isSetPath");
-	    getPath = obj.getClass().getMethod("getPath");
-	    isSetBehaviors = obj.getClass().getMethod("isSetBehaviors");
-	    getBehaviors = obj.getClass().getMethod("getBehaviors");
+	    ReflectedFileObject fObj = new ReflectedFileObject(obj);
 
-	    if (!legacy && ((Boolean)isSetFilepath.invoke(obj)).booleanValue()) {
-		EntityObjectStringType filepath = (EntityObjectStringType)getFilepath.invoke(obj);
+	    if (fObj.isSetFilepath()) {
+		EntityObjectStringType filepath = fObj.getFilepath();
 		if (filepath.isSetVarRef()) {
 		    String resolved = ctx.resolve(filepath.getVarRef(), variables);
 		    if (OperationEnumeration.EQUALS == filepath.getOperation()) {
@@ -204,8 +282,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 		} else {
 		    list.add((String)filepath.getValue());
 		}
-	    } else if (((Boolean)isSetPath.invoke(obj)).booleanValue()) {
-		EntityObjectStringType path = (EntityObjectStringType)getPath.invoke(obj);
+	    } else if (fObj.isSetPath()) {
+		EntityObjectStringType path = fObj.getPath();
 		if (path.isSetVarRef()) {
 		    String resolved = ctx.resolve(path.getVarRef(), variables);
 		    if (OperationEnumeration.EQUALS == path.getOperation()) {
@@ -223,33 +301,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", path.getOperation()));
 		}
 
-		if (((Boolean)isSetBehaviors.invoke(obj)).booleanValue()) {
-		    Object behaviors = getBehaviors.invoke(obj);
-		    BigInteger maxDepth = new BigInteger("-1");
-		    String recurseDirection = "none";
-		    if (behaviors != null) {
-		        Method getMaxDepth = behaviors.getClass().getMethod("getMaxDepth");
-		        maxDepth = (BigInteger)getMaxDepth.invoke(behaviors);
-		        Method getRecurseDirection = behaviors.getClass().getMethod("getRecurseDirection");
-		        recurseDirection = (String)getRecurseDirection.invoke(behaviors);
-		    }
-		    if ("none".equals(recurseDirection)) {
-		        maxDepth = BigInteger.ZERO;
-		    }
-		    int depth = Integer.parseInt(maxDepth.toString());
-		    list = getPaths(list, depth, recurseDirection);
+		if (fObj.isSetBehaviors()) {
+		    ReflectedFileBehaviors fb = fObj.getBehaviors();
+		    list = getPaths(list, fb.getDepth(), fb.getRecurseDirection());
 		}
 
-		if (((Boolean)isSetFilename.invoke(obj)).booleanValue()) {
-		    EntityObjectStringType filename = null;
-		    Object oFilename = getFilename.invoke(obj);
-		    if (oFilename instanceof JAXBElement) {
-			filename = (EntityObjectStringType)((JAXBElement)oFilename).getValue();
-		    } else if (oFilename instanceof EntityObjectStringType) {
-			filename = (EntityObjectStringType)oFilename;
-		    } else {
-			throw new OvalException(JOVALSystem.getMessage("ERROR_FILENAME_TYPE", oFilename.getClass().getName()));
-		    }
+		if (fObj.isSetFilename()) {
+		    EntityObjectStringType filename = fObj.getFilename();
 		    if (filename == null) {
 			// False positive for isSetFilename -- happens with nil
 		    } else if (filename.isSetValue()) {
@@ -321,5 +379,170 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    }
 	}
 	return results;
+    }
+
+    /**
+     * A reflection proxy for:
+     *     oval.schemas.definitions.independent.Textfilecontent54Object
+     *     oval.schemas.definitions.independent.TextfilecontentObject
+     *     oval.schemas.definitions.unix.FileObject
+     *     oval.schemas.definitions.windows.FileObject
+     */
+    class ReflectedFileObject {
+	ObjectType obj;
+	boolean legacy = false;
+	Method isSetFilepath=null, getFilepath=null;
+	Method isSetFilename, getFilename, isSetPath, getPath, isSetBehaviors, getBehaviors;
+
+	ReflectedFileObject(ObjectType obj) throws NoSuchMethodException {
+	    this.obj = obj;
+
+	    try {
+		isSetFilepath = obj.getClass().getMethod("isSetFilepath");
+		getFilepath = obj.getClass().getMethod("getFilepath");
+	    } catch (NoSuchMethodException e) {
+		legacy = true;
+	    }
+
+	    isSetFilename = obj.getClass().getMethod("isSetFilename");
+	    getFilename = obj.getClass().getMethod("getFilename");
+	    isSetPath = obj.getClass().getMethod("isSetPath");
+	    getPath = obj.getClass().getMethod("getPath");
+	    isSetBehaviors = obj.getClass().getMethod("isSetBehaviors");
+	    getBehaviors = obj.getClass().getMethod("getBehaviors");
+	}
+
+	boolean isSetFilepath()
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    if (legacy) {
+		return false;
+	    } else {
+		return ((Boolean)isSetFilepath.invoke(obj)).booleanValue();
+	    }
+	}
+
+	EntityObjectStringType getFilepath()
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    if (legacy) {
+		return null;
+	    } else {
+		return (EntityObjectStringType)getFilepath.invoke(obj);
+	    }
+	}
+
+	boolean isSetFilename()
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    return ((Boolean)isSetFilename.invoke(obj)).booleanValue();
+	}
+
+	EntityObjectStringType getFilename()
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    Object o = getFilename.invoke(obj);
+	    if (o instanceof JAXBElement) {
+		return (EntityObjectStringType)(((JAXBElement)o).getValue());
+	    } else {
+		return (EntityObjectStringType)o;
+	    }
+	}
+
+	boolean isSetPath()
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    return ((Boolean)isSetPath.invoke(obj)).booleanValue();
+	}
+
+	EntityObjectStringType getPath()
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    return (EntityObjectStringType)getPath.invoke(obj);
+	}
+
+	boolean isSetBehaviors()
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    return ((Boolean)isSetBehaviors.invoke(obj)).booleanValue();
+	}
+
+	ReflectedFileBehaviors getBehaviors()
+		throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    return new ReflectedFileBehaviors(getBehaviors.invoke(obj));
+	}
+    }
+
+    /**
+     * A reflection proxy for:
+     *     oval.schemas.definitions.independent.FileBehaviors
+     *     oval.schemas.definitions.unix.FileBehaviors
+     *     oval.schemas.definitions.windows.FileBehaviors
+     */
+    class ReflectedFileBehaviors {
+	BigInteger maxDepth = new BigInteger("-1");
+	String recurseDirection = "none";
+
+	ReflectedFileBehaviors(Object obj)
+		throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    if (obj != null) {
+	        Method getMaxDepth = obj.getClass().getMethod("getMaxDepth");
+	        maxDepth = (BigInteger)getMaxDepth.invoke(obj);
+	        Method getRecurseDirection = obj.getClass().getMethod("getRecurseDirection");
+	        recurseDirection = (String)getRecurseDirection.invoke(obj);
+	    }
+	    if ("none".equals(recurseDirection)) {
+	        maxDepth = BigInteger.ZERO;
+	    }
+	}
+
+	String getRecurseDirection() {
+	    return recurseDirection;
+	}
+
+	int getDepth() {
+	    return Integer.parseInt(maxDepth.toString());
+	}
+    }
+
+    /**
+     * A reflection proxy for:
+     *     oval.schemas.systemcharacteristics.independent.TextfilecontentItem
+     *     oval.schemas.systemcharacteristics.unix.FileItem
+     *     oval.schemas.systemcharacteristics.windows.FileItem
+     */
+    class ReflectedFileItem {
+	ItemType it;
+	Method setFilepath, setFilename, setPath, setStatus;
+
+	ReflectedFileItem(ItemType it) {
+	    this.it = it;
+	    Method[] methods = it.getClass().getMethods();
+	    for (int i=0; i < methods.length; i++) {
+		String name = methods[i].getName();
+		if ("setFilepath".equals(name)) {
+		    setFilepath = methods[i];
+		} else if ("setFilename".equals(name)) {
+		    setFilename = methods[i];
+		} else if ("setPath".equals(name)) {
+		    setPath = methods[i];
+		} else if ("setStatus".equals(name)) {
+		    setStatus = methods[i];
+		}
+	    }
+	}
+
+	void setFilename(EntityItemStringType filename)
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    setFilename.invoke(it, convertFilename(filename));
+	}
+
+	void setFilepath(EntityItemStringType filepath)
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    setFilepath.invoke(it, filepath);
+	}
+
+	void setPath(EntityItemStringType path)
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    setPath.invoke(it, path);
+	}
+
+	void setStatus(StatusEnumeration status)
+		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+	    setStatus.invoke(it, status);
+	}
     }
 }

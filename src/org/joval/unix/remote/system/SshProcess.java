@@ -36,7 +36,7 @@ class SshProcess implements IProcess {
 
     public void start() throws Exception {
 	ce.connect();
-//	new Monitor(this).start();
+	new Monitor(this).start();
     }
 
     public InputStream getInputStream() {
@@ -77,7 +77,7 @@ class SshProcess implements IProcess {
 	return ce.getExitStatus();
     }
 
-    public synchronized void destroy() {
+    public void destroy() {
 	try {
 	    ce.sendSignal("KILL");
 	} catch (Exception e) {
@@ -110,7 +110,7 @@ class SshProcess implements IProcess {
 
 	public void run() {
 	    try {
-		p.waitFor(3600000);
+		p.waitFor(3600000); // 1 hour
 	    } catch (InterruptedException e) {
 	    } finally {
 		p.cleanup();

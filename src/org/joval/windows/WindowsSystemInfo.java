@@ -40,6 +40,9 @@ import org.joval.windows.wmi.WmiException;
 public class WindowsSystemInfo {
     public static final String ARCHITECTURE	= "PROCESSOR_ARCHITECTURE";
 
+    static final String IP4_ADDRESS		= "ipv4_address";
+    static final String IP6_ADDRESS		= "ipv6_address";
+
     static final String COMPUTERNAME_KEY	= "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
     static final String COMPUTERNAME_VAL	= "ComputerName";
     static final String CURRENTVERSION_KEY	= "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
@@ -106,21 +109,29 @@ public class WindowsSystemInfo {
 		    ISWbemPropertySet row = iter.next().getProperties();
 		    String macAddress = row.getItem(MAC_ADDR_FIELD).getValueAsString();
 		    if (macAddress != null) {
-			InterfaceType interfaceType = coreFactory.createInterfaceType();
-			interfaceType.setMacAddress(macAddress);
-			String description = row.getItem(DESCRIPTION_FIELD).getValueAsString();
-			if (description != null) {
-			    interfaceType.setInterfaceName(description);
-			}
-			EntityItemIPAddressStringType ipAddressType = coreFactory.createEntityItemIPAddressStringType();
 			String[] ipAddresses = row.getItem(IP_ADDR_FIELD).getValueAsArray();
-			if (ipAddresses != null) {
-			    if (ipAddresses.length > 0) {
-				ipAddressType.setValue(ipAddresses[0]); // The IPv4 address; IPv6 is [1]
+			if (ipAddresses != null && ipAddresses.length > 0) {
+			    for (int i=0; i < 2 && i < ipAddresses.length; i++) {
+				InterfaceType interfaceType = coreFactory.createInterfaceType();
+				interfaceType.setMacAddress(macAddress);
+				String description = row.getItem(DESCRIPTION_FIELD).getValueAsString();
+				if (description != null) {
+				    interfaceType.setInterfaceName(description);
+				}
+				EntityItemIPAddressStringType ipAddressType = coreFactory.createEntityItemIPAddressStringType();
+				ipAddressType.setValue(ipAddresses[i]);
+				switch(i) {
+				  case 0: // The IPv4 address is [0]
+				    ipAddressType.setDatatype(IP4_ADDRESS);
+				    break;
+				  case 1: // The IPv6 address is [1]
+				    ipAddressType.setDatatype(IP6_ADDRESS);
+				    break;
+				}
+				interfaceType.setIpAddress(ipAddressType);
+				interfacesType.getInterface().add(interfaceType);
 			    }
 			}
-			interfaceType.setIpAddress(ipAddressType);
-			interfacesType.getInterface().add(interfaceType);
 		    }
 		}
 		info.setInterfaces(interfacesType);

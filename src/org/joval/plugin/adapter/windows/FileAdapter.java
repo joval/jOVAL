@@ -85,9 +85,6 @@ import org.joval.windows.pe.resource.version.StringStructure;
  * @version %I% %G%
  */
 public class FileAdapter extends BaseFileAdapter {
-    private static final String DATATYPE_INT		= "int";
-    private static final String DATATYPE_VERSION	= "version";
-
     private static final String CIMV2		= "root\\cimv2";
     private static final String OWNER_WQL	= "ASSOCIATORS OF {Win32_LogicalFileSecuritySetting='$path'} WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
 
@@ -256,89 +253,29 @@ public class FileAdapter extends BaseFileAdapter {
 	return windowsFactory.createFileItem((FileItem)item);
     }
 
-    protected List<ItemType> createFileItems(ObjectType obj, IFile file) throws NoSuchElementException,
-										IOException, OvalException {
-	FileObject fObj = null;
-	if (obj instanceof FileObject) {
-	    fObj = (FileObject)obj;
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-							   getObjectClass().getName(), obj.getClass().getName()));
-	}
-
-	FileItem fItem = windowsFactory.createFileItem();
-	String path = file.getLocalName();
-	boolean fileExists = file.exists();
-	boolean dirExists = fileExists;
-	String dirPath = path.substring(0, path.lastIndexOf(fs.getDelimString()));
-	if (!fileExists) {
-	    throw new NoSuchElementException(path);
-	}
-
-	if (fObj.isSetFilepath()) {
-	    EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
-	    filepathType.setValue(path);
-	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
-	    pathType.setValue(dirPath);
-	    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
-	    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
-	    if (!fileExists) {
-		filepathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		if (!dirExists) {
-		    pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		    fItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		}
-	    }
-	    fItem.setFilepath(filepathType);
-	    fItem.setPath(pathType);
-	    fItem.setFilename(windowsFactory.createFileItemFilename(filenameType));
-	} else if (fObj.isSetFilename()) {
-	    EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
-	    filepathType.setValue(path);
-	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
-	    pathType.setValue(dirPath);
-	    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
-	    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
-	    if (fileExists) {
-		fItem.setFilepath(filepathType);
-		fItem.setPath(pathType);
-		fItem.setFilename(windowsFactory.createFileItemFilename(filenameType));
-	    } else if (dirExists) {
-		fItem.setPath(pathType);
-		filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		fItem.setFilename(windowsFactory.createFileItemFilename(filenameType));
-	    } else {
-		pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		fItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		fItem.setPath(pathType);
-	    }
-	} else if (fObj.isSetPath()) {
-	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
-	    pathType.setValue(dirPath);
-	    if (!fileExists) {
-		pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    }
-	    fItem.setPath(pathType);
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_WINFILE_SPEC", fObj.getId()));
-	}
-
-	if (fileExists) {
-	    setItem(fItem, file);
-	} else if (!dirExists) {
-	    throw new NoSuchElementException("No file or parent directory");
-	}
-
-	List<ItemType> fList = new Vector<ItemType>();
-	fList.add(fItem);
-	return fList;
+    protected Object convertFilename(EntityItemStringType filename) {
+	return windowsFactory.createFileItemFilename(filename);
     }
+
+    protected ItemType createFileItem() {
+	return windowsFactory.createFileItem();
+    }
+
+    protected List<? extends ItemType> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
+	List<ItemType> list = new Vector<ItemType>();
+	if (base instanceof FileItem) {
+	    setItem((FileItem)base, f);
+	    list.add(base);
+	}
+	return list;
+    }
+
+    // Private
 
     /**
      * Populate the FileItem with everything except the path, filename and filepath. 
      */
-    private void setItem(FileItem fItem, IFile file) throws IOException, OvalException {
+    private void setItem(FileItem fItem, IFile file) throws IOException {
 	IRandomAccess ra = null;
 	try {
 	    //

@@ -33,6 +33,9 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class UnixSystemInfo {
+    private static final String IP4_ADDRESS = "ipv4_address";
+    private static final String IP6_ADDRESS = "ipv6_address";
+
     private ISession session;
     private ObjectFactory coreFactory;
     private SystemInfoType info;
@@ -98,12 +101,20 @@ public class UnixSystemInfo {
 	    InterfacesType interfacesType = coreFactory.createInterfacesType();
 	    List<NetworkInterface> interfaces = NetworkInterface.getInterfaces(flavor, session);
 	    for (NetworkInterface intf : interfaces) {
+		InterfaceType interfaceType = coreFactory.createInterfaceType();
+		interfaceType.setMacAddress(intf.getMacAddress());
+		interfaceType.setInterfaceName(intf.getDescription());
+
+		EntityItemIPAddressStringType ipAddressType = coreFactory.createEntityItemIPAddressStringType();
 		if (intf.getIpV4Address() != null) {
-		    InterfaceType interfaceType = coreFactory.createInterfaceType();
-		    interfaceType.setMacAddress(intf.getMacAddress());
-		    interfaceType.setInterfaceName(intf.getDescription());
-		    EntityItemIPAddressStringType ipAddressType = coreFactory.createEntityItemIPAddressStringType();
 		    ipAddressType.setValue(intf.getIpV4Address());
+		    ipAddressType.setDatatype(IP4_ADDRESS);
+		} else if (intf.getIpV6Address() != null) {
+		    ipAddressType.setValue(intf.getIpV6Address());
+		    ipAddressType.setDatatype(IP6_ADDRESS);
+		}
+
+		if (ipAddressType.getValue() != null) {
 		    interfaceType.setIpAddress(ipAddressType);
 		    interfacesType.getInterface().add(interfaceType);
 		}

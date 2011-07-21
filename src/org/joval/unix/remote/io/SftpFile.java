@@ -55,7 +55,7 @@ class SftpFile implements IFile {
 
     public long accessTime() throws IOException {
 	if (exists()) {
-	    return attrs.getAccessTime();
+	    return attrs.getAccessTime() * 1000L;
 	} else {
 	    throw new FileNotFoundException(path);
 	}
@@ -65,7 +65,7 @@ class SftpFile implements IFile {
      * Not really supported by this implementation.
      */
     public long createTime() throws IOException {
-	return lastModified();
+	return lastModified() * 1000L;
     }
 
     public boolean exists() throws IOException {
@@ -133,7 +133,7 @@ class SftpFile implements IFile {
 
     public long lastModified() throws IOException {
 	if (exists()) {
-	    return attrs.getModifiedTime();
+	    return attrs.getModifiedTime() * 1000L;
 	} else {
 	    throw new FileNotFoundException(path);
 	}

@@ -227,83 +227,21 @@ public class FileAdapter extends BaseFileAdapter {
 	return unixFactory.createFileItem((FileItem)item);
     }
 
-    protected List<ItemType> createFileItems(ObjectType obj, IFile file) throws NoSuchElementException,
-										IOException, OvalException {
-	FileObject fObj = null;
-	if (obj instanceof FileObject) {
-	    fObj = (FileObject)obj;
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-							   getObjectClass().getName(), obj.getClass().getName()));
-	}
+    protected Object convertFilename(EntityItemStringType filename) {
+	return unixFactory.createFileItemFilename(filename);
+    }
 
-	FileItem fItem = unixFactory.createFileItem();
-	String path = file.getLocalName();
-	boolean fileExists = file.exists();
-	boolean dirExists = fileExists;
-	String dirPath = path.substring(0, path.lastIndexOf(fs.getDelimString()));
-	if (!fileExists) {
-	    throw new NoSuchElementException(path);
-	}
+    protected ItemType createFileItem() {
+	return unixFactory.createFileItem();
+    }
 
-	if (fObj.isSetFilepath()) {
-	    EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
-	    filepathType.setValue(path);
-	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
-	    pathType.setValue(dirPath);
-	    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
-	    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
-	    if (!fileExists) {
-		filepathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		if (!dirExists) {
-		    pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		    fItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		}
-	    }
-	    fItem.setFilepath(filepathType);
-	    fItem.setPath(pathType);
-	    fItem.setFilename(unixFactory.createFileItemFilename(filenameType));
-	} else if (fObj.isSetFilename()) {
-	    EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
-	    filepathType.setValue(path);
-	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
-	    pathType.setValue(dirPath);
-	    EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
-	    filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
-	    if (fileExists) {
-		fItem.setFilepath(filepathType);
-		fItem.setPath(pathType);
-		fItem.setFilename(unixFactory.createFileItemFilename(filenameType));
-	    } else if (dirExists) {
-		fItem.setPath(pathType);
-		filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		fItem.setFilename(unixFactory.createFileItemFilename(filenameType));
-	    } else {
-		pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		fItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		fItem.setPath(pathType);
-	    }
-	} else if (fObj.isSetPath()) {
-	    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
-	    pathType.setValue(dirPath);
-	    if (!fileExists) {
-		pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    }
-	    fItem.setPath(pathType);
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_TEXTFILECONTENT_SPEC", fObj.getId()));
+    protected List<? extends ItemType> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
+	List<ItemType> list = new Vector<ItemType>();
+	if (base instanceof FileItem) {
+	    setItem((FileItem)base, f);
+	    list.add(base);
 	}
-
-	if (fileExists) {
-	    setItem(fItem, file);
-	} else if (!dirExists) {
-	    throw new NoSuchElementException("No file or parent directory");
-	}
-
-	List<ItemType> fList = new Vector<ItemType>();
-	fList.add(fItem);
-	return fList;
+	return list;
     }
 
     // Private
@@ -373,17 +311,20 @@ public class FileAdapter extends BaseFileAdapter {
      * Decorate the Item with information about the file.
      */
     private void setItem(FileItem item, IFile file) throws IOException {
-	EntityItemIntType aTimeType = coreFactory.createEntityItemIntType();
-	aTimeType.setValue(Long.toString(file.accessTime()));
-	item.setATime(aTimeType);
+	EntityItemIntType aTime = coreFactory.createEntityItemIntType();
+	aTime.setValue(Long.toString(file.accessTime()/1000L));
+	aTime.setDatatype(DATATYPE_INT);
+	item.setATime(aTime);
 
-	EntityItemIntType cTimeType = coreFactory.createEntityItemIntType();
-	cTimeType.setValue(Long.toString(file.createTime()));
-	item.setCTime(cTimeType);
+	EntityItemIntType cTime = coreFactory.createEntityItemIntType();
+	cTime.setStatus(StatusEnumeration.NOT_COLLECTED);
+	cTime.setDatatype(DATATYPE_INT);
+	item.setCTime(cTime);
 
-	EntityItemIntType mTimeType = coreFactory.createEntityItemIntType();
-	mTimeType.setValue(Long.toString(file.lastModified()));
-	item.setMTime(mTimeType);
+	EntityItemIntType mTime = coreFactory.createEntityItemIntType();
+	mTime.setValue(Long.toString(file.lastModified()/1000L));
+	mTime.setDatatype(DATATYPE_INT);
+	item.setMTime(mTime);
 
 	try {
 	    Lstat ls = new Lstat(file.getLocalName());
@@ -394,65 +335,80 @@ public class FileAdapter extends BaseFileAdapter {
 
 	    EntityItemIntType userId = coreFactory.createEntityItemIntType();
 	    userId.setValue(Integer.toString(ls.getUserId()));
+	    userId.setDatatype(DATATYPE_INT);
 	    item.setUserId(userId);
 
 	    EntityItemIntType groupId = coreFactory.createEntityItemIntType();
 	    groupId.setValue(Integer.toString(ls.getGroupId()));
+	    groupId.setDatatype(DATATYPE_INT);
 	    item.setGroupId(groupId);
 
 	    EntityItemBoolType uRead = coreFactory.createEntityItemBoolType();
 	    uRead.setValue(Boolean.toString(ls.uRead()));
+	    uRead.setDatatype(DATATYPE_BOOL);
 	    item.setUread(uRead);
 
 	    EntityItemBoolType uWrite = coreFactory.createEntityItemBoolType();
 	    uWrite.setValue(Boolean.toString(ls.uWrite()));
+	    uWrite.setDatatype(DATATYPE_BOOL);
 	    item.setUwrite(uWrite);
 
 	    EntityItemBoolType uExec = coreFactory.createEntityItemBoolType();
 	    uExec.setValue(Boolean.toString(ls.uExec()));
+	    uExec.setDatatype(DATATYPE_BOOL);
 	    item.setUexec(uExec);
 
 	    EntityItemBoolType sUid = coreFactory.createEntityItemBoolType();
 	    sUid.setValue(Boolean.toString(ls.sUid()));
+	    sUid.setDatatype(DATATYPE_BOOL);
 	    item.setSuid(sUid);
 
 	    EntityItemBoolType gRead = coreFactory.createEntityItemBoolType();
 	    gRead.setValue(Boolean.toString(ls.gRead()));
+	    gRead.setDatatype(DATATYPE_BOOL);
 	    item.setGread(gRead);
 
 	    EntityItemBoolType gWrite = coreFactory.createEntityItemBoolType();
 	    gWrite.setValue(Boolean.toString(ls.gWrite()));
+	    gWrite.setDatatype(DATATYPE_BOOL);
 	    item.setGwrite(gWrite);
 
 	    EntityItemBoolType gExec = coreFactory.createEntityItemBoolType();
 	    gExec.setValue(Boolean.toString(ls.gExec()));
+	    gExec.setDatatype(DATATYPE_BOOL);
 	    item.setGexec(gExec);
 
 	    EntityItemBoolType sGid = coreFactory.createEntityItemBoolType();
 	    sGid.setValue(Boolean.toString(ls.sGid()));
+	    sGid.setDatatype(DATATYPE_BOOL);
 	    item.setSgid(sGid);
 
 	    EntityItemBoolType oRead = coreFactory.createEntityItemBoolType();
 	    oRead.setValue(Boolean.toString(ls.oRead()));
+	    oRead.setDatatype(DATATYPE_BOOL);
 	    item.setOread(oRead);
 
 	    EntityItemBoolType oWrite = coreFactory.createEntityItemBoolType();
 	    oWrite.setValue(Boolean.toString(ls.oWrite()));
+	    oWrite.setDatatype(DATATYPE_BOOL);
 	    item.setOwrite(oWrite);
 
 	    EntityItemBoolType oExec = coreFactory.createEntityItemBoolType();
 	    oExec.setValue(Boolean.toString(ls.oExec()));
+	    oExec.setDatatype(DATATYPE_BOOL);
 	    item.setOexec(oExec);
 
 	    EntityItemBoolType sticky = coreFactory.createEntityItemBoolType();
 	    sticky.setValue(Boolean.toString(ls.sticky()));
+	    sticky.setDatatype(DATATYPE_BOOL);
 	    item.setSticky(sticky);
 
 	    EntityItemBoolType aclType = coreFactory.createEntityItemBoolType();
 	    aclType.setValue(Boolean.toString(ls.hasExtendedAcl()));
+	    aclType.setDatatype(DATATYPE_BOOL);
 	    item.setHasExtendedAcl(aclType);
 	} catch (Exception e) {
-e.printStackTrace();
+	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	    throw new IOException (e);
 	}
     }
