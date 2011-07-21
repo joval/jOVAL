@@ -29,10 +29,7 @@ import oval.schemas.common.OperationEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.EntityStateAnySimpleType;
 import oval.schemas.definitions.core.EntityStateStringType;
-import oval.schemas.definitions.core.ObjectComponentType;
-import oval.schemas.definitions.core.ObjectRefType;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateRefType;
 import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.independent.Textfilecontent54Object;
 import oval.schemas.definitions.independent.Textfilecontent54State;
@@ -90,90 +87,27 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	return Textfilecontent54Test.class;
     }
 
-    public void evaluate(TestType testResult, ISystemCharacteristics sc) throws OvalException {
-	String testId = testResult.getTestId();
-	Textfilecontent54Test testDefinition = definitions.getTest(testId, Textfilecontent54Test.class);
-	String objectId = testDefinition.getObject().getObjectRef();
-	Textfilecontent54State state = null;
-	if (testDefinition.isSetState() && testDefinition.getState().get(0).isSetStateRef()) {
-	    String stateId = testDefinition.getState().get(0).getStateRef();
-	    state = definitions.getState(stateId, Textfilecontent54State.class);
+    public Class getStateClass() {
+	return Textfilecontent54State.class;
+    }
+
+    public Class getItemClass() {
+	return TextfilecontentItem.class;
+    }
+
+    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+	Textfilecontent54State state = (Textfilecontent54State)st;
+	TextfilecontentItem item = (TextfilecontentItem)it;
+
+	String pattern = (String)state.getText().getValue();
+        if (item.getPattern().getValue().equals(pattern)) {
+	    return ResultEnumeration.TRUE;
 	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_MISSING", testId));
-	}
-
-	for (VariableValueType var : sc.getVariablesByObjectId(objectId)) {
-	    TestedVariableType testedVariable = JOVALSystem.resultsFactory.createTestedVariableType();
-	    testedVariable.setVariableId(var.getVariableId());
-	    testedVariable.setValue(var.getValue());
-	    testResult.getTestedVariable().add(testedVariable);
-	}
-
-	boolean result = false;
-	int trueCount=0, falseCount=0, errorCount=0;
-	if (sc.getObject(objectId).getFlag() == FlagEnumeration.ERROR) {
-	    errorCount++;
-	}
-
-	if (testDefinition.getCheckExistence() != ExistenceEnumeration.AT_LEAST_ONE_EXISTS) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE" , testDefinition.getCheckExistence()));
-	}
-	if (state.isSetText()) {
-	    if (OperationEnumeration.PATTERN_MATCH == state.getText().getOperation()) {
-		String pattern = (String)state.getText().getValue();
-		for (ItemType it : sc.getItemsByObjectId(objectId)) {
-		    if (it instanceof TextfilecontentItem) {
-			TextfilecontentItem item = (TextfilecontentItem)it;
-			TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-			testedItem.setItemId(item.getId());
-			switch(item.getStatus()) {
-			  case EXISTS:
-			    if (item.getPattern().getValue().equals(pattern)) {
-				testedItem.setResult(ResultEnumeration.TRUE);
-				trueCount++;
-			    } else {
-				testedItem.setResult(ResultEnumeration.FALSE);
-				falseCount++;
-			    }
-			    break;
-			  case DOES_NOT_EXIST:
-			    testedItem.setResult(ResultEnumeration.NOT_APPLICABLE);
-			    break;
-			  case ERROR:
-			    testedItem.setResult(ResultEnumeration.ERROR);
-			    errorCount++;
-			    break;
-			  default:
-			    testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-			    break;
-			}
-			testResult.getTestedItem().add(testedItem);
-		    } else {
-			throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-                				TextfilecontentItem.class.getName(), it.getClass().getName()));
-		    }
-		}
-	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getText().getOperation()));
-	    }
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_BAD", state.getId()));
-	}
-
-	if (errorCount > 0) {
-	    testResult.setResult(ResultEnumeration.ERROR);
-	} else if (result) {
-	    testResult.setResult(ResultEnumeration.TRUE);
-	} else {
-	    testResult.setResult(ResultEnumeration.FALSE);
+	    return ResultEnumeration.FALSE;
 	}
     }
 
     // Private
-
-    protected void preScan() {}
-
-    protected void postScan() {}
 
     protected JAXBElement<? extends ItemType> createStorageItem(ItemType item) {
 	return independentFactory.createTextfilecontentItem((TextfilecontentItem)item);

@@ -100,6 +100,14 @@ public class RegistryAdapter implements IAdapter {
 	return RegistryTest.class;
     }
 
+    public Class getStateClass() {
+	return RegistryState.class;
+    }
+
+    public Class getItemClass() {
+	return RegistryItem.class;
+    }
+
     public void scan(ISystemCharacteristics sc) throws OvalException {
 	try {
 	    registry.connect();
@@ -172,131 +180,11 @@ public class RegistryAdapter implements IAdapter {
 	}
     }
 
-    public void evaluate(TestType testResult, ISystemCharacteristics sc) throws OvalException {
-	String testId = testResult.getTestId();
-	RegistryTest test = definitions.getTest(testId, RegistryTest.class);
-	String objectId = test.getObject().getObjectRef();
-
-	RegistryState state = null;
-	if (test.isSetState() && test.getState().get(0).isSetStateRef()) {
-	    String stateId = test.getState().get(0).getStateRef();
-	    state = definitions.getState(stateId, RegistryState.class);
-	}
-
-	for (VariableValueType var : sc.getVariablesByObjectId(objectId)) {
-	    TestedVariableType testedVariable = JOVALSystem.resultsFactory.createTestedVariableType();
-	    testedVariable.setVariableId(var.getVariableId());
-	    testedVariable.setValue(var.getValue());
-	    testResult.getTestedVariable().add(testedVariable);
-	}
-
-	boolean result = false;
-	int trueCount=0, falseCount=0, errorCount=0;
-	if (sc.getObject(objectId).getFlag() == FlagEnumeration.ERROR) {
-	    errorCount++;
-	}
-	Iterator<ItemType> items = sc.getItemsByObjectId(objectId).iterator();
-	switch(test.getCheckExistence()) {
-	  case NONE_EXIST: {
-	    while(items.hasNext()) {
-		ItemType it = items.next();
-		if (it instanceof RegistryItem) {
-		    RegistryItem item = (RegistryItem)it;
-		    TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-		    testedItem.setItemId(item.getId());
-		    switch(item.getStatus()) {
-		      case EXISTS:
-			trueCount++;
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED); // just an existence check
-			break;
-		      case DOES_NOT_EXIST:
-			falseCount++;
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED); // just an existence check
-			break;
-		      case ERROR:
-			errorCount++;
-			testedItem.setResult(ResultEnumeration.ERROR);
-			break;
-		      case NOT_COLLECTED:
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-			break;
-		    }
-		    testResult.getTestedItem().add(testedItem);
-		} else {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-								   RegistryItem.class.getName(), it.getClass().getName()));
-		}
-	    }
-	    result = trueCount == 0;
-	    break;
-	  }
-
-	  case AT_LEAST_ONE_EXISTS: {
-	    while(items.hasNext()) {
-		ItemType it = items.next();
-		if (it instanceof RegistryItem) {
-		    RegistryItem item = (RegistryItem)it;
-		    TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-		    testedItem.setItemId(item.getId());
-		    switch(item.getStatus()) {
-		      case EXISTS:
-			if (state == null) {
-			    trueCount++;
-			    testedItem.setResult(ResultEnumeration.TRUE);
-			} else {
-			    if(match(state, item)) {
-				trueCount++;
-				testedItem.setResult(ResultEnumeration.TRUE);
-			    } else {
-				falseCount++;
-				testedItem.setResult(ResultEnumeration.FALSE);
-			    }
-			}
-			break;
-		      case DOES_NOT_EXIST:
-			falseCount++;
-			testedItem.setResult(ResultEnumeration.FALSE);
-			break;
-		      case ERROR:
-			errorCount++;
-			testedItem.setResult(ResultEnumeration.ERROR);
-			break;
-		      case NOT_COLLECTED:
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-			break;
-		    }
-		    testResult.getTestedItem().add(testedItem);
-		} else {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-								   RegistryItem.class.getName(), it.getClass().getName()));
-		}
-	    }
-
-	    switch(test.getCheck()) {
-	      case ALL:
-		result = falseCount == 0 && trueCount > 0;
-		break;
-	      case NONE_SATISFY:
-		result = trueCount == 0;
-		break;
-	      case AT_LEAST_ONE:
-		result = trueCount > 0;
-		break;
-	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_CHECK", test.getCheck()));
-	    }
-	    break;
-	  }
-
-          default:
-            throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE", test.getCheckExistence()));
-	}
-	if (errorCount > 0) {
-	    testResult.setResult(ResultEnumeration.ERROR);
-	} else if (result) {
-	    testResult.setResult(ResultEnumeration.TRUE);
+    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+	if (match((RegistryState)st, (RegistryItem)it)) {
+	    return ResultEnumeration.TRUE;
 	} else {
-	    testResult.setResult(ResultEnumeration.FALSE);
+	    return ResultEnumeration.FALSE;
 	}
     }
 

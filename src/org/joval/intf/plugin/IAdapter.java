@@ -8,6 +8,9 @@ import javax.xml.bind.JAXBElement;
 
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.ObjectComponentType;
+import oval.schemas.definitions.core.StateType;
+import oval.schemas.systemcharacteristics.core.ItemType;
+import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.TestType;
 
 import org.joval.oval.OvalException;
@@ -15,7 +18,7 @@ import org.joval.intf.oval.ISystemCharacteristics;
 
 /**
  * The interface for implementing a jOVAL plug-in adapter.  An adapter operates on a pair of classes, an ObjectType subclass
- * and a TestType subclass.  The jOVAL engine uses adapters to retrieve object data from hosts, and to evaluate tests.
+ * and a TestType subclass.  The jOVAL engine uses adapters to retrieve object data from hosts, and to compare items.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -27,14 +30,25 @@ public interface IAdapter {
     public void init(IAdapterContext ctx);
 
     /**
-     * Identify the class of a subclass of ObjectType for which this plug-in knows how to retrieve data.
+     * Identify the class of a subclass of ObjectType for which this adapter knows how to retrieve item data.
      */
     public Class getObjectClass();
 
     /**
-     * Identify the class of a subclass of definitions.TestType that this plug-in knows how to evaluate.
+     * Identify the class of a subclass of definitions.TestType that this adapter is used to evaluate.
      */
     public Class getTestClass();
+
+    /**
+     * Identify the class of a subclass of definitions.StateType that this adapter knows how to compare to an item.
+     */
+    public Class getStateClass();
+
+    /**
+     * Identify the class of a subclass of systemcharacteristics.ItemType that this adapter creates and knows how to
+     * compare to a state.
+     */
+    public Class getItemClass();
 
     /**
      * Retrieve data for all objects of the supported class(es) and store in the ISystemCharacteristics for later use.
@@ -45,15 +59,14 @@ public interface IAdapter {
     /**
      * Return the specified item/record field for the object (the item, field and object ID all being contained within the
      * ObjectComponentType argument.  The ISystemCharacteristics is provided as a convenience, but owing to the fact that
-     * this method is used to resolve variable values, it may be necessary for the plug-in to probe the host for the
+     * this method is used to resolve variable values, it may be necessary for the adapter to probe the host for the
      * information, as it may be invoked <i>during</i> the scan method, when object definitions refer to variable values.
      */
     public String getItemData(ObjectComponentType object, ISystemCharacteristics sc) throws OvalException;
 
     /**
-     * Evaluate a test.  Throw an OvalException if the test is not a supported type.  The ISystemCharacteristics contains
-     * all the data stored by the IPlugin in the scan phase.  The IPlugin must fully populate the results.TestType
-     * object, including the ResultEnumeration and all related ItemTypes and VariableValueTypes, with their embedded results.
+     * Compare an item to a state.  The state and item are type-checked to insure that they match the types identified by
+     * getStateClass and getItemClass before this method is invoked.
      */
-    public void evaluate(TestType test, ISystemCharacteristics sc) throws OvalException;
+    public ResultEnumeration compare(StateType state, ItemType item) throws OvalException;
 }

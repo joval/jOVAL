@@ -114,96 +114,23 @@ public class PatchAdapter implements IAdapter {
 	return PatchTest.class;
     }
 
+    public Class getStateClass() {
+	return PatchState.class;
+    }
+
+    public Class getItemClass() {
+	return PatchItem.class;
+    }
+
     public String getItemData(ObjectComponentType object, ISystemCharacteristics sc) throws OvalException {
 	return null; // What foolish variable would point to a PatchObject?
     }
 
-    public void evaluate(TestType testResult, ISystemCharacteristics sc) throws OvalException {
-	String testId = testResult.getTestId();
-	PatchTest testDefinition = ctx.getDefinitions().getTest(testId, PatchTest.class); 
-	String objectId = testDefinition.getObject().getObjectRef();
-	PatchObject pObj = definitions.getObject(objectId, PatchObject.class);
-
-	//
-	// Decode the state object, provided that there is one.
-	//
-	PatchState pState = null;
-	if (testDefinition.getState().size() > 0) {
-	    String stateId = testDefinition.getState().get(0).getStateRef();
-	    if (stateId != null) {
-		pState = definitions.getState(stateId, PatchState.class);
-	    }
-	}
-
-	List<ItemType> items = sc.getItemsByObjectId(objectId);
-	boolean result = false;
-	int trueCount=0, falseCount=0, errorCount=0;
-	switch (testDefinition.getCheckExistence()) {
-	  case NONE_EXIST:
-	    for (ItemType it : items) {
-		TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-		testedItem.setItemId(it.getId());
-		testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-		if (it.getStatus() == StatusEnumeration.EXISTS) {
-		    trueCount++;
-		} else {
-		    falseCount++;
-		}
-		testResult.getTestedItem().add(testedItem);
-	    }
-	    result = trueCount == 0;
-	    break;
-
-	  case AT_LEAST_ONE_EXISTS:
-	    for (ItemType it : items) {
-		TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-		testedItem.setItemId(it.getId());
-		if (it instanceof PatchItem) {
-		    if (pState == null) {
-			if (it.getStatus() == StatusEnumeration.EXISTS) {
-			    trueCount++;
-			} else {
-			    falseCount++;
-			}
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-		    } else {
-			PatchItem item = (PatchItem)it;
-			if (compare(pState, item)) {
-			    trueCount++;
-			} else {
-			    falseCount++;
-			}
-		    }
-		} else {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-								   PatchItem.class.getName(), it.getClass().getName()));
-		}
-		testResult.getTestedItem().add(testedItem);
-	    }
-	    switch(testDefinition.getCheck()) {
-	      case ALL:
-		result = falseCount == 0 && trueCount > 0;
-		break;
-	      case NONE_SATISFY:
-		result = trueCount == 0;
-		break;
-	      case AT_LEAST_ONE:
-		result = trueCount > 0;
-		break;
-	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_CHECK", testDefinition.getCheck()));
-	    }
-	    break;
-
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE", testDefinition.getCheckExistence()));
-	}
-	if (errorCount > 0) {
-	    testResult.setResult(ResultEnumeration.ERROR);
-	} else if (result) {
-	    testResult.setResult(ResultEnumeration.TRUE);
+    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+	if (compare((PatchState)st, (PatchItem)it)) {
+	    return ResultEnumeration.TRUE;
 	} else {
-	    testResult.setResult(ResultEnumeration.FALSE);
+	    return ResultEnumeration.FALSE;
 	}
     }
 

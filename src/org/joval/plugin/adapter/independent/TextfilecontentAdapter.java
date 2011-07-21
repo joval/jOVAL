@@ -88,63 +88,23 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	return TextfilecontentTest.class;
     }
 
-    public void evaluate(TestType testResult, ISystemCharacteristics sc) throws OvalException {
-	String testId = testResult.getTestId();
-	TextfilecontentTest testDefinition = definitions.getTest(testId, TextfilecontentTest.class);
-	String objectId = testDefinition.getObject().getObjectRef();
-	TextfilecontentState state = null;
-	if (testDefinition.isSetState() && testDefinition.getState().get(0).isSetStateRef()) {
-	    String stateId = testDefinition.getState().get(0).getStateRef();
-	    state = definitions.getState(stateId, TextfilecontentState.class);
-	}
+    public Class getStateClass() {
+	return TextfilecontentState.class;
+    }
 
-	for (VariableValueType var : sc.getVariablesByObjectId(objectId)) {
-	    TestedVariableType testedVariable = JOVALSystem.resultsFactory.createTestedVariableType();
-	    testedVariable.setVariableId(var.getVariableId());
-	    testedVariable.setValue(var.getValue());
-	    testResult.getTestedVariable().add(testedVariable);
-	}
+    public Class getItemClass() {
+	return TextfilecontentItem.class;
+    }
 
-	int trueCount=0, falseCount=0, errorCount=0;
-	if (sc.getObject(objectId).getFlag() == FlagEnumeration.ERROR) {
-	    errorCount++;
-	}
-
-	if (testDefinition.getCheckExistence() != ExistenceEnumeration.AT_LEAST_ONE_EXISTS) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE" , testDefinition.getCheckExistence()));
-	}
-
-	for (ItemType it : sc.getItemsByObjectId(objectId)) {
-	    if (it instanceof TextfilecontentItem) {
-		TextfilecontentItem item = (TextfilecontentItem)it;
-		TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-		testedItem.setItemId(item.getId());
-		if (match(state, item)) {
-		    trueCount++;
-		    testedItem.setResult(ResultEnumeration.TRUE);
-		} else {
-		    falseCount++;
-		    testedItem.setResult(ResultEnumeration.FALSE);
-		}
-		testResult.getTestedItem().add(testedItem);
-	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-					TextfilecontentItem.class.getName(), it.getClass().getName()));
-	    }
-	}
-
-	if (trueCount > 0) {
-	    testResult.setResult(ResultEnumeration.TRUE);
+    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+	if (match((TextfilecontentState)st, (TextfilecontentItem)it)) {
+	    return ResultEnumeration.TRUE;
 	} else {
-	    testResult.setResult(ResultEnumeration.FALSE);
+	    return ResultEnumeration.FALSE;
 	}
     }
 
     // Overrides
-
-    protected void preScan() {}
-
-    protected void postScan() {}
 
     protected JAXBElement<? extends ItemType> createStorageItem(ItemType item) {
 	return independentFactory.createTextfilecontentItem((TextfilecontentItem)item);

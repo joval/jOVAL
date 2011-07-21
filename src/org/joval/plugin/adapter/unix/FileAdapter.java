@@ -23,22 +23,11 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.ExistenceEnumeration;
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.definitions.core.EntityObjectStringType;
-import oval.schemas.definitions.core.EntityStateAnySimpleType;
-import oval.schemas.definitions.core.EntityStateStringType;
-import oval.schemas.definitions.core.ObjectComponentType;
-import oval.schemas.definitions.core.ObjectRefType;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateRefType;
 import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.unix.FileObject;
 import oval.schemas.definitions.unix.FileState;
 import oval.schemas.definitions.unix.FileTest;
-import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -92,136 +81,23 @@ public class FileAdapter extends BaseFileAdapter {
 	return FileTest.class;
     }
 
-    public void evaluate(TestType testResult, ISystemCharacteristics sc) throws OvalException {
-	String testId = testResult.getTestId();
-	FileTest test = definitions.getTest(testId, FileTest.class);
-	String objectId = test.getObject().getObjectRef();
-	FileState state = null;
-	if (test.isSetState() && test.getState().get(0).isSetStateRef()) {
-	    String stateId = test.getState().get(0).getStateRef();
-	    state = definitions.getState(stateId, FileState.class);
-	}
+    public Class getStateClass() {
+	return FileState.class;
+    }
 
-	for (VariableValueType var : sc.getVariablesByObjectId(objectId)) {
-	    TestedVariableType testedVariable = JOVALSystem.resultsFactory.createTestedVariableType();
-	    testedVariable.setVariableId(var.getVariableId());
-	    testedVariable.setValue(var.getValue());
-	    testResult.getTestedVariable().add(testedVariable);
-	}
+    public Class getItemClass() {
+	return FileItem.class;
+    }
 
-	boolean result = false;
-	int trueCount=0, falseCount=0, errorCount=0;
-	if (sc.getObject(objectId).getFlag() == FlagEnumeration.ERROR) {
-	    errorCount++;
-	}
-
-	Iterator<ItemType> items = sc.getItemsByObjectId(objectId).iterator();
-	switch(test.getCheckExistence()) {
-	  case NONE_EXIST: {
-	    boolean foundOne = false;
-	    while(items.hasNext()) {
-		ItemType it = items.next();
-		if (it instanceof FileItem) {
-		    FileItem item = (FileItem)it;
-		    TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-		    testedItem.setItemId(item.getId());
-		    switch(item.getStatus()) {
-		      case EXISTS:
-			testedItem.setResult(ResultEnumeration.TRUE);
-			trueCount++;
-			break;
-		      case DOES_NOT_EXIST:
-			testedItem.setResult(ResultEnumeration.FALSE);
-			falseCount++;
-			break;
-		      case ERROR:
-			testedItem.setResult(ResultEnumeration.ERROR);
-			errorCount++;
-			break;
-		      default:
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-			break;
-		    }
-		    testResult.getTestedItem().add(testedItem);
-		} else {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-								   FileItem.class.getName(), it.getClass().getName()));
-		}
-	    }
-	    result = trueCount == 0;
-	  }
-
-	  case AT_LEAST_ONE_EXISTS: {
-	    while(items.hasNext()) {
-		ItemType it = items.next();
-		if (it instanceof FileItem) {
-		    FileItem item = (FileItem)it;
-		    TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-		    testedItem.setItemId(item.getId());
-		    switch(item.getStatus()) {
-		      case EXISTS:
-			if (state == null) {
-			    trueCount++;
-			    testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-			} else if (compare(state, item)) {
-			    trueCount++;
-			    testedItem.setResult(ResultEnumeration.TRUE);
-			} else {
-			    falseCount++;
-			    testedItem.setResult(ResultEnumeration.FALSE);
-			}
-			break;
-		      case DOES_NOT_EXIST:
-			testedItem.setResult(ResultEnumeration.FALSE);
-			falseCount++;
-			break;
-		      case ERROR:
-			testedItem.setResult(ResultEnumeration.ERROR);
-			errorCount++;
-			break;
-		      default:
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-			break;
-		    }
-		    testResult.getTestedItem().add(testedItem);
-		} else {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-								   FileItem.class.getName(), it.getClass().getName()));
-		}
-	    }
-	    switch(test.getCheck()) {
-	      case ALL:
-		result = falseCount == 0 && trueCount > 0;
-		break;
-	      case AT_LEAST_ONE:
-		result = trueCount > 0;
-		break;
-	      case ONLY_ONE:
-		result = trueCount == 1 && falseCount == 0 && errorCount == 0;
-		break;
-	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_CHECK", test.getCheck()));
-	    }
-	    break;
-	  }
-
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE", test.getCheckExistence()));
-	}
-	if (errorCount > 0) {
-	    testResult.setResult(ResultEnumeration.ERROR);
-	} else if (result) {
-	    testResult.setResult(ResultEnumeration.TRUE);
+    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+	if (compare((FileState)st, (FileItem)it)) {
+	    return ResultEnumeration.TRUE;
 	} else {
-	    testResult.setResult(ResultEnumeration.FALSE);
+	    return ResultEnumeration.FALSE;
 	}
     }
 
     // Private
-
-    protected void preScan() {}
-
-    protected void postScan() {}
 
     protected JAXBElement<? extends ItemType> createStorageItem(ItemType item) {
 	return unixFactory.createFileItem((FileItem)item);

@@ -27,6 +27,7 @@ import oval.schemas.definitions.core.ObjectComponentType;
 import oval.schemas.definitions.core.ObjectRefType;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.StateRefType;
+import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.windows.WmiObject;
 import oval.schemas.definitions.windows.WmiState;
 import oval.schemas.definitions.windows.WmiTest;
@@ -90,6 +91,14 @@ public class WmiAdapter implements IAdapter {
 	return WmiObject.class;
     }
 
+    public Class getStateClass() {
+	return WmiState.class;
+    }
+
+    public Class getItemClass() {
+	return WmiItem.class;
+    }
+
     public void scan(ISystemCharacteristics sc) throws OvalException {
 	try {
 	    wmi.connect();
@@ -115,144 +124,11 @@ public class WmiAdapter implements IAdapter {
 	throw new OvalException("getItemData not supported for WmiObject");
     }
 
-    public void evaluate(TestType testResult, ISystemCharacteristics sc) throws OvalException {
-	String testId = testResult.getTestId();
-	WmiTest test = definitions.getTest(testId, WmiTest.class);
-	String objectId = test.getObject().getObjectRef();
-
-	WmiState state = null;
-	if (test.isSetState()) {
-	    String stateId = test.getState().get(0).getStateRef();
-	    state = definitions.getState(stateId, WmiState.class);
-	}
-
-	for (VariableValueType var : sc.getVariablesByObjectId(objectId)) {
-	    TestedVariableType testedVariable = JOVALSystem.resultsFactory.createTestedVariableType();
-	    testedVariable.setVariableId(var.getVariableId());
-	    testedVariable.setValue(var.getValue());
-	    testResult.getTestedVariable().add(testedVariable);
-	}
-
-	boolean result = false;
-	int trueCount=0, falseCount=0, errorCount=0;
-	if (sc.getObject(objectId).getFlag() == FlagEnumeration.ERROR) {
-	    errorCount++;
-	}
-	Iterator<ItemType> items = sc.getItemsByObjectId(objectId).iterator();
-	switch (test.getCheckExistence()) {
-	  case NONE_EXIST: {
-            while(items.hasNext()) {
-                ItemType it = items.next();
-                if (it instanceof WmiItem) {
-                    WmiItem item = (WmiItem)it;
-                    TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-                    testedItem.setItemId(item.getId());
-                    switch(item.getStatus()) {
-                      case EXISTS:
-			if (hasResult(item)) {
-                            trueCount++;
-			} else {
-                            falseCount++;
-			}
-                        testedItem.setResult(ResultEnumeration.NOT_EVALUATED); // just an existence check
-                        break;
-                      case DOES_NOT_EXIST:
-                        falseCount++;
-                        testedItem.setResult(ResultEnumeration.NOT_EVALUATED); // just an existence check
-                        break;
-                      case ERROR:
-                        errorCount++;
-                        testedItem.setResult(ResultEnumeration.ERROR);
-                        break;
-                      case NOT_COLLECTED:
-                        testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-                        break;
-                    }
-                    testResult.getTestedItem().add(testedItem);
-                } else {
-                    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-                                                                   WmiItem.class.getName(), it.getClass().getName()));
-                }
-            }
-            result = trueCount == 0;
-	    break;
-	  }
-
-	  case AT_LEAST_ONE_EXISTS: {
-            while(items.hasNext()) {
-                ItemType it = items.next();
-                if (it instanceof WmiItem) {
-                    WmiItem item = (WmiItem)it;
-                    TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-                    testedItem.setItemId(item.getId());
-                    switch(item.getStatus()) {
-                      case EXISTS:
-                        if (state == null) {
-                            if (hasResult(item)) {
-				trueCount++;
-                        	testedItem.setResult(ResultEnumeration.TRUE);
-			    } else {
-				falseCount++;
-                        	testedItem.setResult(ResultEnumeration.FALSE);
-			    }
-                        } else if (hasResult(item)) {
-                            if(match(state, item)) {
-                                trueCount++;
-                                testedItem.setResult(ResultEnumeration.TRUE);
-                            } else {
-                                falseCount++;
-                                testedItem.setResult(ResultEnumeration.FALSE);
-                            }
-                        } else {
-                            falseCount++;
-                            testedItem.setResult(ResultEnumeration.FALSE);
-			}
-                        break;
-                      case DOES_NOT_EXIST:
-                        falseCount++;
-                        testedItem.setResult(ResultEnumeration.FALSE);
-                        break;
-                      case ERROR:
-                        errorCount++;
-                        testedItem.setResult(ResultEnumeration.ERROR);
-                        break;
-                      case NOT_COLLECTED:
-                        testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-                        break;
-                    }
-                    testResult.getTestedItem().add(testedItem);
-                } else {
-                    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-                                                                   WmiItem.class.getName(), it.getClass().getName()));
-                }
-            }
-
-            switch(test.getCheck()) {
-              case ALL:
-                result = falseCount == 0 && trueCount > 0;
-                break;
-              case NONE_SATISFY:
-                result = trueCount == 0;
-                break;
-              case AT_LEAST_ONE:
-                result = trueCount > 0;
-                break;
-              default:
-                throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_CHECK", test.getCheck()));
-            }
-	    break;
-	  }
-
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE", test.getCheckExistence()));
-	}
-
-	if (errorCount > 0) {
-	    testResult.setResult(ResultEnumeration.ERROR);
-	} else if (result) {
-	    testResult.setResult(ResultEnumeration.TRUE);
+    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+        if (match((WmiState)st, (WmiItem)it)) {
+	    return ResultEnumeration.TRUE;
 	} else {
-	    testResult.setResult(ResultEnumeration.FALSE);
+	    return ResultEnumeration.FALSE;
 	}
     }
 
@@ -313,24 +189,26 @@ public class WmiAdapter implements IAdapter {
 	item.setWql(wqlType);
 	try {
 	    ISWbemObjectSet objSet = wmi.execQuery(ns, wql);
-	    List<EntityItemAnySimpleType> result = item.getResult();
 	    int size = objSet.getSize();
 	    if (size == 0) {
-		EntityItemAnySimpleType itemEntity = coreFactory.createEntityItemAnySimpleType();
-		itemEntity.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		result.add(itemEntity);
+		EntityItemAnySimpleType resultType = coreFactory.createEntityItemAnySimpleType();
+		resultType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		item.getResult().add(resultType);
 	    } else {
 		String field = getField(wql);
 		for (ISWbemObject swbObj : objSet) {
 		    for (ISWbemProperty prop : swbObj.getProperties()) {
 			if (prop.getName().equalsIgnoreCase(field)) {
-			    EntityItemAnySimpleType itemEntity = coreFactory.createEntityItemAnySimpleType();
-			    itemEntity.setValue(prop.getValueAsString());
-			    result.add(itemEntity);
+			    EntityItemAnySimpleType resultType = coreFactory.createEntityItemAnySimpleType();
+			    resultType.setValue(prop.getValueAsString());
+			    item.getResult().add(resultType);
 			    break;
 			}
 		    }
 		}
+	    }
+	    if (!hasResult(item)) {
+		item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    }
 	} catch (WmiException e) {
 	    item.setStatus(StatusEnumeration.ERROR);

@@ -16,6 +16,7 @@ import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.ObjectComponentType;
+import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.linux.RpminfoObject;
 import oval.schemas.definitions.linux.RpminfoState;
 import oval.schemas.definitions.linux.RpminfoTest;
@@ -71,6 +72,14 @@ public class RpminfoAdapter implements IAdapter {
 	return RpminfoTest.class;
     }
 
+    public Class getStateClass() {
+	return RpminfoState.class;
+    }
+
+    public Class getItemClass() {
+	return RpminfoItem.class;
+    }
+
     public void init(IAdapterContext ctx) {
 	definitions = ctx.getDefinitions();
 	this.ctx = ctx;
@@ -119,109 +128,65 @@ public class RpminfoAdapter implements IAdapter {
 	throw new RuntimeException("getItemData not supported");
     }
 
-    public void evaluate(TestType testResult, ISystemCharacteristics sc) throws OvalException {
-	String testId = testResult.getTestId();
-	RpminfoTest testDefinition = definitions.getTest(testId, RpminfoTest.class);
-	String objectId = testDefinition.getObject().getObjectRef();
-	RpminfoState state = null;
-	if (testDefinition.isSetState() && testDefinition.getState().get(0).isSetStateRef()) {
-	    String stateId = testDefinition.getState().get(0).getStateRef();
-	    state = definitions.getState(stateId, RpminfoState.class);
+    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+	RpminfoState state = (RpminfoState)st;
+	RpminfoItem item = (RpminfoItem)it;
+
+	if (state.getEvr() == null) {
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_BAD", state.getId()));
 	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_MISSING", testId));
-	}
-
-	try {
-	    List<? extends ItemType> items = sc.getItemsByObjectId(objectId);
-
-	    switch(testDefinition.getCheckExistence()) {
-	      case AT_LEAST_ONE_EXISTS:
-		if (items.size() < 1) {
-		    testResult.setResult(ResultEnumeration.FALSE);
+	    String evr = (String)state.getEvr().getValue();
+	    int end = evr.indexOf(":");
+	    String epoch = evr.substring(0, end);
+	    int begin = end+1;
+	    end = evr.indexOf("-", begin);
+	    String version = evr.substring(begin, end);
+	    String release = evr.substring(end+1);
+    
+	    switch(state.getEvr().getOperation()) {
+	      case EQUALS:
+		if (epoch.equals((String)item.getEpoch().getValue()) &&
+		    version.equals((String)item.getVersion().getValue()) &&
+		    release.equals((String)item.getRelease().getValue())) {
+		    return ResultEnumeration.TRUE;
 		} else {
-		    RpminfoItem item = (RpminfoItem)items.get(0);
-		    if (state.getEvr() == null) {
-			throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_BAD", state.getId()));
-		    } else {
-			String evr = (String)state.getEvr().getValue();
-			int end = evr.indexOf(":");
-			String epoch = evr.substring(0, end);
-			int begin = end+1;
-			end = evr.indexOf("-", begin);
-			String version = evr.substring(begin, end);
-			String release = evr.substring(end+1);
-    
-			switch(state.getEvr().getOperation()) {
-			  case EQUALS:
-			    if (epoch.equals((String)item.getEpoch().getValue()) &&
-				version.equals((String)item.getVersion().getValue()) &&
-				release.equals((String)item.getRelease().getValue())) {
-				testResult.setResult(ResultEnumeration.TRUE);
-			    } else {
-				testResult.setResult(ResultEnumeration.FALSE);
-			    }
-			    break;
-			  case LESS_THAN:
-			    if (Version.isVersion(epoch) && Version.isVersion((String)item.getEpoch().getValue())) {
-				Version stateEpoch = new Version(epoch);
-				Version itemEpoch = new Version((String)item.getEpoch().getValue());
-				if (itemEpoch.lessThan(stateEpoch)) {
-				    testResult.setResult(ResultEnumeration.TRUE);
-				    break;
-				}
-			    } else if (((String)item.getEpoch().getValue()).compareTo(epoch) > 0) {
-				testResult.setResult(ResultEnumeration.TRUE);
-				break;
-			    }
-    
-			    if (Version.isVersion(version) && Version.isVersion((String)item.getVersion().getValue())) {
-				Version stateEpoch = new Version(version);
-				Version itemEpoch = new Version((String)item.getVersion().getValue());
-				if (itemEpoch.lessThan(stateEpoch)) {
-				    testResult.setResult(ResultEnumeration.TRUE);
-				    break;
-				}
-			    } else if (((String)item.getVersion().getValue()).compareTo(version) > 0) {
-				testResult.setResult(ResultEnumeration.TRUE);
-				break;
-			    }
-    
-			    if (Version.isVersion(release) && Version.isVersion((String)item.getRelease().getValue())) {
-				Version stateEpoch = new Version(release);
-				Version itemEpoch = new Version((String)item.getRelease().getValue());
-				if (itemEpoch.lessThan(stateEpoch)) {
-				    testResult.setResult(ResultEnumeration.TRUE);
-				    break;
-				}
-			    } else if (((String)item.getRelease().getValue()).compareTo(release) > 0) {
-				testResult.setResult(ResultEnumeration.TRUE);
-				break;
-			    }
-    
-			    testResult.setResult(ResultEnumeration.FALSE);
-			    break;
-			  default:
-			    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
-									   state.getEvr().getOperation()));
-			}
+		    return ResultEnumeration.FALSE;
+		}
+
+	      case LESS_THAN:
+		if (Version.isVersion(epoch) && Version.isVersion((String)item.getEpoch().getValue())) {
+		    Version stateEpoch = new Version(epoch);
+		    Version itemEpoch = new Version((String)item.getEpoch().getValue());
+		    if (itemEpoch.lessThan(stateEpoch)) {
+			return ResultEnumeration.TRUE;
 		    }
+		} else if (((String)item.getEpoch().getValue()).compareTo(epoch) > 0) {
+		    return ResultEnumeration.TRUE;
 		}
-		break;
-
-	      case NONE_EXIST:
-		if (items.size() == 0) {
-		    testResult.setResult(ResultEnumeration.TRUE);
-		} else {
-		    testResult.setResult(ResultEnumeration.FALSE);
+		if (Version.isVersion(version) && Version.isVersion((String)item.getVersion().getValue())) {
+		    Version stateEpoch = new Version(version);
+		    Version itemEpoch = new Version((String)item.getVersion().getValue());
+		    if (itemEpoch.lessThan(stateEpoch)) {
+			return ResultEnumeration.TRUE;
+		    }
+		} else if (((String)item.getVersion().getValue()).compareTo(version) > 0) {
+		    return ResultEnumeration.TRUE;
 		}
-		break;
+		if (Version.isVersion(release) && Version.isVersion((String)item.getRelease().getValue())) {
+		    Version stateEpoch = new Version(release);
+		    Version itemEpoch = new Version((String)item.getRelease().getValue());
+		    if (itemEpoch.lessThan(stateEpoch)) {
+			return ResultEnumeration.TRUE;
+		    }
+		} else if (((String)item.getRelease().getValue()).compareTo(release) > 0) {
+		    return ResultEnumeration.TRUE;
+		}
+		return ResultEnumeration.FALSE;
 
 	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE",
-							       testDefinition.getCheckExistence()));
+		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
+							       state.getEvr().getOperation()));
 	    }
-	} catch (NoSuchElementException e) {
-	    testResult.setResult(ResultEnumeration.NOT_EVALUATED);
 	}
     }
 

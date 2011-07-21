@@ -54,11 +54,11 @@ import oval.schemas.definitions.core.RegexCaptureFunctionType;
 import oval.schemas.definitions.core.Set;
 import oval.schemas.definitions.core.SetOperatorEnumeration;
 import oval.schemas.definitions.core.SplitFunctionType;
+import oval.schemas.definitions.core.StateRefType;
 import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.core.StatesType;
 import oval.schemas.definitions.core.SubstringFunctionType;
 import oval.schemas.definitions.core.TestsType;
-import oval.schemas.definitions.core.TestType;
 import oval.schemas.definitions.core.TimeDifferenceFunctionType;
 import oval.schemas.definitions.core.ValueType;
 import oval.schemas.definitions.core.VariableComponentType;
@@ -66,6 +66,9 @@ import oval.schemas.definitions.core.VariableType;
 import oval.schemas.definitions.core.VariablesType;
 import oval.schemas.definitions.independent.EntityObjectVariableRefType;
 import oval.schemas.results.core.ResultEnumeration;
+import oval.schemas.results.core.TestedItemType;
+import oval.schemas.results.core.TestedVariableType;
+import oval.schemas.results.core.TestType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.SystemDataType;
@@ -399,9 +402,9 @@ public class Engine implements IProducer {
 
     private oval.schemas.results.core.CriterionType evaluateCriterion(CriterionType criterionDefinition) throws OvalException {
 	String testId = criterionDefinition.getTestRef();
-	oval.schemas.results.core.TestType testResult = results.getTest(testId);
+	TestType testResult = results.getTest(testId);
 	if (testResult == null) {
-	    TestType testDefinition = definitions.getTest(testId);
+	    oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	    testResult = resultsFactory.createTestType();
 	    testResult.setTestId(testDefinition.getId());
 	    testResult.setCheck(testDefinition.getCheck());
@@ -419,7 +422,7 @@ public class Engine implements IProducer {
 		} else if (getObjectRef(testDefinition) == null) {
 		    throw new OvalException(JOVALSystem.getMessage("ERROR_TEST_NOOBJREF", testId));
 		} else {
-		    adapter.evaluate(testResult, sc);
+		    evaluateTest(testResult, sc, adapter);
 		}
 	    } else {
 		testResult.setResult(ResultEnumeration.NOT_EVALUATED);
@@ -447,6 +450,137 @@ public class Engine implements IProducer {
 	    criterionResult.setResult(testResult.getResult());
 	}
 	return criterionResult;
+    }
+
+    private void evaluateTest(TestType testResult, ISystemCharacteristics sc, IAdapter adapter) throws OvalException {
+	String testId = testResult.getTestId();
+	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId, adapter.getTestClass());
+	String objectId = getObjectRef(testDefinition);
+	String stateId = getStateRef(testDefinition);
+	StateType state = null;
+	if (stateId != null) {
+	    state = definitions.getState(stateId, adapter.getStateClass());
+	}
+
+	for (VariableValueType var : sc.getVariablesByObjectId(objectId)) {
+	    TestedVariableType testedVariable = JOVALSystem.resultsFactory.createTestedVariableType();
+	    testedVariable.setVariableId(var.getVariableId());
+	    testedVariable.setValue(var.getValue());
+	    testResult.getTestedVariable().add(testedVariable);
+	}
+
+	boolean result = false;
+	int trueCount=0, falseCount=0, errorCount=0;
+	if (sc.getObject(objectId).getFlag() == FlagEnumeration.ERROR) {
+	    errorCount++;
+	}
+
+	Iterator<ItemType> items = sc.getItemsByObjectId(objectId).iterator();
+	switch(testDefinition.getCheckExistence()) {
+	  case NONE_EXIST: {
+	    while(items.hasNext()) {
+		ItemType item = items.next();
+		if (item.getClass().getName().equals(adapter.getItemClass().getName())) {
+		    TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
+		    testedItem.setItemId(item.getId());
+		    switch(item.getStatus()) {
+		      case EXISTS:
+			testedItem.setResult(ResultEnumeration.NOT_EVALUATED); // just an existence check
+			trueCount++;
+			break;
+		      case DOES_NOT_EXIST:
+			testedItem.setResult(ResultEnumeration.NOT_EVALUATED); // just an existence check
+			falseCount++;
+			break;
+		      case ERROR:
+			testedItem.setResult(ResultEnumeration.ERROR);
+			errorCount++;
+			break;
+		      default:
+			testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
+			break;
+		    }
+		    testResult.getTestedItem().add(testedItem);
+		} else {
+		    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", adapter.getItemClass().getName(),
+								   item.getClass().getName()));
+		}
+	    }
+	    result = trueCount == 0;
+	    break;
+	  }
+
+	  case AT_LEAST_ONE_EXISTS: {
+	    while(items.hasNext()) {
+		ItemType item = items.next();
+		if (item.getClass().getName().equals(adapter.getItemClass().getName())) {
+		    TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
+		    testedItem.setItemId(item.getId());
+		    switch(item.getStatus()) {
+		      case EXISTS:
+			if (state == null) { // In the absence of a state, check only for the existence of the item
+			    trueCount++;
+			    testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
+			} else {
+			    ResultEnumeration matchResult = adapter.compare(state, item);
+			    switch(matchResult) {
+			      case TRUE:
+				trueCount++;
+				break;
+			      case FALSE:
+				falseCount++;
+				break;
+			      case ERROR:
+				errorCount++;
+				break;
+			    }
+			    testedItem.setResult(matchResult);
+			}
+			break;
+		      case DOES_NOT_EXIST:
+			testedItem.setResult(ResultEnumeration.FALSE);
+			falseCount++;
+			break;
+		      case ERROR:
+			testedItem.setResult(ResultEnumeration.ERROR);
+			errorCount++;
+			break;
+		      default:
+			testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
+			break;
+		    }
+		    testResult.getTestedItem().add(testedItem);
+		} else {
+		    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", adapter.getItemClass().getName(),
+								   item.getClass().getName()));
+		}
+	    }
+	    switch(testDefinition.getCheck()) {
+	      case ALL:
+		result = falseCount == 0 && trueCount > 0;
+		break;
+	      case AT_LEAST_ONE:
+		result = trueCount > 0;
+		break;
+	      case ONLY_ONE:
+		result = trueCount == 1 && falseCount == 0 && errorCount == 0;
+		break;
+	      default:
+		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_CHECK", testDefinition.getCheck()));
+	    }
+	    break;
+	  }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE", testDefinition.getCheckExistence()));
+	}
+	if (errorCount > 0) {
+	    testResult.setResult(ResultEnumeration.ERROR);
+	} else if (result) {
+	    testResult.setResult(ResultEnumeration.TRUE);
+	} else {
+	    testResult.setResult(ResultEnumeration.FALSE);
+	}
     }
 
     private oval.schemas.results.core.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition) throws OvalException {
@@ -911,11 +1045,28 @@ public class Engine implements IProducer {
 	}
     }
 
-    private String getObjectRef(TestType test) {
+    private String getObjectRef(oval.schemas.definitions.core.TestType test) {
 	try {
 	    Method getObject = test.getClass().getMethod("getObject");
 	    ObjectRefType objectRef = (ObjectRefType)getObject.invoke(test);
 	    return objectRef.getObjectRef();
+	} catch (NoSuchMethodException e) {
+	} catch (IllegalAccessException e) {
+	} catch (InvocationTargetException e) {
+	} catch (Exception e) {
+	}
+	return null;
+    }
+
+    private String getStateRef(oval.schemas.definitions.core.TestType test) {
+	try {
+	    Method getObject = test.getClass().getMethod("getState");
+	    Object o = getObject.invoke(test);
+	    if (o instanceof List) {
+		return ((List<StateRefType>)o).get(0).getStateRef();
+	    } else if (o instanceof StateRefType) {
+		return ((StateRefType)o).getStateRef();
+	    }
 	} catch (NoSuchMethodException e) {
 	} catch (IllegalAccessException e) {
 	} catch (InvocationTargetException e) {

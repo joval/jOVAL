@@ -89,45 +89,37 @@ public class FamilyAdapter implements IAdapter {
 	return FamilyTest.class;
     }
 
+    public Class getStateClass() {
+	return FamilyState.class;
+    }
+
+    public Class getItemClass() {
+	return FamilyItem.class;
+    }
+
     public String getItemData(ObjectComponentType object, ISystemCharacteristics sc) throws OvalException {
 	return null; // What foolish variable would point to a FamilyObject?
     }
 
-    public void evaluate(TestType testResult, ISystemCharacteristics sc) throws OvalException {
-	String testId = testResult.getTestId();
-	FamilyTest testDefinition = ctx.getDefinitions().getTest(testId, FamilyTest.class); 
-	String objectId = testDefinition.getObject().getObjectRef();
-	FamilyObject fObj = definitions.getObject(objectId, FamilyObject.class);
-
-	//
-	// Decode the state object
-	//
-	FamilyState fState = null;
-	String stateId = testDefinition.getState().get(0).getStateRef();
-	if (stateId != null) {
-	    fState = definitions.getState(stateId, FamilyState.class);
-	}
-
-	ItemType it = sc.getItemsByObjectId(objectId).get(0);
-	if (!(it instanceof FamilyItem)) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-							   FamilyItem.class.getName(), it.getClass().getName()));
-	}
+    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+	FamilyState state = (FamilyState)st;
 	FamilyItem item = (FamilyItem)it;
-	if (OperationEnumeration.CASE_INSENSITIVE_EQUALS == fState.getFamily().getOperation()) {
-	    if (((String)item.getFamily().getValue()).equalsIgnoreCase((String)fState.getFamily().getValue())) {
-		testResult.setResult(ResultEnumeration.TRUE);
+
+	switch (state.getFamily().getOperation()) {
+	  case CASE_INSENSITIVE_EQUALS:
+	    if (((String)item.getFamily().getValue()).equalsIgnoreCase((String)state.getFamily().getValue())) {
+		return ResultEnumeration.TRUE;
 	    } else {
-		testResult.setResult(ResultEnumeration.FALSE);
+		return ResultEnumeration.FALSE;
 	    }
-	} else if (OperationEnumeration.EQUALS == fState.getFamily().getOperation()) {
-	    if (((String)item.getFamily().getValue()).equals((String)fState.getFamily().getValue())) {
-		testResult.setResult(ResultEnumeration.TRUE);
+	  case EQUALS:
+	    if (((String)item.getFamily().getValue()).equals((String)state.getFamily().getValue())) {
+		return ResultEnumeration.TRUE;
 	    } else {
-		testResult.setResult(ResultEnumeration.FALSE);
+		return ResultEnumeration.FALSE;
 	    }
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", fState.getFamily().getOperation()));
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getFamily().getOperation()));
 	}
     }
 }

@@ -42,8 +42,8 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
 /**
- * Base class for IFile-based IAdapters. Subclasses need only implement getObjectClass, getTestClass, evaluate,
- * createFileItems and createStorageItem methods.
+ * Base class for IFile-based IAdapters. Subclasses need only implement get[X]Class, compare, createFileItems and
+ * createStorageItem methods.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -78,39 +78,34 @@ public abstract class BaseFileAdapter implements IAdapter {
      * createFileItems and createStorageItem methods.
      */
     public void scan(ISystemCharacteristics sc) throws OvalException {
-	try {
-	    preScan();
-	    Iterator <ObjectType>iter = definitions.iterateObjects(getObjectClass());
-	    while (iter.hasNext()) {
-		ObjectType obj = iter.next();
-		if (isSet(obj)) {
-		    // Set objects can be skipped, they only contain references to objects that will be scaned elsewhere.
-		    continue;
+	Iterator <ObjectType>iter = definitions.iterateObjects(getObjectClass());
+	while (iter.hasNext()) {
+	    ObjectType obj = iter.next();
+	    if (isSet(obj)) {
+		// Set objects can be skipped, they only contain references to objects that will be scaned elsewhere.
+		continue;
+	    } else {
+		ctx.status(obj.getId());
+		List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
+		List<? extends ItemType> items = getItems(obj, variableValueTypes);
+		if (items.size() == 0) {
+		    MessageType msg = new MessageType();
+		    msg.setLevel(MessageLevelEnumeration.INFO);
+		    msg.setValue("Could not resolve any items for object");
+		    sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
 		} else {
-		    ctx.status(obj.getId());
-		    List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
-		    List<? extends ItemType> items = getItems(obj, variableValueTypes);
-		    if (items.size() == 0) {
-			MessageType msg = new MessageType();
-			msg.setLevel(MessageLevelEnumeration.INFO);
-			msg.setValue("Could not resolve any items for object");
-			sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
-		    } else {
-			sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-			for (ItemType itemType : items) {
-			    JAXBElement<? extends ItemType> storageItem = createStorageItem(itemType);
-			    BigInteger itemId = sc.storeItem(storageItem);
-			    sc.relateItem(obj.getId(), itemId);
-			}
-		    }
-		    for (VariableValueType var : variableValueTypes) {
-			sc.storeVariable(var);
-			sc.relateVariable(obj.getId(), var.getVariableId());
+		    sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+		    for (ItemType itemType : items) {
+			JAXBElement<? extends ItemType> storageItem = createStorageItem(itemType);
+			BigInteger itemId = sc.storeItem(storageItem);
+			sc.relateItem(obj.getId(), itemId);
 		    }
 		}
+		for (VariableValueType var : variableValueTypes) {
+		    sc.storeVariable(var);
+		    sc.relateVariable(obj.getId(), var.getVariableId());
+		}
 	    }
-	} finally {
-	    postScan();
 	}
     }
 
@@ -119,10 +114,6 @@ public abstract class BaseFileAdapter implements IAdapter {
     }
 
     // Protected
-
-    protected abstract void preScan();
-
-    protected abstract void postScan();
 
     protected abstract JAXBElement<? extends ItemType> createStorageItem(ItemType item);
 

@@ -67,6 +67,22 @@ public class UnameAdapter implements IAdapter {
 
     // Implement IAdapter
 
+    public Class getObjectClass() {
+	return UnameObject.class;
+    }
+
+    public Class getTestClass() {
+	return UnameTest.class;
+    }
+
+    public Class getStateClass() {
+	return UnameState.class;
+    }
+
+    public Class getItemClass() {
+	return UnameItem.class;
+    }
+
     public void init(IAdapterContext ctx) {
 	this.ctx = ctx;
 	definitions = ctx.getDefinitions();
@@ -94,103 +110,53 @@ public class UnameAdapter implements IAdapter {
 	}
     }
 
-    public Class getObjectClass() {
-	return UnameObject.class;
-    }
-
-    public Class getTestClass() {
-	return UnameTest.class;
-    }
-
     public String getItemData(ObjectComponentType object, ISystemCharacteristics sc) throws OvalException {
 	return null; // What foolish variable would point to a UnameObject?
     }
 
-    public void evaluate(TestType testResult, ISystemCharacteristics sc) throws OvalException {
-	String testId = testResult.getTestId();
-	UnameTest testDefinition = ctx.getDefinitions().getTest(testId, UnameTest.class); 
-	String objectId = testDefinition.getObject().getObjectRef();
-	UnameObject uObj = definitions.getObject(objectId, UnameObject.class);
-
-	//
-	// Decode the state object
-	//
-	UnameState uState = null;
-	String stateId = testDefinition.getState().get(0).getStateRef();
-	if (stateId != null) {
-	    uState = definitions.getState(stateId, UnameState.class);
-	}
-
-	List<ItemType> items = sc.getItemsByObjectId(objectId);
-	if (items.size() < 1) {
-	    testResult.setResult(ResultEnumeration.ERROR);
-	    MessageType msg = new MessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALSystem.getMessage("ERROR_NO_ITEMS", objectId));
-	    testResult.getMessage().add(msg);
-	    return;
-	}
-	ItemType it = sc.getItemsByObjectId(objectId).get(0);
-	if (!(it instanceof UnameItem)) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
-							   UnameItem.class.getName(), it.getClass().getName()));
-	}
+    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+	UnameState state = (UnameState)st;
 	UnameItem item = (UnameItem)it;
-	TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-	testedItem.setItemId(item.getId());
 
-	if (uState.isSetMachineClass()) {
-	    if (compareTypes(uState.getMachineClass(), item.getMachineClass())) {
-		testResult.setResult(ResultEnumeration.TRUE);
+	if (state.isSetMachineClass()) {
+	    if (compareTypes(state.getMachineClass(), item.getMachineClass())) {
+		return ResultEnumeration.TRUE;
 	    } else {
-		testResult.setResult(ResultEnumeration.FALSE);
-		testedItem.setResult(ResultEnumeration.FALSE);
+		return ResultEnumeration.FALSE;
 	    }
-	} else if (uState.isSetNodeName()) {
-	    if (compareTypes(uState.getNodeName(), item.getNodeName())) {
-		testResult.setResult(ResultEnumeration.TRUE);
+	} else if (state.isSetNodeName()) {
+	    if (compareTypes(state.getNodeName(), item.getNodeName())) {
+		return ResultEnumeration.TRUE;
 	    } else {
-		testResult.setResult(ResultEnumeration.FALSE);
-		testedItem.setResult(ResultEnumeration.FALSE);
+		return ResultEnumeration.FALSE;
 	    }
-	} else if (uState.isSetOsName()) {
-	    if (compareTypes(uState.getOsName(), item.getOsName())) {
-		testResult.setResult(ResultEnumeration.TRUE);
+	} else if (state.isSetOsName()) {
+	    if (compareTypes(state.getOsName(), item.getOsName())) {
+		return ResultEnumeration.TRUE;
 	    } else {
-		testResult.setResult(ResultEnumeration.FALSE);
-		testedItem.setResult(ResultEnumeration.FALSE);
+		return ResultEnumeration.FALSE;
 	    }
-	} else if (uState.isSetOsRelease()) {
-	    if (compareTypes(uState.getOsRelease(), item.getOsRelease())) {
-		testResult.setResult(ResultEnumeration.TRUE);
+	} else if (state.isSetOsRelease()) {
+	    if (compareTypes(state.getOsRelease(), item.getOsRelease())) {
+		return ResultEnumeration.TRUE;
 	    } else {
-		testResult.setResult(ResultEnumeration.FALSE);
-		testedItem.setResult(ResultEnumeration.FALSE);
+		return ResultEnumeration.FALSE;
 	    }
-	} else if (uState.isSetOsVersion()) {
-	    if (compareTypes(uState.getOsVersion(), item.getOsVersion())) {
-		testResult.setResult(ResultEnumeration.TRUE);
+	} else if (state.isSetOsVersion()) {
+	    if (compareTypes(state.getOsVersion(), item.getOsVersion())) {
+		return ResultEnumeration.TRUE;
 	    } else {
-		testResult.setResult(ResultEnumeration.FALSE);
-		testedItem.setResult(ResultEnumeration.FALSE);
+		return ResultEnumeration.FALSE;
 	    }
-	} else if (uState.isSetProcessorType()) {
-	    if (compareTypes(uState.getProcessorType(), item.getProcessorType())) {
-		testResult.setResult(ResultEnumeration.TRUE);
+	} else if (state.isSetProcessorType()) {
+	    if (compareTypes(state.getProcessorType(), item.getProcessorType())) {
+		return ResultEnumeration.TRUE;
 	    } else {
-		testResult.setResult(ResultEnumeration.FALSE);
-		testedItem.setResult(ResultEnumeration.FALSE);
+		return ResultEnumeration.FALSE;
 	    }
 	} else {
-	    testResult.setResult(ResultEnumeration.ERROR);
-	    testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-	    MessageType msg = new MessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALSystem.getMessage("ERROR_UNAME_STATE_EMPTY", stateId));
-	    testResult.getMessage().add(msg);
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNAME_STATE_EMPTY", state.getId()));
 	}
-
-	testResult.getTestedItem().add(testedItem);
     }
 
     // Internal
