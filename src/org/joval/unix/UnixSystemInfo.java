@@ -14,6 +14,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemIPAddressStringType;
 import oval.schemas.systemcharacteristics.core.InterfacesType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
@@ -33,9 +34,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class UnixSystemInfo {
-    private static final String IP4_ADDRESS = "ipv4_address";
-    private static final String IP6_ADDRESS = "ipv6_address";
-
     private ISession session;
     private ObjectFactory coreFactory;
     private SystemInfoType info;
@@ -108,10 +106,10 @@ public class UnixSystemInfo {
 		EntityItemIPAddressStringType ipAddressType = coreFactory.createEntityItemIPAddressStringType();
 		if (intf.getIpV4Address() != null) {
 		    ipAddressType.setValue(intf.getIpV4Address());
-		    ipAddressType.setDatatype(IP4_ADDRESS);
+		    ipAddressType.setDatatype(SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());
 		} else if (intf.getIpV6Address() != null) {
 		    ipAddressType.setValue(intf.getIpV6Address());
-		    ipAddressType.setDatatype(IP6_ADDRESS);
+		    ipAddressType.setDatatype(SimpleDatatypeEnumeration.IPV_6_ADDRESS.value());
 		}
 
 		if (ipAddressType.getValue() != null) {

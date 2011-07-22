@@ -10,6 +10,7 @@ import java.util.Properties;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemIPAddressStringType;
 import oval.schemas.systemcharacteristics.core.InterfacesType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
@@ -39,9 +40,6 @@ import org.joval.windows.wmi.WmiException;
  */
 public class WindowsSystemInfo {
     public static final String ARCHITECTURE	= "PROCESSOR_ARCHITECTURE";
-
-    static final String IP4_ADDRESS		= "ipv4_address";
-    static final String IP6_ADDRESS		= "ipv6_address";
 
     static final String COMPUTERNAME_KEY	= "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
     static final String COMPUTERNAME_VAL	= "ComputerName";
@@ -122,10 +120,10 @@ public class WindowsSystemInfo {
 				ipAddressType.setValue(ipAddresses[i]);
 				switch(i) {
 				  case 0: // The IPv4 address is [0]
-				    ipAddressType.setDatatype(IP4_ADDRESS);
+				    ipAddressType.setDatatype(SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());
 				    break;
 				  case 1: // The IPv6 address is [1]
-				    ipAddressType.setDatatype(IP6_ADDRESS);
+				    ipAddressType.setDatatype(SimpleDatatypeEnumeration.IPV_6_ADDRESS.value());
 				    break;
 				}
 				interfaceType.setIpAddress(ipAddressType);

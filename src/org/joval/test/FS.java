@@ -3,6 +3,8 @@
 
 package org.joval.test;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -12,21 +14,22 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.List;
 
+import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.ISession;
 
 public class FS {
     private ISession session;
+    private IFilesystem fs;
 
     public FS(ISession session) {
 	this.session = session;
+	fs = session.getFilesystem();
     }
 
     public synchronized void test(String path) {
 	InputStream in = null;
 	try {
-	    IFilesystem fs = session.getFilesystem();
-
 	    if (path.startsWith("search:")) {
 		path = path.substring(7);
 		List<String> list = fs.search(path);
@@ -36,10 +39,18 @@ public class FS {
 		    System.out.println("Match: " + iter.next());
 		}
 	    } else {
-		in = fs.getInputStream(path);
-		String cs = getMD5Checksum(in);
-		System.out.println("Path:  " + path);
-		System.out.println("  md5: " + cs);
+		IFile f = fs.getFile(path);
+		if (f.isDirectory()) {
+		    String[] children = f.list();
+		    for (int i=0; i < children.length; i++) {
+			System.out.println(children[i]);
+		    }
+		} else if (f.isFile()) {
+		    in = fs.getInputStream(path);
+		    String cs = getMD5Checksum(in);
+		    System.out.println("Path:  " + path);
+		    System.out.println("  md5: " + cs);
+		}
 	    }
 	} catch (IOException e) {
 	    e.printStackTrace();
@@ -76,5 +87,15 @@ public class FS {
         } catch (NoSuchAlgorithmException e) {
             throw new IOException (e.getMessage());
         }
+    }
+
+    private String getFileName(IFile f) {
+	String path = f.getLocalName();
+	int ptr = path.lastIndexOf(fs.getDelimString());
+	if (ptr > 0) {
+	    return path.substring(ptr+1);
+	} else {
+	    return path;
+	}
     }
 }

@@ -14,6 +14,7 @@ import javax.xml.bind.JAXBElement;
 import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
+import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.ObjectComponentType;
 import oval.schemas.definitions.core.StateType;
@@ -245,6 +246,7 @@ public class RpminfoAdapter implements IAdapter {
 
 	    EntityItemEVRStringType evr = new EntityItemEVRStringType();
 	    evr.setValue(pkgEpoch + ":" + pkgVersion + "-" + pkgRelease);
+	    evr.setDatatype(SimpleDatatypeEnumeration.EVR_STRING.value());
 	    item.setEvr(evr);
 	} else {
 	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
