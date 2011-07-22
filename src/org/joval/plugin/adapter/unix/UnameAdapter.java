@@ -10,8 +10,8 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Vector;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
@@ -104,8 +104,14 @@ public class UnameAdapter implements IAdapter {
 	}
     }
 
-    public String getItemData(ObjectComponentType object, ISystemCharacteristics sc) throws OvalException {
-	return null; // What foolish variable would point to a UnameObject?
+    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
+	Vector<ItemType> v = new Vector<ItemType>();
+	try {
+	    v.add(getItem().getValue());
+	} catch (Exception e) {
+	    ctx.log(Level.WARNING, e.getMessage(), e);
+	}
+	return v;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {

@@ -3,7 +3,7 @@
 
 package org.joval.intf.plugin;
 
-import java.util.Collection;
+import java.util.List;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.definitions.core.ObjectType;
@@ -58,12 +58,9 @@ public interface IAdapter {
     public void scan(ISystemCharacteristics sc) throws OvalException;
 
     /**
-     * Return the specified item/record field for the object (the item, field and object ID all being contained within the
-     * ObjectComponentType argument.  The ISystemCharacteristics is provided as a convenience, but owing to the fact that
-     * this method is used to resolve variable values, it may be necessary for the adapter to probe the host for the
-     * information, as it may be invoked <i>during</i> the scan method, when object definitions refer to variable values.
+     * Retrieve items associated with the given object by scanning the machine.  Used for variable resolution.
      */
-    public String getItemData(ObjectComponentType object, ISystemCharacteristics sc) throws OvalException;
+    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException;
 
     /**
      * Compare an item to a state.  The state and item are type-checked to insure that they match the types identified by

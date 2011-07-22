@@ -11,6 +11,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -120,8 +121,10 @@ public class WmiAdapter implements IAdapter {
 	}
     }
 
-    public String getItemData(ObjectComponentType object, ISystemCharacteristics sc) throws OvalException {
-	throw new OvalException("getItemData not supported for WmiObject");
+    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
+	Vector<ItemType> v = new Vector<ItemType>();
+	v.add(getItem((WmiObject)ot));
+	return v;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {

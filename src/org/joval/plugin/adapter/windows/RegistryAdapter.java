@@ -114,31 +114,26 @@ public class RegistryAdapter implements IAdapter {
 	    Iterator <ObjectType>iter = definitions.iterateLeafObjects(RegistryObject.class);
 	    while (iter.hasNext()) {
 		RegistryObject rObj = (RegistryObject)iter.next();
-		if (rObj.isSetSet()) {
-		    // DAS: Set objects are just collections, the object references they contain will be scanned elsewhere.
-		    continue;
+		ctx.status(rObj.getId());
+		List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
+		List<ItemWrapper> items = getItems(rObj, variableValueTypes);
+		if (items.size() == 0) {
+		    MessageType msg = new MessageType();
+		    msg.setLevel(MessageLevelEnumeration.INFO);
+		    msg.setValue(JOVALSystem.getMessage("ERROR_WINREG_KEY"));
+		    sc.setObject(rObj.getId(), rObj.getComment(), rObj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
 		} else {
-		    ctx.status(rObj.getId());
-		    List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
-		    List<ItemWrapper> items = getItems(rObj, variableValueTypes);
-		    if (items.size() == 0) {
-			MessageType msg = new MessageType();
-			msg.setLevel(MessageLevelEnumeration.INFO);
-			msg.setValue(JOVALSystem.getMessage("ERROR_WINREG_KEY"));
-			sc.setObject(rObj.getId(), rObj.getComment(), rObj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
-		    } else {
-			sc.setObject(rObj.getId(), rObj.getComment(), rObj.getVersion(), FlagEnumeration.COMPLETE, null);
-			for (ItemWrapper wrapper : items) {
-			    BigInteger itemId = itemIds.get(wrapper.identifier);
-			    if (itemId == null) {
-				itemId = sc.storeItem(windowsFactory.createRegistryItem(wrapper.item));
-				itemIds.put(wrapper.identifier, itemId);
-			    }
-			    sc.relateItem(rObj.getId(), itemId);
-			    for (VariableValueType var : variableValueTypes) {
-				sc.storeVariable(var);
-				sc.relateVariable(rObj.getId(), var.getVariableId());
-			    }
+		    sc.setObject(rObj.getId(), rObj.getComment(), rObj.getVersion(), FlagEnumeration.COMPLETE, null);
+		    for (ItemWrapper wrapper : items) {
+			BigInteger itemId = itemIds.get(wrapper.identifier);
+			if (itemId == null) {
+			    itemId = sc.storeItem(windowsFactory.createRegistryItem(wrapper.item));
+			    itemIds.put(wrapper.identifier, itemId);
+			}
+			sc.relateItem(rObj.getId(), itemId);
+			for (VariableValueType var : variableValueTypes) {
+			    sc.storeVariable(var);
+			    sc.relateVariable(rObj.getId(), var.getVariableId());
 			}
 		    }
 		}
@@ -148,36 +143,8 @@ public class RegistryAdapter implements IAdapter {
 	}
     }
 
-    public String getItemData(ObjectComponentType oc, ISystemCharacteristics sc) throws OvalException {
-	RegistryObject rObj = definitions.getObject(oc.getObjectRef(), RegistryObject.class);
-	List<ItemType> items = null;
-	try {
-	    items = sc.getItemsByObjectId(rObj.getId());
-	} catch (NoSuchElementException e) {
-	    items = getItems(rObj);
-	}
-	if (items.size() == 0) {
-	    return null;
-	} else if (items.size() > 1) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_OBJECT_ITEM_CHOICE",
-							   new Integer(items.size()), rObj.getId()));
-	}
-	RegistryItem item = (RegistryItem)items.get(0);
-	if ("value".equals(oc.getItemField())) {
-	    if (item.isSetValue()) {
-		return (String)item.getValue().get(0).getValue();
-	    } else {
-		return null;
-	    }
-	} else if ("key".equals(oc.getItemField())) {
-	    if (item.isSetKey()) {
-		return (String)item.getKey().getValue().getValue();
-	    } else {
-		return null;
-	    }
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_OBJECT_ITEM_FIELD", oc.getItemField()));
-	}
+    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
+	return getItems((RegistryObject)ot);
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {

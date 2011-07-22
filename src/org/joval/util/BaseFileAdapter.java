@@ -99,6 +99,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 	}
     }
 
+    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
+	return getItems(ot, new Vector<VariableValueType>());
+    }
+
     public String getItemData(ObjectComponentType oc, ISystemCharacteristics sc) throws OvalException {
 	throw new RuntimeException("getItemData not supported");
     }

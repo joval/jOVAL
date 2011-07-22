@@ -7,17 +7,12 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.xml.bind.JAXBElement;
+import java.util.List;
+import java.util.Vector;
 
 import oval.schemas.common.FamilyEnumeration;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.definitions.core.ObjectComponentType;
-import oval.schemas.definitions.core.ObjectRefType;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.StateType;
-import oval.schemas.definitions.independent.EntityStateFamilyType;
 import oval.schemas.definitions.independent.FamilyObject;
 import oval.schemas.definitions.independent.FamilyState;
 import oval.schemas.definitions.independent.FamilyTest;
@@ -27,9 +22,6 @@ import oval.schemas.systemcharacteristics.independent.EntityItemFamilyType;
 import oval.schemas.systemcharacteristics.independent.FamilyItem;
 import oval.schemas.systemcharacteristics.independent.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestedItemType;
-import oval.schemas.results.core.TestedVariableType;
-import oval.schemas.results.core.TestType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
@@ -71,14 +63,17 @@ public class FamilyAdapter implements IAdapter {
 	    }
 	    FamilyObject fObj = (FamilyObject)iter.next();
 	    ctx.status(fObj.getId());
-	    FamilyItem item = independentFactory.createFamilyItem();
-	    EntityItemFamilyType familyType = independentFactory.createEntityItemFamilyType();
-	    familyType.setValue(plugin.getFamily().value());
-	    item.setFamily(familyType);
+	    FamilyItem item = getItem();
 	    sc.setObject(fObj.getId(), fObj.getComment(), fObj.getVersion(), FlagEnumeration.COMPLETE, null);
 	    BigInteger itemId = sc.storeItem(independentFactory.createFamilyItem(item));
 	    sc.relateItem(fObj.getId(), itemId);
 	}
+    }
+
+    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
+	Vector<FamilyItem> v = new Vector<FamilyItem>();
+	v.add(getItem());
+	return v;
     }
 
     public Class getObjectClass() {
@@ -95,10 +90,6 @@ public class FamilyAdapter implements IAdapter {
 
     public Class getItemClass() {
 	return FamilyItem.class;
-    }
-
-    public String getItemData(ObjectComponentType object, ISystemCharacteristics sc) throws OvalException {
-	return null; // What foolish variable would point to a FamilyObject?
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
@@ -121,5 +112,15 @@ public class FamilyAdapter implements IAdapter {
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getFamily().getOperation()));
 	}
+    }
+
+    // Private
+
+    private FamilyItem getItem() {
+	FamilyItem item = independentFactory.createFamilyItem();
+	EntityItemFamilyType familyType = independentFactory.createEntityItemFamilyType();
+	familyType.setValue(plugin.getFamily().value());
+	item.setFamily(familyType);
+	return item;
     }
 }

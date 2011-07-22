@@ -6,10 +6,12 @@ package org.joval.oval.engine;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
@@ -18,12 +20,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -69,6 +73,9 @@ import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.TestedItemType;
 import oval.schemas.results.core.TestedVariableType;
 import oval.schemas.results.core.TestType;
+import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
+import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
+import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.SystemDataType;
@@ -830,21 +837,34 @@ public class Engine implements IProducer {
 	    return (String)((LiteralComponentType)object).getValue();
 
 	//
-	// Use the registered IAdapter to get data from an ObjectType
+	// Retrieve from an ItemType (which possibly has to be fetched from an adapter)
 	//
 	} else if (object instanceof ObjectComponentType) {
 	    ObjectComponentType oc = (ObjectComponentType)object;
-	    ObjectType ot = definitions.getObject(oc.getObjectRef());
-	    IAdapter adapter = getAdapterForObject(ot.getClass());
-	    if (adapter != null) {
-		String data = adapter.getItemData(oc, sc);
-		if (data == null) {
-		    throw new NoSuchElementException(oc.getObjectRef());
+	    String objectId = oc.getObjectRef();
+	    List<? extends ItemType> items = null;
+	    try {
+		//
+		// First, we scan the SystemCharacteristics for items related to the object.
+		//
+		items = sc.getItemsByObjectId(objectId);
+	    } catch (NoSuchElementException e) {
+		//
+		// If the object has not yet been scanned, then it must be retrieved live from the adapter.
+		//
+		ObjectType ot = definitions.getObject(objectId);
+		IAdapter adapter = getAdapterForObject(ot.getClass());
+		if (adapter != null) {
+		    items = adapter.getItems(ot);
 		} else {
-		    return data;
+		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", ot.getClass().getName()));
 		}
+	    }
+	    String data = extractItemData(objectId, oc, items);
+	    if (data == null) {
+		throw new NoSuchElementException(oc.getObjectRef());
 	    } else {
-		throw new RuntimeException(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", ot.getClass().getName()));
+		return data;
 	    }
 
 	//
@@ -901,6 +921,81 @@ public class Engine implements IProducer {
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_COMPONENT", object.getClass().getName()));
 	}
+    }
+
+    /**
+     * The final step in resolving an object reference variable's value is extracting the item field or record from the items
+     * associated with that ObjectType, which is the function of this method.
+     *
+     * REMIND (DAS) The spec allows for a list of resolved values, but this implementaiton only allows for one.
+     */
+    private String extractItemData(String objectId, ObjectComponentType oc, List list) throws OvalException {
+	if (list.size() == 0) {
+	    return null;
+	} else if (list.size() > 1) {
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_OBJECT_ITEM_CHOICE", new Integer(list.size()), objectId));
+	}
+	Object o = list.get(0);
+
+	if (o instanceof ItemType) {
+	    try {
+		ItemType item = (ItemType)o;
+		String methodName = getAccessorMethodName(oc.getItemField());
+		Method method = item.getClass().getMethod(methodName);
+		o = method.invoke(item);
+	    } catch (NoSuchMethodException e) {
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+		return null;
+	    } catch (IllegalAccessException e) {
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+		return null;
+	    } catch (InvocationTargetException e) {
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+		return null;
+	    }
+	}
+
+	if (o instanceof JAXBElement) {
+	    o = ((JAXBElement)o).getValue();
+	}
+	if (o instanceof EntityItemSimpleBaseType) {
+	    EntityItemSimpleBaseType entity = (EntityItemSimpleBaseType)o;
+	    return (String)entity.getValue();
+	} else if (o instanceof List) {
+	    return extractItemData(objectId, null, (List)o);
+	} else if (o instanceof EntityItemRecordType) {
+	    EntityItemRecordType record = (EntityItemRecordType)o;
+	    String fieldName = oc.getRecordField();
+	    for (EntityItemFieldType field : record.getField()) {
+		if (field.getName().equals(fieldName)) {
+		    return (String)field.getValue();
+		}
+	    }
+	} else {
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_REFLECTION", o.getClass().getName()));
+	}
+
+	return null;
+    }
+
+    /**
+     * Given the name of an XML node, guess the name of the accessor field that JAXB would generate.
+     * For example, field_name -> getFieldName.
+     */
+    private String getAccessorMethodName(String fieldName) {
+	StringTokenizer tok = new StringTokenizer(fieldName, "_");
+	StringBuffer sb = new StringBuffer("get");
+	while(tok.hasMoreTokens()) {
+	    try {
+		byte[] ba = tok.nextToken().toLowerCase().getBytes("US-ASCII");
+		if (97 <= ba[0] && ba[0] <= 122) {
+		    ba[0] -= 32; // Capitalize the first letter.
+		}
+		sb.append(new String(ba, Charset.forName("US-ASCII")));
+	    } catch (UnsupportedEncodingException e) {
+	    }
+	}
+	return sb.toString();
     }
 
     private Object getComponent(Object unknown) throws OvalException {

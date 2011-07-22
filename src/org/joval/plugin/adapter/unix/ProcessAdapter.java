@@ -11,6 +11,7 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -94,38 +95,7 @@ public class ProcessAdapter implements IAdapter {
 	while (iter.hasNext()) {
 	    ProcessObject pObj = (ProcessObject)iter.next();
 	    ctx.status(pObj.getId());
-	    ProcessItem item = null;
-	    switch (pObj.getCommand().getOperation()) {
-	      case EQUALS:
-		item = processes.get((String)pObj.getCommand().getValue());
-		break;
-
-	      case CASE_INSENSITIVE_EQUALS: {
-		String command = (String)pObj.getCommand().getValue();
-		for (String key : processes.keySet()) {
-		    if (key.equalsIgnoreCase(command)) {
-			item = processes.get(key);
-			break;
-		    }
-		}
-		break;
-	      }
-
-	      case PATTERN_MATCH: {
-		String command = (String)pObj.getCommand().getValue();
-		for (String key : processes.keySet()) {
-		    if (Pattern.compile(command).matcher(key).find()) {
-			item = processes.get(key);
-			break;
-		    }
-		}
-		break;
-	      }
-
-	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
-							       pObj.getCommand().getOperation()));
-	    }
+	    ProcessItem item = getItem(pObj);
 	    if (item == null) {
 		sc.setObject(pObj.getId(), pObj.getComment(), pObj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
 	    } else {
@@ -136,8 +106,10 @@ public class ProcessAdapter implements IAdapter {
 	}
     }
 
-    public String getItemData(ObjectComponentType object, ISystemCharacteristics sc) throws OvalException {
-	return null; // What foolish variable would point to a ProcessObject?
+    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
+	Vector<ItemType> v = new Vector<ItemType>();
+	v.add(getItem((ProcessObject)ot));
+	return v;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
@@ -210,6 +182,42 @@ public class ProcessAdapter implements IAdapter {
     }
 
     // Internal
+
+    private ProcessItem getItem(ProcessObject pObj) throws OvalException {
+	ProcessItem item = null;
+	switch (pObj.getCommand().getOperation()) {
+	  case EQUALS:
+	    item = processes.get((String)pObj.getCommand().getValue());
+	    break;
+
+	  case CASE_INSENSITIVE_EQUALS: {
+	    String command = (String)pObj.getCommand().getValue();
+	    for (String key : processes.keySet()) {
+		if (key.equalsIgnoreCase(command)) {
+		    item = processes.get(key);
+		    break;
+		}
+	    }
+	    break;
+	  }
+
+	  case PATTERN_MATCH: {
+	    String command = (String)pObj.getCommand().getValue();
+	    for (String key : processes.keySet()) {
+		if (Pattern.compile(command).matcher(key).find()) {
+		    item = processes.get(key);
+		    break;
+		}
+	    }
+	    break;
+	  }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
+							   pObj.getCommand().getOperation()));
+	}
+	return item;
+    }
 
     private boolean compareTypes(EntityStateIntType state, EntityItemIntType item) throws OvalException {
 	int itemVal = Integer.parseInt((String)item.getValue());

@@ -9,6 +9,8 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Vector;
+import java.util.logging.Level;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.ExistenceEnumeration;
@@ -125,8 +127,14 @@ public class RpminfoAdapter implements IAdapter {
 	}
     }
 
-    public String getItemData(ObjectComponentType oc, ISystemCharacteristics sc) throws OvalException {
-	throw new RuntimeException("getItemData not supported");
+    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
+	Vector<RpminfoItem> v = new Vector<RpminfoItem>();
+	try {
+	    v.add(getItem((RpminfoObject)ot));
+	} catch (Exception e) {
+	    ctx.log(Level.WARNING, e.getMessage(), e);
+	}
+	return v;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {

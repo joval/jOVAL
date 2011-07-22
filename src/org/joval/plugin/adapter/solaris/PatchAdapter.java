@@ -85,24 +85,17 @@ public class PatchAdapter implements IAdapter {
 	while (iter.hasNext()) {
 	    PatchObject pObj = (PatchObject)iter.next();
 	    ctx.status(pObj.getId());
-	    String base = (String)pObj.getBase().getValue();
-	    List<RevisionEntry> entries = revisions.get(base);
-	    if (entries == null) {
+	    List<PatchItem> items = getItems(pObj);
+	    if (items.size() == 0) {
 		sc.setObject(pObj.getId(), pObj.getComment(), pObj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
 	    } else {
 		sc.setObject(pObj.getId(), pObj.getComment(), pObj.getVersion(), FlagEnumeration.COMPLETE, null);
-		for (RevisionEntry entry : entries) {
-		    PatchItem item = solarisFactory.createPatchItem();
-		    EntityItemIntType baseType = coreFactory.createEntityItemIntType();
-		    baseType.setValue(entry.patch.getBaseString());
-		    item.setBase(baseType);
-		    EntityItemIntType versionType = coreFactory.createEntityItemIntType();
-		    versionType.setValue(entry.patch.getVersionString());
-		    item.setVersion(versionType);
+		for (PatchItem item : items) {
 		    BigInteger itemId = sc.storeItem(solarisFactory.createPatchItem(item));
 		    sc.relateItem(pObj.getId(), itemId);
 		}
 	    }
+
 	}
     }
 
@@ -122,8 +115,8 @@ public class PatchAdapter implements IAdapter {
 	return PatchItem.class;
     }
 
-    public String getItemData(ObjectComponentType object, ISystemCharacteristics sc) throws OvalException {
-	return null; // What foolish variable would point to a PatchObject?
+    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
+	return getItems((PatchObject)ot);
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
@@ -135,6 +128,25 @@ public class PatchAdapter implements IAdapter {
     }
 
     // Internal
+
+    private List<PatchItem> getItems(PatchObject pObj) {
+	Vector<PatchItem> v = new Vector<PatchItem>();
+	String base = (String)pObj.getBase().getValue();
+	List<RevisionEntry> entries = revisions.get(base);
+	if (entries != null) {
+	    for (RevisionEntry entry : entries) {
+		PatchItem item = solarisFactory.createPatchItem();
+		EntityItemIntType baseType = coreFactory.createEntityItemIntType();
+		baseType.setValue(entry.patch.getBaseString());
+		item.setBase(baseType);
+		EntityItemIntType versionType = coreFactory.createEntityItemIntType();
+		versionType.setValue(entry.patch.getVersionString());
+		item.setVersion(versionType);
+		v.add(item);
+	    }
+	}
+	return v;
+    }
 
     private boolean compare(PatchState state, PatchItem item) throws OvalException {
 	int stateVersion = Integer.parseInt((String)state.getPatchVersion().getValue());
