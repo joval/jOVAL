@@ -40,8 +40,8 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
 /**
- * Base class for IFile-based IAdapters. Subclasses need only implement get[X]Class, compare, createFileItems and
- * createStorageItem methods.
+ * Base class for IFile-based IAdapters. Subclasses need only implement get[X]Class, compare, createFileItem, convertFilename
+ * and getItems methods.  The base class handles searches and caching of search results.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -158,6 +158,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
 	    } catch (IOException e) {
 		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
+		MessageType msg = new MessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		ctx.addObjectMessage(obj.getId(), msg);
 	    } finally {
 		if (f != null) {
 		    try {
@@ -171,8 +175,6 @@ public abstract class BaseFileAdapter implements IAdapter {
     }
 
     // Protected
-
-//    protected abstract JAXBElement<? extends ItemType> createStorageItem(ItemType item);
 
     /**
      * Return either an EntityItemStringType or a JAXBElement<EntityItemStringType>, as appropriate for the relevant ItemType.
