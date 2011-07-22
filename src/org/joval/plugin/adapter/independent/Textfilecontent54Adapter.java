@@ -35,8 +35,6 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.oval.OvalException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
@@ -63,10 +61,6 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	return Textfilecontent54Object.class;
     }
 
-    public Class getTestClass() {
-	return Textfilecontent54Test.class;
-    }
-
     public Class getStateClass() {
 	return Textfilecontent54State.class;
     }
@@ -87,11 +81,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	}
     }
 
-    // Private
-
-    protected JAXBElement<? extends ItemType> createStorageItem(ItemType item) {
-	return independentFactory.createTextfilecontentItem((TextfilecontentItem)item);
-    }
+    // Protected
 
     protected Object convertFilename(EntityItemStringType filename) {
 	return filename;
@@ -104,11 +94,11 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected List<? extends ItemType> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
-	List<ItemType> list = new Vector<ItemType>();
+    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
+	List<JAXBElement<? extends ItemType>> list = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof TextfilecontentItem && obj instanceof Textfilecontent54Object) {
 	    setItem((TextfilecontentItem)base, (Textfilecontent54Object)obj, f);
-	    list.add(base);
+	    list.add(independentFactory.createTextfilecontentItem((TextfilecontentItem)base));
 	}
 	return list;
     }

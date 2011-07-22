@@ -47,8 +47,6 @@ import oval.schemas.results.core.TestedItemType;
 import oval.schemas.results.core.TestedVariableType;
 import oval.schemas.results.core.TestType;
 
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.windows.registry.IDwordValue;
@@ -71,7 +69,6 @@ public class RegistryAdapter implements IAdapter {
     private static final String DATATYPE_INT	= "int";
 
     private IAdapterContext ctx;
-    private IDefinitions definitions;
     private IRegistry registry;
     private Hashtable<String, BigInteger> itemIds;
 
@@ -89,15 +86,10 @@ public class RegistryAdapter implements IAdapter {
 
     public void init(IAdapterContext ctx) {
 	this.ctx = ctx;
-	definitions = ctx.getDefinitions();
     }
 
     public Class getObjectClass() {
 	return RegistryObject.class;
-    }
-
-    public Class getTestClass() {
-	return RegistryTest.class;
     }
 
     public Class getStateClass() {
@@ -108,43 +100,25 @@ public class RegistryAdapter implements IAdapter {
 	return RegistryItem.class;
     }
 
-    public void scan(ISystemCharacteristics sc) throws OvalException {
-	try {
-	    registry.connect();
-	    Iterator <ObjectType>iter = definitions.iterateLeafObjects(RegistryObject.class);
-	    while (iter.hasNext()) {
-		RegistryObject rObj = (RegistryObject)iter.next();
-		ctx.status(rObj.getId());
-		List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
-		List<ItemWrapper> items = getItems(rObj, variableValueTypes);
-		if (items.size() == 0) {
-		    MessageType msg = new MessageType();
-		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALSystem.getMessage("ERROR_WINREG_KEY"));
-		    sc.setObject(rObj.getId(), rObj.getComment(), rObj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
-		} else {
-		    sc.setObject(rObj.getId(), rObj.getComment(), rObj.getVersion(), FlagEnumeration.COMPLETE, null);
-		    for (ItemWrapper wrapper : items) {
-			BigInteger itemId = itemIds.get(wrapper.identifier);
-			if (itemId == null) {
-			    itemId = sc.storeItem(windowsFactory.createRegistryItem(wrapper.item));
-			    itemIds.put(wrapper.identifier, itemId);
-			}
-			sc.relateItem(rObj.getId(), itemId);
-			for (VariableValueType var : variableValueTypes) {
-			    sc.storeVariable(var);
-			    sc.relateVariable(rObj.getId(), var.getVariableId());
-			}
-		    }
-		}
-	    }
-	} finally {
+    public boolean connect() {
+	if (registry != null) {
+	    return registry.connect();
+	}
+	return false;
+    }
+
+    public void disconnect() {
+	if (registry != null) {
 	    registry.disconnect();
 	}
     }
 
-    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
-	return getItems((RegistryObject)ot);
+    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	for (ItemWrapper wrapper : getItems((RegistryObject)obj, vars)) {
+	    items.add(windowsFactory.createRegistryItem(wrapper.item));
+	}
+	return items;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
@@ -156,15 +130,6 @@ public class RegistryAdapter implements IAdapter {
     }
 
     // Private
-
-    private List<ItemType> getItems(RegistryObject rObj) throws OvalException {
-	List<VariableValueType> temp = new Vector<VariableValueType>();
-	Vector<ItemType> items = new Vector<ItemType>();
-	for (ItemWrapper wrapper : getItems(rObj, temp)) {
-	    items.add(wrapper.item);
-	}
-	return items;
-    }
 
     private List<ItemWrapper> getItems(RegistryObject rObj, List<VariableValueType> variableValueTypes) throws OvalException {
 	List<ItemWrapper> list = new Vector<ItemWrapper>();
@@ -238,8 +203,8 @@ public class RegistryAdapter implements IAdapter {
     /**
      * @return the registry value name, or null if none is specified (i.e., it's just a Key).
      */
-    private String addNameAndValue(RegistryObject rObj, RegistryItem item,
-			 EntityItemAnySimpleType valueType, IKey key) throws NoSuchElementException, OvalException {
+    private String addNameAndValue(RegistryObject rObj, RegistryItem item, EntityItemAnySimpleType valueType, IKey key)
+		throws NoSuchElementException, OvalException {
 	String name = null;
 	if (rObj.isSetName() && rObj.getName().getValue() != null) {
 	    name = (String)rObj.getName().getValue().getValue();
@@ -293,7 +258,7 @@ public class RegistryAdapter implements IAdapter {
 	return name;
     }
 
-    String getItemString(RegistryItem item) {
+    private String getItemString(RegistryItem item) {
 	StringBuffer sb = new StringBuffer();
 	if (item.isSetHive()) {
 	    sb.append((String)item.getHive().getValue());
@@ -317,7 +282,7 @@ public class RegistryAdapter implements IAdapter {
     /**
      * Does the item match the state?
      */
-    boolean match(RegistryState state, RegistryItem item) throws OvalException {
+    private boolean match(RegistryState state, RegistryItem item) throws OvalException {
 	if (!item.isSetValue()) {
 	    return false; // Value doesn't exist
 	}

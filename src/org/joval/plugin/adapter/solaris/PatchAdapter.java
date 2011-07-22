@@ -33,6 +33,7 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
+import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.solaris.PatchItem;
 import oval.schemas.systemcharacteristics.solaris.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
@@ -44,8 +45,6 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 
@@ -57,10 +56,10 @@ import org.joval.util.JOVALSystem;
  */
 public class PatchAdapter implements IAdapter {
     private IAdapterContext ctx;
-    private IDefinitions definitions;
     private ISession session;
     private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
     private ObjectFactory solarisFactory;
+    private String error = null;
     private Hashtable<String, List<RevisionEntry>> revisions;
 
     public PatchAdapter(ISession session) {
@@ -74,37 +73,10 @@ public class PatchAdapter implements IAdapter {
 
     public void init(IAdapterContext ctx) {
 	this.ctx = ctx;
-	definitions = ctx.getDefinitions();
-    }
-
-    public void scan(ISystemCharacteristics sc) throws OvalException {
-	ctx.status("Retrieving revision list");
-	scanRevisions();
-
-	Iterator<ObjectType> iter = definitions.iterateLeafObjects(PatchObject.class);
-	while (iter.hasNext()) {
-	    PatchObject pObj = (PatchObject)iter.next();
-	    ctx.status(pObj.getId());
-	    List<PatchItem> items = getItems(pObj);
-	    if (items.size() == 0) {
-		sc.setObject(pObj.getId(), pObj.getComment(), pObj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
-	    } else {
-		sc.setObject(pObj.getId(), pObj.getComment(), pObj.getVersion(), FlagEnumeration.COMPLETE, null);
-		for (PatchItem item : items) {
-		    BigInteger itemId = sc.storeItem(solarisFactory.createPatchItem(item));
-		    sc.relateItem(pObj.getId(), itemId);
-		}
-	    }
-
-	}
     }
 
     public Class getObjectClass() {
 	return PatchObject.class;
-    }
-
-    public Class getTestClass() {
-	return PatchTest.class;
     }
 
     public Class getStateClass() {
@@ -115,8 +87,29 @@ public class PatchAdapter implements IAdapter {
 	return PatchItem.class;
     }
 
-    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
-	return getItems((PatchObject)ot);
+    public boolean connect() {
+	if (session != null) {
+	    scanRevisions();
+	    return true;
+	}
+	return false;
+    }
+
+    public void disconnect() {
+    }
+
+    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	for (ItemType item : getItems((PatchObject)obj)) {
+	    items.add(solarisFactory.createPatchItem((PatchItem)item));
+	}
+	if (error != null) {
+	    MessageType msg = new MessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(error);
+	    ctx.addObjectMessage(obj.getId(), msg);
+	}
+	return items;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
@@ -241,6 +234,7 @@ public class PatchAdapter implements IAdapter {
 	    }
 	    br.close();
 	} catch (Exception e) {
+	    error = e.getMessage();
 	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
 	}
     }

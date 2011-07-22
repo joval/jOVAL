@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
+import oval.schemas.common.MessageType;
 import oval.schemas.definitions.core.VariableType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
-import org.joval.intf.oval.IDefinitions;
 import org.joval.oval.OvalException;
 
 /**
@@ -24,16 +24,6 @@ import org.joval.oval.OvalException;
  * @version %I% %G%
  */
 public interface IAdapterContext {
-    /**
-     * Get the IDefinitions that will be evaluated.
-     */
-    public IDefinitions getDefinitions();
-
-    /**
-     * Indicate that an object with the given objectId is being fetched.  Calls to this method are optional.
-     */
-    public void status(String objectId);
-
     /**
      * Log a message.
      */
@@ -59,4 +49,9 @@ public interface IAdapterContext {
      *			     variable with that ID defined in the OVAL definitions file.
      */
     public String resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException;
+
+    /**
+     * Add a message for an ObjectType record.
+     */
+    public void addObjectMessage(String objectId, MessageType message);
 }

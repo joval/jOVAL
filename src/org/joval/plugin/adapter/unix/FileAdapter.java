@@ -35,7 +35,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.unix.ObjectFactory;
 import oval.schemas.systemcharacteristics.unix.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
@@ -44,8 +43,6 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.io.StreamTool;
@@ -75,16 +72,16 @@ public class FileAdapter extends BaseFileAdapter {
 	return FileObject.class;
     }
 
-    public Class getTestClass() {
-	return FileTest.class;
-    }
-
     public Class getStateClass() {
 	return FileState.class;
     }
 
     public Class getItemClass() {
 	return FileItem.class;
+    }
+
+    public boolean connect() {
+	return session != null;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
@@ -95,11 +92,7 @@ public class FileAdapter extends BaseFileAdapter {
 	}
     }
 
-    // Private
-
-    protected JAXBElement<? extends ItemType> createStorageItem(ItemType item) {
-	return unixFactory.createFileItem((FileItem)item);
-    }
+    // Protected
 
     protected Object convertFilename(EntityItemStringType filename) {
 	return unixFactory.createFileItemFilename(filename);
@@ -109,13 +102,13 @@ public class FileAdapter extends BaseFileAdapter {
 	return unixFactory.createFileItem();
     }
 
-    protected List<? extends ItemType> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
-	List<ItemType> list = new Vector<ItemType>();
+    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {
 	    setItem((FileItem)base, f);
-	    list.add(base);
+	    items.add(unixFactory.createFileItem((FileItem)base));
 	}
-	return list;
+	return items;
     }
 
     // Private

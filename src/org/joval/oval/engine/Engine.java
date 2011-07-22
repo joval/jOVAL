@@ -82,9 +82,7 @@ import oval.schemas.systemcharacteristics.core.SystemDataType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.variables.core.OvalVariables;
 
-import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IResults;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
@@ -261,10 +259,6 @@ public class Engine implements IProducer {
 	return generator;
     }
 
-    IDefinitions getDefinitions() {
-	return definitions;
-    }
-
     IAdapter getAdapterForObject(Class clazz) {
 	for (AdapterContext ctx : adapterContextList) {
 	    if (clazz.equals(ctx.getAdapter().getObjectClass())) {
@@ -274,13 +268,13 @@ public class Engine implements IProducer {
 	return null;
     }
 
-    IAdapter getAdapterForTest(Class clazz) {
-	for (AdapterContext ctx : adapterContextList) {
-	    if (clazz.equals(ctx.getAdapter().getTestClass())) {
-		return ctx.getAdapter();
-	    }
+    IAdapter getAdapterForTest(oval.schemas.definitions.core.TestType testDefinition) throws OvalException {
+	String objectId = getObjectRef(testDefinition);
+	if (objectId == null) {
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_OBJECT_MISSING", testDefinition.getId()));
+	} else {
+	    return getAdapterForObject(definitions.getObject(objectId).getClass());
 	}
-	return null;
     }
 
     /**
@@ -305,6 +299,10 @@ public class Engine implements IProducer {
 	    }
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_MISSING_VARIABLE", id));
 	}
+    }
+
+    void addObjectMessage(String objectId, MessageType msg) {
+	sc.setObject(objectId, null, null, null, msg);
     }
 
     // Private
@@ -332,7 +330,7 @@ public class Engine implements IProducer {
 	for (Class referencedClass : varTypes) {
 	    for (AdapterContext ctx : adapterContextList) {
 		if (referencedClass.equals(ctx.getAdapter().getObjectClass())) {
-		    ctx.getAdapter().scan(sc);
+		    scanAdapter(ctx.getAdapter());
 		    break;
 		}
 	    }
@@ -343,7 +341,7 @@ public class Engine implements IProducer {
 	//
 	for (AdapterContext ctx : adapterContextList) {
 	    if (!varTypes.contains(ctx.getAdapter().getObjectClass())) {
-		ctx.getAdapter().scan(sc);
+		scanAdapter(ctx.getAdapter());
 	    }
 	}
 
@@ -383,6 +381,40 @@ public class Engine implements IProducer {
 	producer.sendNotify(this, MESSAGE_OBJECT_PHASE_END, null);
     }
 
+//DAS
+    private void scanAdapter(IAdapter adapter) throws OvalException {
+	if (adapter.connect()) {
+	    try {
+		Iterator<ObjectType> iter = definitions.iterateLeafObjects(adapter.getObjectClass());
+		while (iter.hasNext()) {
+		    ObjectType obj = iter.next();
+		    String objectId = obj.getId();
+		    producer.sendNotify(this, MESSAGE_OBJECT, objectId);
+		    List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
+		    List<JAXBElement<? extends ItemType>> items = adapter.getItems(obj, variableValueTypes);
+		    if (items.size() == 0) {
+		        MessageType msg = new MessageType();
+		        msg.setLevel(MessageLevelEnumeration.INFO);
+		        msg.setValue(JOVALSystem.getMessage("STATUS_EMPTY_OBJECT"));
+		        sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
+		    } else {
+		        sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+		        for (JAXBElement<? extends ItemType> item : items) {
+		            BigInteger itemId = sc.storeItem(item);
+		            sc.relateItem(obj.getId(), itemId);
+		        }
+		    }
+		    for (VariableValueType var : variableValueTypes) {
+		        sc.storeVariable(var);
+		        sc.relateVariable(objectId, var.getVariableId());
+		    }
+		}
+	    } finally {
+		adapter.disconnect();
+	    }
+	}
+    }
+
     /**
      * Evaluate the DefinitionType.
      */
@@ -419,7 +451,7 @@ public class Engine implements IProducer {
 	    testResult.setStateOperator(testDefinition.getStateOperator());
 
 	    if (filter.getEvaluationAllowed()) {
-		IAdapter adapter = getAdapterForTest(testDefinition.getClass());
+		IAdapter adapter = getAdapterForTest(testDefinition);
 		if (adapter == null) {
 		    MessageType message = new MessageType();
 		    message.setLevel(MessageLevelEnumeration.WARNING);
@@ -429,7 +461,7 @@ public class Engine implements IProducer {
 		} else if (getObjectRef(testDefinition) == null) {
 		    throw new OvalException(JOVALSystem.getMessage("ERROR_TEST_NOOBJREF", testId));
 		} else {
-		    evaluateTest(testResult, sc, adapter);
+		    evaluateTest(testResult, adapter);
 		}
 	    } else {
 		testResult.setResult(ResultEnumeration.NOT_EVALUATED);
@@ -459,9 +491,9 @@ public class Engine implements IProducer {
 	return criterionResult;
     }
 
-    private void evaluateTest(TestType testResult, ISystemCharacteristics sc, IAdapter adapter) throws OvalException {
+    private void evaluateTest(TestType testResult, IAdapter adapter) throws OvalException {
 	String testId = testResult.getTestId();
-	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId, adapter.getTestClass());
+	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	String objectId = getObjectRef(testDefinition);
 	String stateId = getStateRef(testDefinition);
 	StateType state = null;
@@ -842,7 +874,7 @@ public class Engine implements IProducer {
 	} else if (object instanceof ObjectComponentType) {
 	    ObjectComponentType oc = (ObjectComponentType)object;
 	    String objectId = oc.getObjectRef();
-	    List<? extends ItemType> items = null;
+	    List<ItemType> items = null;
 	    try {
 		//
 		// First, we scan the SystemCharacteristics for items related to the object.
@@ -855,7 +887,11 @@ public class Engine implements IProducer {
 		ObjectType ot = definitions.getObject(objectId);
 		IAdapter adapter = getAdapterForObject(ot.getClass());
 		if (adapter != null) {
-		    items = adapter.getItems(ot);
+		    List<JAXBElement<? extends ItemType>> wrappedItems = adapter.getItems(ot, list);
+		    items = new Vector<ItemType>(wrappedItems.size());
+		    for (JAXBElement<? extends ItemType> wrappedItem : wrappedItems) {
+			items.add(wrappedItem.getValue());
+		    }
 		} else {
 		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", ot.getClass().getName()));
 		}
@@ -927,7 +963,7 @@ public class Engine implements IProducer {
      * The final step in resolving an object reference variable's value is extracting the item field or record from the items
      * associated with that ObjectType, which is the function of this method.
      *
-     * REMIND (DAS) The spec allows for a list of resolved values, but this implementaiton only allows for one.
+     * REMIND (DAS) The spec allows for a list of resolved values, but this implementation only allows for one.
      */
     private String extractItemData(String objectId, ObjectComponentType oc, List list) throws OvalException {
 	if (list.size() == 0) {

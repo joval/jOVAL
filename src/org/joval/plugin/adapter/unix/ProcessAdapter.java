@@ -17,6 +17,8 @@ import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
+import oval.schemas.common.MessageType;
+import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.definitions.core.EntityStateIntType;
 import oval.schemas.definitions.core.EntityStateStringType;
 import oval.schemas.definitions.core.ObjectComponentType;
@@ -30,6 +32,7 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
+import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.unix.ProcessItem;
 import oval.schemas.systemcharacteristics.unix.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
@@ -38,8 +41,6 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 
@@ -51,11 +52,11 @@ import org.joval.util.JOVALSystem;
  */
 public class ProcessAdapter implements IAdapter {
     private IAdapterContext ctx;
-    private IDefinitions definitions;
     private ISession session;
     private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
     private ObjectFactory unixFactory;
     private Hashtable<String,ProcessItem> processes;
+    private String error = null;
 
     public ProcessAdapter(ISession session) {
 	this.session = session;
@@ -66,12 +67,12 @@ public class ProcessAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return ProcessObject.class;
+    public void init(IAdapterContext ctx) {
+	this.ctx = ctx;
     }
 
-    public Class getTestClass() {
-	return ProcessTest.class;
+    public Class getObjectClass() {
+	return ProcessObject.class;
     }
 
     public Class getStateClass() {
@@ -82,34 +83,30 @@ public class ProcessAdapter implements IAdapter {
 	return ProcessItem.class;
     }
 
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-	definitions = ctx.getDefinitions();
-    }
-
-    public void scan(ISystemCharacteristics sc) throws OvalException {
-	ctx.status("Retrieving process list");
-	scanProcesses();
-
-	Iterator<ObjectType> iter = definitions.iterateLeafObjects(ProcessObject.class);
-	while (iter.hasNext()) {
-	    ProcessObject pObj = (ProcessObject)iter.next();
-	    ctx.status(pObj.getId());
-	    ProcessItem item = getItem(pObj);
-	    if (item == null) {
-		sc.setObject(pObj.getId(), pObj.getComment(), pObj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
-	    } else {
-		sc.setObject(pObj.getId(), pObj.getComment(), pObj.getVersion(), FlagEnumeration.COMPLETE, null);
-		BigInteger itemId = sc.storeItem(unixFactory.createProcessItem(item));
-		sc.relateItem(pObj.getId(), itemId);
-	    }
+    public boolean connect() {
+	if (session != null) {
+	    scanProcesses();
+	    return true;
 	}
+	return false;
     }
 
-    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
-	Vector<ItemType> v = new Vector<ItemType>();
-	v.add(getItem((ProcessObject)ot));
-	return v;
+    public void disconnect() {
+    }
+
+    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+	List<JAXBElement <? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	ProcessItem item = getItem((ProcessObject)obj);
+	if (item != null) {
+	    items.add(unixFactory.createProcessItem(getItem((ProcessObject)obj)));
+	}
+	if (error != null) {
+	    MessageType msg = new MessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(error);
+	    ctx.addObjectMessage(obj.getId(), msg);
+	}
+	return items;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
@@ -213,8 +210,7 @@ public class ProcessAdapter implements IAdapter {
 	  }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
-							   pObj.getCommand().getOperation()));
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", pObj.getCommand().getOperation()));
 	}
 	return item;
     }
@@ -310,6 +306,7 @@ public class ProcessAdapter implements IAdapter {
 	    }
 	    br.close();
 	} catch (Exception e) {
+	    error = e.getMessage();
 	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
 	}
     }

@@ -46,8 +46,6 @@ import oval.schemas.results.core.TestType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
@@ -65,7 +63,6 @@ import org.joval.windows.wmi.WmiException;
  */
 public class WmiAdapter implements IAdapter {
     private IAdapterContext ctx;
-    private IDefinitions definitions;
     private IWmiProvider wmi;
 
     private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
@@ -80,12 +77,7 @@ public class WmiAdapter implements IAdapter {
     // Implement IAdapter
 
     public void init(IAdapterContext ctx) {
-	definitions = ctx.getDefinitions();
 	this.ctx = ctx;
-    }
-
-    public Class getTestClass() {
-	return WmiTest.class;
     }
 
     public Class getObjectClass() {
@@ -100,31 +92,23 @@ public class WmiAdapter implements IAdapter {
 	return WmiItem.class;
     }
 
-    public void scan(ISystemCharacteristics sc) throws OvalException {
-	try {
-	    wmi.connect();
-	    Iterator <ObjectType>iter = definitions.iterateLeafObjects(WmiObject.class);
-	    while (iter.hasNext()) {
-		WmiObject wObj = (WmiObject)iter.next();
-		if (wObj.isSetSet()) {
-		    // Set objects merely contain references to other objects that are scanned elsewhere.
-		    continue;
-		} else {
-		    ctx.status(wObj.getId());
-		    sc.setObject(wObj.getId(), wObj.getComment(), wObj.getVersion(), FlagEnumeration.COMPLETE, null);
-		    BigInteger itemId = sc.storeItem(windowsFactory.createWmiItem(getItem(wObj)));
-		    sc.relateItem(wObj.getId(), itemId);
-		}
-	    }
-	} finally {
+    public boolean connect() {
+	if (wmi != null) {
+	    return wmi.connect();
+	}
+	return false;
+    }
+
+    public void disconnect() {
+	if (wmi != null) {
 	    wmi.disconnect();
 	}
     }
 
-    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
-	Vector<ItemType> v = new Vector<ItemType>();
-	v.add(getItem((WmiObject)ot));
-	return v;
+    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
+	items.add(windowsFactory.createWmiItem(getItem((WmiObject)obj)));
+	return items;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {

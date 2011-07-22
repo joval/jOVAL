@@ -27,6 +27,7 @@ import oval.schemas.definitions.unix.UnameTest;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.unix.UnameItem;
 import oval.schemas.systemcharacteristics.unix.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
@@ -35,8 +36,6 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 
@@ -48,7 +47,6 @@ import org.joval.util.JOVALSystem;
  */
 public class UnameAdapter implements IAdapter {
     private IAdapterContext ctx;
-    private IDefinitions definitions;
     private ISession session;
     private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
     private ObjectFactory unixFactory;
@@ -61,12 +59,12 @@ public class UnameAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return UnameObject.class;
+    public void init(IAdapterContext ctx) {
+	this.ctx = ctx;
     }
 
-    public Class getTestClass() {
-	return UnameTest.class;
+    public Class getObjectClass() {
+	return UnameObject.class;
     }
 
     public Class getStateClass() {
@@ -77,41 +75,25 @@ public class UnameAdapter implements IAdapter {
 	return UnameItem.class;
     }
 
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-	definitions = ctx.getDefinitions();
+    public boolean connect() {
+	return session != null;
     }
 
-    public void scan(ISystemCharacteristics sc) throws OvalException {
-	Iterator<ObjectType> iter = definitions.iterateLeafObjects(UnameObject.class);
-	for (int i=0; iter.hasNext(); i++) {
-	    if (i > 0) {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNAME_OVERFLOW"));
-	    }
-	    UnameObject uObj = (UnameObject)iter.next();
-	    ctx.status(uObj.getId());
-	    try {
-		JAXBElement<UnameItem> item = getItem();
-		sc.setObject(uObj.getId(), uObj.getComment(), uObj.getVersion(), FlagEnumeration.COMPLETE, null);
-		BigInteger itemId = sc.storeItem(item);
-		sc.relateItem(uObj.getId(), itemId);
-	    } catch (Exception e) {
-		MessageType msg = new MessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(e.getMessage());
-		sc.setObject(uObj.getId(), uObj.getComment(), uObj.getVersion(), FlagEnumeration.ERROR, msg);
-	    }
-	}
+    public void disconnect() {
     }
 
-    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
-	Vector<ItemType> v = new Vector<ItemType>();
+    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	try {
-	    v.add(getItem().getValue());
+	    items.add(getItem());
 	} catch (Exception e) {
+	    MessageType msg = new MessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    ctx.addObjectMessage(obj.getId(), msg);
 	    ctx.log(Level.WARNING, e.getMessage(), e);
 	}
-	return v;
+	return items;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {

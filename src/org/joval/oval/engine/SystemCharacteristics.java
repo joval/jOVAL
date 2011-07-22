@@ -40,7 +40,6 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 
@@ -53,7 +52,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SystemCharacteristics implements ISystemCharacteristics {
+public class SystemCharacteristics {
     /**
      * Load a SystemCharacteristics from a File.
      */
@@ -193,9 +192,7 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 	return filteredSc;
     }
 
-    // Implement ISystemCharacteristics
-
-    public OvalSystemCharacteristics getOvalSystemCharacteristics() {
+    OvalSystemCharacteristics getOvalSystemCharacteristics() {
 	if (osc == null) {
 	    osc = createOvalSystemCharacteristics();
 	}
@@ -206,7 +203,7 @@ public class SystemCharacteristics implements ISystemCharacteristics {
      * Store the ItemType in the itemTable and return the ID used to store it.  The plugin should retain this ID in case the
      * item is shared by multiple objects.
      */
-    public synchronized BigInteger storeItem(JAXBElement<? extends ItemType> wrappedItem) {
+    synchronized BigInteger storeItem(JAXBElement<? extends ItemType> wrappedItem) {
 	ItemType item = wrappedItem.getValue();
 	BigInteger itemId = null;
 	if (item.isSetId()) {
@@ -225,12 +222,14 @@ public class SystemCharacteristics implements ISystemCharacteristics {
     /**
      * Add some information about an object to the store, without relating it to a variable or an item.
      */
-    public void setObject(String objectId, String comment, BigInteger version, FlagEnumeration flag, MessageType message) {
+    void setObject(String objectId, String comment, BigInteger version, FlagEnumeration flag, MessageType message) {
 	ObjectType objectType = objectTable.get(objectId);
+	boolean created = false;
 	if (objectType == null) {
 	    objectType = coreFactory.createObjectType();
 	    objectType.setId(objectId);
 	    objectTable.put(objectId, objectType);
+	    created = true;
 	}
 	if (comment != null) {
 	    objectType.setComment(comment);
@@ -238,7 +237,13 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 	if (version != null) {
 	    objectType.setVersion(version);
 	}
-	objectType.setFlag(flag);
+	if (flag == null) {
+	    if (created) {
+		objectType.setFlag(FlagEnumeration.INCOMPLETE);
+	    }
+	} else {
+	    objectType.setFlag(flag);
+	}
 	if (message != null) {
 	    objectType.getMessage().add(message);
 	}
@@ -248,7 +253,7 @@ public class SystemCharacteristics implements ISystemCharacteristics {
      * Fetch an existing ObjectType or create a new ObjectType and store it in the objectTable, and create a relation between
      * the ObjectType and ItemType.
      */
-    public void relateItem(String objectId, BigInteger itemId) throws NoSuchElementException {
+    void relateItem(String objectId, BigInteger itemId) throws NoSuchElementException {
 	ItemType item = itemTable.get(itemId).getValue();
 	if (item == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_ITEM", itemId.toString()));
@@ -262,7 +267,7 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 	objectType.getReference().add(referenceType);
     }
 
-    public void storeVariable(VariableValueType variableValueType) {
+    void storeVariable(VariableValueType variableValueType) {
 	if (!variableTable.containsKey(variableValueType.getVariableId())) {
 	    variableTable.put(variableValueType.getVariableId(), variableValueType);
 	}
@@ -271,7 +276,7 @@ public class SystemCharacteristics implements ISystemCharacteristics {
     /**
      * Add a variable reference to an ObjectType; the object is stored if it does not already exist.
      */
-    public void relateVariable(String objectId, String variableId) throws NoSuchElementException {
+    void relateVariable(String objectId, String variableId) throws NoSuchElementException {
 	VariableValueType variable = variableTable.get(variableId);
 	if (variable == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_VARIABLE", variableId));
@@ -283,11 +288,11 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 	objectType.getVariableValue().add(variable);
     }
 
-    public String getVariableValue(String variableId) {
+    String getVariableValue(String variableId) {
 	return (String)variableTable.get(variableId).getValue();
     }
 
-    public List<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
+    List<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
 	ObjectType objectType = objectTable.get(id);
 	if (objectType == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
@@ -298,7 +303,7 @@ public class SystemCharacteristics implements ISystemCharacteristics {
     /**
      * Get an object.
      */
-    public ObjectType getObject(String id) throws NoSuchElementException {
+    ObjectType getObject(String id) throws NoSuchElementException {
 	ObjectType objectType = objectTable.get(id);
 	if (objectType == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
@@ -309,7 +314,7 @@ public class SystemCharacteristics implements ISystemCharacteristics {
     /**
      * Fetch all the ItemTypes associated with the ObjectType with the given ID.
      */
-    public List<ItemType> getItemsByObjectId(String id) throws NoSuchElementException {
+    List<ItemType> getItemsByObjectId(String id) throws NoSuchElementException {
 	ObjectType objectType = objectTable.get(id);
 	if (objectType == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
@@ -326,7 +331,7 @@ public class SystemCharacteristics implements ISystemCharacteristics {
     /**
      * Serialize.
      */
-    public void write(File f) {
+    void write(File f) {
 	OutputStream out = null;
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS));

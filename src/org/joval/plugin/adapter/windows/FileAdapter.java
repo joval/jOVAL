@@ -34,7 +34,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.windows.EntityItemFileTypeType;
 import oval.schemas.systemcharacteristics.windows.FileItem;
 import oval.schemas.systemcharacteristics.windows.ObjectFactory;
@@ -48,8 +47,6 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
@@ -98,10 +95,6 @@ public class FileAdapter extends BaseFileAdapter {
 	return FileObject.class;
     }
 
-    public Class getTestClass() {
-	return FileTest.class;
-    }
-
     public Class getStateClass() {
 	return FileState.class;
     }
@@ -110,16 +103,16 @@ public class FileAdapter extends BaseFileAdapter {
 	return FileItem.class;
     }
 
-    public void scan(ISystemCharacteristics sc) throws OvalException {
+    public boolean connect() {
 	if (wmi != null) {
-	    wmi.connect();
+	    return wmi.connect();
 	}
-	try {
-	    super.scan(sc);
-	} finally {
-	    if (wmi != null) {
-		wmi.disconnect();
-	    }
+	return false;
+    }
+
+    public void disconnect() {
+	if (wmi != null) {
+	    wmi.disconnect();
 	}
     }
 
@@ -148,12 +141,7 @@ public class FileAdapter extends BaseFileAdapter {
 	return result;
     }
 
-
     // Protected
-
-    protected JAXBElement<? extends ItemType> createStorageItem(ItemType item) {
-	return windowsFactory.createFileItem((FileItem)item);
-    }
 
     protected Object convertFilename(EntityItemStringType filename) {
 	return windowsFactory.createFileItemFilename(filename);
@@ -163,13 +151,13 @@ public class FileAdapter extends BaseFileAdapter {
 	return windowsFactory.createFileItem();
     }
 
-    protected List<? extends ItemType> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
-	List<ItemType> list = new Vector<ItemType>();
+    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {
 	    setItem((FileItem)base, f);
-	    list.add(base);
+	    items.add(windowsFactory.createFileItem((FileItem)base));
 	}
-	return list;
+	return items;
     }
 
     // Private

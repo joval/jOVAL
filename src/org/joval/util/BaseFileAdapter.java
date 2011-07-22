@@ -35,8 +35,6 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
@@ -50,7 +48,6 @@ import org.joval.util.Version;
  */
 public abstract class BaseFileAdapter implements IAdapter {
     protected IAdapterContext ctx;
-    protected IDefinitions definitions;
     protected IFilesystem fs;
     protected Hashtable<String, List<String>> pathMap;
     protected oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
@@ -64,78 +61,24 @@ public abstract class BaseFileAdapter implements IAdapter {
     // Implement IAdapter
 
     public void init(IAdapterContext ctx) {
-	definitions = ctx.getDefinitions();
 	this.ctx = ctx;
     }
 
-    /**
-     * A generic implementation of the IAdapter.scan method for File-type objects.  Subclasses need only implement the
-     * createFileItems and createStorageItem methods.
-     */
-    public void scan(ISystemCharacteristics sc) throws OvalException {
-	Iterator <ObjectType>iter = definitions.iterateLeafObjects(getObjectClass());
-	while (iter.hasNext()) {
-	    ObjectType obj = iter.next();
-	    ctx.status(obj.getId());
-	    List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
-	    List<? extends ItemType> items = getItems(obj, variableValueTypes);
-	    if (items.size() == 0) {
-		MessageType msg = new MessageType();
-		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue("Could not resolve any items for object");
-		sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
-	    } else {
-		sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-		for (ItemType itemType : items) {
-		    JAXBElement<? extends ItemType> storageItem = createStorageItem(itemType);
-		    BigInteger itemId = sc.storeItem(storageItem);
-		    sc.relateItem(obj.getId(), itemId);
-		}
-	    }
-	    for (VariableValueType var : variableValueTypes) {
-		sc.storeVariable(var);
-		sc.relateVariable(obj.getId(), var.getVariableId());
-	    }
-	}
+    public boolean connect() {
+	return true;
     }
 
-    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
-	return getItems(ot, new Vector<VariableValueType>());
+    public void disconnect() {
     }
 
-    public String getItemData(ObjectComponentType oc, ISystemCharacteristics sc) throws OvalException {
-	throw new RuntimeException("getItemData not supported");
-    }
-
-    // Protected
-
-    protected abstract JAXBElement<? extends ItemType> createStorageItem(ItemType item);
-
-    /**
-     * Return either an EntityItemStringType or a JAXBElement<EntityItemStringType>, as appropriate for the relevant ItemType.
-     */
-    protected abstract Object convertFilename(EntityItemStringType filename);
-
-    /**
-     * Create and return an instance of the appropriate ItemType.
-     */
-    protected abstract ItemType createFileItem();
-
-    /**
-     * Return a list of items to associate with the given ObjectType, based on information gathered from the IFile.
-     */
-    protected abstract List<? extends ItemType> getItems(ItemType base, ObjectType obj, IFile f) throws IOException;
-
-    // Internal
-
-    final List<? extends ItemType> getItems(ObjectType obj, List<VariableValueType> variableValueTypes) throws OvalException {
+    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
 	if (!obj.getClass().getName().equals(getObjectClass().getName())) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
 							   getObjectClass().getName(), obj.getClass().getName()));
 	}
 	ItemType it = createFileItem();
-	List<ItemType> items = new Vector<ItemType>();
-	for (String path : getPathList(obj, variableValueTypes)) {
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	for (String path : getPathList(obj, vars)) {
 	    IFile f = null;
 	    try {
 		ReflectedFileObject fObj = new ReflectedFileObject(obj);
@@ -227,10 +170,33 @@ public abstract class BaseFileAdapter implements IAdapter {
 	return items;
     }
 
+    // Protected
+
+//    protected abstract JAXBElement<? extends ItemType> createStorageItem(ItemType item);
+
+    /**
+     * Return either an EntityItemStringType or a JAXBElement<EntityItemStringType>, as appropriate for the relevant ItemType.
+     */
+    protected abstract Object convertFilename(EntityItemStringType filename);
+
+    /**
+     * Create and return an instance of the appropriate ItemType.
+     */
+    protected abstract ItemType createFileItem();
+
+    /**
+     * Return a list of items to associate with the given ObjectType, based on information gathered from the IFile.
+     *
+     * @arg it the base ItemType containing filepath, path and filename information already populated
+     */
+    protected abstract List<JAXBElement<? extends ItemType>> getItems(ItemType it, ObjectType obj, IFile f) throws IOException;
+
+    // Internal
+
     /**
      * Get a list of String paths for this object.  This accommodates both searches and singletons.
      */
-    final List<String> getPathList(ObjectType obj, List<VariableValueType> variables) throws OvalException {
+    final List<String> getPathList(ObjectType obj, List<VariableValueType> vars) throws OvalException {
 	List<String> list = pathMap.get(obj.getId());
 	if (list != null) {
 	    return list;
@@ -243,7 +209,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    if (fObj.isSetFilepath()) {
 		EntityObjectStringType filepath = fObj.getFilepath();
 		if (filepath.isSetVarRef()) {
-		    String resolved = ctx.resolve(filepath.getVarRef(), variables);
+		    String resolved = ctx.resolve(filepath.getVarRef(), vars);
 		    if (OperationEnumeration.EQUALS == filepath.getOperation()) {
 			list.add(resolved);
 		    } else if (OperationEnumeration.PATTERN_MATCH == filepath.getOperation()) {
@@ -257,7 +223,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    } else if (fObj.isSetPath()) {
 		EntityObjectStringType path = fObj.getPath();
 		if (path.isSetVarRef()) {
-		    String resolved = ctx.resolve(path.getVarRef(), variables);
+		    String resolved = ctx.resolve(path.getVarRef(), vars);
 		    if (OperationEnumeration.EQUALS == path.getOperation()) {
 			list.add(resolved);
 		    } else if (OperationEnumeration.PATTERN_MATCH == path.getOperation()) {
@@ -289,7 +255,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			}
 			list = files;
 		    } else if (filename.isSetVarRef()) {
-			String resolved = ctx.resolve(filename.getVarRef(), variables);
+			String resolved = ctx.resolve(filename.getVarRef(), vars);
 			switch(filename.getOperation()) {
 			  case PATTERN_MATCH: {
 			    List<String> files = new Vector<String>();

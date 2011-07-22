@@ -41,7 +41,6 @@ import oval.schemas.definitions.core.TestsType;
 import oval.schemas.definitions.core.VariableType;
 import oval.schemas.definitions.core.VariablesType;
 
-import org.joval.intf.oval.IDefinitions;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 
@@ -51,7 +50,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-class Definitions implements IDefinitions {
+class Definitions {
     private static final int LEAF	= 1;
     private static final int SET	= 2;
 
@@ -172,13 +171,13 @@ class Definitions implements IDefinitions {
 	}
     }
 
-    // Implement IOvalDefinitionsIndex
-
-    public OvalDefinitions getOvalDefinitions() {
+    OvalDefinitions getOvalDefinitions() {
 	return defs;
     }
 
-    public <T extends ObjectType> T getObject(String id, Class<T> type) throws OvalException {
+    // Internal
+
+    <T extends ObjectType> T getObject(String id, Class<T> type) throws OvalException {
 	ObjectType object = objects.get(id);
 	if (object == null) {
 	    throw new OvalException("Unresolved object reference ID=" + id);
@@ -189,23 +188,12 @@ class Definitions implements IDefinitions {
 	}
     }
 
-    public Iterator<ObjectType> iterateLeafObjects(Class type) {
+    Iterator<ObjectType> iterateLeafObjects(Class type) {
 	return new SpecifiedObjectIterator(type, LEAF);
     }
 
-    // Internal
-
     Iterator<ObjectType> iterateSetObjects() {
 	return new SpecifiedObjectIterator(ObjectType.class, SET);
-    }
-
-    VariableType getVariable(String id) throws OvalException {
-	VariableType variable = variables.get(id);
-	if (variable == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_VARIABLE", id));
-	} else {
-	    return variable;
-	}
     }
 
     /**
@@ -222,17 +210,28 @@ class Definitions implements IDefinitions {
 	}
     }
 
-    /**
-     * Type-checked retrieval of a TestType.
-     */
-    TestType getTest(String id, Class type) throws OvalException {
+    TestType getTest(String id) throws OvalException {
 	TestType test = tests.get(id);
 	if (test == null) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_TEST", id));
-	} else if (type.isInstance(test)) {
-	    return test;
+	}
+	return test;
+    }
+
+    ObjectType getObject(String id) throws OvalException {
+	ObjectType object = objects.get(id);
+	if (object == null) {
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
+	}
+	return object;
+    }
+
+    VariableType getVariable(String id) throws OvalException {
+	VariableType variable = variables.get(id);
+	if (variable == null) {
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_VARIABLE", id));
 	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", type.getName(), test.getClass().getName()));
+	    return variable;
 	}
     }
 
@@ -263,22 +262,6 @@ class Definitions implements IDefinitions {
 
     Iterator <VariableType>iterateVariables() {
 	return variables.values().iterator();
-    }
-
-    ObjectType getObject(String id) throws OvalException {
-	ObjectType object = objects.get(id);
-	if (object == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
-	}
-	return object;
-    }
-
-    TestType getTest(String id) throws OvalException {
-	TestType test = tests.get(id);
-	if (test == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_TEST", id));
-	}
-	return test;
     }
 
     // Private

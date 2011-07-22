@@ -8,9 +8,9 @@ import java.util.NoSuchElementException;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 
+import oval.schemas.common.MessageType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
-import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.oval.OvalException;
@@ -25,17 +25,8 @@ import org.joval.util.JOVALSystem;
 class AdapterContext implements IAdapterContext {
     private IAdapter adapter;
     private Engine engine;
-    private IDefinitions definitions;
 
     // Implement IAdapterContext
-
-    public IDefinitions getDefinitions() {
-	return engine.getDefinitions();
-    }
-
-    public void status(String objectId) {
-	engine.producer.sendNotify(engine, Engine.MESSAGE_OBJECT, objectId);
-    }
 
     public void log(Level level, String message) {
 	JOVALSystem.getLogger().logp(level, adapter.getClass().getName(), "unknown", message);
@@ -47,6 +38,10 @@ class AdapterContext implements IAdapterContext {
 
     public String resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException {
 	return engine.resolve(id, list);
+    }
+
+    public void addObjectMessage(String objectId, MessageType message) {
+	engine.addObjectMessage(objectId, message);
     }
 
     // Internal

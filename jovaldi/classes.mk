@@ -1,9 +1,7 @@
 CLASSES=\
 	org.joval.intf.di.IJovaldiConfiguration				\
 	org.joval.intf.di.IJovaldiPlugin				\
-	org.joval.intf.oval.IDefinitions				\
 	org.joval.intf.oval.IResults					\
-	org.joval.intf.oval.ISystemCharacteristics			\
 	org.joval.intf.plugin.IAdapter					\
 	org.joval.intf.plugin.IAdapterContext				\
 	org.joval.intf.plugin.IPlugin					\

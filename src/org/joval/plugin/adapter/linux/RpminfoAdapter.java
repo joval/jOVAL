@@ -30,6 +30,7 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemEVRStringType;
+import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.linux.ObjectFactory;
 import oval.schemas.systemcharacteristics.linux.RpminfoItem;
 
@@ -39,8 +40,6 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
@@ -54,14 +53,13 @@ import org.joval.util.Version;
  */
 public class RpminfoAdapter implements IAdapter {
     private IAdapterContext ctx;
-    private IDefinitions definitions;
     private ISession session;
-    private ObjectFactory factory;
+    private ObjectFactory linuxFactory;
     private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
 
     public RpminfoAdapter(ISession session) {
 	this.session = session;
-	factory = new ObjectFactory();
+	linuxFactory = new ObjectFactory();
 	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
     }
 
@@ -69,10 +67,6 @@ public class RpminfoAdapter implements IAdapter {
 
     public Class getObjectClass() {
 	return RpminfoObject.class;
-    }
-
-    public Class getTestClass() {
-	return RpminfoTest.class;
     }
 
     public Class getStateClass() {
@@ -84,57 +78,28 @@ public class RpminfoAdapter implements IAdapter {
     }
 
     public void init(IAdapterContext ctx) {
-	definitions = ctx.getDefinitions();
 	this.ctx = ctx;
     }
 
-    /**
-     * A generic implementation of the IAdapter.scan method for File-type objects.  Subclasses need only implement the
-     * createFileItem and createStorageItem methods.
-     */
-    public void scan(ISystemCharacteristics sc) throws OvalException {
-	Iterator <ObjectType>iter = definitions.iterateLeafObjects(getObjectClass());
-	while (iter.hasNext()) {
-	    RpminfoObject obj = (RpminfoObject)iter.next();
-	    if (obj.isSetSet()) {
-		// Set objects only contain references to other objects, which are scanned elsewhere.
-		continue;
-	    } else {
-		ctx.status(obj.getId());
-		try {
-		    RpminfoItem item = getItem(obj);
-		    FlagEnumeration flag = FlagEnumeration.COMPLETE;
-		    switch(item.getStatus()) {
-		      case DOES_NOT_EXIST:
-			sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
-			break;
-
-		      case EXISTS: {
-			sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-			JAXBElement<? extends ItemType> storageItem = factory.createRpminfoItem(item);
-			BigInteger itemId = sc.storeItem(storageItem);
-			sc.relateItem(obj.getId(), itemId);
-			break;
-		      }
-		    }
-		} catch (Exception e) {
-		    MessageType msg = new MessageType();
-		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(e.getMessage());
-		    sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, msg);
-		}
-	    }
-	}
+    public boolean connect() {
+	return session != null;
     }
 
-    public List<? extends ItemType> getItems(ObjectType ot) throws OvalException {
-	Vector<RpminfoItem> v = new Vector<RpminfoItem>();
+    public void disconnect() {
+    }
+
+    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	try {
-	    v.add(getItem((RpminfoObject)ot));
+	    items.add(linuxFactory.createRpminfoItem(getItem((RpminfoObject)obj)));
 	} catch (Exception e) {
+	    MessageType msg = new MessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    ctx.addObjectMessage(obj.getId(), msg);
 	    ctx.log(Level.WARNING, e.getMessage(), e);
 	}
-	return v;
+	return items;
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
@@ -202,7 +167,7 @@ public class RpminfoAdapter implements IAdapter {
     // Private
 
     private RpminfoItem getItem(RpminfoObject obj) throws Exception {
-	RpminfoItem item = factory.createRpminfoItem();
+	RpminfoItem item = linuxFactory.createRpminfoItem();
 
 	String packageName = (String)obj.getName().getValue();
 	IProcess p = session.createProcess("rpm -q " + packageName);
@@ -236,7 +201,7 @@ public class RpminfoAdapter implements IAdapter {
 	    name.setValue(pkgName);
 	    item.setName(name);
 
-	    RpminfoItem.Epoch epoch = factory.createRpminfoItemEpoch();
+	    RpminfoItem.Epoch epoch = linuxFactory.createRpminfoItemEpoch();
 	    epoch.setValue(pkgEpoch);
 	    item.setEpoch(epoch);
 
@@ -244,11 +209,11 @@ public class RpminfoAdapter implements IAdapter {
 	    arch.setValue(pkgArch);
 	    item.setArch(arch);
 
-	    RpminfoItem.Version version = factory.createRpminfoItemVersion();
+	    RpminfoItem.Version version = linuxFactory.createRpminfoItemVersion();
 	    version.setValue(pkgVersion);
 	    item.setVersion(version);
 
-	    RpminfoItem.Release release = factory.createRpminfoItemRelease();
+	    RpminfoItem.Release release = linuxFactory.createRpminfoItemRelease();
 	    release.setValue(pkgRelease);
 	    item.setRelease(release);
 

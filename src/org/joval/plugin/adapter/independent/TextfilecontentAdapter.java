@@ -34,8 +34,6 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.oval.OvalException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
@@ -60,10 +58,6 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	return TextfilecontentObject.class;
     }
 
-    public Class getTestClass() {
-	return TextfilecontentTest.class;
-    }
-
     public Class getStateClass() {
 	return TextfilecontentState.class;
     }
@@ -80,11 +74,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	}
     }
 
-    // Overrides
-
-    protected JAXBElement<? extends ItemType> createStorageItem(ItemType item) {
-	return independentFactory.createTextfilecontentItem((TextfilecontentItem)item);
-    }
+    // Protected
 
     protected Object convertFilename(EntityItemStringType filename) {
 	return filename;
@@ -97,8 +87,8 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected List<? extends ItemType> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
-	List<ItemType> items = new Vector<ItemType>();
+    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	TextfilecontentItem baseItem = null;
 	if (base instanceof TextfilecontentItem) {
@@ -129,7 +119,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 			EntityItemStringType lineType = coreFactory.createEntityItemStringType();
 			lineType.setValue(line);
 			item.setLine(lineType);
-			items.add(item);
+			items.add(independentFactory.createTextfilecontentItem(item));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
