@@ -19,6 +19,7 @@ import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
+import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.EntityStateIntType;
 import oval.schemas.definitions.core.EntityStateStringType;
 import oval.schemas.definitions.core.ObjectComponentType;
@@ -263,22 +264,27 @@ public class ProcessAdapter implements IAdapter {
 
 		EntityItemIntType pid = coreFactory.createEntityItemIntType();
 		pid.setValue(tok.nextToken());
+		pid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		process.setPid(pid);
 
 		EntityItemIntType ppid = coreFactory.createEntityItemIntType();
 		ppid.setValue(tok.nextToken());
+		ppid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		process.setPpid(ppid);
 
 		EntityItemIntType priority = coreFactory.createEntityItemIntType();
 		priority.setValue(tok.nextToken());
+		priority.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		process.setPriority(priority);
 
 		EntityItemIntType userid = coreFactory.createEntityItemIntType();
 		userid.setValue(tok.nextToken());
+		userid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		process.setUserId(userid);
 
 		EntityItemIntType ruid = coreFactory.createEntityItemIntType();
 		ruid.setValue(tok.nextToken());
+		ruid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		process.setRuid(ruid);
 
 		EntityItemStringType tty = coreFactory.createEntityItemStringType();

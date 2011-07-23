@@ -26,7 +26,8 @@ import oval.schemas.definitions.core.EntityObjectIntType;
 import oval.schemas.definitions.core.EntityStateIntType;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.StateType;
-import oval.schemas.definitions.solaris.PatchObject;
+import oval.schemas.definitions.solaris.PatchBehaviors;
+import oval.schemas.definitions.solaris.Patch54Object;
 import oval.schemas.definitions.solaris.PatchState;
 import oval.schemas.definitions.solaris.PatchTest;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
@@ -51,19 +52,21 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class PatchAdapter implements IAdapter {
+public class Patch54Adapter implements IAdapter {
     private IAdapterContext ctx;
     private ISession session;
     private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
     private ObjectFactory solarisFactory;
     private String error = null;
     private Hashtable<String, List<RevisionEntry>> revisions;
+    private Hashtable<String, List<SupercedenceEntry>> supercedence;
 
-    public PatchAdapter(ISession session) {
+    public Patch54Adapter(ISession session) {
 	this.session = session;
 	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
 	solarisFactory = new ObjectFactory();
 	revisions = new Hashtable<String, List<RevisionEntry>>();
+	supercedence = new Hashtable<String, List<SupercedenceEntry>>();
     }
 
     // Implement IAdapter
@@ -73,7 +76,7 @@ public class PatchAdapter implements IAdapter {
     }
 
     public Class getObjectClass() {
-	return PatchObject.class;
+	return Patch54Object.class;
     }
 
     public Class getStateClass() {
@@ -97,7 +100,7 @@ public class PatchAdapter implements IAdapter {
 
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	for (ItemType item : getItems((PatchObject)obj)) {
+	for (ItemType item : getItems((Patch54Object)obj)) {
 	    items.add(solarisFactory.createPatchItem((PatchItem)item));
 	}
 	if (error != null) {
@@ -119,22 +122,55 @@ public class PatchAdapter implements IAdapter {
 
     // Internal
 
-    private List<PatchItem> getItems(PatchObject pObj) {
+    private List<PatchItem> getItems(Patch54Object pObj) {
+	PatchBehaviors behaviors = pObj.getBehaviors();
+	boolean isSupercedence = false;
+	if (behaviors != null) {
+	    isSupercedence = behaviors.isSupersedence();
+	}
+
 	Vector<PatchItem> v = new Vector<PatchItem>();
 	String base = (String)pObj.getBase().getValue();
+	int version = Integer.parseInt((String)pObj.getPatchVersion().getValue());
 	List<RevisionEntry> entries = revisions.get(base);
 	if (entries != null) {
 	    for (RevisionEntry entry : entries) {
-		PatchItem item = solarisFactory.createPatchItem();
-		EntityItemIntType baseType = coreFactory.createEntityItemIntType();
-		baseType.setValue(entry.patch.getBaseString());
-		baseType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		item.setBase(baseType);
-		EntityItemIntType versionType = coreFactory.createEntityItemIntType();
-		versionType.setValue(entry.patch.getVersionString());
-		versionType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		item.setVersion(versionType);
-		v.add(item);
+		boolean accept = false;
+		if (isSupercedence && version <= entry.patch.version) {
+		    accept = true;
+		} else if (version == entry.patch.version) {
+		    accept = true;
+		}
+		if (accept) {
+		    PatchItem item = solarisFactory.createPatchItem();
+		    EntityItemIntType baseType = coreFactory.createEntityItemIntType();
+		    baseType.setValue(entry.patch.getBaseString());
+		    baseType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    item.setBase(baseType);
+		    EntityItemIntType versionType = coreFactory.createEntityItemIntType();
+		    versionType.setValue(entry.patch.getVersionString());
+		    versionType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    item.setVersion(versionType);
+		    v.add(item);
+		}
+	    }
+	}
+
+	if (isSupercedence) {
+	    List<SupercedenceEntry> list = supercedence.get(base);
+	    if (list != null) {
+		for (SupercedenceEntry entry : list) {
+		    if (version >= entry.superceded.version && !v.contains(entry.by)) {
+			PatchItem item = solarisFactory.createPatchItem();
+			EntityItemIntType baseType = coreFactory.createEntityItemIntType();
+			baseType.setValue(entry.by.getBaseString());
+			item.setBase(baseType);
+			EntityItemIntType versionType = coreFactory.createEntityItemIntType();
+			versionType.setValue(entry.by.getVersionString());
+			item.setVersion(versionType);
+			v.add(item);
+		    }
+		}
 	    }
 	}
 	return v;
@@ -191,35 +227,46 @@ public class PatchAdapter implements IAdapter {
 		end = line.indexOf(REQUIRES);
 		buff = line.substring(begin, end).trim();
 		Vector<PatchEntry> obsoletes = new Vector<PatchEntry>();
-		tok = new StringTokenizer(buff, ",");
+		tok = new StringTokenizer(buff, ", ");
 		while(tok.hasMoreTokens()) {
-		    obsoletes.add(new PatchEntry(tok.nextToken().trim()));
+		    PatchEntry superceded = new PatchEntry(tok.nextToken());
+		    obsoletes.add(superceded);
+		    String obsoleteBase = superceded.getBaseString();
+		    List<SupercedenceEntry> list = supercedence.get(obsoleteBase);
+		    if (list == null) {
+			list = new Vector<SupercedenceEntry>();
+			supercedence.put(obsoleteBase, list);
+		    }
+		    SupercedenceEntry entry = new SupercedenceEntry(superceded, patch);
+		    if (!list.contains(entry)) {
+			list.add(entry);
+		    }
 		}
 
 		begin = line.indexOf(REQUIRES) + REQUIRES.length();
 		end = line.indexOf(INCOMPATIBLES);
 		buff = line.substring(begin, end).trim();
 		Vector<PatchEntry> requires = new Vector<PatchEntry>();
-		tok = new StringTokenizer(buff, ",");
+		tok = new StringTokenizer(buff, ", ");
 		while(tok.hasMoreTokens()) {
-		    requires.add(new PatchEntry(tok.nextToken().trim()));
+		    requires.add(new PatchEntry(tok.nextToken()));
 		}
 
 		begin = line.indexOf(INCOMPATIBLES) + INCOMPATIBLES.length();
 		end = line.indexOf(PACKAGES);
 		buff = line.substring(begin, end).trim();
 		Vector<PatchEntry> incompatibles = new Vector<PatchEntry>();
-		tok = new StringTokenizer(buff, ",");
+		tok = new StringTokenizer(buff, ", ");
 		while(tok.hasMoreTokens()) {
-		    incompatibles.add(new PatchEntry(tok.nextToken().trim()));
+		    incompatibles.add(new PatchEntry(tok.nextToken()));
 		}
 
 		begin = line.indexOf(PACKAGES) + PACKAGES.length();
 		buff = line.substring(begin).trim();
 		Vector<String> packages = new Vector<String>();
-		tok = new StringTokenizer(buff, ",");
+		tok = new StringTokenizer(buff, ", ");
 		while(tok.hasMoreTokens()) {
-		    packages.add(tok.nextToken().trim());
+		    packages.add(tok.nextToken());
 		}
 
 		RevisionEntry entry = new RevisionEntry(patch, obsoletes, requires, incompatibles, packages);
@@ -271,6 +318,30 @@ public class PatchAdapter implements IAdapter {
 
 	String getVersionString() {
 	    return Integer.toString(version);
+	}
+
+	public boolean equals(Object other) {
+	    if (other instanceof PatchEntry) {
+		return base == ((PatchEntry)other).base && version == ((PatchEntry)other).version;
+	    }
+	    return false;
+	}
+    }
+
+    class SupercedenceEntry {
+	PatchEntry superceded;
+	PatchEntry by;
+
+	SupercedenceEntry (PatchEntry superceded, PatchEntry by) {
+	    this.superceded = superceded;
+	    this.by = by;
+	}
+
+	public boolean equals(Object other) {
+	    if (other instanceof SupercedenceEntry) {
+		return superceded == ((SupercedenceEntry)other).superceded && by == ((SupercedenceEntry)other).by;
+	    }
+	    return false;
 	}
     }
 }
