@@ -23,7 +23,6 @@ import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.OperatorEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
-import oval.schemas.definitions.core.EntityStateSimpleBaseType;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.solaris.EntityStateSmfProtocolType;
@@ -34,7 +33,6 @@ import oval.schemas.definitions.solaris.SmfTest;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.solaris.EntityItemSmfProtocolType;
@@ -49,6 +47,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
+import org.joval.util.TypeTools;
 
 /**
  * Evaluates the Solaris SMF OVAL tests.
@@ -122,42 +121,13 @@ public class SmfAdapter implements IAdapter {
 
     private boolean compare(SmfState state, SmfItem item) throws OvalException {
 	if (state.isSetFmri()) {
-	    if (item.isSetFmri()) {
-		return compare(state.getFmri(), item.getFmri());
-	    } else {
-		return false;
-	    }
+	    return TypeTools.compare(state.getFmri(), item.getFmri());
 	} else if (state.isSetServiceName()) {
-	    if (item.isSetServiceName()) {
-		return compare(state.getServiceName(), item.getServiceName());
-	    } else {
-		return false;
-	    }
+	    return TypeTools.compare(state.getServiceName(), item.getServiceName());
 	} else if (state.isSetServiceState()) {
-	    if (item.isSetServiceState()) {
-		return compare(state.getServiceState(), item.getServiceState());
-	    } else {
-		return false;
-	    }
+	    return TypeTools.compare(state.getServiceState(), item.getServiceState());
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
-	}
-    }
-
-    private boolean compare(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item) throws OvalException {
-	switch(state.getOperation()) {
-	  case CASE_INSENSITIVE_EQUALS:
-	    return ((String)state.getValue()).equalsIgnoreCase((String)item.getValue());
-	  case EQUALS:
-	    return ((String)state.getValue()).equals((String)item.getValue());
-	  case PATTERN_MATCH:
-	    if (item.getValue() == null) {
-		return false;
-	    } else {
-		return Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find();
-	    }
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getOperation()));
 	}
     }
 

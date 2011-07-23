@@ -20,7 +20,6 @@ import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.EntityStateIntType;
 import oval.schemas.definitions.core.EntityStateStringType;
-import oval.schemas.definitions.core.EntityStateSimpleBaseType;
 import oval.schemas.definitions.core.ObjectComponentType;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.StateType;
@@ -30,7 +29,6 @@ import oval.schemas.definitions.solaris.IsainfoTest;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
-import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.solaris.IsainfoItem;
@@ -43,6 +41,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
+import org.joval.util.TypeTools;
 
 /**
  * Evaluates IsainfoTest OVAL tests.
@@ -102,46 +101,26 @@ public class IsainfoAdapter implements IAdapter {
     }
 
     public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
-	IsainfoState state = (IsainfoState)st;
-	IsainfoItem item = (IsainfoItem)it;
+	if (compare((IsainfoState)st, (IsainfoItem)it)) {
+	    return ResultEnumeration.TRUE;
+	} else {
+	    return ResultEnumeration.FALSE;
+	}
+    }
 
+    private boolean compare(IsainfoState state, IsainfoItem item) throws OvalException {
 	if (state.isSetApplicationIsa()) {
-	    if (compare(state.getApplicationIsa(), item.getApplicationIsa())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return TypeTools.compare(state.getApplicationIsa(), item.getApplicationIsa());
 	} else if (state.isSetKernelIsa()) {
-	    if (compare(state.getKernelIsa(), item.getKernelIsa())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return TypeTools.compare(state.getKernelIsa(), item.getKernelIsa());
 	} else if (state.isSetBits()) {
-	    if (compare(state.getBits(), item.getBits())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return TypeTools.compare(state.getBits(), item.getBits());
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
 	}
     }
 
     // Internal
-
-    private boolean compare(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item) throws OvalException {
-	switch (state.getOperation()) {
-	  case CASE_INSENSITIVE_EQUALS:
-	    return ((String)item.getValue()).equalsIgnoreCase((String)state.getValue());
-	  case EQUALS:
-	    return ((String)item.getValue()).equals((String)state.getValue());
-	  case PATTERN_MATCH:
-	    return Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find();
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getOperation()));
-	}
-    }
 
     private JAXBElement<IsainfoItem> getItem() throws Exception {
 	IsainfoItem item = solarisFactory.createIsainfoItem();
