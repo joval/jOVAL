@@ -160,7 +160,7 @@ public class Patch54Adapter implements IAdapter {
 	    List<SupercedenceEntry> list = supercedence.get(base);
 	    if (list != null) {
 		for (SupercedenceEntry entry : list) {
-		    if (version >= entry.superceded.version && !v.contains(entry.by)) {
+		    if (version <= entry.superceded.version && !v.contains(entry.by)) {
 			PatchItem item = solarisFactory.createPatchItem();
 			EntityItemIntType baseType = coreFactory.createEntityItemIntType();
 			baseType.setValue(entry.by.getBaseString());
