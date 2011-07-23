@@ -174,7 +174,7 @@ public class ProcessAdapter implements IAdapter {
                 return ResultEnumeration.FALSE;
             }
         } else {
-            throw new OvalException(JOVALSystem.getMessage("ERROR_PROCESS_STATE_EMPTY", state.getId()));
+            throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
         }
     }
 

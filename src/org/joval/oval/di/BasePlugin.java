@@ -30,6 +30,7 @@ import org.joval.plugin.adapter.independent.FamilyAdapter;
 import org.joval.plugin.adapter.independent.TextfilecontentAdapter;
 import org.joval.plugin.adapter.independent.Textfilecontent54Adapter;
 import org.joval.plugin.adapter.linux.RpminfoAdapter;
+import org.joval.plugin.adapter.solaris.PackageAdapter;
 import org.joval.plugin.adapter.solaris.PatchAdapter;
 import org.joval.plugin.adapter.unix.ProcessAdapter;
 import org.joval.plugin.adapter.unix.UnameAdapter;
@@ -101,6 +102,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    adapters.add(new RegistryAdapter(null));
 	    adapters.add(new RpminfoAdapter(null));
 	    adapters.add(new PatchAdapter(null));
+	    adapters.add(new PackageAdapter(null));
 	    adapters.add(new ProcessAdapter(null));
 	    adapters.add(new UnameAdapter(null));
 	} else if (session.connect()) {
@@ -128,6 +130,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	      case ISession.UNIX: {
 		info = new UnixSystemInfo(session).getSystemInfo();
 		adapters.add(new RpminfoAdapter(session));
+		adapters.add(new PackageAdapter(session));
 		adapters.add(new PatchAdapter(session));
 		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(session));
 		adapters.add(new ProcessAdapter(session));

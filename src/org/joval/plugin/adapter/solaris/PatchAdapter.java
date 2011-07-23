@@ -23,7 +23,6 @@ import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.definitions.core.EntityObjectIntType;
 import oval.schemas.definitions.core.EntityStateIntType;
-import oval.schemas.definitions.core.ObjectComponentType;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.solaris.PatchObject;
@@ -37,9 +36,6 @@ import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.solaris.PatchItem;
 import oval.schemas.systemcharacteristics.solaris.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestedItemType;
-import oval.schemas.results.core.TestedVariableType;
-import oval.schemas.results.core.TestType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;

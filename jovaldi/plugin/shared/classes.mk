@@ -28,6 +28,7 @@ SHARED=\
 	org.joval.plugin.adapter.independent.TextfilecontentAdapter	\
 	org.joval.plugin.adapter.independent.Textfilecontent54Adapter	\
 	org.joval.plugin.adapter.linux.RpminfoAdapter			\
+	org.joval.plugin.adapter.solaris.PackageAdapter			\
 	org.joval.plugin.adapter.solaris.PatchAdapter			\
 	org.joval.plugin.adapter.unix.FileAdapter			\
 	org.joval.plugin.adapter.unix.ProcessAdapter			\
