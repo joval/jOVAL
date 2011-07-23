@@ -16,13 +16,22 @@ the "remote" plugin (which can scan remote hosts).  Plugins can specify their ow
 options as well.  To see a print-out of options for a plugin, use:
   jovaldi -j <string> -h
 
-This release (version 0.A.4) supports scanning of Windows and Linux host machines, and implements
-the following OVAL tests:
+This release (version 0.A.5) supports scanning of Windows, Linux and Solaris host machines,
+and implements the following OVAL tests:
 
   ind-family
   ind-textfilecontent54
+  ind-textfilecontent
   linux-rpminfo
-  windows-file (version and product_version checks only)
+  solaris-isainfo
+  solaris-package
+  solaris-patch54
+  solaris-patch
+  solaris-smf
+  unix-file
+  unix-process
+  unix-uname
+  windows-file
   windows-registry
   windows-wmi
 
