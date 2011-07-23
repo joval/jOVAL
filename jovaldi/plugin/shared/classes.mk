@@ -30,6 +30,7 @@ SHARED=\
 	org.joval.plugin.adapter.linux.RpminfoAdapter			\
 	org.joval.plugin.adapter.solaris.PackageAdapter			\
 	org.joval.plugin.adapter.solaris.PatchAdapter			\
+	org.joval.plugin.adapter.solaris.SmfAdapter			\
 	org.joval.plugin.adapter.unix.FileAdapter			\
 	org.joval.plugin.adapter.unix.ProcessAdapter			\
 	org.joval.plugin.adapter.unix.UnameAdapter			\
