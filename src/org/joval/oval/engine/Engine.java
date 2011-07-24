@@ -69,6 +69,7 @@ import oval.schemas.definitions.core.VariableComponentType;
 import oval.schemas.definitions.core.VariableType;
 import oval.schemas.definitions.core.VariablesType;
 import oval.schemas.definitions.independent.EntityObjectVariableRefType;
+import oval.schemas.definitions.independent.UnknownTest;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.TestedItemType;
 import oval.schemas.results.core.TestedVariableType;
@@ -451,17 +452,21 @@ public class Engine implements IProducer {
 	    testResult.setStateOperator(testDefinition.getStateOperator());
 
 	    if (filter.getEvaluationAllowed()) {
-		IAdapter adapter = getAdapterForTest(testDefinition);
-		if (adapter == null) {
-		    MessageType message = new MessageType();
-		    message.setLevel(MessageLevelEnumeration.WARNING);
-		    message.setValue(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", testDefinition.getClass().getName()));
-		    testResult.getMessage().add(message);
-		    testResult.setResult(ResultEnumeration.NOT_EVALUATED);
-		} else if (getObjectRef(testDefinition) == null) {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_TEST_NOOBJREF", testId));
+		if (testDefinition instanceof UnknownTest) {
+		    testResult.setResult(ResultEnumeration.UNKNOWN);
 		} else {
-		    evaluateTest(testResult, adapter);
+		    IAdapter adapter = getAdapterForTest(testDefinition);
+		    if (adapter == null) {
+			MessageType message = new MessageType();
+			message.setLevel(MessageLevelEnumeration.WARNING);
+			message.setValue(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", testDefinition.getClass().getName()));
+			testResult.getMessage().add(message);
+			testResult.setResult(ResultEnumeration.NOT_EVALUATED);
+		    } else if (getObjectRef(testDefinition) == null) {
+			throw new OvalException(JOVALSystem.getMessage("ERROR_TEST_NOOBJREF", testId));
+		    } else {
+			evaluateTest(testResult, adapter);
+		    }
 		}
 	    } else {
 		testResult.setResult(ResultEnumeration.NOT_EVALUATED);
