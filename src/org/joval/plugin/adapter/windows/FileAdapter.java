@@ -166,227 +166,231 @@ public class FileAdapter extends BaseFileAdapter {
      * Populate the FileItem with everything except the path, filename and filepath. 
      */
     private void setItem(FileItem fItem, IFile file) throws IOException {
-	IRandomAccess ra = null;
-	try {
-	    //
-	    // Get some useful information from the IFile
-	    //
-	    fItem.setStatus(StatusEnumeration.EXISTS);
-	    EntityItemIntType sizeType = coreFactory.createEntityItemIntType();
-	    sizeType.setValue(new Long(file.length()).toString());
-	    sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	    fItem.setSize(sizeType);
-	    EntityItemIntType aTimeType = coreFactory.createEntityItemIntType();
-	    aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	    fItem.setATime(aTimeType);
-	    EntityItemIntType mTimeType = coreFactory.createEntityItemIntType();
-	    mTimeType.setValue(toWindowsTimestamp(file.lastModified()));
-	    mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	    fItem.setMTime(mTimeType);
-	    EntityItemIntType cTimeType = coreFactory.createEntityItemIntType();
-	    cTimeType.setValue(toWindowsTimestamp(file.createTime()));
-	    cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	    fItem.setCTime(cTimeType);
-	    EntityItemFileTypeType typeType = windowsFactory.createEntityItemFileTypeType();
-	    switch(file.getType()) {
-	      case IFile.FILE_TYPE_DISK:
-		typeType.setValue("FILE_TYPE_DISK");
-		break;
-	      case IFile.FILE_TYPE_REMOTE:
-		typeType.setValue("FILE_TYPE_REMOTE");
-		break;
-	      case IFile.FILE_TYPE_PIPE:
-		typeType.setValue("FILE_TYPE_PIPE");
-		break;
-	      case IFile.FILE_TYPE_CHAR:
-		typeType.setValue("FILE_TYPE_CHAR");
-		break;
-	      default:
-		typeType.setValue("FILE_TYPE_UNKNOWN");
-		break;
-	    }
-	    fItem.setType(typeType);
+	//
+	// Get some useful information from the IFile
+	//
+	fItem.setStatus(StatusEnumeration.EXISTS);
+	EntityItemIntType sizeType = coreFactory.createEntityItemIntType();
+	sizeType.setValue(new Long(file.length()).toString());
+	sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	fItem.setSize(sizeType);
+	EntityItemIntType aTimeType = coreFactory.createEntityItemIntType();
+	aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	fItem.setATime(aTimeType);
+	EntityItemIntType mTimeType = coreFactory.createEntityItemIntType();
+	mTimeType.setValue(toWindowsTimestamp(file.lastModified()));
+	mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	fItem.setMTime(mTimeType);
+	EntityItemIntType cTimeType = coreFactory.createEntityItemIntType();
+	cTimeType.setValue(toWindowsTimestamp(file.createTime()));
+	cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	fItem.setCTime(cTimeType);
+	EntityItemFileTypeType typeType = windowsFactory.createEntityItemFileTypeType();
+	switch(file.getType()) {
+	  case IFile.FILE_TYPE_DISK:
+	    typeType.setValue("FILE_TYPE_DISK");
+	    break;
+	  case IFile.FILE_TYPE_REMOTE:
+	    typeType.setValue("FILE_TYPE_REMOTE");
+	    break;
+	  case IFile.FILE_TYPE_PIPE:
+	    typeType.setValue("FILE_TYPE_PIPE");
+	    break;
+	  case IFile.FILE_TYPE_CHAR:
+	    typeType.setValue("FILE_TYPE_CHAR");
+	    break;
+	  default:
+	    typeType.setValue("FILE_TYPE_UNKNOWN");
+	    break;
+	}
+	fItem.setType(typeType);
 
-	    EntityItemStringType ownerType = coreFactory.createEntityItemStringType();
-	    if (wmi == null) {
-		ownerType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    } else {
-		try {
-		    String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(file.getLocalName()));
-		    ISWbemObjectSet objSet = wmi.execQuery(CIMV2, wql);
-		    if (objSet.getSize() == 1) {
-			ISWbemObject ownerObj = objSet.iterator().next();
-			ISWbemPropertySet ownerPropSet = ownerObj.getProperties();
-			ISWbemProperty usernameProp = ownerPropSet.getItem("AccountName");
-			String username = usernameProp.getValueAsString();
-			ISWbemProperty domainProp = ownerPropSet.getItem("ReferencedDomainName"); 
-			String domain = domainProp.getValueAsString();
-			String ownerAccount = new StringBuffer(domain).append("\\").append(username).toString();
-			ownerType.setValue(ownerAccount);
-		    } else {
-			MessageType msg = new MessageType();
-			msg.setLevel(MessageLevelEnumeration.INFO);
-			msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_OWNER", objSet.getSize()));
-			fItem.getMessage().add(msg);
-			ownerType.setStatus(StatusEnumeration.ERROR);
-		    }
-		} catch (Exception e) {
+	EntityItemStringType ownerType = coreFactory.createEntityItemStringType();
+	if (wmi == null) {
+	    ownerType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	} else {
+	    try {
+		String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(file.getLocalName()));
+		ISWbemObjectSet objSet = wmi.execQuery(CIMV2, wql);
+		if (objSet.getSize() == 1) {
+		    ISWbemObject ownerObj = objSet.iterator().next();
+		    ISWbemPropertySet ownerPropSet = ownerObj.getProperties();
+		    ISWbemProperty usernameProp = ownerPropSet.getItem("AccountName");
+		    String username = usernameProp.getValueAsString();
+		    ISWbemProperty domainProp = ownerPropSet.getItem("ReferencedDomainName"); 
+		    String domain = domainProp.getValueAsString();
+		    String ownerAccount = new StringBuffer(domain).append("\\").append(username).toString();
+		    ownerType.setValue(ownerAccount);
+		} else {
 		    MessageType msg = new MessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(e.getMessage());
+		    msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_OWNER", objSet.getSize()));
 		    fItem.getMessage().add(msg);
 		    ownerType.setStatus(StatusEnumeration.ERROR);
 		}
+	    } catch (Exception e) {
+		MessageType msg = new MessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue(e.getMessage());
+		fItem.getMessage().add(msg);
+		ownerType.setStatus(StatusEnumeration.ERROR);
 	    }
-	    fItem.setOwner(ownerType);
+	}
+	fItem.setOwner(ownerType);
 
-	    if (file.length() > 0) {
-		//
-		// Read the PE-format headers
-		//
-		ra = file.getRandomAccess("r");
-		ctx.log(Level.FINE, JOVALSystem.getMessage("STATUS_PE_READ", file.toString()));
-		ImageDOSHeader dh = new ImageDOSHeader(ra);
-		ra.seek((long)dh.getELFHeaderRVA());
-		ImageNTHeaders nh = new ImageNTHeaders(ra);
+	if (file.length() > 0) {
+	    readPEHeaders(file, fItem);
+	} else {
+	    ctx.log(Level.INFO, JOVALSystem.getMessage("STATUS_EMPTY_FILE", file.toString()));
+	    EntityItemVersionType versionType = coreFactory.createEntityItemVersionType();
+	    versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+	    versionType.setStatus(StatusEnumeration.ERROR);  //DAS: this is what Ovaldi does
+	    fItem.setVersion(versionType);
+	    MessageType msg = new MessageType();
+	    msg.setLevel(MessageLevelEnumeration.INFO);
+	    msg.setValue(JOVALSystem.getMessage("STATUS_PE_EMPTY"));
+	    fItem.getMessage().add(msg);
+	}
+    }
 
-		// Get the MS Checksum
-		EntityItemStringType msChecksumType = coreFactory.createEntityItemStringType();
-		msChecksumType.setValue(new Integer(nh.getImageOptionalHeader().getChecksum()).toString());
-		fItem.setMsChecksum(msChecksumType);
+    /**
+     * Read the Portable Execution format header information, including String Tables.
+     */
+    private void readPEHeaders(IFile file, FileItem fItem) throws IOException {
+	IRandomAccess ra = file.getRandomAccess("r");
+	ctx.log(Level.FINE, JOVALSystem.getMessage("STATUS_PE_READ", file.toString()));
+	try {
+	    ImageDOSHeader dh = new ImageDOSHeader(ra);
+	    ra.seek((long)dh.getELFHeaderRVA());
+	    ImageNTHeaders nh = new ImageNTHeaders(ra);
 
-		//
-		// Get the version directory entry from the image resource directory
-		//
-		long rba = nh.getResourceBaseAddress(ImageDataDirectory.RESOURCE_TABLE);
-		if (rba == 0) {
-		    throw new IOException("Missing resource section!");
-		}
-		ra.seek(rba);
-		ImageResourceDirectory root = new ImageResourceDirectory(ra);
-		ImageResourceDataEntry vde = getDirectoryEntry(Types.RT_VERSION, root, 1, ra, rba).getDataEntry(ra, rba);
-		ra.seek(vde.getDataAddress(rba, nh.getImageDirEntryRVA(ImageDataDirectory.RESOURCE_TABLE)));
-		VsVersionInfo vi = new VsVersionInfo(ra);
-		VsFixedFileInfo vffi = vi.getValue();
+	    // Get the MS Checksum
+	    EntityItemStringType msChecksumType = coreFactory.createEntityItemStringType();
+	    msChecksumType.setValue(new Integer(nh.getImageOptionalHeader().getChecksum()).toString());
+	    fItem.setMsChecksum(msChecksumType);
 
-		//
-		// Get the file version from the VsFixedFileInfo structure
-		//
-		EntityItemVersionType versionType = coreFactory.createEntityItemVersionType();
-		versionType.setValue(vffi.getFileVersion().toString());
-		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-		fItem.setVersion(versionType);
+	    //
+	    // Get the version directory entry from the image resource directory
+	    //
+	    long rba = nh.getResourceBaseAddress(ImageDataDirectory.RESOURCE_TABLE);
+	    if (rba == 0) {
+		throw new IOException("Missing resource section!");
+	    }
+	    ra.seek(rba);
+	    ImageResourceDirectory root = new ImageResourceDirectory(ra);
+	    ImageResourceDataEntry vde = getDirectoryEntry(Types.RT_VERSION, root, 1, ra, rba).getDataEntry(ra, rba);
+	    ra.seek(vde.getDataAddress(rba, nh.getImageDirEntryRVA(ImageDataDirectory.RESOURCE_TABLE)));
+	    VsVersionInfo vi = new VsVersionInfo(ra);
+	    VsFixedFileInfo vffi = vi.getValue();
 
-		//
-		// Look at the StringTables for any interesting information
-		//
-		String companyName=null, internalName=null, productName=null, originalFilename=null, productVersion=null,
-		       fileVersion=null;
-		for (Object obj : vi.getChildren()) {
-		    if (obj instanceof StringFileInfo) {
-			StringFileInfo sfi = (StringFileInfo)obj;
-			List <StringTable>stringTables = sfi.getChildren();
-			if (stringTables.size() > 0) {
-			    StringTable st = stringTables.get(0); //DAS
-			    String key = st.getKey();
-			    EntityItemStringType languageType = coreFactory.createEntityItemStringType();
-			    String locale = LanguageConstants.getLocaleString(key);
-			    if (locale == null) {
-				languageType.setStatus(StatusEnumeration.ERROR);
-				MessageType msg = new MessageType();
-				msg.setLevel(MessageLevelEnumeration.INFO);
-				msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_LANGUAGE", key));
-				fItem.getMessage().add(msg);
-			    } else {
-				languageType.setValue(LanguageConstants.getLocaleString(key));
-			    }
-			    fItem.setLanguage(languageType);
-			    for (StringStructure string : st.getChildren()) {
-				if (string.getKey().trim().equals("CompanyName")) {
-		    		    companyName = string.getValue().trim();
+	    //
+	    // Get the file version from the VsFixedFileInfo structure
+	    //
+	    EntityItemVersionType versionType = coreFactory.createEntityItemVersionType();
+	    versionType.setValue(vffi.getFileVersion().toString());
+	    versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+	    fItem.setVersion(versionType);
 
-				} else if (string.getKey().trim().equals("InternalName")) {
-		    		    internalName = string.getValue().trim();
-
-				} else if (string.getKey().trim().equals("ProductName")) {
-		    		    productName = string.getValue().trim();
-
-				} else if (string.getKey().trim().equals("OriginalFilename")) {
-		    		    originalFilename = string.getValue().trim();
-
-				} else if (string.getKey().trim().equals("ProductVersion")) {
-		    		    productVersion = string.getValue().trim();
-
-				} else if (string.getKey().trim().equals("FileVersion")) {
-		    		    fileVersion = string.getValue().trim();
-				}
+	    //
+	    // Look at the StringTables for any interesting information
+	    //
+	    String companyName=null, internalName=null, productName=null, originalFilename=null, productVersion=null,
+		   fileVersion=null;
+	    for (Object obj : vi.getChildren()) {
+		if (obj instanceof StringFileInfo) {
+		    StringFileInfo sfi = (StringFileInfo)obj;
+		    List <StringTable>stringTables = sfi.getChildren();
+		    if (stringTables.size() > 0) {
+			StringTable st = stringTables.get(0); //DAS: just going with the first String Table
+			String key = st.getKey();
+			EntityItemStringType languageType = coreFactory.createEntityItemStringType();
+			String locale = LanguageConstants.getLocaleString(key);
+			if (locale == null) {
+			    languageType.setStatus(StatusEnumeration.ERROR);
+			    MessageType msg = new MessageType();
+			    msg.setLevel(MessageLevelEnumeration.INFO);
+			    msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_LANGUAGE", key));
+			    fItem.getMessage().add(msg);
+			} else {
+			    languageType.setValue(LanguageConstants.getLocaleString(key));
+			}
+			fItem.setLanguage(languageType);
+			for (StringStructure string : st.getChildren()) {
+			    if (string.getKey().trim().equals("CompanyName")) {
+				companyName = string.getValue().trim();
+			    } else if (string.getKey().trim().equals("InternalName")) {
+				internalName = string.getValue().trim();
+			    } else if (string.getKey().trim().equals("ProductName")) {
+				productName = string.getValue().trim();
+			    } else if (string.getKey().trim().equals("OriginalFilename")) {
+				originalFilename = string.getValue().trim();
+			    } else if (string.getKey().trim().equals("ProductVersion")) {
+				productVersion = string.getValue().trim();
+			    } else if (string.getKey().trim().equals("FileVersion")) {
+				fileVersion = string.getValue().trim();
 			    }
 			}
 		    }
 		}
-		EntityItemStringType companyType = coreFactory.createEntityItemStringType();
-		if (companyName == null) {
-		    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		} else {
-		    companyType.setValue(companyName);
-		}
-		fItem.setCompany(companyType);
-		EntityItemStringType internalNameType = coreFactory.createEntityItemStringType();
-		if (internalName == null) {
-		    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		} else {
-		    internalNameType.setValue(internalName);
-		}
-		fItem.setInternalName(internalNameType);
-		EntityItemStringType productNameType = coreFactory.createEntityItemStringType();
-		if (productName == null) {
-		    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		} else {
-		    productNameType.setValue(productName);
-		}
-		fItem.setProductName(productNameType);
-		EntityItemStringType originalFilenameType = coreFactory.createEntityItemStringType();
-		if (originalFilename == null) {
-		    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		} else {
-		    originalFilenameType.setValue(originalFilename);
-		}
-		fItem.setOriginalFilename(originalFilenameType);
-		EntityItemVersionType productVersionType = coreFactory.createEntityItemVersionType();
-		if (productVersion == null) {
-		    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		} else {
-		    productVersionType.setValue(productVersion);
-		}
-		productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-		fItem.setProductVersion(productVersionType);
-		EntityItemStringType developmentClassType = coreFactory.createEntityItemStringType();
-		if (fileVersion == null) {
-		    developmentClassType.setStatus(StatusEnumeration.NOT_COLLECTED);
-		} else {
-		    try {
-			developmentClassType.setValue(getDevelopmentClass(fileVersion));
-		    } catch (IllegalArgumentException e) {
-			MessageType msg = new MessageType();
-			msg.setLevel(MessageLevelEnumeration.INFO);
-			msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_DEVCLASS", e.getMessage()));
-			fItem.getMessage().add(msg);
-			developmentClassType.setStatus(StatusEnumeration.ERROR);
-		    }
-		}
-		fItem.setDevelopmentClass(developmentClassType);
-	    } else {
-		ctx.log(Level.INFO, JOVALSystem.getMessage("STATUS_EMPTY_FILE", file.toString()));
-		EntityItemVersionType versionType = coreFactory.createEntityItemVersionType();
-		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-		versionType.setStatus(StatusEnumeration.ERROR);  //DAS: this is what Ovaldi does
-		fItem.setVersion(versionType);
-		MessageType msg = new MessageType();
-		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue(JOVALSystem.getMessage("STATUS_PE_EMPTY"));
-		fItem.getMessage().add(msg);
 	    }
+	    EntityItemStringType companyType = coreFactory.createEntityItemStringType();
+	    if (companyName == null) {
+		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    } else {
+		companyType.setValue(companyName);
+	    }
+	    fItem.setCompany(companyType);
+	    EntityItemStringType internalNameType = coreFactory.createEntityItemStringType();
+	    if (internalName == null) {
+		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    } else {
+		internalNameType.setValue(internalName);
+	    }
+	    fItem.setInternalName(internalNameType);
+	    EntityItemStringType productNameType = coreFactory.createEntityItemStringType();
+	    if (productName == null) {
+		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    } else {
+		productNameType.setValue(productName);
+	    }
+	    fItem.setProductName(productNameType);
+	    EntityItemStringType originalFilenameType = coreFactory.createEntityItemStringType();
+	    if (originalFilename == null) {
+		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    } else {
+		originalFilenameType.setValue(originalFilename);
+	    }
+	    fItem.setOriginalFilename(originalFilenameType);
+	    EntityItemVersionType productVersionType = coreFactory.createEntityItemVersionType();
+	    if (productVersion == null) {
+		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    } else {
+		productVersionType.setValue(productVersion);
+	    }
+	    productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+	    fItem.setProductVersion(productVersionType);
+	    EntityItemStringType developmentClassType = coreFactory.createEntityItemStringType();
+	    if (fileVersion == null) {
+		developmentClassType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	    } else {
+		try {
+		    developmentClassType.setValue(getDevelopmentClass(fileVersion));
+		} catch (IllegalArgumentException e) {
+		    MessageType msg = new MessageType();
+		    msg.setLevel(MessageLevelEnumeration.INFO);
+		    msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_DEVCLASS", e.getMessage()));
+		    fItem.getMessage().add(msg);
+		    developmentClassType.setStatus(StatusEnumeration.ERROR);
+		}
+	    }
+	    fItem.setDevelopmentClass(developmentClassType);
+	} catch (Exception e) {
+	    ctx.log(Level.INFO, JOVALSystem.getMessage("ERROR_PE", file.getLocalName(), e));
+	    MessageType msg = new MessageType();
+	    msg.setLevel(MessageLevelEnumeration.INFO);
+	    msg.setValue(e.getMessage());
+	    fItem.getMessage().add(msg);
 	} finally {
 	    if (ra != null) {
 		try {

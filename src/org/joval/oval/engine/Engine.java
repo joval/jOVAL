@@ -382,7 +382,6 @@ public class Engine implements IProducer {
 	producer.sendNotify(this, MESSAGE_OBJECT_PHASE_END, null);
     }
 
-//DAS
     private void scanAdapter(IAdapter adapter) throws OvalException {
 	if (adapter.connect()) {
 	    try {

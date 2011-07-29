@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.joval.io.LittleEndian;
+import org.joval.util.JOVALSystem;
 
 public class StringStructure {
     short length;
@@ -20,6 +21,7 @@ public class StringStructure {
     String value;
 
     StringStructure(byte[] buff, int offset, int fileOffset) throws IOException {
+	int initialOffset = offset;
 	length		= LittleEndian.getUShort(buff, offset);
 	offset += 2;
 	valueLength	= LittleEndian.getUShort(buff, offset);
@@ -31,6 +33,18 @@ public class StringStructure {
 	padding		= LittleEndian.get32BitAlignPadding(buff, offset, fileOffset);
 	offset += padding.length;
 	value		= LittleEndian.getSzUTF16LEString(buff, offset, 2*valueLength);
+	offset += 2*valueLength;
+
+	int computedLength = offset - initialOffset;
+	if (length < computedLength) {
+	    throw new IOException(JOVALSystem.getMessage("ERROR_PE_STRINGSTR_OVERFLOW",
+							 new Integer(computedLength), new Integer(length)));
+	} else {
+	    //
+	    // Sometimes the specified length is less than the actual length of the structure, so we correct it.
+	    //
+	    length = (short)computedLength;
+	}
     }
 
     public String toString() {

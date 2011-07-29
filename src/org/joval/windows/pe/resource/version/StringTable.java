@@ -40,7 +40,7 @@ public class StringTable {
 	    StringStructure str = new StringStructure(buff, offset, fileOffset);
 	    children.add(str);
 	    offset += str.length;
-	    if(str.length == 0) {
+	    if (str.length == 0) {
 		throw new IOException(JOVALSystem.getMessage("ERROR_WINPE_STRSTR0LEN"));
 	    }
 
@@ -56,7 +56,6 @@ public class StringTable {
 		    break;
 		}
 	    }
-
 	}
     }
 

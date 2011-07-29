@@ -253,7 +253,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    } else if (filename.isSetValue()) {
 			List<String> files = new Vector<String>();
 			for (String pathString : list) {
-			    files.add(pathString + fs.getDelimString() + (String)filename.getValue());
+			    if (pathString.endsWith(fs.getDelimString())) {
+				files.add(pathString + (String)filename.getValue());
+			    } else {
+				files.add(pathString + fs.getDelimString() + (String)filename.getValue());
+			    }
 			}
 			list = files;
 		    } else if (filename.isSetVarRef()) {

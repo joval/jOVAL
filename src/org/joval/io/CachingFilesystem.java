@@ -121,24 +121,24 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 	    }
 	}
 
-	    String patternStr = null;
-	    if (caseInsensitive) {
-		patternStr = "(?i)" + token;
-	    } else {
-		patternStr = token;
+	String patternStr = null;
+	if (caseInsensitive) {
+	    patternStr = "(?i)" + token;
+	} else {
+	    patternStr = token;
+	}
+	Pattern p = Pattern.compile(patternStr);
+	for (int i=0; i < children.length; i++) {
+	    Matcher m = p.matcher(children[i]);
+	    if (m.find()) {
+		TreeNode child = node.getChild(children[i]);
+		if (path == null) {
+		    results.add(child.toString());
+		} else {
+		    results.addAll(search(child.toString(), path));
+		}
 	    }
-	    Pattern p = Pattern.compile(patternStr);
-	    for (int i=0; i < children.length; i++) {
-	        Matcher m = p.matcher(children[i]);
-	        if (m.find()) {
-	            TreeNode child = node.getChild(children[i]);
-	            if (path == null) {
-	                results.add(child.toString());
-	            } else {
-	                results.addAll(search(child.toString(), path));
-	            }
-	        }
-	    }
+	}
 
 	return results;
     }
