@@ -6,6 +6,8 @@ package org.joval.plugin.adapter.windows;
 import java.math.BigInteger;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -55,6 +57,7 @@ import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.oval.OvalException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
+import org.joval.util.StringTools;
 import org.joval.util.Version;
 import org.joval.windows.pe.ImageDOSHeader;
 import org.joval.windows.pe.ImageNTHeaders;
@@ -79,6 +82,7 @@ import org.joval.windows.pe.resource.version.StringStructure;
 public class FileAdapter extends BaseFileAdapter {
     private static final String CIMV2		= "root\\cimv2";
     private static final String OWNER_WQL	= "ASSOCIATORS OF {Win32_LogicalFileSecuritySetting='$path'} WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
+    private static final String TIME_WQL	= "SELECT * FROM CIM_DataFile WHERE Name='$path'";
 
     private ObjectFactory windowsFactory;
     private IWmiProvider wmi;
@@ -167,25 +171,13 @@ public class FileAdapter extends BaseFileAdapter {
      */
     private void setItem(FileItem fItem, IFile file) throws IOException {
 	//
-	// Get some useful information from the IFile
+	// Get some information from the IFile
 	//
 	fItem.setStatus(StatusEnumeration.EXISTS);
 	EntityItemIntType sizeType = coreFactory.createEntityItemIntType();
 	sizeType.setValue(new Long(file.length()).toString());
 	sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	fItem.setSize(sizeType);
-	EntityItemIntType aTimeType = coreFactory.createEntityItemIntType();
-	aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	fItem.setATime(aTimeType);
-	EntityItemIntType mTimeType = coreFactory.createEntityItemIntType();
-	mTimeType.setValue(toWindowsTimestamp(file.lastModified()));
-	mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	fItem.setMTime(mTimeType);
-	EntityItemIntType cTimeType = coreFactory.createEntityItemIntType();
-	cTimeType.setValue(toWindowsTimestamp(file.createTime()));
-	cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	fItem.setCTime(cTimeType);
 	EntityItemFileTypeType typeType = windowsFactory.createEntityItemFileTypeType();
 	switch(file.getType()) {
 	  case IFile.FILE_TYPE_DISK:
@@ -206,9 +198,21 @@ public class FileAdapter extends BaseFileAdapter {
 	}
 	fItem.setType(typeType);
 
+	//
+	// If possible, use WMI to retrieve owner, aTime, cTime and mTime values
+	//
 	EntityItemStringType ownerType = coreFactory.createEntityItemStringType();
+	EntityItemIntType aTimeType = coreFactory.createEntityItemIntType();
+	aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	EntityItemIntType cTimeType = coreFactory.createEntityItemIntType();
+	cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	EntityItemIntType mTimeType = coreFactory.createEntityItemIntType();
+	mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	if (wmi == null) {
 	    ownerType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	    aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	    cTimeType.setValue(toWindowsTimestamp(file.createTime()));
+	    mTimeType.setValue(toWindowsTimestamp(file.lastModified()));
 	} else {
 	    try {
 		String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(file.getLocalName()));
@@ -229,6 +233,19 @@ public class FileAdapter extends BaseFileAdapter {
 		    fItem.getMessage().add(msg);
 		    ownerType.setStatus(StatusEnumeration.ERROR);
 		}
+
+		wql = TIME_WQL.replaceAll("(?i)\\$path", escapePath(Matcher.quoteReplacement(file.getLocalName())));
+		objSet = wmi.execQuery(CIMV2, wql);
+		if (objSet.getSize() == 1) {
+		    ISWbemObject fileObj = objSet.iterator().next();
+		    ISWbemPropertySet filePropSet = fileObj.getProperties();
+		    ISWbemProperty aTimeProp = filePropSet.getItem("LastAccessed");
+		    aTimeType.setValue(toWindowsTimestamp(aTimeProp.getValueAsString()));
+		    ISWbemProperty cTimeProp = filePropSet.getItem("InstallDate");
+		    cTimeType.setValue(toWindowsTimestamp(cTimeProp.getValueAsString()));
+		    ISWbemProperty mTimeProp = filePropSet.getItem("LastModified");
+		    mTimeType.setValue(toWindowsTimestamp(mTimeProp.getValueAsString()));
+		}
 	    } catch (Exception e) {
 		MessageType msg = new MessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
@@ -238,7 +255,13 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	}
 	fItem.setOwner(ownerType);
+	fItem.setATime(aTimeType);
+	fItem.setCTime(cTimeType);
+	fItem.setMTime(mTimeType);
 
+	//
+	// If possible, read the PE header information
+	//
 	if (file.length() > 0) {
 	    readPEHeaders(file, fItem);
 	} else {
@@ -497,12 +520,32 @@ public class FileAdapter extends BaseFileAdapter {
     static final BigInteger TEN_K		= new BigInteger("10000");
 
     /**
-     * Given a Java timestamp, return a Windows-style decimal timestamp, converted to a String.  Note there is a loss of
-     * precision in the last 4 digits of the resulting value (they'll always be 0s).
+     * Given a Java timestamp, return a Windows-style decimal timestamp, converted to a String.  Note that the last 4
+     * digits will always be 0, as there is only enough information to express the time in milliseconds.
      */
     private String toWindowsTimestamp(long javaTS) {
 	BigInteger tm = new BigInteger(new Long(javaTS).toString());
 	tm = tm.multiply(TEN_K); // 10K 100 nanosecs in one millisec
+	return tm.add(CNANOS_1601to1970).toString();
+    }
+
+    private static final SimpleDateFormat WMIDATEFORMAT = new SimpleDateFormat("yyyyMMddHHmmssZ");
+
+    /**
+     * Given a WBEM timestamp of the form yyyyMMddHHmmss.SSSSSSsutc, return a Windows-style decimal timestamp.  The last
+     * digit will always be a 0, as there is only enough information to express the time in microseconds.
+     */
+    public static String toWindowsTimestamp(String wmistr) throws NumberFormatException, ParseException {
+	StringBuffer sb = new StringBuffer(wmistr.substring(0,14));
+	sb.append(wmistr.substring(21,22));
+	int utcMinOffset = Integer.parseInt(wmistr.substring(22));
+	int utcHrs = utcMinOffset/60;
+	int utcMins = utcMinOffset % 60;
+	String s = String.format("%02d%02d", utcHrs, utcMins);
+	sb.append(s);
+	long secondsSince1970 = WMIDATEFORMAT.parse(sb.toString()).getTime()/1000L;
+	StringBuffer sb2 = new StringBuffer(Long.toString(secondsSince1970));
+	BigInteger tm = new BigInteger(sb2.append(wmistr.substring(15, 21)).append("0").toString()); //cnanos
 	return tm.add(CNANOS_1601to1970).toString();
     }
 
@@ -523,5 +566,20 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	}
 	throw new IllegalArgumentException(fileVersion);
+    }
+
+    /**
+     * Escape '\' characters for use as a path in a WQL query.
+     */
+    private String escapePath(String path) {
+	Iterator iter = StringTools.tokenize(path, "\\");
+	StringBuffer sb = new StringBuffer();
+	while (iter.hasNext()) {
+	    sb.append(iter.next());
+	    if (iter.hasNext()) {
+		sb.append("\\\\");
+	    }
+	}
+	return sb.toString();
     }
 }

@@ -5,6 +5,7 @@ package org.joval.windows.remote.wmi.query;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Vector;
 
 import org.jinterop.dcom.common.JIException;
 
@@ -56,7 +57,11 @@ public class SimpleSWbemObjectSet implements ISWbemObjectSet {
 	}
 
 	public boolean hasNext() {
-	    return iter.hasNext();
+	    if (iter == null) {
+		return false;
+	    } else {
+		return iter.hasNext();
+	    }
 	}
 
 	public ISWbemObject next() throws NoSuchElementException {
