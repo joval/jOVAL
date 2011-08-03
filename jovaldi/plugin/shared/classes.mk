@@ -24,6 +24,7 @@ SHARED=\
 	org.joval.io.LittleEndian					\
 	org.joval.io.StreamTool						\
 	org.joval.oval.di.BasePlugin					\
+	org.joval.plugin.adapter.independent.EnvironmentvariableAdapter	\
 	org.joval.plugin.adapter.independent.FamilyAdapter		\
 	org.joval.plugin.adapter.independent.TextfilecontentAdapter	\
 	org.joval.plugin.adapter.independent.Textfilecontent54Adapter	\

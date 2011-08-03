@@ -114,11 +114,13 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 	String[] children = null;
 	if (cacheRead) {
 	    children = node.list();
-	} else {
+	} else if (file.isDirectory()) {
 	    children = file.list();
 	    for (int i=0; i < children.length; i++) {
 	        TreeNode.makeNode(node, children[i]);
 	    }
+	} else {
+	    return results; // end of the line
 	}
 
 	String patternStr = null;

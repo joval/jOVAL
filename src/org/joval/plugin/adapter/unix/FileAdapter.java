@@ -35,6 +35,7 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
+import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.unix.ObjectFactory;
 import oval.schemas.systemcharacteristics.unix.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
@@ -102,7 +103,9 @@ public class FileAdapter extends BaseFileAdapter {
 	return unixFactory.createFileItem();
     }
 
-    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
+    protected List<JAXBElement<? extends ItemType>>
+	getItems(ItemType base, ObjectType obj, IFile f, List<VariableValueType> vars) throws IOException, OvalException {
+
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {
 	    setItem((FileItem)base, f);

@@ -27,11 +27,17 @@ public class TypeTools {
 	}
 	switch (state.getOperation()) {
 	  case CASE_INSENSITIVE_EQUALS:
-	    return ((String)item.getValue()).equalsIgnoreCase((String)state.getValue());
+	    return ((String)state.getValue()).equalsIgnoreCase((String)item.getValue());
 	  case EQUALS:
-	    return ((String)item.getValue()).equals((String)state.getValue());
+	    return ((String)state.getValue()).equals((String)item.getValue());
 	  case PATTERN_MATCH:
-	    return Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find();
+	    if (item.getValue() == null) {
+		return false;
+	    } else {
+		return Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find();
+	    }
+	  case NOT_EQUAL:
+	    return !((String)state.getValue()).equals((String)item.getValue());
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getOperation()));
 	}

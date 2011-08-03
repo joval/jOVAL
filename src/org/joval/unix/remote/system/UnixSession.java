@@ -3,6 +3,8 @@
 
 package org.joval.unix.remote.system;
 
+import java.util.logging.Level;
+
 import org.vngx.jsch.JSch;
 import org.vngx.jsch.ChannelExec;
 import org.vngx.jsch.ChannelType;
@@ -17,7 +19,9 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.unix.system.Environment;
+import org.joval.unix.remote.UnixCredential;
 import org.joval.unix.remote.io.SftpFilesystem;
+import org.joval.util.JOVALSystem;
 
 /**
  * A representation of an SSH session, which simply uses JSch to implement an ISession.
@@ -27,7 +31,7 @@ import org.joval.unix.remote.io.SftpFilesystem;
  */
 public class UnixSession implements ISession, ILocked, UserInfo {
     private String hostname;
-    private ICredential cred;
+    private UnixCredential cred;
     private Session session;
     private IEnvironment env;
     private SftpFilesystem fs;
@@ -38,9 +42,13 @@ public class UnixSession implements ISession, ILocked, UserInfo {
 
     // Implement ILocked
 
-    public boolean unlock(ICredential cred) {
-	this.cred = cred;
-	return true;
+    public boolean unlock(ICredential credential) {
+	if (credential instanceof UnixCredential) {
+	    cred = (UnixCredential)credential;
+	    return true;
+	} else {
+	    return false;
+	}
     }
 
     // Implement ISession
@@ -85,7 +93,7 @@ public class UnixSession implements ISession, ILocked, UserInfo {
 
     public IProcess createProcess(String command) throws Exception {
 	ChannelExec ce = session.openChannel(ChannelType.EXEC);
-	return new SshProcess(ce, command);
+	return new SshProcess(ce, command, cred);
     }
 
     // Implement UserInfo
@@ -99,21 +107,18 @@ public class UnixSession implements ISession, ILocked, UserInfo {
     }
 
     public boolean promptPassphrase(String message) {
-	System.out.println(message);
 	return true;
     }
 
     public boolean promptPassword(String message) {
-	System.out.println(message);
 	return true;
     }
 
     public boolean promptYesNo(String message) {
-	System.out.println(message);
 	return true;
     }
 
     public void showMessage(String message) {
-	System.out.println(message);
+	JOVALSystem.getLogger().log(Level.INFO, message);
     }
 }

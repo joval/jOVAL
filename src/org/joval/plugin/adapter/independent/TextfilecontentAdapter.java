@@ -26,6 +26,7 @@ import oval.schemas.definitions.independent.TextfilecontentTest;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
+import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.ObjectFactory;
 import oval.schemas.systemcharacteristics.independent.TextfilecontentItem;
 import oval.schemas.results.core.ResultEnumeration;
@@ -87,7 +88,9 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
+    protected List<JAXBElement<? extends ItemType>>
+	getItems(ItemType base, ObjectType obj, IFile f, List<VariableValueType> vars) throws IOException, OvalException {
+
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	TextfilecontentItem baseItem = null;

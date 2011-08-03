@@ -63,9 +63,13 @@ public class TreeNode {
     }
 
     public TreeNode getChild(String name) throws NoSuchElementException {
-	for (TreeNode node : children) {
-	    if (name.equals(node.getName())) {
-		return node;
+	if (isLeaf()) {
+	    throw new NoSuchElementException(name);
+	} else {
+	    for (TreeNode node : children) {
+		if (name.equals(node.getName())) {
+		    return node;
+		}
 	    }
 	}
 	throw new NoSuchElementException(name);

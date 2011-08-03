@@ -142,7 +142,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		}
 
 		if (fileExists) {
-		    items.addAll(getItems(it, obj, f));
+		    items.addAll(getItems(it, obj, f, vars));
 		} else if (!dirExists) {
 		    throw new NoSuchElementException("No file or parent directory");
 		}
@@ -191,7 +191,8 @@ public abstract class BaseFileAdapter implements IAdapter {
      *
      * @arg it the base ItemType containing filepath, path and filename information already populated
      */
-    protected abstract List<JAXBElement<? extends ItemType>> getItems(ItemType it, ObjectType obj, IFile f) throws IOException;
+    protected abstract List<JAXBElement<? extends ItemType>>
+	getItems(ItemType it, ObjectType obj, IFile f, List<VariableValueType> vars) throws IOException, OvalException;
 
     // Internal
 
@@ -211,12 +212,17 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    if (fObj.isSetFilepath()) {
 		EntityObjectStringType filepath = fObj.getFilepath();
 		if (filepath.isSetVarRef()) {
-		    String resolved = ctx.resolve(filepath.getVarRef(), vars);
-		    if (OperationEnumeration.EQUALS == filepath.getOperation()) {
-			list.add(resolved);
-		    } else if (OperationEnumeration.PATTERN_MATCH == filepath.getOperation()) {
-			list.addAll(fs.search(resolved));
-		    } else {
+		    List<String> resolved = ctx.resolve(filepath.getVarRef(), vars);
+		    switch(filepath.getOperation()) {
+		      case EQUALS:
+			list.addAll(resolved);
+			break;
+		      case PATTERN_MATCH:
+			for (String value : resolved) {
+			    list.addAll(fs.search(value));
+			}
+			break;
+		      default:
 			throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", filepath.getOperation()));
 		    }
 		} else {
@@ -225,20 +231,30 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    } else if (fObj.isSetPath()) {
 		EntityObjectStringType path = fObj.getPath();
 		if (path.isSetVarRef()) {
-		    String resolved = ctx.resolve(path.getVarRef(), vars);
-		    if (OperationEnumeration.EQUALS == path.getOperation()) {
-			list.add(resolved);
-		    } else if (OperationEnumeration.PATTERN_MATCH == path.getOperation()) {
-			list.addAll(fs.search(resolved));
-		    } else {
+		    List<String> resolved = ctx.resolve(path.getVarRef(), vars);
+		    switch(path.getOperation()) {
+		      case EQUALS:
+			list.addAll(resolved);
+			break;
+		      case PATTERN_MATCH:
+			for (String value : resolved) {
+			    list.addAll(fs.search(value));
+			}
+			break;
+		      default:
 			throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", path.getOperation()));
 		    }
-		} else if (OperationEnumeration.PATTERN_MATCH == path.getOperation()) {
-		    list.addAll(fs.search((String)path.getValue()));
-		} else if (OperationEnumeration.EQUALS == path.getOperation()) {
-		    list.add((String)path.getValue());
-		} else {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", path.getOperation()));
+		} else if (path.isSetValue()) {
+		    switch(path.getOperation()) {
+		      case PATTERN_MATCH:
+			list.addAll(fs.search((String)path.getValue()));
+			break;
+		      case EQUALS:
+			list.add((String)path.getValue());
+			break;
+		      default:
+			throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", path.getOperation()));
+		    }
 		}
 
 		if (fObj.isSetBehaviors()) {
@@ -250,31 +266,36 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    EntityObjectStringType filename = fObj.getFilename();
 		    if (filename == null) {
 			// False positive for isSetFilename -- happens with nil
-		    } else if (filename.isSetValue()) {
+		    } else {
+			List<String> fnames = new Vector<String>();
+			if (filename.isSetVarRef()) {
+			    fnames.addAll(ctx.resolve(filename.getVarRef(), vars));
+			} else {
+			    fnames.add((String)filename.getValue());
+			}
 			List<String> files = new Vector<String>();
 			for (String pathString : list) {
-			    if (pathString.endsWith(fs.getDelimString())) {
-				files.add(pathString + (String)filename.getValue());
-			    } else {
-				files.add(pathString + fs.getDelimString() + (String)filename.getValue());
+			    for (String fname : fnames) {
+				switch(filename.getOperation()) {
+				  case PATTERN_MATCH:
+				    files.addAll(fs.search(pathString, fname));
+				    break;
+    
+				  case EQUALS:
+				    if (pathString.endsWith(fs.getDelimString())) {
+					files.add(pathString + fname);
+				    } else {
+					files.add(pathString + fs.getDelimString() + fname);
+				    }
+				    break;
+    
+				  default:
+				    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
+										   filename.getOperation()));
+				}
 			    }
 			}
 			list = files;
-		    } else if (filename.isSetVarRef()) {
-			String resolved = ctx.resolve(filename.getVarRef(), vars);
-			switch(filename.getOperation()) {
-			  case PATTERN_MATCH: {
-			    List<String> files = new Vector<String>();
-			    for (String pathString : list) {
-				files.addAll(fs.search(pathString, resolved));
-			    }
-			    list = files;
-			    break;
-			  }
-			  default:
-			    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
-									   filename.getOperation()));
-			}
 		    }
 		}
 	    } else {

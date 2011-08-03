@@ -36,7 +36,7 @@ class AdapterContext implements IAdapterContext {
 	JOVALSystem.getLogger().logp(level, adapter.getClass().getName(), "unknown", message, thrown);
     }
 
-    public String resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException {
+    public List<String> resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException {
 	return engine.resolve(id, list);
     }
 

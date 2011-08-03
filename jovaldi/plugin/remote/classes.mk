@@ -6,6 +6,7 @@ REMOTE=\
 	org.joval.intf.identity.ILocked					\
 	org.joval.io.TailDashF						\
 	org.joval.plugin.RemotePlugin					\
+	org.joval.unix.remote.UnixCredential				\
 	org.joval.unix.remote.io.SftpError				\
 	org.joval.unix.remote.io.SftpFile				\
 	org.joval.unix.remote.io.SftpFilesystem				\

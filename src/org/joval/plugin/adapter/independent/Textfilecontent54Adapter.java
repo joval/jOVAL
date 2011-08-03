@@ -27,6 +27,7 @@ import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.ItemType;
+import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.ObjectFactory;
 import oval.schemas.systemcharacteristics.independent.TextfilecontentItem;
 import oval.schemas.results.core.ResultEnumeration;
@@ -38,11 +39,13 @@ import org.joval.intf.plugin.IAdapterContext;
 import org.joval.oval.OvalException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
+import org.joval.util.StringTools;
+import org.joval.util.TypeTools;
 
 /**
  * Evaluates Textfilecontent54Test OVAL tests.
  *
- * DAS: Specify a maximum file size supported for multi-line behavior support.
+ * DAS: Specify a maximum file size supported
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -73,12 +76,30 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	Textfilecontent54State state = (Textfilecontent54State)st;
 	TextfilecontentItem item = (TextfilecontentItem)it;
 
-	String pattern = (String)state.getText().getValue();
-        if (item.getPattern().getValue().equals(pattern)) {
-	    return ResultEnumeration.TRUE;
-	} else {
+	if (state.isSetInstance()) {
+	    String instance = (String)state.getInstance().getValue();
+	    if (!instance.equals((String)item.getInstance().getValue())) {
+		return ResultEnumeration.FALSE;
+	    }
+	}
+	if (state.isSetText()) {
+	    if (TypeTools.compare(state.getText(), item.getText())) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+	}
+	if (state.isSetSubexpression()) {
+	    List<EntityItemAnySimpleType> subexpressions = item.getSubexpression();
+	    for (EntityItemAnySimpleType itemSubexpression : subexpressions) {
+		if (TypeTools.compare(state.getSubexpression(), itemSubexpression)) {
+		    return ResultEnumeration.TRUE;
+		}
+	    }
 	    return ResultEnumeration.FALSE;
 	}
+
+	return ResultEnumeration.TRUE;
     }
 
     // Protected
@@ -94,91 +115,100 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, ObjectType obj, IFile f) throws IOException {
-	List<JAXBElement<? extends ItemType>> list = new Vector<JAXBElement<? extends ItemType>>();
-	if (base instanceof TextfilecontentItem && obj instanceof Textfilecontent54Object) {
-	    setItem((TextfilecontentItem)base, (Textfilecontent54Object)obj, f);
-	    list.add(independentFactory.createTextfilecontentItem((TextfilecontentItem)base));
+    protected List<JAXBElement<? extends ItemType>>
+	getItems(ItemType base, ObjectType obj, IFile f, List<VariableValueType> vars) throws IOException, OvalException {
+
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+
+	TextfilecontentItem baseItem = null;
+	if (base instanceof TextfilecontentItem) {
+	    baseItem = (TextfilecontentItem)base;
 	}
-	return list;
-    }
+	Textfilecontent54Object tfcObj = null;
+	if (obj instanceof Textfilecontent54Object) {
+	    tfcObj = (Textfilecontent54Object)obj;
+	}
 
-    // Private
-
-    /**
-     * Parse the file as specified by the Object, and decorate the Item.
-     */
-    private void setItem(TextfilecontentItem item, Textfilecontent54Object tfcObj, IFile file) throws IOException {
-	InputStream in = null;
-	try {
-	    int flags = 0;
-	    if (tfcObj.isSetBehaviors()) {
-		if (tfcObj.getBehaviors().isMultiline()) {
-		    flags |= Pattern.MULTILINE;
+	if (baseItem != null && tfcObj != null) {
+	    InputStream in = null;
+	    try {
+		int flags = 0;
+		if (tfcObj.isSetBehaviors()) {
+		    if (tfcObj.getBehaviors().isMultiline()) {
+			flags |= Pattern.MULTILINE;
+		    }
+		    if (tfcObj.getBehaviors().isIgnoreCase()) {
+			flags |= Pattern.CASE_INSENSITIVE;
+		    }
+		    if (tfcObj.getBehaviors().isSingleline()) {
+			flags |= Pattern.DOTALL;
+		    }
+		} else {
+		    flags = Pattern.MULTILINE;
 		}
-		if (tfcObj.getBehaviors().isIgnoreCase()) {
-		    flags |= Pattern.CASE_INSENSITIVE;
+		List<Pattern> patterns = new Vector<Pattern>();
+		if (tfcObj.getPattern().isSetVarRef()) {
+		    for (String value : ctx.resolve(tfcObj.getPattern().getVarRef(), vars)) {
+			patterns.add(Pattern.compile(value, flags));
+		    }
+		} else {
+		    patterns.add(Pattern.compile((String)tfcObj.getPattern().getValue(), flags));
 		}
-		if (tfcObj.getBehaviors().isSingleline()) {
-		    flags |= Pattern.DOTALL;
+
+		//
+		// Read the whole file into a buffer and search for the pattern
+		//
+		byte[] buff = new byte[256];
+		int len = 0;
+		StringBuffer sb = new StringBuffer();
+		in = f.getInputStream();
+		while ((len = in.read(buff)) > 0) {
+		    sb.append(StringTools.toCharArray(buff), 0, len);
 		}
-	    } else {
-		flags = Pattern.MULTILINE;
-	    }
-	    Pattern p = Pattern.compile((String)tfcObj.getPattern().getValue(), flags);
+		String s = sb.toString();
 
-	    EntityItemStringType patternType = coreFactory.createEntityItemStringType();
-	    patternType.setValue(p.toString());
-	    item.setPattern(patternType);
-	    EntityItemIntType instanceType = coreFactory.createEntityItemIntType();
-	    instanceType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	    instanceType.setValue(tfcObj.getInstance().getValue());
-	    item.setInstance(instanceType);
-
-	    //
-	    // Read the whole file into a buffer and search for the pattern
-	    //
-	    String text = null;
-	    byte[] buff = new byte[256];
-	    int len = 0;
-	    StringBuffer sb = new StringBuffer();
-	    in = file.getInputStream();
-	    while ((len = in.read(buff)) > 0) {
-		sb.append(toCharArray(buff), 0, len);
-	    }
-	    String s = sb.toString();
-	    Matcher m = p.matcher(s);
-	    if (m.find()) {
-		MatchResult mr = m.toMatchResult();
-		text = s.substring(mr.start(), mr.end());
-	    }
-
-	    if (text != null) {
-		EntityItemAnySimpleType textType = coreFactory.createEntityItemAnySimpleType();
-		textType.setValue(text);
-		item.setText(textType);
-	    }
-	} catch (PatternSyntaxException e) {
-	    MessageType msg = new MessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    item.getMessage().add(msg);
-	} finally {
-	    if (in != null) {
-		try {
-		    in.close();
-		} catch (IOException e) {
-		    ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", file.toString()), e);
+		for (Pattern p : patterns) {
+		    Matcher m = p.matcher(s);
+		    for (int instanceNum=1; m.find(); instanceNum++) {
+			TextfilecontentItem item = independentFactory.createTextfilecontentItem();
+			item.setPath(baseItem.getPath());
+			item.setFilename(baseItem.getFilename());
+    
+			EntityItemStringType patternType = coreFactory.createEntityItemStringType();
+			patternType.setValue(p.toString());
+			item.setPattern(patternType);
+			EntityItemIntType instanceType = coreFactory.createEntityItemIntType();
+			instanceType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+			instanceType.setValue(Integer.toString(instanceNum));
+			item.setInstance(instanceType);
+    
+			EntityItemAnySimpleType textType = coreFactory.createEntityItemAnySimpleType();
+			textType.setValue(m.group());
+			item.setText(textType);
+			int subexpressionCount = m.groupCount();
+			if (subexpressionCount > 0) {
+			    for (int subexpressionNum=1; subexpressionNum <= subexpressionCount; subexpressionNum++) {
+				EntityItemAnySimpleType subexpressionType = coreFactory.createEntityItemAnySimpleType();
+				subexpressionType.setValue(m.group(subexpressionNum));
+				item.getSubexpression().add(subexpressionType);
+			    }
+			}
+    
+			items.add(independentFactory.createTextfilecontentItem(item));
+		    }
+		}
+	    } catch (PatternSyntaxException e) {
+		throw new IOException(e);
+	    } finally {
+		if (in != null) {
+		    try {
+			in.close();
+		    } catch (IOException e) {
+			ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", f.toString()), e);
+		    }
 		}
 	    }
 	}
-    }
-
-    private char[] toCharArray(byte[] buff) {
-	char[] ca = new char[buff.length];
-	for (int i=0; i < buff.length; i++) {
-	    ca[i] = (char)buff[i];
-	}
-	return ca;
+	return items;
     }
 }

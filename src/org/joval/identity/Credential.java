@@ -3,13 +3,6 @@
 
 package org.joval.identity;
 
-import java.io.File;
-
-import org.vngx.jsch.exception.JSchException;
-import org.vngx.jsch.userauth.Identity;
-import org.vngx.jsch.userauth.IdentityManager;
-import org.vngx.jsch.userauth.IdentityFile;
-
 import org.joval.intf.identity.ICredential;
 
 /**
@@ -22,12 +15,10 @@ import org.joval.intf.identity.ICredential;
 public class Credential implements ICredential {
     protected String username;
     protected String password;
-    protected String passphrase;
 
     public Credential() {
 	username = null;
 	password = null;
-	passphrase = null;
     }
 
     /**
@@ -36,20 +27,6 @@ public class Credential implements ICredential {
     public Credential(String username, String password) {
 	this.username = username;
 	this.password = password;
-    }
-
-    /**
-     * Create a Credential for a certificate.
-     */
-    public Credential(String username, File privateKey, String passphrase) throws JSchException {
-	this.username = username;
-	Identity id = IdentityFile.newInstance(privateKey.getPath(), null);
-	if (passphrase == null) {
-	    IdentityManager.getManager().addIdentity(id, null);
-	} else {
-	    IdentityManager.getManager().addIdentity(id, passphrase.getBytes());
-	}
-	this.passphrase = passphrase;
     }
 
     public void setUsername(String username) {
@@ -68,9 +45,5 @@ public class Credential implements ICredential {
 
     public String getPassword() {
 	return password;
-    }
-
-    public String getPassphrase() {
-	return passphrase;
     }
 }

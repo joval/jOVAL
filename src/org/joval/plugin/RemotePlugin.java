@@ -20,6 +20,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.di.BasePlugin;
+import org.joval.unix.remote.UnixCredential;
 import org.joval.util.JOVALSystem;
 import org.joval.windows.remote.WindowsCredential;
 
@@ -64,7 +65,7 @@ public class RemotePlugin extends BasePlugin {
 
 	String hostname = null;
 	boolean redirect64 = true;
-	String domain=null, username=null, password=null, passphrase=null;
+	String domain=null, username=null, password=null, passphrase=null, rootPassword=null;
 	File privateKey = null;
 
 	for (int i=0; i < args.length; i++) {
@@ -80,6 +81,8 @@ public class RemotePlugin extends BasePlugin {
 		privateKey = new File(args[++i]);
 	    } else if (args[i].equals("-passphrase")) {
 		passphrase = args[++i];
+	    } else if (args[i].equals("-rootPassword")) {
+		rootPassword = args[++i];
 	    } else if (args[i].equals("-redirect64")) {
 		redirect64 = "true".equals(args[++i]);
 	    }
@@ -125,11 +128,13 @@ public class RemotePlugin extends BasePlugin {
 		    cred = new WindowsCredential(domain, username, password);
 		} else if (privateKey != null) {
 		    try {
-			cred = new Credential(username, privateKey, passphrase);
+			cred = new UnixCredential(username, privateKey, passphrase, rootPassword);
 		    } catch (JSchException e) {
 			err = getMessage("ERROR_PRIVATE_KEY", e.getMessage());
 			return false;
 		    }
+		} else if (rootPassword != null) {
+		    cred = new UnixCredential(username, password, rootPassword);
 		} else {
 		    cred = new Credential(username, password);
 		}

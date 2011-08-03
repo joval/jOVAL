@@ -12,5 +12,4 @@ package org.joval.intf.identity;
 public interface ICredential {
     String getUsername();
     String getPassword();
-    String getPassphrase();
 }

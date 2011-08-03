@@ -26,6 +26,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.plugin.adapter.independent.EnvironmentvariableAdapter;
 import org.joval.plugin.adapter.independent.FamilyAdapter;
 import org.joval.plugin.adapter.independent.TextfilecontentAdapter;
 import org.joval.plugin.adapter.independent.Textfilecontent54Adapter;
@@ -97,6 +98,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    // If there is no session, then the IPlugin is being invoked to perform analysis on a pre-existing
 	    // System-Characteristics file.  Therefore, all adapters are added, but without resources for data retrieval.
 	    //
+	    adapters.add(new EnvironmentvariableAdapter(null));
 	    adapters.add(new TextfilecontentAdapter(null));
 	    adapters.add(new Textfilecontent54Adapter(null));
 	    adapters.add(new WmiAdapter(null));
@@ -112,6 +114,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    adapters.add(new ProcessAdapter(null));
 	    adapters.add(new UnameAdapter(null));
 	} else if (session.connect()) {
+	    adapters.add(new EnvironmentvariableAdapter(session.getEnvironment()));
 	    adapters.add(new TextfilecontentAdapter(session.getFilesystem()));
 	    adapters.add(new Textfilecontent54Adapter(session.getFilesystem()));
 

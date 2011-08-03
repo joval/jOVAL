@@ -19,6 +19,7 @@ import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.system.ISession;
+import org.joval.unix.remote.UnixCredential;
 import org.joval.util.JOVALSystem;
 import org.joval.util.JSchLogger;
 import org.joval.windows.remote.WindowsCredential;
@@ -58,6 +59,7 @@ public class Remote {
 	    String password = props.getProperty("password");
 	    String privateKey = props.getProperty("privateKey");
 	    String passphrase = props.getProperty("passphrase");
+	    String rootPassword = props.getProperty("rootPassword");
 
 	    SessionFactory factory = new SessionFactory(new File("."));
 	    ISession session = factory.createSession(host);
@@ -65,16 +67,20 @@ public class Remote {
 		ILocked locked = (ILocked)session;
 		ICredential cred = null;
 		switch(session.getType()) {
+		  case ISession.UNIX:
+		    if (privateKey != null) {
+			cred = new UnixCredential(username, new File(privateKey), passphrase, rootPassword);
+		    } else {
+			cred = new UnixCredential(username, password, rootPassword);
+		    }
+		    break;
+
 		  case ISession.WINDOWS:
 		    cred = new WindowsCredential(domain, username, password);
 		    break;
 
 		  default:
-		    if (privateKey != null) {
-			cred = new Credential(username, new File(privateKey), passphrase);
-		    } else {
-			cred = new Credential(username, password);
-		    }
+		    cred = new Credential(username, password);
 		    break;
 		}
 		locked.unlock(cred);

@@ -14,7 +14,6 @@ import java.util.Vector;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.ExistenceEnumeration;
@@ -44,6 +43,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
+import org.joval.util.TypeTools;
 
 /**
  * Evaluates the Solaris Package OVAL tests.
@@ -121,37 +121,37 @@ public class PackageAdapter implements IAdapter {
 	  case OR:
 	    if (state.isSetCategory()) {
 		if (item.isSetCategory()) {
-		    return compare(state.getCategory(), item.getCategory());
+		    return TypeTools.compare(state.getCategory(), item.getCategory());
 		} else {
 		    return false;
 		}
 	    } else if (state.isSetDescription()) {
 		if (item.isSetDescription()) {
-		    return compare(state.getDescription(), item.getDescription());
+		    return TypeTools.compare(state.getDescription(), item.getDescription());
 		} else {
 		    return false;
 		}
 	    } else if (state.isSetName()) {
 		if (item.isSetName()) {
-		    return compare(state.getName(), item.getName());
+		    return TypeTools.compare(state.getName(), item.getName());
 		} else {
 		    return false;
 		}
 	    } else if (state.isSetPackageVersion()) {
 		if (item.isSetVersion()) {
-		    return compare(state.getPackageVersion(), item.getVersion());
+		    return TypeTools.compare(state.getPackageVersion(), item.getVersion());
 		} else {
 		    return false;
 		}
 	    } else if (state.isSetPkginst()) {
 		if (item.isSetPkginst()) {
-		    return compare(state.getPkginst(), item.getPkginst());
+		    return TypeTools.compare(state.getPkginst(), item.getPkginst());
 		} else {
 		    return false;
 		}
 	    } else if (state.isSetVendor()) {
 		if (item.isSetVendor()) {
-		    return compare(state.getVendor(), item.getVendor());
+		    return TypeTools.compare(state.getVendor(), item.getVendor());
 		} else {
 		    return false;
 		}
@@ -162,7 +162,7 @@ public class PackageAdapter implements IAdapter {
 	  case AND:
 	    if (state.isSetCategory()) {
 		if (item.isSetCategory()) {
-		   if (!compare(state.getCategory(), item.getCategory())) {
+		   if (!TypeTools.compare(state.getCategory(), item.getCategory())) {
 			return false;
 		    }
 		} else {
@@ -171,7 +171,7 @@ public class PackageAdapter implements IAdapter {
 	    }
 	    if (state.isSetDescription()) {
 		if (item.isSetDescription()) {
-		    if (!compare(state.getDescription(), item.getDescription())) {
+		    if (!TypeTools.compare(state.getDescription(), item.getDescription())) {
 			return false;
 		    }
 		} else {
@@ -180,7 +180,7 @@ public class PackageAdapter implements IAdapter {
 	    }
 	    if (state.isSetName()) {
 		if (item.isSetName()) {
-		    if (!compare(state.getName(), item.getName())) {
+		    if (!TypeTools.compare(state.getName(), item.getName())) {
 			return false;
 		    }
 		} else {
@@ -189,7 +189,7 @@ public class PackageAdapter implements IAdapter {
 	    }
 	    if (state.isSetPackageVersion()) {
 		if (item.isSetVersion()) {
-		    if (!compare(state.getPackageVersion(), item.getVersion())) {
+		    if (!TypeTools.compare(state.getPackageVersion(), item.getVersion())) {
 			return false;
 		    }
 		} else {
@@ -198,7 +198,7 @@ public class PackageAdapter implements IAdapter {
 	    }
 	    if (state.isSetPkginst()) {
 		if (item.isSetPkginst()) {
-		    if (!compare(state.getPkginst(), item.getPkginst())) {
+		    if (!TypeTools.compare(state.getPkginst(), item.getPkginst())) {
 			return false;
 		    }
 		} else {
@@ -207,7 +207,7 @@ public class PackageAdapter implements IAdapter {
 	    }
 	    if (state.isSetVendor()) {
 		if (item.isSetVendor()) {
-		    if (!compare(state.getVendor(), item.getVendor())) {
+		    if (!TypeTools.compare(state.getVendor(), item.getVendor())) {
 			return false;
 		    }
 		} else {
@@ -218,26 +218,6 @@ public class PackageAdapter implements IAdapter {
 
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATOR", state.getOperator()));
-	}
-    }
-
-    private boolean compare(EntityStateStringType state, EntityItemStringType item) throws OvalException {
-	if (item == null) {
-	    return false;
-	}
-	switch(state.getOperation()) {
-	  case CASE_INSENSITIVE_EQUALS:
-	    return ((String)state.getValue()).equalsIgnoreCase((String)item.getValue());
-	  case EQUALS:
-	    return ((String)state.getValue()).equals((String)item.getValue());
-	  case PATTERN_MATCH:
-	    if (item.getValue() == null) {
-		return false;
-	    } else {
-		return Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find();
-	    }
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getOperation()));
 	}
     }
 

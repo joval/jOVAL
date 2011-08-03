@@ -40,6 +40,14 @@ public class StringTools {
 	return new StringTokenIterator(target, delimiter);
     }
 
+    public static char[] toCharArray(byte[] buff) {
+	char[] ca = new char[buff.length];
+	for (int i=0; i < buff.length; i++) {
+	    ca[i] = (char)buff[i];
+	}
+	return ca;
+    }
+
     // Private
 
     static final class StringComparator implements Comparator<String> {

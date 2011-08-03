@@ -134,18 +134,19 @@ public class RegistryAdapter implements IAdapter {
     private List<ItemWrapper> getItems(RegistryObject rObj, List<VariableValueType> variableValueTypes) throws OvalException {
 	List<ItemWrapper> list = new Vector<ItemWrapper>();
 	String id = rObj.getId();
-	String hive=null, path=null;
+	String hive = null;
+	List<String> paths = new Vector<String>();
 	if (rObj.getKey().getValue().isSetVarRef()) {
 	    try {
 		String variableId = rObj.getKey().getValue().getVarRef();
-		path = ctx.resolve(variableId, variableValueTypes);
+		paths.addAll(ctx.resolve(variableId, variableValueTypes));
 	    } catch (NoSuchElementException e) {
        		ctx.log(Level.FINER, JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), id));
 	    }
 	} else {
-	    path = (String)rObj.getKey().getValue().getValue();
+	    paths.add((String)rObj.getKey().getValue().getValue());
 	}
-	if (path != null && rObj.isSetHive()) {
+	for (String path : paths) {
 	    try {
 		hive = (String)rObj.getHive().getValue();
 		OperationEnumeration op = rObj.getKey().getValue().getOperation();

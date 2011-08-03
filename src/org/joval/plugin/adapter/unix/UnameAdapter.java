@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
-import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
@@ -38,6 +37,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
+import org.joval.util.TypeTools;
 
 /**
  * Evaluates UnameTest OVAL tests.
@@ -101,37 +101,37 @@ public class UnameAdapter implements IAdapter {
 	UnameItem item = (UnameItem)it;
 
 	if (state.isSetMachineClass()) {
-	    if (compareTypes(state.getMachineClass(), item.getMachineClass())) {
+	    if (TypeTools.compare(state.getMachineClass(), item.getMachineClass())) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
 	    }
 	} else if (state.isSetNodeName()) {
-	    if (compareTypes(state.getNodeName(), item.getNodeName())) {
+	    if (TypeTools.compare(state.getNodeName(), item.getNodeName())) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
 	    }
 	} else if (state.isSetOsName()) {
-	    if (compareTypes(state.getOsName(), item.getOsName())) {
+	    if (TypeTools.compare(state.getOsName(), item.getOsName())) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
 	    }
 	} else if (state.isSetOsRelease()) {
-	    if (compareTypes(state.getOsRelease(), item.getOsRelease())) {
+	    if (TypeTools.compare(state.getOsRelease(), item.getOsRelease())) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
 	    }
 	} else if (state.isSetOsVersion()) {
-	    if (compareTypes(state.getOsVersion(), item.getOsVersion())) {
+	    if (TypeTools.compare(state.getOsVersion(), item.getOsVersion())) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
 	    }
 	} else if (state.isSetProcessorType()) {
-	    if (compareTypes(state.getProcessorType(), item.getProcessorType())) {
+	    if (TypeTools.compare(state.getProcessorType(), item.getProcessorType())) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
@@ -142,19 +142,6 @@ public class UnameAdapter implements IAdapter {
     }
 
     // Internal
-
-    private boolean compareTypes(EntityStateStringType state, EntityItemStringType item) throws OvalException {
-	switch (state.getOperation()) {
-	  case CASE_INSENSITIVE_EQUALS:
-	    return ((String)item.getValue()).equalsIgnoreCase((String)state.getValue());
-	  case EQUALS:
-	    return ((String)item.getValue()).equals((String)state.getValue());
-	  case PATTERN_MATCH:
-	    return Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find();
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getOperation()));
-	}
-    }
 
     private JAXBElement<UnameItem> getItem() throws Exception {
 	UnameItem item = unixFactory.createUnameItem();

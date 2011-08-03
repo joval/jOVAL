@@ -7,8 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -32,6 +32,8 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
 
+import oval.schemas.common.CheckEnumeration;
+import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.common.GeneratorType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
@@ -79,6 +81,7 @@ import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
 import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
+import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemDataType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.variables.core.OvalVariables;
@@ -281,24 +284,29 @@ public class Engine implements IProducer {
     /**
      * Return the value of the Variable with the specified ID, and also add any chained variables to the provided list.
      */
-    String resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException {
+    List<String> resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException {
 	VariableType var = definitions.getVariable(id);
 	String varId = var.getId();
 	List<VariableValueType> cachedList = variableMap.get(varId);
 	if (cachedList == null) {
 	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_VARIABLE_CREATE", varId));
-	    String result = resolveInternal(var, list);
+	    List<String> result = resolveInternal(var, list);
 	    variableMap.put(varId, list);
 	    return result;
 	} else {
 	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_VARIABLE_RECYCLE", varId));
+	    List<String> result = new Vector<String>();
 	    list.addAll(cachedList);
 	    for (VariableValueType variableValueType : cachedList) {
 		if (variableValueType.getVariableId().equals(id)) {
-		    return (String)variableValueType.getValue();
+		    result.add((String)variableValueType.getValue());
 		}
 	    }
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_MISSING_VARIABLE", id));
+	    if (result.size() > 0) {
+		return result;
+	    } else {
+		throw new OvalException(JOVALSystem.getMessage("ERROR_MISSING_VARIABLE", id));
+	    }
 	}
     }
 
@@ -382,6 +390,9 @@ public class Engine implements IProducer {
 	producer.sendNotify(this, MESSAGE_OBJECT_PHASE_END, null);
     }
 
+    /**
+     * Fetch all items associated with objects serviced by the given adapter, and store them in the SystemCharacteristics.
+     */
     private void scanAdapter(IAdapter adapter) throws OvalException {
 	if (adapter.connect()) {
 	    try {
@@ -512,117 +523,73 @@ public class Engine implements IProducer {
 	    testResult.getTestedVariable().add(testedVariable);
 	}
 
-	boolean result = false;
-	int trueCount=0, falseCount=0, errorCount=0;
-	if (sc.getObject(objectId).getFlag() == FlagEnumeration.ERROR) {
-	    errorCount++;
+	ExistenceData existence = new ExistenceData();
+	CheckData check = new CheckData();
+
+	List<ItemType> items = sc.getItemsByObjectId(objectId);
+	for (ItemType item : items) {
+	    if (item.getClass().getName().equals(adapter.getItemClass().getName())) {
+		TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
+		testedItem.setItemId(item.getId());
+		testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
+
+		StatusEnumeration status = item.getStatus();
+		switch(status) {
+		  case EXISTS:
+		    if (state == null) {
+			//
+			// DAS: The spec is ambiguous on what this situation means for the check result,
+			//      but it seems to really have imply a true result.
+			//
+			check.addResult(ResultEnumeration.TRUE);
+		    } else {
+			ResultEnumeration checkResult = ResultEnumeration.UNKNOWN;
+
+			switch(sc.getObject(objectId).getFlag()) {
+			  case COMPLETE:
+			  case INCOMPLETE:
+			  case DOES_NOT_EXIST:
+			    checkResult = adapter.compare(state, item);
+			    break;
+
+			  case ERROR:
+			    checkResult = ResultEnumeration.ERROR;
+			    break;
+			  case NOT_APPLICABLE:
+			    checkResult = ResultEnumeration.NOT_APPLICABLE;
+			    break;
+			  case NOT_COLLECTED:
+			  default:
+			    checkResult = ResultEnumeration.UNKNOWN;
+			    break;
+			}
+
+			testedItem.setResult(checkResult);
+			check.addResult(checkResult);
+		    }
+		    // fall-thru
+
+		  default:
+		    existence.addStatus(status);
+		    break;
+		}
+
+		testResult.getTestedItem().add(testedItem);
+	    } else {
+		throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", adapter.getItemClass().getName(),
+							       item.getClass().getName()));
+	    }
 	}
 
-	Iterator<ItemType> items = sc.getItemsByObjectId(objectId).iterator();
-	switch(testDefinition.getCheckExistence()) {
-	  case NONE_EXIST: {
-	    while(items.hasNext()) {
-		ItemType item = items.next();
-		if (item.getClass().getName().equals(adapter.getItemClass().getName())) {
-		    TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-		    testedItem.setItemId(item.getId());
-		    switch(item.getStatus()) {
-		      case EXISTS:
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED); // just an existence check
-			trueCount++;
-			break;
-		      case DOES_NOT_EXIST:
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED); // just an existence check
-			falseCount++;
-			break;
-		      case ERROR:
-			testedItem.setResult(ResultEnumeration.ERROR);
-			errorCount++;
-			break;
-		      default:
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-			break;
-		    }
-		    testResult.getTestedItem().add(testedItem);
-		} else {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", adapter.getItemClass().getName(),
-								   item.getClass().getName()));
-		}
-	    }
-	    result = trueCount == 0;
+	ResultEnumeration existenceResult = existence.getResult(testDefinition.getCheckExistence());
+	switch(existenceResult) {
+	  case TRUE:
+	    testResult.setResult(check.getResult(testDefinition.getCheck()));
 	    break;
-	  }
-
-	  case AT_LEAST_ONE_EXISTS: {
-	    while(items.hasNext()) {
-		ItemType item = items.next();
-		if (item.getClass().getName().equals(adapter.getItemClass().getName())) {
-		    TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
-		    testedItem.setItemId(item.getId());
-		    switch(item.getStatus()) {
-		      case EXISTS:
-			if (state == null) { // In the absence of a state, check only for the existence of the item
-			    trueCount++;
-			    testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-			} else {
-			    ResultEnumeration matchResult = adapter.compare(state, item);
-			    switch(matchResult) {
-			      case TRUE:
-				trueCount++;
-				break;
-			      case FALSE:
-				falseCount++;
-				break;
-			      case ERROR:
-				errorCount++;
-				break;
-			    }
-			    testedItem.setResult(matchResult);
-			}
-			break;
-		      case DOES_NOT_EXIST:
-			testedItem.setResult(ResultEnumeration.FALSE);
-			falseCount++;
-			break;
-		      case ERROR:
-			testedItem.setResult(ResultEnumeration.ERROR);
-			errorCount++;
-			break;
-		      default:
-			testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-			break;
-		    }
-		    testResult.getTestedItem().add(testedItem);
-		} else {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", adapter.getItemClass().getName(),
-								   item.getClass().getName()));
-		}
-	    }
-	    switch(testDefinition.getCheck()) {
-	      case ALL:
-		result = falseCount == 0 && trueCount > 0;
-		break;
-	      case AT_LEAST_ONE:
-		result = trueCount > 0;
-		break;
-	      case ONLY_ONE:
-		result = trueCount == 1 && falseCount == 0 && errorCount == 0;
-		break;
-	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_CHECK", testDefinition.getCheck()));
-	    }
-	    break;
-	  }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE", testDefinition.getCheckExistence()));
-	}
-	if (errorCount > 0) {
-	    testResult.setResult(ResultEnumeration.ERROR);
-	} else if (result) {
-	    testResult.setResult(ResultEnumeration.TRUE);
-	} else {
-	    testResult.setResult(ResultEnumeration.FALSE);
+	    testResult.setResult(existenceResult);
+	    break;
 	}
     }
 
@@ -630,48 +597,18 @@ public class Engine implements IProducer {
 	oval.schemas.results.core.CriteriaType criteriaResult = resultsFactory.createCriteriaType();
 	criteriaResult.setOperator(criteriaDefinition.getOperator());
 
-	int trueCount=0, falseCount=0, errorCount=0, unknownCount=0, skippedCount=0;
-	OperatorEnumeration operator = criteriaDefinition.getOperator();
+	OperatorData operator = new OperatorData();
 	for (Object child : criteriaDefinition.getCriteriaOrCriterionOrExtendDefinition()) {
 	    Object resultObject = null;
 	    if (child instanceof CriteriaType) {
 		CriteriaType ctDefinition = (CriteriaType)child;
 		oval.schemas.results.core.CriteriaType ctResult = evaluateCriteria(ctDefinition);
-		switch(ctResult.getResult()) {
-		  case TRUE:
-		    trueCount++;
-		    break;
-		  case FALSE:
-		    falseCount++;
-		    break;
-		  case UNKNOWN:
-		    unknownCount++;
-		    break;
-		  case NOT_EVALUATED:
-		    skippedCount++;
-		    break;
-		  case ERROR:
-		    errorCount++;
-		    break;
-		}
+		operator.addResult(ctResult.getResult());
 		resultObject = ctResult;
 	    } else if (child instanceof CriterionType) {
 		CriterionType ctDefinition = (CriterionType)child;
 		oval.schemas.results.core.CriterionType ctResult = evaluateCriterion(ctDefinition);
-		switch(ctResult.getResult()) {
-		  case TRUE:
-		    trueCount++;
-		    break;
-		  case FALSE:
-		    falseCount++;
-		    break;
-		  case NOT_EVALUATED:
-		    skippedCount++;
-		    break;
-		  case ERROR:
-		    errorCount++;
-		    break;
-		}
+		operator.addResult(ctResult.getResult());
 		resultObject = ctResult;
 	    } else if (child instanceof ExtendDefinitionType) {
 		ExtendDefinitionType edtDefinition = (ExtendDefinitionType)child;
@@ -686,43 +623,16 @@ public class Engine implements IProducer {
 		    edtResult.setResult(defResult.getResult()); // Overridden for true and false, below
 		    switch(defResult.getResult()) {
 		      case TRUE:
-			falseCount++;
 			edtResult.setResult(ResultEnumeration.FALSE);
 			break;
 		      case FALSE:
-			trueCount++;
 			edtResult.setResult(ResultEnumeration.TRUE);
-			break;
-		      case UNKNOWN:
-			unknownCount++;
-			break;
-		      case NOT_EVALUATED:
-			skippedCount++;
-			break;
-		      case ERROR:
-			errorCount++;
 			break;
 		    }
 		} else {
-		    switch(defResult.getResult()) {
-		      case TRUE:
-			trueCount++;
-			break;
-		      case FALSE:
-			falseCount++;
-			break;
-		      case UNKNOWN:
-			unknownCount++;
-			break;
-		      case NOT_EVALUATED:
-			skippedCount++;
-			break;
-		      case ERROR:
-			errorCount++;
-			break;
-		    }
 		    edtResult.setResult(defResult.getResult());
 		}
+		operator.addResult(edtResult.getResult());
 		resultObject = edtResult;
 	    } else {
 		throw new OvalException(JOVALSystem.getMessage("ERROR_BAD_COMPONENT", child.getClass().getName()));
@@ -730,42 +640,7 @@ public class Engine implements IProducer {
 	    criteriaResult.getCriteriaOrCriterionOrExtendDefinition().add(resultObject);
 	}
 
-	ResultEnumeration result = ResultEnumeration.UNKNOWN;
-	switch(criteriaDefinition.getOperator()) {
-	  case AND:
-	    if (falseCount > 0) {
-		result = ResultEnumeration.FALSE;
-	    } else if (trueCount > 0 && errorCount == 0 && skippedCount == 0 && unknownCount == 0) {
-		result = ResultEnumeration.TRUE;
-	    } else if (errorCount > 0) {
-		result = ResultEnumeration.ERROR;
-	    }
-	    break;
-	  case OR:
-	    if (trueCount > 0) {
-		result = ResultEnumeration.TRUE;
-	    } else if (errorCount == 0 && skippedCount == 0 && unknownCount == 0) {
-		result = ResultEnumeration.FALSE;
-	    } else if (errorCount > 0) {
-		result = ResultEnumeration.ERROR;
-	    }
-	    break;
-	  case ONE:
-	    if (errorCount == 0 && skippedCount == 0 && unknownCount == 0) {
-		if (trueCount == 1) {
-		    result = ResultEnumeration.TRUE;
-		} else {
-		    result = ResultEnumeration.FALSE;
-		}
-	    } else if (trueCount > 1) {
-		result = ResultEnumeration.FALSE;
-	    } else if (errorCount > 0) {
-		result = ResultEnumeration.ERROR;
-	    }
-	    break;
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATOR", criteriaDefinition.getOperator()));
-	}
+	ResultEnumeration result = operator.getResult(criteriaDefinition.getOperator());
 	if (criteriaDefinition.isSetNegate() && criteriaDefinition.isNegate()) {
 	    criteriaResult.setNegate(true);
 	    if (result == ResultEnumeration.TRUE) {
@@ -786,6 +661,10 @@ public class Engine implements IProducer {
 	    return; // Terminated in a constant type
 	} else if (object instanceof VariableComponentType) {
 	    return; // The variable this references will add any classes.
+	} else if (object instanceof ExternalVariable) {
+	    return; // Just a String.
+	} else if (object instanceof ConstantVariable) {
+	    return; // Just a String.
 	} else if (object instanceof LiteralComponentType) {
 	    return; // Just a String.
 	} else if (object instanceof ConcatFunctionType) {
@@ -809,20 +688,23 @@ public class Engine implements IProducer {
      * Resolve the component.  If the component is a variable, resolve it and append it to the list, appending its value to
      * the value that is ultimately returned.
      *
-     * DAS: Implement the remaining five component types: begin, end, arithmetic, substring and timedifference.
+     * DAS: Implement the remaining component types: begin, end, arithmetic and timedifference.
      */
-    private String resolveInternal(Object object, List <VariableValueType>list) throws NoSuchElementException, OvalException {
+    private List<String> resolveInternal(Object object, List <VariableValueType>list)
+		throws NoSuchElementException, OvalException {
 	//
 	// Why do variables point to variables?  Because sometimes they are nested.
 	//
 	if (object instanceof LocalVariable) {
 	    LocalVariable localVariable = (LocalVariable)object;
-	    VariableValueType variableValueType = new VariableValueType();
-	    variableValueType.setVariableId(localVariable.getId());
-	    String value = resolveInternal(getComponent(localVariable), list);
-	    variableValueType.setValue(value);
-	    list.add(variableValueType);
-	    return value;
+	    List<String> values = resolveInternal(getComponent(localVariable), list);
+	    for (String value : values) {
+		VariableValueType variableValueType = new VariableValueType();
+		variableValueType.setVariableId(localVariable.getId());
+		variableValueType.setValue(value);
+		list.add(variableValueType);
+	    }
+	    return values;
 
 	//
 	// Add an externally-defined variable.
@@ -834,17 +716,13 @@ public class Engine implements IProducer {
 		throw new OvalException(JOVALSystem.getMessage("ERROR_EXTERNAL_VARIABLE_SOURCE", id));
 	    } else {
 		List<String> values = externalVariables.getValue(id);
-		int size = values.size();
-		if (size == 1) {
+		for (String value : values) {
 		    VariableValueType variableValueType = new VariableValueType();
 		    variableValueType.setVariableId(id);
-		    String value = values.get(0);
 		    variableValueType.setValue(value);
 		    list.add(variableValueType);
-		    return value;
-		} else {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_EXTERNAL_VARIABLE_CHOICE", new Integer(size), id));
 		}
+		return values;
 	    }
 
 	//
@@ -854,23 +732,24 @@ public class Engine implements IProducer {
 	    ConstantVariable constantVariable = (ConstantVariable)object;
 	    String id = constantVariable.getId();
 	    List<ValueType> values = constantVariable.getValue();
-	    int size = values.size();
-	    if (size == 1) {
+	    List<String> stringValues = new Vector<String>(values.size());
+	    for (ValueType value : values) {
 		VariableValueType variableValueType = new VariableValueType();
 		variableValueType.setVariableId(id);
-		Object value = values.get(0).getValue();
-		variableValueType.setValue(value);
+		String s = (String)value.getValue();
+		variableValueType.setValue(s);
 		list.add(variableValueType);
-		return (String)value;
-	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_CONSTANT_VARIABLE_CHOICE", new Integer(size), id));
+		stringValues.add(s);
 	    }
+	    return stringValues;
 
 	//
 	// Add a static (literal) value.
 	//
 	} else if (object instanceof LiteralComponentType) {
-	    return (String)((LiteralComponentType)object).getValue();
+	    List<String> values = new Vector<String>();
+	    values.add((String)((LiteralComponentType)object).getValue());
+	    return values;
 
 	//
 	// Retrieve from an ItemType (which possibly has to be fetched from an adapter)
@@ -900,11 +779,11 @@ public class Engine implements IProducer {
 		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", ot.getClass().getName()));
 		}
 	    }
-	    String data = extractItemData(objectId, oc, items);
-	    if (data == null) {
+	    List<String> values = extractItemData(objectId, oc, items);
+	    if (values == null || values.size() == 0) {
 		throw new NoSuchElementException(oc.getObjectRef());
 	    } else {
-		return data;
+		return values;
 	    }
 
 	//
@@ -918,46 +797,82 @@ public class Engine implements IProducer {
 	// Resolve and concatenate child components.
 	//
 	} else if (object instanceof ConcatFunctionType) {
-	    StringBuffer sb = new StringBuffer();
+	    List<String> values = new Vector<String>();
 	    ConcatFunctionType concat = (ConcatFunctionType)object;
 	    for (Object child : concat.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		sb.append(resolveInternal(child, list));
+		List<String> next = resolveInternal(child, list);
+		if (values.size() == 0) {
+		    values.addAll(next);
+		} else {
+		    List<String> newValues = new Vector<String>();
+		    for (String base : values) {
+			for (String val : next) {
+			    newValues.add(base + val);
+			}
+		    }
+		    values = newValues;
+		}
 	    }
-	    return sb.toString();
+	    return values;
 
 	//
 	// Escape anything that could be pattern-matched.
 	//
 	} else if (object instanceof EscapeRegexFunctionType) {
-	    return Matcher.quoteReplacement(resolveInternal(getComponent((EscapeRegexFunctionType)object), list));
+	    List<String> values = resolveInternal(getComponent((EscapeRegexFunctionType)object), list);
+	    List<String> newValues = new Vector<String>(values.size());
+	    for (String value : values) {
+		newValues.add(Matcher.quoteReplacement(value));
+	    }
+	    return newValues;
 
 	//
 	// Process a Split, which contains a component and a delimiter with which to split it up.
 	//
 	} else if (object instanceof SplitFunctionType) {
-	    StringBuffer sb = new StringBuffer();
 	    SplitFunctionType split = (SplitFunctionType)object;
-	    String[] sa = resolveInternal(getComponent(split), list).split(split.getDelimiter());
-	    for (int i=0; i < sa.length; i++) {
-		sb.append(sa[i]);
+	    List<String> values = resolveInternal(getComponent(split), list);
+	    List<String> newValues = new Vector<String>();
+	    for (String value : values) {
+		String[] sa = value.split(split.getDelimiter());
+		for (int i=0; i < sa.length; i++) {
+		    newValues.add(value + sa[i]);
+		}
 	    }
-	    return sb.toString();
+	    return newValues;
 
 	//
-	// Process a RegexCapture, which returns the region of a component resolved as a String that matches a given pattern.
+	// Process a RegexCapture, which returns the regions of a component resolved as a String that match a given pattern.
 	//
 	} else if (object instanceof RegexCaptureFunctionType) {
 	    RegexCaptureFunctionType rc = (RegexCaptureFunctionType)object;
 	    Pattern p = Pattern.compile(rc.getPattern());
-	    String s = resolveInternal(getComponent(rc), list);
-	    Matcher m = p.matcher(s);
-
-	    if (m.matches()) {
-		MatchResult mr = m.toMatchResult();
-		return s.substring(mr.start(), mr.end());
-	    } else {
-		throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REGEX_NOMATCH", rc.getPattern(), s));
+	    List<String> values = resolveInternal(getComponent(rc), list);
+	    List<String> newValues = new Vector<String>();
+	    for (String value : values) {
+		Matcher m = p.matcher(value);
+		while (m.find()) {
+		     newValues.add(m.group());
+		}
 	    }
+	    return newValues;
+
+	//
+	// Process a Substring
+	//
+	} else if (object instanceof SubstringFunctionType) {
+	    SubstringFunctionType st = (SubstringFunctionType)object;
+	    int start = st.getSubstringStart();
+	    start = Math.min(1, start);
+	    start--; // in OVAL, the start index begins at 1 instead of 0
+	    int len = st.getSubstringLength();
+	    List<String> values = resolveInternal(getComponent(st), list);
+	    List<String> newValues = new Vector<String>();
+	    for (String value : values) {
+		newValues.add(value.substring(start, start+len));
+	    }
+	    return newValues;
+
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_COMPONENT", object.getClass().getName()));
 	}
@@ -966,56 +881,52 @@ public class Engine implements IProducer {
     /**
      * The final step in resolving an object reference variable's value is extracting the item field or record from the items
      * associated with that ObjectType, which is the function of this method.
-     *
-     * REMIND (DAS) The spec allows for a list of resolved values, but this implementation only allows for one.
      */
-    private String extractItemData(String objectId, ObjectComponentType oc, List list) throws OvalException {
+    private List<String> extractItemData(String objectId, ObjectComponentType oc, List list) throws OvalException {
 	if (list.size() == 0) {
 	    return null;
-	} else if (list.size() > 1) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_OBJECT_ITEM_CHOICE", new Integer(list.size()), objectId));
 	}
-	Object o = list.get(0);
-
-	if (o instanceof ItemType) {
-	    try {
-		ItemType item = (ItemType)o;
-		String methodName = getAccessorMethodName(oc.getItemField());
-		Method method = item.getClass().getMethod(methodName);
-		o = method.invoke(item);
-	    } catch (NoSuchMethodException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
-		return null;
-	    } catch (IllegalAccessException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
-		return null;
-	    } catch (InvocationTargetException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
-		return null;
-	    }
-	}
-
-	if (o instanceof JAXBElement) {
-	    o = ((JAXBElement)o).getValue();
-	}
-	if (o instanceof EntityItemSimpleBaseType) {
-	    EntityItemSimpleBaseType entity = (EntityItemSimpleBaseType)o;
-	    return (String)entity.getValue();
-	} else if (o instanceof List) {
-	    return extractItemData(objectId, null, (List)o);
-	} else if (o instanceof EntityItemRecordType) {
-	    EntityItemRecordType record = (EntityItemRecordType)o;
-	    String fieldName = oc.getRecordField();
-	    for (EntityItemFieldType field : record.getField()) {
-		if (field.getName().equals(fieldName)) {
-		    return (String)field.getValue();
+	List<String> values = new Vector<String>();
+	for (Object o : list) {
+	    if (o instanceof ItemType) {
+		try {
+		    ItemType item = (ItemType)o;
+		    String methodName = getAccessorMethodName(oc.getItemField());
+		    Method method = item.getClass().getMethod(methodName);
+		    o = method.invoke(item);
+		} catch (NoSuchMethodException e) {
+		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+		    return null;
+		} catch (IllegalAccessException e) {
+		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+		    return null;
+		} catch (InvocationTargetException e) {
+		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+		    return null;
 		}
 	    }
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REFLECTION", o.getClass().getName()));
-	}
 
-	return null;
+	    if (o instanceof JAXBElement) {
+		o = ((JAXBElement)o).getValue();
+	    }
+	    if (o instanceof EntityItemSimpleBaseType) {
+		EntityItemSimpleBaseType entity = (EntityItemSimpleBaseType)o;
+		values.add((String)entity.getValue());
+	    } else if (o instanceof List) {
+		return extractItemData(objectId, null, (List)o);
+	    } else if (o instanceof EntityItemRecordType) {
+		EntityItemRecordType record = (EntityItemRecordType)o;
+		String fieldName = oc.getRecordField();
+		for (EntityItemFieldType field : record.getField()) {
+		    if (field.getName().equals(fieldName)) {
+			values.add((String)field.getValue());
+		    }
+		}
+	    } else {
+		throw new OvalException(JOVALSystem.getMessage("ERROR_REFLECTION", o.getClass().getName()));
+	    }
+	}
+	return values;
     }
 
     /**
@@ -1038,146 +949,79 @@ public class Engine implements IProducer {
 	return sb.toString();
     }
 
+    /**
+     * Use reflection to get the child component.
+     */
     private Object getComponent(Object unknown) throws OvalException {
-	if (unknown instanceof RegexCaptureFunctionType) {
-	    return getComponent((RegexCaptureFunctionType)unknown);
-	} else if (unknown instanceof SplitFunctionType) {
-	    return getComponent((SplitFunctionType)unknown);
-	} else if (unknown instanceof EscapeRegexFunctionType) {
-	    return getComponent((EscapeRegexFunctionType)unknown);
-	} else if (unknown instanceof LocalVariable) {
-	    return getComponent((LocalVariable)unknown);
-	} else if (unknown instanceof ExternalVariable) {
-	    return null; // Constant
-	} else if (unknown instanceof ConstantVariable) {
-	    return null; // Constant
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_COMPONENT", unknown.getClass().getName()));
+	Object obj = safeInvokeMethod(unknown, "getArithmetic");
+	if (obj != null) {
+	    return obj;
 	}
+	obj = safeInvokeMethod(unknown, "getBegin");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getConcat");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getEnd");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getEscapeRegex");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getLiteralComponent");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getObjectComponent");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getRegexCapture");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getSplit");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getSubstring");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getTimeDifference");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getVariableComponent");
+	if (obj != null) {
+	    return obj;
+	}
+
+	throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_COMPONENT", unknown.getClass().getName()));
     }
 
-    private Object getComponent(RegexCaptureFunctionType rc) throws OvalException {
-	Object obj = null;
-	if ((obj = rc.getObjectComponent()) != null) {
-	    return obj;
-	} else if ((obj = rc.getLiteralComponent()) != null) {
-	    return obj;
-	} else if ((obj = rc.getVariableComponent() ) != null) {
-	    return obj;
-	} else if ((obj = rc.getConcat()) != null) {
-	    return obj;
-	} else if ((obj = rc.getEscapeRegex()) != null) {
-	    return obj;
-	} else if ((obj = rc.getRegexCapture()) != null) {
-	    return obj;
-	} else if ((obj = rc.getSplit()) != null) {
-	    return obj;
-	} else if ((obj = rc.getArithmetic()) != null) {
-	    return obj;
-	} else if ((obj = rc.getBegin()) != null) {
-	    return obj;
-	} else if ((obj = rc.getEnd()) != null) {
-	    return obj;
-	} else if ((obj = rc.getSubstring()) != null) {
-	    return obj;
-	} else if ((obj = rc.getTimeDifference()) != null) {
-	    return obj;
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_MISSING_COMPONENT"));
+    /**
+     * Safely invoke a method that takes no arguments and returns an Object.
+     * @returns null if the method is not implemented, if there was an error, or if the method returned null.
+     */
+    private Object safeInvokeMethod(Object obj, String name) {
+	Object result = null;
+	try {
+	    Method m = obj.getClass().getMethod(name);
+	    result = m.invoke(obj);
+	} catch (NoSuchMethodException e) {
+	    // Object doesn't implement the method; no big deal.
+	} catch (IllegalAccessException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	} catch (InvocationTargetException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	}
-    }
-
-    private Object getComponent(SplitFunctionType split) throws OvalException {
-	Object obj = null;
-	if ((obj = split.getObjectComponent()) != null) {
-	    return obj;
-	} else if ((obj = split.getLiteralComponent()) != null) {
-	    return obj;
-	} else if ((obj = split.getVariableComponent() ) != null) {
-	    return obj;
-	} else if ((obj = split.getConcat()) != null) {
-	    return obj;
-	} else if ((obj = split.getEscapeRegex()) != null) {
-	    return obj;
-	} else if ((obj = split.getRegexCapture()) != null) {
-	    return obj;
-	} else if ((obj = split.getSplit()) != null) {
-	    return obj;
-	} else if ((obj = split.getArithmetic()) != null) {
-	    return obj;
-	} else if ((obj = split.getBegin()) != null) {
-	    return obj;
-	} else if ((obj = split.getEnd()) != null) {
-	    return obj;
-	} else if ((obj = split.getSubstring()) != null) {
-	    return obj;
-	} else if ((obj = split.getTimeDifference()) != null) {
-	    return obj;
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_MISSING_COMPONENT"));
-	}
-    }
-
-    private Object getComponent(EscapeRegexFunctionType er) throws OvalException {
-	Object obj = null;
-	if ((obj = er.getObjectComponent()) != null) {
-	    return obj;
-	} else if ((obj = er.getLiteralComponent()) != null) {
-	    return obj;
-	} else if ((obj = er.getVariableComponent() ) != null) {
-	    return obj;
-	} else if ((obj = er.getConcat()) != null) {
-	    return obj;
-	} else if ((obj = er.getEscapeRegex()) != null) {
-	    return obj;
-	} else if ((obj = er.getRegexCapture()) != null) {
-	    return obj;
-	} else if ((obj = er.getSplit()) != null) {
-	    return obj;
-	} else if ((obj = er.getArithmetic()) != null) {
-	    return obj;
-	} else if ((obj = er.getBegin()) != null) {
-	    return obj;
-	} else if ((obj = er.getEnd()) != null) {
-	    return obj;
-	} else if ((obj = er.getSubstring()) != null) {
-	    return obj;
-	} else if ((obj = er.getTimeDifference()) != null) {
-	    return obj;
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_MISSING_COMPONENT"));
-	}
-    }
-
-    private Object getComponent(LocalVariable lVar) throws OvalException {
-	Object obj = null;
-	if ((obj = lVar.getObjectComponent()) != null) {
-	    return obj;
-	} else if ((obj = lVar.getLiteralComponent()) != null) {
-	    return obj;
-	} else if ((obj = lVar.getVariableComponent() ) != null) {
-	    return obj;
-	} else if ((obj = lVar.getConcat()) != null) {
-	    return obj;
-	} else if ((obj = lVar.getEscapeRegex()) != null) {
-	    return obj;
-	} else if ((obj = lVar.getRegexCapture()) != null) {
-	    return obj;
-	} else if ((obj = lVar.getSplit()) != null) {
-	    return obj;
-	} else if ((obj = lVar.getArithmetic()) != null) {
-	    return obj;
-	} else if ((obj = lVar.getBegin()) != null) {
-	    return obj;
-	} else if ((obj = lVar.getEnd()) != null) {
-	    return obj;
-	} else if ((obj = lVar.getSubstring()) != null) {
-	    return obj;
-	} else if ((obj = lVar.getTimeDifference()) != null) {
-	    return obj;
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_MISSING_VARIABLE_COMPONENT", lVar.getId()));
-	}
+	return result;
     }
 
     private String getObjectRef(oval.schemas.definitions.core.TestType test) {
@@ -1293,5 +1137,305 @@ public class Engine implements IProducer {
 	    }
 	}
 	return new Vector<ItemType>(results.values());
+    }
+
+    /**
+     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#OperatorEnumeration
+     */
+    class OperatorData {
+	int t, f, e, u, ne, na;
+
+	OperatorData() {
+	    t = 0;
+	    f = 0;
+	    e = 0;
+	    u = 0;
+	    ne = 0;
+	    na = 0;
+	}
+
+	void addResult(ResultEnumeration result) {
+	    switch(result) {
+	      case TRUE:
+		t++;
+		break;
+	      case FALSE:
+		f++;
+		break;
+	      case UNKNOWN:
+		u++;
+		break;
+	      case NOT_APPLICABLE:
+		na++;
+		break;
+	      case NOT_EVALUATED:
+		ne++;
+		break;
+	      case ERROR:
+		e++;
+		break;
+	    }
+	}
+
+	ResultEnumeration getResult(OperatorEnumeration op) throws OvalException {
+	    ResultEnumeration result = ResultEnumeration.UNKNOWN;
+	    switch(op) {
+	      case AND:
+		if        (t > 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (t >= 0	&& f > 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (t >= 0	&& f == 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (t >= 0	&& f == 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.UNKNOWN;
+		} else if (t >= 0	&& f == 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
+		    return ResultEnumeration.NOT_EVALUATED;
+		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
+		    return ResultEnumeration.NOT_APPLICABLE;
+		}
+		break;
+
+	      case ONE:
+		if        (t == 1	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (t > 1	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (t < 2	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (t < 2	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.UNKNOWN;
+		} else if (t < 2	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
+		    return ResultEnumeration.NOT_EVALUATED;
+		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
+		    return ResultEnumeration.NOT_APPLICABLE;
+		}
+		break;
+
+	      case OR:
+		if        (t > 0	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (t == 0	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (t == 0	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.UNKNOWN;
+		} else if (t == 0	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
+		    return ResultEnumeration.NOT_EVALUATED;
+		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na == 0) {
+		    return ResultEnumeration.NOT_APPLICABLE;
+		}
+		break;
+
+	      case XOR:
+		if        (t%2 != 0	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (t%2 == 0	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (t >= 0	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (t >= 0	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.UNKNOWN;
+		} else if (t >= 0	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
+		    return ResultEnumeration.NOT_EVALUATED;
+		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na == 0) {
+		    return ResultEnumeration.NOT_APPLICABLE;
+		}
+		break;
+
+	      default:
+		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
+	    }
+	    return result;
+	}
+    }
+
+    /**
+     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#CheckEnumeration
+     */
+    class CheckData extends OperatorData {
+	CheckData() {
+	    super();
+	}
+
+	ResultEnumeration getResult(CheckEnumeration check) throws OvalException {
+	    ResultEnumeration result = ResultEnumeration.UNKNOWN;
+	    switch(check) {
+	      case ALL:
+		if        (t > 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (t >= 0	&& f > 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (t >= 0	&& f == 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (t >= 0	&& f == 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.UNKNOWN;
+		} else if (t >= 0	&& f == 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
+		    return ResultEnumeration.NOT_EVALUATED;
+		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
+		    return ResultEnumeration.NOT_APPLICABLE;
+		}
+		break;
+
+	      case AT_LEAST_ONE:
+		if        (t >= 1	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (t == 0	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (t == 0	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.UNKNOWN;
+		} else if (t == 0	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
+		    return ResultEnumeration.NOT_EVALUATED;
+		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
+		    return ResultEnumeration.NOT_APPLICABLE;
+		}
+		break;
+
+	      case ONLY_ONE:
+		if        (t == 1	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (t > 1	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (t < 2	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (t < 2	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.UNKNOWN;
+		} else if (t < 2	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
+		    return ResultEnumeration.NOT_EVALUATED;
+		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
+		    return ResultEnumeration.NOT_APPLICABLE;
+		}
+		break;
+
+	      case NONE_SATISFY:
+		if        (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (t > 0	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (t == 0	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (t == 0	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
+		    return ResultEnumeration.UNKNOWN;
+		} else if (t == 0	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
+		    return ResultEnumeration.NOT_EVALUATED;
+		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
+		    return ResultEnumeration.NOT_APPLICABLE;
+		}
+		break;
+
+	      default:
+		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_CHECK", check));
+	    }
+	    return result;
+	}
+    }
+
+    /**
+     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#ExistenceEnumeration
+     */
+    class ExistenceData {
+	int ex, de, er, nc;
+
+	ExistenceData() {
+	    ex = 0;
+	    de = 0;
+	    er = 0;
+	    nc = 0;
+	}
+
+	void addStatus(StatusEnumeration status) {
+	    switch(status) {
+	      case DOES_NOT_EXIST:
+		de++;
+		break;
+	      case ERROR:
+		er++;
+		break;
+	      case EXISTS:
+		ex++;
+		break;
+	      case NOT_COLLECTED:
+		nc++;
+		break;
+	    }
+	}
+
+	ResultEnumeration getResult(ExistenceEnumeration existence) throws OvalException {
+	    ResultEnumeration result = ResultEnumeration.UNKNOWN;
+	    switch(existence) {
+	      case ALL_EXIST:
+		if        (ex > 0	&& de == 0	&& er == 0	&& nc == 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (ex == 0	&& de == 0	&& er == 0	&& nc == 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (ex >= 0	&& de > 0	&& er >= 0	&& nc >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (ex >= 0	&& de == 0	&& er > 0	&& nc >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (ex >= 0	&& de == 0	&& er == 0	&& nc > 0) {
+		    return ResultEnumeration.UNKNOWN;
+		}
+		break;
+
+	      case ANY_EXIST:
+		if        (ex >= 0	&& de >= 0	&& er == 0	&& nc >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (ex > 0	&& de >= 0	&& er > 0	&& nc >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (ex == 0	&& de >= 0	&& er > 0	&& nc >= 0) {
+		    return ResultEnumeration.ERROR;
+		}
+		break;
+
+	      case AT_LEAST_ONE_EXISTS:
+		if        (ex > 0	&& de >= 0	&& er >= 0	&& nc >= 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (ex == 0	&& de >= 0	&& er == 0	&& nc == 0) { // Spec says "de > 0"
+		    return ResultEnumeration.FALSE;
+		} else if (ex == 0	&& de >= 0	&& er > 0	&& nc == 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (ex == 0	&& de >= 0	&& er == 0	&& nc > 0) {
+		    return ResultEnumeration.UNKNOWN;
+		}
+		break;
+
+	      case NONE_EXIST:
+		if        (ex == 0	&& de >= 0	&& er == 0	&& nc == 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (ex > 0	&& de >= 0	&& er >= 0	&& nc >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (ex == 0	&& de >= 0	&& er > 0	&& nc >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (ex == 0	&& de >= 0	&& er == 0	&& nc > 0) {
+		    return ResultEnumeration.UNKNOWN;
+		}
+		break;
+
+	      case ONLY_ONE_EXISTS:
+		if        (ex == 1	&& de >= 0	&& er == 0	&& nc == 0) {
+		    return ResultEnumeration.TRUE;
+		} else if (ex > 1	&& de >= 0	&& er >= 0	&& nc >= 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (ex == 0	&& de >= 0	&& er == 0	&& nc == 0) {
+		    return ResultEnumeration.FALSE;
+		} else if (ex < 2	&& de >= 0	&& er > 0	&& nc >= 0) {
+		    return ResultEnumeration.ERROR;
+		} else if (ex < 2	&& de >= 0	&& er == 0	&& nc > 0) {
+		    return ResultEnumeration.UNKNOWN;
+		}
+		break;
+
+	      default:
+		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE", ex));
+	    }
+	    return result;
+	}
     }
 }

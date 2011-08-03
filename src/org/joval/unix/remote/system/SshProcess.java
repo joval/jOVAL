@@ -15,7 +15,9 @@ import org.vngx.jsch.ChannelExec;
 import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.exception.JSchException;
 
+import org.joval.unix.remote.UnixCredential;
 import org.joval.intf.system.IProcess;
+import org.joval.io.StreamTool;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -26,9 +28,19 @@ import org.joval.util.JOVALSystem;
  */
 class SshProcess implements IProcess {
     private ChannelExec ce;
+    private String rootPassword;
+    private InputStream in, err;
+    private OutputStream out;
 
-    SshProcess(ChannelExec ce, String command) {
+    /**
+     * If the UnixCredential contains a root password, then the command is automatically run as root using su.
+     */
+    SshProcess(ChannelExec ce, String command, UnixCredential cred) {
 	this.ce = ce;
+	rootPassword = cred.getRootPassword();
+	if (rootPassword != null) {
+	    command = "echo " + cred.getRootPassword() + " | su - root -c \"" + quoteEscape(command) + "\"";
+	}
 	ce.setCommand(command);
     }
 
@@ -37,11 +49,20 @@ class SshProcess implements IProcess {
     public void start() throws Exception {
 	ce.connect();
 	new Monitor(this).start();
+	if (rootPassword != null) {
+	    getOutputStream();
+	    out.write(rootPassword.getBytes());
+	    out.write('\n');
+	    out.flush();
+	}
     }
 
     public InputStream getInputStream() {
 	try {
-	    return ce.getInputStream();
+	    if (in == null) {
+	        in = ce.getInputStream();
+	    }
+	    return in;
 	} catch (IOException e) {
 	}
 	return null;
@@ -49,7 +70,10 @@ class SshProcess implements IProcess {
 
     public InputStream getErrorStream() {
 	try {
-	    return ce.getErrStream();
+	    if (err == null) {
+		err = ce.getErrStream();
+	    }
+	    return err;
 	} catch (IOException e) {
 	}
 	return null;
@@ -57,7 +81,10 @@ class SshProcess implements IProcess {
 
     public OutputStream getOutputStream() {
 	try {
-	    return ce.getOutputStream();
+	    if (out == null) {
+		out = ce.getOutputStream();
+	    }
+	    return out;
 	} catch (IOException e) {
 	}
 	return null;
@@ -88,6 +115,10 @@ class SshProcess implements IProcess {
     }
 
     // Private
+
+    private String quoteEscape(String s) {
+	return s.replace("\"", "\\\"");
+    }
 
     private synchronized void cleanup() {
 	if (ce.isConnected()) {
