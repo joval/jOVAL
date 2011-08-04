@@ -6,6 +6,7 @@ SHARED=\
 	org.joval.intf.system.IEnvironment				\
 	org.joval.intf.system.IProcess					\
 	org.joval.intf.system.ISession					\
+	org.joval.intf.unix.session.IUnixSession			\
 	org.joval.intf.windows.registry.IKey				\
 	org.joval.intf.windows.registry.IRegistry			\
 	org.joval.intf.windows.registry.IBinaryValue			\
@@ -46,6 +47,7 @@ SHARED=\
 	org.joval.test.Reg						\
 	org.joval.test.WMI						\
 	org.joval.unix.NetworkInterface					\
+	org.joval.unix.Sudo						\
 	org.joval.unix.UnixFlavor					\
 	org.joval.unix.UnixSystemInfo					\
 	org.joval.unix.system.Environment				\

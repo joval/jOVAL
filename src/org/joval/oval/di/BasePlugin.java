@@ -25,6 +25,7 @@ import org.joval.intf.di.IJovaldiPlugin;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.plugin.adapter.independent.EnvironmentvariableAdapter;
 import org.joval.plugin.adapter.independent.FamilyAdapter;
@@ -137,16 +138,17 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	      }
 
 	      case ISession.UNIX: {
-		info = new UnixSystemInfo(session).getSystemInfo();
-		adapters.add(new RpminfoAdapter(session));
-		adapters.add(new IsainfoAdapter(session));
-		adapters.add(new PackageAdapter(session));
-		adapters.add(new SmfAdapter(session));
-		adapters.add(new Patch54Adapter(session));
-		adapters.add(new PatchAdapter(session));
-		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(session));
-		adapters.add(new ProcessAdapter(session));
-		adapters.add(new UnameAdapter(session));
+		IUnixSession unix = (IUnixSession)session;
+		info = new UnixSystemInfo(unix).getSystemInfo();
+		adapters.add(new RpminfoAdapter(unix));
+		adapters.add(new IsainfoAdapter(unix));
+		adapters.add(new PackageAdapter(unix));
+		adapters.add(new SmfAdapter(unix));
+		adapters.add(new Patch54Adapter(unix));
+		adapters.add(new PatchAdapter(unix));
+		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(unix));
+		adapters.add(new ProcessAdapter(unix));
+		adapters.add(new UnameAdapter(unix));
 		break;
 	      }
 	    }

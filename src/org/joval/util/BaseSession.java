@@ -64,6 +64,17 @@ public abstract class BaseSession implements ISession {
 
 	// Implement IProcess
 
+	public String getCommand() {
+	    return command;
+	}
+
+	public void setCommand(String command) {
+	    this.command = command;
+	}
+
+	public void setInteractive(boolean interactive) {
+	}
+
 	public void start() throws Exception {
 	    p = Runtime.getRuntime().exec(command, null, cwd);
 	}

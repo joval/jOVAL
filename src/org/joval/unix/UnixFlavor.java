@@ -9,7 +9,7 @@ package org.joval.unix;
  * @author David A. Solin
  * @version %I% %G%
  */
-enum UnixFlavor {
+public enum UnixFlavor {
     UNKNOWN("unknown"),
     LINUX("Linux"),
     SOLARIS("SunOS");

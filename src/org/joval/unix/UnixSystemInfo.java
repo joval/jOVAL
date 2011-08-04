@@ -24,7 +24,7 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -34,25 +34,12 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class UnixSystemInfo {
-    private ISession session;
+    private IUnixSession session;
     private ObjectFactory coreFactory;
     private SystemInfoType info;
-    private UnixFlavor flavor = UnixFlavor.UNKNOWN;
 
-    /**
-     * Create a plugin for scanning or test evaluation.
-     */
-    public UnixSystemInfo(ISession session) {
-	coreFactory = new ObjectFactory();
-	this.session = session;
-    }
-
-    public SystemInfoType getSystemInfo() {
-	if (info != null) {
-	    return info;
-	}
-
-	info = coreFactory.createSystemInfoType();
+    public static UnixFlavor getFlavor(IUnixSession session) {
+	UnixFlavor flavor = UnixFlavor.UNKNOWN;
 	try {
 	    IProcess p = session.createProcess("uname -s");
 	    p.start();
@@ -66,9 +53,30 @@ public class UnixSystemInfo {
 		}
 	    }
 
-	    p = session.createProcess("hostname");
+	} catch (Exception e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PLUGIN_INTERFACE"), e);
+	}
+	return flavor;
+    }
+
+    /**
+     * Create a plugin for scanning or test evaluation.
+     */
+    public UnixSystemInfo(IUnixSession session) {
+	coreFactory = new ObjectFactory();
+	this.session = session;
+    }
+
+    public SystemInfoType getSystemInfo() {
+	if (info != null) {
+	    return info;
+	}
+
+	info = coreFactory.createSystemInfoType();
+	try {
+	    IProcess p = session.createProcess("hostname");
 	    p.start();
-	    reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    info.setPrimaryHostName(reader.readLine());
 	    reader.close();
 
@@ -87,7 +95,7 @@ public class UnixSystemInfo {
 		info.setOsName(reader.readLine());
 		reader.close();
 	    } else {
-		info.setOsName(osName);
+		info.setOsName(session.getFlavor().osName());
 	    }
 
 	    p = session.createProcess("uname -p");
@@ -97,7 +105,7 @@ public class UnixSystemInfo {
 	    reader.close();
 
 	    InterfacesType interfacesType = coreFactory.createInterfacesType();
-	    List<NetworkInterface> interfaces = NetworkInterface.getInterfaces(flavor, session);
+	    List<NetworkInterface> interfaces = NetworkInterface.getInterfaces(session.getFlavor(), session);
 	    for (NetworkInterface intf : interfaces) {
 		InterfaceType interfaceType = coreFactory.createInterfaceType();
 		interfaceType.setMacAddress(intf.getMacAddress());

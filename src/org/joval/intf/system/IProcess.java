@@ -13,6 +13,12 @@ import java.io.OutputStream;
  * @version %I% %G%
  */
 public interface IProcess {
+    public String getCommand();
+
+    public void setCommand(String command);
+
+    public void setInteractive(boolean interactive);
+
     public void start() throws Exception;
 
     public InputStream getInputStream();

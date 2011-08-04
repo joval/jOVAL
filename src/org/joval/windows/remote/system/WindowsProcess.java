@@ -50,6 +50,18 @@ class WindowsProcess implements IProcess {
 
     // Implement IProcess
 
+    public String getCommand() {
+	return command;
+    }
+
+    public void setCommand(String command) {
+	this.command = command;
+    }
+
+    public void setInteractive(boolean interactive) {
+	// DAS: implement this
+    }
+
     public void start() throws Exception {
 	SWbemSecurity security = new SWbemSecurity(services);
 	security.setImpersonationLevel(SWbemSecurity.ImpersonationLevel_IMPERSONATION);

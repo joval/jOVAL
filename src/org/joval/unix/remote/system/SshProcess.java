@@ -15,7 +15,6 @@ import org.vngx.jsch.ChannelExec;
 import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.exception.JSchException;
 
-import org.joval.unix.remote.UnixCredential;
 import org.joval.intf.system.IProcess;
 import org.joval.io.StreamTool;
 import org.joval.util.JOVALSystem;
@@ -28,41 +27,38 @@ import org.joval.util.JOVALSystem;
  */
 class SshProcess implements IProcess {
     private ChannelExec ce;
-    private String rootPassword;
-    private InputStream in, err;
-    private OutputStream out;
+    private String command;
+    private boolean interactive = false;
 
-    /**
-     * If the UnixCredential contains a root password, then the command is automatically run as root using su.
-     */
-    SshProcess(ChannelExec ce, String command, UnixCredential cred) {
+    SshProcess(ChannelExec ce, String command) {
 	this.ce = ce;
-	rootPassword = cred.getRootPassword();
-	if (rootPassword != null) {
-	    command = "echo " + cred.getRootPassword() + " | su - root -c \"" + quoteEscape(command) + "\"";
-	}
-	ce.setCommand(command);
+	this.command = command;
     }
 
     // Implement IProcess
 
+    public String getCommand() {
+	return command;
+    }
+
+    public void setCommand(String command) {
+	this.command = command;
+    }
+
+    public void setInteractive(boolean interactive) {
+	this.interactive = interactive;
+    }
+
     public void start() throws Exception {
+	ce.setPty(interactive);
+	ce.setCommand(command);
 	ce.connect();
 	new Monitor(this).start();
-	if (rootPassword != null) {
-	    getOutputStream();
-	    out.write(rootPassword.getBytes());
-	    out.write('\n');
-	    out.flush();
-	}
     }
 
     public InputStream getInputStream() {
 	try {
-	    if (in == null) {
-	        in = ce.getInputStream();
-	    }
-	    return in;
+	    return ce.getInputStream();
 	} catch (IOException e) {
 	}
 	return null;
@@ -70,10 +66,7 @@ class SshProcess implements IProcess {
 
     public InputStream getErrorStream() {
 	try {
-	    if (err == null) {
-		err = ce.getErrStream();
-	    }
-	    return err;
+	    return ce.getErrStream();
 	} catch (IOException e) {
 	}
 	return null;
@@ -81,10 +74,7 @@ class SshProcess implements IProcess {
 
     public OutputStream getOutputStream() {
 	try {
-	    if (out == null) {
-		out = ce.getOutputStream();
-	    }
-	    return out;
+	    return ce.getOutputStream();
 	} catch (IOException e) {
 	}
 	return null;

@@ -48,13 +48,15 @@ class NetworkInterface {
 	  //
 	  case SOLARIS:
 	    while ((line = reader.readLine()) != null) {
-		if (line.startsWith("\t")) {
+		if (line.startsWith("\t") || line.startsWith("  ")) {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
 		    interfaces.add(createSolarisInterface(lines));
 		    lines = new Vector<String>();
-		    lines.add(line);
-		} else {
+		    if (line.trim().length() > 0) {
+			lines.add(line);
+		    }
+		} else if (line.trim().length() > 0) {
 		    lines.add(line);
 		}
 	    }

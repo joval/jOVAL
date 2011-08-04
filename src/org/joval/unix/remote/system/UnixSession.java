@@ -12,29 +12,35 @@ import org.vngx.jsch.Session;
 import org.vngx.jsch.UserInfo;
 import org.vngx.jsch.exception.JSchException;
 
+import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
+import org.joval.unix.Sudo;
+import org.joval.unix.UnixFlavor;
+import org.joval.unix.UnixSystemInfo;
 import org.joval.unix.system.Environment;
 import org.joval.unix.remote.UnixCredential;
 import org.joval.unix.remote.io.SftpFilesystem;
 import org.joval.util.JOVALSystem;
 
 /**
- * A representation of an SSH session, which simply uses JSch to implement an ISession.
+ * A representation of an SSH session, which simply uses JSch to implement an IUnixSession.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixSession implements ISession, ILocked, UserInfo {
+public class UnixSession implements IUnixSession, ILocked, UserInfo {
     private String hostname;
     private UnixCredential cred;
+    private Credential rootCred = null;
     private Session session;
     private IEnvironment env;
     private SftpFilesystem fs;
+    private UnixFlavor flavor = UnixFlavor.UNKNOWN;
 
     public UnixSession(String hostname) {
 	this.hostname = hostname;
@@ -45,13 +51,17 @@ public class UnixSession implements ISession, ILocked, UserInfo {
     public boolean unlock(ICredential credential) {
 	if (credential instanceof UnixCredential) {
 	    cred = (UnixCredential)credential;
+	    String rootPassword = cred.getRootPassword();
+	    if (rootPassword != null) {
+		rootCred = new Credential("root", rootPassword);
+	    }
 	    return true;
 	} else {
 	    return false;
 	}
     }
 
-    // Implement ISession
+    // Implement IUnixSession
 
     public boolean connect() {
 	if (cred == null) {
@@ -64,6 +74,7 @@ public class UnixSession implements ISession, ILocked, UserInfo {
 	    session.connect(3000);
 	    env = new Environment(this);
 	    fs = new SftpFilesystem(session, env);
+	    flavor = UnixSystemInfo.getFlavor(this);
 	    return true;
 	} catch (JSchException e) {
 	    e.printStackTrace();
@@ -93,7 +104,22 @@ public class UnixSession implements ISession, ILocked, UserInfo {
 
     public IProcess createProcess(String command) throws Exception {
 	ChannelExec ce = session.openChannel(ChannelType.EXEC);
-	return new SshProcess(ce, command, cred);
+	IProcess p = new SshProcess(ce, command);
+	switch(flavor) {
+	  case LINUX:
+	  case SOLARIS:
+	    if (rootCred != null) {
+		p = new Sudo(p, flavor, rootCred);
+	    }
+	    // fall-through
+
+	  default:
+	    return p;
+	}
+    }
+
+    public UnixFlavor getFlavor() {
+	return flavor;
     }
 
     // Implement UserInfo
