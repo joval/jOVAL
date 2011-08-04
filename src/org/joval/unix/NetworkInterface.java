@@ -23,17 +23,17 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.util.JOVALSystem;
 
 /**
- * Tool for creating a SystemInfoType from a Unix ISession implementation.
+ * Tool for creating a SystemInfoType from an IUnixSession implementation.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 class NetworkInterface {
-    static List<NetworkInterface> getInterfaces(UnixFlavor flavor, ISession session) throws Exception {
+    static List<NetworkInterface> getInterfaces(IUnixSession session) throws Exception {
 	Vector<NetworkInterface> interfaces = new Vector<NetworkInterface>();
 
 	IProcess p = session.createProcess("/sbin/ifconfig -a");
@@ -42,7 +42,7 @@ class NetworkInterface {
 	Vector<String> lines = new Vector<String>();
 	String line = null;
 
-	switch(flavor) {
+	switch(session.getFlavor()) {
 	  //
 	  // On Solaris, info for every interface starts at char[0] of a line; with additional lines tab-indented
 	  //

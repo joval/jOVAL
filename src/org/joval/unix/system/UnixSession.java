@@ -7,7 +7,6 @@ import java.io.File;
 
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.LocalFilesystem;
-import org.joval.unix.UnixFlavor;
 import org.joval.unix.UnixSystemInfo;
 import org.joval.util.BaseSession;
 
@@ -18,7 +17,7 @@ import org.joval.util.BaseSession;
  * @version %I% %G%
  */
 public class UnixSession extends BaseSession implements IUnixSession {
-    private UnixFlavor flavor = UnixFlavor.UNKNOWN;
+    private Flavor flavor = Flavor.UNKNOWN;
 
     public UnixSession() {
 	super();
@@ -30,7 +29,7 @@ public class UnixSession extends BaseSession implements IUnixSession {
 	env = new Environment(this);
 	fs = new LocalFilesystem(env, null);
 	cwd = new File(".");
-	flavor = UnixSystemInfo.getFlavor(this);
+	flavor = Flavor.flavorOf(this);
 	return true;
     }
 
@@ -43,7 +42,7 @@ public class UnixSession extends BaseSession implements IUnixSession {
 
     // Implement IUnixSession
 
-    public UnixFlavor getFlavor() {
+    public Flavor getFlavor() {
 	return flavor;
     }
 }

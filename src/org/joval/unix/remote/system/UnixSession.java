@@ -20,7 +20,6 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.unix.Sudo;
-import org.joval.unix.UnixFlavor;
 import org.joval.unix.UnixSystemInfo;
 import org.joval.unix.system.Environment;
 import org.joval.unix.remote.UnixCredential;
@@ -40,7 +39,7 @@ public class UnixSession implements IUnixSession, ILocked, UserInfo {
     private Session session;
     private IEnvironment env;
     private SftpFilesystem fs;
-    private UnixFlavor flavor = UnixFlavor.UNKNOWN;
+    private Flavor flavor = Flavor.UNKNOWN;
 
     public UnixSession(String hostname) {
 	this.hostname = hostname;
@@ -74,7 +73,7 @@ public class UnixSession implements IUnixSession, ILocked, UserInfo {
 	    session.connect(3000);
 	    env = new Environment(this);
 	    fs = new SftpFilesystem(session, env);
-	    flavor = UnixSystemInfo.getFlavor(this);
+	    flavor = Flavor.flavorOf(this);
 	    return true;
 	} catch (JSchException e) {
 	    e.printStackTrace();
@@ -118,7 +117,7 @@ public class UnixSession implements IUnixSession, ILocked, UserInfo {
 	}
     }
 
-    public UnixFlavor getFlavor() {
+    public Flavor getFlavor() {
 	return flavor;
     }
 

@@ -2,8 +2,13 @@
 
 package org.joval.intf.unix.system;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.logging.Level;
+
+import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.unix.UnixFlavor;
+import org.joval.util.JOVALSystem;
 
 /**
  * A representation of a Unix command-line session.
@@ -12,5 +17,44 @@ import org.joval.unix.UnixFlavor;
  * @version %I% %G%
  */
 public interface IUnixSession extends ISession {
-    UnixFlavor getFlavor();
+    Flavor getFlavor();
+
+    /**
+     * Enumeration of Unix flavors.
+     */
+    enum Flavor {
+	UNKNOWN("unknown"),
+	LINUX("Linux"),
+	SOLARIS("SunOS");
+    
+	private String osName = null;
+    
+	private Flavor(String osName) {
+	    this.osName = osName;
+	}
+
+	public String getOsName() {
+	    return osName;
+	}
+    
+	public static Flavor flavorOf(IUnixSession session) {
+	    Flavor flavor = UNKNOWN;
+	    try {
+		IProcess p = session.createProcess("uname -s");
+		p.start();
+		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		String osName = reader.readLine();
+		reader.close();
+		for (Flavor f : values()) {
+		    if (f.getOsName().equals(osName)) {
+			flavor = f;
+			break;
+		    }
+		}
+	    } catch (Exception e) {
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PLUGIN_INTERFACE"), e);
+	    }
+	    return flavor;
+	}
+    }
 }

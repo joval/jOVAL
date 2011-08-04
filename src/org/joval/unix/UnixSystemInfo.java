@@ -38,27 +38,6 @@ public class UnixSystemInfo {
     private ObjectFactory coreFactory;
     private SystemInfoType info;
 
-    public static UnixFlavor getFlavor(IUnixSession session) {
-	UnixFlavor flavor = UnixFlavor.UNKNOWN;
-	try {
-	    IProcess p = session.createProcess("uname -s");
-	    p.start();
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	    String osName = reader.readLine();
-	    reader.close();
-	    for (UnixFlavor f : UnixFlavor.values()) {
-		if (f.osName().equals(osName)) {
-		    flavor = f;
-		    break;
-		}
-	    }
-
-	} catch (Exception e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PLUGIN_INTERFACE"), e);
-	}
-	return flavor;
-    }
-
     /**
      * Create a plugin for scanning or test evaluation.
      */
@@ -95,7 +74,7 @@ public class UnixSystemInfo {
 		info.setOsName(reader.readLine());
 		reader.close();
 	    } else {
-		info.setOsName(session.getFlavor().osName());
+		info.setOsName(session.getFlavor().getOsName());
 	    }
 
 	    p = session.createProcess("uname -p");
@@ -105,7 +84,7 @@ public class UnixSystemInfo {
 	    reader.close();
 
 	    InterfacesType interfacesType = coreFactory.createInterfacesType();
-	    List<NetworkInterface> interfaces = NetworkInterface.getInterfaces(session.getFlavor(), session);
+	    List<NetworkInterface> interfaces = NetworkInterface.getInterfaces(session);
 	    for (NetworkInterface intf : interfaces) {
 		InterfaceType interfaceType = coreFactory.createInterfaceType();
 		interfaceType.setMacAddress(intf.getMacAddress());

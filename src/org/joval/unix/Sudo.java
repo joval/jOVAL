@@ -27,13 +27,13 @@ import org.joval.util.JOVALSystem;
  */
 public class Sudo implements IProcess {
     private IProcess p;
-    private UnixFlavor flavor;
+    private IUnixSession.Flavor flavor;
     private ICredential cred;
     private String innerCommand;
     private InputStream in=null, err=null;
     private OutputStream out=null;
 
-    public Sudo(IProcess p, UnixFlavor flavor, ICredential cred) {
+    public Sudo(IProcess p, IUnixSession.Flavor flavor, ICredential cred) {
 	this.p = p;
 	this.flavor = flavor;
 	this.cred = cred;
