@@ -15,6 +15,7 @@ import java.util.Vector;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.CheckEnumeration;
@@ -116,7 +117,9 @@ public class RegistryAdapter implements IAdapter {
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	for (ItemWrapper wrapper : getItems((RegistryObject)obj, vars)) {
-	    items.add(windowsFactory.createRegistryItem(wrapper.item));
+	    if (wrapper.item != null) {
+		items.add(windowsFactory.createRegistryItem(wrapper.item));
+	    }
 	}
 	return items;
     }
@@ -186,6 +189,12 @@ public class RegistryAdapter implements IAdapter {
 	    item.setKey(windowsFactory.createRegistryItemKey(keyType));
 	    name = addNameAndValue(rObj, item, valueType, key);
 	    item.setStatus(StatusEnumeration.EXISTS);
+	} catch (PatternSyntaxException e) {
+	    MessageType msg = new MessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+	    ctx.addObjectMessage(rObj.getId(), msg);
+       	    ctx.log(Level.WARNING, e.getMessage(), e);
 	} catch (NoSuchElementException e) {
        	    ctx.log(Level.FINER, JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), rObj.getId()));
 	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);

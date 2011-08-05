@@ -41,6 +41,7 @@ import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
+import org.joval.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -158,24 +159,27 @@ public class SystemCharacteristics {
 	// Add only objects whose items and variables are all specified.
 	//
 	CollectedObjectsType collectedObjectsType = coreFactory.createCollectedObjectsType();
-	List <ObjectType>objects = collectedObjectsType.getObject();
 	for (ObjectType objectType : objectTable.values()) {
 	    boolean add = true;
 	    for (ReferenceType referenceType : objectType.getReference()) {
 		if (!itemIds.contains(referenceType.getItemRef())) {
 		    add = false;
+		    JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_SC_FILTER_ITEM",
+			referenceType.getItemRef(), objectType.getId()));
 		    break;
 		}
 	    }
 	    if (add) {
 		for (VariableValueType variableValueType : objectType.getVariableValue()) {
 		    if (!variables.contains(variableValueType.getVariableId())) {
+			JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_SC_FILTER_VARIABLE",
+			    variableValueType.getVariableId(), objectType.getId()));
 			add = false;
 			break;
 		    }
 		}
 		if (add) {
-		    objects.add(objectTable.get(objectType));
+		    collectedObjectsType.getObject().add(objectTable.get(objectType));
 		}
 	    }
 	}
@@ -336,6 +340,7 @@ public class SystemCharacteristics {
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS));
 	    Marshaller marshaller = ctx.createMarshaller();
+	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
 	    out = new FileOutputStream(f);
 	    marshaller.setProperty("jaxb.formatted.output", new Boolean(true));
 	    marshaller.marshal(getOvalSystemCharacteristics(), out);

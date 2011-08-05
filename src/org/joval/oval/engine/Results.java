@@ -59,6 +59,7 @@ import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.oval.IResults;
 import org.joval.oval.OvalException;
+import org.joval.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -128,8 +129,9 @@ class Results implements IResults {
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS));
 	    Marshaller marshaller = ctx.createMarshaller();
+	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.RES);
 	    out = new FileOutputStream(f);
-	    marshaller.setProperty("jaxb.formatted.output", new Boolean(true));
+	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, new Boolean(true));
 	    marshaller.marshal(getOvalResults(), out);
 	} catch (JAXBException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);

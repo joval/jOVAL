@@ -127,16 +127,18 @@ class Definitions {
 	this.defs = defs;
 
 	objects = new Hashtable <String, ObjectType>();
-	List <JAXBElement <? extends ObjectType>> objectList = defs.getObjects().getObject();
-	int len = objectList.size();
-	for (int i=0; i < len; i++) {
-	    ObjectType ot = objectList.get(i).getValue();
-	    objects.put(ot.getId(), ot);
+	if (defs.getObjects() != null) {
+	    List <JAXBElement <? extends ObjectType>> objectList = defs.getObjects().getObject();
+	    int len = objectList.size();
+	    for (int i=0; i < len; i++) {
+		ObjectType ot = objectList.get(i).getValue();
+		objects.put(ot.getId(), ot);
+	    }
 	}
 
 	tests = new Hashtable <String, TestType>();
 	List <JAXBElement <? extends TestType>> testList = defs.getTests().getTest();
-	len = testList.size();
+	int len = testList.size();
 	for (int i=0; i < len; i++) {
 	    TestType tt = testList.get(i).getValue();
 	    tests.put(tt.getId(), tt);

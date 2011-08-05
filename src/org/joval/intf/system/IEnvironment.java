@@ -11,7 +11,7 @@ import java.util.Iterator;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IEnvironment {
+public interface IEnvironment extends Iterable<String> {
     /**
      * Get an environment variable by name.
      */
@@ -26,6 +26,6 @@ public interface IEnvironment {
     /**
      * Returns an Iterator over the names of the variables defined in this environment.
      */
-    public Iterator<String> iterateVariables();
+    public Iterator<String> iterator();
 }
 

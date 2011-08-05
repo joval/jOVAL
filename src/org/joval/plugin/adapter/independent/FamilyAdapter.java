@@ -30,6 +30,7 @@ import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
+import org.joval.util.TypeTools;
 
 /**
  * Evaluates FamilyTest OVAL tests.
@@ -82,21 +83,10 @@ public class FamilyAdapter implements IAdapter {
 	FamilyState state = (FamilyState)st;
 	FamilyItem item = (FamilyItem)it;
 
-	switch (state.getFamily().getOperation()) {
-	  case CASE_INSENSITIVE_EQUALS:
-	    if (((String)item.getFamily().getValue()).equalsIgnoreCase((String)state.getFamily().getValue())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-	  case EQUALS:
-	    if (((String)item.getFamily().getValue()).equals((String)state.getFamily().getValue())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getFamily().getOperation()));
+	if (TypeTools.compare(state.getFamily(), item.getFamily())) {
+	    return ResultEnumeration.TRUE;
+	} else {
+	    return ResultEnumeration.FALSE;
 	}
     }
 

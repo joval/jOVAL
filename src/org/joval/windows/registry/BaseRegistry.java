@@ -180,7 +180,7 @@ public abstract class BaseRegistry implements IRegistry {
 		}
 	    }
 	} catch (PatternSyntaxException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINREG_PATTERN"), e);
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()), e);
 	    throw new NoSuchElementException(e.getMessage());
 	}
 	searchMap.put(cacheKey, list);

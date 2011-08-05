@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.logging.Level;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
@@ -85,15 +88,59 @@ public class EnvironmentvariableAdapter implements IAdapter {
 
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	try {
-	    EnvironmentvariableObject eObj = (EnvironmentvariableObject)obj;
-	    items.add(getItem(eObj));
-	} catch (NoSuchElementException e) {
+	EnvironmentvariableObject eObj = (EnvironmentvariableObject)obj;
+	String name = (String)eObj.getName().getValue();
+
+	switch(eObj.getName().getOperation()) {
+	  case EQUALS:
+	    if (env.getenv(name) != null) {
+		items.add(makeItem(name, env.getenv(name)));
+	    }
+	    break;
+
+	  case CASE_INSENSITIVE_EQUALS:
+	    for (String varName : env) {
+		if (varName.equalsIgnoreCase(name)) {
+		    items.add(makeItem(varName, env.getenv(varName)));
+		    break;
+		}
+	    }
+	    break;
+
+	  case NOT_EQUAL:
+	    for (String varName : env) {
+		if (!name.equals(varName)) {
+		    items.add(makeItem(name, env.getenv(varName)));
+		}
+	    }
+	    break;
+
+	  case PATTERN_MATCH:
+	    try {
+		Pattern p = Pattern.compile(name);
+		for (String varName : env) {
+		    if (p.matcher(varName).find()) {
+			items.add(makeItem(varName, env.getenv(varName)));
+		    }
+		}
+	    } catch (PatternSyntaxException e) {
+		MessageType msg = new MessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", name, eObj.getId()));
+		ctx.addObjectMessage(obj.getId(), msg);
+		ctx.log(Level.WARNING, e.getMessage(), e);
+	    }
+	    break;
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", eObj.getName().getOperation()));
+	}
+
+	if (items.size() == 0) {
 	    MessageType msg = new MessageType();
 	    msg.setLevel(MessageLevelEnumeration.INFO);
-	    msg.setValue(e.getMessage());
+	    msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", name, eObj.getId()));
 	    ctx.addObjectMessage(obj.getId(), msg);
-	    ctx.log(Level.WARNING, e.getMessage(), e);
 	}
 	return items;
     }
@@ -121,21 +168,14 @@ public class EnvironmentvariableAdapter implements IAdapter {
 
     // Internal
 
-    private JAXBElement<EnvironmentvariableItem> getItem(EnvironmentvariableObject variable) throws NoSuchElementException {
-	String varName = (String)variable.getName().getValue();
-	String varValue = env.getenv(varName);
-	if (varValue == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage("STATUS_NOT_FOUND", varName, variable.getId()));
-	}
+    private JAXBElement<EnvironmentvariableItem> makeItem(String name, String value) {
 	EnvironmentvariableItem item = independentFactory.createEnvironmentvariableItem();
-
-	EntityItemStringType name = coreFactory.createEntityItemStringType();
-	name.setValue(varName);
-	item.setName(name);
-	EntityItemAnySimpleType value = coreFactory.createEntityItemAnySimpleType();
-	value.setValue(varValue);
-	item.setValue(value);
-
+	EntityItemStringType nameType = coreFactory.createEntityItemStringType();
+	nameType.setValue(name);
+	item.setName(nameType);
+	EntityItemAnySimpleType valueType = coreFactory.createEntityItemAnySimpleType();
+	valueType.setValue(value);
+	item.setValue(valueType);
 	return independentFactory.createEnvironmentvariableItem(item);
     }
 }

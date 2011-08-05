@@ -173,7 +173,7 @@ public class Environment implements IEnvironment {
 	return props.getProperty(var.toUpperCase());
     }
 
-    public Iterator<String> iterateVariables() {
+    public Iterator<String> iterator() {
 	return props.stringPropertyNames().iterator();
     }
 }
