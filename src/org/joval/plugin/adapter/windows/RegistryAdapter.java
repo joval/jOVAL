@@ -188,17 +188,17 @@ public class RegistryAdapter implements IAdapter {
 		ctx.addObjectMessage(rObj.getId(), msg);
 	    }
 	} else {
-	    for (String path : getPathList(rObj, hive, vars)) {
-		try {
+	    try {
+		for (String path : getPathList(rObj, hive, vars)) {
 		    for (RegistryItem item : getItems(rObj, hive, path)) {
 			items.add(windowsFactory.createRegistryItem(item));
 		    }
-		} catch (NoSuchElementException e) {
-		    MessageType msg = new MessageType();
-		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), id));
-		    ctx.addObjectMessage(rObj.getId(), msg);
 		}
+	    } catch (NoSuchElementException e) {
+		MessageType msg = new MessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), id));
+		ctx.addObjectMessage(rObj.getId(), msg);
 	    }
 	}
 	return items;
