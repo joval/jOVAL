@@ -190,8 +190,12 @@ public class RegistryAdapter implements IAdapter {
 	} else {
 	    try {
 		for (String path : getPathList(rObj, hive, vars)) {
-		    for (RegistryItem item : getItems(rObj, hive, path)) {
-			items.add(windowsFactory.createRegistryItem(item));
+		    try {
+			for (RegistryItem item : getItems(rObj, hive, path)) {
+			    items.add(windowsFactory.createRegistryItem(item));
+			}
+		    } catch (NoSuchElementException e) {
+			// Just ignore it
 		    }
 		}
 	    } catch (NoSuchElementException e) {
