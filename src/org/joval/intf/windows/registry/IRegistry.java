@@ -57,26 +57,38 @@ public interface IRegistry {
      * Search for a key in the registry.
      */
     public List<IKey> search(String hive, String path) throws NoSuchElementException;
+    public List<IKey> search(String hive, String path, boolean win32) throws NoSuchElementException;
 
     /**
      * Return a key given its full path (including the name of the hive).
      */
     public IKey fetchKey(String fullPath) throws IllegalArgumentException, NoSuchElementException;
+    public IKey fetchKey(String fullPath, boolean win32) throws IllegalArgumentException, NoSuchElementException;
 
     /**
-     * Return a key from a hive.
+     * Return a key from a hive using the default redirection mode.
      */
     public IKey fetchKey(String hive, String path) throws NoSuchElementException;
 
     /**
-     * Return a subkey of a key.
+     * Return a key from a hive using the specified redirection mode.
+     */
+    public IKey fetchKey(String hive, String path, boolean win32) throws NoSuchElementException;
+
+    /**
+     * Return a subkey of a key using the default redirection mode.
      */
     public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException;
 
     /**
+     * Return a subkey of a key using the specified redirection mode.
+     */
+    public IKey fetchSubkey(IKey parent, String name, boolean win32) throws NoSuchElementException;
+
+    /**
      * Return a value of a key, whose name matches a pattern.
      */
-    public IValue fetchValue(IKey key, Pattern p);
+    public IValue[] fetchValues(IKey key, Pattern p) throws NoSuchElementException;
 
     /**
      * Return a value of a key, given its name.

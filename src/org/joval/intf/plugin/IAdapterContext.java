@@ -8,10 +8,14 @@ import java.util.NoSuchElementException;
 import java.util.logging.Level;
 
 import oval.schemas.common.MessageType;
+import oval.schemas.definitions.core.EntityStateSimpleBaseType;
 import oval.schemas.definitions.core.VariableType;
+import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
+import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 
 /**
  * The IAdapterContext provides services to the IAdapters.
@@ -27,12 +31,12 @@ public interface IAdapterContext {
     /**
      * Log a message.
      */
-    public void log(Level level, String message);
+    void log(Level level, String message);
 
     /**
      * Log an exception.
      */
-    public void log(Level level, String message, Throwable thrown);
+    void log(Level level, String message, Throwable thrown);
 
     /**
      * Resolve a variable given its ID String.  A VariableType, in the context of the jOVAL Engine, is either a LocalVariable
@@ -48,10 +52,16 @@ public interface IAdapterContext {
      * #throws OvalException if the OVAL is somehow invalid, for instance, if a variable ID is referenced but there is no
      *			     variable with that ID defined in the OVAL definitions file.
      */
-    public List<String> resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException;
+    List<String> resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException;
 
     /**
      * Add a message for an ObjectType record.
      */
-    public void addObjectMessage(String objectId, MessageType message);
+    void addObjectMessage(String objectId, MessageType message);
+
+    /**
+     * Use the OVAL Engine to compare a state type to an item type.  This is useful in implementations of the IAdapter.compare
+     * method.
+     */
+    ResultEnumeration test(EntityStateSimpleBaseType s, EntityItemSimpleBaseType i) throws TestException, OvalException;
 }

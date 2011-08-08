@@ -101,7 +101,7 @@ public class Registry extends BaseRegistry {
 	    registry = factory.getWinreg(cred, host, true);
 	    state = STATE_ENV;
 	    env = new Environment(this);
-	    ia64 = env.getenv("PROCESSOR_ARCHITECTURE").indexOf("64") != -1;
+	    ia64 = env.getenv(IEnvironment.WINARCH).indexOf("64") != -1;
 	    state = STATE_CONNECTED;
 	    return true;
 	} catch (UnknownHostException e) {
@@ -161,13 +161,17 @@ public class Registry extends BaseRegistry {
      * Returns a key given a path that includes the hive.
      */
     public IKey fetchKey(String fullPath) throws IllegalArgumentException, NoSuchElementException {
+	return fetchKey(fullPath, get64BitRedirect());
+    }
+
+    public IKey fetchKey(String fullPath, boolean win32) throws IllegalArgumentException, NoSuchElementException {
 	int ptr = fullPath.indexOf(DELIM_STR);
 	if (ptr == -1) {
 	    return getHive(fullPath);
 	} else {
 	    String hive = fullPath.substring(0, ptr);
 	    String path = fullPath.substring(ptr + 1);
-	    return fetchKey(hive, path);
+	    return fetchKey(hive, path, win32);
 	}
     }
 
@@ -179,6 +183,10 @@ public class Registry extends BaseRegistry {
 	return fetchSubkey(getHive(hive), path);
     }
 
+    public IKey fetchKey(String hive, String path, boolean win32) throws NoSuchElementException {
+	return fetchSubkey(getHive(hive), path, win32);
+    }
+
     /**
      * Retrieve a subkey, first by attempting to retrieve the subkey from the local cache, then from the deepest (nearest)
      * ancestor key available from the cache.  This method redirects to the 64-bit portion of the registry if it fails
@@ -187,13 +195,19 @@ public class Registry extends BaseRegistry {
      * @throws NoSuchElementException if there is no subkey with the specified name.
      */
     public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException {
+	return fetchSubkey(parent, name, get64BitRedirect());
+    }
+
+    public IKey fetchSubkey(IKey parent, String name, boolean win32) throws NoSuchElementException {
 	String fullPath = new StringBuffer(parent.toString()).append(DELIM_CH).append(name).toString();
 	Key key = map.get(fullPath);
 	if (key == null) {
-	    String alt = getRedirect(fullPath);
-	    if (alt != null) {
-		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", fullPath, alt));
-		return fetchKey(alt);
+	    if (win32) {
+		String alt = getRedirect(fullPath);
+		if (alt != null) {
+		    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", fullPath, alt));
+		    return fetchKey(alt, win32);
+		}
 	    }
 	    StringBuffer partialPath = new StringBuffer();
 	    StringTokenizer tok = new StringTokenizer(fullPath, DELIM_STR);
@@ -218,12 +232,13 @@ public class Registry extends BaseRegistry {
     /**
      * Return the value of the Value with a name matching the given Pattern.
      */
-    public IValue fetchValue(IKey key, Pattern p) throws NoSuchElementException {
+    public IValue[] fetchValues(IKey key, Pattern p) throws NoSuchElementException {
 	String[] sa = key.listValues(p);
-	if (sa.length > 0) {
-	    return fetchValue(key, sa[0]);
+	IValue[] values = new IValue[sa.length];
+	for (int i=0; i < sa.length; i++) {
+	    values[i] = fetchValue(key, sa[i]);
 	}
-	return null;
+	return values;
     }
 
     /**
@@ -232,17 +247,7 @@ public class Registry extends BaseRegistry {
      * @returns null if no such value exists.
      */
     public IValue fetchValue(IKey key, String name) throws NoSuchElementException {
-	try {
-	    return key.getValue(name);
-	} catch (NoSuchElementException e) {
-	    String alt = getRedirect(key.toString());
-	    if (alt == null) {
-		JOVALSystem.getLogger().log(Level.FINER, e.getMessage());
-		throw e;
-	    } else {
-		return fetchValue(fetchKey(alt), name);
-	    }
-	}
+	return key.getValue(name);
     }
 
     // Package-level access

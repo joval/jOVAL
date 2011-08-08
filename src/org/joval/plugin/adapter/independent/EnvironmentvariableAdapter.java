@@ -40,8 +40,8 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IEnvironment;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
-import org.joval.util.TypeTools;
 
 /**
  * Evaluates Environmentvariable OVAL tests.
@@ -145,25 +145,16 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	return items;
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
 	EnvironmentvariableState state = (EnvironmentvariableState)st;
 	EnvironmentvariableItem item = (EnvironmentvariableItem)it;
 
 	if (state.isSetName()) {
-	    if (TypeTools.compare(state.getName(), item.getName())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ctx.test(state.getName(), item.getName());
 	} else if (state.isSetValue()) {
-	    if (TypeTools.compare(state.getValue(), item.getValue())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
+	    return ctx.test(state.getValue(), item.getValue());
 	}
+	throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
     }
 
     // Internal

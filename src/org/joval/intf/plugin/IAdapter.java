@@ -14,6 +14,7 @@ import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.TestType;
 
+import org.joval.oval.TestException;
 import org.joval.oval.OvalException;
 
 /**
@@ -69,6 +70,9 @@ public interface IAdapter {
      * Compare an item to a state.  The state and item are type-checked to insure that they match the types identified by
      * getStateClass and getItemClass before this method is invoked.  It should not be necessary for the adapter to interact
      * with a machine in order to compare an item to a state, as system data may be originating from a file.
+     *
+     * @throws OvalException if there is a fundamental issue with the OVAL structures, like a datatype mismatch.
+     * @throws TestException if there is an error in evaluating the test, which should be attached to the TestedItemType.
      */
-    public ResultEnumeration compare(StateType state, ItemType item) throws OvalException;
+    public ResultEnumeration compare(StateType state, ItemType item) throws TestException, OvalException;
 }

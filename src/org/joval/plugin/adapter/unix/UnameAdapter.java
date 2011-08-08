@@ -36,8 +36,8 @@ import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
-import org.joval.util.TypeTools;
 
 /**
  * Evaluates UnameTest OVAL tests.
@@ -96,46 +96,22 @@ public class UnameAdapter implements IAdapter {
 	return items;
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
 	UnameState state = (UnameState)st;
 	UnameItem item = (UnameItem)it;
 
 	if (state.isSetMachineClass()) {
-	    if (TypeTools.compare(state.getMachineClass(), item.getMachineClass())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ctx.test(state.getMachineClass(), item.getMachineClass());
 	} else if (state.isSetNodeName()) {
-	    if (TypeTools.compare(state.getNodeName(), item.getNodeName())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ctx.test(state.getNodeName(), item.getNodeName());
 	} else if (state.isSetOsName()) {
-	    if (TypeTools.compare(state.getOsName(), item.getOsName())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ctx.test(state.getOsName(), item.getOsName());
 	} else if (state.isSetOsRelease()) {
-	    if (TypeTools.compare(state.getOsRelease(), item.getOsRelease())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ctx.test(state.getOsRelease(), item.getOsRelease());
 	} else if (state.isSetOsVersion()) {
-	    if (TypeTools.compare(state.getOsVersion(), item.getOsVersion())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ctx.test(state.getOsVersion(), item.getOsVersion());
 	} else if (state.isSetProcessorType()) {
-	    if (TypeTools.compare(state.getProcessorType(), item.getProcessorType())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ctx.test(state.getProcessorType(), item.getProcessorType());
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
 	}

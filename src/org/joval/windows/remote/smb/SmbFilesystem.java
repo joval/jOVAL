@@ -56,7 +56,7 @@ public class SmbFilesystem extends CachingFilesystem {
      */
     public SmbFilesystem(String host, WindowsCredential cred, IEnvironment env) {
 	super();
-	setCaseInsensitive(true);
+	setCaseInsensitive(false);//DAS
 	this.host = host;
 	auth = cred.getNtlmPasswordAuthentication();
 	this.env = env;

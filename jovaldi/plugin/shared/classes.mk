@@ -54,7 +54,6 @@ SHARED=\
 	org.joval.util.BaseSession					\
 	org.joval.util.BaseFileAdapter					\
 	org.joval.util.TreeNode						\
-	org.joval.util.TypeTools					\
 	org.joval.windows.WindowsSystemInfo				\
 	org.joval.windows.WOW3264PathRedirector				\
 	org.joval.windows.pe.Characteristics				\

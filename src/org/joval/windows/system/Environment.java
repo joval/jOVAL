@@ -29,11 +29,18 @@ import org.joval.util.JOVALSystem;
 public class Environment implements IEnvironment {
     public static final String ARCHITECTURE = "PROCESSOR_ARCHITECTURE";
 
-    static final String SYSTEMROOT	= "SYSTEMROOT";
-    static final String PATH		= "PATH";
+    static final String PROGRAMFILES		= "PROGRAMFILES";
+    static final String PROGRAMFILESX86		= "PROGRAMFILES(X86)";
+    static final String COMMONPROGRAMFILES	= "COMMONPROGRAMFILES";
+    static final String COMMONPROGRAMFILESX86	= "COMMONPROGRAMFILES(X86)";
+    static final String COMMONPROGRAMW6432	= "COMMONPROGRAMW6432";
+    static final String SYSTEMROOT		= "SYSTEMROOT";
+    static final String WINDIR			= "WINDIR";
+    static final String PATH			= "PATH";
 
     static final String[] SYSROOT_ENV	= {IRegistry.HKLM, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"};
     static final String[] SYSTEM_ENV	= {IRegistry.HKLM, "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"};
+    static final String[] COMMON_ENV	= {IRegistry.HKLM, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion"};
     static final String[] USER_ENV	= {IRegistry.HKCU, "Environment"};
     static final String[] VOLATILE_ENV	= {IRegistry.HKCU, "Volatile Environment"};
 
@@ -43,14 +50,14 @@ public class Environment implements IEnvironment {
 	props = new Properties();
 	Vector <String>toExpand = new Vector <String>();
 
-	IKey cv = null, env = null;
+	IKey cv = null, common = null, env = null;
 	try {
-	    cv = registry.fetchKey(SYSROOT_ENV[0], SYSROOT_ENV[1]);
+	    cv = registry.fetchKey(SYSROOT_ENV[0], SYSROOT_ENV[1], false);
 	    IValue sysRootValue = cv.getValue("SystemRoot");
 	    if (sysRootValue.getType() == IValue.REG_SZ) {
 		String sysRoot = ((IStringValue)sysRootValue).getData();
 		props.setProperty(SYSTEMROOT, sysRoot);
-		sysRoot = Matcher.quoteReplacement(sysRoot);
+		props.setProperty(WINDIR, sysRoot);
 	    } else {
 		throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_SYSROOT"));
 	    }
@@ -68,11 +75,54 @@ public class Environment implements IEnvironment {
 		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINENV_NONSTR" + val.getName()));
 		}
 	    }
+
+	    common = registry.fetchKey(COMMON_ENV[0], COMMON_ENV[1], false);
+	    IValue programFilesValue = common.getValue("ProgramFilesDir");
+	    if (programFilesValue.getType() == IValue.REG_SZ) {
+		String programFiles = ((IStringValue)programFilesValue).getData();
+		props.setProperty(PROGRAMFILES, programFiles);
+	    } else {
+		throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILES"));
+	    }
+	    IValue commonFilesValue = common.getValue("CommonFilesDir");
+	    if (commonFilesValue.getType() == IValue.REG_SZ) {
+		String commonFiles = ((IStringValue)commonFilesValue).getData();
+		props.setProperty(PROGRAMFILES, commonFiles);
+	    } else {
+		throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILES"));
+	    }
+
+	    if (props.getProperty(ARCHITECTURE).indexOf("64") != -1) {
+		IValue programFilesX86Value = common.getValue("ProgramFilesDir (x86)");
+		if (programFilesX86Value.getType() == IValue.REG_SZ) {
+		    String programFilesX86 = ((IStringValue)programFilesX86Value).getData();
+		    props.setProperty(PROGRAMFILESX86, programFilesX86);
+		} else {
+		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILESX86"));
+		}
+		IValue commonFilesX86Value = common.getValue("CommonFilesDir (x86)");
+		if (commonFilesX86Value.getType() == IValue.REG_SZ) {
+		    String commonFilesX86 = ((IStringValue)commonFilesX86Value).getData();
+		    props.setProperty(COMMONPROGRAMFILESX86, commonFilesX86);
+		} else {
+		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILESX86"));
+		}
+		IValue commonFilesW6432Value = common.getValue("CommonW6432Dir");
+		if (commonFilesW6432Value.getType() == IValue.REG_SZ) {
+		    String commonFilesW6432 = ((IStringValue)commonFilesW6432Value).getData();
+		    props.setProperty(COMMONPROGRAMW6432, commonFilesW6432);
+		} else {
+		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILESX86"));
+		}
+	    }
 	} catch (NoSuchElementException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINENV_SYSENV"));
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINENV_SYSENV"), e);
 	} finally {
 	    if (cv != null) {
 		cv.closeAll();
+	    }
+	    if (common != null) {
+		common.closeAll();
 	    }
 	    if (env != null) {
 		env.closeAll();

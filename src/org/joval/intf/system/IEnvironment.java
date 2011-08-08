@@ -12,6 +12,8 @@ import java.util.Iterator;
  * @version %I% %G%
  */
 public interface IEnvironment extends Iterable<String> {
+    String WINARCH = "PROCESSOR_ARCHITECTURE";
+
     /**
      * Get an environment variable by name.
      */

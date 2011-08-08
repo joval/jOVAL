@@ -29,8 +29,8 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
-import org.joval.util.TypeTools;
 
 /**
  * Evaluates FamilyTest OVAL tests.
@@ -79,15 +79,11 @@ public class FamilyAdapter implements IAdapter {
 	return items;
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
 	FamilyState state = (FamilyState)st;
 	FamilyItem item = (FamilyItem)it;
 
-	if (TypeTools.compare(state.getFamily(), item.getFamily())) {
-	    return ResultEnumeration.TRUE;
-	} else {
-	    return ResultEnumeration.FALSE;
-	}
+	return ctx.test(state.getFamily(), item.getFamily());
     }
 
     // Private

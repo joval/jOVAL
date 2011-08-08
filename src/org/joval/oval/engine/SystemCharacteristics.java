@@ -164,7 +164,7 @@ public class SystemCharacteristics {
 	    for (ReferenceType referenceType : objectType.getReference()) {
 		if (!itemIds.contains(referenceType.getItemRef())) {
 		    add = false;
-		    JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_SC_FILTER_ITEM",
+		    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_SC_FILTER_ITEM",
 			referenceType.getItemRef(), objectType.getId()));
 		    break;
 		}
@@ -172,7 +172,7 @@ public class SystemCharacteristics {
 	    if (add) {
 		for (VariableValueType variableValueType : objectType.getVariableValue()) {
 		    if (!variables.contains(variableValueType.getVariableId())) {
-			JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_SC_FILTER_VARIABLE",
+			JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_SC_FILTER_VARIABLE",
 			    variableValueType.getVariableId(), objectType.getId()));
 			add = false;
 			break;
@@ -342,7 +342,6 @@ public class SystemCharacteristics {
 	    Marshaller marshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
 	    out = new FileOutputStream(f);
-	    marshaller.setProperty("jaxb.formatted.output", new Boolean(true));
 	    marshaller.marshal(getOvalSystemCharacteristics(), out);
 	} catch (JAXBException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);

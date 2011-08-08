@@ -78,13 +78,18 @@ public abstract class BaseRegistry implements IRegistry {
      * Searches for the specified path under the specified hive.
      */
     public List<IKey> search(String hive, String path) throws NoSuchElementException {
-	return searchInternal(getHive(hive), cleanRegex(path));
+	return searchInternal(getHive(hive), cleanRegex(path), get64BitRedirect());
+    }
+
+    public List<IKey> search(String hive, String path, boolean win32) throws NoSuchElementException {
+	return searchInternal(getHive(hive), cleanRegex(path), win32);
     }
 
     // Protected
 
     //
-    // TBD: This section needs to be re-vamped to properly redirect all the various 64-bit registry mappings.
+    // DAS: This section needs to be re-vamped to properly redirect all the various 64-bit registry mappings.  Currently
+    //      it only redirects HKEY_LOCAL_MACHINE\SOFTWARE to HKEY_LOCAL_MACHINE\Wow6432Node\SOFTWARE
     // See http://msdn.microsoft.com/en-us/library/aa384253(v=vs.85).aspx
     //
 
@@ -99,7 +104,7 @@ public abstract class BaseRegistry implements IRegistry {
      * Returns the non-redirected form of the path.
      */
     protected String getOriginal(String path) {
-	if (get64BitRedirect() && path.startsWith(REDIR_SOFTWARE_STR)) {
+	if (is64Bit() && path.startsWith(REDIR_SOFTWARE_STR)) {
 	    return FULL_SOFTWARE_STR + path.substring(REDIR_SOFTWARE_LEN);
 	}
 	return path;
@@ -110,7 +115,7 @@ public abstract class BaseRegistry implements IRegistry {
      * like the kind returned by Key.toString().  The method returns null if no redirected path is available.
      */
     protected String getRedirect(String path) {
-	if (get64BitRedirect() && path.startsWith(FULL_SOFTWARE_STR)) {
+	if (is64Bit() && path.startsWith(FULL_SOFTWARE_STR)) {
 	    StringTokenizer tok = new StringTokenizer(path.substring(FULL_SOFTWARE_LEN), DELIM_STR);
 	    if (tok.hasMoreTokens()) {
 		String next = tok.nextToken();
@@ -126,16 +131,16 @@ public abstract class BaseRegistry implements IRegistry {
 	return null;
     }
 
-    // Private
-
     /**
      * Are we redirecting?
      */
-    private boolean get64BitRedirect() {
+    protected boolean get64BitRedirect() {
 	return ia64 && redirect64;
     }
 
-    private List<IKey> searchInternal(IKey key, String path) throws NoSuchElementException {
+    // Private
+
+    private List<IKey> searchInternal(IKey key, String path, boolean win32) throws NoSuchElementException {
 	String cacheKey = "search: " + key.toString() + DELIM_STR + path;
 	List<IKey> list = searchMap.get(cacheKey);
 	if (list != null) {
@@ -143,10 +148,12 @@ public abstract class BaseRegistry implements IRegistry {
 	}
 	list = new Vector<IKey>();
 
-	String alt = getRedirect(key.toString());
-	if (alt != null) {
-	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", key.toString(), alt));
-	    key = fetchKey(alt);
+	if (win32) {
+	    String alt = getRedirect(key.toString());
+	    if (alt != null) {
+		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", key.toString(), alt));
+		key = fetchKey(alt, win32);
+	    }
 	}
 	String next = null;
 	int ptr = path.indexOf("\\\\");
@@ -169,7 +176,7 @@ public abstract class BaseRegistry implements IRegistry {
 			list.add(fetchSubkey(key, children[i]));
 		    } else {
 			try {
-			    Iterator<IKey> iter = searchInternal(fetchSubkey(key, children[i]), path).iterator();
+			    Iterator<IKey> iter = searchInternal(fetchSubkey(key, children[i], win32), path, win32).iterator();
 			    while (iter.hasNext()) {
 				list.add(iter.next());
 			    }

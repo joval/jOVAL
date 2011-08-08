@@ -61,6 +61,7 @@ public class Registry extends BaseRegistry {
 		}
 		loadingEnv = true;
 		env = new Environment(this);
+		ia64 = env.getenv(IEnvironment.WINARCH).indexOf("64") != -1;
 		loadingEnv = false;
 		return true;
 	    } catch (UnsatisfiedLinkError e) {
@@ -115,12 +116,20 @@ public class Registry extends BaseRegistry {
 	}
     }
 
+    public IKey fetchKey(String fullPath, boolean win32) throws IllegalArgumentException, NoSuchElementException {
+	return fetchKey(fullPath);
+    }
+
     /**
      * Retrieve a Key, first by attempting to retrieve the key from the local cache, then from the deepest (nearest)
      * ancestor key available from the cache.
      */
     public IKey fetchKey(String hive, String path) throws NoSuchElementException {
-	return fetchSubkey(getHive(hive), path);
+	return fetchSubkey(getHive(hive), path, get64BitRedirect());
+    }
+
+    public IKey fetchKey(String hive, String path, boolean win32) throws NoSuchElementException {
+	return fetchSubkey(getHive(hive), path, win32);
     }
 
     /**
@@ -131,30 +140,30 @@ public class Registry extends BaseRegistry {
      * @throws NoSuchElementException if there is no subkey with the specified name.
      */
     public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException {
+	return fetchSubkey(parent, name, get64BitRedirect());
+    }
+
+    public IKey fetchSubkey(IKey parent, String name, boolean win32) throws NoSuchElementException {
 	IKey key = null;
-	try {
-	    key = ((Key)parent).getSubkey(name);
-	} catch (NoSuchElementException e) {
+	if (win32) {
 	    String alt = getRedirect(parent.toString() + DELIM_STR + name);
-	    if (alt == null) {
-		JOVALSystem.getLogger().log(Level.FINER, e.getMessage());
-		throw e;
-	    } else {
-		key = fetchKey(alt);
+	    if (alt != null) {
+		return fetchKey(alt);
 	    }
 	}
-	return key;
+	return ((Key)parent).getSubkey(name);
     }
 
     /**
      * Return the value of the Value with a name matching the given Pattern.
      */
-    public IValue fetchValue(IKey key, Pattern p) throws NoSuchElementException {
+    public IValue[] fetchValues(IKey key, Pattern p) throws NoSuchElementException {
 	String[] sa = key.listValues(p);
-	if (sa.length > 0) {
-	    return fetchValue(key, sa[0]);
+	IValue[] values = new IValue[sa.length];
+	for (int i=0; i < sa.length; i++) {
+	    values[i] = fetchValue(key, sa[i]);
 	}
-	return null;
+	return values;
     }
 
     /**
@@ -163,17 +172,7 @@ public class Registry extends BaseRegistry {
      * @returns null if no such value exists.
      */
     public IValue fetchValue(IKey key, String name) throws NoSuchElementException {
-	try {
-	    return key.getValue(name);
-	} catch (NoSuchElementException e) {
-	    String alt = getRedirect(key.toString());
-	    if (alt == null) {
-		JOVALSystem.getLogger().log(Level.FINER, e.getMessage());
-		throw e;
-	    } else {
-		return fetchValue(fetchKey(alt), name);
-	    }
-	}
+	return key.getValue(name);
     }
 
     // Internal

@@ -37,10 +37,10 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
-import org.joval.util.TypeTools;
 
 /**
  * Evaluates Textfilecontent54Test OVAL tests.
@@ -72,28 +72,27 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	return TextfilecontentItem.class;
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
 	Textfilecontent54State state = (Textfilecontent54State)st;
 	TextfilecontentItem item = (TextfilecontentItem)it;
 
 	if (state.isSetInstance()) {
-	    String instance = (String)state.getInstance().getValue();
-	    if (!instance.equals((String)item.getInstance().getValue())) {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ctx.test(state.getInstance(), item.getInstance());
 	}
 	if (state.isSetText()) {
-	    if (TypeTools.compare(state.getText(), item.getText())) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	    return ctx.test(state.getText(), item.getText());
 	}
 	if (state.isSetSubexpression()) {
 	    List<EntityItemAnySimpleType> subexpressions = item.getSubexpression();
 	    for (EntityItemAnySimpleType itemSubexpression : subexpressions) {
-		if (TypeTools.compare(state.getSubexpression(), itemSubexpression)) {
-		    return ResultEnumeration.TRUE;
+		ResultEnumeration result = ctx.test(state.getSubexpression(), itemSubexpression);
+		switch (result) {
+		  case FALSE:
+		    // Check all the rest...
+		    break;
+
+		  default:
+		    return result;
 		}
 	    }
 	    return ResultEnumeration.FALSE;

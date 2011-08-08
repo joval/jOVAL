@@ -131,7 +131,6 @@ class Results implements IResults {
 	    Marshaller marshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.RES);
 	    out = new FileOutputStream(f);
-	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, new Boolean(true));
 	    marshaller.marshal(getOvalResults(), out);
 	} catch (JAXBException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
@@ -173,6 +172,7 @@ class Results implements IResults {
     // Internal
 
     void storeTestResult(TestType test) {
+	JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_TEST", test.getTestId()));
 	testTable.put(test.getTestId(), test);
     }
 

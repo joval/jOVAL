@@ -25,11 +25,6 @@ public interface IKey {
     public boolean closeAll();
 
     /**
-     * Get this key's parent key.
-     */
-    public IKey getParent();
-
-    /**
      * Get this key's name (the last element of its path).
      */
     public String getName();
@@ -48,11 +43,6 @@ public interface IKey {
      * Get the path for this key underneath its hive.
      */
     public String getPath();
-
-    /**
-     * Iterate over this key's subkeys.
-     */
-    public Iterator <IKey> subkeys() throws IllegalStateException;
 
     /**
      * Iterate over this key's values.

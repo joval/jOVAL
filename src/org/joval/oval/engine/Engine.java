@@ -92,6 +92,7 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
 
@@ -536,20 +537,22 @@ public class Engine implements IProducer {
 		StatusEnumeration status = item.getStatus();
 		switch(status) {
 		  case EXISTS:
-		    if (state == null) {
-			//
-			// DAS: The spec is ambiguous on what this situation means for the check result,
-			//      but it seems to really have imply a true result.
-			//
-			check.addResult(ResultEnumeration.TRUE);
-		    } else {
+		    if (state != null) {
 			ResultEnumeration checkResult = ResultEnumeration.UNKNOWN;
 
 			switch(sc.getObject(objectId).getFlag()) {
 			  case COMPLETE:
 			  case INCOMPLETE:
 			  case DOES_NOT_EXIST:
-			    checkResult = adapter.compare(state, item);
+			    try {
+				checkResult = adapter.compare(state, item);
+			    } catch (TestException e) {
+				MessageType message = new MessageType();
+				message.setLevel(MessageLevelEnumeration.ERROR);
+				message.setValue(e.getMessage());
+				testedItem.getMessage().add(message);
+				checkResult = ResultEnumeration.ERROR;
+			    }
 			    break;
 
 			  case ERROR:
@@ -582,14 +585,18 @@ public class Engine implements IProducer {
 	}
 
 	ResultEnumeration existenceResult = existence.getResult(testDefinition.getCheckExistence());
-	switch(existenceResult) {
-	  case TRUE:
-	    testResult.setResult(check.getResult(testDefinition.getCheck()));
-	    break;
-
-	  default:
+	if (state == null) {
 	    testResult.setResult(existenceResult);
-	    break;
+	} else {
+	    switch(existenceResult) {
+	      case TRUE:
+		testResult.setResult(check.getResult(testDefinition.getCheck()));
+		break;
+
+	      default:
+		testResult.setResult(existenceResult);
+		break;
+	    }
 	}
     }
 

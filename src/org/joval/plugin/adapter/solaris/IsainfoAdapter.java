@@ -40,8 +40,8 @@ import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
-import org.joval.util.TypeTools;
 
 /**
  * Evaluates IsainfoTest OVAL tests.
@@ -100,21 +100,16 @@ public class IsainfoAdapter implements IAdapter {
 	return items;
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
-	if (compare((IsainfoState)st, (IsainfoItem)it)) {
-	    return ResultEnumeration.TRUE;
-	} else {
-	    return ResultEnumeration.FALSE;
-	}
-    }
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
+	IsainfoState state = (IsainfoState)st;
+	IsainfoItem item = (IsainfoItem)it;
 
-    private boolean compare(IsainfoState state, IsainfoItem item) throws OvalException {
 	if (state.isSetApplicationIsa()) {
-	    return TypeTools.compare(state.getApplicationIsa(), item.getApplicationIsa());
+	    return ctx.test(state.getApplicationIsa(), item.getApplicationIsa());
 	} else if (state.isSetKernelIsa()) {
-	    return TypeTools.compare(state.getKernelIsa(), item.getKernelIsa());
+	    return ctx.test(state.getKernelIsa(), item.getKernelIsa());
 	} else if (state.isSetBits()) {
-	    return TypeTools.compare(state.getBits(), item.getBits());
+	    return ctx.test(state.getBits(), item.getBits());
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
 	}

@@ -64,10 +64,9 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
     public List<String> search(String parent, String path) throws IOException {
 	if (path == null || path.length() < 1) {
 	    throw new IOException(JOVALSystem.getMessage("ERROR_FS_NULLPATH"));
-	} else if (path.startsWith("^")) {
+	} else if (parent == null && path.startsWith("^")) {
 	    path = path.substring(1);
 	}
-	path = getRedirect(path);
 
 	//
 	// Advance to the starting position!
@@ -77,7 +76,7 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 	if (parent == null) {
 	    String root = getToken(path);
 	    node = cache.get(root);
-	    if (node == null) {
+	    if (node == null) { // first-ever call
 	        node = TreeNode.makeRoot(root, getDelimString());
 	        cache.put(root, node);
 	        file = getFile(root + getDelimString());
@@ -132,7 +131,11 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 	Pattern p = Pattern.compile(patternStr);
 	for (int i=0; i < children.length; i++) {
 	    Matcher m = p.matcher(children[i]);
-	    if (m.find()) {
+	    //
+	    // Does a match for a path token, but a find for the filename (last token).
+	    // DAS: this is not exactly correct.. look for a .* in the token?
+	    //
+	    if ((path == null && m.find()) || m.matches()) {
 		TreeNode child = node.getChild(children[i]);
 		if (path == null) {
 		    results.add(child.toString());
@@ -141,7 +144,6 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 		}
 	    }
 	}
-
 	return results;
     }
 

@@ -56,6 +56,7 @@ import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
@@ -82,7 +83,8 @@ import org.joval.windows.pe.resource.version.StringStructure;
  */
 public class FileAdapter extends BaseFileAdapter {
     private static final String CIMV2		= "root\\cimv2";
-    private static final String OWNER_WQL	= "ASSOCIATORS OF {Win32_LogicalFileSecuritySetting='$path'} WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
+    private static final String OWNER_WQL	= "ASSOCIATORS OF {Win32_LogicalFileSecuritySetting='$path'} " +
+						  "WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
     private static final String TIME_WQL	= "SELECT * FROM CIM_DataFile WHERE Name='$path'";
 
     private ObjectFactory windowsFactory;
@@ -121,29 +123,129 @@ public class FileAdapter extends BaseFileAdapter {
 	}
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
 	FileState state = (FileState)st;
 	FileItem item = (FileItem)it;
 
-	ResultEnumeration result = ResultEnumeration.UNKNOWN;
 	if (state == null) {
-	    result = ResultEnumeration.TRUE; // existence check
-	} else if (state.isSetFileVersion()) {
-	    if (item.isSetVersion()) {
-		result = match(state.getFileVersion(), item.getVersion());
-	    } else {
-		result = ResultEnumeration.NOT_APPLICABLE;
-	    }
-	} else if (state.isSetProductVersion()) {
-	    if (item.isSetProductVersion()) {
-		result = match(state.getProductVersion(), item.getProductVersion());
-	    } else {
-		result = ResultEnumeration.NOT_APPLICABLE;
-	    }
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_STATE", state.getId()));
+	    return ResultEnumeration.TRUE; // existence check
 	}
-	return result;
+
+	if (state.isSetATime()) {
+	    ResultEnumeration result = ctx.test(state.getATime(), item.getATime());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetCompany()) {
+	    ResultEnumeration result = ctx.test(state.getCompany(), item.getCompany());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetCTime()) {
+	    ResultEnumeration result = ctx.test(state.getCTime(), item.getCTime());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetDevelopmentClass()) {
+	    ResultEnumeration result = ctx.test(state.getDevelopmentClass(), item.getDevelopmentClass());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetFilename()) {
+	    if (item.isSetFilename()) {
+		JAXBElement<EntityItemStringType> itemJE = item.getFilename();
+		ResultEnumeration result = ctx.test(state.getFilename(), itemJE.getValue());
+		if (result != ResultEnumeration.TRUE) {
+		    return result;
+		}
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+	}
+	if (state.isSetFilepath()) {
+	    ResultEnumeration result = ctx.test(state.getFilepath(), item.getFilepath());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetFileVersion()) {
+	    ResultEnumeration result = ctx.test(state.getFileVersion(), item.getVersion());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetInternalName()) {
+	    ResultEnumeration result = ctx.test(state.getInternalName(), item.getInternalName());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetLanguage()) {
+	    ResultEnumeration result = ctx.test(state.getLanguage(), item.getLanguage());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetMsChecksum()) {
+	    ResultEnumeration result = ctx.test(state.getMsChecksum(), item.getMsChecksum());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetMTime()) {
+	    ResultEnumeration result = ctx.test(state.getMTime(), item.getMTime());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetOriginalFilename()) {
+	    ResultEnumeration result = ctx.test(state.getOriginalFilename(), item.getOriginalFilename());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetOwner()) {
+	    ResultEnumeration result = ctx.test(state.getOwner(), item.getOwner());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetPath()) {
+	    ResultEnumeration result = ctx.test(state.getPath(), item.getPath());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetProductName()) {
+	    ResultEnumeration result = ctx.test(state.getProductName(), item.getProductName());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetProductVersion()) {
+	    ResultEnumeration result = ctx.test(state.getProductVersion(), item.getProductVersion());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetSize()) {
+	    ResultEnumeration result = ctx.test(state.getSize(), item.getSize());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetType()) {
+	    ResultEnumeration result = ctx.test(state.getType(), item.getType());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+
+	return ResultEnumeration.TRUE;
     }
 
     // Protected
@@ -265,18 +367,21 @@ public class FileAdapter extends BaseFileAdapter {
 	//
 	// If possible, read the PE header information
 	//
-	if (file.length() > 0) {
-	    readPEHeaders(file, fItem);
-	} else {
-	    ctx.log(Level.INFO, JOVALSystem.getMessage("STATUS_EMPTY_FILE", file.toString()));
-	    EntityItemVersionType versionType = coreFactory.createEntityItemVersionType();
-	    versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-	    versionType.setStatus(StatusEnumeration.ERROR);  //DAS: this is what Ovaldi does
-	    fItem.setVersion(versionType);
-	    MessageType msg = new MessageType();
-	    msg.setLevel(MessageLevelEnumeration.INFO);
-	    msg.setValue(JOVALSystem.getMessage("STATUS_PE_EMPTY"));
-	    fItem.getMessage().add(msg);
+	if (file.isFile()) {
+	    if (file.length() > 0) {
+		readPEHeaders(file, fItem);
+	    } else {
+		ctx.log(Level.INFO, JOVALSystem.getMessage("STATUS_EMPTY_FILE", file.toString()));
+		EntityItemVersionType versionType = coreFactory.createEntityItemVersionType();
+		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+//DAS: this is what Ovaldi does now, but JB says it'll change and do the right thing soon
+		versionType.setStatus(StatusEnumeration.ERROR);
+		fItem.setVersion(versionType);
+		MessageType msg = new MessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue(JOVALSystem.getMessage("STATUS_PE_EMPTY"));
+		fItem.getMessage().add(msg);
+	    }
 	}
     }
 
@@ -413,10 +518,19 @@ public class FileAdapter extends BaseFileAdapter {
 	    fItem.setDevelopmentClass(developmentClassType);
 	} catch (Exception e) {
 	    ctx.log(Level.INFO, JOVALSystem.getMessage("ERROR_PE", file.getLocalName(), e));
-	    MessageType msg = new MessageType();
-	    msg.setLevel(MessageLevelEnumeration.INFO);
-	    msg.setValue(e.getMessage());
-	    fItem.getMessage().add(msg);
+	    boolean reported = false;
+	    for (MessageType msg : fItem.getMessage()) {
+		if (((String)msg.getValue()).equals(e.getMessage())) {
+		    reported = true;
+		    break;
+		}
+	    }
+	    if (!reported) {
+		MessageType msg = new MessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue(e.getMessage());
+		fItem.getMessage().add(msg);
+	    }
 	} finally {
 	    if (ra != null) {
 		try {
@@ -453,70 +567,6 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	}
 	return null;
-    }
-
-    private ResultEnumeration match(EntityStateVersionType stateVer, EntityItemVersionType itemVer) throws OvalException {
-	ResultEnumeration result = ResultEnumeration.UNKNOWN;
-
-	switch(itemVer.getStatus()) {
-	  case NOT_COLLECTED:
-	    result = ResultEnumeration.NOT_EVALUATED;
-	    break;
-
-	  case ERROR:
-	    result = ResultEnumeration.ERROR;
-	    break;
-
-	  case DOES_NOT_EXIST:
-	    result = ResultEnumeration.FALSE;
-	    break;
-
-	  case EXISTS: {
-	    String stateData = (String)stateVer.getValue();
-	    String itemData = (String)itemVer.getValue();
-	    OperationEnumeration op = stateVer.getOperation();
-	    try {
-		//
-		// Use Strings for pattern matching, else use Version objects.
-		//
-		if (op == OperationEnumeration.PATTERN_MATCH) {
-		    Pattern p = Pattern.compile(stateData);
-		    if (p.matcher(itemData).find()) {
-			result = ResultEnumeration.TRUE;
-		    } else {
-			result = ResultEnumeration.FALSE;
-		    }
-		} else if (versionCompare(new Version(itemData), op, new Version(stateData))) {
-		    result = ResultEnumeration.TRUE;
-		} else {
-		    result = ResultEnumeration.FALSE;
-		}
-	    } catch (NumberFormatException e) {
-		result = ResultEnumeration.ERROR;
-	    }
-	    break;
-	  }
-	}
-	return result;
-    }
-
-    private boolean versionCompare(Version lhs, OperationEnumeration op, Version rhs) throws OvalException {
-	switch(op) {
-	  case EQUALS:
-	    return lhs.equals(rhs);
-	  case GREATER_THAN:
-	    return lhs.greaterThan(rhs);
-	  case LESS_THAN:
-	    return rhs.greaterThan(lhs);
-	  case LESS_THAN_OR_EQUAL:
-	    return !lhs.greaterThan(rhs);
-	  case GREATER_THAN_OR_EQUAL:
-	    return !rhs.greaterThan(lhs);
-	  case NOT_EQUAL:
-	    return !lhs.equals(rhs);
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
-	}
     }
 
     static final BigInteger CNANOS_1601to1970	= new BigInteger("116444736000000000");

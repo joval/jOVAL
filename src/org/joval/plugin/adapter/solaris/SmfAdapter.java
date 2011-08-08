@@ -46,8 +46,8 @@ import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
-import org.joval.util.TypeTools;
 
 /**
  * Evaluates the Solaris SMF OVAL tests.
@@ -109,27 +109,22 @@ public class SmfAdapter implements IAdapter {
 	return items;
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
-	if (compare((SmfState)st, (SmfItem)it)) {
-	    return ResultEnumeration.TRUE;
-	} else {
-	    return ResultEnumeration.FALSE;
-	}
-    }
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
+	SmfState state = (SmfState)st;
+	SmfItem item = (SmfItem)it;
 
-    // Internal
-
-    private boolean compare(SmfState state, SmfItem item) throws OvalException {
 	if (state.isSetFmri()) {
-	    return TypeTools.compare(state.getFmri(), item.getFmri());
+	    return ctx.test(state.getFmri(), item.getFmri());
 	} else if (state.isSetServiceName()) {
-	    return TypeTools.compare(state.getServiceName(), item.getServiceName());
+	    return ctx.test(state.getServiceName(), item.getServiceName());
 	} else if (state.isSetServiceState()) {
-	    return TypeTools.compare(state.getServiceState(), item.getServiceState());
+	    return ctx.test(state.getServiceState(), item.getServiceState());
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
 	}
     }
+
+    // Internal
 
     private static final String FMRI		= "fmri";
     private static final String NAME		= "name";

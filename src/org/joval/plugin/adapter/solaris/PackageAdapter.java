@@ -42,8 +42,8 @@ import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
-import org.joval.util.TypeTools;
 
 /**
  * Evaluates the Solaris Package OVAL tests.
@@ -106,115 +106,66 @@ public class PackageAdapter implements IAdapter {
 	return items;
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
-	if (compare((PackageState)st, (PackageItem)it)) {
-	    return ResultEnumeration.TRUE;
-	} else {
-	    return ResultEnumeration.FALSE;
-	}
-    }
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
+	PackageState state = (PackageState)st;
+	PackageItem item = (PackageItem)it;
 
-    // Internal
-
-    private boolean compare(PackageState state, PackageItem item) throws OvalException {
 	switch(state.getOperator()) {
 	  case OR:
 	    if (state.isSetCategory()) {
-		if (item.isSetCategory()) {
-		    return TypeTools.compare(state.getCategory(), item.getCategory());
-		} else {
-		    return false;
-		}
+		return ctx.test(state.getCategory(), item.getCategory());
 	    } else if (state.isSetDescription()) {
-		if (item.isSetDescription()) {
-		    return TypeTools.compare(state.getDescription(), item.getDescription());
-		} else {
-		    return false;
-		}
+		return ctx.test(state.getDescription(), item.getDescription());
 	    } else if (state.isSetName()) {
-		if (item.isSetName()) {
-		    return TypeTools.compare(state.getName(), item.getName());
-		} else {
-		    return false;
-		}
+		return ctx.test(state.getName(), item.getName());
 	    } else if (state.isSetPackageVersion()) {
-		if (item.isSetVersion()) {
-		    return TypeTools.compare(state.getPackageVersion(), item.getVersion());
-		} else {
-		    return false;
-		}
+		return ctx.test(state.getPackageVersion(), item.getVersion());
 	    } else if (state.isSetPkginst()) {
-		if (item.isSetPkginst()) {
-		    return TypeTools.compare(state.getPkginst(), item.getPkginst());
-		} else {
-		    return false;
-		}
+		return ctx.test(state.getPkginst(), item.getPkginst());
 	    } else if (state.isSetVendor()) {
-		if (item.isSetVendor()) {
-		    return TypeTools.compare(state.getVendor(), item.getVendor());
-		} else {
-		    return false;
-		}
+		return ctx.test(state.getVendor(), item.getVendor());
 	    } else {
 		throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
 	    }
 
 	  case AND:
 	    if (state.isSetCategory()) {
-		if (item.isSetCategory()) {
-		   if (!TypeTools.compare(state.getCategory(), item.getCategory())) {
-			return false;
-		    }
-		} else {
-		    return false;
+		ResultEnumeration result = ctx.test(state.getCategory(), item.getCategory());
+		if (result != ResultEnumeration.TRUE) {
+		    return result;
 		}
 	    }
 	    if (state.isSetDescription()) {
-		if (item.isSetDescription()) {
-		    if (!TypeTools.compare(state.getDescription(), item.getDescription())) {
-			return false;
-		    }
-		} else {
-		    return false;
+		ResultEnumeration result = ctx.test(state.getDescription(), item.getDescription());
+		if (result != ResultEnumeration.TRUE) {
+		    return result;
 		}
 	    }
 	    if (state.isSetName()) {
-		if (item.isSetName()) {
-		    if (!TypeTools.compare(state.getName(), item.getName())) {
-			return false;
-		    }
-		} else {
-		    return false;
+		ResultEnumeration result = ctx.test(state.getName(), item.getName());
+		if (result != ResultEnumeration.TRUE) {
+		    return result;
 		}
 	    }
 	    if (state.isSetPackageVersion()) {
-		if (item.isSetVersion()) {
-		    if (!TypeTools.compare(state.getPackageVersion(), item.getVersion())) {
-			return false;
-		    }
-		} else {
-		    return false;
+		ResultEnumeration result = ctx.test(state.getPackageVersion(), item.getVersion());
+		if (result != ResultEnumeration.TRUE) {
+		    return result;
 		}
 	    }
 	    if (state.isSetPkginst()) {
-		if (item.isSetPkginst()) {
-		    if (!TypeTools.compare(state.getPkginst(), item.getPkginst())) {
-			return false;
-		    }
-		} else {
-		    return false;
+		ResultEnumeration result = ctx.test(state.getPkginst(), item.getPkginst());
+		if (result != ResultEnumeration.TRUE) {
+		    return result;
 		}
 	    }
 	    if (state.isSetVendor()) {
-		if (item.isSetVendor()) {
-		    if (!TypeTools.compare(state.getVendor(), item.getVendor())) {
-			return false;
-		    }
-		} else {
-		    return false;
+		ResultEnumeration result = ctx.test(state.getVendor(), item.getVendor());
+		if (result != ResultEnumeration.TRUE) {
+		    return result;
 		}
 	    }
-	    return true;
+	    return ResultEnumeration.TRUE;
 
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATOR", state.getOperator()));

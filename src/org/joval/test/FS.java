@@ -34,9 +34,8 @@ public class FS {
 		path = path.substring(7);
 		List<String> list = fs.search(path);
 		System.out.println("Found " + list.size() + " matches");
-		Iterator<String> iter = list.iterator();
-		while(iter.hasNext()) {
-		    System.out.println("Match: " + iter.next());
+		for (String item : list) {
+		    System.out.println("Match: " + item);
 		}
 	    } else {
 		IFile f = fs.getFile(path);

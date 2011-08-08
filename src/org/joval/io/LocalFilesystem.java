@@ -34,7 +34,7 @@ public class LocalFilesystem extends CachingFilesystem {
 	this.env = env;
 	this.redirector = redirector;
 	if (WINDOWS) {
-	    setCaseInsensitive(true);
+	    setCaseInsensitive(false);//DAS
 	}
     }
 
