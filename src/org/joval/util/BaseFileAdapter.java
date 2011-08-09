@@ -81,12 +81,14 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    try {
 		ReflectedFileObject fObj = new ReflectedFileObject(obj);
 		ReflectedFileItem fItem = new ReflectedFileItem();
-	
+
 		f = fs.getFile(path);
-		boolean isDirectory = f.isDirectory();
-		boolean fileExists = f.exists();
-		boolean dirExists = fileExists;
+		if (!f.exists()) {
+		    throw new NoSuchElementException(path);
+		}
+
 		String dirPath = null;
+		boolean isDirectory = f.isDirectory();
 		if (isDirectory) {
 		    dirPath = path;
 		} else {
@@ -98,9 +100,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    dirPath += fs.getDelimString();
 		}
 */
-		if (!fileExists) {
-		    throw new NoSuchElementException(path);
-		}
 
 		if (fObj.isSetFilepath()) {
 		    if (isDirectory) {
@@ -115,14 +114,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 			pathType.setValue(dirPath);
 			EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
 			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
-			if (!fileExists) {
-			    filepathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-			    filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-			    if (!dirExists) {
-				pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-				fItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-			    }
-			}
 			fItem.setFilepath(filepathType);
 			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
@@ -140,26 +131,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 			pathType.setValue(dirPath);
 			EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
 			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
-			if (fileExists) {
-			    fItem.setFilepath(filepathType);
-			    fItem.setPath(pathType);
-			    fItem.setFilename(filenameType);
-			} else if (dirExists) {
-			    fItem.setPath(pathType);
-			    filenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-			    fItem.setFilename(filenameType);
-			} else {
-			    pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-			    fItem.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-			    fItem.setPath(pathType);
-			}
+			fItem.setFilepath(filepathType);
+			fItem.setPath(pathType);
+			fItem.setFilename(filenameType);
 		    }
 		} else if (fObj.isSetPath()) {
 		    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
 		    pathType.setValue(dirPath);
-		    if (!fileExists) {
-			pathType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		    }
 		    fItem.setPath(pathType);
 		    if (!isDirectory) {
 			EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
@@ -173,11 +151,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    throw new OvalException(JOVALSystem.getMessage("ERROR_TEXTFILECONTENT_SPEC", obj.getId()));
 		}
 
-		if (fileExists) {
-		    items.addAll(getItems(fItem.it, obj, f, vars));
-		} else if (!dirExists) {
-		    throw new NoSuchElementException("No file or parent directory");
-		}
+		items.addAll(getItems(fItem.it, obj, f, vars));
 	    } catch (NoSuchElementException e) {
 		// skip it
 	    } catch (NoSuchMethodException e) {
@@ -189,16 +163,20 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    } catch (InvocationTargetException e) {
 		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
 	    } catch (IOException e) {
-		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
 		MessageType msg = new MessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(e.getMessage());
+		if (f == null) {
+		    msg.setValue(e.getMessage());
+		} else {
+		    msg.setValue(JOVALSystem.getMessage("ERROR_IO", f.getLocalName(), e.getMessage()));
+		}
 		ctx.addObjectMessage(obj.getId(), msg);
 	    } finally {
 		if (f != null) {
 		    try {
 			f.close();
 		    } catch (IOException e) {
+			ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE", e.getMessage()));
 		    }
 		}
 	    }
@@ -354,7 +332,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	} catch (InvocationTargetException e) {
        	    ctx.log(Level.SEVERE, e.getMessage(), e);
 	} catch (IOException e) {
-       	    ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", e.getMessage()), e);
+       	    ctx.log(Level.WARNING, e.getMessage(), e);
 	} catch (NoSuchElementException e) {
        	    ctx.log(Level.FINER, JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), obj.getId()));
 	}
@@ -365,7 +343,7 @@ public abstract class BaseFileAdapter implements IAdapter {
     /**
      * Crawls recursively based on FileBehaviors.
      */
-    private List<String> getPaths(List<String> list, int depth, String recurseDirection) throws IOException {
+    private List<String> getPaths(List<String> list, int depth, String recurseDirection) {
 	if ("none".equals(recurseDirection) || depth == 0) {
 	    return list;
 	} else {
@@ -374,34 +352,51 @@ public abstract class BaseFileAdapter implements IAdapter {
 		if (!path.endsWith(fs.getDelimString())) {
 		    path += fs.getDelimString();
 		}
-		IFile f = fs.getFile(path);
-		if (f.exists() && f.isDirectory()) {
-		    results.add(path);
-		    if ("up".equals(recurseDirection)) {
-			f.close();
-		        int ptr = 0;
-			if (path.endsWith(fs.getDelimString())) {
-			    path = path.substring(0, path.lastIndexOf(fs.getDelimString()));
-			}
-			ptr = path.lastIndexOf(fs.getDelimString());
-			if (ptr != -1) {
-			    Vector<String> v = new Vector<String>();
-			    v.add(path.substring(0, ptr + fs.getDelimString().length()));
-			    results.addAll(getPaths(v, --depth, recurseDirection));
-			}
-		    } else { // recurse down
-			String[] children = f.list();
-			f.close();
-			if (children != null) {
-			    Vector<String> v = new Vector<String>();
-			    for (int i=0; i < children.length; i++) {
-				if (path.endsWith(fs.getDelimString())) {
-				    v.add(path + children[i]);
-				} else {
-				    v.add(path + fs.getDelimString() + children[i]);
-				}
+		IFile f = null;
+		try {
+		    f = fs.getFile(path);
+		    if (f.exists() && f.isDirectory()) {
+			results.add(path);
+			if ("up".equals(recurseDirection)) {
+			    f.close();
+			    int ptr = 0;
+			    if (path.endsWith(fs.getDelimString())) {
+				path = path.substring(0, path.lastIndexOf(fs.getDelimString()));
 			    }
-			    results.addAll(getPaths(v, --depth, recurseDirection));
+			    ptr = path.lastIndexOf(fs.getDelimString());
+			    if (ptr != -1) {
+				Vector<String> v = new Vector<String>();
+				v.add(path.substring(0, ptr + fs.getDelimString().length()));
+				results.addAll(getPaths(v, --depth, recurseDirection));
+			    }
+			} else { // recurse down
+			    String[] children = f.list();
+			    f.close();
+			    if (children != null) {
+				Vector<String> v = new Vector<String>();
+				for (int i=0; i < children.length; i++) {
+				    if (path.endsWith(fs.getDelimString())) {
+					v.add(path + children[i]);
+				    } else {
+					v.add(path + fs.getDelimString() + children[i]);
+				    }
+				}
+				results.addAll(getPaths(v, --depth, recurseDirection));
+			    }
+			}
+		    }
+		} catch (IOException e) {
+		    if (f == null) {
+			ctx.log(Level.WARNING, e.getMessage(), e);
+		    } else {
+			ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", f.getLocalName(), e.getMessage()));
+		    }
+		} finally {
+		    if (f != null) {
+			try {
+			    f.close();
+			} catch (IOException e) {
+			    ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE", e.getMessage()));
 			}
 		    }
 		}
@@ -515,13 +510,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 	ReflectedFileBehaviors(Object obj)
 		throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 	    if (obj != null) {
-	        Method getMaxDepth = obj.getClass().getMethod("getMaxDepth");
-	        maxDepth = (BigInteger)getMaxDepth.invoke(obj);
-	        Method getRecurseDirection = obj.getClass().getMethod("getRecurseDirection");
-	        recurseDirection = (String)getRecurseDirection.invoke(obj);
+		Method getMaxDepth = obj.getClass().getMethod("getMaxDepth");
+		maxDepth = (BigInteger)getMaxDepth.invoke(obj);
+		Method getRecurseDirection = obj.getClass().getMethod("getRecurseDirection");
+		recurseDirection = (String)getRecurseDirection.invoke(obj);
 	    }
 	    if ("none".equals(recurseDirection)) {
-	        maxDepth = BigInteger.ZERO;
+		maxDepth = BigInteger.ZERO;
 	    }
 	}
 

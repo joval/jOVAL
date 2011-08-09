@@ -381,11 +381,12 @@ public class Engine implements IProducer {
 	Iterator<ObjectType> allObjects = definitions.iterateObjects();
 	while(allObjects.hasNext()) {
 	    ObjectType obj = allObjects.next();
-	    if (!sc.containsObject(obj.getId())) {
+	    String objectId = obj.getId();
+	    if (!sc.containsObject(objectId)) {
 		MessageType message = new MessageType();
 		message.setLevel(MessageLevelEnumeration.WARNING);
 		message.setValue(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", obj.getClass().getName()));
-		sc.setObject(obj.getId(), obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
 	    }
 	}
 	producer.sendNotify(this, MESSAGE_OBJECT_PHASE_END, null);

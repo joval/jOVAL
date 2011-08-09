@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Vector;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -96,79 +97,89 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 	    throw new IOException(JOVALSystem.getMessage("ERROR_FS_NULLPATH"));
 	}
 
-	//
-	// Advance to the starting position!
-	//
 	IFile file = null;
-	TreeNode node = null;
-	if (parent == null) {
-	    String root = getToken(path);
-	    node = cache.get(root);
-	    if (node == null) { // first-ever call
-	        node = TreeNode.makeRoot(root, getDelimString());
-	        cache.put(root, node);
-	        file = getFile(root + getDelimString());
-	    }
-	    path = trimToken(path);
-	} else {
-	    String root = getToken(parent);
-	    node = cache.get(root);
-	    if (node == null) {
-	        node = TreeNode.makeRoot(root, getDelimString());
-	        cache.put(root, node);
-	        file = getFile(parent + getDelimString());
-	        while ((parent = trimToken(parent)) != null) {
-	            node = TreeNode.makeNode(node, getToken(parent));
-	        }
+	try {
+	    //
+	    // Advance to the starting position!
+	    //
+	    TreeNode node = null;
+	    if (parent == null) {
+		String root = getToken(path);
+		node = cache.get(root);
+		if (node == null) { // first-ever call
+		    node = TreeNode.makeRoot(root, getDelimString());
+		    cache.put(root, node);
+		    file = getFile(root + getDelimString());
+		}
+		path = trimToken(path);
 	    } else {
-	        try {
-	            while ((parent = trimToken(parent)) != null) {
-	                node = node.getChild(getToken(parent));
-	            }
-	            file = getFile(node.toString() + getDelimString());
-	        } catch (NoSuchElementException e) {
-	            do {
-	                node = TreeNode.makeNode(node, getToken(parent));
-	            } while ((parent = trimToken(parent)) != null);
-	            file = getFile(node.toString() + getDelimString());
-	        }
-	    }
-	}
-	boolean cacheRead = node.isBranch();
-	List<String> results = new Vector<String>();
-	String token = getToken(path);
-	path = trimToken(path);
-	String[] children = null;
-	if (cacheRead) {
-	    children = node.list();
-	} else if (file.isDirectory()) {
-	    children = file.list();
-	    for (int i=0; i < children.length; i++) {
-	        TreeNode.makeNode(node, children[i]);
-	    }
-	} else {
-	    return results; // end of the line
-	}
-
-	String patternStr = null;
-	if (caseInsensitive) {
-	    patternStr = "(?i)" + token;
-	} else {
-	    patternStr = token;
-	}
-	Pattern p = Pattern.compile(patternStr);
-	for (int i=0; i < children.length; i++) {
-	    Matcher m = p.matcher(children[i]);
-	    if (m.find()) {
-		TreeNode child = node.getChild(children[i]);
-		if (path == null) {
-		    results.add(child.toString());
+		String root = getToken(parent);
+		node = cache.get(root);
+		if (node == null) {
+		    node = TreeNode.makeRoot(root, getDelimString());
+		    cache.put(root, node);
+		    file = getFile(parent + getDelimString());
+		    while ((parent = trimToken(parent)) != null) {
+			node = TreeNode.makeNode(node, getToken(parent));
+		    }
 		} else {
-		    results.addAll(search(child.toString(), path));
+		    try {
+			while ((parent = trimToken(parent)) != null) {
+			    node = node.getChild(getToken(parent));
+			}
+			file = getFile(node.toString() + getDelimString());
+		    } catch (NoSuchElementException e) {
+			do {
+			    node = TreeNode.makeNode(node, getToken(parent));
+			} while ((parent = trimToken(parent)) != null);
+			file = getFile(node.toString() + getDelimString());
+		    }
 		}
 	    }
+	    boolean cacheRead = node.isBranch();
+	    List<String> results = new Vector<String>();
+	    String token = getToken(path);
+	    path = trimToken(path);
+	    String[] children = null;
+	    if (cacheRead) {
+		children = node.list();
+	    } else if (file.exists() && file.isDirectory()) {
+		children = file.list();
+		for (int i=0; i < children.length; i++) {
+		    TreeNode.makeNode(node, children[i]);
+		}
+	    } else {
+		return results; // end of the line
+	    }
+    
+	    String patternStr = null;
+	    if (caseInsensitive) {
+		patternStr = "(?i)" + token;
+	    } else {
+		patternStr = token;
+	    }
+	    Pattern p = Pattern.compile(patternStr);
+	    for (int i=0; i < children.length; i++) {
+		Matcher m = p.matcher(children[i]);
+		if (m.find()) {
+		    TreeNode child = node.getChild(children[i]);
+		    if (path == null) {
+			results.add(child.toString());
+		    } else {
+			results.addAll(search(child.toString(), path));
+		    }
+		}
+	    }
+	    return results;
+	} finally {
+	    try {
+		if (file != null) {
+		    file.close();
+		}
+	    } catch (IOException e) {
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE", e.getMessage()));
+	    }
 	}
-	return results;
     }
 
     // Subclasses-only
