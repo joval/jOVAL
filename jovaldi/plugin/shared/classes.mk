@@ -6,7 +6,7 @@ SHARED=\
 	org.joval.intf.system.IEnvironment				\
 	org.joval.intf.system.IProcess					\
 	org.joval.intf.system.ISession					\
-	org.joval.intf.unix.session.IUnixSession			\
+	org.joval.intf.unix.system.IUnixSession				\
 	org.joval.intf.windows.registry.IKey				\
 	org.joval.intf.windows.registry.IRegistry			\
 	org.joval.intf.windows.registry.IBinaryValue			\

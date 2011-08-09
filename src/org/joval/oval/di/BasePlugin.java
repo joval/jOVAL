@@ -140,15 +140,21 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	      case ISession.UNIX: {
 		IUnixSession unix = (IUnixSession)session;
 		info = new UnixSystemInfo(unix).getSystemInfo();
-		adapters.add(new RpminfoAdapter(unix));
-		adapters.add(new IsainfoAdapter(unix));
-		adapters.add(new PackageAdapter(unix));
-		adapters.add(new SmfAdapter(unix));
-		adapters.add(new Patch54Adapter(unix));
-		adapters.add(new PatchAdapter(unix));
 		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(unix, unix.getFilesystem()));
 		adapters.add(new ProcessAdapter(unix));
 		adapters.add(new UnameAdapter(unix));
+		switch(unix.getFlavor()) {
+		  case LINUX:
+		    adapters.add(new RpminfoAdapter(unix));
+		    break;
+		  case SOLARIS:
+		    adapters.add(new IsainfoAdapter(unix));
+		    adapters.add(new PackageAdapter(unix));
+		    adapters.add(new SmfAdapter(unix));
+		    adapters.add(new Patch54Adapter(unix));
+		    adapters.add(new PatchAdapter(unix));
+		    break;
+		}
 		break;
 	      }
 	    }

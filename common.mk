@@ -30,7 +30,7 @@ JAVA=$(JAVA_HOME)/bin/java
 JAVAC=$(JAVA_HOME)/bin/javac
 JAR=$(JAVA_HOME)/bin/jar
 XJC=$(JAVA_HOME)/bin/xjc
-JAVACFLAGS=-Xlint:unchecked -deprecation
+JAVACFLAGS=-Xlint:unchecked -XDignore.symbol.file=true -deprecation
 CLASSLIB=$(JAVA_HOME)/jre/lib/rt.jar
 BUILD=build
 DIST=dist

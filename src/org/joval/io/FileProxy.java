@@ -83,7 +83,12 @@ public class FileProxy implements IFile {
     }
 
     public String[] list() throws IOException {
-	return file.list();
+	String[] children = file.list();
+	if (children == null) {
+	    return new String[0];
+	} else {
+	    return children;
+	}
     }
 
     public int getType() throws IOException {

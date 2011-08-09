@@ -278,7 +278,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    aclType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setHasExtendedAcl(aclType);
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_UNIX_FILE", e.getMessage()), e);
 	    throw new IOException (e);
 	}
     }
@@ -290,12 +290,27 @@ public class FileAdapter extends BaseFileAdapter {
 	private char type;
 
 	Lstat(String path) throws Exception {
-	    IProcess p = session.createProcess("/usr/bin/ls -n " + path);
+	    String command = null;
+	    switch(session.getFlavor()) {
+	      case SOLARIS: {
+		command = "/usr/bin/ls -n " + path;
+		break;
+	      }
+
+	      case LINUX: {
+		command = "/bin/ls -dn " + path;
+		break;
+	      }
+
+	      default:
+		throw new RuntimeException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_UNIX_FLAVOR", session.getFlavor()));
+	    }
+
+	    IProcess p = session.createProcess(command);
 	    p.start();
 	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	    String line = br.readLine();
+	    line = br.readLine();
 	    br.close();
-
 	    type = line.charAt(0);
 	    permissions = line.substring(1, 10);
 	    if (line.charAt(11) == '+') {
