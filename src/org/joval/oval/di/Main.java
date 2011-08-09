@@ -384,13 +384,14 @@ public class Main implements IObserver {
 		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
 	    }
 
-	    state.plugin.connect();
 	    Engine engine = null;
 	    if (state.inputFile == null) {
+		state.plugin.connect(true);
 		engine = new Engine(defs, state.plugin);
 		print(getMessage("MESSAGE_CREATING_SYSTEMCHARACTERISTICS"));
 		engine.setSystemCharacteristicsOutputFile(state.dataFile);
 	    } else {
+		state.plugin.connect(false);
 		print(" ** parsing " + state.inputFile.toString() + " for analysis.");
 		if (!validateSchema(state.inputFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
 		    return ERR;

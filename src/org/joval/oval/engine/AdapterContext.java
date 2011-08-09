@@ -78,7 +78,17 @@ class AdapterContext implements IAdapterContext {
 	SimpleDatatypeEnumeration itemDT =  getDatatype(item.getDatatype());
 	switch (stateDT) {
 	  case VERSION:
-	    if (itemDT == SimpleDatatypeEnumeration.STRING) { // A state is allowed to cast a String to a Version
+	    if (itemDT == SimpleDatatypeEnumeration.STRING) {
+		break;
+	    }
+
+	  case EVR_STRING:
+	    if (itemDT == SimpleDatatypeEnumeration.STRING) {
+		break;
+	    }
+
+	  case STRING:
+	    if (itemDT == SimpleDatatypeEnumeration.VERSION || itemDT == SimpleDatatypeEnumeration.EVR_STRING) {
 		break;
 	    }
 
@@ -174,6 +184,13 @@ class AdapterContext implements IAdapterContext {
 		throw new TestException(e);
 	    }
 
+	  case EVR_STRING:
+	    try {
+		return new Evr((String)item.getValue()).equals(new Evr((String)state.getValue()));
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
 	  case STRING:
 	    return ((String)state.getValue()).equals((String)item.getValue());
 
@@ -200,6 +217,13 @@ class AdapterContext implements IAdapterContext {
 		throw new TestException(e);
 	    }
 
+	  case EVR_STRING:
+	    try {
+		return new Evr((String)item.getValue()).greaterThanOrEquals(new Evr((String)state.getValue()));
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
 							   state.getDatatype(), OperationEnumeration.GREATER_THAN_OR_EQUAL));
@@ -219,6 +243,13 @@ class AdapterContext implements IAdapterContext {
 	  case VERSION:
 	    try {
 		return new Version(item.getValue()).greaterThan(new Version(state.getValue()));
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  case EVR_STRING:
+	    try {
+		return new Evr((String)item.getValue()).greaterThan(new Evr((String)state.getValue()));
 	    } catch (NumberFormatException e) {
 		throw new TestException(e);
 	    }
@@ -281,5 +312,62 @@ class AdapterContext implements IAdapterContext {
 
     IAdapter getAdapter() {
 	return adapter;
+    }
+
+    class Evr {
+	String epoch, version, release;
+
+	Evr(String evr) {
+	    int end = evr.indexOf(":");
+	    epoch = evr.substring(0, end);
+	    int begin = end+1;
+	    end = evr.indexOf("-", begin);
+	    version = evr.substring(begin, end);
+	    release = evr.substring(end+1);
+	}
+
+	boolean greaterThanOrEquals(Evr evr) {
+	    if (equals(evr)) {
+		return true;
+	    } else if (greaterThan(evr)) {
+		return true;
+	    } else {
+		return false;
+	    }
+	}
+
+	boolean greaterThan(Evr evr) {
+	    if (Version.isVersion(epoch) && Version.isVersion(evr.epoch)) {
+		if (new Version(epoch).greaterThan(new Version(evr.epoch))) {
+		    return true;
+		}
+	    } else if (epoch.compareTo(evr.epoch) > 0) {
+		return true;
+	    }
+	    if (Version.isVersion(version) && Version.isVersion(evr.version)) {
+		if (new Version(version).greaterThan(new Version(evr.version))) {
+		    return true;
+		}
+	    } else if (version.compareTo(evr.version) > 0) {
+		return true;
+	    }
+	    if (Version.isVersion(release) && Version.isVersion(evr.release)) {
+		if (new Version(release).greaterThan(new Version(evr.release))) {
+		    return true;
+		}
+	    } else if (release.compareTo(evr.release) > 0) {
+		return true;
+	    }
+	    return false;
+	}
+
+	public boolean equals(Object obj) {
+	    if (obj instanceof Evr) {
+		Evr evr = (Evr)obj;
+		return epoch.equals(evr.epoch) && version.equals(evr.version) && release.equals(evr.release);
+	    } else {
+		return false;
+	    }
+	}
     }
 }

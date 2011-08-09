@@ -37,7 +37,7 @@ public interface IJovaldiPlugin extends IPlugin {
     /**
      * Connect to any underlying resources required by the plugin (or its adapters).
      */
-    public void connect();
+    public void connect(boolean online);
 
     /**
      * Release any underlying resources.

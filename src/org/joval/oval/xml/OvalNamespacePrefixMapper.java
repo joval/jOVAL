@@ -50,6 +50,7 @@ public class OvalNamespacePrefixMapper extends NamespacePrefixMapper {
 	return namespaceMap.keySet().toArray(new String[namespaceMap.size()]);
     }
 
+/*
     public String[] getPreDeclaredNamespaceUris2() {
 	String[] sa = new String[namespaceMap.size() * 2];
 	int index = 0;
@@ -60,6 +61,7 @@ public class OvalNamespacePrefixMapper extends NamespacePrefixMapper {
 	}
 	return sa;
     }
+*/
 
     // Private
 

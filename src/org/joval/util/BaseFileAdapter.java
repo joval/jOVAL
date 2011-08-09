@@ -92,6 +92,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		} else {
 		    dirPath = path.substring(0, path.lastIndexOf(fs.getDelimString()));
 		}
+
 /*DAS -- should the path end with the delimiter string, or not?
 		if (!dirPath.endsWith(fs.getDelimString())) {
 		    dirPath += fs.getDelimString();
@@ -228,7 +229,8 @@ public abstract class BaseFileAdapter implements IAdapter {
     // Internal
 
     /**
-     * Get a list of String paths for this object.  This accommodates both searches and singletons.
+     * Get a list of String paths for this object.  This accommodates searches (from pattern match operations),
+     * singletons (from equals operations) and handles recursive searches specified by FileBehaviors.
      */
     final List<String> getPathList(ObjectType obj, List<VariableValueType> vars) throws OvalException {
 	List<String> list = pathMap.get(obj.getId());
@@ -370,6 +372,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 	return list;
     }
 
+    /**
+     * Crawls recursively based on FileBehaviors.
+     */
     private List<String> getPaths(List<String> list, int depth, String recurseDirection) throws IOException {
 	if ("none".equals(recurseDirection) || depth == 0) {
 	    return list;

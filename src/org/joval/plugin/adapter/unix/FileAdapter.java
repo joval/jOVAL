@@ -61,8 +61,8 @@ public class FileAdapter extends BaseFileAdapter {
     private ISession session;
     protected ObjectFactory unixFactory;
 
-    public FileAdapter(ISession session) {
-	super(session.getFilesystem());
+    public FileAdapter(ISession session, IFilesystem fs) {
+	super(fs);
 	this.session = session;
 	unixFactory = new ObjectFactory();
     }

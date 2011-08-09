@@ -91,19 +91,19 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 
     // Implement IJovaldiPlugin
 
-    public void connect() {
+    public void connect(boolean online) {
 	adapters.add(new FamilyAdapter(this));
 
-	if (session == null) {
+	if (!online) {
 	    //
-	    // If there is no session, then the IPlugin is being invoked to perform analysis on a pre-existing
-	    // System-Characteristics file.  Therefore, all adapters are added, but without resources for data retrieval.
+	    // If not online, then the IPlugin is being invoked to perform analysis on a pre-existing System-Characteristics
+	    // file.  Therefore, all adapters are added, but without resources for data retrieval.
 	    //
 	    adapters.add(new EnvironmentvariableAdapter(null));
 	    adapters.add(new TextfilecontentAdapter(null));
 	    adapters.add(new Textfilecontent54Adapter(null));
 	    adapters.add(new WmiAdapter(null));
-	    adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(null));
+	    adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(null, null));
 	    adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(null, null));
 	    adapters.add(new RegistryAdapter(null));
 	    adapters.add(new RpminfoAdapter(null));
@@ -146,7 +146,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		adapters.add(new SmfAdapter(unix));
 		adapters.add(new Patch54Adapter(unix));
 		adapters.add(new PatchAdapter(unix));
-		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(unix));
+		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(unix, unix.getFilesystem()));
 		adapters.add(new ProcessAdapter(unix));
 		adapters.add(new UnameAdapter(unix));
 		break;

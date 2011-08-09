@@ -6,11 +6,16 @@ package org.joval.plugin.adapter.linux;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.ExistenceEnumeration;
@@ -42,6 +47,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
@@ -56,11 +62,14 @@ public class RpminfoAdapter implements IAdapter {
     private ISession session;
     private ObjectFactory linuxFactory;
     private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
+    private Hashtable<String, RpminfoItem> packageMap;
+    private String[] rpms;
 
     public RpminfoAdapter(ISession session) {
 	this.session = session;
 	linuxFactory = new ObjectFactory();
 	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
+	packageMap = new Hashtable<String, RpminfoItem>();
     }
 
     // Implement IAdapter
@@ -82,101 +91,238 @@ public class RpminfoAdapter implements IAdapter {
     }
 
     public boolean connect() {
-	return session != null;
+	if (session != null) {
+	    try {
+		ArrayList<String> list = new ArrayList<String>();
+		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_RPMINFO_LIST"));
+		IProcess p = session.createProcess("rpm -q -a");
+		p.start();
+		BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		String line = null;
+		while ((line = br.readLine()) != null) {
+		    list.add(line);
+		}
+		br.close();
+		rpms = list.toArray(new String[list.size()]);
+		Arrays.sort(rpms);
+		return true;
+	    } catch (Exception e) {
+		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    }
+	}
+	return false;
     }
 
     public void disconnect() {
+	packageMap = null;
     }
 
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+	RpminfoObject rObj = (RpminfoObject)obj;
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	try {
-	    items.add(linuxFactory.createRpminfoItem(getItem((RpminfoObject)obj)));
-	} catch (Exception e) {
-	    MessageType msg = new MessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    ctx.addObjectMessage(obj.getId(), msg);
-	    ctx.log(Level.WARNING, e.getMessage(), e);
+	switch(rObj.getName().getOperation()) {
+	  case EQUALS:
+	    try {
+		items.add(linuxFactory.createRpminfoItem(getItem((String)rObj.getName().getValue())));
+	    } catch (Exception e) {
+		MessageType msg = new MessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		String s = JOVALSystem.getMessage("ERROR_RPMINFO", (String)rObj.getName().getValue(), e.getMessage());
+		msg.setValue(s);
+		ctx.addObjectMessage(obj.getId(), msg);
+		ctx.log(Level.WARNING, s, e);
+	    }
+	    break;
+
+	  case PATTERN_MATCH:
+	    loadFullPackageMap();
+	    try {
+		Pattern p = Pattern.compile((String)rObj.getName().getValue());
+		for (String packageName : packageMap.keySet()) {
+		    if (p.matcher(packageName).find()) {
+			items.add(linuxFactory.createRpminfoItem(packageMap.get(packageName)));
+		    }
+		}
+	    } catch (PatternSyntaxException e) {
+		MessageType msg = new MessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		ctx.addObjectMessage(obj.getId(), msg);
+		ctx.log(Level.WARNING, e.getMessage(), e);
+	    }
+	    break;
+
+	  case NOT_EQUAL: {
+	    loadFullPackageMap();
+	    String name = (String)rObj.getName().getValue();
+	    for (String packageName : packageMap.keySet()) {
+		if (!packageName.equals(name)) {
+		    items.add(linuxFactory.createRpminfoItem(packageMap.get(packageName)));
+		}
+	    }
+	    break;
+	  }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", rObj.getName().getOperation()));
 	}
+
 	return items;
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
 	RpminfoState state = (RpminfoState)st;
 	RpminfoItem item = (RpminfoItem)it;
 
-	if (state.getEvr() == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_BAD", state.getId()));
-	} else {
-	    String evr = (String)state.getEvr().getValue();
-	    int end = evr.indexOf(":");
-	    String epoch = evr.substring(0, end);
-	    int begin = end+1;
-	    end = evr.indexOf("-", begin);
-	    String version = evr.substring(begin, end);
-	    String release = evr.substring(end+1);
-    
-	    switch(state.getEvr().getOperation()) {
-	      case EQUALS:
-		if (epoch.equals((String)item.getEpoch().getValue()) &&
-		    version.equals((String)item.getVersion().getValue()) &&
-		    release.equals((String)item.getRelease().getValue())) {
-		    return ResultEnumeration.TRUE;
-		} else {
-		    return ResultEnumeration.FALSE;
-		}
-
-	      case LESS_THAN:
-		if (Version.isVersion(epoch) && Version.isVersion((String)item.getEpoch().getValue())) {
-		    Version stateEpoch = new Version(epoch);
-		    Version itemEpoch = new Version((String)item.getEpoch().getValue());
-		    if (itemEpoch.lessThan(stateEpoch)) {
-			return ResultEnumeration.TRUE;
-		    }
-		} else if (((String)item.getEpoch().getValue()).compareTo(epoch) > 0) {
-		    return ResultEnumeration.TRUE;
-		}
-		if (Version.isVersion(version) && Version.isVersion((String)item.getVersion().getValue())) {
-		    Version stateEpoch = new Version(version);
-		    Version itemEpoch = new Version((String)item.getVersion().getValue());
-		    if (itemEpoch.lessThan(stateEpoch)) {
-			return ResultEnumeration.TRUE;
-		    }
-		} else if (((String)item.getVersion().getValue()).compareTo(version) > 0) {
-		    return ResultEnumeration.TRUE;
-		}
-		if (Version.isVersion(release) && Version.isVersion((String)item.getRelease().getValue())) {
-		    Version stateEpoch = new Version(release);
-		    Version itemEpoch = new Version((String)item.getRelease().getValue());
-		    if (itemEpoch.lessThan(stateEpoch)) {
-			return ResultEnumeration.TRUE;
-		    }
-		} else if (((String)item.getRelease().getValue()).compareTo(release) > 0) {
-		    return ResultEnumeration.TRUE;
-		}
-		return ResultEnumeration.FALSE;
-
-	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
-							       state.getEvr().getOperation()));
+	if (state.getArch() != null) {
+	    ResultEnumeration result = ctx.test(state.getArch(), item.getArch());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
 	    }
 	}
+	if (state.getEpoch() != null) {
+	    ResultEnumeration result = ctx.test(state.getEpoch(), item.getEpoch());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.getEvr() != null) {
+	    ResultEnumeration result = ctx.test(state.getEvr(), item.getEvr());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.getName() != null) {
+	    ResultEnumeration result = ctx.test(state.getName(), item.getName());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.getRelease() != null) {
+	    ResultEnumeration result = ctx.test(state.getRelease(), item.getRelease());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.getRpmVersion() != null) {
+	    ResultEnumeration result = ctx.test(state.getRpmVersion(), item.getVersion());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.getSignatureKeyid() != null) {
+	    ResultEnumeration result = ctx.test(state.getSignatureKeyid(), item.getSignatureKeyid());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	return ResultEnumeration.TRUE;
     }
 
     // Private
 
-    private RpminfoItem getItem(RpminfoObject obj) throws Exception {
-	RpminfoItem item = linuxFactory.createRpminfoItem();
+    private boolean loaded = false;
+    private void loadFullPackageMap() {
+	if (loaded) return;
 
-	String packageName = (String)obj.getName().getValue();
-	IProcess p = session.createProcess("rpm -q " + packageName);
+	packageMap = new Hashtable<String, RpminfoItem>();
+	for (int i=0; i < rpms.length; i++) {
+	    try {
+		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_RPMINFO_RPM", rpms[i]));
+		RpminfoItem item = getItem(rpms[i]);
+		packageMap.put((String)item.getName().getValue(), item);
+	    } catch (Exception e) {
+		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_RPMINFO", rpms[i], e.getMessage()), e);
+	    }
+	}
+	loaded = true;
+    }
+
+    private RpminfoItem getItem(String packageName) throws Exception {
+	RpminfoItem item = packageMap.get(packageName);
+	if (item != null) {
+	    return item;
+	}
+
+	item = linuxFactory.createRpminfoItem();
+	String pkgVersion=null, pkgRelease=null;
+	IProcess p = session.createProcess("rpm -q " + packageName + " -i");
 	p.start();
 	BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	String result = br.readLine();
+	boolean isInstalled = false;
+	String line = null;
+	for (int lineNum=1; (line = br.readLine()) != null; lineNum++) {
+	    String param=null, value=null;
+	    switch(lineNum) {
+	      case 1:
+		if (line.indexOf("not installed") == -1) {
+		    isInstalled = true;
+		} else {
+		    break;
+		}
+
+	      default:
+		int ptr = line.indexOf(":");
+		if (ptr != -1) {
+		    param = line.substring(0,ptr).trim();
+		    value = line.substring(ptr+1).trim();
+		}
+		break;
+	    }
+
+	    if ("Description".equals(param)) {
+		StringBuffer sb = new StringBuffer();
+		for(lineNum = 1; (line = br.readLine()) != null; lineNum++) {
+		    switch(lineNum) {
+		      case 1:
+			sb = new StringBuffer(line);
+			break;
+		      default:
+			sb.append(" ").append(line);
+			break;
+		    }
+		}
+		value = sb.toString();
+		break; // last param; break the enclosing for-loop
+	    } else if ("Name".equals(param)) {
+		packageName = value;
+		EntityItemStringType name = coreFactory.createEntityItemStringType();
+		name.setValue(packageName);
+		item.setName(name);
+	    } else if ("Architecture".equals(param)) {
+		EntityItemStringType arch = coreFactory.createEntityItemStringType();
+		arch.setValue(value);
+		item.setArch(arch);
+	    } else if ("Version".equals(param)) {
+		pkgVersion = value;
+		RpminfoItem.Version version = linuxFactory.createRpminfoItemVersion();
+		version.setValue(pkgVersion);
+		item.setVersion(version);
+	    } else if ("Release".equals(param)) {
+		pkgRelease = value;
+		RpminfoItem.Release release = linuxFactory.createRpminfoItemRelease();
+		release.setValue(pkgRelease);
+		item.setRelease(release);
+	    } else if ("Signature".equals(param)) {
+		EntityItemStringType signatureKeyid = coreFactory.createEntityItemStringType();
+		int ptr = value.indexOf("Key ID");
+		if (ptr == -1) {
+		    signatureKeyid.setStatus(StatusEnumeration.ERROR);
+		    MessageType msg = new MessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(JOVALSystem.getMessage("ERROR_RPMINFO_SIGKEY", value));
+		    item.getMessage().add(msg);
+		} else {
+		    signatureKeyid.setValue(value.substring(ptr+7).trim());
+		}
+		item.setSignatureKeyid(signatureKeyid);
+	    }
+	}
 	br.close();
 
-	if (result.indexOf("not installed") == -1) {
+	if (isInstalled) {
+	    item.setStatus(StatusEnumeration.EXISTS);
+
 	    p = session.createProcess("rpm -q --qf '%{EPOCH}\\n' " + packageName);
 	    p.start();
 	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -185,46 +331,22 @@ public class RpminfoAdapter implements IAdapter {
 	    if (pkgEpoch.equals("(none)")) {
 		pkgEpoch = "0";
 	    }
-
-	    int end = result.indexOf("-");
-	    String pkgName = result.substring(0, end);
-	    int begin = end+1;
-	    end = result.indexOf("-", begin+1);
-	    String pkgRelease = result.substring(begin, end);
-	    begin = end+1;
-	    end = result.lastIndexOf(".");
-	    String pkgVersion = result.substring(begin, end);
-	    String pkgArch = result.substring(end+1);
-
-	    item.setStatus(StatusEnumeration.EXISTS);
-	    EntityItemStringType name = coreFactory.createEntityItemStringType();
-	    name.setValue(pkgName);
-	    item.setName(name);
-
 	    RpminfoItem.Epoch epoch = linuxFactory.createRpminfoItemEpoch();
 	    epoch.setValue(pkgEpoch);
 	    item.setEpoch(epoch);
-
-	    EntityItemStringType arch = coreFactory.createEntityItemStringType();
-	    arch.setValue(pkgArch);
-	    item.setArch(arch);
-
-	    RpminfoItem.Version version = linuxFactory.createRpminfoItemVersion();
-	    version.setValue(pkgVersion);
-	    item.setVersion(version);
-
-	    RpminfoItem.Release release = linuxFactory.createRpminfoItemRelease();
-	    release.setValue(pkgRelease);
-	    item.setRelease(release);
 
 	    EntityItemEVRStringType evr = new EntityItemEVRStringType();
 	    evr.setValue(pkgEpoch + ":" + pkgVersion + "-" + pkgRelease);
 	    evr.setDatatype(SimpleDatatypeEnumeration.EVR_STRING.value());
 	    item.setEvr(evr);
 	} else {
+	    EntityItemStringType name = coreFactory.createEntityItemStringType();
+	    name.setValue(packageName);
+	    item.setName(name);
 	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	}
 
+	packageMap.put(packageName, item);
 	return item;
     }
 }

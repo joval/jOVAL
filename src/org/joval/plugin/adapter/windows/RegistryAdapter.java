@@ -211,7 +211,8 @@ public class RegistryAdapter implements IAdapter {
     // Private
 
     /**
-     * Return the list of all registry key paths corresponding to the given RegistryObject.
+     * Return the list of all registry key paths corresponding to the given RegistryObject.  Handles searches (from
+     * pattern match operations), singletons (from equals operations), and searches based on RegistryBehaviors.
      */
     private List<String> getPathList(RegistryObject rObj, String hive, List<VariableValueType> vars) throws OvalException {
 	List<String> list = pathMap.get(rObj.getId());
@@ -281,6 +282,9 @@ public class RegistryAdapter implements IAdapter {
 	return list;
     }
 
+    /**
+     * Recursively searchies for matches based on RegistryBehaviors.
+     */
     private List<String> getPaths(String hive, List<String> list, int depth, String direction) {
 	if ("none".equals(direction) || depth == 0) {
 	    return list;

@@ -74,7 +74,9 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
     }
 
     public void disconnect() {
-	wmi.disconnect();
+	if (wmi != null) {
+	    wmi.disconnect();
+	}
     }
 
     public int getType() {
