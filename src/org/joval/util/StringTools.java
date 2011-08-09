@@ -40,6 +40,13 @@ public class StringTools {
 	return new StringTokenIterator(target, delimiter);
     }
 
+    /**
+     * Gives you an option to keep any zero-length tokens at the ends of the target, if it begins or ends with the delimiter.
+     */
+    public static Iterator <String>tokenize(String target, String delimiter, boolean trim) {
+	return new StringTokenIterator(target, delimiter, trim);
+    }
+
     public static char[] toCharArray(byte[] buff) {
 	char[] ca = new char[buff.length];
 	for (int i=0; i < buff.length; i++) {
@@ -78,15 +85,21 @@ public class StringTools {
 	int pointer;
 
 	StringTokenIterator(String target, String delimiter) {
-	    //
-	    // Trim tokens from the beginning and end.
-	    //
-	    int len = delimiter.length();
-	    if (target.startsWith(delimiter)) {
-		target = target.substring(len);
-	    }
-	    if (target.endsWith(delimiter)) {
-		target = target.substring(0, target.length() - len);
+	    this(target, delimiter, true);
+	}
+
+	StringTokenIterator(String target, String delimiter, boolean trim) {
+	    if (trim) {
+		//
+		// Trim tokens from the beginning and end.
+		//
+		int len = delimiter.length();
+		if (target.startsWith(delimiter)) {
+		    target = target.substring(len);
+		}
+		if (target.endsWith(delimiter)) {
+		    target = target.substring(0, target.length() - len);
+		}
 	    }
 
 	    this.target = target;
@@ -112,7 +125,7 @@ public class StringTools {
 		return tmp;
 	    }
 	    int i = target.indexOf(delimiter, pointer);
-	    if (i > 0) {
+	    if (i > -1) {
 		String tmp = target.substring(pointer, i);
 		pointer = (i + delimiter.length());
 		return tmp;

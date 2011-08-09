@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -43,8 +44,37 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 
     public abstract String getDelimString();
 
+    /**
+     * Search for a path.  This method converts the path string into tokens delimited by the filesystem separator character.
+     * Each token is prepended with a ^ and appended with a $.  The method then iterates down the filesystem searching for
+     * each token, in sequence, using the Matcher.find method.
+     */
     public List<String> search(String path) throws IOException {
-	return search(null, path);
+	if (path.startsWith("^")) {
+	    path = path.substring(1);
+	}
+	if (path.endsWith("$")) {
+	    path = path.substring(0, path.length()-1);
+	}
+	StringBuffer sb = new StringBuffer();
+	Iterator<String> iter = StringTools.tokenize(path, getDelimString(), false);
+	for (int i=0; iter.hasNext(); i++) {
+	    String token = iter.next();
+	    if (token.length() > 0) {
+		boolean bound = i > 0 && !".*".equals(token);
+		if (bound && !token.startsWith("^")) {
+		    sb.append('^');
+		}
+		sb.append(token);
+		if (bound && !token.endsWith("$")) {
+		    sb.append('$');
+		}
+	    }
+	    if (iter.hasNext()) {
+		sb.append(getDelimString());
+	    }
+	}
+	return search(null, sb.toString());
     }
 
     /**
@@ -57,15 +87,13 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
      * but the implemented solution is more general, even though it requires specific patterns to be re-matched in the case of
      * repeat searches.
      *
-     * @arg sf set to null for an absolute path search, or non-null for a relative search.
+     * @arg parent cannot contain any search strings -- this is a fully-resolved portion of the path.
      * @returns a list of matching local paths
      * @throws FileNotFoundException if a match cannot be found.
      */
     public List<String> search(String parent, String path) throws IOException {
 	if (path == null || path.length() < 1) {
 	    throw new IOException(JOVALSystem.getMessage("ERROR_FS_NULLPATH"));
-	} else if (parent == null && path.startsWith("^")) {
-	    path = path.substring(1);
 	}
 
 	//
@@ -131,11 +159,7 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 	Pattern p = Pattern.compile(patternStr);
 	for (int i=0; i < children.length; i++) {
 	    Matcher m = p.matcher(children[i]);
-	    //
-	    // Does a match for a path token, but a find for the filename (last token).
-	    // DAS: this is not exactly correct.. look for a .* in the token?
-	    //
-	    if ((path == null && m.find()) || m.matches()) {
+	    if (m.find()) {
 		TreeNode child = node.getChild(children[i]);
 		if (path == null) {
 		    results.add(child.toString());
