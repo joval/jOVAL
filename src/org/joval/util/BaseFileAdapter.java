@@ -244,56 +244,46 @@ public abstract class BaseFileAdapter implements IAdapter {
 
 	    boolean patternMatch = false;
 	    if (fObj.isSetFilepath()) {
+		List<String> filepaths = new Vector<String>();
 		EntityObjectStringType filepath = fObj.getFilepath();
 		if (filepath.isSetVarRef()) {
-		    List<String> resolved = ctx.resolve(filepath.getVarRef(), vars);
-		    switch(filepath.getOperation()) {
-		      case EQUALS:
-			list.addAll(resolved);
-			break;
-		      case PATTERN_MATCH:
-			patternMatch = true;
-			for (String value : resolved) {
-			    list.addAll(fs.search(value));
-			}
-			break;
-		      default:
-			throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", filepath.getOperation()));
-		    }
+		    filepaths.addAll(ctx.resolve(filepath.getVarRef(), vars));
 		} else {
-		    list.add((String)filepath.getValue());
+		    filepaths.add((String)filepath.getValue());
+		}
+		switch(filepath.getOperation()) {
+		  case EQUALS:
+		    list.addAll(filepaths);
+		    break;
+		  case PATTERN_MATCH:
+		    patternMatch = true;
+		    for (String value : filepaths) {
+			list.addAll(fs.search(value));
+		    }
+		    break;
+		  default:
+		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", filepath.getOperation()));
 		}
 	    } else if (fObj.isSetPath()) {
+		List<String> paths = new Vector<String>();
 		EntityObjectStringType path = fObj.getPath();
 		if (path.isSetVarRef()) {
-		    List<String> resolved = ctx.resolve(path.getVarRef(), vars);
-		    switch(path.getOperation()) {
-		      case EQUALS:
-			list.addAll(resolved);
-			break;
-		      case PATTERN_MATCH:
-			patternMatch = true;
-			for (String value : resolved) {
-			    list.addAll(fs.search(value));
-			}
-			break;
-		      default:
-			throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", path.getOperation()));
-		    }
+		    paths.addAll(ctx.resolve(path.getVarRef(), vars));
 		} else if (path.isSetValue()) {
-		    switch(path.getOperation()) {
-		      case PATTERN_MATCH:
-			patternMatch = true;
-			list.addAll(fs.search((String)path.getValue()));
-			break;
-		      case EQUALS:
-			list.add((String)path.getValue());
-			break;
-		      case NOT_EQUAL://DAS ???
-			break;
-		      default:
-			throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", path.getOperation()));
+		    paths.add((String)path.getValue());
+		}
+		switch(path.getOperation()) {
+		  case EQUALS:
+		    list.addAll(paths);
+		    break;
+		  case PATTERN_MATCH:
+		    patternMatch = true;
+		    for (String value : paths) {
+			list.addAll(fs.search(value));
 		    }
+		    break;
+		  default:
+		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", path.getOperation()));
 		}
 
 		if (fObj.isSetBehaviors()) {
