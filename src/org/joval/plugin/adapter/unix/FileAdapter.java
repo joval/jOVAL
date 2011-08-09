@@ -48,6 +48,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
 
@@ -85,12 +86,143 @@ public class FileAdapter extends BaseFileAdapter {
 	return session != null;
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
-	if (compare((FileState)st, (FileItem)it)) {
-	    return ResultEnumeration.TRUE;
-	} else {
-	    return ResultEnumeration.FALSE;
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
+	FileState state = (FileState)st;
+	FileItem item = (FileItem)it;
+
+	if (state.isSetFilepath()) {
+	    ResultEnumeration result = ctx.test(state.getFilepath(), item.getFilepath());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
 	}
+	if (state.isSetPath()) {
+	    ResultEnumeration result = ctx.test(state.getPath(), item.getPath());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetFilename()) {
+	    ResultEnumeration result = ctx.test(state.getFilename(), item.getFilename().getValue());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetType()) {
+	    ResultEnumeration result = ctx.test(state.getType(), item.getType());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetUread()) {
+	    ResultEnumeration result = ctx.test(state.getUread(), item.getUread());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetUwrite()) {
+	    ResultEnumeration result = ctx.test(state.getUwrite(), item.getUwrite());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetUexec()) {
+	    ResultEnumeration result = ctx.test(state.getUexec(), item.getUexec());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetSuid()) {
+	    ResultEnumeration result = ctx.test(state.getSuid(), item.getSuid());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetUserId()) {
+	    ResultEnumeration result = ctx.test(state.getUserId(), item.getUserId());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetGread()) {
+	    ResultEnumeration result = ctx.test(state.getGread(), item.getGread());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetGwrite()) {
+	    ResultEnumeration result = ctx.test(state.getGwrite(), item.getGwrite());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetGexec()) {
+	    ResultEnumeration result = ctx.test(state.getGexec(), item.getGexec());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetSgid()) {
+	    ResultEnumeration result = ctx.test(state.getSgid(), item.getSgid());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetGroupId()) {
+	    ResultEnumeration result = ctx.test(state.getGroupId(), item.getGroupId());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetOread()) {
+	    ResultEnumeration result = ctx.test(state.getOread(), item.getOread());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetOwrite()) {
+	    ResultEnumeration result = ctx.test(state.getOwrite(), item.getOwrite());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetOexec()) {
+	    ResultEnumeration result = ctx.test(state.getOexec(), item.getOexec());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetSticky()) {
+	    ResultEnumeration result = ctx.test(state.getSticky(), item.getSticky());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetHasExtendedAcl()) {
+	    ResultEnumeration result = ctx.test(state.getHasExtendedAcl(), item.getHasExtendedAcl());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetCTime()) {
+	    ResultEnumeration result = ctx.test(state.getCTime(), item.getCTime());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetATime()) {
+	    ResultEnumeration result = ctx.test(state.getATime(), item.getATime());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetMTime()) {
+	    ResultEnumeration result = ctx.test(state.getMTime(), item.getMTime());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	return ResultEnumeration.TRUE;
     }
 
     // Protected
@@ -115,67 +247,6 @@ public class FileAdapter extends BaseFileAdapter {
     }
 
     // Private
-
-    private boolean compare(FileState state, FileItem item) throws OvalException {
-	if (state.isSetType()) {
-	    return ((String)state.getType().getValue()).equals((String)item.getType().getValue());
-	}
-	if (state.isSetUread()) {
-	    return ((String)state.getUread().getValue()).equals((String)item.getUread().getValue());
-	}
-	if (state.isSetUwrite()) {
-	    return ((String)state.getUwrite().getValue()).equals((String)item.getUwrite().getValue());
-	}
-	if (state.isSetUexec()) {
-	    return ((String)state.getUexec().getValue()).equals((String)item.getUexec().getValue());
-	}
-	if (state.isSetSuid()) {
-	    return ((String)state.getSuid().getValue()).equals((String)item.getSuid().getValue());
-	}
-	if (state.isSetUserId()) {
-	    return ((String)state.getUserId().getValue()).equals((String)item.getUserId().getValue());
-	}
-	if (state.isSetGread()) {
-	    return ((String)state.getGread().getValue()).equals((String)item.getGread().getValue());
-	}
-	if (state.isSetGwrite()) {
-	    return ((String)state.getGwrite().getValue()).equals((String)item.getGwrite().getValue());
-	}
-	if (state.isSetGexec()) {
-	    return ((String)state.getGexec().getValue()).equals((String)item.getGexec().getValue());
-	}
-	if (state.isSetSgid()) {
-	    return ((String)state.getSgid().getValue()).equals((String)item.getSgid().getValue());
-	}
-	if (state.isSetGroupId()) {
-	    return ((String)state.getGroupId().getValue()).equals((String)item.getGroupId().getValue());
-	}
-	if (state.isSetOread()) {
-	    return ((String)state.getOread().getValue()).equals((String)item.getOread().getValue());
-	}
-	if (state.isSetOwrite()) {
-	    return ((String)state.getOwrite().getValue()).equals((String)item.getOwrite().getValue());
-	}
-	if (state.isSetOexec()) {
-	    return ((String)state.getOexec().getValue()).equals((String)item.getOexec().getValue());
-	}
-	if (state.isSetSticky()) {
-	    return ((String)state.getSticky().getValue()).equals((String)item.getSticky().getValue());
-	}
-	if (state.isSetHasExtendedAcl()) {
-	    return ((String)state.getHasExtendedAcl().getValue()).equals((String)item.getHasExtendedAcl().getValue());
-	}
-	if (state.isSetCTime()) {
-	    return ((String)state.getCTime().getValue()).equals((String)item.getCTime().getValue());
-	}
-	if (state.isSetATime()) {
-	    return ((String)state.getATime().getValue()).equals((String)item.getATime().getValue());
-	}
-	if (state.isSetMTime()) {
-	    return ((String)state.getMTime().getValue()).equals((String)item.getMTime().getValue());
-	}
-	throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_STATE", state.getId()));
-    }
 
     /**
      * Decorate the Item with information about the file.
