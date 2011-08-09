@@ -45,7 +45,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;
 import org.joval.oval.OvalException;
 import org.joval.util.BaseFileAdapter;
@@ -58,10 +58,10 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class FileAdapter extends BaseFileAdapter {
-    private ISession session;
+    private IUnixSession session;
     protected ObjectFactory unixFactory;
 
-    public FileAdapter(ISession session, IFilesystem fs) {
+    public FileAdapter(IUnixSession session, IFilesystem fs) {
 	super(fs);
 	this.session = session;
 	unixFactory = new ObjectFactory();
@@ -309,7 +309,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    IProcess p = session.createProcess(command);
 	    p.start();
 	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	    line = br.readLine();
+	    String line = br.readLine();
 	    br.close();
 	    type = line.charAt(0);
 	    permissions = line.substring(1, 10);
