@@ -118,6 +118,19 @@ public class Engine implements IProducer {
     public static final int MESSAGE_DEFINITION_PHASE_END	= 6;
     public static final int MESSAGE_MAX				= 6;
 
+    public enum Result {
+	OK,
+	ERR;
+    }
+
+    private enum State {
+	CONFIGURE,
+	RUNNING,
+	COMPLETE_OK,
+	COMPLETE_ERR;
+    }
+    private State state;
+
     /**
      * Unmarshal an XML file and return the OvalDefinitions root object.
      */
@@ -138,6 +151,7 @@ public class Engine implements IProducer {
     private SystemCharacteristics sc = null;
     private File scOutputFile = null;
     private IPlugin plugin;
+    private OvalException error;
     private Results results;
     private oval.schemas.results.core.ObjectFactory resultsFactory;
     private DefinitionFilter filter;
@@ -161,6 +175,7 @@ public class Engine implements IProducer {
 	variableMap = new Hashtable<String, List<VariableValueType>>();
 	producer = new Producer();
 	filter = new DefinitionFilter();
+	state = State.CONFIGURE;
     }
 
     /**
@@ -194,10 +209,34 @@ public class Engine implements IProducer {
     }
 
     /**
+     * Returns Result.OK or Result.ERR, or throws an exception if the engine hasn't run, or is running.
+     */
+    public Result getResult() throws IllegalThreadStateException {
+	switch(state) {
+	  case COMPLETE_OK:
+	    return Result.OK;
+
+	  case COMPLETE_ERR:
+	    return Result.ERR;
+
+	  case CONFIGURE:
+	  case RUNNING:
+	  default:
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage("ERROR_ENGINE_STATE", state));
+	}
+    }
+
+    /**
      * Return the results.  Only valid after the run() method is called.
      */
-    public IResults getResults() {
+    public IResults getResults() throws IllegalThreadStateException {
+	getResult();
 	return results;
+    }
+
+    public OvalException getError() {
+	getResult();
+	return error;
     }
 
     // Implement IProducer
@@ -216,6 +255,7 @@ public class Engine implements IProducer {
      * Do what one might do with an Engine if one were to do it in its own Thread.
      */
     public void run() {
+	state = State.RUNNING;
 	try {
 	    if (sc == null) {
 		scan();
@@ -247,8 +287,10 @@ public class Engine implements IProducer {
 	    }
 
 	    producer.sendNotify(this, MESSAGE_DEFINITION_PHASE_END, null);
+	    state = State.COMPLETE_OK;
 	} catch (OvalException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    error = e;
+	    state = State.COMPLETE_ERR;
 	}
     }
 
@@ -554,6 +596,8 @@ public class Engine implements IProducer {
 			    try {
 				checkResult = adapter.compare(state, item);
 			    } catch (TestException e) {
+				String s = JOVALSystem.getMessage("ERROR_TESTEXCEPTION", testId, e.getMessage());
+				JOVALSystem.getLogger().log(Level.WARNING, s, e);
 				MessageType message = new MessageType();
 				message.setLevel(MessageLevelEnumeration.ERROR);
 				message.setValue(e.getMessage());
@@ -759,9 +803,8 @@ public class Engine implements IProducer {
 	} else if (object instanceof ConstantVariable) {
 	    ConstantVariable constantVariable = (ConstantVariable)object;
 	    String id = constantVariable.getId();
-	    List<ValueType> values = constantVariable.getValue();
-	    List<String> stringValues = new Vector<String>(values.size());
-	    for (ValueType value : values) {
+	    List<String> stringValues = new Vector<String>();
+	    for (ValueType value : constantVariable.getValue()) {
 		VariableValueType variableValueType = new VariableValueType();
 		variableValueType.setVariableId(id);
 		String s = (String)value.getValue();

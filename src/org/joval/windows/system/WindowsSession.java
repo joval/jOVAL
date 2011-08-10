@@ -60,10 +60,10 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 	    env = registry.getEnvironment();
 	    registry.disconnect();
 	    if (redirect64 && registry.is64Bit()) {
-		JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_WINDOWS_REDIRECT", "true"));
+		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_WINDOWS_REDIRECT", "true"));
 		fs = new LocalFilesystem(env, new WOW3264PathRedirector(env));
 	    } else {
-		JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_WINDOWS_REDIRECT", "false"));
+		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_WINDOWS_REDIRECT", "false"));
 		fs = new LocalFilesystem(env, null);
 	    }
 	    cwd = new File(env.expand("%SystemRoot%"));

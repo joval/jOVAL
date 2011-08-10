@@ -6,6 +6,7 @@ package org.joval.oval.engine;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Vector;
 import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -13,6 +14,8 @@ import java.util.regex.Pattern;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.EntityObjectAnySimpleType;
+import oval.schemas.definitions.core.EntitySimpleBaseType;
 import oval.schemas.definitions.core.EntityStateSimpleBaseType;
 import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
@@ -22,6 +25,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IAdapterContext;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
+import org.joval.oval.util.CheckData;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
@@ -85,6 +89,29 @@ class AdapterContext implements IAdapterContext {
 	    }
 	}
 
+	//
+	// Handle the variable_ref case
+	//
+	if (state.isSetVarRef()) {
+	    CheckData cd = new CheckData();
+	    EntitySimpleBaseType base = new EntityObjectAnySimpleType();
+	    base.setDatatype(state.getDatatype());
+	    base.setOperation(state.getOperation());
+	    base.setMask(state.isMask());
+	    for (String value : resolve(state.getVarRef(), new Vector<VariableValueType>())) {
+		base.setValue(value);
+		cd.addResult(testImpl(base, item));
+	    }
+	    return cd.getResult(state.getVarCheck());
+	} else {
+	    return testImpl(state, item);
+	}
+    }
+
+
+    // Internal
+
+    ResultEnumeration testImpl(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
 	switch (state.getOperation()) {
 	  case CASE_INSENSITIVE_EQUALS:
 	    if (caseInsensitiveEquals(state, item)) {
@@ -107,6 +134,13 @@ class AdapterContext implements IAdapterContext {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
+	    }
+
+	  case CASE_INSENSITIVE_NOT_EQUAL:
+	    if (caseInsensitiveEquals(state, item)) {
+		return ResultEnumeration.FALSE;
+	    } else {
+		return ResultEnumeration.TRUE;
 	    }
 
 	  case NOT_EQUAL:
@@ -149,9 +183,7 @@ class AdapterContext implements IAdapterContext {
 	}
     }
 
-    // Internal
-
-    boolean equals(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item)
+    boolean equals(EntitySimpleBaseType state, EntityItemSimpleBaseType item)
 		throws TestException, OvalException {
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
@@ -178,6 +210,7 @@ class AdapterContext implements IAdapterContext {
 		throw new TestException(e);
 	    }
 
+	  case BINARY:
 	  case STRING:
 	    return ((String)state.getValue()).equals((String)item.getValue());
 
@@ -187,7 +220,7 @@ class AdapterContext implements IAdapterContext {
 	}
     }
 
-    boolean greaterThanOrEqual(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item)
+    boolean greaterThanOrEqual(EntitySimpleBaseType state, EntityItemSimpleBaseType item)
 		throws TestException, OvalException {
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
@@ -217,7 +250,7 @@ class AdapterContext implements IAdapterContext {
 	}
     }
 
-    boolean greaterThan(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item)
+    boolean greaterThan(EntitySimpleBaseType state, EntityItemSimpleBaseType item)
 		throws TestException, OvalException {
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
@@ -247,7 +280,7 @@ class AdapterContext implements IAdapterContext {
 	}
     }
 
-    boolean caseInsensitiveEquals(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item)
+    boolean caseInsensitiveEquals(EntitySimpleBaseType state, EntityItemSimpleBaseType item)
 		throws TestException, OvalException {
 	switch(getDatatype(state.getDatatype())) {
 	  case STRING:

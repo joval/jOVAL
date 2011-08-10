@@ -411,6 +411,10 @@ public class Main implements IObserver {
 	    }
 	    engine.addObserver(this, Engine.MESSAGE_MIN, Engine.MESSAGE_MAX);
 	    engine.run();
+	    switch(engine.getResult()) {
+	      case ERR:
+		throw engine.getError();
+	    }
 	    state.plugin.disconnect();
 
 	    IResults results = engine.getResults();
@@ -446,9 +450,16 @@ public class Main implements IObserver {
 	    print(getMessage("MESSAGE_DIVIDER"));
 	    return OK;
 	} catch (OvalException e) {
+	    print("");
+	    print("");
+	    print(getMessage("ERROR_OVAL"));
+	    print("");
 	    e.printStackTrace();
 	    return ERR;
 	} catch (Exception e) {
+	    print("");
+	    print("");
+	    print(getMessage("ERROR_FATAL"));
 	    e.printStackTrace();
 	    return ERR;
 	}

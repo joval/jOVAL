@@ -82,7 +82,7 @@ public class SystemCharacteristics {
     private OvalSystemCharacteristics osc;
     private Hashtable<String, ObjectType> objectTable;
     private Hashtable<BigInteger, JAXBElement<? extends ItemType>> itemTable;
-    private Hashtable<String, VariableValueType> variableTable;
+    private Hashtable<String, List<VariableValueType>> variableTable;
     private IPlugin plugin;
     private ObjectFactory coreFactory;
 
@@ -92,7 +92,7 @@ public class SystemCharacteristics {
     SystemCharacteristics(IPlugin plugin) {
 	objectTable = new Hashtable<String, ObjectType>();
 	itemTable = new Hashtable<BigInteger, JAXBElement<? extends ItemType>>();
-	variableTable = new Hashtable<String, VariableValueType>();
+	variableTable = new Hashtable<String, List<VariableValueType>>();
 	coreFactory = new ObjectFactory();
 	this.plugin = plugin;
     }
@@ -109,7 +109,7 @@ public class SystemCharacteristics {
 	    storeItem(item);
 	}
 
-	variableTable = new Hashtable<String, VariableValueType>();
+	variableTable = new Hashtable<String, List<VariableValueType>>();
 	objectTable = new Hashtable<String, ObjectType>();
 	for (ObjectType objectType : osc.getCollectedObjects().getObject()) {
 	    String id = objectType.getId();
@@ -272,28 +272,52 @@ public class SystemCharacteristics {
     }
 
     void storeVariable(VariableValueType variableValueType) {
-	if (!variableTable.containsKey(variableValueType.getVariableId())) {
-	    variableTable.put(variableValueType.getVariableId(), variableValueType);
+	List<VariableValueType> variableValueTypes = variableTable.get(variableValueType.getVariableId());
+
+	if (variableValueTypes == null) {
+	    variableValueTypes = new Vector<VariableValueType>();
+	    variableTable.put(variableValueType.getVariableId(), variableValueTypes);
 	}
+	for (VariableValueType existingType : variableValueTypes) {
+	    if (((String)existingType.getValue()).equals((String)variableValueType.getValue())) {
+		return; //duplicate
+	    }
+	}
+	variableValueTypes.add(variableValueType);
     }
 
     /**
-     * Add a variable reference to an ObjectType; the object is stored if it does not already exist.
+     * Add a variable reference to an ObjectType.  Both must already exist.
      */
     void relateVariable(String objectId, String variableId) throws NoSuchElementException {
-	VariableValueType variable = variableTable.get(variableId);
-	if (variable == null) {
+	List<VariableValueType> variables = variableTable.get(variableId);
+	if (variables == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_VARIABLE", variableId));
 	}
 	ObjectType objectType = objectTable.get(objectId);
 	if (objectType == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", objectId));
 	}
-	objectType.getVariableValue().add(variable);
-    }
 
-    String getVariableValue(String variableId) {
-	return (String)variableTable.get(variableId).getValue();
+	List<VariableValueType> objectVariableValues = objectType.getVariableValue();
+	List<VariableValueType> filterList = new Vector<VariableValueType>();
+	for (VariableValueType existingVariable : objectVariableValues) {
+	    if (variableId.equals((String)existingVariable.getVariableId())) {
+		filterList.add(existingVariable);
+	    }
+	}
+	for (VariableValueType variableValue : variables) {
+	    boolean add = true;
+	    for (VariableValueType existingVariable : filterList) {
+		if (((String)variableValue.getValue()).equals((String)existingVariable.getValue())) {
+		    add = false;
+		    break;
+		}
+	    }
+	    if (add) {
+		objectVariableValues.add(variableValue);
+	    }
+	}
     }
 
     List<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
