@@ -31,6 +31,7 @@ import org.joval.plugin.adapter.independent.EnvironmentvariableAdapter;
 import org.joval.plugin.adapter.independent.FamilyAdapter;
 import org.joval.plugin.adapter.independent.TextfilecontentAdapter;
 import org.joval.plugin.adapter.independent.Textfilecontent54Adapter;
+import org.joval.plugin.adapter.independent.VariableAdapter;
 import org.joval.plugin.adapter.linux.RpminfoAdapter;
 import org.joval.plugin.adapter.solaris.IsainfoAdapter;
 import org.joval.plugin.adapter.solaris.PackageAdapter;
@@ -93,6 +94,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 
     public void connect(boolean online) {
 	adapters.add(new FamilyAdapter(this));
+	adapters.add(new VariableAdapter());
 
 	if (!online) {
 	    //

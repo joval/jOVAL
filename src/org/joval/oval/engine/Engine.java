@@ -93,6 +93,9 @@ import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
+import org.joval.oval.util.CheckData;
+import org.joval.oval.util.ExistenceData;
+import org.joval.oval.util.OperatorData;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
 
@@ -285,19 +288,19 @@ public class Engine implements IProducer {
     /**
      * Return the value of the Variable with the specified ID, and also add any chained variables to the provided list.
      */
-    List<String> resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException {
+    List<String> resolve(String id, List<VariableValueType> vars) throws NoSuchElementException, OvalException {
 	VariableType var = definitions.getVariable(id);
 	String varId = var.getId();
 	List<VariableValueType> cachedList = variableMap.get(varId);
 	if (cachedList == null) {
 	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_VARIABLE_CREATE", varId));
-	    List<String> result = resolveInternal(var, list);
-	    variableMap.put(varId, list);
+	    List<String> result = resolveInternal(var, vars);
+	    variableMap.put(varId, vars);
 	    return result;
 	} else {
 	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_VARIABLE_RECYCLE", varId));
 	    List<String> result = new Vector<String>();
-	    list.addAll(cachedList);
+	    vars.addAll(cachedList);
 	    for (VariableValueType variableValueType : cachedList) {
 		if (variableValueType.getVariableId().equals(id)) {
 		    result.add((String)variableValueType.getValue());
@@ -323,6 +326,7 @@ public class Engine implements IProducer {
     private void scan() throws OvalException {
 	producer.sendNotify(this, MESSAGE_OBJECT_PHASE_START, null);
 	sc = new SystemCharacteristics(plugin);
+
 
 	//
 	// First, find all the object types that are referenced by variables
@@ -1161,305 +1165,5 @@ public class Engine implements IProducer {
 	    }
 	}
 	return new Vector<ItemType>(results.values());
-    }
-
-    /**
-     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#OperatorEnumeration
-     */
-    class OperatorData {
-	int t, f, e, u, ne, na;
-
-	OperatorData() {
-	    t = 0;
-	    f = 0;
-	    e = 0;
-	    u = 0;
-	    ne = 0;
-	    na = 0;
-	}
-
-	void addResult(ResultEnumeration result) {
-	    switch(result) {
-	      case TRUE:
-		t++;
-		break;
-	      case FALSE:
-		f++;
-		break;
-	      case UNKNOWN:
-		u++;
-		break;
-	      case NOT_APPLICABLE:
-		na++;
-		break;
-	      case NOT_EVALUATED:
-		ne++;
-		break;
-	      case ERROR:
-		e++;
-		break;
-	    }
-	}
-
-	ResultEnumeration getResult(OperatorEnumeration op) throws OvalException {
-	    ResultEnumeration result = ResultEnumeration.UNKNOWN;
-	    switch(op) {
-	      case AND:
-		if        (t > 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (t >= 0	&& f > 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (t >= 0	&& f == 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (t >= 0	&& f == 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.UNKNOWN;
-		} else if (t >= 0	&& f == 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
-		    return ResultEnumeration.NOT_EVALUATED;
-		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
-		    return ResultEnumeration.NOT_APPLICABLE;
-		}
-		break;
-
-	      case ONE:
-		if        (t == 1	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (t > 1	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (t < 2	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (t < 2	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.UNKNOWN;
-		} else if (t < 2	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
-		    return ResultEnumeration.NOT_EVALUATED;
-		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
-		    return ResultEnumeration.NOT_APPLICABLE;
-		}
-		break;
-
-	      case OR:
-		if        (t > 0	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (t == 0	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (t == 0	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.UNKNOWN;
-		} else if (t == 0	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
-		    return ResultEnumeration.NOT_EVALUATED;
-		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na == 0) {
-		    return ResultEnumeration.NOT_APPLICABLE;
-		}
-		break;
-
-	      case XOR:
-		if        (t%2 != 0	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (t%2 == 0	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (t >= 0	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (t >= 0	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.UNKNOWN;
-		} else if (t >= 0	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
-		    return ResultEnumeration.NOT_EVALUATED;
-		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na == 0) {
-		    return ResultEnumeration.NOT_APPLICABLE;
-		}
-		break;
-
-	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
-	    }
-	    return result;
-	}
-    }
-
-    /**
-     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#CheckEnumeration
-     */
-    class CheckData extends OperatorData {
-	CheckData() {
-	    super();
-	}
-
-	ResultEnumeration getResult(CheckEnumeration check) throws OvalException {
-	    ResultEnumeration result = ResultEnumeration.UNKNOWN;
-	    switch(check) {
-	      case ALL:
-		if        (t > 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (t >= 0	&& f > 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (t >= 0	&& f == 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (t >= 0	&& f == 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.UNKNOWN;
-		} else if (t >= 0	&& f == 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
-		    return ResultEnumeration.NOT_EVALUATED;
-		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
-		    return ResultEnumeration.NOT_APPLICABLE;
-		}
-		break;
-
-	      case AT_LEAST_ONE:
-		if        (t >= 1	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (t == 0	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (t == 0	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.UNKNOWN;
-		} else if (t == 0	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
-		    return ResultEnumeration.NOT_EVALUATED;
-		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
-		    return ResultEnumeration.NOT_APPLICABLE;
-		}
-		break;
-
-	      case ONLY_ONE:
-		if        (t == 1	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (t > 1	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (t < 2	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (t < 2	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.UNKNOWN;
-		} else if (t < 2	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
-		    return ResultEnumeration.NOT_EVALUATED;
-		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
-		    return ResultEnumeration.NOT_APPLICABLE;
-		}
-		break;
-
-	      case NONE_SATISFY:
-		if        (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (t > 0	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (t == 0	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (t == 0	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
-		    return ResultEnumeration.UNKNOWN;
-		} else if (t == 0	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
-		    return ResultEnumeration.NOT_EVALUATED;
-		} else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
-		    return ResultEnumeration.NOT_APPLICABLE;
-		}
-		break;
-
-	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_CHECK", check));
-	    }
-	    return result;
-	}
-    }
-
-    /**
-     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#ExistenceEnumeration
-     */
-    class ExistenceData {
-	int ex, de, er, nc;
-
-	ExistenceData() {
-	    ex = 0;
-	    de = 0;
-	    er = 0;
-	    nc = 0;
-	}
-
-	void addStatus(StatusEnumeration status) {
-	    switch(status) {
-	      case DOES_NOT_EXIST:
-		de++;
-		break;
-	      case ERROR:
-		er++;
-		break;
-	      case EXISTS:
-		ex++;
-		break;
-	      case NOT_COLLECTED:
-		nc++;
-		break;
-	    }
-	}
-
-	ResultEnumeration getResult(ExistenceEnumeration existence) throws OvalException {
-	    ResultEnumeration result = ResultEnumeration.UNKNOWN;
-	    switch(existence) {
-	      case ALL_EXIST:
-		if        (ex > 0	&& de == 0	&& er == 0	&& nc == 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (ex == 0	&& de == 0	&& er == 0	&& nc == 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (ex >= 0	&& de > 0	&& er >= 0	&& nc >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (ex >= 0	&& de == 0	&& er > 0	&& nc >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (ex >= 0	&& de == 0	&& er == 0	&& nc > 0) {
-		    return ResultEnumeration.UNKNOWN;
-		}
-		break;
-
-	      case ANY_EXIST:
-		if        (ex >= 0	&& de >= 0	&& er == 0	&& nc >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (ex > 0	&& de >= 0	&& er > 0	&& nc >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (ex == 0	&& de >= 0	&& er > 0	&& nc >= 0) {
-		    return ResultEnumeration.ERROR;
-		}
-		break;
-
-	      case AT_LEAST_ONE_EXISTS:
-		if        (ex > 0	&& de >= 0	&& er >= 0	&& nc >= 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (ex == 0	&& de >= 0	&& er == 0	&& nc == 0) { // Spec says "de > 0"
-		    return ResultEnumeration.FALSE;
-		} else if (ex == 0	&& de >= 0	&& er > 0	&& nc == 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (ex == 0	&& de >= 0	&& er == 0	&& nc > 0) {
-		    return ResultEnumeration.UNKNOWN;
-		}
-		break;
-
-	      case NONE_EXIST:
-		if        (ex == 0	&& de >= 0	&& er == 0	&& nc == 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (ex > 0	&& de >= 0	&& er >= 0	&& nc >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (ex == 0	&& de >= 0	&& er > 0	&& nc >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (ex == 0	&& de >= 0	&& er == 0	&& nc > 0) {
-		    return ResultEnumeration.UNKNOWN;
-		}
-		break;
-
-	      case ONLY_ONE_EXISTS:
-		if        (ex == 1	&& de >= 0	&& er == 0	&& nc == 0) {
-		    return ResultEnumeration.TRUE;
-		} else if (ex > 1	&& de >= 0	&& er >= 0	&& nc >= 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (ex == 0	&& de >= 0	&& er == 0	&& nc == 0) {
-		    return ResultEnumeration.FALSE;
-		} else if (ex < 2	&& de >= 0	&& er > 0	&& nc >= 0) {
-		    return ResultEnumeration.ERROR;
-		} else if (ex < 2	&& de >= 0	&& er == 0	&& nc > 0) {
-		    return ResultEnumeration.UNKNOWN;
-		}
-		break;
-
-	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_EXISTENCE", ex));
-	    }
-	    return result;
-	}
     }
 }

@@ -45,8 +45,8 @@ class AdapterContext implements IAdapterContext {
 	JOVALSystem.getLogger().logp(level, adapter.getClass().getName(), "unknown", message, thrown);
     }
 
-    public List<String> resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException {
-	return engine.resolve(id, list);
+    public List<String> resolve(String id, List<VariableValueType> vars) throws NoSuchElementException, OvalException {
+	return engine.resolve(id, vars);
     }
 
     public void addObjectMessage(String objectId, MessageType message) {
@@ -74,26 +74,13 @@ class AdapterContext implements IAdapterContext {
 	    }
 	}
 
+	//
+	// Check datatype compatibility; anything can be compared with a string.
+	//
 	SimpleDatatypeEnumeration stateDT = getDatatype(state.getDatatype());
 	SimpleDatatypeEnumeration itemDT =  getDatatype(item.getDatatype());
-	switch (stateDT) {
-	  case VERSION:
-	    if (itemDT == SimpleDatatypeEnumeration.STRING) {
-		break;
-	    }
-
-	  case EVR_STRING:
-	    if (itemDT == SimpleDatatypeEnumeration.STRING) {
-		break;
-	    }
-
-	  case STRING:
-	    if (itemDT == SimpleDatatypeEnumeration.VERSION || itemDT == SimpleDatatypeEnumeration.EVR_STRING) {
-		break;
-	    }
-
-	  default:
-	    if (itemDT != stateDT) {
+	if (itemDT != stateDT) {
+	    if (itemDT != SimpleDatatypeEnumeration.STRING && stateDT != SimpleDatatypeEnumeration.STRING) {
 		throw new OvalException(JOVALSystem.getMessage("ERROR_DATATYPE_MISMATCH", stateDT, itemDT));
 	    }
 	}
@@ -175,7 +162,7 @@ class AdapterContext implements IAdapterContext {
 	    }
 
 	  case BOOLEAN:
-	    return Boolean.getBoolean((String)state.getValue()) == Boolean.getBoolean((String)item.getValue());
+	    return getBoolean((String)state.getValue()) == getBoolean((String)item.getValue());
 
 	  case VERSION:
 	    try {
@@ -300,6 +287,22 @@ class AdapterContext implements IAdapterContext {
 	    return SimpleDatatypeEnumeration.VERSION;
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_DATATYPE", s));
+	}
+    }
+
+    boolean getBoolean(String s) {
+	if (s == null) {
+	    return false;
+	} else if (s.equalsIgnoreCase("true")) {
+	    return true;
+	} else if (s.equals("0")) {
+	    return false;
+	} else if (s.equalsIgnoreCase("false")) {
+	    return false;
+	} else if (s.length() == 0) {
+	    return false;
+	} else {
+	    return true;
 	}
     }
 

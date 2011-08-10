@@ -49,7 +49,7 @@ public abstract class BaseFileAdapter implements IAdapter {
     protected IAdapterContext ctx;
     protected IFilesystem fs;
     protected Hashtable<String, List<String>> pathMap;
-    protected oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
+    protected ObjectFactory coreFactory;
 
     protected BaseFileAdapter(IFilesystem fs) {
 	this.fs = fs;

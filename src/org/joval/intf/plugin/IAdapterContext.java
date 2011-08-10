@@ -52,7 +52,7 @@ public interface IAdapterContext {
      * #throws OvalException if the OVAL is somehow invalid, for instance, if a variable ID is referenced but there is no
      *			     variable with that ID defined in the OVAL definitions file.
      */
-    List<String> resolve(String id, List<VariableValueType> list) throws NoSuchElementException, OvalException;
+    List<String> resolve(String id, List<VariableValueType> vars) throws NoSuchElementException, OvalException;
 
     /**
      * Add a message for an ObjectType record.
