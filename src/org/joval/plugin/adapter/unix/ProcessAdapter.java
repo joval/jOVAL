@@ -43,6 +43,7 @@ import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -96,104 +97,30 @@ public class ProcessAdapter implements IAdapter {
     }
 
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+	ProcessObject pObj = (ProcessObject)obj;
 	List<JAXBElement <? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	ProcessItem item = getItem((ProcessObject)obj);
-	if (item != null) {
-	    items.add(unixFactory.createProcessItem(getItem((ProcessObject)obj)));
-	}
+
 	if (error != null) {
 	    MessageType msg = new MessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(error);
 	    ctx.addObjectMessage(obj.getId(), msg);
 	}
-	return items;
-    }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
-	ProcessState state = (ProcessState)st;
-	ProcessItem item = (ProcessItem)it;
-
-        if (state.isSetPid()) {
-            if (compareTypes(state.getPid(), item.getPid())) {
-                return ResultEnumeration.TRUE;
-            } else {
-                return ResultEnumeration.FALSE;
-            }
-        } else if (state.isSetPpid()) {
-            if (compareTypes(state.getPpid(), item.getPpid())) {
-                return ResultEnumeration.TRUE;
-            } else {
-                return ResultEnumeration.FALSE;
-            }
-        } else if (state.isSetCommand()) {
-            if (compareTypes(state.getCommand(), item.getCommand())) {
-                return ResultEnumeration.TRUE;
-            } else {
-                return ResultEnumeration.FALSE;
-            }
-        } else if (state.isSetPriority()) {
-            if (compareTypes(state.getPriority(), item.getPriority())) {
-                return ResultEnumeration.TRUE;
-            } else {
-                return ResultEnumeration.FALSE;
-            }
-        } else if (state.isSetExecTime()) {
-            if (compareTypes(state.getExecTime(), item.getExecTime())) {
-                return ResultEnumeration.TRUE;
-            } else {
-                return ResultEnumeration.FALSE;
-            }
-        } else if (state.isSetRuid()) {
-            if (compareTypes(state.getRuid(), item.getRuid())) {
-                return ResultEnumeration.TRUE;
-            } else {
-                return ResultEnumeration.FALSE;
-            }
-        } else if (state.isSetSchedulingClass()) {
-            if (compareTypes(state.getSchedulingClass(), item.getSchedulingClass())) {
-                return ResultEnumeration.TRUE;
-            } else {
-                return ResultEnumeration.FALSE;
-            }
-        } else if (state.isSetStartTime()) {
-            if (compareTypes(state.getStartTime(), item.getStartTime())) {
-                return ResultEnumeration.TRUE;
-            } else {
-                return ResultEnumeration.FALSE;
-            }
-        } else if (state.isSetTty()) {
-            if (compareTypes(state.getTty(), item.getTty())) {
-                return ResultEnumeration.TRUE;
-            } else {
-                return ResultEnumeration.FALSE;
-            }
-        } else if (state.isSetUserId()) {
-            if (compareTypes(state.getUserId(), item.getUserId())) {
-                return ResultEnumeration.TRUE;
-            } else {
-                return ResultEnumeration.FALSE;
-            }
-        } else {
-            throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
-        }
-    }
-
-    // Internal
-
-    private ProcessItem getItem(ProcessObject pObj) throws OvalException {
-	ProcessItem item = null;
 	switch (pObj.getCommand().getOperation()) {
-	  case EQUALS:
-	    item = processes.get((String)pObj.getCommand().getValue());
+	  case EQUALS: {
+	    ProcessItem item = processes.get((String)pObj.getCommand().getValue());
+	    if (item != null) {
+		items.add(unixFactory.createProcessItem(item));
+	    }
 	    break;
+	  }
 
 	  case CASE_INSENSITIVE_EQUALS: {
 	    String command = (String)pObj.getCommand().getValue();
 	    for (String key : processes.keySet()) {
 		if (key.equalsIgnoreCase(command)) {
-		    item = processes.get(key);
-		    break;
+		    items.add(unixFactory.createProcessItem(processes.get(key)));
 		}
 	    }
 	    break;
@@ -203,8 +130,17 @@ public class ProcessAdapter implements IAdapter {
 	    String command = (String)pObj.getCommand().getValue();
 	    for (String key : processes.keySet()) {
 		if (Pattern.compile(command).matcher(key).find()) {
-		    item = processes.get(key);
-		    break;
+		    items.add(unixFactory.createProcessItem(processes.get(key)));
+		}
+	    }
+	    break;
+	  }
+
+	  case NOT_EQUAL: {
+	    String command = (String)pObj.getCommand().getValue();
+	    for (String key : processes.keySet()) {
+		if (!command.equals(key)) {
+		    items.add(unixFactory.createProcessItem(processes.get(key)));
 		}
 	    }
 	    break;
@@ -213,41 +149,70 @@ public class ProcessAdapter implements IAdapter {
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", pObj.getCommand().getOperation()));
 	}
-	return item;
+
+	return items;
     }
 
-    private boolean compareTypes(EntityStateIntType state, EntityItemIntType item) throws OvalException {
-	int itemVal = Integer.parseInt((String)item.getValue());
-	int stateVal = Integer.parseInt((String)state.getValue());
 
-	switch (state.getOperation()) {
-	  case EQUALS:
-	    return stateVal == itemVal;
-	  case LESS_THAN:
-	    return stateVal < itemVal;
-	  case LESS_THAN_OR_EQUAL:
-	    return stateVal <= itemVal;
-	  case GREATER_THAN:
-	    return stateVal > itemVal;
-	  case GREATER_THAN_OR_EQUAL:
-	    return stateVal >= itemVal;
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getOperation()));
-	}
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
+	ProcessState state = (ProcessState)st;
+	ProcessItem item = (ProcessItem)it;
+
+        if (state.isSetPid()) {
+            ResultEnumeration result = ctx.test(state.getPid(), item.getPid());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+        } else if (state.isSetPpid()) {
+            ResultEnumeration result = ctx.test(state.getPpid(), item.getPpid());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+        } else if (state.isSetCommand()) {
+            ResultEnumeration result = ctx.test(state.getCommand(), item.getCommand());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+        } else if (state.isSetPriority()) {
+            ResultEnumeration result = ctx.test(state.getPriority(), item.getPriority());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+        } else if (state.isSetExecTime()) {
+            ResultEnumeration result = ctx.test(state.getExecTime(), item.getExecTime());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+        } else if (state.isSetRuid()) {
+            ResultEnumeration result = ctx.test(state.getRuid(), item.getRuid());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+        } else if (state.isSetSchedulingClass()) {
+            ResultEnumeration result = ctx.test(state.getSchedulingClass(), item.getSchedulingClass());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+        } else if (state.isSetStartTime()) {
+            ResultEnumeration result = ctx.test(state.getStartTime(), item.getStartTime());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+        } else if (state.isSetTty()) {
+            ResultEnumeration result = ctx.test(state.getTty(), item.getTty());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+        } else if (state.isSetUserId()) {
+            ResultEnumeration result = ctx.test(state.getUserId(), item.getUserId());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+        }
+	return ResultEnumeration.TRUE;
     }
 
-    private boolean compareTypes(EntityStateStringType state, EntityItemStringType item) throws OvalException {
-	switch (state.getOperation()) {
-	  case CASE_INSENSITIVE_EQUALS:
-	    return ((String)item.getValue()).equalsIgnoreCase((String)state.getValue());
-	  case EQUALS:
-	    return ((String)item.getValue()).equals((String)state.getValue());
-	  case PATTERN_MATCH:
-	    return Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find();
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getOperation()));
-	}
-    }
+    // Internal
 
     /**
      * REMIND: Stops if it encounters any exceptions at all; make this more robust?

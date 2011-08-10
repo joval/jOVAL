@@ -96,6 +96,8 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 	if (path == null || path.length() < 1) {
 	    throw new IOException(JOVALSystem.getMessage("ERROR_FS_NULLPATH"));
 	}
+	String parentName = parent == null ? "[root]" : parent;
+	JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_FS_SEARCH", parentName, path));
 
 	IFile file = null;
 	try {

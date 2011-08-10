@@ -349,6 +349,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	} else {
 	    List<String> results = new Vector<String>();
 	    for (String path : list) {
+		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_FS_RECURSE", path));
 		if (!path.endsWith(fs.getDelimString())) {
 		    path += fs.getDelimString();
 		}

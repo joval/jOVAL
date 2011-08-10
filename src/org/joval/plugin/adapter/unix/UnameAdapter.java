@@ -101,20 +101,42 @@ public class UnameAdapter implements IAdapter {
 	UnameItem item = (UnameItem)it;
 
 	if (state.isSetMachineClass()) {
-	    return ctx.test(state.getMachineClass(), item.getMachineClass());
-	} else if (state.isSetNodeName()) {
-	    return ctx.test(state.getNodeName(), item.getNodeName());
-	} else if (state.isSetOsName()) {
-	    return ctx.test(state.getOsName(), item.getOsName());
-	} else if (state.isSetOsRelease()) {
-	    return ctx.test(state.getOsRelease(), item.getOsRelease());
-	} else if (state.isSetOsVersion()) {
-	    return ctx.test(state.getOsVersion(), item.getOsVersion());
-	} else if (state.isSetProcessorType()) {
-	    return ctx.test(state.getProcessorType(), item.getProcessorType());
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
+	    ResultEnumeration result = ctx.test(state.getMachineClass(), item.getMachineClass());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
 	}
+	if (state.isSetNodeName()) {
+	    ResultEnumeration result = ctx.test(state.getNodeName(), item.getNodeName());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetOsName()) {
+	    ResultEnumeration result = ctx.test(state.getOsName(), item.getOsName());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetOsRelease()) {
+	    ResultEnumeration result = ctx.test(state.getOsRelease(), item.getOsRelease());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetOsVersion()) {
+	    ResultEnumeration result = ctx.test(state.getOsVersion(), item.getOsVersion());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetProcessorType()) {
+	    ResultEnumeration result = ctx.test(state.getProcessorType(), item.getProcessorType());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	return ResultEnumeration.TRUE;
     }
 
     // Internal

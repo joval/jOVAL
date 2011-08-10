@@ -327,7 +327,7 @@ public class Engine implements IProducer {
 	//
 	// First, find all the object types that are referenced by variables
 	//
-	Vector<Class> varTypes = new Vector<Class>();
+	List<Class> varTypes = new Vector<Class>();
 	Iterator<VariableType> varIter = definitions.iterateVariables();
 	while(varIter.hasNext()) {
 	    VariableType vt = varIter.next();
@@ -335,23 +335,25 @@ public class Engine implements IProducer {
 	}
 
 	//
-	// Next, pre-fetch all those types
+	// Next, scan all those types (for which there are adapters)
 	//
-	for (Class referencedClass : varTypes) {
-	    for (AdapterContext ctx : adapterContextList) {
-		if (referencedClass.equals(ctx.getAdapter().getObjectClass())) {
-		    scanAdapter(ctx.getAdapter());
-		    break;
-		}
+	for (Class clazz : varTypes) {
+	    IAdapter adapter = getAdapterForObject(clazz);
+	    if (adapter != null) {
+		scanAdapter(adapter);
 	    }
 	}
 
 	//
-	// Then, pre-fetch any remaining types for which there are plug-ins
+	// Then, scan all remaining types for which there are adapters
 	//
-	for (AdapterContext ctx : adapterContextList) {
-	    if (!varTypes.contains(ctx.getAdapter().getObjectClass())) {
-		scanAdapter(ctx.getAdapter());
+	List<Class> allTypes = getObjectClasses(definitions.iterateObjects());
+	for (Class clazz : allTypes) {
+	    if (!varTypes.contains(clazz)) {
+		IAdapter adapter = getAdapterForObject(clazz);
+		if (adapter != null) {
+		    scanAdapter(adapter);
+		}
 	    }
 	}
 
@@ -376,7 +378,7 @@ public class Engine implements IProducer {
 	}
 
 	//
-	// Finally, add any objects for which there are no plug-ins, flagged NOT_COLLECTED
+	// Finally, add all objects for which there are no adapters, and flag them NOT_COLLECTED
 	//
 	Iterator<ObjectType> allObjects = definitions.iterateObjects();
 	while(allObjects.hasNext()) {
@@ -659,6 +661,20 @@ public class Engine implements IProducer {
 	}
 	criteriaResult.setResult(result);
 	return criteriaResult;
+    }
+
+    /**
+     * Get a List of all the distinct ObjectType classes that appear in the Iterator.
+     */
+    private List<Class> getObjectClasses(Iterator<ObjectType> iter) {
+	List<Class> classes = new Vector<Class>();
+	while(iter.hasNext()) {
+	    Class clazz = iter.next().getClass();
+	    if (!classes.contains(clazz)) {
+		classes.add(clazz);
+	    }
+	}
+	return classes;
     }
 
     /**
