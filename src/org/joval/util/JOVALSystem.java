@@ -15,7 +15,8 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 /**
- * This class is used to configure JOVAL-wide behaviors, like the java.util.logging-based logging.
+ * This class is used to configure JOVAL-wide behaviors, like the java.util.logging-based logging.  It also provides
+ * JAXB services for the OVAL schema (i.e., properties and access to ObjectFactories).
  *
  * @author David A. Solin
  * @version %I% %G%

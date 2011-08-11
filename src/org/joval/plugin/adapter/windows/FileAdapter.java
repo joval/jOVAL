@@ -330,7 +330,7 @@ public class FileAdapter extends BaseFileAdapter {
 		    String ownerAccount = new StringBuffer(domain).append("\\").append(username).toString();
 		    ownerType.setValue(ownerAccount);
 		} else {
-		    MessageType msg = new MessageType();
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
 		    msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_OWNER", objSet.getSize()));
 		    fItem.getMessage().add(msg);
@@ -350,7 +350,7 @@ public class FileAdapter extends BaseFileAdapter {
 		    mTimeType.setValue(Timestamp.toWindowsTimestamp(mTimeProp.getValueAsString()));
 		}
 	    } catch (Exception e) {
-		MessageType msg = new MessageType();
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(e.getMessage());
 		fItem.getMessage().add(msg);
@@ -375,7 +375,7 @@ public class FileAdapter extends BaseFileAdapter {
 //DAS: this is what Ovaldi does now, but JB says it'll change and do the right thing soon
 		versionType.setStatus(StatusEnumeration.ERROR);
 		fItem.setVersion(versionType);
-		MessageType msg = new MessageType();
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(JOVALSystem.getMessage("STATUS_PE_EMPTY"));
 		fItem.getMessage().add(msg);
@@ -437,7 +437,7 @@ public class FileAdapter extends BaseFileAdapter {
 			String locale = LanguageConstants.getLocaleString(key);
 			if (locale == null) {
 			    languageType.setStatus(StatusEnumeration.ERROR);
-			    MessageType msg = new MessageType();
+			    MessageType msg = JOVALSystem.factories.common.createMessageType();
 			    msg.setLevel(MessageLevelEnumeration.INFO);
 			    msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_LANGUAGE", key));
 			    fItem.getMessage().add(msg);
@@ -506,7 +506,7 @@ public class FileAdapter extends BaseFileAdapter {
 		try {
 		    developmentClassType.setValue(getDevelopmentClass(fileVersion));
 		} catch (IllegalArgumentException e) {
-		    MessageType msg = new MessageType();
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
 		    msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_DEVCLASS", e.getMessage()));
 		    fItem.getMessage().add(msg);
@@ -524,7 +524,7 @@ public class FileAdapter extends BaseFileAdapter {
 		}
 	    }
 	    if (!reported) {
-		MessageType msg = new MessageType();
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(e.getMessage());
 		fItem.getMessage().add(msg);

@@ -160,7 +160,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    } catch (InvocationTargetException e) {
 		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
 	    } catch (IOException e) {
-		MessageType msg = new MessageType();
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		if (f == null) {
 		    msg.setValue(e.getMessage());
@@ -320,7 +320,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    }
 		}
 	    } else {
-		throw new OvalException("Unknown file ObjectType type for " + obj.getId());
+		throw new OvalException("ERROR_BAD_FILEOBJECT" + obj.getId());
 	    }
 	} catch (NoSuchMethodException e) {
        	    ctx.log(Level.SEVERE, e.getMessage(), e);

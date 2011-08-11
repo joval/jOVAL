@@ -86,7 +86,7 @@ public class IsainfoAdapter implements IAdapter {
 	try {
 	    items.add(getItem());
 	} catch (Exception e) {
-	    MessageType msg = new MessageType();
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    ctx.addObjectMessage(obj.getId(), msg);

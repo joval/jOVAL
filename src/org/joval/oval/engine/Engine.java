@@ -779,7 +779,7 @@ public class Engine implements IProducer {
 	    LocalVariable localVariable = (LocalVariable)object;
 	    List<String> values = resolveInternal(getComponent(localVariable), list);
 	    for (String value : values) {
-		VariableValueType variableValueType = new VariableValueType();
+		VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(localVariable.getId());
 		variableValueType.setValue(value);
 		list.add(variableValueType);
@@ -797,7 +797,7 @@ public class Engine implements IProducer {
 	    } else {
 		List<String> values = externalVariables.getValue(id);
 		for (String value : values) {
-		    VariableValueType variableValueType = new VariableValueType();
+		    VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
 		    variableValueType.setVariableId(id);
 		    variableValueType.setValue(value);
 		    list.add(variableValueType);
@@ -813,7 +813,7 @@ public class Engine implements IProducer {
 	    String id = constantVariable.getId();
 	    List<String> values = new Vector<String>();
 	    for (ValueType value : constantVariable.getValue()) {
-		VariableValueType variableValueType = new VariableValueType();
+		VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(id);
 		String s = (String)value.getValue();
 		variableValueType.setValue(s);

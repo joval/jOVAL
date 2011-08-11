@@ -120,7 +120,7 @@ public class RpminfoAdapter implements IAdapter {
 	    try {
 		items.add(JOVALSystem.factories.sc.linux.createRpminfoItem(getItem((String)rObj.getName().getValue())));
 	    } catch (Exception e) {
-		MessageType msg = new MessageType();
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		String s = JOVALSystem.getMessage("ERROR_RPMINFO", (String)rObj.getName().getValue(), e.getMessage());
 		msg.setValue(s);
@@ -139,7 +139,7 @@ public class RpminfoAdapter implements IAdapter {
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
-		MessageType msg = new MessageType();
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
 		ctx.addObjectMessage(obj.getId(), msg);
@@ -303,7 +303,7 @@ public class RpminfoAdapter implements IAdapter {
 		int ptr = value.indexOf("Key ID");
 		if (ptr == -1) {
 		    signatureKeyid.setStatus(StatusEnumeration.ERROR);
-		    MessageType msg = new MessageType();
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALSystem.getMessage("ERROR_RPMINFO_SIGKEY", value));
 		    item.getMessage().add(msg);

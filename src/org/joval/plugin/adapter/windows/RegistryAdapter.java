@@ -177,7 +177,7 @@ public class RegistryAdapter implements IAdapter {
 		    items.add(JOVALSystem.factories.sc.windows.createRegistryItem(item));
 		}
 	    } catch (NoSuchElementException e) {
-		MessageType msg = new MessageType();
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), id));
 		ctx.addObjectMessage(rObj.getId(), msg);
@@ -194,7 +194,7 @@ public class RegistryAdapter implements IAdapter {
 		    }
 		}
 	    } catch (NoSuchElementException e) {
-		MessageType msg = new MessageType();
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), id));
 		ctx.addObjectMessage(rObj.getId(), msg);
@@ -355,7 +355,7 @@ public class RegistryAdapter implements IAdapter {
 			items.add(getItem(key, valueNames[i]));
 		    }
 		} catch (PatternSyntaxException e) {
-		    MessageType msg = new MessageType();
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
 		    ctx.addObjectMessage(rObj.getId(), msg);

@@ -95,7 +95,7 @@ public class SmfAdapter implements IAdapter {
 		items.add(JOVALSystem.factories.sc.solaris.createSmfItem(item));
 	    }
 	} catch (Exception e) {
-	    MessageType msg = new MessageType();
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    ctx.addObjectMessage(obj.getId(), msg);

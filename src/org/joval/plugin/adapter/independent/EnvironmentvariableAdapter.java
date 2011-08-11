@@ -119,7 +119,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
-		MessageType msg = new MessageType();
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", name, eObj.getId()));
 		ctx.addObjectMessage(obj.getId(), msg);
@@ -132,7 +132,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	}
 
 	if (items.size() == 0) {
-	    MessageType msg = new MessageType();
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.INFO);
 	    msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", name, eObj.getId()));
 	    ctx.addObjectMessage(obj.getId(), msg);

@@ -92,7 +92,7 @@ public class PackageAdapter implements IAdapter {
 		items.add(JOVALSystem.factories.sc.solaris.createPackageItem(item));
 	    }
 	} catch (Exception e) {
-	    MessageType msg = new MessageType();
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    ctx.addObjectMessage(obj.getId(), msg);

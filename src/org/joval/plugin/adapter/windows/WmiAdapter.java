@@ -195,7 +195,7 @@ public class WmiAdapter implements IAdapter {
 	} catch (WmiException e) {
 	    item.setStatus(StatusEnumeration.ERROR);
 	    item.unsetResult();
-	    MessageType msg = new MessageType();
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.INFO);
 	    msg.setValue(e.getMessage());
 	    item.getMessage().add(msg);

@@ -96,7 +96,7 @@ public class ProcessAdapter implements IAdapter {
 	List<JAXBElement <? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	if (error != null) {
-	    MessageType msg = new MessageType();
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(error);
 	    ctx.addObjectMessage(obj.getId(), msg);

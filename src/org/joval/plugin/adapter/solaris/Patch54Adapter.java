@@ -99,7 +99,7 @@ public class Patch54Adapter implements IAdapter {
 	    items.add(JOVALSystem.factories.sc.solaris.createPatchItem((PatchItem)item));
 	}
 	if (error != null) {
-	    MessageType msg = new MessageType();
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(error);
 	    ctx.addObjectMessage(obj.getId(), msg);
