@@ -34,7 +34,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.solaris.PackageItem;
-import oval.schemas.systemcharacteristics.solaris.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
@@ -54,13 +53,9 @@ import org.joval.util.JOVALSystem;
 public class PackageAdapter implements IAdapter {
     private IAdapterContext ctx;
     private ISession session;
-    private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
-    private ObjectFactory solarisFactory;
 
     public PackageAdapter(ISession session) {
 	this.session = session;
-	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
-	solarisFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -94,7 +89,7 @@ public class PackageAdapter implements IAdapter {
 	try {
 	    PackageItem item = getItem((PackageObject)obj);
 	    if (item != null) {
-		items.add(solarisFactory.createPackageItem(item));
+		items.add(JOVALSystem.factories.sc.solaris.createPackageItem(item));
 	    }
 	} catch (Exception e) {
 	    MessageType msg = new MessageType();
@@ -188,7 +183,7 @@ public class PackageAdapter implements IAdapter {
     private static final String ERROR		= "ERROR:";
 
     private PackageItem getItem(PackageObject obj) throws Exception {
-	PackageItem item = solarisFactory.createPackageItem();
+	PackageItem item = JOVALSystem.factories.sc.solaris.createPackageItem();
 
 	String pkginst = (String)obj.getPkginst().getValue();
 	IProcess p = session.createProcess("/usr/bin/pkginfo -l " + pkginst);
@@ -202,27 +197,27 @@ public class PackageAdapter implements IAdapter {
 		line = line.trim();
 		if (line.startsWith(PKGINST)) {
 		    found = true;
-		    EntityItemStringType type = coreFactory.createEntityItemStringType();
+		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    type.setValue(line.substring(PKGINST.length()).trim());
 		    item.setPkginst(type);
 		} else if (line.startsWith(NAME)) {
-		    EntityItemStringType type = coreFactory.createEntityItemStringType();
+		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    type.setValue(line.substring(NAME.length()).trim());
 		    item.setName(type);
 		} else if (line.startsWith(DESC)) {
-		    EntityItemStringType type = coreFactory.createEntityItemStringType();
+		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    type.setValue(line.substring(DESC.length()).trim());
 		    item.setDescription(type);
 		} else if (line.startsWith(CATEGORY)) {
-		    EntityItemStringType type = coreFactory.createEntityItemStringType();
+		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    type.setValue(line.substring(CATEGORY.length()).trim());
 		    item.setCategory(type);
 		} else if (line.startsWith(VENDOR)) {
-		    EntityItemStringType type = coreFactory.createEntityItemStringType();
+		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    type.setValue(line.substring(VENDOR.length()).trim());
 		    item.setVendor(type);
 		} else if (line.startsWith(VERSION)) {
-		    EntityItemStringType type = coreFactory.createEntityItemStringType();
+		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    type.setValue(line.substring(VERSION.length()).trim());
 		    item.setVersion(type);
 		}

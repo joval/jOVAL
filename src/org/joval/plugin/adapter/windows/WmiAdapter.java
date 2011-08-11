@@ -65,13 +65,8 @@ public class WmiAdapter implements IAdapter {
     private IAdapterContext ctx;
     private IWmiProvider wmi;
 
-    private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
-    private oval.schemas.systemcharacteristics.windows.ObjectFactory windowsFactory;
-
     public WmiAdapter(IWmiProvider wmi) {
 	this.wmi = wmi;
-	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
-	windowsFactory = new oval.schemas.systemcharacteristics.windows.ObjectFactory();
     }
 
     // Implement IAdapter
@@ -107,7 +102,7 @@ public class WmiAdapter implements IAdapter {
 
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
-	items.add(windowsFactory.createWmiItem(getItem((WmiObject)obj)));
+	items.add(JOVALSystem.factories.sc.windows.createWmiItem(getItem((WmiObject)obj)));
 	return items;
     }
 
@@ -165,20 +160,20 @@ public class WmiAdapter implements IAdapter {
 
     private WmiItem getItem(WmiObject wObj) {
 	String id = wObj.getId();
-	WmiItem item = windowsFactory.createWmiItem();
+	WmiItem item = JOVALSystem.factories.sc.windows.createWmiItem();
 	String ns = wObj.getNamespace().getValue().toString();
-	EntityItemStringType namespaceType = coreFactory.createEntityItemStringType();
+	EntityItemStringType namespaceType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	namespaceType.setValue(ns);
 	item.setNamespace(namespaceType);
 	String wql = wObj.getWql().getValue().toString();
-	EntityItemStringType wqlType = coreFactory.createEntityItemStringType();
+	EntityItemStringType wqlType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	wqlType.setValue(wql);
 	item.setWql(wqlType);
 	try {
 	    ISWbemObjectSet objSet = wmi.execQuery(ns, wql);
 	    int size = objSet.getSize();
 	    if (size == 0) {
-		EntityItemAnySimpleType resultType = coreFactory.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType resultType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 		resultType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		item.getResult().add(resultType);
 	    } else {
@@ -186,7 +181,7 @@ public class WmiAdapter implements IAdapter {
 		for (ISWbemObject swbObj : objSet) {
 		    for (ISWbemProperty prop : swbObj.getProperties()) {
 			if (prop.getName().equalsIgnoreCase(field)) {
-			    EntityItemAnySimpleType resultType = coreFactory.createEntityItemAnySimpleType();
+			    EntityItemAnySimpleType resultType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 			    resultType.setValue(prop.getValueAsString());
 			    item.getResult().add(resultType);
 			    break;

@@ -36,7 +36,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.solaris.PatchItem;
-import oval.schemas.systemcharacteristics.solaris.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
@@ -55,16 +54,12 @@ import org.joval.util.JOVALSystem;
 public class Patch54Adapter implements IAdapter {
     private IAdapterContext ctx;
     private ISession session;
-    private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
-    private ObjectFactory solarisFactory;
     private String error = null;
     private Hashtable<String, List<RevisionEntry>> revisions;
     private Hashtable<String, List<SupercedenceEntry>> supercedence;
 
     public Patch54Adapter(ISession session) {
 	this.session = session;
-	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
-	solarisFactory = new ObjectFactory();
 	revisions = new Hashtable<String, List<RevisionEntry>>();
 	supercedence = new Hashtable<String, List<SupercedenceEntry>>();
     }
@@ -101,7 +96,7 @@ public class Patch54Adapter implements IAdapter {
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	for (ItemType item : getItems((Patch54Object)obj)) {
-	    items.add(solarisFactory.createPatchItem((PatchItem)item));
+	    items.add(JOVALSystem.factories.sc.solaris.createPatchItem((PatchItem)item));
 	}
 	if (error != null) {
 	    MessageType msg = new MessageType();
@@ -142,12 +137,12 @@ public class Patch54Adapter implements IAdapter {
 		    accept = true;
 		}
 		if (accept) {
-		    PatchItem item = solarisFactory.createPatchItem();
-		    EntityItemIntType baseType = coreFactory.createEntityItemIntType();
+		    PatchItem item = JOVALSystem.factories.sc.solaris.createPatchItem();
+		    EntityItemIntType baseType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 		    baseType.setValue(entry.patch.getBaseString());
 		    baseType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		    item.setBase(baseType);
-		    EntityItemIntType versionType = coreFactory.createEntityItemIntType();
+		    EntityItemIntType versionType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 		    versionType.setValue(entry.patch.getVersionString());
 		    versionType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		    item.setVersion(versionType);
@@ -161,11 +156,11 @@ public class Patch54Adapter implements IAdapter {
 	    if (list != null) {
 		for (SupercedenceEntry entry : list) {
 		    if (version <= entry.superceded.version && !v.contains(entry.by)) {
-			PatchItem item = solarisFactory.createPatchItem();
-			EntityItemIntType baseType = coreFactory.createEntityItemIntType();
+			PatchItem item = JOVALSystem.factories.sc.solaris.createPatchItem();
+			EntityItemIntType baseType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 			baseType.setValue(entry.by.getBaseString());
 			item.setBase(baseType);
-			EntityItemIntType versionType = coreFactory.createEntityItemIntType();
+			EntityItemIntType versionType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 			versionType.setValue(entry.by.getVersionString());
 			item.setVersion(versionType);
 			v.add(item);

@@ -19,7 +19,6 @@ import oval.schemas.definitions.independent.VariableTest;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.ObjectFactory;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.EntityItemVariableRefType;
 import oval.schemas.systemcharacteristics.independent.VariableItem;
@@ -42,12 +41,8 @@ import org.joval.util.JOVALSystem;
 public class VariableAdapter implements IAdapter {
     private IAdapterContext ctx;
     private IPlugin plugin;
-    private oval.schemas.systemcharacteristics.independent.ObjectFactory independentFactory;
-    private ObjectFactory coreFactory;
 
     public VariableAdapter() {
-	independentFactory = new oval.schemas.systemcharacteristics.independent.ObjectFactory();
-	coreFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -81,15 +76,15 @@ public class VariableAdapter implements IAdapter {
 
 	List<String> values = ctx.resolve((String)vObj.getVarRef().getValue(), vars);
 	if (values.size() > 0) {
-	    VariableItem item = independentFactory.createVariableItem();
-	    EntityItemVariableRefType ref = independentFactory.createEntityItemVariableRefType();
+	    VariableItem item = JOVALSystem.factories.sc.independent.createVariableItem();
+	    EntityItemVariableRefType ref = JOVALSystem.factories.sc.independent.createEntityItemVariableRefType();
 	    ref.setValue(vObj.getVarRef().getValue());
 	    for (String value : values) {
-		EntityItemAnySimpleType valueType = coreFactory.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue(value);
 		item.getValue().add(valueType);
 	    }
-	    items.add(independentFactory.createVariableItem(item));
+	    items.add(JOVALSystem.factories.sc.independent.createVariableItem(item));
 	}
 	return items;
     }

@@ -33,7 +33,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.EnvironmentvariableItem;
-import oval.schemas.systemcharacteristics.independent.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
@@ -52,13 +51,9 @@ import org.joval.util.JOVALSystem;
 public class EnvironmentvariableAdapter implements IAdapter {
     private IAdapterContext ctx;
     private IEnvironment env;
-    private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
-    private ObjectFactory independentFactory;
 
     public EnvironmentvariableAdapter(IEnvironment env) {
 	this.env = env;
-	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
-	independentFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -160,13 +155,13 @@ public class EnvironmentvariableAdapter implements IAdapter {
     // Internal
 
     private JAXBElement<EnvironmentvariableItem> makeItem(String name, String value) {
-	EnvironmentvariableItem item = independentFactory.createEnvironmentvariableItem();
-	EntityItemStringType nameType = coreFactory.createEntityItemStringType();
+	EnvironmentvariableItem item = JOVALSystem.factories.sc.independent.createEnvironmentvariableItem();
+	EntityItemStringType nameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	nameType.setValue(name);
 	item.setName(nameType);
-	EntityItemAnySimpleType valueType = coreFactory.createEntityItemAnySimpleType();
+	EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 	valueType.setValue(value);
 	item.setValue(valueType);
-	return independentFactory.createEnvironmentvariableItem(item);
+	return JOVALSystem.factories.sc.independent.createEnvironmentvariableItem(item);
     }
 }

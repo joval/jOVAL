@@ -27,7 +27,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.ObjectFactory;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import org.joval.intf.io.IFile;
@@ -49,12 +48,10 @@ public abstract class BaseFileAdapter implements IAdapter {
     protected IAdapterContext ctx;
     protected IFilesystem fs;
     protected Hashtable<String, List<String>> pathMap;
-    protected ObjectFactory coreFactory;
 
     protected BaseFileAdapter(IFilesystem fs) {
 	this.fs = fs;
 	pathMap = new Hashtable<String, List<String>>();
-	coreFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -108,11 +105,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 			//
 			continue;
 		    } else {
-			EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
+			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			filepathType.setValue(path);
-			EntityItemStringType pathType = coreFactory.createEntityItemStringType();
+			EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			pathType.setValue(dirPath);
-			EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
+			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
 			fItem.setFilepath(filepathType);
 			fItem.setPath(pathType);
@@ -125,25 +122,25 @@ public abstract class BaseFileAdapter implements IAdapter {
 			//
 			continue;
 		    } else {
-			EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
+			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			filepathType.setValue(path);
-			EntityItemStringType pathType = coreFactory.createEntityItemStringType();
+			EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			pathType.setValue(dirPath);
-			EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
+			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
 			fItem.setFilepath(filepathType);
 			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
 		    }
 		} else if (fObj.isSetPath()) {
-		    EntityItemStringType pathType = coreFactory.createEntityItemStringType();
+		    EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    pathType.setValue(dirPath);
 		    fItem.setPath(pathType);
 		    if (!isDirectory) {
-			EntityItemStringType filenameType = coreFactory.createEntityItemStringType();
+			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
 			fItem.setFilename(filenameType);
-			EntityItemStringType filepathType = coreFactory.createEntityItemStringType();
+			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			filepathType.setValue(path);
 			fItem.setFilepath(filepathType);
 		    }

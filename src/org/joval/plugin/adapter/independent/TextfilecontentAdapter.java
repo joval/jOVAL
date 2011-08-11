@@ -27,7 +27,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
-import oval.schemas.systemcharacteristics.independent.ObjectFactory;
 import oval.schemas.systemcharacteristics.independent.TextfilecontentItem;
 import oval.schemas.results.core.ResultEnumeration;
 
@@ -46,11 +45,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class TextfilecontentAdapter extends BaseFileAdapter {
-    protected ObjectFactory independentFactory;
-
     public TextfilecontentAdapter(IFilesystem fs) {
 	super(fs);
-	independentFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -82,7 +78,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
     }
 
     protected ItemType createFileItem() {
-	return independentFactory.createTextfilecontentItem();
+	return JOVALSystem.factories.sc.independent.createTextfilecontentItem();
     }
 
     /**
@@ -116,13 +112,13 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		while ((line = br.readLine()) != null) {
 		    Matcher m = p.matcher(line);
 		    if (m.find()) {
-			TextfilecontentItem item = independentFactory.createTextfilecontentItem();
+			TextfilecontentItem item = JOVALSystem.factories.sc.independent.createTextfilecontentItem();
 			item.setPath(baseItem.getPath());
 			item.setFilename(baseItem.getFilename());
-			EntityItemStringType lineType = coreFactory.createEntityItemStringType();
+			EntityItemStringType lineType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			lineType.setValue(line);
 			item.setLine(lineType);
-			items.add(independentFactory.createTextfilecontentItem(item));
+			items.add(JOVALSystem.factories.sc.independent.createTextfilecontentItem(item));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {

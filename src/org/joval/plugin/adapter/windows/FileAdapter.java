@@ -39,7 +39,6 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.windows.EntityItemFileTypeType;
 import oval.schemas.systemcharacteristics.windows.FileItem;
-import oval.schemas.systemcharacteristics.windows.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.TestedItemType;
 import oval.schemas.results.core.TestedVariableType;
@@ -88,13 +87,11 @@ public class FileAdapter extends BaseFileAdapter {
 						  "WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
     private static final String TIME_WQL	= "SELECT * FROM CIM_DataFile WHERE Name='$path'";
 
-    private ObjectFactory windowsFactory;
     private IWmiProvider wmi;
 
     public FileAdapter(IFilesystem fs, IWmiProvider wmi) {
 	super(fs);
 	this.wmi = wmi;
-	windowsFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -252,11 +249,11 @@ public class FileAdapter extends BaseFileAdapter {
     // Protected
 
     protected Object convertFilename(EntityItemStringType filename) {
-	return windowsFactory.createFileItemFilename(filename);
+	return JOVALSystem.factories.sc.windows.createFileItemFilename(filename);
     }
 
     protected ItemType createFileItem() {
-	return windowsFactory.createFileItem();
+	return JOVALSystem.factories.sc.windows.createFileItem();
     }
 
     protected List<JAXBElement<? extends ItemType>>
@@ -265,7 +262,7 @@ public class FileAdapter extends BaseFileAdapter {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {
 	    setItem((FileItem)base, f);
-	    items.add(windowsFactory.createFileItem((FileItem)base));
+	    items.add(JOVALSystem.factories.sc.windows.createFileItem((FileItem)base));
 	}
 	return items;
     }
@@ -280,11 +277,11 @@ public class FileAdapter extends BaseFileAdapter {
 	// Get some information from the IFile
 	//
 	fItem.setStatus(StatusEnumeration.EXISTS);
-	EntityItemIntType sizeType = coreFactory.createEntityItemIntType();
+	EntityItemIntType sizeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	sizeType.setValue(new Long(file.length()).toString());
 	sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	fItem.setSize(sizeType);
-	EntityItemFileTypeType typeType = windowsFactory.createEntityItemFileTypeType();
+	EntityItemFileTypeType typeType = JOVALSystem.factories.sc.windows.createEntityItemFileTypeType();
 	switch(file.getType()) {
 	  case IFile.FILE_TYPE_DISK:
 	    typeType.setValue("FILE_TYPE_DISK");
@@ -307,12 +304,12 @@ public class FileAdapter extends BaseFileAdapter {
 	//
 	// If possible, use WMI to retrieve owner, aTime, cTime and mTime values
 	//
-	EntityItemStringType ownerType = coreFactory.createEntityItemStringType();
-	EntityItemIntType aTimeType = coreFactory.createEntityItemIntType();
+	EntityItemStringType ownerType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemIntType aTimeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	EntityItemIntType cTimeType = coreFactory.createEntityItemIntType();
+	EntityItemIntType cTimeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	EntityItemIntType mTimeType = coreFactory.createEntityItemIntType();
+	EntityItemIntType mTimeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	if (wmi == null) {
 	    ownerType.setStatus(StatusEnumeration.NOT_COLLECTED);
@@ -373,7 +370,7 @@ public class FileAdapter extends BaseFileAdapter {
 		readPEHeaders(file, fItem);
 	    } else {
 		ctx.log(Level.INFO, JOVALSystem.getMessage("STATUS_EMPTY_FILE", file.toString()));
-		EntityItemVersionType versionType = coreFactory.createEntityItemVersionType();
+		EntityItemVersionType versionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
 		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 //DAS: this is what Ovaldi does now, but JB says it'll change and do the right thing soon
 		versionType.setStatus(StatusEnumeration.ERROR);
@@ -398,7 +395,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    ImageNTHeaders nh = new ImageNTHeaders(ra);
 
 	    // Get the MS Checksum
-	    EntityItemStringType msChecksumType = coreFactory.createEntityItemStringType();
+	    EntityItemStringType msChecksumType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    msChecksumType.setValue(new Integer(nh.getImageOptionalHeader().getChecksum()).toString());
 	    fItem.setMsChecksum(msChecksumType);
 
@@ -419,7 +416,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    //
 	    // Get the file version from the VsFixedFileInfo structure
 	    //
-	    EntityItemVersionType versionType = coreFactory.createEntityItemVersionType();
+	    EntityItemVersionType versionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
 	    versionType.setValue(vffi.getFileVersion().toString());
 	    versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	    fItem.setVersion(versionType);
@@ -436,7 +433,7 @@ public class FileAdapter extends BaseFileAdapter {
 		    if (stringTables.size() > 0) {
 			StringTable st = stringTables.get(0); //DAS: just going with the first String Table
 			String key = st.getKey();
-			EntityItemStringType languageType = coreFactory.createEntityItemStringType();
+			EntityItemStringType languageType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			String locale = LanguageConstants.getLocaleString(key);
 			if (locale == null) {
 			    languageType.setStatus(StatusEnumeration.ERROR);
@@ -466,35 +463,35 @@ public class FileAdapter extends BaseFileAdapter {
 		    }
 		}
 	    }
-	    EntityItemStringType companyType = coreFactory.createEntityItemStringType();
+	    EntityItemStringType companyType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    if (companyName == null) {
 		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		companyType.setValue(companyName);
 	    }
 	    fItem.setCompany(companyType);
-	    EntityItemStringType internalNameType = coreFactory.createEntityItemStringType();
+	    EntityItemStringType internalNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    if (internalName == null) {
 		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		internalNameType.setValue(internalName);
 	    }
 	    fItem.setInternalName(internalNameType);
-	    EntityItemStringType productNameType = coreFactory.createEntityItemStringType();
+	    EntityItemStringType productNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    if (productName == null) {
 		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		productNameType.setValue(productName);
 	    }
 	    fItem.setProductName(productNameType);
-	    EntityItemStringType originalFilenameType = coreFactory.createEntityItemStringType();
+	    EntityItemStringType originalFilenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    if (originalFilename == null) {
 		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		originalFilenameType.setValue(originalFilename);
 	    }
 	    fItem.setOriginalFilename(originalFilenameType);
-	    EntityItemVersionType productVersionType = coreFactory.createEntityItemVersionType();
+	    EntityItemVersionType productVersionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
 	    if (productVersion == null) {
 		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
@@ -502,7 +499,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	    productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	    fItem.setProductVersion(productVersionType);
-	    EntityItemStringType developmentClassType = coreFactory.createEntityItemStringType();
+	    EntityItemStringType developmentClassType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    if (fileVersion == null) {
 		developmentClassType.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    } else {

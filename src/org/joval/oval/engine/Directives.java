@@ -12,7 +12,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import oval.schemas.common.ClassEnumeration;
-import oval.schemas.directives.core.ObjectFactory;
 import oval.schemas.directives.core.OvalDirectives;
 import oval.schemas.results.core.ClassDirectivesType;
 import oval.schemas.results.core.ContentEnumeration;
@@ -71,10 +70,10 @@ class Directives {
      * Create a Directives with default behavior (full reporting for everything).
      */
     Directives() {
-	directives = new ObjectFactory().createOvalDirectives();
-	DefaultDirectivesType ddt = JOVALSystem.resultsFactory.createDefaultDirectivesType();
+	directives = JOVALSystem.factories.directives.createOvalDirectives();
+	DefaultDirectivesType ddt = JOVALSystem.factories.results.createDefaultDirectivesType();
 	ddt.setIncludeSourceDefinitions(true);
-	DirectiveType dt = JOVALSystem.resultsFactory.createDirectiveType();
+	DirectiveType dt = JOVALSystem.factories.results.createDirectiveType();
 	dt.setReported(true);
 	dt.setContent(ContentEnumeration.FULL);
 	ddt.setDefinitionError(dt);

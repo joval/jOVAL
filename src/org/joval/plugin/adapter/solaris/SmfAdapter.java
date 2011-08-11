@@ -37,7 +37,6 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.solaris.EntityItemSmfProtocolType;
 import oval.schemas.systemcharacteristics.solaris.EntityItemSmfServiceStateType;
-import oval.schemas.systemcharacteristics.solaris.ObjectFactory;
 import oval.schemas.systemcharacteristics.solaris.SmfItem;
 import oval.schemas.results.core.ResultEnumeration;
 
@@ -58,13 +57,9 @@ import org.joval.util.JOVALSystem;
 public class SmfAdapter implements IAdapter {
     private IAdapterContext ctx;
     private ISession session;
-    private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
-    private ObjectFactory solarisFactory;
 
     public SmfAdapter(ISession session) {
 	this.session = session;
-	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
-	solarisFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -97,7 +92,7 @@ public class SmfAdapter implements IAdapter {
 	try {
 	    SmfItem item = getItem((SmfObject)obj);
 	    if (item != null) {
-		items.add(solarisFactory.createSmfItem(item));
+		items.add(JOVALSystem.factories.sc.solaris.createSmfItem(item));
 	    }
 	} catch (Exception e) {
 	    MessageType msg = new MessageType();
@@ -136,7 +131,7 @@ public class SmfAdapter implements IAdapter {
     private static final String DEPENDENCY	= "dependency";
 
     private SmfItem getItem(SmfObject obj) throws Exception {
-	SmfItem item = solarisFactory.createSmfItem();
+	SmfItem item = JOVALSystem.factories.sc.solaris.createSmfItem();
 
 	String fmri = (String)obj.getFmri().getValue();
 	IProcess p = session.createProcess("/usr/bin/svcs -l " + fmri);
@@ -150,16 +145,16 @@ public class SmfAdapter implements IAdapter {
 		line = line.trim();
 		if (line.startsWith(FMRI)) {
 		    found = true;
-		    EntityItemStringType type = coreFactory.createEntityItemStringType();
+		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    type.setValue(line.substring(FMRI.length()).trim());
 		    item.setFmri(type);
 		} else if (line.startsWith(NAME)) {
-		    EntityItemStringType type = coreFactory.createEntityItemStringType();
+		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    type.setValue(line.substring(NAME.length()).trim());
 		    item.setServiceName(type);
 		} else if (line.startsWith(STATE_TIME)) { // NB: this MUST appear before STATE
 		} else if (line.startsWith(STATE)) {
-		    EntityItemSmfServiceStateType type = solarisFactory.createEntityItemSmfServiceStateType();
+		    EntityItemSmfServiceStateType type = JOVALSystem.factories.sc.solaris.createEntityItemSmfServiceStateType();
 		    type.setValue(line.substring(STATE.length()).trim().toUpperCase());
 		    item.setServiceState(type);
 		}

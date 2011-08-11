@@ -35,7 +35,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.unix.ProcessItem;
-import oval.schemas.systemcharacteristics.unix.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
@@ -55,15 +54,11 @@ import org.joval.util.JOVALSystem;
 public class ProcessAdapter implements IAdapter {
     private IAdapterContext ctx;
     private ISession session;
-    private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
-    private ObjectFactory unixFactory;
     private Hashtable<String,ProcessItem> processes;
     private String error = null;
 
     public ProcessAdapter(ISession session) {
 	this.session = session;
-	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
-	unixFactory = new ObjectFactory();
 	processes = new Hashtable<String, ProcessItem>();
     }
 
@@ -111,7 +106,7 @@ public class ProcessAdapter implements IAdapter {
 	  case EQUALS: {
 	    ProcessItem item = processes.get((String)pObj.getCommand().getValue());
 	    if (item != null) {
-		items.add(unixFactory.createProcessItem(item));
+		items.add(JOVALSystem.factories.sc.unix.createProcessItem(item));
 	    }
 	    break;
 	  }
@@ -120,7 +115,7 @@ public class ProcessAdapter implements IAdapter {
 	    String command = (String)pObj.getCommand().getValue();
 	    for (String key : processes.keySet()) {
 		if (key.equalsIgnoreCase(command)) {
-		    items.add(unixFactory.createProcessItem(processes.get(key)));
+		    items.add(JOVALSystem.factories.sc.unix.createProcessItem(processes.get(key)));
 		}
 	    }
 	    break;
@@ -130,7 +125,7 @@ public class ProcessAdapter implements IAdapter {
 	    String command = (String)pObj.getCommand().getValue();
 	    for (String key : processes.keySet()) {
 		if (Pattern.compile(command).matcher(key).find()) {
-		    items.add(unixFactory.createProcessItem(processes.get(key)));
+		    items.add(JOVALSystem.factories.sc.unix.createProcessItem(processes.get(key)));
 		}
 	    }
 	    break;
@@ -140,7 +135,7 @@ public class ProcessAdapter implements IAdapter {
 	    String command = (String)pObj.getCommand().getValue();
 	    for (String key : processes.keySet()) {
 		if (!command.equals(key)) {
-		    items.add(unixFactory.createProcessItem(processes.get(key)));
+		    items.add(JOVALSystem.factories.sc.unix.createProcessItem(processes.get(key)));
 		}
 	    }
 	    break;
@@ -225,50 +220,50 @@ public class ProcessAdapter implements IAdapter {
 	    String line = br.readLine(); // skip over the header row.
 	    while((line = br.readLine()) != null) {
 		StringTokenizer tok = new StringTokenizer(line);
-		ProcessItem process = unixFactory.createProcessItem();
+		ProcessItem process = JOVALSystem.factories.sc.unix.createProcessItem();
 
-		EntityItemIntType pid = coreFactory.createEntityItemIntType();
+		EntityItemIntType pid = JOVALSystem.factories.sc.core.createEntityItemIntType();
 		pid.setValue(tok.nextToken());
 		pid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		process.setPid(pid);
 
-		EntityItemIntType ppid = coreFactory.createEntityItemIntType();
+		EntityItemIntType ppid = JOVALSystem.factories.sc.core.createEntityItemIntType();
 		ppid.setValue(tok.nextToken());
 		ppid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		process.setPpid(ppid);
 
-		EntityItemIntType priority = coreFactory.createEntityItemIntType();
+		EntityItemIntType priority = JOVALSystem.factories.sc.core.createEntityItemIntType();
 		priority.setValue(tok.nextToken());
 		priority.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		process.setPriority(priority);
 
-		EntityItemIntType userid = coreFactory.createEntityItemIntType();
+		EntityItemIntType userid = JOVALSystem.factories.sc.core.createEntityItemIntType();
 		userid.setValue(tok.nextToken());
 		userid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		process.setUserId(userid);
 
-		EntityItemIntType ruid = coreFactory.createEntityItemIntType();
+		EntityItemIntType ruid = JOVALSystem.factories.sc.core.createEntityItemIntType();
 		ruid.setValue(tok.nextToken());
 		ruid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		process.setRuid(ruid);
 
-		EntityItemStringType tty = coreFactory.createEntityItemStringType();
+		EntityItemStringType tty = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		tty.setValue(tok.nextToken());
 		process.setTty(tty);
 
-		EntityItemStringType schedulingClass = coreFactory.createEntityItemStringType();
+		EntityItemStringType schedulingClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		schedulingClass.setValue(tok.nextToken());
 		process.setSchedulingClass(schedulingClass);
 
-		EntityItemStringType execTime = coreFactory.createEntityItemStringType();
+		EntityItemStringType execTime = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		execTime.setValue(tok.nextToken());
 		process.setExecTime(execTime);
 
-		EntityItemStringType startTime = coreFactory.createEntityItemStringType();
+		EntityItemStringType startTime = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		startTime.setValue(tok.nextToken());
 		process.setStartTime(startTime);
 
-		EntityItemStringType command = coreFactory.createEntityItemStringType();
+		EntityItemStringType command = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		String args = tok.nextToken("\n").trim();
 		command.setValue(args);
 		process.setCommand(command);

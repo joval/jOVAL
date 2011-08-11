@@ -32,8 +32,7 @@ public class JOVALSystem {
     public static final String PROP_VERSION	= "version";
     public static final String PROP_BUILD_DATE	= "build.date";
 
-    public static final oval.schemas.common.ObjectFactory commonFactory = new oval.schemas.common.ObjectFactory();
-    public static final oval.schemas.results.core.ObjectFactory resultsFactory = new oval.schemas.results.core.ObjectFactory();
+    public static final Factories factories = new Factories();
 
     private static final Logger logger = Logger.getLogger("org.joval");
     private static Properties props, ovalProps;
@@ -86,5 +85,105 @@ public class JOVALSystem {
         FileHandler fileHandler = new FileHandler("%t/jOVAL%g.log", 0, 1, true);
         fileHandler.setFormatter(new SimpleFormatter());
         logger.addHandler(fileHandler);
+    }
+
+    //
+    // Simplify access to all the OVAL Object Factories
+    //
+
+    public static class Factories {
+	public oval.schemas.common.ObjectFactory common;
+	public oval.schemas.directives.core.ObjectFactory directives;
+	public oval.schemas.evaluation.id.ObjectFactory evaluation;
+	public oval.schemas.results.core.ObjectFactory results;
+	public oval.schemas.variables.core.ObjectFactory variables;
+	public DefinitionFactories definitions;
+	public SystemCharacteristicsFactories sc;
+
+	Factories() {
+	    common = new oval.schemas.common.ObjectFactory();
+	    definitions = new DefinitionFactories();
+	    directives = new oval.schemas.directives.core.ObjectFactory();
+	    evaluation = new oval.schemas.evaluation.id.ObjectFactory();
+	    results = new oval.schemas.results.core.ObjectFactory();
+	    sc = new SystemCharacteristicsFactories();
+	    variables = new oval.schemas.variables.core.ObjectFactory();
+	}
+    }
+
+    public static class DefinitionFactories {
+	public oval.schemas.definitions.aix.ObjectFactory aix;
+	public oval.schemas.definitions.apache.ObjectFactory apache;
+	public oval.schemas.definitions.catos.ObjectFactory catos;
+	public oval.schemas.definitions.core.ObjectFactory core;
+	public oval.schemas.definitions.esx.ObjectFactory esx;
+	public oval.schemas.definitions.freebsd.ObjectFactory freebsd;
+	public oval.schemas.definitions.hpux.ObjectFactory hpux;
+	public oval.schemas.definitions.independent.ObjectFactory independent;
+	public oval.schemas.definitions.ios.ObjectFactory ios;
+	public oval.schemas.definitions.linux.ObjectFactory linux;
+	public oval.schemas.definitions.macos.ObjectFactory macos;
+	public oval.schemas.definitions.pixos.ObjectFactory pixos;
+	public oval.schemas.definitions.sharepoint.ObjectFactory sharepoint;
+	public oval.schemas.definitions.solaris.ObjectFactory solaris;
+	public oval.schemas.definitions.unix.ObjectFactory unix;
+	public oval.schemas.definitions.windows.ObjectFactory windows;
+
+	private DefinitionFactories() {
+	    aix = new oval.schemas.definitions.aix.ObjectFactory();
+	    apache = new oval.schemas.definitions.apache.ObjectFactory();
+	    catos = new oval.schemas.definitions.catos.ObjectFactory();
+	    core = new oval.schemas.definitions.core.ObjectFactory();
+	    esx = new oval.schemas.definitions.esx.ObjectFactory();
+	    freebsd = new oval.schemas.definitions.freebsd.ObjectFactory();
+	    hpux = new oval.schemas.definitions.hpux.ObjectFactory();
+	    independent = new oval.schemas.definitions.independent.ObjectFactory();
+	    ios = new oval.schemas.definitions.ios.ObjectFactory();
+	    linux = new oval.schemas.definitions.linux.ObjectFactory();
+	    macos = new oval.schemas.definitions.macos.ObjectFactory();
+	    pixos = new oval.schemas.definitions.pixos.ObjectFactory();
+	    sharepoint = new oval.schemas.definitions.sharepoint.ObjectFactory();
+	    solaris = new oval.schemas.definitions.solaris.ObjectFactory();
+	    unix = new oval.schemas.definitions.unix.ObjectFactory();
+	    windows = new oval.schemas.definitions.windows.ObjectFactory();
+	}
+    }
+
+    public static class SystemCharacteristicsFactories {
+	public oval.schemas.systemcharacteristics.aix.ObjectFactory aix;
+	public oval.schemas.systemcharacteristics.apache.ObjectFactory apache;
+	public oval.schemas.systemcharacteristics.catos.ObjectFactory catos;
+	public oval.schemas.systemcharacteristics.core.ObjectFactory core;
+	public oval.schemas.systemcharacteristics.esx.ObjectFactory esx;
+	public oval.schemas.systemcharacteristics.freebsd.ObjectFactory freebsd;
+	public oval.schemas.systemcharacteristics.hpux.ObjectFactory hpux;
+	public oval.schemas.systemcharacteristics.independent.ObjectFactory independent;
+	public oval.schemas.systemcharacteristics.ios.ObjectFactory ios;
+	public oval.schemas.systemcharacteristics.linux.ObjectFactory linux;
+	public oval.schemas.systemcharacteristics.macos.ObjectFactory macos;
+	public oval.schemas.systemcharacteristics.pixos.ObjectFactory pixos;
+	public oval.schemas.systemcharacteristics.sharepoint.ObjectFactory sharepoint;
+	public oval.schemas.systemcharacteristics.solaris.ObjectFactory solaris;
+	public oval.schemas.systemcharacteristics.unix.ObjectFactory unix;
+	public oval.schemas.systemcharacteristics.windows.ObjectFactory windows;
+
+	private SystemCharacteristicsFactories() {
+	    aix = new oval.schemas.systemcharacteristics.aix.ObjectFactory();
+	    apache = new oval.schemas.systemcharacteristics.apache.ObjectFactory();
+	    catos = new oval.schemas.systemcharacteristics.catos.ObjectFactory();
+	    core = new oval.schemas.systemcharacteristics.core.ObjectFactory();
+	    esx = new oval.schemas.systemcharacteristics.esx.ObjectFactory();
+	    freebsd = new oval.schemas.systemcharacteristics.freebsd.ObjectFactory();
+	    hpux = new oval.schemas.systemcharacteristics.hpux.ObjectFactory();
+	    independent = new oval.schemas.systemcharacteristics.independent.ObjectFactory();
+	    ios = new oval.schemas.systemcharacteristics.ios.ObjectFactory();
+	    linux = new oval.schemas.systemcharacteristics.linux.ObjectFactory();
+	    macos = new oval.schemas.systemcharacteristics.macos.ObjectFactory();
+	    pixos = new oval.schemas.systemcharacteristics.pixos.ObjectFactory();
+	    sharepoint = new oval.schemas.systemcharacteristics.sharepoint.ObjectFactory();
+	    solaris = new oval.schemas.systemcharacteristics.solaris.ObjectFactory();
+	    unix = new oval.schemas.systemcharacteristics.unix.ObjectFactory();
+	    windows = new oval.schemas.systemcharacteristics.windows.ObjectFactory();
+	}
     }
 }

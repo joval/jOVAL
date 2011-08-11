@@ -36,7 +36,6 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemEVRStringType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
-import oval.schemas.systemcharacteristics.linux.ObjectFactory;
 import oval.schemas.systemcharacteristics.linux.RpminfoItem;
 
 import org.joval.intf.io.IFile;
@@ -60,15 +59,11 @@ import org.joval.util.Version;
 public class RpminfoAdapter implements IAdapter {
     private IAdapterContext ctx;
     private ISession session;
-    private ObjectFactory linuxFactory;
-    private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
     private Hashtable<String, RpminfoItem> packageMap;
     private String[] rpms;
 
     public RpminfoAdapter(ISession session) {
 	this.session = session;
-	linuxFactory = new ObjectFactory();
-	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
 	packageMap = new Hashtable<String, RpminfoItem>();
     }
 
@@ -123,7 +118,7 @@ public class RpminfoAdapter implements IAdapter {
 	switch(rObj.getName().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(linuxFactory.createRpminfoItem(getItem((String)rObj.getName().getValue())));
+		items.add(JOVALSystem.factories.sc.linux.createRpminfoItem(getItem((String)rObj.getName().getValue())));
 	    } catch (Exception e) {
 		MessageType msg = new MessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -140,7 +135,7 @@ public class RpminfoAdapter implements IAdapter {
 		Pattern p = Pattern.compile((String)rObj.getName().getValue());
 		for (String packageName : packageMap.keySet()) {
 		    if (p.matcher(packageName).find()) {
-			items.add(linuxFactory.createRpminfoItem(packageMap.get(packageName)));
+			items.add(JOVALSystem.factories.sc.linux.createRpminfoItem(packageMap.get(packageName)));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
@@ -157,7 +152,7 @@ public class RpminfoAdapter implements IAdapter {
 	    String name = (String)rObj.getName().getValue();
 	    for (String packageName : packageMap.keySet()) {
 		if (!packageName.equals(name)) {
-		    items.add(linuxFactory.createRpminfoItem(packageMap.get(packageName)));
+		    items.add(JOVALSystem.factories.sc.linux.createRpminfoItem(packageMap.get(packageName)));
 		}
 	    }
 	    break;
@@ -244,7 +239,7 @@ public class RpminfoAdapter implements IAdapter {
 	    return item;
 	}
 
-	item = linuxFactory.createRpminfoItem();
+	item = JOVALSystem.factories.sc.linux.createRpminfoItem();
 	String pkgVersion=null, pkgRelease=null;
 	IProcess p = session.createProcess("rpm -q " + packageName + " -i");
 	p.start();
@@ -286,25 +281,25 @@ public class RpminfoAdapter implements IAdapter {
 		break; // last param; break the enclosing for-loop
 	    } else if ("Name".equals(param)) {
 		packageName = value;
-		EntityItemStringType name = coreFactory.createEntityItemStringType();
+		EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		name.setValue(packageName);
 		item.setName(name);
 	    } else if ("Architecture".equals(param)) {
-		EntityItemStringType arch = coreFactory.createEntityItemStringType();
+		EntityItemStringType arch = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		arch.setValue(value);
 		item.setArch(arch);
 	    } else if ("Version".equals(param)) {
 		pkgVersion = value;
-		RpminfoItem.Version version = linuxFactory.createRpminfoItemVersion();
+		RpminfoItem.Version version = JOVALSystem.factories.sc.linux.createRpminfoItemVersion();
 		version.setValue(pkgVersion);
 		item.setVersion(version);
 	    } else if ("Release".equals(param)) {
 		pkgRelease = value;
-		RpminfoItem.Release release = linuxFactory.createRpminfoItemRelease();
+		RpminfoItem.Release release = JOVALSystem.factories.sc.linux.createRpminfoItemRelease();
 		release.setValue(pkgRelease);
 		item.setRelease(release);
 	    } else if ("Signature".equals(param)) {
-		EntityItemStringType signatureKeyid = coreFactory.createEntityItemStringType();
+		EntityItemStringType signatureKeyid = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		int ptr = value.indexOf("Key ID");
 		if (ptr == -1) {
 		    signatureKeyid.setStatus(StatusEnumeration.ERROR);
@@ -331,16 +326,16 @@ public class RpminfoAdapter implements IAdapter {
 	    if (pkgEpoch.equals("(none)")) {
 		pkgEpoch = "0";
 	    }
-	    RpminfoItem.Epoch epoch = linuxFactory.createRpminfoItemEpoch();
+	    RpminfoItem.Epoch epoch = JOVALSystem.factories.sc.linux.createRpminfoItemEpoch();
 	    epoch.setValue(pkgEpoch);
 	    item.setEpoch(epoch);
 
-	    EntityItemEVRStringType evr = new EntityItemEVRStringType();
+	    EntityItemEVRStringType evr = JOVALSystem.factories.sc.core.createEntityItemEVRStringType();
 	    evr.setValue(pkgEpoch + ":" + pkgVersion + "-" + pkgRelease);
 	    evr.setDatatype(SimpleDatatypeEnumeration.EVR_STRING.value());
 	    item.setEvr(evr);
 	} else {
-	    EntityItemStringType name = coreFactory.createEntityItemStringType();
+	    EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    name.setValue(packageName);
 	    item.setName(name);
 	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);

@@ -76,13 +76,8 @@ public class RegistryAdapter implements IAdapter {
     private Hashtable<String, BigInteger> itemIds;
     private Hashtable<String, List<String>> pathMap;
 
-    private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
-    private oval.schemas.systemcharacteristics.windows.ObjectFactory windowsFactory;
-
     public RegistryAdapter(IRegistry registry) {
 	this.registry = registry;
-	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
-	windowsFactory = new oval.schemas.systemcharacteristics.windows.ObjectFactory();
 	itemIds = new Hashtable<String, BigInteger>();
 	pathMap = new Hashtable<String, List<String>>();
     }
@@ -179,7 +174,7 @@ public class RegistryAdapter implements IAdapter {
 	if (rObj.getKey().getValue() == null) {
 	    try {
 		for (RegistryItem item : getItems(rObj, hive, null)) {
-		    items.add(windowsFactory.createRegistryItem(item));
+		    items.add(JOVALSystem.factories.sc.windows.createRegistryItem(item));
 		}
 	    } catch (NoSuchElementException e) {
 		MessageType msg = new MessageType();
@@ -192,7 +187,7 @@ public class RegistryAdapter implements IAdapter {
 		for (String path : getPathList(rObj, hive, vars)) {
 		    try {
 			for (RegistryItem item : getItems(rObj, hive, path)) {
-			    items.add(windowsFactory.createRegistryItem(item));
+			    items.add(JOVALSystem.factories.sc.windows.createRegistryItem(item));
 			}
 		    } catch (NoSuchElementException e) {
 			// Just ignore it
@@ -380,8 +375,8 @@ public class RegistryAdapter implements IAdapter {
      * Get an item given a concrete hive, key path and value name.
      */
     private RegistryItem getItem(IKey key, String name) throws NoSuchElementException, OvalException {
-	RegistryItem item = windowsFactory.createRegistryItem();
-	EntityItemRegistryHiveType hiveType = windowsFactory.createEntityItemRegistryHiveType();
+	RegistryItem item = JOVALSystem.factories.sc.windows.createRegistryItem();
+	EntityItemRegistryHiveType hiveType = JOVALSystem.factories.sc.windows.createEntityItemRegistryHiveType();
 	hiveType.setValue(key.getHive());
 	item.setHive(hiveType);
 
@@ -389,24 +384,24 @@ public class RegistryAdapter implements IAdapter {
 	    return item;
 	}
 
-	EntityItemStringType keyType = coreFactory.createEntityItemStringType();
+	EntityItemStringType keyType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	keyType.setValue(key.getPath());
-	item.setKey(windowsFactory.createRegistryItemKey(keyType));
+	item.setKey(JOVALSystem.factories.sc.windows.createRegistryItemKey(keyType));
 
 	if (name != null) {
-	    EntityItemStringType nameType = coreFactory.createEntityItemStringType();
+	    EntityItemStringType nameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    nameType.setValue(name);
-	    item.setName(windowsFactory.createRegistryItemName(nameType));
+	    item.setName(JOVALSystem.factories.sc.windows.createRegistryItemName(nameType));
 	}
 
 	if (name != null && !"".equals(name)) {
 	    IValue val = registry.fetchValue(key, name);
 
 	    List<EntityItemAnySimpleType> values = new Vector<EntityItemAnySimpleType>();
-	    EntityItemRegistryTypeType typeType = windowsFactory.createEntityItemRegistryTypeType();
+	    EntityItemRegistryTypeType typeType = JOVALSystem.factories.sc.windows.createEntityItemRegistryTypeType();
 	    switch (val.getType()) {
 	      case IValue.REG_SZ: {
-		EntityItemAnySimpleType valueType = coreFactory.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue(((IStringValue)val).getData());
 		values.add(valueType);
 		typeType.setValue("reg_sz");
@@ -414,7 +409,7 @@ public class RegistryAdapter implements IAdapter {
 	      }
 
 	      case IValue.REG_EXPAND_SZ: {
-		EntityItemAnySimpleType valueType = coreFactory.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue(((IExpandStringValue)val).getExpandedData());
 		values.add(valueType);
 		typeType.setValue("reg_expand_sz");
@@ -422,7 +417,7 @@ public class RegistryAdapter implements IAdapter {
 	      }
 
 	      case IValue.REG_DWORD: {
-		EntityItemAnySimpleType valueType = coreFactory.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue("" + ((IDwordValue)val).getData());
 		valueType.setDatatype(DATATYPE_INT);
 		values.add(valueType);
@@ -433,7 +428,7 @@ public class RegistryAdapter implements IAdapter {
 	      case IValue.REG_MULTI_SZ: {
 		String[] sVals = ((IMultiStringValue)val).getData();
 		for (int i=0; i < sVals.length; i++) {
-		    EntityItemAnySimpleType valueType = coreFactory.createEntityItemAnySimpleType();
+		    EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 		    valueType.setValue(sVals[i]);
 		    values.add(valueType);
 		}

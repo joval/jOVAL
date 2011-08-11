@@ -32,7 +32,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.solaris.IsainfoItem;
-import oval.schemas.systemcharacteristics.solaris.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
@@ -52,13 +51,9 @@ import org.joval.util.JOVALSystem;
 public class IsainfoAdapter implements IAdapter {
     private IAdapterContext ctx;
     private ISession session;
-    private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
-    private ObjectFactory solarisFactory;
 
     public IsainfoAdapter(ISession session) {
 	this.session = session;
-	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
-	solarisFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -118,8 +113,8 @@ public class IsainfoAdapter implements IAdapter {
     // Internal
 
     private JAXBElement<IsainfoItem> getItem() throws Exception {
-	IsainfoItem item = solarisFactory.createIsainfoItem();
-	EntityItemStringType kernelIsa = coreFactory.createEntityItemStringType();
+	IsainfoItem item = JOVALSystem.factories.sc.solaris.createIsainfoItem();
+	EntityItemStringType kernelIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	IProcess p = session.createProcess("isainfo -k");
 	p.start();
 	BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -128,7 +123,7 @@ public class IsainfoAdapter implements IAdapter {
 	kernelIsa.setValue(result);
 	item.setKernelIsa(kernelIsa);
 
-	EntityItemStringType applicationIsa = coreFactory.createEntityItemStringType();
+	EntityItemStringType applicationIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("isainfo -n");
 	p.start();
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -137,7 +132,7 @@ public class IsainfoAdapter implements IAdapter {
 	applicationIsa.setValue(result);
 	item.setApplicationIsa(applicationIsa);
 
-	EntityItemIntType bits = coreFactory.createEntityItemIntType();
+	EntityItemIntType bits = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	p = session.createProcess("isainfo -b");
 	p.start();
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -147,6 +142,6 @@ public class IsainfoAdapter implements IAdapter {
 	bits.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setBits(bits);
 
-	return solarisFactory.createIsainfoItem(item);
+	return JOVALSystem.factories.sc.solaris.createIsainfoItem(item);
     }
 }

@@ -28,7 +28,6 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.unix.UnameItem;
-import oval.schemas.systemcharacteristics.unix.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
@@ -48,13 +47,9 @@ import org.joval.util.JOVALSystem;
 public class UnameAdapter implements IAdapter {
     private IAdapterContext ctx;
     private ISession session;
-    private oval.schemas.systemcharacteristics.core.ObjectFactory coreFactory;
-    private ObjectFactory unixFactory;
 
     public UnameAdapter(ISession session) {
 	this.session = session;
-	coreFactory = new oval.schemas.systemcharacteristics.core.ObjectFactory();
-	unixFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -142,8 +137,8 @@ public class UnameAdapter implements IAdapter {
     // Internal
 
     private JAXBElement<UnameItem> getItem() throws Exception {
-	UnameItem item = unixFactory.createUnameItem();
-	EntityItemStringType machineClass = coreFactory.createEntityItemStringType();
+	UnameItem item = JOVALSystem.factories.sc.unix.createUnameItem();
+	EntityItemStringType machineClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	IProcess p = session.createProcess("uname -m");
 	p.start();
 	BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -152,7 +147,7 @@ public class UnameAdapter implements IAdapter {
 	machineClass.setValue(result);
 	item.setMachineClass(machineClass);
 
-	EntityItemStringType nodeName = coreFactory.createEntityItemStringType();
+	EntityItemStringType nodeName = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -n");
 	p.start();
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -161,7 +156,7 @@ public class UnameAdapter implements IAdapter {
 	nodeName.setValue(result);
 	item.setNodeName(nodeName);
 
-	EntityItemStringType osName = coreFactory.createEntityItemStringType();
+	EntityItemStringType osName = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -s");
 	p.start();
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -170,7 +165,7 @@ public class UnameAdapter implements IAdapter {
 	osName.setValue(result);
 	item.setOsName(osName);
 
-	EntityItemStringType osRelease = coreFactory.createEntityItemStringType();
+	EntityItemStringType osRelease = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -r");
 	p.start();
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -179,7 +174,7 @@ public class UnameAdapter implements IAdapter {
 	osRelease.setValue(result);
 	item.setOsRelease(osRelease);
 
-	EntityItemStringType osVersion = coreFactory.createEntityItemStringType();
+	EntityItemStringType osVersion = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -v");
 	p.start();
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -188,7 +183,7 @@ public class UnameAdapter implements IAdapter {
 	osVersion.setValue(result);
 	item.setOsVersion(osVersion);
 
-	EntityItemStringType processorType = coreFactory.createEntityItemStringType();
+	EntityItemStringType processorType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -p");
 	p.start();
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -197,6 +192,6 @@ public class UnameAdapter implements IAdapter {
 	processorType.setValue(result);
 	item.setProcessorType(processorType);
 
-	return unixFactory.createUnameItem(item);
+	return JOVALSystem.factories.sc.unix.createUnameItem(item);
     }
 }

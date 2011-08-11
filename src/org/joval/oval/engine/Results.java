@@ -108,7 +108,7 @@ class Results implements IResults {
 		    definitions.add(definition);
 		    break;
 		  case THIN: {
-		    DefinitionType thinDefinition = JOVALSystem.resultsFactory.createDefinitionType();
+		    DefinitionType thinDefinition = JOVALSystem.factories.results.createDefinitionType();
 		    thinDefinition.setDefinitionId(definition.getDefinitionId());
 		    thinDefinition.setClazz(definition.getClazz());
 		    thinDefinition.setResult(definition.getResult());
@@ -210,7 +210,7 @@ class Results implements IResults {
 	if (or != null) {
 	    return or;
 	}
-	or = JOVALSystem.resultsFactory.createOvalResults();
+	or = JOVALSystem.factories.results.createOvalResults();
 	or.setGenerator(Engine.getGenerator());
 	OvalDirectives od = directives.getOvalDirectives();
 	or.setDirectives(od.getDirectives());
@@ -218,13 +218,13 @@ class Results implements IResults {
 	if (directives.includeSource()) {
 	    or.setOvalDefinitions(definitions.getOvalDefinitions());
 	}
-	SystemType systemType = JOVALSystem.resultsFactory.createSystemType();
+	SystemType systemType = JOVALSystem.factories.results.createSystemType();
 
 	//
 	// Add definitions (using the Directives-filtered method) and simultaneously track reportable tests.
 	//
 	Hashtable<String, TestType> reportableTests = new Hashtable<String, TestType>();
-	DefinitionsType definitionsType = JOVALSystem.resultsFactory.createDefinitionsType();
+	DefinitionsType definitionsType = JOVALSystem.factories.results.createDefinitionsType();
 	Iterator<DefinitionType> iter = iterateDefinitions();
 	while(iter.hasNext()) {
 	    DefinitionType definition = iter.next();
@@ -240,7 +240,7 @@ class Results implements IResults {
 	//
 	// Add only those tests for which there are fully-reportable definitions.
 	//
-	TestsType testsType = JOVALSystem.resultsFactory.createTestsType();
+	TestsType testsType = JOVALSystem.factories.results.createTestsType();
 	testsType.getTest().addAll(reportableTests.values());
 	systemType.setTests(testsType);
 
@@ -251,7 +251,7 @@ class Results implements IResults {
 	List<BigInteger> reportableItems = getItemIds(reportableTests);
 	systemType.setOvalSystemCharacteristics(sc.getOvalSystemCharacteristics(reportableVariables, reportableItems));
 
-	ResultsType resultsType = JOVALSystem.resultsFactory.createResultsType();
+	ResultsType resultsType = JOVALSystem.factories.results.createResultsType();
 	resultsType.getSystem().add(systemType);
 	or.setResults(resultsType);
 	return or;

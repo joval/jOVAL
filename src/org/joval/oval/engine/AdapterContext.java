@@ -94,7 +94,7 @@ class AdapterContext implements IAdapterContext {
 	//
 	if (state.isSetVarRef()) {
 	    CheckData cd = new CheckData();
-	    EntitySimpleBaseType base = new EntityObjectAnySimpleType();
+	    EntitySimpleBaseType base = JOVALSystem.factories.definitions.core.createEntityObjectAnySimpleType();
 	    base.setDatatype(state.getDatatype());
 	    base.setOperation(state.getOperation());
 	    base.setMask(state.isMask());

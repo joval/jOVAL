@@ -22,7 +22,6 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.EntityItemFamilyType;
 import oval.schemas.systemcharacteristics.independent.FamilyItem;
-import oval.schemas.systemcharacteristics.independent.ObjectFactory;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
@@ -41,11 +40,9 @@ import org.joval.util.JOVALSystem;
 public class FamilyAdapter implements IAdapter {
     private IAdapterContext ctx;
     private IPlugin plugin;
-    private ObjectFactory independentFactory;
 
     public FamilyAdapter(IPlugin plugin) {
 	this.plugin = plugin;
-	independentFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -75,7 +72,7 @@ public class FamilyAdapter implements IAdapter {
 
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	items.add(independentFactory.createFamilyItem(getItem()));
+	items.add(JOVALSystem.factories.sc.independent.createFamilyItem(getItem()));
 	return items;
     }
 
@@ -92,8 +89,8 @@ public class FamilyAdapter implements IAdapter {
 
     private FamilyItem getItem() {
 	if (fItem == null) {
-	    fItem = independentFactory.createFamilyItem();
-	    EntityItemFamilyType familyType = independentFactory.createEntityItemFamilyType();
+	    fItem = JOVALSystem.factories.sc.independent.createFamilyItem();
+	    EntityItemFamilyType familyType = JOVALSystem.factories.sc.independent.createEntityItemFamilyType();
 	    familyType.setValue(plugin.getFamily().value());
 	    fItem.setFamily(familyType);
 	}

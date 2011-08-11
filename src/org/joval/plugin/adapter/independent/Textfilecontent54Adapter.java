@@ -28,7 +28,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
-import oval.schemas.systemcharacteristics.independent.ObjectFactory;
 import oval.schemas.systemcharacteristics.independent.TextfilecontentItem;
 import oval.schemas.results.core.ResultEnumeration;
 
@@ -51,11 +50,8 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class Textfilecontent54Adapter extends BaseFileAdapter {
-    protected ObjectFactory independentFactory;
-
     public Textfilecontent54Adapter(IFilesystem fs) {
 	super(fs);
-	independentFactory = new ObjectFactory();
     }
 
     // Implement IAdapter
@@ -108,7 +104,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
     }
 
     protected ItemType createFileItem() {
-	return independentFactory.createTextfilecontentItem();
+	return JOVALSystem.factories.sc.independent.createTextfilecontentItem();
     }
 
     /**
@@ -169,31 +165,31 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 		for (Pattern p : patterns) {
 		    Matcher m = p.matcher(s);
 		    for (int instanceNum=1; m.find(); instanceNum++) {
-			TextfilecontentItem item = independentFactory.createTextfilecontentItem();
+			TextfilecontentItem item = JOVALSystem.factories.sc.independent.createTextfilecontentItem();
 			item.setPath(baseItem.getPath());
 			item.setFilename(baseItem.getFilename());
     
-			EntityItemStringType patternType = coreFactory.createEntityItemStringType();
+			EntityItemStringType patternType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			patternType.setValue(p.toString());
 			item.setPattern(patternType);
-			EntityItemIntType instanceType = coreFactory.createEntityItemIntType();
+			EntityItemIntType instanceType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 			instanceType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 			instanceType.setValue(Integer.toString(instanceNum));
 			item.setInstance(instanceType);
     
-			EntityItemAnySimpleType textType = coreFactory.createEntityItemAnySimpleType();
+			EntityItemAnySimpleType textType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 			textType.setValue(m.group());
 			item.setText(textType);
-			int subexpressionCount = m.groupCount();
-			if (subexpressionCount > 0) {
-			    for (int subexpressionNum=1; subexpressionNum <= subexpressionCount; subexpressionNum++) {
-				EntityItemAnySimpleType subexpressionType = coreFactory.createEntityItemAnySimpleType();
-				subexpressionType.setValue(m.group(subexpressionNum));
-				item.getSubexpression().add(subexpressionType);
+			int sCount = m.groupCount();
+			if (sCount > 0) {
+			    for (int sNum=1; sNum <= sCount; sNum++) {
+				EntityItemAnySimpleType sType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+				sType.setValue(m.group(sNum));
+				item.getSubexpression().add(sType);
 			    }
 			}
     
-			items.add(independentFactory.createTextfilecontentItem(item));
+			items.add(JOVALSystem.factories.sc.independent.createTextfilecontentItem(item));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {

@@ -163,7 +163,6 @@ public class Engine implements IProducer {
     private IPlugin plugin;
     private OvalException error;
     private Results results;
-    private oval.schemas.results.core.ObjectFactory resultsFactory;
     private DefinitionFilter filter;
     private List<AdapterContext> adapterContextList;
     Producer producer;
@@ -181,7 +180,6 @@ public class Engine implements IProducer {
 	for (IAdapter adapter : plugin.getAdapters()) {
 	    adapterContextList.add(new AdapterContext(adapter, this));
 	}
-	resultsFactory = new oval.schemas.results.core.ObjectFactory();
 	variableMap = new Hashtable<String, List<VariableValueType>>();
 	producer = new Producer();
 	filter = new DefinitionFilter();
@@ -307,7 +305,7 @@ public class Engine implements IProducer {
     // Internal
 
     static final GeneratorType getGenerator() {
-	GeneratorType generator = JOVALSystem.commonFactory.createGeneratorType();
+	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
 	generator.setProductName(JOVALSystem.getProperty(JOVALSystem.PROP_PRODUCT));
 	generator.setProductVersion(JOVALSystem.getProperty(JOVALSystem.PROP_VERSION));
 	generator.setSchemaVersion(SCHEMA_VERSION);
@@ -441,7 +439,7 @@ public class Engine implements IProducer {
 	    ObjectType obj = allObjects.next();
 	    String objectId = obj.getId();
 	    if (!sc.containsObject(objectId)) {
-		MessageType message = new MessageType();
+		MessageType message = JOVALSystem.factories.common.createMessageType();
 		message.setLevel(MessageLevelEnumeration.WARNING);
 		message.setValue(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", obj.getClass().getName()));
 		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
@@ -464,7 +462,7 @@ public class Engine implements IProducer {
 		    List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
 		    List<JAXBElement<? extends ItemType>> items = adapter.getItems(obj, variableValueTypes);
 		    if (items.size() == 0) {
-		        MessageType msg = new MessageType();
+		        MessageType msg = JOVALSystem.factories.common.createMessageType();
 		        msg.setLevel(MessageLevelEnumeration.INFO);
 		        msg.setValue(JOVALSystem.getMessage("STATUS_EMPTY_OBJECT"));
 		        sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
@@ -498,7 +496,7 @@ public class Engine implements IProducer {
 	oval.schemas.results.core.DefinitionType defResult = results.getDefinition(defId);
 
 	if (defResult == null) {
-	    defResult = resultsFactory.createDefinitionType();
+	    defResult = JOVALSystem.factories.results.createDefinitionType();
 	    defResult.setDefinitionId(defId);
 	    defResult.setVersion(defDefinition.getVersion());
 	    defResult.setClazz(defDefinition.getClazz());
@@ -515,7 +513,7 @@ public class Engine implements IProducer {
 	TestType testResult = results.getTest(testId);
 	if (testResult == null) {
 	    oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
-	    testResult = resultsFactory.createTestType();
+	    testResult = JOVALSystem.factories.results.createTestType();
 	    testResult.setTestId(testDefinition.getId());
 	    testResult.setCheck(testDefinition.getCheck());
 	    testResult.setCheckExistence(testDefinition.getCheckExistence());
@@ -527,7 +525,7 @@ public class Engine implements IProducer {
 		} else {
 		    IAdapter adapter = getAdapterForTest(testDefinition);
 		    if (adapter == null) {
-			MessageType message = new MessageType();
+			MessageType message = JOVALSystem.factories.common.createMessageType();
 			message.setLevel(MessageLevelEnumeration.WARNING);
 			message.setValue(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", testDefinition.getClass().getName()));
 			testResult.getMessage().add(message);
@@ -545,7 +543,7 @@ public class Engine implements IProducer {
 	    results.storeTestResult(testResult);
 	}
 
-	oval.schemas.results.core.CriterionType criterionResult = resultsFactory.createCriterionType();
+	oval.schemas.results.core.CriterionType criterionResult = JOVALSystem.factories.results.createCriterionType();
 	criterionResult.setTestRef(testId);
 	if (criterionDefinition.isSetNegate() && criterionDefinition.isNegate()) {
 	    criterionResult.setNegate(true);
@@ -577,7 +575,7 @@ public class Engine implements IProducer {
 	}
 
 	for (VariableValueType var : sc.getVariablesByObjectId(objectId)) {
-	    TestedVariableType testedVariable = JOVALSystem.resultsFactory.createTestedVariableType();
+	    TestedVariableType testedVariable = JOVALSystem.factories.results.createTestedVariableType();
 	    testedVariable.setVariableId(var.getVariableId());
 	    testedVariable.setValue(var.getValue());
 	    testResult.getTestedVariable().add(testedVariable);
@@ -589,7 +587,7 @@ public class Engine implements IProducer {
 	List<ItemType> items = sc.getItemsByObjectId(objectId);
 	for (ItemType item : items) {
 	    if (item.getClass().getName().equals(adapter.getItemClass().getName())) {
-		TestedItemType testedItem = JOVALSystem.resultsFactory.createTestedItemType();
+		TestedItemType testedItem = JOVALSystem.factories.results.createTestedItemType();
 		testedItem.setItemId(item.getId());
 		testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
 
@@ -608,7 +606,7 @@ public class Engine implements IProducer {
 			    } catch (TestException e) {
 				String s = JOVALSystem.getMessage("ERROR_TESTEXCEPTION", testId, e.getMessage());
 				JOVALSystem.getLogger().log(Level.WARNING, s, e);
-				MessageType message = new MessageType();
+				MessageType message = JOVALSystem.factories.common.createMessageType();
 				message.setLevel(MessageLevelEnumeration.ERROR);
 				message.setValue(e.getMessage());
 				testedItem.getMessage().add(message);
@@ -662,7 +660,7 @@ public class Engine implements IProducer {
     }
 
     private oval.schemas.results.core.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition) throws OvalException {
-	oval.schemas.results.core.CriteriaType criteriaResult = resultsFactory.createCriteriaType();
+	oval.schemas.results.core.CriteriaType criteriaResult = JOVALSystem.factories.results.createCriteriaType();
 	criteriaResult.setOperator(criteriaDefinition.getOperator());
 
 	OperatorData operator = new OperatorData();
@@ -683,7 +681,7 @@ public class Engine implements IProducer {
 		String defId = edtDefinition.getDefinitionRef();
 		DefinitionType defDefinition = definitions.getDefinition(defId);
 		oval.schemas.results.core.DefinitionType defResult = evaluateDefinition(defDefinition);
-		oval.schemas.results.core.ExtendDefinitionType edtResult = resultsFactory.createExtendDefinitionType();
+		oval.schemas.results.core.ExtendDefinitionType edtResult = JOVALSystem.factories.results.createExtendDefinitionType();
 		edtResult.setDefinitionRef(defId);
 		edtResult.setVersion(defDefinition.getVersion());
 		if (edtDefinition.isSetNegate() && edtDefinition.isNegate()) {

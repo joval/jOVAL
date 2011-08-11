@@ -30,7 +30,6 @@ import oval.schemas.common.MessageType;
 import oval.schemas.systemcharacteristics.core.CollectedObjectsType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.ObjectFactory;
 import oval.schemas.systemcharacteristics.core.ObjectType;
 import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
 import oval.schemas.systemcharacteristics.core.ReferenceType;
@@ -84,7 +83,6 @@ public class SystemCharacteristics {
     private Hashtable<BigInteger, JAXBElement<? extends ItemType>> itemTable;
     private Hashtable<String, List<VariableValueType>> variableTable;
     private IPlugin plugin;
-    private ObjectFactory coreFactory;
 
     /**
      * Create an empty SystemCharacteristics for scanning.
@@ -93,7 +91,6 @@ public class SystemCharacteristics {
 	objectTable = new Hashtable<String, ObjectType>();
 	itemTable = new Hashtable<BigInteger, JAXBElement<? extends ItemType>>();
 	variableTable = new Hashtable<String, List<VariableValueType>>();
-	coreFactory = new ObjectFactory();
 	this.plugin = plugin;
     }
 
@@ -102,7 +99,6 @@ public class SystemCharacteristics {
      */
     SystemCharacteristics(OvalSystemCharacteristics osc) {
 	this.osc = osc;
-	coreFactory = new ObjectFactory();
 
 	itemTable = new Hashtable<BigInteger, JAXBElement<? extends ItemType>>();
 	for (JAXBElement<? extends ItemType> item : osc.getSystemData().getItem()) {
@@ -148,7 +144,7 @@ public class SystemCharacteristics {
      * and objects.
      */
     OvalSystemCharacteristics getOvalSystemCharacteristics(List<String> variables, List<BigInteger> itemIds) {
-	OvalSystemCharacteristics filteredSc = coreFactory.createOvalSystemCharacteristics();
+	OvalSystemCharacteristics filteredSc = JOVALSystem.factories.sc.core.createOvalSystemCharacteristics();
 	if (osc == null) {
 	    osc = getOvalSystemCharacteristics();
 	}
@@ -158,7 +154,7 @@ public class SystemCharacteristics {
 	//
 	// Add only objects whose items and variables are all specified.
 	//
-	CollectedObjectsType collectedObjectsType = coreFactory.createCollectedObjectsType();
+	CollectedObjectsType collectedObjectsType = JOVALSystem.factories.sc.core.createCollectedObjectsType();
 	for (ObjectType objectType : objectTable.values()) {
 	    boolean add = true;
 	    for (ReferenceType referenceType : objectType.getReference()) {
@@ -188,7 +184,7 @@ public class SystemCharacteristics {
 	//
 	// Add only items in the list.
 	//
-	SystemDataType systemDataType = coreFactory.createSystemDataType();
+	SystemDataType systemDataType = JOVALSystem.factories.sc.core.createSystemDataType();
 	for (BigInteger itemId : itemIds) {
 	    systemDataType.getItem().add(itemTable.get(itemId));
 	}
@@ -230,7 +226,7 @@ public class SystemCharacteristics {
 	ObjectType objectType = objectTable.get(objectId);
 	boolean created = false;
 	if (objectType == null) {
-	    objectType = coreFactory.createObjectType();
+	    objectType = JOVALSystem.factories.sc.core.createObjectType();
 	    objectType.setId(objectId);
 	    objectTable.put(objectId, objectType);
 	    created = true;
@@ -266,7 +262,7 @@ public class SystemCharacteristics {
 	if (objectType == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", objectId));
 	}
-	ReferenceType referenceType = coreFactory.createReferenceType();
+	ReferenceType referenceType = JOVALSystem.factories.sc.core.createReferenceType();
 	referenceType.setItemRef(itemId);
 	objectType.getReference().add(referenceType);
     }
@@ -387,18 +383,18 @@ public class SystemCharacteristics {
     // Private
 
     private OvalSystemCharacteristics createOvalSystemCharacteristics() {
-	OvalSystemCharacteristics sc = coreFactory.createOvalSystemCharacteristics();
+	OvalSystemCharacteristics sc = JOVALSystem.factories.sc.core.createOvalSystemCharacteristics();
 	sc.setGenerator(Engine.getGenerator());
 	sc.setSystemInfo(plugin.getSystemInfo());
 
-	CollectedObjectsType collectedObjectsType = coreFactory.createCollectedObjectsType();
+	CollectedObjectsType collectedObjectsType = JOVALSystem.factories.sc.core.createCollectedObjectsType();
 	List <ObjectType>objects = collectedObjectsType.getObject();
 	for (ObjectType objectType : objectTable.values()) {
 	    objects.add(objectType);
 	}
 	sc.setCollectedObjects(collectedObjectsType);
 
-	SystemDataType systemDataType = coreFactory.createSystemDataType();
+	SystemDataType systemDataType = JOVALSystem.factories.sc.core.createSystemDataType();
 	List <JAXBElement<? extends ItemType>>items = systemDataType.getItem();
 	for (JAXBElement<? extends ItemType> itemType : itemTable.values()) {
 	    items.add(itemType);
