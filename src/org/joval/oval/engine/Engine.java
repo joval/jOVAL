@@ -336,6 +336,15 @@ public class Engine implements IProducer {
 	}
     }
 
+    AdapterContext getAdapterContext(IAdapter adapter) throws NoSuchElementException {
+	for (AdapterContext ac : adapterContextList) {
+	    if (ac.getAdapter().equals(adapter)) {
+		return ac;
+	    }
+	}
+	throw new NoSuchElementException(adapter.toString());
+    }
+
     /**
      * Return the value of the Variable with the specified ID, and also add any chained variables to the provided list.
      */
@@ -413,26 +422,6 @@ public class Engine implements IProducer {
 	}
 
 	//
-	// Now that we have retrieved all the information we can, handle any Set objects.
-	//
-	Iterator<ObjectType> objectIter = definitions.iterateSetObjects();
-	while(objectIter.hasNext()) {
-	    ObjectType obj = objectIter.next();
-	    String objectId = obj.getId();
-	    Set s = getObjectSet(obj);
-	    if (s != null) {
-		try {
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-		    for (ItemType itemType : getSetItems(s)) {
-			sc.relateItem(objectId, itemType.getId());
-		    }
-		} catch (NoSuchElementException e) {
-		    throw new OvalException(e);
-		}
-	    }
-	}
-
-	//
 	// Finally, add all objects for which there are no adapters, and flag them NOT_COLLECTED
 	//
 	Iterator<ObjectType> allObjects = definitions.iterateObjects();
@@ -454,35 +443,162 @@ public class Engine implements IProducer {
      */
     private void scanAdapter(IAdapter adapter) throws OvalException {
 	if (adapter.connect()) {
+	    AdapterContext adapterContext = getAdapterContext(adapter);
+	    adapterContext.setActive(true);
 	    try {
-		Iterator<ObjectType> iter = definitions.iterateLeafObjects(adapter.getObjectClass());
+		Iterator<ObjectType> iter = definitions.iterateObjects(adapter.getObjectClass());
 		while (iter.hasNext()) {
 		    ObjectType obj = iter.next();
 		    String objectId = obj.getId();
-		    producer.sendNotify(this, MESSAGE_OBJECT, objectId);
-		    List<VariableValueType> variableValueTypes = new Vector<VariableValueType>();
-		    List<JAXBElement<? extends ItemType>> items = adapter.getItems(obj, variableValueTypes);
-		    if (items.size() == 0) {
-		        MessageType msg = JOVALSystem.factories.common.createMessageType();
-		        msg.setLevel(MessageLevelEnumeration.INFO);
-		        msg.setValue(JOVALSystem.getMessage("STATUS_EMPTY_OBJECT"));
-		        sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
+
+		    Boolean isSetSet = (Boolean)safeInvokeMethod(obj, "isSetSet");
+		    if (isSetSet != null && isSetSet.booleanValue()) {
+			//
+			// Is a Set
+			//
+			Set s = getObjectSet(obj);
+			if (s != null) {
+			    try {
+				sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+				for (ItemType itemType : getSetItems(s)) {
+				    sc.relateItem(objectId, itemType.getId());
+				}
+			    } catch (NoSuchElementException e) {
+				throw new OvalException(e);
+			    }
+			}
 		    } else {
-		        sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-		        for (JAXBElement<? extends ItemType> item : items) {
-		            BigInteger itemId = sc.storeItem(item);
-		            sc.relateItem(obj.getId(), itemId);
-		        }
-		    }
-		    for (VariableValueType var : variableValueTypes) {
-		        sc.storeVariable(var);
-		        sc.relateVariable(objectId, var.getVariableId());
+			//
+			// If items have been retrieved in the course of resolving a Set or a Variable, then skip
+			// its collection.
+			//
+			try {
+			    sc.getObject(objectId);
+			} catch (NoSuchElementException e) {
+			    scanObject(obj, new Vector<VariableValueType>());
+			}
 		    }
 		}
 	    } finally {
+		adapterContext.setActive(false);
 		adapter.disconnect();
 	    }
 	}
+    }
+
+    /**
+     * Scan an object live using an adapter, including crawling down any encountered Sets.
+     */
+    private List<ItemType> scanObject(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+	String objectId = obj.getId();
+	producer.sendNotify(this, MESSAGE_OBJECT, objectId);
+
+	Set s = getObjectSet(obj);
+	if (s == null) {
+	    IAdapter adapter = getAdapterForObject(obj.getClass());
+	    if (adapter != null && getAdapterContext(adapter).isActive()) {
+		List<JAXBElement<? extends ItemType>> items = adapter.getItems(obj, vars);
+		if (items.size() == 0) {
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.INFO);
+		    msg.setValue(JOVALSystem.getMessage("STATUS_EMPTY_OBJECT"));
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
+		} else {
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+		    for (JAXBElement<? extends ItemType> item : items) {
+			BigInteger itemId = sc.storeItem(item);
+			sc.relateItem(objectId, itemId);
+		    }
+		}
+		for (VariableValueType var : vars) {
+		    sc.storeVariable(var);
+		    sc.relateVariable(objectId, var.getVariableId());
+		}
+		List<ItemType> unwrapped = new Vector<ItemType>();
+		for (JAXBElement<? extends ItemType> item : items) {
+		    unwrapped.add(item.getValue());
+		}
+		return unwrapped;
+	    } else {
+		throw new RuntimeException(JOVALSystem.getMessage("ERROR_ADAPTER_UNAVAILABLE", obj.getClass().getName()));
+	    }
+	} else {
+	    try {
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+		List<ItemType> items = getSetItems(s);
+		for (ItemType item : items) {
+		    sc.relateItem(objectId, item.getId());
+		}
+		return items;
+	    } catch (NoSuchElementException e) {
+		throw new OvalException(e);
+	    }
+	}
+    }
+
+    private List<ItemType> getSetItems(Set s) throws NoSuchElementException, OvalException {
+	List<List<ItemType>> lists = new Vector<List<ItemType>>();
+	if (s.isSetSet()) {
+	    for (Set set : s.getSet()) {
+		lists.add(getSetItems(set));
+	    }
+	} else {
+	    for (String objectId : s.getObjectReference()) {
+		try {
+		    lists.add(sc.getItemsByObjectId(objectId));
+		} catch (NoSuchElementException e) {
+		    lists.add(scanObject(definitions.getObject(objectId), new Vector<VariableValueType>()));
+		}
+	    }
+	}
+
+	Hashtable<BigInteger, ItemType> results = null;
+	for (List<ItemType> list : lists) {
+	    Iterator<ItemType> iter = list.iterator();
+
+	    switch(s.getSetOperator()) {
+	      case UNION:
+		if (results == null) {
+		    results = new Hashtable<BigInteger, ItemType>();
+		}
+		while(iter.hasNext()) {
+		    ItemType item = iter.next();
+		    if (!results.containsKey(item.getId())) {
+			results.put(item.getId(), item);
+		    }
+		}
+		break;
+
+	      case INTERSECTION:
+		Hashtable<BigInteger, ItemType> intersection = new Hashtable<BigInteger, ItemType>();
+		while(iter.hasNext()) {
+		    ItemType item = iter.next();
+		    if (results == null) {
+			intersection.put(item.getId(), item);
+		    } else if (results.containsKey(item.getId())) {
+			intersection.put(item.getId(), item);
+		    }
+		}
+		results = intersection;
+		break;
+
+	      // This case works only because there can never be more than two child Sets.
+	      case COMPLEMENT:
+		if (results == null) {
+		    results = new Hashtable<BigInteger, ItemType>();
+		}
+		while(iter.hasNext()) {
+		    ItemType item = iter.next();
+		    if (results.containsKey(item.getId())) {
+			results.remove(item.getId());
+		    } else {
+			results.put(item.getId(), item);
+		    }
+		}
+		break;
+	    }
+	}
+	return new Vector<ItemType>(results.values());
     }
 
     /**
@@ -770,6 +886,8 @@ public class Engine implements IProducer {
     /**
      * Resolve the component.  If the component is a variable, resolve it and append it to the list, appending its value to
      * the value that is ultimately returned.
+     *
+     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-definitions-schema.html#FunctionGroup
      */
     private List<String> resolveInternal(Object object, List <VariableValueType>list)
 		throws NoSuchElementException, OvalException {
@@ -848,16 +966,7 @@ public class Engine implements IProducer {
 		// If the object has not yet been scanned, then it must be retrieved live from the adapter.
 		//
 		ObjectType ot = definitions.getObject(objectId);
-		IAdapter adapter = getAdapterForObject(ot.getClass());
-		if (adapter != null) {
-		    List<JAXBElement<? extends ItemType>> wrappedItems = adapter.getItems(ot, list);
-		    items = new Vector<ItemType>(wrappedItems.size());
-		    for (JAXBElement<? extends ItemType> wrappedItem : wrappedItems) {
-			items.add(wrappedItem.getValue());
-		    }
-		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", ot.getClass().getName()));
-		}
+		items = scanObject(ot, list);
 	    }
 	    List<String> values = extractItemData(objectId, oc, items);
 	    if (values == null || values.size() == 0) {
@@ -912,15 +1021,13 @@ public class Engine implements IProducer {
 	    SplitFunctionType split = (SplitFunctionType)object;
 	    List<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(split), list)) {
-		String[] sa = value.split(split.getDelimiter());
-		for (int i=0; i < sa.length; i++) {
-		    values.add(value + sa[i]);
-		}
+		values.addAll(StringTools.toList(StringTools.tokenize(value, split.getDelimiter(), false)));
 	    }
 	    return values;
 
 	//
-	// Process a RegexCapture, which returns the regions of a component resolved as a String that match a given pattern.
+	// Process a RegexCapture, which returns the regions of a component resolved as a String that match the first
+	// subexpression in the given pattern.
 	//
 	} else if (object instanceof RegexCaptureFunctionType) {
 	    RegexCaptureFunctionType rc = (RegexCaptureFunctionType)object;
@@ -928,8 +1035,14 @@ public class Engine implements IProducer {
 	    List<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(rc), list)) {
 		Matcher m = p.matcher(value);
-		while (m.find()) {
-		     values.add(m.group());
+		if (m.groupCount() > 0) {
+		    if (m.find()) {
+			values.add(m.group(1));
+		    } else {
+			values.add("");
+		    }
+		} else {
+		    values.add("");
 		}
 	    }
 	    return values;
@@ -940,12 +1053,18 @@ public class Engine implements IProducer {
 	} else if (object instanceof SubstringFunctionType) {
 	    SubstringFunctionType st = (SubstringFunctionType)object;
 	    int start = st.getSubstringStart();
-	    start = Math.min(1, start);
-	    start--; // in OVAL, the start index begins at 1 instead of 0
+	    start = Math.max(1, start);
+	    start--; // in OVAL, the index count begins at 1 instead of 0
 	    int len = st.getSubstringLength();
 	    List<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(st), list)) {
-		values.add(value.substring(start, start+len));
+		if (start > value.length()) {
+		    throw new OvalException(JOVALSystem.getMessage("ERROR_SUBSTRING", value, new Integer(start)));
+		} else if (len < 0 || value.length() <= (start+len)) {
+		    values.add(value.substring(start));
+		} else {
+		    values.add(value.substring(start, start+len));
+		}
 	    }
 	    return values;
 
@@ -1310,67 +1429,6 @@ public class Engine implements IProducer {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	}
 	return objectSet;
-    }
-
-    private List<ItemType> getSetItems(Set s) throws NoSuchElementException {
-	List<List<ItemType>> lists = new Vector<List<ItemType>>();
-	if (s.isSetSet()) {
-	    for (Set set : s.getSet()) {
-		lists.add(getSetItems(set));
-	    }
-	} else {
-	    for (String objectId : s.getObjectReference()) {
-		lists.add(sc.getItemsByObjectId(objectId));
-	    }
-	}
-
-	Hashtable<BigInteger, ItemType> results = null;
-	for (List<ItemType> list : lists) {
-	    Iterator<ItemType> iter = list.iterator();
-
-	    switch(s.getSetOperator()) {
-	      case UNION:
-		if (results == null) {
-		    results = new Hashtable<BigInteger, ItemType>();
-		}
-		while(iter.hasNext()) {
-		    ItemType item = iter.next();
-		    if (!results.containsKey(item.getId())) {
-			results.put(item.getId(), item);
-		    }
-		}
-		break;
-
-	      case INTERSECTION:
-		Hashtable<BigInteger, ItemType> intersection = new Hashtable<BigInteger, ItemType>();
-		while(iter.hasNext()) {
-		    ItemType item = iter.next();
-		    if (results == null) {
-			intersection.put(item.getId(), item);
-		    } else if (results.containsKey(item.getId())) {
-			intersection.put(item.getId(), item);
-		    }
-		}
-		results = intersection;
-		break;
-
-	      // This case works only because there can never be more than two child Sets.
-	      case COMPLEMENT:
-		if (results == null) {
-		    results = new Hashtable<BigInteger, ItemType>();
-		}
-		while(iter.hasNext()) {
-		    ItemType item = iter.next();
-		    if (results.containsKey(item.getId())) {
-			results.remove(item.getId());
-		    } else {
-			results.put(item.getId(), item);
-		    }
-		}
-		break;
-	    }
-	}
-	return new Vector<ItemType>(results.values());
     }
 
     /**

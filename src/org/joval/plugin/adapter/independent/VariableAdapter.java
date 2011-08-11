@@ -79,6 +79,7 @@ public class VariableAdapter implements IAdapter {
 	    VariableItem item = JOVALSystem.factories.sc.independent.createVariableItem();
 	    EntityItemVariableRefType ref = JOVALSystem.factories.sc.independent.createEntityItemVariableRefType();
 	    ref.setValue(vObj.getVarRef().getValue());
+	    item.setVarRef(ref);
 	    for (String value : values) {
 		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue(value);

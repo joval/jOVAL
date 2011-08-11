@@ -6,8 +6,6 @@ package org.joval.oval.engine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.lang.reflect.Method;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -51,9 +49,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 class Definitions {
-    private static final int LEAF	= 1;
-    private static final int SET	= 2;
-
     private static List<String> schematronValidationErrors = null;
 
     /**
@@ -190,12 +185,8 @@ class Definitions {
 	}
     }
 
-    Iterator<ObjectType> iterateLeafObjects(Class type) {
-	return new SpecifiedObjectIterator(type, LEAF);
-    }
-
-    Iterator<ObjectType> iterateSetObjects() {
-	return new SpecifiedObjectIterator(ObjectType.class, SET);
+    Iterator<ObjectType> iterateObjects(Class type) {
+	return new SpecifiedObjectIterator(type);
     }
 
     /**
@@ -269,28 +260,13 @@ class Definitions {
     // Private
 
 
-    private boolean isSet(ObjectType obj) {
-        try {
-            Method isSetSet = obj.getClass().getMethod("isSetSet");
-            return ((Boolean)isSetSet.invoke(obj)).booleanValue();
-        } catch (NoSuchMethodException e) {
-        } catch (IllegalAccessException e) {
-            JOVALSystem.getLogger().log(Level.SEVERE, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
-        } catch (InvocationTargetException e) {
-            JOVALSystem.getLogger().log(Level.SEVERE, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
-        }
-        return false;
-    }
-
     class SpecifiedObjectIterator implements Iterator<ObjectType> {
 	Iterator <ObjectType>iter;
 	Class type;
 	ObjectType next;
-	int flags;
 
-	SpecifiedObjectIterator(Class type, int flags) {
+	SpecifiedObjectIterator(Class type) {
 	    this.type = type;
-	    this.flags = flags;
 	    iter = objects.values().iterator();
 	}
 
@@ -315,12 +291,7 @@ class Definitions {
 	    while (true) {
 		ObjectType temp = iter.next();
 		if (type.isInstance(temp)) {
-		    boolean isSet = isSet(temp);
-		    if ((flags & LEAF) == LEAF && !isSet) {
-			return temp;
-		    } else if ((flags & SET) == SET && isSet) {
-			return temp;
-		    }
+		    return temp;
 		}
 	    }
 	}

@@ -110,6 +110,16 @@ class AdapterContext implements IAdapterContext {
 
     // Internal
 
+    boolean active = false;
+
+    void setActive(boolean active) {
+	this.active = active;
+    }
+
+    boolean isActive() {
+	return active;
+    }
+
     /**
      * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#OperationEnumeration
      */
@@ -178,6 +188,20 @@ class AdapterContext implements IAdapterContext {
 		return ResultEnumeration.FALSE;
 	    } else {
 		return ResultEnumeration.TRUE;
+	    }
+
+	  case BITWISE_AND:
+	    if (bitwiseAnd(state, item)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
+	  case BITWISE_OR:
+	    if (bitwiseOr(state, item)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
 	    }
 
 	  default:
@@ -320,6 +344,40 @@ class AdapterContext implements IAdapterContext {
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
 							   state.getDatatype(), OperationEnumeration.CASE_INSENSITIVE_EQUALS));
+	}
+    }
+
+    boolean bitwiseAnd(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+	switch(getDatatype(state.getDatatype())) {
+	  case INT:
+	    try {
+		int sInt = Integer.parseInt((String)state.getValue());
+		int iInt = Integer.parseInt((String)item.getValue());
+		return sInt == (sInt & iInt);
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+							   state.getDatatype(), OperationEnumeration.BITWISE_AND));
+	}
+    }
+
+    boolean bitwiseOr(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+	switch(getDatatype(state.getDatatype())) {
+	  case INT:
+	    try {
+		int sInt = Integer.parseInt((String)state.getValue());
+		int iInt = Integer.parseInt((String)item.getValue());
+		return sInt == (sInt | iInt);
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+							   state.getDatatype(), OperationEnumeration.BITWISE_OR));
 	}
     }
 

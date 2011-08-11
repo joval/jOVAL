@@ -58,7 +58,6 @@ public class Timestamp {
 	    s = s.substring(0, s.length()-4); // divide by 10k
 	}
 	BigInteger tm = new BigInteger(s).subtract(MILLIS_1601to1970);
-System.out.println("DAS " + timestamp.toString() + " -> " + tm.toString());
 	return tm.longValue();
     }
 }
