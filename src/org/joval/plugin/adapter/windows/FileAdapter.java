@@ -61,6 +61,7 @@ import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.Version;
+import org.joval.windows.Timestamp;
 import org.joval.windows.pe.ImageDOSHeader;
 import org.joval.windows.pe.ImageNTHeaders;
 import org.joval.windows.pe.ImageDataDirectory;
@@ -316,8 +317,8 @@ public class FileAdapter extends BaseFileAdapter {
 	if (wmi == null) {
 	    ownerType.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    cTimeType.setValue(toWindowsTimestamp(file.createTime()));
-	    mTimeType.setValue(toWindowsTimestamp(file.lastModified()));
+	    cTimeType.setValue(Timestamp.toWindowsTimestamp(file.createTime()));
+	    mTimeType.setValue(Timestamp.toWindowsTimestamp(file.lastModified()));
 	} else {
 	    try {
 		String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(file.getLocalName()));
@@ -345,11 +346,11 @@ public class FileAdapter extends BaseFileAdapter {
 		    ISWbemObject fileObj = objSet.iterator().next();
 		    ISWbemPropertySet filePropSet = fileObj.getProperties();
 		    ISWbemProperty aTimeProp = filePropSet.getItem("LastAccessed");
-		    aTimeType.setValue(toWindowsTimestamp(aTimeProp.getValueAsString()));
+		    aTimeType.setValue(Timestamp.toWindowsTimestamp(aTimeProp.getValueAsString()));
 		    ISWbemProperty cTimeProp = filePropSet.getItem("InstallDate");
-		    cTimeType.setValue(toWindowsTimestamp(cTimeProp.getValueAsString()));
+		    cTimeType.setValue(Timestamp.toWindowsTimestamp(cTimeProp.getValueAsString()));
 		    ISWbemProperty mTimeProp = filePropSet.getItem("LastModified");
-		    mTimeType.setValue(toWindowsTimestamp(mTimeProp.getValueAsString()));
+		    mTimeType.setValue(Timestamp.toWindowsTimestamp(mTimeProp.getValueAsString()));
 		}
 	    } catch (Exception e) {
 		MessageType msg = new MessageType();
@@ -567,39 +568,6 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	}
 	return null;
-    }
-
-    static final BigInteger CNANOS_1601to1970	= new BigInteger("116444736000000000");
-    static final BigInteger TEN_K		= new BigInteger("10000");
-
-    /**
-     * Given a Java timestamp, return a Windows-style decimal timestamp, converted to a String.  Note that the last 4
-     * digits will always be 0, as there is only enough information to express the time in milliseconds.
-     */
-    private String toWindowsTimestamp(long javaTS) {
-	BigInteger tm = new BigInteger(new Long(javaTS).toString());
-	tm = tm.multiply(TEN_K); // 10K 100 nanosecs in one millisec
-	return tm.add(CNANOS_1601to1970).toString();
-    }
-
-    private static final SimpleDateFormat WMIDATEFORMAT = new SimpleDateFormat("yyyyMMddHHmmssZ");
-
-    /**
-     * Given a WBEM timestamp of the form yyyyMMddHHmmss.SSSSSSsutc, return a Windows-style decimal timestamp.  The last
-     * digit will always be a 0, as there is only enough information to express the time in microseconds.
-     */
-    public static String toWindowsTimestamp(String wmistr) throws NumberFormatException, ParseException {
-	StringBuffer sb = new StringBuffer(wmistr.substring(0,14));
-	sb.append(wmistr.substring(21,22));
-	int utcMinOffset = Integer.parseInt(wmistr.substring(22));
-	int utcHrs = utcMinOffset/60;
-	int utcMins = utcMinOffset % 60;
-	String s = String.format("%02d%02d", utcHrs, utcMins);
-	sb.append(s);
-	long secondsSince1970 = WMIDATEFORMAT.parse(sb.toString()).getTime()/1000L;
-	StringBuffer sb2 = new StringBuffer(Long.toString(secondsSince1970));
-	BigInteger tm = new BigInteger(sb2.append(wmistr.substring(15, 21)).append("0").toString()); //cnanos
-	return tm.add(CNANOS_1601to1970).toString();
     }
 
     /**

@@ -108,13 +108,15 @@ class AdapterContext implements IAdapterContext {
 	}
     }
 
-
     // Internal
 
+    /**
+     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#OperationEnumeration
+     */
     ResultEnumeration testImpl(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
 	switch (state.getOperation()) {
 	  case CASE_INSENSITIVE_EQUALS:
-	    if (caseInsensitiveEquals(state, item)) {
+	    if (equalsIgnoreCase(state, item)) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
@@ -137,7 +139,7 @@ class AdapterContext implements IAdapterContext {
 	    }
 
 	  case CASE_INSENSITIVE_NOT_EQUAL:
-	    if (caseInsensitiveEquals(state, item)) {
+	    if (equalsIgnoreCase(state, item)) {
 		return ResultEnumeration.FALSE;
 	    } else {
 		return ResultEnumeration.TRUE;
@@ -183,8 +185,7 @@ class AdapterContext implements IAdapterContext {
 	}
     }
 
-    boolean equals(EntitySimpleBaseType state, EntityItemSimpleBaseType item)
-		throws TestException, OvalException {
+    boolean equals(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
@@ -193,14 +194,25 @@ class AdapterContext implements IAdapterContext {
 		throw new TestException(e);
 	    }
 
+	  case FLOAT:
+	    try {
+		return new Float((String)item.getValue()).equals(new Float((String)state.getValue()));
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
 	  case BOOLEAN:
 	    return getBoolean((String)state.getValue()) == getBoolean((String)item.getValue());
 
 	  case VERSION:
-	    try {
-		return new Version(item.getValue()).equals(new Version(state.getValue()));
-	    } catch (NumberFormatException e) {
-		throw new TestException(e);
+	    if (Version.isVersion((String)item.getValue()) && Version.isVersion((String)state.getValue())) {
+		try {
+		    return new Version(item.getValue()).greaterThanOrEquals(new Version(state.getValue()));
+		} catch (NumberFormatException e) {
+		    throw new TestException(e);
+		}
+	    } else {
+		return ((String)item.getValue()).compareTo((String)state.getValue()) == 0;
 	    }
 
 	  case EVR_STRING:
@@ -220,8 +232,7 @@ class AdapterContext implements IAdapterContext {
 	}
     }
 
-    boolean greaterThanOrEqual(EntitySimpleBaseType state, EntityItemSimpleBaseType item)
-		throws TestException, OvalException {
+    boolean greaterThanOrEqual(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
@@ -230,11 +241,22 @@ class AdapterContext implements IAdapterContext {
 		throw new TestException(e);
 	    }
 
-	  case VERSION:
+	  case FLOAT:
 	    try {
-		return new Version(item.getValue()).greaterThanOrEquals(new Version(state.getValue()));
+		return new Float((String)item.getValue()).compareTo(new Float((String)state.getValue())) >= 0;
 	    } catch (NumberFormatException e) {
 		throw new TestException(e);
+	    }
+
+	  case VERSION:
+	    if (Version.isVersion((String)item.getValue()) && Version.isVersion((String)state.getValue())) {
+		try {
+		    return new Version(item.getValue()).greaterThanOrEquals(new Version(state.getValue()));
+		} catch (NumberFormatException e) {
+		    throw new TestException(e);
+		}
+	    } else {
+		return ((String)item.getValue()).compareTo((String)state.getValue()) >= 0;
 	    }
 
 	  case EVR_STRING:
@@ -250,8 +272,7 @@ class AdapterContext implements IAdapterContext {
 	}
     }
 
-    boolean greaterThan(EntitySimpleBaseType state, EntityItemSimpleBaseType item)
-		throws TestException, OvalException {
+    boolean greaterThan(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
@@ -260,11 +281,22 @@ class AdapterContext implements IAdapterContext {
 		throw new TestException(e);
 	    }
 
-	  case VERSION:
+	  case FLOAT:
 	    try {
-		return new Version(item.getValue()).greaterThan(new Version(state.getValue()));
+		return new Float((String)item.getValue()).compareTo(new Float((String)state.getValue())) > 0;
 	    } catch (NumberFormatException e) {
 		throw new TestException(e);
+	    }
+
+	  case VERSION:
+	    if (Version.isVersion((String)item.getValue()) && Version.isVersion((String)state.getValue())) {
+		try {
+		    return new Version(item.getValue()).greaterThan(new Version(state.getValue()));
+		} catch (NumberFormatException e) {
+		    throw new TestException(e);
+		}
+	    } else {
+		return ((String)item.getValue()).compareTo((String)state.getValue()) > 0;
 	    }
 
 	  case EVR_STRING:
@@ -280,8 +312,7 @@ class AdapterContext implements IAdapterContext {
 	}
     }
 
-    boolean caseInsensitiveEquals(EntitySimpleBaseType state, EntityItemSimpleBaseType item)
-		throws TestException, OvalException {
+    boolean equalsIgnoreCase(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
 	switch(getDatatype(state.getDatatype())) {
 	  case STRING:
 	    return ((String)state.getValue()).equalsIgnoreCase((String)item.getValue());

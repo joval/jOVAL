@@ -12,7 +12,9 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
@@ -20,7 +22,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.Stack;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 import java.util.Vector;
 import java.util.logging.Logger;
 import java.util.logging.Level;
@@ -38,12 +42,17 @@ import oval.schemas.common.GeneratorType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperatorEnumeration;
+import oval.schemas.definitions.core.ArithmeticEnumeration;
+import oval.schemas.definitions.core.ArithmeticFunctionType;
+import oval.schemas.definitions.core.BeginFunctionType;
 import oval.schemas.definitions.core.ConcatFunctionType;
 import oval.schemas.definitions.core.ConstantVariable;
 import oval.schemas.definitions.core.CriteriaType;
 import oval.schemas.definitions.core.CriterionType;
+import oval.schemas.definitions.core.DateTimeFormatEnumeration;
 import oval.schemas.definitions.core.DefinitionType;
 import oval.schemas.definitions.core.DefinitionsType;
+import oval.schemas.definitions.core.EndFunctionType;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.EntitySimpleBaseType;
 import oval.schemas.definitions.core.EscapeRegexFunctionType;
@@ -98,6 +107,7 @@ import org.joval.oval.util.ExistenceData;
 import org.joval.oval.util.OperatorData;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
+import org.joval.windows.Timestamp;
 
 /**
  * Engine that evaluates OVAL tests on remote hosts.
@@ -739,11 +749,6 @@ public class Engine implements IProducer {
 	    return; // Just a String.
 	} else if (object instanceof LiteralComponentType) {
 	    return; // Just a String.
-	} else if (object instanceof ConcatFunctionType) {
-	    ConcatFunctionType concat = (ConcatFunctionType)object;
-	    for (Object child : concat.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		getObjectClasses(child, list);
-	    }
 	} else if (object instanceof ObjectComponentType) {
 	    ObjectComponentType oct = (ObjectComponentType)object;
 	    String objectId = oct.getObjectRef();
@@ -752,15 +757,20 @@ public class Engine implements IProducer {
 		list.add(clazz);
 	    }
 	} else {
-	    getObjectClasses(getComponent(object), list);
+	    Object obj = getComponent(object);
+	    if (obj instanceof List) {
+		for (Object child : (List)obj) {
+		    getObjectClasses(child, list);
+		}
+	    } else {
+		getObjectClasses(getComponent(object), list);
+	    }
 	}
     }
 
     /**
      * Resolve the component.  If the component is a variable, resolve it and append it to the list, appending its value to
      * the value that is ultimately returned.
-     *
-     * DAS: Implement the remaining component types: begin, end, arithmetic and timedifference.
      */
     private List<String> resolveInternal(Object object, List <VariableValueType>list)
 		throws NoSuchElementException, OvalException {
@@ -803,16 +813,16 @@ public class Engine implements IProducer {
 	} else if (object instanceof ConstantVariable) {
 	    ConstantVariable constantVariable = (ConstantVariable)object;
 	    String id = constantVariable.getId();
-	    List<String> stringValues = new Vector<String>();
+	    List<String> values = new Vector<String>();
 	    for (ValueType value : constantVariable.getValue()) {
 		VariableValueType variableValueType = new VariableValueType();
 		variableValueType.setVariableId(id);
 		String s = (String)value.getValue();
 		variableValueType.setValue(s);
 		list.add(variableValueType);
-		stringValues.add(s);
+		values.add(s);
 	    }
-	    return stringValues;
+	    return values;
 
 	//
 	// Add a static (literal) value.
@@ -890,27 +900,27 @@ public class Engine implements IProducer {
 	// Escape anything that could be pattern-matched.
 	//
 	} else if (object instanceof EscapeRegexFunctionType) {
-	    List<String> values = resolveInternal(getComponent((EscapeRegexFunctionType)object), list);
-	    List<String> newValues = new Vector<String>(values.size());
-	    for (String value : values) {
-		newValues.add(Matcher.quoteReplacement(value));
+	    List<String> values = new Vector<String>();
+	    for (String value : resolveInternal(getComponent((EscapeRegexFunctionType)object), list)) {
+//DAS: This is not right; TBD
+//		values.add(Pattern.quote(value));
+		values.add(Matcher.quoteReplacement(value));
 	    }
-	    return newValues;
+	    return values;
 
 	//
 	// Process a Split, which contains a component and a delimiter with which to split it up.
 	//
 	} else if (object instanceof SplitFunctionType) {
 	    SplitFunctionType split = (SplitFunctionType)object;
-	    List<String> values = resolveInternal(getComponent(split), list);
-	    List<String> newValues = new Vector<String>();
-	    for (String value : values) {
+	    List<String> values = new Vector<String>();
+	    for (String value : resolveInternal(getComponent(split), list)) {
 		String[] sa = value.split(split.getDelimiter());
 		for (int i=0; i < sa.length; i++) {
-		    newValues.add(value + sa[i]);
+		    values.add(value + sa[i]);
 		}
 	    }
-	    return newValues;
+	    return values;
 
 	//
 	// Process a RegexCapture, which returns the regions of a component resolved as a String that match a given pattern.
@@ -918,15 +928,14 @@ public class Engine implements IProducer {
 	} else if (object instanceof RegexCaptureFunctionType) {
 	    RegexCaptureFunctionType rc = (RegexCaptureFunctionType)object;
 	    Pattern p = Pattern.compile(rc.getPattern());
-	    List<String> values = resolveInternal(getComponent(rc), list);
-	    List<String> newValues = new Vector<String>();
-	    for (String value : values) {
+	    List<String> values = new Vector<String>();
+	    for (String value : resolveInternal(getComponent(rc), list)) {
 		Matcher m = p.matcher(value);
 		while (m.find()) {
-		     newValues.add(m.group());
+		     values.add(m.group());
 		}
 	    }
-	    return newValues;
+	    return values;
 
 	//
 	// Process a Substring
@@ -937,16 +946,134 @@ public class Engine implements IProducer {
 	    start = Math.min(1, start);
 	    start--; // in OVAL, the start index begins at 1 instead of 0
 	    int len = st.getSubstringLength();
-	    List<String> values = resolveInternal(getComponent(st), list);
-	    List<String> newValues = new Vector<String>();
-	    for (String value : values) {
-		newValues.add(value.substring(start, start+len));
+	    List<String> values = new Vector<String>();
+	    for (String value : resolveInternal(getComponent(st), list)) {
+		values.add(value.substring(start, start+len));
 	    }
-	    return newValues;
+	    return values;
+
+	//
+	// Process a Begin
+	//
+	} else if (object instanceof BeginFunctionType) {
+	    BeginFunctionType bt = (BeginFunctionType)object;
+	    String s = bt.getCharacter();
+	    List<String> values = new Vector<String>();
+	    for (String value : resolveInternal(getComponent(bt), list)) {
+		if (value.startsWith(s)) {
+		    values.add(value);
+		} else {
+		    values.add(s + value);
+		}
+	    }
+	    return values;
+
+	//
+	// Process an End
+	//
+	} else if (object instanceof EndFunctionType) {
+	    EndFunctionType et = (EndFunctionType)object;
+	    String s = et.getCharacter();
+	    List<String> values = new Vector<String>();
+	    for (String value : resolveInternal(getComponent(et), list)) {
+		if (value.endsWith(s)) {
+		    values.add(value);
+		} else {
+		    values.add(value + s);
+		}
+	    }
+	    return values;
+
+	//
+	// Process a TimeDifference
+	//
+	} else if (object instanceof TimeDifferenceFunctionType) {
+	    TimeDifferenceFunctionType tt = (TimeDifferenceFunctionType)object;
+	    List<String> values = new Vector<String>();
+	    List<Object> children = tt.getObjectComponentOrVariableComponentOrLiteralComponent();
+	    List<String> timestamp1;
+	    List<String> timestamp2;
+	    if (children.size() == 1) {
+		timestamp1 = new Vector<String>();
+		timestamp1.add(new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date()));
+		timestamp2 = resolveInternal(children.get(0), list);
+	    } else if (children.size() == 2) {
+		timestamp1 = resolveInternal(children.get(0), list);
+		timestamp2 = resolveInternal(children.get(1), list);
+	    } else {
+		throw new OvalException(JOVALSystem.getMessage("ERROR_BAD_TIMEDIFFERENCE", new Integer(children.size())));
+	    }
+	    for (String time1 : timestamp1) {
+		long tm1 = getTime(time1, tt.getFormat1());
+		for (String time2 : timestamp2) {
+		    long tm2 = getTime(time2, tt.getFormat2());
+		    long diff = (tm1 - tm2)/1000L; // convert diff to seconds
+		    values.add(Long.toString(diff));
+		}
+	    }
+	    return values;
+
+	//
+	// Process Arithmetic
+	//
+	} else if (object instanceof ArithmeticFunctionType) {
+	    ArithmeticFunctionType at = (ArithmeticFunctionType)object;
+	    Stack<List<String>> rows = new Stack<List<String>>();
+	    ArithmeticEnumeration op = at.getArithmeticOperation();
+	    for (Object child : at.getObjectComponentOrVariableComponentOrLiteralComponent()) {
+		List<String> row = new Vector<String>();
+		for (String cell : resolveInternal(child, list)) {
+		    row.add(cell);
+		}
+		rows.add(row);
+	    }
+	    if (rows.empty()) {
+		throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_COMPONENT_EMPTY"));
+	    } else {
+		return computeProduct(op, rows);
+	    }
 
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_COMPONENT", object.getClass().getName()));
 	}
+    }
+
+    private List<String> computeProduct(ArithmeticEnumeration op, Stack<List<String>> rows) {
+	List<String> results = new Vector<String>();
+	if (rows.empty()) {
+	    switch(op) {
+		case ADD:
+		  results.add("0");
+		  break;
+		case MULTIPLY:
+		  results.add("1");
+		  break;
+	    }
+	} else {
+	    for (String value : rows.pop()) {
+		Stack<List<String>> copy = new Stack<List<String>>();
+		copy.addAll(rows);
+		for (String otherValue : computeProduct(op, copy)) {
+		    switch(op) {
+		      case ADD:
+			if (value.indexOf(".") == -1 && otherValue.indexOf(".") == -1) {
+			    results.add(new BigInteger(value).add(new BigInteger(otherValue)).toString());
+			} else {
+			    results.add(new BigDecimal(value).add(new BigDecimal(otherValue)).toString());
+			}
+			break;
+		      case MULTIPLY:
+			if (value.indexOf(".") == -1 && otherValue.indexOf(".") == -1) {
+			    results.add(new BigInteger(value).multiply(new BigInteger(otherValue)).toString());
+			} else {
+			    results.add(new BigDecimal(value).multiply(new BigDecimal(otherValue)).toString());
+			}
+			break;
+		    }
+		}
+	    }
+	}
+	return results;
     }
 
     /**
@@ -1069,6 +1196,10 @@ public class Engine implements IProducer {
 	    return obj;
 	}
 	obj = safeInvokeMethod(unknown, "getVariableComponent");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getObjectComponentOrVariableComponentOrLiteralComponent");
 	if (obj != null) {
 	    return obj;
 	}
@@ -1208,5 +1339,140 @@ public class Engine implements IProducer {
 	    }
 	}
 	return new Vector<ItemType>(results.values());
+    }
+
+    /**
+     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-definitions-schema.html#DateTimeFormatEnumeration
+     */
+    long getTime(String s, DateTimeFormatEnumeration format) throws OvalException {
+	try {
+	    String sdf = null;
+
+	    switch(format) {
+	      case SECONDS_SINCE_EPOCH:
+		return Long.parseLong(s) * 1000L;
+    
+	      case WIN_FILETIME:
+		return Timestamp.getTime(new BigInteger(s, 16));
+
+	      case DAY_MONTH_YEAR:
+		switch(s.length()) {
+		  case 8:
+		  case 9:
+		  case 10:
+		    if (s.charAt(1) == '/' || s.charAt(2) == '/') {
+			sdf = "dd/MM/yyyy";
+		    } else {
+			sdf = "dd-MM-yyyy";
+		    }
+		    break;
+    
+		  case 18:
+		  case 19:
+		  case 20:
+		    if (s.charAt(1) == '/' || s.charAt(2) == '/') {
+			sdf = "dd/MM/yyyy HH:mm:ss";
+		    } else {
+			sdf = "dd-MM-yyyy HH:mm:ss";
+		    }
+		    break;
+
+		  default:
+		    break;
+		}
+		break;
+    
+	      case MONTH_DAY_YEAR:
+		switch(s.length()) {
+		  case 8:
+		  case 9:
+		  case 10:
+		    if (s.charAt(1) == '/' || s.charAt(2) == '/') {
+			sdf = "MM/dd/yyyy";
+		    } else {
+			sdf = "MM-dd-yyyy";
+		    }
+		    break;
+    
+		  case 11:
+		  case 12:
+		    sdf = "MMM, dd yyyy";
+		    break;
+
+		  case 17:
+		  case 18:
+		  case 19:
+		  case 20:
+		  case 21:
+		    if (s.charAt(1) == '/' || s.charAt(2) == '/') {
+			sdf = "MM/dd/yyyy HH:mm:ss";
+			break;
+		    } else if (s.charAt(1) == '-' || s.charAt(2) == '-') {
+			sdf = "MM-dd-yyyy HH:mm:ss";
+			break;
+		    } else if (s.charAt(3) == ',') {
+			sdf = "MMM, dd yyyy HH:mm:ss";
+			break;
+		    }
+		    // fall-through
+    
+		  default:
+		    if (s.indexOf(":") == -1) {
+			sdf = "MMMMM, dd yyyy";
+		    } else {
+			if (s.indexOf(",") == -1) {
+			    sdf = "MMMMM dd yyyy HH:mm:ss";
+			} else {
+			    sdf = "MMMMM, dd yyyy HH:mm:ss";
+			}
+		    }
+		    break;
+		}
+		break;
+    
+	      case YEAR_MONTH_DAY: {
+		switch(s.length()) {
+		  case 8:
+		  case 9:
+		  case 10:
+		    if (s.charAt(4) == '/') {
+			sdf = "yyyy/MM/dd";
+		    } else if (s.charAt(4) == '-') {
+			sdf = "yyyy-MM-dd";
+		    } else {
+			sdf = "yyyyMMdd";
+		    }
+		    break;
+
+		  case 15:
+		    sdf = "yyyyMMdd'T'HHmmss";
+		    break;
+    
+		  case 19:
+		    if (s.charAt(4) == '/') {
+			sdf = "yyyy/MM/dd HH:mm:ss";
+		    } else {
+			sdf = "yyyy-MM-dd HH:mm:ss";
+		    }
+		    break;
+    
+		  default:
+		    break;
+		}
+		break;
+	      }
+	    }
+
+	    if (sdf != null) {
+		SimpleDateFormat df = new SimpleDateFormat(sdf);
+		df.setTimeZone(TimeZone.getTimeZone("GMT"));
+		return df.parse(s).getTime();
+	    }
+	} catch (Exception e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_TIME_PARSE", s, format, e.getMessage()));
+	}
+
+	throw new OvalException(JOVALSystem.getMessage("ERROR_ILLEGAL_TIME", format, s));
     }
 }
