@@ -6,6 +6,8 @@ package org.joval.util;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Vector;
 import java.util.NoSuchElementException;
 
 /**
@@ -36,15 +38,24 @@ public class StringTools {
      * A StringTokenizer operates on single-character tokens.  This acts on a delimiter that is a multi-character
      * String.
      */
-    public static Iterator <String>tokenize(String target, String delimiter) {
+    public static Iterator<String> tokenize(String target, String delimiter) {
 	return new StringTokenIterator(target, delimiter);
     }
 
     /**
      * Gives you an option to keep any zero-length tokens at the ends of the target, if it begins or ends with the delimiter.
+     * This guarantees that you get one token for every time the delimiter appears in the target String.
      */
-    public static Iterator <String>tokenize(String target, String delimiter, boolean trim) {
+    public static Iterator<String> tokenize(String target, String delimiter, boolean trim) {
 	return new StringTokenIterator(target, delimiter, trim);
+    }
+
+    public static List<String> toList(Iterator<String> iter) {
+	List<String> list = new Vector<String>();
+	while (iter.hasNext()) {
+	    list.add(iter.next());
+	}
+	return list;
     }
 
     public static char[] toCharArray(byte[] buff) {
@@ -80,8 +91,8 @@ public class StringTools {
 	}
     }
 
-    static final class StringTokenIterator implements Iterator <String> {
-	private String target, delimiter, next;
+    static final class StringTokenIterator implements Iterator<String> {
+	private String target, delimiter, next, last=null;
 	int pointer;
 
 	StringTokenIterator(String target, String delimiter) {
@@ -125,16 +136,25 @@ public class StringTools {
 		return tmp;
 	    }
 	    int i = target.indexOf(delimiter, pointer);
-	    if (i > -1) {
-		String tmp = target.substring(pointer, i);
-		pointer = (i + delimiter.length());
+	    if (last != null) {
+		String tmp = last;
+		last = null;
 		return tmp;
-	    } else if (pointer < target.length()) {
+	    } else if (pointer >= target.length()) {
+		throw new NoSuchElementException("No tokens after " + pointer);
+	    } else if (i == -1) {
 		String tmp = target.substring(pointer);
 		pointer = target.length();
 		return tmp;
+	    } else {
+		String tmp = target.substring(pointer, i);
+		pointer = (i + delimiter.length());
+		if (pointer == target.length()) {
+		    // special case; append an empty token when ending with the token
+		    last = "";
+		}
+		return tmp;
 	    }
-	    throw new NoSuchElementException("No tokens after " + pointer);
 	}
 
 	public void remove() {

@@ -35,10 +35,12 @@ import org.joval.util.TreeNode;
 public abstract class CachingFilesystem implements IFilesystem, IPathRedirector {
     private Map <String, TreeNode>cache;
     private boolean caseInsensitive;
+    private String ESCAPED_DELIM;
 
     public CachingFilesystem() {
 	cache = new Hashtable<String, TreeNode>();
 	caseInsensitive = false;
+	ESCAPED_DELIM = Matcher.quoteReplacement(getDelimString());
     }
 
     // Implement IFilesystem (sparsely)
@@ -197,7 +199,7 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
     // Private
 
     private String getToken(String path) {
-	int ptr = path.indexOf(Matcher.quoteReplacement(getDelimString()));
+	int ptr = path.indexOf(ESCAPED_DELIM);
 	if (ptr != -1) {
 	    return path.substring(0, ptr);
 	} else {
@@ -206,12 +208,11 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
     }
 
     private String trimToken(String path) {
-	String s = Matcher.quoteReplacement(getDelimString());
-	int ptr = path.indexOf(s);
+	int ptr = path.indexOf(ESCAPED_DELIM);
 	if (ptr == 0) {
 	    return path.substring(1);
 	} else if (ptr > 0) {
-	    return path.substring(ptr + s.length());
+	    return path.substring(ptr + ESCAPED_DELIM.length());
 	} else {
 	    return null;
 	}

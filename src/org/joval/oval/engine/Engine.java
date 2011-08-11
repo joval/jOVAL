@@ -107,6 +107,7 @@ import org.joval.oval.util.ExistenceData;
 import org.joval.oval.util.OperatorData;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
+import org.joval.util.StringTools;
 import org.joval.windows.Timestamp;
 
 /**
@@ -139,7 +140,6 @@ public class Engine implements IProducer {
 	COMPLETE_OK,
 	COMPLETE_ERR;
     }
-    private State state;
 
     /**
      * Unmarshal an XML file and return the OvalDefinitions root object.
@@ -163,6 +163,7 @@ public class Engine implements IProducer {
     private IPlugin plugin;
     private OvalException error;
     private Results results;
+    private State state;
     private DefinitionFilter filter;
     private List<AdapterContext> adapterContextList;
     Producer producer;
@@ -900,9 +901,7 @@ public class Engine implements IProducer {
 	} else if (object instanceof EscapeRegexFunctionType) {
 	    List<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent((EscapeRegexFunctionType)object), list)) {
-//DAS: This is not right; TBD
-//		values.add(Pattern.quote(value));
-		values.add(Matcher.quoteReplacement(value));
+		values.add(escapeRegex(value));
 	    }
 	    return values;
 
@@ -1036,6 +1035,41 @@ public class Engine implements IProducer {
 	}
     }
 
+    private static final String ESCAPE = "\\";
+    private static final String[] REGEX_CHARS = {ESCAPE, "^", ".", "$", "|", "(", ")", "[", "]", "{", "}", "*", "+", "?"};
+
+    private String escapeRegex(String s) {
+	Stack<String> delims = new Stack<String>();
+	for (int i=0; i < REGEX_CHARS.length; i++) {
+	    delims.add(REGEX_CHARS[i]);
+	}
+	return safeEscape(delims, s);
+    }
+
+    private String safeEscape(Stack<String> delims, String s) {
+	if (delims.empty()) {
+	    return s;
+	} else {
+	    String delim = delims.pop();
+	    Stack<String> copy = new Stack<String>();
+	    copy.addAll(delims);
+	    List<String> list = StringTools.toList(StringTools.tokenize(s, delim, false));
+	    int len = list.size();
+	    StringBuffer result = new StringBuffer();
+	    for (int i=0; i < len; i++) {
+		    if (i > 0) {
+			result.append(ESCAPE);
+			result.append(delim);
+		    }
+		    result.append(safeEscape(copy, list.get(i)));
+	    }
+	    return result.toString();
+	}
+    }
+
+    /**
+     * Perform the Arithmetic operation on permutations of the Stack, and return the resulting permutations.
+     */
     private List<String> computeProduct(ArithmeticEnumeration op, Stack<List<String>> rows) {
 	List<String> results = new Vector<String>();
 	if (rows.empty()) {
