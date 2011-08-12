@@ -20,6 +20,7 @@ CLASSES=\
 	org.joval.oval.engine.Variables					\
 	org.joval.oval.util.CheckData					\
 	org.joval.oval.util.ExistenceData				\
+	org.joval.oval.util.ItemSet					\
 	org.joval.oval.util.OperatorData				\
 	org.joval.oval.xml.OvalNamespacePrefixMapper			\
 	org.joval.util.Checksum						\

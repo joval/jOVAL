@@ -3,12 +3,15 @@
 
 package org.joval.oval.engine;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -81,8 +84,11 @@ public class SystemCharacteristics {
     private OvalSystemCharacteristics osc;
     private Hashtable<String, ObjectType> objectTable;
     private Hashtable<BigInteger, JAXBElement<? extends ItemType>> itemTable;
+    private Hashtable<String, BigInteger> itemChecksums;
     private Hashtable<String, List<VariableValueType>> variableTable;
     private IPlugin plugin;
+    private JAXBContext ctx;
+    private Marshaller csMarshaller = null;
 
     /**
      * Create an empty SystemCharacteristics for scanning.
@@ -91,7 +97,17 @@ public class SystemCharacteristics {
 	objectTable = new Hashtable<String, ObjectType>();
 	itemTable = new Hashtable<BigInteger, JAXBElement<? extends ItemType>>();
 	variableTable = new Hashtable<String, List<VariableValueType>>();
+	itemChecksums = new Hashtable<String, BigInteger>();
 	this.plugin = plugin;
+	try {
+	    ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS));
+	    csMarshaller = ctx.createMarshaller();
+	    OvalNamespacePrefixMapper.configure(csMarshaller, OvalNamespacePrefixMapper.URI.SC);
+	} catch (JAXBException e) {
+	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
+	} catch (FactoryConfigurationError e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	}
     }
 
     /**
@@ -212,9 +228,14 @@ public class SystemCharacteristics {
 		itemTable.put(itemId, wrappedItem);
 	    }
 	} else {
-	    itemId = new BigInteger(new Integer(itemTable.size()).toString());
+	    String cs = getChecksum(wrappedItem);
+	    itemId = itemChecksums.get(cs);
+	    if (itemId == null) {
+		itemId = new BigInteger(new Integer(itemTable.size()).toString());
+		itemTable.put(itemId, wrappedItem);
+		itemChecksums.put(cs, itemId);
+	    }
 	    item.setId(itemId);
-	    itemTable.put(itemId, wrappedItem);
 	}
 	return itemId;
     }
@@ -358,7 +379,6 @@ public class SystemCharacteristics {
     void write(File f) {
 	OutputStream out = null;
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS));
 	    Marshaller marshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
 	    out = new FileOutputStream(f);
@@ -402,5 +422,26 @@ public class SystemCharacteristics {
 	sc.setSystemData(systemDataType);
 
 	return sc;
+    }
+
+    private String getChecksum(JAXBElement elt) {
+	ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+	    csMarshaller.marshal(elt, out);
+	    byte[] buff = out.toByteArray();
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            digest.update(buff, 0, buff.length);
+	    byte[] cs = digest.digest();
+            StringBuffer sb = new StringBuffer();
+            for (int i=0; i < cs.length; i++) {
+                sb.append(Integer.toHexString(0xFF & cs[i]));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	} catch (JAXBException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+        }
+	return null;
     }
 }

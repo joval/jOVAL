@@ -277,10 +277,6 @@ public class FileAdapter extends BaseFileAdapter {
 	// Get some information from the IFile
 	//
 	fItem.setStatus(StatusEnumeration.EXISTS);
-	EntityItemIntType sizeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	sizeType.setValue(new Long(file.length()).toString());
-	sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	fItem.setSize(sizeType);
 	EntityItemFileTypeType typeType = JOVALSystem.factories.sc.windows.createEntityItemFileTypeType();
 	switch(file.getType()) {
 	  case IFile.FILE_TYPE_DISK:
@@ -314,8 +310,11 @@ public class FileAdapter extends BaseFileAdapter {
 	if (wmi == null) {
 	    ownerType.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	    fItem.setATime(aTimeType);
 	    cTimeType.setValue(Timestamp.toWindowsTimestamp(file.createTime()));
+	    fItem.setCTime(cTimeType);
 	    mTimeType.setValue(Timestamp.toWindowsTimestamp(file.lastModified()));
+	    fItem.setMTime(mTimeType);
 	} else {
 	    try {
 		String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(file.getLocalName()));
@@ -344,10 +343,13 @@ public class FileAdapter extends BaseFileAdapter {
 		    ISWbemPropertySet filePropSet = fileObj.getProperties();
 		    ISWbemProperty aTimeProp = filePropSet.getItem("LastAccessed");
 		    aTimeType.setValue(Timestamp.toWindowsTimestamp(aTimeProp.getValueAsString()));
+		    fItem.setATime(aTimeType);
 		    ISWbemProperty cTimeProp = filePropSet.getItem("InstallDate");
 		    cTimeType.setValue(Timestamp.toWindowsTimestamp(cTimeProp.getValueAsString()));
+		    fItem.setCTime(cTimeType);
 		    ISWbemProperty mTimeProp = filePropSet.getItem("LastModified");
 		    mTimeType.setValue(Timestamp.toWindowsTimestamp(mTimeProp.getValueAsString()));
+		    fItem.setMTime(mTimeType);
 		}
 	    } catch (Exception e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
@@ -358,14 +360,15 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	}
 	fItem.setOwner(ownerType);
-	fItem.setATime(aTimeType);
-	fItem.setCTime(cTimeType);
-	fItem.setMTime(mTimeType);
 
 	//
 	// If possible, read the PE header information
 	//
 	if (file.isFile()) {
+	    EntityItemIntType sizeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	    sizeType.setValue(new Long(file.length()).toString());
+	    sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	    fItem.setSize(sizeType);
 	    if (file.length() > 0) {
 		readPEHeaders(file, fItem);
 	    } else {

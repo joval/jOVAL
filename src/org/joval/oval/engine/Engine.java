@@ -58,6 +58,7 @@ import oval.schemas.definitions.core.EntitySimpleBaseType;
 import oval.schemas.definitions.core.EscapeRegexFunctionType;
 import oval.schemas.definitions.core.ExtendDefinitionType;
 import oval.schemas.definitions.core.ExternalVariable;
+import oval.schemas.definitions.core.Filter;
 import oval.schemas.definitions.core.LiteralComponentType;
 import oval.schemas.definitions.core.LocalVariable;
 import oval.schemas.definitions.core.ObjectComponentType;
@@ -104,6 +105,7 @@ import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.oval.util.CheckData;
 import org.joval.oval.util.ExistenceData;
+import org.joval.oval.util.ItemSet;
 import org.joval.oval.util.OperatorData;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
@@ -336,6 +338,15 @@ public class Engine implements IProducer {
 	}
     }
 
+    IAdapter getAdapterForState(Class clazz) {
+	for (AdapterContext ctx : adapterContextList) {
+	    if (clazz.equals(ctx.getAdapter().getStateClass())) {
+		return ctx.getAdapter();
+	    }
+	}
+	return null;
+    }
+
     AdapterContext getAdapterContext(IAdapter adapter) throws NoSuchElementException {
 	for (AdapterContext ac : adapterContextList) {
 	    if (ac.getAdapter().equals(adapter)) {
@@ -524,8 +535,8 @@ public class Engine implements IProducer {
 	    }
 	} else {
 	    try {
-		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
 		List<ItemType> items = getSetItems(s);
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
 		for (ItemType item : items) {
 		    sc.relateItem(objectId, item.getId());
 		}
@@ -536,7 +547,13 @@ public class Engine implements IProducer {
 	}
     }
 
+    /**
+     * Get a list of items belonging to a Set.
+     */
     private List<ItemType> getSetItems(Set s) throws NoSuchElementException, OvalException {
+	//
+	// First, retrieve the filtered list of items in the Set, recursively.
+	//
 	List<List<ItemType>> lists = new Vector<List<ItemType>>();
 	if (s.isSetSet()) {
 	    for (Set set : s.getSet()) {
@@ -544,61 +561,79 @@ public class Engine implements IProducer {
 	    }
 	} else {
 	    for (String objectId : s.getObjectReference()) {
+		List<ItemType> items = null;
 		try {
-		    lists.add(sc.getItemsByObjectId(objectId));
+		    items = sc.getItemsByObjectId(objectId);
 		} catch (NoSuchElementException e) {
-		    lists.add(scanObject(definitions.getObject(objectId), new Vector<VariableValueType>()));
+		    items = scanObject(definitions.getObject(objectId), new Vector<VariableValueType>());
+		}
+		//
+		// Apply filters, if any
+		// DAS: needs better error-handling
+		//
+		List<ItemType> filteredItems = new Vector<ItemType>();
+		List<Filter> filters = s.getFilter();
+		if (filters.size() > 0) {
+		    for (Filter filter : s.getFilter()) {
+			StateType state = definitions.getState(filter.getValue());
+			for (ItemType item : items) {
+			    try {
+				ResultEnumeration result = getAdapterForState(state.getClass()).compare(state, item);
+				switch(filter.getAction()) {
+				  case INCLUDE:
+				    if (result == ResultEnumeration.TRUE) {
+					filteredItems.add(item);
+				    }
+				    break;
+
+				  case EXCLUDE:
+				    if (result != ResultEnumeration.TRUE) {
+					filteredItems.add(item);
+				    }
+				    break;
+				}
+			    } catch (TestException e) {
+				JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+			    }
+			}
+		    }
+		    lists.add(filteredItems);
+		} else {
+		    lists.add(items);
 		}
 	    }
 	}
 
-	Hashtable<BigInteger, ItemType> results = null;
-	for (List<ItemType> list : lists) {
-	    Iterator<ItemType> iter = list.iterator();
-
-	    switch(s.getSetOperator()) {
-	      case UNION:
-		if (results == null) {
-		    results = new Hashtable<BigInteger, ItemType>();
+	switch(s.getSetOperator()) {
+	  case INTERSECTION: {
+	    ItemSet intersection = null;
+	    for (List<ItemType> items : lists) {
+		if (intersection == null) {
+		    intersection = new ItemSet(items);
+		} else {
+		    intersection = intersection.intersection(new ItemSet(items));
 		}
-		while(iter.hasNext()) {
-		    ItemType item = iter.next();
-		    if (!results.containsKey(item.getId())) {
-			results.put(item.getId(), item);
-		    }
-		}
-		break;
-
-	      case INTERSECTION:
-		Hashtable<BigInteger, ItemType> intersection = new Hashtable<BigInteger, ItemType>();
-		while(iter.hasNext()) {
-		    ItemType item = iter.next();
-		    if (results == null) {
-			intersection.put(item.getId(), item);
-		    } else if (results.containsKey(item.getId())) {
-			intersection.put(item.getId(), item);
-		    }
-		}
-		results = intersection;
-		break;
-
-	      // This case works only because there can never be more than two child Sets.
-	      case COMPLEMENT:
-		if (results == null) {
-		    results = new Hashtable<BigInteger, ItemType>();
-		}
-		while(iter.hasNext()) {
-		    ItemType item = iter.next();
-		    if (results.containsKey(item.getId())) {
-			results.remove(item.getId());
-		    } else {
-			results.put(item.getId(), item);
-		    }
-		}
-		break;
 	    }
+	    return intersection.toList();
+	  }
+
+	  case COMPLEMENT: {
+	    if (lists.size() == 2) {
+		return new ItemSet(lists.get(0)).complement(new ItemSet(lists.get(1))).toList();
+	    } else {
+		throw new OvalException(JOVALSystem.getMessage("ERROR_SET_COMPLEMENT", new Integer(lists.size())));
+	    }
+	  }
+
+	  case UNION:
+	  default: {
+	    ItemSet union = new ItemSet();
+	    for (List<ItemType> items : lists) {
+		union = union.union(new ItemSet(items));
+	    }
+	    return union.toList();
+	  }
 	}
-	return new Vector<ItemType>(results.values());
     }
 
     /**

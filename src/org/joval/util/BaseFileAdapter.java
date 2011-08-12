@@ -92,12 +92,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    dirPath = path.substring(0, path.lastIndexOf(fs.getDelimString()));
 		}
 
-/*DAS -- should the path end with the delimiter string, or not?
-		if (!dirPath.endsWith(fs.getDelimString())) {
-		    dirPath += fs.getDelimString();
-		}
-*/
-
 		if (fObj.isSetFilepath()) {
 		    if (isDirectory) {
 			//
@@ -270,7 +264,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    //
 		    List<String> newList = new Vector<String>();
 		    for (String value : list) {
-			if (((String)path.getValue()).indexOf(".*") != -1) {
+			if (((String)path.getValue()).indexOf(".*") != -1 ||
+			    ((String)path.getValue()).indexOf(".+") != -1) {
 			    List<String> l = new Vector<String>();
 			    l.add(value);
 			    newList.addAll(getPaths(l, -1, "down"));
@@ -399,7 +394,19 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    }
 		}
 	    }
-	    return results;
+	    //
+	    // Eliminate any duplicates, and remove any trailing slashes
+	    //
+	    List<String> deduped = new Vector<String>();
+	    for (String s : results) {
+		if (s.endsWith(fs.getDelimString())) {
+		    s = s.substring(0, s.lastIndexOf(fs.getDelimString()));
+		}
+		if (!deduped.contains(s)) {
+		    deduped.add(s);
+		}
+	    }
+	    return deduped;
 	}
     }
 

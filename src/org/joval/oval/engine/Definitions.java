@@ -193,14 +193,20 @@ class Definitions {
      * Type-checked retrieval of a StateType.
      */
     StateType getState(String id, Class type) throws OvalException {
-	StateType state = states.get(id);
-	if (state == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_STATE", id));
-	} else if (type.isInstance(state)) {
+	StateType state = getState(id);
+	if (type.isInstance(state)) {
 	    return state;
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", type.getName(), state.getClass().getName()));
 	}
+    }
+
+    StateType getState(String id) throws OvalException {
+	StateType state = states.get(id);
+	if (state == null) {
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_STATE", id));
+	}
+	return state;
     }
 
     TestType getTest(String id) throws OvalException {
