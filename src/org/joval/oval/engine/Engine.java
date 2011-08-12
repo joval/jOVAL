@@ -442,7 +442,7 @@ public class Engine implements IProducer {
 	    if (!sc.containsObject(objectId)) {
 		MessageType message = JOVALSystem.factories.common.createMessageType();
 		message.setLevel(MessageLevelEnumeration.WARNING);
-		message.setValue(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", obj.getClass().getName()));
+		message.setValue(JOVALSystem.getMessage("ERROR_ADAPTER_MISSING", obj.getClass().getName()));
 		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
 	    }
 	}
@@ -507,7 +507,9 @@ public class Engine implements IProducer {
 	Set s = getObjectSet(obj);
 	if (s == null) {
 	    IAdapter adapter = getAdapterForObject(obj.getClass());
-	    if (adapter != null && getAdapterContext(adapter).isActive()) {
+	    if (adapter == null) {
+		throw new OvalException(JOVALSystem.getMessage("ERROR_ADAPTER_MISSING", obj.getClass().getName()));
+	    } else if (getAdapterContext(adapter).isActive()) {
 		List<JAXBElement<? extends ItemType>> items = adapter.getItems(obj, vars);
 		if (items.size() == 0) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
@@ -531,7 +533,7 @@ public class Engine implements IProducer {
 		}
 		return unwrapped;
 	    } else {
-		throw new RuntimeException(JOVALSystem.getMessage("ERROR_ADAPTER_UNAVAILABLE", obj.getClass().getName()));
+		throw new OvalException(JOVALSystem.getMessage("ERROR_ADAPTER_UNAVAILABLE", obj.getClass().getName()));
 	    }
 	} else {
 	    try {
@@ -679,7 +681,7 @@ public class Engine implements IProducer {
 		    if (adapter == null) {
 			MessageType message = JOVALSystem.factories.common.createMessageType();
 			message.setLevel(MessageLevelEnumeration.WARNING);
-			message.setValue(JOVALSystem.getMessage("ERROR_MISSING_ADAPTER", testDefinition.getClass().getName()));
+			message.setValue(JOVALSystem.getMessage("ERROR_ADAPTER_MISSING", testDefinition.getClass().getName()));
 			testResult.getMessage().add(message);
 			testResult.setResult(ResultEnumeration.NOT_EVALUATED);
 		    } else if (getObjectRef(testDefinition) == null) {
