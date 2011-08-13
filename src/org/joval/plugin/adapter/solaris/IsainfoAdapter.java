@@ -100,14 +100,24 @@ public class IsainfoAdapter implements IAdapter {
 	IsainfoItem item = (IsainfoItem)it;
 
 	if (state.isSetApplicationIsa()) {
-	    return ctx.test(state.getApplicationIsa(), item.getApplicationIsa());
-	} else if (state.isSetKernelIsa()) {
-	    return ctx.test(state.getKernelIsa(), item.getKernelIsa());
-	} else if (state.isSetBits()) {
-	    return ctx.test(state.getBits(), item.getBits());
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
+	    ResultEnumeration result = ctx.test(state.getApplicationIsa(), item.getApplicationIsa());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
 	}
+	if (state.isSetKernelIsa()) {
+	    ResultEnumeration result = ctx.test(state.getKernelIsa(), item.getKernelIsa());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetBits()) {
+	    ResultEnumeration result = ctx.test(state.getBits(), item.getBits());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	return ResultEnumeration.TRUE;
     }
 
     // Internal

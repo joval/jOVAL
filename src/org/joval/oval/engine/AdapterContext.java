@@ -231,7 +231,7 @@ class AdapterContext implements IAdapterContext {
 	  case VERSION:
 	    if (Version.isVersion((String)item.getValue()) && Version.isVersion((String)state.getValue())) {
 		try {
-		    return new Version(item.getValue()).greaterThanOrEquals(new Version(state.getValue()));
+		    return new Version(item.getValue()).equals(new Version(state.getValue()));
 		} catch (NumberFormatException e) {
 		    throw new TestException(e);
 		}

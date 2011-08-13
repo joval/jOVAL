@@ -925,6 +925,8 @@ public class Engine implements IProducer {
      * the value that is ultimately returned.
      *
      * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-definitions-schema.html#FunctionGroup
+     *
+     * DAS: TBD for 5.10: implementations for Count and Unique functions
      */
     private List<String> resolveInternal(Object object, List <VariableValueType>list)
 		throws NoSuchElementException, OvalException {

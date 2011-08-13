@@ -5,7 +5,9 @@ package org.joval.plugin.adapter.solaris;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -57,9 +59,12 @@ import org.joval.util.JOVALSystem;
 public class SmfAdapter implements IAdapter {
     private IAdapterContext ctx;
     private ISession session;
+    private String[] services = null;
+    private Hashtable<String, SmfItem> serviceMap = null;
 
     public SmfAdapter(ISession session) {
 	this.session = session;
+	serviceMap = new Hashtable<String, SmfItem>();
     }
 
     // Implement IAdapter
@@ -81,25 +86,82 @@ public class SmfAdapter implements IAdapter {
     }
 
     public boolean connect() {
-	return session != null;
+	if (session != null) {
+	    BufferedReader br = null;
+	    try {
+		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_SMF"));
+		IProcess p = session.createProcess("/usr/bin/svcs -o fmri");
+		p.start();
+		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		ArrayList<String> list = new ArrayList<String>();
+		String line = null;
+		while((line = br.readLine()) != null) {
+		    if (line.startsWith("FRMI")) {
+			continue;
+		    }
+		    list.add(getFullFmri(line.trim()));
+		}
+		services = list.toArray(new String[list.size()]);
+	    } catch (Exception e) {
+		JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
+	    } finally {
+		if (br != null) {
+		    try {
+			br.close();
+		    } catch (IOException e) {
+		    }
+		}
+	    }
+	}
+	return services != null;
     }
 
     public void disconnect() {
     }
 
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+	SmfObject sObj = (SmfObject)obj;
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	try {
-	    SmfItem item = getItem((SmfObject)obj);
-	    if (item != null) {
-		items.add(JOVALSystem.factories.sc.solaris.createSmfItem(item));
+
+	switch(sObj.getFmri().getOperation()) {
+	  case EQUALS:
+	    try {
+		SmfItem item = getItem((String)sObj.getFmri().getValue());
+		if (item != null) {
+		    items.add(JOVALSystem.factories.sc.solaris.createSmfItem(item));
+		}
+	    } catch (Exception e) {
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		ctx.addObjectMessage(obj.getId(), msg);
+		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	    }
-	} catch (Exception e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    ctx.addObjectMessage(obj.getId(), msg);
-	    ctx.log(Level.WARNING, e.getMessage(), e);
+	    break;
+
+	  case NOT_EQUAL: {
+	    loadFullServiceMap();
+	    for (String fmri : serviceMap.keySet()) {
+		if (!fmri.equals((String)sObj.getFmri().getValue())) {
+		    items.add(JOVALSystem.factories.sc.solaris.createSmfItem(serviceMap.get(fmri)));
+		}
+	    }
+	    break;
+	  }
+
+	  case PATTERN_MATCH: {
+	    loadFullServiceMap();
+	    Pattern p = Pattern.compile((String)sObj.getFmri().getValue());
+	    for (String fmri : serviceMap.keySet()) {
+		if (p.matcher(fmri).find()) {
+		    items.add(JOVALSystem.factories.sc.solaris.createSmfItem(serviceMap.get(fmri)));
+		}
+	    }
+	    break;
+	  }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", sObj.getFmri().getOperation()));
 	}
 	return items;
     }
@@ -109,17 +171,43 @@ public class SmfAdapter implements IAdapter {
 	SmfItem item = (SmfItem)it;
 
 	if (state.isSetFmri()) {
-	    return ctx.test(state.getFmri(), item.getFmri());
-	} else if (state.isSetServiceName()) {
-	    return ctx.test(state.getServiceName(), item.getServiceName());
-	} else if (state.isSetServiceState()) {
-	    return ctx.test(state.getServiceState(), item.getServiceState());
-	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
+	    ResultEnumeration result = ctx.test(state.getFmri(), item.getFmri());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
 	}
+	if (state.isSetServiceName()) {
+	    ResultEnumeration result = ctx.test(state.getServiceName(), item.getServiceName());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	if (state.isSetServiceState()) {
+	    ResultEnumeration result = ctx.test(state.getServiceState(), item.getServiceState());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	return ResultEnumeration.TRUE;
     }
 
     // Internal
+
+    private boolean loaded = false;
+    private void loadFullServiceMap() {
+	if (loaded) return;
+
+	serviceMap = new Hashtable<String, SmfItem>();
+	for (int i=0; i < services.length; i++) {
+	    try {
+		SmfItem item = getItem(services[i]);
+		serviceMap.put((String)item.getFmri().getValue(), item);
+	    } catch (Exception e) {
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_SMF", services[i], e.getMessage()), e);
+	    }
+	}
+	loaded = true;
+    }
 
     private static final String FMRI		= "fmri";
     private static final String NAME		= "name";
@@ -130,23 +218,27 @@ public class SmfAdapter implements IAdapter {
     private static final String RESTARTER	= "restarter";
     private static final String DEPENDENCY	= "dependency";
 
-    private SmfItem getItem(SmfObject obj) throws Exception {
-	SmfItem item = JOVALSystem.factories.sc.solaris.createSmfItem();
+    private SmfItem getItem(String fmri) throws Exception {
+	SmfItem item = serviceMap.get(fmri);
+	if (item != null) {
+	    return item;
+	}
 
-	String fmri = (String)obj.getFmri().getValue();
+	JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_SMF_SERVICE", fmri));
+	item = JOVALSystem.factories.sc.solaris.createSmfItem();
 	IProcess p = session.createProcess("/usr/bin/svcs -l " + fmri);
 	p.start();
 	BufferedReader br = null;
+	boolean found = false;
 	try {
 	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    String line = null;
-	    boolean found = false;
 	    while((line = br.readLine()) != null) {
 		line = line.trim();
 		if (line.startsWith(FMRI)) {
 		    found = true;
 		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    type.setValue(line.substring(FMRI.length()).trim());
+		    type.setValue(getFullFmri(line.substring(FMRI.length()).trim()));
 		    item.setFmri(type);
 		} else if (line.startsWith(NAME)) {
 		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
@@ -159,15 +251,36 @@ public class SmfAdapter implements IAdapter {
 		    item.setServiceState(type);
 		}
 	    }
-	    if (!found) {
-		return null;
-	    }
 	} finally {
 	    if (br != null) {
 		br.close();
 	    }
 	}
 
+	if (found) {
+	    item.setStatus(StatusEnumeration.EXISTS);
+	} else {
+	    EntityItemStringType fmriType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    fmriType.setValue(fmri);
+	    item.setFmri(fmriType);
+	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	}
+
 	return item;
+    }
+
+    /**
+     * Generally, prepend "localhost".
+     */
+    private String getFullFmri(String fmri) {
+	if (fmri.indexOf("//") == -1) {
+	    int ptr = fmri.indexOf("/");
+	    StringBuffer sb = new StringBuffer(fmri.substring(0, ptr));
+	    sb.append("//localhost");
+	    sb.append(fmri.substring(ptr));
+	    return sb.toString();
+	} else {
+	    return fmri;
+	}
     }
 }

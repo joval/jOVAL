@@ -4,6 +4,7 @@
 package org.joval.util;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 
 import org.joval.util.JOVALSystem;
 
@@ -118,14 +119,47 @@ public class Version {
     // Private
 
     private void build(String str) {
-	String[] sa = str.split("[\\.,]");
-	parts = new int[sa.length];
-	if (parts.length > 0) {
-	    for (int i=0; i < parts.length; i++) {
-		parts[i] = Integer.parseInt(sa[i]);
+	ArrayList<String> list = new ArrayList<String>();
+
+	StringBuffer sb = new StringBuffer();
+	int len = str.length();
+	for (int i=0; i < len; i++) {
+	    char ch = str.charAt(i);
+	    switch(str.charAt(i)) {
+	      case '0':
+	      case '1':
+	      case '2':
+	      case '3':
+	      case '4':
+	      case '5':
+	      case '6':
+	      case '7':
+	      case '8':
+	      case '9':
+		sb.append(ch);
+		break;
+
+	      default:
+		if (sb.length() > 0) {
+		    list.add(sb.toString());
+		    sb = new StringBuffer();
+		} else {
+		    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_VERSION_STR", str));
+		}
+		break;
 	    }
-	} else {
+	}
+	if (sb.length() > 0) {
+	    list.add(sb.toString());
+	}
+
+	if (list.size() == 0) {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_VERSION_STR", str));
+	}
+	String[] sa = list.toArray(new String[list.size()]);
+	parts = new int[sa.length];
+	for (int i=0; i < sa.length; i++) {
+	    parts[i] = Integer.parseInt(sa[i]);
 	}
     }
 }

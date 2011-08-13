@@ -223,7 +223,6 @@ public class RpminfoAdapter implements IAdapter {
 	packageMap = new Hashtable<String, RpminfoItem>();
 	for (int i=0; i < rpms.length; i++) {
 	    try {
-		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_RPMINFO_RPM", rpms[i]));
 		RpminfoItem item = getItem(rpms[i]);
 		packageMap.put((String)item.getName().getValue(), item);
 	    } catch (Exception e) {
@@ -239,6 +238,7 @@ public class RpminfoAdapter implements IAdapter {
 	    return item;
 	}
 
+	JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_RPMINFO_RPM", packageName));
 	item = JOVALSystem.factories.sc.linux.createRpminfoItem();
 	String pkgVersion=null, pkgRelease=null;
 	IProcess p = session.createProcess("rpm -q " + packageName + " -i");

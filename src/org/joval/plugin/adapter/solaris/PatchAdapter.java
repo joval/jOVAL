@@ -5,6 +5,7 @@ package org.joval.plugin.adapter.solaris;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Hashtable;
@@ -42,6 +43,7 @@ import org.joval.intf.plugin.IAdapterContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
+import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -51,14 +53,16 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class PatchAdapter implements IAdapter {
-    private IAdapterContext ctx;
-    private ISession session;
-    private String error = null;
-    private Hashtable<String, List<RevisionEntry>> revisions;
+    IAdapterContext ctx;
+    ISession session;
+    String error = null;
+    Hashtable<String, List<RevisionEntry>> revisions;
+    Hashtable<String, List<SupercedenceEntry>> supercedence;
 
     public PatchAdapter(ISession session) {
 	this.session = session;
 	revisions = new Hashtable<String, List<RevisionEntry>>();
+	supercedence = new Hashtable<String, List<SupercedenceEntry>>();
     }
 
     // Implement IAdapter
@@ -91,10 +95,90 @@ public class PatchAdapter implements IAdapter {
     }
 
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	for (ItemType item : getItems((PatchObject)obj)) {
-	    items.add(JOVALSystem.factories.sc.solaris.createPatchItem((PatchItem)item));
+	PatchObject pObj = (PatchObject)obj;
+	int iBase = 0;
+	try {
+	    iBase = Integer.parseInt((String)pObj.getBase().getValue());
+	} catch (NumberFormatException e) {
+	    throw new OvalException(e);
 	}
+
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	switch(pObj.getBase().getOperation()) {
+	  case EQUALS:
+	    items.addAll(getItems((String)pObj.getBase().getValue()));
+	    break;
+
+	  case NOT_EQUAL:
+	    for (String base : revisions.keySet()) {
+		if (!base.equals((String)pObj.getBase().getValue())) {
+		    items.addAll(getItems(base));
+		}
+	    }
+	    break;
+
+	  case LESS_THAN:
+	    for (String base : revisions.keySet()) {
+		try {
+		    if (Integer.parseInt(base) < iBase) {
+			items.addAll(getItems(base));
+		    }
+		} catch (NumberFormatException e) {
+		    throw new OvalException(e);
+		}
+	    }
+	    break;
+
+	  case LESS_THAN_OR_EQUAL:
+	    for (String base : revisions.keySet()) {
+		try {
+		    if (Integer.parseInt(base) <= iBase) {
+			items.addAll(getItems(base));
+		    }
+		} catch (NumberFormatException e) {
+		    throw new OvalException(e);
+		}
+	    }
+	    break;
+
+	  case GREATER_THAN:
+	    for (String base : revisions.keySet()) {
+		try {
+		    if (Integer.parseInt(base) > iBase) {
+			items.addAll(getItems(base));
+		    }
+		} catch (NumberFormatException e) {
+		    throw new OvalException(e);
+		}
+	    }
+	    break;
+
+	  case GREATER_THAN_OR_EQUAL:
+	    for (String base : revisions.keySet()) {
+		try {
+		    if (Integer.parseInt(base) >= iBase) {
+			items.addAll(getItems(base));
+		    }
+		} catch (NumberFormatException e) {
+		    throw new OvalException(e);
+		}
+	    }
+	    break;
+
+	  case PATTERN_MATCH: {
+	    Pattern p = Pattern.compile((String)pObj.getBase().getValue());
+	    for (String base : revisions.keySet()) {
+		if (p.matcher(base).find()) {
+		    items.addAll(getItems(base));
+		}
+	    }
+	    break;
+	  }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", pObj.getBase().getOperation()));
+	}
+
 	if (error != null) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -104,19 +188,29 @@ public class PatchAdapter implements IAdapter {
 	return items;
     }
 
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
-	if (compare((PatchState)st, (PatchItem)it)) {
-	    return ResultEnumeration.TRUE;
-	} else {
-	    return ResultEnumeration.FALSE;
+    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
+	PatchState state = (PatchState)st;
+	PatchItem item = (PatchItem)it;
+
+	if (state.isSetBase()) {
+	    ResultEnumeration result = ctx.test(state.getBase(), item.getBase());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
 	}
+	if (state.isSetVersion()) {
+	    ResultEnumeration result = ctx.test(state.getPatchVersion(), item.getVersion());
+	    if (result != ResultEnumeration.TRUE) {
+		return result;
+	    }
+	}
+	return ResultEnumeration.TRUE;
     }
 
     // Internal
 
-    private List<PatchItem> getItems(PatchObject pObj) {
-	Vector<PatchItem> v = new Vector<PatchItem>();
-	String base = (String)pObj.getBase().getValue();
+    private List<JAXBElement<PatchItem>> getItems(String base) {
+	List<JAXBElement<PatchItem>> items = new Vector<JAXBElement<PatchItem>>();
 	List<RevisionEntry> entries = revisions.get(base);
 	if (entries != null) {
 	    for (RevisionEntry entry : entries) {
@@ -129,32 +223,10 @@ public class PatchAdapter implements IAdapter {
 		versionType.setValue(entry.patch.getVersionString());
 		versionType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		item.setVersion(versionType);
-		v.add(item);
+		items.add(JOVALSystem.factories.sc.solaris.createPatchItem(item));
 	    }
 	}
-	return v;
-    }
-
-    private boolean compare(PatchState state, PatchItem item) throws OvalException {
-	int stateVersion = Integer.parseInt((String)state.getPatchVersion().getValue());
-	int itemVersion = Integer.parseInt((String)item.getVersion().getValue());
-	switch (state.getPatchVersion().getOperation()) {
-	  case EQUALS:
-	    return stateVersion == itemVersion;
-	  case NOT_EQUAL:
-	    return stateVersion != itemVersion;
-	  case GREATER_THAN:
-	    return stateVersion > itemVersion;
-	  case GREATER_THAN_OR_EQUAL:
-	    return stateVersion >= itemVersion;
-	  case LESS_THAN:
-	    return stateVersion < itemVersion;
-	  case LESS_THAN_OR_EQUAL:
-	    return stateVersion <= itemVersion;
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
-							   state.getPatchVersion().getOperation()));
-	}
+	return items;
     }
 
     private static final String PATCH		= "Patch:";
@@ -167,12 +239,16 @@ public class PatchAdapter implements IAdapter {
      * REMIND: Stops if it encounters any exceptions at all; make this more robust?
      */
     private void scanRevisions() {
+	BufferedReader br = null;
 	try {
 	    IProcess p = session.createProcess("/usr/bin/showrev -p");
 	    p.start();
-	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	    String line = br.readLine(); // skip over the header row.
+	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    String line;
 	    while((line = br.readLine()) != null) {
+		if (!line.startsWith(PATCH)) {
+		    continue;
+		}
 		StringTokenizer tok = null;
 		String buff = null;
 		int begin, end;
@@ -188,7 +264,18 @@ public class PatchAdapter implements IAdapter {
 		Vector<PatchEntry> obsoletes = new Vector<PatchEntry>();
 		tok = new StringTokenizer(buff, ",");
 		while(tok.hasMoreTokens()) {
-		    obsoletes.add(new PatchEntry(tok.nextToken().trim()));
+		    PatchEntry superceded = new PatchEntry(tok.nextToken().trim());
+		    obsoletes.add(superceded);
+		    String obsoleteBase = superceded.getBaseString();
+		    List<SupercedenceEntry> list = supercedence.get(obsoleteBase);
+		    if (list == null) {
+			list = new Vector<SupercedenceEntry>();
+			supercedence.put(obsoleteBase, list);
+		    }
+		    SupercedenceEntry entry = new SupercedenceEntry(superceded, patch);
+		    if (!list.contains(entry)) {
+			list.add(entry);
+		    }
 		}
 
 		begin = line.indexOf(REQUIRES) + REQUIRES.length();
@@ -226,10 +313,16 @@ public class PatchAdapter implements IAdapter {
 		    revisions.put(patch.getBaseString(), list);
 		}
 	    }
-	    br.close();
 	} catch (Exception e) {
 	    error = e.getMessage();
 	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
+	} finally {
+	    if (br != null) {
+		try {
+		    br.close();
+		} catch (IOException e) {
+		}
+	    }
 	}
     }
 
@@ -266,6 +359,23 @@ public class PatchAdapter implements IAdapter {
 
 	String getVersionString() {
 	    return Integer.toString(version);
+	}
+    }
+
+    class SupercedenceEntry {
+	PatchEntry superceded;
+	PatchEntry by;
+
+	SupercedenceEntry (PatchEntry superceded, PatchEntry by) {
+	    this.superceded = superceded;
+	    this.by = by;
+	}
+
+	public boolean equals(Object other) {
+	    if (other instanceof SupercedenceEntry) {
+		return superceded == ((SupercedenceEntry)other).superceded && by == ((SupercedenceEntry)other).by;
+	    }
+	    return false;
 	}
     }
 }
