@@ -7,7 +7,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Hashtable;
@@ -112,7 +111,6 @@ public class PackageAdapter implements IAdapter {
 		    }
 		}
 		packages = list.toArray(new String[list.size()]);
-		Arrays.sort(packages);
 		return true;
 	    } catch (Exception e) {
 		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);

@@ -201,22 +201,43 @@ public class Engine implements IProducer {
     /**
      * Set the file from which to read external variable definitions.
      */
-    public void setExternalVariablesFile(File f) throws OvalException {
-	externalVariables = new Variables(Variables.getOvalVariables(f));
+    public void setExternalVariablesFile(File f) throws IllegalThreadStateException, OvalException {
+	switch(state) {
+	  case CONFIGURE:
+	    externalVariables = new Variables(Variables.getOvalVariables(f));
+	    break;
+
+	  default:
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage("ERROR_ENGINE_STATE", state));
+	}
     }
 
     /**
      * Set the file to which to save collected SystemCharacteristics data.
      */
-    public void setSystemCharacteristicsOutputFile(File f) {
-	scOutputFile = f;
+    public void setSystemCharacteristicsOutputFile(File f) throws IllegalThreadStateException {
+	switch(state) {
+	  case CONFIGURE:
+	    scOutputFile = f;
+	    break;
+
+	  default:
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage("ERROR_ENGINE_STATE", state));
+	}
     }
 
     /**
      * Set a list of definition IDs to evaluate during the run phase.
      */
-    public void setDefinitionFilter(DefinitionFilter filter) {
-	this.filter = filter;
+    public void setDefinitionFilter(DefinitionFilter filter) throws IllegalThreadStateException {
+	switch(state) {
+	  case CONFIGURE:
+	    this.filter = filter;
+	    break;
+
+	  default:
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage("ERROR_ENGINE_STATE", state));
+	}
     }
 
     /**
@@ -238,14 +259,17 @@ public class Engine implements IProducer {
     }
 
     /**
-     * Return the results.  Only valid after the run() method is called.
+     * Return the scan IResults (valid if getResult returned COMPLETE_OK).  Only valid after the run() method has finished.
      */
     public IResults getResults() throws IllegalThreadStateException {
 	getResult();
 	return results;
     }
 
-    public OvalException getError() {
+    /**
+     * Return the error (valid if getResult returned COMPLETE_ERR).  Only valid after the run() method has finished.
+     */
+    public OvalException getError() throws IllegalThreadStateException {
 	getResult();
 	return error;
     }
@@ -835,7 +859,8 @@ public class Engine implements IProducer {
 		String defId = edtDefinition.getDefinitionRef();
 		DefinitionType defDefinition = definitions.getDefinition(defId);
 		oval.schemas.results.core.DefinitionType defResult = evaluateDefinition(defDefinition);
-		oval.schemas.results.core.ExtendDefinitionType edtResult = JOVALSystem.factories.results.createExtendDefinitionType();
+		oval.schemas.results.core.ExtendDefinitionType edtResult;
+		edtResult = JOVALSystem.factories.results.createExtendDefinitionType();
 		edtResult.setDefinitionRef(defId);
 		edtResult.setVersion(defDefinition.getVersion());
 		if (edtDefinition.isSetNegate() && edtDefinition.isNegate()) {
