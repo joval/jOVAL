@@ -73,14 +73,6 @@ public class RpminfoAdapter implements IAdapter {
 	return RpminfoObject.class;
     }
 
-    public Class getStateClass() {
-	return RpminfoState.class;
-    }
-
-    public Class getItemClass() {
-	return RpminfoItem.class;
-    }
-
     public void init(IAdapterContext ctx) {
 	this.ctx = ctx;
     }
@@ -163,55 +155,6 @@ public class RpminfoAdapter implements IAdapter {
 	}
 
 	return items;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	RpminfoState state = (RpminfoState)st;
-	RpminfoItem item = (RpminfoItem)it;
-
-	if (state.getArch() != null) {
-	    ResultEnumeration result = ctx.test(state.getArch(), item.getArch());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.getEpoch() != null) {
-	    ResultEnumeration result = ctx.test(state.getEpoch(), item.getEpoch());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.getEvr() != null) {
-	    ResultEnumeration result = ctx.test(state.getEvr(), item.getEvr());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.getName() != null) {
-	    ResultEnumeration result = ctx.test(state.getName(), item.getName());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.getRelease() != null) {
-	    ResultEnumeration result = ctx.test(state.getRelease(), item.getRelease());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.getRpmVersion() != null) {
-	    ResultEnumeration result = ctx.test(state.getRpmVersion(), item.getVersion());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.getSignatureKeyid() != null) {
-	    ResultEnumeration result = ctx.test(state.getSignatureKeyid(), item.getSignatureKeyid());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	return ResultEnumeration.TRUE;
     }
 
     // Private

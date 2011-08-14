@@ -62,14 +62,6 @@ public class UnameAdapter implements IAdapter {
 	return UnameObject.class;
     }
 
-    public Class getStateClass() {
-	return UnameState.class;
-    }
-
-    public Class getItemClass() {
-	return UnameItem.class;
-    }
-
     public boolean connect() {
 	return session != null;
     }
@@ -89,49 +81,6 @@ public class UnameAdapter implements IAdapter {
 	    ctx.log(Level.WARNING, e.getMessage(), e);
 	}
 	return items;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	UnameState state = (UnameState)st;
-	UnameItem item = (UnameItem)it;
-
-	if (state.isSetMachineClass()) {
-	    ResultEnumeration result = ctx.test(state.getMachineClass(), item.getMachineClass());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetNodeName()) {
-	    ResultEnumeration result = ctx.test(state.getNodeName(), item.getNodeName());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetOsName()) {
-	    ResultEnumeration result = ctx.test(state.getOsName(), item.getOsName());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetOsRelease()) {
-	    ResultEnumeration result = ctx.test(state.getOsRelease(), item.getOsRelease());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetOsVersion()) {
-	    ResultEnumeration result = ctx.test(state.getOsVersion(), item.getOsVersion());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetProcessorType()) {
-	    ResultEnumeration result = ctx.test(state.getProcessorType(), item.getProcessorType());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	return ResultEnumeration.TRUE;
     }
 
     // Internal

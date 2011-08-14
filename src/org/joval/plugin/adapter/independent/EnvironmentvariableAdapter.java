@@ -66,14 +66,6 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	return EnvironmentvariableObject.class;
     }
 
-    public Class getStateClass() {
-	return EnvironmentvariableState.class;
-    }
-
-    public Class getItemClass() {
-	return EnvironmentvariableItem.class;
-    }
-
     public boolean connect() {
 	return env != null;
     }
@@ -138,18 +130,6 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	    ctx.addObjectMessage(obj.getId(), msg);
 	}
 	return items;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	EnvironmentvariableState state = (EnvironmentvariableState)st;
-	EnvironmentvariableItem item = (EnvironmentvariableItem)it;
-
-	if (state.isSetName()) {
-	    return ctx.test(state.getName(), item.getName());
-	} else if (state.isSetValue()) {
-	    return ctx.test(state.getValue(), item.getValue());
-	}
-	throw new OvalException(JOVALSystem.getMessage("ERROR_STATE_EMPTY", state.getId()));
     }
 
     // Internal

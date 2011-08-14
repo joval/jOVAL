@@ -60,43 +60,6 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	return Textfilecontent54Object.class;
     }
 
-    public Class getStateClass() {
-	return Textfilecontent54State.class;
-    }
-
-    public Class getItemClass() {
-	return TextfilecontentItem.class;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	Textfilecontent54State state = (Textfilecontent54State)st;
-	TextfilecontentItem item = (TextfilecontentItem)it;
-
-	if (state.isSetInstance()) {
-	    return ctx.test(state.getInstance(), item.getInstance());
-	}
-	if (state.isSetText()) {
-	    return ctx.test(state.getText(), item.getText());
-	}
-	if (state.isSetSubexpression()) {
-	    List<EntityItemAnySimpleType> subexpressions = item.getSubexpression();
-	    for (EntityItemAnySimpleType itemSubexpression : subexpressions) {
-		ResultEnumeration result = ctx.test(state.getSubexpression(), itemSubexpression);
-		switch (result) {
-		  case FALSE:
-		    // Check all the rest...
-		    break;
-
-		  default:
-		    return result;
-		}
-	    }
-	    return ResultEnumeration.FALSE;
-	}
-
-	return ResultEnumeration.TRUE;
-    }
-
     // Protected
 
     protected Object convertFilename(EntityItemStringType filename) {

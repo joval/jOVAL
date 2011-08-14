@@ -75,14 +75,6 @@ public class PatchAdapter implements IAdapter {
 	return PatchObject.class;
     }
 
-    public Class getStateClass() {
-	return PatchState.class;
-    }
-
-    public Class getItemClass() {
-	return PatchItem.class;
-    }
-
     public boolean connect() {
 	if (session != null) {
 	    scanRevisions();
@@ -186,25 +178,6 @@ public class PatchAdapter implements IAdapter {
 	    ctx.addObjectMessage(obj.getId(), msg);
 	}
 	return items;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	PatchState state = (PatchState)st;
-	PatchItem item = (PatchItem)it;
-
-	if (state.isSetBase()) {
-	    ResultEnumeration result = ctx.test(state.getBase(), item.getBase());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetVersion()) {
-	    ResultEnumeration result = ctx.test(state.getPatchVersion(), item.getVersion());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	return ResultEnumeration.TRUE;
     }
 
     // Internal

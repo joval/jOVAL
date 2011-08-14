@@ -74,14 +74,6 @@ public class PackageAdapter implements IAdapter {
 	return PackageObject.class;
     }
 
-    public Class getStateClass() {
-	return PackageState.class;
-    }
-
-    public Class getItemClass() {
-	return PackageItem.class;
-    }
-
     public void init(IAdapterContext ctx) {
 	this.ctx = ctx;
     }
@@ -181,49 +173,6 @@ public class PackageAdapter implements IAdapter {
 	}
 
 	return items;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	PackageState state = (PackageState)st;
-	PackageItem item = (PackageItem)it;
-
-	if (state.isSetCategory()) {
-	    ResultEnumeration result = ctx.test(state.getCategory(), item.getCategory());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetDescription()) {
-	    ResultEnumeration result = ctx.test(state.getDescription(), item.getDescription());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetName()) {
-	    ResultEnumeration result = ctx.test(state.getName(), item.getName());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetPackageVersion()) {
-	    ResultEnumeration result = ctx.test(state.getPackageVersion(), item.getVersion());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetPkginst()) {
-	    ResultEnumeration result = ctx.test(state.getPkginst(), item.getPkginst());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetVendor()) {
-	    ResultEnumeration result = ctx.test(state.getVendor(), item.getVendor());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	return ResultEnumeration.TRUE;
     }
 
     // Private

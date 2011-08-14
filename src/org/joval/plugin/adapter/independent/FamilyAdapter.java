@@ -55,14 +55,6 @@ public class FamilyAdapter implements IAdapter {
 	return FamilyObject.class;
     }
 
-    public Class getStateClass() {
-	return FamilyState.class;
-    }
-
-    public Class getItemClass() {
-	return FamilyItem.class;
-    }
-
     public boolean connect() {
 	return plugin != null;
     }
@@ -74,13 +66,6 @@ public class FamilyAdapter implements IAdapter {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	items.add(JOVALSystem.factories.sc.independent.createFamilyItem(getItem()));
 	return items;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	FamilyState state = (FamilyState)st;
-	FamilyItem item = (FamilyItem)it;
-
-	return ctx.test(state.getFamily(), item.getFamily());
     }
 
     // Private

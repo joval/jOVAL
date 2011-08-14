@@ -38,7 +38,7 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
 /**
- * Base class for IFile-based IAdapters. Subclasses need only implement get[X]Class, compare, createFileItem, convertFilename
+ * Base class for IFile-based IAdapters. Subclasses need only implement getObjectClass, createFileItem, convertFilename
  * and getItems methods.  The base class handles searches and caching of search results.
  *
  * @author David A. Solin

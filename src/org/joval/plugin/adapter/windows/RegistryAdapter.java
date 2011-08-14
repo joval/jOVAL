@@ -92,14 +92,6 @@ public class RegistryAdapter implements IAdapter {
 	return RegistryObject.class;
     }
 
-    public Class getStateClass() {
-	return RegistryState.class;
-    }
-
-    public Class getItemClass() {
-	return RegistryItem.class;
-    }
-
     public boolean connect() {
 	if (registry != null) {
 	    return registry.connect();
@@ -111,54 +103,6 @@ public class RegistryAdapter implements IAdapter {
 	if (registry != null) {
 	    registry.disconnect();
 	}
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	RegistryState state = (RegistryState)st;
-	RegistryItem item = (RegistryItem)it;
-
-	if (state.getHive() != null && state.getHive().getValue() != null) {
-	    ResultEnumeration result = ctx.test(state.getHive(), item.getHive());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.getKey() != null && state.getKey().getValue() != null) {
-	    if (item.isSetKey()) {
-		ResultEnumeration result = ctx.test(state.getKey(), item.getKey().getValue());
-		if (result != ResultEnumeration.TRUE) {
-		    return result;
-		}
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-	}
-	if (state.getName() != null && state.getName().getValue() != null) {
-	    if (item.isSetName()) {
-		ResultEnumeration result = ctx.test(state.getName(), item.getName().getValue());
-		if (result != ResultEnumeration.TRUE) {
-		    return result;
-		}
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-	}
-	if (state.getType() != null && state.getType().getValue() != null) {
-	    ResultEnumeration result = ctx.test(state.getType(), item.getType());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.getValue() != null && state.getValue().getValue() != null) {
-	    for (EntityItemAnySimpleType value : item.getValue()) {
-		ResultEnumeration result = ctx.test(state.getValue(), value);
-		if (result != ResultEnumeration.FALSE) {
-		    return result;
-		}
-	    }
-	    return ResultEnumeration.FALSE;
-	}
-	return ResultEnumeration.TRUE;
     }
 
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {

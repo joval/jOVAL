@@ -37,17 +37,6 @@ public interface IAdapter {
     public Class getObjectClass();
 
     /**
-     * Identify the class of a subclass of definitions.StateType that this adapter knows how to compare to an item.
-     */
-    public Class getStateClass();
-
-    /**
-     * Identify the class of a subclass of systemcharacteristics.ItemType that this adapter creates and knows how to
-     * compare to a state.
-     */
-    public Class getItemClass();
-
-    /**
      * The adapter should open any special resources it's going to need in order to scan objects on the machine.  The engine
      * will call this method after init, but before any call to getItems.
      */
@@ -65,14 +54,4 @@ public interface IAdapter {
      * into an OvalSystemCharacteristics.)
      */
     public List<JAXBElement<? extends ItemType>> getItems(ObjectType ot, List<VariableValueType> vars) throws OvalException;
-
-    /**
-     * Compare an item to a state.  The state and item are type-checked to insure that they match the types identified by
-     * getStateClass and getItemClass before this method is invoked.  It should not be necessary for the adapter to interact
-     * with a machine in order to compare an item to a state, as system data may be originating from a file.
-     *
-     * @throws OvalException if there is a fundamental issue with the OVAL structures, like a datatype mismatch.
-     * @throws TestException if there is an error in evaluating the test, which should be attached to the TestedItemType.
-     */
-    public ResultEnumeration compare(StateType state, ItemType item) throws TestException, OvalException;
 }

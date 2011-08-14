@@ -58,49 +58,6 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	return TextfilecontentObject.class;
     }
 
-    public Class getStateClass() {
-	return TextfilecontentState.class;
-    }
-
-    public Class getItemClass() {
-	return TextfilecontentItem.class;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	TextfilecontentState state = (TextfilecontentState)st;
-	TextfilecontentItem item = (TextfilecontentItem)it;
-
-	if (state.isSetFilename()) {
-	    ResultEnumeration result = ctx.test(state.getFilename(), item.getFilename());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetLine()) {
-	    ResultEnumeration result = ctx.test(state.getLine(), item.getLine());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetPath()) {
-	    ResultEnumeration result = ctx.test(state.getPath(), item.getPath());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetSubexpression()) {
-	    CheckData cd = new CheckData();
-	    for (EntityItemAnySimpleType itemSubexpression : item.getSubexpression()) {
-		cd.addResult(ctx.test(state.getSubexpression(), itemSubexpression));
-	    }
-	    ResultEnumeration result = cd.getResult(state.getSubexpression().getEntityCheck());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	return ResultEnumeration.TRUE;
-    }
-
     // Protected
 
     protected Object convertFilename(EntityItemStringType filename) {

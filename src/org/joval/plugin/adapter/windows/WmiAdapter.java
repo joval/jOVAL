@@ -79,14 +79,6 @@ public class WmiAdapter implements IAdapter {
 	return WmiObject.class;
     }
 
-    public Class getStateClass() {
-	return WmiState.class;
-    }
-
-    public Class getItemClass() {
-	return WmiItem.class;
-    }
-
     public boolean connect() {
 	if (wmi != null) {
 	    return wmi.connect();
@@ -104,14 +96,6 @@ public class WmiAdapter implements IAdapter {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
 	items.add(JOVALSystem.factories.sc.windows.createWmiItem(getItem((WmiObject)obj)));
 	return items;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws OvalException {
-        if (match((WmiState)st, (WmiItem)it)) {
-	    return ResultEnumeration.TRUE;
-	} else {
-	    return ResultEnumeration.FALSE;
-	}
     }
 
     // Private

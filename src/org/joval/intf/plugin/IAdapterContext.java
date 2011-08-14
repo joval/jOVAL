@@ -58,10 +58,4 @@ public interface IAdapterContext {
      * Add a message for an ObjectType record.
      */
     void addObjectMessage(String objectId, MessageType message);
-
-    /**
-     * Use the OVAL Engine to compare a state type to an item type.  This is useful in implementations of the IAdapter.compare
-     * method.
-     */
-    ResultEnumeration test(EntityStateSimpleBaseType s, EntityItemSimpleBaseType i) throws TestException, OvalException;
 }

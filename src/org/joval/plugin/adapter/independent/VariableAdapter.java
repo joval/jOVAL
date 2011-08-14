@@ -55,14 +55,6 @@ public class VariableAdapter implements IAdapter {
 	return VariableObject.class;
     }
 
-    public Class getStateClass() {
-	return VariableState.class;
-    }
-
-    public Class getItemClass() {
-	return VariableItem.class;
-    }
-
     public boolean connect() {
 	return true;
     }
@@ -88,32 +80,5 @@ public class VariableAdapter implements IAdapter {
 	    items.add(JOVALSystem.factories.sc.independent.createVariableItem(item));
 	}
 	return items;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	VariableState state = (VariableState)st;
-	VariableItem item = (VariableItem)it;
-
-	if (state.isSetVarRef()) {
-	    ResultEnumeration result = ctx.test(state.getVarRef(), item.getVarRef());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetValue()) {
-	    if (item.isSetValue()) {
-		CheckData cd = new CheckData();
-		for (EntityItemAnySimpleType itemType : item.getValue()) {
-		    cd.addResult(ctx.test(state.getValue(), itemType));
-		}
-		ResultEnumeration result = cd.getResult(state.getValue().getEntityCheck());
-		if (result != ResultEnumeration.TRUE) {
-		    return result;
-		}
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-	}
-	return ResultEnumeration.TRUE;
     }
 }

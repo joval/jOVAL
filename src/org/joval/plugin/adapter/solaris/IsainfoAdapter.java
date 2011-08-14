@@ -66,14 +66,6 @@ public class IsainfoAdapter implements IAdapter {
 	return IsainfoObject.class;
     }
 
-    public Class getStateClass() {
-	return IsainfoState.class;
-    }
-
-    public Class getItemClass() {
-	return IsainfoItem.class;
-    }
-
     public boolean connect() {
 	return session != null;
     }
@@ -93,31 +85,6 @@ public class IsainfoAdapter implements IAdapter {
 	    ctx.log(Level.WARNING, e.getMessage(), e);
 	}
 	return items;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	IsainfoState state = (IsainfoState)st;
-	IsainfoItem item = (IsainfoItem)it;
-
-	if (state.isSetApplicationIsa()) {
-	    ResultEnumeration result = ctx.test(state.getApplicationIsa(), item.getApplicationIsa());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetKernelIsa()) {
-	    ResultEnumeration result = ctx.test(state.getKernelIsa(), item.getKernelIsa());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetBits()) {
-	    ResultEnumeration result = ctx.test(state.getBits(), item.getBits());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	return ResultEnumeration.TRUE;
     }
 
     // Internal

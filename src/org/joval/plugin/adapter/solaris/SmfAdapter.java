@@ -77,14 +77,6 @@ public class SmfAdapter implements IAdapter {
 	return SmfObject.class;
     }
 
-    public Class getStateClass() {
-	return SmfState.class;
-    }
-
-    public Class getItemClass() {
-	return SmfItem.class;
-    }
-
     public boolean connect() {
 	if (session != null) {
 	    BufferedReader br = null;
@@ -164,31 +156,6 @@ public class SmfAdapter implements IAdapter {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", sObj.getFmri().getOperation()));
 	}
 	return items;
-    }
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	SmfState state = (SmfState)st;
-	SmfItem item = (SmfItem)it;
-
-	if (state.isSetFmri()) {
-	    ResultEnumeration result = ctx.test(state.getFmri(), item.getFmri());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetServiceName()) {
-	    ResultEnumeration result = ctx.test(state.getServiceName(), item.getServiceName());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	if (state.isSetServiceState()) {
-	    ResultEnumeration result = ctx.test(state.getServiceState(), item.getServiceState());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-	}
-	return ResultEnumeration.TRUE;
     }
 
     // Internal

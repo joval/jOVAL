@@ -72,14 +72,6 @@ public class ProcessAdapter implements IAdapter {
 	return ProcessObject.class;
     }
 
-    public Class getStateClass() {
-	return ProcessState.class;
-    }
-
-    public Class getItemClass() {
-	return ProcessItem.class;
-    }
-
     public boolean connect() {
 	if (session != null) {
 	    scanProcesses();
@@ -146,65 +138,6 @@ public class ProcessAdapter implements IAdapter {
 	}
 
 	return items;
-    }
-
-
-    public ResultEnumeration compare(StateType st, ItemType it) throws TestException, OvalException {
-	ProcessState state = (ProcessState)st;
-	ProcessItem item = (ProcessItem)it;
-
-        if (state.isSetPid()) {
-            ResultEnumeration result = ctx.test(state.getPid(), item.getPid());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-        } else if (state.isSetPpid()) {
-            ResultEnumeration result = ctx.test(state.getPpid(), item.getPpid());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-        } else if (state.isSetCommand()) {
-            ResultEnumeration result = ctx.test(state.getCommand(), item.getCommand());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-        } else if (state.isSetPriority()) {
-            ResultEnumeration result = ctx.test(state.getPriority(), item.getPriority());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-        } else if (state.isSetExecTime()) {
-            ResultEnumeration result = ctx.test(state.getExecTime(), item.getExecTime());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-        } else if (state.isSetRuid()) {
-            ResultEnumeration result = ctx.test(state.getRuid(), item.getRuid());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-        } else if (state.isSetSchedulingClass()) {
-            ResultEnumeration result = ctx.test(state.getSchedulingClass(), item.getSchedulingClass());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-        } else if (state.isSetStartTime()) {
-            ResultEnumeration result = ctx.test(state.getStartTime(), item.getStartTime());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-        } else if (state.isSetTty()) {
-            ResultEnumeration result = ctx.test(state.getTty(), item.getTty());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-        } else if (state.isSetUserId()) {
-            ResultEnumeration result = ctx.test(state.getUserId(), item.getUserId());
-	    if (result != ResultEnumeration.TRUE) {
-		return result;
-	    }
-        }
-	return ResultEnumeration.TRUE;
     }
 
     // Internal

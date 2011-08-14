@@ -42,6 +42,8 @@ import oval.schemas.common.GeneratorType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperatorEnumeration;
+import oval.schemas.common.OperationEnumeration;
+import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.ArithmeticEnumeration;
 import oval.schemas.definitions.core.ArithmeticFunctionType;
 import oval.schemas.definitions.core.BeginFunctionType;
@@ -55,6 +57,7 @@ import oval.schemas.definitions.core.DefinitionsType;
 import oval.schemas.definitions.core.EndFunctionType;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.EntitySimpleBaseType;
+import oval.schemas.definitions.core.EntityStateSimpleBaseType;
 import oval.schemas.definitions.core.EscapeRegexFunctionType;
 import oval.schemas.definitions.core.ExtendDefinitionType;
 import oval.schemas.definitions.core.ExternalVariable;
@@ -110,6 +113,7 @@ import org.joval.oval.util.OperatorData;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
 import org.joval.util.StringTools;
+import org.joval.util.Version;
 import org.joval.windows.Timestamp;
 
 /**
@@ -362,15 +366,6 @@ public class Engine implements IProducer {
 	}
     }
 
-    IAdapter getAdapterForState(Class clazz) {
-	for (AdapterContext ctx : adapterContextList) {
-	    if (clazz.equals(ctx.getAdapter().getStateClass())) {
-		return ctx.getAdapter();
-	    }
-	}
-	return null;
-    }
-
     AdapterContext getAdapterContext(IAdapter adapter) throws NoSuchElementException {
 	for (AdapterContext ac : adapterContextList) {
 	    if (ac.getAdapter().equals(adapter)) {
@@ -604,7 +599,7 @@ public class Engine implements IProducer {
 			StateType state = definitions.getState(filter.getValue());
 			for (ItemType item : items) {
 			    try {
-				ResultEnumeration result = getAdapterForState(state.getClass()).compare(state, item);
+				ResultEnumeration result = compare(state, item);
 				switch(filter.getAction()) {
 				  case INCLUDE:
 				    if (result == ResultEnumeration.TRUE) {
@@ -749,7 +744,7 @@ public class Engine implements IProducer {
 	String stateId = getStateRef(testDefinition);
 	StateType state = null;
 	if (stateId != null) {
-	    state = definitions.getState(stateId, adapter.getStateClass());
+	    state = definitions.getState(stateId);
 	}
 
 	for (VariableValueType var : sc.getVariablesByObjectId(objectId)) {
@@ -764,61 +759,56 @@ public class Engine implements IProducer {
 
 	List<ItemType> items = sc.getItemsByObjectId(objectId);
 	for (ItemType item : items) {
-	    if (item.getClass().getName().equals(adapter.getItemClass().getName())) {
-		TestedItemType testedItem = JOVALSystem.factories.results.createTestedItemType();
-		testedItem.setItemId(item.getId());
-		testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-
-		StatusEnumeration status = item.getStatus();
-		switch(status) {
-		  case EXISTS:
-		    if (state != null) {
-			ResultEnumeration checkResult = ResultEnumeration.UNKNOWN;
-
-			switch(sc.getObject(objectId).getFlag()) {
-			  case COMPLETE:
-			  case INCOMPLETE:
-			  case DOES_NOT_EXIST:
-			    try {
-				checkResult = adapter.compare(state, item);
-			    } catch (TestException e) {
-				String s = JOVALSystem.getMessage("ERROR_TESTEXCEPTION", testId, e.getMessage());
-				JOVALSystem.getLogger().log(Level.WARNING, s, e);
-				MessageType message = JOVALSystem.factories.common.createMessageType();
-				message.setLevel(MessageLevelEnumeration.ERROR);
-				message.setValue(e.getMessage());
-				testedItem.getMessage().add(message);
-				checkResult = ResultEnumeration.ERROR;
-			    }
-			    break;
-
-			  case ERROR:
+	    TestedItemType testedItem = JOVALSystem.factories.results.createTestedItemType();
+	    testedItem.setItemId(item.getId());
+	    testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
+    
+	    StatusEnumeration status = item.getStatus();
+	    switch(status) {
+	      case EXISTS:
+		if (state != null) {
+		    ResultEnumeration checkResult = ResultEnumeration.UNKNOWN;
+    
+		    switch(sc.getObject(objectId).getFlag()) {
+		      case COMPLETE:
+		      case INCOMPLETE:
+		      case DOES_NOT_EXIST:
+			try {
+			    checkResult = compare(state, item);
+			} catch (TestException e) {
+			    String s = JOVALSystem.getMessage("ERROR_TESTEXCEPTION", testId, e.getMessage());
+			    JOVALSystem.getLogger().log(Level.WARNING, s, e);
+			    MessageType message = JOVALSystem.factories.common.createMessageType();
+			    message.setLevel(MessageLevelEnumeration.ERROR);
+			    message.setValue(e.getMessage());
+			    testedItem.getMessage().add(message);
 			    checkResult = ResultEnumeration.ERROR;
-			    break;
-			  case NOT_APPLICABLE:
-			    checkResult = ResultEnumeration.NOT_APPLICABLE;
-			    break;
-			  case NOT_COLLECTED:
-			  default:
-			    checkResult = ResultEnumeration.UNKNOWN;
-			    break;
 			}
-
-			testedItem.setResult(checkResult);
-			check.addResult(checkResult);
+			break;
+    
+		      case ERROR:
+			checkResult = ResultEnumeration.ERROR;
+			break;
+		      case NOT_APPLICABLE:
+			checkResult = ResultEnumeration.NOT_APPLICABLE;
+			break;
+		      case NOT_COLLECTED:
+		      default:
+			checkResult = ResultEnumeration.UNKNOWN;
+			break;
 		    }
-		    // fall-thru
-
-		  default:
-		    existence.addStatus(status);
-		    break;
+    
+		    testedItem.setResult(checkResult);
+		    check.addResult(checkResult);
 		}
-
-		testResult.getTestedItem().add(testedItem);
-	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", adapter.getItemClass().getName(),
-							       item.getClass().getName()));
+		// fall-thru
+    
+	      default:
+		existence.addStatus(status);
+		break;
 	    }
+    
+	    testResult.getTestedItem().add(testedItem);
 	}
 
 	ResultEnumeration existenceResult = existence.getResult(testDefinition.getCheckExistence());
@@ -896,6 +886,425 @@ public class Engine implements IProducer {
 	}
 	criteriaResult.setResult(result);
 	return criteriaResult;
+    }
+
+    private ResultEnumeration compare(StateType state, ItemType item) throws OvalException, TestException {
+	try {
+	    String stateClassname = state.getClass().getName();
+	    String stateBaseClassname = stateClassname.substring(stateClassname.lastIndexOf(".")+1);
+	    String stateTypename = stateBaseClassname.substring(0, stateBaseClassname.lastIndexOf("State"));
+	    for (String methodName : getMethodNames(state.getClass())) {
+		if (methodName.startsWith("get") && !stateMethodNames.contains(methodName)) {
+		    Object stateEntityObj = state.getClass().getMethod(methodName).invoke(state);
+		    if (stateEntityObj != null && stateEntityObj instanceof EntityStateSimpleBaseType) {
+			EntityStateSimpleBaseType stateEntity = (EntityStateSimpleBaseType)stateEntityObj;
+			Object itemEntityObj = null;
+			if (methodName.equals("get" + stateTypename + "Version")) {
+			    itemEntityObj = item.getClass().getMethod("getVersion").invoke(item);
+			} else {
+			    itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
+			}
+    
+			ResultEnumeration result = ResultEnumeration.UNKNOWN;
+			if (itemEntityObj instanceof EntityItemSimpleBaseType) {
+			    result = compare(stateEntity, (EntityItemSimpleBaseType)itemEntityObj);
+			} else if (itemEntityObj instanceof JAXBElement) {
+			    JAXBElement element = (JAXBElement)itemEntityObj;
+			    EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)element.getValue();
+			    result = compare(stateEntity, itemEntity);
+			} else if (itemEntityObj instanceof List) {
+			    CheckData cd = new CheckData();
+			    for (Object entityObj : (List)itemEntityObj) {
+			        EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)entityObj;
+				cd.addResult(compare(stateEntity, itemEntity));
+			    }
+			    result = cd.getResult(stateEntity.getEntityCheck());
+			} else {
+			    String message = JOVALSystem.getMessage("ERROR_UNEXPECTED_ENTITY",
+								    itemEntityObj.getClass().getName(), item.getId());
+	    		    throw new OvalException(message);
+			}
+			if (result != ResultEnumeration.TRUE) {
+			    return result;
+			}
+		    }
+		}
+	    }
+	    return ResultEnumeration.TRUE;
+	} catch (Exception e) {
+	    throw new OvalException(e);
+	}
+    }
+
+    private static List<String> stateMethodNames = getMethodNames(StateType.class);
+    private static List<String> itemMethodNames = getMethodNames(ItemType.class);
+
+    private static List<String> getMethodNames(Class clazz) {
+	List<String> names = new Vector<String>();
+	Method[] methods = clazz.getMethods();
+	for (int i=0; i < methods.length; i++) {
+	    names.add(methods[i].getName());
+	}
+	return names;
+    }
+
+    /**
+     * Compare a state SimpleBaseType to an item SimpleBaseType.  If the item is null, this method returns false.  That
+     * allows callers to simply check if the state is set before invoking the comparison.
+     */
+    private ResultEnumeration compare(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item)
+		throws TestException, OvalException {
+	if (item == null) {
+	    return ResultEnumeration.NOT_APPLICABLE;
+	} else {
+	    switch(item.getStatus()) {
+	      case NOT_COLLECTED:
+		return ResultEnumeration.NOT_EVALUATED;
+
+	      case ERROR:
+		return ResultEnumeration.ERROR;
+
+	      case DOES_NOT_EXIST:
+		return ResultEnumeration.FALSE;
+	    }
+	}
+
+	//
+	// Check datatype compatibility; anything can be compared with a string.
+	//
+	SimpleDatatypeEnumeration stateDT = getDatatype(state.getDatatype());
+	SimpleDatatypeEnumeration itemDT =  getDatatype(item.getDatatype());
+	if (itemDT != stateDT) {
+	    if (itemDT != SimpleDatatypeEnumeration.STRING && stateDT != SimpleDatatypeEnumeration.STRING) {
+		throw new OvalException(JOVALSystem.getMessage("ERROR_DATATYPE_MISMATCH", stateDT, itemDT));
+	    }
+	}
+
+	//
+	// Handle the variable_ref case
+	//
+	if (state.isSetVarRef()) {
+	    CheckData cd = new CheckData();
+	    EntitySimpleBaseType base = JOVALSystem.factories.definitions.core.createEntityObjectAnySimpleType();
+	    base.setDatatype(state.getDatatype());
+	    base.setOperation(state.getOperation());
+	    base.setMask(state.isMask());
+	    for (String value : resolve(state.getVarRef(), new Vector<VariableValueType>())) {
+		base.setValue(value);
+		cd.addResult(testImpl(base, item));
+	    }
+	    return cd.getResult(state.getVarCheck());
+	} else {
+	    return testImpl(state, item);
+	}
+    }
+
+    /**
+     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#OperationEnumeration
+     */
+    ResultEnumeration testImpl(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+	switch (state.getOperation()) {
+	  case CASE_INSENSITIVE_EQUALS:
+	    if (equalsIgnoreCase(state, item)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
+	  case EQUALS:
+	    if (equals(state, item)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
+	  case PATTERN_MATCH: // Always treat as Strings
+	    if (item.getValue() == null) {
+		return ResultEnumeration.FALSE;
+	    } else if (Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find()) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
+	  case CASE_INSENSITIVE_NOT_EQUAL:
+	    if (equalsIgnoreCase(state, item)) {
+		return ResultEnumeration.FALSE;
+	    } else {
+		return ResultEnumeration.TRUE;
+	    }
+
+	  case NOT_EQUAL:
+	    if (equals(state, item)) {
+		return ResultEnumeration.FALSE;
+	    } else {
+		return ResultEnumeration.TRUE;
+	    }
+
+	  case GREATER_THAN_OR_EQUAL:
+	    if (greaterThanOrEqual(state, item)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
+	  case GREATER_THAN:
+	    if (greaterThan(state, item)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
+	  case LESS_THAN_OR_EQUAL:
+	    if (greaterThan(state, item)) {
+		return ResultEnumeration.FALSE;
+	    } else {
+		return ResultEnumeration.TRUE;
+	    }
+
+	  case LESS_THAN:
+	    if (greaterThanOrEqual(state, item)) {
+		return ResultEnumeration.FALSE;
+	    } else {
+		return ResultEnumeration.TRUE;
+	    }
+
+	  case BITWISE_AND:
+	    if (bitwiseAnd(state, item)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
+	  case BITWISE_OR:
+	    if (bitwiseOr(state, item)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getOperation()));
+	}
+    }
+
+    boolean equals(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+	switch(getDatatype(state.getDatatype())) {
+	  case INT:
+	    try {
+		return new BigInteger((String)item.getValue()).equals(new BigInteger((String)state.getValue()));
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  case FLOAT:
+	    try {
+		return new Float((String)item.getValue()).equals(new Float((String)state.getValue()));
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  case BOOLEAN:
+	    return getBoolean((String)state.getValue()) == getBoolean((String)item.getValue());
+
+	  case VERSION:
+	    if (Version.isVersion((String)item.getValue()) && Version.isVersion((String)state.getValue())) {
+		try {
+		    return new Version(item.getValue()).equals(new Version(state.getValue()));
+		} catch (NumberFormatException e) {
+		    throw new TestException(e);
+		}
+	    } else {
+		return ((String)item.getValue()).compareTo((String)state.getValue()) == 0;
+	    }
+
+	  case EVR_STRING:
+	    try {
+		return new Evr((String)item.getValue()).equals(new Evr((String)state.getValue()));
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  case BINARY:
+	  case STRING:
+	    return ((String)state.getValue()).equals((String)item.getValue());
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+							   state.getDatatype(), OperationEnumeration.EQUALS));
+	}
+    }
+
+    boolean greaterThanOrEqual(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+	switch(getDatatype(state.getDatatype())) {
+	  case INT:
+	    try {
+		return new BigInteger((String)item.getValue()).compareTo(new BigInteger((String)state.getValue())) >= 0;
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  case FLOAT:
+	    try {
+		return new Float((String)item.getValue()).compareTo(new Float((String)state.getValue())) >= 0;
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  case VERSION:
+	    if (Version.isVersion((String)item.getValue()) && Version.isVersion((String)state.getValue())) {
+		try {
+		    return new Version(item.getValue()).greaterThanOrEquals(new Version(state.getValue()));
+		} catch (NumberFormatException e) {
+		    throw new TestException(e);
+		}
+	    } else {
+		return ((String)item.getValue()).compareTo((String)state.getValue()) >= 0;
+	    }
+
+	  case EVR_STRING:
+	    try {
+		return new Evr((String)item.getValue()).greaterThanOrEquals(new Evr((String)state.getValue()));
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+							   state.getDatatype(), OperationEnumeration.GREATER_THAN_OR_EQUAL));
+	}
+    }
+
+    boolean greaterThan(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+	switch(getDatatype(state.getDatatype())) {
+	  case INT:
+	    try {
+		return new BigInteger((String)item.getValue()).compareTo(new BigInteger((String)state.getValue())) > 0;
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  case FLOAT:
+	    try {
+		return new Float((String)item.getValue()).compareTo(new Float((String)state.getValue())) > 0;
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  case VERSION:
+	    if (Version.isVersion((String)item.getValue()) && Version.isVersion((String)state.getValue())) {
+		try {
+		    return new Version(item.getValue()).greaterThan(new Version(state.getValue()));
+		} catch (NumberFormatException e) {
+		    throw new TestException(e);
+		}
+	    } else {
+		return ((String)item.getValue()).compareTo((String)state.getValue()) > 0;
+	    }
+
+	  case EVR_STRING:
+	    try {
+		return new Evr((String)item.getValue()).greaterThan(new Evr((String)state.getValue()));
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+							   state.getDatatype(), OperationEnumeration.GREATER_THAN_OR_EQUAL));
+	}
+    }
+
+    boolean equalsIgnoreCase(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+	switch(getDatatype(state.getDatatype())) {
+	  case STRING:
+	    return ((String)state.getValue()).equalsIgnoreCase((String)item.getValue());
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+							   state.getDatatype(), OperationEnumeration.CASE_INSENSITIVE_EQUALS));
+	}
+    }
+
+    boolean bitwiseAnd(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+	switch(getDatatype(state.getDatatype())) {
+	  case INT:
+	    try {
+		int sInt = Integer.parseInt((String)state.getValue());
+		int iInt = Integer.parseInt((String)item.getValue());
+		return sInt == (sInt & iInt);
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+							   state.getDatatype(), OperationEnumeration.BITWISE_AND));
+	}
+    }
+
+    boolean bitwiseOr(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+	switch(getDatatype(state.getDatatype())) {
+	  case INT:
+	    try {
+		int sInt = Integer.parseInt((String)state.getValue());
+		int iInt = Integer.parseInt((String)item.getValue());
+		return sInt == (sInt | iInt);
+	    } catch (NumberFormatException e) {
+		throw new TestException(e);
+	    }
+
+	  default:
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+							   state.getDatatype(), OperationEnumeration.BITWISE_OR));
+	}
+    }
+
+    /**
+     * Convert the datatype String into a SimpleDatatypeEnumeration for use in switches.
+     */
+    SimpleDatatypeEnumeration getDatatype(String s) throws OvalException {
+	if ("binary".equals(s)) {
+	    return SimpleDatatypeEnumeration.BINARY;
+	} else if ("boolean".equals(s)) {
+	    return SimpleDatatypeEnumeration.BOOLEAN;
+	} else if ("evr_string".equals(s)) {
+	    return SimpleDatatypeEnumeration.EVR_STRING;
+	} else if ("fileset_revision".equals(s)) {
+	    return SimpleDatatypeEnumeration.FILESET_REVISION;
+	} else if ("float".equals(s)) {
+	    return SimpleDatatypeEnumeration.FLOAT;
+	} else if ("int".equals(s)) {
+	    return SimpleDatatypeEnumeration.INT;
+	} else if ("ios_version".equals(s)) {
+	    return SimpleDatatypeEnumeration.IOS_VERSION;
+	} else if ("ipv4_address".equals(s)) {
+	    return SimpleDatatypeEnumeration.IPV_4_ADDRESS;
+	} else if ("ipv6_address".equals(s)) {
+	    return SimpleDatatypeEnumeration.IPV_6_ADDRESS;
+	} else if ("string".equals(s)) {
+	    return SimpleDatatypeEnumeration.STRING;
+	} else if ("version".equals(s)) {
+	    return SimpleDatatypeEnumeration.VERSION;
+	} else {
+	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_DATATYPE", s));
+	}
+    }
+
+    boolean getBoolean(String s) {
+	if (s == null) {
+	    return false;
+	} else if (s.equalsIgnoreCase("true")) {
+	    return true;
+	} else if (s.equals("0")) {
+	    return false;
+	} else if (s.equalsIgnoreCase("false")) {
+	    return false;
+	} else if (s.length() == 0) {
+	    return false;
+	} else {
+	    return true;
+	}
     }
 
     /**
@@ -1628,5 +2037,62 @@ public class Engine implements IProducer {
 	}
 
 	throw new OvalException(JOVALSystem.getMessage("ERROR_ILLEGAL_TIME", format, s));
+    }
+
+    class Evr {
+	String epoch, version, release;
+
+	Evr(String evr) {
+	    int end = evr.indexOf(":");
+	    epoch = evr.substring(0, end);
+	    int begin = end+1;
+	    end = evr.indexOf("-", begin);
+	    version = evr.substring(begin, end);
+	    release = evr.substring(end+1);
+	}
+
+	boolean greaterThanOrEquals(Evr evr) {
+	    if (equals(evr)) {
+		return true;
+	    } else if (greaterThan(evr)) {
+		return true;
+	    } else {
+		return false;
+	    }
+	}
+
+	boolean greaterThan(Evr evr) {
+	    if (Version.isVersion(epoch) && Version.isVersion(evr.epoch)) {
+		if (new Version(epoch).greaterThan(new Version(evr.epoch))) {
+		    return true;
+		}
+	    } else if (epoch.compareTo(evr.epoch) > 0) {
+		return true;
+	    }
+	    if (Version.isVersion(version) && Version.isVersion(evr.version)) {
+		if (new Version(version).greaterThan(new Version(evr.version))) {
+		    return true;
+		}
+	    } else if (version.compareTo(evr.version) > 0) {
+		return true;
+	    }
+	    if (Version.isVersion(release) && Version.isVersion(evr.release)) {
+		if (new Version(release).greaterThan(new Version(evr.release))) {
+		    return true;
+		}
+	    } else if (release.compareTo(evr.release) > 0) {
+		return true;
+	    }
+	    return false;
+	}
+
+	public boolean equals(Object obj) {
+	    if (obj instanceof Evr) {
+		Evr evr = (Evr)obj;
+		return epoch.equals(evr.epoch) && version.equals(evr.version) && release.equals(evr.release);
+	    } else {
+		return false;
+	    }
+	}
     }
 }

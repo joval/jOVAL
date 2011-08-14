@@ -58,6 +58,14 @@ public class StringTools {
 	return list;
     }
 
+    public static List<String> toList(String[] sa) {
+	List<String> list = new Vector<String>(sa.length);
+	for (int i=0; i < sa.length; i++) {
+	    list.add(sa[i]);
+	}
+	return list;
+    }
+
     public static char[] toCharArray(byte[] buff) {
 	char[] ca = new char[buff.length];
 	for (int i=0; i < buff.length; i++) {
