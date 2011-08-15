@@ -26,12 +26,11 @@ import oval.schemas.definitions.unix.UnameTest;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.unix.UnameItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
@@ -45,7 +44,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class UnameAdapter implements IAdapter {
-    private IAdapterContext ctx;
     private ISession session;
 
     public UnameAdapter(ISession session) {
@@ -53,10 +51,6 @@ public class UnameAdapter implements IAdapter {
     }
 
     // Implement IAdapter
-
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-    }
 
     public Class getObjectClass() {
 	return UnameObject.class;
@@ -69,7 +63,7 @@ public class UnameAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	try {
 	    items.add(getItem());
@@ -77,8 +71,8 @@ public class UnameAdapter implements IAdapter {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
-	    ctx.addObjectMessage(obj.getId(), msg);
-	    ctx.log(Level.WARNING, e.getMessage(), e);
+	    rc.addMessage(msg);
+	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	}
 	return items;
     }

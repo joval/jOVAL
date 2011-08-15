@@ -4,7 +4,7 @@
 package org.joval.intf.oval;
 
 import java.io.File;
-import java.util.Iterator;
+import java.util.List;
 
 import oval.schemas.results.core.DefinitionType;
 
@@ -25,7 +25,7 @@ public interface IResults {
     /**
      * Returns an Iterator over all the Definitions in these results.
      */
-    Iterator<DefinitionType> iterateDefinitions();
+    List<DefinitionType> getDefinitions();
 
     /**
      * Serialize the contents of this IResults to a file.

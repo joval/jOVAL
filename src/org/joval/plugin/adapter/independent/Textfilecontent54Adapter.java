@@ -27,14 +27,13 @@ import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.TextfilecontentItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.util.BaseFileAdapter;
@@ -73,8 +72,8 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected List<JAXBElement<? extends ItemType>>
-	getItems(ItemType base, ObjectType obj, IFile f, List<VariableValueType> vars) throws IOException, OvalException {
+    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
+		throws IOException, OvalException {
 
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
@@ -83,8 +82,8 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	    baseItem = (TextfilecontentItem)base;
 	}
 	Textfilecontent54Object tfcObj = null;
-	if (obj instanceof Textfilecontent54Object) {
-	    tfcObj = (Textfilecontent54Object)obj;
+	if (rc.getObject() instanceof Textfilecontent54Object) {
+	    tfcObj = (Textfilecontent54Object)rc.getObject();
 	}
 
 	if (baseItem != null && tfcObj != null) {
@@ -106,7 +105,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 		}
 		List<Pattern> patterns = new Vector<Pattern>();
 		if (tfcObj.getPattern().isSetVarRef()) {
-		    for (String value : ctx.resolve(tfcObj.getPattern().getVarRef(), vars)) {
+		    for (String value : rc.resolve(tfcObj.getPattern().getVarRef())) {
 			patterns.add(Pattern.compile(value, flags));
 		    }
 		} else {
@@ -162,7 +161,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 		    try {
 			in.close();
 		    } catch (IOException e) {
-			ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", f.toString()), e);
+			JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", f.toString()), e);
 		    }
 		}
 	    }

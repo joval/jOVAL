@@ -34,12 +34,11 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.solaris.PatchItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
@@ -53,7 +52,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class PatchAdapter implements IAdapter {
-    IAdapterContext ctx;
     ISession session;
     String error = null;
     Hashtable<String, List<RevisionEntry>> revisions;
@@ -66,10 +64,6 @@ public class PatchAdapter implements IAdapter {
     }
 
     // Implement IAdapter
-
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-    }
 
     public Class getObjectClass() {
 	return PatchObject.class;
@@ -86,8 +80,8 @@ public class PatchAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
-	PatchObject pObj = (PatchObject)obj;
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	PatchObject pObj = (PatchObject)rc.getObject();
 	int iBase = 0;
 	try {
 	    iBase = Integer.parseInt((String)pObj.getBase().getValue());
@@ -175,7 +169,7 @@ public class PatchAdapter implements IAdapter {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(error);
-	    ctx.addObjectMessage(obj.getId(), msg);
+	    rc.addMessage(msg);
 	}
 	return items;
     }

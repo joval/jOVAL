@@ -33,12 +33,11 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.unix.ProcessItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
@@ -52,7 +51,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class ProcessAdapter implements IAdapter {
-    private IAdapterContext ctx;
     private ISession session;
     private Hashtable<String,ProcessItem> processes;
     private String error = null;
@@ -63,10 +61,6 @@ public class ProcessAdapter implements IAdapter {
     }
 
     // Implement IAdapter
-
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-    }
 
     public Class getObjectClass() {
 	return ProcessObject.class;
@@ -83,15 +77,15 @@ public class ProcessAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
-	ProcessObject pObj = (ProcessObject)obj;
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	ProcessObject pObj = (ProcessObject)rc.getObject();
 	List<JAXBElement <? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	if (error != null) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(error);
-	    ctx.addObjectMessage(obj.getId(), msg);
+	    rc.addMessage(msg);
 	}
 
 	switch (pObj.getCommand().getOperation()) {

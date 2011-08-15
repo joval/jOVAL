@@ -102,6 +102,7 @@ import oval.schemas.variables.core.OvalVariables;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;
@@ -171,7 +172,7 @@ public class Engine implements IProducer {
     private Results results;
     private State state;
     private DefinitionFilter filter;
-    private List<AdapterContext> adapterContextList;
+    private Hashtable<Class, AdapterManager> adapters;
     Producer producer;
 
     /**
@@ -183,9 +184,9 @@ public class Engine implements IProducer {
 	    throw new RuntimeException(JOVALSystem.getMessage("ERROR_NO_SYSTEMCHARACTERISTICS"));
 	}
 	this.plugin = plugin;
-	adapterContextList = new Vector<AdapterContext>();
+	adapters = new Hashtable<Class, AdapterManager>();
 	for (IAdapter adapter : plugin.getAdapters()) {
-	    adapterContextList.add(new AdapterContext(adapter, this));
+	    adapters.put(adapter.getObjectClass(), new AdapterManager(adapter));
 	}
 	variableMap = new Hashtable<String, List<VariableValueType>>();
 	producer = new Producer();
@@ -348,38 +349,16 @@ public class Engine implements IProducer {
 	return generator;
     }
 
-    IAdapter getAdapterForObject(Class clazz) {
-	for (AdapterContext ctx : adapterContextList) {
-	    if (clazz.equals(ctx.getAdapter().getObjectClass())) {
-		return ctx.getAdapter();
-	    }
-	}
-	return null;
-    }
-
-    IAdapter getAdapterForTest(oval.schemas.definitions.core.TestType testDefinition) throws OvalException {
-	String objectId = getObjectRef(testDefinition);
-	if (objectId == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_OBJECT_MISSING", testDefinition.getId()));
-	} else {
-	    return getAdapterForObject(definitions.getObject(objectId).getClass());
-	}
-    }
-
-    AdapterContext getAdapterContext(IAdapter adapter) throws NoSuchElementException {
-	for (AdapterContext ac : adapterContextList) {
-	    if (ac.getAdapter().equals(adapter)) {
-		return ac;
-	    }
-	}
-	throw new NoSuchElementException(adapter.toString());
+    SystemCharacteristics getSystemCharacteristics() {
+	return sc;
     }
 
     /**
      * Return the value of the Variable with the specified ID, and also add any chained variables to the provided list.
      */
-    List<String> resolve(String id, List<VariableValueType> vars) throws NoSuchElementException, OvalException {
-	VariableType var = definitions.getVariable(id);
+    List<String> resolve(String variableId, RequestContext rc) throws NoSuchElementException, OvalException {
+	List<VariableValueType> vars = rc.getVars();
+	VariableType var = definitions.getVariable(variableId);
 	String varId = var.getId();
 	List<VariableValueType> cachedList = variableMap.get(varId);
 	if (cachedList == null) {
@@ -392,20 +371,16 @@ public class Engine implements IProducer {
 	    List<String> result = new Vector<String>();
 	    vars.addAll(cachedList);
 	    for (VariableValueType variableValueType : cachedList) {
-		if (variableValueType.getVariableId().equals(id)) {
+		if (variableValueType.getVariableId().equals(variableId)) {
 		    result.add((String)variableValueType.getValue());
 		}
 	    }
 	    if (result.size() > 0) {
 		return result;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_MISSING_VARIABLE", id));
+		throw new OvalException(JOVALSystem.getMessage("ERROR_MISSING_VARIABLE", variableId));
 	    }
 	}
-    }
-
-    void addObjectMessage(String objectId, MessageType msg) {
-	sc.setObject(objectId, null, null, null, msg);
     }
 
     // Private
@@ -429,30 +404,30 @@ public class Engine implements IProducer {
 	}
 
 	//
-	// Next, scan all those types (for which there are adapters)
+	// Second, scan all those types (for which there are adapters)
 	//
 	for (Class clazz : varTypes) {
-	    IAdapter adapter = getAdapterForObject(clazz);
-	    if (adapter != null) {
-		scanAdapter(adapter);
+	    AdapterManager manager = adapters.get(clazz);
+	    if (manager != null) {
+		scanAdapter(manager);
 	    }
 	}
 
 	//
-	// Then, scan all remaining types for which there are adapters
+	// Third, scan all remaining types for which there are adapters
 	//
 	List<Class> allTypes = getObjectClasses(definitions.iterateObjects());
 	for (Class clazz : allTypes) {
 	    if (!varTypes.contains(clazz)) {
-		IAdapter adapter = getAdapterForObject(clazz);
-		if (adapter != null) {
-		    scanAdapter(adapter);
+		AdapterManager manager = adapters.get(clazz);
+		if (manager != null) {
+		    scanAdapter(manager);
 		}
 	    }
 	}
 
 	//
-	// Finally, add all objects for which there are no adapters, and flag them NOT_COLLECTED
+	// Finally, add all objects for which there are no adapters and flag them NOT_COLLECTED
 	//
 	Iterator<ObjectType> allObjects = definitions.iterateObjects();
 	while(allObjects.hasNext()) {
@@ -469,12 +444,12 @@ public class Engine implements IProducer {
     }
 
     /**
-     * Fetch all items associated with objects serviced by the given adapter, and store them in the SystemCharacteristics.
+     * Fetch all items associated with objects serviced by the given adapter and store them in the SystemCharacteristics.
      */
-    private void scanAdapter(IAdapter adapter) throws OvalException {
+    private void scanAdapter(AdapterManager manager) throws OvalException {
+	IAdapter adapter = manager.getAdapter();
 	if (adapter.connect()) {
-	    AdapterContext adapterContext = getAdapterContext(adapter);
-	    adapterContext.setActive(true);
+	    manager.setActive(true);
 	    try {
 		Iterator<ObjectType> iter = definitions.iterateObjects(adapter.getObjectClass());
 		while (iter.hasNext()) {
@@ -505,12 +480,12 @@ public class Engine implements IProducer {
 			try {
 			    sc.getObject(objectId);
 			} catch (NoSuchElementException e) {
-			    scanObject(obj, new Vector<VariableValueType>());
+			    scanObject(new RequestContext(this, obj));
 			}
 		    }
 		}
 	    } finally {
-		adapterContext.setActive(false);
+		manager.setActive(false);
 		adapter.disconnect();
 	    }
 	}
@@ -519,17 +494,18 @@ public class Engine implements IProducer {
     /**
      * Scan an object live using an adapter, including crawling down any encountered Sets.
      */
-    private List<ItemType> scanObject(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+    private List<ItemType> scanObject(RequestContext rc) throws OvalException {
+	ObjectType obj = rc.getObject();
 	String objectId = obj.getId();
 	producer.sendNotify(this, MESSAGE_OBJECT, objectId);
 
 	Set s = getObjectSet(obj);
 	if (s == null) {
-	    IAdapter adapter = getAdapterForObject(obj.getClass());
-	    if (adapter == null) {
+	    AdapterManager manager = adapters.get(obj.getClass());
+	    if (manager == null) {
 		throw new OvalException(JOVALSystem.getMessage("ERROR_ADAPTER_MISSING", obj.getClass().getName()));
-	    } else if (getAdapterContext(adapter).isActive()) {
-		List<JAXBElement<? extends ItemType>> items = adapter.getItems(obj, vars);
+	    } else if (manager.isActive()) {
+		List<JAXBElement<? extends ItemType>> items = manager.getAdapter().getItems(rc);
 		if (items.size() == 0) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
@@ -542,7 +518,7 @@ public class Engine implements IProducer {
 			sc.relateItem(objectId, itemId);
 		    }
 		}
-		for (VariableValueType var : vars) {
+		for (VariableValueType var : rc.getVars()) {
 		    sc.storeVariable(var);
 		    sc.relateVariable(objectId, var.getVariableId());
 		}
@@ -586,7 +562,7 @@ public class Engine implements IProducer {
 		try {
 		    items = sc.getItemsByObjectId(objectId);
 		} catch (NoSuchElementException e) {
-		    items = scanObject(definitions.getObject(objectId), new Vector<VariableValueType>());
+		    items = scanObject(new RequestContext(this, definitions.getObject(objectId)));
 		}
 		//
 		// Apply filters, if any
@@ -696,18 +672,7 @@ public class Engine implements IProducer {
 		if (testDefinition instanceof UnknownTest) {
 		    testResult.setResult(ResultEnumeration.UNKNOWN);
 		} else {
-		    IAdapter adapter = getAdapterForTest(testDefinition);
-		    if (adapter == null) {
-			MessageType message = JOVALSystem.factories.common.createMessageType();
-			message.setLevel(MessageLevelEnumeration.WARNING);
-			message.setValue(JOVALSystem.getMessage("ERROR_ADAPTER_MISSING", testDefinition.getClass().getName()));
-			testResult.getMessage().add(message);
-			testResult.setResult(ResultEnumeration.NOT_EVALUATED);
-		    } else if (getObjectRef(testDefinition) == null) {
-			throw new OvalException(JOVALSystem.getMessage("ERROR_TEST_NOOBJREF", testId));
-		    } else {
-			evaluateTest(testResult, adapter);
-		    }
+		    evaluateTest(testResult);
 		}
 	    } else {
 		testResult.setResult(ResultEnumeration.NOT_EVALUATED);
@@ -737,7 +702,7 @@ public class Engine implements IProducer {
 	return criterionResult;
     }
 
-    private void evaluateTest(TestType testResult, IAdapter adapter) throws OvalException {
+    private void evaluateTest(TestType testResult) throws OvalException {
 	String testId = testResult.getTestId();
 	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	String objectId = getObjectRef(testDefinition);
@@ -989,7 +954,7 @@ public class Engine implements IProducer {
 	    base.setDatatype(state.getDatatype());
 	    base.setOperation(state.getOperation());
 	    base.setMask(state.isMask());
-	    for (String value : resolve(state.getVarRef(), new Vector<VariableValueType>())) {
+	    for (String value : resolve(state.getVarRef(), new RequestContext(this, null))) {
 		base.setValue(value);
 		cd.addResult(testImpl(base, item));
 	    }
@@ -1439,7 +1404,7 @@ public class Engine implements IProducer {
 		// If the object has not yet been scanned, then it must be retrieved live from the adapter.
 		//
 		ObjectType ot = definitions.getObject(objectId);
-		items = scanObject(ot, list);
+		items = scanObject(new RequestContext(this, ot, list));
 	    }
 	    List<String> values = extractItemData(objectId, oc, items);
 	    if (values == null || values.size() == 0) {
@@ -1850,12 +1815,18 @@ public class Engine implements IProducer {
 	return result;
     }
 
-    private String getObjectRef(oval.schemas.definitions.core.TestType test) {
+    /**
+     * Get the object ID to which a test refers, or throw an exception if there is none.
+     */
+    private String getObjectRef(oval.schemas.definitions.core.TestType test) throws OvalException {
 	try {
 	    Method getObject = test.getClass().getMethod("getObject");
 	    ObjectRefType objectRef = (ObjectRefType)getObject.invoke(test);
 	    if (objectRef != null) {
-		return objectRef.getObjectRef();
+		String ref = objectRef.getObjectRef();
+		if (ref != null) {
+		    return objectRef.getObjectRef();
+		}
 	    }
 	} catch (NoSuchMethodException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
@@ -1864,7 +1835,8 @@ public class Engine implements IProducer {
 	} catch (InvocationTargetException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	}
-	return null;
+
+	throw new OvalException(JOVALSystem.getMessage("ERROR_TEST_NOOBJREF", test.getId()));
     }
 
     private String getStateRef(oval.schemas.definitions.core.TestType test) {
@@ -2037,6 +2009,27 @@ public class Engine implements IProducer {
 	}
 
 	throw new OvalException(JOVALSystem.getMessage("ERROR_ILLEGAL_TIME", format, s));
+    }
+
+    class AdapterManager {
+	IAdapter adapter;
+	boolean active = false;
+
+	AdapterManager(IAdapter adapter) {
+	    this.adapter = adapter;
+	}
+
+	void setActive(boolean active) {
+	    this.active = active;
+	}
+
+	boolean isActive() {
+	    return active;
+	}
+
+	IAdapter getAdapter() {
+	    return adapter;
+	}
     }
 
     class Evr {

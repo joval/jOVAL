@@ -31,12 +31,11 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.EnvironmentvariableItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IEnvironment;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
@@ -49,7 +48,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class EnvironmentvariableAdapter implements IAdapter {
-    private IAdapterContext ctx;
     private IEnvironment env;
 
     public EnvironmentvariableAdapter(IEnvironment env) {
@@ -57,10 +55,6 @@ public class EnvironmentvariableAdapter implements IAdapter {
     }
 
     // Implement IAdapter
-
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-    }
 
     public Class getObjectClass() {
 	return EnvironmentvariableObject.class;
@@ -73,9 +67,9 @@ public class EnvironmentvariableAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	EnvironmentvariableObject eObj = (EnvironmentvariableObject)obj;
+	EnvironmentvariableObject eObj = (EnvironmentvariableObject)rc.getObject();
 	String name = (String)eObj.getName().getValue();
 
 	switch(eObj.getName().getOperation()) {
@@ -114,8 +108,8 @@ public class EnvironmentvariableAdapter implements IAdapter {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", name, eObj.getId()));
-		ctx.addObjectMessage(obj.getId(), msg);
-		ctx.log(Level.WARNING, e.getMessage(), e);
+		rc.addMessage(msg);
+		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	    }
 	    break;
 
@@ -127,7 +121,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.INFO);
 	    msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", name, eObj.getId()));
-	    ctx.addObjectMessage(obj.getId(), msg);
+	    rc.addMessage(msg);
 	}
 	return items;
     }

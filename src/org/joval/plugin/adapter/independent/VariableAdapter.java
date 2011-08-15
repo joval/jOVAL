@@ -19,13 +19,12 @@ import oval.schemas.definitions.independent.VariableTest;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.EntityItemVariableRefType;
 import oval.schemas.systemcharacteristics.independent.VariableItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
@@ -39,17 +38,12 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class VariableAdapter implements IAdapter {
-    private IAdapterContext ctx;
     private IPlugin plugin;
 
     public VariableAdapter() {
     }
 
     // Implement IAdapter
-
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-    }
 
     public Class getObjectClass() {
 	return VariableObject.class;
@@ -62,11 +56,11 @@ public class VariableAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
-	VariableObject vObj = (VariableObject)obj;
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	VariableObject vObj = (VariableObject)rc.getObject();
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
-	List<String> values = ctx.resolve((String)vObj.getVarRef().getValue(), vars);
+	List<String> values = rc.resolve((String)vObj.getVarRef().getValue());
 	if (values.size() > 0) {
 	    VariableItem item = JOVALSystem.factories.sc.independent.createVariableItem();
 	    EntityItemVariableRefType ref = JOVALSystem.factories.sc.independent.createEntityItemVariableRefType();

@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
@@ -80,7 +79,7 @@ class Results implements IResults {
     private OvalResults or;
 
     /**
-     * Create an empty SystemCharacteristics.
+     * Create a Results based on the specified Definitions and SystemCharacteristics.
      */
     Results(Definitions definitions, SystemCharacteristics sc) {
 	this.definitions = definitions;
@@ -98,8 +97,11 @@ class Results implements IResults {
 	or = null; // reset results if they have been previously computed.
     }
 
-    public Iterator<DefinitionType> iterateDefinitions() {
-	Vector<DefinitionType> definitions = new Vector<DefinitionType>();
+    /**
+     * Get a List of definition results, in full or thin format according to the directives.
+     */
+    public List<DefinitionType> getDefinitions() {
+	List<DefinitionType> definitions = new Vector<DefinitionType>();
 	for (DefinitionType definition : definitionTable.values()) {
 	    DirectiveType directive = directives.getDirective(definition);
 	    if (directive.isReported()) {
@@ -118,7 +120,7 @@ class Results implements IResults {
 		}
 	    }
 	}
-	return definitions.iterator();
+	return definitions;
     }
 
     /**
@@ -225,9 +227,7 @@ class Results implements IResults {
 	//
 	Hashtable<String, TestType> reportableTests = new Hashtable<String, TestType>();
 	DefinitionsType definitionsType = JOVALSystem.factories.results.createDefinitionsType();
-	Iterator<DefinitionType> iter = iterateDefinitions();
-	while(iter.hasNext()) {
-	    DefinitionType definition = iter.next();
+	for (DefinitionType definition : getDefinitions()) {
 	    definitionsType.getDefinition().add(definition);
 	    for (String testId : getTestIds(definition)) {
 		if (!reportableTests.containsKey(testId)) {

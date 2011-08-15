@@ -40,7 +40,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.windows.EntityItemRegistryHiveType;
 import oval.schemas.systemcharacteristics.windows.EntityItemRegistryTypeType;
 import oval.schemas.systemcharacteristics.windows.RegistryItem;
@@ -50,7 +49,7 @@ import oval.schemas.results.core.TestedVariableType;
 import oval.schemas.results.core.TestType;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.registry.IDwordValue;
 import org.joval.intf.windows.registry.IExpandStringValue;
 import org.joval.intf.windows.registry.IKey;
@@ -71,7 +70,6 @@ import org.joval.util.JOVALSystem;
 public class RegistryAdapter implements IAdapter {
     private static final String DATATYPE_INT	= "int";
 
-    private IAdapterContext ctx;
     private IRegistry registry;
     private Hashtable<String, BigInteger> itemIds;
     private Hashtable<String, List<String>> pathMap;
@@ -83,10 +81,6 @@ public class RegistryAdapter implements IAdapter {
     }
 
     // Implement IAdapter
-
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-    }
 
     public Class getObjectClass() {
 	return RegistryObject.class;
@@ -105,9 +99,9 @@ public class RegistryAdapter implements IAdapter {
 	}
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	RegistryObject rObj = (RegistryObject)obj;
+	RegistryObject rObj = (RegistryObject)rc.getObject();
 
 	String id = rObj.getId();
 	if (rObj.getHive() == null || rObj.getHive().getValue() == null) {
@@ -117,20 +111,20 @@ public class RegistryAdapter implements IAdapter {
 
 	if (rObj.getKey().getValue() == null) {
 	    try {
-		for (RegistryItem item : getItems(rObj, hive, null)) {
+		for (RegistryItem item : getItems(rObj, hive, null, rc)) {
 		    items.add(JOVALSystem.factories.sc.windows.createRegistryItem(item));
 		}
 	    } catch (NoSuchElementException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), id));
-		ctx.addObjectMessage(rObj.getId(), msg);
+		rc.addMessage(msg);
 	    }
 	} else {
 	    try {
-		for (String path : getPathList(rObj, hive, vars)) {
+		for (String path : getPathList(rObj, hive, rc)) {
 		    try {
-			for (RegistryItem item : getItems(rObj, hive, path)) {
+			for (RegistryItem item : getItems(rObj, hive, path, rc)) {
 			    items.add(JOVALSystem.factories.sc.windows.createRegistryItem(item));
 			}
 		    } catch (NoSuchElementException e) {
@@ -141,7 +135,7 @@ public class RegistryAdapter implements IAdapter {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), id));
-		ctx.addObjectMessage(rObj.getId(), msg);
+		rc.addMessage(msg);
 	    }
 	}
 	return items;
@@ -153,7 +147,7 @@ public class RegistryAdapter implements IAdapter {
      * Return the list of all registry key paths corresponding to the given RegistryObject.  Handles searches (from
      * pattern match operations), singletons (from equals operations), and searches based on RegistryBehaviors.
      */
-    private List<String> getPathList(RegistryObject rObj, String hive, List<VariableValueType> vars) throws OvalException {
+    private List<String> getPathList(RegistryObject rObj, String hive, IRequestContext rc) throws OvalException {
 	List<String> list = pathMap.get(rObj.getId());
 	if (list != null) {
 	    return list;
@@ -163,9 +157,9 @@ public class RegistryAdapter implements IAdapter {
 	if (rObj.getKey().getValue().isSetVarRef()) {
 	    try {
 		String variableId = rObj.getKey().getValue().getVarRef();
-		list.addAll(ctx.resolve(variableId, vars));
+		list.addAll(rc.resolve(variableId));
 	    } catch (NoSuchElementException e) {
-		ctx.log(Level.FINER, JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), rObj.getId()));
+		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), rObj.getId()));
 	    }
 	} else {
 	    list.add((String)rObj.getKey().getValue().getValue());
@@ -268,7 +262,7 @@ public class RegistryAdapter implements IAdapter {
     /**
      * Get all items corresponding to a concrete path, given the hive and RegistryObject.
      */
-    private List<RegistryItem> getItems(RegistryObject rObj, String hive, String path)
+    private List<RegistryItem> getItems(RegistryObject rObj, String hive, String path, IRequestContext rc)
 		throws NoSuchElementException, OvalException {
 
 	IKey key = null;
@@ -302,8 +296,8 @@ public class RegistryAdapter implements IAdapter {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
-		    ctx.addObjectMessage(rObj.getId(), msg);
-		    ctx.log(Level.WARNING, e.getMessage(), e);
+		    rc.addMessage(msg);
+		    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 		}
 		break;
     

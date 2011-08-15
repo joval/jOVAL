@@ -19,13 +19,12 @@ import oval.schemas.definitions.independent.FamilyState;
 import oval.schemas.definitions.independent.FamilyTest;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.EntityItemFamilyType;
 import oval.schemas.systemcharacteristics.independent.FamilyItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
@@ -38,7 +37,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class FamilyAdapter implements IAdapter {
-    private IAdapterContext ctx;
     private IPlugin plugin;
 
     public FamilyAdapter(IPlugin plugin) {
@@ -46,10 +44,6 @@ public class FamilyAdapter implements IAdapter {
     }
 
     // Implement IAdapter
-
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-    }
 
     public Class getObjectClass() {
 	return FamilyObject.class;
@@ -62,7 +56,7 @@ public class FamilyAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	items.add(JOVALSystem.factories.sc.independent.createFamilyItem(getItem()));
 	return items;

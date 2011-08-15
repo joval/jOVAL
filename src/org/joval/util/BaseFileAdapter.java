@@ -28,11 +28,10 @@ import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
@@ -45,7 +44,6 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public abstract class BaseFileAdapter implements IAdapter {
-    protected IAdapterContext ctx;
     protected IFilesystem fs;
     protected Hashtable<String, List<String>> pathMap;
 
@@ -56,10 +54,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-    }
-
     public boolean connect() {
 	return true;
     }
@@ -67,13 +61,14 @@ public abstract class BaseFileAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	ObjectType obj = rc.getObject();
 	if (!obj.getClass().getName().equals(getObjectClass().getName())) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
 							   getObjectClass().getName(), obj.getClass().getName()));
 	}
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	for (String path : getPathList(obj, vars)) {
+	for (String path : getPathList(rc)) {
 	    IFile f = null;
 	    try {
 		ReflectedFileObject fObj = new ReflectedFileObject(obj);
@@ -142,17 +137,17 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    throw new OvalException(JOVALSystem.getMessage("ERROR_TEXTFILECONTENT_SPEC", obj.getId()));
 		}
 
-		items.addAll(getItems(fItem.it, obj, f, vars));
+		items.addAll(getItems(fItem.it, f, rc));
 	    } catch (NoSuchElementException e) {
 		// skip it
 	    } catch (NoSuchMethodException e) {
-		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
 	    } catch (IllegalAccessException e) {
-		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
 	    } catch (IllegalArgumentException e) {
-		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
 	    } catch (InvocationTargetException e) {
-		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", obj.getId(), path), e);
 	    } catch (IOException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -161,13 +156,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 		} else {
 		    msg.setValue(JOVALSystem.getMessage("ERROR_IO", f.getLocalName(), e.getMessage()));
 		}
-		ctx.addObjectMessage(obj.getId(), msg);
+		rc.addMessage(msg);
 	    } finally {
 		if (f != null) {
 		    try {
 			f.close();
 		    } catch (IOException e) {
-			ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE", e.getMessage()));
+			JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE", e.getMessage()));
 		    }
 		}
 	    }
@@ -193,7 +188,7 @@ public abstract class BaseFileAdapter implements IAdapter {
      * @arg it the base ItemType containing filepath, path and filename information already populated
      */
     protected abstract List<JAXBElement<? extends ItemType>>
-	getItems(ItemType it, ObjectType obj, IFile f, List<VariableValueType> vars) throws IOException, OvalException;
+	getItems(ItemType it, IFile f, IRequestContext rc) throws IOException, OvalException;
 
     // Internal
 
@@ -201,7 +196,8 @@ public abstract class BaseFileAdapter implements IAdapter {
      * Get a list of String paths for this object.  This accommodates searches (from pattern match operations),
      * singletons (from equals operations) and handles recursive searches specified by FileBehaviors.
      */
-    final List<String> getPathList(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+    final List<String> getPathList(IRequestContext rc) throws OvalException {
+	ObjectType obj = rc.getObject();
 	List<String> list = pathMap.get(obj.getId());
 	if (list != null) {
 	    return list;
@@ -216,7 +212,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		List<String> filepaths = new Vector<String>();
 		EntityObjectStringType filepath = fObj.getFilepath();
 		if (filepath.isSetVarRef()) {
-		    filepaths.addAll(ctx.resolve(filepath.getVarRef(), vars));
+		    filepaths.addAll(rc.resolve(filepath.getVarRef()));
 		} else {
 		    filepaths.add((String)filepath.getValue());
 		}
@@ -237,7 +233,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		List<String> paths = new Vector<String>();
 		EntityObjectStringType path = fObj.getPath();
 		if (path.isSetVarRef()) {
-		    paths.addAll(ctx.resolve(path.getVarRef(), vars));
+		    paths.addAll(rc.resolve(path.getVarRef()));
 		} else if (path.isSetValue()) {
 		    paths.add((String)path.getValue());
 		}
@@ -285,7 +281,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    } else {
 			List<String> fnames = new Vector<String>();
 			if (filename.isSetVarRef()) {
-			    fnames.addAll(ctx.resolve(filename.getVarRef(), vars));
+			    fnames.addAll(rc.resolve(filename.getVarRef()));
 			} else {
 			    fnames.add((String)filename.getValue());
 			}
@@ -318,15 +314,15 @@ public abstract class BaseFileAdapter implements IAdapter {
 		throw new OvalException("ERROR_BAD_FILEOBJECT" + obj.getId());
 	    }
 	} catch (NoSuchMethodException e) {
-       	    ctx.log(Level.SEVERE, e.getMessage(), e);
+       	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
 	} catch (IllegalAccessException e) {
-       	    ctx.log(Level.SEVERE, e.getMessage(), e);
+       	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
 	} catch (InvocationTargetException e) {
-       	    ctx.log(Level.SEVERE, e.getMessage(), e);
+       	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
 	} catch (IOException e) {
-       	    ctx.log(Level.WARNING, e.getMessage(), e);
+       	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	} catch (NoSuchElementException e) {
-       	    ctx.log(Level.FINER, JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), obj.getId()));
+       	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), obj.getId()));
 	}
 	pathMap.put(obj.getId(), list);
 	return list;
@@ -380,16 +376,16 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    }
 		} catch (IOException e) {
 		    if (f == null) {
-			ctx.log(Level.WARNING, e.getMessage(), e);
+			JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 		    } else {
-			ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", f.getLocalName(), e.getMessage()));
+			JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", f.getLocalName(), e.getMessage()));
 		    }
 		} finally {
 		    if (f != null) {
 			try {
 			    f.close();
 			} catch (IOException e) {
-			    ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE", e.getMessage()));
+			    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE", e.getMessage()));
 			}
 		    }
 		}

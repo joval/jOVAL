@@ -27,11 +27,6 @@ import org.joval.oval.OvalException;
  */
 public interface IAdapter {
     /**
-     * Initialize the plug-in.
-     */
-    public void init(IAdapterContext ctx);
-
-    /**
      * Identify the class of a subclass of ObjectType for which this adapter knows how to retrieve item data.
      */
     public Class getObjectClass();
@@ -49,9 +44,8 @@ public interface IAdapter {
     public void disconnect();
 
     /**
-     * Retrieve items associated with the given object by scanning the machine.  Implementations should add variables
-     * to the list as they are resolved.  (The ItemTypes must be wrapped in a JAXBElement so that they can be marshalled
-     * into an OvalSystemCharacteristics.)
+     * Retrieve items associated with the given object by scanning the machine.  The ItemTypes returned must be wrapped in a
+     * JAXBElement so that they can be marshalled into an OvalSystemCharacteristics.
      */
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType ot, List<VariableValueType> vars) throws OvalException;
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext irc) throws OvalException;
 }

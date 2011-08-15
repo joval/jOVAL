@@ -29,7 +29,7 @@ Result Output Options:
 Other Options:
    -l <integer> = Log messages at the specified level. (DEBUG = 1, INFO = 2, MESSAGE = 3, FATAL = 4)
    -p           = print all information and error messages.
-   -y <string>  = save the ovaldi.log file to a specific location.
+   -y <string>  = save the jovaldi.log file to a specific location.
    -z           = return md5 of current oval-definitions file.
 
 General Plugin Options:

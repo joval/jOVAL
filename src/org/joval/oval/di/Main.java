@@ -426,9 +426,7 @@ public class Main implements IObserver {
 	    print("");
 	    print(getMessage("MESSAGE_DEFINITION_TABLE_HEAD"));
 	    print(getMessage("MESSAGE_DEFINITION_TABLE_DIV"));
-	    Iterator<DefinitionType> definitionIter = results.iterateDefinitions();
-	    while(definitionIter.hasNext()) {
-		DefinitionType definition = definitionIter.next();
+	    for (DefinitionType definition : results.getDefinitions()) {
 		String id = definition.getDefinitionId();
 		String result = definition.getResult().toString().toLowerCase();
 		print(getMessage("MESSAGE_DEFINITION_TABLE_ROW", String.format("%-40s", id), result));

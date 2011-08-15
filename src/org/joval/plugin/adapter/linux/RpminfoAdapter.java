@@ -35,7 +35,6 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemEVRStringType;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.linux.RpminfoItem;
 
 import org.joval.intf.io.IFile;
@@ -43,7 +42,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
@@ -57,7 +56,6 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class RpminfoAdapter implements IAdapter {
-    private IAdapterContext ctx;
     private ISession session;
     private Hashtable<String, RpminfoItem> packageMap;
     private String[] rpms;
@@ -71,10 +69,6 @@ public class RpminfoAdapter implements IAdapter {
 
     public Class getObjectClass() {
 	return RpminfoObject.class;
-    }
-
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
     }
 
     public boolean connect() {
@@ -104,8 +98,8 @@ public class RpminfoAdapter implements IAdapter {
 	packageMap = null;
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
-	RpminfoObject rObj = (RpminfoObject)obj;
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	RpminfoObject rObj = (RpminfoObject)rc.getObject();
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	switch(rObj.getName().getOperation()) {
 	  case EQUALS:
@@ -116,8 +110,8 @@ public class RpminfoAdapter implements IAdapter {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		String s = JOVALSystem.getMessage("ERROR_RPMINFO", (String)rObj.getName().getValue(), e.getMessage());
 		msg.setValue(s);
-		ctx.addObjectMessage(obj.getId(), msg);
-		ctx.log(Level.WARNING, s, e);
+		rc.addMessage(msg);
+		JOVALSystem.getLogger().log(Level.WARNING, s, e);
 	    }
 	    break;
 
@@ -134,8 +128,8 @@ public class RpminfoAdapter implements IAdapter {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
-		ctx.addObjectMessage(obj.getId(), msg);
-		ctx.log(Level.WARNING, e.getMessage(), e);
+		rc.addMessage(msg);
+		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	    }
 	    break;
 
@@ -169,7 +163,7 @@ public class RpminfoAdapter implements IAdapter {
 		RpminfoItem item = getItem(rpms[i]);
 		packageMap.put((String)item.getName().getValue(), item);
 	    } catch (Exception e) {
-		ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_RPMINFO", rpms[i], e.getMessage()), e);
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_RPMINFO", rpms[i], e.getMessage()), e);
 	    }
 	}
 	loaded = true;

@@ -37,7 +37,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.windows.WmiItem;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.TestedItemType;
@@ -45,7 +44,7 @@ import oval.schemas.results.core.TestedVariableType;
 import oval.schemas.results.core.TestType;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
@@ -62,7 +61,6 @@ import org.joval.windows.wmi.WmiException;
  * @version %I% %G%
  */
 public class WmiAdapter implements IAdapter {
-    private IAdapterContext ctx;
     private IWmiProvider wmi;
 
     public WmiAdapter(IWmiProvider wmi) {
@@ -70,10 +68,6 @@ public class WmiAdapter implements IAdapter {
     }
 
     // Implement IAdapter
-
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-    }
 
     public Class getObjectClass() {
 	return WmiObject.class;
@@ -92,9 +86,9 @@ public class WmiAdapter implements IAdapter {
 	}
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
-	items.add(JOVALSystem.factories.sc.windows.createWmiItem(getItem((WmiObject)obj)));
+	items.add(JOVALSystem.factories.sc.windows.createWmiItem(getItem((WmiObject)rc.getObject())));
 	return items;
     }
 
@@ -184,7 +178,7 @@ public class WmiAdapter implements IAdapter {
 	    msg.setValue(e.getMessage());
 	    item.getMessage().add(msg);
 	} catch (Exception e) {
-	    ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINWMI_GENERAL", id), e);
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINWMI_GENERAL", id), e);
 	}
 	return item;
     }

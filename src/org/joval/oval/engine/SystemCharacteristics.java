@@ -123,27 +123,27 @@ public class SystemCharacteristics {
 
 	variableTable = new Hashtable<String, List<VariableValueType>>();
 	objectTable = new Hashtable<String, ObjectType>();
-	for (ObjectType objectType : osc.getCollectedObjects().getObject()) {
-	    String id = objectType.getId();
-	    List<MessageType> messages = objectType.getMessage();
+	for (ObjectType obj : osc.getCollectedObjects().getObject()) {
+	    String id = obj.getId();
+	    List<MessageType> messages = obj.getMessage();
 	    if (messages.size() == 0) {
-		setObject(id, objectType.getComment(), objectType.getVersion(), objectType.getFlag(), null);
+		setObject(id, obj.getComment(), obj.getVersion(), obj.getFlag(), null);
 	    } else {
-		String comment = objectType.getComment();
-		BigInteger version = objectType.getVersion();
-		FlagEnumeration flag = objectType.getFlag();
+		String comment = obj.getComment();
+		BigInteger version = obj.getVersion();
+		FlagEnumeration flag = obj.getFlag();
 		for (MessageType message : messages) {
 		    setObject(id, comment, version, flag, message);
 		}
 	    }
 
-	    for (ReferenceType referenceType : objectType.getReference()) {
-		relateItem(id, referenceType.getItemRef());
+	    for (ReferenceType ref : obj.getReference()) {
+		relateItem(id, ref.getItemRef());
 	    }
 
-	    for (VariableValueType variableValueType : objectType.getVariableValue()) {
-		storeVariable(variableValueType);
-		relateVariable(id, variableValueType.getVariableId());
+	    for (VariableValueType var : obj.getVariableValue()) {
+		storeVariable(var);
+		relateVariable(id, var.getVariableId());
 	    }
 	}
     }
@@ -170,41 +170,41 @@ public class SystemCharacteristics {
 	//
 	// Add only objects whose items and variables are all specified.
 	//
-	CollectedObjectsType collectedObjectsType = JOVALSystem.factories.sc.core.createCollectedObjectsType();
-	for (ObjectType objectType : objectTable.values()) {
+	CollectedObjectsType collectedObjects = JOVALSystem.factories.sc.core.createCollectedObjectsType();
+	for (ObjectType obj : objectTable.values()) {
 	    boolean add = true;
-	    for (ReferenceType referenceType : objectType.getReference()) {
-		if (!itemIds.contains(referenceType.getItemRef())) {
+	    for (ReferenceType ref : obj.getReference()) {
+		if (!itemIds.contains(ref.getItemRef())) {
 		    add = false;
-		    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_SC_FILTER_ITEM",
-			referenceType.getItemRef(), objectType.getId()));
+		    String s = JOVALSystem.getMessage("STATUS_SC_FILTER_ITEM", ref.getItemRef(), obj.getId());
+		    JOVALSystem.getLogger().log(Level.FINE, s);
 		    break;
 		}
 	    }
 	    if (add) {
-		for (VariableValueType variableValueType : objectType.getVariableValue()) {
-		    if (!variables.contains(variableValueType.getVariableId())) {
-			JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_SC_FILTER_VARIABLE",
-			    variableValueType.getVariableId(), objectType.getId()));
+		for (VariableValueType var : obj.getVariableValue()) {
+		    if (!variables.contains(var.getVariableId())) {
+			String s = JOVALSystem.getMessage("STATUS_SC_FILTER_VARIABLE", var.getVariableId(), obj.getId());
+			JOVALSystem.getLogger().log(Level.FINE, s);
 			add = false;
 			break;
 		    }
 		}
 		if (add) {
-		    collectedObjectsType.getObject().add(objectTable.get(objectType));
+		    collectedObjects.getObject().add(obj);
 		}
 	    }
 	}
-	filteredSc.setCollectedObjects(collectedObjectsType);
+	filteredSc.setCollectedObjects(collectedObjects);
 
 	//
 	// Add only items in the list.
 	//
-	SystemDataType systemDataType = JOVALSystem.factories.sc.core.createSystemDataType();
+	SystemDataType systemData = JOVALSystem.factories.sc.core.createSystemDataType();
 	for (BigInteger itemId : itemIds) {
-	    systemDataType.getItem().add(itemTable.get(itemId));
+	    systemData.getItem().add(itemTable.get(itemId));
 	}
-	filteredSc.setSystemData(systemDataType);
+	filteredSc.setSystemData(systemData);
 	return filteredSc;
     }
 
@@ -244,29 +244,29 @@ public class SystemCharacteristics {
      * Add some information about an object to the store, without relating it to a variable or an item.
      */
     void setObject(String objectId, String comment, BigInteger version, FlagEnumeration flag, MessageType message) {
-	ObjectType objectType = objectTable.get(objectId);
+	ObjectType obj = objectTable.get(objectId);
 	boolean created = false;
-	if (objectType == null) {
-	    objectType = JOVALSystem.factories.sc.core.createObjectType();
-	    objectType.setId(objectId);
-	    objectTable.put(objectId, objectType);
+	if (obj == null) {
+	    obj = JOVALSystem.factories.sc.core.createObjectType();
+	    obj.setId(objectId);
+	    objectTable.put(objectId, obj);
 	    created = true;
 	}
 	if (comment != null) {
-	    objectType.setComment(comment);
+	    obj.setComment(comment);
 	}
 	if (version != null) {
-	    objectType.setVersion(version);
+	    obj.setVersion(version);
 	}
 	if (flag == null) {
 	    if (created) {
-		objectType.setFlag(FlagEnumeration.INCOMPLETE);
+		obj.setFlag(FlagEnumeration.INCOMPLETE);
 	    }
 	} else {
-	    objectType.setFlag(flag);
+	    obj.setFlag(flag);
 	}
 	if (message != null) {
-	    objectType.getMessage().add(message);
+	    obj.getMessage().add(message);
 	}
     }
 
@@ -279,28 +279,28 @@ public class SystemCharacteristics {
 	if (item == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_ITEM", itemId.toString()));
 	}
-	ObjectType objectType = objectTable.get(objectId);
-	if (objectType == null) {
+	ObjectType obj = objectTable.get(objectId);
+	if (obj == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", objectId));
 	}
-	ReferenceType referenceType = JOVALSystem.factories.sc.core.createReferenceType();
-	referenceType.setItemRef(itemId);
-	objectType.getReference().add(referenceType);
+	ReferenceType ref = JOVALSystem.factories.sc.core.createReferenceType();
+	ref.setItemRef(itemId);
+	obj.getReference().add(ref);
     }
 
-    void storeVariable(VariableValueType variableValueType) {
-	List<VariableValueType> variableValueTypes = variableTable.get(variableValueType.getVariableId());
+    void storeVariable(VariableValueType var) {
+	List<VariableValueType> vars = variableTable.get(var.getVariableId());
 
-	if (variableValueTypes == null) {
-	    variableValueTypes = new Vector<VariableValueType>();
-	    variableTable.put(variableValueType.getVariableId(), variableValueTypes);
+	if (vars == null) {
+	    vars = new Vector<VariableValueType>();
+	    variableTable.put(var.getVariableId(), vars);
 	}
-	for (VariableValueType existingType : variableValueTypes) {
-	    if (((String)existingType.getValue()).equals((String)variableValueType.getValue())) {
+	for (VariableValueType existingType : vars) {
+	    if (((String)existingType.getValue()).equals((String)var.getValue())) {
 		return; //duplicate
 	    }
 	}
-	variableValueTypes.add(variableValueType);
+	vars.add(var);
     }
 
     /**
@@ -311,12 +311,12 @@ public class SystemCharacteristics {
 	if (variables == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_VARIABLE", variableId));
 	}
-	ObjectType objectType = objectTable.get(objectId);
-	if (objectType == null) {
+	ObjectType obj = objectTable.get(objectId);
+	if (obj == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", objectId));
 	}
 
-	List<VariableValueType> objectVariableValues = objectType.getVariableValue();
+	List<VariableValueType> objectVariableValues = obj.getVariableValue();
 	List<VariableValueType> filterList = new Vector<VariableValueType>();
 	for (VariableValueType existingVariable : objectVariableValues) {
 	    if (variableId.equals((String)existingVariable.getVariableId())) {
@@ -338,36 +338,36 @@ public class SystemCharacteristics {
     }
 
     List<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
-	ObjectType objectType = objectTable.get(id);
-	if (objectType == null) {
+	ObjectType obj = objectTable.get(id);
+	if (obj == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
 	}
-	return objectType.getVariableValue();
+	return obj.getVariableValue();
     }
 
     /**
      * Get an object.
      */
     ObjectType getObject(String id) throws NoSuchElementException {
-	ObjectType objectType = objectTable.get(id);
-	if (objectType == null) {
+	ObjectType obj = objectTable.get(id);
+	if (obj == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
 	}
-	return objectType;
+	return obj;
     }
 
     /**
      * Fetch all the ItemTypes associated with the ObjectType with the given ID.
      */
     List<ItemType> getItemsByObjectId(String id) throws NoSuchElementException {
-	ObjectType objectType = objectTable.get(id);
-	if (objectType == null) {
+	ObjectType obj = objectTable.get(id);
+	if (obj == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
 	}
 	List <ItemType>items = new Vector<ItemType>();
-	if (objectType.isSetReference()) {
-	    for (ReferenceType referenceType : objectType.getReference()) {
-		items.add(itemTable.get(referenceType.getItemRef()).getValue());
+	if (obj.isSetReference()) {
+	    for (ReferenceType ref : obj.getReference()) {
+		items.add(itemTable.get(ref.getItemRef()).getValue());
 	    }
 	}
 	return items;
@@ -407,19 +407,19 @@ public class SystemCharacteristics {
 	sc.setGenerator(Engine.getGenerator());
 	sc.setSystemInfo(plugin.getSystemInfo());
 
-	CollectedObjectsType collectedObjectsType = JOVALSystem.factories.sc.core.createCollectedObjectsType();
-	List <ObjectType>objects = collectedObjectsType.getObject();
-	for (ObjectType objectType : objectTable.values()) {
-	    objects.add(objectType);
+	CollectedObjectsType collectedObjects = JOVALSystem.factories.sc.core.createCollectedObjectsType();
+	List <ObjectType>objects = collectedObjects.getObject();
+	for (ObjectType obj : objectTable.values()) {
+	    objects.add(obj);
 	}
-	sc.setCollectedObjects(collectedObjectsType);
+	sc.setCollectedObjects(collectedObjects);
 
-	SystemDataType systemDataType = JOVALSystem.factories.sc.core.createSystemDataType();
-	List <JAXBElement<? extends ItemType>>items = systemDataType.getItem();
+	SystemDataType systemData = JOVALSystem.factories.sc.core.createSystemDataType();
+	List <JAXBElement<? extends ItemType>>items = systemData.getItem();
 	for (JAXBElement<? extends ItemType> itemType : itemTable.values()) {
 	    items.add(itemType);
 	}
-	sc.setSystemData(systemDataType);
+	sc.setSystemData(systemData);
 
 	return sc;
     }

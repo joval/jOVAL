@@ -36,7 +36,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.windows.EntityItemFileTypeType;
 import oval.schemas.systemcharacteristics.windows.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
@@ -48,7 +47,7 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
@@ -123,8 +122,8 @@ public class FileAdapter extends BaseFileAdapter {
 	return JOVALSystem.factories.sc.windows.createFileItem();
     }
 
-    protected List<JAXBElement<? extends ItemType>>
-	getItems(ItemType base, ObjectType obj, IFile f, List<VariableValueType> vars) throws IOException, OvalException {
+    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
+		throws IOException, OvalException {
 
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {
@@ -239,7 +238,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    if (file.length() > 0) {
 		readPEHeaders(file, fItem);
 	    } else {
-		ctx.log(Level.INFO, JOVALSystem.getMessage("STATUS_EMPTY_FILE", file.toString()));
+		JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_EMPTY_FILE", file.toString()));
 		EntityItemVersionType versionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
 		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 //DAS: this is what Ovaldi does now, but JB says it'll change and do the right thing soon
@@ -258,7 +257,7 @@ public class FileAdapter extends BaseFileAdapter {
      */
     private void readPEHeaders(IFile file, FileItem fItem) throws IOException {
 	IRandomAccess ra = file.getRandomAccess("r");
-	ctx.log(Level.FINE, JOVALSystem.getMessage("STATUS_PE_READ", file.toString()));
+	JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_PE_READ", file.toString()));
 	try {
 	    ImageDOSHeader dh = new ImageDOSHeader(ra);
 	    ra.seek((long)dh.getELFHeaderRVA());
@@ -385,7 +384,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	    fItem.setDevelopmentClass(developmentClassType);
 	} catch (Exception e) {
-	    ctx.log(Level.INFO, JOVALSystem.getMessage("ERROR_PE", file.getLocalName(), e));
+	    JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("ERROR_PE", file.getLocalName(), e));
 	    boolean reported = false;
 	    for (MessageType msg : fItem.getMessage()) {
 		if (((String)msg.getValue()).equals(e.getMessage())) {
@@ -404,7 +403,7 @@ public class FileAdapter extends BaseFileAdapter {
 		try {
 		    ra.close();
 		} catch (IOException e) {
-		    ctx.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", file.toString()), e);
+		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", file.toString()), e);
 		}
 	    }
 	}

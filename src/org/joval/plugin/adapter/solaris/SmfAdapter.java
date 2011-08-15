@@ -36,14 +36,13 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.solaris.EntityItemSmfProtocolType;
 import oval.schemas.systemcharacteristics.solaris.EntityItemSmfServiceStateType;
 import oval.schemas.systemcharacteristics.solaris.SmfItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IAdapterContext;
+import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
@@ -57,7 +56,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class SmfAdapter implements IAdapter {
-    private IAdapterContext ctx;
     private ISession session;
     private String[] services = null;
     private Hashtable<String, SmfItem> serviceMap = null;
@@ -68,10 +66,6 @@ public class SmfAdapter implements IAdapter {
     }
 
     // Implement IAdapter
-
-    public void init(IAdapterContext ctx) {
-	this.ctx = ctx;
-    }
 
     public Class getObjectClass() {
 	return SmfObject.class;
@@ -111,8 +105,8 @@ public class SmfAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(ObjectType obj, List<VariableValueType> vars) throws OvalException {
-	SmfObject sObj = (SmfObject)obj;
+    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	SmfObject sObj = (SmfObject)rc.getObject();
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	switch(sObj.getFmri().getOperation()) {
@@ -126,7 +120,7 @@ public class SmfAdapter implements IAdapter {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
-		ctx.addObjectMessage(obj.getId(), msg);
+		rc.addMessage(msg);
 		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	    }
 	    break;
