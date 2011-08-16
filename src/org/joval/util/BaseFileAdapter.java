@@ -291,7 +291,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 				  case PATTERN_MATCH:
 				    files.addAll(fs.search(pathString, fname));
 				    break;
-    
+   
 				  case EQUALS:
 				    if (pathString.endsWith(fs.getDelimString())) {
 					files.add(pathString + fname);
@@ -299,7 +299,25 @@ public abstract class BaseFileAdapter implements IAdapter {
 					files.add(pathString + fs.getDelimString() + fname);
 				    }
 				    break;
-    
+
+				  case NOT_EQUAL: {
+				    IFile f = fs.getFile(pathString);
+				    if (f.exists() && f.isDirectory()) {
+					String[] children = f.list();
+					f.close();
+					for (int i=0; i < children.length; i++) {
+					    if (!fname.equals(children[i])) {
+						if (pathString.endsWith(fs.getDelimString())) {
+						    files.add(pathString + fname);
+						} else {
+						    files.add(pathString + fs.getDelimString() + fname);
+						}
+					    }
+					}
+				    }
+				    break;
+				  }
+ 
 				  default:
 				    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
 										   filename.getOperation()));

@@ -32,6 +32,7 @@ import org.joval.plugin.adapter.independent.FamilyAdapter;
 import org.joval.plugin.adapter.independent.TextfilecontentAdapter;
 import org.joval.plugin.adapter.independent.Textfilecontent54Adapter;
 import org.joval.plugin.adapter.independent.VariableAdapter;
+import org.joval.plugin.adapter.independent.XmlfilecontentAdapter;
 import org.joval.plugin.adapter.linux.RpminfoAdapter;
 import org.joval.plugin.adapter.solaris.IsainfoAdapter;
 import org.joval.plugin.adapter.solaris.PackageAdapter;
@@ -105,6 +106,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    adapters.add(new EnvironmentvariableAdapter(null));
 	    adapters.add(new TextfilecontentAdapter(null));
 	    adapters.add(new Textfilecontent54Adapter(null));
+	    adapters.add(new XmlfilecontentAdapter(null));
 	    adapters.add(new WmiAdapter(null));
 	    adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(null, null));
 	    adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(null, null));
@@ -122,6 +124,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    adapters.add(new EnvironmentvariableAdapter(session.getEnvironment()));
 	    adapters.add(new TextfilecontentAdapter(session.getFilesystem()));
 	    adapters.add(new Textfilecontent54Adapter(session.getFilesystem()));
+	    adapters.add(new XmlfilecontentAdapter(session.getFilesystem()));
 
 	    switch(session.getType()) {
 	      case ISession.WINDOWS: {
