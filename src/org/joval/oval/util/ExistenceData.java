@@ -70,7 +70,7 @@ public class ExistenceData {
 	  case AT_LEAST_ONE_EXISTS:
 	    if        (ex > 0	&& de >= 0	&& er >= 0	&& nc >= 0) {
 		return ResultEnumeration.TRUE;
-	    } else if (ex == 0	&& de >= 0	&& er == 0	&& nc == 0) { // Spec says "de > 0"
+	    } else if (ex == 0	&& de >= 0	&& er == 0	&& nc == 0) { // spec says "de > 0"
 		return ResultEnumeration.FALSE;
 	    } else if (ex == 0	&& de >= 0	&& er > 0	&& nc == 0) {
 		return ResultEnumeration.ERROR;

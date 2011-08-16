@@ -6,12 +6,10 @@ package org.joval.plugin.adapter.solaris;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -19,34 +17,21 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.ObjectComponentType;
-import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.solaris.PackageObject;
-import oval.schemas.definitions.solaris.PackageState;
-import oval.schemas.definitions.solaris.PackageTest;
 import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemEVRStringType;
 import oval.schemas.systemcharacteristics.solaris.PackageItem;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
@@ -145,7 +130,7 @@ public class PackageAdapter implements IAdapter {
 	    } catch (PatternSyntaxException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(e.getMessage());
+		msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
 		rc.addMessage(msg);
 		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	    }

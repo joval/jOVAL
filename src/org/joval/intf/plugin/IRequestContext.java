@@ -12,9 +12,9 @@ import oval.schemas.definitions.core.ObjectType;
 import org.joval.oval.OvalException;
 
 /**
- * The interface for the argument supplied to an adapter request, specifying the ObjectType for which the request is being
- * made, a means of resolving variable values referenced by the object, and a facility for adding messages related to the
- * request.
+ * The interface for the argument supplied to an adapter getItems request, specifying the ObjectType for which the request is
+ * being made, a means of resolving variable values referenced within the object, and a facility for adding messages related
+ * to the request.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -26,7 +26,7 @@ public interface IRequestContext {
     public ObjectType getObject();
 
     /**
-     * Associate a message with the request object.
+     * Associate a message (like an error) with the request object.
      */
     public void addMessage(MessageType msg);
 

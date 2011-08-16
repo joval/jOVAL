@@ -15,6 +15,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
@@ -108,11 +109,18 @@ public class ProcessAdapter implements IAdapter {
 	  }
 
 	  case PATTERN_MATCH: {
-	    String command = (String)pObj.getCommand().getValue();
-	    for (String key : processes.keySet()) {
-		if (Pattern.compile(command).matcher(key).find()) {
-		    items.add(JOVALSystem.factories.sc.unix.createProcessItem(processes.get(key)));
+	    try {
+		String command = (String)pObj.getCommand().getValue();
+		for (String key : processes.keySet()) {
+		    if (Pattern.compile(command).matcher(key).find()) {
+			items.add(JOVALSystem.factories.sc.unix.createProcessItem(processes.get(key)));
+		    }
 		}
+	    } catch (PatternSyntaxException e) {
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.WARNING);
+		msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		rc.addMessage(msg);
 	    }
 	    break;
 	  }

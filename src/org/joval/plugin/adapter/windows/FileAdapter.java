@@ -3,33 +3,18 @@
 
 package org.joval.plugin.adapter.windows;
 
-import java.math.BigInteger;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.text.SimpleDateFormat;
-import java.text.ParseException;
-import java.util.Collection;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
-import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.EntityStateVersionType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.windows.FileObject;
-import oval.schemas.definitions.windows.FileState;
-import oval.schemas.definitions.windows.FileTest;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
@@ -39,9 +24,6 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.EntityItemFileTypeType;
 import oval.schemas.systemcharacteristics.windows.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestedItemType;
-import oval.schemas.results.core.TestedVariableType;
-import oval.schemas.results.core.TestType;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
@@ -54,7 +36,6 @@ import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;

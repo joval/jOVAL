@@ -13,16 +13,11 @@ import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
-import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.independent.TextfilecontentObject;
-import oval.schemas.definitions.independent.TextfilecontentState;
-import oval.schemas.definitions.independent.TextfilecontentTest;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -35,8 +30,6 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
-import org.joval.oval.util.CheckData;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
 
@@ -108,7 +101,8 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()), e);
+		throw new IOException(e);
 	    } finally {
 		if (in != null) {
 		    try {

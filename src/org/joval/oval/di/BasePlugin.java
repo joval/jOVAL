@@ -39,6 +39,7 @@ import org.joval.plugin.adapter.solaris.Patch54Adapter;
 import org.joval.plugin.adapter.solaris.PatchAdapter;
 import org.joval.plugin.adapter.solaris.SmfAdapter;
 import org.joval.plugin.adapter.unix.ProcessAdapter;
+import org.joval.plugin.adapter.unix.RunlevelAdapter;
 import org.joval.plugin.adapter.unix.UnameAdapter;
 import org.joval.plugin.adapter.windows.RegistryAdapter;
 import org.joval.plugin.adapter.windows.WmiAdapter;
@@ -115,6 +116,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    adapters.add(new IsainfoAdapter(null));
 	    adapters.add(new SmfAdapter(null));
 	    adapters.add(new ProcessAdapter(null));
+	    adapters.add(new RunlevelAdapter(null));
 	    adapters.add(new UnameAdapter(null));
 	} else if (session.connect()) {
 	    adapters.add(new EnvironmentvariableAdapter(session.getEnvironment()));
@@ -144,6 +146,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		info = new UnixSystemInfo(unix).getSystemInfo();
 		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(unix, unix.getFilesystem()));
 		adapters.add(new ProcessAdapter(unix));
+		adapters.add(new RunlevelAdapter(unix));
 		adapters.add(new UnameAdapter(unix));
 		switch(unix.getFlavor()) {
 		  case LINUX:

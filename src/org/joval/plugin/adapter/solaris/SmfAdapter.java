@@ -8,31 +8,18 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
-import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.common.OperatorEnumeration;
-import oval.schemas.definitions.core.EntityObjectStringType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateType;
-import oval.schemas.definitions.solaris.EntityStateSmfProtocolType;
-import oval.schemas.definitions.solaris.EntityStateSmfServiceStateType;
 import oval.schemas.definitions.solaris.SmfObject;
-import oval.schemas.definitions.solaris.SmfState;
-import oval.schemas.definitions.solaris.SmfTest;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
@@ -46,7 +33,6 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -137,11 +123,19 @@ public class SmfAdapter implements IAdapter {
 
 	  case PATTERN_MATCH: {
 	    loadFullServiceMap();
-	    Pattern p = Pattern.compile((String)sObj.getFmri().getValue());
-	    for (String fmri : serviceMap.keySet()) {
-		if (p.matcher(fmri).find()) {
-		    items.add(JOVALSystem.factories.sc.solaris.createSmfItem(serviceMap.get(fmri)));
+	    try {
+		Pattern p = Pattern.compile((String)sObj.getFmri().getValue());
+		for (String fmri : serviceMap.keySet()) {
+		    if (p.matcher(fmri).find()) {
+			items.add(JOVALSystem.factories.sc.solaris.createSmfItem(serviceMap.get(fmri)));
+		    }
 		}
+	    } catch (PatternSyntaxException e) {
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		rc.addMessage(msg);
+		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	    }
 	    break;
 	  }

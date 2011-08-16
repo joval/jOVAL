@@ -38,6 +38,7 @@ SHARED=\
 	org.joval.plugin.adapter.solaris.SmfAdapter			\
 	org.joval.plugin.adapter.unix.FileAdapter			\
 	org.joval.plugin.adapter.unix.ProcessAdapter			\
+	org.joval.plugin.adapter.unix.RunlevelAdapter			\
 	org.joval.plugin.adapter.unix.UnameAdapter			\
 	org.joval.plugin.adapter.windows.FileAdapter			\
 	org.joval.plugin.adapter.windows.RegistryAdapter		\

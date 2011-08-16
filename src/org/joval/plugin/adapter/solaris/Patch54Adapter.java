@@ -6,34 +6,21 @@ package org.joval.plugin.adapter.solaris;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
-import java.util.StringTokenizer;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.EntityObjectIntType;
-import oval.schemas.definitions.core.EntityStateIntType;
-import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.solaris.PatchBehaviors;
 import oval.schemas.definitions.solaris.Patch54Object;
-import oval.schemas.definitions.solaris.PatchState;
-import oval.schemas.definitions.solaris.PatchTest;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.solaris.PatchItem;
 import oval.schemas.results.core.ResultEnumeration;
 
@@ -133,11 +120,19 @@ public class Patch54Adapter extends PatchAdapter {
 	    break;
 
 	  case PATTERN_MATCH: {
-	    Pattern p = Pattern.compile((String)pObj.getBase().getValue());
-	    for (String base : revisions.keySet()) {
-		if (p.matcher(base).find()) {
-		    items.addAll(getItems(pObj, base));
+	    try {
+		Pattern p = Pattern.compile((String)pObj.getBase().getValue());
+		for (String base : revisions.keySet()) {
+		    if (p.matcher(base).find()) {
+			items.addAll(getItems(pObj, base));
+		    }
 		}
+	    } catch (PatternSyntaxException e) {
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		rc.addMessage(msg);
+		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	    }
 	    break;
 	  }

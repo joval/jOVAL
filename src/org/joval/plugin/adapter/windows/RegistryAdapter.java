@@ -4,37 +4,20 @@
 package org.joval.plugin.adapter.windows;
 
 import java.math.BigInteger;
-import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.CheckEnumeration;
-import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
-import oval.schemas.definitions.core.EntityObjectStringType;
-import oval.schemas.definitions.core.EntityStateAnySimpleType;
-import oval.schemas.definitions.core.ObjectComponentType;
-import oval.schemas.definitions.core.ObjectRefType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateRefType;
-import oval.schemas.definitions.core.StateType;
-import oval.schemas.definitions.windows.EntityObjectRegistryHiveType;
 import oval.schemas.definitions.windows.RegistryBehaviors;
 import oval.schemas.definitions.windows.RegistryObject;
-import oval.schemas.definitions.windows.RegistryState;
-import oval.schemas.definitions.windows.RegistryTest;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
@@ -44,9 +27,6 @@ import oval.schemas.systemcharacteristics.windows.EntityItemRegistryHiveType;
 import oval.schemas.systemcharacteristics.windows.EntityItemRegistryTypeType;
 import oval.schemas.systemcharacteristics.windows.RegistryItem;
 import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestedItemType;
-import oval.schemas.results.core.TestedVariableType;
-import oval.schemas.results.core.TestType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;

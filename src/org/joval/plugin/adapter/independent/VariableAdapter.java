@@ -3,19 +3,11 @@
 
 package org.joval.plugin.adapter.independent;
 
-import java.math.BigInteger;
-import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.independent.VariableObject;
-import oval.schemas.definitions.independent.VariableState;
-import oval.schemas.definitions.independent.VariableTest;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -27,7 +19,6 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
 import org.joval.oval.util.CheckData;
 import org.joval.util.JOVALSystem;
 

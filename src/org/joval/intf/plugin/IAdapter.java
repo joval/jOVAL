@@ -18,9 +18,8 @@ import org.joval.oval.TestException;
 import org.joval.oval.OvalException;
 
 /**
- * The interface for implementing a jOVAL plug-in adapter.  An adapter operates on a set of classes: an ObjectType subclass,
- * a StateType subclass and an ItemType subclass.  The jOVAL engine uses adapters to retrieve item data about objects from
- * hosts, and to compare items to states.
+ * The interface for implementing a jOVAL plug-in adapter.  An adapter knows how to retrieve items that correspond to an
+ * ObjectType subclass from a host, and the jOVAL engine uses adapters to do this.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -38,14 +37,16 @@ public interface IAdapter {
     public boolean connect();
 
     /**
-     * The adapter should release any resource that it's opened for scanning purposes.  The engine will call this method
-     * after all calls to getItems.
+     * The adapter should release and/or clean-up any resource that it's opened for scanning purposes.  The engine will call
+     * this method after all calls to getItems have been made to the adapter.
      */
     public void disconnect();
 
     /**
      * Retrieve items associated with the given object by scanning the machine.  The ItemTypes returned must be wrapped in a
      * JAXBElement so that they can be marshalled into an OvalSystemCharacteristics.
+     *
+     * @see IRequestContext
      */
     public List<JAXBElement<? extends ItemType>> getItems(IRequestContext irc) throws OvalException;
 }

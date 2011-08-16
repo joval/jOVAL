@@ -19,8 +19,6 @@ import java.util.logging.Logger;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.SimpleDatatypeEnumeration;

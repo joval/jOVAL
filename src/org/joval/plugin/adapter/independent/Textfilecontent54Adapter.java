@@ -5,12 +5,10 @@ package org.joval.plugin.adapter.independent;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
-import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -18,11 +16,7 @@ import javax.xml.bind.JAXBElement;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.independent.Textfilecontent54Object;
-import oval.schemas.definitions.independent.Textfilecontent54State;
-import oval.schemas.definitions.independent.Textfilecontent54Test;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -35,7 +29,6 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
@@ -155,6 +148,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()), e);
 		throw new IOException(e);
 	    } finally {
 		if (in != null) {

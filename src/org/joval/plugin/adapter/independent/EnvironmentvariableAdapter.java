@@ -3,31 +3,16 @@
 
 package org.joval.plugin.adapter.independent;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.math.BigInteger;
-import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.logging.Level;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.definitions.core.EntityStateStringType;
-import oval.schemas.definitions.core.ObjectComponentType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.independent.EnvironmentvariableObject;
-import oval.schemas.definitions.independent.EnvironmentvariableState;
-import oval.schemas.definitions.independent.EnvironmentvariableTest;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -38,7 +23,6 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IEnvironment;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -107,7 +91,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	    } catch (PatternSyntaxException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", name, eObj.getId()));
+		msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
 		rc.addMessage(msg);
 		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	    }

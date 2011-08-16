@@ -722,22 +722,20 @@ public class Engine implements IProducer {
 	ExistenceData existence = new ExistenceData();
 	CheckData check = new CheckData();
 
-	List<ItemType> items = sc.getItemsByObjectId(objectId);
-	for (ItemType item : items) {
-	    TestedItemType testedItem = JOVALSystem.factories.results.createTestedItemType();
-	    testedItem.setItemId(item.getId());
-	    testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
-    
-	    StatusEnumeration status = item.getStatus();
-	    switch(status) {
-	      case EXISTS:
-		if (state != null) {
-		    ResultEnumeration checkResult = ResultEnumeration.UNKNOWN;
-    
-		    switch(sc.getObject(objectId).getFlag()) {
-		      case COMPLETE:
-		      case INCOMPLETE:
-		      case DOES_NOT_EXIST:
+	switch(sc.getObject(objectId).getFlag()) {
+	  case COMPLETE:
+	  case INCOMPLETE:
+	    for (ItemType item : sc.getItemsByObjectId(objectId)) {
+		existence.addStatus(item.getStatus());
+
+		TestedItemType testedItem = JOVALSystem.factories.results.createTestedItemType();
+		testedItem.setItemId(item.getId());
+		testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
+
+		switch(item.getStatus()) {
+		  case EXISTS:
+		    if (state != null) {
+			ResultEnumeration checkResult = ResultEnumeration.UNKNOWN;
 			try {
 			    checkResult = compare(state, item);
 			} catch (TestException e) {
@@ -749,33 +747,40 @@ public class Engine implements IProducer {
 			    testedItem.getMessage().add(message);
 			    checkResult = ResultEnumeration.ERROR;
 			}
-			break;
-    
-		      case ERROR:
-			checkResult = ResultEnumeration.ERROR;
-			break;
-		      case NOT_APPLICABLE:
-			checkResult = ResultEnumeration.NOT_APPLICABLE;
-			break;
-		      case NOT_COLLECTED:
-		      default:
-			checkResult = ResultEnumeration.UNKNOWN;
-			break;
+			testedItem.setResult(checkResult);
+			check.addResult(checkResult);
 		    }
-    
-		    testedItem.setResult(checkResult);
-		    check.addResult(checkResult);
-		}
-		// fall-thru
-    
-	      default:
-		existence.addStatus(status);
-		break;
-	    }
-    
-	    testResult.getTestedItem().add(testedItem);
-	}
+		    break;
 
+		  case DOES_NOT_EXIST:
+		    check.addResult(ResultEnumeration.NOT_APPLICABLE);
+		    break;
+		  case ERROR:
+		    check.addResult(ResultEnumeration.ERROR);
+		    break;
+		  case NOT_COLLECTED:
+		    check.addResult(ResultEnumeration.NOT_EVALUATED);
+		    break;
+		}
+
+		testResult.getTestedItem().add(testedItem);
+	    }
+	    break;
+
+	  case DOES_NOT_EXIST:
+	    existence.addStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    break;
+	  case ERROR:
+	    existence.addStatus(StatusEnumeration.ERROR);
+	    break;
+	  case NOT_APPLICABLE:
+	    // No impact on existence check
+	    break;
+	  case NOT_COLLECTED:
+	    existence.addStatus(StatusEnumeration.NOT_COLLECTED);
+	    break;
+	}
+   
 	ResultEnumeration existenceResult = existence.getResult(testDefinition.getCheckExistence());
 	if (state == null) {
 	    testResult.setResult(existenceResult);
