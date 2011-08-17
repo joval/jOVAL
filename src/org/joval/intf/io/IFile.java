@@ -86,6 +86,11 @@ public interface IFile {
     public boolean isFile() throws IOException;
 
     /**
+     * Does this file represent a link?
+     */
+    public boolean isLink() throws IOException;
+
+    /**
      * Get the time this file was last modified.
      */
     public long lastModified() throws IOException;

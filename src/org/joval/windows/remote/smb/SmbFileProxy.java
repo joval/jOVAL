@@ -80,6 +80,10 @@ public class SmbFileProxy implements IFile {
 	return smbFile.isFile();
     }
 
+    public boolean isLink() throws IOException {
+	return smbFile.getDfsPath() != null;
+    }
+
     public long lastModified() throws IOException {
 	return smbFile.lastModified();
     }

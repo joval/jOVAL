@@ -272,7 +272,7 @@ public class SystemCharacteristics {
 
     /**
      * Fetch an existing ObjectType or create a new ObjectType and store it in the objectTable, and create a relation between
-     * the ObjectType and ItemType.
+     * the ObjectType and ItemType (if such a relation does not already exist).
      */
     void relateItem(String objectId, BigInteger itemId) throws NoSuchElementException {
 	ItemType item = itemTable.get(itemId).getValue();
@@ -282,6 +282,11 @@ public class SystemCharacteristics {
 	ObjectType obj = objectTable.get(objectId);
 	if (obj == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", objectId));
+	}
+	for (ReferenceType ref : obj.getReference()) {
+	    if (ref.getItemRef().equals(itemId)) {
+		return; // duplicate
+	    }
 	}
 	ReferenceType ref = JOVALSystem.factories.sc.core.createReferenceType();
 	ref.setItemRef(itemId);

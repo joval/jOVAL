@@ -252,7 +252,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 
 		if (fObj.isSetBehaviors()) {
 		    ReflectedFileBehaviors fb = fObj.getBehaviors();
-		    list = getPaths(list, fb.getDepth(), fb.getRecurseDirection());
+		    list = getPaths(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse());
 		} else if (patternMatch) {
 		    //
 		    // Wildcard pattern matches are really supposed to be recursive searches, unfortunately
@@ -263,7 +263,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    ((String)path.getValue()).indexOf(".+") != -1) {
 			    List<String> l = new Vector<String>();
 			    l.add(value);
-			    newList.addAll(getPaths(l, -1, "down"));
+			    newList.addAll(getPaths(l, -1, "down", "directories"));
 			}
 		    }
 		    for (String value : newList) {
@@ -348,7 +348,7 @@ public abstract class BaseFileAdapter implements IAdapter {
     /**
      * Crawls recursively based on FileBehaviors.
      */
-    private List<String> getPaths(List<String> list, int depth, String recurseDirection) {
+    private List<String> getPaths(List<String> list, int depth, String recurseDirection, String recurse) {
 	if ("none".equals(recurseDirection) || depth == 0) {
 	    return list;
 	} else {
@@ -361,33 +361,42 @@ public abstract class BaseFileAdapter implements IAdapter {
 		IFile f = null;
 		try {
 		    f = fs.getFile(path);
-		    if (f.exists() && f.isDirectory()) {
-			results.add(path);
-			if ("up".equals(recurseDirection)) {
-			    f.close();
-			    int ptr = 0;
-			    if (path.endsWith(fs.getDelimString())) {
-				path = path.substring(0, path.lastIndexOf(fs.getDelimString()));
-			    }
-			    ptr = path.lastIndexOf(fs.getDelimString());
-			    if (ptr != -1) {
-				Vector<String> v = new Vector<String>();
-				v.add(path.substring(0, ptr + fs.getDelimString().length()));
-				results.addAll(getPaths(v, --depth, recurseDirection));
-			    }
-			} else { // recurse down
-			    String[] children = f.list();
-			    f.close();
-			    if (children != null) {
-				Vector<String> v = new Vector<String>();
-				for (int i=0; i < children.length; i++) {
-				    if (path.endsWith(fs.getDelimString())) {
-					v.add(path + children[i]);
-				    } else {
-					v.add(path + fs.getDelimString() + children[i]);
-				    }
+		    if (f.exists()) {
+			if (recurse.indexOf("symlinks") == -1 && f.isLink()) {
+System.out.println("DAS: skipping symlink " + path);
+			    // skip the symlink
+			} else if (recurse.indexOf("directories") == -1 && f.isDirectory()) {
+System.out.println("DAS: skipping directory " + path);
+			    // skip the directory
+			} else {
+System.out.println("DAS: recursing directory " + path);
+			    results.add(path);
+			    if ("up".equals(recurseDirection)) {
+				f.close();
+				int ptr = 0;
+				if (path.endsWith(fs.getDelimString())) {
+				    path = path.substring(0, path.lastIndexOf(fs.getDelimString()));
 				}
-				results.addAll(getPaths(v, --depth, recurseDirection));
+				ptr = path.lastIndexOf(fs.getDelimString());
+				if (ptr != -1) {
+				    Vector<String> v = new Vector<String>();
+				    v.add(path.substring(0, ptr + fs.getDelimString().length()));
+				    results.addAll(getPaths(v, --depth, recurseDirection, recurse));
+				}
+			    } else { // recurse down
+				String[] children = f.list();
+				f.close();
+				if (children != null) {
+				    Vector<String> v = new Vector<String>();
+				    for (int i=0; i < children.length; i++) {
+					if (path.endsWith(fs.getDelimString())) {
+					    v.add(path + children[i]);
+					} else {
+					    v.add(path + fs.getDelimString() + children[i]);
+					}
+				    }
+				    results.addAll(getPaths(v, --depth, recurseDirection, recurse));
+				}
 			    }
 			}
 		    }
@@ -526,6 +535,8 @@ public abstract class BaseFileAdapter implements IAdapter {
     class ReflectedFileBehaviors {
 	BigInteger maxDepth = new BigInteger("-1");
 	String recurseDirection = "none";
+	String recurse = "symlinks and directories";
+	String recurseFS = "all";
 
 	ReflectedFileBehaviors(Object obj)
 		throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
@@ -534,10 +545,22 @@ public abstract class BaseFileAdapter implements IAdapter {
 		maxDepth = (BigInteger)getMaxDepth.invoke(obj);
 		Method getRecurseDirection = obj.getClass().getMethod("getRecurseDirection");
 		recurseDirection = (String)getRecurseDirection.invoke(obj);
+		Method getRecurse = obj.getClass().getMethod("getRecurse");
+		recurse = (String)getRecurse.invoke(obj);
+		Method getRecurseFileSystem = obj.getClass().getMethod("getRecurseFileSystem");
+		recurseFS = (String)getRecurseFileSystem.invoke(obj);
+		if (!"all".equals(recurseFS)) {
+		    JOVALSystem.getLogger().log(Level.SEVERE,
+						JOVALSystem.getMessage("ERROR_UNSUPPORTED_BEHAVIOR", recurseFS));
+		}
 	    }
 	    if ("none".equals(recurseDirection)) {
 		maxDepth = BigInteger.ZERO;
 	    }
+	}
+
+	String getRecurse() {
+	    return recurse;
 	}
 
 	String getRecurseDirection() {
@@ -546,6 +569,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 
 	int getDepth() {
 	    return Integer.parseInt(maxDepth.toString());
+	}
+
+	String getRecurseFileSystem() {
+	    return recurseFS;
 	}
     }
 

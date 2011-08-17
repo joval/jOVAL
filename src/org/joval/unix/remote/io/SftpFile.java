@@ -131,6 +131,14 @@ class SftpFile implements IFile {
 	}
     }
 
+    public boolean isLink() throws IOException {
+	if (exists()) {
+	    return attrs.isLink();
+	} else {
+	    return false;
+	}
+    }
+
     public long lastModified() throws IOException {
 	if (exists()) {
 	    return attrs.getModifiedTime() * 1000L;

@@ -74,6 +74,10 @@ public class FileProxy implements IFile {
 	return file.isFile();
     }
 
+    public boolean isLink() throws IOException {
+	return !file.getPath().equals(file.getCanonicalPath());
+    }
+
     public long lastModified() throws IOException {
 	return file.lastModified();
     }
