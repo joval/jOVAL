@@ -196,7 +196,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    aclType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    item.setHasExtendedAcl(aclType);
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_UNIX_FILE", e.getMessage()), e);
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_UNIX_FILE", file.getLocalName()), e);
 	    throw new IOException (e);
 	}
     }

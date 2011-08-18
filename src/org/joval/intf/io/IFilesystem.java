@@ -68,4 +68,5 @@ public interface IFilesystem {
      */
     public List<String> search(String path) throws IOException;
     public List<String> search(String parent, String path) throws IOException;
+    public List<String> search(String parent, String path, boolean followLinks) throws IOException;
 }

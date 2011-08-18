@@ -77,7 +77,14 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 		sb.append(getDelimString());
 	    }
 	}
-	return search(null, sb.toString());
+	return search(null, sb.toString(), false);
+    }
+
+    /**
+     * Search without following links.
+     */
+    public List<String> search(String parent, String path) throws IOException {
+	return search(parent, path, false);
     }
 
     /**
@@ -91,10 +98,11 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
      * repeat searches.
      *
      * @arg parent cannot contain any search strings -- this is a fully-resolved portion of the path.
+     * @arg followLinks whether or not filesystem links should be followed by the search.
      * @returns a list of matching local paths
      * @throws FileNotFoundException if a match cannot be found.
      */
-    public List<String> search(String parent, String path) throws IOException {
+    public List<String> search(String parent, String path, boolean followLinks) throws IOException {
 	if (path == null || path.length() < 1) {
 	    throw new IOException(JOVALSystem.getMessage("ERROR_FS_NULLPATH"));
 	}
@@ -147,6 +155,8 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 	    String[] children = null;
 	    if (cacheRead) {
 		children = node.list();
+	    } else if (file.isLink() && !followLinks) {
+		// skip
 	    } else if (file.exists() && file.isDirectory()) {
 		children = file.list();
 		for (int i=0; i < children.length; i++) {
@@ -170,7 +180,7 @@ public abstract class CachingFilesystem implements IFilesystem, IPathRedirector 
 		    if (path == null) {
 			results.add(child.toString());
 		    } else {
-			results.addAll(search(child.toString(), path));
+			results.addAll(search(child.toString(), path, followLinks));
 		    }
 		}
 	    }

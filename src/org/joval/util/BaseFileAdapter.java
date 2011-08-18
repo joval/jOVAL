@@ -363,13 +363,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    f = fs.getFile(path);
 		    if (f.exists()) {
 			if (recurse.indexOf("symlinks") == -1 && f.isLink()) {
-System.out.println("DAS: skipping symlink " + path);
 			    // skip the symlink
 			} else if (recurse.indexOf("directories") == -1 && f.isDirectory()) {
-System.out.println("DAS: skipping directory " + path);
 			    // skip the directory
 			} else {
-System.out.println("DAS: recursing directory " + path);
 			    results.add(path);
 			    if ("up".equals(recurseDirection)) {
 				f.close();
