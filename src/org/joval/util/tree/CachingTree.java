@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.util;
+package org.joval.util.tree;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -19,40 +19,45 @@ import java.util.regex.PatternSyntaxException;
 import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITree;
+import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.util.tree.Forest;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.tree.Tree;
 
 /**
- * An abstract tree implementation that caches search results for better performance.
+ * An abstract tree that is intended to serve as a base class for ITree implementations whose access operations are too
+ * expensive for direct, repeated use in searches.  The CachingTree saves search results in an internal cache for better
+ * performance.
+ *
+ * The CachingTree provides methods (preload and preloadLinks) that should be overridden by subclasses to populate the cache in
+ * bulk, and it also provides internal methods that convert regular expression searches into progressive tree node searches,
+ * which are used when the preload methods return false.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public abstract class CachingTree implements ITree {
-    protected IForest cache;
     private String ESCAPED_DELIM;
+    protected IForest cache;
 
     public CachingTree() {
 	cache = new Forest();
 	ESCAPED_DELIM = Matcher.quoteReplacement(getDelimiter());
     }
 
-    protected abstract boolean preload();
-
-    // Implement ITree (sparsely) -- subclasses must implement only the getDelimiter and lookup methods.
-
-    public INode makeNode(INode parent, String name) {
-	return null;
+    protected boolean preload() {
+	return false;
     }
 
-    public INode makeLink(INode parent, String name, String destinationPath) {
-	return null;
+    protected boolean preloadLinks() {
+	return false;
     }
+
+    // Implement ITree (sparsely) -- subclasses must implement the getDelimiter and lookup methods.
 
     public INode getRoot() {
-	return null;
+	throw new UnsupportedOperationException();
     }
 
     public Collection<String> search(Pattern p, boolean followLinks) {
@@ -64,7 +69,7 @@ public abstract class CachingTree implements ITree {
 	    }
 	    return null;
 	} else {
-	    return smartSearch(p.pattern(), followLinks);
+	    return treeSearch(p.pattern(), followLinks);
 	}
     }
 
@@ -103,7 +108,7 @@ public abstract class CachingTree implements ITree {
      * is prepended with a ^ and appended with a $.  The method then iterates down the filesystem searching for each token,
      * in sequence, using the Matcher.find method.
      */
-    private Collection<String> smartSearch(String path, boolean followLinks) {
+    private Collection<String> treeSearch(String path, boolean followLinks) {
 	Collection<String> result = new Vector<String>();
 	try {
 	    if (path.startsWith("^")) {
@@ -130,7 +135,7 @@ public abstract class CachingTree implements ITree {
 		    sb.append(getDelimiter());
 		}
 	    }
-	    result.addAll(smartSearch(null, sb.toString(), followLinks));
+	    result.addAll(treeSearch(null, sb.toString(), followLinks));
 	} catch (Exception e) {
 	    String msg = e.getMessage() == null ? "null" : e.getMessage();
 	    JOVALSystem.getLogger().log(Level.WARNING, msg, e);
@@ -153,7 +158,7 @@ public abstract class CachingTree implements ITree {
      * @returns a list of matching local paths
      * @throws FileNotFoundException if a match cannot be found.
      */
-    private Collection<String> smartSearch(String parent, String path, boolean followLinks) throws Exception {
+    private Collection<String> treeSearch(String parent, String path, boolean followLinks) throws Exception {
 	if (path == null || path.length() < 1) {
 	    throw new IOException(JOVALSystem.getMessage("ERROR_FS_NULLPATH"));
 	}
@@ -164,11 +169,11 @@ public abstract class CachingTree implements ITree {
 	//
 	// Advance to the starting position!
 	//
-	ITree tree = null;
+	ITreeBuilder tree = null;
 	INode node = null;
 	if (parent == null) {
 	    String root = getToken(path);
-	    tree = cache.getTree(root);
+	    tree = cache.getTreeBuilder(root);
 	    if (tree == null) { // first-ever call
 		tree = cache.makeTree(root, getDelimiter());
 	    }
@@ -177,7 +182,7 @@ public abstract class CachingTree implements ITree {
 	    path = trimToken(path);
 	} else {
 	    String root = getToken(parent);
-	    tree = cache.getTree(root);
+	    tree = cache.getTreeBuilder(root);
 	    if (tree == null) {
 		tree = cache.makeTree(root, getDelimiter());
 		node = tree.getRoot();
@@ -224,7 +229,7 @@ public abstract class CachingTree implements ITree {
 		if (path == null) {
 		    results.add(child.getPath());
 		} else {
-		    results.addAll(smartSearch(child.getPath(), path, followLinks));
+		    results.addAll(treeSearch(child.getPath(), path, followLinks));
 		}
 	    }
 	}

@@ -15,11 +15,11 @@ REMOTE=\
 	org.joval.util.JSchLogger					\
 	org.joval.test.Remote						\
 	org.joval.windows.remote.WindowsCredential			\
+	org.joval.windows.remote.io.SmbFilesystem			\
+	org.joval.windows.remote.io.SmbFileProxy			\
+	org.joval.windows.remote.io.SmbRandomAccessProxy		\
 	org.joval.windows.remote.registry.Key				\
 	org.joval.windows.remote.registry.Registry			\
-	org.joval.windows.remote.smb.SmbFilesystem			\
-	org.joval.windows.remote.smb.SmbFileProxy			\
-	org.joval.windows.remote.smb.SmbRandomAccessProxy		\
 	org.joval.windows.remote.system.WindowsProcess			\
 	org.joval.windows.remote.system.WindowsSession			\
 	org.joval.windows.remote.wmi.WmiConnection			\

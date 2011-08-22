@@ -12,6 +12,7 @@ import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.ITree;
+import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.util.tree.INode;
 
 /**
@@ -33,10 +34,20 @@ public class Forest implements IForest {
 
     // Implement IForest
 
-    public ITree makeTree(String name, String delimiter) {
+    public ITreeBuilder makeTree(String name, String delimiter) {
 	Tree tree = new Tree(name, delimiter);
 	trees.put(name, tree);
 	return tree;
+    }
+
+    public ITreeBuilder getTreeBuilder(String name) throws SecurityException {
+	ITree tree = trees.get(name);
+	if (tree == null) {
+	    return null;
+	} else if (tree instanceof ITreeBuilder) {
+	    return (ITreeBuilder)tree;
+	}
+	throw new SecurityException(name);
     }
 
     public ITree getTree(String name) {

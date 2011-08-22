@@ -370,12 +370,12 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    IFile f = (IFile)fs.lookup(path);
 		    if (!f.exists()) {
 			// skip non-existent files
-		    } else if (recurse.indexOf("symlinks") == -1 && f.isLink()) {
+		    } else if (recurse != null && recurse.indexOf("symlinks") == -1 && f.isLink()) {
 			// skip the symlink
-		    } else if (recurse.indexOf("directories") == -1 && f.isDirectory()) {
+		    } else if (recurse != null && recurse.indexOf("directories") == -1 && f.isDirectory()) {
 			// skip the directory
 		    } else {
-//			results.add(path);
+			results.add(path);
 			if ("up".equals(recurseDirection)) {
 			    int ptr = 0;
 			    if (path.endsWith(fs.getDelimiter())) {
@@ -535,8 +535,17 @@ public abstract class BaseFileAdapter implements IAdapter {
 		maxDepth = (BigInteger)getMaxDepth.invoke(obj);
 		Method getRecurseDirection = obj.getClass().getMethod("getRecurseDirection");
 		recurseDirection = (String)getRecurseDirection.invoke(obj);
-		Method getRecurse = obj.getClass().getMethod("getRecurse");
-		recurse = (String)getRecurse.invoke(obj);
+
+		try {
+		    //
+		    // Not applicable to Windows FileBehaviors
+		    //
+		    Method getRecurse = obj.getClass().getMethod("getRecurse");
+		    recurse = (String)getRecurse.invoke(obj);
+		} catch (NoSuchMethodException e) {
+		    recurse = null;
+		}
+
 		Method getRecurseFileSystem = obj.getClass().getMethod("getRecurseFileSystem");
 		recurseFS = (String)getRecurseFileSystem.invoke(obj);
 		if (!"all".equals(recurseFS)) {

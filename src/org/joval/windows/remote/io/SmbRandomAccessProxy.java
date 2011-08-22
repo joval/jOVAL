@@ -1,7 +1,7 @@
 // Copyright (c) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.windows.remote.smb;
+package org.joval.windows.remote.io;
 
 import java.io.IOException;
 import java.io.EOFException;
@@ -18,7 +18,7 @@ import org.joval.intf.io.IRandomAccess;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SmbRandomAccessProxy implements IRandomAccess {
+class SmbRandomAccessProxy implements IRandomAccess {
     private SmbRandomAccessFile smb;
     private long ptr;
 

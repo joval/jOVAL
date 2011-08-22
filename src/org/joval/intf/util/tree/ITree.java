@@ -15,16 +15,6 @@ import java.util.regex.Pattern;
  */
 public interface ITree {
     /**
-     * Add a node to the tree.
-     */
-    public INode makeNode(INode parent, String name);
-
-    /**
-     * Add a node to the tree, which is a link to another node.
-     */
-    public INode makeLink(INode parent, String name, String destinationPath);
-
-    /**
      * Get the root node of the tree.
      */
     public INode getRoot();

@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.windows.remote.smb;
+package org.joval.windows.remote.io;
 
 import java.io.InputStream;
 import java.io.IOException;
@@ -26,7 +26,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.util.tree.INode;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
-import org.joval.util.CachingTree;
+import org.joval.util.tree.CachingTree;
 import org.joval.windows.WOW3264PathRedirector;
 import org.joval.windows.remote.WindowsCredential;
 
@@ -101,10 +101,6 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
     }
 
     // Implement methods left abstract in CachingTree
-
-    public boolean preload() {
-	return false;
-    }
 
     public String getDelimiter() {
 	return LOCAL_DELIM_STR;

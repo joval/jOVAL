@@ -17,7 +17,7 @@ import org.joval.intf.io.IPathRedirector;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.system.IEnvironment;
-import org.joval.util.CachingTree;
+import org.joval.util.tree.CachingTree;
 import org.joval.util.JOVALSystem;
 
 /**

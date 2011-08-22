@@ -13,7 +13,9 @@ import java.util.regex.Pattern;
  * @version %I% %G%
  */
 public interface IForest {
-    public ITree makeTree(String name, String delimiter);
+    public ITreeBuilder makeTree(String name, String delimiter);
+
+    public ITreeBuilder getTreeBuilder(String name);
 
     public ITree getTree(String name);
 

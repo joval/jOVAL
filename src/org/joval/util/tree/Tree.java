@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
-import org.joval.intf.util.tree.ITree;
+import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.util.tree.INode;
 
 /**
@@ -18,7 +18,7 @@ import org.joval.intf.util.tree.INode;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Tree implements ITree {
+public class Tree implements ITreeBuilder {
     String delimiter;
     Node root;
 
@@ -27,7 +27,7 @@ public class Tree implements ITree {
 	root = new Node(this, name);
     }
 
-    // Implement ITree
+    // Implement ITreeBuilder
 
     public INode makeNode(INode parent, String name) {
 	Node p = (Node)parent;
@@ -48,6 +48,8 @@ public class Tree implements ITree {
 	node.linkPath = destination;
 	return node;
     }
+
+    // Implement ITree
 
     public INode lookup(String path) throws NoSuchElementException {
 	return root.lookup(path);

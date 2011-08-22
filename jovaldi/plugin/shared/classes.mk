@@ -7,6 +7,10 @@ SHARED=\
 	org.joval.intf.system.IProcess					\
 	org.joval.intf.system.ISession					\
 	org.joval.intf.unix.system.IUnixSession				\
+	org.joval.intf.util.tree.IForest				\
+	org.joval.intf.util.tree.INode					\
+	org.joval.intf.util.tree.ITree					\
+	org.joval.intf.util.tree.ITreeBuilder				\
 	org.joval.intf.windows.registry.IKey				\
 	org.joval.intf.windows.registry.IRegistry			\
 	org.joval.intf.windows.registry.IBinaryValue			\
@@ -21,7 +25,7 @@ SHARED=\
 	org.joval.intf.windows.wmi.ISWbemProperty			\
 	org.joval.intf.windows.wmi.ISWbemPropertySet			\
 	org.joval.intf.windows.wmi.IWmiProvider				\
-	org.joval.io.CachingFilesystem					\
+	org.joval.io.BaseFile						\
 	org.joval.io.LittleEndian					\
 	org.joval.io.StreamTool						\
 	org.joval.oval.di.BasePlugin					\
@@ -56,7 +60,10 @@ SHARED=\
 	org.joval.util.Base64						\
 	org.joval.util.BaseSession					\
 	org.joval.util.BaseFileAdapter					\
-	org.joval.util.TreeNode						\
+	org.joval.util.tree.CachingTree					\
+	org.joval.util.tree.Forest					\
+	org.joval.util.tree.Node					\
+	org.joval.util.tree.Tree					\
 	org.joval.windows.WindowsSystemInfo				\
 	org.joval.windows.WOW3264PathRedirector				\
 	org.joval.windows.pe.Characteristics				\

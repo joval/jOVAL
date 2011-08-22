@@ -3,12 +3,8 @@
 
 package org.joval.plugin.adapter.independent;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.FileNotFoundException;
-import java.math.BigInteger;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -17,11 +13,15 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
+import oval.schemas.common.MessageLevelEnumeration;
+import oval.schemas.common.MessageType;
+import oval.schemas.common.OperationEnumeration;
+import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.independent.TextfilecontentObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
+import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.independent.TextfilecontentItem;
 import oval.schemas.results.core.ResultEnumeration;
 
@@ -32,9 +32,12 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.oval.OvalException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
+import org.joval.util.StringTools;
 
 /**
  * Evaluates TextfilecontentTest OVAL tests.
+ *
+ * DAS: Specify a maximum file size supported
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -80,25 +83,33 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	if (baseItem != null && tfcObj != null) {
 	    InputStream in = null;
 	    try {
-		Pattern p = Pattern.compile((String)tfcObj.getLine().getValue());
-    
 		//
-		// Read the file line-by-line and search for the pattern.  Add matching lines as subexpression elements.
+		// Read the whole file into a buffer and search for the pattern
 		//
+		byte[] buff = new byte[256];
+		int len = 0;
+		StringBuffer sb = new StringBuffer();
 		in = f.getInputStream();
-		BufferedReader br = new BufferedReader(new InputStreamReader(in));
-		String line = null;
-		while ((line = br.readLine()) != null) {
-		    Matcher m = p.matcher(line);
-		    if (m.find()) {
-			TextfilecontentItem item = JOVALSystem.factories.sc.independent.createTextfilecontentItem();
-			item.setPath(baseItem.getPath());
-			item.setFilename(baseItem.getFilename());
+		while ((len = in.read(buff)) > 0) {
+		    sb.append(StringTools.toCharArray(buff), 0, len);
+		}
+		String s = sb.toString();
+
+		OperationEnumeration op = tfcObj.getLine().getOperation();
+		switch (op) {
+		  case PATTERN_MATCH: {
+		    Pattern p = Pattern.compile((String)tfcObj.getLine().getValue());
+		    for (JAXBElement<TextfilecontentItem>item : getItems(p, baseItem, s)) {
 			EntityItemStringType lineType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			lineType.setValue(line);
-			item.setLine(lineType);
-			items.add(JOVALSystem.factories.sc.independent.createTextfilecontentItem(item));
+			lineType.setValue(tfcObj.getLine().getValue());
+			item.getValue().setLine(lineType);
+			items.add(item);
 		    }
+		    break;
+		  }
+
+		  default:
+		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
 		}
 	    } catch (PatternSyntaxException e) {
 		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()), e);
@@ -108,10 +119,44 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		    try {
 			in.close();
 		    } catch (IOException e) {
-			JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", f.toString()), e);
+			JOVALSystem.getLogger().log(Level.WARNING,
+						    JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", f.toString()), e);
 		    }
 		}
 	    }
+	}
+	return items;
+    }
+
+    protected List<JAXBElement<TextfilecontentItem>> getItems(Pattern p, TextfilecontentItem baseItem, String s) {
+	Matcher m = p.matcher(s);
+	List<JAXBElement<TextfilecontentItem>> items = new Vector<JAXBElement<TextfilecontentItem>>();
+	for (int instanceNum=1; m.find(); instanceNum++) {
+	    TextfilecontentItem item = (TextfilecontentItem)createFileItem();
+	    item.setPath(baseItem.getPath());
+	    item.setFilename(baseItem.getFilename());
+
+	    EntityItemStringType patternType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    patternType.setValue(p.toString());
+	    item.setPattern(patternType);
+	    EntityItemIntType instanceType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	    instanceType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	    instanceType.setValue(Integer.toString(instanceNum));
+	    item.setInstance(instanceType);
+
+	    EntityItemAnySimpleType textType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+	    textType.setValue(m.group());
+	    item.setText(textType);
+	    int sCount = m.groupCount();
+	    if (sCount > 0) {
+		for (int sNum=1; sNum <= sCount; sNum++) {
+		    EntityItemAnySimpleType sType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		    sType.setValue(m.group(sNum));
+		    item.getSubexpression().add(sType);
+		}
+	    }
+
+	    items.add(JOVALSystem.factories.sc.independent.createTextfilecontentItem(item));
 	}
 	return items;
     }
