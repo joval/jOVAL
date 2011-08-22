@@ -8,12 +8,16 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.NoSuchElementException;
+import java.util.logging.Level;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IPathRedirector;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.util.tree.INode;
 import org.joval.intf.system.IEnvironment;
+import org.joval.util.CachingTree;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -22,7 +26,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class LocalFilesystem extends CachingFilesystem {
+public class LocalFilesystem extends CachingTree implements IFilesystem {
     private static boolean WINDOWS = System.getProperty("os.name").startsWith("Windows");
 
     private boolean autoExpand = true;
@@ -33,9 +37,6 @@ public class LocalFilesystem extends CachingFilesystem {
 	super();
 	this.env = env;
 	this.redirector = redirector;
-	if (WINDOWS) {
-	    setCaseInsensitive(false);//DAS
-	}
     }
 
     public void setAutoExpand(boolean autoExpand) {
@@ -52,14 +53,37 @@ public class LocalFilesystem extends CachingFilesystem {
 	}
     }
 
-    // Implement IFilesystem
+    // Implement methdos left abstract in CachingTree
 
-    public char getDelimChar() {
-	return File.separatorChar;
+    public boolean preload() {
+	return false;
     }
 
-    public String getDelimString() {
+    public String getDelimiter() {
 	return File.separator;
+    }
+
+    public INode lookup(String path) throws NoSuchElementException {
+	try {
+	    IFile f = getFile(path);
+	    if (f.exists()) {
+		return f;
+	    } else {
+		throw new NoSuchElementException(path);
+	    }
+	} catch (IOException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", e.getMessage()), e);
+	    return null;
+	}
+    }
+
+    // Implement IFilesystem
+
+    public boolean connect() {
+	return true;
+    }
+
+    public void disconnect() {
     }
 
     public IFile getFile(String path) throws IllegalArgumentException, IOException {
@@ -70,12 +94,12 @@ public class LocalFilesystem extends CachingFilesystem {
 	if (WINDOWS) {
 	    if (path.length() > 2 && path.charAt(1) == ':') {
 	        if (isLetter(path.charAt(0))) {
-		    return new FileProxy(new File(path));
+		    return new FileProxy(this, new File(path));
 	        }
 	    }
 	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_FS_LOCALPATH", path));
 	} else if (path.charAt(0) == File.separatorChar) {
-	    return new FileProxy(new File(path));
+	    return new FileProxy(this, new File(path));
 	} else {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_FS_LOCALPATH", path));
 	}

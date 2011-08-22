@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Vector;
 import javax.xml.bind.JAXBElement;
 
+import oval.schemas.common.MessageLevelEnumeration;
+import oval.schemas.common.MessageType;
 import oval.schemas.definitions.independent.VariableObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
@@ -19,6 +21,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
+import org.joval.oval.ResolveException;
 import org.joval.oval.util.CheckData;
 import org.joval.util.JOVALSystem;
 
@@ -50,19 +53,25 @@ public class VariableAdapter implements IAdapter {
     public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	VariableObject vObj = (VariableObject)rc.getObject();
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-
-	List<String> values = rc.resolve((String)vObj.getVarRef().getValue());
-	if (values.size() > 0) {
-	    VariableItem item = JOVALSystem.factories.sc.independent.createVariableItem();
-	    EntityItemVariableRefType ref = JOVALSystem.factories.sc.independent.createEntityItemVariableRefType();
-	    ref.setValue(vObj.getVarRef().getValue());
-	    item.setVarRef(ref);
-	    for (String value : values) {
-		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
-		valueType.setValue(value);
-		item.getValue().add(valueType);
+	try {
+	    List<String> values = rc.resolve((String)vObj.getVarRef().getValue());
+	    if (values.size() > 0) {
+		VariableItem item = JOVALSystem.factories.sc.independent.createVariableItem();
+		EntityItemVariableRefType ref = JOVALSystem.factories.sc.independent.createEntityItemVariableRefType();
+		ref.setValue(vObj.getVarRef().getValue());
+		item.setVarRef(ref);
+		for (String value : values) {
+		    EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		    valueType.setValue(value);
+		    item.getValue().add(valueType);
+		}
+		items.add(JOVALSystem.factories.sc.independent.createVariableItem(item));
 	    }
-	    items.add(JOVALSystem.factories.sc.independent.createVariableItem(item));
+	} catch (ResolveException e) {
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALSystem.getMessage("ERROR_RESOLVE_VAR", (String)vObj.getVarRef().getValue(), e.getMessage()));
+	    rc.addMessage(msg);
 	}
 	return items;
     }

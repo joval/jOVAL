@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageLevelEnumeration;
@@ -31,6 +33,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.oval.OvalException;
+import org.joval.oval.ResolveException;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
@@ -83,7 +86,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		if (isDirectory) {
 		    dirPath = path;
 		} else {
-		    dirPath = path.substring(0, path.lastIndexOf(fs.getDelimString()));
+		    dirPath = path.substring(0, path.lastIndexOf(fs.getDelimiter()));
 		}
 
 		if (fObj.isSetFilepath()) {
@@ -98,7 +101,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			pathType.setValue(dirPath);
 			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
+			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimiter())+1));
 			fItem.setFilepath(filepathType);
 			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
@@ -115,7 +118,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			pathType.setValue(dirPath);
 			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
+			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimiter())+1));
 			fItem.setFilepath(filepathType);
 			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
@@ -126,7 +129,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    fItem.setPath(pathType);
 		    if (!isDirectory) {
 			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimString())+1));
+			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimiter())+1));
 			fItem.setFilename(filenameType);
 			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			filepathType.setValue(path);
@@ -156,14 +159,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    msg.setValue(JOVALSystem.getMessage("ERROR_IO", f.getLocalName(), e.getMessage()));
 		}
 		rc.addMessage(msg);
-	    } finally {
-		if (f != null) {
-		    try {
-			f.close();
-		    } catch (IOException e) {
-			JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE", e.getMessage()));
-		    }
-		}
 	    }
 	}
 	return items;
@@ -222,7 +217,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		  case PATTERN_MATCH:
 		    patternMatch = true;
 		    for (String value : filepaths) {
-			list.addAll(fs.search(value));
+			list.addAll(fs.search(Pattern.compile(value), false));
 		    }
 		    break;
 		  default:
@@ -243,7 +238,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		  case PATTERN_MATCH:
 		    patternMatch = true;
 		    for (String value : paths) {
-			list.addAll(fs.search(value));
+			list.addAll(fs.search(Pattern.compile(value), false));
 		    }
 		    break;
 		  default:
@@ -288,15 +283,25 @@ public abstract class BaseFileAdapter implements IAdapter {
 			for (String pathString : list) {
 			    for (String fname : fnames) {
 				switch(filename.getOperation()) {
-				  case PATTERN_MATCH:
-				    files.addAll(fs.search(pathString, fname));
+				  case PATTERN_MATCH: {
+				    IFile f = fs.getFile(pathString);
+				    if (f.exists()) {
+					String[] children = f.list();
+					Pattern p = Pattern.compile(fname);
+					for (int i=0; i < children.length; i++) {
+					    if (p.matcher(children[i]).find()) {
+						files.add(pathString + fs.getDelimiter() + children[i]);
+					    }
+					}
+				    }
 				    break;
+				  }
    
 				  case EQUALS:
-				    if (pathString.endsWith(fs.getDelimString())) {
+				    if (pathString.endsWith(fs.getDelimiter())) {
 					files.add(pathString + fname);
 				    } else {
-					files.add(pathString + fs.getDelimString() + fname);
+					files.add(pathString + fs.getDelimiter() + fname);
 				    }
 				    break;
 
@@ -304,13 +309,12 @@ public abstract class BaseFileAdapter implements IAdapter {
 				    IFile f = fs.getFile(pathString);
 				    if (f.exists() && f.isDirectory()) {
 					String[] children = f.list();
-					f.close();
 					for (int i=0; i < children.length; i++) {
 					    if (!fname.equals(children[i])) {
-						if (pathString.endsWith(fs.getDelimString())) {
+						if (pathString.endsWith(fs.getDelimiter())) {
 						    files.add(pathString + fname);
 						} else {
-						    files.add(pathString + fs.getDelimString() + fname);
+						    files.add(pathString + fs.getDelimiter() + fname);
 						}
 					    }
 					}
@@ -336,10 +340,17 @@ public abstract class BaseFileAdapter implements IAdapter {
        	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
 	} catch (InvocationTargetException e) {
        	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
+	} catch (PatternSyntaxException e) {
+       	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e); //DAS
 	} catch (IOException e) {
        	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	} catch (NoSuchElementException e) {
        	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), obj.getId()));
+	} catch (ResolveException e) {
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
 	}
 	pathMap.put(obj.getId(), list);
 	return list;
@@ -355,64 +366,46 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    List<String> results = new Vector<String>();
 	    for (String path : list) {
 		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_FS_RECURSE", path));
-		if (!path.endsWith(fs.getDelimString())) {
-		    path += fs.getDelimString();
-		}
-		IFile f = null;
 		try {
-		    f = fs.getFile(path);
-		    if (f.exists()) {
-			if (recurse.indexOf("symlinks") == -1 && f.isLink()) {
-			    // skip the symlink
-			} else if (recurse.indexOf("directories") == -1 && f.isDirectory()) {
-			    // skip the directory
-			} else {
-			    results.add(path);
-			    if ("up".equals(recurseDirection)) {
-				f.close();
-				int ptr = 0;
-				if (path.endsWith(fs.getDelimString())) {
-				    path = path.substring(0, path.lastIndexOf(fs.getDelimString()));
-				}
-				ptr = path.lastIndexOf(fs.getDelimString());
-				if (ptr != -1) {
-				    Vector<String> v = new Vector<String>();
-				    v.add(path.substring(0, ptr + fs.getDelimString().length()));
-				    results.addAll(getPaths(v, --depth, recurseDirection, recurse));
-				}
-			    } else { // recurse down
-				String[] children = f.list();
-				f.close();
-				if (children != null) {
-				    Vector<String> v = new Vector<String>();
-				    for (int i=0; i < children.length; i++) {
-					if (path.endsWith(fs.getDelimString())) {
-					    v.add(path + children[i]);
-					} else {
-					    v.add(path + fs.getDelimString() + children[i]);
-					}
+		    IFile f = (IFile)fs.lookup(path);
+		    if (!f.exists()) {
+			// skip non-existent files
+		    } else if (recurse.indexOf("symlinks") == -1 && f.isLink()) {
+			// skip the symlink
+		    } else if (recurse.indexOf("directories") == -1 && f.isDirectory()) {
+			// skip the directory
+		    } else {
+//			results.add(path);
+			if ("up".equals(recurseDirection)) {
+			    int ptr = 0;
+			    if (path.endsWith(fs.getDelimiter())) {
+				path = path.substring(0, path.lastIndexOf(fs.getDelimiter()));
+			    }
+			    ptr = path.lastIndexOf(fs.getDelimiter());
+			    if (ptr != -1) {
+				Vector<String> v = new Vector<String>();
+				v.add(path.substring(0, ptr + fs.getDelimiter().length()));
+				results.addAll(getPaths(v, --depth, recurseDirection, recurse));
+			    }
+			} else if (f.isDirectory()) { // recurse down
+			    String[] children = f.list();
+			    if (children != null) {
+				Vector<String> v = new Vector<String>();
+				for (int i=0; i < children.length; i++) {
+				    if (path.endsWith(fs.getDelimiter())) {
+					v.add(path + children[i]);
+				    } else {
+					v.add(path + fs.getDelimiter() + children[i]);
 				    }
-				    results.addAll(getPaths(v, --depth, recurseDirection, recurse));
 				}
+				results.addAll(getPaths(v, --depth, recurseDirection, recurse));
 			    }
 			}
 		    }
+		} catch (NoSuchElementException e) {
+		    // path doesn't exist.
 		} catch (IOException e) {
-		    if (f == null) {
-			JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
-		    } else {
-			JOVALSystem.getLogger().log(Level.WARNING,
-						    JOVALSystem.getMessage("ERROR_IO", f.getLocalName(), e.getMessage()));
-		    }
-		} finally {
-		    if (f != null) {
-			try {
-			    f.close();
-			} catch (IOException e) {
-			    JOVALSystem.getLogger().log(Level.WARNING,
-							JOVALSystem.getMessage("ERROR_FILE_CLOSE", e.getMessage()));
-			}
-		    }
+		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", path, e.getMessage()), e);
 		}
 	    }
 	    //
@@ -420,8 +413,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    //
 	    List<String> deduped = new Vector<String>();
 	    for (String s : results) {
-		if (s.endsWith(fs.getDelimString())) {
-		    s = s.substring(0, s.lastIndexOf(fs.getDelimString()));
+		if (s.endsWith(fs.getDelimiter())) {
+		    s = s.substring(0, s.lastIndexOf(fs.getDelimiter()));
 		}
 		if (!deduped.contains(s)) {
 		    deduped.add(s);

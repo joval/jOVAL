@@ -67,10 +67,10 @@ public class RunlevelAdapter implements IAdapter {
 	      case SOLARIS: {
 		try {
 		    IFilesystem fs = session.getFilesystem();
-		    for (String path : fs.search("/etc/rc.\\.d")) {
+		    for (String path : fs.search(Pattern.compile("/etc/rc.\\.d"), false)) {
 			IFile dir = fs.getFile(path);
 			if (dir.isDirectory()) {
-			    String rl = path.substring(path.lastIndexOf(fs.getDelimString())+1).substring(2, 3);
+			    String rl = path.substring(path.lastIndexOf(fs.getDelimiter())+1).substring(2, 3);
 			    Hashtable<String, Boolean> runlevel = runlevels.get(rl);
 			    if (runlevel == null) {
 				runlevel = new Hashtable<String, Boolean>();

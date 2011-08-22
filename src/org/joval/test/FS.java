@@ -12,7 +12,9 @@ import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
@@ -32,13 +34,16 @@ public class FS {
 	try {
 	    if (path.startsWith("search:")) {
 		path = path.substring(7);
-		List<String> list = fs.search(path);
+		Collection<String> list = fs.search(Pattern.compile(path), false);
 		System.out.println("Found " + list.size() + " matches");
 		for (String item : list) {
 		    System.out.println("Match: " + item);
 		}
 	    } else {
 		IFile f = fs.getFile(path);
+		if (f.isLink()) {
+		    System.out.println(path + " is a link to " + f.getCanonicalPath());
+		}
 		if (f.isDirectory()) {
 		    String[] children = f.list();
 		    for (int i=0; i < children.length; i++) {
@@ -51,6 +56,8 @@ public class FS {
 		    System.out.println("  md5: " + cs);
 		}
 	    }
+	} catch (PatternSyntaxException e) {
+	    e.printStackTrace();
 	} catch (IOException e) {
 	    e.printStackTrace();
 	} finally {
@@ -90,7 +97,7 @@ public class FS {
 
     private String getFileName(IFile f) {
 	String path = f.getLocalName();
-	int ptr = path.lastIndexOf(fs.getDelimString());
+	int ptr = path.lastIndexOf(fs.getDelimiter());
 	if (ptr > 0) {
 	    return path.substring(ptr+1);
 	} else {

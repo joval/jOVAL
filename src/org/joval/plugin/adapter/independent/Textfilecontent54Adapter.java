@@ -29,6 +29,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.oval.OvalException;
+import org.joval.oval.ResolveException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
@@ -150,6 +151,11 @@ public class Textfilecontent54Adapter extends BaseFileAdapter {
 	    } catch (PatternSyntaxException e) {
 		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()), e);
 		throw new IOException(e);
+	    } catch (ResolveException e) {
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALSystem.getMessage("ERROR_RESOLVE_VAR", tfcObj.getPattern().getVarRef(), e.getMessage()));
+		rc.addMessage(msg);
 	    } finally {
 		if (in != null) {
 		    try {

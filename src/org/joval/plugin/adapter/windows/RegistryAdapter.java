@@ -38,6 +38,7 @@ import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.oval.OvalException;
+import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
 
@@ -139,7 +140,13 @@ public class RegistryAdapter implements IAdapter {
 		String variableId = rObj.getKey().getValue().getVarRef();
 		list.addAll(rc.resolve(variableId));
 	    } catch (NoSuchElementException e) {
-		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), rObj.getId()));
+		JOVALSystem.getLogger().log(Level.FINER,
+					    JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), rObj.getId()));
+	    } catch (ResolveException e) {
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALSystem.getMessage("ERROR_RESOLVE_VAR", rObj.getKey().getValue().getVarRef(), e.getMessage()));
+		rc.addMessage(msg);
 	    }
 	} else {
 	    list.add((String)rObj.getKey().getValue().getValue());

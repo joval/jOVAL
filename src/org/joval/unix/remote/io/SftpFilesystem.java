@@ -3,11 +3,16 @@
 
 package org.joval.unix.remote.io;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.NoSuchElementException;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import org.vngx.jsch.Session;
 import org.vngx.jsch.ChannelType;
@@ -18,8 +23,12 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IPathRedirector;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.system.IProcess;
+import org.joval.intf.unix.system.IUnixSession;
+import org.joval.intf.util.tree.INode;
+import org.joval.intf.util.tree.ITree;
 import org.joval.intf.system.IEnvironment;
-import org.joval.io.CachingFilesystem;
+import org.joval.util.CachingTree;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -28,18 +37,21 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SftpFilesystem extends CachingFilesystem {
+public class SftpFilesystem extends CachingTree implements IFilesystem {
     final static char DELIM_CH = '/';
     final static String DELIM_STR = "/";
 
     private Session session;
+    private IUnixSession unixSession;
     private boolean autoExpand = true;
-    private IEnvironment env;
+    private boolean preloaded = false;
 
-    public SftpFilesystem(Session session, IEnvironment env) {
+    ChannelSftp cs;
+
+    public SftpFilesystem(Session session, IUnixSession unixSession) {
 	super();
-	this.env = env;
 	this.session = session;
+	this.unixSession = unixSession;
     }
 
     public void setAutoExpand(boolean autoExpand) {
@@ -52,25 +64,104 @@ public class SftpFilesystem extends CachingFilesystem {
 	return path;
     }
 
-    // Implement IFilesystem
+    // Implement methods left abstract in CachingTree
 
-    public char getDelimChar() {
-	return DELIM_CH;
+    public boolean preload() {
+	if (preloaded) {
+	    return true;
+	}
+
+	ITree tree = cache.getTree("");
+	if (tree == null) {
+	    tree = cache.makeTree("", DELIM_STR);
+	}
+	try {
+	    IProcess p = unixSession.createProcess("find / *");
+	    p.start();
+	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    ErrorReader er = new ErrorReader(p.getErrorStream());
+	    er.start();
+	    String line = null;
+	    while((line = br.readLine()) != null) {
+		String path = line;
+		if (!path.equals(getDelimiter())) { // skip the root node
+		    INode node = tree.getRoot();
+		    try {
+			while ((path = trimToken(path)) != null) {
+			    node = node.getChild(getToken(path));
+			}
+		    } catch (UnsupportedOperationException e) {
+			do {
+			    node = tree.makeNode(node, getToken(path));
+			} while ((path = trimToken(path)) != null);
+		    } catch (NoSuchElementException e) {
+			do {
+			    node = tree.makeNode(node, getToken(path));
+			} while ((path = trimToken(path)) != null);
+		    }
+		}
+	    }
+	    br.close();
+	    er.join();
+	    preloaded = true;
+	    return true;
+	} catch (Exception e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FIND", e.getMessage()), e);
+	    return false;
+	}
     }
 
-    public String getDelimString() {
+    public String getDelimiter() {
 	return DELIM_STR;
+    }
+
+    public INode lookup(String path) throws NoSuchElementException {
+	try {
+	    IFile f = getFile(path);
+	    if (f.exists()) {
+		return f;
+	    } else {
+		throw new NoSuchElementException(path);
+	    }
+	} catch (IOException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", e.getMessage()), e);
+	    return null;
+	}
+    }
+
+    // Implement IFilesystem
+
+    public boolean connect() {
+	try {
+	    cs = session.openChannel(ChannelType.SFTP);
+	    cs.connect();
+	    return true;
+	} catch (JSchException e) {
+	    JOVALSystem.getLogger().log(Level.SEVERE,
+					JOVALSystem.getMessage("ERROR_IO", getRoot().getName(), e.getMessage()), e);
+	    return false;
+	}
+    }
+
+    public void disconnect() {
+	try {
+	    if (cs.isConnected()) {
+		cs.disconnect();
+	    }
+	} catch (Throwable e) {
+	    JOVALSystem.getLogger().log(Level.WARNING,
+					JOVALSystem.getMessage("ERROR_IO", getRoot().getName(), e.getMessage()), e);
+	}
     }
 
     public IFile getFile(String path) throws IllegalArgumentException, IOException {
 	if (autoExpand) {
-	    path = env.expand(path);
+	    path = unixSession.getEnvironment().expand(path);
 	}
 	path = getRedirect(path);
-	if (path.charAt(0) == DELIM_CH) {
+	if (path.length() > 0 && path.charAt(0) == DELIM_CH) {
 	    try {
-	        ChannelSftp cs = session.openChannel(ChannelType.SFTP);
-	        return new SftpFile(cs, path);
+	        return new SftpFile(this, path);
 	    } catch (JSchException e) {
 		throw new IOException(e);
 	    }
@@ -101,5 +192,43 @@ public class SftpFilesystem extends CachingFilesystem {
 
     public OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException {
 	return getFile(path).getOutputStream(append);
+    }
+
+    // Private
+
+    class ErrorReader implements Runnable {
+	InputStream err;
+	Thread t;
+
+	ErrorReader(InputStream err) {
+	    this.err = err;
+	}
+
+	void start() {
+	    t = new Thread(this);
+	    t.start();
+	}
+
+	void join() throws InterruptedException {
+	    t.join();
+	}
+
+	public void run() {
+	    Logger log = JOVALSystem.getLogger();
+	    try {
+		BufferedReader br = new BufferedReader(new InputStreamReader(err));
+		String line = null;
+		while((line = br.readLine()) != null) {
+		    log.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FIND", line));
+		}
+	    } catch (IOException e) {
+		log.log(Level.WARNING, JOVALSystem.getMessage("ERROR_FIND", e.getMessage()), e);
+	    } finally {
+		try {
+		    err.close();
+		} catch (IOException e) {
+		}
+	    }
+	}
     }
 }

@@ -13,6 +13,7 @@ import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.oval.OvalException;
+import org.joval.oval.ResolveException;
 
 class RequestContext implements IRequestContext {
     Engine engine;
@@ -43,7 +44,7 @@ class RequestContext implements IRequestContext {
         engine.getSystemCharacteristics().setObject(object.getId(), null, null, null, msg);
     }
 
-    public List<String> resolve(String variableId) throws NoSuchElementException, OvalException {
+    public List<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException {
         return engine.resolve(variableId, this);
     }
 }

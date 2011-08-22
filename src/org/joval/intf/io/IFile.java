@@ -8,13 +8,15 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
+import org.joval.intf.util.tree.INode;
+
 /**
  * A platform-independent abstraction of a File.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IFile {
+public interface IFile extends INode {
     /**
      * Either the type of the specified file is unknown, or the function failed.
      */
@@ -39,11 +41,6 @@ public interface IFile {
      * Unused.
      */
     int FILE_TYPE_REMOTE = 0x8000;
-
-    /**
-     * Release any resources associated with the IFile.
-     */
-    public void close() throws IOException;
 
     /**
      * Get the time that the file was last accessed.
@@ -108,7 +105,7 @@ public interface IFile {
     /**
      * Returns one of the FILE_TYPE constants.
      */
-    public int getType() throws IOException;
+    public int getFileType() throws IOException;
 
     /**
      * Delete the file.
@@ -116,9 +113,11 @@ public interface IFile {
     public void delete() throws IOException;
 
     /**
-     * Returns the full path as it appears to the system on which the IFile resides.
+     * Returns the full path as it appears to the system on which the IFile resides (not necessarily canonical).
      */
     public String getLocalName();
+
+    public String getName();
 
     /**
      * Returns a unique representation of the IFile. This might be a local name, a URL or a UNC pathname.

@@ -14,6 +14,7 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.vngx.jsch.ChannelSftp;
 import org.vngx.jsch.SftpATTRS;
@@ -21,7 +22,10 @@ import org.vngx.jsch.exception.JSchException;
 import org.vngx.jsch.exception.SftpException;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.io.BaseFile;
+import org.joval.util.JOVALSystem;
 
 /**
  * An IFile wrapper for an SFTP channel.
@@ -29,29 +33,25 @@ import org.joval.intf.io.IRandomAccess;
  * @author David A. Solin
  * @version %I% %G%
  */
-class SftpFile implements IFile {
+class SftpFile extends BaseFile {
     private ChannelSftp cs;
     private SftpATTRS attrs = null;
     private String path;
     boolean tested=false, doesExist;
 
-    SftpFile(ChannelSftp cs, String path) throws JSchException {
-	cs.connect();
-	this.cs = cs;
+    SftpFile(SftpFilesystem fs, String path) throws JSchException {
+	super(fs);
+	cs = fs.cs;
 	this.path = path;
     }
 
-    // Implement IFile
+    // Implement INode
 
-    public void close() throws IOException {
-	try {
-	    if (cs.isConnected()) {
-		cs.disconnect();
-	    }
-	} catch (Throwable e) {
-	    throw new IOException(e);
-	}
+    public String getCanonicalPath() {
+	return toString();
     }
+
+    // Implement IFile
 
     public long accessTime() throws IOException {
 	if (exists()) {
@@ -116,7 +116,9 @@ class SftpFile implements IFile {
     }
 
     public boolean isDirectory() throws IOException {
-	if (exists()) {
+	if (isLink()) {
+	    return fs.getFile(toString()).isDirectory();
+	} else if (exists()) {
 	    return attrs.isDir();
 	} else {
 	    throw new FileNotFoundException(path);
@@ -124,7 +126,9 @@ class SftpFile implements IFile {
     }
 
     public boolean isFile() throws IOException {
-	if (exists()) {
+	if (isLink()) {
+	    return fs.getFile(toString()).isFile();
+	} else if (exists()) {
 	    return !isDirectory();
 	} else {
 	    return true;
@@ -173,7 +177,7 @@ class SftpFile implements IFile {
 	}
     }
 
-    public int getType() throws IOException {
+    public int getFileType() throws IOException {
 	return FILE_TYPE_DISK;
     }
 
@@ -191,6 +195,10 @@ class SftpFile implements IFile {
 
     public String getLocalName() {
 	return path;
+    }
+
+    public String getName() {
+	return path.substring(path.lastIndexOf(fs.getDelimiter()+fs.getDelimiter().length()));
     }
 
     public String toString() {

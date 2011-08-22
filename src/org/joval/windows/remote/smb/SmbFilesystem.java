@@ -6,6 +6,7 @@ package org.joval.windows.remote.smb;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,10 +23,10 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IPathRedirector;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IEnvironment;
-import org.joval.io.CachingFilesystem;
+import org.joval.intf.util.tree.INode;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
-import org.joval.util.TreeNode;
+import org.joval.util.CachingTree;
 import org.joval.windows.WOW3264PathRedirector;
 import org.joval.windows.remote.WindowsCredential;
 
@@ -36,7 +37,7 @@ import org.joval.windows.remote.WindowsCredential;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SmbFilesystem extends CachingFilesystem {
+public class SmbFilesystem extends CachingTree implements IFilesystem {
     static final String	LOCAL_DELIM_STR		= "\\";
     static final char	LOCAL_DELIM_CH		= '\\';
     static final String	SMBURL_DELIM_STR	= "/";
@@ -56,7 +57,6 @@ public class SmbFilesystem extends CachingFilesystem {
      */
     public SmbFilesystem(String host, WindowsCredential cred, IEnvironment env) {
 	super();
-	setCaseInsensitive(false);//DAS
 	this.host = host;
 	auth = cred.getNtlmPasswordAuthentication();
 	this.env = env;
@@ -100,14 +100,46 @@ public class SmbFilesystem extends CachingFilesystem {
 	}
     }
 
-    // Implement IFilesystem
+    // Implement methods left abstract in CachingTree
 
-    public char getDelimChar() {
-	return LOCAL_DELIM_CH;
+    public boolean preload() {
+	return false;
     }
 
-    public String getDelimString() {
+    public String getDelimiter() {
 	return LOCAL_DELIM_STR;
+    }
+
+    public INode lookup(String path) throws NoSuchElementException {
+	try {
+	    IFile f = null;
+	    try {
+		f = getFile(path);
+	    } catch (IOException e) {
+		if (!path.endsWith(getDelimiter())) {
+		    f = getFile(path + getDelimiter());
+		} else {
+		    throw e;
+		}
+	    }
+	    if (f.exists()) {
+		return f;
+	    } else {
+		throw new NoSuchElementException(path);
+	    }
+	} catch (IOException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", e.getMessage()), e);
+	    return null;
+	}
+    }
+
+    // Implement IFilesystem
+
+    public boolean connect() {
+	return true;
+    }
+
+    public void disconnect() {
     }
 
     public IFile getFile(String path) throws IllegalArgumentException, IOException {
@@ -136,7 +168,7 @@ public class SmbFilesystem extends CachingFilesystem {
 		} else {
 		    smbFile = new SmbFile(sb.toString(), auth);
 		}
-		return new SmbFileProxy(smbFile, path);
+		return new SmbFileProxy(this, smbFile, path);
 	    }
 	}
 	throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_FS_LOCALPATH", path));

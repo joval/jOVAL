@@ -72,9 +72,9 @@ public class UnixSession implements IUnixSession, ILocked, UserInfo {
 	    session.setUserInfo(this);
 	    session.connect(3000);
 	    env = new Environment(this);
-	    fs = new SftpFilesystem(session, env);
+	    fs = new SftpFilesystem(session, this);
 	    flavor = Flavor.flavorOf(this);
-	    return true;
+	    return fs.connect();
 	} catch (JSchException e) {
 	    e.printStackTrace();
 	}
@@ -82,6 +82,7 @@ public class UnixSession implements IUnixSession, ILocked, UserInfo {
     }
 
     public void disconnect() {
+	fs.disconnect();
 	session.disconnect();
     }
 

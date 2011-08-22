@@ -16,7 +16,9 @@ import jcifs.smb.SmbFileOutputStream;
 import jcifs.smb.SmbRandomAccessFile;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.io.BaseFile;
 
 /**
  * An IFile wrapper for an SmbFile.
@@ -24,11 +26,12 @@ import org.joval.intf.io.IRandomAccess;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SmbFileProxy implements IFile {
+class SmbFileProxy extends BaseFile {
     private SmbFile smbFile;
     private String localName;
 
-    SmbFileProxy(SmbFile smbFile, String localName) {
+    SmbFileProxy(IFilesystem fs, SmbFile smbFile, String localName) {
+	super(fs);
 	this.smbFile = smbFile;
 	this.localName = localName;
     }
@@ -37,13 +40,14 @@ public class SmbFileProxy implements IFile {
 	return smbFile;
     }
 
-    // Implement IFile
+    // Implement INode
 
-    /**
-     * Does nothing in this implementation.
-     */
-    public void close() throws IOException {
+    public String getCanonicalPath() {
+	String uncCP = smbFile.getCanonicalPath();
+	return uncCP.substring(6).replaceAll("\\/","\\\\");
     }
+
+    // Implement IFile
 
     /**
      * Not really supported by this implementation.
@@ -96,7 +100,7 @@ public class SmbFileProxy implements IFile {
 	return smbFile.list();
     }
 
-    public int getType() throws IOException {
+    public int getFileType() throws IOException {
 	switch(smbFile.getType()) {
 	  case SmbFile.TYPE_FILESYSTEM:
 	    return FILE_TYPE_DISK;
@@ -120,6 +124,10 @@ public class SmbFileProxy implements IFile {
 
     public String getLocalName() {
 	return localName;
+    }
+
+    public String getName() {
+	return smbFile.getName();
     }
 
     public String toString() {

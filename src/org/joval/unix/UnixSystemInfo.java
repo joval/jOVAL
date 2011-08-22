@@ -6,13 +6,14 @@ package org.joval.unix;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemIPAddressStringType;
@@ -25,6 +26,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.intf.util.tree.INode;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -66,14 +68,14 @@ public class UnixSystemInfo {
 	    reader.close();
 
 	    IFilesystem fs = session.getFilesystem();
-	    List<String> releaseFiles = fs.search("^/etc/.*-release$");
-	    if (releaseFiles.size() > 0) {
-		p = session.createProcess("cat " + releaseFiles.get(0));
+	    for (INode node : fs.getFile("/etc").getChildren(Pattern.compile("^.*-release$"))) {
+		p = session.createProcess("cat " + node.getPath());
 		p.start();
     		reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		info.setOsName(reader.readLine());
 		reader.close();
-	    } else {
+	    }
+	    if (!info.isSetOsName()) {
 		info.setOsName(session.getFlavor().getOsName());
 	    }
 

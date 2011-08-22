@@ -8,6 +8,8 @@ CLASSES=\
 	org.joval.intf.util.IObserver					\
 	org.joval.intf.util.IProducer					\
 	org.joval.oval.OvalException					\
+	org.joval.oval.ResolveException					\
+	org.joval.oval.TestException					\
 	org.joval.oval.di.ExecutionState				\
 	org.joval.oval.di.Main						\
 	org.joval.oval.engine.DefinitionFilter				\

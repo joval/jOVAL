@@ -12,7 +12,9 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.util.tree.INode;
 
 /**
  * An IFile wrapper for a java.io.File.
@@ -20,10 +22,11 @@ import org.joval.intf.io.IRandomAccess;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class FileProxy implements IFile {
+class FileProxy extends BaseFile {
     private File file;
 
-    FileProxy(File file) {
+    FileProxy(IFilesystem fs, File file) {
+	super(fs);
 	this.file = file;
     }
 
@@ -31,13 +34,17 @@ public class FileProxy implements IFile {
 	return file;
     }
 
-    // Implement IFile
+    // Implement methods left abstract in BaseFile
 
-    /**
-     * Does nothing in this implementation.
-     */
-    public void close() throws IOException {
+    public String getCanonicalPath() {
+	try {
+	    return file.getCanonicalPath();
+	} catch (IOException e) {
+	    return file.getPath();
+	}
     }
+
+    // Implement IFile
 
     /**
      * Not really supported in this implementation.
@@ -95,7 +102,7 @@ public class FileProxy implements IFile {
 	}
     }
 
-    public int getType() throws IOException {
+    public int getFileType() throws IOException {
 	return FILE_TYPE_DISK;
     }
 
@@ -105,6 +112,10 @@ public class FileProxy implements IFile {
 
     public String getLocalName() {
 	return toString();
+    }
+
+    public String getName() {
+	return file.getName();
     }
 
     public String toString() {

@@ -143,7 +143,7 @@ public class WindowsSession implements IWindowsSession, ILocked {
     }
 
     public IProcess createProcess(String command) throws Exception {
-	StringBuffer sb = new StringBuffer(tempDir).append(fs.getDelimChar()).append("rexec_");
+	StringBuffer sb = new StringBuffer(tempDir).append(fs.getDelimiter()).append("rexec_");
 	sb.append(Integer.toHexString(counter++));
 
 	IFile out = fs.getFile(sb.toString() + ".out", true);

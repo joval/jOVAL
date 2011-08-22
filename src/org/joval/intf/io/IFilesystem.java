@@ -8,22 +8,24 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
+import org.joval.intf.util.tree.ITree;
+
 /**
  * A platform-independent abstraction of a server filesystem.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IFilesystem {
+public interface IFilesystem extends ITree {
     /**
-     * Get the char delimiter for pathnames.
+     * Connect to any resources required to access the IFilesystem.
      */
-    public char getDelimChar();
+    public boolean connect();
 
     /**
-     * Get the String delimiter for pathnames.
+     * Release any resources associated with the IFilesystem.
      */
-    public String getDelimString();
+    public void disconnect();
 
     /**
      * An interface with all the methods of java.io.File and jcifs.smb.SmbFile.
@@ -59,14 +61,4 @@ public interface IFilesystem {
      * Optionally, append to a file.
      */
     public OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException;
-
-    /**
-     * Search for a path on the filesystem.
-     *
-     * @argument path contains [esacped] delimiter-delimited regex search patterns describing a directory hierarchy.
-     * @returns a list of local paths patching the patterns.
-     */
-    public List<String> search(String path) throws IOException;
-    public List<String> search(String parent, String path) throws IOException;
-    public List<String> search(String parent, String path, boolean followLinks) throws IOException;
 }

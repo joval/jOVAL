@@ -106,6 +106,7 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;
+import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
 import org.joval.oval.util.CheckData;
 import org.joval.oval.util.ExistenceData;
@@ -356,7 +357,7 @@ public class Engine implements IProducer {
     /**
      * Return the value of the Variable with the specified ID, and also add any chained variables to the provided list.
      */
-    List<String> resolve(String variableId, RequestContext rc) throws NoSuchElementException, OvalException {
+    List<String> resolve(String variableId, RequestContext rc) throws NoSuchElementException, ResolveException, OvalException {
 	List<VariableValueType> vars = rc.getVars();
 	VariableType var = definitions.getVariable(variableId);
 	String varId = var.getId();
@@ -876,7 +877,7 @@ public class Engine implements IProducer {
 			}
     
 			ResultEnumeration result = ResultEnumeration.UNKNOWN;
-			if (itemEntityObj instanceof EntityItemSimpleBaseType) {
+			if (itemEntityObj instanceof EntityItemSimpleBaseType || itemEntityObj == null) {
 			    result = compare(stateEntity, (EntityItemSimpleBaseType)itemEntityObj);
 			} else if (itemEntityObj instanceof JAXBElement) {
 			    JAXBElement element = (JAXBElement)itemEntityObj;
@@ -890,7 +891,7 @@ public class Engine implements IProducer {
 			    }
 			    result = cd.getResult(stateEntity.getEntityCheck());
 			} else {
-			    String message = JOVALSystem.getMessage("ERROR_UNEXPECTED_ENTITY",
+			    String message = JOVALSystem.getMessage("ERROR_UNSUPPORTED_ENTITY",
 								    itemEntityObj.getClass().getName(), item.getId());
 	    		    throw new OvalException(message);
 			}
@@ -901,7 +902,14 @@ public class Engine implements IProducer {
 		}
 	    }
 	    return ResultEnumeration.TRUE;
-	} catch (Exception e) {
+	} catch (NoSuchMethodException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    throw new OvalException(e);
+	} catch (IllegalAccessException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    throw new OvalException(e);
+	} catch (InvocationTargetException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
 	    throw new OvalException(e);
 	}
     }
@@ -959,9 +967,16 @@ public class Engine implements IProducer {
 	    base.setDatatype(state.getDatatype());
 	    base.setOperation(state.getOperation());
 	    base.setMask(state.isMask());
-	    for (String value : resolve(state.getVarRef(), new RequestContext(this, null))) {
-		base.setValue(value);
-		cd.addResult(testImpl(base, item));
+	    try {
+		for (String value : resolve(state.getVarRef(), new RequestContext(this, null))) {
+		    base.setValue(value);
+		    cd.addResult(testImpl(base, item));
+		}
+	    } catch (NoSuchElementException e) {
+//DAS
+		throw new TestException(JOVALSystem.getMessage("ERROR_RESOLVE_VAR", state.getVarRef(), e.getMessage()));
+	    } catch (ResolveException e) {
+		throw new TestException(JOVALSystem.getMessage("ERROR_RESOLVE_VAR", state.getVarRef(), e.getMessage()));
 	    }
 	    return cd.getResult(state.getVarCheck());
 	} else {
@@ -1333,7 +1348,7 @@ public class Engine implements IProducer {
      * DAS: TBD for 5.10: implementations for Count and Unique functions
      */
     private List<String> resolveInternal(Object object, List <VariableValueType>list)
-		throws NoSuchElementException, OvalException {
+		throws NoSuchElementException, ResolveException, OvalException {
 	//
 	// Why do variables point to variables?  Because sometimes they are nested.
 	//
@@ -1413,7 +1428,7 @@ public class Engine implements IProducer {
 	    }
 	    List<String> values = extractItemData(objectId, oc, items);
 	    if (values == null || values.size() == 0) {
-		throw new NoSuchElementException(oc.getObjectRef());
+		throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_COMPONENT_EMPTY"));
 	    } else {
 		return values;
 	    }
@@ -1502,7 +1517,7 @@ public class Engine implements IProducer {
 	    List<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(st), list)) {
 		if (start > value.length()) {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_SUBSTRING", value, new Integer(start)));
+		    throw new ResolveException(JOVALSystem.getMessage("ERROR_SUBSTRING", value, new Integer(start)));
 		} else if (len < 0 || value.length() <= (start+len)) {
 		    values.add(value.substring(start));
 		} else {
@@ -1554,7 +1569,7 @@ public class Engine implements IProducer {
 	    List<String> timestamp2;
 	    if (children.size() == 1) {
 		timestamp1 = new Vector<String>();
-		timestamp1.add(new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date()));
+		timestamp1.add(new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date(System.currentTimeMillis())));
 		timestamp2 = resolveInternal(children.get(0), list);
 	    } else if (children.size() == 2) {
 		timestamp1 = resolveInternal(children.get(0), list);
