@@ -68,10 +68,15 @@ public class SmfAdapter implements IAdapter {
 		ArrayList<String> list = new ArrayList<String>();
 		String line = null;
 		while((line = br.readLine()) != null) {
-		    if (line.startsWith("FRMI")) {
+		    if (line.startsWith("FMRI")) {
 			continue;
 		    }
-		    list.add(getFullFmri(line.trim()));
+		    String fmri = getFullFmri(line.trim());
+		    if (fmri == null) {
+			JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FMRI", line));
+		    } else {
+			list.add(fmri);
+		    }
 		}
 		services = list.toArray(new String[list.size()]);
 	    } catch (Exception e) {
@@ -230,6 +235,9 @@ public class SmfAdapter implements IAdapter {
     private String getFullFmri(String fmri) {
 	if (fmri.indexOf("//") == -1) {
 	    int ptr = fmri.indexOf("/");
+	    if (ptr == -1) {
+		return null;
+	    }
 	    StringBuffer sb = new StringBuffer(fmri.substring(0, ptr));
 	    sb.append("//localhost");
 	    sb.append(fmri.substring(ptr));

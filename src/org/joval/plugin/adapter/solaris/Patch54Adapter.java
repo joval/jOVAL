@@ -205,9 +205,11 @@ public class Patch54Adapter extends PatchAdapter {
 	List<PatchEntry> patches = new Vector<PatchEntry>();
 	if (isSupercedence) {
 	    List<SupercedenceEntry> candidates = supercedence.get(base);
-	    for (SupercedenceEntry candidate : candidates) {
-		if (candidate.superceded.version >= version) {
-		    patches.add(candidate.by);
+	    if (candidates != null) {
+		for (SupercedenceEntry candidate : candidates) {
+		    if (candidate.superceded.version >= version) {
+			patches.add(candidate.by);
+		    }
 		}
 	    }
 	}
@@ -216,9 +218,11 @@ public class Patch54Adapter extends PatchAdapter {
 
 	    if (isSupercedence) {
 		List<SupercedenceEntry> candidates = supercedence.get(Integer.toString(match.patch.base));
-		for (SupercedenceEntry candidate : candidates) {
-		    if (candidate.superceded.version >= match.patch.version) {
-			patches.add(candidate.by);
+		if (candidates != null) {
+		    for (SupercedenceEntry candidate : candidates) {
+			if (candidate.superceded.version >= match.patch.version) {
+			    patches.add(candidate.by);
+			}
 		    }
 		}
 	    }
