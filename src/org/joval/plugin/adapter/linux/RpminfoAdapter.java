@@ -214,7 +214,7 @@ public class RpminfoAdapter implements IAdapter {
 		pkgVersion = value;
 		RpminfoItem.Version version = JOVALSystem.factories.sc.linux.createRpminfoItemVersion();
 		version.setValue(pkgVersion);
-		item.setVersion(version);
+		item.setRpmVersion(version);
 	    } else if ("Release".equals(param)) {
 		pkgRelease = value;
 		RpminfoItem.Release release = JOVALSystem.factories.sc.linux.createRpminfoItemRelease();

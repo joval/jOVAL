@@ -224,7 +224,7 @@ public class FileAdapter extends BaseFileAdapter {
 		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 //DAS: this is what Ovaldi does now, but JB says it'll change and do the right thing soon
 		versionType.setStatus(StatusEnumeration.ERROR);
-		fItem.setVersion(versionType);
+		fItem.setFileVersion(versionType);
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(JOVALSystem.getMessage("STATUS_PE_EMPTY"));
@@ -269,7 +269,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    EntityItemVersionType versionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
 	    versionType.setValue(vffi.getFileVersion().toString());
 	    versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-	    fItem.setVersion(versionType);
+	    fItem.setFileVersion(versionType);
 
 	    //
 	    // Look at the StringTables for any interesting information

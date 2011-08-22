@@ -189,6 +189,12 @@
                      </xsd:complexType>
                   </xsd:element>
                   <xsd:element name="version" minOccurs="0" maxOccurs="1">
+                     <!-- jOVAL embellishment -->
+                     <xsd:annotation>
+                        <xsd:appinfo>
+                           <jxb:property name="rpm_version" />
+                        </xsd:appinfo>
+                     </xsd:annotation>
                      <xsd:complexType>
                         <xsd:simpleContent>
                            <xsd:restriction base="oval-sc:EntityItemAnySimpleType">

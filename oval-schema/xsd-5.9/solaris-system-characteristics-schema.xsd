@@ -55,7 +55,14 @@
                   <xsd:element name="pkginst" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="category" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
-                  <xsd:element name="version" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="version" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1">
+		     <!-- jOVAL embellishment -->
+                     <xsd:annotation>
+                          <xsd:appinfo>
+                               <jxb:property name="package_version" />
+                          </xsd:appinfo>
+                      </xsd:annotation>
+                  </xsd:element>
                   <xsd:element name="vendor" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="description" type="oval-sc:EntityItemStringType" minOccurs="0"
                                maxOccurs="1"/>
@@ -106,7 +113,14 @@
             <xsd:extension base="oval-sc:ItemType">
                <xsd:sequence>
                   <xsd:element name="base" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
-                  <xsd:element name="version" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="version" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1">
+		     <!-- jOVAL embellishment -->
+                     <xsd:annotation>
+                          <xsd:appinfo>
+                               <jxb:property name="patch_version" />
+                          </xsd:appinfo>
+                      </xsd:annotation>
+		  </xsd:element>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>

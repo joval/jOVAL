@@ -374,7 +374,14 @@
                   <xsd:element name="m_time" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="ms_checksum" type="oval-sc:EntityItemStringType" minOccurs="0"
                                maxOccurs="1"/>
-                  <xsd:element name="version" type="oval-sc:EntityItemVersionType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="version" type="oval-sc:EntityItemVersionType" minOccurs="0" maxOccurs="1">
+		     <!-- jOVAL embellishment -->
+                     <xsd:annotation>
+                        <xsd:appinfo>
+                           <jxb:property name="file_version" />
+                        </xsd:appinfo>
+                     </xsd:annotation>
+                  </xsd:element>
                   <xsd:element name="type" type="win-sc:EntityItemFileTypeType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="development_class" type="oval-sc:EntityItemStringType" minOccurs="0"
                                maxOccurs="1"/>

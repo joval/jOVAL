@@ -228,7 +228,7 @@ public class PackageAdapter implements IAdapter {
 		} else if (line.startsWith(VERSION)) {
 		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    type.setValue(line.substring(VERSION.length()).trim());
-		    item.setVersion(type);
+		    item.setPackageVersion(type);
 		}
 	    }
 	} finally {

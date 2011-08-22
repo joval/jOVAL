@@ -863,19 +863,12 @@ public class Engine implements IProducer {
 	try {
 	    String stateClassname = state.getClass().getName();
 	    String stateBaseClassname = stateClassname.substring(stateClassname.lastIndexOf(".")+1);
-	    String stateTypename = stateBaseClassname.substring(0, stateBaseClassname.lastIndexOf("State"));
 	    for (String methodName : getMethodNames(state.getClass())) {
 		if (methodName.startsWith("get") && !stateMethodNames.contains(methodName)) {
 		    Object stateEntityObj = state.getClass().getMethod(methodName).invoke(state);
 		    if (stateEntityObj != null && stateEntityObj instanceof EntityStateSimpleBaseType) {
 			EntityStateSimpleBaseType stateEntity = (EntityStateSimpleBaseType)stateEntityObj;
-			Object itemEntityObj = null;
-			if (methodName.equals("get" + stateTypename + "Version")) {
-			    itemEntityObj = item.getClass().getMethod("getVersion").invoke(item);
-			} else {
-			    itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
-			}
-    
+			Object itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
 			ResultEnumeration result = ResultEnumeration.UNKNOWN;
 			if (itemEntityObj instanceof EntityItemSimpleBaseType || itemEntityObj == null) {
 			    result = compare(stateEntity, (EntityItemSimpleBaseType)itemEntityObj);

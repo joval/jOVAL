@@ -187,7 +187,7 @@ public class PatchAdapter implements IAdapter {
 		EntityItemIntType versionType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 		versionType.setValue(entry.patch.getVersionString());
 		versionType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		item.setVersion(versionType);
+		item.setPatchVersion(versionType);
 		items.add(JOVALSystem.factories.sc.solaris.createPatchItem(item));
 	    }
 	}

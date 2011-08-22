@@ -245,7 +245,7 @@ public class Patch54Adapter extends PatchAdapter {
 	EntityItemIntType versionType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	versionType.setValue(patch.getVersionString());
 	versionType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	item.setVersion(versionType);
+	item.setPatchVersion(versionType);
 	return item;
     }
 }
