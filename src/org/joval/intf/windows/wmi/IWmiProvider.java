@@ -12,6 +12,8 @@ import org.joval.windows.wmi.WmiException;
  * @version %I% %G%
  */
 public interface IWmiProvider {
+    public static final String CIMv2 = "root\\cimv2";
+
     /**
      * Connect to the underlying WMI provider.
      */

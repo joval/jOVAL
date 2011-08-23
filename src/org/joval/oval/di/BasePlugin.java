@@ -96,36 +96,12 @@ public abstract class BasePlugin implements IJovaldiPlugin {
     // Implement IJovaldiPlugin
 
     public void connect(boolean online) {
-	adapters.add(new FamilyAdapter(this));
-	adapters.add(new VariableAdapter());
-
-	if (!online) {
-	    //
-	    // If not online, then the IPlugin is being invoked to perform analysis on a pre-existing System-Characteristics
-	    // file.  Therefore, all adapters are added, but without resources for data retrieval.
-	    //
-	    adapters.add(new EnvironmentvariableAdapter(null));
-	    adapters.add(new TextfilecontentAdapter(null));
-	    adapters.add(new Textfilecontent54Adapter(null));
-	    adapters.add(new XmlfilecontentAdapter(null));
-	    adapters.add(new WmiAdapter(null));
-	    adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(null, null));
-	    adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(null, null));
-	    adapters.add(new RegistryAdapter(null));
-	    adapters.add(new UserAdapter(null));
-	    adapters.add(new RpminfoAdapter(null));
-	    adapters.add(new Patch54Adapter(null));
-	    adapters.add(new PatchAdapter(null));
-	    adapters.add(new PackageAdapter(null));
-	    adapters.add(new IsainfoAdapter(null));
-	    adapters.add(new SmfAdapter(null));
-	    adapters.add(new ProcessAdapter(null));
-	    adapters.add(new RunlevelAdapter(null));
-	    adapters.add(new UnameAdapter(null));
-	} else if (session.connect()) {
+	if (online && session.connect()) {
 	    adapters.add(new EnvironmentvariableAdapter(session.getEnvironment()));
-	    adapters.add(new TextfilecontentAdapter(session.getFilesystem()));
+	    adapters.add(new FamilyAdapter(this));
 	    adapters.add(new Textfilecontent54Adapter(session.getFilesystem()));
+	    adapters.add(new TextfilecontentAdapter(session.getFilesystem()));
+	    adapters.add(new VariableAdapter());
 	    adapters.add(new XmlfilecontentAdapter(session.getFilesystem()));
 
 	    switch(session.getType()) {
@@ -140,10 +116,10 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		} catch (Exception e) {
 		    throw new RuntimeException(getMessage("ERROR_INFO"), e);
 		}
-		adapters.add(new UserAdapter(win.getWmiProvider()));
-		adapters.add(new WmiAdapter(win.getWmiProvider()));
 		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win.getFilesystem(), win.getWmiProvider()));
 		adapters.add(new RegistryAdapter(win.getRegistry()));
+		adapters.add(new UserAdapter(info.getPrimaryHostName(), win.getWmiProvider()));
+		adapters.add(new WmiAdapter(win.getWmiProvider()));
 		break;
 	      }
 
@@ -161,9 +137,9 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		  case SOLARIS:
 		    adapters.add(new IsainfoAdapter(unix));
 		    adapters.add(new PackageAdapter(unix));
-		    adapters.add(new SmfAdapter(unix));
 		    adapters.add(new Patch54Adapter(unix));
 		    adapters.add(new PatchAdapter(unix));
+		    adapters.add(new SmfAdapter(unix));
 		    break;
 		}
 		break;

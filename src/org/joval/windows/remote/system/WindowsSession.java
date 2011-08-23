@@ -154,7 +154,7 @@ public class WindowsSession implements IWindowsSession, ILocked {
 	err.getOutputStream(false).close(); // create/clear tmpErrFile
 	tempFiles.add(err);
 
-	WindowsProcess p = new WindowsProcess(conn.getServices(host, "root\\cimv2"), command, cwd, out, err);
+	WindowsProcess p = new WindowsProcess(conn.getServices(host, IWmiProvider.CIMv2), command, cwd, out, err);
 	return p;
     }
 

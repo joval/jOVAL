@@ -40,7 +40,6 @@ import org.joval.windows.wmi.WmiException;
  * @version %I% %G%
  */
 public class UserAdapter implements IAdapter {
-    static final String ROOT_NS	= "root\\cimv2";
     static final String USER_WQL			= "SELECT * FROM Win32_UserAccount";
     static final String USER_WQL_DOMAIN_CONDITION	= "Domain='$domain'";
     static final String USER_WQL_LOCAL_CONDITION	= "LocalAccount=TRUE";
@@ -48,15 +47,16 @@ public class UserAdapter implements IAdapter {
 
     static final String GROUP_WQL			= "ASSOCIATORS OF {$conditions} WHERE resultClass=Win32_Group";
     static final String DOMAIN_ASSOC_CONDITION		= "Win32_UserAccount.Domain=\"$domain\"";
-    static final String LOCAL_ASSOC_CONDITION		= "Win32_UserAccount.LocalAccount=TRUE";
     static final String NAME_ASSOC_CONDITION		= "Name=\"$username\"";
 
     private IWmiProvider wmi;
+    private String hostname;
     private Hashtable<String, UserItem> users;
     private boolean preloaded = false;
 
-    public UserAdapter(IWmiProvider wmi) {
+    public UserAdapter(String hostname, IWmiProvider wmi) {
 	this.wmi = wmi;
+	this.hostname = hostname.toUpperCase();
 	users = new Hashtable<String, UserItem>();
     }
 
@@ -154,6 +154,78 @@ public class UserAdapter implements IAdapter {
 	}
     }
 
+    private boolean isBuiltinUser(String s) {
+	String domain = getDomain(s);
+	boolean local = false;
+	if (domain == null) {
+	    local = true;
+	} else {
+	    if (domain.toUpperCase().equals(hostname)) {
+		local = true;
+	    }
+	}
+	if (local) {
+	    String username = getUser(s);
+	    if ("Administrator".equals(username)) {
+		return true;
+	    } else if ("Guest".equals(username)) {
+		return true;
+	    }
+	}
+	return false;
+    }
+
+    private boolean isBuiltinGroup(String s) {
+	String domain = getDomain(s);
+	boolean local = false;
+	if (domain == null) {
+	    local = true;
+	} else {
+	    if (domain.toUpperCase().equals(hostname)) {
+		local = true;
+	    }
+	}
+	if (local) {
+	    String group = getUser(s);
+	    if ("Administrators".equals(group)) {
+		return true;
+	    } else if ("Users".equals(group)) {
+		return true;
+	    } else if ("Guests".equals(group)) {
+		return true;
+	    } else if ("Print Operators".equals(group)) {
+		return true;
+	    } else if ("Performance Log Users".equals(group)) {
+		return true;
+	    } else if ("Performance Monitor Users".equals(group)) {
+		return true;
+	    } else if ("Remote Desktop Users".equals(group)) {
+		return true;
+	    } else if ("Account Operators".equals(group)) {
+		return true;
+	    } else if ("Event Log Readers".equals(group)) {
+		return true;
+	    } else if ("Cryptographic Operators".equals(group)) {
+		return true;
+	    } else if ("Backup Operators".equals(group)) {
+		return true;
+	    } else if ("Distributed COM Users".equals(group)) {
+		return true;
+	    } else if ("Power Users".equals(group)) {
+		return true;
+	    } else if ("Replicators".equals(group)) {
+		return true;
+	    } else if ("HelpLibraryUpdaters".equals(group)) {
+		return true;
+	    } else if ("HomeUsers".equals(group)) {
+		return true;
+	    } else if ("Server Operators".equals(group)) {
+		return true;
+	    }
+	}
+	return false;
+    }
+
     private UserItem queryUser(String name) throws WmiException {
 	UserItem item = users.get(name.toUpperCase());
 	if (item == null) {
@@ -168,7 +240,7 @@ public class UserAdapter implements IAdapter {
 		wql.append(USER_WQL_DOMAIN_CONDITION.replaceAll("(?i)\\$username", Matcher.quoteReplacement(domain)));
 	    }
 
-	    ISWbemObjectSet os = wmi.execQuery(ROOT_NS, wql.toString());
+	    ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, wql.toString());
 	    if (os.getSize() == 0) {
 		item = JOVALSystem.factories.sc.windows.createUserItem();
 		EntityItemStringType user = JOVALSystem.factories.sc.core.createEntityItemStringType();
@@ -178,7 +250,14 @@ public class UserAdapter implements IAdapter {
 	    } else {
 		ISWbemPropertySet columns = os.iterator().next().getProperties();
 		boolean enabled = !columns.getItem("Disabled").getValueAsBoolean().booleanValue();
-		item = makeItem(getUser(name), domain, enabled);
+		if (domain == null) {
+		    domain = columns.getItem("Domain").getValueAsString();
+		    name = domain + "\\" + columns.getItem("Name").getValueAsString();
+		}
+		item = users.get(name.toUpperCase()); // check again using the complete name
+		if (item == null) {
+		    item = makeItem(name, enabled);
+		}
 	    }
 	    users.put(name.toUpperCase(), item);
 	}
@@ -187,13 +266,15 @@ public class UserAdapter implements IAdapter {
 
     private List<UserItem> queryAllUsers() throws WmiException {
 	if (!preloaded) {
-	    for (ISWbemObject row : wmi.execQuery(ROOT_NS, USER_WQL)) {
+	    for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, USER_WQL)) {
 		ISWbemPropertySet columns = row.getProperties();
 		String username = columns.getItem("Name").getValueAsString();
 		String domain = columns.getItem("Domain").getValueAsString();
 		boolean enabled = !columns.getItem("Disabled").getValueAsBoolean().booleanValue();
 		String s = domain + "\\" + username;
-		users.put(s.toUpperCase(), makeItem(username, domain, enabled));
+		if (users.get(s.toUpperCase()) == null) {
+		    users.put(s.toUpperCase(), makeItem(s, enabled));
+		}
 	    }
 	    preloaded = true;
 	}
@@ -204,14 +285,13 @@ public class UserAdapter implements IAdapter {
 	return items;
     }
 
-    private UserItem makeItem(String username, String domain, boolean enabled) throws WmiException {
-System.out.println("DAS: makeItem username=" + username + " domain=" + domain + ", enabled=" + enabled);
+    private UserItem makeItem(String name, boolean enabled) throws WmiException {
 	UserItem item = JOVALSystem.factories.sc.windows.createUserItem();
 	EntityItemStringType user = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	if (domain == null) {
-	    user.setValue(username);
+	if (isBuiltinUser(name)) {
+	    user.setValue(getUser(name));
 	} else {
-	    user.setValue(domain + "\\" + username);
+	    user.setValue(name);
 	}
 	item.setUser(user);
 	EntityItemBoolType enabledType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
@@ -219,23 +299,23 @@ System.out.println("DAS: makeItem username=" + username + " domain=" + domain + 
 	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setEnabled(enabledType);
 
-	if (enabled) {
-	    StringBuffer conditions = new StringBuffer();
-	    if (domain == null) {
-	        conditions.append(LOCAL_ASSOC_CONDITION);
+	StringBuffer conditions = new StringBuffer();
+	conditions.append(DOMAIN_ASSOC_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(getDomain(name))));
+	conditions.append(",");
+	conditions.append(NAME_ASSOC_CONDITION.replaceAll("(?i)\\$username", Matcher.quoteReplacement(getUser(name))));
+	String wql = GROUP_WQL.replaceAll("(?i)\\$conditions", Matcher.quoteReplacement(conditions.toString()));
+	for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, wql)) {
+	    ISWbemPropertySet columns = row.getProperties();
+	    EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    String domain = columns.getItem("Domain").getValueAsString();
+	    String group = columns.getItem("Name").getValueAsString();
+	    String s = domain + "\\" + group;
+	    if (isBuiltinGroup(s)) {
+		groupType.setValue(group);
 	    } else {
-	        conditions.append(DOMAIN_ASSOC_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(domain)));
+		groupType.setValue(s);
 	    }
-	    conditions.append(",");
-	    conditions.append(NAME_ASSOC_CONDITION.replaceAll("(?i)\\$username", Matcher.quoteReplacement(username)));
-	    String wql = GROUP_WQL.replaceAll("(?i)\\$conditions", Matcher.quoteReplacement(conditions.toString()));
-System.out.println(wql);
-	    for (ISWbemObject row : wmi.execQuery(ROOT_NS, wql)) {
-		ISWbemPropertySet columns = row.getProperties();
-		EntityItemStringType group = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		group.setValue(columns.getItem("Domain").getValueAsString()+"\\"+columns.getItem("Name").getValueAsString());
-		item.getGroup().add(group);
-	    }
+	    item.getGroup().add(groupType);
 	}
 
 	return item;

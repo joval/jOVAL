@@ -47,7 +47,6 @@ public class WindowsSystemInfo {
     static final String CURRENTVERSION_VAL	= "CurrentVersion";
     static final String PRODUCTNAME_VAL		= "ProductName";
 
-    static final String CIMV2NS			= "root\\cimv2";
     static final String ADAPTER_WQL		= "select * from Win32_NetworkAdapterConfiguration";
     static final String MAC_ADDR_FIELD		= "MACAddress";
     static final String IP_ADDR_FIELD		= "IPAddress";
@@ -101,7 +100,7 @@ public class WindowsSystemInfo {
 	    wmiConnected = wmi.connect();
 	    if (wmiConnected) {
 		InterfacesType interfacesType = coreFactory.createInterfacesType();
-		ISWbemObjectSet result = wmi.execQuery(CIMV2NS, ADAPTER_WQL);
+		ISWbemObjectSet result = wmi.execQuery(IWmiProvider.CIMv2, ADAPTER_WQL);
 		Iterator <ISWbemObject>iter = result.iterator();
 		while (iter.hasNext()) {
 		    ISWbemPropertySet row = iter.next().getProperties();
