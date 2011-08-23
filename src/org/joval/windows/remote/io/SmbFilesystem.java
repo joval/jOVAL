@@ -18,6 +18,7 @@ import jcifs.smb.SmbFileOutputStream;
 import jcifs.smb.SmbRandomAccessFile;
 import jcifs.smb.VolatileSmbFile;
 
+import org.joval.identity.windows.WindowsCredential;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IPathRedirector;
@@ -28,7 +29,6 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.tree.CachingTree;
 import org.joval.windows.WOW3264PathRedirector;
-import org.joval.windows.remote.WindowsCredential;
 
 /**
  * A simple abstraction of a server filesystem, to make it easy to retrieve SmbFile objects from a particular machine using

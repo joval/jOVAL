@@ -1,6 +1,6 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 
-package org.joval.windows.remote;
+package org.joval.identity.windows;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

@@ -13,6 +13,8 @@ import org.vngx.jsch.exception.JSchException;
 
 import org.joval.discovery.SessionFactory;
 import org.joval.identity.Credential;
+import org.joval.identity.ssh.SshCredential;
+import org.joval.identity.windows.WindowsCredential;
 import org.joval.intf.di.IJovaldiConfiguration;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
@@ -20,9 +22,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.di.BasePlugin;
-import org.joval.unix.remote.UnixCredential;
 import org.joval.util.JOVALSystem;
-import org.joval.windows.remote.WindowsCredential;
 
 /**
  * Implementation of an IJovaldiPlugin for the Windows operating system.
@@ -128,13 +128,13 @@ public class RemotePlugin extends BasePlugin {
 		    cred = new WindowsCredential(domain, username, password);
 		} else if (privateKey != null) {
 		    try {
-			cred = new UnixCredential(username, privateKey, passphrase, rootPassword);
+			cred = new SshCredential(username, privateKey, passphrase, rootPassword);
 		    } catch (JSchException e) {
 			err = getMessage("ERROR_PRIVATE_KEY", e.getMessage());
 			return false;
 		    }
 		} else if (rootPassword != null) {
-		    cred = new UnixCredential(username, password, rootPassword);
+		    cred = new SshCredential(username, password, rootPassword);
 		} else {
 		    cred = new Credential(username, password);
 		}

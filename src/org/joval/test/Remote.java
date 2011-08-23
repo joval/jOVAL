@@ -16,13 +16,13 @@ import org.jinterop.dcom.common.JISystem;
 
 import org.joval.discovery.SessionFactory;
 import org.joval.identity.Credential;
+import org.joval.identity.ssh.SshCredential;
+import org.joval.identity.windows.WindowsCredential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.system.ISession;
-import org.joval.unix.remote.UnixCredential;
 import org.joval.util.JOVALSystem;
 import org.joval.util.JSchLogger;
-import org.joval.windows.remote.WindowsCredential;
 
 public class Remote {
     public static void main (String[] argv) {
@@ -69,9 +69,9 @@ public class Remote {
 		switch(session.getType()) {
 		  case ISession.UNIX:
 		    if (privateKey != null) {
-			cred = new UnixCredential(username, new File(privateKey), passphrase, rootPassword);
+			cred = new SshCredential(username, new File(privateKey), passphrase, rootPassword);
 		    } else {
-			cred = new UnixCredential(username, password, rootPassword);
+			cred = new SshCredential(username, password, rootPassword);
 		    }
 		    break;
 

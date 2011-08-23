@@ -2,11 +2,12 @@ REMOTE=\
 	jcifs.smb.VolatileSmbFile					\
 	org.joval.discovery.SessionFactory				\
 	org.joval.identity.Credential					\
+	org.joval.identity.ssh.SshCredential				\
+	org.joval.identity.windows.WindowsCredential			\
 	org.joval.intf.identity.ICredential				\
 	org.joval.intf.identity.ILocked					\
 	org.joval.io.TailDashF						\
 	org.joval.plugin.RemotePlugin					\
-	org.joval.unix.remote.UnixCredential				\
 	org.joval.unix.remote.io.SftpError				\
 	org.joval.unix.remote.io.SftpFile				\
 	org.joval.unix.remote.io.SftpFilesystem				\
@@ -14,7 +15,6 @@ REMOTE=\
 	org.joval.unix.remote.system.UnixSession			\
 	org.joval.util.JSchLogger					\
 	org.joval.test.Remote						\
-	org.joval.windows.remote.WindowsCredential			\
 	org.joval.windows.remote.io.SmbFilesystem			\
 	org.joval.windows.remote.io.SmbFileProxy			\
 	org.joval.windows.remote.io.SmbRandomAccessProxy		\

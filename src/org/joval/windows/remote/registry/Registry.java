@@ -29,6 +29,7 @@ import org.jinterop.dcom.common.JIException;
 import org.jinterop.winreg.IJIWinReg;
 import org.jinterop.winreg.JIWinRegFactory;
 
+import org.joval.identity.windows.WindowsCredential;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
@@ -44,8 +45,6 @@ import org.joval.windows.registry.Value;
 import org.joval.windows.system.Environment;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
-
-import org.joval.windows.remote.WindowsCredential;
 
 /**
  * A class for accessing the Windows registry over the network.  Leverages the j-Interop package.

@@ -13,6 +13,7 @@ import org.vngx.jsch.UserInfo;
 import org.vngx.jsch.exception.JSchException;
 
 import org.joval.identity.Credential;
+import org.joval.identity.ssh.SshCredential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFilesystem;
@@ -22,7 +23,6 @@ import org.joval.intf.unix.system.IUnixSession;
 import org.joval.unix.Sudo;
 import org.joval.unix.UnixSystemInfo;
 import org.joval.unix.system.Environment;
-import org.joval.unix.remote.UnixCredential;
 import org.joval.unix.remote.io.SftpFilesystem;
 import org.joval.util.JOVALSystem;
 
@@ -34,7 +34,7 @@ import org.joval.util.JOVALSystem;
  */
 public class UnixSession implements IUnixSession, ILocked, UserInfo {
     private String hostname;
-    private UnixCredential cred;
+    private SshCredential cred;
     private Credential rootCred = null;
     private Session session;
     private IEnvironment env;
@@ -48,8 +48,8 @@ public class UnixSession implements IUnixSession, ILocked, UserInfo {
     // Implement ILocked
 
     public boolean unlock(ICredential credential) {
-	if (credential instanceof UnixCredential) {
-	    cred = (UnixCredential)credential;
+	if (credential instanceof SshCredential) {
+	    cred = (SshCredential)credential;
 	    String rootPassword = cred.getRootPassword();
 	    if (rootPassword != null) {
 		rootCred = new Credential("root", rootPassword);

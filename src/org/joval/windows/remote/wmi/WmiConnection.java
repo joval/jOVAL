@@ -21,14 +21,13 @@ import com.h9labs.jwbem.SWbemObject;
 import com.h9labs.jwbem.SWbemObjectSet;
 import com.h9labs.jwbem.SWbemServices;
 
+import org.joval.identity.windows.WindowsCredential;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.util.JOVALSystem;
-import org.joval.windows.wmi.WmiException;
-
-import org.joval.windows.remote.WindowsCredential;
 import org.joval.windows.remote.wmi.query.SimpleSWbemObjectSet;
+import org.joval.windows.wmi.WmiException;
 
 /**
  * A thin wrapper class around the JWbem packages that maintains one SWbemServices per namespace associated with
@@ -67,7 +66,9 @@ public class WmiConnection implements IWmiProvider {
     /**
      * Execute a query on another host, using the locator on the connected server as a proxy.
      */
-    public SWbemObjectSet <SWbemObject>execQuery(String target, String ns, String wql) throws UnknownHostException, JIException {
+    public SWbemObjectSet <SWbemObject>execQuery(String target, String ns, String wql)
+		throws UnknownHostException, JIException {
+
 	return getServices(target, ns).execQuery(wql);
     }
 

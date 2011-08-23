@@ -1,6 +1,6 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 
-package org.joval.unix.remote;
+package org.joval.identity.ssh;
 
 import java.io.File;
 
@@ -18,11 +18,11 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixCredential extends Credential {
+public class SshCredential extends Credential {
     private String passphrase;
     private String rootPassword;
 
-    public UnixCredential(String username, String password, String rootPassword) {
+    public SshCredential(String username, String password, String rootPassword) {
 	super(username, password);
 	this.rootPassword = rootPassword;
     }
@@ -30,7 +30,7 @@ public class UnixCredential extends Credential {
     /**
      * Create a Credential for a certificate.
      */
-    public UnixCredential(String username, File privateKey, String passphrase, String rootPassword) throws JSchException {
+    public SshCredential(String username, File privateKey, String passphrase, String rootPassword) throws JSchException {
         this.username = username;
         Identity id = IdentityFile.newInstance(privateKey.getPath(), null);
         if (passphrase == null) {

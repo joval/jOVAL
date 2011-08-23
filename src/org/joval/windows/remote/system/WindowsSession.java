@@ -14,6 +14,7 @@ import org.jinterop.dcom.common.JISystem;
 import com.h9labs.jwbem.SWbemLocator;
 import com.h9labs.jwbem.SWbemServices;
 
+import org.joval.identity.windows.WindowsCredential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFile;
@@ -25,7 +26,6 @@ import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.util.JOVALSystem;
-import org.joval.windows.remote.WindowsCredential;
 import org.joval.windows.remote.io.SmbFilesystem;
 import org.joval.windows.remote.registry.Registry;
 import org.joval.windows.remote.wmi.WmiConnection;

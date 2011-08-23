@@ -1,4 +1,6 @@
 SHARED=\
+	org.joval.identity.windows.ActiveDirectory			\
+	org.joval.identity.windows.LocalDirectory			\
 	org.joval.intf.io.IFile						\
 	org.joval.intf.io.IFilesystem					\
 	org.joval.intf.io.IPathRedirector				\
@@ -49,6 +51,7 @@ SHARED=\
 	org.joval.plugin.adapter.windows.RegistryAdapter		\
 	org.joval.plugin.adapter.windows.UserAdapter			\
 	org.joval.plugin.adapter.windows.WmiAdapter			\
+	org.joval.test.AD						\
 	org.joval.test.Exec						\
 	org.joval.test.FS						\
 	org.joval.test.PE						\

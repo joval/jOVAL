@@ -37,6 +37,9 @@ public class Default {
 
 	    ISession session = Local.getSession();
 	    if (session.connect()) {
+		if ("true".equals(props.getProperty("test.ad"))) {
+		    new AD(session).test(props.getProperty("ad.user"));
+		}
 		if ("true".equals(props.getProperty("test.registry"))) {
 		    new Reg(session).test(props.getProperty("registry.key"));
 		}
