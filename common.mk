@@ -22,7 +22,7 @@ SPACE:=$(NULL) # end of the line
 SHELL=/bin/sh
 CWD=$(shell pwd)
 
-JOVAL_VERSION=0.A.6
+JOVAL_VERSION=0.A.7-dev
 OVAL_SCHEMA_VERSION=5.9
 
 JRE_HOME=$(TOP)/../../tools/jre160_26

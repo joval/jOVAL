@@ -27,8 +27,11 @@ public class SWbemObjectSet implements ISWbemObjectSet {
 	this.dispatch = dispatch;
 	EnumVariant enumVariant = new EnumVariant(dispatch);
 	objects = new Vector<ISWbemObject>();
-	while(enumVariant.hasMoreElements()) {
-	    objects.add(new SWbemObject(enumVariant.nextElement().toDispatch()));
+	try {
+	    while(enumVariant.hasMoreElements()) {
+		objects.add(new SWbemObject(enumVariant.nextElement().toDispatch()));
+	    }
+	} catch (Exception e) {
 	}
     }
 

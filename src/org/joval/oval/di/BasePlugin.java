@@ -43,6 +43,7 @@ import org.joval.plugin.adapter.unix.ProcessAdapter;
 import org.joval.plugin.adapter.unix.RunlevelAdapter;
 import org.joval.plugin.adapter.unix.UnameAdapter;
 import org.joval.plugin.adapter.windows.RegistryAdapter;
+import org.joval.plugin.adapter.windows.UserAdapter;
 import org.joval.plugin.adapter.windows.WmiAdapter;
 import org.joval.unix.UnixSystemInfo;
 import org.joval.util.JOVALSystem;
@@ -111,6 +112,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(null, null));
 	    adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(null, null));
 	    adapters.add(new RegistryAdapter(null));
+	    adapters.add(new UserAdapter(null));
 	    adapters.add(new RpminfoAdapter(null));
 	    adapters.add(new Patch54Adapter(null));
 	    adapters.add(new PatchAdapter(null));
@@ -138,6 +140,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		} catch (Exception e) {
 		    throw new RuntimeException(getMessage("ERROR_INFO"), e);
 		}
+		adapters.add(new UserAdapter(win.getWmiProvider()));
 		adapters.add(new WmiAdapter(win.getWmiProvider()));
 		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win.getFilesystem(), win.getWmiProvider()));
 		adapters.add(new RegistryAdapter(win.getRegistry()));
