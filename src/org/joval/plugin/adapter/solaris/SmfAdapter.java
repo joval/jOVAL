@@ -178,6 +178,9 @@ public class SmfAdapter implements IAdapter {
     private static final String RESTARTER	= "restarter";
     private static final String DEPENDENCY	= "dependency";
 
+    /**
+     * DAS: need to add protocol, serverArguments, serverExecutable and execAsUser types...
+     */
     private SmfItem getItem(String fmri) throws Exception {
 	SmfItem item = serviceMap.get(fmri);
 	if (item != null) {

@@ -42,6 +42,7 @@ import org.joval.plugin.adapter.solaris.SmfAdapter;
 import org.joval.plugin.adapter.unix.ProcessAdapter;
 import org.joval.plugin.adapter.unix.RunlevelAdapter;
 import org.joval.plugin.adapter.unix.UnameAdapter;
+import org.joval.plugin.adapter.windows.GroupAdapter;
 import org.joval.plugin.adapter.windows.RegistryAdapter;
 import org.joval.plugin.adapter.windows.UserAdapter;
 import org.joval.plugin.adapter.windows.WmiAdapter;
@@ -117,6 +118,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		    throw new RuntimeException(getMessage("ERROR_INFO"), e);
 		}
 		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win.getFilesystem(), win.getWmiProvider()));
+		adapters.add(new GroupAdapter(info.getPrimaryHostName(), win.getWmiProvider()));
 		adapters.add(new RegistryAdapter(win.getRegistry()));
 		adapters.add(new UserAdapter(info.getPrimaryHostName(), win.getWmiProvider()));
 		adapters.add(new WmiAdapter(win.getWmiProvider()));

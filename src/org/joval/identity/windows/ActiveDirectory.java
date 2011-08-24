@@ -34,11 +34,11 @@ import org.joval.windows.wmi.WmiException;
  * @version %I% %G%
  */
 public class ActiveDirectory {
-    private static final String DOMAIN_WQL		= "SELECT Name, DomainName, DnsForestName FROM Win32_NTDomain";
+    private static final String DOMAIN_WQL = "SELECT Name, DomainName, DnsForestName FROM Win32_NTDomain";
 
-    private static final String AD_NAMESPACE		= "root\\directory\\ldap";
-    private static final String USER_WQL		= "SELECT * FROM DS_User";
-    private static final String USER_WQL_UPN_CONDITION	= "DS_userPrincipalName=\"$upn\"";
+    private static final String AD_NAMESPACE = "root\\directory\\ldap";
+    private static final String USER_WQL = "SELECT DS_userPrincipalName, DS_memberOf, DS_userAccountControl FROM DS_User";
+    private static final String USER_WQL_UPN_CONDITION = "DS_userPrincipalName=\"$upn\"";
 
     private IWmiProvider wmi;
     private Hashtable<String, UserItem> users;
@@ -82,11 +82,7 @@ public class ActiveDirectory {
 		item.setUser(user);
 		item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
-		ISWbemPropertySet columns = os.iterator().next().getProperties();
-		int uac = columns.getItem("DS_userAccountControl").getValueAsInteger().intValue();
-		boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
-		String groups = columns.getItem("DS_memberOf").getValueAsString();
-		item = makeItem(name, groups, enabled);
+		item = makeItem(name, os.iterator().next().getProperties());
 	    }
 	    users.put(upn.toUpperCase(), item);
 	}
@@ -94,11 +90,35 @@ public class ActiveDirectory {
     }
 
     /**
-     * This can be an extremely expensive call.
+     * This can be an extremely expensive call.  Gets all the users from a domain whose name matches the pattern.
      */
-    public List<UserItem> queryAllUsers(Pattern domain) {
-	//DAS
-	return null;
+    public List<UserItem> queryAllUsers(Pattern domainPattern) throws WmiException {
+	for (ISWbemObject row : wmi.execQuery(AD_NAMESPACE, USER_WQL)) {
+	    ISWbemPropertySet columns = row.getProperties();
+	    String upn = columns.getItem("DS_userPrincipalName").getValueAsString();
+	    if (users.get(upn.toUpperCase()) == null) {
+		int ptr = upn.indexOf("@");
+		String cn = upn.substring(0, ptr);
+		String dns = upn.substring(ptr+1);
+		String domain = toDomain(dns);
+		if (domain != null) {
+		    String name = domain + "\\" + cn;
+		    if (domainPattern.matcher(domain).find()) {
+			JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_USER_ADD", name));
+			users.put(upn.toUpperCase(), makeItem(name, columns));
+		    } else {
+			JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_USER_SKIP", name));
+		    }
+		}
+	    }
+	}
+	List<UserItem> items = new Vector<UserItem>();
+	for (UserItem item : users.values()) {
+	    if (domainPattern.matcher(getDomain((String)item.getUser().getValue())).find()) {
+		items.add(item);
+	    }
+	}
+	return items;
     }
 
     // Private
@@ -180,7 +200,11 @@ public class ActiveDirectory {
 	return groups;
     }
 
-    private UserItem makeItem(String name, String groups, boolean enabled) throws WmiException {
+    private UserItem makeItem(String name, ISWbemPropertySet props) throws WmiException {
+	int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
+	boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
+	String groups = props.getItem("DS_memberOf").getValueAsString();
+
 	UserItem item = JOVALSystem.factories.sc.windows.createUserItem();
 	EntityItemStringType user = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	user.setValue(name);

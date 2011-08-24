@@ -48,6 +48,7 @@ SHARED=\
 	org.joval.plugin.adapter.unix.RunlevelAdapter			\
 	org.joval.plugin.adapter.unix.UnameAdapter			\
 	org.joval.plugin.adapter.windows.FileAdapter			\
+	org.joval.plugin.adapter.windows.GroupAdapter			\
 	org.joval.plugin.adapter.windows.RegistryAdapter		\
 	org.joval.plugin.adapter.windows.UserAdapter			\
 	org.joval.plugin.adapter.windows.WmiAdapter			\

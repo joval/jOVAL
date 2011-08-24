@@ -13,6 +13,7 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
+import oval.schemas.systemcharacteristics.windows.GroupItem;
 import oval.schemas.systemcharacteristics.windows.UserItem;
 import oval.schemas.results.core.ResultEnumeration;
 
@@ -32,25 +33,32 @@ import org.joval.windows.wmi.WmiException;
  * @version %I% %G%
  */
 public class LocalDirectory {
-    private static final String USER_WQL			= "SELECT * FROM Win32_UserAccount";
-    private static final String USER_WQL_DOMAIN_CONDITION	= "Domain='$domain'";
-    private static final String USER_WQL_LOCAL_CONDITION	= "LocalAccount=TRUE";
-    private static final String USER_WQL_NAME_CONDITION		= "Name='$username'";
+    private static final String USER_WQL		= "SELECT Name, Domain, Disabled FROM Win32_UserAccount";
+    private static final String GROUP_WQL		= "SELECT Name, Domain FROM Win32_Group";
+    private static final String DOMAIN_CONDITION	= "Domain='$domain'";
+    private static final String LOCAL_CONDITION		= "LocalAccount=TRUE";
+    private static final String NAME_CONDITION		= "Name='$name'";
 
-    private static final String GROUP_WQL			= "ASSOCIATORS OF {$conditions} WHERE resultClass=Win32_Group";
-    private static final String DOMAIN_ASSOC_CONDITION		= "Win32_UserAccount.Domain=\"$domain\"";
-    private static final String NAME_ASSOC_CONDITION		= "Name=\"$username\"";
+    private static final String USER_GROUP_WQL		= "ASSOCIATORS OF {$conditions} WHERE resultClass=Win32_Group";
+    private static final String USERDOM_ASSOC_CONDITION	= "Win32_UserAccount.Domain=\"$domain\"";
+    private static final String NAME_ASSOC_CONDITION	= "Name=\"$username\"";
+
+    private static final String GROUP_USER_WQL		= "ASSOCIATORS OF {$conditions} WHERE resultClass=Win32_UserAccount";
+    private static final String DOMUSER_ASSOC_CONDITION	= "Win32_Group.Domain=\"$domain\"";
 
     private Hashtable<String, UserItem> users;
+    private Hashtable<String, GroupItem> groups;
 
     private IWmiProvider wmi;
     private String hostname;
-    private boolean preloaded = false;
+    private boolean preloadedUsers = false;
+    private boolean preloadedGroups = false;
 
     public LocalDirectory(String hostname, IWmiProvider wmi) {
 	this.wmi = wmi;
 	this.hostname = hostname.toUpperCase();
 	users = new Hashtable<String, UserItem>();
+	groups = new Hashtable<String, GroupItem>();
     }
 
     /**
@@ -67,7 +75,7 @@ public class LocalDirectory {
 
     /**
      * Query for an individual user.  The name parameter should be of the form DOMAIN\\username.  For built-in accounts,
-     * the DOMAIN\\ part can be specified, in which case the name parameter is just the username.
+     * the DOMAIN\\ part can be dropped, in which case the name parameter is just the username.
      *
      * If the user is not found, then a UserItem is returned with a status of DOES_NOT_EXIST.
      */
@@ -76,13 +84,13 @@ public class LocalDirectory {
 	if (item == null) {
 	    StringBuffer wql = new StringBuffer(USER_WQL);
 	    wql.append(" WHERE ");
-	    wql.append(USER_WQL_NAME_CONDITION.replaceAll("(?i)\\$username", Matcher.quoteReplacement(getUser(name))));
+	    wql.append(NAME_CONDITION.replaceAll("(?i)\\$name", Matcher.quoteReplacement(getUser(name))));
 	    wql.append(" AND ");
 	    String domain = getDomain(name);
 	    if (domain == null) {
-		wql.append(USER_WQL_LOCAL_CONDITION);
+		wql.append(LOCAL_CONDITION);
 	    } else {
-		wql.append(USER_WQL_DOMAIN_CONDITION.replaceAll("(?i)\\$username", Matcher.quoteReplacement(domain)));
+		wql.append(DOMAIN_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(domain)));
 	    }
 
 	    ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, wql.toString());
@@ -101,7 +109,7 @@ public class LocalDirectory {
 		    item = users.get(name.toUpperCase()); // check again using the complete name
 		}
 		if (item == null) {
-		    item = makeItem(name, enabled);
+		    item = makeUserItem(name, enabled);
 		}
 	    }
 	    users.put(name.toUpperCase(), item);
@@ -110,10 +118,10 @@ public class LocalDirectory {
     }
 
     /**
-     * Returns a List of all the users.
+     * Returns a List of all the local users.
      */
     public List<UserItem> queryAllUsers() throws WmiException {
-	if (!preloaded) {
+	if (!preloadedUsers) {
 	    for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, USER_WQL)) {
 		ISWbemPropertySet columns = row.getProperties();
 		String username = columns.getItem("Name").getValueAsString();
@@ -121,13 +129,82 @@ public class LocalDirectory {
 		boolean enabled = !columns.getItem("Disabled").getValueAsBoolean().booleanValue();
 		String s = domain + "\\" + username;
 		if (users.get(s.toUpperCase()) == null) {
-		    users.put(s.toUpperCase(), makeItem(s, enabled));
+		    users.put(s.toUpperCase(), makeUserItem(s, enabled));
 		}
 	    }
-	    preloaded = true;
+	    preloadedUsers = true;
 	}
 	List<UserItem> items = new Vector<UserItem>();
 	for (UserItem item : users.values()) {
+	    items.add(item);
+	}
+	return items;
+    }
+
+    /**
+     * Query for an individual group.  The name parameter should be of the form DOMAIN\\username.  For built-in groups,
+     * the DOMAIN\\ part can be dropped, in which case the name parameter is just the group name.
+     *
+     * If the group is not found, then a GroupItem is returned with a status of DOES_NOT_EXIST.
+     */
+    public GroupItem queryGroup(String name) throws WmiException {
+	GroupItem item = groups.get(name.toUpperCase());
+	if (item == null) {
+	    StringBuffer wql = new StringBuffer(GROUP_WQL);
+	    wql.append(" WHERE ");
+	    wql.append(NAME_CONDITION.replaceAll("(?i)\\$name", Matcher.quoteReplacement(getUser(name))));
+	    wql.append(" AND ");
+	    String domain = getDomain(name);
+	    if (domain == null) {
+		wql.append(LOCAL_CONDITION);
+	    } else {
+		wql.append(DOMAIN_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(domain)));
+	    }
+
+	    ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, wql.toString());
+	    if (os.getSize() == 0) {
+		item = JOVALSystem.factories.sc.windows.createGroupItem();
+		EntityItemStringType group = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		group.setValue(name);
+		item.setGroup(group);
+		item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    } else {
+		ISWbemPropertySet columns = os.iterator().next().getProperties();
+		if (domain == null) {
+		    domain = columns.getItem("Domain").getValueAsString();
+		    name = domain + "\\" + columns.getItem("Name").getValueAsString();
+		    item = groups.get(name.toUpperCase()); // check again using the complete name
+		}
+		if (item == null) {
+		    item = makeGroupItem(name);
+		}
+	    }
+	    groups.put(name.toUpperCase(), item);
+	}
+	return item;
+    }
+
+    /**
+     * Returns a List of all the local groups.
+     */
+    public List<GroupItem> queryAllGroups() throws WmiException {
+	if (!preloadedGroups) {
+	    StringBuffer wql = new StringBuffer(GROUP_WQL);
+	    wql.append(" WHERE ");
+	    wql.append(LOCAL_CONDITION);
+	    for (ISWbemObject rows : wmi.execQuery(IWmiProvider.CIMv2, wql.toString())) {
+		ISWbemPropertySet columns = rows.getProperties();
+		String group = columns.getItem("Name").getValueAsString();
+		String domain = columns.getItem("Domain").getValueAsString();
+		String s = domain + "\\" + group;
+		if (groups.get(s.toUpperCase()) == null) {
+		    groups.put(s.toUpperCase(), makeGroupItem(s));
+		}
+	    }
+	    preloadedGroups = true;
+	}
+	List<GroupItem> items = new Vector<GroupItem>();
+	for (GroupItem item : groups.values()) {
 	    items.add(item);
 	}
 	return items;
@@ -237,7 +314,7 @@ public class LocalDirectory {
 	return false;
     }
 
-    private UserItem makeItem(String name, boolean enabled) throws WmiException {
+    private UserItem makeUserItem(String name, boolean enabled) throws WmiException {
 	UserItem item = JOVALSystem.factories.sc.windows.createUserItem();
 	EntityItemStringType user = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	if (isBuiltinUser(name)) {
@@ -252,10 +329,10 @@ public class LocalDirectory {
 	item.setEnabled(enabledType);
 
 	StringBuffer conditions = new StringBuffer();
-	conditions.append(DOMAIN_ASSOC_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(getDomain(name))));
+	conditions.append(USERDOM_ASSOC_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(getDomain(name))));
 	conditions.append(",");
 	conditions.append(NAME_ASSOC_CONDITION.replaceAll("(?i)\\$username", Matcher.quoteReplacement(getUser(name))));
-	String wql = GROUP_WQL.replaceAll("(?i)\\$conditions", Matcher.quoteReplacement(conditions.toString()));
+	String wql = USER_GROUP_WQL.replaceAll("(?i)\\$conditions", Matcher.quoteReplacement(conditions.toString()));
 	for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, wql)) {
 	    ISWbemPropertySet columns = row.getProperties();
 	    EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
@@ -268,6 +345,38 @@ public class LocalDirectory {
 		groupType.setValue(s);
 	    }
 	    item.getGroup().add(groupType);
+	}
+
+	return item;
+    }
+
+    private GroupItem makeGroupItem(String name) throws WmiException {
+	GroupItem item = JOVALSystem.factories.sc.windows.createGroupItem();
+	EntityItemStringType group = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	if (isBuiltinGroup(name)) {
+	    group.setValue(getUser(name));
+	} else {
+	    group.setValue(name);
+	}
+	item.setGroup(group);
+
+	StringBuffer conditions = new StringBuffer();
+	conditions.append(DOMUSER_ASSOC_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(getDomain(name))));
+	conditions.append(",");
+	conditions.append(NAME_ASSOC_CONDITION.replaceAll("(?i)\\$username", Matcher.quoteReplacement(getUser(name))));
+	String wql = GROUP_USER_WQL.replaceAll("(?i)\\$conditions", Matcher.quoteReplacement(conditions.toString()));
+	for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, wql)) {
+	    ISWbemPropertySet columns = row.getProperties();
+	    EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    String domain = columns.getItem("Domain").getValueAsString();
+	    String user = columns.getItem("Name").getValueAsString();
+	    String s = domain + "\\" + user;
+	    if (isBuiltinUser(s)) {
+		userType.setValue(user);
+	    } else {
+		userType.setValue(s);
+	    }
+	    item.getUser().add(userType);
 	}
 
 	return item;
