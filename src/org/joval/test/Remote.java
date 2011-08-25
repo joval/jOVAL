@@ -86,6 +86,10 @@ public class Remote {
 		locked.unlock(cred);
 	    }
 	    if (session.connect()) {
+		if ("true".equals(props.getProperty("test.ad"))) {
+		    AD ad = new AD(session);
+		    ad.test(props.getProperty("ad.user"));
+		}
 		if ("true".equals(props.getProperty("test.fs"))) {
 		    FS fs = new FS(session);
 		    fs.test(props.getProperty("fs.path"));
