@@ -178,7 +178,7 @@ public class LocalDirectory {
      * Returns true of the supplied NetBios username String represents a built-in account on the local machine.
      */
     public boolean isBuiltinUser(String netbiosName) {
-	if (isLocal(netbiosName)) {
+	if (isMember(netbiosName)) {
 	    String username = getName(netbiosName);
 	    if ("Administrator".equals(username)) {
 		return true;
@@ -195,7 +195,7 @@ public class LocalDirectory {
      * Returns true of the supplied NetBios group name String represents a built-in group on the local machine.
      */
     public boolean isBuiltinGroup(String netbiosName) {
-	if (isLocal(netbiosName)) {
+	if (isMember(netbiosName)) {
 	    String group = getName(netbiosName);
 	    if ("Account Operators".equals(group)) {
 		return true;
@@ -252,6 +252,14 @@ public class LocalDirectory {
 	}
     }
 
+    /**
+     * Returns whether or not the specified netbiosName is a member of this directory, meaning that the domain matches
+     * the local hostname.
+     */
+    public boolean isMember(String netbiosName) {
+	return hostname.equalsIgnoreCase(getDomain(netbiosName));
+    }
+
     // Private
 
     /**
@@ -265,10 +273,6 @@ public class LocalDirectory {
 	} else {
 	    return s.substring(0, ptr);
 	}
-    }
-
-    private boolean isLocal(String s) {
-	return hostname.equalsIgnoreCase(getDomain(s));
     }
 
     private User makeUser(String domain, String name, String sid, boolean enabled) throws WmiException {

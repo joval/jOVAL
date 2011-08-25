@@ -34,31 +34,20 @@ public class ActiveDirectory {
     private static final String AD_NAMESPACE = "root\\directory\\ldap";
     private static final String USER_WQL = "SELECT DS_memberOf, DS_userAccountControl, DS_objectSid FROM DS_User";
     private static final String USER_WQL_UPN_CONDITION = "DS_userPrincipalName=\"$upn\"";
+    private static final String GROUP_WQL = "SELECT DS_member, DS_distinguishedName, DS_objectSid FROM DS_Group";
+    private static final String GROUP_WQL_CN_CONDITION = "DS_cn=\"$cn\"";
 
     private IWmiProvider wmi;
     private Hashtable<String, User> users;
+    private Hashtable<String, Group> groups;
     private Hashtable<String, String> domains;
+    private boolean initialized = false;
 
     public ActiveDirectory(IWmiProvider wmi) {
 	this.wmi = wmi;
 	domains = new Hashtable<String, String>();
 	users = new Hashtable<String, User>();
-	try {
-	    for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, DOMAIN_WQL)) {
-		ISWbemPropertySet columns = row.getProperties();
-		String domain = columns.getItem("DomainName").getValueAsString();
-		String dns = columns.getItem("DnsForestName").getValueAsString();
-		String name = columns.getItem("Name").getValueAsString();
-		if (domain == null || dns == null) {
-		    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_DOMAIN_SKIP", name));
-		} else {
-		    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_DOMAIN_ADD", domain, dns));
-		    domains.put(domain.toUpperCase(), dns);
-		}
-	    }
-	} catch (WmiException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WMI_GENERAL", e.getMessage()), e);
-	}
+	groups = new Hashtable<String, Group>();
     }
 
     public User queryUser(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
@@ -72,27 +61,110 @@ public class ActiveDirectory {
 	    if (os.getSize() == 0) {
 		throw new NoSuchElementException(netbiosName);
 	    } else {
-		user = makeUser(netbiosName, os.iterator().next().getProperties());
+		ISWbemPropertySet props = os.iterator().next().getProperties();
+		String name = getName(netbiosName);
+		String domain = getDomain(netbiosName);
+		String sid = toSid(props.getItem("DS_objectSid").getValueAsString());
+		List<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
+		int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
+		boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
+		user = new User(domain, name, sid, groupNetbiosNames, enabled);
 	    }
 	    users.put(upn.toUpperCase(), user);
 	}
 	return user;
     }
 
+    public Group queryGroup(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
+	Group group = groups.get(netbiosName.toUpperCase());
+	if (group == null) {
+	    if (isMember(netbiosName)) {
+		String domain = getDomain(netbiosName);
+		String dc = toDCString(domains.get(domain.toUpperCase()));
+		String cn = getName(netbiosName);
+
+		StringBuffer wql = new StringBuffer(GROUP_WQL);
+		wql.append(" WHERE ");
+		wql.append(GROUP_WQL_CN_CONDITION.replaceAll("(?i)\\$cn", Matcher.quoteReplacement(cn)));
+		for (ISWbemObject row : wmi.execQuery(AD_NAMESPACE, wql.toString())) {
+		    ISWbemPropertySet columns = row.getProperties();
+		    String dn = columns.getItem("DS_distinguishedName").getValueAsString();
+		    if (dn.endsWith(dc)) {
+			List<String> userNetbiosNames = new Vector<String>();
+			List<String> groupNetbiosNames = new Vector<String>();
+			String[] members = columns.getItem("DS_member").getValueAsArray();
+			for (int i=0; i < members.length; i++) {
+			    if (members[i].indexOf(",OU=Distribution Groups") != -1) {
+				groupNetbiosNames.add(toNetbiosName(members[i]));
+			    } else if (members[i].indexOf(",OU=Domain Users") != -1) {
+				userNetbiosNames.add(toNetbiosName(members[i]));
+			    } else {
+				JOVALSystem.getLogger().log(Level.WARNING,
+							    JOVALSystem.getMessage("ERROR_AD_BAD_OU", members[i]));
+			    }
+			}
+			String sid = toSid(columns.getItem("DS_objectSid").getValueAsString());
+			group = new Group(domain, cn, sid, userNetbiosNames, groupNetbiosNames);
+			groups.put(netbiosName.toUpperCase(), group);
+		    } else {
+			JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_GROUP_SKIP", dn, dc));
+		    }
+		}
+		if (group == null) {
+		    throw new NoSuchElementException(netbiosName);
+		}
+	    } else {
+		throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", netbiosName));
+	    }
+	}
+	return group;
+    }
+
+    public boolean isMember(String netbiosName) throws IllegalArgumentException {
+	init();
+	return domains.containsKey(getDomain(netbiosName));
+    }
+
     // Private
+
+    /**
+     * Initialize the domain list.
+     */
+    private void init() {
+	if (initialized) {
+	    return;
+	}
+	try {
+	    for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, DOMAIN_WQL)) {
+		ISWbemPropertySet columns = row.getProperties();
+		String domain = columns.getItem("DomainName").getValueAsString();
+		String dns = columns.getItem("DnsForestName").getValueAsString();
+		String name = columns.getItem("Name").getValueAsString();
+		if (domain == null || dns == null) {
+		    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_DOMAIN_SKIP", name));
+		} else {
+		    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_DOMAIN_ADD", domain, dns));
+		    domains.put(domain.toUpperCase(), dns);
+		}
+	    }
+	    initialized = true;
+	} catch (WmiException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WMI_GENERAL", e.getMessage()), e);
+	}
+    }
 
     /**
      * Given a name of the form DOMAIN\\username, return the corresponding UserPrincipalName of the form username@domain.com.
      */
     private String toUserPrincipalName(String netbiosName) throws IllegalArgumentException {
 	String domain = getDomain(netbiosName);
-	String dns = domains.get(domain.toUpperCase());
-	if (dns == null) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", domain));
-	} else {
+	if (isMember(netbiosName)) {
+	    String dns = domains.get(domain.toUpperCase());
 	    String upn = new StringBuffer(getName(netbiosName)).append("@").append(dns).toString();
 	    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_UPN_CONVERT", netbiosName, upn));
 	    return upn;
+	} else {
+	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", netbiosName));
 	}
     }
 
@@ -106,6 +178,21 @@ public class ActiveDirectory {
 	    }
 	}
 	return null;
+    }
+
+    /**
+     * Convert a String of the form a.b.com to a String of the form DC=a,DC=b,DC=com.
+     */
+    private String toDCString(String dns) {
+	StringBuffer sb = new StringBuffer();
+	for (String token : StringTools.toList(StringTools.tokenize(dns, "."))) {
+	    if (sb.length() > 0) {
+		sb.append(",");
+	    }
+	    sb.append("DC=");
+	    sb.append(token);
+	}
+	return sb.toString();
     }
 
     /**
@@ -133,44 +220,48 @@ public class ActiveDirectory {
     }
 
     /**
+     * Convert a DN to a Netbios Name.
+     *
+     * @throws NoSuchElementException if the domain can not be found
+     */
+    private String toNetbiosName(String dn) throws NoSuchElementException {
+	int ptr = dn.indexOf(",");
+	String groupName = dn.substring(3, ptr); // Starts with CN=
+	ptr = dn.indexOf(",DC=");
+	StringBuffer dns = new StringBuffer();
+	for (String name : StringTools.toList(StringTools.tokenize(dn.substring(ptr), ",DC="))) {
+	    if (dns.length() > 0) {
+		dns.append(".");
+	    }
+	    dns.append(name);
+	}
+	String domain = toDomain(dns.toString());
+	if (domain == null) {
+	    throw new NoSuchElementException(JOVALSystem.getMessage("STATUS_NAME_DOMAIN_ERR", dn));
+	}
+	String name = domain + "\\" + groupName;
+	JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_NAME_DOMAIN_OK", dn, name));
+	return name;
+    }
+
+    /**
      * Convert a String of group DNs into a List of DOMAIN\\group names.
      */
     private List<String> parseGroups(String[] sa) {
 	List<String> groups = new Vector<String>(sa.length);
 	for (int i=0; i < sa.length; i++) {
-	    String dn = sa[i];
-	    int ptr = dn.indexOf(",");
-	    String groupName = dn.substring(3, ptr); // Starts with CN=
-	    ptr = dn.indexOf(",DC=");
-	    StringBuffer dns = new StringBuffer();
-	    for (String name : StringTools.toList(StringTools.tokenize(dn.substring(ptr), ",DC="))) {
-		if (dns.length() > 0) {
-		    dns.append(".");
-		}
-		dns.append(name);
-	    }
-	    String domain = toDomain(dns.toString());
-	    if (domain == null) {
-		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_GROUP_DOMAIN_ERR", dn));
-	    } else {
-		String name = domain + "\\" + groupName;
-		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_GROUP_DOMAIN_OK", dn, name));
-		groups.add(name);
+	    try {
+		groups.add(toNetbiosName(sa[i]));
+	    } catch (NoSuchElementException e) {
+		JOVALSystem.getLogger().log(Level.FINER, e.getMessage());
 	    }
 	}
 	return groups;
     }
 
-    private User makeUser(String netbiosName, ISWbemPropertySet props) throws WmiException {
-	String name = getName(netbiosName);
-	String domain = getDomain(netbiosName);
-	String sid = toSid(props.getItem("DS_objectSid").getValueAsString());
-	List<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
-	int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
-	boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
-	return new User(domain, name, sid, groupNetbiosNames, enabled);
-    }
-
+    /**
+     * Convert a hexidecimal String representation of a SID into a "readable" SID String.
+     */
     private String toSid(String hex) {
 	int rev = Integer.parseInt(hex.substring(0, 2), 16);
 	int subauthCount = Integer.parseInt(hex.substring(2, 4), 16);

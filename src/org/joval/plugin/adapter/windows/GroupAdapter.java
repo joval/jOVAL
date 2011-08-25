@@ -24,6 +24,7 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.GroupItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import org.joval.identity.windows.ActiveDirectory;
 import org.joval.identity.windows.LocalDirectory;
 import org.joval.identity.windows.Group;
 import org.joval.intf.plugin.IAdapter;
@@ -43,6 +44,7 @@ public class GroupAdapter implements IAdapter {
     private IWmiProvider wmi;
     private String hostname;
     private LocalDirectory local = null;
+    private ActiveDirectory ad = null;
 
     public GroupAdapter(String hostname, IWmiProvider wmi) {
 	this.wmi = wmi;
@@ -58,6 +60,7 @@ public class GroupAdapter implements IAdapter {
     public boolean connect() {
 	if (wmi.connect()) {
 	    local = new LocalDirectory(hostname, wmi);
+	    ad = new ActiveDirectory(wmi);
 	    return true;
 	}
 	return false;
@@ -66,6 +69,7 @@ public class GroupAdapter implements IAdapter {
     public void disconnect() {
 	wmi.disconnect();
 	local = null;
+	ad = null;
     }
 
     public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
@@ -76,7 +80,18 @@ public class GroupAdapter implements IAdapter {
 	try {
 	    switch(gObj.getGroup().getOperation()) {
 	      case EQUALS:
-		items.add(makeGroupItem(local.queryGroup(group)));
+		if (local.isMember(group)) {
+		    items.add(makeGroupItem(local.queryGroup(group)));
+		} else if (ad.isMember(group)) {
+		    items.add(makeGroupItem(ad.queryGroup(group)));
+		} else {
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.WARNING);
+		    String s = JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", group);
+		    JOVALSystem.getLogger().log(Level.WARNING, s);
+		    msg.setValue(s);
+		    rc.addMessage(msg);
+		}
 		break;
     
 	      case NOT_EQUAL:

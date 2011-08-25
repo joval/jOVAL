@@ -24,6 +24,7 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.UserItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import org.joval.identity.windows.ActiveDirectory;
 import org.joval.identity.windows.LocalDirectory;
 import org.joval.identity.windows.User;
 import org.joval.intf.plugin.IAdapter;
@@ -43,6 +44,7 @@ public class UserAdapter implements IAdapter {
     private IWmiProvider wmi;
     private String hostname;
     private LocalDirectory local = null;
+    private ActiveDirectory ad = null;
 
     public UserAdapter(String hostname, IWmiProvider wmi) {
 	this.wmi = wmi;
@@ -58,6 +60,7 @@ public class UserAdapter implements IAdapter {
     public boolean connect() {
 	if (wmi.connect()) {
 	    local = new LocalDirectory(hostname, wmi);
+	    ad = new ActiveDirectory(wmi);
 	    return true;
 	}
 	return false;
@@ -66,6 +69,7 @@ public class UserAdapter implements IAdapter {
     public void disconnect() {
 	wmi.disconnect();
 	local = null;
+	ad = null;
     }
 
     public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
@@ -76,7 +80,18 @@ public class UserAdapter implements IAdapter {
 	try {
 	    switch(uObj.getUser().getOperation()) {
 	      case EQUALS:
-		items.add(makeUserItem(local.queryUser(user)));
+		if (local.isMember(user)) {
+		    items.add(makeUserItem(local.queryUser(user)));
+		} else if (ad.isMember(user)) {
+		    items.add(makeUserItem(ad.queryUser(user)));
+		} else {
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.WARNING);
+		    String s = JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", user);
+		    JOVALSystem.getLogger().log(Level.WARNING, s);
+		    msg.setValue(s);
+		    rc.addMessage(msg);
+		}
 		break;
     
 	      case NOT_EQUAL:

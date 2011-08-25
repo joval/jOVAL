@@ -102,7 +102,6 @@ public class SWbemProperty implements ISWbemProperty {
 		if (Variant.VariantArray == (Variant.VariantArray & type)) {
 		    SafeArray sa = var.toSafeArray();
 		    int arrayType = (Variant.VariantTypeMask & type);
-System.out.println("DAS: arrayType=" + arrayType);
 		    switch(arrayType) {
 		      case Variant.VariantByte:
 			return new String(sa.toByteArray());

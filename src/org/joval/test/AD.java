@@ -6,6 +6,7 @@ package org.joval.test;
 import java.util.NoSuchElementException;
 
 import org.joval.identity.windows.ActiveDirectory;
+import org.joval.identity.windows.Group;
 import org.joval.identity.windows.User;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
@@ -26,19 +27,34 @@ public class AD {
 	    IWmiProvider wmi = session.getWmiProvider();
 	    if (wmi.connect()) {
 		ActiveDirectory ad = new ActiveDirectory(wmi);
-		User user = ad.queryUser(name);
-		System.out.println("Name: " + name);
-		System.out.println("SID: " + user.getSid());
-		System.out.println("Enabled: " + user.isEnabled());
-		for (String group : user.getGroupNetbiosNames()) {
-		    System.out.println("Group: " + group);
+		try {
+		    User user = ad.queryUser(name);
+		    System.out.println("User Name: " + name);
+		    System.out.println("SID: " + user.getSid());
+		    System.out.println("Enabled: " + user.isEnabled());
+		    for (String group : user.getGroupNetbiosNames()) {
+			System.out.println("Group: " + group);
+		    }
+		} catch (NoSuchElementException e) {
+		    System.out.println("User " + name + " not found.");
+		}
+		try {
+		    Group group = ad.queryGroup(name);
+		    System.out.println("Group Name: " + name);
+		    System.out.println("SID: " + group.getSid());
+		    for (String userMember : group.getMemberUserNetbiosNames()) {
+			System.out.println("Member User: " + userMember);
+		    }
+		    for (String groupMember : group.getMemberGroupNetbiosNames()) {
+			System.out.println("Member Group: " + groupMember);
+		    }
+		} catch (NoSuchElementException e) {
+		    System.out.println("Group " + name + " not found.");
 		}
 		wmi.disconnect();
 	    } else {
 	 	System.out.println("Failed to connect to WMI");
 	    }
-	} catch (NoSuchElementException e) {
-	    System.out.println("User " + name + " not found.");
 	} catch (IllegalArgumentException e) {
 	    e.printStackTrace();
 	} catch (WmiException e) {
