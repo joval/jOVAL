@@ -6,9 +6,12 @@ package org.joval.windows.wmi;
 import java.util.Iterator;
 
 import com.jacob.com.Dispatch;
+import com.jacob.com.SafeArray;
 import com.jacob.com.Variant;
+import com.jacob.com.VariantUtilities;
 
 import org.joval.intf.windows.wmi.ISWbemProperty;
+import org.joval.io.LittleEndian;
 import org.joval.windows.wmi.WmiException;
 
 /**
@@ -57,16 +60,7 @@ public class SWbemProperty implements ISWbemProperty {
 	if (value.isNull()) {
 	    return null;
 	} else {
-	    switch(value.getvt()) {
-	      case Variant.VariantString:
-		return value.toString();
-
-	      case Variant.VariantInt:
-		return Integer.toString(value.getInt());
-
-	      default:
-		return value.toString();
-	    }
+	    return getString(value);
 	}
     }
 
@@ -78,6 +72,56 @@ public class SWbemProperty implements ISWbemProperty {
 	    return null;
 	} else {
 	    return value.toSafeArray().toStringArray();
+	}
+    }
+
+    // Private
+
+    private String getString(Variant var) {
+	if (var.isNull()) {
+	    return null;
+	} else {
+	    int type = var.getvt();
+	    switch(type) {
+	      case Variant.VariantString:
+		return value.toString();
+
+	      case Variant.VariantInt:
+		return Integer.toString(value.getInt());
+
+	      case Variant.VariantObject:
+		return value.toString();
+
+	      case Variant.VariantByte:
+		return LittleEndian.toHexString(var.getByte());
+
+	      case Variant.VariantDispatch:
+		return getString(Dispatch.get(value.toDispatch(), "value"));
+
+	      default:
+		if (Variant.VariantArray == (Variant.VariantArray & type)) {
+		    SafeArray sa = var.toSafeArray();
+		    int arrayType = (Variant.VariantTypeMask & type);
+System.out.println("DAS: arrayType=" + arrayType);
+		    switch(arrayType) {
+		      case Variant.VariantByte:
+			return new String(sa.toByteArray());
+
+		      default: {
+			Variant[] va = sa.toVariantArray();
+			StringBuffer sb = new StringBuffer();
+			for (int i=0; i < va.length; i++) {
+			    sb.append(getString(va[i]));
+			}
+			return sb.toString();
+		      }
+		    }
+		} else {
+		    return value.toString();
+		}
+	    }
+
+
 	}
     }
 }

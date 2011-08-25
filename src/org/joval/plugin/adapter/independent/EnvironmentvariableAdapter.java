@@ -100,13 +100,6 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", eObj.getName().getOperation()));
 	}
-
-	if (items.size() == 0) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.INFO);
-	    msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", name, eObj.getId()));
-	    rc.addMessage(msg);
-	}
 	return items;
     }
 

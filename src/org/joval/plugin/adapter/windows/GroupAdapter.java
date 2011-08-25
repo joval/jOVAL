@@ -5,6 +5,7 @@ package org.joval.plugin.adapter.windows;
 
 import java.util.Hashtable;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -24,6 +25,7 @@ import oval.schemas.systemcharacteristics.windows.GroupItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.identity.windows.LocalDirectory;
+import org.joval.identity.windows.Group;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.wmi.IWmiProvider;
@@ -74,13 +76,14 @@ public class GroupAdapter implements IAdapter {
 	try {
 	    switch(gObj.getGroup().getOperation()) {
 	      case EQUALS:
-		items.add(JOVALSystem.factories.sc.windows.createGroupItem(local.queryGroup(group)));
+		items.add(makeGroupItem(local.queryGroup(group)));
 		break;
     
 	      case NOT_EQUAL:
-		for (GroupItem item : local.queryAllGroups()) {
-		    if (!group.equals((String)item.getGroup().getValue())) {
-			items.add(JOVALSystem.factories.sc.windows.createGroupItem(item));
+		for (Group g : local.queryAllGroups()) {
+		    JAXBElement<GroupItem> item = makeGroupItem(g);
+		    if (!group.equals((String)item.getValue().getGroup().getValue())) {
+			items.add(item);
 		    }
 		}
 		break;
@@ -88,9 +91,10 @@ public class GroupAdapter implements IAdapter {
 	      case PATTERN_MATCH:
 		try {
 		    Pattern p = Pattern.compile(group);
-		    for (GroupItem item : local.queryAllGroups()) {
-			if (p.matcher((String)item.getGroup().getValue()).find()) {
-			    items.add(JOVALSystem.factories.sc.windows.createGroupItem(item));
+		    for (Group g : local.queryAllGroups()) {
+			JAXBElement<GroupItem> item = makeGroupItem(g);
+			if (p.matcher((String)item.getValue().getGroup().getValue()).find()) {
+			    items.add(item);
 			}
 		    }
 		} catch (PatternSyntaxException e) {
@@ -105,18 +109,60 @@ public class GroupAdapter implements IAdapter {
 	      default:
 		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", gObj.getGroup().getOperation()));
 	    }
+	} catch (NoSuchElementException e) {
+	    // No match.
 	} catch (WmiException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALSystem.getMessage("ERROR_WINWMI_GENERAL", e.getMessage()));
 	    rc.addMessage(msg);
 	}
-	if (items.size() == 0) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.INFO);
-	    msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", group, gObj.getId()));
-	    rc.addMessage(msg);
-	}
 	return items;
+    }
+
+    // Private
+
+    private JAXBElement<GroupItem> makeGroupItem(Group group) {
+	GroupItem item = JOVALSystem.factories.sc.windows.createGroupItem();
+	EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	if (local.isBuiltinGroup(group.getNetbiosName())) {
+	    groupType.setValue(group.getName());
+	} else {
+	    groupType.setValue(group.getNetbiosName());
+	}
+	item.setGroup(groupType);
+	List<String> userNetbiosNames = group.getMemberUserNetbiosNames();
+	if (userNetbiosNames.size() == 0) {
+	    EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    userType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    item.getUser().add(userType);
+	} else {
+	    for (String userNetbiosName : userNetbiosNames) {
+		EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		if (local.isBuiltinUser(userNetbiosName)) {
+		    userType.setValue(local.getName(userNetbiosName));
+		} else {
+		    userType.setValue(userNetbiosName);
+		}
+		item.getUser().add(userType);
+	    }
+	}
+	List<String> groupNetbiosNames = group.getMemberGroupNetbiosNames();
+	if (groupNetbiosNames.size() == 0) {
+	    EntityItemStringType subgroupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    subgroupType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    item.getSubgroup().add(subgroupType);
+	} else {
+	    for (String groupNetbiosName : groupNetbiosNames) {
+		EntityItemStringType subgroupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		if (local.isBuiltinGroup(groupNetbiosName)) {
+		    subgroupType.setValue(local.getName(groupNetbiosName));
+		} else {
+		    subgroupType.setValue(groupNetbiosName);
+		}
+		item.getSubgroup().add(subgroupType);
+	    }
+	}
+	return JOVALSystem.factories.sc.windows.createGroupItem(item);
     }
 }

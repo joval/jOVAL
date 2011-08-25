@@ -44,7 +44,8 @@ public interface IAdapter {
 
     /**
      * Retrieve items associated with the given object by scanning the machine.  The ItemTypes returned must be wrapped in a
-     * JAXBElement so that they can be marshalled into an OvalSystemCharacteristics.
+     * JAXBElement so that they can be marshalled into an OvalSystemCharacteristics.  If no corresponding items are found,
+     * this method should return an empty list, and the Engine will add a message indicating that no items were found.
      *
      * @see IRequestContext
      */

@@ -3,10 +3,10 @@
 
 package org.joval.test;
 
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.windows.UserItem;
+import java.util.NoSuchElementException;
 
 import org.joval.identity.windows.ActiveDirectory;
+import org.joval.identity.windows.User;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
@@ -26,24 +26,19 @@ public class AD {
 	    IWmiProvider wmi = session.getWmiProvider();
 	    if (wmi.connect()) {
 		ActiveDirectory ad = new ActiveDirectory(wmi);
-		UserItem user = ad.queryUser(name);
+		User user = ad.queryUser(name);
 		System.out.println("Name: " + name);
-		switch(user.getStatus()) {
-		  case EXISTS:
-		    System.out.println("Enabled: " + (String)user.getEnabled().getValue());
-		    for (EntityItemStringType group : user.getGroup()) {
-			System.out.println("Group: " + (String)group.getValue());
-		    }
-		    break;
-
-		  default:
-		    System.out.println(user.getStatus());
-		    break;
+		System.out.println("SID: " + user.getSid());
+		System.out.println("Enabled: " + user.isEnabled());
+		for (String group : user.getGroupNetbiosNames()) {
+		    System.out.println("Group: " + group);
 		}
 		wmi.disconnect();
 	    } else {
 	 	System.out.println("Failed to connect to WMI");
 	    }
+	} catch (NoSuchElementException e) {
+	    System.out.println("User " + name + " not found.");
 	} catch (IllegalArgumentException e) {
 	    e.printStackTrace();
 	} catch (WmiException e) {

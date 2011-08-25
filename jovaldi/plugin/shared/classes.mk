@@ -1,6 +1,8 @@
 SHARED=\
 	org.joval.identity.windows.ActiveDirectory			\
+	org.joval.identity.windows.Group				\
 	org.joval.identity.windows.LocalDirectory			\
+	org.joval.identity.windows.User					\
 	org.joval.intf.io.IFile						\
 	org.joval.intf.io.IFilesystem					\
 	org.joval.intf.io.IPathRedirector				\

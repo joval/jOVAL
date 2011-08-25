@@ -5,18 +5,13 @@ package org.joval.identity.windows;
 
 import java.util.Hashtable;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.windows.UserItem;
-import oval.schemas.results.core.ResultEnumeration;
-
+import org.joval.io.LittleEndian;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
@@ -37,18 +32,17 @@ public class ActiveDirectory {
     private static final String DOMAIN_WQL = "SELECT Name, DomainName, DnsForestName FROM Win32_NTDomain";
 
     private static final String AD_NAMESPACE = "root\\directory\\ldap";
-    private static final String USER_WQL = "SELECT DS_userPrincipalName, DS_memberOf, DS_userAccountControl FROM DS_User";
+    private static final String USER_WQL = "SELECT DS_memberOf, DS_userAccountControl, DS_objectSid FROM DS_User";
     private static final String USER_WQL_UPN_CONDITION = "DS_userPrincipalName=\"$upn\"";
 
     private IWmiProvider wmi;
-    private Hashtable<String, UserItem> users;
+    private Hashtable<String, User> users;
     private Hashtable<String, String> domains;
-    private boolean preloaded = false;
 
     public ActiveDirectory(IWmiProvider wmi) {
 	this.wmi = wmi;
 	domains = new Hashtable<String, String>();
-	users = new Hashtable<String, UserItem>();
+	users = new Hashtable<String, User>();
 	try {
 	    for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, DOMAIN_WQL)) {
 		ISWbemPropertySet columns = row.getProperties();
@@ -67,58 +61,22 @@ public class ActiveDirectory {
 	}
     }
 
-    public UserItem queryUser(String name) throws IllegalArgumentException, WmiException {
-	String upn = toUserPrincipalName(name);
-	UserItem item = users.get(upn.toUpperCase());
-	if (item == null) {
+    public User queryUser(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
+	String upn = toUserPrincipalName(netbiosName);
+	User user = users.get(upn.toUpperCase());
+	if (user == null) {
 	    StringBuffer wql = new StringBuffer(USER_WQL);
 	    wql.append(" WHERE ");
 	    wql.append(USER_WQL_UPN_CONDITION.replaceAll("(?i)\\$upn", Matcher.quoteReplacement(upn)));
 	    ISWbemObjectSet os = wmi.execQuery(AD_NAMESPACE, wql.toString());
 	    if (os.getSize() == 0) {
-		item = JOVALSystem.factories.sc.windows.createUserItem();
-		EntityItemStringType user = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		user.setValue(name);
-		item.setUser(user);
-		item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		throw new NoSuchElementException(netbiosName);
 	    } else {
-		item = makeItem(name, os.iterator().next().getProperties());
+		user = makeUser(netbiosName, os.iterator().next().getProperties());
 	    }
-	    users.put(upn.toUpperCase(), item);
+	    users.put(upn.toUpperCase(), user);
 	}
-	return item;
-    }
-
-    /**
-     * This can be an extremely expensive call.  Gets all the users from a domain whose name matches the pattern.
-     */
-    public List<UserItem> queryAllUsers(Pattern domainPattern) throws WmiException {
-	for (ISWbemObject row : wmi.execQuery(AD_NAMESPACE, USER_WQL)) {
-	    ISWbemPropertySet columns = row.getProperties();
-	    String upn = columns.getItem("DS_userPrincipalName").getValueAsString();
-	    if (users.get(upn.toUpperCase()) == null) {
-		int ptr = upn.indexOf("@");
-		String cn = upn.substring(0, ptr);
-		String dns = upn.substring(ptr+1);
-		String domain = toDomain(dns);
-		if (domain != null) {
-		    String name = domain + "\\" + cn;
-		    if (domainPattern.matcher(domain).find()) {
-			JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_USER_ADD", name));
-			users.put(upn.toUpperCase(), makeItem(name, columns));
-		    } else {
-			JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_USER_SKIP", name));
-		    }
-		}
-	    }
-	}
-	List<UserItem> items = new Vector<UserItem>();
-	for (UserItem item : users.values()) {
-	    if (domainPattern.matcher(getDomain((String)item.getUser().getValue())).find()) {
-		items.add(item);
-	    }
-	}
-	return items;
+	return user;
     }
 
     // Private
@@ -126,17 +84,21 @@ public class ActiveDirectory {
     /**
      * Given a name of the form DOMAIN\\username, return the corresponding UserPrincipalName of the form username@domain.com.
      */
-    private String toUserPrincipalName(String name) throws IllegalArgumentException {
-	String dns = domains.get(getDomain(name).toUpperCase());
+    private String toUserPrincipalName(String netbiosName) throws IllegalArgumentException {
+	String domain = getDomain(netbiosName);
+	String dns = domains.get(domain.toUpperCase());
 	if (dns == null) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", getDomain(name)));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", domain));
 	} else {
-	    String upn = new StringBuffer(getUser(name)).append("@").append(dns).toString();
-	    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_UPN_CONVERT", name, upn));
+	    String upn = new StringBuffer(getName(netbiosName)).append("@").append(dns).toString();
+	    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_UPN_CONVERT", netbiosName, upn));
 	    return upn;
 	}
     }
 
+    /**
+     * Convert a DNS path into a Netbios domain name.
+     */
     private String toDomain(String dns) {
 	for (String domain : domains.keySet()) {
 	    if (dns.equals(domains.get(domain))) {
@@ -147,7 +109,7 @@ public class ActiveDirectory {
     }
 
     /**
-     * Get the Domain portion of a Domain\\User String.
+     * Get the Domain portion of a Domain\\Name String.
      */
     private String getDomain(String s) throws IllegalArgumentException {
 	int ptr = s.indexOf("\\");
@@ -159,9 +121,9 @@ public class ActiveDirectory {
     }
 
     /**
-     * Get the User portion of a Domain\\User String.  If there is no domain portion, throws an exception.
+     * Get the Name portion of a Domain\\Name String.  If there is no domain portion, throws an exception.
      */
-    private String getUser(String s) throws IllegalArgumentException {
+    private String getName(String s) throws IllegalArgumentException {
 	int ptr = s.indexOf("\\");
 	if (ptr == -1) {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_AD_DOMAIN_REQUIRED", s));
@@ -173,12 +135,12 @@ public class ActiveDirectory {
     /**
      * Convert a String of group DNs into a List of DOMAIN\\group names.
      */
-    private List<String> parseGroups(String s) {
-	List<String> groups = new Vector<String>();
-
-	for (String dn : StringTools.toList(StringTools.tokenize(s, " CN="))) {
+    private List<String> parseGroups(String[] sa) {
+	List<String> groups = new Vector<String>(sa.length);
+	for (int i=0; i < sa.length; i++) {
+	    String dn = sa[i];
 	    int ptr = dn.indexOf(",");
-	    String groupName = dn.substring(0, ptr);
+	    String groupName = dn.substring(3, ptr); // Starts with CN=
 	    ptr = dn.indexOf(",DC=");
 	    StringBuffer dns = new StringBuffer();
 	    for (String name : StringTools.toList(StringTools.tokenize(dn.substring(ptr), ",DC="))) {
@@ -196,30 +158,41 @@ public class ActiveDirectory {
 		groups.add(name);
 	    }
 	}
-
 	return groups;
     }
 
-    private UserItem makeItem(String name, ISWbemPropertySet props) throws WmiException {
+    private User makeUser(String netbiosName, ISWbemPropertySet props) throws WmiException {
+	String name = getName(netbiosName);
+	String domain = getDomain(netbiosName);
+	String sid = toSid(props.getItem("DS_objectSid").getValueAsString());
+	List<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
 	int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
 	boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
-	String groups = props.getItem("DS_memberOf").getValueAsString();
+	return new User(domain, name, sid, groupNetbiosNames, enabled);
+    }
 
-	UserItem item = JOVALSystem.factories.sc.windows.createUserItem();
-	EntityItemStringType user = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	user.setValue(name);
-	item.setUser(user);
-	EntityItemBoolType enabledType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	enabledType.setValue(enabled ? "true" : "false");
-	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-	item.setEnabled(enabledType);
+    private String toSid(String hex) {
+	int rev = Integer.parseInt(hex.substring(0, 2), 16);
+	int subauthCount = Integer.parseInt(hex.substring(2, 4), 16);
 
-	for (String group : parseGroups(groups)) {
-	    EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    groupType.setValue(group);
-	    item.getGroup().add(groupType);
+	String idAuthStr = hex.substring(4, 16);
+	long idAuth = Long.parseLong(idAuthStr, 16);
+
+	StringBuffer sid = new StringBuffer("S-");
+	sid.append(Integer.toHexString(rev));
+	sid.append("-");
+	sid.append(Long.toHexString(idAuth));
+
+	for (int i=0; i < subauthCount; i++) {
+	    sid.append("-");
+	    byte[] buff = new byte[4];
+	    int base = 16 + i*8;
+	    buff[0] = (byte)Integer.parseInt(hex.substring(base, base+2), 16);
+	    buff[1] = (byte)Integer.parseInt(hex.substring(base+2, base+4), 16);
+	    buff[2] = (byte)Integer.parseInt(hex.substring(base+4, base+6), 16);
+	    buff[3] = (byte)Integer.parseInt(hex.substring(base+6, base+8), 16);
+	    sid.append(Long.toString(LittleEndian.getUInt(buff) & 0xFFFFFFFFL));
 	}
-
-	return item;
+	return sid.toString();
     }
 }

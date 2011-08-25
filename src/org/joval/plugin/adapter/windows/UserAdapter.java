@@ -5,6 +5,7 @@ package org.joval.plugin.adapter.windows;
 
 import java.util.Hashtable;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -24,6 +25,7 @@ import oval.schemas.systemcharacteristics.windows.UserItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.identity.windows.LocalDirectory;
+import org.joval.identity.windows.User;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.wmi.IWmiProvider;
@@ -74,13 +76,14 @@ public class UserAdapter implements IAdapter {
 	try {
 	    switch(uObj.getUser().getOperation()) {
 	      case EQUALS:
-		items.add(JOVALSystem.factories.sc.windows.createUserItem(local.queryUser(user)));
+		items.add(makeUserItem(local.queryUser(user)));
 		break;
     
 	      case NOT_EQUAL:
-		for (UserItem item : local.queryAllUsers()) {
-		    if (!user.equals((String)item.getUser().getValue())) {
-			items.add(JOVALSystem.factories.sc.windows.createUserItem(item));
+		for (User u : local.queryAllUsers()) {
+		    JAXBElement<UserItem> item = makeUserItem(u);
+		    if (!user.equals((String)item.getValue().getUser().getValue())) {
+			items.add(item);
 		    }
 		}
 		break;
@@ -88,9 +91,10 @@ public class UserAdapter implements IAdapter {
 	      case PATTERN_MATCH:
 		try {
 		    Pattern p = Pattern.compile(user);
-		    for (UserItem item : local.queryAllUsers()) {
-			if (p.matcher((String)item.getUser().getValue()).find()) {
-			    items.add(JOVALSystem.factories.sc.windows.createUserItem(item));
+		    for (User u : local.queryAllUsers()) {
+			JAXBElement<UserItem> item = makeUserItem(u);
+			if (p.matcher((String)item.getValue().getUser().getValue()).find()) {
+			    items.add(item);
 			}
 		    }
 		} catch (PatternSyntaxException e) {
@@ -105,18 +109,48 @@ public class UserAdapter implements IAdapter {
 	      default:
 		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", uObj.getUser().getOperation()));
 	    }
+	} catch (NoSuchElementException e) {
+	    // No match.
 	} catch (WmiException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALSystem.getMessage("ERROR_WINWMI_GENERAL", e.getMessage()));
 	    rc.addMessage(msg);
 	}
-	if (items.size() == 0) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.INFO);
-	    msg.setValue(JOVALSystem.getMessage("STATUS_NOT_FOUND", user, uObj.getId()));
-	    rc.addMessage(msg);
-	}
 	return items;
+    }
+
+    // Private
+
+    private JAXBElement<UserItem> makeUserItem(User user) {
+	UserItem item = JOVALSystem.factories.sc.windows.createUserItem();
+	EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	if (local.isBuiltinUser(user.getNetbiosName())) {
+	    userType.setValue(user.getName());
+	} else {
+	    userType.setValue(user.getNetbiosName());
+	}
+	item.setUser(userType);
+	EntityItemBoolType enabledType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	enabledType.setValue(user.isEnabled() ? "true" : "false");
+	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setEnabled(enabledType);
+	List<String> groupNetbiosNames = user.getGroupNetbiosNames();
+	if (groupNetbiosNames.size() == 0) {
+	    EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    groupType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    item.getGroup().add(groupType);
+	} else {
+	    for (String groupName : groupNetbiosNames) {
+		EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		if (local.isBuiltinGroup(groupName)) {
+		    groupType.setValue(local.getName(groupName));
+		} else {
+		    groupType.setValue(groupName);
+		}
+		item.getGroup().add(groupType);
+	    }
+	}
+	return JOVALSystem.factories.sc.windows.createUserItem(item);
     }
 }

@@ -4,6 +4,7 @@
 package org.joval.windows.remote.wmi.query;
 
 import java.util.Iterator;
+import java.util.logging.Level;
 
 import org.jinterop.dcom.core.JIArray;
 import org.jinterop.dcom.core.JIString;
@@ -16,6 +17,7 @@ import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
+import org.joval.util.JOVALSystem;
 import org.joval.windows.wmi.WmiException;
 
 /**
@@ -82,6 +84,8 @@ public class SimpleSWbemProperty implements ISWbemProperty {
 	    if (obj instanceof JIString) {
 		return ((JIString)obj).getString();
 	    } else {
+		JOVALSystem.getLogger().log(Level.WARNING,
+					    JOVALSystem.getMessage("ERROR_WMI_STR_CONVERSION", obj.getClass().getName()));
 		return null;
 	    }
 	} catch (JIException e) {
