@@ -15,7 +15,9 @@ import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
+import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.windows.GroupObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
@@ -43,8 +45,9 @@ import org.joval.windows.wmi.WmiException;
 public class GroupAdapter implements IAdapter {
     private IWmiProvider wmi;
     private String hostname;
-    private LocalDirectory local = null;
-    private ActiveDirectory ad = null;
+
+    protected LocalDirectory local = null;
+    protected ActiveDirectory ad = null;
 
     public GroupAdapter(String hostname, IWmiProvider wmi) {
 	this.wmi = wmi;
@@ -74,16 +77,16 @@ public class GroupAdapter implements IAdapter {
 
     public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	GroupObject gObj = (GroupObject)rc.getObject();
-	String group = (String)gObj.getGroup().getValue();
+	OperationEnumeration op = ((GroupObject)rc.getObject()).getGroup().getOperation();
+	String group = (String)((GroupObject)rc.getObject()).getGroup().getValue();
 
 	try {
-	    switch(gObj.getGroup().getOperation()) {
+	    switch(op) {
 	      case EQUALS:
 		if (local.isMember(group)) {
-		    items.add(makeGroupItem(local.queryGroup(group)));
+		    items.add(makeItem(local.queryGroup(group)));
 		} else if (ad.isMember(group)) {
-		    items.add(makeGroupItem(ad.queryGroup(group)));
+		    items.add(makeItem(ad.queryGroup(group)));
 		} else {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.WARNING);
@@ -96,9 +99,8 @@ public class GroupAdapter implements IAdapter {
     
 	      case NOT_EQUAL:
 		for (Group g : local.queryAllGroups()) {
-		    JAXBElement<GroupItem> item = makeGroupItem(g);
-		    if (!group.equals((String)item.getValue().getGroup().getValue())) {
-			items.add(item);
+		    if (!local.getQualifiedNetbiosName(group).equals(g.getNetbiosName())) {
+			items.add(makeItem(g));
 		    }
 		}
 		break;
@@ -107,9 +109,14 @@ public class GroupAdapter implements IAdapter {
 		try {
 		    Pattern p = Pattern.compile(group);
 		    for (Group g : local.queryAllGroups()) {
-			JAXBElement<GroupItem> item = makeGroupItem(g);
-			if (p.matcher((String)item.getValue().getGroup().getValue()).find()) {
-			    items.add(item);
+			Matcher m = null;
+			if (local.isMember(g.getNetbiosName())) {
+			    m = p.matcher(g.getName());
+			} else {
+			    m = p.matcher(g.getNetbiosName());
+			}
+			if (m.find()) {
+			    items.add(makeItem(g));
 			}
 		    }
 		} catch (PatternSyntaxException e) {
@@ -122,7 +129,7 @@ public class GroupAdapter implements IAdapter {
 		break;
     
 	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", gObj.getGroup().getOperation()));
+		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
 	    }
 	} catch (NoSuchElementException e) {
 	    // No match.
@@ -135,9 +142,9 @@ public class GroupAdapter implements IAdapter {
 	return items;
     }
 
-    // Private
+    // Internal
 
-    private JAXBElement<GroupItem> makeGroupItem(Group group) {
+    protected JAXBElement<? extends ItemType> makeItem(Group group) {
 	GroupItem item = JOVALSystem.factories.sc.windows.createGroupItem();
 	EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	if (local.isBuiltinGroup(group.getNetbiosName())) {

@@ -43,8 +43,10 @@ import org.joval.plugin.adapter.unix.ProcessAdapter;
 import org.joval.plugin.adapter.unix.RunlevelAdapter;
 import org.joval.plugin.adapter.unix.UnameAdapter;
 import org.joval.plugin.adapter.windows.GroupAdapter;
+import org.joval.plugin.adapter.windows.GroupSidAdapter;
 import org.joval.plugin.adapter.windows.RegistryAdapter;
 import org.joval.plugin.adapter.windows.UserAdapter;
+import org.joval.plugin.adapter.windows.UserSid55Adapter;
 import org.joval.plugin.adapter.windows.WmiAdapter;
 import org.joval.unix.UnixSystemInfo;
 import org.joval.util.JOVALSystem;
@@ -119,8 +121,10 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		}
 		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win.getFilesystem(), win.getWmiProvider()));
 		adapters.add(new GroupAdapter(info.getPrimaryHostName(), win.getWmiProvider()));
+		adapters.add(new GroupSidAdapter(info.getPrimaryHostName(), win.getWmiProvider()));
 		adapters.add(new RegistryAdapter(win.getRegistry()));
 		adapters.add(new UserAdapter(info.getPrimaryHostName(), win.getWmiProvider()));
+		adapters.add(new UserSid55Adapter(info.getPrimaryHostName(), win.getWmiProvider()));
 		adapters.add(new WmiAdapter(win.getWmiProvider()));
 		break;
 	      }

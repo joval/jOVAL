@@ -28,9 +28,11 @@ import org.joval.windows.wmi.WmiException;
  */
 public class LocalDirectory {
     static final String USER_WQL		= "SELECT SID, Name, Domain, Disabled FROM Win32_UserAccount";
+    static final String SYSUSER_WQL		= "SELECT SID, Name, Domain FROM Win32_SystemAccount";
     static final String GROUP_WQL		= "SELECT SID, Name, Domain FROM Win32_Group";
     static final String DOMAIN_CONDITION	= "Domain='$domain'";
     static final String NAME_CONDITION		= "Name='$name'";
+    static final String SID_CONDITION		= "SID='$sid'";
 
     static final String USER_GROUP_WQL		= "ASSOCIATORS OF {$conditions} WHERE resultClass=Win32_Group";
     static final String USER_DOMAIN_CONDITION	= "Win32_UserAccount.Domain=\"$domain\"";
@@ -39,8 +41,12 @@ public class LocalDirectory {
     static final String GROUP_USER_WQL		= "SELECT * FROM Win32_GroupUser WHERE GroupComponent=\"$conditions\"";
     static final String GROUP_DOMAIN_CONDITION	= "Win32_Group.Domain='$domain'";
 
-    private Hashtable<String, User> users;
-    private Hashtable<String, Group> groups;
+    private Hashtable<String, User> usersBySid;
+    private Hashtable<String, User> usersByNetbiosName;
+    private Hashtable<String, Group> groupsBySid;
+    private Hashtable<String, Group> groupsByNetbiosName;
+    private List<String> builtinUsers;
+    private List<String> builtinGroups;
 
     private String hostname;
     private IWmiProvider wmi;
@@ -50,8 +56,61 @@ public class LocalDirectory {
     public LocalDirectory(String hostname, IWmiProvider wmi) {
 	this.hostname = hostname;
 	this.wmi = wmi;
-	users = new Hashtable<String, User>();
-	groups = new Hashtable<String, Group>();
+	usersByNetbiosName = new Hashtable<String, User>();
+	usersBySid = new Hashtable<String, User>();
+	groupsByNetbiosName = new Hashtable<String, Group>();
+	groupsBySid = new Hashtable<String, Group>();
+
+	builtinUsers = new Vector<String>();
+	builtinUsers.add("Administrator".toUpperCase());
+	builtinUsers.add("Guest".toUpperCase());
+	builtinUsers.add("HomeGroupUser$".toUpperCase());
+
+	builtinGroups = new Vector<String>();
+	builtinGroups.add("Account Operators".toUpperCase());
+	builtinGroups.add("Administrators".toUpperCase());
+	builtinGroups.add("Backup Operators".toUpperCase());
+	builtinGroups.add("Cryptographic Operators".toUpperCase());
+	builtinGroups.add("Distributed COM Users".toUpperCase());
+	builtinGroups.add("Event Log Readers".toUpperCase());
+	builtinGroups.add("Guests".toUpperCase());
+	builtinGroups.add("HelpLibraryUpdaters".toUpperCase());
+	builtinGroups.add("HomeUsers".toUpperCase());
+	builtinGroups.add("IIS_IUSRS".toUpperCase());
+	builtinGroups.add("Network Configuration Operators".toUpperCase());
+	builtinGroups.add("Performance Log Users".toUpperCase());
+	builtinGroups.add("Performance Monitor Users".toUpperCase());
+	builtinGroups.add("Power Users".toUpperCase());
+	builtinGroups.add("Print Operators".toUpperCase());
+	builtinGroups.add("Remote Desktop Users".toUpperCase());
+	builtinGroups.add("Replicator".toUpperCase());
+	builtinGroups.add("Server Operators".toUpperCase());
+	builtinGroups.add("Users".toUpperCase());
+
+    }
+
+    public User queryUserBySid(String sid) throws NoSuchElementException, WmiException {
+	User user = usersBySid.get(sid);
+	if (user == null) {
+	    if (preloadedUsers) {
+		throw new NoSuchElementException(sid);
+	    }
+
+	    boolean system = false;
+	    StringBuffer conditions = new StringBuffer(" WHERE ");
+	    conditions.append(SID_CONDITION.replaceAll("(?i)\\$sid", Matcher.quoteReplacement(sid)));
+	    ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, USER_WQL + conditions.toString());
+	    if (os.getSize() == 0) {
+		system = true;
+		os = wmi.execQuery(IWmiProvider.CIMv2, SYSUSER_WQL + conditions.toString());
+	    }
+	    if (os.getSize() == 0) {
+		throw new NoSuchElementException(sid);
+	    } else {
+		user = preloadUser(os.iterator().next().getProperties(), system);
+	    }
+	}
+	return user;
     }
 
     /**
@@ -65,27 +124,26 @@ public class LocalDirectory {
 	String name = getName(netbiosName);
 	netbiosName = domain + "\\" + name; // in case no domain was specified in the original netbiosName
 
-	User user = users.get(netbiosName.toUpperCase());
+	User user = usersByNetbiosName.get(netbiosName.toUpperCase());
 	if (user == null) {
 	    if (preloadedUsers) {
 		throw new NoSuchElementException(netbiosName);
 	    }
 
-	    StringBuffer wql = new StringBuffer(USER_WQL);
-	    wql.append(" WHERE ");
-	    wql.append(NAME_CONDITION.replaceAll("(?i)\\$name", Matcher.quoteReplacement(name)));
-	    wql.append(" AND ");
-	    wql.append(DOMAIN_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(domain)));
-
-	    ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, wql.toString());
+	    boolean system = false;
+	    StringBuffer conditions = new StringBuffer(" WHERE ");
+	    conditions.append(NAME_CONDITION.replaceAll("(?i)\\$name", Matcher.quoteReplacement(name)));
+	    conditions.append(" AND ");
+	    conditions.append(DOMAIN_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(domain)));
+	    ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, USER_WQL + conditions.toString());
+	    if (os.getSize() == 0) {
+		system = true;
+		os = wmi.execQuery(IWmiProvider.CIMv2, SYSUSER_WQL + conditions.toString());
+	    }
 	    if (os.getSize() == 0) {
 		throw new NoSuchElementException(netbiosName);
 	    } else {
-		ISWbemPropertySet columns = os.iterator().next().getProperties();
-		boolean enabled = !columns.getItem("Disabled").getValueAsBoolean().booleanValue();
-		String sid = columns.getItem("SID").getValueAsString();
-		user = makeUser(domain, name, sid, enabled);
-		users.put(netbiosName.toUpperCase(), user);
+		user = preloadUser(os.iterator().next().getProperties(), system);
 	    }
 	}
 	return user;
@@ -96,23 +154,43 @@ public class LocalDirectory {
      */
     public Collection<User> queryAllUsers() throws WmiException {
 	if (!preloadedUsers) {
-	    StringBuffer wql = new StringBuffer(USER_WQL);
-	    wql.append(" WHERE ");
-	    wql.append(DOMAIN_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(hostname)));
-	    for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, wql.toString())) {
-		ISWbemPropertySet columns = row.getProperties();
-		String domain = columns.getItem("Domain").getValueAsString();
-		String name = columns.getItem("Name").getValueAsString();
-		String netbiosName = domain + "\\" + name;
-		String sid = columns.getItem("SID").getValueAsString();
-		boolean enabled = !columns.getItem("Disabled").getValueAsBoolean().booleanValue();
-		if (users.get(netbiosName.toUpperCase()) == null) {
-		    users.put(netbiosName.toUpperCase(), makeUser(domain, name, sid, enabled));
-		}
+	    StringBuffer conditions = new StringBuffer(" WHERE ");
+	    conditions.append(DOMAIN_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(hostname)));
+	    for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, USER_WQL + conditions.toString())) {
+		preloadUser(row.getProperties(), false);
+	    }
+	    for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, SYSUSER_WQL + conditions.toString())) {
+		preloadUser(row.getProperties(), true);
 	    }
 	    preloadedUsers = true;
 	}
-	return users.values();
+	return usersByNetbiosName.values();
+    }
+
+    public Group queryGroupBySid(String sid) throws NoSuchElementException, WmiException {
+	Group group = groupsBySid.get(sid);
+	if (group == null) {
+	    if (preloadedGroups) {
+		throw new NoSuchElementException(sid);
+	    }
+
+	    StringBuffer wql = new StringBuffer(GROUP_WQL);
+	    wql.append(" WHERE ");
+	    wql.append(SID_CONDITION.replaceAll("(?i)\\$sid", Matcher.quoteReplacement(sid)));
+
+	    ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, wql.toString());
+	    if (os.getSize() == 0) {
+		throw new NoSuchElementException(sid);
+	    } else {
+		ISWbemPropertySet columns = os.iterator().next().getProperties();
+		String name = columns.getItem("Name").getValueAsString();
+		String domain = columns.getItem("Domain").getValueAsString();
+		group = makeGroup(domain, name, sid);
+		groupsByNetbiosName.put((domain + "\\" + name).toUpperCase(), group);
+		groupsBySid.put(sid, group);
+	    }
+	}
+	return group;
     }
 
     /**
@@ -126,7 +204,7 @@ public class LocalDirectory {
 	String name = getName(netbiosName);
 	netbiosName = domain + "\\" + name; // in case no domain was specified in the original netbiosName
 
-	Group group = groups.get(netbiosName.toUpperCase());
+	Group group = groupsByNetbiosName.get(netbiosName.toUpperCase());
 	if (group == null) {
 	    if (preloadedGroups) {
 		throw new NoSuchElementException(netbiosName);
@@ -145,8 +223,9 @@ public class LocalDirectory {
 		ISWbemPropertySet columns = os.iterator().next().getProperties();
 		String sid = columns.getItem("SID").getValueAsString();
 		group = makeGroup(domain, name, sid);
+		groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
+		groupsBySid.put(sid, group);
 	    }
-	    groups.put(netbiosName.toUpperCase(), group);
 	}
 	return group;
     }
@@ -165,13 +244,15 @@ public class LocalDirectory {
 		String name = columns.getItem("Name").getValueAsString();
 		String netbiosName = domain + "\\" + name;
 		String sid = columns.getItem("SID").getValueAsString();
-		if (groups.get(netbiosName.toUpperCase()) == null) {
-		    groups.put(netbiosName.toUpperCase(), makeGroup(domain, name, sid));
+		if (groupsByNetbiosName.get(netbiosName.toUpperCase()) == null) {
+		    Group group = makeGroup(domain, name, sid);
+		    groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
+		    groupsBySid.put(netbiosName.toUpperCase(), group);
 		}
 	    }
 	    preloadedGroups = true;
 	}
-	return groups.values();
+	return groupsByNetbiosName.values();
     }
 
     /**
@@ -179,14 +260,7 @@ public class LocalDirectory {
      */
     public boolean isBuiltinUser(String netbiosName) {
 	if (isMember(netbiosName)) {
-	    String username = getName(netbiosName);
-	    if ("Administrator".equals(username)) {
-		return true;
-	    } else if ("Guest".equals(username)) {
-		return true;
-	    } else if ("HomeGroupUser$".equals(username)) {
-		return true;
-	    }
+	    return builtinUsers.contains(getName(netbiosName).toUpperCase());
 	}
 	return false;
     }
@@ -196,46 +270,7 @@ public class LocalDirectory {
      */
     public boolean isBuiltinGroup(String netbiosName) {
 	if (isMember(netbiosName)) {
-	    String group = getName(netbiosName);
-	    if ("Account Operators".equals(group)) {
-		return true;
-	    } else if ("Administrators".equals(group)) {
-		return true;
-	    } else if ("Backup Operators".equals(group)) {
-		return true;
-	    } else if ("Cryptographic Operators".equals(group)) {
-		return true;
-	    } else if ("Distributed COM Users".equals(group)) {
-		return true;
-	    } else if ("Event Log Readers".equals(group)) {
-		return true;
-	    } else if ("Guests".equals(group)) {
-		return true;
-	    } else if ("HelpLibraryUpdaters".equals(group)) {
-		return true;
-	    } else if ("HomeUsers".equals(group)) {
-		return true;
-	    } else if ("IIS_IUSRS".equals(group)) {
-		return true;
-	    } else if ("Network Configuration Operators".equals(group)) {
-		return true;
-	    } else if ("Performance Log Users".equals(group)) {
-		return true;
-	    } else if ("Performance Monitor Users".equals(group)) {
-		return true;
-	    } else if ("Power Users".equals(group)) {
-		return true;
-	    } else if ("Print Operators".equals(group)) {
-		return true;
-	    } else if ("Remote Desktop Users".equals(group)) {
-		return true;
-	    } else if ("Replicator".equals(group)) {
-		return true;
-	    } else if ("Server Operators".equals(group)) {
-		return true;
-	    } else if ("Users".equals(group)) {
-		return true;
-	    }
+	    return builtinGroups.contains(getName(netbiosName).toUpperCase());
 	}
 	return false;
     }
@@ -260,7 +295,43 @@ public class LocalDirectory {
 	return hostname.equalsIgnoreCase(getDomain(netbiosName));
     }
 
+    public boolean isMemberSid(String sid) {
+	return false;
+    }
+
+    /**
+     * Fills in the domain with the local hostname if it is not specified in the argument.
+     */
+    public String getQualifiedNetbiosName(String netbiosName) {
+	String domain = getDomain(netbiosName);
+	if (domain == null) {
+	    domain = hostname.toUpperCase();
+	}
+	return domain + "\\" + getName(netbiosName);
+    }
+
     // Private
+
+    private User preloadUser(ISWbemPropertySet columns, boolean builtin) throws WmiException {
+	String domain = columns.getItem("Domain").getValueAsString();
+	String name = columns.getItem("Name").getValueAsString();
+	if (builtin) {
+	    builtinUsers.add(name.toUpperCase());
+	}
+	String netbiosName = domain + "\\" + name;
+	String sid = columns.getItem("SID").getValueAsString();
+	boolean enabled = true;
+	if (columns.getItem("Disabled") != null) {
+	    enabled = !columns.getItem("Disabled").getValueAsBoolean().booleanValue();
+	}
+	User user = usersByNetbiosName.get(netbiosName.toUpperCase());
+	if (user == null) {
+	    user = makeUser(domain, name, sid, enabled);
+	    usersByNetbiosName.put(netbiosName.toUpperCase(), user);
+	    usersBySid.put(sid, user);
+	}
+	return user;
+    }
 
     /**
      * Get the Domain portion of a Domain\\Name String.  If Domain is not specified, this method returns the hostname

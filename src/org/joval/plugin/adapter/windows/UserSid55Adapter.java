@@ -18,18 +18,17 @@ import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.UserObject;
+import oval.schemas.definitions.windows.UserSid55Object;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.windows.UserItem;
-import oval.schemas.results.core.ResultEnumeration;
+import oval.schemas.systemcharacteristics.windows.UserSidItem;
 
 import org.joval.identity.windows.ActiveDirectory;
 import org.joval.identity.windows.LocalDirectory;
+import org.joval.identity.windows.Group;
 import org.joval.identity.windows.User;
-import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.oval.OvalException;
@@ -37,69 +36,44 @@ import org.joval.util.JOVALSystem;
 import org.joval.windows.wmi.WmiException;
 
 /**
- * Evaluates User OVAL tests.
+ * Evaluates Group OVAL tests.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UserAdapter implements IAdapter {
-    private IWmiProvider wmi;
-    private String hostname;
-
-    protected LocalDirectory local = null;
-    protected ActiveDirectory ad = null;
-
-    public UserAdapter(String hostname, IWmiProvider wmi) {
-	this.wmi = wmi;
-	this.hostname = hostname.toUpperCase();
+public class UserSid55Adapter extends UserAdapter {
+    public UserSid55Adapter(String hostname, IWmiProvider wmi) {
+	super(hostname, wmi);
     }
 
-    // Implement IAdapter
-
+    /**
+     * @override
+     */
     public Class getObjectClass() {
-	return UserObject.class;
+	return UserSid55Object.class;
     }
 
-    public boolean connect() {
-	if (wmi.connect()) {
-	    local = new LocalDirectory(hostname, wmi);
-	    ad = new ActiveDirectory(wmi);
-	    return true;
-	}
-	return false;
-    }
-
-    public void disconnect() {
-	wmi.disconnect();
-	local = null;
-	ad = null;
-    }
-
+    /**
+     * @override
+     */
     public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	OperationEnumeration op = getOperation(rc.getObject());
-	String user = getValue(rc.getObject());
+	OperationEnumeration op = ((UserSid55Object)rc.getObject()).getUserSid().getOperation();
+	UserSid55Object uObj = (UserSid55Object)rc.getObject();
 
 	try {
 	    switch(op) {
 	      case EQUALS:
-		if (local.isMember(user)) {
-		    items.add(makeItem(local.queryUser(user)));
-		} else if (ad.isMember(user)) {
-		    items.add(makeItem(ad.queryUser(user)));
-		} else {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.WARNING);
-		    String s = JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", user);
-		    JOVALSystem.getLogger().log(Level.WARNING, s);
-		    msg.setValue(s);
-		    rc.addMessage(msg);
+		try {
+		    items.add(makeItem(local.queryUserBySid((String)uObj.getUserSid().getValue())));
+		} catch (NoSuchElementException e) {
+		    items.add(makeItem(ad.queryUserBySid((String)uObj.getUserSid().getValue())));
 		}
 		break;
     
 	      case NOT_EQUAL:
 		for (User u : local.queryAllUsers()) {
-		    if (!local.getQualifiedNetbiosName(user).equals(u.getNetbiosName())) {
+		    if (!u.getSid().equals((String)uObj.getUserSid().getValue())) {
 			items.add(makeItem(u));
 		    }
 		}
@@ -107,15 +81,9 @@ public class UserAdapter implements IAdapter {
     
 	      case PATTERN_MATCH:
 		try {
-		    Pattern p = Pattern.compile(user);
+		    Pattern p = Pattern.compile((String)uObj.getUserSid().getValue());
 		    for (User u : local.queryAllUsers()) {
-			Matcher m = null;
-			if (local.isMember(u.getNetbiosName())) {
-			    m = p.matcher(u.getName());
-			} else {
-			    m = p.matcher(u.getNetbiosName());
-			}
-			if (m.find()) {
+			if (p.matcher(u.getSid()).find()) {
 			    items.add(makeItem(u));
 			}
 		    }
@@ -142,45 +110,37 @@ public class UserAdapter implements IAdapter {
 	return items;
     }
 
-    // Internal
-
-    protected OperationEnumeration getOperation(ObjectType obj) {
-	return ((UserObject)obj).getUser().getOperation();
-    }
-
-    protected String getValue(ObjectType obj) {
-	return (String)((UserObject)obj).getUser().getValue();
-    }
-
     protected JAXBElement<? extends ItemType> makeItem(User user) {
-	UserItem item = JOVALSystem.factories.sc.windows.createUserItem();
-	EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	if (local.isBuiltinUser(user.getNetbiosName())) {
-	    userType.setValue(user.getName());
-	} else {
-	    userType.setValue(user.getNetbiosName());
-	}
-	item.setUser(userType);
+	UserSidItem item = JOVALSystem.factories.sc.windows.createUserSidItem();
+	EntityItemStringType userSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	userSidType.setValue(user.getSid());
+	item.setUserSid(userSidType);
 	EntityItemBoolType enabledType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
 	enabledType.setValue(user.isEnabled() ? "true" : "false");
 	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setEnabled(enabledType);
-	List<String> groupNetbiosNames = user.getGroupNetbiosNames();
-	if (groupNetbiosNames.size() == 0) {
-	    EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    groupType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    item.getGroup().add(groupType);
-	} else {
-	    for (String groupName : groupNetbiosNames) {
-		EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		if (local.isBuiltinGroup(groupName)) {
-		    groupType.setValue(local.getName(groupName));
-		} else {
-		    groupType.setValue(groupName);
+	for (String groupNetbiosName : user.getGroupNetbiosNames()) {
+	    Group group = null;
+	    try {
+		if (local.isMember(groupNetbiosName)) {
+		    group = local.queryGroup(groupNetbiosName);
+		} else if (ad.isMember(groupNetbiosName)) {
+		    group = ad.queryGroup(groupNetbiosName);
 		}
-		item.getGroup().add(groupType);
+		if (group != null) {
+		    EntityItemStringType groupSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    groupSidType.setValue(group.getSid());
+		    item.getGroupSid().add(groupSidType);
+		}
+	    } catch (NoSuchElementException e) {
+	    } catch (WmiException e) {
 	    }
 	}
-	return JOVALSystem.factories.sc.windows.createUserItem(item);
+	if (item.getGroupSid().size() == 0) {
+	    EntityItemStringType groupSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    groupSidType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    item.getGroupSid().add(groupSidType);
+	}
+	return JOVALSystem.factories.sc.windows.createUserSidItem(item);
     }
 }

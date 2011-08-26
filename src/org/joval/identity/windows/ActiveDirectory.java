@@ -32,27 +32,59 @@ public class ActiveDirectory {
     private static final String DOMAIN_WQL = "SELECT Name, DomainName, DnsForestName FROM Win32_NTDomain";
 
     private static final String AD_NAMESPACE = "root\\directory\\ldap";
-    private static final String USER_WQL = "SELECT DS_memberOf, DS_userAccountControl, DS_objectSid FROM DS_User";
+    private static final String USER_WQL = "SELECT DS_userPrincipalName, DS_distinguishedName, DS_memberOf, DS_userAccountControl, DS_objectSid FROM DS_User";
     private static final String USER_WQL_UPN_CONDITION = "DS_userPrincipalName=\"$upn\"";
     private static final String GROUP_WQL = "SELECT DS_member, DS_distinguishedName, DS_objectSid FROM DS_Group";
     private static final String GROUP_WQL_CN_CONDITION = "DS_cn=\"$cn\"";
+    private static final String SID_CONDITION = "DS_objectSid=\"$sid\"";
 
     private IWmiProvider wmi;
-    private Hashtable<String, User> users;
-    private Hashtable<String, Group> groups;
+    private Hashtable<String, User> usersByUpn;
+    private Hashtable<String, User> usersBySid;
+    private Hashtable<String, Group> groupsByNetbiosName;
+    private Hashtable<String, Group> groupsBySid;
     private Hashtable<String, String> domains;
     private boolean initialized = false;
 
     public ActiveDirectory(IWmiProvider wmi) {
 	this.wmi = wmi;
 	domains = new Hashtable<String, String>();
-	users = new Hashtable<String, User>();
-	groups = new Hashtable<String, Group>();
+	usersByUpn = new Hashtable<String, User>();
+	usersBySid = new Hashtable<String, User>();
+	groupsByNetbiosName = new Hashtable<String, Group>();
+	groupsBySid = new Hashtable<String, Group>();
+    }
+
+    public User queryUserBySid(String sid) throws NoSuchElementException, WmiException {
+	User user = usersBySid.get(sid);
+	if (user == null) {
+	    StringBuffer wql = new StringBuffer(USER_WQL);
+	    wql.append(" WHERE ");
+	    wql.append(SID_CONDITION.replaceAll("(?i)\\$sid", Matcher.quoteReplacement(sid)));
+	    ISWbemObjectSet os = wmi.execQuery(AD_NAMESPACE, wql.toString());
+	    if (os.getSize() == 0) {
+		throw new NoSuchElementException(sid);
+	    } else {
+		ISWbemPropertySet props = os.iterator().next().getProperties();
+		String upn = props.getItem("DS_userPrincipalName").getValueAsString();
+		String dn = props.getItem("DS_distinguishedName").getValueAsString();
+		String netbiosName = toNetbiosName(dn);
+		String domain = getDomain(netbiosName);
+		String name = getName(netbiosName);
+		List<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
+		int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
+		boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
+		user = new User(domain, name, sid, groupNetbiosNames, enabled);
+		usersByUpn.put(upn.toUpperCase(), user);
+		usersBySid.put(sid, user);
+	    }
+	}
+	return user;
     }
 
     public User queryUser(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
 	String upn = toUserPrincipalName(netbiosName);
-	User user = users.get(upn.toUpperCase());
+	User user = usersByUpn.get(upn.toUpperCase());
 	if (user == null) {
 	    StringBuffer wql = new StringBuffer(USER_WQL);
 	    wql.append(" WHERE ");
@@ -69,14 +101,50 @@ public class ActiveDirectory {
 		int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
 		boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
 		user = new User(domain, name, sid, groupNetbiosNames, enabled);
+		usersByUpn.put(upn.toUpperCase(), user);
+		usersBySid.put(sid, user);
 	    }
-	    users.put(upn.toUpperCase(), user);
 	}
 	return user;
     }
 
+    public Group queryGroupBySid(String sid) throws NoSuchElementException, WmiException {
+	Group group = groupsBySid.get(sid);
+	if (group == null) {
+	    StringBuffer wql = new StringBuffer(GROUP_WQL);
+	    wql.append(" WHERE ");
+	    wql.append(SID_CONDITION.replaceAll("(?i)\\$sid", Matcher.quoteReplacement(sid)));
+	    ISWbemObjectSet rows = wmi.execQuery(AD_NAMESPACE, wql.toString());
+	    if (rows.getSize() == 0) {
+		throw new NoSuchElementException(sid);
+	    } else {
+		ISWbemPropertySet columns = rows.iterator().next().getProperties();
+		String cn = columns.getItem("DS_cn").getValueAsString();
+		String dn = columns.getItem("DS_distinguishedName").getValueAsString();
+		String netbiosName = toNetbiosName(dn);
+		String domain = getDomain(netbiosName);
+		List<String> userNetbiosNames = new Vector<String>();
+		List<String> groupNetbiosNames = new Vector<String>();
+		String[] members = columns.getItem("DS_member").getValueAsArray();
+		for (int i=0; i < members.length; i++) {
+		    if (members[i].indexOf(",OU=Distribution Groups") != -1) {
+			groupNetbiosNames.add(toNetbiosName(members[i]));
+		    } else if (members[i].indexOf(",OU=Domain Users") != -1) {
+			userNetbiosNames.add(toNetbiosName(members[i]));
+		    } else {
+			JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_AD_BAD_OU", members[i]));
+		    }
+		}
+		group = new Group(domain, cn, sid, userNetbiosNames, groupNetbiosNames);
+		groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
+		groupsBySid.put(sid, group);
+	    }
+	}
+	return group;
+    }
+
     public Group queryGroup(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
-	Group group = groups.get(netbiosName.toUpperCase());
+	Group group = groupsByNetbiosName.get(netbiosName.toUpperCase());
 	if (group == null) {
 	    if (isMember(netbiosName)) {
 		String domain = getDomain(netbiosName);
@@ -105,7 +173,8 @@ public class ActiveDirectory {
 			}
 			String sid = toSid(columns.getItem("DS_objectSid").getValueAsString());
 			group = new Group(domain, cn, sid, userNetbiosNames, groupNetbiosNames);
-			groups.put(netbiosName.toUpperCase(), group);
+			groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
+			groupsBySid.put(sid, group);
 		    } else {
 			JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_GROUP_SKIP", dn, dc));
 		    }
@@ -123,6 +192,10 @@ public class ActiveDirectory {
     public boolean isMember(String netbiosName) throws IllegalArgumentException {
 	init();
 	return domains.containsKey(getDomain(netbiosName));
+    }
+
+    public boolean isMemberSid(String sid) {
+	return false;
     }
 
     // Private
