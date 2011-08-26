@@ -2031,7 +2031,14 @@
                <xsd:sequence>
                   <xsd:choice>
                      <xsd:element ref="oval-def:set"/>
-                     <xsd:element name="user" type="oval-def:EntityObjectStringType"/>
+                     <xsd:element name="user" type="oval-def:EntityObjectStringType">
+		        <!-- jOVAL embellishment -->
+                        <xsd:annotation>
+                           <xsd:appinfo>
+                              <jxb:property name="user_sid" />
+                           </xsd:appinfo>
+                        </xsd:annotation>
+	             </xsd:element>
                   </xsd:choice>
                </xsd:sequence>
             </xsd:extension>
@@ -2043,9 +2050,23 @@
          <xsd:complexContent>
             <xsd:extension base="oval-def:StateType">
                <xsd:sequence>
-                  <xsd:element name="user" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                  <xsd:element name="user" type="oval-def:EntityStateStringType" minOccurs="0">
+		     <!-- jOVAL embellishment -->
+                     <xsd:annotation>
+                        <xsd:appinfo>
+                           <jxb:property name="user_sid" />
+                        </xsd:appinfo>
+                     </xsd:annotation>
+		  </xsd:element>
                   <xsd:element name="enabled" type="oval-def:EntityStateBoolType" minOccurs="0"/>
-                  <xsd:element name="group" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                  <xsd:element name="group" type="oval-def:EntityStateStringType" minOccurs="0">
+		     <!-- jOVAL embellishment -->
+                     <xsd:annotation>
+                        <xsd:appinfo>
+                           <jxb:property name="group_sid" />
+                        </xsd:appinfo>
+                     </xsd:annotation>
+		  </xsd:element>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
