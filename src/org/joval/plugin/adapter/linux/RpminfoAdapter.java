@@ -222,15 +222,16 @@ public class RpminfoAdapter implements IAdapter {
 		item.setRelease(release);
 	    } else if ("Signature".equals(param)) {
 		EntityItemStringType signatureKeyid = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		int ptr = value.indexOf("Key ID");
-		if (ptr == -1) {
+		if (value.toUpperCase().indexOf("(NONE)") != -1) {
+		    signatureKeyid.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		} else if (value.indexOf("Key ID") == -1) {
 		    signatureKeyid.setStatus(StatusEnumeration.ERROR);
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALSystem.getMessage("ERROR_RPMINFO_SIGKEY", value));
 		    item.getMessage().add(msg);
 		} else {
-		    signatureKeyid.setValue(value.substring(ptr+7).trim());
+		    signatureKeyid.setValue(value.substring(value.indexOf("Key ID")+7).trim());
 		}
 		item.setSignatureKeyid(signatureKeyid);
 	    }
