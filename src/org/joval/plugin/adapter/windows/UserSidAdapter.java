@@ -13,6 +13,8 @@ import oval.schemas.definitions.windows.UserSid55Object;
 import oval.schemas.definitions.windows.UserSidObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 
+import org.joval.identity.windows.ActiveDirectory;
+import org.joval.identity.windows.LocalDirectory;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.oval.OvalException;
@@ -27,8 +29,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class UserSidAdapter extends UserSid55Adapter {
-    public UserSidAdapter(String hostname, IWmiProvider wmi) {
-	super(hostname, wmi);
+    public UserSidAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
+	super(local, ad, wmi);
     }
 
     /**

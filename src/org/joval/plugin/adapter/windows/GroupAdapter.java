@@ -44,14 +44,14 @@ import org.joval.windows.wmi.WmiException;
  */
 public class GroupAdapter implements IAdapter {
     private IWmiProvider wmi;
-    private String hostname;
 
     protected LocalDirectory local = null;
     protected ActiveDirectory ad = null;
 
-    public GroupAdapter(String hostname, IWmiProvider wmi) {
+    public GroupAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
+	this.local = local;
+	this.ad = ad;
 	this.wmi = wmi;
-	this.hostname = hostname.toUpperCase();
     }
 
     // Implement IAdapter
@@ -62,8 +62,6 @@ public class GroupAdapter implements IAdapter {
 
     public boolean connect() {
 	if (wmi.connect()) {
-	    local = new LocalDirectory(hostname, wmi);
-	    ad = new ActiveDirectory(wmi);
 	    return true;
 	}
 	return false;

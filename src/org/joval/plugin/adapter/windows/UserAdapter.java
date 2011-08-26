@@ -49,9 +49,10 @@ public class UserAdapter implements IAdapter {
     protected LocalDirectory local = null;
     protected ActiveDirectory ad = null;
 
-    public UserAdapter(String hostname, IWmiProvider wmi) {
+    public UserAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
+	this.local = local;
+	this.ad = ad;
 	this.wmi = wmi;
-	this.hostname = hostname.toUpperCase();
     }
 
     // Implement IAdapter
@@ -62,8 +63,6 @@ public class UserAdapter implements IAdapter {
 
     public boolean connect() {
 	if (wmi.connect()) {
-	    local = new LocalDirectory(hostname, wmi);
-	    ad = new ActiveDirectory(wmi);
 	    return true;
 	}
 	return false;

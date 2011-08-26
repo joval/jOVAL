@@ -42,8 +42,8 @@ import org.joval.windows.wmi.WmiException;
  * @version %I% %G%
  */
 public class UserSid55Adapter extends UserAdapter {
-    public UserSid55Adapter(String hostname, IWmiProvider wmi) {
-	super(hostname, wmi);
+    public UserSid55Adapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
+	super(local, ad, wmi);
     }
 
     /**

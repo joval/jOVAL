@@ -21,6 +21,8 @@ import java.util.logging.Level;
 import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import org.joval.identity.windows.ActiveDirectory;
+import org.joval.identity.windows.LocalDirectory;
 import org.joval.intf.di.IJovaldiPlugin;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.IEnvironment;
@@ -121,13 +123,16 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		    throw new RuntimeException(getMessage("ERROR_INFO"), e);
 		}
 		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win.getFilesystem(), win.getWmiProvider()));
-		adapters.add(new GroupAdapter(info.getPrimaryHostName(), win.getWmiProvider()));
-		adapters.add(new GroupSidAdapter(info.getPrimaryHostName(), win.getWmiProvider()));
 		adapters.add(new RegistryAdapter(win.getRegistry()));
-		adapters.add(new UserAdapter(info.getPrimaryHostName(), win.getWmiProvider()));
-		adapters.add(new UserSid55Adapter(info.getPrimaryHostName(), win.getWmiProvider()));
-		adapters.add(new UserSidAdapter(info.getPrimaryHostName(), win.getWmiProvider()));
 		adapters.add(new WmiAdapter(win.getWmiProvider()));
+
+		LocalDirectory local = new LocalDirectory(info.getPrimaryHostName(), win.getWmiProvider());
+		ActiveDirectory ad = new ActiveDirectory(win.getWmiProvider());
+		adapters.add(new GroupAdapter(local, ad, win.getWmiProvider()));
+		adapters.add(new GroupSidAdapter(local, ad, win.getWmiProvider()));
+		adapters.add(new UserAdapter(local, ad, win.getWmiProvider()));
+		adapters.add(new UserSid55Adapter(local, ad, win.getWmiProvider()));
+		adapters.add(new UserSidAdapter(local, ad, win.getWmiProvider()));
 		break;
 	      }
 

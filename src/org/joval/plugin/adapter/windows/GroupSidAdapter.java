@@ -42,8 +42,8 @@ import org.joval.windows.wmi.WmiException;
  * @version %I% %G%
  */
 public class GroupSidAdapter extends GroupAdapter {
-    public GroupSidAdapter(String hostname, IWmiProvider wmi) {
-	super(hostname, wmi);
+    public GroupSidAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
+	super(local, ad, wmi);
     }
 
     /**
