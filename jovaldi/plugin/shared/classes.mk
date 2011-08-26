@@ -55,6 +55,7 @@ SHARED=\
 	org.joval.plugin.adapter.windows.RegistryAdapter		\
 	org.joval.plugin.adapter.windows.UserAdapter			\
 	org.joval.plugin.adapter.windows.UserSid55Adapter		\
+	org.joval.plugin.adapter.windows.UserSidAdapter			\
 	org.joval.plugin.adapter.windows.WmiAdapter			\
 	org.joval.test.AD						\
 	org.joval.test.Exec						\
