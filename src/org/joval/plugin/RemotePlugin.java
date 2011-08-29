@@ -13,15 +13,19 @@ import org.vngx.jsch.exception.JSchException;
 
 import org.joval.discovery.SessionFactory;
 import org.joval.identity.Credential;
-import org.joval.identity.ssh.SshCredential;
-import org.joval.identity.windows.WindowsCredential;
 import org.joval.intf.di.IJovaldiConfiguration;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.os.embedded.system.IosSession;
+import org.joval.os.unix.remote.system.UnixSession;
+import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.oval.di.BasePlugin;
+import org.joval.ssh.identity.SshCredential;
+import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -100,51 +104,86 @@ public class RemotePlugin extends BasePlugin {
 	//
 	} else if (hostname != null) {
 	    try {
-		session = sessionFactory.createSession(hostname);
-	    } catch (UnknownHostException e) {
+		IBaseSession base = sessionFactory.createSession(hostname);
+		ICredential cred = null;
+		if (base instanceof ILocked) {
+		    if (username == null) {
+			err = getMessage("ERROR_USERNAME");
+			return false;
+		    } else if (privateKey == null && password == null) {
+			err = getMessage("ERROR_PASSWORD");
+			return false;
+		    } else if (privateKey != null && !privateKey.isFile()) {
+			err = getMessage("ERROR_PRIVATE_KEY", privateKey.getPath());
+			return false;
+		    }
+    
+		    switch (base.getType()) {
+		      case WINDOWS:
+			if (domain == null) {
+			    domain = hostname;
+			}
+			cred = new WindowsCredential(domain, username, password);
+			break;
+    
+		      case SSH: 
+			if (privateKey != null) {
+			    try {
+				cred = new SshCredential(username, privateKey, passphrase, rootPassword);
+			    } catch (JSchException e) {
+				err = getMessage("ERROR_PRIVATE_KEY", e.getMessage());
+				return false;
+			    }
+			} else if (rootPassword != null) {
+			    cred = new SshCredential(username, password, rootPassword);
+			} else {
+			    cred = new Credential(username, password);
+			}
+			break;
+		    }
+    
+		    if (!((ILocked)base).unlock(cred)) {
+			err = getMessage("ERROR_LOCK", cred.getClass().getName(), session.getClass().getName());
+			return false;
+		    }
+		}
+
+	        switch (base.getType()) {
+		  case WINDOWS:
+		    session = (IWindowsSession)session;
+		    break;
+
+		  case UNIX:
+		    base.disconnect();
+		    UnixSession us = new UnixSession(new SshSession(hostname));
+		    us.unlock(cred);
+		    session = us;
+		    break;
+
+		  case CISCO_IOS:
+		    base.disconnect();
+		    IosSession is = new IosSession(new SshSession(hostname));
+		    is.unlock(cred);
+		    session = is;
+		    break;
+
+		  default:
+System.out.println("DAS: screwed: " + base.getType());
+		    break;
+	        }
+
+		if (session instanceof ILocked) {
+		    ((ILocked)session).unlock(cred);
+		}
+	    } catch (Exception e) {
 		err = e.getMessage();
 		return false;
 	    }
 
-	    if (session.getType() == ISession.WINDOWS) {
+	    if (session.getType() == IBaseSession.Type.WINDOWS) {
 		((IWindowsSession)session).set64BitRedirect(redirect64);
 	    }
-	    if (session instanceof ILocked) {
-		if (username == null) {
-		    err = getMessage("ERROR_USERNAME");
-		    return false;
-		} else if (privateKey == null && password == null) {
-		    err = getMessage("ERROR_PASSWORD");
-		    return false;
-		} else if (privateKey != null && !privateKey.isFile()) {
-		    err = getMessage("ERROR_PRIVATE_KEY", privateKey.getPath());
-		    return false;
-		}
-		ICredential cred;
-		if (session.getType() == ISession.WINDOWS) {
-		    if (domain == null) {
-			domain = hostname;
-		    }
-		    cred = new WindowsCredential(domain, username, password);
-		} else if (privateKey != null) {
-		    try {
-			cred = new SshCredential(username, privateKey, passphrase, rootPassword);
-		    } catch (JSchException e) {
-			err = getMessage("ERROR_PRIVATE_KEY", e.getMessage());
-			return false;
-		    }
-		} else if (rootPassword != null) {
-		    cred = new SshCredential(username, password, rootPassword);
-		} else {
-		    cred = new Credential(username, password);
-		}
-		if (((ILocked)session).unlock(cred)) {
-		    return true;
-		} else {
-		    err = getMessage("ERROR_LOCK", cred.getClass().getName(), session.getClass().getName());
-		    return false;
-		}
-	    }
+
 	    return true;
 	} else {
 	    err = getMessage("ERROR_HOSTNAME");

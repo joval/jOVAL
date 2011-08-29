@@ -3,7 +3,7 @@
 
 package org.joval.intf.windows.wmi;
 
-import org.joval.windows.wmi.WmiException;
+import org.joval.os.windows.wmi.WmiException;
 
 /**
  * An ISWbemObject is a collection of ISWbemProperties.

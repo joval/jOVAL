@@ -28,6 +28,7 @@ import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
+
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
@@ -70,7 +71,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 							   getObjectClass().getName(), obj.getClass().getName()));
 	}
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	for (String path : getPathList(rc)) {
+	List<String> paths = getPathList(rc);
+	for (String path : paths) {
 	    IFile f = null;
 	    try {
 		ReflectedFileObject fObj = new ReflectedFileObject(obj);
@@ -282,49 +284,53 @@ public abstract class BaseFileAdapter implements IAdapter {
 			List<String> files = new Vector<String>();
 			for (String pathString : list) {
 			    for (String fname : fnames) {
-				switch(filename.getOperation()) {
-				  case PATTERN_MATCH: {
-				    IFile f = fs.getFile(pathString);
-				    if (f.exists()) {
-					String[] children = f.list();
-					Pattern p = Pattern.compile(fname);
-					for (int i=0; i < children.length; i++) {
-					    if (p.matcher(children[i]).find()) {
-						files.add(pathString + fs.getDelimiter() + children[i]);
-					    }
-					}
-				    }
-				    break;
-				  }
-   
-				  case EQUALS:
-				    if (pathString.endsWith(fs.getDelimiter())) {
-					files.add(pathString + fname);
-				    } else {
-					files.add(pathString + fs.getDelimiter() + fname);
-				    }
-				    break;
-
-				  case NOT_EQUAL: {
-				    IFile f = fs.getFile(pathString);
-				    if (f.exists() && f.isDirectory()) {
-					String[] children = f.list();
-					for (int i=0; i < children.length; i++) {
-					    if (!fname.equals(children[i])) {
-						if (pathString.endsWith(fs.getDelimiter())) {
-						    files.add(pathString + fname);
-						} else {
-						    files.add(pathString + fs.getDelimiter() + fname);
+				try {
+				    switch(filename.getOperation()) {
+				      case PATTERN_MATCH: {
+					IFile f = fs.getFile(pathString);
+					if (f.exists()) {
+					    String[] children = f.list();
+					    Pattern p = Pattern.compile(fname);
+					    for (int i=0; i < children.length; i++) {
+						if (p.matcher(children[i]).find()) {
+						    files.add(pathString + fs.getDelimiter() + children[i]);
 						}
 					    }
 					}
+					break;
+				      }
+       
+				      case EQUALS:
+					if (pathString.endsWith(fs.getDelimiter())) {
+					    files.add(pathString + fname);
+					} else {
+					    files.add(pathString + fs.getDelimiter() + fname);
+					}
+					break;
+    
+				      case NOT_EQUAL: {
+					IFile f = fs.getFile(pathString);
+					if (f.exists() && f.isDirectory()) {
+					    String[] children = f.list();
+					    for (int i=0; i < children.length; i++) {
+						if (!fname.equals(children[i])) {
+						    if (pathString.endsWith(fs.getDelimiter())) {
+							files.add(pathString + fname);
+						    } else {
+							files.add(pathString + fs.getDelimiter() + fname);
+						    }
+						}
+					    }
+					}
+					break;
+				      }
+     
+				      default:
+					throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
+										       filename.getOperation()));
 				    }
-				    break;
-				  }
- 
-				  default:
-				    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
-										   filename.getOperation()));
+				} catch (IllegalArgumentException e) {
+       				    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 				}
 			    }
 			}

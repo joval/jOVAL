@@ -13,7 +13,7 @@ import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
-import org.joval.windows.wmi.WmiException;
+import org.joval.os.windows.wmi.WmiException;
 
 public class WMI {
     IWindowsSession session;

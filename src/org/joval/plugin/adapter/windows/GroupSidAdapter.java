@@ -25,15 +25,15 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.GroupSidItem;
 
-import org.joval.identity.windows.ActiveDirectory;
-import org.joval.identity.windows.LocalDirectory;
-import org.joval.identity.windows.Group;
-import org.joval.identity.windows.User;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.wmi.IWmiProvider;
+import org.joval.os.windows.identity.ActiveDirectory;
+import org.joval.os.windows.identity.LocalDirectory;
+import org.joval.os.windows.identity.Group;
+import org.joval.os.windows.identity.User;
+import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
-import org.joval.windows.wmi.WmiException;
 
 /**
  * Evaluates Group OVAL tests.

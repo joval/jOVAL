@@ -13,9 +13,12 @@ import java.net.UnknownHostException;
 import java.util.Properties;
 
 import org.joval.intf.identity.ICredential;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
-import org.joval.unix.remote.system.UnixSession;
-import org.joval.windows.remote.system.WindowsSession;
+import org.joval.os.embedded.system.IosSession;
+import org.joval.os.unix.remote.system.UnixSession;
+import org.joval.os.windows.remote.system.WindowsSession;
+import org.joval.ssh.system.SshSession;
 
 /**
  * Use this class to grab an ISession for a host.
@@ -40,16 +43,23 @@ public class SessionFactory {
 	}
     }
 
-    public ISession createSession(String hostname) throws UnknownHostException {
-	String type = props.getProperty(hostname);
-	if (type == null) {
+    public IBaseSession createSession(String hostname) throws UnknownHostException {
+	IBaseSession.Type type = IBaseSession.Type.UNKNOWN;
+	String s = props.getProperty(hostname);
+	if (s == null) {
 	    type = discoverSessionType(hostname);
-	}
-	if (WINDOWS.equals(type)) {
-	    return new WindowsSession(hostname);
-	} else if (SSH.equals(type)) {
-	    return new UnixSession(hostname);
 	} else {
+	    type = IBaseSession.Type.getType(s);
+	}
+
+	switch (type) {
+	  case SSH:
+	    return new SshSession(hostname);
+
+	  case WINDOWS:
+	    return new WindowsSession(hostname);
+
+	  default:
 	    throw new RuntimeException("Type: " + type + " not supported");
 	}
     }
@@ -60,16 +70,16 @@ public class SessionFactory {
      * We check for an SSH port listener (22), then an SMB port listener (135).  We check in that order because it is more
      * likely that a Unix machine will be running Samba than a Windows machine will be running an SSH server.
      */
-    private String discoverSessionType(String hostname) throws UnknownHostException {
-	String type = UNKNOWN;
+    private IBaseSession.Type discoverSessionType(String hostname) throws UnknownHostException {
+	IBaseSession.Type type = IBaseSession.Type.UNKNOWN;
 	if (hasListener(hostname, 22)) {
-	    type = SSH;
+	    type = IBaseSession.Type.SSH;
 	} else if (hasListener(hostname, 135)) {
-	    type = WINDOWS;
+	    type = IBaseSession.Type.WINDOWS;
 	} else {
-	    type = UNKNOWN;
+	    type = IBaseSession.Type.UNKNOWN;
 	}
-	props.setProperty(hostname, type);
+	props.setProperty(hostname, type.toString());
 	try {
 	    props.storeToXML(new FileOutputStream(propsFile), "Session Discovery Database");
 	} catch (IOException e) {

@@ -9,17 +9,17 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.ISession;
+import org.joval.os.windows.pe.ImageDOSHeader;
+import org.joval.os.windows.pe.ImageDataDirectory;
+import org.joval.os.windows.pe.ImageNTHeaders;
+import org.joval.os.windows.pe.ImageSectionHeader;
+import org.joval.os.windows.pe.resource.ImageResourceDataEntry;
+import org.joval.os.windows.pe.resource.ImageResourceDirectory;
+import org.joval.os.windows.pe.resource.ImageResourceDirectoryEntry;
+import org.joval.os.windows.pe.resource.Types;
+import org.joval.os.windows.pe.resource.version.VsVersionInfo;
+import org.joval.os.windows.pe.resource.version.VsFixedFileInfo;
 import org.joval.util.Version;
-import org.joval.windows.pe.ImageDOSHeader;
-import org.joval.windows.pe.ImageDataDirectory;
-import org.joval.windows.pe.ImageNTHeaders;
-import org.joval.windows.pe.ImageSectionHeader;
-import org.joval.windows.pe.resource.ImageResourceDataEntry;
-import org.joval.windows.pe.resource.ImageResourceDirectory;
-import org.joval.windows.pe.resource.ImageResourceDirectoryEntry;
-import org.joval.windows.pe.resource.Types;
-import org.joval.windows.pe.resource.version.VsVersionInfo;
-import org.joval.windows.pe.resource.version.VsFixedFileInfo;
 
 public class PE {
     ISession session;

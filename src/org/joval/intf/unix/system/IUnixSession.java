@@ -20,6 +20,11 @@ public interface IUnixSession extends ISession {
     Flavor getFlavor();
 
     /**
+     * Create a process that should last no longer than the specified number of milliseconds.
+     */
+    IProcess createProcess(String command, long millis, boolean debug) throws Exception;
+
+    /**
      * Enumeration of Unix flavors.
      */
     enum Flavor {

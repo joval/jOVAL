@@ -2,33 +2,36 @@ REMOTE=\
 	jcifs.smb.VolatileSmbFile					\
 	org.joval.discovery.SessionFactory				\
 	org.joval.identity.Credential					\
-	org.joval.identity.ssh.SshCredential				\
 	org.joval.identity.windows.WindowsCredential			\
 	org.joval.intf.identity.ICredential				\
 	org.joval.intf.identity.ILocked					\
+	org.joval.io.StreamLogger					\
 	org.joval.io.TailDashF						\
 	org.joval.plugin.RemotePlugin					\
-	org.joval.unix.remote.io.SftpError				\
-	org.joval.unix.remote.io.SftpFile				\
-	org.joval.unix.remote.io.SftpFilesystem				\
-	org.joval.unix.remote.system.SshProcess				\
-	org.joval.unix.remote.system.UnixSession			\
+	org.joval.os.embedded.system.IosSession				\
+	org.joval.os.unix.remote.system.UnixSession			\
+	org.joval.os.windows.remote.io.SmbFilesystem			\
+	org.joval.os.windows.remote.io.SmbFileProxy			\
+	org.joval.os.windows.remote.io.SmbRandomAccessProxy		\
+	org.joval.os.windows.remote.registry.Key			\
+	org.joval.os.windows.remote.registry.Registry			\
+	org.joval.os.windows.remote.system.WindowsProcess		\
+	org.joval.os.windows.remote.system.WindowsSession		\
+	org.joval.os.windows.remote.wmi.WmiConnection			\
+	org.joval.os.windows.remote.wmi.process.ICreateFlags		\
+	org.joval.os.windows.remote.wmi.process.IShowWindow		\
+	org.joval.os.windows.remote.wmi.process.SWbemSecurity		\
+	org.joval.os.windows.remote.wmi.process.Win32Process		\
+	org.joval.os.windows.remote.wmi.process.Win32ProcessStartup	\
+	org.joval.os.windows.remote.wmi.query.SimpleSWbemObject		\
+	org.joval.os.windows.remote.wmi.query.SimpleSWbemObjectSet	\
+	org.joval.os.windows.remote.wmi.query.SimpleSWbemProperty	\
+	org.joval.os.windows.remote.wmi.query.SimpleSWbemPropertySet	\
+	org.joval.ssh.identity.SshCredential				\
+	org.joval.ssh.io.SftpError					\
+	org.joval.ssh.io.SftpFile					\
+	org.joval.ssh.io.SftpFilesystem					\
+	org.joval.ssh.system.SshProcess					\
+	org.joval.ssh.system.SshSession					\
 	org.joval.util.JSchLogger					\
-	org.joval.test.Remote						\
-	org.joval.windows.remote.io.SmbFilesystem			\
-	org.joval.windows.remote.io.SmbFileProxy			\
-	org.joval.windows.remote.io.SmbRandomAccessProxy		\
-	org.joval.windows.remote.registry.Key				\
-	org.joval.windows.remote.registry.Registry			\
-	org.joval.windows.remote.system.WindowsProcess			\
-	org.joval.windows.remote.system.WindowsSession			\
-	org.joval.windows.remote.wmi.WmiConnection			\
-	org.joval.windows.remote.wmi.process.ICreateFlags		\
-	org.joval.windows.remote.wmi.process.IShowWindow		\
-	org.joval.windows.remote.wmi.process.SWbemSecurity		\
-	org.joval.windows.remote.wmi.process.Win32Process		\
-	org.joval.windows.remote.wmi.process.Win32ProcessStartup	\
-	org.joval.windows.remote.wmi.query.SimpleSWbemObject		\
-	org.joval.windows.remote.wmi.query.SimpleSWbemObjectSet		\
-	org.joval.windows.remote.wmi.query.SimpleSWbemProperty		\
-	org.joval.windows.remote.wmi.query.SimpleSWbemPropertySet
+	org.joval.test.Remote

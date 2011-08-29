@@ -105,6 +105,7 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
+import org.joval.os.windows.Timestamp;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
@@ -116,7 +117,6 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
 import org.joval.util.StringTools;
 import org.joval.util.Version;
-import org.joval.windows.Timestamp;
 
 /**
  * Engine that evaluates OVAL tests on remote hosts.

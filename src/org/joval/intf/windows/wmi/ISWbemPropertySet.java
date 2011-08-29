@@ -5,7 +5,7 @@ package org.joval.intf.windows.wmi;
 
 import java.util.Iterator;
 
-import org.joval.windows.wmi.WmiException;
+import org.joval.os.windows.wmi.WmiException;
 
 /**
  * An ISWbemPropertySet is a collection of ISWbemProperties.

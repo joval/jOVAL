@@ -1,0 +1,374 @@
+// Copyright (C) 2011 jOVAL.org.  All rights reserved.
+// This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+
+package org.joval.ssh.io;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.logging.Level;
+
+import org.vngx.jsch.ChannelSftp;
+import org.vngx.jsch.SftpATTRS;
+import org.vngx.jsch.exception.JSchException;
+import org.vngx.jsch.exception.SftpException;
+
+import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFilesystem;
+import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.unix.io.IUnixFile;
+import org.joval.io.BaseFile;
+import org.joval.util.JOVALSystem;
+
+/**
+ * An IFile wrapper for an SFTP channel.
+ *
+ * @author David A. Solin
+ * @version %I% %G%
+ */
+class SftpFile extends BaseFile implements IUnixFile {
+    private SftpFilesystem sfs;
+    private SftpATTRS attrs = null;
+    private String path, permissions;
+    boolean tested=false, doesExist;
+
+    SftpFile(SftpFilesystem fs, String path) throws JSchException {
+	super(fs);
+	sfs = fs;
+	this.path = path;
+    }
+
+    // Implement INode
+
+    public String getCanonicalPath() {
+	return toString();
+    }
+
+    // Implement IFile
+
+    public long accessTime() throws IOException {
+	if (exists()) {
+	    return attrs.getAccessTime() * 1000L;
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    /**
+     * Not really supported by this implementation.
+     */
+    public long createTime() throws IOException {
+	return lastModified() * 1000L;
+    }
+
+    public boolean exists() throws IOException {
+	if (!tested) {
+	    tested = true;
+	    try {
+		attrs = sfs.getCS().lstat(path);
+		permissions = attrs.getPermissionsString();
+		if (permissions.length() != 10) {
+		    throw new IOException("\"" + permissions + "\"");
+		}
+		doesExist = true;
+	    } catch (SftpException e) {
+		switch(getErrorCode(e)) {
+		  case SftpError.NO_SUCH_FILE:
+		    doesExist = false;
+		    break;
+		  default:
+		    throw new IOException(e);
+		}
+	    }
+	}
+	return doesExist;
+    }
+
+    public InputStream getInputStream() throws IOException {
+	if (exists()) {
+	    try {
+		return sfs.getCS().get(path);
+	    } catch (SftpException e) {
+		throw new IOException(e);
+	    }
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public OutputStream getOutputStream(boolean append) throws IOException {
+	if (isFile()) {
+	    try {
+		return sfs.getCS().put(path);
+	    } catch (SftpException e) {
+		throw new IOException(e);
+	    }
+	} else {
+	    throw new IOException("Cannot write to a directory: " + path);
+	}
+    }
+
+    public IRandomAccess getRandomAccess(String mode) throws IllegalArgumentException, IOException {
+	throw new UnsupportedOperationException("Not implemented");
+    }
+
+    public boolean isDirectory() throws IOException {
+	if (isLink()) {
+	    return fs.getFile(toString()).isDirectory();
+	} else if (exists()) {
+	    return attrs.isDir();
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean isFile() throws IOException {
+	if (isLink()) {
+	    return fs.getFile(toString()).isFile();
+	} else if (exists()) {
+	    return !isDirectory();
+	} else {
+	    return true;
+	}
+    }
+
+    public boolean isLink() throws IOException {
+	if (exists()) {
+	    return attrs.isLink();
+	} else {
+	    return false;
+	}
+    }
+
+    public long lastModified() throws IOException {
+	if (exists()) {
+	    return attrs.getModifiedTime() * 1000L;
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public long length() throws IOException {
+	if (exists()) {
+	    return attrs.getSize();
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public String[] list() throws IOException {
+	try {
+	    List<ChannelSftp.LsEntry> list = sfs.getCS().ls(path);
+	    String[] children = new String[0];
+	    ArrayList<String> al = new ArrayList<String>();
+	    Iterator<ChannelSftp.LsEntry> iter = list.iterator();
+	    while (iter.hasNext()) {
+		ChannelSftp.LsEntry entry = iter.next();
+		if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
+		    al.add(entry.getFilename());
+		}
+	    }
+	    return al.toArray(children);
+	} catch (SftpException e) {
+	    throw new IOException(e);
+	}
+    }
+
+    public int getFileType() throws IOException {
+	return FILE_TYPE_DISK;
+    }
+
+    public void delete() throws IOException {
+	if (exists()) {
+	    try {
+		sfs.getCS().rm(path);
+	    } catch (SftpException e) {
+		throw new IOException(e);
+	    }
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public String getLocalName() {
+	return path;
+    }
+
+    public String getName() {
+	return path.substring(path.lastIndexOf(fs.getDelimiter()+fs.getDelimiter().length()));
+    }
+
+    public String toString() {
+	try {
+	    return sfs.getCS().realpath(path);
+	} catch (SftpException e) {
+	    return path;
+	}
+    }
+
+    // Implement IUnixFile
+
+    public String getUnixFileType() throws IOException {
+	if (exists()) {
+	    switch(permissions.charAt(0)) {
+	      case 'd':
+		return "directory";
+	      case 'p':
+		return "fifo";
+	      case 'l':
+		return "symlink";
+	      case 'b':
+		return "block";
+	      case 'c':
+		return "character";
+	      case 's':
+		return "socket";
+	      case '-':
+	      default:
+		return "file";
+	    }
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public int getUserId() throws IOException {
+	if (exists()) {
+	    return attrs.getUId();
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public int getGroupId() throws IOException {
+	if (exists()) {
+	    return attrs.getGId();
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean uRead() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(1) == 'r';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean uWrite() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(2) == 'w';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean uExec() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(3) != '-';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean sUid() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(3) == 's';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean gRead() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(4) == 'r';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean gWrite() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(5) == 'w';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean gExec() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(6) != '-';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean sGid() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(6) == 's';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean oRead() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(7) == 'r';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean oWrite() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(8) == 'w';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean oExec() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(9) != '-';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean sticky() throws IOException {
+	if (exists()) {
+	    return permissions.charAt(9) == 't';
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    public boolean hasExtendedAcl() throws IOException {
+	if (exists()) {
+	    String[] exAttrs = attrs.getExtended();
+	    return exAttrs != null && exAttrs.length > 0;
+	} else {
+	    throw new FileNotFoundException(path);
+	}
+    }
+
+    // Private
+
+    private int getErrorCode(SftpException e) {
+	try {
+	    String s = e.toString();
+	    return Integer.parseInt(s.substring(0, s.indexOf(":")));
+	} catch (Exception ex) {
+	    return -1;
+	}
+    }
+}

@@ -152,10 +152,13 @@ public class RegistryAdapter implements IAdapter {
 	    patternMatch = true;
 	    List<String> newList = new Vector<String>();
 	    for (String value : list) {
-		for (IKey key : registry.search(hive, value)) {
-		    if (!newList.contains(key.getPath())) {
-			newList.add(key.getPath());
+		try {
+		    for (IKey key : registry.search(hive, value)) {
+			if (!newList.contains(key.getPath())) {
+			    newList.add(key.getPath());
+			}
 		    }
+		} catch (NoSuchElementException e) {
 		}
 	    }
 	    list = newList;

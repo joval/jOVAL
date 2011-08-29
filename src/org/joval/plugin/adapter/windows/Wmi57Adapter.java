@@ -30,9 +30,9 @@ import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
+import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
-import org.joval.windows.wmi.WmiException;
 
 /**
  * Evaluates WmiTest OVAL tests.

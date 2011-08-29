@@ -5,13 +5,13 @@ package org.joval.test;
 
 import java.util.NoSuchElementException;
 
-import org.joval.identity.windows.ActiveDirectory;
-import org.joval.identity.windows.Group;
-import org.joval.identity.windows.User;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.windows.wmi.WmiException;
+import org.joval.os.windows.identity.ActiveDirectory;
+import org.joval.os.windows.identity.Group;
+import org.joval.os.windows.identity.User;
+import org.joval.os.windows.wmi.WmiException;
 
 public class AD {
     IWindowsSession session;

@@ -13,8 +13,8 @@ import java.net.UnknownHostException;
 import java.util.Properties;
 
 import org.joval.intf.system.ISession;
-import org.joval.unix.system.UnixSession;
-import org.joval.windows.system.WindowsSession;
+import org.joval.os.unix.system.UnixSession;
+import org.joval.os.windows.system.WindowsSession;
 
 /**
  * Use this class to grab an ISession.

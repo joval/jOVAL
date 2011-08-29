@@ -7,6 +7,12 @@ import java.io.*;
 
 import org.joval.util.JOVALSystem;
 
+/**
+ * Some stream utilities.
+ *
+ * @author David A. Solin
+ * @version %I% %G%
+ */
 public class StreamTool {
     /**
      * Read from the InputStream until the buffer is completely filled.

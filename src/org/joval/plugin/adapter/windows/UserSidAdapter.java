@@ -13,10 +13,10 @@ import oval.schemas.definitions.windows.UserSid55Object;
 import oval.schemas.definitions.windows.UserSidObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 
-import org.joval.identity.windows.ActiveDirectory;
-import org.joval.identity.windows.LocalDirectory;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.wmi.IWmiProvider;
+import org.joval.os.windows.identity.ActiveDirectory;
+import org.joval.os.windows.identity.LocalDirectory;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALSystem;

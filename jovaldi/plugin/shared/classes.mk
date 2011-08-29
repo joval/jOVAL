@@ -1,8 +1,4 @@
 SHARED=\
-	org.joval.identity.windows.ActiveDirectory			\
-	org.joval.identity.windows.Group				\
-	org.joval.identity.windows.LocalDirectory			\
-	org.joval.identity.windows.User					\
 	org.joval.intf.io.IFile						\
 	org.joval.intf.io.IFilesystem					\
 	org.joval.intf.io.IPathRedirector				\
@@ -10,6 +6,7 @@ SHARED=\
 	org.joval.intf.system.IEnvironment				\
 	org.joval.intf.system.IProcess					\
 	org.joval.intf.system.ISession					\
+	org.joval.intf.unix.io.IUnixFile				\
 	org.joval.intf.unix.system.IUnixSession				\
 	org.joval.intf.util.tree.IForest				\
 	org.joval.intf.util.tree.INode					\
@@ -33,6 +30,50 @@ SHARED=\
 	org.joval.io.LittleEndian					\
 	org.joval.io.StreamTool						\
 	org.joval.oval.di.BasePlugin					\
+	org.joval.os.embedded.IosNetworkInterface			\
+	org.joval.os.embedded.IosSystemInfo				\
+	org.joval.os.unix.NetworkInterface				\
+	org.joval.os.unix.Sudo						\
+	org.joval.os.unix.UnixSystemInfo				\
+	org.joval.os.unix.io.UnixFile					\
+	org.joval.os.unix.system.Environment				\
+	org.joval.os.windows.WindowsSystemInfo				\
+	org.joval.os.windows.WOW3264PathRedirector			\
+	org.joval.os.windows.identity.ActiveDirectory			\
+	org.joval.os.windows.identity.Group				\
+	org.joval.os.windows.identity.LocalDirectory			\
+	org.joval.os.windows.identity.User				\
+	org.joval.os.windows.pe.Characteristics				\
+	org.joval.os.windows.pe.DLLCharacteristics			\
+	org.joval.os.windows.pe.ImageDOSHeader				\
+	org.joval.os.windows.pe.ImageFileHeader				\
+	org.joval.os.windows.pe.ImageNTHeaders				\
+	org.joval.os.windows.pe.ImageDataDirectory			\
+	org.joval.os.windows.pe.ImageOptionalHeader			\
+	org.joval.os.windows.pe.ImageOptionalHeader32			\
+	org.joval.os.windows.pe.ImageOptionalHeader64			\
+	org.joval.os.windows.pe.ImageSectionHeader			\
+	org.joval.os.windows.pe.LanguageConstants			\
+	org.joval.os.windows.pe.resource.ImageResourceDataEntry		\
+	org.joval.os.windows.pe.resource.ImageResourceDirectory		\
+	org.joval.os.windows.pe.resource.ImageResourceDirectoryEntry	\
+	org.joval.os.windows.pe.resource.Types				\
+	org.joval.os.windows.pe.resource.version.StringFileInfo		\
+	org.joval.os.windows.pe.resource.version.StringStructure	\
+	org.joval.os.windows.pe.resource.version.StringTable		\
+	org.joval.os.windows.pe.resource.version.Var			\
+	org.joval.os.windows.pe.resource.version.VarFileInfo		\
+	org.joval.os.windows.pe.resource.version.VsFixedFileInfo	\
+	org.joval.os.windows.pe.resource.version.VsVersionInfo		\
+	org.joval.os.windows.registry.BaseRegistry			\
+	org.joval.os.windows.registry.BinaryValue			\
+	org.joval.os.windows.registry.DwordValue			\
+	org.joval.os.windows.registry.ExpandStringValue			\
+	org.joval.os.windows.registry.MultiStringValue			\
+	org.joval.os.windows.registry.StringValue			\
+	org.joval.os.windows.registry.Value				\
+	org.joval.os.windows.system.Environment				\
+	org.joval.os.windows.wmi.WmiException				\
 	org.joval.plugin.adapter.independent.EnvironmentvariableAdapter	\
 	org.joval.plugin.adapter.independent.FamilyAdapter		\
 	org.joval.plugin.adapter.independent.TextfilecontentAdapter	\
@@ -64,47 +105,10 @@ SHARED=\
 	org.joval.test.PE						\
 	org.joval.test.Reg						\
 	org.joval.test.WMI						\
-	org.joval.unix.NetworkInterface					\
-	org.joval.unix.Sudo						\
-	org.joval.unix.UnixSystemInfo					\
-	org.joval.unix.system.Environment				\
 	org.joval.util.Base64						\
 	org.joval.util.BaseSession					\
 	org.joval.util.BaseFileAdapter					\
 	org.joval.util.tree.CachingTree					\
 	org.joval.util.tree.Forest					\
 	org.joval.util.tree.Node					\
-	org.joval.util.tree.Tree					\
-	org.joval.windows.WindowsSystemInfo				\
-	org.joval.windows.WOW3264PathRedirector				\
-	org.joval.windows.pe.Characteristics				\
-	org.joval.windows.pe.DLLCharacteristics				\
-	org.joval.windows.pe.ImageDOSHeader				\
-	org.joval.windows.pe.ImageFileHeader				\
-	org.joval.windows.pe.ImageNTHeaders				\
-	org.joval.windows.pe.ImageDataDirectory				\
-	org.joval.windows.pe.ImageOptionalHeader			\
-	org.joval.windows.pe.ImageOptionalHeader32			\
-	org.joval.windows.pe.ImageOptionalHeader64			\
-	org.joval.windows.pe.ImageSectionHeader				\
-	org.joval.windows.pe.LanguageConstants				\
-	org.joval.windows.pe.resource.ImageResourceDataEntry		\
-	org.joval.windows.pe.resource.ImageResourceDirectory		\
-	org.joval.windows.pe.resource.ImageResourceDirectoryEntry	\
-	org.joval.windows.pe.resource.Types				\
-	org.joval.windows.pe.resource.version.StringFileInfo		\
-	org.joval.windows.pe.resource.version.StringStructure		\
-	org.joval.windows.pe.resource.version.StringTable		\
-	org.joval.windows.pe.resource.version.Var			\
-	org.joval.windows.pe.resource.version.VarFileInfo		\
-	org.joval.windows.pe.resource.version.VsFixedFileInfo		\
-	org.joval.windows.pe.resource.version.VsVersionInfo		\
-	org.joval.windows.registry.BaseRegistry				\
-	org.joval.windows.registry.BinaryValue				\
-	org.joval.windows.registry.DwordValue				\
-	org.joval.windows.registry.ExpandStringValue			\
-	org.joval.windows.registry.MultiStringValue			\
-	org.joval.windows.registry.StringValue				\
-	org.joval.windows.registry.Value				\
-	org.joval.windows.system.Environment				\
-	org.joval.windows.wmi.WmiException
+	org.joval.util.tree.Tree

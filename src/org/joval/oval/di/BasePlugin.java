@@ -21,14 +21,17 @@ import java.util.logging.Level;
 import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.identity.windows.ActiveDirectory;
-import org.joval.identity.windows.LocalDirectory;
 import org.joval.intf.di.IJovaldiPlugin;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.os.embedded.IosSystemInfo;
+import org.joval.os.unix.UnixSystemInfo;
+import org.joval.os.windows.WindowsSystemInfo;
+import org.joval.os.windows.identity.ActiveDirectory;
+import org.joval.os.windows.identity.LocalDirectory;
 import org.joval.plugin.adapter.independent.EnvironmentvariableAdapter;
 import org.joval.plugin.adapter.independent.FamilyAdapter;
 import org.joval.plugin.adapter.independent.TextfilecontentAdapter;
@@ -52,9 +55,7 @@ import org.joval.plugin.adapter.windows.UserSid55Adapter;
 import org.joval.plugin.adapter.windows.UserSidAdapter;
 import org.joval.plugin.adapter.windows.Wmi57Adapter;
 import org.joval.plugin.adapter.windows.WmiAdapter;
-import org.joval.unix.UnixSystemInfo;
 import org.joval.util.JOVALSystem;
-import org.joval.windows.WindowsSystemInfo;
 
 /**
  * Abstract base class for jovaldi plug-ins.
@@ -112,7 +113,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    adapters.add(new XmlfilecontentAdapter(session.getFilesystem()));
 
 	    switch(session.getType()) {
-	      case ISession.WINDOWS: {
+	      case WINDOWS: {
 		IWindowsSession win = (IWindowsSession)session;
 		//
 		// Gather SystemInfo data
@@ -138,7 +139,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		break;
 	      }
 
-	      case ISession.UNIX: {
+	      case UNIX: {
 		IUnixSession unix = (IUnixSession)session;
 		info = new UnixSystemInfo(unix).getSystemInfo();
 		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(unix, unix.getFilesystem()));
@@ -157,6 +158,13 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		    adapters.add(new SmfAdapter(unix));
 		    break;
 		}
+		break;
+	      }
+
+	      case CISCO_IOS: {
+		info = new IosSystemInfo(session).getSystemInfo();
+//		adapters.add(new LineAdapter(session));
+//		adapters.add(new VersionAdapter(session));
 		break;
 	      }
 	    }
@@ -192,11 +200,14 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 
     public FamilyEnumeration getFamily() {
 	switch(session.getType()) {
-	  case ISession.WINDOWS:
+	  case WINDOWS:
 	    return FamilyEnumeration.WINDOWS;
 
-	  case ISession.UNIX:
+	  case UNIX:
 	    return FamilyEnumeration.UNIX;
+
+	  case CISCO_IOS:
+	    return FamilyEnumeration.IOS;
 
 	  default:
 	    return FamilyEnumeration.UNDEFINED;

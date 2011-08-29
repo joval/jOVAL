@@ -32,7 +32,7 @@ public class DefaultPlugin extends BasePlugin {
 	for (int i=0; i < args.length; i++) {
 	    if (args[i].equals("-redirect64")) {
 		boolean redirect64 = "true".equals(args[++i]);
-		if (session.getType() == ISession.WINDOWS) {
+		if (session.getType() == ISession.Type.WINDOWS) {
 		    ((IWindowsSession)session).set64BitRedirect(redirect64);
 		}
 	    }

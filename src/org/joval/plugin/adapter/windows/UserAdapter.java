@@ -26,15 +26,15 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.UserItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.identity.windows.ActiveDirectory;
-import org.joval.identity.windows.LocalDirectory;
-import org.joval.identity.windows.User;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.wmi.IWmiProvider;
+import org.joval.os.windows.identity.ActiveDirectory;
+import org.joval.os.windows.identity.LocalDirectory;
+import org.joval.os.windows.identity.User;
+import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
-import org.joval.windows.wmi.WmiException;
 
 /**
  * Evaluates User OVAL tests.
