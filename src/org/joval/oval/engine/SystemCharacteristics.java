@@ -83,6 +83,7 @@ public class SystemCharacteristics {
 
     private OvalSystemCharacteristics osc;
     private Hashtable<String, ObjectType> objectTable;
+    private Hashtable<String, Hashtable<BigInteger, JAXBElement<? extends ItemType>>> objectItemTable;
     private Hashtable<BigInteger, JAXBElement<? extends ItemType>> itemTable;
     private Hashtable<String, BigInteger> itemChecksums;
     private Hashtable<String, List<VariableValueType>> variableTable;
@@ -95,6 +96,7 @@ public class SystemCharacteristics {
      */
     SystemCharacteristics(IPlugin plugin) {
 	objectTable = new Hashtable<String, ObjectType>();
+	objectItemTable = new Hashtable<String, Hashtable<BigInteger, JAXBElement<? extends ItemType>>>();
 	itemTable = new Hashtable<BigInteger, JAXBElement<? extends ItemType>>();
 	variableTable = new Hashtable<String, List<VariableValueType>>();
 	itemChecksums = new Hashtable<String, BigInteger>();
@@ -123,6 +125,7 @@ public class SystemCharacteristics {
 
 	variableTable = new Hashtable<String, List<VariableValueType>>();
 	objectTable = new Hashtable<String, ObjectType>();
+	objectItemTable = new Hashtable<String, Hashtable<BigInteger, JAXBElement<? extends ItemType>>>();
 	for (ObjectType obj : osc.getCollectedObjects().getObject()) {
 	    String id = obj.getId();
 	    List<MessageType> messages = obj.getMessage();
@@ -275,7 +278,7 @@ public class SystemCharacteristics {
      * the ObjectType and ItemType (if such a relation does not already exist).
      */
     void relateItem(String objectId, BigInteger itemId) throws NoSuchElementException {
-	ItemType item = itemTable.get(itemId).getValue();
+	JAXBElement<? extends ItemType> item = itemTable.get(itemId);
 	if (item == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_ITEM", itemId.toString()));
 	}
@@ -283,14 +286,18 @@ public class SystemCharacteristics {
 	if (obj == null) {
 	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", objectId));
 	}
-	for (ReferenceType ref : obj.getReference()) {
-	    if (ref.getItemRef().equals(itemId)) {
-		return; // duplicate
-	    }
+
+	Hashtable<BigInteger, JAXBElement<? extends ItemType>> objectItems = objectItemTable.get(objectId);
+	if (objectItems == null) {
+	    objectItems = new Hashtable<BigInteger, JAXBElement<? extends ItemType>>();
+	    objectItemTable.put(objectId, objectItems);
 	}
-	ReferenceType ref = JOVALSystem.factories.sc.core.createReferenceType();
-	ref.setItemRef(itemId);
-	obj.getReference().add(ref);
+	if (!objectItems.containsKey(itemId)) {
+	    objectItems.put(itemId, item);
+	    ReferenceType ref = JOVALSystem.factories.sc.core.createReferenceType();
+	    ref.setItemRef(itemId);
+	    obj.getReference().add(ref);
+	}
     }
 
     void storeVariable(VariableValueType var) {

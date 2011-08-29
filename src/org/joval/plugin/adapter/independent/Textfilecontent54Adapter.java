@@ -5,7 +5,7 @@ package org.joval.plugin.adapter.independent;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+import java.util.Collection;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -63,10 +63,10 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
      *
      * @override
      */
-    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
+    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
 		throws IOException, OvalException {
 
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	TextfilecontentItem baseItem = null;
 	if (base instanceof TextfilecontentItem) {
@@ -94,7 +94,7 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		} else {
 		    flags = Pattern.MULTILINE;
 		}
-		List<Pattern> patterns = new Vector<Pattern>();
+		Collection<Pattern> patterns = new Vector<Pattern>();
 		if (tfcObj.getPattern().isSetVarRef()) {
 		    for (String value : rc.resolve(tfcObj.getPattern().getVarRef())) {
 			patterns.add(Pattern.compile(value, flags));

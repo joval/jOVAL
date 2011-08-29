@@ -11,7 +11,7 @@ import java.io.FileNotFoundException;
 import java.math.BigInteger;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -84,10 +84,10 @@ public class FileAdapter extends BaseFileAdapter {
 	return JOVALSystem.factories.sc.unix.createFileItem();
     }
 
-    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
+    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
 		throws IOException, OvalException {
 
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {
 	    setItem((FileItem)base, f);
 	    items.add(JOVALSystem.factories.sc.unix.createFileItem((FileItem)base));

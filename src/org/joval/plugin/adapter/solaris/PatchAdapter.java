@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Hashtable;
-import java.util.List;
+import java.util.Collection;
 import java.util.Vector;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -44,13 +44,13 @@ import org.joval.util.JOVALSystem;
 public class PatchAdapter implements IAdapter {
     ISession session;
     String error = null;
-    Hashtable<String, List<RevisionEntry>> revisions;
-    Hashtable<String, List<SupercedenceEntry>> supercedence;
+    Hashtable<String, Collection<RevisionEntry>> revisions;
+    Hashtable<String, Collection<SupercedenceEntry>> supercedence;
 
     public PatchAdapter(ISession session) {
 	this.session = session;
-	revisions = new Hashtable<String, List<RevisionEntry>>();
-	supercedence = new Hashtable<String, List<SupercedenceEntry>>();
+	revisions = new Hashtable<String, Collection<RevisionEntry>>();
+	supercedence = new Hashtable<String, Collection<SupercedenceEntry>>();
     }
 
     // Implement IAdapter
@@ -70,7 +70,7 @@ public class PatchAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	PatchObject pObj = (PatchObject)rc.getObject();
 	int iBase = 0;
 	try {
@@ -79,7 +79,7 @@ public class PatchAdapter implements IAdapter {
 	    throw new OvalException(e);
 	}
 
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	switch(pObj.getBase().getOperation()) {
 	  case EQUALS:
 	    items.addAll(getItems((String)pObj.getBase().getValue()));
@@ -174,9 +174,9 @@ public class PatchAdapter implements IAdapter {
 
     // Internal
 
-    private List<JAXBElement<PatchItem>> getItems(String base) {
-	List<JAXBElement<PatchItem>> items = new Vector<JAXBElement<PatchItem>>();
-	List<RevisionEntry> entries = revisions.get(base);
+    private Collection<JAXBElement<PatchItem>> getItems(String base) {
+	Collection<JAXBElement<PatchItem>> items = new Vector<JAXBElement<PatchItem>>();
+	Collection<RevisionEntry> entries = revisions.get(base);
 	if (entries != null) {
 	    for (RevisionEntry entry : entries) {
 		PatchItem item = JOVALSystem.factories.sc.solaris.createPatchItem();
@@ -232,7 +232,7 @@ public class PatchAdapter implements IAdapter {
 		    PatchEntry superceded = new PatchEntry(tok.nextToken().trim());
 		    obsoletes.add(superceded);
 		    String obsoleteBase = superceded.getBaseString();
-		    List<SupercedenceEntry> list = supercedence.get(obsoleteBase);
+		    Collection<SupercedenceEntry> list = supercedence.get(obsoleteBase);
 		    if (list == null) {
 			list = new Vector<SupercedenceEntry>();
 			supercedence.put(obsoleteBase, list);
@@ -273,7 +273,7 @@ public class PatchAdapter implements IAdapter {
 		if (revisions.containsKey(patch.getBaseString())) {
 		    revisions.get(patch.getBaseString()).add(entry);
 		} else {
-		    List<RevisionEntry> list = new Vector<RevisionEntry>();
+		    Collection<RevisionEntry> list = new Vector<RevisionEntry>();
 		    list.add(entry);
 		    revisions.put(patch.getBaseString(), list);
 		}
@@ -293,14 +293,14 @@ public class PatchAdapter implements IAdapter {
 
     class RevisionEntry {
 	PatchEntry patch;
-	List<PatchEntry> obsoletes, requires, incompatibles;
-	List<String> packages;
+	Collection<PatchEntry> obsoletes, requires, incompatibles;
+	Collection<String> packages;
 
 	RevisionEntry(PatchEntry patch,
-		      List<PatchEntry> obsoletes,
-		      List<PatchEntry> requires,
-		      List<PatchEntry> incompatibles,
-		      List<String> packages) {
+		      Collection<PatchEntry> obsoletes,
+		      Collection<PatchEntry> requires,
+		      Collection<PatchEntry> incompatibles,
+		      Collection<String> packages) {
 	    this.patch = patch;
 	    this.obsoletes = obsoletes;
 	    this.requires = requires;

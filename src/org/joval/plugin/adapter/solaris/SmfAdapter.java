@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Hashtable;
-import java.util.List;
+import java.util.Collection;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -96,9 +96,9 @@ public class SmfAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	SmfObject sObj = (SmfObject)rc.getObject();
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	switch(sObj.getFmri().getOperation()) {
 	  case EQUALS:

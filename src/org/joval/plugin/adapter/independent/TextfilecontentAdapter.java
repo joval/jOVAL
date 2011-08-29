@@ -5,7 +5,7 @@ package org.joval.plugin.adapter.independent;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+import java.util.Collection;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
@@ -66,10 +66,10 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
+    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
 		throws IOException, OvalException {
 
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	TextfilecontentItem baseItem = null;
 	if (base instanceof TextfilecontentItem) {
@@ -128,9 +128,9 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	return items;
     }
 
-    protected List<JAXBElement<TextfilecontentItem>> getItems(Pattern p, TextfilecontentItem baseItem, String s) {
+    protected Collection<JAXBElement<TextfilecontentItem>> getItems(Pattern p, TextfilecontentItem baseItem, String s) {
 	Matcher m = p.matcher(s);
-	List<JAXBElement<TextfilecontentItem>> items = new Vector<JAXBElement<TextfilecontentItem>>();
+	Collection<JAXBElement<TextfilecontentItem>> items = new Vector<JAXBElement<TextfilecontentItem>>();
 	for (int instanceNum=1; m.find(); instanceNum++) {
 	    TextfilecontentItem item = (TextfilecontentItem)createFileItem();
 	    item.setPath(baseItem.getPath());

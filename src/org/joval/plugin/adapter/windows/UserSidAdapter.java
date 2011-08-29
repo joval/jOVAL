@@ -3,7 +3,7 @@
 
 package org.joval.plugin.adapter.windows;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBElement;
 
@@ -43,7 +43,7 @@ public class UserSidAdapter extends UserSid55Adapter {
     /**
      * @override
      */
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	return super.getItems(new USRequestContext(rc));
     }
 
@@ -68,7 +68,7 @@ public class UserSidAdapter extends UserSid55Adapter {
 	    base.addMessage(msg);
 	}
 
-	public List<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException {
+	public Collection<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException {
 	    return base.resolve(variableId);
 	}
     }

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -47,11 +48,11 @@ import org.joval.util.Version;
  */
 public abstract class BaseFileAdapter implements IAdapter {
     protected IFilesystem fs;
-    protected Hashtable<String, List<String>> pathMap;
+    protected Hashtable<String, Collection<String>> pathMap;
 
     protected BaseFileAdapter(IFilesystem fs) {
 	this.fs = fs;
-	pathMap = new Hashtable<String, List<String>>();
+	pathMap = new Hashtable<String, Collection<String>>();
     }
 
     // Implement IAdapter
@@ -63,15 +64,15 @@ public abstract class BaseFileAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	ObjectType obj = rc.getObject();
 	String id = obj.getId();
 	if (!obj.getClass().getName().equals(getObjectClass().getName())) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
 							   getObjectClass().getName(), obj.getClass().getName()));
 	}
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	List<String> paths = getPathList(rc);
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<String> paths = getPathList(rc);
 	for (String path : paths) {
 	    IFile f = null;
 	    try {
@@ -183,7 +184,7 @@ public abstract class BaseFileAdapter implements IAdapter {
      *
      * @arg it the base ItemType containing filepath, path and filename information already populated
      */
-    protected abstract List<JAXBElement<? extends ItemType>>
+    protected abstract Collection<JAXBElement<? extends ItemType>>
 	getItems(ItemType it, IFile f, IRequestContext rc) throws IOException, OvalException;
 
     // Internal
@@ -192,9 +193,9 @@ public abstract class BaseFileAdapter implements IAdapter {
      * Get a list of String paths for this object.  This accommodates searches (from pattern match operations),
      * singletons (from equals operations) and handles recursive searches specified by FileBehaviors.
      */
-    final List<String> getPathList(IRequestContext rc) throws OvalException {
+    final Collection<String> getPathList(IRequestContext rc) throws OvalException {
 	ObjectType obj = rc.getObject();
-	List<String> list = pathMap.get(obj.getId());
+	Collection<String> list = pathMap.get(obj.getId());
 	if (list != null) {
 	    return list;
 	}
@@ -205,7 +206,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 
 	    boolean patternMatch = false;
 	    if (fObj.isSetFilepath()) {
-		List<String> filepaths = new Vector<String>();
+		Collection<String> filepaths = new Vector<String>();
 		EntityObjectStringType filepath = fObj.getFilepath();
 		if (filepath.isSetVarRef()) {
 		    filepaths.addAll(rc.resolve(filepath.getVarRef()));
@@ -226,7 +227,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", filepath.getOperation()));
 		}
 	    } else if (fObj.isSetPath()) {
-		List<String> paths = new Vector<String>();
+		Collection<String> paths = new Vector<String>();
 		EntityObjectStringType path = fObj.getPath();
 		if (path.isSetVarRef()) {
 		    paths.addAll(rc.resolve(path.getVarRef()));
@@ -254,11 +255,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    //
 		    // Wildcard pattern matches are really supposed to be recursive searches, unfortunately
 		    //
-		    List<String> newList = new Vector<String>();
+		    Collection<String> newList = new Vector<String>();
 		    for (String value : list) {
 			if (((String)path.getValue()).indexOf(".*") != -1 ||
 			    ((String)path.getValue()).indexOf(".+") != -1) {
-			    List<String> l = new Vector<String>();
+			    Collection<String> l = new Vector<String>();
 			    l.add(value);
 			    newList.addAll(getPaths(l, -1, "down", "directories"));
 			}
@@ -275,13 +276,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    if (filename == null) {
 			// False positive for isSetFilename -- happens with nil
 		    } else {
-			List<String> fnames = new Vector<String>();
+			Collection<String> fnames = new Vector<String>();
 			if (filename.isSetVarRef()) {
 			    fnames.addAll(rc.resolve(filename.getVarRef()));
 			} else {
 			    fnames.add((String)filename.getValue());
 			}
-			List<String> files = new Vector<String>();
+			Collection<String> files = new Vector<String>();
 			for (String pathString : list) {
 			    for (String fname : fnames) {
 				try {
@@ -365,11 +366,11 @@ public abstract class BaseFileAdapter implements IAdapter {
     /**
      * Crawls recursively based on FileBehaviors.
      */
-    private List<String> getPaths(List<String> list, int depth, String recurseDirection, String recurse) {
+    private Collection<String> getPaths(Collection<String> list, int depth, String recurseDirection, String recurse) {
 	if ("none".equals(recurseDirection) || depth == 0) {
 	    return list;
 	} else {
-	    List<String> results = new Vector<String>();
+	    Collection<String> results = new Vector<String>();
 	    for (String path : list) {
 		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_FS_RECURSE", path));
 		try {
@@ -417,16 +418,17 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    //
 	    // Eliminate any duplicates, and remove any trailing slashes
 	    //
-	    List<String> deduped = new Vector<String>();
+	    Object o = new Object();
+	    Hashtable<String, Object> deduped = new Hashtable<String, Object>();
 	    for (String s : results) {
 		if (s.endsWith(fs.getDelimiter())) {
 		    s = s.substring(0, s.lastIndexOf(fs.getDelimiter()));
 		}
-		if (!deduped.contains(s)) {
-		    deduped.add(s);
+		if (!deduped.containsKey(s)) {
+		    deduped.put(s, o);
 		}
 	    }
-	    return deduped;
+	    return deduped.keySet();
 	}
     }
 

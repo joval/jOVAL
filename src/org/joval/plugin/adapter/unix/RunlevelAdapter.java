@@ -7,7 +7,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -178,9 +178,9 @@ public class RunlevelAdapter implements IAdapter {
 	runlevels = null;
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	RunlevelObject rObj = (RunlevelObject)rc.getObject();
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	OperationEnumeration op = rObj.getRunlevel().getOperation();
 	switch(op) {
 	  case EQUALS: {
@@ -229,9 +229,9 @@ public class RunlevelAdapter implements IAdapter {
     /**
      * Get all the items matching the serviceName/operation, given the specified runlevel.
      */
-    private List<JAXBElement<RunlevelItem>> getItems(IRequestContext rc, String rl) {
+    private Collection<JAXBElement<RunlevelItem>> getItems(IRequestContext rc, String rl) {
 	RunlevelObject rObj = (RunlevelObject)rc.getObject();
-	List<JAXBElement<RunlevelItem>> items = new Vector<JAXBElement<RunlevelItem>>();
+	Collection<JAXBElement<RunlevelItem>> items = new Vector<JAXBElement<RunlevelItem>>();
 	Hashtable<String, Boolean> runlevel = runlevels.get(rl);
 	if (runlevel != null) {
 	    OperationEnumeration op = rObj.getServiceName().getOperation();

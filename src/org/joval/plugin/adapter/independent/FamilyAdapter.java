@@ -3,7 +3,7 @@
 
 package org.joval.plugin.adapter.independent;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Vector;
 import javax.xml.bind.JAXBElement;
 
@@ -45,8 +45,8 @@ public class FamilyAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	items.add(JOVALSystem.factories.sc.independent.createFamilyItem(getItem()));
 	return items;
     }

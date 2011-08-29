@@ -168,6 +168,8 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		break;
 	      }
 	    }
+	} else if (!online) {
+	    JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_OFFLINE"));
 	} else {
 	    throw new RuntimeException(getMessage("ERROR_SESSION_CONNECTION"));
 	}

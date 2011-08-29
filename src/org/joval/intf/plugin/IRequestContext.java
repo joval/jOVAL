@@ -3,7 +3,7 @@
 
 package org.joval.intf.plugin;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 
 import oval.schemas.common.MessageType;
@@ -34,5 +34,5 @@ public interface IRequestContext {
     /**
      * Resolve a variable.
      */
-    public List<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException;
+    public Collection<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException;
 }

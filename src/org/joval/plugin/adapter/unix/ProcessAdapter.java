@@ -9,7 +9,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -78,9 +78,9 @@ public class ProcessAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	ProcessObject pObj = (ProcessObject)rc.getObject();
-	List<JAXBElement <? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement <? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	if (error != null) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();

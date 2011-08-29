@@ -163,7 +163,7 @@ public class Engine implements IProducer {
 	return Definitions.getSchematronValidationErrors();
     }
 
-    private Hashtable <String, List<VariableValueType>>variableMap; // A cache of nested VariableValueTypes
+    private Hashtable <String, Collection<VariableValueType>>variableMap; // A cache of nested VariableValueTypes
     private Definitions definitions;
     private Variables externalVariables = null;
     private SystemCharacteristics sc = null;
@@ -189,7 +189,7 @@ public class Engine implements IProducer {
 	for (IAdapter adapter : plugin.getAdapters()) {
 	    adapters.put(adapter.getObjectClass(), new AdapterManager(adapter));
 	}
-	variableMap = new Hashtable<String, List<VariableValueType>>();
+	variableMap = new Hashtable<String, Collection<VariableValueType>>();
 	producer = new Producer();
 	filter = new DefinitionFilter();
 	state = State.CONFIGURE;
@@ -357,14 +357,16 @@ public class Engine implements IProducer {
     /**
      * Return the value of the Variable with the specified ID, and also add any chained variables to the provided list.
      */
-    List<String> resolve(String variableId, RequestContext rc) throws NoSuchElementException, ResolveException, OvalException {
-	List<VariableValueType> vars = rc.getVars();
+    Collection<String> resolve(String variableId, RequestContext rc)
+		throws NoSuchElementException, ResolveException, OvalException {
+
+	Collection<VariableValueType> vars = rc.getVars();
 	VariableType var = definitions.getVariable(variableId);
 	String varId = var.getId();
-	List<VariableValueType> cachedList = variableMap.get(varId);
+	Collection<VariableValueType> cachedList = variableMap.get(varId);
 	if (cachedList == null) {
 	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_VARIABLE_CREATE", varId));
-	    List<String> result = resolveInternal(var, vars);
+	    Collection<String> result = resolveInternal(var, vars);
 	    variableMap.put(varId, vars);
 	    return result;
 	} else {
@@ -495,7 +497,7 @@ public class Engine implements IProducer {
     /**
      * Scan an object live using an adapter, including crawling down any encountered Sets.
      */
-    private List<ItemType> scanObject(RequestContext rc) throws OvalException {
+    private Collection<ItemType> scanObject(RequestContext rc) throws OvalException {
 	ObjectType obj = rc.getObject();
 	String objectId = obj.getId();
 	producer.sendNotify(this, MESSAGE_OBJECT, objectId);
@@ -506,7 +508,7 @@ public class Engine implements IProducer {
 	    if (manager == null) {
 		throw new OvalException(JOVALSystem.getMessage("ERROR_ADAPTER_MISSING", obj.getClass().getName()));
 	    } else if (manager.isActive()) {
-		List<JAXBElement<? extends ItemType>> items = manager.getAdapter().getItems(rc);
+		Collection<JAXBElement<? extends ItemType>> items = manager.getAdapter().getItems(rc);
 		if (items.size() == 0) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
@@ -523,7 +525,7 @@ public class Engine implements IProducer {
 		    sc.storeVariable(var);
 		    sc.relateVariable(objectId, var.getVariableId());
 		}
-		List<ItemType> unwrapped = new Vector<ItemType>();
+		Collection<ItemType> unwrapped = new Vector<ItemType>();
 		for (JAXBElement<? extends ItemType> item : items) {
 		    unwrapped.add(item.getValue());
 		}
@@ -533,7 +535,7 @@ public class Engine implements IProducer {
 	    }
 	} else {
 	    try {
-		List<ItemType> items = getSetItems(s);
+		Collection<ItemType> items = getSetItems(s);
 		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
 		for (ItemType item : items) {
 		    sc.relateItem(objectId, item.getId());
@@ -548,18 +550,18 @@ public class Engine implements IProducer {
     /**
      * Get a list of items belonging to a Set.
      */
-    private List<ItemType> getSetItems(Set s) throws NoSuchElementException, OvalException {
+    private Collection<ItemType> getSetItems(Set s) throws NoSuchElementException, OvalException {
 	//
 	// First, retrieve the filtered list of items in the Set, recursively.
 	//
-	List<List<ItemType>> lists = new Vector<List<ItemType>>();
+	Collection<Collection<ItemType>> lists = new Vector<Collection<ItemType>>();
 	if (s.isSetSet()) {
 	    for (Set set : s.getSet()) {
 		lists.add(getSetItems(set));
 	    }
 	} else {
 	    for (String objectId : s.getObjectReference()) {
-		List<ItemType> items = null;
+		Collection<ItemType> items = null;
 		try {
 		    items = sc.getItemsByObjectId(objectId);
 		} catch (NoSuchElementException e) {
@@ -569,8 +571,8 @@ public class Engine implements IProducer {
 		// Apply filters, if any
 		// DAS: needs better error-handling
 		//
-		List<ItemType> filteredItems = new Vector<ItemType>();
-		List<Filter> filters = s.getFilter();
+		Collection<ItemType> filteredItems = new Vector<ItemType>();
+		Collection<Filter> filters = s.getFilter();
 		if (filters.size() > 0) {
 		    for (Filter filter : s.getFilter()) {
 			StateType state = definitions.getState(filter.getValue());
@@ -605,7 +607,7 @@ public class Engine implements IProducer {
 	switch(s.getSetOperator()) {
 	  case INTERSECTION: {
 	    ItemSet intersection = null;
-	    for (List<ItemType> items : lists) {
+	    for (Collection<ItemType> items : lists) {
 		if (intersection == null) {
 		    intersection = new ItemSet(items);
 		} else {
@@ -617,7 +619,10 @@ public class Engine implements IProducer {
 
 	  case COMPLEMENT: {
 	    if (lists.size() == 2) {
-		return new ItemSet(lists.get(0)).complement(new ItemSet(lists.get(1))).toList();
+		Iterator<Collection<ItemType>> iter = lists.iterator();
+		Collection<ItemType> set1 = iter.next();
+		Collection<ItemType> set2 = iter.next();
+		return new ItemSet(set1).complement(new ItemSet(set2)).toList();
 	    } else {
 		throw new OvalException(JOVALSystem.getMessage("ERROR_SET_COMPLEMENT", new Integer(lists.size())));
 	    }
@@ -626,7 +631,7 @@ public class Engine implements IProducer {
 	  case UNION:
 	  default: {
 	    ItemSet union = new ItemSet();
-	    for (List<ItemType> items : lists) {
+	    for (Collection<ItemType> items : lists) {
 		union = union.union(new ItemSet(items));
 	    }
 	    return union.toList();
@@ -876,9 +881,9 @@ public class Engine implements IProducer {
 			    JAXBElement element = (JAXBElement)itemEntityObj;
 			    EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)element.getValue();
 			    result = compare(stateEntity, itemEntity);
-			} else if (itemEntityObj instanceof List) {
+			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
-			    for (Object entityObj : (List)itemEntityObj) {
+			    for (Object entityObj : (Collection)itemEntityObj) {
 			        EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)entityObj;
 				cd.addResult(compare(stateEntity, itemEntity));
 			    }
@@ -1340,14 +1345,14 @@ public class Engine implements IProducer {
      *
      * DAS: TBD for 5.10: implementations for Count and Unique functions
      */
-    private List<String> resolveInternal(Object object, List <VariableValueType>list)
+    private Collection<String> resolveInternal(Object object, Collection<VariableValueType>list)
 		throws NoSuchElementException, ResolveException, OvalException {
 	//
 	// Why do variables point to variables?  Because sometimes they are nested.
 	//
 	if (object instanceof LocalVariable) {
 	    LocalVariable localVariable = (LocalVariable)object;
-	    List<String> values = resolveInternal(getComponent(localVariable), list);
+	    Collection<String> values = resolveInternal(getComponent(localVariable), list);
 	    for (String value : values) {
 		VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(localVariable.getId());
@@ -1365,7 +1370,7 @@ public class Engine implements IProducer {
 	    if (externalVariables == null) {
 		throw new OvalException(JOVALSystem.getMessage("ERROR_EXTERNAL_VARIABLE_SOURCE", id));
 	    } else {
-		List<String> values = externalVariables.getValue(id);
+		Collection<String> values = externalVariables.getValue(id);
 		for (String value : values) {
 		    VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
 		    variableValueType.setVariableId(id);
@@ -1381,7 +1386,7 @@ public class Engine implements IProducer {
 	} else if (object instanceof ConstantVariable) {
 	    ConstantVariable constantVariable = (ConstantVariable)object;
 	    String id = constantVariable.getId();
-	    List<String> values = new Vector<String>();
+	    Collection<String> values = new Vector<String>();
 	    for (ValueType value : constantVariable.getValue()) {
 		VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(id);
@@ -1396,7 +1401,7 @@ public class Engine implements IProducer {
 	// Add a static (literal) value.
 	//
 	} else if (object instanceof LiteralComponentType) {
-	    List<String> values = new Vector<String>();
+	    Collection<String> values = new Vector<String>();
 	    values.add((String)((LiteralComponentType)object).getValue());
 	    return values;
 
@@ -1406,7 +1411,7 @@ public class Engine implements IProducer {
 	} else if (object instanceof ObjectComponentType) {
 	    ObjectComponentType oc = (ObjectComponentType)object;
 	    String objectId = oc.getObjectRef();
-	    List<ItemType> items = null;
+	    Collection<ItemType> items = null;
 	    try {
 		//
 		// First, we scan the SystemCharacteristics for items related to the object.
@@ -1419,7 +1424,7 @@ public class Engine implements IProducer {
 		ObjectType ot = definitions.getObject(objectId);
 		items = scanObject(new RequestContext(this, ot, list));
 	    }
-	    List<String> values = extractItemData(objectId, oc, items);
+	    Collection<String> values = extractItemData(objectId, oc, items);
 	    if (values == null || values.size() == 0) {
 		throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_COMPONENT_EMPTY"));
 	    } else {
@@ -1437,14 +1442,14 @@ public class Engine implements IProducer {
 	// Resolve and concatenate child components.
 	//
 	} else if (object instanceof ConcatFunctionType) {
-	    List<String> values = new Vector<String>();
+	    Collection<String> values = new Vector<String>();
 	    ConcatFunctionType concat = (ConcatFunctionType)object;
 	    for (Object child : concat.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		List<String> next = resolveInternal(child, list);
+		Collection<String> next = resolveInternal(child, list);
 		if (values.size() == 0) {
 		    values.addAll(next);
 		} else {
-		    List<String> newValues = new Vector<String>();
+		    Collection<String> newValues = new Vector<String>();
 		    for (String base : values) {
 			for (String val : next) {
 			    newValues.add(base + val);
@@ -1459,7 +1464,7 @@ public class Engine implements IProducer {
 	// Escape anything that could be pattern-matched.
 	//
 	} else if (object instanceof EscapeRegexFunctionType) {
-	    List<String> values = new Vector<String>();
+	    Collection<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent((EscapeRegexFunctionType)object), list)) {
 		values.add(escapeRegex(value));
 	    }
@@ -1470,7 +1475,7 @@ public class Engine implements IProducer {
 	//
 	} else if (object instanceof SplitFunctionType) {
 	    SplitFunctionType split = (SplitFunctionType)object;
-	    List<String> values = new Vector<String>();
+	    Collection<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(split), list)) {
 		values.addAll(StringTools.toList(StringTools.tokenize(value, split.getDelimiter(), false)));
 	    }
@@ -1483,7 +1488,7 @@ public class Engine implements IProducer {
 	} else if (object instanceof RegexCaptureFunctionType) {
 	    RegexCaptureFunctionType rc = (RegexCaptureFunctionType)object;
 	    Pattern p = Pattern.compile(rc.getPattern());
-	    List<String> values = new Vector<String>();
+	    Collection<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(rc), list)) {
 		Matcher m = p.matcher(value);
 		if (m.groupCount() > 0) {
@@ -1507,7 +1512,7 @@ public class Engine implements IProducer {
 	    start = Math.max(1, start);
 	    start--; // in OVAL, the index count begins at 1 instead of 0
 	    int len = st.getSubstringLength();
-	    List<String> values = new Vector<String>();
+	    Collection<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(st), list)) {
 		if (start > value.length()) {
 		    throw new ResolveException(JOVALSystem.getMessage("ERROR_SUBSTRING", value, new Integer(start)));
@@ -1525,7 +1530,7 @@ public class Engine implements IProducer {
 	} else if (object instanceof BeginFunctionType) {
 	    BeginFunctionType bt = (BeginFunctionType)object;
 	    String s = bt.getCharacter();
-	    List<String> values = new Vector<String>();
+	    Collection<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(bt), list)) {
 		if (value.startsWith(s)) {
 		    values.add(value);
@@ -1541,7 +1546,7 @@ public class Engine implements IProducer {
 	} else if (object instanceof EndFunctionType) {
 	    EndFunctionType et = (EndFunctionType)object;
 	    String s = et.getCharacter();
-	    List<String> values = new Vector<String>();
+	    Collection<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(et), list)) {
 		if (value.endsWith(s)) {
 		    values.add(value);
@@ -1556,10 +1561,10 @@ public class Engine implements IProducer {
 	//
 	} else if (object instanceof TimeDifferenceFunctionType) {
 	    TimeDifferenceFunctionType tt = (TimeDifferenceFunctionType)object;
-	    List<String> values = new Vector<String>();
+	    Collection<String> values = new Vector<String>();
 	    List<Object> children = tt.getObjectComponentOrVariableComponentOrLiteralComponent();
-	    List<String> timestamp1;
-	    List<String> timestamp2;
+	    Collection<String> timestamp1;
+	    Collection<String> timestamp2;
 	    if (children.size() == 1) {
 		timestamp1 = new Vector<String>();
 		timestamp1.add(new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date(System.currentTimeMillis())));
@@ -1585,10 +1590,10 @@ public class Engine implements IProducer {
 	//
 	} else if (object instanceof ArithmeticFunctionType) {
 	    ArithmeticFunctionType at = (ArithmeticFunctionType)object;
-	    Stack<List<String>> rows = new Stack<List<String>>();
+	    Stack<Collection<String>> rows = new Stack<Collection<String>>();
 	    ArithmeticEnumeration op = at.getArithmeticOperation();
 	    for (Object child : at.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		List<String> row = new Vector<String>();
+		Collection<String> row = new Vector<String>();
 		for (String cell : resolveInternal(child, list)) {
 		    row.add(cell);
 		}
@@ -1640,7 +1645,7 @@ public class Engine implements IProducer {
     /**
      * Perform the Arithmetic operation on permutations of the Stack, and return the resulting permutations.
      */
-    private List<String> computeProduct(ArithmeticEnumeration op, Stack<List<String>> rows) {
+    private List<String> computeProduct(ArithmeticEnumeration op, Stack<Collection<String>> rows) {
 	List<String> results = new Vector<String>();
 	if (rows.empty()) {
 	    switch(op) {
@@ -1653,7 +1658,7 @@ public class Engine implements IProducer {
 	    }
 	} else {
 	    for (String value : rows.pop()) {
-		Stack<List<String>> copy = new Stack<List<String>>();
+		Stack<Collection<String>> copy = new Stack<Collection<String>>();
 		copy.addAll(rows);
 		for (String otherValue : computeProduct(op, copy)) {
 		    switch(op) {
@@ -1682,7 +1687,7 @@ public class Engine implements IProducer {
      * The final step in resolving an object reference variable's value is extracting the item field or record from the items
      * associated with that ObjectType, which is the function of this method.
      */
-    private List<String> extractItemData(String objectId, ObjectComponentType oc, List list) throws OvalException {
+    private List<String> extractItemData(String objectId, ObjectComponentType oc, Collection list) throws OvalException {
 	if (list.size() == 0) {
 	    return null;
 	}

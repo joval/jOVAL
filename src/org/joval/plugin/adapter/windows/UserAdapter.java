@@ -4,7 +4,7 @@
 package org.joval.plugin.adapter.windows;
 
 import java.util.Hashtable;
-import java.util.List;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -74,8 +74,8 @@ public class UserAdapter implements IAdapter {
 	ad = null;
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	OperationEnumeration op = getOperation(rc.getObject());
 	String user = getValue(rc.getObject());
 
@@ -164,7 +164,7 @@ public class UserAdapter implements IAdapter {
 	enabledType.setValue(user.isEnabled() ? "true" : "false");
 	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setEnabled(enabledType);
-	List<String> groupNetbiosNames = user.getGroupNetbiosNames();
+	Collection<String> groupNetbiosNames = user.getGroupNetbiosNames();
 	if (groupNetbiosNames.size() == 0) {
 	    EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    groupType.setStatus(StatusEnumeration.DOES_NOT_EXIST);

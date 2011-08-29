@@ -5,7 +5,7 @@ package org.joval.plugin.adapter.windows;
 
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -66,8 +66,8 @@ public class Wmi57Adapter implements IAdapter {
 	}
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
 	items.add(JOVALSystem.factories.sc.windows.createWmi57Item(getItem((Wmi57Object)rc.getObject())));
 	return items;
     }

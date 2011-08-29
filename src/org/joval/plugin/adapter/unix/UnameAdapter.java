@@ -9,7 +9,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
 import java.util.Vector;
 import java.util.logging.Level;
 import javax.xml.bind.JAXBElement;
@@ -63,8 +63,8 @@ public class UnameAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	try {
 	    items.add(getItem());
 	} catch (Exception e) {

@@ -5,7 +5,7 @@ package org.joval.plugin.adapter.windows;
 
 import java.math.BigInteger;
 import java.util.Hashtable;
-import java.util.List;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -53,12 +53,12 @@ public class RegistryAdapter implements IAdapter {
 
     private IRegistry registry;
     private Hashtable<String, BigInteger> itemIds;
-    private Hashtable<String, List<String>> pathMap;
+    private Hashtable<String, Collection<String>> pathMap;
 
     public RegistryAdapter(IRegistry registry) {
 	this.registry = registry;
 	itemIds = new Hashtable<String, BigInteger>();
-	pathMap = new Hashtable<String, List<String>>();
+	pathMap = new Hashtable<String, Collection<String>>();
     }
 
     // Implement IAdapter
@@ -80,8 +80,8 @@ public class RegistryAdapter implements IAdapter {
 	}
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	RegistryObject rObj = (RegistryObject)rc.getObject();
 
 	String id = rObj.getId();
@@ -118,8 +118,8 @@ public class RegistryAdapter implements IAdapter {
      * Return the list of all registry key paths corresponding to the given RegistryObject.  Handles searches (from
      * pattern match operations), singletons (from equals operations), and searches based on RegistryBehaviors.
      */
-    private List<String> getPathList(RegistryObject rObj, String hive, IRequestContext rc) throws OvalException {
-	List<String> list = pathMap.get(rObj.getId());
+    private Collection<String> getPathList(RegistryObject rObj, String hive, IRequestContext rc) throws OvalException {
+	Collection<String> list = pathMap.get(rObj.getId());
 	if (list != null) {
 	    return list;
 	}
@@ -150,7 +150,7 @@ public class RegistryAdapter implements IAdapter {
 
 	  case PATTERN_MATCH: {
 	    patternMatch = true;
-	    List<String> newList = new Vector<String>();
+	    Collection<String> newList = new Vector<String>();
 	    for (String value : list) {
 		try {
 		    for (IKey key : registry.search(hive, value)) {
@@ -176,10 +176,10 @@ public class RegistryAdapter implements IAdapter {
 	    //
 	    // Wildcard pattern matches are really supposed to be recursive searches, unfortunately
 	    //
-	    List<String> newList = new Vector<String>();
+	    Collection<String> newList = new Vector<String>();
 	    for (String value : list) {
 		if (((String)rObj.getKey().getValue().getValue()).indexOf(".*") != -1) {
-		    List<String> l = new Vector<String>();
+		    Collection<String> l = new Vector<String>();
 		    l.add(value);
 		    newList.addAll(getPaths(hive, l, -1, "down"));
 		}
@@ -198,11 +198,11 @@ public class RegistryAdapter implements IAdapter {
     /**
      * Recursively searchies for matches based on RegistryBehaviors.
      */
-    private List<String> getPaths(String hive, List<String> list, int depth, String direction) {
+    private Collection<String> getPaths(String hive, Collection<String> list, int depth, String direction) {
 	if ("none".equals(direction) || depth == 0) {
 	    return list;
 	} else {
-	    List<String> results = new Vector<String>();
+	    Collection<String> results = new Vector<String>();
 	    for (String path : list) {
 		try {
 		    IKey key = registry.fetchKey(hive, path);
@@ -242,7 +242,7 @@ public class RegistryAdapter implements IAdapter {
     /**
      * Get all items corresponding to a concrete path, given the hive and RegistryObject.
      */
-    private List<RegistryItem> getItems(RegistryObject rObj, String hive, String path, IRequestContext rc)
+    private Collection<RegistryItem> getItems(RegistryObject rObj, String hive, String path, IRequestContext rc)
 		throws NoSuchElementException, OvalException {
 
 	IKey key = null;
@@ -252,7 +252,7 @@ public class RegistryAdapter implements IAdapter {
 	    key = registry.fetchKey(hive, path);
 	}
 
-	List<RegistryItem> items = new Vector<RegistryItem>();
+	Collection<RegistryItem> items = new Vector<RegistryItem>();
 	if (rObj.getName() == null || rObj.getName().getValue() == null) {
 	    items.add(getItem(key, null));
 	} else {
@@ -315,7 +315,7 @@ public class RegistryAdapter implements IAdapter {
 	if (name != null && !"".equals(name)) {
 	    IValue val = registry.fetchValue(key, name);
 
-	    List<EntityItemAnySimpleType> values = new Vector<EntityItemAnySimpleType>();
+	    Collection<EntityItemAnySimpleType> values = new Vector<EntityItemAnySimpleType>();
 	    EntityItemRegistryTypeType typeType = JOVALSystem.factories.sc.windows.createEntityItemRegistryTypeType();
 	    switch (val.getType()) {
 	      case IValue.REG_SZ: {

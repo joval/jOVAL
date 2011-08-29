@@ -4,6 +4,7 @@
 package org.joval.oval.util;
 
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
@@ -26,7 +27,7 @@ public class ItemSet {
 	ht = new Hashtable<BigInteger, ItemType>();
     }
 
-    public ItemSet(List<ItemType> items) {
+    public ItemSet(Collection<ItemType> items) {
 	this();
 	for (ItemType item : items) {
 	    ht.put(item.getId(), item);

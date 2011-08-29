@@ -3,7 +3,7 @@
 
 package org.joval.plugin.adapter.independent;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Vector;
 import javax.xml.bind.JAXBElement;
 
@@ -50,11 +50,11 @@ public class VariableAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	VariableObject vObj = (VariableObject)rc.getObject();
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	try {
-	    List<String> values = rc.resolve((String)vObj.getVarRef().getValue());
+	    Collection<String> values = rc.resolve((String)vObj.getVarRef().getValue());
 	    if (values.size() > 0) {
 		VariableItem item = JOVALSystem.factories.sc.independent.createVariableItem();
 		EntityItemVariableRefType ref = JOVALSystem.factories.sc.independent.createEntityItemVariableRefType();

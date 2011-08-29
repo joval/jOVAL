@@ -3,6 +3,7 @@
 
 package org.joval.plugin.adapter.independent;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -51,7 +52,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	EnvironmentvariableObject eObj = (EnvironmentvariableObject)rc.getObject();
 	String name = (String)eObj.getName().getValue();

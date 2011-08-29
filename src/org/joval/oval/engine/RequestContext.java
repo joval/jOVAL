@@ -3,8 +3,8 @@
 
 package org.joval.oval.engine;
 
+import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.List;
 import java.util.Vector;
 
 import oval.schemas.common.MessageType;
@@ -18,19 +18,19 @@ import org.joval.oval.ResolveException;
 class RequestContext implements IRequestContext {
     Engine engine;
     ObjectType object;
-    List<VariableValueType> vars;
+    Collection<VariableValueType> vars;
 
     RequestContext(Engine engine, ObjectType object) {
         this(engine, object, new Vector<VariableValueType>());
     }
 
-    RequestContext(Engine engine, ObjectType object, List<VariableValueType> vars) {
+    RequestContext(Engine engine, ObjectType object, Collection<VariableValueType> vars) {
 	this.engine = engine;
         this.object = object;
         this.vars = vars;
     }
 
-    List<VariableValueType> getVars() {
+    Collection<VariableValueType> getVars() {
         return vars;
     }
 
@@ -44,7 +44,7 @@ class RequestContext implements IRequestContext {
         engine.getSystemCharacteristics().setObject(object.getId(), null, null, null, msg);
     }
 
-    public List<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException {
+    public Collection<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException {
         return engine.resolve(variableId, this);
     }
 }

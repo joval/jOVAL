@@ -3,6 +3,7 @@
 
 package org.joval.plugin.adapter.windows;
 
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -65,8 +66,8 @@ public class WmiAdapter implements IAdapter {
 	}
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
 	items.add(JOVALSystem.factories.sc.windows.createWmiItem(getItem((WmiObject)rc.getObject())));
 	return items;
     }

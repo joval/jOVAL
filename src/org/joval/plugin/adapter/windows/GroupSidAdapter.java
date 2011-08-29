@@ -4,7 +4,7 @@
 package org.joval.plugin.adapter.windows;
 
 import java.util.Hashtable;
-import java.util.List;
+import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -56,8 +56,8 @@ public class GroupSidAdapter extends GroupAdapter {
     /**
      * @override
      */
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	OperationEnumeration op = ((GroupSidObject)rc.getObject()).getGroupSid().getOperation();
 	String groupSid = (String)((GroupSidObject)rc.getObject()).getGroupSid().getValue();
 

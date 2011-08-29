@@ -4,6 +4,7 @@
 package org.joval.plugin.adapter.windows;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -103,10 +104,10 @@ public class FileAdapter extends BaseFileAdapter {
 	return JOVALSystem.factories.sc.windows.createFileItem();
     }
 
-    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
+    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
 		throws IOException, OvalException {
 
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {
 	    setItem((FileItem)base, f);
 	    items.add(JOVALSystem.factories.sc.windows.createFileItem((FileItem)base));

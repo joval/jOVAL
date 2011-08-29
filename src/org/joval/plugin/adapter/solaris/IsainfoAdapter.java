@@ -6,7 +6,7 @@ package org.joval.plugin.adapter.solaris;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.util.List;
+import java.util.Collection;
 import java.util.Vector;
 import java.util.logging.Level;
 import javax.xml.bind.JAXBElement;
@@ -54,8 +54,8 @@ public class IsainfoAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	try {
 	    items.add(getItem());
 	} catch (Exception e) {

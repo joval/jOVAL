@@ -5,7 +5,7 @@ package org.joval.plugin.adapter.independent;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
+import java.util.Collection;
 import java.util.Stack;
 import java.util.Vector;
 import java.util.logging.Level;
@@ -83,10 +83,10 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected List<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
+    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
 		throws IOException, OvalException {
 
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	XmlfilecontentItem baseItem = null;
 	if (base instanceof XmlfilecontentItem) {
@@ -147,7 +147,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 	return items;
     }
 
-    private List<String> typesafeEval(XPathExpression expr, Document doc) throws OvalException {
+    private Collection<String> typesafeEval(XPathExpression expr, Document doc) throws OvalException {
 	Stack<QName> types = new Stack<QName>();
 	types.push(XPathConstants.BOOLEAN);
 	types.push(XPathConstants.NODE);
@@ -158,8 +158,8 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 	return typesafeEval(expr, doc, types);
     }
 
-    private List<String> typesafeEval(XPathExpression exp, Document doc, Stack<QName> types) throws OvalException {
-	List<String> list = new Vector<String>();
+    private Collection<String> typesafeEval(XPathExpression exp, Document doc, Stack<QName> types) throws OvalException {
+	Collection<String> list = new Vector<String>();
 	if (types.empty()) {
 	    return list;
 	}

@@ -6,7 +6,7 @@ package org.joval.plugin.adapter.solaris;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.util.List;
+import java.util.Collection;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
@@ -48,7 +48,7 @@ public class Patch54Adapter extends PatchAdapter {
 	return Patch54Object.class;
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	Patch54Object pObj = (Patch54Object)rc.getObject();
 	int iBase = 0;
 	try {
@@ -57,7 +57,7 @@ public class Patch54Adapter extends PatchAdapter {
 	    throw new OvalException(e);
 	}
 
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	switch(pObj.getBase().getOperation()) {
 	  case EQUALS:
 	    items.addAll(getItems(pObj, Integer.toString(iBase)));
@@ -152,7 +152,7 @@ public class Patch54Adapter extends PatchAdapter {
 
     // Internal
 
-    private List<JAXBElement<PatchItem>> getItems(Patch54Object pObj, String base) throws OvalException {
+    private Collection<JAXBElement<PatchItem>> getItems(Patch54Object pObj, String base) throws OvalException {
 	PatchBehaviors behaviors = pObj.getBehaviors();
 	boolean isSupercedence = false;
 	if (behaviors != null) {
@@ -160,8 +160,8 @@ public class Patch54Adapter extends PatchAdapter {
 	}
 	int version = Integer.parseInt((String)pObj.getPatchVersion().getValue());
 
-	List<RevisionEntry> matches = new Vector<RevisionEntry>();
-	List<RevisionEntry> entries = revisions.get(base);
+	Collection<RevisionEntry> matches = new Vector<RevisionEntry>();
+	Collection<RevisionEntry> entries = revisions.get(base);
 	if (entries != null) {
 	    for (RevisionEntry entry : entries) {
 		switch(pObj.getPatchVersion().getOperation()) {
@@ -202,9 +202,9 @@ public class Patch54Adapter extends PatchAdapter {
 	    }
 	}
 
-	List<PatchEntry> patches = new Vector<PatchEntry>();
+	Collection<PatchEntry> patches = new Vector<PatchEntry>();
 	if (isSupercedence) {
-	    List<SupercedenceEntry> candidates = supercedence.get(base);
+	    Collection<SupercedenceEntry> candidates = supercedence.get(base);
 	    if (candidates != null) {
 		for (SupercedenceEntry candidate : candidates) {
 		    if (candidate.superceded.version >= version) {
@@ -217,7 +217,7 @@ public class Patch54Adapter extends PatchAdapter {
 	    patches.add(match.patch);
 
 	    if (isSupercedence) {
-		List<SupercedenceEntry> candidates = supercedence.get(Integer.toString(match.patch.base));
+		Collection<SupercedenceEntry> candidates = supercedence.get(Integer.toString(match.patch.base));
 		if (candidates != null) {
 		    for (SupercedenceEntry candidate : candidates) {
 			if (candidate.superceded.version >= match.patch.version) {

@@ -3,7 +3,7 @@
 
 package org.joval.intf.plugin;
 
-import java.util.List;
+import java.util.Collection;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.definitions.core.ObjectType;
@@ -49,5 +49,5 @@ public interface IAdapter {
      *
      * @see IRequestContext
      */
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext irc) throws OvalException;
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext irc) throws OvalException;
 }

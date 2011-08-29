@@ -3,6 +3,7 @@
 
 package org.joval.plugin.adapter.windows;
 
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -73,8 +74,8 @@ public class GroupAdapter implements IAdapter {
 	ad = null;
     }
 
-    public List<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	OperationEnumeration op = ((GroupObject)rc.getObject()).getGroup().getOperation();
 	String group = (String)((GroupObject)rc.getObject()).getGroup().getValue();
 
