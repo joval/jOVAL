@@ -66,7 +66,7 @@ public class WindowsSystemInfo {
 	this.wmi = wmi;
     }
 
-    public SystemInfoType getSystemInfo() throws Exception {
+    public SystemInfoType getSystemInfo() {
 	if (info != null) {
 	    return info;
 	}
@@ -137,6 +137,8 @@ public class WindowsSystemInfo {
 	    }
 	} catch (WmiException e) {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PLUGIN_INTERFACE"), e);
+	} catch (Exception e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	} finally {
 	    try {
 		if (regConnected) {

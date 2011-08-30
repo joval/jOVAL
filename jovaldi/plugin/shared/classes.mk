@@ -74,6 +74,7 @@ SHARED=\
 	org.joval.os.windows.registry.Value				\
 	org.joval.os.windows.system.Environment				\
 	org.joval.os.windows.wmi.WmiException				\
+	org.joval.plugin.adapter.cisco.ios.LineAdapter			\
 	org.joval.plugin.adapter.cisco.ios.Version55Adapter		\
 	org.joval.plugin.adapter.independent.EnvironmentvariableAdapter	\
 	org.joval.plugin.adapter.independent.FamilyAdapter		\

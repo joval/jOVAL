@@ -107,25 +107,21 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 
     public void connect(boolean online) {
 	if (online && session.connect()) {
-	    adapters.add(new EnvironmentvariableAdapter(session.getEnvironment()));
 	    adapters.add(new FamilyAdapter(this));
-	    adapters.add(new Textfilecontent54Adapter(session.getFilesystem()));
-	    adapters.add(new TextfilecontentAdapter(session.getFilesystem()));
 	    adapters.add(new VariableAdapter());
-	    adapters.add(new XmlfilecontentAdapter(session.getFilesystem()));
+	    if (session.getEnvironment() != null) {
+		adapters.add(new EnvironmentvariableAdapter(session.getEnvironment()));
+	    }
+	    if (session.getFilesystem() != null) {
+		adapters.add(new Textfilecontent54Adapter(session.getFilesystem()));
+		adapters.add(new TextfilecontentAdapter(session.getFilesystem()));
+		adapters.add(new XmlfilecontentAdapter(session.getFilesystem()));
+	    }
 
 	    switch(session.getType()) {
 	      case WINDOWS: {
 		IWindowsSession win = (IWindowsSession)session;
-		//
-		// Gather SystemInfo data
-		//
-		WindowsSystemInfo wsi = new WindowsSystemInfo(win.getRegistry(), win.getWmiProvider());
-		try {
-		    info = wsi.getSystemInfo();
-		} catch (Exception e) {
-		    throw new RuntimeException(getMessage("ERROR_INFO"), e);
-		}
+		info = new WindowsSystemInfo(win.getRegistry(), win.getWmiProvider()).getSystemInfo();
 		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win.getFilesystem(), win.getWmiProvider()));
 		adapters.add(new RegistryAdapter(win.getRegistry()));
 		adapters.add(new Wmi57Adapter(win.getWmiProvider()));
