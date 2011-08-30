@@ -16,13 +16,8 @@ import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.definitions.core.EntityStateStringType;
-import oval.schemas.definitions.core.ObjectComponentType;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.unix.UnameObject;
-import oval.schemas.definitions.unix.UnameState;
-import oval.schemas.definitions.unix.UnameTest;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
