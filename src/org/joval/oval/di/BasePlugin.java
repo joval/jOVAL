@@ -32,6 +32,7 @@ import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.windows.WindowsSystemInfo;
 import org.joval.os.windows.identity.ActiveDirectory;
 import org.joval.os.windows.identity.LocalDirectory;
+import org.joval.plugin.adapter.cisco.ios.Version55Adapter;
 import org.joval.plugin.adapter.independent.EnvironmentvariableAdapter;
 import org.joval.plugin.adapter.independent.FamilyAdapter;
 import org.joval.plugin.adapter.independent.TextfilecontentAdapter;
@@ -163,8 +164,8 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 
 	      case CISCO_IOS: {
 		info = new IosSystemInfo(session).getSystemInfo();
+		adapters.add(new Version55Adapter(info.getOsVersion()));
 //		adapters.add(new LineAdapter(session));
-//		adapters.add(new VersionAdapter(session));
 		break;
 	      }
 	    }
