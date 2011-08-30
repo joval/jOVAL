@@ -150,7 +150,7 @@ public class RemotePlugin extends BasePlugin {
 
 	        switch (base.getType()) {
 		  case WINDOWS:
-		    session = (IWindowsSession)session;
+		    session = (IWindowsSession)base;
 		    break;
 
 		  case UNIX:
