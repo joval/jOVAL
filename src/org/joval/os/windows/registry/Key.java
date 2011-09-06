@@ -5,6 +5,7 @@ package org.joval.os.windows.registry;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -12,11 +13,9 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import ca.beq.util.win32.registry.KeyIterator;
-import ca.beq.util.win32.registry.RegistryKey;
-import ca.beq.util.win32.registry.RegistryValue;
-import ca.beq.util.win32.registry.RootKey;
-import ca.beq.util.win32.registry.ValueIterator;
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.Win32Exception;
+import com.sun.jna.platform.win32.WinReg;
 
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IValue;
@@ -31,8 +30,9 @@ import org.joval.util.JOVALSystem;
 public class Key implements IKey {
     private Key parent;
     private Registry registry;
-    private RegistryKey self;
+    private WinReg.HKEY rootKey;
     private String path, name;
+    private Map<String, Object> values;
 
     // Implement IKey
 
@@ -75,7 +75,17 @@ public class Key implements IKey {
     }
 
     public String getHive() {
-	return self.getRootKey().toString();
+	if (rootKey == WinReg.HKEY_LOCAL_MACHINE) {
+	    return Registry.HKLM;
+	} else if (rootKey == WinReg.HKEY_USERS) {
+	    return Registry.HKU;
+	} else if (rootKey == WinReg.HKEY_CURRENT_USER) {
+	    return Registry.HKCU;
+	} else if (rootKey == WinReg.HKEY_CLASSES_ROOT) {
+	    return Registry.HKCU;
+	} else {
+	    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINREG_HIVE_NAME", rootKey));
+	}
     }
 
     /**
@@ -99,7 +109,27 @@ public class Key implements IKey {
      * Test whether or not this Key has a child Key with the given name.
      */
     public boolean hasSubkey(String name) {
-	return self.hasSubkey(name);
+	StringBuffer sb = new StringBuffer(getPathInternal());
+	if (sb.length() > 0) {
+	    sb.append(Registry.DELIM_CH);
+	}
+	sb.append(name);
+
+	try {
+	    return Advapi32Util.registryKeyExists(rootKey, sb.toString());
+	} catch (Win32Exception e) {
+	    switch(e.getHR().intValue()) {
+	      case 0x80070005: {
+		String subkeyPath = getHive() + Registry.DELIM_STR + sb.toString();
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINREG_ACCESS", subkeyPath));
+		break;
+	      }
+	      default:
+		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		break;
+	    }
+	    return false;
+	}
     }
 
     /**
@@ -141,7 +171,13 @@ public class Key implements IKey {
      */
     public IValue getValue(String name) throws NoSuchElementException, IllegalStateException {
 	if (hasValue(name)) {
-	    return registry.createValue(this, self.getValue(name));
+	    Iterator<IValue> iter = new InternalValueIterator();
+	    while(iter.hasNext()) {
+		IValue val = iter.next();
+		if (val.getName().equals(name)) {
+		    return val;
+		}
+	    }
 	}
 	throw new NoSuchElementException(name);
     }
@@ -150,7 +186,7 @@ public class Key implements IKey {
      * Test whether or not the Value with the specified name exists under this Key.
      */
     public boolean hasValue(String name) {
-	return self.hasValue(name);
+	return Advapi32Util.registryValueExists(rootKey, getPathInternal(), name);
     }
 
     public String[] listValues() throws IllegalStateException {
@@ -192,13 +228,15 @@ public class Key implements IKey {
 	this.registry = registry;
 	this.name = name;
 	if (Registry.HKLM.equals(name)) {
-	    self = new RegistryKey(RootKey.HKEY_LOCAL_MACHINE);
+	    rootKey = WinReg.HKEY_LOCAL_MACHINE;
 	} else if (Registry.HKU.equals(name)) {
-	    self = new RegistryKey(RootKey.HKEY_USERS);
+	    rootKey = WinReg.HKEY_USERS;
 	} else if (Registry.HKCU.equals(name)) {
-	    self = new RegistryKey(RootKey.HKEY_CURRENT_USER);
+	    rootKey = WinReg.HKEY_CURRENT_USER;
 	} else if (Registry.HKCR.equals(name)) {
-	    self = new RegistryKey(RootKey.HKEY_CLASSES_ROOT);
+	    rootKey = WinReg.HKEY_CLASSES_ROOT;
+	} else {
+	    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINREG_HIVE_NAME", name));
 	}
     }
 
@@ -216,32 +254,46 @@ public class Key implements IKey {
     // Private
 
     /**
+     * Get the non-redirected path.
+     */
+    String getPathInternal() {
+	String s = toString();
+	int ptr = s.indexOf(Registry.DELIM_STR);
+	if (ptr > 0) {
+	    return s.substring(ptr+1);
+	} else {
+	    return "";
+	}
+    }
+
+    /**
      * Create a key.
      */
     private Key(Key parent, String name) {
 	registry = parent.registry;
+	rootKey = parent.rootKey;
 	this.parent = parent;
 	this.name = name;
-	String parentPath = parent.self.getPath();
-	if (parentPath.length() > 0) {
-	    parentPath += Registry.DELIM_STR;
-	}
-	self = new RegistryKey(parent.self.getRootKey(), parentPath + name);
     }
 
     private class InternalKeyIterator implements Iterator<IKey> {
-	Iterator iter;
+	String[] subkeys;
+	int index = 0;
 
 	InternalKeyIterator() {
-	    iter = Key.this.self.subkeys();
+	    if (parent == null) {
+		subkeys = Advapi32Util.registryGetKeys(rootKey);
+	    } else {
+		subkeys = Advapi32Util.registryGetKeys(rootKey, getPathInternal());
+	    }
 	}
 
 	public boolean hasNext() {
-	    return iter.hasNext();
+	    return index < subkeys.length;
 	}
 
 	public IKey next() {
-	    return new Key(Key.this, ((RegistryKey)iter.next()).getName());
+	    return new Key(Key.this, subkeys[index++]);
 	}
 
 	public void remove() {
@@ -250,10 +302,17 @@ public class Key implements IKey {
     }
 
     private class InternalValueIterator implements Iterator<IValue> {
-	Iterator iter;
+	Iterator<String> iter;
 
 	InternalValueIterator() {
-	    iter = Key.this.self.values();
+	    if (values == null) {
+		if (parent == null) {
+		    values = Advapi32Util.registryGetValues(rootKey);
+		} else {
+		    values = Advapi32Util.registryGetValues(rootKey, getPathInternal());
+		}
+	    }
+	    iter = values.keySet().iterator();
 	}
 
 	public boolean hasNext() {
@@ -261,7 +320,8 @@ public class Key implements IKey {
 	}
 
 	public IValue next() {
-	    return Key.this.registry.createValue(Key.this, (RegistryValue)iter.next());
+	    String name = iter.next();
+	    return Key.this.registry.createValue(Key.this, name, values.get(name));
 	}
 
 	public void remove() {

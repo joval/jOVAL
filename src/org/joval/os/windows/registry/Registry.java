@@ -15,9 +15,9 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import ca.beq.util.win32.registry.RegistryKey;
-import ca.beq.util.win32.registry.RegistryValue;
-import ca.beq.util.win32.registry.ValueType;
+import com.sun.jna.Platform;
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.WinReg;
 
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.registry.IKey;
@@ -49,22 +49,15 @@ public class Registry extends BaseRegistry {
 
     // Implement IRegistry
 
-    /**
-     * Connect to the remote host.  This causes the environment information to be retrieved.
-     */
     public boolean connect() {
 	if (env == null) {
-	    try {
-		if (!libLoaded) {
-		    System.loadLibrary("jRegistryKey");
-		    libLoaded = true;
-		}
+	    if (Platform.isWindows()) {
 		loadingEnv = true;
 		env = new Environment(this);
 		ia64 = env.getenv(IEnvironment.WINARCH).indexOf("64") != -1;
 		loadingEnv = false;
 		return true;
-	    } catch (UnsatisfiedLinkError e) {
+	    } else {
 		return false;
 	    }
 	} else {
@@ -72,16 +65,10 @@ public class Registry extends BaseRegistry {
 	}
     }
 
-    /**
-     * Closes the connection to the remote host.  This will cause any open keys to be closed.
-     */
     public void disconnect() {
 	searchMap.clear();
     }
 
-    /**
-     * A convenience method to retrieve a top-level hive using its String name.
-     */
     public IKey getHive(String name) throws IllegalArgumentException {
 	Key hive = null;
 	if (HKLM.equals(name)) {
@@ -102,9 +89,6 @@ public class Registry extends BaseRegistry {
 	return hive;
     }
 
-    /**
-     * Returns a key given a path that includes the hive.
-     */
     public IKey fetchKey(String fullPath) throws IllegalArgumentException, NoSuchElementException {
 	int ptr = fullPath.indexOf(DELIM_STR);
 	if (ptr == -1) {
@@ -120,10 +104,6 @@ public class Registry extends BaseRegistry {
 	return fetchKey(fullPath);
     }
 
-    /**
-     * Retrieve a Key, first by attempting to retrieve the key from the local cache, then from the deepest (nearest)
-     * ancestor key available from the cache.
-     */
     public IKey fetchKey(String hive, String path) throws NoSuchElementException {
 	return fetchSubkey(getHive(hive), path, get64BitRedirect());
     }
@@ -132,13 +112,6 @@ public class Registry extends BaseRegistry {
 	return fetchSubkey(getHive(hive), path, win32);
     }
 
-    /**
-     * Retrieve a subkey, first by attempting to retrieve the subkey from the local cache, then from the deepest (nearest)
-     * ancestor key available from the cache.  This method redirects to the 64-bit portion of the registry if it fails
-     * to find the key in the 32-bit portion.
-     *
-     * @throws NoSuchElementException if there is no subkey with the specified name.
-     */
     public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException {
 	return fetchSubkey(parent, name, get64BitRedirect());
     }
@@ -154,9 +127,6 @@ public class Registry extends BaseRegistry {
 	return ((Key)parent).getSubkey(name);
     }
 
-    /**
-     * Return the value of the Value with a name matching the given Pattern.
-     */
     public IValue[] fetchValues(IKey key, Pattern p) throws NoSuchElementException {
 	String[] sa = key.listValues(p);
 	IValue[] values = new IValue[sa.length];
@@ -166,40 +136,40 @@ public class Registry extends BaseRegistry {
 	return values;
     }
 
-    /**
-     * Retrieve a value (converted to a String if necessary) from the specified Key.
-     *
-     * @returns null if no such value exists.
-     */
     public IValue fetchValue(IKey key, String name) throws NoSuchElementException {
 	return key.getValue(name);
     }
 
     // Internal
 
-    Value createValue(Key key, RegistryValue value) throws IllegalArgumentException {
-	String name = value.getName();
-	ValueType type = value.getType();
-
-	if (type == ValueType.REG_MULTI_SZ) {
-	    String[] sa = (String[])value.getData();
-	    return new MultiStringValue(key, name, sa);
-	} else if (type == ValueType.REG_BINARY) {
-	    byte[] data = (byte[])value.getData();
-	    return new BinaryValue(key, name, data);
-	} else if (type == ValueType.REG_DWORD || type == ValueType.REG_DWORD_LITTLE_ENDIAN) {
-	    return new DwordValue(key, name, ((Integer)value.getData()).intValue());
-	} else if (type == ValueType.REG_EXPAND_SZ) {
-	    String raw = value.getStringValue();
-	    String expanded = null;
-	    if (!loadingEnv) {
-		expanded = env.expand(raw);
+    Value createValue(Key key, String name, Object data) throws IllegalArgumentException {
+	if (data instanceof String[]) {
+	    return new MultiStringValue(key, name, (String[])data);
+	} else if (data instanceof byte[]) {
+	    return new BinaryValue(key, name, (byte[])data);
+	} else if (data instanceof Integer) {
+	    return new DwordValue(key, name, ((Integer)data).intValue());
+	} else if (data instanceof String) {
+	    //
+	    // Guess whether this might be an Expand type by counting the number of times the character '%' appears.
+	    // If it's > 0 and divisible by 2, then we assume it's expandable.
+	    //
+	    String value = (String)data;
+	    int len = value.length();
+	    int appearances = 0;
+	    for (int i=0; i < len; i++) {
+		char ch = value.charAt(i);
+		if (ch == '%') {
+		    appearances++;
+		}
 	    }
-	    return new ExpandStringValue(key, name, raw, expanded);
-	} else if (type == ValueType.REG_SZ) {
-	    return new StringValue(key, name, value.getStringValue());
+	    if (appearances > 0 && (appearances % 2) == 0 && !loadingEnv) {
+		return new ExpandStringValue(key, name, value, env.expand(value));
+	    } else {
+		return new StringValue(key, name, value);
+	    }
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_WINREG_TYPE", value.getType()));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_WINREG_TYPE", data.getClass().getName()));
 	}
     }
 

@@ -22,7 +22,7 @@ import org.joval.util.BaseSession;
 import org.joval.util.JOVALSystem;
 
 /**
- * Windows implementation of ISession for local machines.
+ * Windows implementation of ISession for local machines, using JNA and JACOB.
  *
  * @author David A. Solin
  * @version %I% %G%
