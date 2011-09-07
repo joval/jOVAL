@@ -15,8 +15,9 @@ import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.io.LocalFilesystem;
-import org.joval.os.windows.WOW3264PathRedirector;
+import org.joval.os.windows.io.WOW3264PathRedirector;
 import org.joval.os.windows.registry.Registry;
+import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.wmi.WmiProvider;
 import org.joval.util.BaseSession;
 import org.joval.util.JOVALSystem;
@@ -54,9 +55,10 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 
     public boolean connect() {
 	registry = new Registry();
-	registry.set64BitRedirect(redirect64);
 	wmi = new WmiProvider();
 	if (registry.connect()) {
+	    WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(registry);
+	    registry.setRedirector(new WOW3264RegistryRedirector(redirect64, flavor));
 	    env = registry.getEnvironment();
 	    registry.disconnect();
 	    if (redirect64 && registry.is64Bit()) {

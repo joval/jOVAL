@@ -6,11 +6,10 @@ TOP=..
 include $(TOP)/common.mk
 
 PRODUCTNAME=jOVAL
-ZIPNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_Windows_x86
+ZIPNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_Windows
 TARNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_`uname -s`_`uname -p`
 
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SCHEMALIB)$(CLN)$(SRC)"
-#PLUGIN_DIRS=plugin/shared plugin/default plugin/remote
 
 include classes.mk
 
@@ -42,7 +41,7 @@ $(PRODUCTNAME).jar: classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 dist-clean: clean
-	rm -f $(ZIPNAME).zip
+	rm -f $(ZIPNAME)*.zip
 	rm -f $(TARNAME).tar.gz
 	rm -rf $(DIST)
 	@$(MAKE) --keep-going --directory=plugin/shared dist-clean
@@ -72,21 +71,38 @@ $(BUILD)/%.class: $(SRC)/%.java
 $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
 
-dist: install
-	mkdir -p $(DIST)
-	mkdir -p $(DIST)/lib
-	cp $(PRODUCTNAME).jar $(DIST)/lib
-	cp $(SCHEMALIB) $(DIST)/lib
-	mkdir -p $(DIST)/plugin/default
-	cp -R plugin/default/dist/* $(DIST)/plugin/default
-	mkdir -p $(DIST)/plugin/remote
-	cp -R plugin/remote/dist/* $(DIST)/plugin/remote
-	cp -R $(RSRC)/* $(DIST)
-	cp -R $(JRE_HOME) $(DIST)
+dist: dist-$(ARCH)
 
-release-win32: dist
-	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME).zip -C $(DIST) .
+dist-x86: install
+	mkdir -p $(DIST)/x86
+	mkdir -p $(DIST)/x86/lib
+	cp $(PRODUCTNAME).jar $(DIST)/x86/lib
+	cp $(SCHEMALIB) $(DIST)/x86/lib
+	mkdir -p $(DIST)/x86/plugin/default
+	cp -R plugin/default/dist/* $(DIST)/x86/plugin/default
+	mkdir -p $(DIST)/x86/plugin/remote
+	cp -R plugin/remote/dist/* $(DIST)/x86/plugin/remote
+	cp -R $(RSRC)/* $(DIST)/x86
+	cp -R $(JRE_HOME)/x86 $(DIST)/x86/jre
 
-release-tar: dist
-	tar -cvf $(TARNAME).tar -C $(DIST) .
+dist-x64: install
+	mkdir -p $(DIST)/x64
+	mkdir -p $(DIST)/x64/lib
+	cp $(PRODUCTNAME).jar $(DIST)/x64/lib
+	cp $(SCHEMALIB) $(DIST)/x64/lib
+	mkdir -p $(DIST)/x64/plugin/default
+	cp -R plugin/default/dist/* $(DIST)/x64/plugin/default
+	mkdir -p $(DIST)/x64/plugin/remote
+	cp -R plugin/remote/dist/* $(DIST)/x64/plugin/remote
+	cp -R $(RSRC)/* $(DIST)/x64
+	cp -R $(JRE_HOME)/x64 $(DIST)/x64/jre
+
+release-win32: dist-x86
+	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x86.zip -C $(DIST)/x86 .
+
+release-win64: dist-x64
+	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x64.zip -C $(DIST)/x64 .
+
+release-tar: dist-$(ARCH)
+	tar -cvf $(TARNAME).tar -C $(DIST)/$(ARCH) .
 	gzip $(TARNAME).tar

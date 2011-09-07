@@ -90,22 +90,22 @@ public class Registry extends BaseRegistry {
     }
 
     public IKey fetchKey(String fullPath) throws IllegalArgumentException, NoSuchElementException {
+	return fetchKey(fullPath, redirector.isEnabled());
+    }
+
+    public IKey fetchKey(String fullPath, boolean win32) throws IllegalArgumentException, NoSuchElementException {
 	int ptr = fullPath.indexOf(DELIM_STR);
 	if (ptr == -1) {
 	    return getHive(fullPath);
 	} else {
 	    String hive = fullPath.substring(0, ptr);
 	    String path = fullPath.substring(ptr + 1);
-	    return fetchKey(hive, path);
+	    return fetchKey(hive, path, win32);
 	}
     }
 
-    public IKey fetchKey(String fullPath, boolean win32) throws IllegalArgumentException, NoSuchElementException {
-	return fetchKey(fullPath);
-    }
-
     public IKey fetchKey(String hive, String path) throws NoSuchElementException {
-	return fetchSubkey(getHive(hive), path, get64BitRedirect());
+	return fetchSubkey(getHive(hive), path, redirector.isEnabled());
     }
 
     public IKey fetchKey(String hive, String path, boolean win32) throws NoSuchElementException {
@@ -113,15 +113,17 @@ public class Registry extends BaseRegistry {
     }
 
     public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException {
-	return fetchSubkey(parent, name, get64BitRedirect());
+	return fetchSubkey(parent, name, redirector.isEnabled());
     }
 
     public IKey fetchSubkey(IKey parent, String name, boolean win32) throws NoSuchElementException {
+	String fullPath = new StringBuffer(parent.toString()).append(DELIM_CH).append(name).toString();
 	IKey key = null;
 	if (win32) {
-	    String alt = getRedirect(parent.toString() + DELIM_STR + name);
+	    String alt = redirector.getRedirect(fullPath);
 	    if (alt != null) {
-		return fetchKey(alt);
+		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", fullPath, alt));
+		return fetchKey(alt, false);
 	    }
 	}
 	return ((Key)parent).getSubkey(name);

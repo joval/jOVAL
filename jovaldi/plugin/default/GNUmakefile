@@ -30,7 +30,7 @@ $(PRODUCTNAME).jar: classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 test:
-	$(JAVA) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.test.Default test.properties
+	$(JRE_HOME)/bin/java -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.test.Default test.properties
 
 dist-clean:
 	rm -rf $(DIST)

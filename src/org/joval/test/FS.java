@@ -18,15 +18,18 @@ import java.util.regex.PatternSyntaxException;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
+import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 
 public class FS {
     private ISession session;
+    private IEnvironment env;
     private IFilesystem fs;
 
     public FS(ISession session) {
 	this.session = session;
 	fs = session.getFilesystem();
+	env = session.getEnvironment();
     }
 
     public synchronized void test(String path) {
@@ -40,7 +43,13 @@ public class FS {
 		    System.out.println("Match: " + item);
 		}
 	    } else {
-		IFile f = fs.getFile(path);
+		String exp = env.expand(path);
+		if (!path.equals(exp)) {
+		    System.out.println(path + " -> " + exp);
+		} else {
+		    System.out.println(path);
+		}
+		IFile f = fs.getFile(exp);
 		if (f.isLink()) {
 		    System.out.println(path + " is a link to " + f.getCanonicalPath());
 		}

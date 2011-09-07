@@ -93,8 +93,13 @@ public class Key implements IKey {
      * apparent location of the Key, potentially hiding its true location in the registry.
      */
     public String getPath() {
-	String s = registry.getOriginal(toString());
-	return s.substring(s.indexOf(Registry.DELIM_STR)+1);
+	String s = registry.redirector.getOriginal(toString());
+	int ptr = s.indexOf(Registry.DELIM_STR);
+	if (ptr > 0) {
+	    return s.substring(ptr+1);
+	} else {
+	    return null;
+	}
     }
 
     public Iterator<IKey> subkeys() throws IllegalStateException {

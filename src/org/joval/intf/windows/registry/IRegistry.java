@@ -34,9 +34,9 @@ public interface IRegistry {
     public void disconnect();
 
     /**
-     * Set the 32-bit Windows on 64-bit Windows redirection behavior.
+     * Set a handler for 32-bit Windows on 64-bit Windows redirection behavior.
      */
-    public void set64BitRedirect(boolean redirect);
+    public void setRedirector(IRegistryRedirector redirector);
 
     /**
      * Return whether or not this IRegistry is connected to a 64-bit view.

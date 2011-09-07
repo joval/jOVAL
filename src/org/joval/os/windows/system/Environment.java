@@ -87,7 +87,7 @@ public class Environment implements IEnvironment {
 	    IValue commonFilesValue = common.getValue("CommonFilesDir");
 	    if (commonFilesValue.getType() == IValue.REG_SZ) {
 		String commonFiles = ((IStringValue)commonFilesValue).getData();
-		props.setProperty(PROGRAMFILES, commonFiles);
+		props.setProperty(COMMONPROGRAMFILES, commonFiles);
 	    } else {
 		throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILES"));
 	    }

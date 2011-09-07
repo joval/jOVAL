@@ -25,6 +25,7 @@ import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.identity.WindowsCredential;
+import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.remote.io.SmbFilesystem;
 import org.joval.os.windows.remote.registry.Registry;
 import org.joval.os.windows.remote.wmi.WmiConnection;
@@ -89,8 +90,9 @@ public class WindowsSession implements IWindowsSession, ILocked {
 	    return false;
 	} else {
 	    registry = new Registry(host, cred);
-	    registry.set64BitRedirect(redirect64);
 	    if (registry.connect()) {
+		WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(registry);
+		registry.setRedirector(new WOW3264RegistryRedirector(redirect64, flavor));
 		env = registry.getEnvironment();
 		registry.disconnect();
 		fs = new SmbFilesystem(host, cred, env);

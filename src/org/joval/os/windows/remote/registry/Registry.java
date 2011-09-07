@@ -160,7 +160,7 @@ public class Registry extends BaseRegistry {
      * Returns a key given a path that includes the hive.
      */
     public IKey fetchKey(String fullPath) throws IllegalArgumentException, NoSuchElementException {
-	return fetchKey(fullPath, get64BitRedirect());
+	return fetchKey(fullPath, redirector.isEnabled());
     }
 
     public IKey fetchKey(String fullPath, boolean win32) throws IllegalArgumentException, NoSuchElementException {
@@ -194,7 +194,7 @@ public class Registry extends BaseRegistry {
      * @throws NoSuchElementException if there is no subkey with the specified name.
      */
     public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException {
-	return fetchSubkey(parent, name, get64BitRedirect());
+	return fetchSubkey(parent, name, redirector.isEnabled());
     }
 
     public IKey fetchSubkey(IKey parent, String name, boolean win32) throws NoSuchElementException {
@@ -202,10 +202,10 @@ public class Registry extends BaseRegistry {
 	Key key = map.get(fullPath);
 	if (key == null) {
 	    if (win32) {
-		String alt = getRedirect(fullPath);
+		String alt = redirector.getRedirect(fullPath);
 		if (alt != null) {
 		    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", fullPath, alt));
-		    return fetchKey(alt, win32);
+		    return fetchKey(alt, false);
 		}
 	    }
 	    StringBuffer partialPath = new StringBuffer();
@@ -252,7 +252,7 @@ public class Registry extends BaseRegistry {
     // Package-level access
 
     String unRedirect(String s) {
-	return getOriginal(s);
+	return redirector.getOriginal(s);
     }
 
     IJIWinReg getWinreg() {

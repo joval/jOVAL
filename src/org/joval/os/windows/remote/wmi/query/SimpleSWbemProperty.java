@@ -116,7 +116,11 @@ public class SimpleSWbemProperty implements ISWbemProperty {
     // Private
 
     private String getValueAsString(Object obj) throws JIException {
-	if (obj instanceof JIString) {
+	if (obj == null) {
+	    return null;
+	} else if (obj instanceof Integer) {
+	    return ((Integer)obj).toString();
+	} else if (obj instanceof JIString) {
 	    return ((JIString)obj).getString();
 	} else if (obj instanceof IJIComObject) {
 	    IJIDispatch dispatch = (IJIDispatch)JIObjectFactory.narrowObject((IJIComObject)obj);
@@ -139,7 +143,7 @@ public class SimpleSWbemProperty implements ISWbemProperty {
 	    return LittleEndian.toHexString(ub.getValue().byteValue());
 	} else {
 	    JOVALSystem.getLogger().log(Level.WARNING,
-					JOVALSystem.getMessage("ERROR_WMI_STR_CONVERSION", obj.getClass().getName()));
+					JOVALSystem.getMessage("ERROR_WMI_STR_CONVERSION", obj));
 	    return null;
 	}
     }

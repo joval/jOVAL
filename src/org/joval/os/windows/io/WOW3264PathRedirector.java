@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.windows;
+package org.joval.os.windows.io;
 
 import org.joval.intf.io.IPathRedirector;
 import org.joval.intf.system.IEnvironment;

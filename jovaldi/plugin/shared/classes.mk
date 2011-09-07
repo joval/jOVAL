@@ -38,11 +38,11 @@ SHARED=\
 	org.joval.os.unix.io.UnixFile					\
 	org.joval.os.unix.system.Environment				\
 	org.joval.os.windows.WindowsSystemInfo				\
-	org.joval.os.windows.WOW3264PathRedirector			\
 	org.joval.os.windows.identity.ActiveDirectory			\
 	org.joval.os.windows.identity.Group				\
 	org.joval.os.windows.identity.LocalDirectory			\
 	org.joval.os.windows.identity.User				\
+	org.joval.os.windows.io.WOW3264PathRedirector			\
 	org.joval.os.windows.pe.Characteristics				\
 	org.joval.os.windows.pe.DLLCharacteristics			\
 	org.joval.os.windows.pe.ImageDOSHeader				\
@@ -72,6 +72,7 @@ SHARED=\
 	org.joval.os.windows.registry.MultiStringValue			\
 	org.joval.os.windows.registry.StringValue			\
 	org.joval.os.windows.registry.Value				\
+	org.joval.os.windows.registry.WOW3264RegistryRedirector		\
 	org.joval.os.windows.system.Environment				\
 	org.joval.os.windows.wmi.WmiException				\
 	org.joval.plugin.adapter.cisco.ios.LineAdapter			\

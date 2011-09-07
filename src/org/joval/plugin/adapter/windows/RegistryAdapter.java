@@ -215,7 +215,7 @@ public class RegistryAdapter implements IAdapter {
 			ptr = path.lastIndexOf(IRegistry.DELIM_STR);
 			if (ptr != -1) {
 			    Vector<String> v = new Vector<String>();
-			    v.add(path.substring(0, ptr + IRegistry.DELIM_STR.length()));
+			    v.add(path.substring(0, ptr));
 			    results.addAll(getPaths(hive, v, --depth, direction));
 			}
 		    } else { // recurse down
@@ -259,11 +259,7 @@ public class RegistryAdapter implements IAdapter {
 	    OperationEnumeration op = rObj.getName().getValue().getOperation();
 	    switch(op) {
 	      case EQUALS:
-		if (rObj.getName().getValue() != null) {
-		    items.add(getItem(key, (String)rObj.getName().getValue().getValue()));
-		} else {
-		    items.add(getItem(key, null));
-		}
+		items.add(getItem(key, (String)rObj.getName().getValue().getValue()));
 		break;
     
 	      case PATTERN_MATCH:

@@ -110,7 +110,12 @@ public class Key implements IKey {
      */
     public String getPath() {
 	String s = registry.unRedirect(toString());
-	return s.substring(s.indexOf(Registry.DELIM_STR)+1);
+	int ptr = s.indexOf(Registry.DELIM_STR);
+	if (ptr > 0) {
+	    return s.substring(ptr+1);
+	} else {
+	    return null;
+	}
     }
 
     public Iterator<IKey> subkeys() throws IllegalStateException {
