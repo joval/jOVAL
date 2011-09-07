@@ -16,6 +16,7 @@ import javax.xml.bind.JAXBElement;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
+import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.windows.RegistryBehaviors;
 import oval.schemas.definitions.windows.RegistryObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
@@ -30,6 +31,7 @@ import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.windows.registry.IBinaryValue;
 import org.joval.intf.windows.registry.IDwordValue;
 import org.joval.intf.windows.registry.IExpandStringValue;
 import org.joval.intf.windows.registry.IKey;
@@ -37,6 +39,7 @@ import org.joval.intf.windows.registry.IMultiStringValue;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
+import org.joval.io.LittleEndian;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
@@ -49,8 +52,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class RegistryAdapter implements IAdapter {
-    private static final String DATATYPE_INT	= "int";
-
     private IRegistry registry;
     private Hashtable<String, BigInteger> itemIds;
     private Hashtable<String, Collection<String>> pathMap;
@@ -317,6 +318,7 @@ public class RegistryAdapter implements IAdapter {
 	      case IValue.REG_SZ: {
 		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue(((IStringValue)val).getData());
+		valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		values.add(valueType);
 		typeType.setValue("reg_sz");
 		break;
@@ -325,6 +327,7 @@ public class RegistryAdapter implements IAdapter {
 	      case IValue.REG_EXPAND_SZ: {
 		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue(((IExpandStringValue)val).getExpandedData());
+		valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		values.add(valueType);
 		typeType.setValue("reg_expand_sz");
 		break;
@@ -333,9 +336,23 @@ public class RegistryAdapter implements IAdapter {
 	      case IValue.REG_DWORD: {
 		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue("" + ((IDwordValue)val).getData());
-		valueType.setDatatype(DATATYPE_INT);
+		valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		values.add(valueType);
 		typeType.setValue("reg_dword");
+		break;
+	      }
+
+	      case IValue.REG_BINARY: {
+		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		byte[] data = ((IBinaryValue)val).getData();
+		StringBuffer sb = new StringBuffer();
+		for (int i=0; i < data.length; i++) {
+		    sb.append(LittleEndian.toHexString(data[i]));
+		}
+		valueType.setValue(sb.toString());
+		valueType.setDatatype(SimpleDatatypeEnumeration.BINARY.value());
+		values.add(valueType);
+		typeType.setValue("reg_binary");
 		break;
 	      }
 
@@ -343,6 +360,7 @@ public class RegistryAdapter implements IAdapter {
 		String[] sVals = ((IMultiStringValue)val).getData();
 		for (int i=0; i < sVals.length; i++) {
 		    EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		    valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		    valueType.setValue(sVals[i]);
 		    values.add(valueType);
 		}

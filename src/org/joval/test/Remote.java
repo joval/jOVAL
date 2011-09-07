@@ -129,7 +129,7 @@ public class Remote {
 		}
 		if ("true".equals(props.getProperty("test.registry"))) {
 		    Reg reg = new Reg(session);
-		    reg.test(props.getProperty("registry.key"));
+		    reg.test(props.getProperty("registry.key"), props.getProperty("registry.value"));
 		}
 		if ("true".equals(props.getProperty("test.wmi"))) {
 		    WMI wmi = new WMI(session);

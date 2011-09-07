@@ -97,15 +97,6 @@ public abstract class BaseRegistry implements IRegistry {
 	}
 	list = new Vector<IKey>();
 
-/*
-	if (win32) {
-	    String alt = redirector.getRedirect(key.toString());
-	    if (alt != null) {
-		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", key.toString(), alt));
-		key = fetchKey(alt, false);
-	    }
-	}
-*/
 	String next = null;
 	int ptr = path.indexOf("\\\\");
 	if (ptr > 0) {

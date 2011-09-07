@@ -41,7 +41,7 @@ public class Default {
 		    new AD(session).test(props.getProperty("ad.user"));
 		}
 		if ("true".equals(props.getProperty("test.registry"))) {
-		    new Reg(session).test(props.getProperty("registry.key"));
+		    new Reg(session).test(props.getProperty("registry.key"), props.getProperty("registry.value"));
 		}
 		if ("true".equals(props.getProperty("test.exec"))) {
 		    new Exec(session).test(props.getProperty("exec.command"));
