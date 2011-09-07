@@ -30,6 +30,7 @@ import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.system.IEnvironment;
 import org.joval.util.tree.CachingTree;
+import org.joval.util.tree.Tree;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -76,7 +77,8 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
 	ITreeBuilder tree = cache.getTreeBuilder("");
 	if (tree == null) {
-	    tree = cache.makeTree("", DELIM_STR);
+	    tree = new Tree("", DELIM_STR);
+	    cache.addTree(tree);
 	}
 	try {
 	    IProcess p = session.createProcess("find / *");

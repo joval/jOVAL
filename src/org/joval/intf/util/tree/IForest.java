@@ -13,7 +13,10 @@ import java.util.regex.Pattern;
  * @version %I% %G%
  */
 public interface IForest {
-    public ITreeBuilder makeTree(String name, String delimiter);
+    /**
+     * @returns the tree that was displaced, if any
+     */
+    public ITree addTree(ITree tree);
 
     public ITreeBuilder getTreeBuilder(String name);
 

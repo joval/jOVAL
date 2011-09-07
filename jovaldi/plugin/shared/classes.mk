@@ -112,6 +112,7 @@ SHARED=\
 	org.joval.util.BaseSession					\
 	org.joval.util.BaseFileAdapter					\
 	org.joval.util.tree.CachingTree					\
+	org.joval.util.tree.PropertyHierarchy				\
 	org.joval.util.tree.Forest					\
 	org.joval.util.tree.Node					\
 	org.joval.util.tree.Tree

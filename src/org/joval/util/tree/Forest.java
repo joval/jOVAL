@@ -28,16 +28,14 @@ public class Forest implements IForest {
 	trees = new Hashtable<String, ITree>();
     }
 
-    public void addTree(ITree tree) {
-	trees.put(tree.getRoot().getName(), tree);
+    public ITree addTree(ITree tree) {
+	return trees.put(tree.getRoot().getName(), tree);
     }
 
     // Implement IForest
 
-    public ITreeBuilder makeTree(String name, String delimiter) {
-	Tree tree = new Tree(name, delimiter);
-	trees.put(name, tree);
-	return tree;
+    public ITree addTree(ITree tree, String name) {
+	return trees.put(name, tree);
     }
 
     public ITreeBuilder getTreeBuilder(String name) throws SecurityException {

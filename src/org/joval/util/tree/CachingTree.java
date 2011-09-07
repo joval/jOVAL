@@ -175,7 +175,8 @@ public abstract class CachingTree implements ITree {
 	    String root = getToken(path);
 	    tree = cache.getTreeBuilder(root);
 	    if (tree == null) { // first-ever call
-		tree = cache.makeTree(root, getDelimiter());
+		tree = new Tree(root, getDelimiter());
+		cache.addTree(tree);
 	    }
 	    accessor = lookup(root + getDelimiter());
 	    node = tree.getRoot();
@@ -184,7 +185,8 @@ public abstract class CachingTree implements ITree {
 	    String root = getToken(parent);
 	    tree = cache.getTreeBuilder(root);
 	    if (tree == null) {
-		tree = cache.makeTree(root, getDelimiter());
+		tree = new Tree(root, getDelimiter());
+		cache.addTree(tree);
 		node = tree.getRoot();
 		accessor = lookup(parent + getDelimiter());
 		while ((parent = trimToken(parent)) != null) {

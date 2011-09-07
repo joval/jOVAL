@@ -3,6 +3,7 @@
 
 package org.joval.os.windows.registry;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.logging.Level;
@@ -14,6 +15,9 @@ import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IRegistryRedirector;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.util.JOVALSystem;
+import org.joval.util.StringTools;
+import org.joval.util.tree.Forest;
+import org.joval.util.tree.PropertyHierarchy;
 
 /**
  * Implementation of an IRegistryRedirector.
@@ -119,28 +123,6 @@ public class WOW3264RegistryRedirector implements IRegistryRedirector {
 	return path;
     }
 
-    /**
-     * Returns the alternate location of the Key path specified by the invocation path.  This should be a full path,
-     * like the kind returned by Key.toString().  The method returns null if no redirected path is available.
-    public String getRedirect(String path) {
-	if (enabled && path.startsWith(FULL_SOFTWARE_STR)) {
-	    StringTokenizer tok = new StringTokenizer(path.substring(FULL_SOFTWARE_LEN), IRegistry.DELIM_STR);
-	    if (tok.hasMoreTokens()) {
-		String next = tok.nextToken();
-		if (!WOW6432NODE.equals(next)) {
-		    StringBuffer s = new StringBuffer(FULL_SOFTWARE_STR);
-		    s.append(WOW6432NODE).append(IRegistry.DELIM_CH).append(next);
-		    while (tok.hasMoreTokens()) {
-			s.append(IRegistry.DELIM_CH).append(tok.nextToken());
-		    }
-		    return s.toString();
-		}
-	    }
-	}
-	return null;
-    }
-     */
-
     public String getRedirect(String path) {
 	if (!enabled) {
 	    return null;
@@ -149,33 +131,250 @@ public class WOW3264RegistryRedirector implements IRegistryRedirector {
 	    return null; // already redirected
 	}
 
+	int ptr = path.indexOf(IRegistry.DELIM_STR);
+	String hive = path;
+	String keyPath = null;
+	if (ptr > 0) {
+	    hive = path.substring(0, ptr);
+	    keyPath = path.substring(ptr + 1);
+	}
+	PropertyHierarchy ph = (PropertyHierarchy)policies.getTree(hive);
+	if (ph == null) {
+	    return null;
+	}
+
 	switch(flavor) {
 	  case WIN7:
 	  case WIN2008R2:
-	    if        (path.startsWith(IRegistry.HKLM + IRegistry.DELIM_STR + "SOFTWARE\\Classes\\CLSID")) {
+	    if (POLICY_REDIRECTED.equals(ph.getProperty(keyPath, KEY_WIN7_08R2))) {
 		return splice(path);
-	    } else if (path.startsWith(IRegistry.HKLM + IRegistry.DELIM_STR + "SOFTWARE\\Classes")) {
-	    } else if (path.startsWith(IRegistry.HKLM + IRegistry.DELIM_STR + "SOFTWARE")) {
-		return splice(path);
+	    } else {
+		return null;
 	    }
-	    break;
 
 	  case VISTA:
 	  case WIN2008:
 	  case WIN2003:
 	  case WINXP:
-	    if        (path.startsWith(IRegistry.HKLM + IRegistry.DELIM_STR + "SOFTWARE")) {
+	    if (POLICY_REDIRECTED.equals(ph.getProperty(keyPath, KEY_LEGACY))) {
 		return splice(path);
+	    } else {
+		return null;
 	    }
-	    break;
 	}
 	return null;
     }
 
     // Private
 
+    private static final String KEY_WIN7_08R2		= "latest";	// Windows 7, Windows 2008 R2
+    private static final String KEY_LEGACY		= "legacy";	// the rest
+    private static final String POLICY_REDIRECTED	= "redirect";
+    private static final String POLICY_SHARED		= "shared";
+
+    private static Forest policies = new Forest();
+    static {
+	policies.addTree(new PropertyHierarchy(IRegistry.HKLM, IRegistry.DELIM_STR));
+	PropertyHierarchy ph = (PropertyHierarchy)policies.getTree(IRegistry.HKLM);
+	String path = "SOFTWARE\\Classes";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\Appid";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);		// DAS: exceptions TBD
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\CLSID";				// DAS: exceptions TBD
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\DirectShow";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\HCP";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Classes\\Interface";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\Media Type";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\MediaFoundation";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Clients";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\COM3";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\Cryptography\\Calais\\Current";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Cryptography\\Calais\\Readers";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Cryptography\\Services";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\CTF\\SystemShared";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\CTF\\TIP";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\DFS";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Driver Signing";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\EnterpriseCertificates";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\EventSystem";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\MSMQ";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Non-Driver Signing";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Nodepad\\DefaultFonts";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\OLE";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\RAS";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\RPC";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\SOFTWARE\\Microsoft\\Shared Tools\\MSInfo";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\System Certificates";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\TermServLicensing";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\TransactionServer";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\CurrentVersion\\App Paths";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\CurrentVersion\\Control Panel\\Cursors\\Schemes";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\CurrentVersion\\Explorer\\AutoplayHandlers";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\CurrentVersion\\Explorer\\DriveIcons";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\CurrentVersion\\Explorer\\KindMap";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\CurrentVersion\\Group Policy";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\CurrentVersion\\Policies";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\CurrentVersion\\PreviewHandlers";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\CurrentVersion\\Setup";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\CurrentVersion\\Telephony Locations";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Console";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontDpi";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontLink";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontMapper";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Gre_Initialize";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Language Pack";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\NetworkCards";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Ports";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Print";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\TimeZones";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\Policies";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+	path = "SOFTWARE\\RegisteredApplications";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_SHARED);
+
+	policies.addTree(new PropertyHierarchy(IRegistry.HKCU, IRegistry.DELIM_STR));
+	ph = (PropertyHierarchy)policies.getTree(IRegistry.HKCU);
+	path = "SOFTWARE\\Classes";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\Appid";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);		// DAS: exceptions TBD
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\CLSID";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\DirectShow";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\Interface";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\Media Type";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes\\MediaFoundation";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+    }
+
+    // Private
+
     private String splice(String path) {
-	String s = path.substring(0, 27) + IRegistry.DELIM_STR + "Wow6432Node" + path.substring(27);
+	int ptr = path.indexOf("\\SOFTWARE\\") + 9;
+	String s = path.substring(0, ptr) + IRegistry.DELIM_STR + "Wow6432Node" + path.substring(ptr);
 	return s;
     }
 }
