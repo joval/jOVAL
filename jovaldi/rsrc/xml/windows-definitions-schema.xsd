@@ -4,18 +4,9 @@
             xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
             xmlns:win-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows"
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
-            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
-            jxb:version="1.0"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows"
             elementFormDefault="qualified"
-            version="5.9">
-   <xsd:annotation>
-      <xsd:appinfo>
-         <jxb:schemaBindings>
-            <jxb:package name="org.joval.oval.schemas.definitions.windows"/>
-         </jxb:schemaBindings>
-      </xsd:appinfo>
-   </xsd:annotation>
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
                schemaLocation="oval-common-schema.xsd"/>
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
@@ -382,6 +373,95 @@
          </xsd:complexContent>
       </xsd:complexType>
    </xsd:element>
+   <xsd:element name="cmdlet_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="cmdlet_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="module_name" type="oval-def:EntityObjectStringType" nillable="true"
+                                     minOccurs="1"
+                                     maxOccurs="1"/>
+                        <xsd:element name="module_id" type="win-def:EntityObjectGUIDType" nillable="true"
+                                     minOccurs="1"
+                                     maxOccurs="1"/>
+                        <xsd:element name="module_version" type="oval-def:EntityObjectVersionType" nillable="true"
+                                     minOccurs="1"
+                                     maxOccurs="1"/>
+                        <xsd:element name="verb" type="win-def:EntityObjectCmdletVerbType" minOccurs="1"
+                                     maxOccurs="1"/>
+                        <xsd:element name="noun" type="oval-def:EntityObjectStringType" minOccurs="1" maxOccurs="1"/>
+                        <xsd:element name="parameters" type="oval-def:EntityObjectRecordType" nillable="true">
+                           <xsd:unique name="UniqueCmdletObjParametersFieldName">
+                              <xsd:selector xpath="./oval-def:field"/>
+                              <xsd:field xpath="@name"/>
+                           </xsd:unique>
+                        </xsd:element>
+                        <xsd:element name="select" type="oval-def:EntityObjectRecordType" nillable="true">
+                           <xsd:unique name="UniqueCmdletObjSelectFieldName">
+                              <xsd:selector xpath="./oval-def:field"/>
+                              <xsd:field xpath="@name"/>
+                           </xsd:unique>
+                        </xsd:element>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="cmdlet_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="module_name" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="module_id" type="win-def:EntityStateGUIDType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="module_version" type="oval-def:EntityStateVersionType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="verb" type="win-def:EntityStateCmdletVerbType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="noun" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="parameters" type="oval-def:EntityStateRecordType" minOccurs="0"
+                               maxOccurs="1">
+                     <xsd:unique name="UniqueCmdletSteParametersFieldName">
+                        <xsd:selector xpath="./oval-def:field"/>
+                        <xsd:field xpath="@name"/>
+                     </xsd:unique>
+                  </xsd:element>
+                  <xsd:element name="select" type="oval-def:EntityStateRecordType" minOccurs="0" maxOccurs="1">
+                     <xsd:unique name="UniqueCmdletSteSelectFieldName">
+                        <xsd:selector xpath="./oval-def:field"/>
+                        <xsd:field xpath="@name"/>
+                     </xsd:unique>
+                  </xsd:element>
+                  <xsd:element name="value" type="oval-def:EntityStateRecordType" minOccurs="0" maxOccurs="1">
+                     <xsd:unique name="UniqueCmdletValueFieldName">
+                        <xsd:selector xpath="./oval-def:field"/>
+                        <xsd:field xpath="@name"/>
+                     </xsd:unique>
+                  </xsd:element>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
    <xsd:element name="dnscache_test" substitutionGroup="oval-def:test">
       <xsd:complexType>
          <xsd:complexContent>
@@ -485,6 +565,7 @@
                   <xsd:element name="original_filename" type="oval-def:EntityStateStringType" minOccurs="0"/>
                   <xsd:element name="product_name" type="oval-def:EntityStateStringType" minOccurs="0"/>
                   <xsd:element name="product_version" type="oval-def:EntityStateVersionType" minOccurs="0"/>
+                  <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -514,6 +595,14 @@
                <xsd:enumeration value="all"/>
                <xsd:enumeration value="local"/>
                <xsd:enumeration value="defined"/>
+            </xsd:restriction>
+         </xsd:simpleType>
+      </xsd:attribute>
+      <xsd:attribute name="windows_view" use="optional" default="64_bit">
+         <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+               <xsd:enumeration value="32_bit"/>
+               <xsd:enumeration value="64_bit"/>
             </xsd:restriction>
          </xsd:simpleType>
       </xsd:attribute>
@@ -583,6 +672,7 @@
                   <xsd:element name="file_delete_child" type="win-def:EntityStateAuditType" minOccurs="0"/>
                   <xsd:element name="file_read_attributes" type="win-def:EntityStateAuditType" minOccurs="0"/>
                   <xsd:element name="file_write_attributes" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -654,6 +744,7 @@
                   <xsd:element name="file_delete_child" type="win-def:EntityStateAuditType" minOccurs="0"/>
                   <xsd:element name="file_read_attributes" type="win-def:EntityStateAuditType" minOccurs="0"/>
                   <xsd:element name="file_write_attributes" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -732,6 +823,7 @@
                   <xsd:element name="file_delete_child" type="oval-def:EntityStateBoolType" minOccurs="0"/>
                   <xsd:element name="file_read_attributes" type="oval-def:EntityStateBoolType" minOccurs="0"/>
                   <xsd:element name="file_write_attributes" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -803,6 +895,7 @@
                   <xsd:element name="file_delete_child" type="oval-def:EntityStateBoolType" minOccurs="0"/>
                   <xsd:element name="file_read_attributes" type="oval-def:EntityStateBoolType" minOccurs="0"/>
                   <xsd:element name="file_write_attributes" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -1063,6 +1156,190 @@
          </xsd:complexContent>
       </xsd:complexType>
    </xsd:element>
+   <xsd:element name="peheader_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="peheader_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="behaviors" type="win-def:FileBehaviors" minOccurs="0" maxOccurs="1"/>
+                        <xsd:choice>
+                           <xsd:element name="filepath" type="oval-def:EntityObjectStringType"/>
+                           <xsd:sequence>
+                              <xsd:element name="path" type="oval-def:EntityObjectStringType"/>
+                              <xsd:element name="filename" type="oval-def:EntityObjectStringType"/>
+                           </xsd:sequence>
+                        </xsd:choice>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="peheader_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="header_signature" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="target_machine_type" type="win-def:EntityStatePeTargetMachineType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="number_of_sections" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="time_date_stamp" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pointer_to_symbol_table" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="number_of_symbols" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_optional_header" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_relocs_stripped" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_executable_image" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_line_nums_stripped" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_local_syms_stripped" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_aggresive_ws_trim" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_large_address_aware" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_16bit_machine" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_bytes_reversed_lo" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_32bit_machine" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_debug_stripped" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_removable_run_from_swap" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_system" type="oval-def:EntityStateBoolType" default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_dll" type="oval-def:EntityStateBoolType" default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_up_system_only" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_bytes_reveresed_hi" type="oval-def:EntityStateBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="magic_number" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="major_linker_version" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minor_linker_version" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_code" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_initialized_data" type="oval-def:EntityStateIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_uninitialized_data" type="oval-def:EntityStateIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="address_of_entry_point" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="base_of_code" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="base_of_data" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_base_address" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="section_alignment" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_alignment" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="major_operating_system_version" type="oval-def:EntityStateIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minor_operating_system_version" type="oval-def:EntityStateIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="major_image_version" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minor_image_version" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="major_subsystem_version" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minor_susbsystem_version" type="oval-def:EntityStateIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_image" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_headers" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="checksum" type="oval-def:EntityStateIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="subsystem" type="win-def:EntityStatePeSubsystemType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="dll_characteristics" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_stack_reserve" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_stack_commit" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_heap_reserve" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_heap_commit" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="loader_flags" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="number_of_rva_and_sizes" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="real_number_of_directory_entries" type="oval-def:EntityStateIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
    <xsd:element name="port_test" substitutionGroup="oval-def:test">
       <xsd:complexType>
          <xsd:complexContent>
@@ -1259,6 +1536,12 @@
                   <xsd:element name="priority" type="oval-def:EntityStateStringType" minOccurs="0"/>
                   <xsd:element name="image_path" type="oval-def:EntityStateStringType" minOccurs="0"/>
                   <xsd:element name="current_dir" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                  <xsd:element name="creation_time" type="oval-def:EntityStateIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="dep_enabled" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="primary_window_text" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -1304,8 +1587,10 @@
                   <xsd:element name="hive" type="win-def:EntityStateRegistryHiveType" minOccurs="0"/>
                   <xsd:element name="key" type="oval-def:EntityStateStringType" minOccurs="0"/>
                   <xsd:element name="name" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                  <xsd:element name="last_write_time" type="oval-def:EntityStateIntType" minOccurs="0"/>
                   <xsd:element name="type" type="win-def:EntityStateRegistryTypeType" minOccurs="0"/>
                   <xsd:element name="value" type="oval-def:EntityStateAnySimpleType" minOccurs="0"/>
+                  <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -1326,6 +1611,14 @@
                <xsd:enumeration value="none"/>
                <xsd:enumeration value="up"/>
                <xsd:enumeration value="down"/>
+            </xsd:restriction>
+         </xsd:simpleType>
+      </xsd:attribute>
+      <xsd:attribute name="windows_view" use="optional" default="64_bit">
+         <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+               <xsd:enumeration value="32_bit"/>
+               <xsd:enumeration value="64_bit"/>
             </xsd:restriction>
          </xsd:simpleType>
       </xsd:attribute>
@@ -1389,6 +1682,7 @@
                   <xsd:element name="key_wow64_64key" type="win-def:EntityStateAuditType" minOccurs="0"/>
                   <xsd:element name="key_wow64_32key" type="win-def:EntityStateAuditType" minOccurs="0"/>
                   <xsd:element name="key_wow64_res" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -1460,6 +1754,7 @@
                   <xsd:element name="key_wow64_64key" type="win-def:EntityStateAuditType" minOccurs="0"/>
                   <xsd:element name="key_wow64_32key" type="win-def:EntityStateAuditType" minOccurs="0"/>
                   <xsd:element name="key_wow64_res" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -1532,6 +1827,7 @@
                   <xsd:element name="key_wow64_64key" type="oval-def:EntityStateBoolType" minOccurs="0"/>
                   <xsd:element name="key_wow64_32key" type="oval-def:EntityStateBoolType" minOccurs="0"/>
                   <xsd:element name="key_wow64_res" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -1603,6 +1899,7 @@
                   <xsd:element name="key_wow64_64key" type="oval-def:EntityStateBoolType" minOccurs="0"/>
                   <xsd:element name="key_wow64_32key" type="oval-def:EntityStateBoolType" minOccurs="0"/>
                   <xsd:element name="key_wow64_res" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="windows_view" type="win-def:EntityStateWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -1785,6 +2082,122 @@
          </xsd:complexContent>
       </xsd:complexType>
    </xsd:element>
+   <xsd:element name="sharedresourceauditedpermissions_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sharedresourceauditedpermissions_object"
+                substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="behaviors" type="win-def:SharedResourceAuditedPermissionsBehaviors"
+                                     minOccurs="0"/>
+                        <xsd:element name="netname" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="trustee_sid" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sharedresourceauditedpermissions_state"
+                substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="netname" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                  <xsd:element name="trustee_sid" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                  <xsd:element name="standard_delete" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="standard_read_control" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="standard_write_dac" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="standard_write_owner" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="standard_synchronize" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="access_system_security" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="generic_read" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="generic_write" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="generic_execute" type="win-def:EntityStateAuditType" minOccurs="0"/>
+                  <xsd:element name="generic_all" type="win-def:EntityStateAuditType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="SharedResourceAuditedPermissionsBehaviors">
+      <xsd:attribute name="include_group" type="xsd:boolean" use="optional" default="true"/>
+   </xsd:complexType>
+   <xsd:element name="sharedresourceeffectiverights_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sharedresourceeffectiverights_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="behaviors" type="win-def:SharedResourceEffectiveRightsBehaviors"
+                                     minOccurs="0"/>
+                        <xsd:element name="netname" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="trustee_sid" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sharedresourceeffectiverights_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="netname" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                  <xsd:element name="trustee_sid" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                  <xsd:element name="standard_delete" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="standard_read_control" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="standard_write_dac" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="standard_write_owner" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="standard_synchronize" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="access_system_security" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="generic_read" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="generic_write" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="generic_execute" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+                  <xsd:element name="generic_all" type="oval-def:EntityStateBoolType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="SharedResourceEffectiveRightsBehaviors">
+      <xsd:attribute name="include_group" type="xsd:boolean" use="optional" default="true"/>
+   </xsd:complexType>
    <xsd:element name="sid_test" substitutionGroup="oval-def:test">
       <xsd:complexType>
          <xsd:complexContent>
@@ -1958,6 +2371,7 @@
                   <xsd:element name="user" type="oval-def:EntityStateStringType" minOccurs="0"/>
                   <xsd:element name="enabled" type="oval-def:EntityStateBoolType" minOccurs="0"/>
                   <xsd:element name="group" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                  <xsd:element name="last_logon" type="oval-def:EntityStateIntType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -2368,6 +2782,48 @@
          </xsd:restriction>
       </xsd:simpleContent>
    </xsd:complexType>
+   <xsd:complexType name="EntityStatePeTargetMachineType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_UNKNOWN"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_ALPHA"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_ARM"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_ALPHA64"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_I386"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_IA64"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_M68K"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_MIPS16"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_MIPSFPU"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_MIPSFPU16"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_POWERPC"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_R3000"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_R4000"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_R10000"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_SH3"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_SH4"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_THUMB"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStatePeSubsystemType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_UNKNOWN"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_NATIVE"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_WINDOWS_GUI"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_WINDOWS_CUI"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_OS2_CUI"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_POSIX_CUI"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_WINDOWS_CE_GUI"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_EFI_APPLICATION"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_EFI_ROM"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_XBOX"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
    <xsd:complexType name="EntityObjectProtocolType">
       <xsd:simpleContent>
          <xsd:restriction base="oval-def:EntityObjectStringType">
@@ -2501,6 +2957,77 @@
             <xsd:enumeration value="STYPE_IPC_SPECIAL_TEMPORARY"/>
             <xsd:enumeration value="STYPE_SPECIAL"/>
             <xsd:enumeration value="STYPE_TEMPORARY"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectGUIDType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityObjectStringType">
+            <xsd:pattern value="(\{[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}\}){0,}"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateGUIDType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:pattern value="(\{[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}\}){0,}"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectCmdletVerbType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityObjectStringType">
+            <xsd:enumeration value="Approve"/>
+            <xsd:enumeration value="Assert"/>
+            <xsd:enumeration value="Compare"/>
+            <xsd:enumeration value="Confirm"/>
+            <xsd:enumeration value="Find"/>
+            <xsd:enumeration value="Get"/>
+            <xsd:enumeration value="Import"/>
+            <xsd:enumeration value="Measure"/>
+            <xsd:enumeration value="Read"/>
+            <xsd:enumeration value="Request"/>
+            <xsd:enumeration value="Resolve"/>
+            <xsd:enumeration value="Search"/>
+            <xsd:enumeration value="Select"/>
+            <xsd:enumeration value="Show"/>
+            <xsd:enumeration value="Test"/>
+            <xsd:enumeration value="Trace"/>
+            <xsd:enumeration value="Watch"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateCmdletVerbType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:enumeration value="Approve"/>
+            <xsd:enumeration value="Assert"/>
+            <xsd:enumeration value="Compare"/>
+            <xsd:enumeration value="Confirm"/>
+            <xsd:enumeration value="Find"/>
+            <xsd:enumeration value="Get"/>
+            <xsd:enumeration value="Import"/>
+            <xsd:enumeration value="Measure"/>
+            <xsd:enumeration value="Read"/>
+            <xsd:enumeration value="Request"/>
+            <xsd:enumeration value="Resolve"/>
+            <xsd:enumeration value="Search"/>
+            <xsd:enumeration value="Select"/>
+            <xsd:enumeration value="Show"/>
+            <xsd:enumeration value="Test"/>
+            <xsd:enumeration value="Trace"/>
+            <xsd:enumeration value="Watch"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateWindowsViewType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:enumeration value="32_bit"/>
+            <xsd:enumeration value="64_bit"/>
             <xsd:enumeration value=""/>
          </xsd:restriction>
       </xsd:simpleContent>

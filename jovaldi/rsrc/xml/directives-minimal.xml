@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="UTF-8"?> 
+<!-- 
+  This OVAL Directives file produces a minimal OVAL Results file, without the source definition and thin results 
+-->
+<oval_directives xmlns="http://oval.mitre.org/XMLSchema/oval-directives-5"
+    xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5"
+    xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+    xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-directives-5 oval-directives-schema.xsd http://oval.mitre.org/XMLSchema/oval-results-5 oval-results-schema.xsd http://oval.mitre.org/XMLSchema/oval-common-5 oval-common-schema.xsd">
+  <generator>
+    <oval:product_name>The OVAL Interpreter Tasker</oval:product_name>
+    <oval:schema_version>5.9</oval:schema_version>
+    <oval:timestamp>2011-04-15T11:38:19.909-05:00</oval:timestamp>
+  </generator> 
+  <directives include_source_definitions="false">
+    <oval-res:definition_true content="thin" reported="true"/>
+    <oval-res:definition_false content="thin" reported="true"/>
+    <oval-res:definition_unknown content="thin" reported="true"/>
+    <oval-res:definition_error content="thin" reported="true"/>
+    <oval-res:definition_not_evaluated content="thin" reported="true"/>
+    <oval-res:definition_not_applicable content="thin" reported="true"/>
+  </directives>
+</oval_directives> 

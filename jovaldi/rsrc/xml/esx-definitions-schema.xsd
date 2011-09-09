@@ -4,18 +4,9 @@
             xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
             xmlns:esx-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#esx"
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
-            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
-            jxb:version="1.0"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#esx"
             elementFormDefault="qualified"
             version="5.8">
-   <xsd:annotation>
-      <xsd:appinfo>
-         <jxb:schemaBindings>
-            <jxb:package name="org.joval.oval.schemas.definitions.esx"/>
-         </jxb:schemaBindings>
-      </xsd:appinfo>
-   </xsd:annotation>
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
                schemaLocation="oval-common-schema.xsd"/>
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"

@@ -6,7 +6,7 @@
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#unix"
             elementFormDefault="qualified"
-            version="5.9">
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
                schemaLocation="oval-system-characteristics-schema.xsd"/>
    <xsd:element name="dnscache_item" substitutionGroup="oval-sc:item">
@@ -156,6 +156,7 @@
                   <xsd:element name="home_dir" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="login_shell" type="oval-sc:EntityItemStringType" minOccurs="0"
                                maxOccurs="1"/>
+                  <xsd:element name="last_login" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -299,7 +300,8 @@
             <xsd:extension base="oval-sc:ItemType">
                <xsd:sequence>
                   <xsd:element name="name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
-                  <xsd:element name="value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0"
+                               maxOccurs="unbounded"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -450,6 +452,9 @@
             <xsd:enumeration value="STATIC"/>
             <xsd:enumeration value="WAS_CLONED"/>
             <xsd:enumeration value="XRESOLVE"/>
+            <xsd:enumeration value="USABLE"/>
+            <xsd:enumeration value="PINNED"/>
+            <xsd:enumeration value="ACTIVE_DEAD_GATEWAY_DETECTION"/>
             <xsd:enumeration value=""/>
          </xsd:restriction>
       </xsd:simpleContent>

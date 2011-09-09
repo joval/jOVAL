@@ -19,17 +19,8 @@
 
 <schema xmlns="http://www.w3.org/2001/XMLSchema"
         xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
-        xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
-        jxb:version="1.0"
         targetNamespace="http://www.w3.org/2000/09/xmldsig#"
         version="0.1" elementFormDefault="qualified"> 
-   <annotation>
-      <appinfo>
-         <jxb:schemaBindings>
-            <jxb:package name="org.joval.xml.sig"/>
-         </jxb:schemaBindings>
-      </appinfo>
-   </annotation>
 
 <!-- Basic Types Defined for Signatures -->
 

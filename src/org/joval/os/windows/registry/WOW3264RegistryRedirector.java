@@ -152,7 +152,10 @@ public class WOW3264RegistryRedirector implements IPathRedirector {
     static {
 	policies.addTree(new PropertyHierarchy(IRegistry.HKLM, IRegistry.DELIM_STR));
 	PropertyHierarchy ph = (PropertyHierarchy)policies.getTree(IRegistry.HKLM);
-	String path = "SOFTWARE\\Classes";
+	String path = "SOFTWARE";
+	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_REDIRECTED);
+	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
+	path = "SOFTWARE\\Classes";
 	ph.setProperty(path,	KEY_WIN7_08R2,	POLICY_SHARED);
 	ph.setProperty(path,	KEY_LEGACY,	POLICY_REDIRECTED);
 	path = "SOFTWARE\\Classes\\Appid";

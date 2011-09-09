@@ -109,7 +109,7 @@ public class Registry extends BaseRegistry {
 	if (redirector != null) {
 	    String alt = redirector.getRedirect(fullPath);
 	    if (alt != null) {
-		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", fullPath, alt));
+		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", fullPath, alt));
 		return fetchKey(alt);
 	    }
 	}

@@ -1,0 +1,816 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:tns="http://scap.nist.gov/schema/asset-identification/1.1"
+           xmlns:core="http://scap.nist.gov/schema/reporting-core/1.1"
+           xmlns:xal="urn:oasis:names:tc:ciq:xsdschema:xAL:2.0"
+           xmlns:xnl="urn:oasis:names:tc:ciq:xsdschema:xNL:2.0"
+           targetNamespace="http://scap.nist.gov/schema/asset-identification/1.1"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified"
+           version="1.1.0-rc1">
+   <xs:annotation>
+      <xs:appinfo>
+         <schema/>
+         <author/>
+         <version/>
+         <date/>
+      </xs:appinfo>
+   </xs:annotation>
+   <xs:import namespace="urn:oasis:names:tc:ciq:xsdschema:xAL:2.0"
+              schemaLocation="http://docs.oasis-open.org/election/external/xAL.xsd"/>
+   <xs:import namespace="urn:oasis:names:tc:ciq:xsdschema:xNL:2.0"
+              schemaLocation="http://docs.oasis-open.org/election/external/xNL.xsd"/>
+   <xs:import namespace="http://scap.nist.gov/schema/reporting-core/1.1"
+              schemaLocation="http://scap.nist.gov/schema/reporting-core/1.1/reporting_core-rc1.xsd"/>
+   <xs:element name="asset-related" type="tns:asset-identification-type">
+      <xs:key name="assetRelKey">
+         <xs:selector xpath="tns:asset"/>
+         <xs:field xpath="@id"/>
+      </xs:key>
+      <xs:keyref refer="tns:assetRelKey" name="assetRelKeyRef">
+         <xs:selector xpath="."/>
+         <xs:field xpath="@asset-ref"/>
+      </xs:keyref>
+      <xs:keyref refer="tns:assetRelKey" name="assetRelRefSubjKeyRef">
+         <xs:selector xpath="core:relationships/core:relationship"/>
+         <xs:field xpath="@subject"/>
+      </xs:keyref>
+      <xs:keyref refer="tns:assetRelKey" name="assetRelRefObjKeyRef">
+         <xs:selector xpath="core:relationships/core:relationship/core:ref"/>
+         <xs:field xpath="."/>
+      </xs:keyref>
+   </xs:element>
+   <xs:complexType name="asset-identification-type">
+      <xs:complexContent>
+         <xs:extension base="tns:assets-type">
+            <xs:attribute name="asset-ref" type="xs:NCName" use="required"/>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:element name="assets" type="tns:assets-type">
+      <xs:key name="assetsRelKey">
+         <xs:selector xpath="tns:asset"/>
+         <xs:field xpath="@id"/>
+      </xs:key>
+      <xs:keyref refer="tns:assetsRelKey" name="assetsRelRefSubjKeyRef">
+         <xs:selector xpath="core:relationships/core:relationship"/>
+         <xs:field xpath="@subject"/>
+      </xs:keyref>
+      <xs:keyref refer="tns:assetsRelKey" name="assetsRelRefObjKeyRef">
+         <xs:selector xpath="core:relationships/core:relationship/core:ref"/>
+         <xs:field xpath="."/>
+      </xs:keyref>
+   </xs:element>
+   <xs:complexType name="assets-type">
+      <xs:complexContent>
+         <xs:extension base="core:relationships-container-type">
+            <xs:sequence>
+               <xs:element name="asset" maxOccurs="unbounded">
+                  <xs:complexType>
+                     <xs:sequence>
+                        <xs:element ref="tns:asset"/>
+                     </xs:sequence>
+                     <xs:attribute name="id" type="xs:NCName" use="required">
+                        <xs:annotation>
+                           <xs:documentation/>
+                        </xs:annotation>
+                     </xs:attribute>
+                     <xs:attribute name="timestamp" type="xs:dateTime">
+                        <xs:annotation>
+                           <xs:documentation/>
+                        </xs:annotation>
+                     </xs:attribute>
+                     <xs:anyAttribute namespace="##other">
+                        <xs:annotation>
+                           <xs:documentation/>
+                        </xs:annotation>
+                     </xs:anyAttribute>
+                  </xs:complexType>
+               </xs:element>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:element name="asset" type="tns:asset-type" abstract="true">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="it-asset" type="tns:it-asset-type" abstract="true"
+               substitutionGroup="tns:asset">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="circuit" type="tns:circuit-type" substitutionGroup="tns:it-asset">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="computing-device" type="tns:computing-device-type"
+               substitutionGroup="tns:it-asset">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="data" type="tns:data-type" substitutionGroup="tns:asset">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="database" substitutionGroup="tns:it-asset" type="tns:database-type">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="network" type="tns:network-type" substitutionGroup="tns:it-asset">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="organization" type="tns:organization-type" substitutionGroup="tns:asset">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="person" type="tns:person-type" substitutionGroup="tns:asset">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="service" substitutionGroup="tns:it-asset" type="tns:service-type">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="software" type="tns:software-type" substitutionGroup="tns:it-asset">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="system" type="tns:system-type" substitutionGroup="tns:it-asset">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="website" substitutionGroup="tns:it-asset" type="tns:website-type">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:complexType name="asset-type" abstract="true">
+      <xs:sequence>
+         <xs:element ref="tns:synthetic-id" minOccurs="0" maxOccurs="unbounded"/>
+         <xs:element ref="tns:locations" minOccurs="0"/>
+         <xs:element name="extended-information" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+            <xs:complexType>
+               <xs:sequence>
+                  <xs:any namespace="##other" processContents="lax" maxOccurs="unbounded"/>
+               </xs:sequence>
+            </xs:complexType>
+         </xs:element>
+      </xs:sequence>
+      <xs:attribute ref="tns:timestamp"/>
+   </xs:complexType>
+   <xs:complexType name="it-asset-type" abstract="true">
+      <xs:complexContent>
+         <xs:extension base="tns:asset-type"/>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="circuit-type">
+      <xs:complexContent>
+         <xs:extension base="tns:it-asset-type">
+            <xs:sequence>
+               <xs:element name="circuit-name" minOccurs="0">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="xs:token">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="computing-device-type">
+      <xs:complexContent>
+         <xs:extension base="tns:it-asset-type">
+            <xs:sequence>
+               <xs:element name="distinguished-name" minOccurs="0">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="xs:token">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+               <xs:element ref="tns:cpe" minOccurs="0" maxOccurs="unbounded">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element name="connections" minOccurs="0">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:sequence>
+                        <xs:element name="connection" type="tns:network-interface-type" maxOccurs="unbounded">
+                           <xs:annotation>
+                              <xs:documentation/>
+                           </xs:annotation>
+                        </xs:element>
+                     </xs:sequence>
+                  </xs:complexType>
+               </xs:element>
+               <xs:element minOccurs="0" ref="tns:fqdn"/>
+               <xs:element name="hostname" minOccurs="0">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="tns:hostname-type">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+               <xs:element minOccurs="0" name="smbios-id" type="xs:string">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element minOccurs="0" name="motherboard-guid" type="xs:string">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+               </xs:element>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="data-type">
+      <xs:complexContent>
+         <xs:extension base="tns:asset-type"/>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="database-type">
+      <xs:complexContent>
+         <xs:extension base="tns:it-asset-type">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="instance-name">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="xs:token">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="network-type">
+      <xs:complexContent>
+         <xs:extension base="tns:it-asset-type">
+            <xs:sequence>
+               <xs:element name="network-name" minOccurs="0">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="xs:normalizedString">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+               <xs:choice minOccurs="0">
+                  <xs:element name="ip-net-range">
+                     <xs:annotation>
+                        <xs:documentation/>
+                     </xs:annotation>
+                     <xs:complexType>
+                        <xs:sequence>
+                           <xs:element name="IPNetRangeStart" type="tns:ip-address-type">
+                              <xs:annotation>
+                                 <xs:documentation/>
+                              </xs:annotation>
+                           </xs:element>
+                           <xs:element name="IPNetRangeEnd" type="tns:ip-address-type">
+                              <xs:annotation>
+                                 <xs:documentation/>
+                              </xs:annotation>
+                           </xs:element>
+                        </xs:sequence>
+                     </xs:complexType>
+                  </xs:element>
+                  <xs:element name="cidr">
+                     <xs:annotation>
+                        <xs:documentation/>
+                     </xs:annotation>
+                     <xs:complexType>
+                        <xs:simpleContent>
+                           <xs:extension base="tns:cidr-type">
+                              <xs:attribute ref="tns:source"/>
+                              <xs:attribute ref="tns:timestamp"/>
+                           </xs:extension>
+                        </xs:simpleContent>
+                     </xs:complexType>
+                  </xs:element>
+               </xs:choice>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="organization-type">
+      <xs:complexContent>
+         <xs:extension base="tns:asset-type">
+            <xs:sequence>
+               <xs:element ref="xnl:OrganisationNameDetails" minOccurs="0" maxOccurs="unbounded"/>
+               <xs:element ref="tns:email-address" minOccurs="0" maxOccurs="unbounded"/>
+               <xs:element ref="tns:telephone-number" minOccurs="0" maxOccurs="unbounded"/>
+               <xs:element ref="tns:website-url" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="person-type">
+      <xs:complexContent>
+         <xs:extension base="tns:asset-type">
+            <xs:sequence>
+               <xs:element ref="xnl:PersonName" minOccurs="0"/>
+               <xs:element ref="tns:email-address" minOccurs="0" maxOccurs="unbounded"/>
+               <xs:element ref="tns:telephone-number" minOccurs="0" maxOccurs="unbounded"/>
+               <xs:element name="birthdate" minOccurs="0">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="xs:date">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="service-type">
+      <xs:complexContent>
+         <xs:extension base="tns:it-asset-type">
+            <xs:sequence>
+               <xs:element minOccurs="0" name="host">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:choice>
+                        <xs:element ref="tns:fqdn"/>
+                        <xs:element ref="tns:ip-address"/>
+                     </xs:choice>
+                  </xs:complexType>
+               </xs:element>
+               <xs:choice maxOccurs="unbounded" minOccurs="0">
+                  <xs:element name="port">
+                     <xs:annotation>
+                        <xs:documentation/>
+                     </xs:annotation>
+                     <xs:complexType>
+                        <xs:simpleContent>
+                           <xs:extension base="tns:port-type">
+                              <xs:attribute ref="tns:source"/>
+                              <xs:attribute ref="tns:timestamp"/>
+                           </xs:extension>
+                        </xs:simpleContent>
+                     </xs:complexType>
+                  </xs:element>
+                  <xs:element name="port-range">
+                     <xs:annotation>
+                        <xs:documentation/>
+                     </xs:annotation>
+                     <xs:complexType>
+                        <xs:attribute name="lower-bound" type="tns:port-type"/>
+                        <xs:attribute name="upper-bound" type="tns:port-type"/>
+                        <xs:attribute ref="tns:source"/>
+                        <xs:attribute ref="tns:timestamp"/>
+                     </xs:complexType>
+                  </xs:element>
+               </xs:choice>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="software-type">
+      <xs:complexContent>
+         <xs:extension base="tns:it-asset-type">
+            <xs:sequence>
+               <xs:element name="installation-id" minOccurs="0">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="xs:token">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+               <xs:element ref="tns:cpe" minOccurs="0">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+               </xs:element>
+               <xs:element name="license" minOccurs="0" maxOccurs="unbounded">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="xs:string">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="system-type">
+      <xs:complexContent>
+         <xs:extension base="tns:it-asset-type">
+            <xs:sequence>
+               <xs:element name="system-name" minOccurs="0" maxOccurs="unbounded">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="xs:token">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+               <xs:element name="version" minOccurs="0">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="xs:token">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="website-type">
+      <xs:complexContent>
+         <xs:extension base="tns:it-asset-type">
+            <xs:sequence>
+               <xs:element name="document-root">
+                  <xs:annotation>
+                     <xs:documentation/>
+                  </xs:annotation>
+                  <xs:complexType>
+                     <xs:simpleContent>
+                        <xs:extension base="xs:token">
+                           <xs:attribute ref="tns:source"/>
+                           <xs:attribute ref="tns:timestamp"/>
+                        </xs:extension>
+                     </xs:simpleContent>
+                  </xs:complexType>
+               </xs:element>
+            </xs:sequence>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:element name="cpe">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:simpleContent>
+            <xs:extension base="tns:cpe-type">
+               <xs:attribute ref="tns:source"/>
+               <xs:attribute ref="tns:timestamp"/>
+            </xs:extension>
+         </xs:simpleContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="synthetic-id">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:attribute name="resource" type="xs:anyURI" use="required">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+         </xs:attribute>
+         <xs:attribute name="id" type="xs:token" use="required">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+         </xs:attribute>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="email-address">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:simpleContent>
+            <xs:extension base="xs:token">
+               <xs:attribute ref="tns:source"/>
+               <xs:attribute ref="tns:timestamp"/>
+            </xs:extension>
+         </xs:simpleContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="fqdn">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:simpleContent>
+            <xs:extension base="xs:token">
+               <xs:attribute ref="tns:source"/>
+               <xs:attribute ref="tns:timestamp"/>
+            </xs:extension>
+         </xs:simpleContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="ip-address" type="tns:ip-address-type">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="location" abstract="true"/>
+   <xs:element name="location-address" type="xal:AddressDetails"
+               substitutionGroup="tns:location">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="location-point" substitutionGroup="tns:location">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:attribute name="latitude" use="required">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+            <xs:simpleType>
+               <xs:restriction base="xs:double">
+                  <xs:minInclusive value="-90"/>
+                  <xs:maxInclusive value="90"/>
+               </xs:restriction>
+            </xs:simpleType>
+         </xs:attribute>
+         <xs:attribute name="longitude" use="required">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+            <xs:simpleType>
+               <xs:restriction base="xs:double">
+                  <xs:minExclusive value="-180"/>
+                  <xs:maxInclusive value="180"/>
+               </xs:restriction>
+            </xs:simpleType>
+         </xs:attribute>
+         <xs:attribute name="elevation" type="xs:double">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+         </xs:attribute>
+         <xs:attribute name="radius">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+            <xs:simpleType>
+               <xs:restriction base="xs:double">
+                  <xs:minInclusive value="0"/>
+               </xs:restriction>
+            </xs:simpleType>
+         </xs:attribute>
+         <xs:attribute ref="tns:source"/>
+         <xs:attribute ref="tns:timestamp"/>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="location-region" substitutionGroup="tns:location">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:simpleContent>
+            <xs:extension base="xs:normalizedString">
+               <xs:attribute ref="tns:source"/>
+               <xs:attribute ref="tns:timestamp"/>
+            </xs:extension>
+         </xs:simpleContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="locations">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:sequence>
+            <xs:element ref="tns:location" maxOccurs="unbounded">
+               <xs:annotation>
+                  <xs:documentation/>
+               </xs:annotation>
+            </xs:element>
+         </xs:sequence>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="served-by" type="tns:service-type">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:element>
+   <xs:element name="telephone-number">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:simpleContent>
+            <xs:extension base="tns:telephone-number-type">
+               <xs:attribute ref="tns:source"/>
+               <xs:attribute ref="tns:timestamp"/>
+            </xs:extension>
+         </xs:simpleContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="website-url">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+      <xs:complexType>
+         <xs:simpleContent>
+            <xs:extension base="xs:anyURI">
+               <xs:attribute ref="tns:source"/>
+               <xs:attribute ref="tns:timestamp"/>
+            </xs:extension>
+         </xs:simpleContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:attribute name="source" type="xs:string">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:attribute>
+   <xs:attribute name="timestamp" type="xs:dateTime">
+      <xs:annotation>
+         <xs:documentation/>
+      </xs:annotation>
+   </xs:attribute>
+   <xs:complexType name="ip-address-type">
+      <xs:choice>
+         <xs:element name="IPv4">
+            <xs:complexType>
+               <xs:simpleContent>
+                  <xs:extension base="tns:ipv4-type">
+                     <xs:attribute ref="tns:source"/>
+                     <xs:attribute ref="tns:timestamp"/>
+                  </xs:extension>
+               </xs:simpleContent>
+            </xs:complexType>
+         </xs:element>
+         <xs:element name="IPv6">
+            <xs:complexType>
+               <xs:simpleContent>
+                  <xs:extension base="tns:ipv6-type">
+                     <xs:attribute ref="tns:source"/>
+                     <xs:attribute ref="tns:timestamp"/>
+                  </xs:extension>
+               </xs:simpleContent>
+            </xs:complexType>
+         </xs:element>
+      </xs:choice>
+   </xs:complexType>
+   <xs:complexType name="network-interface-type">
+      <xs:sequence>
+         <xs:element ref="tns:ip-address" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="mac-address" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+            <xs:complexType>
+               <xs:simpleContent>
+                  <xs:extension base="tns:mac-address-type">
+                     <xs:attribute ref="tns:source"/>
+                     <xs:attribute ref="tns:timestamp"/>
+                  </xs:extension>
+               </xs:simpleContent>
+            </xs:complexType>
+         </xs:element>
+         <xs:element name="url" minOccurs="0" maxOccurs="unbounded">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+            <xs:complexType>
+               <xs:simpleContent>
+                  <xs:extension base="xs:anyURI">
+                     <xs:attribute ref="tns:source"/>
+                     <xs:attribute ref="tns:timestamp"/>
+                  </xs:extension>
+               </xs:simpleContent>
+            </xs:complexType>
+         </xs:element>
+         <xs:element name="subnet-mask" type="tns:ip-address-type" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+         </xs:element>
+         <xs:element name="default-route" type="tns:ip-address-type" minOccurs="0">
+            <xs:annotation>
+               <xs:documentation/>
+            </xs:annotation>
+         </xs:element>
+      </xs:sequence>
+   </xs:complexType>
+   <xs:simpleType name="cidr-type">
+      <xs:restriction base="xs:token">
+         <xs:pattern value="([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))/([0-9]|[1-2][0-9]|3[0-2])"/>
+      </xs:restriction>
+   </xs:simpleType>
+   <xs:simpleType name="cpe-type">
+      <xs:restriction base="xs:token">
+         <xs:pattern value="[c][pP][eE]:/[AHOaho]?(:[A-Za-z0-9\._\-~%]*){0,6}"/>
+      </xs:restriction>
+   </xs:simpleType>
+   <xs:simpleType name="hostname-type">
+      <xs:restriction base="xs:token">
+         <xs:pattern value="\w+(\.\w+){0,}"/>
+      </xs:restriction>
+   </xs:simpleType>
+   <xs:simpleType name="ipv4-type">
+      <xs:restriction base="xs:token">
+         <xs:pattern value="([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))\.([0-9]|[1-9][0-9]|1([0-9][0-9])|2([0-4][0-9]|5[0-5]))"/>
+      </xs:restriction>
+   </xs:simpleType>
+   <xs:simpleType name="ipv6-type">
+      <xs:restriction base="xs:token">
+         <xs:pattern value="([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}"/>
+      </xs:restriction>
+   </xs:simpleType>
+   <xs:simpleType name="mac-address-type">
+      <xs:restriction base="xs:token">
+         <xs:pattern value="([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}"/>
+      </xs:restriction>
+   </xs:simpleType>
+   <xs:simpleType name="port-type">
+      <xs:restriction base="xs:integer">
+         <xs:minInclusive value="0"/>
+         <xs:maxInclusive value="65535"/>
+      </xs:restriction>
+   </xs:simpleType>
+   <xs:simpleType name="telephone-number-type">
+      <xs:restriction base="xs:token">
+         <xs:pattern value="(([2-9][0-8]\d-[2-9]\d{2}-[0-9]{4})|(\+([0-9] ?){6,14}[0-9]))"/>
+      </xs:restriction>
+   </xs:simpleType>
+</xs:schema>

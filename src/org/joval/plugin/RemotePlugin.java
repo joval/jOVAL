@@ -160,7 +160,6 @@ public class RemotePlugin extends BasePlugin {
 		    break;
 
 		  default:
-System.out.println("DAS: screwed: " + base.getType());
 		    break;
 	        }
 

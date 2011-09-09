@@ -4,18 +4,9 @@
             xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
             xmlns:unix-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix"
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
-            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
-            jxb:version="1.0"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix"
             elementFormDefault="qualified"
-            version="5.9">
-   <xsd:annotation>
-      <xsd:appinfo>
-         <jxb:schemaBindings>
-            <jxb:package name="org.joval.oval.schemas.definitions.unix"/>
-         </jxb:schemaBindings>
-      </xsd:appinfo>
-   </xsd:annotation>
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
                schemaLocation="oval-definitions-schema.xsd"/>
    <xsd:element name="dnscache_test" substitutionGroup="oval-def:test">
@@ -430,6 +421,8 @@
                   <xsd:element name="home_dir" type="oval-def:EntityStateStringType" minOccurs="0"
                                maxOccurs="1"/>
                   <xsd:element name="login_shell" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="last_login" type="oval-def:EntityStateIntType" minOccurs="0"
                                maxOccurs="1"/>
                </xsd:sequence>
             </xsd:extension>
@@ -994,6 +987,9 @@
             <xsd:enumeration value="STATIC"/>
             <xsd:enumeration value="WAS_CLONED"/>
             <xsd:enumeration value="XRESOLVE"/>
+            <xsd:enumeration value="USABLE"/>
+            <xsd:enumeration value="PINNED"/>
+            <xsd:enumeration value="ACTIVE_DEAD_GATEWAY_DETECTION"/>
             <xsd:enumeration value=""/>
          </xsd:restriction>
       </xsd:simpleContent>

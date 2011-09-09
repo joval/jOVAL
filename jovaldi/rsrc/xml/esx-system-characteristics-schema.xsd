@@ -6,7 +6,7 @@
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esx"
             elementFormDefault="qualified"
-            version="5.9">
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
                schemaLocation="oval-common-schema.xsd"/>
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"

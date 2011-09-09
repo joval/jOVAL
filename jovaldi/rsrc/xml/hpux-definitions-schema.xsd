@@ -4,18 +4,9 @@
             xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
             xmlns:hpux-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#hpux"
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
-            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
-            jxb:version="1.0"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#hpux"
             elementFormDefault="qualified"
-            version="5.9">
-   <xsd:annotation>
-      <xsd:appinfo>
-         <jxb:schemaBindings>
-            <jxb:package name="org.joval.oval.schemas.definitions.hpux"/>
-         </jxb:schemaBindings>
-      </xsd:appinfo>
-   </xsd:annotation>
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
                schemaLocation="oval-common-schema.xsd"/>
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
@@ -41,7 +32,7 @@
                      <xsd:element ref="oval-def:set"/>
                      <xsd:sequence>
                         <xsd:element name="parameter_name" type="oval-def:EntityObjectStringType"/>
-                        <xsd:element name="pathname" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="pathname" type="oval-def:EntityObjectStringType" nillable="true"/>
                         <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
                      </xsd:sequence>
                   </xsd:choice>

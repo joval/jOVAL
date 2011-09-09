@@ -4,18 +4,9 @@
             xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
             xmlns:sp-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#sharepoint"
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
-            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
-            jxb:version="1.0"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#sharepoint"
             elementFormDefault="qualified"
-            version="5.9">
-   <xsd:annotation>
-      <xsd:appinfo>
-         <jxb:schemaBindings>
-            <jxb:package name="org.joval.oval.schemas.definitions.sharepoint"/>
-         </jxb:schemaBindings>
-      </xsd:appinfo>
-   </xsd:annotation>
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
                schemaLocation="oval-definitions-schema.xsd"/>
    <xsd:element name="spwebapplication_test" substitutionGroup="oval-def:test">
@@ -551,6 +542,54 @@
       </xsd:complexType>
    </xsd:element>
    <xsd:element name="spjobdefinition_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="webappuri" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="displayname" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="isdisabled" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="retry" type="oval-def:EntityStateBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="title" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spjobdefinition510_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spjobdefinition510_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="webappuri" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="displayname" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spjobdefinition510_state" substitutionGroup="oval-def:state">
       <xsd:complexType>
          <xsd:complexContent>
             <xsd:extension base="oval-def:StateType">

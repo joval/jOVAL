@@ -4,9 +4,10 @@
             xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
             xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            xmlns:tns="http://scap.nist.gov/schema/asset-identification/1.1"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
             elementFormDefault="qualified"
-            version="5.9">
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
                schemaLocation="oval-common-schema.xsd"/>
    <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#"
@@ -44,7 +45,7 @@
          <xsd:element name="architecture" type="xsd:string"/>
          <xsd:element name="primary_host_name" type="xsd:string"/>
          <xsd:element name="interfaces" type="oval-sc:InterfacesType"/>
-         <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+         <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
       </xsd:sequence>
    </xsd:complexType>
    <xsd:complexType name="InterfacesType">
@@ -142,7 +143,7 @@
             <xsd:simpleType>
                <xsd:restriction base="xsd:string"/>
             </xsd:simpleType>
-            <xsd:attribute name="datatype">
+            <xsd:attribute name="datatype" use="required">
                <xsd:simpleType>
                   <xsd:restriction base="oval:SimpleDatatypeEnumeration">
                      <xsd:enumeration value="ipv4_address"/>
@@ -159,7 +160,7 @@
             <xsd:simpleType>
                <xsd:restriction base="xsd:string"/>
             </xsd:simpleType>
-            <xsd:attribute name="datatype">
+            <xsd:attribute name="datatype" use="optional" default="string">
                <xsd:simpleType>
                   <xsd:restriction base="oval:SimpleDatatypeEnumeration">
                      <xsd:enumeration value="ipv4_address"/>
@@ -177,7 +178,8 @@
             <xsd:simpleType>
                <xsd:restriction base="xsd:string"/>
             </xsd:simpleType>
-            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration"/>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="optional"
+                           default="string"/>
          </xsd:restriction>
       </xsd:simpleContent>
    </xsd:complexType>

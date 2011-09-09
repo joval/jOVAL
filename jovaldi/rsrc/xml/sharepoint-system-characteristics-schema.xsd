@@ -6,7 +6,7 @@
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#sharepoint"
             elementFormDefault="qualified"
-            version="5.9">
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
                schemaLocation="oval-system-characteristics-schema.xsd"/>
    <xsd:element name="spwebapplication_item" substitutionGroup="oval-sc:item">
@@ -273,6 +273,23 @@
       </xsd:complexType>
    </xsd:element>
    <xsd:element name="spjobdefinition_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="webappuri" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="displayname" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="isdisabled" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="retry" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="title" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="spjobdefinition510_item" substitutionGroup="oval-sc:item">
       <xsd:complexType>
          <xsd:complexContent>
             <xsd:extension base="oval-sc:ItemType">

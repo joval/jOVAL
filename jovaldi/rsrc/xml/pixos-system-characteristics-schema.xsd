@@ -5,7 +5,7 @@
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#pixos"
             elementFormDefault="qualified"
-            version="5.9">
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
                schemaLocation="oval-system-characteristics-schema.xsd"/>
    <xsd:element name="line_item" substitutionGroup="oval-sc:item">

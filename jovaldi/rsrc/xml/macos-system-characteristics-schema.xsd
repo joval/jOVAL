@@ -6,7 +6,7 @@
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos"
             elementFormDefault="qualified"
-            version="5.9">
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
                schemaLocation="oval-system-characteristics-schema.xsd"/>
    <xsd:element name="accountinfo_item" substitutionGroup="oval-sc:item">
@@ -79,6 +79,33 @@
                   <xsd:element name="pid" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="protocol" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="user_id" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="inetlisteningserver510_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="protocol" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="local_address" type="oval-sc:EntityItemIPAddressStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="local_port" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="local_full_address" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="program_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="foreign_address" type="oval-sc:EntityItemIPAddressStringType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="foreign_port" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="foreign_full_address" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pid" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="user_id" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -163,6 +190,39 @@
                   <xsd:element name="requiresAlpha" type="oval-sc:EntityItemBoolType" minOccurs="0"
                                maxOccurs="1"/>
                   <xsd:element name="requiresNumeric" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="maxMinutesUntilChangePassword" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minMinutesUntilChangePassword" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="requiresMixedCase" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="requiresSymbol" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minutesUntilFailedLoginReset" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="usingHistory" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="canModifyPasswordforSelf" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="usingExpirationDate" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="usingHardExpirationDate" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="expirationDateGMT" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="hardExpireDateGMT" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="maxMinutesUntilDisabled" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="maxMinutesOfNonUse" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="newPasswordRequired" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="notGuessablePattern" type="oval-sc:EntityItemBoolType" minOccurs="0"
                                maxOccurs="1"/>
                </xsd:sequence>
             </xsd:extension>

@@ -6,7 +6,7 @@
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#independent"
             elementFormDefault="qualified"
-            version="5.9">
+            version="5.10">
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
                schemaLocation="oval-system-characteristics-schema.xsd"/>
    <xsd:element name="family_item" substitutionGroup="oval-sc:item">
@@ -30,6 +30,7 @@
                   <xsd:element name="filename" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="md5" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="sha1" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="windows_view" type="ind-sc:EntityItemWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -46,6 +47,7 @@
                   <xsd:element name="hash_type" type="ind-sc:EntityItemHashTypeType" minOccurs="0"
                                maxOccurs="1"/>
                   <xsd:element name="hash" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="windows_view" type="ind-sc:EntityItemWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -170,6 +172,7 @@
                   <xsd:element name="text" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="subexpression" type="oval-sc:EntityItemAnySimpleType" minOccurs="0"
                                maxOccurs="unbounded"/>
+                  <xsd:element name="windows_view" type="ind-sc:EntityItemWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -200,6 +203,7 @@
                   <xsd:element name="xpath" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
                   <xsd:element name="value_of" type="oval-sc:EntityItemAnySimpleType" minOccurs="0"
                                maxOccurs="unbounded"/>
+                  <xsd:element name="windows_view" type="ind-sc:EntityItemWindowsViewType" minOccurs="0"/>
                </xsd:sequence>
             </xsd:extension>
          </xsd:complexContent>
@@ -221,6 +225,7 @@
             <xsd:enumeration value="maxdb"/>
             <xsd:enumeration value="monetdb"/>
             <xsd:enumeration value="mimer"/>
+            <xsd:enumeration value="mysql"/>
             <xsd:enumeration value="oracle"/>
             <xsd:enumeration value="paradox"/>
             <xsd:enumeration value="pervasive"/>
@@ -285,6 +290,15 @@
             <xsd:enumeration value="LDAPTYPE_BINARY"/>
             <xsd:enumeration value="LDAPTYPE_TIMESTAMP"/>
             <xsd:enumeration value="LDAPTYPE_EMAIL"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemWindowsViewType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="32_bit"/>
+            <xsd:enumeration value="64_bit"/>
             <xsd:enumeration value=""/>
          </xsd:restriction>
       </xsd:simpleContent>

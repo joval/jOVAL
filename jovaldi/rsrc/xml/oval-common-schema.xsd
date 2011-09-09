@@ -2,18 +2,9 @@
 <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
             xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
             xmlns:sch="http://purl.oclc.org/dsdl/schematron"
-            xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
-            jxb:version="1.0"
             targetNamespace="http://oval.mitre.org/XMLSchema/oval-common-5"
             elementFormDefault="qualified"
-            version="5.9">
-   <xsd:annotation>
-      <xsd:appinfo>
-         <jxb:schemaBindings>
-            <jxb:package name="org.joval.oval.schemas.definitions.common"/>
-         </jxb:schemaBindings>
-      </xsd:appinfo>
-   </xsd:annotation>
+            version="5.10">
    <xsd:element name="deprecated_info" type="oval:DeprecatedInfoType"/>
    <xsd:element name="element_mapping" type="oval:ElementMapType"/>
    <xsd:complexType name="ElementMapType">
@@ -44,7 +35,7 @@
          <xsd:element name="product_version" type="xsd:string" minOccurs="0" maxOccurs="1"/>
          <xsd:element name="schema_version" type="xsd:decimal"/>
          <xsd:element name="timestamp" type="xsd:dateTime"/>
-         <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+         <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
       </xsd:sequence>
    </xsd:complexType>
    <xsd:complexType name="MessageType">
