@@ -29,6 +29,7 @@ public class FS {
     public FS(ISession session) {
 	this.session = session;
 	fs = session.getFilesystem();
+//	fs = ((org.joval.intf.windows.system.IWindowsSession)session).getFilesystem(org.joval.intf.windows.system.IWindowsSession.View._32BIT);
 	env = session.getEnvironment();
     }
 
@@ -62,6 +63,7 @@ public class FS {
 		    in = fs.getInputStream(path);
 		    String cs = getMD5Checksum(in);
 		    System.out.println("Path:  " + path);
+		    System.out.println(" Size: " + f.length());
 		    System.out.println("  md5: " + cs);
 		}
 	    }

@@ -57,7 +57,7 @@
    <xsd:complexType name="InterfaceType">
       <xsd:sequence>
          <xsd:element name="interface_name" type="xsd:string"/>
-         <xsd:element name="ip_address" type="oval-sc:EntityItemIPAddressStringType"/>
+         <xsd:element name="ip_address" type="xsd:string"/>
          <xsd:element name="mac_address" type="xsd:string"/>
       </xsd:sequence>
    </xsd:complexType>

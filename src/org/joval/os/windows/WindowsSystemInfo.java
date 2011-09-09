@@ -113,17 +113,7 @@ public class WindowsSystemInfo {
 				if (description != null) {
 				    interfaceType.setInterfaceName(description);
 				}
-				EntityItemIPAddressStringType ipAddressType = JOVALSystem.factories.sc.core.createEntityItemIPAddressStringType();
-				ipAddressType.setValue(ipAddresses[i]);
-				switch(i) {
-				  case 0: // The IPv4 address is [0]
-				    ipAddressType.setDatatype(SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());
-				    break;
-				  case 1: // The IPv6 address is [1]
-				    ipAddressType.setDatatype(SimpleDatatypeEnumeration.IPV_6_ADDRESS.value());
-				    break;
-				}
-				interfaceType.setIpAddress(ipAddressType);
+				interfaceType.setIpAddress(ipAddresses[i]);
 				interfacesType.getInterface().add(interfaceType);
 			    }
 			}

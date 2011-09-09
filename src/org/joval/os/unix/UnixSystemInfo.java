@@ -89,17 +89,13 @@ public class UnixSystemInfo {
 		interfaceType.setMacAddress(intf.getMacAddress());
 		interfaceType.setInterfaceName(intf.getDescription());
 
-		EntityItemIPAddressStringType ipAddressType = JOVALSystem.factories.sc.core.createEntityItemIPAddressStringType();
 		if (intf.getIpV4Address() != null) {
-		    ipAddressType.setValue(intf.getIpV4Address());
-		    ipAddressType.setDatatype(SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());
+		    interfaceType.setIpAddress(intf.getIpV4Address());
 		} else if (intf.getIpV6Address() != null) {
-		    ipAddressType.setValue(intf.getIpV6Address());
-		    ipAddressType.setDatatype(SimpleDatatypeEnumeration.IPV_6_ADDRESS.value());
+		    interfaceType.setIpAddress(intf.getIpV6Address());
 		}
 
-		if (ipAddressType.getValue() != null) {
-		    interfaceType.setIpAddress(ipAddressType);
+		if (interfaceType.getIpAddress() != null) {
 		    interfacesType.getInterface().add(interfaceType);
 		}
 	    }
