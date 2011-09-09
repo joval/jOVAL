@@ -21,10 +21,12 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
+import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.identity.WindowsCredential;
+import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.remote.io.SmbFilesystem;
 import org.joval.os.windows.remote.registry.Registry;
@@ -48,10 +50,11 @@ public class WindowsSession implements IWindowsSession, ILocked {
     private WindowsCredential cred;
     private WmiConnection conn;
     private IEnvironment env;
-    private Registry registry;
-    private SmbFilesystem fs;
+    private IRegistry reg, reg32;
+    private IFilesystem fs, fs32;
+    private IPathRedirector rr = null, fr = null;
     private Vector<IFile> tempFiles;
-    private boolean redirect64 = true;
+    private boolean is64bit = false;
 
     public WindowsSession(String host) {
 	this.host = host;
@@ -60,12 +63,34 @@ public class WindowsSession implements IWindowsSession, ILocked {
 
     // Implement IWindowsSession extensions
 
-    public void set64BitRedirect(boolean redirect64) {
-	this.redirect64 = redirect64;
+    public IPathRedirector getRegistryRedirector() {
+	return rr;
     }
 
-    public IRegistry getRegistry() {
-	return registry;
+    public IRegistry getRegistry(View view) {
+	switch(view) {
+	  case _32BIT:
+	    return reg32;
+	}
+	return reg;
+    }
+
+    public boolean supports(View view) {
+	switch(view) {
+	  case _32BIT:
+	    return true;
+	  case _64BIT:
+	  default:
+	    return is64bit;
+	}
+    }
+
+    public IFilesystem getFilesystem(View view) {
+	switch(view) {
+	  case _32BIT:
+	    return fs32;
+	}
+	return fs;
     }
 
     public IWmiProvider getWmiProvider() {
@@ -89,14 +114,20 @@ public class WindowsSession implements IWindowsSession, ILocked {
 	if (cred == null) {
 	    return false;
 	} else {
-	    registry = new Registry(host, cred);
-	    if (registry.connect()) {
-		WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(registry);
-		registry.setRedirector(new WOW3264RegistryRedirector(redirect64, flavor));
-		env = registry.getEnvironment();
-		registry.disconnect();
-		fs = new SmbFilesystem(host, cred, env);
-		fs.set64BitRedirect(redirect64);
+	    reg = new Registry(host, cred, null);
+	    if (reg.connect()) {
+		env = reg.getEnvironment();
+		fs = new SmbFilesystem(host, cred, env, null);
+		is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
+		if (is64bit) {
+		    WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
+		    reg32 = new Registry(host, cred, new WOW3264RegistryRedirector(flavor));
+		    fs32 = new SmbFilesystem(host, cred, env, new WOW3264FilesystemRedirector(env));
+		} else {
+		    reg32 = reg;
+		    fs32 = fs;
+		}
+		reg.disconnect();
 		try {
 		    tempDir = getTempDir();
 		} catch (IOException e) {
@@ -142,6 +173,10 @@ public class WindowsSession implements IWindowsSession, ILocked {
 
     public IFilesystem getFilesystem() {
 	return fs;
+    }
+
+    public IPathRedirector getFilesystemRedirector() {
+	return fr;
     }
 
     public IProcess createProcess(String command) throws Exception {

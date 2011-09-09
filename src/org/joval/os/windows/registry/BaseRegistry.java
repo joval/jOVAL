@@ -14,36 +14,31 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
-import org.joval.intf.windows.registry.IRegistryRedirector;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.os.windows.system.Environment;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
 /**
- * A base class for accessing the Windows registry over the network.   This class handles searching, caching searches
- * and 64-bit redirection.
- *
- * DAS: Need to complete the implementation of Wow64 registry redirection; see:
- *      http://msdn.microsoft.com/en-us/library/aa384253%28v=vs.85%29.aspx
+ * A base class for accessing the Windows registry.   This class handles searching, caching searches and 64-bit redirection.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public abstract class BaseRegistry implements IRegistry {
+    protected IPathRedirector redirector;
     protected Environment env = null;
-    protected boolean ia64 = false;
-    protected IRegistryRedirector redirector;
     protected Hashtable<String, List<IKey>> searchMap;
 
     /**
      * Create a new Registry, connected to the specified host using the specified Credential.
      */
-    protected BaseRegistry() {
+    protected BaseRegistry(IPathRedirector redirector) {
+	this.redirector = redirector;
 	searchMap = new Hashtable<String, List<IKey>>();
-	redirector = new DefaultRedirector();
     }
 
     // Implement IRegistry (sparsely)
@@ -59,37 +54,13 @@ public abstract class BaseRegistry implements IRegistry {
 	return env;
     }
 
-    /**
-     * If this is a 64-bit registry, should redirection be implemented?  (That is, should we pretend that the user of
-     * this class behaves like a 32-bit Windows application, having no knownedge of the 64-bit registry behavior?)
-     *
-     * This setting is ignored if not connected to a 64-bit registry.
-     */
-    public void setRedirector(IRegistryRedirector redirector) {
-	this.redirector = redirector;
-    }
-
-    /**
-     * Do we have a 64-bit view of the registry?
-     */
-    public boolean is64Bit() {
-	return ia64;
-    }
-
-    /**
-     * Searches for the specified path under the specified hive.
-     */
     public List<IKey> search(String hive, String path) throws NoSuchElementException {
-	return searchInternal(getHive(hive), cleanRegex(path), redirector.isEnabled());
-    }
-
-    public List<IKey> search(String hive, String path, boolean win32) throws NoSuchElementException {
-	return searchInternal(getHive(hive), cleanRegex(path), win32);
+	return searchInternal(getHive(hive), cleanRegex(path));
     }
 
     // Private
 
-    private List<IKey> searchInternal(IKey key, String path, boolean win32) throws NoSuchElementException {
+    private List<IKey> searchInternal(IKey key, String path) throws NoSuchElementException {
 	String cacheKey = "search: " + key.toString() + DELIM_STR + path;
 	List<IKey> list = searchMap.get(cacheKey);
 	if (list != null) {
@@ -118,10 +89,10 @@ public abstract class BaseRegistry implements IRegistry {
 	    } else {
 		for (int i=0; i < children.length; i++) {
 		    if (path == null) {
-			list.add(fetchSubkey(key, children[i], win32));
+			list.add(fetchSubkey(key, children[i]));
 		    } else {
 			try {
-			    Iterator<IKey> iter = searchInternal(fetchSubkey(key, children[i], win32), path, win32).iterator();
+			    Iterator<IKey> iter = searchInternal(fetchSubkey(key, children[i]), path).iterator();
 			    while (iter.hasNext()) {
 				list.add(iter.next());
 			    }
@@ -158,21 +129,5 @@ public abstract class BaseRegistry implements IRegistry {
 	    }
 	}
 	return clean;
-    }
-
-    private class DefaultRedirector implements IRegistryRedirector {
-	private DefaultRedirector(){}
-
-	public boolean isEnabled() {
-	    return false;
-	}
-
-	public String getRedirect(String s) {
-	    return s;
-	}
-
-	public String getOriginal(String s) {
-	    return s;
-	}
     }
 }

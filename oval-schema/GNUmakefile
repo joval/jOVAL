@@ -8,6 +8,7 @@ include $(TOP)/common.mk
 PRODUCTNAME=oval-schema-$(OVAL_SCHEMA_VERSION)
 
 SCHEMADIR=xsd-$(OVAL_SCHEMA_VERSION)
+BINDINGS=$(SCHEMADIR)/bindings.xjb
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(GENSRC)"
 
 include classes.mk
@@ -39,7 +40,7 @@ classes: classdirs $(CLASS_FILES)
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 
 sources:
-	$(XJC) $(SCHEMA_FILES) -d $(GENSRC)
+	$(XJC) $(SCHEMA_FILES) -b $(BINDINGS) -d $(GENSRC)
 
 $(GENSRC):
 	mkdir $@

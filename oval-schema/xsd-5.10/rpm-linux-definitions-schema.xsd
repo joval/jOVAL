@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+            xmlns:linux-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux"
+            elementFormDefault="qualified"
+            version="5.10">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+               schemaLocation="oval-definitions-schema.xsd"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
+               schemaLocation="oval-common-schema.xsd"/>
+   <xsd:element name="rpminfo510_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="rpminfo510_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="behaviors" type="linux-def:Rpm510Behaviors" minOccurs="0" maxOccurs="1"/>
+                        <xsd:element name="name" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="arch" type="oval-def:EntityStateStringType"/>
+                        <xsd:element name="epoch">
+                           <xsd:complexType>
+                              <xsd:simpleContent>
+                                 <xsd:restriction base="oval-def:EntityObjectAnySimpleType">
+                                    <xsd:attribute name="datatype" use="optional" default="string">
+                                       <xsd:simpleType>
+                                          <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                             <xsd:enumeration value="string"/>
+                                             <xsd:enumeration value="int"/>
+                                          </xsd:restriction>
+                                       </xsd:simpleType>
+                                    </xsd:attribute>
+                                 </xsd:restriction>
+                              </xsd:simpleContent>
+                           </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="version">
+                           <xsd:complexType>
+                              <xsd:simpleContent>
+                                 <xsd:restriction base="oval-def:EntityObjectAnySimpleType">
+                                    <xsd:attribute name="datatype" use="optional" default="string">
+                                       <xsd:simpleType>
+                                          <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                             <xsd:enumeration value="string"/>
+                                             <xsd:enumeration value="version"/>
+                                          </xsd:restriction>
+                                       </xsd:simpleType>
+                                    </xsd:attribute>
+                                 </xsd:restriction>
+                              </xsd:simpleContent>
+                           </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="release">
+                           <xsd:complexType>
+                              <xsd:simpleContent>
+                                 <xsd:restriction base="oval-def:EntityObjectAnySimpleType">
+                                    <xsd:attribute name="datatype" use="optional" default="string">
+                                       <xsd:simpleType>
+                                          <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                             <xsd:enumeration value="string"/>
+                                             <xsd:enumeration value="version"/>
+                                          </xsd:restriction>
+                                       </xsd:simpleType>
+                                    </xsd:attribute>
+                                 </xsd:restriction>
+                              </xsd:simpleContent>
+                           </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="rpminfo510_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="name" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="arch" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="epoch" minOccurs="0" maxOccurs="1">
+                     <xsd:complexType>
+                        <xsd:simpleContent>
+                           <xsd:restriction base="oval-def:EntityStateAnySimpleType">
+                              <xsd:attribute name="datatype" use="optional" default="string">
+                                 <xsd:simpleType>
+                                    <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                       <xsd:enumeration value="string"/>
+                                       <xsd:enumeration value="int"/>
+                                    </xsd:restriction>
+                                 </xsd:simpleType>
+                              </xsd:attribute>
+                           </xsd:restriction>
+                        </xsd:simpleContent>
+                     </xsd:complexType>
+                  </xsd:element>
+                  <xsd:element name="version" minOccurs="0" maxOccurs="1">
+                     <xsd:complexType>
+                        <xsd:simpleContent>
+                           <xsd:restriction base="oval-def:EntityStateAnySimpleType">
+                              <xsd:attribute name="datatype" use="optional" default="string">
+                                 <xsd:simpleType>
+                                    <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                       <xsd:enumeration value="string"/>
+                                       <xsd:enumeration value="version"/>
+                                    </xsd:restriction>
+                                 </xsd:simpleType>
+                              </xsd:attribute>
+                           </xsd:restriction>
+                        </xsd:simpleContent>
+                     </xsd:complexType>
+                  </xsd:element>
+                  <xsd:element name="release" minOccurs="0" maxOccurs="1">
+                     <xsd:complexType>
+                        <xsd:simpleContent>
+                           <xsd:restriction base="oval-def:EntityStateAnySimpleType">
+                              <xsd:attribute name="datatype" use="optional" default="string">
+                                 <xsd:simpleType>
+                                    <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                       <xsd:enumeration value="string"/>
+                                       <xsd:enumeration value="version"/>
+                                    </xsd:restriction>
+                                 </xsd:simpleType>
+                              </xsd:attribute>
+                           </xsd:restriction>
+                        </xsd:simpleContent>
+                     </xsd:complexType>
+                  </xsd:element>
+                  <xsd:element name="evr" type="oval-def:EntityStateEVRStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="signature_keyid" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="filepath" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="Rpm510Behaviors">
+      <xsd:attribute name="filepaths" use="optional" type="xsd:boolean" default="false"/>
+   </xsd:complexType>
+   <xsd:element name="rpmverify510_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="rpmverify510_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="behaviors" type="linux-def:RpmVerifyBehaviors" minOccurs="0"
+                                     maxOccurs="1"/>
+                        <xsd:element name="name" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="arch" type="oval-def:EntityStateStringType"/>
+                        <xsd:element name="epoch">
+                           <xsd:complexType>
+                              <xsd:simpleContent>
+                                 <xsd:restriction base="oval-def:EntityObjectAnySimpleType">
+                                    <xsd:attribute name="datatype" use="optional" default="string">
+                                       <xsd:simpleType>
+                                          <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                             <xsd:enumeration value="string"/>
+                                             <xsd:enumeration value="int"/>
+                                          </xsd:restriction>
+                                       </xsd:simpleType>
+                                    </xsd:attribute>
+                                 </xsd:restriction>
+                              </xsd:simpleContent>
+                           </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="release">
+                           <xsd:complexType>
+                              <xsd:simpleContent>
+                                 <xsd:restriction base="oval-def:EntityObjectAnySimpleType">
+                                    <xsd:attribute name="datatype" use="optional" default="string">
+                                       <xsd:simpleType>
+                                          <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                             <xsd:enumeration value="string"/>
+                                             <xsd:enumeration value="version"/>
+                                          </xsd:restriction>
+                                       </xsd:simpleType>
+                                    </xsd:attribute>
+                                 </xsd:restriction>
+                              </xsd:simpleContent>
+                           </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="version">
+                           <xsd:complexType>
+                              <xsd:simpleContent>
+                                 <xsd:restriction base="oval-def:EntityObjectAnySimpleType">
+                                    <xsd:attribute name="datatype" use="optional" default="string">
+                                       <xsd:simpleType>
+                                          <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                             <xsd:enumeration value="string"/>
+                                             <xsd:enumeration value="version"/>
+                                          </xsd:restriction>
+                                       </xsd:simpleType>
+                                    </xsd:attribute>
+                                 </xsd:restriction>
+                              </xsd:simpleContent>
+                           </xsd:complexType>
+                        </xsd:element>
+                        <xsd:element name="filepath" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="rpmverify510_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="name" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="arch" type="oval-def:EntityStateStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="epoch" minOccurs="0" maxOccurs="1">
+                     <xsd:complexType>
+                        <xsd:simpleContent>
+                           <xsd:restriction base="oval-def:EntityStateAnySimpleType">
+                              <xsd:attribute name="datatype" use="optional" default="string">
+                                 <xsd:simpleType>
+                                    <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                       <xsd:enumeration value="string"/>
+                                       <xsd:enumeration value="int"/>
+                                    </xsd:restriction>
+                                 </xsd:simpleType>
+                              </xsd:attribute>
+                           </xsd:restriction>
+                        </xsd:simpleContent>
+                     </xsd:complexType>
+                  </xsd:element>
+                  <xsd:element name="release" minOccurs="0" maxOccurs="1">
+                     <xsd:complexType>
+                        <xsd:simpleContent>
+                           <xsd:restriction base="oval-def:EntityStateAnySimpleType">
+                              <xsd:attribute name="datatype" use="optional" default="string">
+                                 <xsd:simpleType>
+                                    <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                       <xsd:enumeration value="string"/>
+                                       <xsd:enumeration value="version"/>
+                                    </xsd:restriction>
+                                 </xsd:simpleType>
+                              </xsd:attribute>
+                           </xsd:restriction>
+                        </xsd:simpleContent>
+                     </xsd:complexType>
+                  </xsd:element>
+                  <xsd:element name="version" minOccurs="0" maxOccurs="1">
+                     <xsd:complexType>
+                        <xsd:simpleContent>
+                           <xsd:restriction base="oval-def:EntityStateAnySimpleType">
+                              <xsd:attribute name="datatype" use="optional" default="string">
+                                 <xsd:simpleType>
+                                    <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                                       <xsd:enumeration value="string"/>
+                                       <xsd:enumeration value="version"/>
+                                    </xsd:restriction>
+                                 </xsd:simpleType>
+                              </xsd:attribute>
+                           </xsd:restriction>
+                        </xsd:simpleContent>
+                     </xsd:complexType>
+                  </xsd:element>
+                  <xsd:element name="filepath" type="oval-def:EntityStateStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="dependency_check_passed" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="digest_check_passed" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="verification_script_successful" type="oval-def:EntityStateBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="signature_check_passed" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_differs" type="linux-def:EntityStateRpmVerifyResultType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="mode_differs" type="linux-def:EntityStateRpmVerifyResultType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="md5_differs" type="linux-def:EntityStateRpmVerifyResultType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="device_differs" type="linux-def:EntityStateRpmVerifyResultType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="link_mismatch" type="linux-def:EntityStateRpmVerifyResultType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="ownership_differs" type="linux-def:EntityStateRpmVerifyResultType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="group_differs" type="linux-def:EntityStateRpmVerifyResultType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="mtime_differs" type="linux-def:EntityStateRpmVerifyResultType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="capabilities_differ" type="linux-def:EntityStateRpmVerifyResultType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="configuration_file" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="documentation_file" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="ghost_file" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="license_file" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="readme_file" type="oval-def:EntityStateBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="RpmVerifyBehaviors">
+      <xsd:attribute name="nodeps" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nodigest" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nofiles" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="noscripts" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nosignature" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nolinkto" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nomd5" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nosize" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nouser" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nogroup" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nomtime" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nomode" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="nordev" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="noconfigfiles" use="optional" type="xsd:boolean" default="false"/>
+      <xsd:attribute name="noghostfiles" use="optional" type="xsd:boolean" default="false"/>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateRpmVerifyResultType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateStringType">
+            <xsd:enumeration value="pass"/>
+            <xsd:enumeration value="fail"/>
+            <xsd:enumeration value="not performed"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+</xsd:schema>

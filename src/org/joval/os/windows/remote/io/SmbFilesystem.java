@@ -20,12 +20,12 @@ import jcifs.smb.VolatileSmbFile;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IPathRedirector;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.os.windows.identity.WindowsCredential;
-import org.joval.os.windows.io.WOW3264PathRedirector;
+import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.tree.CachingTree;
@@ -47,7 +47,7 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
     private NtlmPasswordAuthentication auth;
     private IEnvironment env;
     private IPathRedirector redirector;
-    private boolean autoExpand, redirect64;
+    private boolean autoExpand;
 
     /**
      * Create an IFilesystem object for a remote host.
@@ -55,14 +55,13 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
      * @param env The host environment, used to expand variables that are passed inside of paths.  If null, autoExpand is
      *            automatically set to false.
      */
-    public SmbFilesystem(String host, WindowsCredential cred, IEnvironment env) {
+    public SmbFilesystem(String host, WindowsCredential cred, IEnvironment env, IPathRedirector redirector) {
 	super();
 	this.host = host;
 	auth = cred.getNtlmPasswordAuthentication();
 	this.env = env;
-	redirector = new WOW3264PathRedirector(env);
+	this.redirector = redirector;
 	autoExpand = true;
-	redirect64 = false;
     }
 
     /**
@@ -81,23 +80,6 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
      */
     public void setAutoExpand(boolean autoExpand) {
 	this.autoExpand = autoExpand;
-    }
-
-    /**
-     * If true, redirects calls to %SystemRoot%\System32 to %SystemRoot%\SysWOW64.
-     */
-    public void set64BitRedirect(boolean redirect) {
-	redirect64 = redirect;
-    }
-
-    // Implement IPathRedirector
-
-    public String getRedirect(String path) {
-	if (redirect64) {
-	    return redirector.getRedirect(path);
-	} else {
-	    return path;
-	}
     }
 
     // Implement methods left abstract in CachingTree
@@ -152,7 +134,12 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 	if (autoExpand) {
 	    path = env.expand(path);
 	}
-	path = getRedirect(path);
+	if (redirector != null) {
+	    String alt = redirector.getRedirect(path);
+	    if (alt != null) {
+		path = alt;
+	    }
+	}
 	if (path.length() > 2 && path.charAt(1) == ':') {
 	    if (isLetter(path.charAt(0))) {
 		StringBuffer sb = new StringBuffer("smb://").append(host).append(SMBURL_DELIM_CH);

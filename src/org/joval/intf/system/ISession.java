@@ -3,6 +3,7 @@
 package org.joval.intf.system;
 
 import org.joval.intf.io.IFilesystem;
+import org.joval.intf.util.IPathRedirector;
 
 /**
  * A representation of a session.
@@ -14,6 +15,8 @@ public interface ISession extends IBaseSession {
     public void setWorkingDir(String path);
 
     public IFilesystem getFilesystem();
+
+    public IPathRedirector getFilesystemRedirector();
 
     public IEnvironment getEnvironment();
 }

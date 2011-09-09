@@ -3,4 +3,4 @@
 @ECHO OFF
 
 IF NOT DEFINED JAVA_HOME SET JAVA_HOME=jre
-%JAVA_HOME%\bin\java -Xmx1024m -Djava.library.path=plugin\default\lib -cp lib\jOVAL.jar;lib\oval-schema-5.9.jar org.joval.oval.di.Main %*
+%JAVA_HOME%\bin\java -Xmx1024m -Djava.library.path=plugin\default\lib -cp lib\jOVAL.jar;lib\oval-schema-5.10.jar org.joval.oval.di.Main %*

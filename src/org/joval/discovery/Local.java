@@ -25,7 +25,7 @@ import org.joval.os.windows.system.WindowsSession;
 public class Local {
     public static ISession getSession() {
 	if (System.getProperty("os.name").startsWith("Windows")) {
-	    return new WindowsSession(true);
+	    return new WindowsSession();
 	} else {
 	    return new UnixSession();
 	}

@@ -22,7 +22,7 @@ import org.joval.io.LittleEndian;
 public class LicenseData {
     public static void main(String[] argv) {
 	try {
-	    LicenseData ld = new LicenseData(new org.joval.os.windows.registry.Registry());
+	    LicenseData ld = new LicenseData(new org.joval.os.windows.registry.Registry(null));
 	    Hashtable<String, Entry> ht = ld.getEntries();
 	    for (Entry entry : ht.values()) {
 		System.out.println(entry.toString());

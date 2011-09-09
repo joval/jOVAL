@@ -10,9 +10,9 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
-import org.joval.intf.windows.registry.IRegistryRedirector;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
@@ -20,14 +20,14 @@ import org.joval.util.tree.Forest;
 import org.joval.util.tree.PropertyHierarchy;
 
 /**
- * Implementation of an IRegistryRedirector.
+ * Implementation of an IPathRedirector for a registry.
  *
  * See http://msdn.microsoft.com/en-us/library/aa384253(v=vs.85).aspx
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WOW3264RegistryRedirector implements IRegistryRedirector {
+public class WOW3264RegistryRedirector implements IPathRedirector {
     /**
      * An enumeration identifying all of the versions of Windows on which 32-on-64 bit emulation is supported.
      */
@@ -63,7 +63,7 @@ public class WOW3264RegistryRedirector implements IRegistryRedirector {
      */
     public static Flavor getFlavor(IRegistry reg) {
 	try {
-	    IKey key = reg.fetchKey(IRegistry.HKLM, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", false);
+	    IKey key = reg.fetchKey(IRegistry.HKLM, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion");
 	    String productName = ((IStringValue)reg.fetchValue(key, "ProductName")).getData();
 	    for (Flavor flavor : Flavor.values()) {
 		Pattern p = flavor.getPattern();
@@ -77,22 +77,15 @@ public class WOW3264RegistryRedirector implements IRegistryRedirector {
 	return Flavor.UNSUPPORTED;
     }
 
-    private boolean enabled;
     private Flavor flavor;
 
     /**
      * Create a new redirector.
-     *
-     * @param enabled Whether or not redirection should be enabled
      */
-    public WOW3264RegistryRedirector(boolean enabled, Flavor flavor) {
-	this.enabled = enabled;
+    public WOW3264RegistryRedirector(Flavor flavor) {
 	switch(flavor) {
 	  case UNSUPPORTED:
-	    if (enabled) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT_OVERRIDE", flavor));
-	    }
-	    this.enabled = false;
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT_OVERRIDE", flavor));
 	    // fall-through
 	  default:
 	    this.flavor = flavor;
@@ -107,26 +100,9 @@ public class WOW3264RegistryRedirector implements IRegistryRedirector {
     private static final String REDIR_SOFTWARE_STR	= FULL_SOFTWARE_STR+WOW6432NODE+IRegistry.DELIM_STR;
     private static final int REDIR_SOFTWARE_LEN		= REDIR_SOFTWARE_STR.length();
 
-    // Implement IRegistryRedirector
-
-    public boolean isEnabled() {
-	return enabled;
-    }
-
-    /**
-     * Returns the non-redirected form of the path.
-     */
-    public String getOriginal(String path) {
-	if (enabled && path.startsWith(REDIR_SOFTWARE_STR)) {
-	    return FULL_SOFTWARE_STR + path.substring(REDIR_SOFTWARE_LEN);
-	}
-	return path;
-    }
+    // Implement IPathRedirector
 
     public String getRedirect(String path) {
-	if (!enabled) {
-	    return null;
-	}
 	if (path.startsWith(IRegistry.HKLM + IRegistry.DELIM_STR + "SOFTWARE\\Wow6432Node")) {
 	    return null; // already redirected
 	}

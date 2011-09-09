@@ -20,6 +20,7 @@ import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
@@ -42,9 +43,8 @@ public class Registry extends BaseRegistry {
     /**
      * Create a new Registry, connected to the specified host using the specified Credential.
      */
-    public Registry() {
-	super();
-	ia64 = "64".equals(System.getProperty("sun.arch.data.model"));
+    public Registry(IPathRedirector redirector) {
+	super(redirector);
     }
 
     // Implement IRegistry
@@ -54,7 +54,6 @@ public class Registry extends BaseRegistry {
 	    if (Platform.isWindows()) {
 		loadingEnv = true;
 		env = new Environment(this);
-		ia64 = env.getenv(IEnvironment.WINARCH).indexOf("64") != -1;
 		loadingEnv = false;
 		return true;
 	    } else {
@@ -90,40 +89,28 @@ public class Registry extends BaseRegistry {
     }
 
     public IKey fetchKey(String fullPath) throws IllegalArgumentException, NoSuchElementException {
-	return fetchKey(fullPath, redirector.isEnabled());
-    }
-
-    public IKey fetchKey(String fullPath, boolean win32) throws IllegalArgumentException, NoSuchElementException {
 	int ptr = fullPath.indexOf(DELIM_STR);
 	if (ptr == -1) {
 	    return getHive(fullPath);
 	} else {
 	    String hive = fullPath.substring(0, ptr);
 	    String path = fullPath.substring(ptr + 1);
-	    return fetchKey(hive, path, win32);
+	    return fetchKey(hive, path);
 	}
     }
 
     public IKey fetchKey(String hive, String path) throws NoSuchElementException {
-	return fetchSubkey(getHive(hive), path, redirector.isEnabled());
-    }
-
-    public IKey fetchKey(String hive, String path, boolean win32) throws NoSuchElementException {
-	return fetchSubkey(getHive(hive), path, win32);
+	return fetchSubkey(getHive(hive), path);
     }
 
     public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException {
-	return fetchSubkey(parent, name, redirector.isEnabled());
-    }
-
-    public IKey fetchSubkey(IKey parent, String name, boolean win32) throws NoSuchElementException {
 	String fullPath = new StringBuffer(parent.toString()).append(DELIM_CH).append(name).toString();
 	IKey key = null;
-	if (win32) {
+	if (redirector != null) {
 	    String alt = redirector.getRedirect(fullPath);
 	    if (alt != null) {
 		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", fullPath, alt));
-		return fetchKey(alt, false);
+		return fetchKey(alt);
 	    }
 	}
 	return ((Key)parent).getSubkey(name);

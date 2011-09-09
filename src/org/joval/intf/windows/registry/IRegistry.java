@@ -34,16 +34,6 @@ public interface IRegistry {
     public void disconnect();
 
     /**
-     * Set a handler for 32-bit Windows on 64-bit Windows redirection behavior.
-     */
-    public void setRedirector(IRegistryRedirector redirector);
-
-    /**
-     * Return whether or not this IRegistry is connected to a 64-bit view.
-     */
-    public boolean is64Bit();
-
-    /**
      * Get an environment based on this registry view.
      */
     public IEnvironment getEnvironment();
@@ -57,33 +47,21 @@ public interface IRegistry {
      * Search for a key in the registry.
      */
     public List<IKey> search(String hive, String path) throws NoSuchElementException;
-    public List<IKey> search(String hive, String path, boolean win32) throws NoSuchElementException;
 
     /**
      * Return a key given its full path (including the name of the hive).
      */
     public IKey fetchKey(String fullPath) throws IllegalArgumentException, NoSuchElementException;
-    public IKey fetchKey(String fullPath, boolean win32) throws IllegalArgumentException, NoSuchElementException;
-
-    /**
-     * Return a key from a hive using the default redirection mode.
-     */
-    public IKey fetchKey(String hive, String path) throws NoSuchElementException;
 
     /**
      * Return a key from a hive using the specified redirection mode.
      */
-    public IKey fetchKey(String hive, String path, boolean win32) throws NoSuchElementException;
-
-    /**
-     * Return a subkey of a key using the default redirection mode.
-     */
-    public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException;
+    public IKey fetchKey(String hive, String path) throws NoSuchElementException;
 
     /**
      * Return a subkey of a key using the specified redirection mode.
      */
-    public IKey fetchSubkey(IKey parent, String name, boolean win32) throws NoSuchElementException;
+    public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException;
 
     /**
      * Return a value of a key, whose name matches a pattern.

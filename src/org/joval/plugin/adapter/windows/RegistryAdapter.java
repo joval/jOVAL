@@ -26,11 +26,13 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.EntityItemRegistryHiveType;
 import oval.schemas.systemcharacteristics.windows.EntityItemRegistryTypeType;
+import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
 import oval.schemas.systemcharacteristics.windows.RegistryItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IBinaryValue;
 import org.joval.intf.windows.registry.IDwordValue;
 import org.joval.intf.windows.registry.IExpandStringValue;
@@ -39,6 +41,7 @@ import org.joval.intf.windows.registry.IMultiStringValue;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.LittleEndian;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
@@ -52,12 +55,14 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class RegistryAdapter implements IAdapter {
-    private IRegistry registry;
+    private IWindowsSession session;
     private Hashtable<String, BigInteger> itemIds;
     private Hashtable<String, Collection<String>> pathMap;
 
-    public RegistryAdapter(IRegistry registry) {
-	this.registry = registry;
+    private IRegistry reg32, reg;
+
+    public RegistryAdapter(IWindowsSession session) {
+	this.session = session;
 	itemIds = new Hashtable<String, BigInteger>();
 	pathMap = new Hashtable<String, Collection<String>>();
     }
@@ -69,15 +74,25 @@ public class RegistryAdapter implements IAdapter {
     }
 
     public boolean connect() {
-	if (registry != null) {
-	    return registry.connect();
+	if (reg32 == null) {
+	    reg32 = session.getRegistry(IWindowsSession.View._64BIT);
+	    if (session.supports(IWindowsSession.View._64BIT)) {
+		reg = session.getRegistry(IWindowsSession.View._64BIT);
+		return reg.connect() && reg32.connect();
+	    } else {
+		reg = reg32;
+		return reg32.connect();
+	    }
 	}
 	return false;
     }
 
     public void disconnect() {
-	if (registry != null) {
-	    registry.disconnect();
+	if (reg32 != null) {
+	    reg32.disconnect();
+	}
+	if (reg != null && !reg.equals(reg32)) {
+	    reg.disconnect();
 	}
     }
 
@@ -125,6 +140,12 @@ public class RegistryAdapter implements IAdapter {
 	    return list;
 	}
 
+	boolean win32 = false;
+	if (rObj.isSetBehaviors()) {
+	    RegistryBehaviors behaviors = rObj.getBehaviors();
+	    win32 = "32_bit".equals(behaviors.getWindowsView());
+	}
+
 	list = new Vector<String>();
 	if (rObj.getKey().getValue().isSetVarRef()) {
 	    try {
@@ -154,7 +175,7 @@ public class RegistryAdapter implements IAdapter {
 	    Collection<String> newList = new Vector<String>();
 	    for (String value : list) {
 		try {
-		    for (IKey key : registry.search(hive, value)) {
+		    for (IKey key : (win32 ? reg32 : reg).search(hive, value)) {
 			if (!newList.contains(key.getPath())) {
 			    newList.add(key.getPath());
 			}
@@ -172,7 +193,7 @@ public class RegistryAdapter implements IAdapter {
 
 	if (rObj.isSetBehaviors()) {
 	    RegistryBehaviors behaviors = rObj.getBehaviors();
-	    list = getPaths(hive, list, behaviors.getMaxDepth().intValue(), behaviors.getRecurseDirection());
+	    list = getPaths(hive, list, behaviors.getMaxDepth().intValue(), behaviors.getRecurseDirection(), win32);
 	} else if (patternMatch) {
 	    //
 	    // Wildcard pattern matches are really supposed to be recursive searches, unfortunately
@@ -182,7 +203,7 @@ public class RegistryAdapter implements IAdapter {
 		if (((String)rObj.getKey().getValue().getValue()).indexOf(".*") != -1) {
 		    Collection<String> l = new Vector<String>();
 		    l.add(value);
-		    newList.addAll(getPaths(hive, l, -1, "down"));
+		    newList.addAll(getPaths(hive, l, -1, "down", win32));
 		}
 	    }
 	    for (String value : newList) {
@@ -199,14 +220,14 @@ public class RegistryAdapter implements IAdapter {
     /**
      * Recursively searchies for matches based on RegistryBehaviors.
      */
-    private Collection<String> getPaths(String hive, Collection<String> list, int depth, String direction) {
+    private Collection<String> getPaths(String hive, Collection<String> list, int depth, String direction, boolean win32) {
 	if ("none".equals(direction) || depth == 0) {
 	    return list;
 	} else {
 	    Collection<String> results = new Vector<String>();
 	    for (String path : list) {
 		try {
-		    IKey key = registry.fetchKey(hive, path);
+		    IKey key = (win32 ? reg32 : reg).fetchKey(hive, path);
 		    results.add(path);
 		    if ("up".equals(direction)) {
 			int ptr = 0;
@@ -217,7 +238,7 @@ public class RegistryAdapter implements IAdapter {
 			if (ptr != -1) {
 			    Vector<String> v = new Vector<String>();
 			    v.add(path.substring(0, ptr));
-			    results.addAll(getPaths(hive, v, --depth, direction));
+			    results.addAll(getPaths(hive, v, --depth, direction, win32));
 			}
 		    } else { // recurse down
 			String[] children = key.listSubkeys();
@@ -230,7 +251,7 @@ public class RegistryAdapter implements IAdapter {
 				    v.add(path + IRegistry.DELIM_STR + children[i]);
 				}
 			    }
-			    results.addAll(getPaths(hive, v, --depth, direction));
+			    results.addAll(getPaths(hive, v, --depth, direction, win32));
 			}
 		    }
 		} catch (NoSuchElementException e) {
@@ -246,28 +267,34 @@ public class RegistryAdapter implements IAdapter {
     private Collection<RegistryItem> getItems(RegistryObject rObj, String hive, String path, IRequestContext rc)
 		throws NoSuchElementException, OvalException {
 
+	boolean win32 = false;
+	if (rObj.isSetBehaviors()) {
+	    RegistryBehaviors behaviors = rObj.getBehaviors();
+	    win32 = "32_bit".equals(behaviors.getWindowsView());
+	}
+
 	IKey key = null;
 	if (path == null) {
-	    key = registry.getHive(hive);
+	    key = (win32 ? reg32 : reg).getHive(hive);
 	} else {
-	    key = registry.fetchKey(hive, path);
+	    key = (win32 ? reg32 : reg).fetchKey(hive, path);
 	}
 
 	Collection<RegistryItem> items = new Vector<RegistryItem>();
 	if (rObj.getName() == null || rObj.getName().getValue() == null) {
-	    items.add(getItem(key, null));
+	    items.add(getItem(key, null, win32));
 	} else {
 	    OperationEnumeration op = rObj.getName().getValue().getOperation();
 	    switch(op) {
 	      case EQUALS:
-		items.add(getItem(key, (String)rObj.getName().getValue().getValue()));
+		items.add(getItem(key, (String)rObj.getName().getValue().getValue(), win32));
 		break;
     
 	      case PATTERN_MATCH:
 		try {
 		    String[] valueNames = key.listValues(Pattern.compile((String)rObj.getName().getValue().getValue()));
 		    for (int i=0; i < valueNames.length; i++) {
-			items.add(getItem(key, valueNames[i]));
+			items.add(getItem(key, valueNames[i], win32));
 		    }
 		} catch (PatternSyntaxException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
@@ -289,11 +316,23 @@ public class RegistryAdapter implements IAdapter {
     /**
      * Get an item given a concrete hive, key path and value name.
      */
-    private RegistryItem getItem(IKey key, String name) throws NoSuchElementException, OvalException {
+    private RegistryItem getItem(IKey key, String name, boolean win32) throws NoSuchElementException, OvalException {
 	RegistryItem item = JOVALSystem.factories.sc.windows.createRegistryItem();
 	EntityItemRegistryHiveType hiveType = JOVALSystem.factories.sc.windows.createEntityItemRegistryHiveType();
 	hiveType.setValue(key.getHive());
 	item.setHive(hiveType);
+
+	EntityItemWindowsViewType viewType = JOVALSystem.factories.sc.windows.createEntityItemWindowsViewType();
+	if (session.supports(IWindowsSession.View._64BIT)) {
+	    if (win32) {
+		viewType.setValue("32_bit");
+	    } else {
+		viewType.setValue("64_bit");
+	    }
+	} else {
+	    viewType.setValue("32_bit");
+	}
+	item.setWindowsView(viewType);
 
 	if (key.getPath() == null) {
 	    return item;
@@ -310,7 +349,7 @@ public class RegistryAdapter implements IAdapter {
 	}
 
 	if (name != null && !"".equals(name)) {
-	    IValue val = registry.fetchValue(key, name);
+	    IValue val = (win32 ? reg32 : reg).fetchValue(key, name);
 
 	    Collection<EntityItemAnySimpleType> values = new Vector<EntityItemAnySimpleType>();
 	    EntityItemRegistryTypeType typeType = JOVALSystem.factories.sc.windows.createEntityItemRegistryTypeType();

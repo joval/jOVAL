@@ -1,0 +1,798 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+            xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+            elementFormDefault="qualified"
+            version="5.10">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
+               schemaLocation="oval-common-schema.xsd"/>
+   <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#"
+               schemaLocation="xmldsig-core-schema.xsd"/>
+   <xsd:element name="oval_definitions">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element name="generator" type="oval:GeneratorType"/>
+            <xsd:element name="definitions" type="oval-def:DefinitionsType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="tests" type="oval-def:TestsType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="objects" type="oval-def:ObjectsType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="states" type="oval-def:StatesType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="variables" type="oval-def:VariablesType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element ref="ds:Signature" minOccurs="0" maxOccurs="1"/>
+         </xsd:sequence>
+      </xsd:complexType>
+      <xsd:key name="definitionKey">
+         <xsd:selector xpath="oval-def:definitions/oval-def:definition"/>
+         <xsd:field xpath="@id"/>
+      </xsd:key>
+      <xsd:key name="testKey">
+         <xsd:selector xpath="oval-def:tests/*"/>
+         <xsd:field xpath="@id"/>
+      </xsd:key>
+      <xsd:key name="objectKey">
+         <xsd:selector xpath="oval-def:objects/*"/>
+         <xsd:field xpath="@id"/>
+      </xsd:key>
+      <xsd:key name="stateKey">
+         <xsd:selector xpath="oval-def:states/*"/>
+         <xsd:field xpath="@id"/>
+      </xsd:key>
+      <xsd:key name="variableKey">
+         <xsd:selector xpath="oval-def:variables/*"/>
+         <xsd:field xpath="@id"/>
+      </xsd:key>
+      <xsd:keyref name="extendKeyRef" refer="oval-def:definitionKey">
+         <xsd:selector xpath=".//*"/>
+         <xsd:field xpath="@definition_ref"/>
+      </xsd:keyref>
+      <xsd:keyref name="testKeyRef" refer="oval-def:testKey">
+         <xsd:selector xpath=".//*"/>
+         <xsd:field xpath="@test_ref"/>
+      </xsd:keyref>
+      <xsd:keyref name="objectKeyRef" refer="oval-def:objectKey">
+         <xsd:selector xpath=".//*"/>
+         <xsd:field xpath="@object_ref"/>
+      </xsd:keyref>
+      <xsd:keyref name="stateKeyRef" refer="oval-def:stateKey">
+         <xsd:selector xpath=".//*"/>
+         <xsd:field xpath="@state_ref"/>
+      </xsd:keyref>
+      <xsd:keyref name="variableKeyRef" refer="oval-def:variableKey">
+         <xsd:selector xpath=".//*"/>
+         <xsd:field xpath="@var_ref"/>
+      </xsd:keyref>
+      <xsd:keyref name="object_referenceKeyRef" refer="oval-def:objectKey">
+         <xsd:selector xpath=".//oval-def:object_reference"/>
+         <xsd:field xpath="."/>
+      </xsd:keyref>
+      <xsd:keyref name="filterKeyRef" refer="oval-def:stateKey">
+         <xsd:selector xpath=".//oval-def:filter"/>
+         <xsd:field xpath="."/>
+      </xsd:keyref>
+   </xsd:element>
+   <xsd:complexType name="DefinitionsType">
+      <xsd:sequence>
+         <xsd:element ref="oval-def:definition" minOccurs="1" maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:element name="definition" type="oval-def:DefinitionType"/>
+   <xsd:complexType name="DefinitionType">
+      <xsd:sequence>
+         <xsd:element ref="ds:Signature" minOccurs="0" maxOccurs="1"/>
+         <xsd:element name="metadata" type="oval-def:MetadataType">
+            <xsd:unique name="UniqueAffectedFamily">
+               <xsd:selector xpath="oval-def:affected"/>
+               <xsd:field xpath="@family"/>
+            </xsd:unique>
+         </xsd:element>
+         <xsd:element name="notes" type="oval-def:NotesType" minOccurs="0" maxOccurs="1"/>
+         <xsd:element name="criteria" type="oval-def:CriteriaType" minOccurs="0" maxOccurs="1"/>
+      </xsd:sequence>
+      <xsd:attribute name="id" type="oval:DefinitionIDPattern" use="required"/>
+      <xsd:attribute name="version" type="xsd:nonNegativeInteger" use="required"/>
+      <xsd:attribute name="class" type="oval:ClassEnumeration" use="required"/>
+      <xsd:attribute name="deprecated" type="xsd:boolean" use="optional" default="false"/>
+   </xsd:complexType>
+   <xsd:complexType name="MetadataType">
+      <xsd:sequence>
+         <xsd:element name="title" type="xsd:string"/>
+         <xsd:element name="affected" type="oval-def:AffectedType" minOccurs="0"
+                      maxOccurs="unbounded">
+            <xsd:unique name="UniqueAffectedPlatform">
+               <xsd:selector xpath="oval-def:platform"/>
+               <xsd:field xpath="."/>
+            </xsd:unique>
+            <xsd:unique name="UniqueAffectedProduct">
+               <xsd:selector xpath="oval-def:product"/>
+               <xsd:field xpath="."/>
+            </xsd:unique>
+         </xsd:element>
+         <xsd:element name="reference" type="oval-def:ReferenceType" minOccurs="0"
+                      maxOccurs="unbounded"/>
+         <xsd:element name="description" type="xsd:string"/>
+         <xsd:any minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="AffectedType">
+      <xsd:sequence>
+         <xsd:element name="platform" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="product" type="xsd:string" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="family" type="oval:FamilyEnumeration" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="ReferenceType">
+      <xsd:attribute name="source" type="xsd:string" use="required"/>
+      <xsd:attribute name="ref_id" type="xsd:string" use="required"/>
+      <xsd:attribute name="ref_url" type="xsd:anyURI" use="optional"/>
+   </xsd:complexType>
+   <xsd:complexType name="NotesType">
+      <xsd:sequence>
+         <xsd:element name="note" type="xsd:string" minOccurs="1" maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="CriteriaType">
+      <xsd:choice minOccurs="1" maxOccurs="unbounded">
+         <xsd:element name="criteria" type="oval-def:CriteriaType"/>
+         <xsd:element name="criterion" type="oval-def:CriterionType"/>
+         <xsd:element name="extend_definition" type="oval-def:ExtendDefinitionType"/>
+      </xsd:choice>
+      <xsd:attribute name="applicability_check" type="xsd:boolean" use="optional"/>
+      <xsd:attribute name="operator" type="oval:OperatorEnumeration" use="optional" default="AND"/>
+      <xsd:attribute name="negate" type="xsd:boolean" use="optional" default="false"/>
+      <xsd:attribute name="comment" type="oval:NonEmptyStringType" use="optional"/>
+   </xsd:complexType>
+   <xsd:complexType name="CriterionType">
+      <xsd:attribute name="applicability_check" type="xsd:boolean" use="optional"/>
+      <xsd:attribute name="test_ref" type="oval:TestIDPattern" use="required"/>
+      <xsd:attribute name="negate" type="xsd:boolean" use="optional" default="false"/>
+      <xsd:attribute name="comment" type="oval:NonEmptyStringType" use="optional"/>
+   </xsd:complexType>
+   <xsd:complexType name="ExtendDefinitionType">
+      <xsd:attribute name="applicability_check" type="xsd:boolean" use="optional"/>
+      <xsd:attribute name="definition_ref" type="oval:DefinitionIDPattern" use="required"/>
+      <xsd:attribute name="negate" type="xsd:boolean" use="optional" default="false"/>
+      <xsd:attribute name="comment" type="oval:NonEmptyStringType" use="optional"/>
+   </xsd:complexType>
+   <xsd:complexType name="TestsType">
+      <xsd:sequence>
+         <xsd:element ref="oval-def:test" minOccurs="1" maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:element name="test" type="oval-def:TestType" abstract="true"/>
+   <xsd:complexType name="TestType">
+      <xsd:sequence>
+         <xsd:element ref="ds:Signature" minOccurs="0" maxOccurs="1"/>
+         <xsd:element name="notes" type="oval-def:NotesType" minOccurs="0" maxOccurs="1"/>
+      </xsd:sequence>
+      <xsd:attribute name="id" type="oval:TestIDPattern" use="required"/>
+      <xsd:attribute name="version" type="xsd:nonNegativeInteger" use="required"/>
+      <xsd:attribute name="check_existence" type="oval:ExistenceEnumeration" use="optional"
+                     default="at_least_one_exists"/>
+      <xsd:attribute name="check" type="oval:CheckEnumeration" use="required"/>
+      <xsd:attribute name="state_operator" type="oval:OperatorEnumeration" use="optional"
+                     default="AND"/>
+      <xsd:attribute name="comment" type="oval:NonEmptyStringType" use="required"/>
+      <xsd:attribute name="deprecated" type="xsd:boolean" use="optional" default="false"/>
+   </xsd:complexType>
+   <xsd:complexType name="ObjectRefType">
+      <xsd:attribute name="object_ref" type="oval:ObjectIDPattern" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="StateRefType">
+      <xsd:attribute name="state_ref" type="oval:StateIDPattern" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="ObjectsType">
+      <xsd:sequence>
+         <xsd:element ref="oval-def:object" minOccurs="1" maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:element name="object" type="oval-def:ObjectType" abstract="true"/>
+   <xsd:complexType name="ObjectType">
+      <xsd:sequence>
+         <xsd:element ref="ds:Signature" minOccurs="0" maxOccurs="1"/>
+         <xsd:element name="notes" type="oval-def:NotesType" minOccurs="0" maxOccurs="1"/>
+      </xsd:sequence>
+      <xsd:attribute name="id" type="oval:ObjectIDPattern" use="required"/>
+      <xsd:attribute name="version" type="xsd:nonNegativeInteger" use="required"/>
+      <xsd:attribute name="comment" type="oval:NonEmptyStringType" use="optional"/>
+      <xsd:attribute name="deprecated" type="xsd:boolean" use="optional" default="false"/>
+   </xsd:complexType>
+   <xsd:element name="set">
+      <xsd:complexType>
+         <xsd:choice>
+            <xsd:sequence>
+               <xsd:element ref="oval-def:set" minOccurs="1" maxOccurs="2"/>
+            </xsd:sequence>
+            <xsd:sequence>
+               <xsd:element name="object_reference" type="oval:ObjectIDPattern" minOccurs="1" maxOccurs="2"/>
+               <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+            </xsd:sequence>
+         </xsd:choice>
+         <xsd:attribute name="set_operator" type="oval-def:SetOperatorEnumeration" use="optional"
+                        default="UNION"/>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="filter">
+      <xsd:complexType>
+         <xsd:simpleContent>
+            <xsd:extension base="oval:StateIDPattern">
+               <xsd:attribute name="action" type="oval-def:FilterActionEnumeration" use="optional"
+                              default="exclude"/>
+            </xsd:extension>
+         </xsd:simpleContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="StatesType">
+      <xsd:sequence>
+         <xsd:element ref="oval-def:state" minOccurs="1" maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:element name="state" type="oval-def:StateType" abstract="true"/>
+   <xsd:complexType name="StateType">
+      <xsd:sequence>
+         <xsd:element ref="ds:Signature" minOccurs="0" maxOccurs="1"/>
+         <xsd:element name="notes" type="oval-def:NotesType" minOccurs="0" maxOccurs="1"/>
+      </xsd:sequence>
+      <xsd:attribute name="id" type="oval:StateIDPattern" use="required"/>
+      <xsd:attribute name="version" type="xsd:nonNegativeInteger" use="required"/>
+      <xsd:attribute name="operator" type="oval:OperatorEnumeration" use="optional" default="AND"/>
+      <xsd:attribute name="comment" type="oval:NonEmptyStringType" use="optional"/>
+      <xsd:attribute name="deprecated" type="xsd:boolean" use="optional" default="false"/>
+   </xsd:complexType>
+   <xsd:complexType name="VariablesType">
+      <xsd:sequence>
+         <xsd:element ref="oval-def:variable" minOccurs="1" maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:element name="variable" type="oval-def:VariableType" abstract="true"/>
+   <xsd:complexType name="VariableType">
+      <xsd:sequence>
+         <xsd:element ref="ds:Signature" minOccurs="0" maxOccurs="1"/>
+      </xsd:sequence>
+      <xsd:attribute name="id" type="oval:VariableIDPattern" use="required"/>
+      <xsd:attribute name="version" type="xsd:nonNegativeInteger" use="required"/>
+      <xsd:attribute name="datatype" use="required" type="oval:SimpleDatatypeEnumeration"/>
+      <xsd:attribute name="comment" type="oval:NonEmptyStringType" use="required"/>
+      <xsd:attribute name="deprecated" type="xsd:boolean" use="optional" default="false"/>
+   </xsd:complexType>
+   <xsd:element name="external_variable" substitutionGroup="oval-def:variable">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:VariableType">
+               <xsd:choice minOccurs="0" maxOccurs="unbounded">
+                  <xsd:element name="possible_value" type="oval-def:PossibleValueType"/>
+                  <xsd:element name="possible_restriction" type="oval-def:PossibleRestrictionType"/>
+               </xsd:choice>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="PossibleValueType">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:anySimpleType">
+            <xsd:attribute name="hint" type="xsd:string" use="required"/>
+         </xsd:extension>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="PossibleRestrictionType">
+      <xsd:choice>
+         <xsd:element name="restriction" type="oval-def:RestrictionType" minOccurs="1"
+                      maxOccurs="unbounded"/>
+      </xsd:choice>
+      <xsd:attribute name="hint" type="xsd:string" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="RestrictionType">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:anySimpleType">
+            <xsd:attribute name="operation" type="oval:OperationEnumeration" use="required"/>
+         </xsd:extension>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:element name="constant_variable" substitutionGroup="oval-def:variable">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:VariableType">
+               <xsd:sequence>
+                  <xsd:element name="value" type="oval-def:ValueType" minOccurs="1" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="ValueType">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:anySimpleType"/>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:element name="local_variable" substitutionGroup="oval-def:variable">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:VariableType">
+               <xsd:sequence>
+                  <xsd:group ref="oval-def:ComponentGroup"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:group name="ComponentGroup">
+      <xsd:choice>
+         <xsd:element name="object_component" type="oval-def:ObjectComponentType"/>
+         <xsd:element name="variable_component" type="oval-def:VariableComponentType"/>
+         <xsd:element name="literal_component" type="oval-def:LiteralComponentType"/>
+         <xsd:group ref="oval-def:FunctionGroup"/>
+      </xsd:choice>
+   </xsd:group>
+   <xsd:complexType name="LiteralComponentType">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:anySimpleType">
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="optional"
+                           default="string"/>
+         </xsd:extension>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="ObjectComponentType">
+      <xsd:attribute name="object_ref" type="oval:ObjectIDPattern" use="required"/>
+      <xsd:attribute name="item_field" type="oval:NonEmptyStringType" use="required"/>
+      <xsd:attribute name="record_field" type="oval:NonEmptyStringType" use="optional"/>
+   </xsd:complexType>
+   <xsd:complexType name="VariableComponentType">
+      <xsd:attribute name="var_ref" type="oval:VariableIDPattern" use="required"/>
+   </xsd:complexType>
+   <xsd:group name="FunctionGroup">
+      <xsd:choice>
+         <xsd:element name="arithmetic" type="oval-def:ArithmeticFunctionType"/>
+         <xsd:element name="begin" type="oval-def:BeginFunctionType"/>
+         <xsd:element name="concat" type="oval-def:ConcatFunctionType"/>
+         <xsd:element name="end" type="oval-def:EndFunctionType"/>
+         <xsd:element name="escape_regex" type="oval-def:EscapeRegexFunctionType"/>
+         <xsd:element name="split" type="oval-def:SplitFunctionType"/>
+         <xsd:element name="substring" type="oval-def:SubstringFunctionType"/>
+         <xsd:element name="time_difference" type="oval-def:TimeDifferenceFunctionType"/>
+         <xsd:element name="regex_capture" type="oval-def:RegexCaptureFunctionType"/>
+         <xsd:element name="unique" type="oval-def:UniqueFunctionType"/>
+         <xsd:element name="count" type="oval-def:CountFunctionType"/>
+      </xsd:choice>
+   </xsd:group>
+   <xsd:complexType name="ArithmeticFunctionType">
+      <xsd:sequence minOccurs="2" maxOccurs="unbounded">
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+      <xsd:attribute name="arithmetic_operation" type="oval-def:ArithmeticEnumeration"
+                     use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="BeginFunctionType">
+      <xsd:sequence>
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+      <xsd:attribute name="character" type="xsd:string" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="ConcatFunctionType">
+      <xsd:sequence minOccurs="2" maxOccurs="unbounded">
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="EndFunctionType">
+      <xsd:sequence>
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+      <xsd:attribute name="character" type="xsd:string" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="EscapeRegexFunctionType">
+      <xsd:sequence>
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="SplitFunctionType">
+      <xsd:sequence>
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+      <xsd:attribute name="delimiter" type="xsd:string" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="SubstringFunctionType">
+      <xsd:sequence>
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+      <xsd:attribute name="substring_start" type="xsd:int" use="required"/>
+      <xsd:attribute name="substring_length" type="xsd:int" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="TimeDifferenceFunctionType">
+      <xsd:sequence minOccurs="1" maxOccurs="2">
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+      <xsd:attribute name="format_1" type="oval-def:DateTimeFormatEnumeration" use="optional"
+                     default="year_month_day"/>
+      <xsd:attribute name="format_2" type="oval-def:DateTimeFormatEnumeration" use="optional"
+                     default="year_month_day"/>
+   </xsd:complexType>
+   <xsd:complexType name="RegexCaptureFunctionType">
+      <xsd:sequence>
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+      <xsd:attribute name="pattern" type="xsd:string"/>
+   </xsd:complexType>
+   <xsd:complexType name="UniqueFunctionType">
+      <xsd:sequence maxOccurs="unbounded">
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="CountFunctionType">
+      <xsd:sequence maxOccurs="unbounded">
+         <xsd:group ref="oval-def:ComponentGroup"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:simpleType name="ArithmeticEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="add"/>
+         <xsd:enumeration value="multiply"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="DateTimeFormatEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="year_month_day"/>
+         <xsd:enumeration value="month_day_year"/>
+         <xsd:enumeration value="day_month_year"/>
+         <xsd:enumeration value="win_filetime"/>
+         <xsd:enumeration value="seconds_since_epoch"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="FilterActionEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="exclude"/>
+         <xsd:enumeration value="include"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="SetOperatorEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="COMPLEMENT"/>
+         <xsd:enumeration value="INTERSECTION"/>
+         <xsd:enumeration value="UNION"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:attributeGroup name="EntityAttributeGroup">
+      <xsd:attribute name="datatype" type="oval:DatatypeEnumeration" use="optional" default="string"/>
+      <xsd:attribute name="operation" type="oval:OperationEnumeration" use="optional"
+                     default="equals"/>
+      <xsd:attribute name="mask" type="xsd:boolean" use="optional" default="false"/>
+      <xsd:attribute name="var_ref" type="oval:VariableIDPattern" use="optional"/>
+      <xsd:attribute name="var_check" type="oval:CheckEnumeration" use="optional"/>
+   </xsd:attributeGroup>
+   <xsd:complexType name="EntitySimpleBaseType" abstract="true">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:anySimpleType">
+            <xsd:attributeGroup ref="oval-def:EntityAttributeGroup"/>
+         </xsd:extension>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityComplexBaseType" abstract="true">
+      <xsd:attributeGroup ref="oval-def:EntityAttributeGroup"/>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectIPAddressType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntitySimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" use="required">
+               <xsd:simpleType>
+                  <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                     <xsd:enumeration value="ipv4_address"/>
+                     <xsd:enumeration value="ipv6_address"/>
+                  </xsd:restriction>
+               </xsd:simpleType>
+            </xsd:attribute>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectIPAddressStringType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntitySimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" use="optional" default="string">
+               <xsd:simpleType>
+                  <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                     <xsd:enumeration value="ipv4_address"/>
+                     <xsd:enumeration value="ipv6_address"/>
+                     <xsd:enumeration value="string"/>
+                  </xsd:restriction>
+               </xsd:simpleType>
+            </xsd:attribute>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectAnySimpleType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntitySimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="optional"
+                           default="string"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectBinaryType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntitySimpleBaseType">
+            <xsd:simpleType>
+               <xsd:union memberTypes="xsd:hexBinary oval:EmptyStringType"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="binary"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectBoolType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntitySimpleBaseType">
+            <xsd:simpleType>
+               <xsd:union memberTypes="xsd:boolean oval:EmptyStringType"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="boolean"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectFloatType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntitySimpleBaseType">
+            <xsd:simpleType>
+               <xsd:union memberTypes="xsd:float oval:EmptyStringType"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="float"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectIntType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntitySimpleBaseType">
+            <xsd:simpleType>
+               <xsd:union memberTypes="xsd:integer oval:EmptyStringType"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="int"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectStringType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntitySimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="optional"
+                           fixed="string"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectVersionType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntitySimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="version"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectRecordType">
+      <xsd:complexContent>
+         <xsd:extension base="oval-def:EntityComplexBaseType">
+            <xsd:sequence>
+               <xsd:element name="field" type="oval-def:EntityObjectFieldType" minOccurs="0"
+                            maxOccurs="unbounded"/>
+            </xsd:sequence>
+         </xsd:extension>
+      </xsd:complexContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityObjectFieldType">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:anySimpleType">
+            <xsd:attribute name="name" use="required">
+               <xsd:simpleType>
+                  <xsd:restriction base="xsd:string">
+                     <xsd:pattern value="[^A-Z]+"/>
+                  </xsd:restriction>
+               </xsd:simpleType>
+            </xsd:attribute>
+            <xsd:attributeGroup ref="oval-def:EntityAttributeGroup"/>
+            <xsd:attribute name="entity_check" type="oval:CheckEnumeration" use="optional" default="all"/>
+         </xsd:extension>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateSimpleBaseType" abstract="true">
+      <xsd:simpleContent>
+         <xsd:extension base="oval-def:EntitySimpleBaseType">
+            <xsd:attribute name="entity_check" type="oval:CheckEnumeration" use="optional" default="all"/>
+         </xsd:extension>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateComplexBaseType" abstract="true">
+      <xsd:complexContent>
+         <xsd:extension base="oval-def:EntityComplexBaseType">
+            <xsd:attribute name="entity_check" type="oval:CheckEnumeration" use="optional" default="all"/>
+         </xsd:extension>
+      </xsd:complexContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateIPAddressType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" use="required">
+               <xsd:simpleType>
+                  <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                     <xsd:enumeration value="ipv4_address"/>
+                     <xsd:enumeration value="ipv6_address"/>
+                  </xsd:restriction>
+               </xsd:simpleType>
+            </xsd:attribute>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateIPAddressStringType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" use="optional" default="string">
+               <xsd:simpleType>
+                  <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                     <xsd:enumeration value="ipv4_address"/>
+                     <xsd:enumeration value="ipv6_address"/>
+                     <xsd:enumeration value="string"/>
+                  </xsd:restriction>
+               </xsd:simpleType>
+            </xsd:attribute>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateAnySimpleType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="optional"
+                           default="string"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateBinaryType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:union memberTypes="xsd:hexBinary oval:EmptyStringType"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="binary"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateBoolType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:union memberTypes="xsd:boolean oval:EmptyStringType"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="boolean"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateFloatType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:union memberTypes="xsd:float oval:EmptyStringType"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="float"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateIntType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:union memberTypes="xsd:integer oval:EmptyStringType"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="int"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateEVRStringType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="evr_string"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateVersionType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="version"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateFileSetRevisionType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="required"
+                           fixed="fileset_revision"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateIOSVersionType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" use="optional" default="string">
+               <xsd:simpleType>
+                  <xsd:restriction base="oval:SimpleDatatypeEnumeration">
+                     <xsd:enumeration value="ios_version"/>
+                     <xsd:enumeration value="string"/>
+                  </xsd:restriction>
+               </xsd:simpleType>
+            </xsd:attribute>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateStringType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-def:EntityStateSimpleBaseType">
+            <xsd:simpleType>
+               <xsd:restriction base="xsd:string"/>
+            </xsd:simpleType>
+            <xsd:attribute name="datatype" type="oval:SimpleDatatypeEnumeration" use="optional"
+                           fixed="string"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateRecordType">
+      <xsd:complexContent>
+         <xsd:extension base="oval-def:EntityStateComplexBaseType">
+            <xsd:sequence>
+               <xsd:element name="field" type="oval-def:EntityStateFieldType" minOccurs="0"
+                            maxOccurs="unbounded"/>
+            </xsd:sequence>
+         </xsd:extension>
+      </xsd:complexContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityStateFieldType">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:anySimpleType">
+            <xsd:attribute name="name" use="required">
+               <xsd:simpleType>
+                  <xsd:restriction base="xsd:string">
+                     <xsd:pattern value="[^A-Z]+"/>
+                  </xsd:restriction>
+               </xsd:simpleType>
+            </xsd:attribute>
+            <xsd:attributeGroup ref="oval-def:EntityAttributeGroup"/>
+            <xsd:attribute name="entity_check" type="oval:CheckEnumeration" use="optional" default="all"/>
+         </xsd:extension>
+      </xsd:simpleContent>
+   </xsd:complexType>
+</xsd:schema>

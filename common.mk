@@ -23,9 +23,12 @@ SHELL=/bin/sh
 CWD=$(shell pwd)
 
 JOVAL_VERSION=0.A.7-dev
-OVAL_SCHEMA_VERSION=5.9
+OVAL_SCHEMA_VERSION=5.10
 
-JRE_HOME=$(TOP)/../../tools/jre160_26
+# If your system is 32-bit, set ARCH to x86
+#ARCH=x86
+ARCH=x64
+JRE_HOME=$(TOP)/../../tools/jre160_27
 JAVA=$(JAVA_HOME)/bin/java
 JAVAC=$(JAVA_HOME)/bin/javac
 JAR=$(JAVA_HOME)/bin/jar

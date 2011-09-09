@@ -18,6 +18,7 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
+import org.joval.intf.util.IPathRedirector;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -30,6 +31,7 @@ public abstract class BaseSession implements ISession {
     protected File cwd;
     protected IEnvironment env;
     protected IFilesystem fs;
+    protected IPathRedirector fr = null;
 
     protected BaseSession() {
     }
@@ -46,6 +48,10 @@ public abstract class BaseSession implements ISession {
 
     public IFilesystem getFilesystem() {
 	return fs;
+    }
+
+    public IPathRedirector getFilesystemRedirector() {
+	return fr;
     }
 
     public IProcess createProcess(String command) throws Exception {

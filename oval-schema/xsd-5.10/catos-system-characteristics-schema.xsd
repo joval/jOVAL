@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:catos-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#catos"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#catos"
+            elementFormDefault="qualified"
+            version="5.10">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+               schemaLocation="oval-system-characteristics-schema.xsd"/>
+   <xsd:element name="line_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="show_subcommand" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="config_line" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="module_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="module_number" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="type" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="model" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="software_major_release" type="oval-sc:EntityItemVersionType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="software_individual_release" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="software_version_id" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="hardware_major_release" type="oval-sc:EntityItemVersionType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="hardware_individual_release" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="firmware_major_release" type="oval-sc:EntityItemVersionType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="firmware_individual_release" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="version_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="switch_series" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="catos_release" type="oval-sc:EntityItemVersionType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="catos_major_release" type="oval-sc:EntityItemVersionType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="catos_individual_release" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="catos_version_id" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+</xsd:schema>

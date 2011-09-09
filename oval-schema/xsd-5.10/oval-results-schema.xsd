@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+            xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5"
+            xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-results-5"
+            elementFormDefault="qualified"
+            version="5.10">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
+               schemaLocation="oval-common-schema.xsd"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5"
+               schemaLocation="oval-definitions-schema.xsd"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+               schemaLocation="oval-system-characteristics-schema.xsd"/>
+   <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#"
+               schemaLocation="xmldsig-core-schema.xsd"/>
+   <xsd:element name="oval_results">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element name="generator" type="oval:GeneratorType"/>
+            <xsd:element name="directives" type="oval-res:DefaultDirectivesType"/>
+            <xsd:element name="class_directives" type="oval-res:ClassDirectivesType" minOccurs="0"
+                         maxOccurs="5"/>
+            <xsd:element ref="oval-def:oval_definitions" minOccurs="0" maxOccurs="1"/>
+            <xsd:element name="results" type="oval-res:ResultsType"/>
+            <xsd:element ref="ds:Signature" minOccurs="0" maxOccurs="1"/>
+         </xsd:sequence>
+      </xsd:complexType>
+      <xsd:unique name="UniqueDirectiveClass">
+         <xsd:selector xpath="oval-res:class_directives"/>
+         <xsd:field xpath="@class"/>
+      </xsd:unique>
+   </xsd:element>
+   <xsd:complexType name="DirectivesType">
+      <xsd:sequence>
+         <xsd:element name="definition_true" type="oval-res:DirectiveType"/>
+         <xsd:element name="definition_false" type="oval-res:DirectiveType"/>
+         <xsd:element name="definition_unknown" type="oval-res:DirectiveType"/>
+         <xsd:element name="definition_error" type="oval-res:DirectiveType"/>
+         <xsd:element name="definition_not_evaluated" type="oval-res:DirectiveType"/>
+         <xsd:element name="definition_not_applicable" type="oval-res:DirectiveType"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="DefaultDirectivesType">
+      <xsd:complexContent>
+         <xsd:extension base="oval-res:DirectivesType">
+            <xsd:attribute name="include_source_definitions" type="xsd:boolean" default="true"
+                           use="optional"/>
+         </xsd:extension>
+      </xsd:complexContent>
+   </xsd:complexType>
+   <xsd:complexType name="ClassDirectivesType">
+      <xsd:complexContent>
+         <xsd:extension base="oval-res:DirectivesType">
+            <xsd:attribute name="class" type="oval:ClassEnumeration" use="required"/>
+         </xsd:extension>
+      </xsd:complexContent>
+   </xsd:complexType>
+   <xsd:complexType name="DirectiveType">
+      <xsd:attribute name="reported" type="xsd:boolean" use="required"/>
+      <xsd:attribute name="content" type="oval-res:ContentEnumeration" use="optional" default="full"/>
+   </xsd:complexType>
+   <xsd:complexType name="ResultsType">
+      <xsd:sequence>
+         <xsd:element name="system" type="oval-res:SystemType" minOccurs="1" maxOccurs="unbounded">
+            <xsd:key name="definitionInstanceKey">
+               <xsd:selector xpath="oval-res:definitions/oval-res:definition"/>
+               <xsd:field xpath="@definition_id"/>
+               <xsd:field xpath="@version"/>
+               <xsd:field xpath="@variable_instance"/>
+            </xsd:key>
+            <xsd:key name="testVersionKey">
+               <xsd:selector xpath="oval-res:tests/oval-res:test"/>
+               <xsd:field xpath="@test_id"/>
+               <xsd:field xpath="@version"/>
+               <xsd:field xpath="@variable_instance"/>
+            </xsd:key>
+            <xsd:keyref name="definitionInstanceKeyRef" refer="oval-res:definitionInstanceKey">
+               <xsd:selector xpath=".//*"/>
+               <xsd:field xpath="@definition_ref"/>
+               <xsd:field xpath="@version"/>
+               <xsd:field xpath="@variable_instance"/>
+            </xsd:keyref>
+            <xsd:keyref name="testVersionKeyRef" refer="oval-res:testVersionKey">
+               <xsd:selector xpath=".//*"/>
+               <xsd:field xpath="@test_ref"/>
+               <xsd:field xpath="@version"/>
+               <xsd:field xpath="@variable_instance"/>
+            </xsd:keyref>
+         </xsd:element>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="SystemType">
+      <xsd:sequence>
+         <xsd:element name="definitions" type="oval-res:DefinitionsType" minOccurs="0" maxOccurs="1"/>
+         <xsd:element name="tests" type="oval-res:TestsType" minOccurs="0" maxOccurs="1"/>
+         <xsd:element ref="oval-sc:oval_system_characteristics"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="DefinitionsType">
+      <xsd:sequence>
+         <xsd:element name="definition" type="oval-res:DefinitionType" minOccurs="1"
+                      maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="DefinitionType">
+      <xsd:sequence>
+         <xsd:element name="message" type="oval:MessageType" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="criteria" type="oval-res:CriteriaType" minOccurs="0" maxOccurs="1"/>
+      </xsd:sequence>
+      <xsd:attribute name="definition_id" type="oval:DefinitionIDPattern" use="required"/>
+      <xsd:attribute name="version" type="xsd:nonNegativeInteger" use="required"/>
+      <xsd:attribute name="variable_instance" type="xsd:nonNegativeInteger" use="optional"
+                     default="1"/>
+      <xsd:attribute name="class" type="oval:ClassEnumeration" use="optional"/>
+      <xsd:attribute name="result" type="oval-res:ResultEnumeration" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="CriteriaType">
+      <xsd:choice minOccurs="1" maxOccurs="unbounded">
+         <xsd:element name="criteria" type="oval-res:CriteriaType"/>
+         <xsd:element name="criterion" type="oval-res:CriterionType"/>
+         <xsd:element name="extend_definition" type="oval-res:ExtendDefinitionType"/>
+      </xsd:choice>
+      <xsd:attribute name="applicability_check" type="xsd:boolean" use="optional"/>
+      <xsd:attribute name="operator" type="oval:OperatorEnumeration" use="required"/>
+      <xsd:attribute name="negate" type="xsd:boolean" use="optional" default="false"/>
+      <xsd:attribute name="result" type="oval-res:ResultEnumeration" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="CriterionType">
+      <xsd:attribute name="applicability_check" type="xsd:boolean" use="optional"/>
+      <xsd:attribute name="test_ref" type="oval:TestIDPattern" use="required"/>
+      <xsd:attribute name="version" type="xsd:nonNegativeInteger" use="required"/>
+      <xsd:attribute name="variable_instance" type="xsd:nonNegativeInteger" use="optional"
+                     default="1"/>
+      <xsd:attribute name="negate" type="xsd:boolean" use="optional" default="false"/>
+      <xsd:attribute name="result" type="oval-res:ResultEnumeration" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="ExtendDefinitionType">
+      <xsd:attribute name="applicability_check" type="xsd:boolean" use="optional"/>
+      <xsd:attribute name="definition_ref" type="oval:DefinitionIDPattern" use="required"/>
+      <xsd:attribute name="version" type="xsd:nonNegativeInteger" use="required"/>
+      <xsd:attribute name="variable_instance" type="xsd:nonNegativeInteger" use="optional"
+                     default="1"/>
+      <xsd:attribute name="negate" type="xsd:boolean" use="optional" default="false"/>
+      <xsd:attribute name="result" type="oval-res:ResultEnumeration" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="TestsType">
+      <xsd:sequence>
+         <xsd:element name="test" type="oval-res:TestType" minOccurs="1" maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="TestType">
+      <xsd:sequence>
+         <xsd:element name="message" type="oval:MessageType" minOccurs="0" maxOccurs="unbounded"/>
+         <xsd:element name="tested_item" type="oval-res:TestedItemType" minOccurs="0"
+                      maxOccurs="unbounded"/>
+         <xsd:element name="tested_variable" type="oval-res:TestedVariableType" minOccurs="0"
+                      maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="test_id" type="oval:TestIDPattern" use="required"/>
+      <xsd:attribute name="version" type="xsd:nonNegativeInteger" use="required"/>
+      <xsd:attribute name="variable_instance" type="xsd:nonNegativeInteger" use="optional"
+                     default="1"/>
+      <xsd:attribute name="check_existence" type="oval:ExistenceEnumeration" use="optional"
+                     default="at_least_one_exists"/>
+      <xsd:attribute name="check" type="oval:CheckEnumeration" use="required"/>
+      <xsd:attribute name="state_operator" type="oval:OperatorEnumeration" use="optional"
+                     default="AND"/>
+      <xsd:attribute name="result" type="oval-res:ResultEnumeration" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="TestedItemType">
+      <xsd:sequence>
+         <xsd:element name="message" type="oval:MessageType" minOccurs="0" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="item_id" type="oval:ItemIDPattern" use="required"/>
+      <xsd:attribute name="result" type="oval-res:ResultEnumeration" use="required"/>
+   </xsd:complexType>
+   <xsd:complexType name="TestedVariableType">
+      <xsd:simpleContent>
+         <xsd:extension base="xsd:anySimpleType">
+            <xsd:attribute name="variable_id" type="oval:VariableIDPattern" use="required"/>
+         </xsd:extension>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:simpleType name="ContentEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="thin"/>
+         <xsd:enumeration value="full"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+   <xsd:simpleType name="ResultEnumeration">
+      <xsd:restriction base="xsd:string">
+         <xsd:enumeration value="true"/>
+         <xsd:enumeration value="false"/>
+         <xsd:enumeration value="unknown"/>
+         <xsd:enumeration value="error"/>
+         <xsd:enumeration value="not evaluated"/>
+         <xsd:enumeration value="not applicable"/>
+      </xsd:restriction>
+   </xsd:simpleType>
+</xsd:schema>

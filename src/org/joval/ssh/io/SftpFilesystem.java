@@ -21,11 +21,11 @@ import org.vngx.jsch.exception.JSchException;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IPathRedirector;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
+import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.system.IEnvironment;

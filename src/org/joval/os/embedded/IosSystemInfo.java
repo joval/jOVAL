@@ -19,7 +19,6 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemIPAddressStringType;
 import oval.schemas.systemcharacteristics.core.InterfacesType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
-import oval.schemas.systemcharacteristics.core.ObjectFactory;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.io.IFilesystem;
@@ -37,14 +36,12 @@ import org.joval.util.JOVALSystem;
  */
 public class IosSystemInfo {
     private ISession session;
-    private ObjectFactory coreFactory;
     private SystemInfoType info;
 
     /**
      * Create a plugin for scanning or test evaluation.
      */
     public IosSystemInfo(ISession session) {
-	coreFactory = new ObjectFactory();
 	this.session = session;
     }
 
@@ -53,7 +50,7 @@ public class IosSystemInfo {
 	    return info;
 	}
 
-	info = coreFactory.createSystemInfoType();
+	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	info.setOsName("Cisco IOS");
 	try {
 	    IProcess p = session.createProcess("show config");
@@ -88,14 +85,14 @@ public class IosSystemInfo {
 		}
 	    }
 
-	    InterfacesType interfacesType = coreFactory.createInterfacesType();
+	    InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
 	    List<IosNetworkInterface> interfaces = IosNetworkInterface.getInterfaces(session);
 	    for (IosNetworkInterface intf : interfaces) {
-		InterfaceType interfaceType = coreFactory.createInterfaceType();
+		InterfaceType interfaceType = JOVALSystem.factories.sc.core.createInterfaceType();
 		interfaceType.setMacAddress(intf.getMacAddress());
 		interfaceType.setInterfaceName(intf.getDescription());
 
-		EntityItemIPAddressStringType ipAddressType = coreFactory.createEntityItemIPAddressStringType();
+		EntityItemIPAddressStringType ipAddressType = JOVALSystem.factories.sc.core.createEntityItemIPAddressStringType();
 		if (intf.getIpV4Address() != null) {
 		    ipAddressType.setValue(intf.getIpV4Address());
 		    ipAddressType.setDatatype(SimpleDatatypeEnumeration.IPV_4_ADDRESS.value());

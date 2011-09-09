@@ -121,9 +121,9 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	    switch(session.getType()) {
 	      case WINDOWS: {
 		IWindowsSession win = (IWindowsSession)session;
-		info = new WindowsSystemInfo(win.getRegistry(), win.getWmiProvider()).getSystemInfo();
+		info = new WindowsSystemInfo(win).getSystemInfo();
 		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win.getFilesystem(), win.getWmiProvider()));
-		adapters.add(new RegistryAdapter(win.getRegistry()));
+		adapters.add(new RegistryAdapter(win));
 		adapters.add(new Wmi57Adapter(win.getWmiProvider()));
 		adapters.add(new WmiAdapter(win.getWmiProvider()));
 

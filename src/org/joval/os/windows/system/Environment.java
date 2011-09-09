@@ -18,6 +18,7 @@ import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IExpandStringValue;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -27,8 +28,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class Environment implements IEnvironment {
-    public static final String ARCHITECTURE = "PROCESSOR_ARCHITECTURE";
-
     static final String PROGRAMFILES		= "PROGRAMFILES";
     static final String PROGRAMFILESX86		= "PROGRAMFILES(X86)";
     static final String COMMONPROGRAMFILES	= "COMMONPROGRAMFILES";
@@ -52,7 +51,7 @@ public class Environment implements IEnvironment {
 
 	IKey cv = null, common = null, env = null;
 	try {
-	    cv = registry.fetchKey(SYSROOT_ENV[0], SYSROOT_ENV[1], false);
+	    cv = registry.fetchKey(SYSROOT_ENV[0], SYSROOT_ENV[1]);
 	    IValue sysRootValue = cv.getValue("SystemRoot");
 	    if (sysRootValue.getType() == IValue.REG_SZ) {
 		String sysRoot = ((IStringValue)sysRootValue).getData();
@@ -76,7 +75,7 @@ public class Environment implements IEnvironment {
 		}
 	    }
 
-	    common = registry.fetchKey(COMMON_ENV[0], COMMON_ENV[1], false);
+	    common = registry.fetchKey(COMMON_ENV[0], COMMON_ENV[1]);
 	    IValue programFilesValue = common.getValue("ProgramFilesDir");
 	    if (programFilesValue.getType() == IValue.REG_SZ) {
 		String programFiles = ((IStringValue)programFilesValue).getData();
@@ -92,7 +91,7 @@ public class Environment implements IEnvironment {
 		throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILES"));
 	    }
 
-	    if (props.getProperty(ARCHITECTURE).indexOf("64") != -1) {
+	    if (props.getProperty(IWindowsSession.ENV_ARCH).indexOf("64") != -1) {
 		IValue programFilesX86Value = common.getValue("ProgramFilesDir (x86)");
 		if (programFilesX86Value.getType() == IValue.REG_SZ) {
 		    String programFilesX86 = ((IStringValue)programFilesX86Value).getData();

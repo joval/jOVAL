@@ -1,0 +1,1671 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:win-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows"
+            elementFormDefault="qualified"
+            version="5.10">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+               schemaLocation="oval-system-characteristics-schema.xsd"/>
+   <xsd:element name="accesstoken_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="security_principle" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seassignprimarytokenprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seauditprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sebackupprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sechangenotifyprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="secreateglobalprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="secreatepagefileprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="secreatepermanentprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="secreatesymboliclinkprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="secreatetokenprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sedebugprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seenabledelegationprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seimpersonateprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seincreasebasepriorityprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seincreasequotaprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seincreaseworkingsetprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seloaddriverprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="selockmemoryprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="semachineaccountprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="semanagevolumeprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seprofilesingleprocessprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="serelabelprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seremoteshutdownprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="serestoreprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sesecurityprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seshutdownprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sesyncagentprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sesystemenvironmentprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sesystemprofileprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sesystemtimeprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="setakeownershipprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="setcbprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="setimezoneprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seundockprivilege" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seunsolicitedinputprivilege" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sebatchlogonright" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seinteractivelogonright" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="senetworklogonright" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seremoteinteractivelogonright" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="seservicelogonright" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sedenybatchLogonright" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sedenyinteractivelogonright" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sedenynetworklogonright" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sedenyremoteInteractivelogonright" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sedenyservicelogonright" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="setrustedcredmanaccessnameright" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="activedirectory_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="naming_context" type="win-sc:EntityItemNamingContextType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="relative_dn" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="attribute" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="object_class" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="adstype" type="win-sc:EntityItemAdstypeType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="activedirectory57_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="naming_context" type="win-sc:EntityItemNamingContextType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="relative_dn" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="attribute" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="object_class" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="adstype" type="win-sc:EntityItemAdstypeType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="value" type="oval-sc:EntityItemRecordType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="auditeventpolicy_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="account_logon" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="account_management" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="detailed_tracking" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="directory_service_access" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="logon" type="win-sc:EntityItemAuditType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="object_access" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="policy_change" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="privilege_use" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="system" type="win-sc:EntityItemAuditType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="auditeventpolicysubcategories_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="credential_validation" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="kerberos_authentication_service" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="kerberos_service_ticket_operations" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="kerberos_ticket_events" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="other_account_logon_events" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="application_group_management" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="computer_account_management" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="distribution_group_management" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="other_account_management_events" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="security_group_management" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="user_account_management" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="dpapi_activity" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="process_creation" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="process_termination" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="rpc_events" type="win-sc:EntityItemAuditType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="directory_service_access" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="directory_service_changes" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="directory_service_replication" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="detailed_directory_service_replication" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="account_lockout" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="ipsec_extended_mode" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="ipsec_main_mode" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="ipsec_quick_mode" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="logoff" type="win-sc:EntityItemAuditType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="logon" type="win-sc:EntityItemAuditType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="network_policy_server" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="other_logon_logoff_events" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="special_logon" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="application_generated" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="certification_services" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="detailed_file_share" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_share" type="win-sc:EntityItemAuditType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="file_system" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="filtering_platform_connection" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="filtering_platform_packet_drop" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="handle_manipulation" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="kernel_object" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="other_object_access_events" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="registry" type="win-sc:EntityItemAuditType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="sam" type="win-sc:EntityItemAuditType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="audit_policy_change" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="authentication_policy_change" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="authorization_policy_change" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="filtering_platform_policy_change" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="mpssvc_rule_level_policy_change" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="other_policy_change_events" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="non_sensitive_privilege_use" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="other_privilege_use_events" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="sensitive_privilege_use" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="ipsec_driver" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="other_system_events" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="security_state_change" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="security_system_extension" type="win-sc:EntityItemAuditType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="system_integrity" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="cmdlet_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="module_name" type="oval-sc:EntityItemStringType" nillable="true"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="module_id" type="win-sc:EntityItemGUIDType" nillable="true" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="module_version" type="oval-sc:EntityItemVersionType" nillable="true"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="verb" type="win-sc:EntityItemCmdletVerbType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="noun" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="parameters" type="oval-sc:EntityItemRecordType" nillable="true"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="select" type="oval-sc:EntityItemRecordType" nillable="true" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="value" type="oval-sc:EntityItemRecordType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="dnscache_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="domain_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="ttl" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="ip_address" type="oval-sc:EntityItemIPAddressStringType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="file_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="filepath" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="path" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="filename" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="owner" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="size" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="a_time" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="c_time" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="m_time" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="ms_checksum" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="version" type="oval-sc:EntityItemVersionType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="type" type="win-sc:EntityItemFileTypeType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="development_class" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="company" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="internal_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="language" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="original_filename" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="product_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="product_version" type="oval-sc:EntityItemVersionType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="windows_view" type="win-sc:EntityItemWindowsViewType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="fileauditedpermissions_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="filepath" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="path" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="filename" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="trustee_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="trustee_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_delete" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_read_control" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_dac" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_owner" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_synchronize" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_system_security" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_read" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_write" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_execute" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_all" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_read_data" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_write_data" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_append_data" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_read_ea" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_write_ea" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_execute" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_delete_child" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_read_attributes" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_write_attributes" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="windows_view" type="win-sc:EntityItemWindowsViewType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="fileeffectiverights_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="filepath" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="path" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="filename" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="trustee_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="trustee_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_delete" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_read_control" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_dac" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_owner" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_synchronize" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_system_security" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_read" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_write" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_execute" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_all" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_read_data" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_write_data" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_append_data" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_read_ea" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_write_ea" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_execute" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_delete_child" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_read_attributes" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_write_attributes" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="windows_view" type="win-sc:EntityItemWindowsViewType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="group_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="group" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="user" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+                  <xsd:element name="subgroup" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="group_sid_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="group_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="user_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+                  <xsd:element name="subgroup_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="interface_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="index" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="type" type="win-sc:EntityItemInterfaceTypeType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="hardware_addr" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="inet_addr" type="oval-sc:EntityItemIPAddressStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="broadcast_addr" type="oval-sc:EntityItemIPAddressStringType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="netmask" type="oval-sc:EntityItemIPAddressStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="addr_type" type="win-sc:EntityItemAddrTypeType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="lockoutpolicy_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="force_logoff" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="lockout_duration" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="lockout_observation_window" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="lockout_threshold" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="metabase_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="key" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="id" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="user_type" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="data_type" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="data" type="oval-sc:EntityItemAnySimpleType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="passwordpolicy_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="max_passwd_age" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="min_passwd_age" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="min_passwd_len" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="password_hist_len" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="password_complexity" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="reversible_encryption" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="peheader_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="header_signature" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="target_machine_type" type="win-sc:EntityItemPeTargetMachineType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="number_of_sections" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="time_date_stamp" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pointer_to_symbol_table" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="number_of_symbols" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_optional_header" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_relocs_stripped" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_executable_image" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_line_nums_stripped" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_local_syms_stripped" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_aggresive_ws_trim" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_large_address_aware" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_16bit_machine" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_bytes_reversed_lo" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_32bit_machine" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_debug_stripped" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_removable_run_from_swap" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_system" type="oval-sc:EntityItemBoolType" default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_dll" type="oval-sc:EntityItemBoolType" default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_up_system_only" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_file_bytes_reveresed_hi" type="oval-sc:EntityItemBoolType"
+                               default="false"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="magic_number" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="major_linker_version" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minor_linker_version" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_code" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_initialized_data" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_uninitialized_data" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="address_of_entry_point" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="base_of_code" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="base_of_data" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="image_base_address" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="section_alignment" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_alignment" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="major_operating_system_version" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minor_operating_system_version" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="major_image_version" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minor_image_version" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="major_subsystem_version" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="minor_susbsystem_version" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_image" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_headers" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="checksum" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="subsystem" type="win-sc:EntityItemPeSubsystemType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="dll_characteristics" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+                  <xsd:element name="size_of_stack_reserve" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_stack_commit" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_heap_reserve" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="size_of_heap_commit" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="loader_flags" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="number_of_rva_and_sizes" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="real_number_of_directory_entries" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="port_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="local_address" type="oval-sc:EntityItemIPAddressStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="local_port" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="protocol" type="win-sc:EntityItemProtocolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pid" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="foreign_address" type="oval-sc:EntityItemIPAddressStringType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="foreign_port" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="printereffectiverights_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="printer_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="trustee_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_delete" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_read_control" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_dac" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_owner" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_synchronize" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_system_security" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_read" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_write" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_execute" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_all" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="printer_access_administer" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="printer_access_use" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="job_access_administer" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="job_access_read" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="process_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="command_line" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="pid" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="ppid" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="priority" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="image_path" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="current_dir" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="creation_time" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="dep_enabled" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="primary_window_text" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="registry_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="hive" type="win-sc:EntityItemRegistryHiveType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="last_write_time" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="type" type="win-sc:EntityItemRegistryTypeType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+                  <xsd:element name="windows_view" type="win-sc:EntityItemWindowsViewType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="regkeyauditedpermissions_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="hive" type="win-sc:EntityItemRegistryHiveType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="trustee_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="trustee_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_delete" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_read_control" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_dac" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_owner" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_synchronize" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_system_security" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_read" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_write" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_execute" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_all" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_query_value" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_set_value" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_create_sub_key" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_enumerate_sub_keys" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_notify" type="win-sc:EntityItemAuditType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="key_create_link" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_wow64_64key" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_wow64_32key" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_wow64_res" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="windows_view" type="win-sc:EntityItemWindowsViewType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="regkeyeffectiverights_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="hive" type="win-sc:EntityItemRegistryHiveType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="trustee_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="trustee_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_delete" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_read_control" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_dac" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_owner" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_synchronize" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_system_security" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_read" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_write" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_execute" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_all" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_query_value" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_set_value" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_create_sub_key" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_enumerate_sub_keys" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_notify" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="key_create_link" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_wow64_64key" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_wow64_32key" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="key_wow64_res" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="windows_view" type="win-sc:EntityItemWindowsViewType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="service_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="service_name" type="oval-sc:EntityItemStringType" minOccurs="0"/>
+                  <xsd:element name="display_name" type="oval-sc:EntityItemStringType" minOccurs="0"/>
+                  <xsd:element name="description" type="oval-sc:EntityItemStringType" minOccurs="0"/>
+                  <xsd:element name="service_type" type="win-sc:EntityItemServiceTypeType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+                  <xsd:element name="start_type" type="win-sc:EntityItemServiceStartTypeType" minOccurs="0"/>
+                  <xsd:element name="current_state" type="win-sc:EntityItemServiceCurrentStateType"
+                               minOccurs="0"/>
+                  <xsd:element name="controls_accepted" type="win-sc:EntityItemServiceControlsAcceptedType"
+                               minOccurs="0"
+                               maxOccurs="unbounded"/>
+                  <xsd:element name="start_name" type="oval-sc:EntityItemStringType" minOccurs="0"/>
+                  <xsd:element name="path" type="oval-sc:EntityItemStringType" minOccurs="0"/>
+                  <xsd:element name="pid" type="oval-sc:EntityItemIntType" minOccurs="0"/>
+                  <xsd:element name="service_flag" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="dependencies" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="serviceeffectiverights_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="service_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"
+                               nillable="false"/>
+                  <xsd:element name="trustee_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_delete" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="standard_read_control" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="standard_write_dac" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="standard_write_owner" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="generic_read" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="generic_write" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="generic_execute" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="service_query_conf" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="service_change_conf" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="service_query_stat" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="service_enum_dependents" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="service_start" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="service_stop" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="service_pause" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="service_interrogate" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+                  <xsd:element name="service_user_defined" type="oval-sc:EntityItemBoolType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sharedresource_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="netname" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="shared_type" type="win-sc:EntityItemSharedResourceTypeType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="max_uses" type="oval-sc:EntityItemIntType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="current_uses" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="local_path" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_read_permission" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_write_permission" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_create_permission" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_exec_permission" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_delete_permission" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_atrib_permission" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_perm_permission" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_all_permission" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sharedresourceauditedpermissions_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="netname" type="oval-sc:EntityItemStringType" minOccurs="0"/>
+                  <xsd:element name="trustee_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_delete" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_read_control" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_dac" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_owner" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_synchronize" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_system_security" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_read" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_write" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_execute" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_all" type="win-sc:EntityItemAuditType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sharedresourceeffectiverights_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="netname" type="oval-sc:EntityItemStringType" minOccurs="0"/>
+                  <xsd:element name="trustee_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_delete" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_read_control" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_dac" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_write_owner" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="standard_synchronize" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="access_system_security" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_read" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_write" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_execute" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="generic_all" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sid_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="trustee_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="trustee_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="trustee_domain" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="sid_sid_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="trustee_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="trustee_name" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="trustee_domain" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="uac_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="admin_approval_mode" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="elevation_prompt_admin" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="elevation_prompt_standard" type="oval-sc:EntityItemStringType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="detect_installations" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="elevate_signed_executables" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="elevate_uiaccess" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="run_admins_aam" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="secure_desktop" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="virtualize_write_failures" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="user_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="user" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="enabled" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="group" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+                  <xsd:element name="last_logon" type="oval-sc:EntityItemIntType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="user_sid_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="user_sid" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="enabled" type="oval-sc:EntityItemBoolType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="group_sid" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="volume_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="rootpath" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="file_system" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="drive_type" type="win-sc:EntityItemDriveTypeType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="volume_max_component_length" type="oval-sc:EntityItemIntType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="serial_number" type="oval-sc:EntityItemIntType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_case_sensitive_search" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_case_preserved_names" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_unicode_on_disk" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_persistent_acls" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_file_compression" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_volume_quotas" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_supports_sparse_files" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_supports_reparse_points" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_supports_remote_storage" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_volume_is_compressed" type="oval-sc:EntityItemBoolType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_supports_object_ids" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_supports_encryption" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_named_streams" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="file_read_only_volume" type="oval-sc:EntityItemBoolType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="wmi_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="namespace" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="wql" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="result" type="oval-sc:EntityItemAnySimpleType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="wmi57_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="namespace" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="wql" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="result" type="oval-sc:EntityItemRecordType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="wuaupdatesearcher_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="search_criteria" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="update_id" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="EntityItemAddrTypeType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="MIB_IPADDR_DELETED"/>
+            <xsd:enumeration value="MIB_IPADDR_DISCONNECTED"/>
+            <xsd:enumeration value="MIB_IPADDR_DYNAMIC"/>
+            <xsd:enumeration value="MIB_IPADDR_PRIMARY"/>
+            <xsd:enumeration value="MIB_IPADDR_TRANSIENT"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemAdstypeType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="ADSTYPE_INVALID"/>
+            <xsd:enumeration value="ADSTYPE_DN_STRING"/>
+            <xsd:enumeration value="ADSTYPE_CASE_EXACT_STRING"/>
+            <xsd:enumeration value="ADSTYPE_CASE_IGNORE_STRING"/>
+            <xsd:enumeration value="ADSTYPE_PRINTABLE_STRING"/>
+            <xsd:enumeration value="ADSTYPE_NUMERIC_STRING"/>
+            <xsd:enumeration value="ADSTYPE_BOOLEAN"/>
+            <xsd:enumeration value="ADSTYPE_INTEGER"/>
+            <xsd:enumeration value="ADSTYPE_OCTET_STRING"/>
+            <xsd:enumeration value="ADSTYPE_UTC_TIME"/>
+            <xsd:enumeration value="ADSTYPE_LARGE_INTEGER"/>
+            <xsd:enumeration value="ADSTYPE_PROV_SPECIFIC"/>
+            <xsd:enumeration value="ADSTYPE_OBJECT_CLASS"/>
+            <xsd:enumeration value="ADSTYPE_CASEIGNORE_LIST"/>
+            <xsd:enumeration value="ADSTYPE_OCTET_LIST"/>
+            <xsd:enumeration value="ADSTYPE_PATH"/>
+            <xsd:enumeration value="ADSTYPE_POSTALADDRESS"/>
+            <xsd:enumeration value="ADSTYPE_TIMESTAMP"/>
+            <xsd:enumeration value="ADSTYPE_BACKLINK"/>
+            <xsd:enumeration value="ADSTYPE_TYPEDNAME"/>
+            <xsd:enumeration value="ADSTYPE_HOLD"/>
+            <xsd:enumeration value="ADSTYPE_NETADDRESS"/>
+            <xsd:enumeration value="ADSTYPE_REPLICAPOINTER"/>
+            <xsd:enumeration value="ADSTYPE_FAXNUMBER"/>
+            <xsd:enumeration value="ADSTYPE_EMAIL"/>
+            <xsd:enumeration value="ADSTYPE_NT_SECURITY_DESCRIPTOR"/>
+            <xsd:enumeration value="ADSTYPE_UNKNOWN"/>
+            <xsd:enumeration value="ADSTYPE_DN_WITH_BINARY"/>
+            <xsd:enumeration value="ADSTYPE_DN_WITH_STRING"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemAuditType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="AUDIT_FAILURE"/>
+            <xsd:enumeration value="AUDIT_NONE"/>
+            <xsd:enumeration value="AUDIT_SUCCESS"/>
+            <xsd:enumeration value="AUDIT_SUCCESS_FAILURE"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemDriveTypeType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="DRIVE_UNKNOWN"/>
+            <xsd:enumeration value="DRIVE_NO_ROOT_DIR"/>
+            <xsd:enumeration value="DRIVE_REMOVABLE"/>
+            <xsd:enumeration value="DRIVE_FIXED"/>
+            <xsd:enumeration value="DRIVE_REMOTE"/>
+            <xsd:enumeration value="DRIVE_CDROM"/>
+            <xsd:enumeration value="DRIVE_RAMDISK"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemFileTypeType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="FILE_ATTRIBUTE_DIRECTORY"/>
+            <xsd:enumeration value="FILE_TYPE_CHAR"/>
+            <xsd:enumeration value="FILE_TYPE_DISK"/>
+            <xsd:enumeration value="FILE_TYPE_PIPE"/>
+            <xsd:enumeration value="FILE_TYPE_REMOTE"/>
+            <xsd:enumeration value="FILE_TYPE_UNKNOWN"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemInterfaceTypeType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="MIB_IF_TYPE_ETHERNET"/>
+            <xsd:enumeration value="MIB_IF_TYPE_FDDI"/>
+            <xsd:enumeration value="MIB_IF_TYPE_LOOPBACK"/>
+            <xsd:enumeration value="MIB_IF_TYPE_OTHER"/>
+            <xsd:enumeration value="MIB_IF_TYPE_PPP"/>
+            <xsd:enumeration value="MIB_IF_TYPE_SLIP"/>
+            <xsd:enumeration value="MIB_IF_TYPE_TOKENRING"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemNamingContextType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="domain"/>
+            <xsd:enumeration value="configuration"/>
+            <xsd:enumeration value="schema"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemPeTargetMachineType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_UNKNOWN"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_ALPHA"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_ARM"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_ALPHA64"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_I386"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_IA64"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_M68K"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_MIPS16"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_MIPSFPU"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_MIPSFPU16"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_POWERPC"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_R3000"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_R4000"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_R10000"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_SH3"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_SH4"/>
+            <xsd:enumeration value="IMAGE_FILE_MACHINE_THUMB"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemPeSubsystemType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_UNKNOWN"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_NATIVE"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_WINDOWS_GUI"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_WINDOWS_CUI"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_OS2_CUI"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_POSIX_CUI"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_WINDOWS_CE_GUI"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_EFI_APPLICATION"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_EFI_ROM"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_XBOX"/>
+            <xsd:enumeration value="IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemProtocolType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="TCP"/>
+            <xsd:enumeration value="UDP"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemRegistryHiveType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="HKEY_CLASSES_ROOT"/>
+            <xsd:enumeration value="HKEY_CURRENT_CONFIG"/>
+            <xsd:enumeration value="HKEY_CURRENT_USER"/>
+            <xsd:enumeration value="HKEY_LOCAL_MACHINE"/>
+            <xsd:enumeration value="HKEY_USERS"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemRegistryTypeType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="reg_binary"/>
+            <xsd:enumeration value="reg_dword"/>
+            <xsd:enumeration value="reg_expand_sz"/>
+            <xsd:enumeration value="reg_multi_sz"/>
+            <xsd:enumeration value="reg_none"/>
+            <xsd:enumeration value="reg_qword"/>
+            <xsd:enumeration value="reg_sz"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemServiceControlsAcceptedType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="SERVICE_ACCEPT_NETBINDCHANGE"/>
+            <xsd:enumeration value="SERVICE_ACCEPT_PARAMCHANGE"/>
+            <xsd:enumeration value="SERVICE_ACCEPT_PAUSE_CONTINUE"/>
+            <xsd:enumeration value="SERVICE_ACCEPT_PRESHUTDOWN"/>
+            <xsd:enumeration value="SERVICE_ACCEPT_SHUTDOWN"/>
+            <xsd:enumeration value="SERVICE_ACCEPT_STOP"/>
+            <xsd:enumeration value="SERVICE_ACCEPT_HARDWAREPROFILECHANGE"/>
+            <xsd:enumeration value="SERVICE_ACCEPT_POWEREVENT"/>
+            <xsd:enumeration value="SERVICE_ACCEPT_SESSIONCHANGE"/>
+            <xsd:enumeration value="SERVICE_ACCEPT_TIMECHANGE"/>
+            <xsd:enumeration value="SERVICE_ACCEPT_TRIGGEREVENT"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemServiceCurrentStateType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="SERVICE_CONTINUE_PENDING"/>
+            <xsd:enumeration value="SERVICE_PAUSE_PENDING"/>
+            <xsd:enumeration value="SERVICE_PAUSED"/>
+            <xsd:enumeration value="SERVICE_RUNNING"/>
+            <xsd:enumeration value="SERVICE_START_PENDING"/>
+            <xsd:enumeration value="SERVICE_STOP_PENDING"/>
+            <xsd:enumeration value="SERVICE_STOPPED"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemServiceStartTypeType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="SERVICE_AUTO_START"/>
+            <xsd:enumeration value="SERVICE_BOOT_START"/>
+            <xsd:enumeration value="SERVICE_DEMAND_START"/>
+            <xsd:enumeration value="SERVICE_DISABLED"/>
+            <xsd:enumeration value="SERVICE_SYSTEM_START"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemServiceTypeType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="SERVICE_FILE_SYSTEM_DRIVER"/>
+            <xsd:enumeration value="SERVICE_KERNEL_DRIVER"/>
+            <xsd:enumeration value="SERVICE_WIN32_OWN_PROCESS"/>
+            <xsd:enumeration value="SERVICE_WIN32_SHARE_PROCESS"/>
+            <xsd:enumeration value="SERVICE_INTERACTIVE_PROCESS"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemSharedResourceTypeType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="STYPE_DISKTREE"/>
+            <xsd:enumeration value="STYPE_DISKTREE_SPECIAL"/>
+            <xsd:enumeration value="STYPE_DISKTREE_TEMPORARY"/>
+            <xsd:enumeration value="STYPE_DISKTREE_SPECIAL_TEMPORARY"/>
+            <xsd:enumeration value="STYPE_PRINTQ"/>
+            <xsd:enumeration value="STYPE_PRINTQ_SPECIAL"/>
+            <xsd:enumeration value="STYPE_PRINTQ_TEMPORARY"/>
+            <xsd:enumeration value="STYPE_PRINTQ_SPECIAL_TEMPORARY"/>
+            <xsd:enumeration value="STYPE_DEVICE"/>
+            <xsd:enumeration value="STYPE_DEVICE_SPECIAL"/>
+            <xsd:enumeration value="STYPE_DEVICE_TEMPORARY"/>
+            <xsd:enumeration value="STYPE_DEVICE_SPECIAL_TEMPORARY"/>
+            <xsd:enumeration value="STYPE_IPC"/>
+            <xsd:enumeration value="STYPE_IPC_SPECIAL"/>
+            <xsd:enumeration value="STYPE_IPC_TEMPORARY"/>
+            <xsd:enumeration value="STYPE_IPC_SPECIAL_TEMPORARY"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemGUIDType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:pattern value="(\{[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}\}){0,}"/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemCmdletVerbType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="Approve"/>
+            <xsd:enumeration value="Assert"/>
+            <xsd:enumeration value="Compare"/>
+            <xsd:enumeration value="Confirm"/>
+            <xsd:enumeration value="Find"/>
+            <xsd:enumeration value="Get"/>
+            <xsd:enumeration value="Import"/>
+            <xsd:enumeration value="Measure"/>
+            <xsd:enumeration value="Read"/>
+            <xsd:enumeration value="Request"/>
+            <xsd:enumeration value="Resolve"/>
+            <xsd:enumeration value="Search"/>
+            <xsd:enumeration value="Select"/>
+            <xsd:enumeration value="Show"/>
+            <xsd:enumeration value="Test"/>
+            <xsd:enumeration value="Trace"/>
+            <xsd:enumeration value="Watch"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemWindowsViewType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="32_bit"/>
+            <xsd:enumeration value="64_bit"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+</xsd:schema>

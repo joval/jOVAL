@@ -3,8 +3,8 @@
 
 package org.joval.os.windows.io;
 
-import org.joval.intf.io.IPathRedirector;
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.util.IPathRedirector;
 
 /**
  * Implementation of an IPathRedirector for the Windows IFilesystems.
@@ -14,12 +14,12 @@ import org.joval.intf.system.IEnvironment;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WOW3264PathRedirector implements IPathRedirector {
+public class WOW3264FilesystemRedirector implements IPathRedirector {
     static final String SEPARATOR = "\\";
 
     private String system32, sysWOW64, sysNative;
 
-    public WOW3264PathRedirector(IEnvironment env) {
+    public WOW3264FilesystemRedirector(IEnvironment env) {
 	system32 = env.getenv("SystemRoot") + SEPARATOR + "System32" + SEPARATOR;
 	sysNative = env.getenv("SystemRoot") + SEPARATOR + "Sysnative" + SEPARATOR;
 	sysWOW64 = env.getenv("SystemRoot") + SEPARATOR + "SysWOW64" + SEPARATOR;
@@ -33,7 +33,7 @@ public class WOW3264PathRedirector implements IPathRedirector {
 	} else if (path.toUpperCase().startsWith(sysNative.toUpperCase())) {
 	    return system32 + path.substring(system32.length());
 	} else {
-	    return path;
+	    return null;
 	}
     }
 }

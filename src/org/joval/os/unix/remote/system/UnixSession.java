@@ -19,6 +19,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.intf.util.IPathRedirector;
 import org.joval.os.unix.Sudo;
 import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.unix.system.Environment;
@@ -33,7 +34,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixSession implements ILocked, IUnixSession {
+public class UnixSession implements ILocked, IUnixSession, IPathRedirector {
     private SshSession ssh;
     private ICredential cred;
     private Credential rootCred = null;
@@ -56,6 +57,12 @@ public class UnixSession implements ILocked, IUnixSession {
 	}
 	this.cred = cred;
 	return ssh.unlock(cred);
+    }
+
+    // Implement IPathRedirector
+
+    public String getRedirect(String path) {
+	return path;
     }
 
     // Implement IBaseSession
@@ -107,6 +114,10 @@ public class UnixSession implements ILocked, IUnixSession {
 
     public IFilesystem getFilesystem() {
 	return fs;
+    }
+
+    public IPathRedirector getFilesystemRedirector() {
+	return this;
     }
 
     public IEnvironment getEnvironment() {

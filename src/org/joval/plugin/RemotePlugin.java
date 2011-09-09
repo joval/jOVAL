@@ -58,17 +58,11 @@ public class RemotePlugin extends BasePlugin {
 
     /**
      * Create a plugin for data retrieval and test evaluation.
-     *
-     * A note about the redirect64 setting: If true, then registry and filesystem redirection will be active for 64-bit
-     * machines.  This means that redirected assets (files, registry entries) will appear to be in their 32-bit locations.
-     * Hence, if you intend to run tests that specifically look for assets in their REAL 64-bit locations this should be set
-     * to false.  If you intend to run tests that were designed for 32-bit Windows systems, then set this parameter to true.
      */
     public boolean configure(String[] args, IJovaldiConfiguration jDIconfig) {
 	if (jDIconfig.printingHelp()) return true;
 
 	String hostname = null;
-	boolean redirect64 = true;
 	String domain=null, username=null, password=null, passphrase=null, rootPassword=null;
 	File privateKey = null;
 
@@ -87,8 +81,6 @@ public class RemotePlugin extends BasePlugin {
 		passphrase = args[++i];
 	    } else if (args[i].equals("-rootPassword")) {
 		rootPassword = args[++i];
-	    } else if (args[i].equals("-redirect64")) {
-		redirect64 = "true".equals(args[++i]);
 	    }
 	}
 
@@ -178,10 +170,6 @@ System.out.println("DAS: screwed: " + base.getType());
 	    } catch (Exception e) {
 		err = e.getMessage();
 		return false;
-	    }
-
-	    if (session.getType() == IBaseSession.Type.WINDOWS) {
-		((IWindowsSession)session).set64BitRedirect(redirect64);
 	    }
 
 	    return true;

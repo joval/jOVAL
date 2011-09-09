@@ -1,13 +1,13 @@
 SHARED=\
 	org.joval.intf.io.IFile						\
 	org.joval.intf.io.IFilesystem					\
-	org.joval.intf.io.IPathRedirector				\
 	org.joval.intf.io.IRandomAccess					\
 	org.joval.intf.system.IEnvironment				\
 	org.joval.intf.system.IProcess					\
 	org.joval.intf.system.ISession					\
 	org.joval.intf.unix.io.IUnixFile				\
 	org.joval.intf.unix.system.IUnixSession				\
+	org.joval.intf.util.IPathRedirector				\
 	org.joval.intf.util.tree.IForest				\
 	org.joval.intf.util.tree.INode					\
 	org.joval.intf.util.tree.ITree					\

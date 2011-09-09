@@ -13,8 +13,8 @@ import java.util.logging.Level;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IPathRedirector;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.system.IEnvironment;
 import org.joval.util.tree.CachingTree;
@@ -41,16 +41,6 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 
     public void setAutoExpand(boolean autoExpand) {
 	this.autoExpand = autoExpand;
-    }
-
-    // Implement IPathRedirector
-
-    public String getRedirect(String path) {
-	if (redirector == null) {
-	    return path;
-	} else {
-	    return redirector.getRedirect(path);
-	}
     }
 
     // Implement methdos left abstract in CachingTree
@@ -90,7 +80,12 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	if (autoExpand) {
 	    path = env.expand(path);
 	}
-	path = getRedirect(path);
+	if (redirector != null) {
+	    String alt = redirector.getRedirect(path);
+	    if (alt != null) {
+		path = alt;
+	    }
+	}
 	if (WINDOWS) {
 	    if (path.length() > 2 && path.charAt(1) == ':') {
 	        if (isLetter(path.charAt(0))) {

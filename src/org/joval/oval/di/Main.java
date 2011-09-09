@@ -358,9 +358,9 @@ public class Main implements IObserver {
 
 	    OvalDefinitions defs = Engine.getOvalDefinitions(state.defsFile);
 	    print(getMessage("MESSAGE_SCHEMA_VERSION_CHECK"));
-	    BigDecimal schemaVersion = defs.getGenerator().getSchemaVersion();
+	    Version schemaVersion = new Version(defs.getGenerator().getSchemaVersion());
 	    print(getMessage("MESSAGE_SCHEMA_VERSION", schemaVersion.toString()));
-	    if (schemaVersion.compareTo(Engine.SCHEMA_VERSION) > 0) { // must be <= engine's version
+	    if (schemaVersion.greaterThan(Engine.SCHEMA_VERSION)) {
 		print(getMessage("ERROR_SCHEMA_VERSION", schemaVersion.toString()));
 		return ERR;
 	    }

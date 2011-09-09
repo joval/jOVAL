@@ -14,7 +14,6 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemIPAddressStringType;
 import oval.schemas.systemcharacteristics.core.InterfacesType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
-import oval.schemas.systemcharacteristics.core.ObjectFactory;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.system.IEnvironment;
@@ -22,6 +21,7 @@ import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.registry.IRegistry;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
@@ -54,16 +54,14 @@ public class WindowsSystemInfo {
 
     private IRegistry registry;
     private IWmiProvider wmi;
-    private ObjectFactory coreFactory;
     private SystemInfoType info;
 
     /**
      * Create a plugin for scanning or test evaluation.
      */
-    public WindowsSystemInfo(IRegistry registry, IWmiProvider wmi) {
-	coreFactory = new ObjectFactory();
-	this.registry = registry;
-	this.wmi = wmi;
+    public WindowsSystemInfo(IWindowsSession session) {
+	registry = session.getRegistry(IWindowsSession.View._64BIT);
+	wmi = session.getWmiProvider();
     }
 
     public SystemInfoType getSystemInfo() {
@@ -71,7 +69,7 @@ public class WindowsSystemInfo {
 	    return info;
 	}
 
-	info = coreFactory.createSystemInfoType();
+	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	boolean regConnected=false, wmiConnected=false;
 	try {
 	    regConnected = registry.connect();
@@ -99,7 +97,7 @@ public class WindowsSystemInfo {
 
 	    wmiConnected = wmi.connect();
 	    if (wmiConnected) {
-		InterfacesType interfacesType = coreFactory.createInterfacesType();
+		InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
 		ISWbemObjectSet result = wmi.execQuery(IWmiProvider.CIMv2, ADAPTER_WQL);
 		Iterator <ISWbemObject>iter = result.iterator();
 		while (iter.hasNext()) {
@@ -109,13 +107,13 @@ public class WindowsSystemInfo {
 			String[] ipAddresses = row.getItem(IP_ADDR_FIELD).getValueAsArray();
 			if (ipAddresses != null && ipAddresses.length > 0) {
 			    for (int i=0; i < 2 && i < ipAddresses.length; i++) {
-				InterfaceType interfaceType = coreFactory.createInterfaceType();
+				InterfaceType interfaceType = JOVALSystem.factories.sc.core.createInterfaceType();
 				interfaceType.setMacAddress(macAddress);
 				String description = row.getItem(DESCRIPTION_FIELD).getValueAsString();
 				if (description != null) {
 				    interfaceType.setInterfaceName(description);
 				}
-				EntityItemIPAddressStringType ipAddressType = coreFactory.createEntityItemIPAddressStringType();
+				EntityItemIPAddressStringType ipAddressType = JOVALSystem.factories.sc.core.createEntityItemIPAddressStringType();
 				ipAddressType.setValue(ipAddresses[i]);
 				switch(i) {
 				  case 0: // The IPv4 address is [0]

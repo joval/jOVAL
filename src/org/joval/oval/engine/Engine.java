@@ -125,7 +125,8 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class Engine implements IProducer {
-    public static final BigDecimal SCHEMA_VERSION = new BigDecimal("5.9");
+    public static final BigDecimal	SCHEMA_VERSION_BD	= new BigDecimal("5.10");
+    public static final Version		SCHEMA_VERSION		= new Version(SCHEMA_VERSION_BD);
 
     public static final int MESSAGE_MIN				= 0;
     public static final int MESSAGE_OBJECT_PHASE_START		= 0;
@@ -341,7 +342,7 @@ public class Engine implements IProducer {
 	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
 	generator.setProductName(JOVALSystem.getProperty(JOVALSystem.PROP_PRODUCT));
 	generator.setProductVersion(JOVALSystem.getProperty(JOVALSystem.PROP_VERSION));
-	generator.setSchemaVersion(SCHEMA_VERSION);
+	generator.setSchemaVersion(SCHEMA_VERSION_BD);
 	try {
 	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
 	} catch (DatatypeConfigurationException e) {
