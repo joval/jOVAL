@@ -77,9 +77,9 @@ public class RegistryAdapter implements IAdapter {
 	if (reg32 == null) {
 	    reg32 = session.getRegistry(IWindowsSession.View._32BIT);
 	    if (session.supports(IWindowsSession.View._64BIT)) {
-System.out.println("DAS supports 64-bit");
 		reg = session.getRegistry(IWindowsSession.View._64BIT);
-		return reg.connect() && reg32.connect();
+		return	reg.connect() &&
+			reg32.connect();
 	    } else {
 		reg = reg32;
 		return reg32.connect();
@@ -97,15 +97,11 @@ System.out.println("DAS supports 64-bit");
 	}
     }
 
-boolean special=false;
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	RegistryObject rObj = (RegistryObject)rc.getObject();
 
 	String id = rObj.getId();
-if("oval:com.patch-service.oval.ms:obj:15".equals(id))special=true;
-else special=false;
-if(special)System.out.println("DAS SPECIAL OBJECT!!");
 	if (rObj.getHive() == null || rObj.getHive().getValue() == null) {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_WINREG_HIVE_NAME", id));
 	}
@@ -150,7 +146,6 @@ if(special)System.out.println("DAS SPECIAL OBJECT!!");
 	    RegistryBehaviors behaviors = rObj.getBehaviors();
 	    win32 = "32_bit".equals(behaviors.getWindowsView());
 	}
-if(special)System.out.println("DAS win32: " + win32);
 
 	list = new Vector<String>();
 	if (rObj.getKey().getValue().isSetVarRef()) {

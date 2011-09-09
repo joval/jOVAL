@@ -80,23 +80,24 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	if (autoExpand) {
 	    path = env.expand(path);
 	}
+	String realPath = path;
 	if (redirector != null) {
 	    String alt = redirector.getRedirect(path);
 	    if (alt != null) {
-		path = alt;
+		realPath = alt;
 	    }
 	}
 	if (WINDOWS) {
-	    if (path.length() > 2 && path.charAt(1) == ':') {
-	        if (isLetter(path.charAt(0))) {
-		    return new FileProxy(this, new File(path));
+	    if (realPath.length() > 2 && realPath.charAt(1) == ':') {
+	        if (isLetter(realPath.charAt(0))) {
+		    return new FileProxy(this, new File(realPath), path);
 	        }
 	    }
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_FS_LOCALPATH", path));
-	} else if (path.charAt(0) == File.separatorChar) {
-	    return new FileProxy(this, new File(path));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_FS_LOCALPATH", realPath));
+	} else if (realPath.charAt(0) == File.separatorChar) {
+	    return new FileProxy(this, new File(realPath), path);
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_FS_LOCALPATH", path));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_FS_LOCALPATH", realPath));
 	}
     }
 

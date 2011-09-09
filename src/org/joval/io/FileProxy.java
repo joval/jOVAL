@@ -24,10 +24,12 @@ import org.joval.intf.util.tree.INode;
  */
 class FileProxy extends BaseFile {
     private File file;
+    private String localName;
 
-    FileProxy(IFilesystem fs, File file) {
+    FileProxy(IFilesystem fs, File file, String localName) {
 	super(fs);
 	this.file = file;
+	this.localName = localName;
     }
 
     File getFile() {
@@ -111,7 +113,7 @@ class FileProxy extends BaseFile {
     }
 
     public String getLocalName() {
-	return toString();
+	return localName;
     }
 
     public String getName() {

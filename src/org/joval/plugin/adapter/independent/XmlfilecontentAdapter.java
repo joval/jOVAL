@@ -34,9 +34,9 @@ import oval.schemas.systemcharacteristics.independent.XmlfilecontentItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.util.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
@@ -53,8 +53,8 @@ import org.joval.util.StringTools;
 public class XmlfilecontentAdapter extends BaseFileAdapter {
     private DocumentBuilder builder;
 
-    public XmlfilecontentAdapter(IFilesystem fs) {
-	super(fs);
+    public XmlfilecontentAdapter(ISession session) {
+	super(session);
 	try {
 	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 	    factory.setNamespaceAware(true);

@@ -34,6 +34,8 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.system.ISession;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALSystem;
@@ -47,11 +49,11 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public abstract class BaseFileAdapter implements IAdapter {
-    protected IFilesystem fs;
+    protected ISession session;
     protected Hashtable<String, Collection<String>> pathMap;
 
-    protected BaseFileAdapter(IFilesystem fs) {
-	this.fs = fs;
+    protected BaseFileAdapter(ISession session) {
+	this.session = session;
 	pathMap = new Hashtable<String, Collection<String>>();
     }
 
@@ -71,12 +73,32 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
 							   getObjectClass().getName(), obj.getClass().getName()));
 	}
+
+	//
+	// Get the appropriate IFilesystem
+	//
+	ReflectedFileObject fObj = new ReflectedFileObject(obj);
+	ReflectedFileBehaviors behaviors = null;
+	if (fObj.isSetBehaviors()) {
+	    behaviors = fObj.getBehaviors();
+	}
+	IFilesystem fs = null;
+	if (session instanceof IWindowsSession) {
+	    if (behaviors != null) {
+		if ("32_bit".equals(behaviors.getWindowsView())) {
+		    fs = ((IWindowsSession)session).getFilesystem(IWindowsSession.View._32BIT);
+		}
+	    }
+	}
+	if (fs == null) {
+	    fs = session.getFilesystem();
+	}
+
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	Collection<String> paths = getPathList(rc);
+	Collection<String> paths = getPathList(rc, fs, behaviors);
 	for (String path : paths) {
 	    IFile f = null;
 	    try {
-		ReflectedFileObject fObj = new ReflectedFileObject(obj);
 		ReflectedFileItem fItem = new ReflectedFileItem();
 
 		f = fs.getFile(path);
@@ -145,14 +167,12 @@ public abstract class BaseFileAdapter implements IAdapter {
 		items.addAll(getItems(fItem.it, f, rc));
 	    } catch (NoSuchElementException e) {
 		// skip it
-	    } catch (NoSuchMethodException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", id, path), e);
 	    } catch (IllegalAccessException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", id, path), e);
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()));
 	    } catch (IllegalArgumentException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", id, path), e);
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()));
 	    } catch (InvocationTargetException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILEOBJECT_ITEMS", id, path), e);
+		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()));
 	    } catch (IOException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -193,7 +213,7 @@ public abstract class BaseFileAdapter implements IAdapter {
      * Get a list of String paths for this object.  This accommodates searches (from pattern match operations),
      * singletons (from equals operations) and handles recursive searches specified by FileBehaviors.
      */
-    final Collection<String> getPathList(IRequestContext rc) throws OvalException {
+    final Collection<String> getPathList(IRequestContext rc, IFilesystem fs, ReflectedFileBehaviors fb) throws OvalException {
 	ObjectType obj = rc.getObject();
 	Collection<String> list = pathMap.get(obj.getId());
 	if (list != null) {
@@ -248,9 +268,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", path.getOperation()));
 		}
 
-		if (fObj.isSetBehaviors()) {
-		    ReflectedFileBehaviors fb = fObj.getBehaviors();
-		    list = getPaths(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse());
+		if (fb != null) {
+		    list = getPaths(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs);
 		} else if (patternMatch) {
 		    //
 		    // Wildcard pattern matches are really supposed to be recursive searches, unfortunately
@@ -261,7 +280,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    ((String)path.getValue()).indexOf(".+") != -1) {
 			    Collection<String> l = new Vector<String>();
 			    l.add(value);
-			    newList.addAll(getPaths(l, -1, "down", "directories"));
+			    newList.addAll(getPaths(l, -1, "down", "directories", fs));
 			}
 		    }
 		    for (String value : newList) {
@@ -284,6 +303,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 			}
 			Collection<String> files = new Vector<String>();
 			for (String pathString : list) {
+			    if (!pathString.endsWith(fs.getDelimiter())) {
+				pathString = pathString + fs.getDelimiter();
+			    }
 			    for (String fname : fnames) {
 				try {
 				    switch(filename.getOperation()) {
@@ -302,11 +324,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 				      }
        
 				      case EQUALS:
-					if (pathString.endsWith(fs.getDelimiter())) {
-					    files.add(pathString + fname);
-					} else {
-					    files.add(pathString + fs.getDelimiter() + fname);
-					}
+					files.add(pathString + fname);
 					break;
     
 				      case NOT_EQUAL: {
@@ -315,11 +333,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 					    String[] children = f.list();
 					    for (int i=0; i < children.length; i++) {
 						if (!fname.equals(children[i])) {
-						    if (pathString.endsWith(fs.getDelimiter())) {
-							files.add(pathString + fname);
-						    } else {
-							files.add(pathString + fs.getDelimiter() + fname);
-						    }
+						    files.add(pathString + fname);
 						}
 					    }
 					}
@@ -341,12 +355,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    } else {
 		throw new OvalException("ERROR_BAD_FILEOBJECT" + obj.getId());
 	    }
-	} catch (NoSuchMethodException e) {
-       	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
-	} catch (IllegalAccessException e) {
-       	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
-	} catch (InvocationTargetException e) {
-       	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
 	} catch (PatternSyntaxException e) {
        	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e); //DAS
 	} catch (IOException e) {
@@ -366,8 +374,8 @@ public abstract class BaseFileAdapter implements IAdapter {
     /**
      * Crawls recursively based on FileBehaviors.
      */
-    private Collection<String> getPaths(Collection<String> list, int depth, String recurseDirection, String recurse) {
-	if ("none".equals(recurseDirection) || depth == 0) {
+    private Collection<String> getPaths(Collection<String> list, int depth, String direction, String recurse, IFilesystem fs) {
+	if ("none".equals(direction) || depth == 0) {
 	    return list;
 	} else {
 	    Collection<String> results = new Vector<String>();
@@ -383,7 +391,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			// skip the directory
 		    } else {
 			results.add(path);
-			if ("up".equals(recurseDirection)) {
+			if ("up".equals(direction)) {
 			    int ptr = 0;
 			    if (path.endsWith(fs.getDelimiter())) {
 				path = path.substring(0, path.lastIndexOf(fs.getDelimiter()));
@@ -392,7 +400,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    if (ptr != -1) {
 				Vector<String> v = new Vector<String>();
 				v.add(path.substring(0, ptr + fs.getDelimiter().length()));
-				results.addAll(getPaths(v, --depth, recurseDirection, recurse));
+				results.addAll(getPaths(v, --depth, direction, recurse, fs));
 			    }
 			} else if (f.isDirectory()) { // recurse down
 			    String[] children = f.list();
@@ -405,7 +413,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 					v.add(path + fs.getDelimiter() + children[i]);
 				    }
 				}
-				results.addAll(getPaths(v, --depth, recurseDirection, recurse));
+				results.addAll(getPaths(v, --depth, direction, recurse, fs));
 			    }
 			}
 		    }
@@ -441,86 +449,112 @@ public abstract class BaseFileAdapter implements IAdapter {
      */
     class ReflectedFileObject {
 	ObjectType obj;
-	boolean legacy = false;
-	Method getId;
-	Method isSetFilepath=null, getFilepath=null;
-	Method isSetFilename, getFilename, isSetPath, getPath, isSetBehaviors, getBehaviors;
+	String id = null;
+	EntityObjectStringType filepath = null, path = null, filename = null;
+	ReflectedFileBehaviors behaviors = null;
 
-	ReflectedFileObject(ObjectType obj) throws NoSuchMethodException {
+	ReflectedFileObject(ObjectType obj) {
 	    this.obj = obj;
 
 	    try {
-		isSetFilepath = obj.getClass().getMethod("isSetFilepath");
-		getFilepath = obj.getClass().getMethod("getFilepath");
+		Method getId = obj.getClass().getMethod("getId");
+		Object o = getId.invoke(obj);
+		if (o != null) {
+		    id = (String)o;
+		}
 	    } catch (NoSuchMethodException e) {
-		legacy = true;
+	    } catch (IllegalAccessException e) {
+	    } catch (IllegalArgumentException e) {
+	    } catch (InvocationTargetException e) {
 	    }
 
-	    getId = obj.getClass().getMethod("getId");
-	    isSetFilename = obj.getClass().getMethod("isSetFilename");
-	    getFilename = obj.getClass().getMethod("getFilename");
-	    isSetPath = obj.getClass().getMethod("isSetPath");
-	    getPath = obj.getClass().getMethod("getPath");
-	    isSetBehaviors = obj.getClass().getMethod("isSetBehaviors");
-	    getBehaviors = obj.getClass().getMethod("getBehaviors");
-	}
-
-	String getId()
-		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    return (String)getId.invoke(obj);
-	}
-
-	boolean isSetFilepath()
-		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    if (legacy) {
-		return false;
-	    } else {
-		return ((Boolean)isSetFilepath.invoke(obj)).booleanValue();
+	    try {
+		Method getFilepath = obj.getClass().getMethod("getFilepath");
+		Object o = getFilepath.invoke(obj);
+		if (o != null) {
+		    filepath = (EntityObjectStringType)o;
+		}
+	    } catch (NoSuchMethodException e) {
+	    } catch (IllegalAccessException e) {
+	    } catch (IllegalArgumentException e) {
+	    } catch (InvocationTargetException e) {
 	    }
-	}
 
-	EntityObjectStringType getFilepath()
-		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    if (legacy) {
-		return null;
-	    } else {
-		return (EntityObjectStringType)getFilepath.invoke(obj);
+	    try {
+		Method getFilename = obj.getClass().getMethod("getFilename");
+		Object o = getFilename.invoke(obj);
+		if (o != null) {
+		    if (o instanceof JAXBElement) {
+			o = ((JAXBElement)o).getValue();
+		    }
+		    filename = (EntityObjectStringType)o;
+		}
+	    } catch (NoSuchMethodException e) {
+	    } catch (IllegalAccessException e) {
+	    } catch (IllegalArgumentException e) {
+	    } catch (InvocationTargetException e) {
 	    }
-	}
 
-	boolean isSetFilename()
-		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    return ((Boolean)isSetFilename.invoke(obj)).booleanValue();
-	}
-
-	EntityObjectStringType getFilename()
-		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    Object o = getFilename.invoke(obj);
-	    if (o instanceof JAXBElement) {
-		return (EntityObjectStringType)(((JAXBElement)o).getValue());
-	    } else {
-		return (EntityObjectStringType)o;
+	    try {
+		Method getPath = obj.getClass().getMethod("getPath");
+		Object o = getPath.invoke(obj);
+		if (o != null) {
+		    path = (EntityObjectStringType)o;
+		}
+	    } catch (NoSuchMethodException e) {
+	    } catch (IllegalAccessException e) {
+	    } catch (IllegalArgumentException e) {
+	    } catch (InvocationTargetException e) {
 	    }
+
+	    try {
+		Method getBehaviors = obj.getClass().getMethod("getBehaviors");
+		Object o = getBehaviors.invoke(obj);
+		if (o != null) {
+		    behaviors = new ReflectedFileBehaviors(getBehaviors.invoke(obj));
+		}
+	    } catch (NoSuchMethodException e) {
+	    } catch (IllegalAccessException e) {
+	    } catch (IllegalArgumentException e) {
+	    } catch (InvocationTargetException e) {
+	    }
+
 	}
 
-	boolean isSetPath()
-		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    return ((Boolean)isSetPath.invoke(obj)).booleanValue();
+	String getId() {
+	    return id;
 	}
 
-	EntityObjectStringType getPath()
-		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    return (EntityObjectStringType)getPath.invoke(obj);
+	boolean isSetFilepath() {
+	    return filepath != null;
 	}
 
-	boolean isSetBehaviors()
-		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    return ((Boolean)isSetBehaviors.invoke(obj)).booleanValue();
+	EntityObjectStringType getFilepath() {
+	    return filepath;
 	}
 
-	ReflectedFileBehaviors getBehaviors()
-		throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    return new ReflectedFileBehaviors(getBehaviors.invoke(obj));
+	boolean isSetFilename() {
+	    return filename != null;
+	}
+
+	EntityObjectStringType getFilename() {
+	    return filename;
+	}
+
+	boolean isSetPath() {
+	    return path != null;
+	}
+
+	EntityObjectStringType getPath() {
+	    return path;
+	}
+
+	boolean isSetBehaviors() {
+	    return behaviors != null;
+	}
+
+	ReflectedFileBehaviors getBehaviors() {
+	    return behaviors;
 	}
     }
 
@@ -535,14 +569,19 @@ public abstract class BaseFileAdapter implements IAdapter {
 	String recurseDirection = "none";
 	String recurse = "symlinks and directories";
 	String recurseFS = "all";
+	String windowsView = "64_bit";
 
 	ReflectedFileBehaviors(Object obj)
 		throws NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 	    if (obj != null) {
 		Method getMaxDepth = obj.getClass().getMethod("getMaxDepth");
 		maxDepth = (BigInteger)getMaxDepth.invoke(obj);
+
 		Method getRecurseDirection = obj.getClass().getMethod("getRecurseDirection");
 		recurseDirection = (String)getRecurseDirection.invoke(obj);
+
+		Method getWindowsView = obj.getClass().getMethod("getWindowsView");
+		windowsView = (String)getWindowsView.invoke(obj);
 
 		try {
 		    //
@@ -580,6 +619,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 
 	String getRecurseFileSystem() {
 	    return recurseFS;
+	}
+
+	String getWindowsView() {
+	    return windowsView;
 	}
     }
 

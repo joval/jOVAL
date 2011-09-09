@@ -37,7 +37,6 @@ import oval.schemas.systemcharacteristics.unix.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
@@ -57,11 +56,11 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class FileAdapter extends BaseFileAdapter {
-    private IUnixSession session;
+    private IUnixSession us;
 
-    public FileAdapter(IUnixSession session, IFilesystem fs) {
-	super(fs);
-	this.session = session;
+    public FileAdapter(IUnixSession us) {
+	super(us);
+	this.us = us;
     }
 
     // Implement IAdapter
@@ -71,7 +70,7 @@ public class FileAdapter extends BaseFileAdapter {
     }
 
     public boolean connect() {
-	return session != null;
+	return us != null;
     }
 
     // Protected
@@ -105,7 +104,7 @@ public class FileAdapter extends BaseFileAdapter {
 	if (f instanceof IUnixFile) {
 	    file = (IUnixFile)f;
 	} else {
-	    file = new UnixFile(session, f);
+	    file = new UnixFile(us, f);
 	}
 	JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_UNIX_FILE", file.getLocalName()));
 	EntityItemIntType aTime = JOVALSystem.factories.sc.core.createEntityItemIntType();
@@ -211,7 +210,7 @@ public class FileAdapter extends BaseFileAdapter {
 
 	Lstat(String path) throws Exception {
 	    String command = null;
-	    switch(session.getFlavor()) {
+	    switch(us.getFlavor()) {
 	      case SOLARIS: {
 		command = "/usr/bin/ls -n " + path;
 		break;
@@ -223,10 +222,10 @@ public class FileAdapter extends BaseFileAdapter {
 	      }
 
 	      default:
-		throw new RuntimeException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_UNIX_FLAVOR", session.getFlavor()));
+		throw new RuntimeException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_UNIX_FLAVOR", us.getFlavor()));
 	    }
 
-	    IProcess p = session.createProcess(command, 5000, true);
+	    IProcess p = us.createProcess(command, 5000, true);
 	    p.start();
 	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    String line = br.readLine();

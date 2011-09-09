@@ -27,10 +27,10 @@ import oval.schemas.systemcharacteristics.windows.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
@@ -70,9 +70,9 @@ public class FileAdapter extends BaseFileAdapter {
 
     private IWmiProvider wmi;
 
-    public FileAdapter(IFilesystem fs, IWmiProvider wmi) {
-	super(fs);
-	this.wmi = wmi;
+    public FileAdapter(IWindowsSession session) {
+	super(session);
+	wmi = session.getWmiProvider();
     }
 
     // Implement IAdapter

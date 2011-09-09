@@ -134,16 +134,17 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 	if (autoExpand) {
 	    path = env.expand(path);
 	}
+	String realPath = path;
 	if (redirector != null) {
 	    String alt = redirector.getRedirect(path);
 	    if (alt != null) {
-		path = alt;
+		realPath = alt;
 	    }
 	}
-	if (path.length() > 2 && path.charAt(1) == ':') {
-	    if (isLetter(path.charAt(0))) {
+	if (realPath.length() > 2 && realPath.charAt(1) == ':') {
+	    if (isLetter(realPath.charAt(0))) {
 		StringBuffer sb = new StringBuffer("smb://").append(host).append(SMBURL_DELIM_CH);
-		sb.append(path.charAt(0)).append('$').append(path.substring(2).replace(LOCAL_DELIM_CH, SMBURL_DELIM_CH));
+		sb.append(realPath.charAt(0)).append('$').append(realPath.substring(2).replace(LOCAL_DELIM_CH,SMBURL_DELIM_CH));
 		JOVALSystem.getLogger().log(Level.FINEST, JOVALSystem.getMessage("STATUS_WINSMB_MAP", path, sb.toString()));
 		SmbFile smbFile = null;
 		if (vol) {

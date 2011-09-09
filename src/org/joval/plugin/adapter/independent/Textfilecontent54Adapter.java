@@ -26,9 +26,9 @@ import oval.schemas.systemcharacteristics.independent.TextfilecontentItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALSystem;
@@ -43,8 +43,8 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class Textfilecontent54Adapter extends TextfilecontentAdapter {
-    public Textfilecontent54Adapter(IFilesystem fs) {
-	super(fs);
+    public Textfilecontent54Adapter(ISession session) {
+	super(session);
     }
 
     // Implement IAdapter

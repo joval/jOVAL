@@ -113,16 +113,16 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		adapters.add(new EnvironmentvariableAdapter(session.getEnvironment()));
 	    }
 	    if (session.getFilesystem() != null) {
-		adapters.add(new Textfilecontent54Adapter(session.getFilesystem()));
-		adapters.add(new TextfilecontentAdapter(session.getFilesystem()));
-		adapters.add(new XmlfilecontentAdapter(session.getFilesystem()));
+		adapters.add(new Textfilecontent54Adapter(session));
+		adapters.add(new TextfilecontentAdapter(session));
+		adapters.add(new XmlfilecontentAdapter(session));
 	    }
 
 	    switch(session.getType()) {
 	      case WINDOWS: {
 		IWindowsSession win = (IWindowsSession)session;
 		info = new WindowsSystemInfo(win).getSystemInfo();
-		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win.getFilesystem(), win.getWmiProvider()));
+		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win));
 		adapters.add(new RegistryAdapter(win));
 		adapters.add(new Wmi57Adapter(win.getWmiProvider()));
 		adapters.add(new WmiAdapter(win.getWmiProvider()));
@@ -140,7 +140,7 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	      case UNIX: {
 		IUnixSession unix = (IUnixSession)session;
 		info = new UnixSystemInfo(unix).getSystemInfo();
-		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(unix, unix.getFilesystem()));
+		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(unix));
 		adapters.add(new ProcessAdapter(unix));
 		adapters.add(new RunlevelAdapter(unix));
 		adapters.add(new UnameAdapter(unix));
