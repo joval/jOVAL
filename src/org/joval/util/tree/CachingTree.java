@@ -118,7 +118,7 @@ public abstract class CachingTree implements ITree {
 		path = path.substring(0, path.length()-1);
 	    }
 	    StringBuffer sb = new StringBuffer();
-	    Iterator<String> iter = StringTools.tokenize(path, getDelimiter(), false);
+	    Iterator<String> iter = StringTools.tokenize(path, ESCAPED_DELIM, false);
 	    for (int i=0; iter.hasNext(); i++) {
 		String token = iter.next();
 		if (token.length() > 0) {
@@ -132,7 +132,7 @@ public abstract class CachingTree implements ITree {
 		    }
 		}
 		if (iter.hasNext()) {
-		    sb.append(getDelimiter());
+		    sb.append(ESCAPED_DELIM);
 		}
 	    }
 	    result.addAll(treeSearch(null, sb.toString(), followLinks));

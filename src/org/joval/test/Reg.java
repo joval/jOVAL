@@ -37,7 +37,7 @@ public class Reg {
 	try {
 	    IRegistry r = session.getRegistry(IWindowsSession.View._64BIT);
 	    if (r.connect()) {
-		IKey key = r.fetchKey(keyName, null);
+		IKey key = r.fetchKey(keyName);
 
 		if (valueName == null) {
 		    String[] sa = key.listValues();

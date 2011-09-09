@@ -221,11 +221,12 @@ public class FileAdapter extends BaseFileAdapter {
 		readPEHeaders(file, fItem);
 	    } else {
 		JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_EMPTY_FILE", file.toString()));
+
 		EntityItemVersionType versionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
 		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-//DAS: this is what Ovaldi does now, but JB says it'll change and do the right thing soon
-		versionType.setStatus(StatusEnumeration.ERROR);
+		versionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		fItem.setFileVersion(versionType);
+
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(JOVALSystem.getMessage("STATUS_PE_EMPTY"));

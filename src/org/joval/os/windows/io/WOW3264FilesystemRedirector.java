@@ -20,9 +20,11 @@ public class WOW3264FilesystemRedirector implements IPathRedirector {
     private String system32, sysWOW64, sysNative;
 
     public WOW3264FilesystemRedirector(IEnvironment env) {
-	system32 = env.getenv("SystemRoot") + SEPARATOR + "System32" + SEPARATOR;
-	sysNative = env.getenv("SystemRoot") + SEPARATOR + "Sysnative" + SEPARATOR;
-	sysWOW64 = env.getenv("SystemRoot") + SEPARATOR + "SysWOW64" + SEPARATOR;
+	String sysRoot	= env.getenv("SystemRoot");
+
+	system32	= sysRoot + SEPARATOR + "System32"  + SEPARATOR;
+	sysNative	= sysRoot + SEPARATOR + "Sysnative" + SEPARATOR;
+	sysWOW64	= sysRoot + SEPARATOR + "SysWOW64"  + SEPARATOR;
     }
 
     // Implement IPathRedirector
