@@ -30,6 +30,11 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 
+/* DAS: TBD -- adding view information to the base objects.
+import oval.schemas.systemcharacteristics.independent.EntityItemWindowsViewType;
+import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
+*/
+
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
@@ -83,11 +88,16 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    behaviors = fObj.getBehaviors();
 	}
 	IFilesystem fs = null;
+	int winView = 0;
 	if (session instanceof IWindowsSession) {
 	    if (behaviors != null) {
 		if ("32_bit".equals(behaviors.getWindowsView())) {
 		    fs = ((IWindowsSession)session).getFilesystem(IWindowsSession.View._32BIT);
+		    winView = 32;
 		}
+	    }
+	    if (winView == 0 && ((IWindowsSession)session).supports(IWindowsSession.View._64BIT)) {
+		winView = 64;
 	    }
 	}
 	if (fs == null) {
@@ -164,6 +174,14 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    throw new OvalException(JOVALSystem.getMessage("ERROR_TEXTFILECONTENT_SPEC", id));
 		}
 
+		switch(winView) {
+		  case 32:
+		    fItem.setWindowsView("32_bit");
+		    break;
+		  case 64:
+		    fItem.setWindowsView("64_bit");
+		    break;
+		}
 		items.addAll(getItems(fItem.it, f, rc));
 	    } catch (NoSuchElementException e) {
 		// skip it
@@ -634,7 +652,7 @@ public abstract class BaseFileAdapter implements IAdapter {
      */
     class ReflectedFileItem {
 	ItemType it;
-	Method setFilepath, setFilename, setPath, setStatus;
+	Method setFilepath, setFilename, setPath, setStatus, setWindowsView;
 
 	ReflectedFileItem() {
 	    it = createFileItem();
@@ -649,7 +667,30 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    setPath = methods[i];
 		} else if ("setStatus".equals(name)) {
 		    setStatus = methods[i];
+		} else if ("setWindowsView".equals(name)) {
+		    setWindowsView = methods[i];
 		}
+	    }
+	}
+
+	void setWindowsView(String view) {
+	    try {
+		if (setWindowsView != null) {
+		    Class[] types = setWindowsView.getParameterTypes();
+		    if (types.length == 1) {
+			Class type = types[0];//DAS
+			Object instance = Class.forName(type.getName());
+			@SuppressWarnings("unchecked")
+			Method setValue = type.getMethod("setValue", Object.class);
+			setValue.invoke(instance, view);
+			setWindowsView.invoke(it, instance);
+		    }
+		}
+	    } catch (NoSuchMethodException e) {
+	    } catch (IllegalAccessException e) {
+	    } catch (IllegalArgumentException e) {
+	    } catch (InvocationTargetException e) {
+	    } catch (ClassNotFoundException e) {
 	    }
 	}
 

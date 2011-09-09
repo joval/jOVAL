@@ -82,6 +82,10 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 	    fs = new LocalFilesystem(env, null);
 	    is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 	    if (is64bit) {
+		if (!"64".equals(System.getProperty("sun.arch.data.model"))) {
+		    reg.disconnect();
+		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINDOWS_BITNESS_INCOMPATIBLE"));
+		}
 		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_WINDOWS_BITNESS", "64"));
 		WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
 		reg32 = new Registry(new WOW3264RegistryRedirector(flavor));
