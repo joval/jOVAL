@@ -142,6 +142,7 @@ public class RpminfoAdapter implements IAdapter {
     private void loadFullPackageMap() {
 	if (loaded) return;
 
+	JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_RPMINFO_FULL"));
 	packageMap = new Hashtable<String, RpminfoItem>();
 	for (int i=0; i < rpms.length; i++) {
 	    try {
@@ -162,7 +163,7 @@ public class RpminfoAdapter implements IAdapter {
 
 	JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_RPMINFO_RPM", packageName));
 	item = JOVALSystem.factories.sc.linux.createRpminfoItem();
-	String pkgVersion=null, pkgRelease=null;
+	String pkgArch=null, pkgVersion=null, pkgRelease=null;
 	IProcess p = session.createProcess("rpm -q " + packageName + " -i");
 	p.start();
 	BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -207,6 +208,7 @@ public class RpminfoAdapter implements IAdapter {
 		name.setValue(packageName);
 		item.setName(name);
 	    } else if ("Architecture".equals(param)) {
+		pkgArch = value;
 		EntityItemStringType arch = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		arch.setValue(value);
 		item.setArch(arch);
@@ -257,6 +259,19 @@ public class RpminfoAdapter implements IAdapter {
 	    evr.setValue(pkgEpoch + ":" + pkgVersion + "-" + pkgRelease);
 	    evr.setDatatype(SimpleDatatypeEnumeration.EVR_STRING.value());
 	    item.setEvr(evr);
+
+	    EntityItemStringType extendedName = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    extendedName.setValue(packageName + "-" + pkgEpoch + ":" + pkgVersion + "-" + pkgRelease + "." + pkgArch);
+	    item.setExtendedName(extendedName);
+
+	    p = session.createProcess("rpm -ql " + packageName);
+	    p.start();
+	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    while((line = br.readLine()) != null) {
+		EntityItemStringType filepath = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		filepath.setValue(line.trim());
+		item.getFilepath().add(filepath);
+	    }
 	} else {
 	    EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    name.setValue(packageName);
