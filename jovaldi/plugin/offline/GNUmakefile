@@ -1,0 +1,52 @@
+# Copyright (C) 2011 jOVAL.org.  All rights reserved.
+# This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+
+TOP=../../..
+
+include $(TOP)/common.mk
+
+PRODUCTNAME=plugin
+
+API=$(JOVAL)/jOVAL.jar$(CLN)$(SCHEMALIB)
+SHARED=plugin-shared.jar
+CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)$(CLN)$(SHARED)"
+RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(DEPS)$(CLN)$(SHARED)$(CLN)$(PRODUCTNAME).jar"
+
+include classes.mk
+
+CLASS_FILES:=$(foreach class, $(OFFLINE), $(BUILD)/$(subst .,/,$(class)).class)
+PACKAGES=$(sort $(basename $(OFFLINE)))
+PACKAGEDIRS=$(subst .,/,$(PACKAGES))
+
+all: $(PRODUCTNAME).jar
+
+install: all
+	mkdir -p $(DIST)
+	cp -R $(RSRC)/* $(DIST)
+	cp $(PRODUCTNAME).jar $(DIST)/lib
+	cp $(SHARED) $(DIST)/lib
+
+$(PRODUCTNAME).jar: classes resources
+	$(JAR) cvf $@ -C $(BUILD)/ .
+
+dist-clean: clean
+	rm -rf $(DIST)
+
+clean:
+	rm -rf $(BUILD)
+	rm -f $(PRODUCTNAME).jar
+
+resources:
+	rm -f $(BUILD)/*.properties*
+	cp $(SRC)/rsrc/plugin-offline/* $(BUILD)
+	echo version=$(JOVAL_VERSION) >> $(BUILD)/plugin.resources.properties
+
+classes: classdirs $(CLASS_FILES)
+
+classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
+
+$(BUILD)/%.class: $(SRC)/%.java
+	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<
+
+$(BUILD)/%/:
+	mkdir -p $(subst PKG,,$@)
