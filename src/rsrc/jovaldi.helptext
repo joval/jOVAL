@@ -4,34 +4,62 @@ Options:
    -h           = show options available from command line.
 
 Definition Evaluation Options:
-   -o <string>  = path to the oval-definitions xml file. DEFAULT="definitions.xml"
-   -v <string>  = path to external variable values file. DEFAULT="external-variables.xml"
-   -e <string>  = evaluate the specified list of definitions. Supply definition ids as a comma separated list like: oval:com.example:def:123
-   -f <string>  = path to a file containing a list of definitions to be evaluated. The file must comply with the evaluation-id schema.
+   -o <string>  = path to the oval-definitions xml file.
+                  DEFAULT="definitions.xml"
+   -v <string>  = path to external variable values file.
+                  DEFAULT="external-variables.xml"
+   -e <string>  = evaluate the specified list of definitions. Supply definition
+                  ids as a comma separated list like: oval:com.example:def:123
+   -f <string>  = path to a file containing a list of definitions to be
+                  evaluated. The file must comply with the evaluation-id
+                  schema.
 
 Input Validation Options:
    -m           = do not verify the oval-definitions file with an MD5 hash.
-   -n           = perform Schematron validation of the oval-definitions file.
-   -c <string>  = path to xsl for oval-definitions Schematron validation. DEFAULT="xml\oval-definitions-schematron.xsl"
+   -c <string>  = perform Schematron validation on the input OVAL Definitions.
+                  Path to an xsl may optionally be specified.
+                  DEFAULT="xml\oval-definitions-schematron.xsl"
 
 Data Collection Options:
-   -a <string>  = path to the directory that contains the OVAL schema. DEFAULT="xml"
-   -i <string>  = path to input System Characteristics file. Evaluation will be based on the contents of the file.
+   -a <string>  = path to the directory that contains the OVAL schema.
+                  DEFAULT="xml"
+   -i <string>  = path to input System Characteristics file. Evaluation will be
+                  based on the contents of the file.
 
 Result Output Options:
-   -d <string>  = save data to the specified XML file. DEFAULT="system-characteristics.xml"
-   -g <string>  = path to the oval directives configuration file. DEFAULT="directives.xml"
-   -r <string>  = save results to the specified XML file. DEFAULT="results.xml"
+   -d <string>  = save data to the specified XML file.
+                  DEFAULT="system-characteristics.xml"
+   -g <string>  = path to the oval directives configuration file.
+                  DEFAULT="directives.xml"
+   -r <string>  = save results to the specified XML file.
+                  DEFAULT="results.xml"
    -s           = do not apply a stylesheet to the results xml.
-   -t <string>  = apply the specified xsl to the results xml. DEFAULT="xml\results_to_html.xsl"
-   -x <string>  = output xsl transform results to the specified file. DEFAULT="results.html"
+   -t <string>  = apply the specified xsl to the results xml.
+                  DEFAULT="xml\results_to_html.xsl"
+   -x <string>  = output xsl transform results to the specified file.
+                  DEFAULT="results.html"
+   -j <string>  = perform schema/schematron validation on the output OVAL
+                  System Characteristics. Path to an xsl may optionally be
+                  specified.
+                  DEFAULT="xml\oval-system-characteristics-schematron.xsl"
+   -k <string>  = perform schema/schematron validation on the output OVAL
+                  Results. Path to an xsl may optionally be specified.
+                  DEFAULT="xml\oval-results-schematron.xsl"
 
 Other Options:
-   -l <integer> = Log messages at the specified level. (DEBUG = 1, INFO = 2, MESSAGE = 3, FATAL = 4)
+   -l <integer> = Log messages at the specified level. (DEBUG = 1, INFO = 2,
+                  MESSAGE = 3, FATAL = 4)
    -p           = print all information and error messages.
    -y <string>  = save the jovaldi.log file to a specific location.
    -z           = return md5 of current oval-definitions file.
 
-General Plugin Options:
-   -j <string>  = name of the jovaldi plugin to use for the scan. Valid choices are "default" and "remote". DEFAULT="default"
-   -k <string>  = arguments for the plugin.  If passing in multiple args, the string must be quoted.
+Plugin Management Options:
+   -plugin <string>  = name of the jovaldi plugin to use for the scan. Valid
+                       choices are "default" and "remote".
+                       DEFAULT="default"
+   -config <string>  = configuration information for the plugin.  See plugin
+                       help for information on valid configuration parameters.
+                       (To see help for a specific plugin, use the -plugin
+                       option to specify the desired plugin, followed by the
+                       -h option for help text).
+                       DEFAULT="config.properties"

@@ -134,11 +134,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 			continue;
 		    } else {
 			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			filepathType.setValue(path);
+			filepathType.setValue(f.getLocalName());
 			EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			pathType.setValue(dirPath);
+			pathType.setValue(getPath(f));
 			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimiter())+1));
+			filenameType.setValue(f.getName());
 			fItem.setFilepath(filepathType);
 			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
@@ -151,11 +151,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 			continue;
 		    } else {
 			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			filepathType.setValue(path);
+			filepathType.setValue(f.getLocalName());
 			EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			pathType.setValue(dirPath);
+			pathType.setValue(getPath(f));
 			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimiter())+1));
+			filenameType.setValue(f.getName());
 			fItem.setFilepath(filepathType);
 			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
@@ -166,10 +166,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    fItem.setPath(pathType);
 		    if (!isDirectory) {
 			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			filenameType.setValue(path.substring(path.lastIndexOf(fs.getDelimiter())+1));
+			filenameType.setValue(f.getName());
 			fItem.setFilename(filenameType);
 			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			filepathType.setValue(path);
+			filepathType.setValue(getPath(f));
 			fItem.setFilepath(filepathType);
 		    }
 		} else {
@@ -328,7 +328,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 			}
 			Collection<String> files = new Vector<String>();
 			for (String pathString : list) {
-			    pathString = pathString + fs.getDelimiter();
+			    if (!pathString.endsWith(fs.getDelimiter())) {
+				pathString = pathString + fs.getDelimiter();
+			    }
 			    for (String fname : fnames) {
 				try {
 				    switch(filename.getOperation()) {
@@ -341,7 +343,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 					}
 					break;
 				      }
-       
+ 
 				      case EQUALS:
 					files.add(pathString + fname);
 					break;
@@ -396,7 +398,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 	} else {
 	    Collection<String> results = new Vector<String>();
 	    for (String path : list) {
-		path = path + fs.getDelimiter();
+		if (!path.endsWith(fs.getDelimiter())) {
+		    path = path + fs.getDelimiter();
+		}
 		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_FS_RECURSE", path));
 		try {
 		    IFile f = (IFile)fs.lookup(path);
@@ -443,6 +447,17 @@ public abstract class BaseFileAdapter implements IAdapter {
 		}
 	    }
 	    return deduped;
+	}
+    }
+
+    private String getPath(IFile f) {
+	String name = f.getName();
+	String path = f.getLocalName();
+	int len = path.length();
+	if (len > 1) {
+	    return path.substring(0, len - name.length() - 1);
+	} else {
+	    return path;
 	}
     }
 
@@ -517,7 +532,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		Method getBehaviors = obj.getClass().getMethod("getBehaviors");
 		Object o = getBehaviors.invoke(obj);
 		if (o != null) {
-		    behaviors = new ReflectedFileBehaviors(getBehaviors.invoke(obj));
+		    behaviors = new ReflectedFileBehaviors(o);
 		}
 	    } catch (NoSuchMethodException e) {
 	    } catch (IllegalAccessException e) {
@@ -586,8 +601,16 @@ public abstract class BaseFileAdapter implements IAdapter {
 		Method getRecurseDirection = obj.getClass().getMethod("getRecurseDirection");
 		recurseDirection = (String)getRecurseDirection.invoke(obj);
 
-		Method getWindowsView = obj.getClass().getMethod("getWindowsView");
-		windowsView = (String)getWindowsView.invoke(obj);
+		try {
+		    //
+		    // Not applicable to Unix FileBehaviors
+		    //
+		    Method getWindowsView = obj.getClass().getMethod("getWindowsView");
+		    windowsView = (String)getWindowsView.invoke(obj);
+		} catch (NoSuchMethodException e) {
+		    recurse = null;
+		}
+
 
 		try {
 		    //

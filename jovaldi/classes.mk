@@ -1,5 +1,4 @@
 CLASSES=\
-	org.joval.intf.di.IJovaldiConfiguration				\
 	org.joval.intf.di.IJovaldiPlugin				\
 	org.joval.intf.oval.IResults					\
 	org.joval.intf.plugin.IAdapter					\
@@ -25,6 +24,8 @@ CLASSES=\
 	org.joval.oval.util.ItemSet					\
 	org.joval.oval.util.OperatorData				\
 	org.joval.oval.xml.OvalNamespacePrefixMapper			\
+	org.joval.oval.xml.SchematronValidationException		\
+	org.joval.oval.xml.SchematronValidator				\
 	org.joval.util.Checksum						\
 	org.joval.util.JOVALSystem					\
 	org.joval.util.Producer						\

@@ -3,13 +3,11 @@
 
 package org.joval.plugin;
 
-import java.util.List;
+import java.util.Properties;
 
 import org.joval.discovery.Local;
-import org.joval.intf.di.IJovaldiConfiguration;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.oval.di.BasePlugin;
 
 /**
  * Implementation of an IJovaldiPlugin for the Windows operating system.
@@ -17,18 +15,18 @@ import org.joval.oval.di.BasePlugin;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class DefaultPlugin extends BasePlugin {
+public class DefaultPlugin extends OnlinePlugin {
     /**
-     * Create a plugin for scanning or test evaluation.
+     * Create a default plugin.
      */
     public DefaultPlugin() {
 	super();
-	session = Local.getSession();
     }
 
     // Implement IJovaldiPlugin
 
-    public boolean configure(String[] args, IJovaldiConfiguration jDIconfig) {
+    public boolean configure(Properties props) {
+	session = Local.getSession();
 	return true;
     }
 }

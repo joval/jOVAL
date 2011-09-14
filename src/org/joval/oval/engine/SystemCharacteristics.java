@@ -63,9 +63,7 @@ public class SystemCharacteristics {
 	this(getOvalSystemCharacteristics(f));
     }
 
-    // Internal
-
-    static final OvalSystemCharacteristics getOvalSystemCharacteristics(File f) throws OvalException {
+    public static final OvalSystemCharacteristics getOvalSystemCharacteristics(File f) throws OvalException {
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS));
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
@@ -80,6 +78,15 @@ public class SystemCharacteristics {
 	    throw new OvalException(e);
 	}
     }
+
+    public OvalSystemCharacteristics getOvalSystemCharacteristics() {
+	if (osc == null) {
+	    osc = createOvalSystemCharacteristics();
+	}
+	return osc;
+    }
+
+    // Internal
 
     private OvalSystemCharacteristics osc;
     private Hashtable<String, ObjectType> objectTable;
@@ -209,13 +216,6 @@ public class SystemCharacteristics {
 	}
 	filteredSc.setSystemData(systemData);
 	return filteredSc;
-    }
-
-    OvalSystemCharacteristics getOvalSystemCharacteristics() {
-	if (osc == null) {
-	    osc = createOvalSystemCharacteristics();
-	}
-	return osc;
     }
 
     /**

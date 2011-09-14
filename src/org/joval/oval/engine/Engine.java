@@ -133,10 +133,11 @@ public class Engine implements IProducer {
     public static final int MESSAGE_OBJECT			= 1;
     public static final int MESSAGE_OBJECT_PHASE_END		= 2;
     public static final int MESSAGE_SYSTEMCHARACTERISTICS	= 3;
-    public static final int MESSAGE_DEFINITION_PHASE_START	= 4;
-    public static final int MESSAGE_DEFINITION			= 5;
-    public static final int MESSAGE_DEFINITION_PHASE_END	= 6;
-    public static final int MESSAGE_MAX				= 6;
+    public static final int MESSAGE_SYSTEMCHARACTERISTICS_FILE	= 4;
+    public static final int MESSAGE_DEFINITION_PHASE_START	= 5;
+    public static final int MESSAGE_DEFINITION			= 6;
+    public static final int MESSAGE_DEFINITION_PHASE_END	= 7;
+    public static final int MESSAGE_MAX				= 8;
 
     public enum Result {
 	OK,
@@ -155,13 +156,6 @@ public class Engine implements IProducer {
      */
     public static final OvalDefinitions getOvalDefinitions(File f) throws OvalException {
 	return Definitions.getOvalDefinitions(f);
-    }
-
-    public static final boolean schematronValidate(OvalDefinitions defs, File transform) {
-	return Definitions.schematronValidate(defs, transform);
-    }
-    public static final List<String> getSchematronValidationErrors() {
-	return Definitions.getSchematronValidationErrors();
     }
 
     private Hashtable <String, Collection<VariableValueType>>variableMap; // A cache of nested VariableValueTypes
@@ -183,7 +177,7 @@ public class Engine implements IProducer {
     public Engine(OvalDefinitions defs, IPlugin plugin) {
 	definitions = new Definitions(defs);
 	if (plugin == null) {
-	    throw new RuntimeException(JOVALSystem.getMessage("ERROR_NO_SYSTEMCHARACTERISTICS"));
+	    throw new RuntimeException(JOVALSystem.getMessage("ERROR_NULL_PLUGIN"));
 	}
 	this.plugin = plugin;
 	adapters = new Hashtable<Class, AdapterManager>();
@@ -304,6 +298,7 @@ public class Engine implements IProducer {
 		if (scOutputFile != null) {
 		    producer.sendNotify(this, MESSAGE_SYSTEMCHARACTERISTICS, scOutputFile.toString());
 		    sc.write(scOutputFile);
+		    producer.sendNotify(this, MESSAGE_SYSTEMCHARACTERISTICS_FILE, scOutputFile);
 		}
 	    }
 	    results = new Results(definitions, sc);

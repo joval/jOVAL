@@ -15,7 +15,6 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 
-import org.joval.intf.di.IJovaldiConfiguration;
 import org.joval.intf.di.IJovaldiPlugin;
 
 /**
@@ -25,7 +24,7 @@ import org.joval.intf.di.IJovaldiPlugin;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class ExecutionState implements IJovaldiConfiguration {
+public class ExecutionState {
     String DEFAULT_DEFINITIONS		= "definitions.xml";
     String DEFAULT_DATA			= "system-characteristics.xml";
     String DEFAULT_DIRECTIVES		= "directives.xml";
@@ -35,8 +34,12 @@ public class ExecutionState implements IJovaldiConfiguration {
     String DEFAULT_LOGFILE		= "jovaldi.log";
     String DEFAULT_XMLDIR		= "xml";
     String DEFAULT_XFORM		= "results_to_html.xsl";
-    String DEFAULT_SCHEMATRON		= "oval-definitions-schematron.xsl";
+    String DEFAULT_DEFS_SCHEMATRON	= "oval-definitions-schematron.xsl";
+    String DEFAULT_SC_SCHEMATRON	= "oval-system-characteristics-schematron.xsl";
+    String DEFAULT_RESULTS_SCHEMATRON	= "oval-results-schematron.xsl";
     String DEFAULT_PLUGIN		= "default";
+    String DEFAULT_CONFIG		= "config.properties";
+    String OFFLINE_PLUGIN		= "offline";
 
     File inputFile;
     File variablesFile;
@@ -46,14 +49,16 @@ public class ExecutionState implements IJovaldiConfiguration {
     File logFile;
     File xmlDir;
     private File xmlTransform;
-    private File schematronTransform;
+    private File schematronDefsXform;
+    private File schematronSCXform;
+    private File schematronResultsXform;
 
     List<String> definitionIDs;
     String specifiedChecksum;
 
     URLClassLoader pluginClassLoader;
     IJovaldiPlugin plugin;
-    String[] pluginArgs;
+    Properties pluginConfig = null;
 
     File dataFile;
     File resultsXML;
@@ -62,21 +67,13 @@ public class ExecutionState implements IJovaldiConfiguration {
     boolean computeChecksum;
     boolean validateChecksum;
     boolean applyTransform;
-    boolean applySchematron;
+    boolean schematronDefs;
+    boolean schematronSC;
+    boolean schematronResults;
     boolean printLogs;
     boolean printHelp;
 
     Level logLevel;
-
-    // Implement IJovaldiConfiguration
-
-    public boolean printingHelp() {
-	return printHelp;
-    }
-
-    public File getSystemCharacteristicsInputFile() {
-	return inputFile;
-    }
 
     // Internal
 
@@ -97,7 +94,7 @@ public class ExecutionState implements IJovaldiConfiguration {
 	logFile = new File(DEFAULT_LOGFILE);
 	xmlDir = new File(DEFAULT_XMLDIR);
 	xmlTransform = null;
-	schematronTransform = null;
+	schematronDefsXform = null;
 	logLevel = Level.INFO;
 
 	//
@@ -113,11 +110,10 @@ public class ExecutionState implements IJovaldiConfiguration {
 	computeChecksum = false;
 	validateChecksum = true;
 	applyTransform = true;
-	applySchematron = false;
+	schematronDefs = false;
 	printLogs = false;
 	printHelp = false;
 
-	pluginArgs = new String[0];
 	loadPlugin(DEFAULT_PLUGIN);
     }
 
@@ -129,11 +125,27 @@ public class ExecutionState implements IJovaldiConfiguration {
 	}
     }
 
-    File getSchematronTransform() {
-	if (schematronTransform == null) {
-	    return new File(xmlDir, DEFAULT_SCHEMATRON);
+    File getDefsSchematron() {
+	if (schematronDefsXform == null) {
+	    return new File(xmlDir, DEFAULT_DEFS_SCHEMATRON);
 	} else {
-	    return schematronTransform;
+	    return schematronDefsXform;
+	}
+    }
+
+    File getSCSchematron() {
+	if (schematronSCXform == null) {
+	    return new File(xmlDir, DEFAULT_SC_SCHEMATRON);
+	} else {
+	    return schematronSCXform;
+	}
+    }
+
+    File getResultsSchematron() {
+	if (schematronResultsXform == null) {
+	    return new File(xmlDir, DEFAULT_RESULTS_SCHEMATRON);
+	} else {
+	    return schematronResultsXform;
 	}
     }
 
@@ -202,6 +214,7 @@ public class ExecutionState implements IJovaldiConfiguration {
 		}
 	    } else if (argv[i].equals("-i")) {
 		inputFile = new File(argv[++i]);
+		loadPlugin(OFFLINE_PLUGIN);
 	    } else if (argv[i].equals("-d")) {
 		dataFile = new File(argv[++i]);
 	    } else if (argv[i].equals("-g")) {
@@ -216,14 +229,34 @@ public class ExecutionState implements IJovaldiConfiguration {
 		resultsTransform = new File(argv[++i]);
 	    } else if (argv[i].equals("-m")) {
 		validateChecksum = false;
-	    } else if (argv[i].equals("-n")) {
-		applySchematron = true;
 	    } else if (argv[i].equals("-c")) {
-		schematronTransform = new File(argv[++i]);
+		schematronDefs = true;
+		int next = i+1;
+		if (next < argv.length && !argv[next].startsWith("-")) {
+		    schematronDefsXform = new File(argv[++i]);
+		}
 	    } else if (argv[i].equals("-j")) {
-		loadPlugin(argv[++i]);
+		schematronSC = true;
+		int next = i+1;
+		if (next < argv.length && !argv[next].startsWith("-")) {
+		    schematronSCXform = new File(argv[++i]);
+		}
 	    } else if (argv[i].equals("-k")) {
-		pluginArgs = getPluginArgs(argv[++i]);
+		schematronResults = true;
+		int next = i+1;
+		if (next < argv.length && !argv[next].startsWith("-")) {
+		    schematronResultsXform = new File(argv[++i]);
+		}
+	    } else if (argv[i].equals("-plugin")) {
+		loadPlugin(argv[++i]);
+	    } else if (argv[i].equals("-config")) {
+		pluginConfig = new Properties();
+		try {
+		    pluginConfig.load(new FileInputStream(new File(argv[++i])));
+		} catch (IOException e) {
+		    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
+		    return false;
+		}
 	    } else if (i == (argv.length - 1)) {
 		specifiedChecksum = argv[i];
 	    } else {
@@ -234,7 +267,15 @@ public class ExecutionState implements IJovaldiConfiguration {
     }
 
     boolean processPluginArguments() {
-	return plugin.configure(pluginArgs, this);
+	if (pluginConfig == null) {
+	    pluginConfig = new Properties();
+	    try {
+		pluginConfig.load(new FileInputStream(new File(DEFAULT_CONFIG)));
+	    } catch (IOException e) {
+		Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
+	    }
+	}
+	return plugin.configure(pluginConfig);
     }
 
     String getPluginError() {

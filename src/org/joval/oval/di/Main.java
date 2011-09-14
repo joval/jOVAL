@@ -40,6 +40,7 @@ import javax.xml.validation.Validator;
 import org.xml.sax.SAXException;
 
 import oval.schemas.definitions.core.OvalDefinitions;
+import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
 import oval.schemas.results.core.DefinitionType;
 
 import org.joval.intf.di.IJovaldiPlugin;
@@ -50,6 +51,8 @@ import org.joval.oval.OvalException;
 import org.joval.oval.engine.DefinitionFilter;
 import org.joval.oval.engine.Engine;
 import org.joval.oval.engine.SystemCharacteristics;
+import org.joval.oval.xml.SchematronValidationException;
+import org.joval.oval.xml.SchematronValidator;
 import org.joval.util.Checksum;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
@@ -102,7 +105,10 @@ public class Main implements IObserver {
 	    if (state.processArguments(argv)) {
 		Main main = new Main();
 		printHeader();
-		if (state.processPluginArguments()) {
+		if (state.printHelp) {
+		    printHelp();
+		    System.exit(OK);
+		} else if (state.processPluginArguments()) {
 		    if (OK == main.exec()) {
 			System.exit(OK);
 		    } else {
@@ -116,7 +122,7 @@ public class Main implements IObserver {
 	    } else {
 		printHeader();
 		printHelp();
-		System.exit(1);
+		System.exit(ERR);
 	    }
 	}
     }
@@ -212,6 +218,9 @@ public class Main implements IObserver {
 	}
     }
 
+    /**
+     * Print the plugin's help text to the console.
+     */
     private static void printPluginHelp() {
 	if (state.plugin != null) {
 	    print(state.plugin.getProperty(IJovaldiPlugin.PROP_HELPTEXT));
@@ -263,6 +272,36 @@ public class Main implements IObserver {
 	  case Engine.MESSAGE_SYSTEMCHARACTERISTICS:
 	    print(getMessage("MESSAGE_SAVING_SYSTEMCHARACTERISTICS", (String)arg));
 	    break;
+	  case Engine.MESSAGE_SYSTEMCHARACTERISTICS_FILE: {
+	    File scFile = (File)arg;
+	    if (state.schematronSC) {
+		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", scFile.toString()));
+		try {
+		    OvalSystemCharacteristics sc = SystemCharacteristics.getOvalSystemCharacteristics(scFile);
+		    SchematronValidator.validate(sc, state.getDefsSchematron());
+		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
+		} catch (OvalException e) {
+		    logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON", 0, e.getMessage()), e);
+		} catch (SchematronValidationException e) {
+		    List<String> errors = e.getErrors();
+		    if (errors == null) {
+			print(e.getMessage());
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		    } else {
+			for (int i=0; i < errors.size(); i++) {
+			    if (i == 0) {
+				print(getMessage("ERROR_SCHEMATRON", new Integer(errors.size()), errors.get(i)));
+			    } else {
+				logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON_ERROR", i, errors.get(i)));
+			    }
+			}
+		    }
+		}
+	    } else {
+		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
+	    }
+	    break;
+	  }
 	}
     }
 
@@ -335,10 +374,7 @@ public class Main implements IObserver {
      */
     private int exec() {
 	try {
-	    if (state.printHelp) {
-		printHelp();
-		return OK;
-	    } else if (state.computeChecksum) {
+	    if (state.computeChecksum) {
 		print("");
 		print(Checksum.getMD5Checksum(state.defsFile));
 		return OK;
@@ -365,17 +401,23 @@ public class Main implements IObserver {
 		return ERR;
 	    }
 
-	    if (state.applySchematron) {
+	    if (state.schematronDefs) {
 		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.defsFile.toString()));
-		if (Engine.schematronValidate(defs, state.getSchematronTransform())) {
+		try {
+		    SchematronValidator.validate(defs, state.getDefsSchematron());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
-		} else {
-		    List<String> errors = Engine.getSchematronValidationErrors();
-		    for (int i=0; i < errors.size(); i++) {
-			if (i == 0) {
-			    print(getMessage("ERROR_SCHEMATRON", new Integer(errors.size()), errors.get(i)));
-			} else {
-			    logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON", errors.get(i)));
+		} catch (SchematronValidationException e) {
+		    List<String> errors = e.getErrors();
+		    if (errors == null) {
+			print(e.getMessage());
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		    } else {
+			for (int i=0; i < errors.size(); i++) {
+			    if (i == 0) {
+				print(getMessage("ERROR_SCHEMATRON", new Integer(errors.size()), errors.get(i)));
+			    } else {
+				logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON", errors.get(i)));
+			    }
 			}
 		    }
 		    return ERR;
@@ -386,17 +428,41 @@ public class Main implements IObserver {
 
 	    Engine engine = null;
 	    if (state.inputFile == null) {
-		state.plugin.connect(true);
+		state.plugin.connect();
 		engine = new Engine(defs, state.plugin);
 		print(getMessage("MESSAGE_CREATING_SYSTEMCHARACTERISTICS"));
 		engine.setSystemCharacteristicsOutputFile(state.dataFile);
 	    } else {
-		state.plugin.connect(false);
 		print(" ** parsing " + state.inputFile.toString() + " for analysis.");
 		if (!validateSchema(state.inputFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
 		    return ERR;
 		}
 		SystemCharacteristics sc = new SystemCharacteristics(state.inputFile);
+		if (state.schematronSC) {
+		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.inputFile.toString()));
+		    try {
+			SchematronValidator.validate(sc.getOvalSystemCharacteristics(), state.getDefsSchematron());
+			print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
+		    } catch (SchematronValidationException e) {
+			List<String> errors = e.getErrors();
+			if (errors == null) {
+			    print(e.getMessage());
+			    logger.log(Level.SEVERE, e.getMessage(), e);
+			} else {
+			    for (int i=0; i < errors.size(); i++) {
+				if (i == 0) {
+				    print(getMessage("ERROR_SCHEMATRON", new Integer(errors.size()), errors.get(i)));
+				} else {
+				    logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON", errors.get(i)));
+				}
+			    }
+			}
+			return ERR;
+		    }
+		} else {
+		    print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
+		}
+
 		engine = new Engine(defs, state.plugin, sc);
 	    }
 	    if (state.variablesFile.exists() && state.variablesFile.isFile()) {
@@ -411,11 +477,11 @@ public class Main implements IObserver {
 	    }
 	    engine.addObserver(this, Engine.MESSAGE_MIN, Engine.MESSAGE_MAX);
 	    engine.run();
+	    state.plugin.disconnect();
 	    switch(engine.getResult()) {
 	      case ERR:
 		throw engine.getError();
 	    }
-	    state.plugin.disconnect();
 
 	    IResults results = engine.getResults();
 	    if (state.directivesFile.exists() && state.directivesFile.isFile()) {
@@ -438,6 +504,30 @@ public class Main implements IObserver {
 	    print("");
 	    print(getMessage("MESSAGE_SAVING_RESULTS", state.resultsXML.toString()));
 	    results.writeXML(state.resultsXML);
+	    if (state.schematronResults) {
+		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.resultsXML.toString()));
+		try {
+		    SchematronValidator.validate(defs, state.getResultsSchematron());
+		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
+		} catch (SchematronValidationException e) {
+		    List<String> errors = e.getErrors();
+		    if (errors == null) {
+			print(e.getMessage());
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		    } else {
+			for (int i=0; i < errors.size(); i++) {
+			    if (i == 0) {
+				print(getMessage("ERROR_SCHEMATRON", new Integer(errors.size()), errors.get(i)));
+			    } else {
+				logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON", errors.get(i)));
+			    }
+			}
+		    }
+		    return ERR;
+		}
+	    } else {
+		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
+	    }
 	    if (state.applyTransform) {
 		print(getMessage("MESSAGE_RUNNING_TRANSFORM", state.getXMLTransform().toString()));
 		results.writeTransform(state.getXMLTransform(), state.resultsTransform);

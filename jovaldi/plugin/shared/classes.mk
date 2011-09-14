@@ -29,7 +29,6 @@ SHARED=\
 	org.joval.io.BaseFile						\
 	org.joval.io.LittleEndian					\
 	org.joval.io.StreamTool						\
-	org.joval.oval.di.BasePlugin					\
 	org.joval.os.embedded.IosNetworkInterface			\
 	org.joval.os.embedded.IosSystemInfo				\
 	org.joval.os.unix.NetworkInterface				\
@@ -75,6 +74,7 @@ SHARED=\
 	org.joval.os.windows.registry.WOW3264RegistryRedirector		\
 	org.joval.os.windows.system.Environment				\
 	org.joval.os.windows.wmi.WmiException				\
+	org.joval.plugin.OnlinePlugin					\
 	org.joval.plugin.adapter.cisco.ios.LineAdapter			\
 	org.joval.plugin.adapter.cisco.ios.Version55Adapter		\
 	org.joval.plugin.adapter.independent.BaseFileAdapter		\

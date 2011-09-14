@@ -17,15 +17,6 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.util.JAXBSource;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMResult;
-import javax.xml.transform.stream.StreamSource;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import oval.schemas.definitions.core.DefinitionType;
 import oval.schemas.definitions.core.DefinitionsType;
@@ -68,47 +59,6 @@ class Definitions {
 	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_DEFINITIONS_PARSE"), e);
 	    throw new OvalException(e);
 	}
-    }
-
-    /**
-     * Applies the specified Schematron XSL template transformation to the OvalDefinitions, and verifies that the result
-     * is an empty document.
-     */
-    static boolean schematronValidate(OvalDefinitions defs, File schematronTemplate) {
-	schematronValidationErrors = null;
-	try {
-	    TransformerFactory xf = TransformerFactory.newInstance();
-	    Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(schematronTemplate)));
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_DEFINITIONS));
-	    DOMResult result = new DOMResult();
-	    transformer.transform(new JAXBSource(ctx, defs), result);
-	    Node root = result.getNode();
-	    if (root.getNodeType() == Node.DOCUMENT_NODE) {
-		NodeList children = root.getChildNodes();
-		int len = children.getLength();
-		if (len == 0) {
-		    return true;
-		} else {
-		    schematronValidationErrors = new Vector<String>();
-		    for (int i=0; i < len; i++) {
-			schematronValidationErrors.add(children.item(i).getTextContent());
-		    }
-		}
-	    }
-	} catch (FileNotFoundException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_DEFINITIONS_SCHEMATRON_VALIDATION"), e);
-	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_DEFINITIONS_SCHEMATRON_VALIDATION"), e);
-	} catch (TransformerConfigurationException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_DEFINITIONS_SCHEMATRON_VALIDATION"), e);
-	} catch (TransformerException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_DEFINITIONS_SCHEMATRON_VALIDATION"), e);
-	}
-	return false;
-    }
-
-    static List<String> getSchematronValidationErrors() {
-	return schematronValidationErrors;
     }
 
     private OvalDefinitions defs;

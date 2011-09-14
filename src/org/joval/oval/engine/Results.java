@@ -21,6 +21,7 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
@@ -77,6 +78,22 @@ class Results implements IResults {
     private SystemCharacteristics sc;
     private Directives directives;
     private OvalResults or;
+
+    public static final OvalResults getOvalResults(File f) throws OvalException {
+	try {
+	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS));
+	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Object rootObj = unmarshaller.unmarshal(f);
+	    if (rootObj instanceof OvalResults) {
+		return (OvalResults)rootObj;
+	    } else {
+	        throw new OvalException(JOVALSystem.getMessage("ERROR_RESULTS_BAD_FILE", f));
+	    }
+	} catch (JAXBException e) {
+	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_RESUTLS_PARSE"), e);
+	    throw new OvalException(e);
+	}
+    }
 
     /**
      * Create a Results based on the specified Definitions and SystemCharacteristics.

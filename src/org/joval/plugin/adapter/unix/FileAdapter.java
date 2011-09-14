@@ -122,6 +122,11 @@ public class FileAdapter extends BaseFileAdapter {
 	mTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setMTime(mTime);
 
+	EntityItemIntType sizeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	sizeType.setValue(Long.toString(file.length()));
+	sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	item.setSize(sizeType);
+
 	EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	type.setValue(file.getUnixFileType());
 	item.setType(type);

@@ -30,14 +30,14 @@ public interface IJovaldiPlugin extends IPlugin {
     public void setDataDirectory(File dataDir);
 
     /**
-     * Configure the IJovaldiPlugin with arguments harvested from the commandline's -k option.
+     * Configure the IJovaldiPlugin with properties harvested from the commandline's -config option.
      */
-    public boolean configure(String[] args, IJovaldiConfiguration jDIconfig);
+    public boolean configure(Properties props);
 
     /**
      * Connect to any underlying resources required by the plugin (or its adapters).
      */
-    public void connect(boolean online);
+    public void connect();
 
     /**
      * Release any underlying resources.

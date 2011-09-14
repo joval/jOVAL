@@ -5,15 +5,13 @@ package org.joval.plugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 
 import org.vngx.jsch.exception.JSchException;
 
 import org.joval.discovery.SessionFactory;
 import org.joval.identity.Credential;
-import org.joval.intf.di.IJovaldiConfiguration;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.system.IBaseSession;
@@ -23,24 +21,23 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.embedded.system.IosSession;
 import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.identity.WindowsCredential;
-import org.joval.oval.di.BasePlugin;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALSystem;
 
 /**
- * Implementation of an IJovaldiPlugin for the Windows operating system.
+ * Implementation of an IJovaldiPlugin for remote scanning.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class RemotePlugin extends BasePlugin {
+public class RemotePlugin extends OnlinePlugin {
     private String hostname;
     private ICredential cred;
     private SessionFactory sessionFactory;
 
     /**
-     * Create a plugin solely for test evaluation.
+     * Create a remote plugin.
      */
     public RemotePlugin() {
 	super();
@@ -59,42 +56,20 @@ public class RemotePlugin extends BasePlugin {
     /**
      * Create a plugin for data retrieval and test evaluation.
      */
-    public boolean configure(String[] args, IJovaldiConfiguration jDIconfig) {
-	if (jDIconfig.printingHelp()) return true;
-
-	String hostname = null;
-	String domain=null, username=null, password=null, passphrase=null, rootPassword=null;
-	File privateKey = null;
-
-	for (int i=0; i < args.length; i++) {
-	    if (args[i].equals("-hostname")) {
-		hostname = args[++i];
-	    } else if (args[i].equals("-domain")) {
-		domain = args[++i];
-	    } else if (args[i].equals("-username")) {
-		username = args[++i];
-	    } else if (args[i].equals("-password")) {
-		password = args[++i];
-	    } else if (args[i].equals("-privateKey")) {
-		privateKey = new File(args[++i]);
-	    } else if (args[i].equals("-passphrase")) {
-		passphrase = args[++i];
-	    } else if (args[i].equals("-rootPassword")) {
-		rootPassword = args[++i];
-	    }
+    public boolean configure(Properties props) {
+	if (props == null) {
+	    return false;
 	}
 
-	//
-	// Configure for analysis only.
-	//
-	if (jDIconfig.getSystemCharacteristicsInputFile() != null && hostname == null) {
-	    session = null;
-	    return true;
+	String hostname		= props.getProperty("hostname");
+	String domain		= props.getProperty("nt.domain");
+	String username		= props.getProperty("user.name");
+	String password		= props.getProperty("user.password");
+	String passphrase	= props.getProperty("key.password");
+	String rootPassword	= props.getProperty("root.password");
+	String privateKey	= props.getProperty("key.file");
 
-	//
-	// Configure for both scanning and analysis.
-	//
-	} else if (hostname != null) {
+	if (hostname != null) {
 	    try {
 		IBaseSession base = sessionFactory.createSession(hostname);
 		ICredential cred = null;
@@ -105,9 +80,14 @@ public class RemotePlugin extends BasePlugin {
 		    } else if (privateKey == null && password == null) {
 			err = getMessage("ERROR_PASSWORD");
 			return false;
-		    } else if (privateKey != null && !privateKey.isFile()) {
-			err = getMessage("ERROR_PRIVATE_KEY", privateKey.getPath());
-			return false;
+		    }
+		    File privateKeyFile = null;
+		    if (privateKey != null) {
+			privateKeyFile = new File(privateKey);
+			if (!privateKeyFile.isFile()) {
+			    err = getMessage("ERROR_PRIVATE_KEY", privateKeyFile.getPath());
+			    return false;
+			}
 		    }
     
 		    switch (base.getType()) {
@@ -119,9 +99,9 @@ public class RemotePlugin extends BasePlugin {
 			break;
     
 		      case SSH: 
-			if (privateKey != null) {
+			if (privateKeyFile != null) {
 			    try {
-				cred = new SshCredential(username, privateKey, passphrase, rootPassword);
+				cred = new SshCredential(username, privateKeyFile, passphrase, rootPassword);
 			    } catch (JSchException e) {
 				err = getMessage("ERROR_PRIVATE_KEY", e.getMessage());
 				return false;

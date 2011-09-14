@@ -187,7 +187,7 @@ class SftpFile extends BaseFile implements IUnixFile {
 	    String[] names = list();
 	    IFile[] children = new IFile[names.length];
 	    for (int i=0; i < names.length; i++) {
-		children[i] = new SftpFile(sfs, path + fs.getDelimiter() + names[i]);
+		children[i] = new SftpFile(sfs, getLocalName() + fs.getDelimiter() + names[i]);
 	    }
 	    return children;
 	} catch (JSchException e) {
@@ -212,11 +212,20 @@ class SftpFile extends BaseFile implements IUnixFile {
     }
 
     public String getLocalName() {
-	return path;
+	if (path.endsWith(fs.getDelimiter())) {
+	    return path.substring(0, path.lastIndexOf(fs.getDelimiter()));
+	} else {
+	    return path;
+	}
     }
 
     public String getName() {
-	return path.substring(path.lastIndexOf(fs.getDelimiter()+fs.getDelimiter().length()));
+	int ptr = path.lastIndexOf(fs.getDelimiter());
+	if (ptr == -1) {
+	    return path;
+	} else {
+	    return path.substring(ptr + fs.getDelimiter().length());
+	}
     }
 
     public String toString() {

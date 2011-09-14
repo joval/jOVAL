@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.di;
+package org.joval.plugin;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -65,48 +65,22 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class BasePlugin implements IJovaldiPlugin {
-    private static PropertyResourceBundle resources;
-    static {
-	try {
-	    ClassLoader cl = BasePlugin.class.getClassLoader();
-	    Locale locale = Locale.getDefault();
-	    URL url = cl.getResource("plugin.resources_" + locale.toString() + ".properties");
-	    if (url == null) {
-		url = cl.getResource("plugin.resources_" + locale.getLanguage() + ".properties");
-	    }
-	    if (url == null) {
-		url = cl.getResource("plugin.resources.properties");
-	    }
-	    resources = new PropertyResourceBundle(url.openStream());
-	} catch (IOException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
-	}
-    }
-
-    /**
-     * Retrieve a message using its key.
-     */
-    protected static final String getMessage(String key, Object... arguments) {
-        return MessageFormat.format(resources.getString(key), arguments);
-    }
-
+public abstract class OnlinePlugin extends OfflinePlugin {
     protected ISession session;
     protected SystemInfoType info;
     protected String err;
-    protected List<IAdapter> adapters;
 
     /**
      * Create a plugin for scanning or test evaluation.
      */
-    protected BasePlugin() {
-	adapters = new Vector<IAdapter>();
+    protected OnlinePlugin() {
+	super();
     }
 
     // Implement IJovaldiPlugin
 
-    public void connect(boolean online) {
-	if (online && session.connect()) {
+    public void connect() {
+	if (session.connect()) {
 	    adapters.add(new FamilyAdapter(this));
 	    adapters.add(new VariableAdapter());
 	    if (session.getEnvironment() != null) {
@@ -166,8 +140,6 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 		break;
 	      }
 	    }
-	} else if (!online) {
-	    JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_OFFLINE"));
 	} else {
 	    throw new RuntimeException(getMessage("ERROR_SESSION_CONNECTION"));
 	}
@@ -179,19 +151,10 @@ public abstract class BasePlugin implements IJovaldiPlugin {
 	}
     }
 
-    public void setDataDirectory(File dir) {
-    }
-
-    public String getProperty(String key) {
-	return resources.getString(key);
-    }
+    public abstract boolean configure(Properties props);
 
     public String getLastError() {
 	return err;
-    }
-
-    public List<IAdapter> getAdapters() {
-	return adapters;
     }
 
     public SystemInfoType getSystemInfo() {
