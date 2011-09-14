@@ -46,7 +46,7 @@ import org.joval.io.StreamTool;
 import org.joval.os.unix.io.UnixFile;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
-import org.joval.util.BaseFileAdapter;
+import org.joval.plugin.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
 
 /**

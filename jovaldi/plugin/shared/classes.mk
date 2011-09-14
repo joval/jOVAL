@@ -77,6 +77,7 @@ SHARED=\
 	org.joval.os.windows.wmi.WmiException				\
 	org.joval.plugin.adapter.cisco.ios.LineAdapter			\
 	org.joval.plugin.adapter.cisco.ios.Version55Adapter		\
+	org.joval.plugin.adapter.independent.BaseFileAdapter		\
 	org.joval.plugin.adapter.independent.EnvironmentvariableAdapter	\
 	org.joval.plugin.adapter.independent.FamilyAdapter		\
 	org.joval.plugin.adapter.independent.TextfilecontentAdapter	\
@@ -110,7 +111,6 @@ SHARED=\
 	org.joval.test.WMI						\
 	org.joval.util.Base64						\
 	org.joval.util.BaseSession					\
-	org.joval.util.BaseFileAdapter					\
 	org.joval.util.tree.CachingTree					\
 	org.joval.util.tree.PropertyHierarchy				\
 	org.joval.util.tree.Forest					\

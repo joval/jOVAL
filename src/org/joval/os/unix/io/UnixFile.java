@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
@@ -155,6 +156,14 @@ public class UnixFile implements IUnixFile {
 
     public String[] list() throws IOException {
 	return f.list();
+    }
+
+    public IFile[] listFiles() throws IOException {
+	ArrayList<IFile> list = new ArrayList<IFile>();
+	for (INode node : f.getChildren()) {
+	    list.add((IFile)node);
+	}
+	return list.toArray(new IFile[list.size()]);
     }
 
     public int getFileType() throws IOException {

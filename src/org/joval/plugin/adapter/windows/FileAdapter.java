@@ -51,7 +51,7 @@ import org.joval.os.windows.pe.resource.version.StringFileInfo;
 import org.joval.os.windows.pe.resource.version.StringTable;
 import org.joval.os.windows.pe.resource.version.StringStructure;
 import org.joval.oval.OvalException;
-import org.joval.util.BaseFileAdapter;
+import org.joval.plugin.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.Version;
