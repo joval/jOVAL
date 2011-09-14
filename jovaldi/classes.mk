@@ -6,6 +6,7 @@ CLASSES=\
 	org.joval.intf.plugin.IPlugin					\
 	org.joval.intf.util.IObserver					\
 	org.joval.intf.util.IProducer					\
+	org.joval.os.windows.Timestamp					\
 	org.joval.oval.OvalException					\
 	org.joval.oval.ResolveException					\
 	org.joval.oval.TestException					\
@@ -30,5 +31,4 @@ CLASSES=\
 	org.joval.util.JOVALSystem					\
 	org.joval.util.Producer						\
 	org.joval.util.StringTools					\
-	org.joval.util.Version						\
-	org.joval.windows.Timestamp
+	org.joval.util.Version
