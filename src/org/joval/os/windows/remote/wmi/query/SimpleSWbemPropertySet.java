@@ -42,7 +42,12 @@ public class SimpleSWbemPropertySet implements ISWbemPropertySet {
 
     public ISWbemProperty getItem(String itemName) throws WmiException {
 	try {
-	    return new SimpleSWbemProperty(propertySet.getItem(itemName));
+	    SWbemProperty prop = propertySet.getItem(itemName);
+	    if (prop == null) {
+		return null;
+	    } else {
+		return new SimpleSWbemProperty(prop);
+	    }
 	} catch (Exception e) {
 	    throw new WmiException(e);
 	}
