@@ -8,6 +8,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -40,6 +41,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
+import org.joval.intf.util.tree.INode;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
@@ -265,6 +267,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", filepath.getOperation()));
 		}
 	    } else if (fObj.isSetPath()) {
+		//
+		// First, collect all possible matching paths (i.e., dirs)
+		//
 		Collection<String> paths = new Vector<String>();
 		EntityObjectStringType path = fObj.getPath();
 		if (path.isSetVarRef()) {
@@ -279,7 +284,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 		  case PATTERN_MATCH:
 		    patternMatch = true;
 		    for (String value : paths) {
-			list.addAll(fs.search(Pattern.compile(value), false));
+			for (String s : fs.search(Pattern.compile(value), false)) {
+			    list.add(s);
+			}
 		    }
 		    break;
 		  default:
@@ -287,7 +294,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		}
 
 		if (fb != null) {
-		    list = getPaths(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs);
+		    list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs);
 		} else if (patternMatch) {
 		    //
 		    // Wildcard pattern matches are really supposed to be recursive searches, unfortunately
@@ -298,7 +305,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    ((String)path.getValue()).indexOf(".+") != -1) {
 			    Collection<String> l = new Vector<String>();
 			    l.add(value);
-			    newList.addAll(getPaths(l, -1, "down", "directories", fs));
+			    newList.addAll(getDirs(l, -1, "down", "directories", fs));
 			}
 		    }
 		    for (String value : newList) {
@@ -321,21 +328,15 @@ public abstract class BaseFileAdapter implements IAdapter {
 			}
 			Collection<String> files = new Vector<String>();
 			for (String pathString : list) {
-			    if (!pathString.endsWith(fs.getDelimiter())) {
-				pathString = pathString + fs.getDelimiter();
-			    }
+			    pathString = pathString + fs.getDelimiter();
 			    for (String fname : fnames) {
 				try {
 				    switch(filename.getOperation()) {
 				      case PATTERN_MATCH: {
 					IFile f = fs.getFile(pathString);
-					if (f.exists()) {
-					    String[] children = f.list();
-					    Pattern p = Pattern.compile(fname);
-					    for (int i=0; i < children.length; i++) {
-						if (p.matcher(children[i]).find()) {
-						    files.add(pathString + fs.getDelimiter() + children[i]);
-						}
+					if (f.exists() && f.isDirectory() && f.hasChildren()) {
+					    for (INode child : f.getChildren(Pattern.compile(fname))) {
+						files.add(child.getPath());
 					    }
 					}
 					break;
@@ -347,12 +348,9 @@ public abstract class BaseFileAdapter implements IAdapter {
     
 				      case NOT_EQUAL: {
 					IFile f = fs.getFile(pathString);
-					if (f.exists() && f.isDirectory()) {
-					    String[] children = f.list();
-					    for (int i=0; i < children.length; i++) {
-						if (!fname.equals(children[i])) {
-						    files.add(pathString + fname);
-						}
+					if (f.exists() && f.isDirectory() && f.hasChildren()) {
+					    for (INode child : f.getChildren(Pattern.compile(fname))) {
+						files.add(child.getPath());
 					    }
 					}
 					break;
@@ -374,7 +372,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		throw new OvalException("ERROR_BAD_FILEOBJECT" + obj.getId());
 	    }
 	} catch (PatternSyntaxException e) {
-       	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e); //DAS
+       	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
 	} catch (IOException e) {
        	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
 	} catch (NoSuchElementException e) {
@@ -390,14 +388,15 @@ public abstract class BaseFileAdapter implements IAdapter {
     }
 
     /**
-     * Crawls recursively based on FileBehaviors.
+     * Finds directories recursively based on FileBahaviors.
      */
-    private Collection<String> getPaths(Collection<String> list, int depth, String direction, String recurse, IFilesystem fs) {
+    private Collection<String> getDirs(Collection<String> list, int depth, String direction, String recurse, IFilesystem fs) {
 	if ("none".equals(direction) || depth == 0) {
 	    return list;
 	} else {
 	    Collection<String> results = new Vector<String>();
 	    for (String path : list) {
+		path = path + fs.getDelimiter();
 		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_FS_RECURSE", path));
 		try {
 		    IFile f = (IFile)fs.lookup(path);
@@ -407,36 +406,29 @@ public abstract class BaseFileAdapter implements IAdapter {
 			// skip the symlink
 		    } else if (recurse != null && recurse.indexOf("directories") == -1 && f.isDirectory()) {
 			// skip the directory
-		    } else {
-			results.add(path);
+		    } else if (f.isDirectory()) {
+			results.add(f.getLocalName());
 			if ("up".equals(direction)) {
 			    int ptr = 0;
-			    if (path.endsWith(fs.getDelimiter())) {
-				path = path.substring(0, path.lastIndexOf(fs.getDelimiter()));
-			    }
-			    ptr = path.lastIndexOf(fs.getDelimiter());
+			    ptr = path.lastIndexOf(fs.getDelimiter(), path.lastIndexOf(fs.getDelimiter())-1);
 			    if (ptr != -1) {
 				Vector<String> v = new Vector<String>();
-				v.add(path.substring(0, ptr + fs.getDelimiter().length()));
-				results.addAll(getPaths(v, --depth, direction, recurse, fs));
+				v.add(path.substring(0, ptr));
+				results.addAll(getDirs(v, --depth, direction, recurse, fs));
 			    }
-			} else if (f.isDirectory()) { // recurse down
+			} else { // recurse down
 			    String[] children = f.list();
 			    if (children != null) {
 				Vector<String> v = new Vector<String>();
 				for (int i=0; i < children.length; i++) {
-				    if (path.endsWith(fs.getDelimiter())) {
-					v.add(path + children[i]);
-				    } else {
-					v.add(path + fs.getDelimiter() + children[i]);
-				    }
+				    v.add(path + children[i]);
 				}
-				results.addAll(getPaths(v, --depth, direction, recurse, fs));
+				results.addAll(getDirs(v, --depth, direction, recurse, fs));
 			    }
 			}
 		    }
 		} catch (NoSuchElementException e) {
-		    // path doesn't exist.
+		    // dir path doesn't exist.
 		} catch (IOException e) {
 		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", path, e.getMessage()), e);
 		}
@@ -444,17 +436,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    //
 	    // Eliminate any duplicates, and remove any trailing slashes
 	    //
-	    Object o = new Object();
-	    Hashtable<String, Object> deduped = new Hashtable<String, Object>();
+	    HashSet<String> deduped = new HashSet<String>();
 	    for (String s : results) {
-		if (s.endsWith(fs.getDelimiter())) {
-		    s = s.substring(0, s.lastIndexOf(fs.getDelimiter()));
-		}
-		if (!deduped.containsKey(s)) {
-		    deduped.put(s, o);
+		if (!deduped.contains(s)) {
+		    deduped.add(s);
 		}
 	    }
-	    return deduped.keySet();
+	    return deduped;
 	}
     }
 
@@ -678,7 +666,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		if (setWindowsView != null) {
 		    Class[] types = setWindowsView.getParameterTypes();
 		    if (types.length == 1) {
-			Class type = types[0];//DAS
+			Class type = types[0];
 			Object instance = Class.forName(type.getName());
 			@SuppressWarnings("unchecked")
 			Method setValue = type.getMethod("setValue", Object.class);

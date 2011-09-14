@@ -103,6 +103,11 @@ public interface IFile extends INode {
     public String[] list() throws IOException;
 
     /**
+     * For a directory, lists all the child files.
+     */
+    public IFile[] listFiles() throws IOException;
+
+    /**
      * Returns one of the FILE_TYPE constants.
      */
     public int getFileType() throws IOException;

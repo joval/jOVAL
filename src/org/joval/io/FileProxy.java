@@ -29,7 +29,11 @@ class FileProxy extends BaseFile {
     FileProxy(IFilesystem fs, File file, String localName) {
 	super(fs);
 	this.file = file;
-	this.localName = localName;
+	if (localName.endsWith(fs.getDelimiter())) {
+	    this.localName = localName.substring(0, localName.lastIndexOf(fs.getDelimiter()));
+	} else {
+	    this.localName = localName;
+	}
     }
 
     File getFile() {
@@ -101,6 +105,19 @@ class FileProxy extends BaseFile {
 	    return new String[0];
 	} else {
 	    return children;
+	}
+    }
+
+    public IFile[] listFiles() throws IOException {
+	String[] children = file.list();
+	if (children == null) {
+	    return new IFile[0];
+	} else {
+	    IFile[] files = new IFile[children.length];
+	    for (int i=0; i < children.length; i++) {
+		files[i] = fs.getFile(localName + fs.getDelimiter() + children[i]);
+	    }
+	    return files;
 	}
     }
 

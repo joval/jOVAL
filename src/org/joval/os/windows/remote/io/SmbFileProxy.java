@@ -29,11 +29,14 @@ import org.joval.io.BaseFile;
 class SmbFileProxy extends BaseFile {
     private SmbFile smbFile;
     private String localName;
-
     SmbFileProxy(IFilesystem fs, SmbFile smbFile, String localName) {
 	super(fs);
 	this.smbFile = smbFile;
-	this.localName = localName;
+	if (localName.endsWith(fs.getDelimiter())) {
+	    this.localName = localName.substring(0, localName.lastIndexOf(fs.getDelimiter()));
+	} else {
+	    this.localName = localName;
+	}
     }
 
     SmbFile getSmbFile() {
@@ -100,6 +103,21 @@ class SmbFileProxy extends BaseFile {
 	return smbFile.list();
     }
 
+    public IFile[] listFiles() throws IOException {
+	SmbFile[] files = smbFile.listFiles();
+	IFile[] children = new IFile[files.length];
+	for (int i=0; i < files.length; i++) {
+	    StringBuffer sb = new StringBuffer(localName);
+	    sb.append(fs.getDelimiter());
+	    sb.append(getName(files[i].getName()));
+	    if (files[i].isDirectory()) {
+		sb.append(fs.getDelimiter());
+	    }
+	    children[i] = fs.getFile(sb.toString());
+	}
+	return children;
+    }
+
     public int getFileType() throws IOException {
 	switch(smbFile.getType()) {
 	  case SmbFile.TYPE_FILESYSTEM:
@@ -127,10 +145,20 @@ class SmbFileProxy extends BaseFile {
     }
 
     public String getName() {
-	return smbFile.getName();
+	return getName(smbFile.getName());
     }
 
     public String toString() {
 	return smbFile.getUncPath();
+    }
+
+    // Private
+
+    private String getName(String name) {
+	if (name.endsWith(SmbFilesystem.SMBURL_DELIM_STR)) {
+	    return name.substring(0, name.lastIndexOf(SmbFilesystem.SMBURL_DELIM_STR));
+	} else {
+	    return name;
+	}
     }
 }

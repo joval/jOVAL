@@ -58,20 +58,7 @@ public abstract class BaseFile implements IFile {
     }
 
     public Collection<INode> getChildren() throws NoSuchElementException, UnsupportedOperationException {
-	try {
-	    if (!isDirectory()) {
-		throw new UnsupportedOperationException(getPath());
-	    }
-	    Collection<INode> children = new Vector<INode>();
-	    String[] names = list();
-	    for (int i=0; i < names.length; i++) {
-		children.add(fs.getFile(getLocalName() + fs.getDelimiter() + names[i]));
-	    }
-	    return children;
-	} catch (IOException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", e.getMessage(), e));
-	}
-	throw new UnsupportedOperationException(getPath());
+	return getChildren(null);
     }
 
     public Collection<INode> getChildren(Pattern p) throws NoSuchElementException, UnsupportedOperationException {
@@ -80,10 +67,10 @@ public abstract class BaseFile implements IFile {
 		throw new UnsupportedOperationException(getPath());
 	    }
 	    Collection<INode> children = new Vector<INode>();
-	    String[] names = list();
-	    for (int i=0; i < names.length; i++) {
-		if (p.matcher(names[i]).find()) {
-		    children.add(fs.getFile(getLocalName() + fs.getDelimiter() + names[i]));
+	    IFile[] files = listFiles();
+	    for (int i=0; i < files.length; i++) {
+		if (p == null || p.matcher(files[i].getName()).find()) {
+		    children.add(files[i]);
 		}
 	    }
 	    return children;

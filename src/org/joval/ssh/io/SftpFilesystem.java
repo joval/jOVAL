@@ -92,17 +92,17 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		if (!path.equals(getDelimiter())) { // skip the root node
 		    INode node = tree.getRoot();
 		    try {
-			while ((path = trimToken(path)) != null) {
-			    node = node.getChild(getToken(path));
+			while ((path = trimToken(path, getDelimiter())) != null) {
+			    node = node.getChild(getToken(path, getDelimiter()));
 			}
 		    } catch (UnsupportedOperationException e) {
 			do {
-			    node = tree.makeNode(node, getToken(path));
-			} while ((path = trimToken(path)) != null);
+			    node = tree.makeNode(node, getToken(path, getDelimiter()));
+			} while ((path = trimToken(path, getDelimiter())) != null);
 		    } catch (NoSuchElementException e) {
 			do {
-			    node = tree.makeNode(node, getToken(path));
-			} while ((path = trimToken(path)) != null);
+			    node = tree.makeNode(node, getToken(path, getDelimiter()));
+			} while ((path = trimToken(path, getDelimiter())) != null);
 		    }
 		}
 	    }

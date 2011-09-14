@@ -182,6 +182,19 @@ class SftpFile extends BaseFile implements IUnixFile {
 	}
     }
 
+    public IFile[] listFiles() throws IOException {
+	try {
+	    String[] names = list();
+	    IFile[] children = new IFile[names.length];
+	    for (int i=0; i < names.length; i++) {
+		children[i] = new SftpFile(sfs, path + fs.getDelimiter() + names[i]);
+	    }
+	    return children;
+	} catch (JSchException e) {
+	    throw new IOException (e);
+	}
+    }
+
     public int getFileType() throws IOException {
 	return FILE_TYPE_DISK;
     }

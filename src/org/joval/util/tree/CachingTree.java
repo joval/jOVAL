@@ -78,8 +78,8 @@ public abstract class CachingTree implements ITree {
     /**
      * Get the first token from the given path.  The delimiter is the escaped result of getDelimiter().
      */
-    protected final String getToken(String path) {
-	int ptr = path.indexOf(ESCAPED_DELIM);
+    protected final String getToken(String path, String delim) {
+	int ptr = path.indexOf(delim);
 	if (ptr == -1) {
 	    return path;
 	} else {
@@ -90,12 +90,12 @@ public abstract class CachingTree implements ITree {
     /**
      * Remove the first token from the given path.  The delimiter is the escaped result of getDelimiter().
      */
-    protected final String trimToken(String path) {
-	int ptr = path.indexOf(ESCAPED_DELIM);
+    protected final String trimToken(String path, String delim) {
+	int ptr = path.indexOf(delim);
 	if (ptr == 0) {
 	    return path.substring(1);
 	} else if (ptr > 0) {
-	    return path.substring(ptr + ESCAPED_DELIM.length());
+	    return path.substring(ptr + delim.length());
 	} else {
 	    return null;
 	}
@@ -172,59 +172,62 @@ public abstract class CachingTree implements ITree {
 	ITreeBuilder tree = null;
 	INode node = null;
 	if (parent == null) {
-	    String root = getToken(path);
+	    String root = getToken(path, ESCAPED_DELIM);
 	    tree = cache.getTreeBuilder(root);
 	    if (tree == null) { // first-ever call
 		tree = new Tree(root, getDelimiter());
 		cache.addTree(tree);
 	    }
-	    accessor = lookup(root + getDelimiter());
 	    node = tree.getRoot();
-	    path = trimToken(path);
+	    path = trimToken(path, ESCAPED_DELIM);
 	} else {
-	    String root = getToken(parent);
+	    String root = getToken(parent, getDelimiter());
 	    tree = cache.getTreeBuilder(root);
 	    if (tree == null) {
 		tree = new Tree(root, getDelimiter());
 		cache.addTree(tree);
 		node = tree.getRoot();
-		accessor = lookup(parent + getDelimiter());
-		while ((parent = trimToken(parent)) != null) {
-		    node = tree.makeNode(node, getToken(parent));
+		while ((parent = trimToken(parent, getDelimiter())) != null) {
+		    node = tree.makeNode(node, getToken(parent, getDelimiter()));
 		}
 	    } else {
 		node = tree.getRoot();
 		try {
-		    while ((parent = trimToken(parent)) != null) {
-			node = node.getChild(getToken(parent));
+		    while ((parent = trimToken(parent, getDelimiter())) != null) {
+			node = node.getChild(getToken(parent, getDelimiter()));
 		    }
-		    accessor = lookup(node.getPath() + getDelimiter());
 		} catch (NoSuchElementException e) {
 		    do {
-			node = tree.makeNode(node, getToken(parent));
-		    } while ((parent = trimToken(parent)) != null);
-		    accessor = lookup(node.getPath() + getDelimiter());
+			node = tree.makeNode(node, getToken(parent, getDelimiter()));
+		    } while ((parent = trimToken(parent, getDelimiter())) != null);
+		} catch (UnsupportedOperationException e) {
+		    do {
+			node = tree.makeNode(node, getToken(parent, getDelimiter()));
+		    } while ((parent = trimToken(parent, getDelimiter())) != null);
 		}
 	    }
 	}
 	boolean cacheRead = node.getType() == INode.Type.BRANCH;
 	List<String> results = new Vector<String>();
-	String token = getToken(path);
-	path = trimToken(path);
 	Collection<INode> children = null;
 	if (cacheRead) {
 	    children = node.getChildren();
-	} else if (accessor.getType() == INode.Type.LINK && !followLinks) {
-	    return results;
-	} else if (accessor.hasChildren()) {
-	    children = accessor.getChildren();
-	    for (INode child : children) {
-		tree.makeNode(node, child.getName());
-	    }
 	} else {
-	    return results; // end of the line
+	    accessor = lookup(node.getPath() + getDelimiter());
+	    if (accessor.getType() == INode.Type.LINK && !followLinks) {
+		return results;
+	    } else if (accessor.hasChildren()) {
+		children = accessor.getChildren();
+		for (INode child : children) {
+		    tree.makeNode(node, child.getName());
+		}
+	    } else {
+		return results; // end of the line
+	    }
 	}
 
+	String token = getToken(path, ESCAPED_DELIM);
+	path = trimToken(path, ESCAPED_DELIM);
 	Pattern p = Pattern.compile(token);
 	for (INode child : children) {
 	    if (p.matcher(child.getName()).find()) {
