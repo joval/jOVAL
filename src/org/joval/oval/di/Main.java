@@ -412,6 +412,31 @@ public class Main implements IObserver {
 		return ERR;
 	    }
 
+	    if (state.schematronDefs) {
+		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.defsFile.toString()));
+		try {
+		    SchematronValidator.validate(defs, state.getDefsSchematron());
+		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
+		} catch (SchematronValidationException e) {
+		    List<String> errors = e.getErrors();
+		    if (errors == null) {
+			print(e.getMessage());
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		    } else {
+			for (int i=0; i < errors.size(); i++) {
+			    if (i == 0) {
+				print(getMessage("ERROR_SCHEMATRON", new Integer(errors.size()), errors.get(i)));
+			    } else {
+				logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON", errors.get(i)));
+			    }
+			}
+		    }
+		    return ERR;
+		}
+	    } else {
+		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
+	    }
+
 	    Engine engine = null;
 	    if (state.inputFile == null) {
 		state.plugin.connect();
@@ -420,35 +445,11 @@ public class Main implements IObserver {
 		engine.setSystemCharacteristicsOutputFile(state.dataFile);
 	    } else {
 		print(" ** parsing " + state.inputFile.toString() + " for analysis.");
+		print(getMessage("MESSAGE_VALIDATING_XML"));
 		if (!validateSchema(state.inputFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
 		    return ERR;
 		}
 		SystemCharacteristics sc = new SystemCharacteristics(state.inputFile);
-		if (state.schematronSC) {
-		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.inputFile.toString()));
-		    try {
-			SchematronValidator.validate(sc.getOvalSystemCharacteristics(), state.getDefsSchematron());
-			print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
-		    } catch (SchematronValidationException e) {
-			List<String> errors = e.getErrors();
-			if (errors == null) {
-			    print(e.getMessage());
-			    logger.log(Level.SEVERE, e.getMessage(), e);
-			} else {
-			    for (int i=0; i < errors.size(); i++) {
-				if (i == 0) {
-				    print(getMessage("ERROR_SCHEMATRON", new Integer(errors.size()), errors.get(i)));
-				} else {
-				    logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON", errors.get(i)));
-				}
-			    }
-			}
-			return ERR;
-		    }
-		} else {
-		    print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
-		}
-
 		engine = new Engine(defs, state.plugin, sc);
 	    }
 	    if (state.variablesFile.exists() && state.variablesFile.isFile()) {
