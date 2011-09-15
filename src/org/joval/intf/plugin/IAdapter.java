@@ -47,6 +47,10 @@ public interface IAdapter {
      * JAXBElement so that they can be marshalled into an OvalSystemCharacteristics.  If no corresponding items are found,
      * this method should return an empty list, and the Engine will add a message indicating that no items were found.
      *
+     * The IRequestContext contains the object for which items should be retrieved.  Many object types allow for the
+     * application of filters, however, it is not necessary for the IAdapter to implement the filtering functionality because
+     * the engine will enforce them itself.
+     *
      * @see IRequestContext
      */
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext irc) throws OvalException;

@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -511,6 +512,14 @@ public class Engine implements IProducer {
 		    msg.setValue(JOVALSystem.getMessage("STATUS_EMPTY_OBJECT"));
 		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
 		} else {
+		    //
+		    // Apply filters from the object, if there are any
+		    //
+		    items = filterWrappedItems(getFilters(obj), items);
+
+		    //
+		    // Add the object to the SystemCharacteristics, and associate all the items with it.
+		    //
 		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
 		    for (JAXBElement<? extends ItemType> item : items) {
 			BigInteger itemId = sc.storeItem(item);
@@ -544,6 +553,92 @@ public class Engine implements IProducer {
     }
 
     /**
+     * If getFilter() were a method of ObjectType (instead of only some of its subclasses), this is what it would return.
+     */
+    private List<Filter> getFilters(ObjectType obj) {
+	List<Filter> filters = new Vector<Filter>();
+	Object oFilters = safeInvokeMethod(obj, "getFilter");
+	if (oFilters != null && oFilters instanceof List) {
+	    for (Object oFilter : (List)oFilters) {
+		if (oFilter instanceof Filter) {
+		    filters.add((Filter)oFilter);
+		}
+	    }
+	}
+	return filters;
+    }
+
+    /**
+     * Given Collections of wrapped items and filters, returns the appropriately filtered collection of wrapped items.
+     */
+    private Collection<JAXBElement<? extends ItemType>> filterWrappedItems(List<Filter> filters,
+		       Collection<JAXBElement<? extends ItemType>> items) throws OvalException {
+
+	if (filters.size() == 0) {
+	    return items;
+	}
+	Collection<JAXBElement<? extends ItemType>> filteredItems = new HashSet<JAXBElement<? extends ItemType>>();
+	for (Filter filter : filters) {
+	    StateType state = definitions.getState(filter.getValue());
+	    for (JAXBElement<? extends ItemType> item : items) {
+		try {
+		    ResultEnumeration result = compare(state, item.getValue());
+		    switch(filter.getAction()) {
+		      case INCLUDE:
+			if (result == ResultEnumeration.TRUE) {
+			    filteredItems.add(item);
+			}
+			break;
+
+		      case EXCLUDE:
+			if (result != ResultEnumeration.TRUE) {
+			    filteredItems.add(item);
+			}
+			break;
+		    }
+		} catch (TestException e) {
+		    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		}
+	    }
+	}
+	return filteredItems;
+    }
+
+    /**
+     * Given Collections of items and filters, returns the appropriately filtered collection.
+     */
+    private Collection<ItemType> filterItems(List<Filter> filters, Collection<ItemType> items) throws OvalException {
+	if (filters.size() == 0) {
+	    return items;
+	}
+	Collection<ItemType> filteredItems = new HashSet<ItemType>();
+	for (Filter filter : filters) {
+	    StateType state = definitions.getState(filter.getValue());
+	    for (ItemType item : items) {
+		try {
+		    ResultEnumeration result = compare(state, item);
+		    switch(filter.getAction()) {
+		      case INCLUDE:
+			if (result == ResultEnumeration.TRUE) {
+			    filteredItems.add(item);
+			}
+			break;
+
+		      case EXCLUDE:
+			if (result != ResultEnumeration.TRUE) {
+			    filteredItems.add(item);
+			}
+			break;
+		    }
+		} catch (TestException e) {
+		    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		}
+	    }
+	}
+	return filteredItems;
+    }
+
+    /**
      * Get a list of items belonging to a Set.
      */
     private Collection<ItemType> getSetItems(Set s) throws NoSuchElementException, OvalException {
@@ -563,40 +658,7 @@ public class Engine implements IProducer {
 		} catch (NoSuchElementException e) {
 		    items = scanObject(new RequestContext(this, definitions.getObject(objectId)));
 		}
-		//
-		// Apply filters, if any
-		// DAS: needs better error-handling
-		//
-		Collection<ItemType> filteredItems = new Vector<ItemType>();
-		Collection<Filter> filters = s.getFilter();
-		if (filters.size() > 0) {
-		    for (Filter filter : s.getFilter()) {
-			StateType state = definitions.getState(filter.getValue());
-			for (ItemType item : items) {
-			    try {
-				ResultEnumeration result = compare(state, item);
-				switch(filter.getAction()) {
-				  case INCLUDE:
-				    if (result == ResultEnumeration.TRUE) {
-					filteredItems.add(item);
-				    }
-				    break;
-
-				  case EXCLUDE:
-				    if (result != ResultEnumeration.TRUE) {
-					filteredItems.add(item);
-				    }
-				    break;
-				}
-			    } catch (TestException e) {
-				JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
-			    }
-			}
-		    }
-		    lists.add(filteredItems);
-		} else {
-		    lists.add(items);
-		}
+		lists.add(filterItems(s.getFilter(), items));
 	    }
 	}
 
