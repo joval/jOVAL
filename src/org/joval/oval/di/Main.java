@@ -275,8 +275,13 @@ public class Main implements IObserver {
 	  case Engine.MESSAGE_SYSTEMCHARACTERISTICS_FILE: {
 	    File scFile = (File)arg;
 	    if (state.schematronSC) {
-		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", scFile.toString()));
 		try {
+		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", scFile.toString()));
+		    if (!validateSchema(scFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
+			state.plugin.disconnect();
+			System.exit(ERR);
+		    }
+		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", scFile.toString()));
 		    OvalSystemCharacteristics sc = SystemCharacteristics.getOvalSystemCharacteristics(scFile);
 		    SchematronValidator.validate(sc, state.getDefsSchematron());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
@@ -296,6 +301,10 @@ public class Main implements IObserver {
 			    }
 			}
 		    }
+		    state.plugin.disconnect();
+		    System.exit(ERR);
+		} catch (Exception e) {
+		    logger.log(Level.WARNING, e.getMessage(), e);
 		}
 	    } else {
 		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
@@ -388,42 +397,19 @@ public class Main implements IObserver {
 	    }
 
 	    print(getMessage("MESSAGE_PARSING_FILE", state.defsFile.toString()));
+	    OvalDefinitions defs = Engine.getOvalDefinitions(state.defsFile);
+
+	    print(getMessage("MESSAGE_VALIDATING_XML"));
 	    if (!validateSchema(state.defsFile, DEFINITIONS_SCHEMAS)) {
 		return ERR;
 	    }
 
-	    OvalDefinitions defs = Engine.getOvalDefinitions(state.defsFile);
 	    print(getMessage("MESSAGE_SCHEMA_VERSION_CHECK"));
 	    Version schemaVersion = new Version(defs.getGenerator().getSchemaVersion());
 	    print(getMessage("MESSAGE_SCHEMA_VERSION", schemaVersion.toString()));
 	    if (schemaVersion.greaterThan(Engine.SCHEMA_VERSION)) {
 		print(getMessage("ERROR_SCHEMA_VERSION", schemaVersion.toString()));
 		return ERR;
-	    }
-
-	    if (state.schematronDefs) {
-		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.defsFile.toString()));
-		try {
-		    SchematronValidator.validate(defs, state.getDefsSchematron());
-		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
-		} catch (SchematronValidationException e) {
-		    List<String> errors = e.getErrors();
-		    if (errors == null) {
-			print(e.getMessage());
-			logger.log(Level.SEVERE, e.getMessage(), e);
-		    } else {
-			for (int i=0; i < errors.size(); i++) {
-			    if (i == 0) {
-				print(getMessage("ERROR_SCHEMATRON", new Integer(errors.size()), errors.get(i)));
-			    } else {
-				logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON", errors.get(i)));
-			    }
-			}
-		    }
-		    return ERR;
-		}
-	    } else {
-		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
 	    }
 
 	    Engine engine = null;
@@ -554,7 +540,6 @@ public class Main implements IObserver {
     }
 
     private boolean validateSchema(File f, String[] fnames) throws SAXException, IOException {
-	print(getMessage("MESSAGE_VALIDATING_XML"));
 	ArrayList<Source> list = new ArrayList<Source>();
 	for (int i=0; i < fnames.length; i++) {
 	    File schemaFile = new File(state.xmlDir, fnames[i]);
