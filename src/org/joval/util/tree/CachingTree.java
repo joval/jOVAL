@@ -213,14 +213,20 @@ public abstract class CachingTree implements ITree {
 	if (cacheRead) {
 	    children = node.getChildren();
 	} else {
+	    String nodePath = node.getPath();
+	    if (nodePath.length() == 0) {
+		nodePath = getDelimiter();
+	    }
 	    try {
-		accessor = lookup(node.getPath());
+		accessor = lookup(nodePath);
 		if (accessor.getType() == INode.Type.LINK && !followLinks) {
 		    return results;
 		}
 	    } catch (IllegalArgumentException e) {
 	    }
-	    accessor = lookup(node.getPath() + getDelimiter());
+	    if (!nodePath.endsWith(getDelimiter())) {
+		accessor = lookup(nodePath + getDelimiter());
+	    }
 	    if (accessor.hasChildren()) {
 		children = accessor.getChildren();
 		for (INode child : children) {

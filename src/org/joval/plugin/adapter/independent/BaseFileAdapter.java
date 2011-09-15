@@ -434,7 +434,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		} catch (NoSuchElementException e) {
 		    // dir path doesn't exist.
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", path, e.getMessage()), e);
+		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", path, e.getMessage()));
 		}
 	    }
 	    //

@@ -2,7 +2,6 @@ REMOTE=\
 	jcifs.smb.VolatileSmbFile					\
 	org.joval.discovery.SessionFactory				\
 	org.joval.identity.Credential					\
-	org.joval.identity.windows.WindowsCredential			\
 	org.joval.intf.identity.ICredential				\
 	org.joval.intf.identity.ILocked					\
 	org.joval.io.StreamLogger					\
@@ -10,6 +9,7 @@ REMOTE=\
 	org.joval.plugin.RemotePlugin					\
 	org.joval.os.embedded.system.IosSession				\
 	org.joval.os.unix.remote.system.UnixSession			\
+	org.joval.os.windows.identity.WindowsCredential			\
 	org.joval.os.windows.remote.io.SmbFilesystem			\
 	org.joval.os.windows.remote.io.SmbFileProxy			\
 	org.joval.os.windows.remote.io.SmbRandomAccessProxy		\
