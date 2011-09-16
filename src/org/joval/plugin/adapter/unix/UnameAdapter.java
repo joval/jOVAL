@@ -11,7 +11,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.Vector;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
@@ -29,7 +28,7 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -67,7 +66,7 @@ public class UnameAdapter implements IAdapter {
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
     }

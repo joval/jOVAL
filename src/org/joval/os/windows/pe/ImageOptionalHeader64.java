@@ -7,12 +7,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.joval.intf.io.IRandomAccess;
 import org.joval.io.LittleEndian;
 import org.joval.io.StreamTool;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -85,7 +84,8 @@ public class ImageOptionalHeader64 extends ImageOptionalHeader {
 
     private void loadFromBuffer() {
 	if (buff.length != BUFFER_SIZE) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_WINPE_BUFFERLEN", new Integer(buff.length)));
+	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_BUFFERLEN, buff.length);
+	    throw new IllegalArgumentException(s);
 	}
 
 	magic = IMAGE_NT_OPTIONAL_HDR64_MAGIC;

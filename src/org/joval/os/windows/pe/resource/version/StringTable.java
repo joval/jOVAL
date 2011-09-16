@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.joval.io.LittleEndian;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 public class StringTable {
@@ -41,7 +42,7 @@ public class StringTable {
 	    children.add(str);
 	    offset += str.length;
 	    if (str.length == 0) {
-		throw new IOException(JOVALSystem.getMessage("ERROR_WINPE_STRSTR0LEN"));
+		throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_STRSTR0LEN));
 	    }
 
 	    //

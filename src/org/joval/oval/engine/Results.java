@@ -15,8 +15,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -60,6 +58,7 @@ import oval.schemas.systemcharacteristics.core.VariableValueType;
 import org.joval.intf.oval.IResults;
 import org.joval.oval.OvalException;
 import org.joval.oval.xml.OvalNamespacePrefixMapper;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -87,10 +86,9 @@ class Results implements IResults {
 	    if (rootObj instanceof OvalResults) {
 		return (OvalResults)rootObj;
 	    } else {
-	        throw new OvalException(JOVALSystem.getMessage("ERROR_RESULTS_BAD_FILE", f));
+	        throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESULTS_BAD_FILE, f));
 	    }
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_RESUTLS_PARSE"), e);
 	    throw new OvalException(e);
 	}
     }
@@ -152,17 +150,17 @@ class Results implements IResults {
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOvalResults(), out);
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	} catch (FactoryConfigurationError e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	} catch (FileNotFoundException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	} finally {
 	    if (out != null) {
 		try {
 		    out.close();
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE",  e.toString()));
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_CLOSE,  e.toString());
 		}
 	    }
 	}
@@ -178,20 +176,20 @@ class Results implements IResults {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS));
 	    transformer.transform(new JAXBSource(ctx, getOvalResults()), new StreamResult(output));
 	} catch (FileNotFoundException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", output), e.toString());
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", output), e.toString());
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (TransformerConfigurationException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", output), e.toString());
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (TransformerException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", output), e.toString());
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	}
     }
 
     // Internal
 
     void storeTestResult(TestType test) {
-	JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_TEST", test.getTestId()));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_TEST, test.getTestId());
 	testTable.put(test.getTestId(), test);
     }
 

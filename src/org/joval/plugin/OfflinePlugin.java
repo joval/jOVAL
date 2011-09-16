@@ -12,13 +12,13 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.Vector;
-import java.util.logging.Level;
 
 import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.di.IJovaldiPlugin;
 import org.joval.intf.plugin.IAdapter;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -42,7 +42,7 @@ public class OfflinePlugin implements IJovaldiPlugin {
 	    }
 	    resources = new PropertyResourceBundle(url.openStream());
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -65,7 +65,7 @@ public class OfflinePlugin implements IJovaldiPlugin {
     // Implement IJovaldiPlugin
 
     public void connect() {
-	JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_OFFLINE"));
+	JOVALSystem.getLogger().info(JOVALMsg.STATUS_OFFLINE);
     }
 
     public void disconnect() {

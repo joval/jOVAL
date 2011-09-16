@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -25,6 +24,7 @@ import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.os.windows.system.Environment;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
@@ -79,11 +79,11 @@ public class Registry extends BaseRegistry {
 	} else if (HKCR.equals(name)) {
 	    hive = getHKCR();
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_WINREG_HIVE_NAME", name));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, name));
 	}
 
 	if (hive == null) {
-	    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINREG_HIVE", name));
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE, name));
 	}
 	return hive;
     }
@@ -109,7 +109,7 @@ public class Registry extends BaseRegistry {
 	if (redirector != null) {
 	    String alt = redirector.getRedirect(fullPath);
 	    if (alt != null) {
-		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT", fullPath, alt));
+		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_REDIRECT, fullPath, alt);
 		return fetchKey(alt);
 	    }
 	}
@@ -158,7 +158,7 @@ public class Registry extends BaseRegistry {
 		return new StringValue(key, name, value);
 	    }
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_WINREG_TYPE", data.getClass().getName()));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_TYPE, data.getClass().getName()));
 	}
     }
 

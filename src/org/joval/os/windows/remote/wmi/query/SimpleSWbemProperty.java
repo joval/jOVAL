@@ -3,9 +3,6 @@
 
 package org.joval.os.windows.remote.wmi.query;
 
-import java.util.Iterator;
-import java.util.logging.Level;
-
 import org.jinterop.dcom.core.JIArray;
 import org.jinterop.dcom.core.JIString;
 import org.jinterop.dcom.core.JIUnsignedByte;
@@ -22,6 +19,7 @@ import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.os.windows.wmi.WmiException;
 
@@ -142,8 +140,7 @@ public class SimpleSWbemProperty implements ISWbemProperty {
 	    JIUnsignedByte ub = (JIUnsignedByte)obj;
 	    return LittleEndian.toHexString(ub.getValue().byteValue());
 	} else {
-	    JOVALSystem.getLogger().log(Level.WARNING,
-					JOVALSystem.getMessage("ERROR_WMI_STR_CONVERSION", obj));
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WMI_STR_CONVERSION, obj);
 	    return null;
 	}
     }

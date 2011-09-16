@@ -12,8 +12,6 @@ import java.util.Iterator;
 import java.util.Collection;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -43,6 +41,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -119,7 +118,7 @@ public class ProcessAdapter implements IAdapter {
 	    } catch (PatternSyntaxException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.WARNING);
-		msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
 	    }
 	    break;
@@ -135,8 +134,10 @@ public class ProcessAdapter implements IAdapter {
 	    break;
 	  }
 
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", pObj.getCommand().getOperation()));
+	  default: {
+	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getCommand().getOperation());
+	    throw new OvalException(s);
+	  }
 	}
 
 	return items;
@@ -208,7 +209,7 @@ public class ProcessAdapter implements IAdapter {
 	    br.close();
 	} catch (Exception e) {
 	    error = e.getMessage();
-	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
+	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 }

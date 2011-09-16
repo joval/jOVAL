@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,6 +18,7 @@ import com.sun.jna.platform.win32.WinReg;
 
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IValue;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -84,7 +84,7 @@ public class Key implements IKey {
 	} else if (rootKey == WinReg.HKEY_CLASSES_ROOT) {
 	    return Registry.HKCU;
 	} else {
-	    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINREG_HIVE_NAME", rootKey));
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, rootKey));
 	}
     }
 
@@ -126,11 +126,11 @@ public class Key implements IKey {
 	    switch(e.getHR().intValue()) {
 	      case 0x80070005: {
 		String subkeyPath = getHive() + Registry.DELIM_STR + sb.toString();
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINREG_ACCESS", subkeyPath));
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_ACCESS, subkeyPath);
 		break;
 	      }
 	      default:
-		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		break;
 	    }
 	    return false;
@@ -241,7 +241,7 @@ public class Key implements IKey {
 	} else if (Registry.HKCR.equals(name)) {
 	    rootKey = WinReg.HKEY_CLASSES_ROOT;
 	} else {
-	    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINREG_HIVE_NAME", name));
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, name));
 	}
     }
 

@@ -8,15 +8,17 @@ import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.PropertyResourceBundle;
 import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
+
+import ch.qos.cal10n.IMessageConveyor;
+import ch.qos.cal10n.MessageConveyor;
+import ch.qos.cal10n.MessageConveyorException;
+import org.slf4j.cal10n.LocLogger;
+import org.slf4j.cal10n.LocLoggerFactory;
 
 /**
- * This class is used to configure JOVAL-wide behaviors, like the java.util.logging-based logging.  It also provides
- * JAXB services for the OVAL schema (i.e., properties and access to ObjectFactories).
+ * This class is used to retrieve JOVAL-wide resources, like SLF4J-based logging, cal10n-based messages and jOVAL and OVAL data
+ * model properties and object factories.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -35,34 +37,37 @@ public class JOVALSystem {
 
     public static final Factories factories = new Factories();
 
-    private static final Logger logger = Logger.getLogger("org.joval");
+    private static IMessageConveyor mc;
+    private static LocLogger logger;
     private static Properties props, ovalProps;
-    private static PropertyResourceBundle resources;
 
     static {
+	mc = new MessageConveyor(Locale.getDefault());
+	try {
+	    //
+	    // Get a message to test whether localized messages are available for the default Locale
+	    //
+	    getMessage(JOVALMsg.ERROR_EXCEPTION);
+	} catch (MessageConveyorException e) {
+	    //
+	    // The test failed, so set the message Locale to English
+	    //
+	    mc = new MessageConveyor(Locale.ENGLISH);
+	}
+	logger = new LocLoggerFactory(mc).getLocLogger(JOVALSystem.class);
 	props = new Properties();
 	ovalProps = new Properties();
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	    props.load(cl.getResourceAsStream("joval.system.properties"));
 	    ovalProps.load(cl.getResourceAsStream("oval.properties"));
-
-	    Locale locale = Locale.getDefault();
-	    URL url = cl.getResource("joval.resources_" + locale.toString() + ".properties");
-	    if (url == null) {
-		url = cl.getResource("joval.resources_" + locale.getLanguage() + ".properties");
-	    }
-	    if (url == null) {
-		url = cl.getResource("joval.resources.properties");
-	    }
-	    resources = new PropertyResourceBundle(url.openStream());
 	} catch (IOException e) {
-	    logger.log(Level.WARNING, "Unable to load JOVALSystem Properties", e);
+	    logger.error(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
-    public static String getMessage(String key, Object... args) {
-	return MessageFormat.format(resources.getString(key), args);
+    public static String getMessage(JOVALMsg key, Object... args) {
+	return mc.getMessage(key, args);
     }
 
     public static String getProperty(String name) {
@@ -73,19 +78,8 @@ public class JOVALSystem {
 	return ovalProps.getProperty(name);
     }
 
-    public static Logger getLogger() {
+    public static LocLogger getLogger() {
 	return logger;
-    }
-
-    /**
-     * Set whether or not to use JOVAL's built-in log handler, which writes to the file <code>joval.log</code> in the
-     * <code>java.io.tmpdir</code> directory.
-     */
-    public static void setInBuiltLogHandler(boolean useParentHandlers) throws SecurityException, IOException {
-        logger.setUseParentHandlers(useParentHandlers);
-        FileHandler fileHandler = new FileHandler("%t/jOVAL%g.log", 0, 1, true);
-        fileHandler.setFormatter(new SimpleFormatter());
-        logger.addHandler(fileHandler);
     }
 
     //

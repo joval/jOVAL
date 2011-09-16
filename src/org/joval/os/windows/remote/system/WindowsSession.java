@@ -31,6 +31,7 @@ import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.remote.io.SmbFilesystem;
 import org.joval.os.windows.remote.registry.Registry;
 import org.joval.os.windows.remote.wmi.WmiConnection;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -52,7 +53,6 @@ public class WindowsSession implements IWindowsSession, ILocked {
     private IEnvironment env;
     private IRegistry reg, reg32;
     private IFilesystem fs, fs32;
-    private IPathRedirector rr = null, fr = null;
     private Vector<IFile> tempFiles;
     private boolean is64bit = false;
 
@@ -62,10 +62,6 @@ public class WindowsSession implements IWindowsSession, ILocked {
     }
 
     // Implement IWindowsSession extensions
-
-    public IPathRedirector getRegistryRedirector() {
-	return rr;
-    }
 
     public IRegistry getRegistry(View view) {
 	switch(view) {
@@ -153,7 +149,7 @@ public class WindowsSession implements IWindowsSession, ILocked {
 		    }
 		}
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().log(Level.WARNING, f.toString(), e);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_DELETE, f.toString());
 	    }
 	}
 	conn.disconnect();
@@ -173,10 +169,6 @@ public class WindowsSession implements IWindowsSession, ILocked {
 
     public IFilesystem getFilesystem() {
 	return fs;
-    }
-
-    public IPathRedirector getFilesystemRedirector() {
-	return fr;
     }
 
     public IProcess createProcess(String command) throws Exception {

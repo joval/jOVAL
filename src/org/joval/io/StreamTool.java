@@ -5,6 +5,7 @@ package org.joval.io;
 
 import java.io.*;
 
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -23,7 +24,7 @@ public class StreamTool {
 	for (int offset=0, read=0; read < buff.length; offset = read) {
 	    int len = in.read(buff, offset, buff.length);
 	    if (len == -1) {
-		throw new EOFException(JOVALSystem.getMessage("ERROR_EOS"));
+		throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_EOS));
 	    } else {
 		read += len;
 	    }

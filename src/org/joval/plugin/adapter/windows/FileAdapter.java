@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import javax.xml.bind.JAXBElement;
 
@@ -52,6 +51,7 @@ import org.joval.os.windows.pe.resource.version.StringTable;
 import org.joval.os.windows.pe.resource.version.StringStructure;
 import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.independent.BaseFileAdapter;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.Version;
@@ -179,7 +179,7 @@ public class FileAdapter extends BaseFileAdapter {
 		} else {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_OWNER", objSet.getSize()));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_OWNER, objSet.getSize()));
 		    fItem.getMessage().add(msg);
 		    ownerType.setStatus(StatusEnumeration.ERROR);
 		}
@@ -220,7 +220,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    if (file.length() > 0) {
 		readPEHeaders(file, fItem);
 	    } else {
-		JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("STATUS_EMPTY_FILE", file.toString()));
+		JOVALSystem.getLogger().info(JOVALMsg.STATUS_EMPTY_FILE, file.toString());
 
 		EntityItemVersionType versionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
 		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
@@ -229,7 +229,7 @@ public class FileAdapter extends BaseFileAdapter {
 
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue(JOVALSystem.getMessage("STATUS_PE_EMPTY"));
+		msg.setValue(JOVALSystem.getMessage(JOVALMsg.STATUS_PE_EMPTY));
 		fItem.getMessage().add(msg);
 	    }
 	}
@@ -240,7 +240,7 @@ public class FileAdapter extends BaseFileAdapter {
      */
     private void readPEHeaders(IFile file, FileItem fItem) throws IOException {
 	IRandomAccess ra = file.getRandomAccess("r");
-	JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_PE_READ", file.toString()));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_PE_READ, file.toString());
 	try {
 	    ImageDOSHeader dh = new ImageDOSHeader(ra);
 	    ra.seek((long)dh.getELFHeaderRVA());
@@ -291,7 +291,7 @@ public class FileAdapter extends BaseFileAdapter {
 			    languageType.setStatus(StatusEnumeration.ERROR);
 			    MessageType msg = JOVALSystem.factories.common.createMessageType();
 			    msg.setLevel(MessageLevelEnumeration.INFO);
-			    msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_LANGUAGE", key));
+			    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_LANGUAGE, key));
 			    fItem.getMessage().add(msg);
 			} else {
 			    languageType.setValue(LanguageConstants.getLocaleString(key));
@@ -360,14 +360,15 @@ public class FileAdapter extends BaseFileAdapter {
 		} catch (IllegalArgumentException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALSystem.getMessage("ERROR_WINFILE_DEVCLASS", e.getMessage()));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_DEVCLASS, e.getMessage()));
 		    fItem.getMessage().add(msg);
 		    developmentClassType.setStatus(StatusEnumeration.ERROR);
 		}
 	    }
 	    fItem.setDevelopmentClass(developmentClassType);
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("ERROR_PE", file.getLocalName(), e));
+	    JOVALSystem.getLogger().info(JOVALMsg.ERROR_PE, file.getLocalName());
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    boolean reported = false;
 	    for (MessageType msg : fItem.getMessage()) {
 		if (((String)msg.getValue()).equals(e.getMessage())) {
@@ -386,7 +387,8 @@ public class FileAdapter extends BaseFileAdapter {
 		try {
 		    ra.close();
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", file.toString()), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_FILE_STREAM_CLOSE, file.toString()));
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}

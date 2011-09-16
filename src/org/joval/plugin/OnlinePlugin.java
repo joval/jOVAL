@@ -16,7 +16,6 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.Vector;
-import java.util.logging.Level;
 
 import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
@@ -57,6 +56,7 @@ import org.joval.plugin.adapter.windows.UserSid55Adapter;
 import org.joval.plugin.adapter.windows.UserSidAdapter;
 import org.joval.plugin.adapter.windows.Wmi57Adapter;
 import org.joval.plugin.adapter.windows.WmiAdapter;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -92,6 +92,7 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 		adapters.add(new XmlfilecontentAdapter(session));
 	    }
 
+	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SESSIONTYPE, session.getType());
 	    switch(session.getType()) {
 	      case WINDOWS: {
 		IWindowsSession win = (IWindowsSession)session;

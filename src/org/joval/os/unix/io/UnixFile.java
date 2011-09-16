@@ -22,6 +22,7 @@ import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
 import org.joval.io.BaseFile;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -53,7 +54,7 @@ public class UnixFile implements IUnixFile {
 	      }
     
 	      default:
-		throw new RuntimeException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_UNIX_FLAVOR", session.getFlavor()));
+		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor()));
 	    }
     
 	    IProcess p = session.createProcess(command, 5000, true);

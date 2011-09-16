@@ -8,6 +8,7 @@ import oval.schemas.common.OperationEnumeration;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -88,7 +89,7 @@ public class CheckData extends OperatorData {
 	    break;
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_CHECK", check));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_CHECK, check));
 	}
 	return result;
     }

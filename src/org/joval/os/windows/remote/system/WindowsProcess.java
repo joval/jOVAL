@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jinterop.dcom.common.JIException;
 import org.jinterop.dcom.impls.automation.JIExcepInfo;
@@ -22,7 +20,6 @@ import org.joval.io.TailDashF;
 import org.joval.os.windows.remote.wmi.process.SWbemSecurity;
 import org.joval.os.windows.remote.wmi.process.Win32Process;
 import org.joval.os.windows.remote.wmi.process.Win32ProcessStartup;
-import org.joval.util.JOVALSystem;
 
 /**
  * Remote Windows implementation of an IProcess.

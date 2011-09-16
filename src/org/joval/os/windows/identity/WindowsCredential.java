@@ -2,13 +2,11 @@
 
 package org.joval.os.windows.identity;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import jcifs.smb.NtlmPasswordAuthentication;
 import org.jinterop.dcom.common.IJIAuthInfo;
 
 import org.joval.identity.Credential;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -41,7 +39,7 @@ public class WindowsCredential extends Credential implements IJIAuthInfo {
     public WindowsCredential(String domain, String username, String password) {
 	super(username, password);
 	this.domain = domain;
-	JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_WINCRED_CREATE", getDomainUser()));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINCRED_CREATE, getDomainUser());
     }
 
     /**

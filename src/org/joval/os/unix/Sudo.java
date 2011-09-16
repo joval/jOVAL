@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.logging.Level;
 import javax.security.auth.login.CredentialException;
 import javax.security.auth.login.LoginException;
 
@@ -16,6 +15,7 @@ import org.joval.intf.identity.ICredential;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -57,7 +57,7 @@ public class Sudo implements IProcess {
 
     public void start() throws Exception {
 	if (cred.getPassword() == null) {
-	    throw new CredentialException(JOVALSystem.getMessage("ERROR_MISSING_PASSWORD", cred.getUsername()));
+	    throw new CredentialException(JOVALSystem.getMessage(JOVALMsg.ERROR_MISSING_PASSWORD, cred.getUsername()));
 	}
 	switch(flavor) {
 	  case SOLARIS: {
@@ -77,7 +77,7 @@ public class Sudo implements IProcess {
 	    if (line1.indexOf("Sorry") == -1) {
 		String line2 = readLine();
 	    } else {
-		throw new LoginException(JOVALSystem.getMessage("ERROR_AUTHENTICATION_FAILED", cred.getUsername()));
+		throw new LoginException(JOVALSystem.getMessage(JOVALMsg.ERROR_AUTHENTICATION_FAILED, cred.getUsername()));
 	    }
 	    break;
 	  }

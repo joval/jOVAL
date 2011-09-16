@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -19,6 +18,7 @@ import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.os.windows.system.Environment;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
@@ -49,7 +49,7 @@ public abstract class BaseRegistry implements IRegistry {
      */
     public IEnvironment getEnvironment() throws IllegalStateException {
 	if (env == null) {
-	    throw new IllegalStateException(JOVALSystem.getMessage("ERROR_WINREG_STATE"));
+	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_STATE));
 	}
 	return env;
     }
@@ -103,8 +103,8 @@ public abstract class BaseRegistry implements IRegistry {
 		}
 	    }
 	} catch (PatternSyntaxException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()), e);
-	    throw new NoSuchElementException(e.getMessage());
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new NoSuchElementException(cacheKey);
 	}
 	searchMap.put(cacheKey, list);
 	return list;

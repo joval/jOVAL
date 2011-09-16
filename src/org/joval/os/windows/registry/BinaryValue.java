@@ -3,12 +3,10 @@
 
 package org.joval.os.windows.registry;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IBinaryValue;
 import org.joval.util.Base64;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -25,7 +23,7 @@ public class BinaryValue extends Value implements IBinaryValue {
 	this.parent = parent;
 	this.name = name;
 	this.data = data;
-	JOVALSystem.getLogger().log(Level.FINEST, JOVALSystem.getMessage("STATUS_WINREG_VALINSTANCE", toString()));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, toString());
     }
 
     public byte[] getData() {

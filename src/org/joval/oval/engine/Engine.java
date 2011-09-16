@@ -27,8 +27,6 @@ import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.Vector;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
@@ -114,6 +112,7 @@ import org.joval.oval.util.CheckData;
 import org.joval.oval.util.ExistenceData;
 import org.joval.oval.util.ItemSet;
 import org.joval.oval.util.OperatorData;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
 import org.joval.util.StringTools;
@@ -178,7 +177,7 @@ public class Engine implements IProducer {
     public Engine(OvalDefinitions defs, IPlugin plugin) {
 	definitions = new Definitions(defs);
 	if (plugin == null) {
-	    throw new RuntimeException(JOVALSystem.getMessage("ERROR_NULL_PLUGIN"));
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_NULL_PLUGIN));
 	}
 	this.plugin = plugin;
 	adapters = new Hashtable<Class, AdapterManager>();
@@ -210,7 +209,7 @@ public class Engine implements IProducer {
 	    break;
 
 	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage("ERROR_ENGINE_STATE", state));
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
 
@@ -224,7 +223,7 @@ public class Engine implements IProducer {
 	    break;
 
 	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage("ERROR_ENGINE_STATE", state));
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
 
@@ -238,7 +237,7 @@ public class Engine implements IProducer {
 	    break;
 
 	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage("ERROR_ENGINE_STATE", state));
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
 
@@ -256,7 +255,7 @@ public class Engine implements IProducer {
 	  case CONFIGURE:
 	  case RUNNING:
 	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage("ERROR_ENGINE_STATE", state));
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
 
@@ -342,7 +341,8 @@ public class Engine implements IProducer {
 	try {
 	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
 	} catch (DatatypeConfigurationException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_TIMESTAMP"), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TIMESTAMP);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return generator;
     }
@@ -362,12 +362,12 @@ public class Engine implements IProducer {
 	String varId = var.getId();
 	Collection<VariableValueType> cachedList = variableMap.get(varId);
 	if (cachedList == null) {
-	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_VARIABLE_CREATE", varId));
+	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
 	    Collection<String> result = resolveInternal(var, vars);
 	    variableMap.put(varId, vars);
 	    return result;
 	} else {
-	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_VARIABLE_RECYCLE", varId));
+	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, varId);
 	    List<String> result = new Vector<String>();
 	    vars.addAll(cachedList);
 	    for (VariableValueType variableValueType : cachedList) {
@@ -378,7 +378,7 @@ public class Engine implements IProducer {
 	    if (result.size() > 0) {
 		return result;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_MISSING_VARIABLE", variableId));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_MISSING_VARIABLE, variableId));
 	    }
 	}
     }
@@ -436,7 +436,7 @@ public class Engine implements IProducer {
 	    if (!sc.containsObject(objectId)) {
 		MessageType message = JOVALSystem.factories.common.createMessageType();
 		message.setLevel(MessageLevelEnumeration.WARNING);
-		message.setValue(JOVALSystem.getMessage("ERROR_ADAPTER_MISSING", obj.getClass().getName()));
+		message.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName()));
 		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
 	    }
 	}
@@ -503,13 +503,13 @@ public class Engine implements IProducer {
 	if (s == null) {
 	    AdapterManager manager = adapters.get(obj.getClass());
 	    if (manager == null) {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_ADAPTER_MISSING", obj.getClass().getName()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName()));
 	    } else if (manager.isActive()) {
 		Collection<JAXBElement<? extends ItemType>> items = manager.getAdapter().getItems(rc);
 		if (items.size() == 0) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALSystem.getMessage("STATUS_EMPTY_OBJECT"));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
 		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
 		} else {
 		    //
@@ -536,7 +536,7 @@ public class Engine implements IProducer {
 		}
 		return unwrapped;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_ADAPTER_UNAVAILABLE", obj.getClass().getName()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_UNAVAILABLE, obj.getClass().getName()));
 	    }
 	} else {
 	    try {
@@ -597,7 +597,7 @@ public class Engine implements IProducer {
 			break;
 		    }
 		} catch (TestException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
@@ -631,7 +631,7 @@ public class Engine implements IProducer {
 			break;
 		    }
 		} catch (TestException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
@@ -682,7 +682,7 @@ public class Engine implements IProducer {
 		Collection<ItemType> set2 = iter.next();
 		return new ItemSet(set1).complement(new ItemSet(set2)).toList();
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_SET_COMPLEMENT", new Integer(lists.size())));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SET_COMPLEMENT, new Integer(lists.size())));
 	    }
 	  }
 
@@ -703,7 +703,7 @@ public class Engine implements IProducer {
     private oval.schemas.results.core.DefinitionType evaluateDefinition(DefinitionType defDefinition) throws OvalException {
 	String defId = defDefinition.getId();
 	if (defId == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_DEFINITION_NOID"));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITION_NOID));
 	}
 	producer.sendNotify(this, MESSAGE_DEFINITION, defId);
 	oval.schemas.results.core.DefinitionType defResult = results.getDefinition(defId);
@@ -803,8 +803,9 @@ public class Engine implements IProducer {
 			try {
 			    checkResult = compare(state, item);
 			} catch (TestException e) {
-			    String s = JOVALSystem.getMessage("ERROR_TESTEXCEPTION", testId, e.getMessage());
-			    JOVALSystem.getLogger().log(Level.WARNING, s, e);
+			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TESTEXCEPTION, testId);
+			    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+
 			    MessageType message = JOVALSystem.factories.common.createMessageType();
 			    message.setLevel(MessageLevelEnumeration.ERROR);
 			    message.setValue(e.getMessage());
@@ -904,7 +905,7 @@ public class Engine implements IProducer {
 		operator.addResult(edtResult.getResult());
 		resultObject = edtResult;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_BAD_COMPONENT", child.getClass().getName()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_COMPONENT, child.getClass().getName()));
 	    }
 	    criteriaResult.getCriteriaOrCriterionOrExtendDefinition().add(resultObject);
 	}
@@ -947,7 +948,7 @@ public class Engine implements IProducer {
 			    }
 			    result = cd.getResult(stateEntity.getEntityCheck());
 			} else {
-			    String message = JOVALSystem.getMessage("ERROR_UNSUPPORTED_ENTITY",
+			    String message = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
 								    itemEntityObj.getClass().getName(), item.getId());
 	    		    throw new OvalException(message);
 			}
@@ -959,14 +960,14 @@ public class Engine implements IProducer {
 	    }
 	    return ResultEnumeration.TRUE;
 	} catch (NoSuchMethodException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
-	    throw new OvalException(e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage()));
 	} catch (IllegalAccessException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
-	    throw new OvalException(e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage()));
 	} catch (InvocationTargetException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
-	    throw new OvalException(e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage()));
 	}
     }
 
@@ -1010,7 +1011,7 @@ public class Engine implements IProducer {
 	SimpleDatatypeEnumeration itemDT =  getDatatype(item.getDatatype());
 	if (itemDT != stateDT) {
 	    if (itemDT != SimpleDatatypeEnumeration.STRING && stateDT != SimpleDatatypeEnumeration.STRING) {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_DATATYPE_MISMATCH", stateDT, itemDT));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DATATYPE_MISMATCH, stateDT, itemDT));
 	    }
 	}
 
@@ -1029,10 +1030,9 @@ public class Engine implements IProducer {
 		    cd.addResult(testImpl(base, item));
 		}
 	    } catch (NoSuchElementException e) {
-//DAS
-		throw new TestException(JOVALSystem.getMessage("ERROR_RESOLVE_VAR", state.getVarRef(), e.getMessage()));
+		throw new TestException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), e.getMessage()));
 	    } catch (ResolveException e) {
-		throw new TestException(JOVALSystem.getMessage("ERROR_RESOLVE_VAR", state.getVarRef(), e.getMessage()));
+		throw new TestException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), e.getMessage()));
 	    }
 	    return cd.getResult(state.getVarCheck());
 	} else {
@@ -1125,7 +1125,7 @@ public class Engine implements IProducer {
 	    }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", state.getOperation()));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, state.getOperation()));
 	}
     }
 
@@ -1171,7 +1171,7 @@ public class Engine implements IProducer {
 	    return ((String)state.getValue()).equals((String)item.getValue());
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
 							   state.getDatatype(), OperationEnumeration.EQUALS));
 	}
     }
@@ -1211,7 +1211,7 @@ public class Engine implements IProducer {
 	    }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
 							   state.getDatatype(), OperationEnumeration.GREATER_THAN_OR_EQUAL));
 	}
     }
@@ -1251,7 +1251,7 @@ public class Engine implements IProducer {
 	    }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
 							   state.getDatatype(), OperationEnumeration.GREATER_THAN_OR_EQUAL));
 	}
     }
@@ -1262,7 +1262,7 @@ public class Engine implements IProducer {
 	    return ((String)state.getValue()).equalsIgnoreCase((String)item.getValue());
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
 							   state.getDatatype(), OperationEnumeration.CASE_INSENSITIVE_EQUALS));
 	}
     }
@@ -1279,7 +1279,7 @@ public class Engine implements IProducer {
 	    }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
 							   state.getDatatype(), OperationEnumeration.BITWISE_AND));
 	}
     }
@@ -1296,7 +1296,7 @@ public class Engine implements IProducer {
 	    }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_OPERATION_DATATYPE",
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
 							   state.getDatatype(), OperationEnumeration.BITWISE_OR));
 	}
     }
@@ -1328,7 +1328,7 @@ public class Engine implements IProducer {
 	} else if ("version".equals(s)) {
 	    return SimpleDatatypeEnumeration.VERSION;
 	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_DATATYPE", s));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_DATATYPE, s));
 	}
     }
 
@@ -1426,7 +1426,7 @@ public class Engine implements IProducer {
 	    ExternalVariable externalVariable = (ExternalVariable)object;
 	    String id = externalVariable.getId();
 	    if (externalVariables == null) {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_EXTERNAL_VARIABLE_SOURCE", id));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE_SOURCE, id));
 	    } else {
 		Collection<String> values = externalVariables.getValue(id);
 		for (String value : values) {
@@ -1484,7 +1484,7 @@ public class Engine implements IProducer {
 	    }
 	    Collection<String> values = extractItemData(objectId, oc, items);
 	    if (values == null || values.size() == 0) {
-		throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_COMPONENT_EMPTY"));
+		throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_EMPTY));
 	    } else {
 		return values;
 	    }
@@ -1573,7 +1573,7 @@ public class Engine implements IProducer {
 	    Collection<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(st), list)) {
 		if (start > value.length()) {
-		    throw new ResolveException(JOVALSystem.getMessage("ERROR_SUBSTRING", value, new Integer(start)));
+		    throw new ResolveException(JOVALSystem.getMessage(JOVALMsg.ERROR_SUBSTRING, value, new Integer(start)));
 		} else if (len < 0 || value.length() <= (start+len)) {
 		    values.add(value.substring(start));
 		} else {
@@ -1631,7 +1631,7 @@ public class Engine implements IProducer {
 		timestamp1 = resolveInternal(children.get(0), list);
 		timestamp2 = resolveInternal(children.get(1), list);
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_BAD_TIMEDIFFERENCE", new Integer(children.size())));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_TIMEDIFFERENCE,new Integer(children.size())));
 	    }
 	    for (String time1 : timestamp1) {
 		long tm1 = getTime(time1, tt.getFormat1());
@@ -1658,13 +1658,13 @@ public class Engine implements IProducer {
 		rows.add(row);
 	    }
 	    if (rows.empty()) {
-		throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_COMPONENT_EMPTY"));
+		throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_EMPTY));
 	    } else {
 		return computeProduct(op, rows);
 	    }
 
 	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_COMPONENT", object.getClass().getName()));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, object.getClass().getName()));
 	}
     }
 
@@ -1758,13 +1758,13 @@ public class Engine implements IProducer {
 		    Method method = item.getClass().getMethod(methodName);
 		    o = method.invoke(item);
 		} catch (NoSuchMethodException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    return null;
 		} catch (IllegalAccessException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    return null;
 		} catch (InvocationTargetException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    return null;
 		}
 	    }
@@ -1786,7 +1786,7 @@ public class Engine implements IProducer {
 		    }
 		}
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_REFLECTION", o.getClass().getName()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, o.getClass().getName()));
 	    }
 	}
 	return values;
@@ -1869,7 +1869,7 @@ public class Engine implements IProducer {
 	    return obj;
 	}
 
-	throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_COMPONENT", unknown.getClass().getName()));
+	throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, unknown.getClass().getName()));
     }
 
     /**
@@ -1884,9 +1884,9 @@ public class Engine implements IProducer {
 	} catch (NoSuchMethodException e) {
 	    // Object doesn't implement the method; no big deal.
 	} catch (IllegalAccessException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return result;
     }
@@ -1905,14 +1905,14 @@ public class Engine implements IProducer {
 		}
 	    }
 	} catch (NoSuchMethodException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (IllegalAccessException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
-	throw new OvalException(JOVALSystem.getMessage("ERROR_TEST_NOOBJREF", test.getId()));
+	throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_TEST_NOOBJREF, test.getId()));
     }
 
     private String getStateRef(oval.schemas.definitions.core.TestType test) {
@@ -1925,11 +1925,11 @@ public class Engine implements IProducer {
 		return ((StateRefType)o).getStateRef();
 	    }
 	} catch (NoSuchMethodException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (IllegalAccessException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return null;
     }
@@ -1945,9 +1945,9 @@ public class Engine implements IProducer {
 	} catch (NoSuchMethodException e) {
 	    // Object doesn't support Sets; no big deal.
 	} catch (IllegalAccessException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return objectSet;
     }
@@ -2080,11 +2080,11 @@ public class Engine implements IProducer {
 		return df.parse(s).getTime();
 	    }
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_TIME_PARSE", s, format, e.getMessage()));
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_TIME_PARSE, s, format));
 	}
 
-	throw new OvalException(JOVALSystem.getMessage("ERROR_ILLEGAL_TIME", format, s));
+	throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ILLEGAL_TIME, format, s));
     }
 
     class AdapterManager {

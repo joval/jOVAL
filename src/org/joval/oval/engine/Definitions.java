@@ -12,7 +12,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -31,6 +30,7 @@ import oval.schemas.definitions.core.VariableType;
 import oval.schemas.definitions.core.VariablesType;
 
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -53,10 +53,9 @@ class Definitions {
 	    if (rootObj instanceof OvalDefinitions) {
 		return (OvalDefinitions)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_DEFINITIONS_BAD_FILE", f.toString()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITIONS_BAD_FILE, f.toString()));
 	    }
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_DEFINITIONS_PARSE"), e);
 	    throw new OvalException(e);
 	}
     }
@@ -131,7 +130,8 @@ class Definitions {
 	} else if (type.isInstance(object)) {
 	    return type.cast(object);
 	} else {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE", type.getName(), object.getClass().getName()));
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_INSTANCE, type.getName(), object.getClass().getName());
+	    throw new OvalException(msg);
 	}
     }
 
@@ -142,7 +142,7 @@ class Definitions {
     StateType getState(String id) throws OvalException {
 	StateType state = states.get(id);
 	if (state == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_STATE", id));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_STATE, id));
 	}
 	return state;
     }
@@ -150,7 +150,7 @@ class Definitions {
     TestType getTest(String id) throws OvalException {
 	TestType test = tests.get(id);
 	if (test == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_TEST", id));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_TEST, id));
 	}
 	return test;
     }
@@ -158,7 +158,7 @@ class Definitions {
     ObjectType getObject(String id) throws OvalException {
 	ObjectType object = objects.get(id);
 	if (object == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
 	return object;
     }
@@ -166,7 +166,7 @@ class Definitions {
     VariableType getVariable(String id) throws OvalException {
 	VariableType variable = variables.get(id);
 	if (variable == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_VARIABLE", id));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_VARIABLE, id));
 	} else {
 	    return variable;
 	}
@@ -175,7 +175,7 @@ class Definitions {
     DefinitionType getDefinition(String id) throws OvalException {
 	DefinitionType definition = definitions.get(id);
 	if (definition == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_DEFINITION", id));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
 	}
 	return definition;
     }

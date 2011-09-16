@@ -9,8 +9,6 @@ import java.io.File;
 import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.vngx.jsch.ChannelExec;
 import org.vngx.jsch.ChannelType;
@@ -19,6 +17,7 @@ import org.vngx.jsch.exception.JSchException;
 import org.joval.intf.system.IProcess;
 import org.joval.io.StreamLogger;
 import org.joval.io.StreamTool;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -123,7 +122,7 @@ class SshProcess implements IProcess {
 	try {
 	    ce.sendSignal("KILL");
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    cleanup();
 	}

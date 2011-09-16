@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageLevelEnumeration;
@@ -32,6 +31,7 @@ import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -128,7 +128,8 @@ public class WmiAdapter implements IAdapter {
 	    msg.setValue(e.getMessage());
 	    item.getMessage().add(msg);
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINWMI_GENERAL", id), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return item;
     }

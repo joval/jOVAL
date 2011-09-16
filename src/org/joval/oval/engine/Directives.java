@@ -5,7 +5,6 @@ package org.joval.oval.engine;
 
 import java.io.File;
 import java.util.Iterator;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -22,6 +21,7 @@ import oval.schemas.results.core.DirectiveType;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -42,10 +42,9 @@ class Directives {
 	    if (rootObj instanceof OvalDirectives) {
 		return (OvalDirectives)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_DIRECTIVES_BAD_FILE", f.toString()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DIRECTIVES_BAD_FILE, f.toString()));
 	    }
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_DIRECTIVES_PARSE", f.toString()), e);
 	    throw new OvalException(e);
 	}
     }

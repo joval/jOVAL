@@ -23,6 +23,7 @@ import oval.schemas.definitions.core.OvalDefinitions;
 import oval.schemas.results.core.OvalResults;
 import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
 
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -84,7 +85,7 @@ public class SchematronValidator {
 		NodeList children = root.getChildNodes();
 		int len = children.getLength();
 		if (len > 0) {
-		    String msg = JOVALSystem.getMessage("ERROR_SCHEMATRON_VALIDATION");
+		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_SCHEMATRON_VALIDATION);
 		    SchematronValidationException error = new SchematronValidationException(msg);
 		    for (int i=0; i < len; i++) {
 			error.getErrors().add(children.item(i).getTextContent());

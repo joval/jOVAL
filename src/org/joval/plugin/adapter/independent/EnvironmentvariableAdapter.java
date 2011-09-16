@@ -6,13 +6,13 @@ package org.joval.plugin.adapter.independent;
 import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
+import oval.schemas.common.OperationEnumeration;
 import oval.schemas.definitions.independent.EnvironmentvariableObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
@@ -24,6 +24,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IEnvironment;
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -57,7 +58,8 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	EnvironmentvariableObject eObj = (EnvironmentvariableObject)rc.getObject();
 	String name = (String)eObj.getName().getValue();
 
-	switch(eObj.getName().getOperation()) {
+	OperationEnumeration op = eObj.getName().getOperation();
+	switch(op) {
 	  case EQUALS:
 	    if (env.getenv(name) != null) {
 		items.add(makeItem(name, env.getenv(name)));
@@ -92,14 +94,14 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	    } catch (PatternSyntaxException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", eObj.getName().getOperation()));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	}
 	return items;
     }

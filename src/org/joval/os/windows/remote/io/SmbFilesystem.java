@@ -7,8 +7,6 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.NoSuchElementException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
@@ -26,6 +24,7 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.tree.CachingTree;
@@ -106,7 +105,7 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 		throw new NoSuchElementException(path);
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return null;
 	}
     }
@@ -148,7 +147,7 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 		if (realPath.length() > 0) {
 		    sb.append(realPath.substring(2).replace(LOCAL_DELIM_CH,SMBURL_DELIM_CH));
 		}
-		JOVALSystem.getLogger().log(Level.FINEST, JOVALSystem.getMessage("STATUS_WINSMB_MAP", path, sb.toString()));
+		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINSMB_MAP, path, sb.toString());
 		SmbFile smbFile = null;
 		if (vol) {
 		    smbFile = new VolatileSmbFile(sb.toString(), auth);
@@ -158,14 +157,14 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 		return new SmbFileProxy(this, smbFile, path);
 	    }
 	}
-	throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_FS_LOCALPATH", path));
+	throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
     }
 
     public IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
 	if (file instanceof SmbFileProxy) {
 	    return new SmbRandomAccessProxy(new SmbRandomAccessFile(((SmbFileProxy)file).getSmbFile(), mode));
 	}
-	throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_INSTANCE", 
+	throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_INSTANCE, 
 								  SmbFileProxy.class.getName(), file.getClass().getName()));
     }
 

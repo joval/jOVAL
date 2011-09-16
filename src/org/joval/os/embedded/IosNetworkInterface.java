@@ -12,7 +12,6 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Level;
 
 import oval.schemas.systemcharacteristics.core.EntityItemIPAddressStringType;
 import oval.schemas.systemcharacteristics.core.InterfacesType;

@@ -8,7 +8,6 @@ import java.util.Hashtable;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -46,6 +45,7 @@ import org.joval.io.LittleEndian;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -103,7 +103,7 @@ public class RegistryAdapter implements IAdapter {
 
 	String id = rObj.getId();
 	if (rObj.getHive() == null || rObj.getHive().getValue() == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_WINREG_HIVE_NAME", id));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, id));
 	}
 	String hive = (String)rObj.getHive().getValue();
 
@@ -153,12 +153,13 @@ public class RegistryAdapter implements IAdapter {
 		String variableId = rObj.getKey().getValue().getVarRef();
 		list.addAll(rc.resolve(variableId));
 	    } catch (NoSuchElementException e) {
-		JOVALSystem.getLogger().log(Level.FINER,
-					    JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), rObj.getId()));
+		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), rObj.getId());
 	    } catch (ResolveException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage("ERROR_RESOLVE_VAR", rObj.getKey().getValue().getVarRef(), e.getMessage()));
+		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR,
+						  rObj.getKey().getValue().getVarRef(), e.getMessage());
+		msg.setValue(s);
 		rc.addMessage(msg);
 	    }
 	} else {
@@ -189,7 +190,7 @@ public class RegistryAdapter implements IAdapter {
 	  }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	}
 
 	if (rObj.isSetBehaviors()) {
@@ -300,14 +301,14 @@ public class RegistryAdapter implements IAdapter {
 		} catch (PatternSyntaxException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
-		    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 		break;
     
 	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	    }
 	}
 
@@ -409,7 +410,7 @@ public class RegistryAdapter implements IAdapter {
 	      }
 
 	      default:
-		throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINREG_VALUETOSTR",
+		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_VALUETOSTR,
 								  key.toString(), name, val.getClass().getName()));
 	    }
 	    item.getValue().addAll(values);

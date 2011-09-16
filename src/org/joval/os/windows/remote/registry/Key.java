@@ -7,8 +7,6 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -20,6 +18,7 @@ import org.jinterop.winreg.JIWinRegFactory;
 
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IValue;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -62,10 +61,11 @@ public class Key implements IKey {
 	    try {
 		registry.getWinreg().winreg_CloseKey(handle);
 		registry.deregisterKey(this);
-		JOVALSystem.getLogger().log(Level.FINEST, JOVALSystem.getMessage("STATUS_WINREG_KEYCLOSED", toString()));
+		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLOSED, toString());
 		return true;
 	    } catch (JIException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINREG_KEYCLOSE", toString()), e);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_KEYCLOSE, toString());
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    }
 	}
@@ -184,8 +184,7 @@ public class Key implements IKey {
 	    if (sa.length == 2) {
 		return sa[0];
 	    } else {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINREG_ENUMKEY",
-										  new Integer(n), toString()));
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMKEY, n, toString());
 		return null;
 	    }
 	} catch (JIException e) {
@@ -257,8 +256,7 @@ public class Key implements IKey {
 	    if (oa.length == 2) {
 		return (String)oa[0];
 	    } else {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINREG_ENUMVAL",
-										  new Integer(n), toString()));
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMVAL, n, toString());
 		return null;
 	    }
 	} catch (JIException e) {
@@ -309,7 +307,7 @@ public class Key implements IKey {
      */
     private void checkOpen() throws IllegalStateException {
 	if (!open) {
-	    throw new IllegalStateException(JOVALSystem.getMessage("STATUS_WINREG_KEYCLOSED", toString()));
+	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.STATUS_WINREG_KEYCLOSED, toString()));
 	}
     }
 
@@ -345,7 +343,7 @@ public class Key implements IKey {
 		    JIPolicyHandle hSubkey = registry.getWinreg().winreg_OpenKey(handle, subkey, IJIWinReg.KEY_READ);
 		    return new Key(Key.this, subkey, hSubkey);
 		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINREG_ENUMKEY",
+		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_ENUMKEY,
 								      new Integer(index), Key.this.toString()));
 		}
 	    } catch (JIException e) {
@@ -389,7 +387,7 @@ public class Key implements IKey {
 		    String name = (String)oa[0];
 		    return registry.createValue(Key.this, name);
 		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINREG_ENUMVAL",
+		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_ENUMVAL,
 								      new Integer(index), Key.this.toString()));
 		}
 	    } catch (IllegalArgumentException e) {

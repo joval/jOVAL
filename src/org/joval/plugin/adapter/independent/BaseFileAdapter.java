@@ -13,7 +13,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -45,6 +44,7 @@ import org.joval.intf.util.tree.INode;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
@@ -77,7 +77,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	ObjectType obj = rc.getObject();
 	String id = obj.getId();
 	if (!obj.getClass().getName().equals(getObjectClass().getName())) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_INSTANCE",
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_INSTANCE,
 							   getObjectClass().getName(), obj.getClass().getName()));
 	}
 
@@ -173,7 +173,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			fItem.setFilepath(filepathType);
 		    }
 		} else {
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_TEXTFILECONTENT_SPEC", id));
+		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_TEXTFILECONTENT_SPEC, id));
 		}
 
 		switch(winView) {
@@ -188,18 +188,18 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    } catch (NoSuchElementException e) {
 		// skip it
 	    } catch (IllegalAccessException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()));
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
 	    } catch (IllegalArgumentException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()));
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
 	    } catch (InvocationTargetException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_REFLECTION", e.getMessage()));
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
 	    } catch (IOException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		if (f == null) {
 		    msg.setValue(e.getMessage());
 		} else {
-		    msg.setValue(JOVALSystem.getMessage("ERROR_IO", f.getLocalName(), e.getMessage()));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_IO, e.getMessage()));
 		}
 		rc.addMessage(msg);
 	    }
@@ -253,7 +253,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 		} else {
 		    filepaths.add((String)filepath.getValue());
 		}
-		switch(filepath.getOperation()) {
+		OperationEnumeration op = filepath.getOperation();
+		switch(op) {
 		  case EQUALS:
 		    list.addAll(filepaths);
 		    break;
@@ -264,7 +265,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    }
 		    break;
 		  default:
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", filepath.getOperation()));
+		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 		}
 	    } else if (fObj.isSetPath()) {
 		//
@@ -277,7 +278,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 		} else if (path.isSetValue()) {
 		    paths.add((String)path.getValue());
 		}
-		switch(path.getOperation()) {
+		OperationEnumeration op = path.getOperation();
+		switch(op) {
 		  case EQUALS:
 		    list.addAll(paths);
 		    break;
@@ -290,7 +292,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    }
 		    break;
 		  default:
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", path.getOperation()));
+		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 		}
 
 		if (fb != null) {
@@ -359,11 +361,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 				      }
      
 				      default:
-					throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
+					throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
 										       filename.getOperation()));
 				    }
 				} catch (IllegalArgumentException e) {
-       				    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+       				    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 				}
 			    }
 			}
@@ -374,11 +376,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 		throw new OvalException("ERROR_BAD_FILEOBJECT" + obj.getId());
 	    }
 	} catch (PatternSyntaxException e) {
-       	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
+       	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (IOException e) {
-       	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+       	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (NoSuchElementException e) {
-       	    JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_NOT_FOUND", e.getMessage(), obj.getId()));
+       	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), obj.getId());
 	} catch (ResolveException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -401,7 +403,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		if (!path.endsWith(fs.getDelimiter())) {
 		    path = path + fs.getDelimiter();
 		}
-		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_FS_RECURSE", path));
+		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_FS_RECURSE, path);
 		try {
 		    IFile f = (IFile)fs.lookup(path);
 		    if (!f.exists()) {
@@ -434,7 +436,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 		} catch (NoSuchElementException e) {
 		    // dir path doesn't exist.
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", path, e.getMessage()));
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	    //
@@ -625,8 +628,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		Method getRecurseFileSystem = obj.getClass().getMethod("getRecurseFileSystem");
 		recurseFS = (String)getRecurseFileSystem.invoke(obj);
 		if (!"all".equals(recurseFS)) {
-		    JOVALSystem.getLogger().log(Level.SEVERE,
-						JOVALSystem.getMessage("ERROR_UNSUPPORTED_BEHAVIOR", recurseFS));
+		    JOVALSystem.getLogger().error(JOVALMsg.ERROR_UNSUPPORTED_BEHAVIOR, recurseFS);
 		}
 	    }
 	    if ("none".equals(recurseDirection)) {

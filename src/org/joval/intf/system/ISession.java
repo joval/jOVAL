@@ -16,7 +16,5 @@ public interface ISession extends IBaseSession {
 
     public IFilesystem getFilesystem();
 
-    public IPathRedirector getFilesystemRedirector();
-
     public IEnvironment getEnvironment();
 }

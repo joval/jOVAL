@@ -10,12 +10,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.joval.intf.io.IRandomAccess;
 import org.joval.io.LittleEndian;
 import org.joval.io.StreamTool;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -77,14 +75,6 @@ public class ImageSectionHeader {
 	    throw new IllegalArgumentException("Bad buffer length: " + buff.length);
 	}
 
-/*
-	int pos = 0;
-	for (; i < IMAGE_SIZEOF_SHORT_NAME; i++) {
-	    if (buff[pos] == 0) {
-		break;
-	    }
-	}
-*/
 	try {
 	    name = new String(buff, 0, IMAGE_SIZEOF_SHORT_NAME, Charset.forName("UTF-8"));
 	} catch (IllegalCharsetNameException e) {

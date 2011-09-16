@@ -17,8 +17,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.NoSuchElementException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -44,6 +42,7 @@ import oval.schemas.systemcharacteristics.core.VariableValueType;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
 import org.joval.oval.xml.OvalNamespacePrefixMapper;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -71,10 +70,9 @@ public class SystemCharacteristics {
 	    if (rootObj instanceof OvalSystemCharacteristics) {
 		return (OvalSystemCharacteristics)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_SC_BAD_FILE", f));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SC_BAD_FILE, f));
 	    }
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_SC_PARSE"), e);
 	    throw new OvalException(e);
 	}
     }
@@ -113,9 +111,9 @@ public class SystemCharacteristics {
 	    csMarshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(csMarshaller, OvalNamespacePrefixMapper.URI.SC);
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.SEVERE, e.getMessage(), e);
+	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -186,16 +184,14 @@ public class SystemCharacteristics {
 	    for (ReferenceType ref : obj.getReference()) {
 		if (!itemIds.contains(ref.getItemRef())) {
 		    add = false;
-		    String s = JOVALSystem.getMessage("STATUS_SC_FILTER_ITEM", ref.getItemRef(), obj.getId());
-		    JOVALSystem.getLogger().log(Level.FINE, s);
+		    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SC_FILTER_ITEM, ref.getItemRef(), obj.getId());
 		    break;
 		}
 	    }
 	    if (add) {
 		for (VariableValueType var : obj.getVariableValue()) {
 		    if (!variables.contains(var.getVariableId())) {
-			String s = JOVALSystem.getMessage("STATUS_SC_FILTER_VARIABLE", var.getVariableId(), obj.getId());
-			JOVALSystem.getLogger().log(Level.FINE, s);
+			JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SC_FILTER_VARIABLE, var.getVariableId(), obj.getId());
 			add = false;
 			break;
 		    }
@@ -280,11 +276,11 @@ public class SystemCharacteristics {
     void relateItem(String objectId, BigInteger itemId) throws NoSuchElementException {
 	JAXBElement<? extends ItemType> item = itemTable.get(itemId);
 	if (item == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_ITEM", itemId.toString()));
+	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_ITEM, itemId.toString()));
 	}
 	ObjectType obj = objectTable.get(objectId);
 	if (obj == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", objectId));
+	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, objectId));
 	}
 
 	Hashtable<BigInteger, JAXBElement<? extends ItemType>> objectItems = objectItemTable.get(objectId);
@@ -321,11 +317,11 @@ public class SystemCharacteristics {
     void relateVariable(String objectId, String variableId) throws NoSuchElementException {
 	List<VariableValueType> variables = variableTable.get(variableId);
 	if (variables == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_VARIABLE", variableId));
+	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_VARIABLE, variableId));
 	}
 	ObjectType obj = objectTable.get(objectId);
 	if (obj == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", objectId));
+	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, objectId));
 	}
 
 	List<VariableValueType> objectVariableValues = obj.getVariableValue();
@@ -352,7 +348,7 @@ public class SystemCharacteristics {
     List<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
 	ObjectType obj = objectTable.get(id);
 	if (obj == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
+	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
 	return obj.getVariableValue();
     }
@@ -363,7 +359,7 @@ public class SystemCharacteristics {
     ObjectType getObject(String id) throws NoSuchElementException {
 	ObjectType obj = objectTable.get(id);
 	if (obj == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
+	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
 	return obj;
     }
@@ -374,7 +370,7 @@ public class SystemCharacteristics {
     List<ItemType> getItemsByObjectId(String id) throws NoSuchElementException {
 	ObjectType obj = objectTable.get(id);
 	if (obj == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage("ERROR_REF_OBJECT", id));
+	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
 	List <ItemType>items = new Vector<ItemType>();
 	if (obj.isSetReference()) {
@@ -396,17 +392,20 @@ public class SystemCharacteristics {
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOvalSystemCharacteristics(), out);
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FileNotFoundException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_GENERATE", f.toString()), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    if (out != null) {
 		try {
 		    out.close();
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE", f.toString()), e);
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
 		}
 	    }
 	}
@@ -450,9 +449,9 @@ public class SystemCharacteristics {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
         }
 	return null;
     }

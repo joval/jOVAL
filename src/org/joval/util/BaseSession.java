@@ -10,7 +10,6 @@ import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
-import java.util.logging.Level;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
@@ -18,8 +17,6 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.intf.util.IPathRedirector;
-import org.joval.util.JOVALSystem;
 
 /**
  * Base class for the Windows and Unix local ISession implementations.
@@ -31,7 +28,6 @@ public abstract class BaseSession implements ISession {
     protected File cwd;
     protected IEnvironment env;
     protected IFilesystem fs;
-    protected IPathRedirector fr = null;
 
     protected BaseSession() {
     }
@@ -48,10 +44,6 @@ public abstract class BaseSession implements ISession {
 
     public IFilesystem getFilesystem() {
 	return fs;
-    }
-
-    public IPathRedirector getFilesystemRedirector() {
-	return fr;
     }
 
     public IProcess createProcess(String command) throws Exception {

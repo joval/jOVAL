@@ -7,8 +7,6 @@ import java.net.UnknownHostException;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jinterop.dcom.common.IJIAuthInfo;
 import org.jinterop.dcom.common.JIException;
@@ -27,8 +25,6 @@ import org.jinterop.dcom.impls.automation.JIExcepInfo;
 
 import com.h9labs.jwbem.SWbemServices;
 import com.h9labs.jwbem.SWbemObjectSet;
-
-import org.joval.util.JOVALSystem;
 
 /**
  * Sparse implementation of a Win32_Process WMI class.

@@ -7,7 +7,6 @@ import java.util.Hashtable;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -34,6 +33,7 @@ import org.joval.os.windows.identity.LocalDirectory;
 import org.joval.os.windows.identity.User;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -89,8 +89,8 @@ public class UserAdapter implements IAdapter {
 		} else {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.WARNING);
-		    String s = JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", user);
-		    JOVALSystem.getLogger().log(Level.WARNING, s);
+		    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, user);
+		    JOVALSystem.getLogger().warn(s);
 		    msg.setValue(s);
 		    rc.addMessage(msg);
 		}
@@ -121,21 +121,21 @@ public class UserAdapter implements IAdapter {
 		} catch (PatternSyntaxException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
-		    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 		break;
     
 	      default:
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	    }
 	} catch (NoSuchElementException e) {
 	    // No match.
 	} catch (WmiException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALSystem.getMessage("ERROR_WINWMI_GENERAL", e.getMessage()));
+	    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
 	    rc.addMessage(msg);
 	}
 	return items;

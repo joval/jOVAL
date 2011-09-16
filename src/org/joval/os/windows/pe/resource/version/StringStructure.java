@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Vector;
 
 import org.joval.io.LittleEndian;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 public class StringStructure {
@@ -37,8 +38,7 @@ public class StringStructure {
 
 	int computedLength = offset - initialOffset;
 	if (length < computedLength) {
-	    throw new IOException(JOVALSystem.getMessage("ERROR_PE_STRINGSTR_OVERFLOW",
-							 new Integer(computedLength), new Integer(length)));
+	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_PE_STRINGSTR_OVERFLOW, computedLength, length));
 	} else {
 	    //
 	    // Sometimes the specified length is less than the actual length of the structure, so we correct it.

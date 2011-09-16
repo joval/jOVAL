@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -29,6 +28,7 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -130,15 +130,17 @@ public class Patch54Adapter extends PatchAdapter {
 	    } catch (PatternSyntaxException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 	  }
 
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", pObj.getBase().getOperation()));
+	  default: {
+	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getBase().getOperation());
+	    throw new OvalException(s);
+	  }
 	}
 
 	if (error != null) {
@@ -196,7 +198,7 @@ public class Patch54Adapter extends PatchAdapter {
 		    }
 		    break;
 		  default:
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION",
+		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
 								   pObj.getPatchVersion().getOperation()));
 		}
 	    }

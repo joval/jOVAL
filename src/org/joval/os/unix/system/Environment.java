@@ -7,12 +7,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -32,7 +32,7 @@ public class Environment implements IEnvironment {
 	    InputStream in = p.getInputStream();
 	    props.load(in);
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 

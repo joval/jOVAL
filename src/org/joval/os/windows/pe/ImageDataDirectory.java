@@ -10,9 +10,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.joval.io.StreamTool;
 import org.joval.io.LittleEndian;
 import org.joval.util.JOVALSystem;

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -21,6 +20,7 @@ import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITree;
 import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.util.tree.Forest;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.tree.Tree;
@@ -65,7 +65,8 @@ public abstract class CachingTree implements ITree {
 	    try {
 		return cache.search(p, followLinks);
 	    } catch (PatternSyntaxException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()), e);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PATTERN, p.pattern());
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    return null;
 	} else {
@@ -137,8 +138,7 @@ public abstract class CachingTree implements ITree {
 	    }
 	    result.addAll(treeSearch(null, sb.toString(), followLinks));
 	} catch (Exception e) {
-	    String msg = e.getMessage() == null ? "null" : e.getMessage();
-	    JOVALSystem.getLogger().log(Level.WARNING, msg, e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return result;
     }
@@ -160,10 +160,10 @@ public abstract class CachingTree implements ITree {
      */
     private Collection<String> treeSearch(String parent, String path, boolean followLinks) throws Exception {
 	if (path == null || path.length() < 1) {
-	    throw new IOException(JOVALSystem.getMessage("ERROR_FS_NULLPATH"));
+	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_NULLPATH));
 	}
 	String parentName = parent == null ? "[root]" : parent;
-	JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_FS_SEARCH", parentName, path));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_FS_SEARCH, parentName, path);
 
 	INode accessor = null;
 	//

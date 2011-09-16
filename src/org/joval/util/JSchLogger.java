@@ -8,51 +8,79 @@ import java.util.Arrays;
 
 import org.vngx.jsch.util.Logger;
 
+import org.slf4j.cal10n.LocLogger;
+
 /**
- * A java.util.logging Logger for JSch.
+ * An SLF4J bridge for JSch.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class JSchLogger implements Logger {
-    private java.util.logging.Logger logger;
+    private LocLogger logger;
 
-    public JSchLogger(java.util.logging.Logger logger) {
+    public JSchLogger(LocLogger logger) {
 	this.logger = logger;
     }
 
     // Implement org.vngx.util.Logger
 
     public boolean isEnabled(Level level) {
-	return getLevel(level) == logger.getLevel();
+	return true;
     }
 
     public void log(Level level, String message) {
-	logger.log(getLevel(level), message);
+	switch(level) {
+	  case DEBUG:
+	    logger.debug(message);
+	    break;
+	  case WARN:
+	    logger.warn(message);
+	    break;
+	  case ERROR:
+	  case FATAL:
+	    logger.error(message);
+	    break;
+	  case INFO:
+	  default:
+	    logger.info(message);
+	}
     }
 
     public void log(Level level, String message, Object... args) {
-	logger.log(getLevel(level), message, Arrays.asList(args).toArray());
+	Object[] oa = Arrays.asList(args).toArray();
+	switch(level) {
+	  case DEBUG:
+	    logger.debug(message, oa);
+	    break;
+	  case WARN:
+	    logger.warn(message, oa);
+	    break;
+	  case ERROR:
+	  case FATAL:
+	    logger.error(message, oa);
+	    break;
+	  case INFO:
+	  default:
+	    logger.info(message, oa);
+	}
     }
 
     public void log(Level level, String message, Throwable exception) {
-	logger.log(getLevel(level), message, exception);
-    }
-
-    // Private
-
-    java.util.logging.Level getLevel(Level level) {
 	switch(level) {
 	  case DEBUG:
-	    return java.util.logging.Level.FINE;
-	  case INFO:
-	    return java.util.logging.Level.INFO;
+	    logger.debug(message, exception);
+	    break;
 	  case WARN:
+	    logger.warn(message, exception);
+	    break;
 	  case ERROR:
-	    return java.util.logging.Level.WARNING;
 	  case FATAL:
+	    logger.error(message, exception);
+	    break;
+	  case INFO:
 	  default:
-	    return java.util.logging.Level.SEVERE;
+	    logger.info(message, exception);
 	}
     }
 }

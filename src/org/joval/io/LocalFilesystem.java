@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.NoSuchElementException;
-import java.util.logging.Level;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
@@ -18,6 +17,7 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.system.IEnvironment;
 import org.joval.util.tree.CachingTree;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -62,9 +62,10 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 		throw new NoSuchElementException(path);
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", e.getMessage()), e);
-	    return null;
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString());
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
+	return null;
     }
 
     // Implement IFilesystem
@@ -93,11 +94,11 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 		    return new FileProxy(this, new File(realPath), path);
 	        }
 	    }
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_FS_LOCALPATH", realPath));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
 	} else if (realPath.charAt(0) == File.separatorChar) {
 	    return new FileProxy(this, new File(realPath), path);
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_FS_LOCALPATH", realPath));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
 	}
     }
 

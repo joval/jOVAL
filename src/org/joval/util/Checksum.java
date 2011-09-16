@@ -3,10 +3,15 @@
 
 package org.joval.util;
 
-import java.io.*;
-import java.security.*;
-import java.util.logging.Level;
+import java.io.File;
+import java.io.ByteArrayInputStream;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -27,7 +32,8 @@ public class Checksum {
 		    in.close();
 		}
 	    } catch (IOException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_FILE_CLOSE", f.toString()), e);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
     }
@@ -56,7 +62,7 @@ public class Checksum {
             in.close();
             return digest.digest();
 	} catch (NoSuchAlgorithmException e) {
-	    throw new IOException (e.getMessage());
+	    throw new IOException(e.getMessage());
 	}
     }
 }

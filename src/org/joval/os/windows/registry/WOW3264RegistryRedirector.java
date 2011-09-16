@@ -6,7 +6,6 @@ package org.joval.os.windows.registry;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -14,6 +13,7 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IStringValue;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.tree.Forest;
@@ -47,7 +47,7 @@ public class WOW3264RegistryRedirector implements IPathRedirector {
 		try {
 		    p = Pattern.compile(s);
 		} catch (PatternSyntaxException e) {
-		    JOVALSystem.getLogger().log(Level.SEVERE, JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage(), e));
+		    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
@@ -72,7 +72,7 @@ public class WOW3264RegistryRedirector implements IPathRedirector {
 		}
 	    }
 	} catch (NoSuchElementException e) {
-	    JOVALSystem.getLogger().log(Level.SEVERE, JOVALSystem.getMessage("ERROR_WINREG_FLAVOR", e.getMessage()));
+	    JOVALSystem.getLogger().error(JOVALMsg.ERROR_WINREG_FLAVOR, e.getMessage());
 	}
 	return Flavor.UNSUPPORTED;
     }
@@ -85,7 +85,7 @@ public class WOW3264RegistryRedirector implements IPathRedirector {
     public WOW3264RegistryRedirector(Flavor flavor) {
 	switch(flavor) {
 	  case UNSUPPORTED:
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("STATUS_WINREG_REDIRECT_OVERRIDE", flavor));
+	    JOVALSystem.getLogger().warn(JOVALMsg.STATUS_WINREG_REDIRECT_OVERRIDE, flavor);
 	    // fall-through
 	  default:
 	    this.flavor = flavor;

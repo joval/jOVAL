@@ -3,15 +3,6 @@
 
 package org.joval.os.unix.remote.system;
 
-import java.util.logging.Level;
-
-import org.vngx.jsch.JSch;
-import org.vngx.jsch.ChannelExec;
-import org.vngx.jsch.ChannelType;
-import org.vngx.jsch.Session;
-import org.vngx.jsch.UserInfo;
-import org.vngx.jsch.exception.JSchException;
-
 import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
@@ -19,14 +10,12 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.util.IPathRedirector;
 import org.joval.os.unix.Sudo;
 import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.unix.system.Environment;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.io.SftpFilesystem;
 import org.joval.ssh.system.SshSession;
-import org.joval.util.JOVALSystem;
 
 /**
  * A representation of Unix session.
@@ -34,7 +23,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixSession implements ILocked, IUnixSession, IPathRedirector {
+public class UnixSession implements ILocked, IUnixSession {
     private SshSession ssh;
     private ICredential cred;
     private Credential rootCred = null;
@@ -57,12 +46,6 @@ public class UnixSession implements ILocked, IUnixSession, IPathRedirector {
 	}
 	this.cred = cred;
 	return ssh.unlock(cred);
-    }
-
-    // Implement IPathRedirector
-
-    public String getRedirect(String path) {
-	return path;
     }
 
     // Implement IBaseSession
@@ -114,10 +97,6 @@ public class UnixSession implements ILocked, IUnixSession, IPathRedirector {
 
     public IFilesystem getFilesystem() {
 	return fs;
-    }
-
-    public IPathRedirector getFilesystemRedirector() {
-	return this;
     }
 
     public IEnvironment getEnvironment() {

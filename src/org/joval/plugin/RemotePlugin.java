@@ -6,7 +6,6 @@ package org.joval.plugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.logging.Level;
 
 import org.vngx.jsch.exception.JSchException;
 
@@ -23,6 +22,7 @@ import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.system.SshSession;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -49,7 +49,7 @@ public class RemotePlugin extends OnlinePlugin {
 	try {
 	    sessionFactory = new SessionFactory(dir);
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 

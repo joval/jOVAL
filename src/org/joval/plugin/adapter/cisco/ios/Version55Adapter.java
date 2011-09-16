@@ -11,11 +11,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.Vector;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.MessageType;
-import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.ios.Version55Object;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;

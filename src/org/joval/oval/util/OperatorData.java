@@ -7,6 +7,7 @@ import oval.schemas.common.OperatorEnumeration;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -117,7 +118,7 @@ public class OperatorData {
 	    break;
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	}
 	return result;
     }

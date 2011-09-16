@@ -7,8 +7,6 @@ import java.net.UnknownHostException;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jinterop.dcom.common.IJIAuthInfo;
 import org.jinterop.dcom.common.JIDefaultAuthInfoImpl;
@@ -27,7 +25,6 @@ import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.os.windows.remote.wmi.query.SimpleSWbemObjectSet;
 import org.joval.os.windows.wmi.WmiException;
-import org.joval.util.JOVALSystem;
 
 /**
  * A thin wrapper class around the JWbem packages that maintains one SWbemServices per namespace associated with

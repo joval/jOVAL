@@ -8,7 +8,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 
 import org.joval.intf.windows.wmi.IWmiProvider;
@@ -16,7 +15,6 @@ import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.os.windows.wmi.WmiException;
-import org.joval.util.JOVALSystem;
 
 /**
  * The LocalDirectory class provides a mechanism to query the local User/Group directory for a Windows machine.  It is

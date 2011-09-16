@@ -7,7 +7,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -17,6 +16,7 @@ import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.os.windows.wmi.WmiException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
@@ -132,7 +132,7 @@ public class ActiveDirectory {
 		    } else if (members[i].indexOf(",OU=Domain Users") != -1) {
 			userNetbiosNames.add(toNetbiosName(members[i]));
 		    } else {
-			JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_AD_BAD_OU", members[i]));
+			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_AD_BAD_OU, members[i]);
 		    }
 		}
 		group = new Group(domain, cn, sid, userNetbiosNames, groupNetbiosNames);
@@ -167,8 +167,7 @@ public class ActiveDirectory {
 			    } else if (members[i].indexOf(",OU=Domain Users") != -1) {
 				userNetbiosNames.add(toNetbiosName(members[i]));
 			    } else {
-				JOVALSystem.getLogger().log(Level.WARNING,
-							    JOVALSystem.getMessage("ERROR_AD_BAD_OU", members[i]));
+				JOVALSystem.getLogger().warn(JOVALMsg.ERROR_AD_BAD_OU, members[i]);
 			    }
 			}
 			String sid = toSid(columns.getItem("DS_objectSid").getValueAsString());
@@ -176,14 +175,14 @@ public class ActiveDirectory {
 			groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
 			groupsBySid.put(sid, group);
 		    } else {
-			JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_GROUP_SKIP", dn, dc));
+			JOVALSystem.getLogger().trace(JOVALMsg.STATUS_AD_GROUP_SKIP, dn, dc);
 		    }
 		}
 		if (group == null) {
 		    throw new NoSuchElementException(netbiosName);
 		}
 	    } else {
-		throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", netbiosName));
+		throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, netbiosName));
 	    }
 	}
 	return group;
@@ -214,15 +213,16 @@ public class ActiveDirectory {
 		String dns = columns.getItem("DnsForestName").getValueAsString();
 		String name = columns.getItem("Name").getValueAsString();
 		if (domain == null || dns == null) {
-		    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_DOMAIN_SKIP", name));
+		    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_AD_DOMAIN_SKIP, name);
 		} else {
-		    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_AD_DOMAIN_ADD", domain, dns));
+		    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_AD_DOMAIN_ADD, domain, dns);
 		    domains.put(domain.toUpperCase(), dns);
 		}
 	    }
 	    initialized = true;
 	} catch (WmiException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WMI_GENERAL", e.getMessage()), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_AD_INIT);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -234,10 +234,10 @@ public class ActiveDirectory {
 	if (isMember(netbiosName)) {
 	    String dns = domains.get(domain.toUpperCase());
 	    String upn = new StringBuffer(getName(netbiosName)).append("@").append(dns).toString();
-	    JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_UPN_CONVERT", netbiosName, upn));
+	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_UPN_CONVERT, netbiosName, upn);
 	    return upn;
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_AD_DOMAIN_UNKNOWN", netbiosName));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, netbiosName));
 	}
     }
 
@@ -274,7 +274,7 @@ public class ActiveDirectory {
     private String getDomain(String s) throws IllegalArgumentException {
 	int ptr = s.indexOf("\\");
 	if (ptr == -1) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_AD_DOMAIN_REQUIRED", s));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_REQUIRED, s));
 	} else {
 	    return s.substring(0, ptr);
 	}
@@ -286,7 +286,7 @@ public class ActiveDirectory {
     private String getName(String s) throws IllegalArgumentException {
 	int ptr = s.indexOf("\\");
 	if (ptr == -1) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_AD_DOMAIN_REQUIRED", s));
+	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_REQUIRED, s));
 	} else {
 	    return s.substring(ptr+1);
 	}
@@ -310,10 +310,10 @@ public class ActiveDirectory {
 	}
 	String domain = toDomain(dns.toString());
 	if (domain == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage("STATUS_NAME_DOMAIN_ERR", dn));
+	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.STATUS_NAME_DOMAIN_ERR, dn));
 	}
 	String name = domain + "\\" + groupName;
-	JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_NAME_DOMAIN_OK", dn, name));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_NAME_DOMAIN_OK, dn, name);
 	return name;
     }
 
@@ -326,7 +326,7 @@ public class ActiveDirectory {
 	    try {
 		groups.add(toNetbiosName(sa[i]));
 	    } catch (NoSuchElementException e) {
-		JOVALSystem.getLogger().log(Level.FINER, e.getMessage());
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return groups;

@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -36,6 +35,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
@@ -116,7 +116,7 @@ public class RunlevelAdapter implements IAdapter {
 		    }
 		    return true;
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	      }
 
@@ -153,7 +153,7 @@ public class RunlevelAdapter implements IAdapter {
 		    }
 		    return true;
 		} catch (Exception e) {
-		    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		} finally {
 		    if (br != null) {
 			try {
@@ -166,8 +166,7 @@ public class RunlevelAdapter implements IAdapter {
 	      }
 
 	      default:
-		JOVALSystem.getLogger().log(Level.WARNING,
-					    JOVALSystem.getMessage("ERROR_UNSUPPORTED_UNIX_FLAVOR", session.getFlavor()));
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor());
 		break;
 	    }
 	}
@@ -202,9 +201,9 @@ public class RunlevelAdapter implements IAdapter {
 	    } catch (PatternSyntaxException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
@@ -218,7 +217,7 @@ public class RunlevelAdapter implements IAdapter {
 	  }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	}
 
 	return items;
@@ -256,9 +255,9 @@ public class RunlevelAdapter implements IAdapter {
 		} catch (PatternSyntaxException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
-		    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 		break;
 	      }

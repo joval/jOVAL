@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -30,6 +29,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
@@ -108,18 +108,17 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		  }
 
 		  default:
-		    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
+		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 		}
 	    } catch (PatternSyntaxException e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()), e);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
 		throw new IOException(e);
 	    } finally {
 		if (in != null) {
 		    try {
 			in.close();
 		    } catch (IOException e) {
-			JOVALSystem.getLogger().log(Level.WARNING,
-						    JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", f.toString()), e);
+			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
 		    }
 		}
 	    }

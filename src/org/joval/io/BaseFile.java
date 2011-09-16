@@ -8,11 +8,11 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
-import java.util.logging.Level;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.util.tree.INode;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -43,7 +43,8 @@ public abstract class BaseFile implements IFile {
 		return Type.BRANCH;
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", e.getMessage(), e));
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString());
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return Type.LEAF;
     }
@@ -75,7 +76,8 @@ public abstract class BaseFile implements IFile {
 	    }
 	    return children;
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", e.getMessage(), e));
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString());
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	throw new UnsupportedOperationException(getPath());
     }
@@ -91,7 +93,8 @@ public abstract class BaseFile implements IFile {
 		}
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_IO", e.getMessage(), e));
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString());
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	throw new UnsupportedOperationException(getPath());
     }

@@ -3,11 +3,9 @@
 
 package org.joval.os.windows.registry;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IMultiStringValue;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -24,7 +22,7 @@ public class MultiStringValue extends Value implements IMultiStringValue {
 	this.parent = parent;
 	this.name = name;
 	this.data = data;
-	JOVALSystem.getLogger().log(Level.FINEST, JOVALSystem.getMessage("STATUS_WINREG_VALINSTANCE", toString()));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, toString());
     }
 
     public String[] getData() {

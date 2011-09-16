@@ -8,8 +8,6 @@ import java.util.NoSuchElementException;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 
 import org.joval.intf.system.IEnvironment;
@@ -19,6 +17,7 @@ import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IExpandStringValue;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -58,7 +57,7 @@ public class Environment implements IEnvironment {
 		props.setProperty(SYSTEMROOT, sysRoot);
 		props.setProperty(WINDIR, sysRoot);
 	    } else {
-		throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_SYSROOT"));
+		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_SYSROOT));
 	    }
 
 	    env = registry.fetchKey(SYSTEM_ENV[0], SYSTEM_ENV[1]);
@@ -71,7 +70,7 @@ public class Environment implements IEnvironment {
 		    toExpand.addElement(name);
 		    props.setProperty(name, ((IExpandStringValue)val).getData());
 		} else {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINENV_NONSTR" + val.getName()));
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
 		}
 	    }
 
@@ -81,14 +80,14 @@ public class Environment implements IEnvironment {
 		String programFiles = ((IStringValue)programFilesValue).getData();
 		props.setProperty(PROGRAMFILES, programFiles);
 	    } else {
-		throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILES"));
+		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILES));
 	    }
 	    IValue commonFilesValue = common.getValue("CommonFilesDir");
 	    if (commonFilesValue.getType() == IValue.REG_SZ) {
 		String commonFiles = ((IStringValue)commonFilesValue).getData();
 		props.setProperty(COMMONPROGRAMFILES, commonFiles);
 	    } else {
-		throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILES"));
+		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILES));
 	    }
 
 	    if (props.getProperty(IWindowsSession.ENV_ARCH).indexOf("64") != -1) {
@@ -97,25 +96,25 @@ public class Environment implements IEnvironment {
 		    String programFilesX86 = ((IStringValue)programFilesX86Value).getData();
 		    props.setProperty(PROGRAMFILESX86, programFilesX86);
 		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILESX86"));
+		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
 		}
 		IValue commonFilesX86Value = common.getValue("CommonFilesDir (x86)");
 		if (commonFilesX86Value.getType() == IValue.REG_SZ) {
 		    String commonFilesX86 = ((IStringValue)commonFilesX86Value).getData();
 		    props.setProperty(COMMONPROGRAMFILESX86, commonFilesX86);
 		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILESX86"));
+		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
 		}
 		IValue commonFilesW6432Value = common.getValue("CommonW6432Dir");
 		if (commonFilesW6432Value.getType() == IValue.REG_SZ) {
 		    String commonFilesW6432 = ((IStringValue)commonFilesW6432Value).getData();
 		    props.setProperty(COMMONPROGRAMW6432, commonFilesW6432);
 		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINENV_PROGRAMFILESX86"));
+		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
 		}
 	    }
 	} catch (NoSuchElementException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINENV_SYSENV"), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_SYSENV);
 	} finally {
 	    if (cv != null) {
 		cv.closeAll();
@@ -152,11 +151,11 @@ public class Environment implements IEnvironment {
 			props.setProperty(name, s);
 		    }
 		} else {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINENV_NONSTR" + val.getName()));
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
 		}
 	    }
 	} catch (NoSuchElementException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINENV_USRENV"));
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_USRENV);
 	} finally {
 	    if (userEnv != null) {
 		userEnv.closeAll();
@@ -177,11 +176,11 @@ public class Environment implements IEnvironment {
 		    }
 		    props.setProperty(name, ((IExpandStringValue)val).getData());
 		} else {
-		    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_WINENV_NONSTR" + val.getName()));
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
 		}
 	    }
 	} catch (NoSuchElementException e) {
-	    JOVALSystem.getLogger().log(Level.INFO, JOVALSystem.getMessage("ERROR_WINENV_VOLENV"));
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_VOLENV);
 	} finally {
 	    if (volatileEnv != null) {
 		volatileEnv.closeAll();

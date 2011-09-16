@@ -8,6 +8,7 @@ import java.util.logging.Level;
 
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -57,7 +58,8 @@ public interface IUnixSession extends ISession {
 		    }
 		}
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PLUGIN_INTERFACE"), e);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_UNIX_FLAVOR);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    return flavor;
 	}

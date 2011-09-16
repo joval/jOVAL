@@ -28,6 +28,7 @@ CLASSES=\
 	org.joval.oval.xml.SchematronValidationException		\
 	org.joval.oval.xml.SchematronValidator				\
 	org.joval.util.Checksum						\
+	org.joval.util.JOVALMsg						\
 	org.joval.util.JOVALSystem					\
 	org.joval.util.Producer						\
 	org.joval.util.StringTools					\

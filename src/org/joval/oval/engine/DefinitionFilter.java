@@ -5,7 +5,6 @@ package org.joval.oval.engine;
 
 import java.io.File;
 import java.util.List;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -40,7 +39,6 @@ public class DefinitionFilter {
 		throw new OvalException("Not an Evaluation Definitions file: " + f);
 	    }
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, "Failed to parse Evaluation Definitions", e);
 	    throw new OvalException(e);
 	}
     }

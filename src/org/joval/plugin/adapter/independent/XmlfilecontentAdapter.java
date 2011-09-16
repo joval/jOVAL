@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Stack;
 import java.util.Vector;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
@@ -38,13 +37,14 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
 /**
  * Evaluates Xmlfilecontent OVAL tests.
  *
- * DAS: Specify a maximum file size supported
+ * DAS: Specify a maximum file size supported?
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -59,7 +59,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 	    factory.setNamespaceAware(true);
 	    builder = factory.newDocumentBuilder();
 	} catch (ParserConfigurationException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -123,22 +123,21 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 	    } catch (XPathExpressionException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage("ERROR_XML_XPATH", expression, e.getMessage()));
+		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_XML_XPATH, expression, e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } catch (SAXException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage("ERROR_XML_PARSE", f.getLocalName(), e.getMessage()));
+		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_XML_PARSE, f.getLocalName(), e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
 		if (in != null) {
 		    try {
 			in.close();
 		    } catch (IOException e) {
-			JOVALSystem.getLogger().log(Level.WARNING,
-						    JOVALSystem.getMessage("ERROR_FILE_STREAM_CLOSE", f.toString()), e);
+			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
 		    }
 		}
 	    }

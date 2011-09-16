@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Vector;
-import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -32,6 +31,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
@@ -61,7 +61,7 @@ public class RpminfoAdapter implements IAdapter {
 	if (session != null) {
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
-		JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_RPMINFO_LIST"));
+		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_RPMINFO_LIST);
 		IProcess p = session.createProcess("rpm -q -a");
 		p.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -73,7 +73,7 @@ public class RpminfoAdapter implements IAdapter {
 		rpms = list.toArray(new String[list.size()]);
 		return true;
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return false;
@@ -93,10 +93,10 @@ public class RpminfoAdapter implements IAdapter {
 	    } catch (Exception e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		String s = JOVALSystem.getMessage("ERROR_RPMINFO", (String)rObj.getName().getValue(), e.getMessage());
+		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_RPMINFO, (String)rObj.getName().getValue(), e.getMessage());
 		msg.setValue(s);
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().log(Level.WARNING, s, e);
+		JOVALSystem.getLogger().warn(s, e);
 	    }
 	    break;
 
@@ -112,9 +112,9 @@ public class RpminfoAdapter implements IAdapter {
 	    } catch (PatternSyntaxException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage("ERROR_PATTERN", e.getMessage()));
+		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
@@ -129,8 +129,10 @@ public class RpminfoAdapter implements IAdapter {
 	    break;
 	  }
 
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", rObj.getName().getOperation()));
+	  default: {
+	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, rObj.getName().getOperation());
+	    throw new OvalException(s);
+	  }
 	}
 
 	return items;
@@ -142,14 +144,15 @@ public class RpminfoAdapter implements IAdapter {
     private void loadFullPackageMap() {
 	if (loaded) return;
 
-	JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_RPMINFO_FULL"));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_RPMINFO_FULL);
 	packageMap = new Hashtable<String, RpminfoItem>();
 	for (int i=0; i < rpms.length; i++) {
 	    try {
 		RpminfoItem item = getItem(rpms[i]);
 		packageMap.put((String)item.getName().getValue(), item);
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_RPMINFO", rpms[i], e.getMessage()), e);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_RPMINFO, rpms[i]);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	loaded = true;
@@ -161,7 +164,7 @@ public class RpminfoAdapter implements IAdapter {
 	    return item;
 	}
 
-	JOVALSystem.getLogger().log(Level.FINER, JOVALSystem.getMessage("STATUS_RPMINFO_RPM", packageName));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_RPMINFO_RPM, packageName);
 	item = JOVALSystem.factories.sc.linux.createRpminfoItem();
 	String pkgArch=null, pkgVersion=null, pkgRelease=null;
 	IProcess p = session.createProcess("rpm -q " + packageName + " -i");
@@ -230,7 +233,7 @@ public class RpminfoAdapter implements IAdapter {
 		    signatureKeyid.setStatus(StatusEnumeration.ERROR);
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALSystem.getMessage("ERROR_RPMINFO_SIGKEY", value));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_RPMINFO_SIGKEY, value));
 		    item.getMessage().add(msg);
 		} else {
 		    signatureKeyid.setValue(value.substring(value.indexOf("Key ID")+7).trim());

@@ -72,7 +72,8 @@ public class Main implements IObserver {
     private static ExecutionState state = null;
     private static String lastStatus = null;
 
-    private static Logger logger = JOVALSystem.getLogger();
+    private static Logger logger = Logger.getLogger("jovaldi");
+
     private static PropertyResourceBundle resources;
     static {
 	try {
@@ -361,17 +362,18 @@ public class Main implements IObserver {
 	try {
 	    InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("jovaldi.logging.properties");
 	    LogManager.getLogManager().readConfiguration(in);
-	    JOVALSystem.getLogger().setLevel(state.logLevel);
+
+	    Logger jSysLogger = Logger.getLogger(JOVALSystem.class.getName());
 	    Handler logHandler = new FileHandler(state.logFile.toString(), false);
 	    logHandler.setFormatter(new LogfileFormatter());
-	    JOVALSystem.getLogger().addHandler(logHandler);
+	    logger.addHandler(logHandler);
+	    jSysLogger.addHandler(logHandler);
 	    if (state.printLogs) {
 		Handler consoleHandler = new ConsoleHandler();
 		consoleHandler.setFormatter(new ConsoleFormatter());
 		consoleHandler.setLevel(state.logLevel);
-		JOVALSystem.getLogger().addHandler(consoleHandler);
-	    } else {
-//		consoleHandler.setLevel(Level.SEVERE);
+		logger.addHandler(consoleHandler);
+		jSysLogger.addHandler(logHandler);
 	    }
 	} catch (IOException e) {
 	    e.printStackTrace();

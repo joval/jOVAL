@@ -23,6 +23,7 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.util.CheckData;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -70,7 +71,8 @@ public class VariableAdapter implements IAdapter {
 	} catch (ResolveException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALSystem.getMessage("ERROR_RESOLVE_VAR", (String)vObj.getVarRef().getValue(), e.getMessage()));
+	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, (String)vObj.getVarRef().getValue(), e.getMessage());
+	    msg.setValue(s);
 	    rc.addMessage(msg);
 	}
 	return items;

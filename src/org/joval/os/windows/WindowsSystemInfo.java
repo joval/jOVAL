@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.Vector;
-import java.util.logging.Level;
 
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemIPAddressStringType;
@@ -28,6 +27,7 @@ import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -92,7 +92,7 @@ public class WindowsSystemInfo {
 		    info.setOsName(((IStringValue)pnVal).getData());
 		}
 	    } else {
-		throw new Exception(JOVALSystem.getMessage("ERROR_WINREG_CONNECT"));
+		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_CONNECT));
 	    }
 
 	    wmiConnected = wmi.connect();
@@ -121,12 +121,13 @@ public class WindowsSystemInfo {
 		}
 		info.setInterfaces(interfacesType);
 	    } else {
-		throw new Exception(JOVALSystem.getMessage("ERROR_WMI_CONNECT"));
+		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_WMI_CONNECT));
 	    }
 	} catch (WmiException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_PLUGIN_INTERFACE"), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, e.getMessage(), e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    try {
 		if (regConnected) {

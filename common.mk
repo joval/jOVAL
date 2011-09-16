@@ -44,5 +44,6 @@ GENSRC=$(TOP)/src-gen
 OVAL=$(TOP)/oval-schema
 JOVAL=$(TOP)/jovaldi
 SCHEMALIB=$(OVAL)/oval-schema-$(OVAL_SCHEMA_VERSION).jar
+JOVAL_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(JOVAL)/$(LIBDIR)/*)))
 LIBDIR=$(RSRC)/lib
 LIB=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(LIBDIR)/*)))

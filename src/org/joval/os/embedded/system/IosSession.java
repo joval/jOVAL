@@ -11,7 +11,6 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.intf.util.IPathRedirector;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.BaseSession;
 
@@ -64,10 +63,6 @@ public class IosSession implements ILocked, ISession {
     }
 
     public IFilesystem getFilesystem() {
-	return null;
-    }
-
-    public IPathRedirector getFilesystemRedirector() {
 	return null;
     }
 

@@ -43,10 +43,10 @@ public class Remote {
 	    }
 
 	    if ("true".equals(props.getProperty("joval.verbose"))) {
-		JOVALSystem.setInBuiltLogHandler(true);
-		JOVALSystem.getLogger().setLevel(Level.FINEST);
-	    } else {
-		JOVALSystem.getLogger().setLevel(Level.WARNING);
+		Handler consoleHandler = new ConsoleHandler();
+		consoleHandler.setFormatter(new ConsoleFormatter());
+		consoleHandler.setLevel(Level.FINEST);
+		Logger.getLogger(JOVALSystem.class.getName()).addHandler(consoleHandler);
 	    }
 	    if ("true".equals(props.getProperty("jinterop.verbose"))) {
 		JISystem.setInBuiltLogHandler(true);
@@ -143,6 +143,14 @@ public class Remote {
 	    e.printStackTrace();
 	}
 	System.exit(0);
+    }
+
+    private static class ConsoleFormatter extends Formatter {
+        public String format(LogRecord record) {
+            StringBuffer line = new StringBuffer(record.getMessage());
+            line.append('\n');
+            return line.toString();
+        }
     }
 }
 

@@ -7,11 +7,10 @@ import java.io.IOException;
 import java.io.PrintStream;
 
 import java.util.Date;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.joval.intf.io.IRandomAccess;
 import org.joval.io.LittleEndian;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -79,8 +78,8 @@ public class ImageNTHeaders {
 
     public ImageSectionHeader getImageSectionHeader(int i) {
 	if (i < 0 || i > sections.length) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_WINPE_ILLEGALSECTION",
-								      new Integer(sections.length), new Integer(i)));
+	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_ILLEGALSECTION, sections.length, i);
+	    throw new IllegalArgumentException(s);
 	}
 	return sections[i];
     }

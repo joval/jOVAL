@@ -6,7 +6,6 @@ package org.joval.ssh.system;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.logging.Level;
 
 import org.vngx.jsch.JSch;
 import org.vngx.jsch.ChannelExec;
@@ -23,6 +22,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -111,8 +111,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 		    } else if (line.equals("")) {
 			// ignore;
 		    } else {
-			JOVALSystem.getLogger().log(Level.WARNING,
-						    JOVALSystem.getMessage("ERROR_SSH_UNEXPECTED_RESPONSE", line));
+			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_UNEXPECTED_RESPONSE, line);
 		    }
 		}
 	    } catch (Exception e) {
@@ -156,6 +155,6 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
     }
 
     public void showMessage(String message) {
-	JOVALSystem.getLogger().log(Level.INFO, message);
+	JOVALSystem.getLogger().info(JOVALMsg.STATUS_AUTHMESSAGE, message);
     }
 }

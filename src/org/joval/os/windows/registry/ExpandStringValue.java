@@ -3,11 +3,9 @@
 
 package org.joval.os.windows.registry;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.joval.intf.windows.registry.IExpandStringValue;
 import org.joval.intf.windows.registry.IKey;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -25,7 +23,7 @@ public class ExpandStringValue extends Value implements IExpandStringValue {
 	this.name = name;
 	this.data = data;
 	this.expandedData = expandedData;
-	JOVALSystem.getLogger().log(Level.FINEST, JOVALSystem.getMessage("STATUS_WINREG_VALINSTANCE", toString()));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, toString());
     }
 
     public String getData() {

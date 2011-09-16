@@ -7,7 +7,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Vector;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
@@ -26,6 +25,7 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.IBaseSession;
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -67,15 +67,16 @@ public class LineAdapter implements IAdapter {
 	    } catch (Exception e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		String s = JOVALSystem.getMessage("ERROR_IOS_SHOW", subcommand, e.getMessage());
+		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_SHOW, subcommand, e.getMessage());
 		msg.setValue(s);
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().log(Level.WARNING, s, e);
+		JOVALSystem.getLogger().warn(s);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_OPERATION", op));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	}
 
 	return items;

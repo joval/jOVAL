@@ -8,11 +8,9 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
-import java.util.logging.Level;
 
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
-import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
@@ -22,6 +20,7 @@ import org.joval.os.windows.registry.Registry;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.wmi.WmiProvider;
 import org.joval.util.BaseSession;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -84,14 +83,14 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 	    if (is64bit) {
 		if (!"64".equals(System.getProperty("sun.arch.data.model"))) {
 		    reg.disconnect();
-		    throw new RuntimeException(JOVALSystem.getMessage("ERROR_WINDOWS_BITNESS_INCOMPATIBLE"));
+		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINDOWS_BITNESS_INCOMPATIBLE));
 		}
-		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_WINDOWS_BITNESS", "64"));
+		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "64");
 		WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
 		reg32 = new Registry(new WOW3264RegistryRedirector(flavor));
 		fs32 = new LocalFilesystem(env, new WOW3264FilesystemRedirector(env));
 	    } else {
-		JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_WINDOWS_BITNESS", "32"));
+		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
 		reg32 = reg;
 		fs32 = fs;
 	    }

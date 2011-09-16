@@ -8,7 +8,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
-import java.util.logging.Level;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -20,6 +19,7 @@ import oval.schemas.variables.core.VariablesType;
 import oval.schemas.variables.core.VariableType;
 
 import org.joval.oval.OvalException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -40,10 +40,9 @@ class Variables {
 	    if (rootObj instanceof OvalVariables) {
 		return (OvalVariables)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_VARIABLES_BAD_FILE", f.toString()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_VARIABLES_BAD_FILE, f.toString()));
 	    }
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().log(Level.WARNING, JOVALSystem.getMessage("ERROR_VARIABLES_PARSE"), e);
 	    throw new OvalException(e);
 	}
     }
@@ -69,14 +68,14 @@ class Variables {
     List<String> getValue(String id) throws OvalException {
 	VariableType var = variables.get(id);
 	if (var == null) {
-	    throw new OvalException(JOVALSystem.getMessage("ERROR_REF_VARIABLE",id));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_VARIABLE, id));
 	}
 	List<String> list = new Vector<String>();
 	for (Object obj : var.getValue()) {
 	    if (obj instanceof Node) {
 		list.add(((Node)obj).getTextContent());
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage("ERROR_UNEXPECTED_NODE", obj.getClass().getName()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNEXPECTED_NODE, obj.getClass().getName()));
 	    }
 	}
 	return list;

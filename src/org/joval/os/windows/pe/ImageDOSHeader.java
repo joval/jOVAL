@@ -7,12 +7,10 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import org.joval.intf.io.IRandomAccess;
 import org.joval.io.LittleEndian;
 import org.joval.io.StreamTool;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -109,12 +107,14 @@ public class ImageDOSHeader {
 
     private void loadFromBuffer() {
 	if (buff.length != BUFFER_SIZE) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_WINPE_BUFFERLEN", new Integer(buff.length)));
+	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_BUFFERLEN, buff.length);
+	    throw new IllegalArgumentException(s);
 	}
 
 	e_magic		= LittleEndian.getUShort(buff, 0);
 	if (e_magic != 0x5A4D) { // MZ
-	    throw new IllegalArgumentException(JOVALSystem.getMessage("ERROR_WINPE_MAGIC", Integer.toHexString(e_magic)));
+	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_MAGIC, Integer.toHexString(e_magic));
+	    throw new IllegalArgumentException(s);
 	}
 	e_cblp		= LittleEndian.getUShort(buff, 2);
 	e_cp		= LittleEndian.getUShort(buff, 4);

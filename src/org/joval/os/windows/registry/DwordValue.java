@@ -3,13 +3,10 @@
 
 package org.joval.os.windows.registry;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import org.joval.util.JOVALSystem;
-
 import org.joval.intf.windows.registry.IDwordValue;
 import org.joval.intf.windows.registry.IKey;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * Representation of a Windows registry DWORD value.
@@ -42,7 +39,7 @@ public class DwordValue extends Value implements IDwordValue {
 	this.parent = parent;
 	this.name = name;
 	this.data = data;
-	JOVALSystem.getLogger().log(Level.FINEST, JOVALSystem.getMessage("STATUS_WINREG_VALINSTANCE", toString()));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, toString());
     }
 
     public int getData() {

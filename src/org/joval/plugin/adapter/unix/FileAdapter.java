@@ -15,8 +15,6 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.logging.Logger;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
 import javax.xml.bind.JAXBElement;
@@ -47,6 +45,7 @@ import org.joval.os.unix.io.UnixFile;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.plugin.adapter.independent.BaseFileAdapter;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -106,7 +105,7 @@ public class FileAdapter extends BaseFileAdapter {
 	} else {
 	    file = new UnixFile(us, f);
 	}
-	JOVALSystem.getLogger().log(Level.FINE, JOVALSystem.getMessage("STATUS_UNIX_FILE", file.getLocalName()));
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_UNIX_FILE, file.getLocalName());
 	EntityItemIntType aTime = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	aTime.setValue(Long.toString(file.accessTime()/1000L));
 	aTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
@@ -227,7 +226,7 @@ public class FileAdapter extends BaseFileAdapter {
 	      }
 
 	      default:
-		throw new RuntimeException(JOVALSystem.getMessage("ERROR_UNSUPPORTED_UNIX_FLAVOR", us.getFlavor()));
+		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, us.getFlavor()));
 	    }
 
 	    IProcess p = us.createProcess(command, 5000, true);

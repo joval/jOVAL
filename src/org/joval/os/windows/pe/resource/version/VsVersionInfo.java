@@ -12,6 +12,7 @@ import java.util.Vector;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.io.LittleEndian;
 import org.joval.io.StreamTool;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -51,7 +52,6 @@ public class VsVersionInfo {
 	    ra.readFully(buff);
 	    value = new VsFixedFileInfo(buff);
 	}
-//	padding2 = LittleEndian.read32BitAlignPadding(ra);
 
 	children = new Vector<Object>();
 	for (int i=0; i < 2; i++) {
@@ -70,7 +70,7 @@ public class VsVersionInfo {
 	    } else if (VarFileInfo.KEY.equals(childKey)) {
 		children.add(new VarFileInfo(childLength, childValueLength, childType, childBuff, fileOffset));
 	    } else {
-		throw new IOException(JOVALSystem.getMessage("ERROR_WINPE_VSVKEY", childKey));
+		throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_VSVKEY, childKey));
 	    }
 	}
     }
