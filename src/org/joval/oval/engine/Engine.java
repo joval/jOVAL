@@ -48,6 +48,7 @@ import oval.schemas.definitions.core.ArithmeticFunctionType;
 import oval.schemas.definitions.core.BeginFunctionType;
 import oval.schemas.definitions.core.ConcatFunctionType;
 import oval.schemas.definitions.core.ConstantVariable;
+import oval.schemas.definitions.core.CountFunctionType;
 import oval.schemas.definitions.core.CriteriaType;
 import oval.schemas.definitions.core.CriterionType;
 import oval.schemas.definitions.core.DateTimeFormatEnumeration;
@@ -78,6 +79,7 @@ import oval.schemas.definitions.core.StatesType;
 import oval.schemas.definitions.core.SubstringFunctionType;
 import oval.schemas.definitions.core.TestsType;
 import oval.schemas.definitions.core.TimeDifferenceFunctionType;
+import oval.schemas.definitions.core.UniqueFunctionType;
 import oval.schemas.definitions.core.ValueType;
 import oval.schemas.definitions.core.VariableComponentType;
 import oval.schemas.definitions.core.VariableType;
@@ -1399,9 +1401,7 @@ public class Engine implements IProducer {
      * Resolve the component.  If the component is a variable, resolve it and append it to the list, appending its value to
      * the value that is ultimately returned.
      *
-     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-definitions-schema.html#FunctionGroup
-     *
-     * DAS: TBD for 5.10: implementations for Count and Unique functions
+     * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#FunctionGroup
      */
     private Collection<String> resolveInternal(Object object, Collection<VariableValueType>list)
 		throws NoSuchElementException, ResolveException, OvalException {
@@ -1663,6 +1663,30 @@ public class Engine implements IProducer {
 		return computeProduct(op, rows);
 	    }
 
+	//
+	// Process Count
+	//
+	} else if (object instanceof CountFunctionType) {
+	    CountFunctionType ct = (CountFunctionType)object;
+	    Collection<String> children = new Vector<String>();
+	    for (Object child : ct.getObjectComponentOrVariableComponentOrLiteralComponent()) {
+		children.addAll(resolveInternal(child, list));
+	    }
+	    Collection<String> values = new Vector<String>();
+	    values.add(Integer.toString(children.size()));
+	    return values;
+
+	//
+	// Process Unique
+	//
+	} else if (object instanceof UniqueFunctionType) {
+	    UniqueFunctionType ut = (UniqueFunctionType)object;
+	    HashSet<String> values = new HashSet<String>();
+	    for (Object child : ut.getObjectComponentOrVariableComponentOrLiteralComponent()) {
+		values.addAll(resolveInternal(child, list));
+	    }
+	    return values;
+
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, object.getClass().getName()));
 	}
@@ -1824,6 +1848,10 @@ public class Engine implements IProducer {
 	if (obj != null) {
 	    return obj;
 	}
+	obj = safeInvokeMethod(unknown, "getCount");
+	if (obj != null) {
+	    return obj;
+	}
 	obj = safeInvokeMethod(unknown, "getConcat");
 	if (obj != null) {
 	    return obj;
@@ -1857,6 +1885,10 @@ public class Engine implements IProducer {
 	    return obj;
 	}
 	obj = safeInvokeMethod(unknown, "getTimeDifference");
+	if (obj != null) {
+	    return obj;
+	}
+	obj = safeInvokeMethod(unknown, "getUnique");
 	if (obj != null) {
 	    return obj;
 	}

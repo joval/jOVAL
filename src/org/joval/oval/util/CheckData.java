@@ -21,6 +21,9 @@ public class CheckData extends OperatorData {
 
     public ResultEnumeration getResult(CheckEnumeration check) throws OvalException {
 	ResultEnumeration result = ResultEnumeration.UNKNOWN;
+	if (check == null) {
+	    check = CheckEnumeration.ALL; // documented as the default value
+	}
 	switch(check) {
 	  case ALL:
 	    if        (t > 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {

@@ -364,6 +364,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 					throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
 										       filename.getOperation()));
 				    }
+				} catch (UnsupportedOperationException e) {
+       				    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 				} catch (IllegalArgumentException e) {
        				    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 				}
@@ -423,16 +425,15 @@ public abstract class BaseFileAdapter implements IAdapter {
 				results.addAll(getDirs(v, --depth, direction, recurse, fs));
 			    }
 			} else { // recurse down
-			    String[] children = f.list();
-			    if (children != null) {
-				Vector<String> v = new Vector<String>();
-				for (int i=0; i < children.length; i++) {
-				    v.add(path + children[i]);
-				}
-				results.addAll(getDirs(v, --depth, direction, recurse, fs));
+			    Vector<String> v = new Vector<String>();
+			    for (INode child : f.getChildren()) {
+				v.add(child.getPath());
 			    }
+			    results.addAll(getDirs(v, --depth, direction, recurse, fs));
 			}
 		    }
+		} catch (UnsupportedOperationException e) {
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		} catch (NoSuchElementException e) {
 		    // dir path doesn't exist.
 		} catch (IOException e) {
