@@ -18,6 +18,8 @@ import org.joval.intf.system.ISession;
 import org.joval.os.embedded.system.IosSession;
 import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.remote.system.WindowsSession;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 import org.joval.ssh.system.SshSession;
 
 /**
@@ -60,7 +62,7 @@ public class SessionFactory {
 	    return new WindowsSession(hostname);
 
 	  default:
-	    throw new RuntimeException("Type: " + type + " not supported");
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSIONTYPE, type));
 	}
     }
 

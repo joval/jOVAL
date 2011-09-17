@@ -3,15 +3,6 @@
 
 package org.joval.discovery;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.ConnectException;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.Properties;
-
 import org.joval.intf.system.ISession;
 import org.joval.os.unix.system.UnixSession;
 import org.joval.os.windows.system.WindowsSession;

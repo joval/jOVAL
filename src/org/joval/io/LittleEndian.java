@@ -130,8 +130,14 @@ public class LittleEndian {
     }
 
     public static final long getLong(byte[] buff, int offset) {
-	return buff[offset] | (buff[offset + 1] << 8) | (buff[offset + 2] << 16) | (buff[offset + 3] << 24) |
-	       (buff[offset + 4] << 32) | (buff[offset + 5] << 40) | (buff[offset + 6] << 48) | (buff[offset + 7] << 56);
+	return	 buff[offset]		 |
+		(buff[offset + 1] << 8)	 |
+		(buff[offset + 2] << 16) |
+		(buff[offset + 3] << 24) |
+		(buff[offset + 4] << 32) |
+		(buff[offset + 5] << 40) |	
+		(buff[offset + 6] << 48) |
+		(buff[offset + 7] << 56);
     }
 
     public static final long getULong(byte[] buff) {
