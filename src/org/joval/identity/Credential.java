@@ -6,8 +6,8 @@ package org.joval.identity;
 import org.joval.intf.identity.ICredential;
 
 /**
- * A representation of an abstract credential.  This can either be a username/password pair, or a username, certificate
- * file and cert passphrase.
+ * A representation of an abstract credential, consisting of a username and password.  Subclasses include WindowsCredential
+ * (which adds a DOMAIN), and SSHCredential (which adds a root password, private key file and key file passphrase).
  *
  * @author David A. Solin
  * @version %I% %G%
