@@ -255,6 +255,17 @@ public class LocalDirectory {
     }
 
     /**
+     * Returns a Principal (User or Group) given a Netbios name.
+     */
+    public Principal queryPrincipal(String netbiosName) throws NoSuchElementException, WmiException {
+	try {
+	    return queryUser(netbiosName);
+	} catch (NoSuchElementException e) {
+	}
+	return queryGroup(netbiosName);
+    }
+
+    /**
      * Returns a Principal (User or Group) given a sid.
      */
     public Principal queryPrincipalBySid(String sid) throws NoSuchElementException, WmiException {

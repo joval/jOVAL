@@ -99,6 +99,7 @@ SHARED=\
 	org.joval.plugin.adapter.windows.GroupAdapter			\
 	org.joval.plugin.adapter.windows.GroupSidAdapter		\
 	org.joval.plugin.adapter.windows.RegistryAdapter		\
+	org.joval.plugin.adapter.windows.SidAdapter			\
 	org.joval.plugin.adapter.windows.SidSidAdapter			\
 	org.joval.plugin.adapter.windows.UserAdapter			\
 	org.joval.plugin.adapter.windows.UserSid55Adapter		\

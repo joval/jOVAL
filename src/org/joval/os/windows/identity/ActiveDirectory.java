@@ -188,6 +188,14 @@ public class ActiveDirectory {
 	return group;
     }
 
+    public Principal queryPrincipal(String netbiosName) throws NoSuchElementException, WmiException {
+	try {
+	    return queryUser(netbiosName);
+	} catch (NoSuchElementException e) {
+	}
+	return queryGroup(netbiosName);
+    }
+
     public Principal queryPrincipalBySid(String sid) throws NoSuchElementException, WmiException {
 	try {
 	    return queryUserBySid(sid);
