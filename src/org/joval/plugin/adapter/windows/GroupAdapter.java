@@ -5,7 +5,6 @@ package org.joval.plugin.adapter.windows;
 
 import java.util.Collection;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -43,37 +42,23 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class GroupAdapter implements IAdapter {
-    private IWmiProvider wmi;
-
-    protected LocalDirectory local = null;
-    protected ActiveDirectory ad = null;
-
+public class GroupAdapter extends UserAdapter {
     public GroupAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
-	this.local = local;
-	this.ad = ad;
-	this.wmi = wmi;
+	super(local, ad, wmi);
     }
 
     // Implement IAdapter
 
+    /**
+     * @override
+     */
     public Class getObjectClass() {
 	return GroupObject.class;
     }
 
-    public boolean connect() {
-	if (wmi.connect()) {
-	    return true;
-	}
-	return false;
-    }
-
-    public void disconnect() {
-	wmi.disconnect();
-	local = null;
-	ad = null;
-    }
-
+    /**
+     * @override
+     */
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	OperationEnumeration op = ((GroupObject)rc.getObject()).getGroup().getOperation();
@@ -141,9 +126,9 @@ public class GroupAdapter implements IAdapter {
 	return items;
     }
 
-    // Internal
+    // Private
 
-    protected JAXBElement<? extends ItemType> makeItem(Group group) {
+    private JAXBElement<? extends ItemType> makeItem(Group group) {
 	GroupItem item = JOVALSystem.factories.sc.windows.createGroupItem();
 	EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	if (local.isBuiltinGroup(group.getNetbiosName())) {
@@ -152,7 +137,7 @@ public class GroupAdapter implements IAdapter {
 	    groupType.setValue(group.getNetbiosName());
 	}
 	item.setGroup(groupType);
-	List<String> userNetbiosNames = group.getMemberUserNetbiosNames();
+	Collection<String> userNetbiosNames = group.getMemberUserNetbiosNames();
 	if (userNetbiosNames.size() == 0) {
 	    EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    userType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
@@ -168,7 +153,7 @@ public class GroupAdapter implements IAdapter {
 		item.getUser().add(userType);
 	    }
 	}
-	List<String> groupNetbiosNames = group.getMemberGroupNetbiosNames();
+	Collection<String> groupNetbiosNames = group.getMemberGroupNetbiosNames();
 	if (groupNetbiosNames.size() == 0) {
 	    EntityItemStringType subgroupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    subgroupType.setStatus(StatusEnumeration.DOES_NOT_EXIST);

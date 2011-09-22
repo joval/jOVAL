@@ -41,7 +41,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class GroupSidAdapter extends GroupAdapter {
+public class GroupSidAdapter extends UserAdapter {
     public GroupSidAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
 	super(local, ad, wmi);
     }
@@ -110,7 +110,9 @@ public class GroupSidAdapter extends GroupAdapter {
 	return items;
     }
 
-    protected JAXBElement<? extends ItemType> makeItem(Group group) {
+    // Private
+
+    private JAXBElement<? extends ItemType> makeItem(Group group) {
 	GroupSidItem item = JOVALSystem.factories.sc.windows.createGroupSidItem();
 	EntityItemStringType groupSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	groupSidType.setValue(group.getSid());

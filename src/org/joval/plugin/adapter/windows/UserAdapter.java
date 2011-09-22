@@ -76,8 +76,9 @@ public class UserAdapter implements IAdapter {
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	OperationEnumeration op = getOperation(rc.getObject());
-	String user = getValue(rc.getObject());
+	UserObject uObj = (UserObject)rc.getObject();
+	OperationEnumeration op = uObj.getUser().getOperation();
+	String user = (String)uObj.getUser().getValue();
 
 	try {
 	    switch(op) {
@@ -141,17 +142,9 @@ public class UserAdapter implements IAdapter {
 	return items;
     }
 
-    // Internal
+    // Private
 
-    protected OperationEnumeration getOperation(ObjectType obj) {
-	return ((UserObject)obj).getUser().getOperation();
-    }
-
-    protected String getValue(ObjectType obj) {
-	return (String)((UserObject)obj).getUser().getValue();
-    }
-
-    protected JAXBElement<? extends ItemType> makeItem(User user) {
+    private JAXBElement<? extends ItemType> makeItem(User user) {
 	UserItem item = JOVALSystem.factories.sc.windows.createUserItem();
 	EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	if (local.isBuiltinUser(user.getNetbiosName())) {

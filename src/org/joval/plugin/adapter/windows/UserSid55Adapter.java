@@ -36,7 +36,7 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
- * Evaluates Group OVAL tests.
+ * Collects items for the user_sid55_object.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -58,22 +58,23 @@ public class UserSid55Adapter extends UserAdapter {
      */
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	OperationEnumeration op = ((UserSid55Object)rc.getObject()).getUserSid().getOperation();
 	UserSid55Object uObj = (UserSid55Object)rc.getObject();
+	String sid = (String)uObj.getUserSid().getValue();
+	OperationEnumeration op = uObj.getUserSid().getOperation();
 
 	try {
 	    switch(op) {
 	      case EQUALS:
 		try {
-		    items.add(makeItem(local.queryUserBySid((String)uObj.getUserSid().getValue())));
+		    items.add(makeItem(local.queryUserBySid(sid)));
 		} catch (NoSuchElementException e) {
-		    items.add(makeItem(ad.queryUserBySid((String)uObj.getUserSid().getValue())));
+		    items.add(makeItem(ad.queryUserBySid(sid)));
 		}
 		break;
     
 	      case NOT_EQUAL:
 		for (User u : local.queryAllUsers()) {
-		    if (!u.getSid().equals((String)uObj.getUserSid().getValue())) {
+		    if (!u.getSid().equals(sid)) {
 			items.add(makeItem(u));
 		    }
 		}
@@ -81,7 +82,7 @@ public class UserSid55Adapter extends UserAdapter {
     
 	      case PATTERN_MATCH:
 		try {
-		    Pattern p = Pattern.compile((String)uObj.getUserSid().getValue());
+		    Pattern p = Pattern.compile(sid);
 		    for (User u : local.queryAllUsers()) {
 			if (p.matcher(u.getSid()).find()) {
 			    items.add(makeItem(u));
@@ -110,7 +111,9 @@ public class UserSid55Adapter extends UserAdapter {
 	return items;
     }
 
-    protected JAXBElement<? extends ItemType> makeItem(User user) {
+    // Private
+
+    private JAXBElement<? extends ItemType> makeItem(User user) {
 	UserSidItem item = JOVALSystem.factories.sc.windows.createUserSidItem();
 	EntityItemStringType userSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	userSidType.setValue(user.getSid());

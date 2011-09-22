@@ -3,7 +3,7 @@
 
 package org.joval.os.windows.identity;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * The User class stores information about a Windows user.
@@ -11,40 +11,25 @@ import java.util.List;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class User {
-    private String domain, name, sid;
+public class User extends Principal {
     private boolean enabled;
-    private List<String> groupNetbiosNames;
+    private Collection<String> groupNetbiosNames;
 
-    User(String domain, String name, String sid, List<String> groupNetbiosNames, boolean enabled) {
-	this.domain = domain;
-	this.name = name;
-	this.sid = sid;
+    User(String domain, String name, String sid, Collection<String> groupNetbiosNames, boolean enabled) {
+	super(domain, name, sid);
 	this.groupNetbiosNames = groupNetbiosNames;
 	this.enabled = enabled;
     }
 
-    public String getNetbiosName() {
-	return domain + "\\" + name;
-    }
-
-    public String getDomain() {
-	return domain;
-    }
-
-    public String getName() {
-	return name;
-    }
-
-    public String getSid() {
-	return sid;
-    }
-
-    public List<String> getGroupNetbiosNames() {
+    public Collection<String> getGroupNetbiosNames() {
 	return groupNetbiosNames;
     }
 
     public boolean isEnabled() {
 	return enabled;
+    }
+
+    public Type getType() {
+	return Type.USER;
     }
 }

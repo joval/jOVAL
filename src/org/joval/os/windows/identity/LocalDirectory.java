@@ -4,8 +4,8 @@
 package org.joval.os.windows.identity;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -15,6 +15,8 @@ import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.os.windows.wmi.WmiException;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * The LocalDirectory class provides a mechanism to query the local User/Group directory for a Windows machine.  It is
@@ -43,8 +45,8 @@ public class LocalDirectory {
     private Hashtable<String, User> usersByNetbiosName;
     private Hashtable<String, Group> groupsBySid;
     private Hashtable<String, Group> groupsByNetbiosName;
-    private List<String> builtinUsers;
-    private List<String> builtinGroups;
+    private Collection<String> builtinUsers;
+    private Collection<String> builtinGroups;
 
     private String hostname;
     private IWmiProvider wmi;
@@ -59,12 +61,12 @@ public class LocalDirectory {
 	groupsByNetbiosName = new Hashtable<String, Group>();
 	groupsBySid = new Hashtable<String, Group>();
 
-	builtinUsers = new Vector<String>();
+	builtinUsers = new HashSet<String>();
 	builtinUsers.add("Administrator".toUpperCase());
 	builtinUsers.add("Guest".toUpperCase());
 	builtinUsers.add("HomeGroupUser$".toUpperCase());
 
-	builtinGroups = new Vector<String>();
+	builtinGroups = new HashSet<String>();
 	builtinGroups.add("Account Operators".toUpperCase());
 	builtinGroups.add("Administrators".toUpperCase());
 	builtinGroups.add("Backup Operators".toUpperCase());
@@ -84,7 +86,6 @@ public class LocalDirectory {
 	builtinGroups.add("Replicator".toUpperCase());
 	builtinGroups.add("Server Operators".toUpperCase());
 	builtinGroups.add("Users".toUpperCase());
-
     }
 
     public User queryUserBySid(String sid) throws NoSuchElementException, WmiException {
@@ -148,7 +149,7 @@ public class LocalDirectory {
     }
 
     /**
-     * Returns a List of all the local users.
+     * Returns a Collection of all the local users.
      */
     public Collection<User> queryAllUsers() throws WmiException {
 	if (!preloadedUsers) {
@@ -229,7 +230,7 @@ public class LocalDirectory {
     }
 
     /**
-     * Returns a List of all the local groups.
+     * Returns a Collection of all the local groups.
      */
     public Collection<Group> queryAllGroups() throws WmiException {
 	if (!preloadedGroups) {
@@ -245,12 +246,33 @@ public class LocalDirectory {
 		if (groupsByNetbiosName.get(netbiosName.toUpperCase()) == null) {
 		    Group group = makeGroup(domain, name, sid);
 		    groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
-		    groupsBySid.put(netbiosName.toUpperCase(), group);
+		    groupsBySid.put(sid, group);
 		}
 	    }
 	    preloadedGroups = true;
 	}
 	return groupsByNetbiosName.values();
+    }
+
+    /**
+     * Returns a Principal (User or Group) given a sid.
+     */
+    public Principal queryPrincipalBySid(String sid) throws NoSuchElementException, WmiException {
+	try {
+	    return queryUserBySid(sid);
+	} catch (NoSuchElementException e) {
+	}
+	return queryGroupBySid(sid);
+    }
+
+    /**
+     * Returns a Collection of all local users and groups.
+     */
+    public Collection<Principal> queryAllPrincipals() throws WmiException {
+	Collection<Principal> result = new Vector<Principal>();
+	result.addAll(queryAllUsers());
+	result.addAll(queryAllGroups());
+	return result;
     }
 
     /**
@@ -264,7 +286,7 @@ public class LocalDirectory {
     }
 
     /**
-     * Returns true of the supplied NetBios group name String represents a built-in group on the local machine.
+     * Returns true if the supplied NetBios group name String represents a built-in group on the local machine.
      */
     public boolean isBuiltinGroup(String netbiosName) {
 	if (isMember(netbiosName)) {
@@ -294,6 +316,13 @@ public class LocalDirectory {
     }
 
     public boolean isMemberSid(String sid) {
+	try {
+	    queryPrincipalBySid(sid);
+	    return true;
+	} catch (NoSuchElementException e) {
+	} catch (WmiException e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+	}
 	return false;
     }
 
@@ -352,7 +381,7 @@ public class LocalDirectory {
 	String wql = USER_GROUP_WQL.replaceAll("(?i)\\$conditions", Matcher.quoteReplacement(conditions.toString()));
 
 	ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, wql);
-	List<String> groupNetbiosNames = new Vector<String>();
+	Collection<String> groupNetbiosNames = new Vector<String>();
 	for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, wql)) {
 	    ISWbemPropertySet columns = row.getProperties();
 	    String groupDomain = columns.getItem("Domain").getValueAsString();
@@ -370,7 +399,7 @@ public class LocalDirectory {
 	String wql = GROUP_USER_WQL.replaceAll("(?i)\\$conditions", Matcher.quoteReplacement(conditions.toString()));
 
 	ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, wql);
-	List<String> groupNetbiosNames = new Vector<String>(), userNetbiosNames = new Vector<String>();
+	Collection<String> groupNetbiosNames = new Vector<String>(), userNetbiosNames = new Vector<String>();
 	for (ISWbemObject row : os) {
 	    ISWbemPropertySet columns = row.getProperties();
 

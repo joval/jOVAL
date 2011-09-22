@@ -40,6 +40,7 @@ SHARED=\
 	org.joval.os.windows.identity.ActiveDirectory			\
 	org.joval.os.windows.identity.Group				\
 	org.joval.os.windows.identity.LocalDirectory			\
+	org.joval.os.windows.identity.Principal				\
 	org.joval.os.windows.identity.User				\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector		\
 	org.joval.os.windows.pe.Characteristics				\
@@ -98,6 +99,7 @@ SHARED=\
 	org.joval.plugin.adapter.windows.GroupAdapter			\
 	org.joval.plugin.adapter.windows.GroupSidAdapter		\
 	org.joval.plugin.adapter.windows.RegistryAdapter		\
+	org.joval.plugin.adapter.windows.SidSidAdapter			\
 	org.joval.plugin.adapter.windows.UserAdapter			\
 	org.joval.plugin.adapter.windows.UserSid55Adapter		\
 	org.joval.plugin.adapter.windows.UserSidAdapter			\

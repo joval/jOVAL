@@ -51,6 +51,7 @@ import org.joval.plugin.adapter.unix.UnameAdapter;
 import org.joval.plugin.adapter.windows.GroupAdapter;
 import org.joval.plugin.adapter.windows.GroupSidAdapter;
 import org.joval.plugin.adapter.windows.RegistryAdapter;
+import org.joval.plugin.adapter.windows.SidSidAdapter;
 import org.joval.plugin.adapter.windows.UserAdapter;
 import org.joval.plugin.adapter.windows.UserSid55Adapter;
 import org.joval.plugin.adapter.windows.UserSidAdapter;
@@ -106,6 +107,7 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 		ActiveDirectory ad = new ActiveDirectory(win.getWmiProvider());
 		adapters.add(new GroupAdapter(local, ad, win.getWmiProvider()));
 		adapters.add(new GroupSidAdapter(local, ad, win.getWmiProvider()));
+		adapters.add(new SidSidAdapter(local, ad, win.getWmiProvider()));
 		adapters.add(new UserAdapter(local, ad, win.getWmiProvider()));
 		adapters.add(new UserSid55Adapter(local, ad, win.getWmiProvider()));
 		adapters.add(new UserSidAdapter(local, ad, win.getWmiProvider()));

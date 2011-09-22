@@ -3,8 +3,8 @@
 
 package org.joval.os.windows.identity;
 
+import java.util.Collection;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -71,7 +71,7 @@ public class ActiveDirectory {
 		String netbiosName = toNetbiosName(dn);
 		String domain = getDomain(netbiosName);
 		String name = getName(netbiosName);
-		List<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
+		Collection<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
 		int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
 		boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
 		user = new User(domain, name, sid, groupNetbiosNames, enabled);
@@ -97,7 +97,7 @@ public class ActiveDirectory {
 		String name = getName(netbiosName);
 		String domain = getDomain(netbiosName);
 		String sid = toSid(props.getItem("DS_objectSid").getValueAsString());
-		List<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
+		Collection<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
 		int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
 		boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
 		user = new User(domain, name, sid, groupNetbiosNames, enabled);
@@ -123,8 +123,8 @@ public class ActiveDirectory {
 		String dn = columns.getItem("DS_distinguishedName").getValueAsString();
 		String netbiosName = toNetbiosName(dn);
 		String domain = getDomain(netbiosName);
-		List<String> userNetbiosNames = new Vector<String>();
-		List<String> groupNetbiosNames = new Vector<String>();
+		Collection<String> userNetbiosNames = new Vector<String>();
+		Collection<String> groupNetbiosNames = new Vector<String>();
 		String[] members = columns.getItem("DS_member").getValueAsArray();
 		for (int i=0; i < members.length; i++) {
 		    if (members[i].indexOf(",OU=Distribution Groups") != -1) {
@@ -158,8 +158,8 @@ public class ActiveDirectory {
 		    ISWbemPropertySet columns = row.getProperties();
 		    String dn = columns.getItem("DS_distinguishedName").getValueAsString();
 		    if (dn.endsWith(dc)) {
-			List<String> userNetbiosNames = new Vector<String>();
-			List<String> groupNetbiosNames = new Vector<String>();
+			Collection<String> userNetbiosNames = new Vector<String>();
+			Collection<String> groupNetbiosNames = new Vector<String>();
 			String[] members = columns.getItem("DS_member").getValueAsArray();
 			for (int i=0; i < members.length; i++) {
 			    if (members[i].indexOf(",OU=Distribution Groups") != -1) {
@@ -188,12 +188,27 @@ public class ActiveDirectory {
 	return group;
     }
 
+    public Principal queryPrincipalBySid(String sid) throws NoSuchElementException, WmiException {
+	try {
+	    return queryUserBySid(sid);
+	} catch (NoSuchElementException e) {
+	}
+	return queryGroupBySid(sid);
+    }
+
     public boolean isMember(String netbiosName) throws IllegalArgumentException {
 	init();
 	return domains.containsKey(getDomain(netbiosName));
     }
 
     public boolean isMemberSid(String sid) {
+	try {
+	    queryPrincipalBySid(sid);
+	    return true;
+	} catch (NoSuchElementException e) {
+	} catch (WmiException e) {
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
 	return false;
     }
 
@@ -318,10 +333,10 @@ public class ActiveDirectory {
     }
 
     /**
-     * Convert a String of group DNs into a List of DOMAIN\\group names.
+     * Convert a String of group DNs into a Collection of DOMAIN\\group names.
      */
-    private List<String> parseGroups(String[] sa) {
-	List<String> groups = new Vector<String>(sa.length);
+    private Collection<String> parseGroups(String[] sa) {
+	Collection<String> groups = new Vector<String>(sa.length);
 	for (int i=0; i < sa.length; i++) {
 	    try {
 		groups.add(toNetbiosName(sa[i]));

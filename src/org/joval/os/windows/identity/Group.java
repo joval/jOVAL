@@ -3,7 +3,7 @@
 
 package org.joval.os.windows.identity;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * The Group class stores information about a Windows group.
@@ -11,46 +11,33 @@ import java.util.List;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Group {
-    private String domain, name, sid;
-    private List<String> memberUserNetbiosNames;
-    private List<String> memberGroupNetbiosNames;
+public class Group extends Principal {
+    private Collection<String> memberUserNetbiosNames;
+    private Collection<String> memberGroupNetbiosNames;
 
-    Group(String domain, String name, String sid, List<String> memberUserNetbiosNames, List<String> memberGroupNetbiosNames) {
-	this.domain = domain;
-	this.name = name;
-	this.sid = sid;
+    Group(String domain, String name, String sid,
+	  Collection<String> memberUserNetbiosNames, Collection<String> memberGroupNetbiosNames) {
+
+	super(domain, name, sid);
 	this.memberUserNetbiosNames = memberUserNetbiosNames;
 	this.memberGroupNetbiosNames = memberGroupNetbiosNames;
-    }
-
-    public String getNetbiosName() {
-	return domain + "\\" + name;
-    }
-
-    public String getDomain() {
-	return domain;
-    }
-
-    public String getName() {
-	return name;
-    }
-
-    public String getSid() {
-	return sid;
     }
 
     /**
      * Non-recursive.
      */
-    public List<String> getMemberUserNetbiosNames() {
+    public Collection<String> getMemberUserNetbiosNames() {
 	return memberUserNetbiosNames;
     }
 
     /**
      * Non-recursive.
      */
-    public List<String> getMemberGroupNetbiosNames() {
+    public Collection<String> getMemberGroupNetbiosNames() {
 	return memberGroupNetbiosNames;
+    }
+
+    public Type getType() {
+	return Type.GROUP;
     }
 }
