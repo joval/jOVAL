@@ -366,14 +366,17 @@ public class Main implements IObserver {
 	    Logger jSysLogger = Logger.getLogger(JOVALSystem.class.getName());
 	    Handler logHandler = new FileHandler(state.logFile.toString(), false);
 	    logHandler.setFormatter(new LogfileFormatter());
+	    logHandler.setLevel(state.logLevel);
+	    logger.setLevel(state.logLevel);
 	    logger.addHandler(logHandler);
+	    jSysLogger.setLevel(state.logLevel);
 	    jSysLogger.addHandler(logHandler);
 	    if (state.printLogs) {
 		Handler consoleHandler = new ConsoleHandler();
 		consoleHandler.setFormatter(new ConsoleFormatter());
 		consoleHandler.setLevel(state.logLevel);
 		logger.addHandler(consoleHandler);
-		jSysLogger.addHandler(logHandler);
+		jSysLogger.addHandler(consoleHandler);
 	    }
 	} catch (IOException e) {
 	    e.printStackTrace();

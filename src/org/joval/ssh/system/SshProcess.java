@@ -61,6 +61,7 @@ class SshProcess implements IProcess {
     }
 
     public void start() throws Exception {
+	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SSH_PROCESS_START, command);
 	ce.setPty(interactive);
 	ce.setCommand(command);
 	ce.connect();
@@ -166,6 +167,7 @@ class SshProcess implements IProcess {
 	public void run() {
 	    try {
 		p.waitFor(timeout); // 1 hour
+		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SSH_PROCESS_END, command);
 	    } catch (InterruptedException e) {
 	    } finally {
 		if (!ce.isEOF()) {

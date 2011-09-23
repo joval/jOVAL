@@ -8,8 +8,10 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.Collection;
+import java.util.Hashtable;
+import java.util.List;
+import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -34,6 +36,7 @@ import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.StringTools;
 
 /**
  * Evaluates the Solaris SMF OVAL tests.
@@ -181,6 +184,10 @@ public class SmfAdapter implements IAdapter {
     private static final String RESTARTER	= "restarter";
     private static final String DEPENDENCY	= "dependency";
 
+    private static final String START_EXEC_PROP	= "start/exec";
+    private static final String INETD_USER_PROP	= "inetd_start/user";
+    private static final String INETD_EXEC_PROP	= "inetd_start/exec";
+
     /**
      * DAS: need to add protocol, serverArguments, serverExecutable and execAsUser types...
      */
@@ -224,7 +231,67 @@ public class SmfAdapter implements IAdapter {
 	}
 
 	if (found) {
+	    //
+	    // If the service was found, then we can retrieve some information using svcprop
+	    //
 	    item.setStatus(StatusEnumeration.EXISTS);
+	    boolean inetd = false;
+	    p = session.createProcess("/usr/bin/svcprop " + fmri);
+	    p.start();
+	    try {
+		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		String line = null;
+		while ((line = br.readLine()) != null) {
+		    if (line.startsWith(START_EXEC_PROP)) {
+			setExecAndArgs(item, line.substring(START_EXEC_PROP.length()).trim());
+		    } else if (line.startsWith(INETD_USER_PROP)) {
+			inetd = true;
+			String suspects = line.substring(INETD_USER_PROP.length()).trim();
+			List<String> list = StringTools.toList(StringTools.tokenize(suspects, " "));
+			if (list.size() > 0) {
+			    String user = list.get(list.size() - 1);
+			    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			    type.setValue(user);
+			    item.setExecAsUser(type);
+			}
+		    } else if (line.startsWith(INETD_EXEC_PROP)) {
+			inetd = true;
+			setExecAndArgs(item, line.substring(INETD_EXEC_PROP.length()).trim());
+		    }
+		}
+	    } finally {
+		if (br != null) {
+		    br.close();
+		}
+	    }
+
+	    //
+	    // If this is an inetd-initiated service, we can get protocol information using inetadm
+	    //
+	    if (inetd) {
+		p = session.createProcess("/usr/sbin/inetadm -l " + fmri);
+		p.start();
+		try {
+		    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		    String line = null;
+		    while ((line = br.readLine()) != null) {
+			if (line.trim().startsWith("proto=")) {
+			    String protocol = line.trim().substring(6);
+			    if (protocol.startsWith("\"") && protocol.endsWith("\"")) {
+				protocol = protocol.substring(1, protocol.length() - 1);
+				EntityItemSmfProtocolType type =
+					JOVALSystem.factories.sc.solaris.createEntityItemSmfProtocolType();
+				type.setValue(protocol);
+				item.setProtocol(type);
+			    }
+			}
+		    }
+		} finally {
+		    if (br != null) {
+			br.close();
+		    }
+		}
+	    }
 	} else {
 	    EntityItemStringType fmriType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    fmriType.setValue(fmri);
@@ -233,6 +300,34 @@ public class SmfAdapter implements IAdapter {
 	}
 
 	return item;
+    }
+
+    /**
+     * Given a property line starting after start/exec or inetd_start/exec, set the server_executable and server_arguments.
+     */
+    private void setExecAndArgs(SmfItem item, String argv) {
+	StringTokenizer tok = new StringTokenizer(argv);
+	if (tok.hasMoreTokens()) {
+	    String astring = tok.nextToken();
+	    if (astring.equals("astring") && tok.hasMoreTokens()) {
+		String executable = tok.nextToken();
+		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		type.setValue(executable);
+		item.setServerExecutable(type);
+	    }
+	    StringBuffer arguments = new StringBuffer();
+	    while(tok.hasMoreTokens()) {
+		if (arguments.length() > 0) {
+		    arguments.append(" ");
+		}
+		arguments.append(tok.nextToken());
+	    }
+	    if (arguments.length() > 0) {
+		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		type.setValue(arguments.toString());
+		item.setServerArguements(type);
+	    }
+	}
     }
 
     /**
