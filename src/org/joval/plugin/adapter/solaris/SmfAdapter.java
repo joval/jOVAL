@@ -188,9 +188,6 @@ public class SmfAdapter implements IAdapter {
     private static final String INETD_USER_PROP	= "inetd_start/user";
     private static final String INETD_EXEC_PROP	= "inetd_start/exec";
 
-    /**
-     * DAS: need to add protocol, serverArguments, serverExecutable and execAsUser types...
-     */
     private SmfItem getItem(String fmri) throws Exception {
 	SmfItem item = serviceMap.get(fmri);
 	if (item != null) {
@@ -306,7 +303,8 @@ public class SmfAdapter implements IAdapter {
      * Given a property line starting after start/exec or inetd_start/exec, set the server_executable and server_arguments.
      */
     private void setExecAndArgs(SmfItem item, String argv) {
-	StringTokenizer tok = new StringTokenizer(argv);
+	String unescaped = argv.replace("\\ ", " ");
+	StringTokenizer tok = new StringTokenizer(unescaped);
 	if (tok.hasMoreTokens()) {
 	    String astring = tok.nextToken();
 	    if (astring.equals("astring") && tok.hasMoreTokens()) {
