@@ -25,11 +25,9 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.GroupSidItem;
 
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.identity.ActiveDirectory;
-import org.joval.os.windows.identity.LocalDirectory;
-import org.joval.os.windows.identity.Group;
-import org.joval.os.windows.identity.User;
+import org.joval.intf.windows.identity.IGroup;
+import org.joval.intf.windows.identity.IUser;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -42,8 +40,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class GroupSidAdapter extends UserAdapter {
-    public GroupSidAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
-	super(local, ad, wmi);
+    public GroupSidAdapter(IWindowsSession session) {
+	super(session);
     }
 
     /**
@@ -64,15 +62,11 @@ public class GroupSidAdapter extends UserAdapter {
 	try {
 	    switch(op) {
 	      case EQUALS:
-		try {
-		    items.add(makeItem(local.queryGroupBySid(groupSid)));
-		} catch (NoSuchElementException e) {
-		    items.add(makeItem(ad.queryGroupBySid(groupSid)));
-		}
+		items.add(makeItem(directory.queryGroupBySid(groupSid)));
 		break;
     
 	      case NOT_EQUAL:
-		for (Group g : local.queryAllGroups()) {
+		for (IGroup g : directory.queryAllGroups()) {
 		    if (!groupSid.equals(g.getSid())) {
 			items.add(makeItem(g));
 		    }
@@ -82,7 +76,7 @@ public class GroupSidAdapter extends UserAdapter {
 	      case PATTERN_MATCH:
 		try {
 		    Pattern p = Pattern.compile(groupSid);
-		    for (Group g : local.queryAllGroups()) {
+		    for (IGroup g : directory.queryAllGroups()) {
 			if (p.matcher(g.getSid()).find()) {
 			    items.add(makeItem(g));
 			}
@@ -112,24 +106,18 @@ public class GroupSidAdapter extends UserAdapter {
 
     // Private
 
-    private JAXBElement<? extends ItemType> makeItem(Group group) {
+    private JAXBElement<? extends ItemType> makeItem(IGroup group) {
 	GroupSidItem item = JOVALSystem.factories.sc.windows.createGroupSidItem();
 	EntityItemStringType groupSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	groupSidType.setValue(group.getSid());
 	item.setGroupSid(groupSidType);
 	for (String userNetbiosName : group.getMemberUserNetbiosNames()) {
-	    User user = null;
 	    try {
-		if (local.isMember(userNetbiosName)) {
-		    user = local.queryUser(userNetbiosName);
-		} else if (ad.isMember(userNetbiosName)) {
-		    user = ad.queryUser(userNetbiosName);
-		}
-		if (user != null) {
-		    EntityItemStringType userSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    userSidType.setValue(user.getSid());
-		    item.getUserSid().add(userSidType);
-		}
+		IUser user = directory.queryUser(userNetbiosName);
+		EntityItemStringType userSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		userSidType.setValue(user.getSid());
+		item.getUserSid().add(userSidType);
+	    } catch (IllegalArgumentException e) {
 	    } catch (NoSuchElementException e) {
 	    } catch (WmiException e) {
 	    }
@@ -140,18 +128,12 @@ public class GroupSidAdapter extends UserAdapter {
 	    item.getUserSid().add(userSidType);
 	}
 	for (String groupNetbiosName : group.getMemberGroupNetbiosNames()) {
-	    Group subgroup = null;
 	    try {
-		if (local.isMember(groupNetbiosName)) {
-		    subgroup = local.queryGroup(groupNetbiosName);
-		} else if (ad.isMember(groupNetbiosName)) {
-		    subgroup = ad.queryGroup(groupNetbiosName);
-		}
-		if (subgroup != null) {
-		    EntityItemStringType subgroupSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    subgroupSidType.setValue(subgroup.getSid());
-		    item.getSubgroupSid().add(subgroupSidType);
-		}
+		IGroup subgroup = directory.queryGroup(groupNetbiosName);
+		EntityItemStringType subgroupSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		subgroupSidType.setValue(subgroup.getSid());
+		item.getSubgroupSid().add(subgroupSidType);
+	    } catch (IllegalArgumentException e) {
 	    } catch (NoSuchElementException e) {
 	    } catch (WmiException e) {
 	    }

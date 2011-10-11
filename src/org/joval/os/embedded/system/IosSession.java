@@ -5,12 +5,15 @@ package org.joval.os.embedded.system;
 
 import java.io.File;
 
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
+
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
+import org.joval.os.embedded.IosSystemInfo;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.BaseSession;
 
@@ -22,9 +25,11 @@ import org.joval.util.BaseSession;
  */
 public class IosSession implements ILocked, ISession {
     private SshSession ssh;
+    private IosSystemInfo info;
 
     public IosSession(SshSession ssh) {
 	this.ssh = ssh;
+	info = new IosSystemInfo(this);
     }
 
     // Implement ILocked
@@ -57,6 +62,10 @@ public class IosSession implements ILocked, ISession {
     }
 
     // Implement ISession
+
+    public SystemInfoType getSystemInfo() {
+	return info.getSystemInfo();
+    }
 
     public void setWorkingDir(String dir) {
 	// no-op

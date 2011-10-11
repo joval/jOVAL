@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
+import jcifs.smb.ACE;
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
@@ -18,6 +19,8 @@ import jcifs.smb.SmbRandomAccessFile;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.windows.identity.IACE;
+import org.joval.intf.windows.io.IWindowsFile;
 import org.joval.io.BaseFile;
 
 /**
@@ -26,9 +29,10 @@ import org.joval.io.BaseFile;
  * @author David A. Solin
  * @version %I% %G%
  */
-class SmbFileProxy extends BaseFile {
+class SmbFileProxy extends BaseFile implements IWindowsFile {
     private SmbFile smbFile;
     private String localName;
+
     SmbFileProxy(IFilesystem fs, SmbFile smbFile, String localName) {
 	super(fs);
 	this.smbFile = smbFile;
@@ -118,7 +122,25 @@ class SmbFileProxy extends BaseFile {
 	return children;
     }
 
-    public int getFileType() throws IOException {
+    public void delete() throws IOException {
+	smbFile.delete();
+    }
+
+    public String getLocalName() {
+	return localName;
+    }
+
+    public String getName() {
+	return getName(smbFile.getName());
+    }
+
+    public String toString() {
+	return smbFile.getUncPath();
+    }
+
+    // Implement IWindowsFile
+
+    public int getWindowsFileType() throws IOException {
 	switch(smbFile.getType()) {
 	  case SmbFile.TYPE_FILESYSTEM:
 	    return FILE_TYPE_DISK;
@@ -136,20 +158,13 @@ class SmbFileProxy extends BaseFile {
 	}
     }
 
-    public void delete() throws IOException {
-	smbFile.delete();
-    }
-
-    public String getLocalName() {
-	return localName;
-    }
-
-    public String getName() {
-	return getName(smbFile.getName());
-    }
-
-    public String toString() {
-	return smbFile.getUncPath();
+    public IACE[] getSecurity() throws IOException {
+	ACE[] aa = smbFile.getSecurity();
+	SmbACE[] sa = new SmbACE[aa.length];
+	for (int i=0; i < aa.length; i++) {
+	    sa[i] = new SmbACE(aa[i]);
+	}
+	return sa;
     }
 
     // Private

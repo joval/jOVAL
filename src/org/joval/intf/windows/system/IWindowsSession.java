@@ -5,11 +5,12 @@ package org.joval.intf.windows.system;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.ISession;
 import org.joval.intf.util.IPathRedirector;
+import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.wmi.IWmiProvider;
 
 /**
- * A representation of a Windows command-line session.
+ * A representation of a Windows session.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -32,4 +33,6 @@ public interface IWindowsSession extends ISession {
     IFilesystem getFilesystem(View view);
 
     IWmiProvider getWmiProvider();
+
+    IDirectory getDirectory();
 }

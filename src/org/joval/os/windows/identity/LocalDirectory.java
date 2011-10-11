@@ -10,6 +10,9 @@ import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Matcher;
 
+import org.joval.intf.windows.identity.IGroup;
+import org.joval.intf.windows.identity.IPrincipal;
+import org.joval.intf.windows.identity.IUser;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
@@ -26,7 +29,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class LocalDirectory {
+class LocalDirectory {
     static final String USER_WQL		= "SELECT SID, Name, Domain, Disabled FROM Win32_UserAccount";
     static final String SYSUSER_WQL		= "SELECT SID, Name, Domain FROM Win32_SystemAccount";
     static final String GROUP_WQL		= "SELECT SID, Name, Domain FROM Win32_Group";
@@ -41,10 +44,10 @@ public class LocalDirectory {
     static final String GROUP_USER_WQL		= "SELECT * FROM Win32_GroupUser WHERE GroupComponent=\"$conditions\"";
     static final String GROUP_DOMAIN_CONDITION	= "Win32_Group.Domain='$domain'";
 
-    private Hashtable<String, User> usersBySid;
-    private Hashtable<String, User> usersByNetbiosName;
-    private Hashtable<String, Group> groupsBySid;
-    private Hashtable<String, Group> groupsByNetbiosName;
+    private Hashtable<String, IUser> usersBySid;
+    private Hashtable<String, IUser> usersByNetbiosName;
+    private Hashtable<String, IGroup> groupsBySid;
+    private Hashtable<String, IGroup> groupsByNetbiosName;
     private Collection<String> builtinUsers;
     private Collection<String> builtinGroups;
 
@@ -53,13 +56,13 @@ public class LocalDirectory {
     private boolean preloadedUsers = false;
     private boolean preloadedGroups = false;
 
-    public LocalDirectory(String hostname, IWmiProvider wmi) {
+    LocalDirectory(String hostname, IWmiProvider wmi) {
 	this.hostname = hostname;
 	this.wmi = wmi;
-	usersByNetbiosName = new Hashtable<String, User>();
-	usersBySid = new Hashtable<String, User>();
-	groupsByNetbiosName = new Hashtable<String, Group>();
-	groupsBySid = new Hashtable<String, Group>();
+	usersByNetbiosName = new Hashtable<String, IUser>();
+	usersBySid = new Hashtable<String, IUser>();
+	groupsByNetbiosName = new Hashtable<String, IGroup>();
+	groupsBySid = new Hashtable<String, IGroup>();
 
 	builtinUsers = new HashSet<String>();
 	builtinUsers.add("Administrator".toUpperCase());
@@ -88,8 +91,8 @@ public class LocalDirectory {
 	builtinGroups.add("Users".toUpperCase());
     }
 
-    public User queryUserBySid(String sid) throws NoSuchElementException, WmiException {
-	User user = usersBySid.get(sid);
+    IUser queryUserBySid(String sid) throws NoSuchElementException, WmiException {
+	IUser user = usersBySid.get(sid);
 	if (user == null) {
 	    if (preloadedUsers) {
 		throw new NoSuchElementException(sid);
@@ -118,12 +121,12 @@ public class LocalDirectory {
      *
      * @throws NoSuchElementException if the user does not exist
      */
-    public User queryUser(String netbiosName) throws NoSuchElementException, WmiException {
+    IUser queryUser(String netbiosName) throws NoSuchElementException, WmiException {
 	String domain = getDomain(netbiosName);
-	String name = getName(netbiosName);
+	String name = Directory.getName(netbiosName);
 	netbiosName = domain + "\\" + name; // in case no domain was specified in the original netbiosName
 
-	User user = usersByNetbiosName.get(netbiosName.toUpperCase());
+	IUser user = usersByNetbiosName.get(netbiosName.toUpperCase());
 	if (user == null) {
 	    if (preloadedUsers) {
 		throw new NoSuchElementException(netbiosName);
@@ -151,7 +154,7 @@ public class LocalDirectory {
     /**
      * Returns a Collection of all the local users.
      */
-    public Collection<User> queryAllUsers() throws WmiException {
+    Collection<IUser> queryAllUsers() throws WmiException {
 	if (!preloadedUsers) {
 	    StringBuffer conditions = new StringBuffer(" WHERE ");
 	    conditions.append(DOMAIN_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(hostname)));
@@ -166,8 +169,8 @@ public class LocalDirectory {
 	return usersByNetbiosName.values();
     }
 
-    public Group queryGroupBySid(String sid) throws NoSuchElementException, WmiException {
-	Group group = groupsBySid.get(sid);
+    IGroup queryGroupBySid(String sid) throws NoSuchElementException, WmiException {
+	IGroup group = groupsBySid.get(sid);
 	if (group == null) {
 	    if (preloadedGroups) {
 		throw new NoSuchElementException(sid);
@@ -198,12 +201,12 @@ public class LocalDirectory {
      *
      * @throws NoSuchElementException if the group does not exist
      */
-    public Group queryGroup(String netbiosName) throws NoSuchElementException, WmiException {
+    IGroup queryGroup(String netbiosName) throws NoSuchElementException, WmiException {
 	String domain = getDomain(netbiosName);
-	String name = getName(netbiosName);
+	String name = Directory.getName(netbiosName);
 	netbiosName = domain + "\\" + name; // in case no domain was specified in the original netbiosName
 
-	Group group = groupsByNetbiosName.get(netbiosName.toUpperCase());
+	IGroup group = groupsByNetbiosName.get(netbiosName.toUpperCase());
 	if (group == null) {
 	    if (preloadedGroups) {
 		throw new NoSuchElementException(netbiosName);
@@ -232,7 +235,7 @@ public class LocalDirectory {
     /**
      * Returns a Collection of all the local groups.
      */
-    public Collection<Group> queryAllGroups() throws WmiException {
+    Collection<IGroup> queryAllGroups() throws WmiException {
 	if (!preloadedGroups) {
 	    StringBuffer wql = new StringBuffer(GROUP_WQL);
 	    wql.append(" WHERE ");
@@ -257,7 +260,7 @@ public class LocalDirectory {
     /**
      * Returns a Principal (User or Group) given a Netbios name.
      */
-    public Principal queryPrincipal(String netbiosName) throws NoSuchElementException, WmiException {
+    IPrincipal queryPrincipal(String netbiosName) throws NoSuchElementException, WmiException {
 	try {
 	    return queryUser(netbiosName);
 	} catch (NoSuchElementException e) {
@@ -268,7 +271,7 @@ public class LocalDirectory {
     /**
      * Returns a Principal (User or Group) given a sid.
      */
-    public Principal queryPrincipalBySid(String sid) throws NoSuchElementException, WmiException {
+    IPrincipal queryPrincipalBySid(String sid) throws NoSuchElementException, WmiException {
 	try {
 	    return queryUserBySid(sid);
 	} catch (NoSuchElementException e) {
@@ -279,8 +282,8 @@ public class LocalDirectory {
     /**
      * Returns a Collection of all local users and groups.
      */
-    public Collection<Principal> queryAllPrincipals() throws WmiException {
-	Collection<Principal> result = new Vector<Principal>();
+    Collection<IPrincipal> queryAllPrincipals() throws WmiException {
+	Collection<IPrincipal> result = new Vector<IPrincipal>();
 	result.addAll(queryAllUsers());
 	result.addAll(queryAllGroups());
 	return result;
@@ -289,9 +292,9 @@ public class LocalDirectory {
     /**
      * Returns true of the supplied NetBios username String represents a built-in account on the local machine.
      */
-    public boolean isBuiltinUser(String netbiosName) {
+    boolean isBuiltinUser(String netbiosName) {
 	if (isMember(netbiosName)) {
-	    return builtinUsers.contains(getName(netbiosName).toUpperCase());
+	    return builtinUsers.contains(Directory.getName(netbiosName).toUpperCase());
 	}
 	return false;
     }
@@ -299,34 +302,22 @@ public class LocalDirectory {
     /**
      * Returns true if the supplied NetBios group name String represents a built-in group on the local machine.
      */
-    public boolean isBuiltinGroup(String netbiosName) {
+    boolean isBuiltinGroup(String netbiosName) {
 	if (isMember(netbiosName)) {
-	    return builtinGroups.contains(getName(netbiosName).toUpperCase());
+	    return builtinGroups.contains(Directory.getName(netbiosName).toUpperCase());
 	}
 	return false;
-    }
-
-    /**
-     * Get the Name portion of a Domain\\Name String.  If there is no domain portion, returns the original String.
-     */
-    public String getName(String s) {
-	int ptr = s.indexOf("\\");
-	if (ptr == -1) {
-	    return s;
-	} else {
-	    return s.substring(ptr+1);
-	}
     }
 
     /**
      * Returns whether or not the specified netbiosName is a member of this directory, meaning that the domain matches
      * the local hostname.
      */
-    public boolean isMember(String netbiosName) {
+    boolean isMember(String netbiosName) {
 	return hostname.equalsIgnoreCase(getDomain(netbiosName));
     }
 
-    public boolean isMemberSid(String sid) {
+    boolean isMemberSid(String sid) {
 	try {
 	    queryPrincipalBySid(sid);
 	    return true;
@@ -340,17 +331,17 @@ public class LocalDirectory {
     /**
      * Fills in the domain with the local hostname if it is not specified in the argument.
      */
-    public String getQualifiedNetbiosName(String netbiosName) {
+    String getQualifiedNetbiosName(String netbiosName) {
 	String domain = getDomain(netbiosName);
 	if (domain == null) {
 	    domain = hostname.toUpperCase();
 	}
-	return domain + "\\" + getName(netbiosName);
+	return domain + "\\" + Directory.getName(netbiosName);
     }
 
     // Private
 
-    private User preloadUser(ISWbemPropertySet columns, boolean builtin) throws WmiException {
+    private IUser preloadUser(ISWbemPropertySet columns, boolean builtin) throws WmiException {
 	String domain = columns.getItem("Domain").getValueAsString();
 	String name = columns.getItem("Name").getValueAsString();
 	if (builtin) {
@@ -362,7 +353,7 @@ public class LocalDirectory {
 	if (columns.getItem("Disabled") != null) {
 	    enabled = !columns.getItem("Disabled").getValueAsBoolean().booleanValue();
 	}
-	User user = usersByNetbiosName.get(netbiosName.toUpperCase());
+	IUser user = usersByNetbiosName.get(netbiosName.toUpperCase());
 	if (user == null) {
 	    user = makeUser(domain, name, sid, enabled);
 	    usersByNetbiosName.put(netbiosName.toUpperCase(), user);

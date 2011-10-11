@@ -26,11 +26,9 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.SidSidItem;
 
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.identity.ActiveDirectory;
-import org.joval.os.windows.identity.LocalDirectory;
-import org.joval.os.windows.identity.Group;
-import org.joval.os.windows.identity.Principal;
+import org.joval.intf.windows.identity.IGroup;
+import org.joval.intf.windows.identity.IPrincipal;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -43,8 +41,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class SidSidAdapter extends UserAdapter {
-    public SidSidAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
-	super(local, ad, wmi);
+    public SidSidAdapter(IWindowsSession session) {
+	super(session);
     }
 
     /**
@@ -67,15 +65,11 @@ public class SidSidAdapter extends UserAdapter {
 	try {
 	    switch(op) {
 	      case EQUALS:
-		try {
-		    items.addAll(makeItems(local.queryPrincipalBySid(sid), behaviors));
-		} catch (NoSuchElementException e) {
-		    items.addAll(makeItems(ad.queryPrincipalBySid(sid), behaviors));
-		}
+		items.addAll(makeItems(directory.queryPrincipalBySid(sid), behaviors));
 		break;
 
 	      case NOT_EQUAL:
-		for (Principal p : local.queryAllPrincipals()) {
+		for (IPrincipal p : directory.queryAllPrincipals()) {
 		    if (!p.getSid().equals(sid)) {
 			items.addAll(makeItems(p, behaviors));
 		    }
@@ -85,7 +79,7 @@ public class SidSidAdapter extends UserAdapter {
 	      case PATTERN_MATCH:
 		try {
 		    Pattern p = Pattern.compile(sid);
-		    for (Principal principal : local.queryAllPrincipals()) {
+		    for (IPrincipal principal : directory.queryAllPrincipals()) {
 			if (p.matcher(principal.getSid()).find()) {
 			    items.addAll(makeItems(principal, behaviors));
 			}
@@ -115,8 +109,8 @@ public class SidSidAdapter extends UserAdapter {
 
     // Private
 
-    private List<JAXBElement<? extends ItemType>> makeItems(Principal principal, SidSidBehaviors behaviors) {
-	Hashtable<String, Principal> principals = new Hashtable<String, Principal>();
+    private List<JAXBElement<? extends ItemType>> makeItems(IPrincipal principal, SidSidBehaviors behaviors) {
+	Hashtable<String, IPrincipal> principals = new Hashtable<String, IPrincipal>();
 	boolean includeGroups = true;
 	boolean resolveGroups = false;
 	if (behaviors != null) {
@@ -125,7 +119,7 @@ public class SidSidAdapter extends UserAdapter {
 	}
 	getAllPrincipals(principal, resolveGroups, principals);
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	for (Principal p : principals.values()) {
+	for (IPrincipal p : principals.values()) {
 	    switch(p.getType()) {
 	      case GROUP:
 		if (includeGroups) {
@@ -145,29 +139,21 @@ public class SidSidAdapter extends UserAdapter {
      * Recurse members of the principal (if it's a group) and add children if resolveGroups == true.  Won't get stuck in
      * a loop because it adds the groups themselves to the Hashtable as it goes.
      */
-    private void getAllPrincipals(Principal principal, boolean resolveGroups, Hashtable<String, Principal> principals) {
+    private void getAllPrincipals(IPrincipal principal, boolean resolveGroups, Hashtable<String, IPrincipal> principals) {
 	switch(principal.getType()) {
 	  case GROUP:
 	    if (resolveGroups && !principals.containsKey(principal.getSid())) {
-		Group g = (Group)principal;
+		IGroup g = (IGroup)principal;
 		for (String netbiosName : g.getMemberUserNetbiosNames()) {
 		    try {
-			if (local.isMember(netbiosName)) {
-			    getAllPrincipals(local.queryUser(netbiosName), resolveGroups, principals);
-		        } else if (ad.isMember(netbiosName)) {
-			    getAllPrincipals(ad.queryUser(netbiosName), resolveGroups, principals);
-		        }
+			getAllPrincipals(directory.queryUser(netbiosName), resolveGroups, principals);
 		    } catch (Exception e) {
 			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
 		    }
 		}
 		for (String netbiosName : g.getMemberGroupNetbiosNames()) {
 		    try {
-			if (local.isMember(netbiosName)) {
-			    getAllPrincipals(local.queryUser(netbiosName), resolveGroups, principals);
-		        } else if (ad.isMember(netbiosName)) {
-			    getAllPrincipals(ad.queryUser(netbiosName), resolveGroups, principals);
-		        }
+			getAllPrincipals(directory.queryUser(netbiosName), resolveGroups, principals);
 		    } catch (Exception e) {
 			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
 		    }
@@ -178,7 +164,7 @@ public class SidSidAdapter extends UserAdapter {
 	principals.put(principal.getSid(), principal);
     }
 
-    private JAXBElement<? extends ItemType> makeItem(Principal principal) {
+    private JAXBElement<? extends ItemType> makeItem(IPrincipal principal) {
 	SidSidItem item = JOVALSystem.factories.sc.windows.createSidSidItem();
 	EntityItemStringType trusteeSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	trusteeSidType.setValue(principal.getSid());
@@ -188,12 +174,12 @@ public class SidSidAdapter extends UserAdapter {
 	boolean builtin = false;
 	switch(principal.getType()) {
 	  case USER:
-	    if (local.isBuiltinUser(principal.getNetbiosName())) {
+	    if (directory.isBuiltinUser(principal.getNetbiosName())) {
 		builtin = true;
  	    }
 	    break;
 	  case GROUP:
-	    if (local.isBuiltinGroup(principal.getNetbiosName())) {
+	    if (directory.isBuiltinGroup(principal.getNetbiosName())) {
 		builtin = true;
  	    }
 	    break;

@@ -53,6 +53,10 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 
     // Implement IBaseSession
 
+    public String getHostname() {
+	return hostname;
+    }
+
     public boolean connect() {
 	if (cred == null) {
 	    return false;

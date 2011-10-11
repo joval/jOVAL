@@ -12,6 +12,12 @@ SHARED=\
 	org.joval.intf.util.tree.INode					\
 	org.joval.intf.util.tree.ITree					\
 	org.joval.intf.util.tree.ITreeBuilder				\
+	org.joval.intf.windows.identity.IACE				\
+	org.joval.intf.windows.identity.IDirectory			\
+	org.joval.intf.windows.identity.IGroup				\
+	org.joval.intf.windows.identity.IPrincipal			\
+	org.joval.intf.windows.identity.IUser				\
+	org.joval.intf.windows.io.IWindowsFile				\
 	org.joval.intf.windows.registry.IKey				\
 	org.joval.intf.windows.registry.IRegistry			\
 	org.joval.intf.windows.registry.IBinaryValue			\
@@ -38,10 +44,12 @@ SHARED=\
 	org.joval.os.unix.system.Environment				\
 	org.joval.os.windows.WindowsSystemInfo				\
 	org.joval.os.windows.identity.ActiveDirectory			\
+	org.joval.os.windows.identity.Directory				\
 	org.joval.os.windows.identity.Group				\
 	org.joval.os.windows.identity.LocalDirectory			\
 	org.joval.os.windows.identity.Principal				\
 	org.joval.os.windows.identity.User				\
+	org.joval.os.windows.io.WindowsFile				\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector		\
 	org.joval.os.windows.pe.Characteristics				\
 	org.joval.os.windows.pe.DLLCharacteristics			\

@@ -26,10 +26,9 @@ import oval.schemas.systemcharacteristics.windows.UserSidItem;
 
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.identity.ActiveDirectory;
-import org.joval.os.windows.identity.LocalDirectory;
-import org.joval.os.windows.identity.Group;
-import org.joval.os.windows.identity.User;
+import org.joval.intf.windows.identity.IGroup;
+import org.joval.intf.windows.identity.IUser;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -42,8 +41,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class UserSid55Adapter extends UserAdapter {
-    public UserSid55Adapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
-	super(local, ad, wmi);
+    public UserSid55Adapter(IWindowsSession session) {
+	super(session);
     }
 
     /**
@@ -65,15 +64,11 @@ public class UserSid55Adapter extends UserAdapter {
 	try {
 	    switch(op) {
 	      case EQUALS:
-		try {
-		    items.add(makeItem(local.queryUserBySid(sid)));
-		} catch (NoSuchElementException e) {
-		    items.add(makeItem(ad.queryUserBySid(sid)));
-		}
+		items.add(makeItem(directory.queryUserBySid(sid)));
 		break;
     
 	      case NOT_EQUAL:
-		for (User u : local.queryAllUsers()) {
+		for (IUser u : directory.queryAllUsers()) {
 		    if (!u.getSid().equals(sid)) {
 			items.add(makeItem(u));
 		    }
@@ -83,7 +78,7 @@ public class UserSid55Adapter extends UserAdapter {
 	      case PATTERN_MATCH:
 		try {
 		    Pattern p = Pattern.compile(sid);
-		    for (User u : local.queryAllUsers()) {
+		    for (IUser u : directory.queryAllUsers()) {
 			if (p.matcher(u.getSid()).find()) {
 			    items.add(makeItem(u));
 			}
@@ -113,7 +108,7 @@ public class UserSid55Adapter extends UserAdapter {
 
     // Private
 
-    private JAXBElement<? extends ItemType> makeItem(User user) {
+    private JAXBElement<? extends ItemType> makeItem(IUser user) {
 	UserSidItem item = JOVALSystem.factories.sc.windows.createUserSidItem();
 	EntityItemStringType userSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	userSidType.setValue(user.getSid());
@@ -123,18 +118,12 @@ public class UserSid55Adapter extends UserAdapter {
 	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setEnabled(enabledType);
 	for (String groupNetbiosName : user.getGroupNetbiosNames()) {
-	    Group group = null;
 	    try {
-		if (local.isMember(groupNetbiosName)) {
-		    group = local.queryGroup(groupNetbiosName);
-		} else if (ad.isMember(groupNetbiosName)) {
-		    group = ad.queryGroup(groupNetbiosName);
-		}
-		if (group != null) {
-		    EntityItemStringType groupSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    groupSidType.setValue(group.getSid());
-		    item.getGroupSid().add(groupSidType);
-		}
+		IGroup group = directory.queryGroup(groupNetbiosName);
+		EntityItemStringType groupSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		groupSidType.setValue(group.getSid());
+		item.getGroupSid().add(groupSidType);
+	    } catch (IllegalArgumentException e) {
 	    } catch (NoSuchElementException e) {
 	    } catch (WmiException e) {
 	    }

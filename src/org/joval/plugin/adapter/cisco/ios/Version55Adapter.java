@@ -26,7 +26,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.IBaseSession;
+import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
@@ -43,9 +43,10 @@ public class Version55Adapter implements IAdapter {
 
     VersionItem item;
 
-    public Version55Adapter(String version) {
+    public Version55Adapter(ISession session) {
 	item = JOVALSystem.factories.sc.ios.createVersionItem();
 	int begin = 0;
+	String version = session.getSystemInfo().getOsVersion();
 	int end = version.indexOf(".");
 	if (end != -1) {
 	    EntityItemIntType majorVersion = JOVALSystem.factories.sc.core.createEntityItemIntType();

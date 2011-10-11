@@ -2,6 +2,8 @@
 
 package org.joval.intf.system;
 
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
+
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.util.IPathRedirector;
 
@@ -17,4 +19,6 @@ public interface ISession extends IBaseSession {
     public IFilesystem getFilesystem();
 
     public IEnvironment getEnvironment();
+
+    public SystemInfoType getSystemInfo();
 }

@@ -10,6 +10,7 @@ REMOTE=\
 	org.joval.os.embedded.system.IosSession				\
 	org.joval.os.unix.remote.system.UnixSession			\
 	org.joval.os.windows.identity.WindowsCredential			\
+	org.joval.os.windows.remote.io.SmbACE				\
 	org.joval.os.windows.remote.io.SmbFilesystem			\
 	org.joval.os.windows.remote.io.SmbFileProxy			\
 	org.joval.os.windows.remote.io.SmbRandomAccessProxy		\

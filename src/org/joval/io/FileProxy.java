@@ -121,10 +121,6 @@ class FileProxy extends BaseFile {
 	}
     }
 
-    public int getFileType() throws IOException {
-	return FILE_TYPE_DISK;
-    }
-
     public void delete() throws IOException {
 	file.delete();
     }

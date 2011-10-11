@@ -194,10 +194,6 @@ class SftpFile extends BaseFile implements IUnixFile {
 	}
     }
 
-    public int getFileType() throws IOException {
-	return FILE_TYPE_DISK;
-    }
-
     public void delete() throws IOException {
 	if (exists()) {
 	    try {

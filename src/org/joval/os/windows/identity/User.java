@@ -5,13 +5,15 @@ package org.joval.os.windows.identity;
 
 import java.util.Collection;
 
+import org.joval.intf.windows.identity.IUser;
+
 /**
  * The User class stores information about a Windows user.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class User extends Principal {
+class User extends Principal implements IUser {
     private boolean enabled;
     private Collection<String> groupNetbiosNames;
 
@@ -21,6 +23,8 @@ public class User extends Principal {
 	this.enabled = enabled;
     }
 
+    // Implement IUser
+
     public Collection<String> getGroupNetbiosNames() {
 	return groupNetbiosNames;
     }
@@ -28,6 +32,8 @@ public class User extends Principal {
     public boolean isEnabled() {
 	return enabled;
     }
+
+    // Implement IPrincipal
 
     public Type getType() {
 	return Type.USER;

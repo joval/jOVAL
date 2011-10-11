@@ -29,6 +29,7 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.windows.io.IWindowsFile;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
@@ -36,6 +37,7 @@ import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.Timestamp;
+import org.joval.os.windows.io.WindowsFile;
 import org.joval.os.windows.pe.ImageDOSHeader;
 import org.joval.os.windows.pe.ImageNTHeaders;
 import org.joval.os.windows.pe.ImageDataDirectory;
@@ -109,7 +111,13 @@ public class FileAdapter extends BaseFileAdapter {
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {
-	    setItem((FileItem)base, f);
+	    IWindowsFile wf = null;
+	    if (f instanceof IWindowsFile) {
+		wf = (IWindowsFile)f;
+	    } else {
+		wf = new WindowsFile(f);
+	    }
+	    setItem((FileItem)base, wf);
 	    items.add(JOVALSystem.factories.sc.windows.createFileItem((FileItem)base));
 	}
 	return items;
@@ -120,23 +128,23 @@ public class FileAdapter extends BaseFileAdapter {
     /**
      * Populate the FileItem with everything except the path, filename and filepath. 
      */
-    private void setItem(FileItem fItem, IFile file) throws IOException {
+    private void setItem(FileItem fItem, IWindowsFile file) throws IOException {
 	//
 	// Get some information from the IFile
 	//
 	fItem.setStatus(StatusEnumeration.EXISTS);
 	EntityItemFileTypeType typeType = JOVALSystem.factories.sc.windows.createEntityItemFileTypeType();
-	switch(file.getFileType()) {
-	  case IFile.FILE_TYPE_DISK:
+	switch(file.getWindowsFileType()) {
+	  case IWindowsFile.FILE_TYPE_DISK:
 	    typeType.setValue("FILE_TYPE_DISK");
 	    break;
-	  case IFile.FILE_TYPE_REMOTE:
+	  case IWindowsFile.FILE_TYPE_REMOTE:
 	    typeType.setValue("FILE_TYPE_REMOTE");
 	    break;
-	  case IFile.FILE_TYPE_PIPE:
+	  case IWindowsFile.FILE_TYPE_PIPE:
 	    typeType.setValue("FILE_TYPE_PIPE");
 	    break;
-	  case IFile.FILE_TYPE_CHAR:
+	  case IWindowsFile.FILE_TYPE_CHAR:
 	    typeType.setValue("FILE_TYPE_CHAR");
 	    break;
 	  default:

@@ -28,7 +28,7 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class ActiveDirectory {
+class ActiveDirectory {
     private static final String DOMAIN_WQL = "SELECT Name, DomainName, DnsForestName FROM Win32_NTDomain";
 
     private static final String AD_NAMESPACE = "root\\directory\\ldap";
@@ -46,7 +46,7 @@ public class ActiveDirectory {
     private Hashtable<String, String> domains;
     private boolean initialized = false;
 
-    public ActiveDirectory(IWmiProvider wmi) {
+    ActiveDirectory(IWmiProvider wmi) {
 	this.wmi = wmi;
 	domains = new Hashtable<String, String>();
 	usersByUpn = new Hashtable<String, User>();
@@ -55,7 +55,7 @@ public class ActiveDirectory {
 	groupsBySid = new Hashtable<String, Group>();
     }
 
-    public User queryUserBySid(String sid) throws NoSuchElementException, WmiException {
+    User queryUserBySid(String sid) throws NoSuchElementException, WmiException {
 	User user = usersBySid.get(sid);
 	if (user == null) {
 	    StringBuffer wql = new StringBuffer(USER_WQL);
@@ -70,7 +70,7 @@ public class ActiveDirectory {
 		String dn = props.getItem("DS_distinguishedName").getValueAsString();
 		String netbiosName = toNetbiosName(dn);
 		String domain = getDomain(netbiosName);
-		String name = getName(netbiosName);
+		String name = Directory.getName(netbiosName);
 		Collection<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
 		int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
 		boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
@@ -82,7 +82,7 @@ public class ActiveDirectory {
 	return user;
     }
 
-    public User queryUser(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
+    User queryUser(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
 	String upn = toUserPrincipalName(netbiosName);
 	User user = usersByUpn.get(upn.toUpperCase());
 	if (user == null) {
@@ -94,7 +94,7 @@ public class ActiveDirectory {
 		throw new NoSuchElementException(netbiosName);
 	    } else {
 		ISWbemPropertySet props = os.iterator().next().getProperties();
-		String name = getName(netbiosName);
+		String name = Directory.getName(netbiosName);
 		String domain = getDomain(netbiosName);
 		String sid = toSid(props.getItem("DS_objectSid").getValueAsString());
 		Collection<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
@@ -108,7 +108,7 @@ public class ActiveDirectory {
 	return user;
     }
 
-    public Group queryGroupBySid(String sid) throws NoSuchElementException, WmiException {
+    Group queryGroupBySid(String sid) throws NoSuchElementException, WmiException {
 	Group group = groupsBySid.get(sid);
 	if (group == null) {
 	    StringBuffer wql = new StringBuffer(GROUP_WQL);
@@ -143,13 +143,13 @@ public class ActiveDirectory {
 	return group;
     }
 
-    public Group queryGroup(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
+    Group queryGroup(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
 	Group group = groupsByNetbiosName.get(netbiosName.toUpperCase());
 	if (group == null) {
 	    if (isMember(netbiosName)) {
 		String domain = getDomain(netbiosName);
 		String dc = toDCString(domains.get(domain.toUpperCase()));
-		String cn = getName(netbiosName);
+		String cn = Directory.getName(netbiosName);
 
 		StringBuffer wql = new StringBuffer(GROUP_WQL);
 		wql.append(" WHERE ");
@@ -188,7 +188,7 @@ public class ActiveDirectory {
 	return group;
     }
 
-    public Principal queryPrincipal(String netbiosName) throws NoSuchElementException, WmiException {
+    Principal queryPrincipal(String netbiosName) throws NoSuchElementException, WmiException {
 	try {
 	    return queryUser(netbiosName);
 	} catch (NoSuchElementException e) {
@@ -196,7 +196,7 @@ public class ActiveDirectory {
 	return queryGroup(netbiosName);
     }
 
-    public Principal queryPrincipalBySid(String sid) throws NoSuchElementException, WmiException {
+    Principal queryPrincipalBySid(String sid) throws NoSuchElementException, WmiException {
 	try {
 	    return queryUserBySid(sid);
 	} catch (NoSuchElementException e) {
@@ -204,12 +204,12 @@ public class ActiveDirectory {
 	return queryGroupBySid(sid);
     }
 
-    public boolean isMember(String netbiosName) throws IllegalArgumentException {
+    boolean isMember(String netbiosName) throws IllegalArgumentException {
 	init();
 	return domains.containsKey(getDomain(netbiosName));
     }
 
-    public boolean isMemberSid(String sid) {
+    boolean isMemberSid(String sid) {
 	try {
 	    queryPrincipalBySid(sid);
 	    return true;
@@ -256,7 +256,7 @@ public class ActiveDirectory {
 	String domain = getDomain(netbiosName);
 	if (isMember(netbiosName)) {
 	    String dns = domains.get(domain.toUpperCase());
-	    String upn = new StringBuffer(getName(netbiosName)).append("@").append(dns).toString();
+	    String upn = new StringBuffer(Directory.getName(netbiosName)).append("@").append(dns).toString();
 	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_UPN_CONVERT, netbiosName, upn);
 	    return upn;
 	} else {
@@ -300,18 +300,6 @@ public class ActiveDirectory {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_REQUIRED, s));
 	} else {
 	    return s.substring(0, ptr);
-	}
-    }
-
-    /**
-     * Get the Name portion of a Domain\\Name String.  If there is no domain portion, throws an exception.
-     */
-    private String getName(String s) throws IllegalArgumentException {
-	int ptr = s.indexOf("\\");
-	if (ptr == -1) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_REQUIRED, s));
-	} else {
-	    return s.substring(ptr+1);
 	}
     }
 

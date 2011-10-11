@@ -14,6 +14,8 @@ import org.jinterop.dcom.common.JISystem;
 import com.h9labs.jwbem.SWbemLocator;
 import com.h9labs.jwbem.SWbemServices;
 
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
+
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFile;
@@ -22,9 +24,12 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.util.IPathRedirector;
+import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
+import org.joval.os.windows.WindowsSystemInfo;
+import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
@@ -55,13 +60,21 @@ public class WindowsSession implements IWindowsSession, ILocked {
     private IFilesystem fs, fs32;
     private Vector<IFile> tempFiles;
     private boolean is64bit = false;
+    private WindowsSystemInfo info = null;
+    private Directory directory = null;
 
     public WindowsSession(String host) {
 	this.host = host;
 	tempFiles = new Vector<IFile>();
+	info = new WindowsSystemInfo(this);
+	directory = new Directory(this);
     }
 
     // Implement IWindowsSession extensions
+
+    public IDirectory getDirectory() {
+	return directory;
+    }
 
     public IRegistry getRegistry(View view) {
 	switch(view) {
@@ -106,6 +119,10 @@ public class WindowsSession implements IWindowsSession, ILocked {
 
     // Implement ISession
 
+    public SystemInfoType getSystemInfo() {
+	return info.getSystemInfo();
+    }
+
     public boolean connect() {
 	if (cred == null) {
 	    return false;
@@ -131,7 +148,12 @@ public class WindowsSession implements IWindowsSession, ILocked {
 		}
 		cwd = env.expand("%SystemRoot%");
 		conn = new WmiConnection(host, cred);
-		return conn.connect();
+		if (conn.connect()) {
+		    directory.connect();
+		    return true;
+		} else {
+		    return false;
+		}
 	    } else {
 		return false;
 	    }
@@ -153,6 +175,7 @@ public class WindowsSession implements IWindowsSession, ILocked {
 	    }
 	}
 	conn.disconnect();
+	directory.disconnect();
     }
 
     public void setWorkingDir(String path) {

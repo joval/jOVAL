@@ -167,10 +167,6 @@ public class UnixFile implements IUnixFile {
 	return list.toArray(new IFile[list.size()]);
     }
 
-    public int getFileType() throws IOException {
-	return f.getFileType();
-    }
-
     public void delete() throws IOException {
 	f.delete();
     }

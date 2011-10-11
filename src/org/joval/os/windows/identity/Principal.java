@@ -5,17 +5,15 @@ package org.joval.os.windows.identity;
 
 import java.util.List;
 
+import org.joval.intf.windows.identity.IPrincipal;
+
 /**
  * The abstract parent class for User and Group.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class Principal {
-    public enum Type {
-	USER, GROUP;
-    }
-
+abstract class Principal implements IPrincipal {
     String domain, name, sid;
 
     Principal(String domain, String name, String sid) {
@@ -23,6 +21,8 @@ public abstract class Principal {
 	this.name = name;
 	this.sid = sid;
     }
+
+    // Implement IPrincipal
 
     public String getNetbiosName() {
 	return domain + "\\" + name;

@@ -27,10 +27,11 @@ import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.windows.identity.IDirectory;
+import org.joval.intf.windows.identity.IUser;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.identity.ActiveDirectory;
-import org.joval.os.windows.identity.LocalDirectory;
-import org.joval.os.windows.identity.User;
+import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -44,15 +45,12 @@ import org.joval.util.JOVALSystem;
  */
 public class UserAdapter implements IAdapter {
     private IWmiProvider wmi;
-    private String hostname;
 
-    protected LocalDirectory local = null;
-    protected ActiveDirectory ad = null;
+    protected IDirectory directory;
 
-    public UserAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
-	this.local = local;
-	this.ad = ad;
-	this.wmi = wmi;
+    public UserAdapter(IWindowsSession session) {
+	this.directory = session.getDirectory();
+	this.wmi = session.getWmiProvider();
     }
 
     // Implement IAdapter
@@ -70,8 +68,7 @@ public class UserAdapter implements IAdapter {
 
     public void disconnect() {
 	wmi.disconnect();
-	local = null;
-	ad = null;
+	directory = null;
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
@@ -83,11 +80,9 @@ public class UserAdapter implements IAdapter {
 	try {
 	    switch(op) {
 	      case EQUALS:
-		if (local.isMember(user)) {
-		    items.add(makeItem(local.queryUser(user)));
-		} else if (ad.isMember(user)) {
-		    items.add(makeItem(ad.queryUser(user)));
-		} else {
+		try {
+		    items.add(makeItem(directory.queryUser(user)));
+		} catch (IllegalArgumentException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.WARNING);
 		    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, user);
@@ -98,8 +93,8 @@ public class UserAdapter implements IAdapter {
 		break;
     
 	      case NOT_EQUAL:
-		for (User u : local.queryAllUsers()) {
-		    if (!local.getQualifiedNetbiosName(user).equals(u.getNetbiosName())) {
+		for (IUser u : directory.queryAllUsers()) {
+		    if (!directory.getQualifiedNetbiosName(user).equals(u.getNetbiosName())) {
 			items.add(makeItem(u));
 		    }
 		}
@@ -108,9 +103,9 @@ public class UserAdapter implements IAdapter {
 	      case PATTERN_MATCH:
 		try {
 		    Pattern p = Pattern.compile(user);
-		    for (User u : local.queryAllUsers()) {
+		    for (IUser u : directory.queryAllUsers()) {
 			Matcher m = null;
-			if (local.isMember(u.getNetbiosName())) {
+			if (directory.isLocal(u.getNetbiosName())) {
 			    m = p.matcher(u.getName());
 			} else {
 			    m = p.matcher(u.getNetbiosName());
@@ -144,10 +139,10 @@ public class UserAdapter implements IAdapter {
 
     // Private
 
-    private JAXBElement<? extends ItemType> makeItem(User user) {
+    private JAXBElement<? extends ItemType> makeItem(IUser user) {
 	UserItem item = JOVALSystem.factories.sc.windows.createUserItem();
 	EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	if (local.isBuiltinUser(user.getNetbiosName())) {
+	if (directory.isBuiltinUser(user.getNetbiosName())) {
 	    userType.setValue(user.getName());
 	} else {
 	    userType.setValue(user.getNetbiosName());
@@ -165,8 +160,8 @@ public class UserAdapter implements IAdapter {
 	} else {
 	    for (String groupName : groupNetbiosNames) {
 		EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		if (local.isBuiltinGroup(groupName)) {
-		    groupType.setValue(local.getName(groupName));
+		if (directory.isBuiltinGroup(groupName)) {
+		    groupType.setValue(Directory.getName(groupName));
 		} else {
 		    groupType.setValue(groupName);
 		}

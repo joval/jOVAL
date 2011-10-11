@@ -18,31 +18,6 @@ import org.joval.intf.util.tree.INode;
  */
 public interface IFile extends INode {
     /**
-     * Either the type of the specified file is unknown, or the function failed.
-     */
-    int FILE_TYPE_UNKNOWN = 0x0000;
-
-    /**
-     * The specified file is a disk file.
-     */
-    int FILE_TYPE_DISK = 0x0001;
-
-    /**
-     * The specified file is a character file, typically an LPT device or a console.
-     */
-    int FILE_TYPE_CHAR = 0x0002;
-
-    /**
-     * The specified file is a socket, a named pipe, or an anonymous pipe.
-     */
-    int FILE_TYPE_PIPE = 0x0003;
-
-    /**
-     * Unused.
-     */
-    int FILE_TYPE_REMOTE = 0x8000;
-
-    /**
      * Get the time that the file was last accessed.
      */
     public long accessTime() throws IOException;
@@ -106,11 +81,6 @@ public interface IFile extends INode {
      * For a directory, lists all the child files.
      */
     public IFile[] listFiles() throws IOException;
-
-    /**
-     * Returns one of the FILE_TYPE constants.
-     */
-    public int getFileType() throws IOException;
 
     /**
      * Delete the file.

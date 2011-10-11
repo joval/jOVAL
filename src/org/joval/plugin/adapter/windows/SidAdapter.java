@@ -25,11 +25,8 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.SidItem;
 
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.identity.ActiveDirectory;
-import org.joval.os.windows.identity.LocalDirectory;
-import org.joval.os.windows.identity.Group;
-import org.joval.os.windows.identity.Principal;
+import org.joval.intf.windows.identity.IPrincipal;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -42,8 +39,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class SidAdapter extends UserAdapter {
-    public SidAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
-	super(local, ad, wmi);
+    public SidAdapter(IWindowsSession session) {
+	super(session);
     }
 
     /**
@@ -64,18 +61,14 @@ public class SidAdapter extends UserAdapter {
 	try {
 	    switch(op) {
 	      case EQUALS: {
-		String netbiosName = local.getQualifiedNetbiosName((String)sObj.getTrusteeName().getValue());
-		try {
-		    items.add(makeItem(local.queryPrincipal(netbiosName)));
-		} catch (NoSuchElementException e) {
-		    items.add(makeItem(ad.queryPrincipal(netbiosName)));
-		}
+		String netbiosName = directory.getQualifiedNetbiosName((String)sObj.getTrusteeName().getValue());
+		items.add(makeItem(directory.queryPrincipal(netbiosName)));
 		break;
 	      }
 
 	      case NOT_EQUAL: {
-		String netbiosName = local.getQualifiedNetbiosName((String)sObj.getTrusteeName().getValue());
-		for (Principal p : local.queryAllPrincipals()) {
+		String netbiosName = directory.getQualifiedNetbiosName((String)sObj.getTrusteeName().getValue());
+		for (IPrincipal p : directory.queryAllPrincipals()) {
 		    if (!p.getNetbiosName().equals(netbiosName)) {
 			items.add(makeItem(p));
 		    }
@@ -86,7 +79,7 @@ public class SidAdapter extends UserAdapter {
 	      case PATTERN_MATCH:
 		try {
 		    Pattern p = Pattern.compile((String)sObj.getTrusteeName().getValue());
-		    for (Principal principal : local.queryAllPrincipals()) {
+		    for (IPrincipal principal : directory.queryAllPrincipals()) {
 			if (p.matcher(principal.getNetbiosName()).find()) {
 			    items.add(makeItem(principal));
 			}
@@ -116,7 +109,7 @@ public class SidAdapter extends UserAdapter {
 
     // Private
 
-    private JAXBElement<? extends ItemType> makeItem(Principal principal) {
+    private JAXBElement<? extends ItemType> makeItem(IPrincipal principal) {
 	SidItem item = JOVALSystem.factories.sc.windows.createSidItem();
 	EntityItemStringType trusteeSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	trusteeSidType.setValue(principal.getSid());
@@ -126,12 +119,12 @@ public class SidAdapter extends UserAdapter {
 	boolean builtin = false;
 	switch(principal.getType()) {
 	  case USER:
-	    if (local.isBuiltinUser(principal.getNetbiosName())) {
+	    if (directory.isBuiltinUser(principal.getNetbiosName())) {
 		builtin = true;
  	    }
 	    break;
 	  case GROUP:
-	    if (local.isBuiltinGroup(principal.getNetbiosName())) {
+	    if (directory.isBuiltinGroup(principal.getNetbiosName())) {
 		builtin = true;
  	    }
 	    break;

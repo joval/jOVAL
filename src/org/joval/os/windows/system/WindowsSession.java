@@ -9,12 +9,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
+
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.io.LocalFilesystem;
+import org.joval.os.windows.WindowsSystemInfo;
+import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.registry.Registry;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
@@ -34,12 +39,20 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
     private boolean is64bit = false;
     private Registry reg32, reg;
     private IFilesystem fs32;
+    private WindowsSystemInfo info = null;
+    private Directory directory = null;
 
     public WindowsSession() {
 	super();
+	info = new WindowsSystemInfo(this);
+	directory = new Directory(this);
     }
 
     // Implement IWindowsSession extensions
+
+    public IDirectory getDirectory() {
+	return directory;
+    }
 
     public IRegistry getRegistry(View view) {
 	switch(view) {
@@ -73,6 +86,10 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 
     // Implement ISession
 
+    public SystemInfoType getSystemInfo() {
+	return info.getSystemInfo();
+    }
+
     public boolean connect() {
 	reg = new Registry(null);
 	wmi = new WmiProvider();
@@ -94,9 +111,17 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 		reg32 = reg;
 		fs32 = fs;
 	    }
-	    reg.disconnect();
 	    cwd = new File(env.expand("%SystemRoot%"));
-	    return wmi.connect();
+	    try {
+		if (wmi.connect()) {
+		    directory.connect();
+		    return true;
+		} else {
+		    return false;
+		}
+	    } finally {
+		reg.disconnect();
+	    }
 	} else {
 	    return false;
 	}

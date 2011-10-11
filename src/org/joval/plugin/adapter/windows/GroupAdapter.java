@@ -27,10 +27,9 @@ import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.identity.ActiveDirectory;
-import org.joval.os.windows.identity.Group;
-import org.joval.os.windows.identity.LocalDirectory;
+import org.joval.intf.windows.identity.IGroup;
+import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -43,8 +42,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class GroupAdapter extends UserAdapter {
-    public GroupAdapter(LocalDirectory local, ActiveDirectory ad, IWmiProvider wmi) {
-	super(local, ad, wmi);
+    public GroupAdapter(IWindowsSession session) {
+	super(session);
     }
 
     // Implement IAdapter
@@ -67,11 +66,9 @@ public class GroupAdapter extends UserAdapter {
 	try {
 	    switch(op) {
 	      case EQUALS:
-		if (local.isMember(group)) {
-		    items.add(makeItem(local.queryGroup(group)));
-		} else if (ad.isMember(group)) {
-		    items.add(makeItem(ad.queryGroup(group)));
-		} else {
+		try {
+		    items.add(makeItem(directory.queryGroup(group)));
+		} catch (IllegalArgumentException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.WARNING);
 		    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, group);
@@ -82,8 +79,8 @@ public class GroupAdapter extends UserAdapter {
 		break;
     
 	      case NOT_EQUAL:
-		for (Group g : local.queryAllGroups()) {
-		    if (!local.getQualifiedNetbiosName(group).equals(g.getNetbiosName())) {
+		for (IGroup g : directory.queryAllGroups()) {
+		    if (!directory.getQualifiedNetbiosName(group).equals(g.getNetbiosName())) {
 			items.add(makeItem(g));
 		    }
 		}
@@ -92,9 +89,9 @@ public class GroupAdapter extends UserAdapter {
 	      case PATTERN_MATCH:
 		try {
 		    Pattern p = Pattern.compile(group);
-		    for (Group g : local.queryAllGroups()) {
+		    for (IGroup g : directory.queryAllGroups()) {
 			Matcher m = null;
-			if (local.isMember(g.getNetbiosName())) {
+			if (directory.isLocal(g.getNetbiosName())) {
 			    m = p.matcher(g.getName());
 			} else {
 			    m = p.matcher(g.getNetbiosName());
@@ -128,10 +125,10 @@ public class GroupAdapter extends UserAdapter {
 
     // Private
 
-    private JAXBElement<? extends ItemType> makeItem(Group group) {
+    private JAXBElement<? extends ItemType> makeItem(IGroup group) {
 	GroupItem item = JOVALSystem.factories.sc.windows.createGroupItem();
 	EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	if (local.isBuiltinGroup(group.getNetbiosName())) {
+	if (directory.isBuiltinGroup(group.getNetbiosName())) {
 	    groupType.setValue(group.getName());
 	} else {
 	    groupType.setValue(group.getNetbiosName());
@@ -145,8 +142,8 @@ public class GroupAdapter extends UserAdapter {
 	} else {
 	    for (String userNetbiosName : userNetbiosNames) {
 		EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		if (local.isBuiltinUser(userNetbiosName)) {
-		    userType.setValue(local.getName(userNetbiosName));
+		if (directory.isBuiltinUser(userNetbiosName)) {
+		    userType.setValue(Directory.getName(userNetbiosName));
 		} else {
 		    userType.setValue(userNetbiosName);
 		}
@@ -161,8 +158,8 @@ public class GroupAdapter extends UserAdapter {
 	} else {
 	    for (String groupNetbiosName : groupNetbiosNames) {
 		EntityItemStringType subgroupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		if (local.isBuiltinGroup(groupNetbiosName)) {
-		    subgroupType.setValue(local.getName(groupNetbiosName));
+		if (directory.isBuiltinGroup(groupNetbiosName)) {
+		    subgroupType.setValue(Directory.getName(groupNetbiosName));
 		} else {
 		    subgroupType.setValue(groupNetbiosName);
 		}

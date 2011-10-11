@@ -5,13 +5,15 @@ package org.joval.os.windows.identity;
 
 import java.util.Collection;
 
+import org.joval.intf.windows.identity.IGroup;
+
 /**
  * The Group class stores information about a Windows group.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Group extends Principal {
+class Group extends Principal implements IGroup {
     private Collection<String> memberUserNetbiosNames;
     private Collection<String> memberGroupNetbiosNames;
 
@@ -23,19 +25,17 @@ public class Group extends Principal {
 	this.memberGroupNetbiosNames = memberGroupNetbiosNames;
     }
 
-    /**
-     * Non-recursive.
-     */
+    // Implement IGroup
+
     public Collection<String> getMemberUserNetbiosNames() {
 	return memberUserNetbiosNames;
     }
 
-    /**
-     * Non-recursive.
-     */
     public Collection<String> getMemberGroupNetbiosNames() {
 	return memberGroupNetbiosNames;
     }
+
+    // Implement IPrincipal
 
     public Type getType() {
 	return Type.GROUP;

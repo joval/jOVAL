@@ -52,16 +52,14 @@ public class WindowsSystemInfo {
     static final String IP_ADDR_FIELD		= "IPAddress";
     static final String DESCRIPTION_FIELD	= "Description";
 
-    private IRegistry registry;
-    private IWmiProvider wmi;
+    private IWindowsSession session;
     private SystemInfoType info;
 
     /**
      * Create a plugin for scanning or test evaluation.
      */
     public WindowsSystemInfo(IWindowsSession session) {
-	registry = session.getRegistry(IWindowsSession.View._64BIT);
-	wmi = session.getWmiProvider();
+	this.session = session;
     }
 
     public SystemInfoType getSystemInfo() {
@@ -69,6 +67,8 @@ public class WindowsSystemInfo {
 	    return info;
 	}
 
+	IRegistry registry = session.getRegistry(IWindowsSession.View._64BIT);
+	IWmiProvider wmi = session.getWmiProvider();
 	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	boolean regConnected=false, wmiConnected=false;
 	try {

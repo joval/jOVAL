@@ -29,8 +29,6 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.embedded.IosSystemInfo;
 import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.windows.WindowsSystemInfo;
-import org.joval.os.windows.identity.ActiveDirectory;
-import org.joval.os.windows.identity.LocalDirectory;
 import org.joval.plugin.adapter.cisco.ios.LineAdapter;
 import org.joval.plugin.adapter.cisco.ios.Version55Adapter;
 import org.joval.plugin.adapter.independent.EnvironmentvariableAdapter;
@@ -98,27 +96,22 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 	    switch(session.getType()) {
 	      case WINDOWS: {
 		IWindowsSession win = (IWindowsSession)session;
-		info = new WindowsSystemInfo(win).getSystemInfo();
 		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win));
 		adapters.add(new RegistryAdapter(win));
-		adapters.add(new Wmi57Adapter(win.getWmiProvider()));
-		adapters.add(new WmiAdapter(win.getWmiProvider()));
-
-		LocalDirectory local = new LocalDirectory(info.getPrimaryHostName(), win.getWmiProvider());
-		ActiveDirectory ad = new ActiveDirectory(win.getWmiProvider());
-		adapters.add(new GroupAdapter(local, ad, win.getWmiProvider()));
-		adapters.add(new GroupSidAdapter(local, ad, win.getWmiProvider()));
-		adapters.add(new SidAdapter(local, ad, win.getWmiProvider()));
-		adapters.add(new SidSidAdapter(local, ad, win.getWmiProvider()));
-		adapters.add(new UserAdapter(local, ad, win.getWmiProvider()));
-		adapters.add(new UserSid55Adapter(local, ad, win.getWmiProvider()));
-		adapters.add(new UserSidAdapter(local, ad, win.getWmiProvider()));
+		adapters.add(new Wmi57Adapter(win));
+		adapters.add(new WmiAdapter(win));
+		adapters.add(new GroupAdapter(win));
+		adapters.add(new GroupSidAdapter(win));
+		adapters.add(new SidAdapter(win));
+		adapters.add(new SidSidAdapter(win));
+		adapters.add(new UserAdapter(win));
+		adapters.add(new UserSid55Adapter(win));
+		adapters.add(new UserSidAdapter(win));
 		break;
 	      }
 
 	      case UNIX: {
 		IUnixSession unix = (IUnixSession)session;
-		info = new UnixSystemInfo(unix).getSystemInfo();
 		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(unix));
 		adapters.add(new ProcessAdapter(unix));
 		adapters.add(new RunlevelAdapter(unix));
@@ -139,12 +132,13 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 	      }
 
 	      case CISCO_IOS: {
-		info = new IosSystemInfo(session).getSystemInfo();
 		adapters.add(new LineAdapter(session));
-		adapters.add(new Version55Adapter(info.getOsVersion()));
+		adapters.add(new Version55Adapter(session));
 		break;
 	      }
 	    }
+
+	    info = session.getSystemInfo();
 	} else {
 	    throw new RuntimeException(getMessage("ERROR_SESSION_CONNECTION"));
 	}

@@ -24,6 +24,7 @@ import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
@@ -43,8 +44,8 @@ import org.joval.util.JOVALSystem;
 public class Wmi57Adapter implements IAdapter {
     private IWmiProvider wmi;
 
-    public Wmi57Adapter(IWmiProvider wmi) {
-	this.wmi = wmi;
+    public Wmi57Adapter(IWindowsSession session) {
+	wmi = session.getWmiProvider();
     }
 
     // Implement IAdapter

@@ -3,6 +3,8 @@
 
 package org.joval.os.unix.remote.system;
 
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
+
 import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
@@ -30,9 +32,11 @@ public class UnixSession implements ILocked, IUnixSession {
     private IEnvironment env;
     private SftpFilesystem fs;
     private Flavor flavor = Flavor.UNKNOWN;
+    private UnixSystemInfo info = null;
 
     public UnixSession(SshSession ssh) {
 	this.ssh = ssh;
+	info = new UnixSystemInfo(this);
     }
 
     // Implement ILocked
@@ -90,6 +94,10 @@ public class UnixSession implements ILocked, IUnixSession {
     }
 
     // Implement ISession
+
+    public SystemInfoType getSystemInfo() {
+	return info.getSystemInfo();
+    }
 
     public void setWorkingDir(String path) {
 	// no-op
