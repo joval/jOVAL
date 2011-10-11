@@ -6,6 +6,7 @@ package org.joval.os.windows.remote.io;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Hashtable;
 import java.util.List;
 
 import jcifs.smb.ACE;
@@ -20,6 +21,7 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.windows.identity.IACE;
+import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.io.IWindowsFile;
 import org.joval.io.BaseFile;
 
@@ -32,6 +34,7 @@ import org.joval.io.BaseFile;
 class SmbFileProxy extends BaseFile implements IWindowsFile {
     private SmbFile smbFile;
     private String localName;
+    private Hashtable<String, IACE> aces;
 
     SmbFileProxy(IFilesystem fs, SmbFile smbFile, String localName) {
 	super(fs);
@@ -158,13 +161,15 @@ class SmbFileProxy extends BaseFile implements IWindowsFile {
 	}
     }
 
-    public IACE[] getSecurity() throws IOException {
-	ACE[] aa = smbFile.getSecurity();
-	SmbACE[] sa = new SmbACE[aa.length];
-	for (int i=0; i < aa.length; i++) {
-	    sa[i] = new SmbACE(aa[i]);
+    public IACE getSecurity(IPrincipal principal) throws IOException {
+	if (aces == null) {
+	    aces = new Hashtable<String, IACE>();
+	    ACE[] aa = smbFile.getSecurity();
+	    for (int i=0; i < aa.length; i++) {
+		aces.put(aa[i].getSID().toString(), new SmbACE(aa[i]));
+	    }
 	}
-	return sa;
+	return aces.get(principal.getSid());
     }
 
     // Private

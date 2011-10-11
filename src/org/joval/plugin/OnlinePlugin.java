@@ -46,6 +46,7 @@ import org.joval.plugin.adapter.solaris.SmfAdapter;
 import org.joval.plugin.adapter.unix.ProcessAdapter;
 import org.joval.plugin.adapter.unix.RunlevelAdapter;
 import org.joval.plugin.adapter.unix.UnameAdapter;
+import org.joval.plugin.adapter.windows.Fileeffectiverights53Adapter;
 import org.joval.plugin.adapter.windows.GroupAdapter;
 import org.joval.plugin.adapter.windows.GroupSidAdapter;
 import org.joval.plugin.adapter.windows.RegistryAdapter;
@@ -97,6 +98,7 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 	      case WINDOWS: {
 		IWindowsSession win = (IWindowsSession)session;
 		adapters.add(new org.joval.plugin.adapter.windows.FileAdapter(win));
+		adapters.add(new Fileeffectiverights53Adapter(win));
 		adapters.add(new RegistryAdapter(win));
 		adapters.add(new Wmi57Adapter(win));
 		adapters.add(new WmiAdapter(win));

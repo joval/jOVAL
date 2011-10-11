@@ -4,6 +4,7 @@
 package org.joval.intf.windows.identity;
 
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.NoSuchElementException;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
@@ -21,6 +22,10 @@ import org.joval.os.windows.wmi.WmiException;
  * @version %I% %G%
  */
 public interface IDirectory {
+    public boolean connect();
+
+    public void disconnect();
+
     /**
      * Returns the user corresponding to the specified SID.
      */
@@ -108,4 +113,10 @@ public interface IDirectory {
      * Fills in the domain with the local hostname if it is not specified in the argument.
      */
     public String getQualifiedNetbiosName(String netbiosName);
+
+    /**
+     * Recurse members of the principal (if it's a group) and add children if resolveGroups == true.  Won't get stuck in
+     * a loop because it adds the groups themselves to the Hashtable as it goes.
+     */
+    public void getAllPrincipals(IPrincipal principal, boolean resolveGroups, Hashtable<String, IPrincipal>principals);
 }

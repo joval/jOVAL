@@ -44,13 +44,10 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class UserAdapter implements IAdapter {
-    private IWmiProvider wmi;
-
     protected IDirectory directory;
 
     public UserAdapter(IWindowsSession session) {
 	this.directory = session.getDirectory();
-	this.wmi = session.getWmiProvider();
     }
 
     // Implement IAdapter
@@ -60,15 +57,11 @@ public class UserAdapter implements IAdapter {
     }
 
     public boolean connect() {
-	if (wmi.connect()) {
-	    return true;
-	}
-	return false;
+	return directory.connect();
     }
 
     public void disconnect() {
-	wmi.disconnect();
-	directory = null;
+	directory.disconnect();
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {

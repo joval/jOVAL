@@ -117,7 +117,7 @@ public class SidSidAdapter extends UserAdapter {
 	    includeGroups = behaviors.isIncludeGroup();
 	    resolveGroups = behaviors.isResolveGroup();
 	}
-	getAllPrincipals(principal, resolveGroups, principals);
+	directory.getAllPrincipals(principal, resolveGroups, principals);
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	for (IPrincipal p : principals.values()) {
 	    switch(p.getType()) {
@@ -133,35 +133,6 @@ public class SidSidAdapter extends UserAdapter {
 	    }
 	}
 	return items;
-    }
-
-    /**
-     * Recurse members of the principal (if it's a group) and add children if resolveGroups == true.  Won't get stuck in
-     * a loop because it adds the groups themselves to the Hashtable as it goes.
-     */
-    private void getAllPrincipals(IPrincipal principal, boolean resolveGroups, Hashtable<String, IPrincipal> principals) {
-	switch(principal.getType()) {
-	  case GROUP:
-	    if (resolveGroups && !principals.containsKey(principal.getSid())) {
-		IGroup g = (IGroup)principal;
-		for (String netbiosName : g.getMemberUserNetbiosNames()) {
-		    try {
-			getAllPrincipals(directory.queryUser(netbiosName), resolveGroups, principals);
-		    } catch (Exception e) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
-		    }
-		}
-		for (String netbiosName : g.getMemberGroupNetbiosNames()) {
-		    try {
-			getAllPrincipals(directory.queryUser(netbiosName), resolveGroups, principals);
-		    } catch (Exception e) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
-		    }
-		}
-	    }
-	    break;
-	}
-	principals.put(principal.getSid(), principal);
     }
 
     private JAXBElement<? extends ItemType> makeItem(IPrincipal principal) {

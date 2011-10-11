@@ -4,6 +4,7 @@
 package org.joval.os.windows.identity;
 
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.NoSuchElementException;
 
 import org.joval.intf.windows.identity.IDirectory;
@@ -11,7 +12,10 @@ import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.identity.IUser;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * Implementation of IDirectory.
@@ -33,6 +37,7 @@ public class Directory implements IDirectory {
     }
 
     private IWindowsSession session;
+    private IWmiProvider wmi;
     private ActiveDirectory ad;
     private LocalDirectory local;
 
@@ -40,12 +45,22 @@ public class Directory implements IDirectory {
 	this.session = session;
     }
 
-    public void connect() {
-	ad = new ActiveDirectory(session.getWmiProvider());
-	local = new LocalDirectory(session.getSystemInfo().getPrimaryHostName(), session.getWmiProvider());
+    public boolean connect() {
+	wmi = session.getWmiProvider();
+	if (wmi.connect()) {
+	    ad = new ActiveDirectory(wmi);
+	    local = new LocalDirectory(session.getSystemInfo().getPrimaryHostName(), wmi);
+	    return true;
+	} else {
+	    return false;
+	}
     }
 
     public void disconnect() {
+	if (wmi != null) {
+	    wmi.disconnect();
+	    wmi = null;
+	}
 	ad = null;
 	local = null;
     }
@@ -138,5 +153,30 @@ public class Directory implements IDirectory {
 
     public String getQualifiedNetbiosName(String netbiosName) {
 	return local.getQualifiedNetbiosName(netbiosName);
+    }
+
+    public void getAllPrincipals(IPrincipal principal, boolean resolveGroups, Hashtable<String, IPrincipal> principals) {
+	switch(principal.getType()) {
+	  case GROUP:
+	    if (resolveGroups && !principals.containsKey(principal.getSid())) {
+		IGroup g = (IGroup)principal;
+		for (String netbiosName : g.getMemberUserNetbiosNames()) {
+		    try {
+			getAllPrincipals(queryUser(netbiosName), resolveGroups, principals);
+		    } catch (Exception e) {
+			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+		    }
+		}
+		for (String netbiosName : g.getMemberGroupNetbiosNames()) {
+		    try {
+			getAllPrincipals(queryUser(netbiosName), resolveGroups, principals);
+		    } catch (Exception e) {
+			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+		    }
+		}
+	    }
+	    break;
+	}
+	principals.put(principal.getSid(), principal);
     }
 }
