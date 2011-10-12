@@ -96,53 +96,65 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 	    } else {
 		wf = new WindowsFile(f);
 	    }
+	    IACE[] aces = wf.getSecurity();
 
 	    Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)rc.getObject();
-	    OperationEnumeration op = fObj.getTrusteeSid().getOperation();
 	    String sid = (String)fObj.getTrusteeSid().getValue();
-	    FileEffectiveRights53Behaviors behaviors = fObj.getBehaviors();
 
-	    try {
-		switch(op) {
-		  case EQUALS:
-		    items.addAll(makeItems(baseItem, getPrincipals(directory.queryPrincipalBySid(sid), behaviors), wf));
-		    break;
-    
-		  case NOT_EQUAL:
-		    for (IPrincipal p : directory.queryAllPrincipals()) {
-			if (!p.getSid().equals(sid)) {
-			    items.addAll(makeItems(baseItem, getPrincipals(p, behaviors), wf));
+	    OperationEnumeration op = fObj.getTrusteeSid().getOperation();
+	    switch(op) {
+	      case PATTERN_MATCH:
+		try {
+		    Pattern p = Pattern.compile(sid);
+		    for (int i=0; i < aces.length; i++) {
+			IACE ace = aces[i];
+			if (p.matcher(ace.getSid()).find()) {
+			    IPrincipal principal = directory.queryPrincipalBySid(ace.getSid());
+			    items.add(makeItem(baseItem, principal, ace));
 			}
 		    }
-		    break;
-	
-		  case PATTERN_MATCH:
-		    try {
-			Pattern p = Pattern.compile(sid);
-			for (IPrincipal principal : directory.queryAllPrincipals()) {
-			    if (p.matcher(principal.getSid()).find()) {
-				items.addAll(makeItems(baseItem, getPrincipals(principal, behaviors), wf));
+		} catch (PatternSyntaxException e) {
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+		    rc.addMessage(msg);
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		} catch (WmiException e) {
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
+		    rc.addMessage(msg);
+		}
+		break;
+
+	      case EQUALS:
+	      case NOT_EQUAL:
+		try {
+		    Collection<IPrincipal> principals = getPrincipals(directory.queryPrincipalBySid(sid), fObj.getBehaviors());
+		    for (IPrincipal principal : principals) {
+			for (int i=0; i < aces.length; i++) {
+			    if (op == OperationEnumeration.EQUALS && directory.isApplicable(principal, aces[i])) {
+				items.add(makeItem(baseItem, principal, aces[i]));
+			    } else if (op == OperationEnumeration.NOT_EQUAL && !directory.isApplicable(principal, aces[i])) {
+				items.add(makeItem(baseItem, principal, aces[i]));
 			    }
 			}
-		    } catch (PatternSyntaxException e) {
-			MessageType msg = JOVALSystem.factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.ERROR);
-			msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-			rc.addMessage(msg);
-			JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
-		    break;
-	
-		  default:
-		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		} catch (NoSuchElementException e) {
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.INFO);
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, sid));
+		    rc.addMessage(msg);
+		} catch (WmiException e) {
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
+		    rc.addMessage(msg);
 		}
-	    } catch (NoSuchElementException e) {
-		// No match.
-	    } catch (WmiException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
-		rc.addMessage(msg);
+		break;
+
+	      default:
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	    }
 	}
 	return items;
@@ -150,172 +162,162 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 
     // Private
 
-    private Collection<IPrincipal> getPrincipals(IPrincipal principal, FileEffectiveRights53Behaviors behaviors) {
-	Hashtable<String, IPrincipal> principals = new Hashtable<String, IPrincipal>();
+    /**
+     * Recursively fetch all members of the IPrincipal (if it's a group) according to the specified behaviors.
+     */
+    private Collection<IPrincipal> getPrincipals(IPrincipal principal, FileEffectiveRights53Behaviors behaviors)
+		throws WmiException {
+
 	boolean includeGroups = true;
 	boolean resolveGroups = false;
 	if (behaviors != null) {
 	    includeGroups = behaviors.isIncludeGroup();
 	    resolveGroups = behaviors.isResolveGroup();
 	}
-	directory.getAllPrincipals(principal, resolveGroups, principals);
-	return principals.values();
+	return directory.getAllPrincipals(principal, includeGroups, resolveGroups);
     }
 
     /**
-     * Populate the FileeffectiverightsItem with everything except the path, filename and filepath. 
+     * Create a new wrapped FileeffectiverightsItem based on the base FileeffectiverightsItem, IPrincipal and IACE.
      */
-    private Collection<JAXBElement<FileeffectiverightsItem>> makeItems(FileeffectiverightsItem base,
-		Collection<IPrincipal> principals, IWindowsFile wf) throws IOException {
+    private JAXBElement<FileeffectiverightsItem> makeItem(FileeffectiverightsItem base, IPrincipal p, IACE ace)
+		throws IOException {
 
-	Hashtable<String, JAXBElement<FileeffectiverightsItem>> items =
-		new Hashtable<String, JAXBElement<FileeffectiverightsItem>>();
+	FileeffectiverightsItem item = JOVALSystem.factories.sc.windows.createFileeffectiverightsItem();
+	item.setPath(base.getPath());
+	item.setFilename(base.getFilename());
+	item.setFilepath(base.getFilepath());
+	item.setWindowsView(base.getWindowsView());
 
-	for (IPrincipal principal : principals) {
-	    if (!items.containsKey(principal.getSid())) {
-		FileeffectiverightsItem item = JOVALSystem.factories.sc.windows.createFileeffectiverightsItem();
-		item.setPath(base.getPath());
-		item.setFilename(base.getFilename());
-		item.setFilepath(base.getFilepath());
-		item.setWindowsView(base.getWindowsView());
+	int accessMask = ace.getAccessMask();
+	boolean test = false;
 
-		IACE ace = wf.getSecurity(principal);
-		if (ace == null) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFER_NOACE, principal.getSid(), wf.getLocalName()));
-		    item.getMessage().add(msg);
-		    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		} else {
-		    int accessMask = ace.getAccessMask();
-		    boolean test = false;
+	test = IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY | accessMask);
+	EntityItemBoolType accessSystemSecurity = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	accessSystemSecurity.setValue(Boolean.toString(test));
+	accessSystemSecurity.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setAccessSystemSecurity(accessSystemSecurity);
 
-		    test = IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY | accessMask);
-		    EntityItemBoolType accessSystemSecurity = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    accessSystemSecurity.setValue(Boolean.toString(test));
-		    accessSystemSecurity.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setAccessSystemSecurity(accessSystemSecurity);
+	test = IACE.FILE_APPEND_DATA == (IACE.FILE_APPEND_DATA | accessMask);
+	EntityItemBoolType fileAppendData = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	fileAppendData.setValue(Boolean.toString(test));
+	fileAppendData.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setFileAppendData(fileAppendData);
 
-		    test = IACE.FILE_APPEND_DATA == (IACE.FILE_APPEND_DATA | accessMask);
-		    EntityItemBoolType fileAppendData = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    fileAppendData.setValue(Boolean.toString(test));
-		    fileAppendData.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setFileAppendData(fileAppendData);
+	test = IACE.FILE_DELETE == (IACE.FILE_DELETE | accessMask);
+	EntityItemBoolType fileDeleteChild = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	fileDeleteChild.setValue(Boolean.toString(test));
+	fileDeleteChild.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setFileDeleteChild(fileDeleteChild);
 
-		    test = IACE.FILE_DELETE == (IACE.FILE_DELETE | accessMask);
-		    EntityItemBoolType fileDeleteChild = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    fileDeleteChild.setValue(Boolean.toString(test));
-		    fileDeleteChild.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setFileDeleteChild(fileDeleteChild);
+	test = IACE.FILE_EXECUTE == (IACE.FILE_EXECUTE | accessMask);
+	EntityItemBoolType fileExecute = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	fileExecute.setValue(Boolean.toString(test));
+	fileExecute.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setFileExecute(fileExecute);
 
-		    test = IACE.FILE_EXECUTE == (IACE.FILE_EXECUTE | accessMask);
-		    EntityItemBoolType fileExecute = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    fileExecute.setValue(Boolean.toString(test));
-		    fileExecute.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setFileExecute(fileExecute);
+	test = IACE.FILE_READ_ATTRIBUTES == (IACE.FILE_READ_ATTRIBUTES | accessMask);
+	EntityItemBoolType fileReadAttributes = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	fileReadAttributes.setValue(Boolean.toString(test));
+	fileReadAttributes.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setFileReadAttributes(fileReadAttributes);
 
-		    test = IACE.FILE_READ_ATTRIBUTES == (IACE.FILE_READ_ATTRIBUTES | accessMask);
-		    EntityItemBoolType fileReadAttributes = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    fileReadAttributes.setValue(Boolean.toString(test));
-		    fileReadAttributes.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setFileReadAttributes(fileReadAttributes);
+	test = IACE.FILE_READ_DATA == (IACE.FILE_READ_DATA | accessMask);
+	EntityItemBoolType fileReadData = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	fileReadData.setValue(Boolean.toString(test));
+	fileReadData.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setFileReadData(fileReadData);
 
-		    test = IACE.FILE_READ_DATA == (IACE.FILE_READ_DATA | accessMask);
-		    EntityItemBoolType fileReadData = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    fileReadData.setValue(Boolean.toString(test));
-		    fileReadData.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setFileReadData(fileReadData);
+	test = IACE.FILE_READ_EA == (IACE.FILE_READ_EA | accessMask);
+	EntityItemBoolType fileReadEa = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	fileReadEa.setValue(Boolean.toString(test));
+	fileReadEa.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setFileReadEa(fileReadEa);
 
-		    test = IACE.FILE_READ_EA == (IACE.FILE_READ_EA | accessMask);
-		    EntityItemBoolType fileReadEa = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    fileReadEa.setValue(Boolean.toString(test));
-		    fileReadEa.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setFileReadEa(fileReadEa);
+	test = IACE.FILE_WRITE_ATTRIBUTES == (IACE.FILE_WRITE_ATTRIBUTES | accessMask);
+	EntityItemBoolType fileWriteAttributes = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	fileWriteAttributes.setValue(Boolean.toString(test));
+	fileWriteAttributes.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setFileWriteAttributes(fileWriteAttributes);
 
-		    test = IACE.FILE_WRITE_ATTRIBUTES == (IACE.FILE_WRITE_ATTRIBUTES | accessMask);
-		    EntityItemBoolType fileWriteAttributes = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    fileWriteAttributes.setValue(Boolean.toString(test));
-		    fileWriteAttributes.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setFileWriteAttributes(fileWriteAttributes);
+	test = IACE.FILE_WRITE_DATA == (IACE.FILE_WRITE_DATA | accessMask);
+	EntityItemBoolType fileWriteData = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	fileWriteData.setValue(Boolean.toString(test));
+	fileWriteData.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setFileWriteData(fileWriteData);
 
-		    test = IACE.FILE_WRITE_DATA == (IACE.FILE_WRITE_DATA | accessMask);
-		    EntityItemBoolType fileWriteData = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    fileWriteData.setValue(Boolean.toString(test));
-		    fileWriteData.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setFileWriteData(fileWriteData);
+	test = IACE.FILE_WRITE_EA == (IACE.FILE_WRITE_EA | accessMask);
+	EntityItemBoolType fileWriteEa = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	fileWriteEa.setValue(Boolean.toString(test));
+	fileWriteEa.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setFileWriteEa(fileWriteEa);
 
-		    test = IACE.FILE_WRITE_EA == (IACE.FILE_WRITE_EA | accessMask);
-		    EntityItemBoolType fileWriteEa = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    fileWriteEa.setValue(Boolean.toString(test));
-		    fileWriteEa.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setFileWriteEa(fileWriteEa);
+	test = IACE.GENERIC_ALL == (IACE.GENERIC_ALL | accessMask);
+	EntityItemBoolType genericAll = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	genericAll.setValue(Boolean.toString(test));
+	genericAll.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setGenericAll(genericAll);
 
-		    test = IACE.GENERIC_ALL == (IACE.GENERIC_ALL | accessMask);
-		    EntityItemBoolType genericAll = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    genericAll.setValue(Boolean.toString(test));
-		    genericAll.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setGenericAll(genericAll);
+	test = IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE | accessMask);
+	EntityItemBoolType genericExecute = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	genericExecute.setValue(Boolean.toString(test));
+	genericExecute.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setGenericExecute(genericExecute);
 
-		    test = IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE | accessMask);
-		    EntityItemBoolType genericExecute = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    genericExecute.setValue(Boolean.toString(test));
-		    genericExecute.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setGenericExecute(genericExecute);
+	test = IACE.GENERIC_READ == (IACE.GENERIC_READ | accessMask);
+	EntityItemBoolType genericRead = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	genericRead.setValue(Boolean.toString(test));
+	genericRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setGenericRead(genericRead);
 
-		    test = IACE.GENERIC_READ == (IACE.GENERIC_READ | accessMask);
-		    EntityItemBoolType genericRead = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    genericRead.setValue(Boolean.toString(test));
-		    genericRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setGenericRead(genericRead);
+	test = IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE | accessMask);
+	EntityItemBoolType genericWrite = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	genericWrite.setValue(Boolean.toString(test));
+	genericWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setGenericWrite(genericWrite);
 
-		    test = IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE | accessMask);
-		    EntityItemBoolType genericWrite = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    genericWrite.setValue(Boolean.toString(test));
-		    genericWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setGenericWrite(genericWrite);
+	test = IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE | accessMask);
+	EntityItemBoolType standardDelete = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	standardDelete.setValue(Boolean.toString(test));
+	standardDelete.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setStandardDelete(standardDelete);
 
-		    test = IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE | accessMask);
-		    EntityItemBoolType standardDelete = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    standardDelete.setValue(Boolean.toString(test));
-		    standardDelete.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setStandardDelete(standardDelete);
+	test = IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL | accessMask);
+	EntityItemBoolType standardReadControl = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	standardReadControl.setValue(Boolean.toString(test));
+	standardReadControl.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setStandardReadControl(standardReadControl);
 
-		    test = IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL | accessMask);
-		    EntityItemBoolType standardReadControl = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    standardReadControl.setValue(Boolean.toString(test));
-		    standardReadControl.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setStandardReadControl(standardReadControl);
+	test = IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE | accessMask);
+	EntityItemBoolType standardSynchronize = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	standardSynchronize.setValue(Boolean.toString(test));
+	standardSynchronize.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setStandardSynchronize(standardSynchronize);
 
-		    test = IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE | accessMask);
-		    EntityItemBoolType standardSynchronize = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    standardSynchronize.setValue(Boolean.toString(test));
-		    standardSynchronize.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setStandardSynchronize(standardSynchronize);
+	test = IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC | accessMask);
+	EntityItemBoolType standardWriteDac = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	standardWriteDac.setValue(Boolean.toString(test));
+	standardWriteDac.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setStandardWriteDac(standardWriteDac);
 
-		    test = IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC | accessMask);
-		    EntityItemBoolType standardWriteDac = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    standardWriteDac.setValue(Boolean.toString(test));
-		    standardWriteDac.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setStandardWriteDac(standardWriteDac);
+	test = IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER | accessMask);
+	EntityItemBoolType standardWriteOwner = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	standardWriteOwner.setValue(Boolean.toString(test));
+	standardWriteOwner.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setStandardWriteOwner(standardWriteOwner);
 
-		    test = IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER | accessMask);
-		    EntityItemBoolType standardWriteOwner = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-		    standardWriteOwner.setValue(Boolean.toString(test));
-		    standardWriteOwner.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-		    item.setStandardWriteOwner(standardWriteOwner);
-
-		    EntityItemStringType trusteeName = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    trusteeName.setValue(principal.getNetbiosName());
-		    item.setTrusteeName(trusteeName);
-
-		    EntityItemStringType trusteeSid = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    trusteeSid.setValue(principal.getSid());
-		    item.setTrusteeSid(trusteeSid);
-
-		}
-		items.put(principal.getSid(), JOVALSystem.factories.sc.windows.createFileeffectiverightsItem(item));
-	    }
+	EntityItemStringType trusteeName = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	if (directory.isBuiltinUser(p.getNetbiosName())) {
+	    trusteeName.setValue(p.getName());
+	} else {
+	    trusteeName.setValue(p.getNetbiosName());
 	}
-	return items.values();
+	item.setTrusteeName(trusteeName);
+
+	EntityItemStringType trusteeSid = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	trusteeSid.setValue(p.getSid());
+	item.setTrusteeSid(trusteeSid);
+
+	return JOVALSystem.factories.sc.windows.createFileeffectiverightsItem(item);
     }
 }

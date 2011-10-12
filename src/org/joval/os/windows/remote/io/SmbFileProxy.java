@@ -21,9 +21,9 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.windows.identity.IACE;
-import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.io.IWindowsFile;
 import org.joval.io.BaseFile;
+import org.joval.os.windows.remote.identity.SmbACE;
 
 /**
  * An IFile wrapper for an SmbFile.
@@ -34,7 +34,7 @@ import org.joval.io.BaseFile;
 class SmbFileProxy extends BaseFile implements IWindowsFile {
     private SmbFile smbFile;
     private String localName;
-    private Hashtable<String, IACE> aces;
+    private IACE[] aces = null;
 
     SmbFileProxy(IFilesystem fs, SmbFile smbFile, String localName) {
 	super(fs);
@@ -161,15 +161,15 @@ class SmbFileProxy extends BaseFile implements IWindowsFile {
 	}
     }
 
-    public IACE getSecurity(IPrincipal principal) throws IOException {
+    public IACE[] getSecurity() throws IOException {
 	if (aces == null) {
-	    aces = new Hashtable<String, IACE>();
 	    ACE[] aa = smbFile.getSecurity();
+	    aces = new IACE[aa.length];
 	    for (int i=0; i < aa.length; i++) {
-		aces.put(aa[i].getSID().toString(), new SmbACE(aa[i]));
+		aces[i] = new SmbACE(aa[i]);
 	    }
 	}
-	return aces.get(principal.getSid());
+	return aces;
     }
 
     // Private

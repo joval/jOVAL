@@ -9,6 +9,7 @@ import java.util.NoSuchElementException;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.identity.IPrincipal;
@@ -115,8 +116,13 @@ public interface IDirectory {
     public String getQualifiedNetbiosName(String netbiosName);
 
     /**
-     * Recurse members of the principal (if it's a group) and add children if resolveGroups == true.  Won't get stuck in
-     * a loop because it adds the groups themselves to the Hashtable as it goes.
+     * Recurse members of the principal (if it's a group) and add children if resolveGroups == true.
      */
-    public void getAllPrincipals(IPrincipal principal, boolean resolveGroups, Hashtable<String, IPrincipal>principals);
+    public Collection<IPrincipal> getAllPrincipals(IPrincipal principal, boolean includeGroups, boolean resolveGroups)
+	throws WmiException;
+
+    /**
+     * Test whether the specified ACE applies to the specified principal.
+     */
+    public boolean isApplicable(IPrincipal principal, IACE entry) throws WmiException;
 }

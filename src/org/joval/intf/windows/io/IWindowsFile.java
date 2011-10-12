@@ -6,7 +6,6 @@ package org.joval.intf.windows.io;
 import java.io.IOException;
 
 import org.joval.intf.windows.identity.IACE;
-import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.io.IFile;
 
 /**
@@ -46,5 +45,8 @@ public interface IWindowsFile extends IFile {
      */
     public int getWindowsFileType() throws IOException;
 
-    public IACE getSecurity(IPrincipal principal) throws IOException;
+    /**
+     * Returns the Access Control Entries associated with the file.
+     */
+    public IACE[] getSecurity() throws IOException;
 }

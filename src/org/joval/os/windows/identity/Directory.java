@@ -6,7 +6,9 @@ package org.joval.os.windows.identity;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
+import java.util.Vector;
 
+import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.identity.IPrincipal;
@@ -155,28 +157,76 @@ public class Directory implements IDirectory {
 	return local.getQualifiedNetbiosName(netbiosName);
     }
 
-    public void getAllPrincipals(IPrincipal principal, boolean resolveGroups, Hashtable<String, IPrincipal> principals) {
-	switch(principal.getType()) {
-	  case GROUP:
-	    if (resolveGroups && !principals.containsKey(principal.getSid())) {
-		IGroup g = (IGroup)principal;
-		for (String netbiosName : g.getMemberUserNetbiosNames()) {
-		    try {
-			getAllPrincipals(queryUser(netbiosName), resolveGroups, principals);
-		    } catch (Exception e) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
-		    }
+    public Collection<IPrincipal> getAllPrincipals(IPrincipal principal, boolean includeGroups, boolean resolveGroups)
+		throws WmiException {
+
+	Hashtable<String, IPrincipal> principals = new Hashtable<String, IPrincipal>();
+	getAllPrincipalsInternal(principal, resolveGroups, principals);
+	Collection<IPrincipal> results = new Vector<IPrincipal>();
+	for (IPrincipal p : principals.values()) {
+	    switch(p.getType()) {
+	      case GROUP:
+		if (includeGroups) {
+		    results.add(p);
 		}
-		for (String netbiosName : g.getMemberGroupNetbiosNames()) {
-		    try {
-			getAllPrincipals(queryUser(netbiosName), resolveGroups, principals);
-		    } catch (Exception e) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
-		    }
-		}
+		break;
+
+	      case USER:
+		results.add(p);
+		break;
 	    }
-	    break;
 	}
-	principals.put(principal.getSid(), principal);
+	return results;
+    }
+
+    public boolean isApplicable(IPrincipal principal, IACE entry) throws WmiException {
+	if (principal.getSid().equals(entry.getSid())) {
+	    return true;
+	} else {
+	    try {
+		return getAllPrincipals(queryPrincipalBySid(entry.getSid()), true, true).contains(principal);
+	    } catch (NoSuchElementException e) {
+	    }
+	    return false;
+	}
+    }
+
+    // Private
+
+    /**
+     * Won't get stuck in a loop because it adds the groups themselves to the Hashtable as it goes.
+     */
+    private void getAllPrincipalsInternal(IPrincipal principal, boolean resolve, Hashtable<String, IPrincipal> principals)
+		throws WmiException {
+
+	if (!principals.containsKey(principal.getSid())) {
+	    principals.put(principal.getSid(), principal);
+	    switch(principal.getType()) {
+	      case GROUP:
+		if (resolve) {
+		    principals.put(principal.getSid(), principal);
+		    IGroup g = (IGroup)principal;
+		    for (String netbiosName : g.getMemberUserNetbiosNames()) {
+			try {
+			    getAllPrincipalsInternal(queryUser(netbiosName), resolve, principals);
+			} catch (IllegalArgumentException e) {
+			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+			} catch (NoSuchElementException e) {
+			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+			}
+		    }
+		    for (String netbiosName : g.getMemberGroupNetbiosNames()) {
+			try {
+			    getAllPrincipalsInternal(queryGroup(netbiosName), resolve, principals);
+			} catch (IllegalArgumentException e) {
+			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+			} catch (NoSuchElementException e) {
+			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+			}
+		    }
+		}
+		break;
+	    }
+	}
     }
 }

@@ -15,7 +15,6 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.windows.identity.IACE;
-import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.io.IWindowsFile;
 
 /**
@@ -146,7 +145,7 @@ public class WindowsFile implements IWindowsFile {
 	return FILE_TYPE_DISK;
     }
 
-    public IACE getSecurity(IPrincipal principal) throws IOException {
+    public IACE[] getSecurity() throws IOException {
 	return null;
     }
 }

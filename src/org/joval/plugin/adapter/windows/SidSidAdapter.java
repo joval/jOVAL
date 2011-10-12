@@ -109,28 +109,18 @@ public class SidSidAdapter extends UserAdapter {
 
     // Private
 
-    private List<JAXBElement<? extends ItemType>> makeItems(IPrincipal principal, SidSidBehaviors behaviors) {
-	Hashtable<String, IPrincipal> principals = new Hashtable<String, IPrincipal>();
+    private List<JAXBElement<? extends ItemType>> makeItems(IPrincipal principal, SidSidBehaviors behaviors)
+		throws WmiException {
+
+	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	boolean includeGroups = true;
 	boolean resolveGroups = false;
 	if (behaviors != null) {
 	    includeGroups = behaviors.isIncludeGroup();
 	    resolveGroups = behaviors.isResolveGroup();
 	}
-	directory.getAllPrincipals(principal, resolveGroups, principals);
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	for (IPrincipal p : principals.values()) {
-	    switch(p.getType()) {
-	      case GROUP:
-		if (includeGroups) {
-		    items.add(makeItem(p));
-		}
-		break;
-
-	      case USER:
-		items.add(makeItem(p));
-		break;
-	    }
+	for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
+	    items.add(makeItem(p));
 	}
 	return items;
     }

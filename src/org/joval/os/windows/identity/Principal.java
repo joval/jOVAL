@@ -22,6 +22,14 @@ abstract class Principal implements IPrincipal {
 	this.sid = sid;
     }
 
+    public boolean equals(Object other) {
+	if (other instanceof IPrincipal) {
+	    return sid.equals(((IPrincipal)other).getSid());
+	} else {
+	    return super.equals(other);
+	}
+    }
+
     // Implement IPrincipal
 
     public String getNetbiosName() {
