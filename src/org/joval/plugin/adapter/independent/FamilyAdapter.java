@@ -15,7 +15,7 @@ import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 
@@ -26,10 +26,10 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class FamilyAdapter implements IAdapter {
-    private IPlugin plugin;
+    private ISession session;
 
-    public FamilyAdapter(IPlugin plugin) {
-	this.plugin = plugin;
+    public FamilyAdapter(ISession session) {
+	this.session = session;
     }
 
     // Implement IAdapter
@@ -39,7 +39,7 @@ public class FamilyAdapter implements IAdapter {
     }
 
     public boolean connect() {
-	return plugin != null;
+	return session != null;
     }
 
     public void disconnect() {
@@ -59,7 +59,7 @@ public class FamilyAdapter implements IAdapter {
 	if (fItem == null) {
 	    fItem = JOVALSystem.factories.sc.independent.createFamilyItem();
 	    EntityItemFamilyType familyType = JOVALSystem.factories.sc.independent.createEntityItemFamilyType();
-	    familyType.setValue(plugin.getFamily().value());
+	    familyType.setValue(session.getFamily().value());
 	    fItem.setFamily(familyType);
 	}
 	return fItem;

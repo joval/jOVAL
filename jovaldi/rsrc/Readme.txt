@@ -9,33 +9,22 @@ available (currently, however, installer packages are only available for 32-bit 
 
 jovaldi has the ability to accommodate "plugins", and therefore it adds a command-line option
 that is not available in ovaldi.  That option is:
-  -j <string>  = name of the jovaldi plugin to use for the scan.  DEFAULT="default"
+  -plugin <string>  = name of the jovaldi plugin to use for the scan.  DEFAULT="default"
 
 Two plugins are distributed with jovaldi: the "default" plugin (which scans the local host) and
-the "remote" plugin (which can scan remote hosts).  Plugins can specify their own command-line
-options as well.  To see a print-out of options for a plugin, use:
-  jovaldi -j <string> -h
+the "remote" plugin (which can scan remote hosts).  Plugins are fed a configuration via another
+command-line option:
+  -config <string>  = name of the configuration file for the plugin.  DEFAULT="config.properties"
 
-This release (version 0.A.5) supports scanning of Windows, Linux and Solaris host machines,
-and implements the following OVAL tests:
+The format of the plugin configuration file is specified in the help text of the plugin.  For
+more information, run: "jovaldi -plugin <name> -h"
 
-  ind-family
-  ind-textfilecontent54
-  ind-textfilecontent
-  linux-rpminfo
-  solaris-isainfo
-  solaris-package
-  solaris-patch54
-  solaris-patch
-  solaris-smf
-  unix-file
-  unix-process
-  unix-uname
-  windows-file
-  windows-registry
-  windows-wmi
+This release (version A.5.10.1) supports scanning of Windows, Linux and Solaris host machines and
+Cisco devices running IOS.  For a complete listing of supported tests, see:
+
+http://joval.org/features
 
 jovaldi has been written and tested on 32-bit Windows XP and 64-bit Windows 7 using the 32-bit
-JRE version 1.6.0_26, and 64-bit Fedora 15 Linux using the 64-bit JRE version 1.6.0_26.  The
-default plugin uses 32-bit DLLs on WIndows.  The remote plugin is written in 100% pure
-platform-independent Java.
+and 64-bit JRE version 1.6.0_26, and 64-bit Fedora 15 Linux using the 64-bit JRE version 1.6.0_26.
+The default plugin uses 32-bit or 64-bit DLLs on WIndows.  The remote plugin is written in 100%
+pure platform-independent Java.

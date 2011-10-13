@@ -36,6 +36,7 @@ import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.remote.io.SmbFilesystem;
 import org.joval.os.windows.remote.registry.Registry;
 import org.joval.os.windows.remote.wmi.WmiConnection;
+import org.joval.util.BaseSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -43,7 +44,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WindowsSession implements IWindowsSession, ILocked {
+public class WindowsSession extends BaseSession implements IWindowsSession, ILocked {
     private static int counter = 0;
     static {
 	JISystem.getLogger().setLevel(Level.WARNING);
@@ -55,9 +56,8 @@ public class WindowsSession implements IWindowsSession, ILocked {
     private String tempDir, cwd;
     private WindowsCredential cred;
     private WmiConnection conn;
-    private IEnvironment env;
     private IRegistry reg, reg32;
-    private IFilesystem fs, fs32;
+    private IFilesystem fs32;
     private Vector<IFile> tempFiles;
     private boolean is64bit = false;
     private WindowsSystemInfo info = null;
@@ -178,6 +178,9 @@ public class WindowsSession implements IWindowsSession, ILocked {
 	directory.disconnect();
     }
 
+    /**
+     * @override
+     */
     public void setWorkingDir(String path) {
 	cwd = env.expand(path);
     }
@@ -186,14 +189,9 @@ public class WindowsSession implements IWindowsSession, ILocked {
 	return Type.WINDOWS;
     }
 
-    public IEnvironment getEnvironment() {
-	return env;
-    }
-
-    public IFilesystem getFilesystem() {
-	return fs;
-    }
-
+    /**
+     * @override
+     */
     public IProcess createProcess(String command) throws Exception {
 	StringBuffer sb = new StringBuffer(tempDir).append(fs.getDelimiter()).append("rexec_");
 	sb.append(Integer.toHexString(counter++));

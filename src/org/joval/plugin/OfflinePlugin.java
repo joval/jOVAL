@@ -86,15 +86,14 @@ public class OfflinePlugin implements IJovaldiPlugin {
 	return null;
     }
 
+    // Implement IPlugin
+
     public List<IAdapter> getAdapters() {
 	return adapters;
     }
 
     public SystemInfoType getSystemInfo() {
+	// In cases using the OfflinePlugin, the SystemInfoType will be supplied by the system-characteristics.xml file.
 	return null;
-    }
-
-    public FamilyEnumeration getFamily() {
-	return FamilyEnumeration.UNDEFINED;
     }
 }

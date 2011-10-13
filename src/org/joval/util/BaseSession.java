@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import oval.schemas.common.FamilyEnumeration;
+
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
@@ -48,6 +50,22 @@ public abstract class BaseSession implements ISession {
 
     public IProcess createProcess(String command) throws Exception {
 	return new JavaProcess(command);
+    }
+
+    public FamilyEnumeration getFamily() {
+	switch(getType()) {
+	  case WINDOWS:
+	    return FamilyEnumeration.WINDOWS;
+
+	  case UNIX:
+	    return FamilyEnumeration.UNIX;
+
+	  case CISCO_IOS:
+	    return FamilyEnumeration.IOS;
+
+	  default:
+	    return FamilyEnumeration.UNDEFINED;
+	}
     }
 
     // Private

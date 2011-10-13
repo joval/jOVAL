@@ -18,6 +18,7 @@ import org.joval.os.unix.system.Environment;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.io.SftpFilesystem;
 import org.joval.ssh.system.SshSession;
+import org.joval.util.BaseSession;
 
 /**
  * A representation of Unix session.
@@ -25,12 +26,10 @@ import org.joval.ssh.system.SshSession;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixSession implements ILocked, IUnixSession {
+public class UnixSession extends BaseSession implements ILocked, IUnixSession {
     private SshSession ssh;
     private ICredential cred;
     private Credential rootCred = null;
-    private IEnvironment env;
-    private SftpFilesystem fs;
     private Flavor flavor = Flavor.UNKNOWN;
     private UnixSystemInfo info = null;
 
@@ -70,8 +69,34 @@ public class UnixSession implements ILocked, IUnixSession {
 	ssh.disconnect();
     }
 
+    /**
+     * @override
+     */
     public IProcess createProcess(String command) throws Exception {
 	return createProcess(command, 3600000L, false);
+    }
+
+    public Type getType() {
+	return Type.UNIX;
+    }
+
+    // Implement ISession
+
+    public SystemInfoType getSystemInfo() {
+	return info.getSystemInfo();
+    }
+
+    /**
+     * @override
+     */
+    public void setWorkingDir(String path) {
+	// no-op
+    }
+
+    // Implement IUnixSession
+
+    public Flavor getFlavor() {
+	return flavor;
     }
 
     public IProcess createProcess(String command, long millis, boolean debug) throws Exception {
@@ -87,33 +112,5 @@ public class UnixSession implements ILocked, IUnixSession {
 	  default:
 	    return p;
 	}
-    }
-
-    public Type getType() {
-	return Type.UNIX;
-    }
-
-    // Implement ISession
-
-    public SystemInfoType getSystemInfo() {
-	return info.getSystemInfo();
-    }
-
-    public void setWorkingDir(String path) {
-	// no-op
-    }
-
-    public IFilesystem getFilesystem() {
-	return fs;
-    }
-
-    public IEnvironment getEnvironment() {
-	return env;
-    }
-
-    // Implement IUnixSession
-
-    public Flavor getFlavor() {
-	return flavor;
     }
 }

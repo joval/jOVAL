@@ -23,7 +23,7 @@ import org.joval.util.BaseSession;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class IosSession implements ILocked, ISession {
+public class IosSession extends BaseSession implements ILocked, ISession {
     private SshSession ssh;
     private IosSystemInfo info;
 
@@ -67,14 +67,23 @@ public class IosSession implements ILocked, ISession {
 	return info.getSystemInfo();
     }
 
+    /**
+     * @override
+     */
     public void setWorkingDir(String dir) {
 	// no-op
     }
 
+    /**
+     * @override
+     */
     public IFilesystem getFilesystem() {
 	return null;
     }
 
+    /**
+     * @override
+     */
     public IEnvironment getEnvironment() {
 	return null;
     }

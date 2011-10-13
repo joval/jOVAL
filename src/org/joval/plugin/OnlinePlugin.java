@@ -68,7 +68,6 @@ import org.joval.util.JOVALSystem;
  */
 public abstract class OnlinePlugin extends OfflinePlugin {
     protected ISession session;
-    protected SystemInfoType info;
     protected String err;
 
     /**
@@ -82,7 +81,7 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 
     public void connect() {
 	if (session.connect()) {
-	    adapters.add(new FamilyAdapter(this));
+	    adapters.add(new FamilyAdapter(session));
 	    adapters.add(new VariableAdapter());
 	    if (session.getEnvironment() != null) {
 		adapters.add(new EnvironmentvariableAdapter(session.getEnvironment()));
@@ -139,8 +138,6 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 		break;
 	      }
 	    }
-
-	    info = session.getSystemInfo();
 	} else {
 	    throw new RuntimeException(getMessage("ERROR_SESSION_CONNECTION"));
 	}
@@ -158,23 +155,10 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 	return err;
     }
 
+    /**
+     * @override
+     */
     public SystemInfoType getSystemInfo() {
-	return info;
-    }
-
-    public FamilyEnumeration getFamily() {
-	switch(session.getType()) {
-	  case WINDOWS:
-	    return FamilyEnumeration.WINDOWS;
-
-	  case UNIX:
-	    return FamilyEnumeration.UNIX;
-
-	  case CISCO_IOS:
-	    return FamilyEnumeration.IOS;
-
-	  default:
-	    return FamilyEnumeration.UNDEFINED;
-	}
+	return session.getSystemInfo();
     }
 }

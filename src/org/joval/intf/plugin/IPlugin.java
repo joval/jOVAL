@@ -4,13 +4,8 @@
 package org.joval.intf.plugin;
 
 import java.util.List;
-import java.util.Properties;
 
-import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
-import org.joval.oval.OvalException;
-import org.joval.oval.engine.Engine;
 
 /**
  * The interface for defining a plugin for the Oval Engine.  The plugin is a container for IAdapters, produces the
@@ -29,13 +24,5 @@ public interface IPlugin {
      */
     public List<IAdapter> getAdapters();
 
-    /**
-     * Return SystemInfoType data about the host.
-     */
     public SystemInfoType getSystemInfo();
-
-    /**
-     * Return the FamilyEnumeration member against which the host should be tested for FamilyTest applicability.
-     */
-    public FamilyEnumeration getFamily();
 }
