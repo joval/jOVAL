@@ -13,6 +13,7 @@ import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.Session;
 import org.vngx.jsch.UserInfo;
 import org.vngx.jsch.exception.JSchException;
+import org.vngx.jsch.util.SocketFactory;
 
 import org.joval.identity.Credential;
 import org.joval.ssh.identity.SshCredential;
@@ -73,13 +74,16 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 	if (session.isConnected()) {
 	    return true; // already connected
 	} else {
-	    try {
-		session.connect(3000);
-		return true;
-	    } catch (JSchException e) {
-		e.printStackTrace();
-		return false;
+	    for (int i=1; i < 4; i++) {
+		try {
+		    session.setSocketFactory(SocketFactory.DEFAULT_SOCKET_FACTORY);
+		    session.connect(0);
+		    return true;
+		} catch (JSchException e) {
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_CONNECT, i, e.getMessage());
+		}
 	    }
+	    return false;
 	}
     }
 
