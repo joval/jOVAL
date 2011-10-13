@@ -99,6 +99,7 @@ public class LineAdapter implements IAdapter {
 	    }
 	} finally {
 	    reader.close();
+	    p.waitFor(0);
 	}
 
 	LineItem item = JOVALSystem.factories.sc.ios.createLineItem();

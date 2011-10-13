@@ -85,6 +85,8 @@ public class IosSystemInfo {
 		    info.setArchitecture(line.substring(0, ptr).trim());
 		}
 	    }
+	    reader.close();
+	    p.waitFor(0);
 
 	    InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
 	    List<IosNetworkInterface> interfaces = IosNetworkInterface.getInterfaces(session);
