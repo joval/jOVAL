@@ -167,6 +167,7 @@ class SshProcess implements IProcess {
 	public void run() {
 	    try {
 		p.waitFor(timeout); // 1 hour
+		p.cleanup();
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SSH_PROCESS_END, command);
 	    } catch (InterruptedException e) {
 	    } finally {

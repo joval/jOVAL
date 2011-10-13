@@ -63,6 +63,7 @@ public class IosSystemInfo {
 		}
 	    }
 	    reader.close();
+	    p.waitFor(0);
 
 	    p = session.createProcess("show version");
 	    p.start();

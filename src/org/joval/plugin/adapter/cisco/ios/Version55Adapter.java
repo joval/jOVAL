@@ -42,8 +42,19 @@ public class Version55Adapter implements IAdapter {
     static final String CLOSE_PEREN = ")";
 
     VersionItem item;
+    ISession session;
 
     public Version55Adapter(ISession session) {
+	this.session = session;
+    }
+    
+    // Implement IAdapter
+
+    public Class getObjectClass() {
+	return Version55Object.class;
+    }
+
+    public boolean connect() {
 	item = JOVALSystem.factories.sc.ios.createVersionItem();
 	int begin = 0;
 	String version = session.getSystemInfo().getOsVersion();
@@ -140,15 +151,7 @@ public class Version55Adapter implements IAdapter {
 	versionString.setValue(version);
 	versionString.setDatatype(SimpleDatatypeEnumeration.IOS_VERSION.value());
 	item.setVersionString(versionString);
-    }
 
-    // Implement IAdapter
-
-    public Class getObjectClass() {
-	return Version55Object.class;
-    }
-
-    public boolean connect() {
 	return true;
     }
 
