@@ -1,4 +1,4 @@
-jOVAL: OVAL implemented in Java. For free.
+jOVAL: OVAL&reg; implemented in Java. For free.
 =============
 
 jOVAL has the potential to let you scan any machine, from any other machine.
