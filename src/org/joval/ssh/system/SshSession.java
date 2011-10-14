@@ -77,7 +77,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 	    for (int i=1; i < 4; i++) {
 		try {
 		    session.setSocketFactory(SocketFactory.DEFAULT_SOCKET_FACTORY);
-		    session.connect(0);
+		    session.connect(3000);
 		    return true;
 		} catch (JSchException e) {
 		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_CONNECT, i, e.getMessage());
