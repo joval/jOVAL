@@ -285,20 +285,29 @@ public class RunlevelAdapter implements IAdapter {
 	EntityItemStringType runlevelType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	runlevelType.setValue(runlevel);
 	item.setRunlevel(runlevelType);
+
 	EntityItemStringType serviceNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	serviceNameType.setValue(serviceName);
 	item.setServiceName(serviceNameType);
+
+	EntityItemBoolType startType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	startType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	if (start) {
-	    EntityItemBoolType startType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	    startType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    startType.setValue("true");
-	    item.setStart(startType);
 	} else {
-	    EntityItemBoolType kill = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	    kill.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-	    kill.setValue("true");
-	    item.setKill(kill);
+	    startType.setValue("false");
 	}
+	item.setStart(startType);
+
+	EntityItemBoolType kill = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	kill.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	if (start) {
+	    kill.setValue("false");
+	} else {
+	    kill.setValue("true");
+	}
+	item.setKill(kill);
+
 	item.setStatus(StatusEnumeration.EXISTS);
 
 	return JOVALSystem.factories.sc.unix.createRunlevelItem(item);
