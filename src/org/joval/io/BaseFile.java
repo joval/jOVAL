@@ -43,8 +43,8 @@ public abstract class BaseFile implements IFile {
 		return Type.BRANCH;
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString());
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString(), e.getMessage());
+	    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return Type.LEAF;
     }
@@ -76,8 +76,8 @@ public abstract class BaseFile implements IFile {
 	    }
 	    return children;
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString());
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString(), e.getMessage());
+	    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	throw new UnsupportedOperationException(getPath());
     }
@@ -93,8 +93,8 @@ public abstract class BaseFile implements IFile {
 		}
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString());
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString(), e.getMessage());
+	    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	throw new UnsupportedOperationException(getPath());
     }

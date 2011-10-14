@@ -62,8 +62,8 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 		throw new NoSuchElementException(path);
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString());
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString(), e.getMessage());
+	    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return null;
     }

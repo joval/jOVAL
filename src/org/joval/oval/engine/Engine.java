@@ -599,7 +599,8 @@ public class Engine implements IProducer {
 			break;
 		    }
 		} catch (TestException e) {
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
+		    JOVALSystem.getLogger().trace(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
@@ -633,7 +634,8 @@ public class Engine implements IProducer {
 			break;
 		    }
 		} catch (TestException e) {
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
+		    JOVALSystem.getLogger().trace(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
@@ -805,8 +807,8 @@ public class Engine implements IProducer {
 			try {
 			    checkResult = compare(state, item);
 			} catch (TestException e) {
-			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TESTEXCEPTION, testId);
-			    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TESTEXCEPTION, testId, e.getMessage());
+			    JOVALSystem.getLogger().debug(JOVALMsg.ERROR_EXCEPTION, e);
 
 			    MessageType message = JOVALSystem.factories.common.createMessageType();
 			    message.setLevel(MessageLevelEnumeration.ERROR);

@@ -118,6 +118,7 @@ public class RunlevelAdapter implements IAdapter {
 		} catch (IOException e) {
 		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
+		break;
 	      }
 
 	      case LINUX: {

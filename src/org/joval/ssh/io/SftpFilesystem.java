@@ -129,8 +129,8 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		throw new NoSuchElementException(path);
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+	    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return null;
 	}
     }
@@ -164,11 +164,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	}
 	path = getRedirect(path);
 	if (path.length() > 0 && path.charAt(0) == DELIM_CH) {
-	    try {
-	        return new SftpFile(this, path);
-	    } catch (JSchException e) {
-		throw new IOException(e);
-	    }
+	    return new SftpFile(this, path);
 	} else {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
 	}

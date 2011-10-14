@@ -199,7 +199,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		if (f == null) {
 		    msg.setValue(e.getMessage());
 		} else {
-		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_IO, e.getMessage()));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_IO, path, e.getMessage()));
 		}
 		rc.addMessage(msg);
 	    }
@@ -365,7 +365,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 										       filename.getOperation()));
 				    }
 				} catch (UnsupportedOperationException e) {
-       				    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+				    // ignore -- not a directory
 				} catch (IllegalArgumentException e) {
        				    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 				}
@@ -432,13 +432,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    results.addAll(getDirs(v, --depth, direction, recurse, fs));
 			}
 		    }
-		} catch (UnsupportedOperationException e) {
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		} catch (UnsupportedOperationException e) {	
+		    // ignore -- not a directory
 		} catch (NoSuchElementException e) {
 		    // dir path doesn't exist.
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path);
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+		    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	    //

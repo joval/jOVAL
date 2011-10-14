@@ -39,9 +39,12 @@ class SftpFile extends BaseFile implements IUnixFile {
     private String path, permissions;
     boolean tested=false, doesExist;
 
-    SftpFile(SftpFilesystem fs, String path) throws JSchException {
+    SftpFile(SftpFilesystem fs, String path) {
 	super(fs);
 	sfs = fs;
+	if (!path.equals(fs.getDelimiter()) && path.endsWith(fs.getDelimiter())) {
+	    path = path.substring(0, path.lastIndexOf(fs.getDelimiter()));
+	}
 	this.path = path;
     }
 
@@ -121,7 +124,7 @@ class SftpFile extends BaseFile implements IUnixFile {
 
     public boolean isDirectory() throws IOException {
 	if (isLink()) {
-	    return fs.getFile(toString()).isDirectory();
+	    return new SftpFile(this).isDirectory();
 	} else if (exists()) {
 	    return attrs.isDir();
 	} else {
@@ -164,34 +167,34 @@ class SftpFile extends BaseFile implements IUnixFile {
     }
 
     public String[] list() throws IOException {
-	try {
-	    List<ChannelSftp.LsEntry> list = sfs.getCS().ls(path);
-	    String[] children = new String[0];
-	    ArrayList<String> al = new ArrayList<String>();
-	    Iterator<ChannelSftp.LsEntry> iter = list.iterator();
-	    while (iter.hasNext()) {
-		ChannelSftp.LsEntry entry = iter.next();
-		if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
-		    al.add(entry.getFilename());
+	if (isLink()) {
+	    return new SftpFile(this).list();
+	} else {
+	    try {
+		List<ChannelSftp.LsEntry> list = sfs.getCS().ls(path);
+		String[] children = new String[0];
+		ArrayList<String> al = new ArrayList<String>();
+		Iterator<ChannelSftp.LsEntry> iter = list.iterator();
+		while (iter.hasNext()) {
+		    ChannelSftp.LsEntry entry = iter.next();
+		    if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
+			al.add(entry.getFilename());
+		    }
 		}
+		return al.toArray(children);
+	    } catch (SftpException e) {
+		throw new IOException(e);
 	    }
-	    return al.toArray(children);
-	} catch (SftpException e) {
-	    throw new IOException(e);
 	}
     }
 
     public IFile[] listFiles() throws IOException {
-	try {
-	    String[] names = list();
-	    IFile[] children = new IFile[names.length];
-	    for (int i=0; i < names.length; i++) {
-		children[i] = new SftpFile(sfs, getLocalName() + fs.getDelimiter() + names[i]);
-	    }
-	    return children;
-	} catch (JSchException e) {
-	    throw new IOException (e);
+	String[] names = list();
+	IFile[] children = new IFile[names.length];
+	for (int i=0; i < names.length; i++) {
+	    children[i] = new SftpFile(sfs, getLocalName() + fs.getDelimiter() + names[i]);
 	}
+	return children;
     }
 
     public void delete() throws IOException {
@@ -379,6 +382,15 @@ class SftpFile extends BaseFile implements IUnixFile {
     }
 
     // Private
+
+    /**
+     * Create an SftpFile that steps into a link.
+     */
+    private SftpFile(SftpFile link) {
+	super(link.sfs);
+	sfs = link.sfs;
+	this.path = path + fs.getDelimiter();
+    }
 
     private int getErrorCode(SftpException e) {
 	try {
