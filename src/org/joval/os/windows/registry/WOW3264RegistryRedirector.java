@@ -352,8 +352,13 @@ public class WOW3264RegistryRedirector implements IPathRedirector {
     // Private
 
     private String splice(String path) {
-	int ptr = path.indexOf("\\SOFTWARE\\") + 9;
-	String s = path.substring(0, ptr) + IRegistry.DELIM_STR + "Wow6432Node" + path.substring(ptr);
-	return s;
+	int ptr = path.indexOf("\\SOFTWARE\\");
+	if (ptr == -1) {
+	    return path + IRegistry.DELIM_STR + "Wow6432Node";
+	} else {
+	    ptr = ptr + 9;
+	    String s = path.substring(0, ptr) + IRegistry.DELIM_STR + "Wow6432Node" + path.substring(ptr);
+	    return s;
+	}
     }
 }
