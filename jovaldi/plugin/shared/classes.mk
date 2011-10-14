@@ -87,6 +87,7 @@ SHARED=\
 	org.joval.plugin.adapter.cisco.ios.LineAdapter			\
 	org.joval.plugin.adapter.cisco.ios.Version55Adapter		\
 	org.joval.plugin.adapter.independent.BaseFileAdapter		\
+	org.joval.plugin.adapter.independent.Environmentvariable58Adapter	\
 	org.joval.plugin.adapter.independent.EnvironmentvariableAdapter	\
 	org.joval.plugin.adapter.independent.FamilyAdapter		\
 	org.joval.plugin.adapter.independent.TextfilecontentAdapter	\

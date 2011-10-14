@@ -31,6 +31,7 @@ import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.windows.WindowsSystemInfo;
 import org.joval.plugin.adapter.cisco.ios.LineAdapter;
 import org.joval.plugin.adapter.cisco.ios.Version55Adapter;
+import org.joval.plugin.adapter.independent.Environmentvariable58Adapter;
 import org.joval.plugin.adapter.independent.EnvironmentvariableAdapter;
 import org.joval.plugin.adapter.independent.FamilyAdapter;
 import org.joval.plugin.adapter.independent.TextfilecontentAdapter;
@@ -84,7 +85,8 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 	    adapters.add(new FamilyAdapter(session));
 	    adapters.add(new VariableAdapter());
 	    if (session.getEnvironment() != null) {
-		adapters.add(new EnvironmentvariableAdapter(session.getEnvironment()));
+		adapters.add(new Environmentvariable58Adapter(session));
+		adapters.add(new EnvironmentvariableAdapter(session));
 	    }
 	    if (session.getFilesystem() != null) {
 		adapters.add(new Textfilecontent54Adapter(session));
