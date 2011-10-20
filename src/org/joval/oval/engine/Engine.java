@@ -30,6 +30,7 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -1064,12 +1065,16 @@ public class Engine implements IProducer {
 	    }
 
 	  case PATTERN_MATCH: // Always treat as Strings
-	    if (item.getValue() == null) {
-		return ResultEnumeration.FALSE;
-	    } else if (Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find()) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
+	    try {
+		if (item.getValue() == null) {
+		    return ResultEnumeration.FALSE;
+		} else if (Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find()) {
+		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
+		}
+	    } catch (PatternSyntaxException e) {
+		throw new TestException(e);
 	    }
 
 	  case CASE_INSENSITIVE_NOT_EQUAL:

@@ -10,7 +10,7 @@ PRODUCTNAME=plugin
 API=$(JOVAL)/jOVAL.jar$(CLN)$(SCHEMALIB)$(CLN)$(JOVAL_DEPS)
 SHARED=plugin-shared.jar
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)$(CLN)$(SHARED)"
-RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(SHARED)$(CLN)plugin.jar"
+RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(SHARED)$(CLN)$(PRODUCTNAME).jar"
 
 include classes.mk
 

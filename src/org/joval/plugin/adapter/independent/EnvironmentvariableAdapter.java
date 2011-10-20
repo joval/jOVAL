@@ -23,6 +23,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -36,8 +37,8 @@ import org.joval.util.JOVALSystem;
 public class EnvironmentvariableAdapter implements IAdapter {
     private IEnvironment env;
 
-    public EnvironmentvariableAdapter(IEnvironment env) {
-	this.env = env;
+    public EnvironmentvariableAdapter(ISession session) {
+	env = session.getEnvironment();
     }
 
     // Implement IAdapter

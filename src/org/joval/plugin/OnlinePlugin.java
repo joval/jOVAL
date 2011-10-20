@@ -30,6 +30,7 @@ import org.joval.os.embedded.IosSystemInfo;
 import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.windows.WindowsSystemInfo;
 import org.joval.plugin.adapter.cisco.ios.LineAdapter;
+import org.joval.plugin.adapter.cisco.ios.VersionAdapter;
 import org.joval.plugin.adapter.cisco.ios.Version55Adapter;
 import org.joval.plugin.adapter.independent.Environmentvariable58Adapter;
 import org.joval.plugin.adapter.independent.EnvironmentvariableAdapter;
@@ -136,6 +137,7 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 
 	      case CISCO_IOS: {
 		adapters.add(new LineAdapter(session));
+		adapters.add(new VersionAdapter(session));
 		adapters.add(new Version55Adapter(session));
 		break;
 	      }

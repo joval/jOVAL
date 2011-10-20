@@ -84,8 +84,6 @@ SHARED=\
 	org.joval.os.windows.system.Environment				\
 	org.joval.os.windows.wmi.WmiException				\
 	org.joval.plugin.OnlinePlugin					\
-	org.joval.plugin.adapter.cisco.ios.LineAdapter			\
-	org.joval.plugin.adapter.cisco.ios.Version55Adapter		\
 	org.joval.plugin.adapter.independent.BaseFileAdapter		\
 	org.joval.plugin.adapter.independent.Environmentvariable58Adapter	\
 	org.joval.plugin.adapter.independent.EnvironmentvariableAdapter	\
@@ -94,6 +92,9 @@ SHARED=\
 	org.joval.plugin.adapter.independent.Textfilecontent54Adapter	\
 	org.joval.plugin.adapter.independent.VariableAdapter		\
 	org.joval.plugin.adapter.independent.XmlfilecontentAdapter	\
+	org.joval.plugin.adapter.cisco.ios.LineAdapter			\
+	org.joval.plugin.adapter.cisco.ios.Version55Adapter		\
+	org.joval.plugin.adapter.cisco.ios.VersionAdapter		\
 	org.joval.plugin.adapter.linux.RpminfoAdapter			\
 	org.joval.plugin.adapter.solaris.IsainfoAdapter			\
 	org.joval.plugin.adapter.solaris.PackageAdapter			\
