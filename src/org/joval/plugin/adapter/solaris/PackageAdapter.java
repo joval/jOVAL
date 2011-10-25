@@ -26,10 +26,10 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemEVRStringType;
 import oval.schemas.systemcharacteristics.solaris.PackageItem;
 
-import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.system.IProcess;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -42,11 +42,13 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class PackageAdapter implements IAdapter {
-    private ISession session;
+    private static final long TIMEOUT = 30000; // 30 sec
+
+    private IUnixSession session;
     private Hashtable<String, PackageItem> packageMap;
     private String[] packages;
 
-    public PackageAdapter(ISession session) {
+    public PackageAdapter(IUnixSession session) {
 	this.session = session;
 	packageMap = new Hashtable<String, PackageItem>();
     }
@@ -63,11 +65,14 @@ public class PackageAdapter implements IAdapter {
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
-		IProcess p = session.createProcess("pkginfo -x");
+		IProcess p = session.createProcess("pkginfo -x", TIMEOUT * 10, false);
 		p.start();
 		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		String line = null;
 		while ((line = br.readLine()) != null) {
+		    if (line.length() == 0) {
+			break;
+		    }
 		    switch(line.charAt(0)) {
 		      case ' ':
 		      case '\t':
@@ -168,8 +173,8 @@ public class PackageAdapter implements IAdapter {
 		PackageItem item = getItem(packages[i]);
 		packageMap.put((String)item.getPkginst().getValue(), item);
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SOLPKG_PKGINFO, packages[i]);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SOLPKG, packages[i], e.getMessage());
+		JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	loaded = true;
@@ -196,9 +201,9 @@ public class PackageAdapter implements IAdapter {
 	    return item;
 	}
 
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
+	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
 	item = JOVALSystem.factories.sc.solaris.createPackageItem();
-	IProcess p = session.createProcess("/usr/bin/pkginfo -l " + pkginst);
+	IProcess p = session.createProcess("/usr/bin/pkginfo -l " + pkginst, TIMEOUT, false);
 	p.start();
 	BufferedReader br = null;
 	boolean isInstalled = false;
@@ -207,7 +212,9 @@ public class PackageAdapter implements IAdapter {
 	    String line = null;
 	    while((line = br.readLine()) != null) {
 		line = line.trim();
-		if (line.startsWith(PKGINST)) {
+		if (line.length() == 0) {
+		    break;
+		} else if (line.startsWith(PKGINST)) {
 		    isInstalled = true;
 		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    type.setValue(line.substring(PKGINST.length()).trim());

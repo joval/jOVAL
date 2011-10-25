@@ -1487,7 +1487,11 @@ public class Engine implements IProducer {
 		// If the object has not yet been scanned, then it must be retrieved live from the adapter.
 		//
 		ObjectType ot = definitions.getObject(objectId);
-		items = scanObject(new RequestContext(this, ot, list));
+		try {
+		    items = scanObject(new RequestContext(this, ot, list));
+		} catch (OvalException oe) {
+		    throw new ResolveException(oe);
+		}
 	    }
 	    Collection<String> values = extractItemData(objectId, oc, items);
 	    if (values == null || values.size() == 0) {

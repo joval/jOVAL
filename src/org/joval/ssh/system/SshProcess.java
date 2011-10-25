@@ -67,7 +67,7 @@ class SshProcess implements IProcess {
 	ce.connect();
 	new Monitor(this).start();
 	if (debug) {
-	    debugIn = new StreamLogger(ce.getInputStream(), new File("out." + num + ".log"));
+	    debugIn = new StreamLogger(command, ce.getInputStream(), new File("out." + num + ".log"));
 	    debugIn.start();
 	    debugErr = new StreamLogger(ce.getErrStream(), new File("err." + num + ".log"));
 	    debugErr.start();

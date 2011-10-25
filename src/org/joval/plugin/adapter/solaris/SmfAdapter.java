@@ -32,7 +32,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -45,11 +45,13 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class SmfAdapter implements IAdapter {
-    private ISession session;
+    private static final long TIMEOUT = 30000; // 30 secs.
+
+    private IUnixSession session;
     private String[] services = null;
     private Hashtable<String, SmfItem> serviceMap = null;
 
-    public SmfAdapter(ISession session) {
+    public SmfAdapter(IUnixSession session) {
 	this.session = session;
 	serviceMap = new Hashtable<String, SmfItem>();
     }
@@ -65,7 +67,7 @@ public class SmfAdapter implements IAdapter {
 	    BufferedReader br = null;
 	    try {
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SMF);
-		IProcess p = session.createProcess("/usr/bin/svcs -o fmri");
+		IProcess p = session.createProcess("/usr/bin/svcs -o fmri", TIMEOUT * 10, false);
 		p.start();
 		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		ArrayList<String> list = new ArrayList<String>();
@@ -194,9 +196,9 @@ public class SmfAdapter implements IAdapter {
 	    return item;
 	}
 
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SMF_SERVICE, fmri);
+	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
 	item = JOVALSystem.factories.sc.solaris.createSmfItem();
-	IProcess p = session.createProcess("/usr/bin/svcs -l " + fmri);
+	IProcess p = session.createProcess("/usr/bin/svcs -l " + fmri, TIMEOUT, false);
 	p.start();
 	BufferedReader br = null;
 	boolean found = false;
@@ -205,15 +207,23 @@ public class SmfAdapter implements IAdapter {
 	    String line = null;
 	    while((line = br.readLine()) != null) {
 		line = line.trim();
-		if (line.startsWith(FMRI)) {
+		if (line.length() == 0) {
+		    break;
+		} else if (line.startsWith(FMRI)) {
 		    found = true;
-		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    type.setValue(getFullFmri(line.substring(FMRI.length()).trim()));
-		    item.setFmri(type);
-		} else if (line.startsWith(NAME)) {
-		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    type.setValue(line.substring(NAME.length()).trim());
-		    item.setServiceName(type);
+
+		    EntityItemStringType fmriType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    String fullFmri = getFullFmri(line.substring(FMRI.length()).trim());
+		    fmriType.setValue(fullFmri);
+		    item.setFmri(fmriType);
+
+		    //
+		    // Name is based on the FMRI.  See:
+		    // http://making-security-measurable.1364806.n2.nabble.com/Solaris-10-SMF-test-request-UNCLASSIFIED-tt23753.html#a23757
+		    //
+		    EntityItemStringType nameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    nameType.setValue(getName(fullFmri));
+		    item.setServiceName(nameType);
 		} else if (line.startsWith(STATE_TIME)) { // NB: this MUST appear before STATE
 		} else if (line.startsWith(STATE)) {
 		    EntityItemSmfServiceStateType type = JOVALSystem.factories.sc.solaris.createEntityItemSmfServiceStateType();
@@ -233,7 +243,7 @@ public class SmfAdapter implements IAdapter {
 	    //
 	    item.setStatus(StatusEnumeration.EXISTS);
 	    boolean inetd = false;
-	    p = session.createProcess("/usr/bin/svcprop " + fmri);
+	    p = session.createProcess("/usr/bin/svcprop " + fmri, TIMEOUT, false);
 	    p.start();
 	    try {
 		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -266,7 +276,7 @@ public class SmfAdapter implements IAdapter {
 	    // If this is an inetd-initiated service, we can get protocol information using inetadm
 	    //
 	    if (inetd) {
-		p = session.createProcess("/usr/sbin/inetadm -l " + fmri);
+		p = session.createProcess("/usr/sbin/inetadm -l " + fmri, TIMEOUT, false);
 		p.start();
 		try {
 		    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -343,6 +353,19 @@ public class SmfAdapter implements IAdapter {
 	    return sb.toString();
 	} else {
 	    return fmri;
+	}
+    }
+
+    private String getName(String fullFmri) throws IllegalArgumentException {
+	int begin = fullFmri.lastIndexOf("/");
+	if (begin == -1) {
+	    throw new IllegalArgumentException(fullFmri);
+	} else {
+	    int end = fullFmri.indexOf(":", ++begin);
+	    if (end == -1) {
+		end = fullFmri.length();
+	    }
+	    return fullFmri.substring(begin, end);
 	}
     }
 }

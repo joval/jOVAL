@@ -10,6 +10,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
+
 /**
  * Provides a facade for an InputStream while logging its contents to a file.
  *
@@ -19,15 +22,26 @@ import java.io.RandomAccessFile;
 public class StreamLogger extends InputStream implements Runnable {
     private Thread t;
     private InputStream in;
-    private OutputStream out;
-    private RandomAccessFile raf;
-    private long pos = 0;
-    private long len = 0;
+    private File outLog;
+    private String comment;
+    private int pos, len, triggerLen;
+    private byte[] buff;
+    private boolean forceClosed = false;
 
-    public StreamLogger (InputStream in, File outLog) throws IOException {
+    public StreamLogger(InputStream in, File outLog) throws IOException {
+	this(null, in, outLog);
+    }
+
+    public StreamLogger(String comment, InputStream in, File outLog) throws IOException {
+	this.comment = comment;
 	this.in = in;
-	out = new FileOutputStream(outLog);
-	raf = new RandomAccessFile(outLog, "r");
+	this.outLog = outLog;
+	buff = new byte[1024];
+	triggerLen = 1023;
+	pos = 0;
+	len = 0;
+
+
     }
 
     public void start() {
@@ -43,19 +57,18 @@ public class StreamLogger extends InputStream implements Runnable {
 	try {
 	    int ch;
 	    while((ch = in.read()) != -1) {
-		out.write(ch);
-		len++;
+		add(ch);
 	    }
 	} catch (IOException e) {
-	    e.printStackTrace();
+	    if (!forceClosed) {
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, in.getClass().getName(), e.getMessage());
+	    }
 	}
     }
 
     public int read() throws IOException {
 	if (pos < len) {
-	    int ch = raf.read();
-	    pos++;
-	    return ch;
+	    return buff[pos++];
 	} else if (t.isAlive()) {
 	    try {
 		Thread.sleep(200);
@@ -69,9 +82,51 @@ public class StreamLogger extends InputStream implements Runnable {
 
     public void close() throws IOException {
 	if (t.isAlive()) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_STREAMLOGGER_CLOSE, outLog);
+	    forceClosed = true;
 	    t.interrupt();
 	}
-	out.close();
-	raf.close();
+	if (len > 0) {
+	    save();
+	}
+    }
+
+    // Private
+
+    private void add(int ch) {
+	if (len == triggerLen) {
+	    int newLen = buff.length + 1024;
+	    byte[] old = buff;
+	    buff = new byte[newLen];
+	    for (int i=0; i < old.length; i++) {
+		buff[i] = old[i];
+	    }
+	    old = null;
+	    triggerLen = newLen - 1;
+	}
+	buff[len++] = (byte)ch;
+    }
+
+    private void save() {
+	OutputStream out = null;
+	try {
+	    out = new FileOutputStream(outLog);
+	    if (comment != null) {
+		StringBuffer sb = new StringBuffer("# ");
+		sb.append(comment);
+		sb.append(System.getProperty("line.separator"));
+		out.write(sb.toString().getBytes());
+	    }
+	    out.write(buff, 0, len);
+	} catch (IOException e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, outLog, e.getMessage());
+	} finally {
+	    if (out != null) {
+		try {
+		    out.close();
+		} catch (IOException e) {
+		}
+	    }
+	}
     }
 }

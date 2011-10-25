@@ -94,13 +94,21 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
     }
 
     public IProcess createProcess(String command, long millis, boolean debug) throws Exception {
-	ChannelExec ce = session.openChannel(ChannelType.EXEC);
-	return new SshProcess(ce, command, millis, debug);
+	if (connect()) {
+	    ChannelExec ce = session.openChannel(ChannelType.EXEC);
+	    return new SshProcess(ce, command, millis, debug);
+	} else {
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
+	}
     }
 
     public IProcess createProcess(String command) throws Exception {
-	ChannelExec ce = session.openChannel(ChannelType.EXEC);
-	return new SshProcess(ce, command);
+	if (connect()) {
+	    ChannelExec ce = session.openChannel(ChannelType.EXEC);
+	    return new SshProcess(ce, command);
+	} else {
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
+	}
     }
 
     public Type getType() {
