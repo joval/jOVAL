@@ -64,10 +64,11 @@ public class SmfAdapter implements IAdapter {
 
     public boolean connect() {
 	if (session != null) {
+	    IProcess p = null;
 	    BufferedReader br = null;
 	    try {
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SMF);
-		IProcess p = session.createProcess("/usr/bin/svcs -o fmri", TIMEOUT * 10, false);
+		p = session.createProcess("/usr/bin/svcs -o fmri", TIMEOUT * 10, false);
 		p.start();
 		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		ArrayList<String> list = new ArrayList<String>();
@@ -90,7 +91,9 @@ public class SmfAdapter implements IAdapter {
 		if (br != null) {
 		    try {
 			br.close();
+			p.waitFor(0);
 		    } catch (IOException e) {
+		    } catch (InterruptedException e) {
 		    }
 		}
 	    }

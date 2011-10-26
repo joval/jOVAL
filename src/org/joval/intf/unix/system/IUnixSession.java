@@ -51,6 +51,7 @@ public interface IUnixSession extends ISession {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		String osName = reader.readLine();
 		reader.close();
+		p.waitFor(0);
 		for (Flavor f : values()) {
 		    if (f.getOsName().equals(osName)) {
 			flavor = f;

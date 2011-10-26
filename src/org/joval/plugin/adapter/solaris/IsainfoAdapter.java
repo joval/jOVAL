@@ -78,6 +78,7 @@ public class IsainfoAdapter implements IAdapter {
 	BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	String result = br.readLine();
 	br.close();
+	p.waitFor(0);
 	kernelIsa.setValue(result);
 	item.setKernelIsa(kernelIsa);
 
@@ -87,6 +88,7 @@ public class IsainfoAdapter implements IAdapter {
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	result = br.readLine();
 	br.close();
+	p.waitFor(0);
 	applicationIsa.setValue(result);
 	item.setApplicationIsa(applicationIsa);
 
@@ -96,6 +98,7 @@ public class IsainfoAdapter implements IAdapter {
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	result = br.readLine();
 	br.close();
+	p.waitFor(0);
 	bits.setValue(result);
 	bits.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setBits(bits);

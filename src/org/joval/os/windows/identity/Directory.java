@@ -210,18 +210,18 @@ public class Directory implements IDirectory {
 			try {
 			    getAllPrincipalsInternal(queryUser(netbiosName), resolve, principals);
 			} catch (IllegalArgumentException e) {
-			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+			    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			} catch (NoSuchElementException e) {
-			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+			    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			}
 		    }
 		    for (String netbiosName : g.getMemberGroupNetbiosNames()) {
 			try {
 			    getAllPrincipalsInternal(queryGroup(netbiosName), resolve, principals);
 			} catch (IllegalArgumentException e) {
-			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+			    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			} catch (NoSuchElementException e) {
-			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+			    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			}
 		    }
 		}

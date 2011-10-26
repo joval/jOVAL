@@ -36,6 +36,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
     protected String hostname;
     protected ICredential cred;
     protected Session session;
+    private boolean connected = false;
 
     public SshSession(String hostname) {
 	this.hostname = hostname;
@@ -74,13 +75,18 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 	if (session.isConnected()) {
 	    return true; // already connected
 	} else {
+	    if (connected) {
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_DROPPED_CONN, hostname);
+	    }
 	    for (int i=1; i < 4; i++) {
 		try {
 		    session.setSocketFactory(SocketFactory.DEFAULT_SOCKET_FACTORY);
 		    session.connect(3000);
+		    JOVALSystem.getLogger().info(JOVALMsg.STATUS_SSH_CONNECT, hostname);
+		    connected = true;
 		    return true;
 		} catch (JSchException e) {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_CONNECT, i, e.getMessage());
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_CONNECT, hostname, i, e.getMessage());
 		}
 	    }
 	    return false;
@@ -89,7 +95,9 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 
     public void disconnect() {
 	if (session != null && session.isConnected()) {
+	    JOVALSystem.getLogger().info(JOVALMsg.STATUS_SSH_DISCONNECT, hostname);
 	    session.disconnect();
+	    connected = false;
 	}
     }
 

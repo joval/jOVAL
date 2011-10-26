@@ -35,7 +35,7 @@ class NetworkInterface {
     static List<NetworkInterface> getInterfaces(IUnixSession session) throws Exception {
 	Vector<NetworkInterface> interfaces = new Vector<NetworkInterface>();
 
-	IProcess p = session.createProcess("/sbin/ifconfig -a");
+	IProcess p = session.createProcess("/sbin/ifconfig -a", UnixSystemInfo.TIMEOUT, UnixSystemInfo.DEBUG);
 	p.start();
 	BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	Vector<String> lines = new Vector<String>();

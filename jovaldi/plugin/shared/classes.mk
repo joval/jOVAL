@@ -38,7 +38,6 @@ SHARED=\
 	org.joval.os.embedded.IosNetworkInterface			\
 	org.joval.os.embedded.IosSystemInfo				\
 	org.joval.os.unix.NetworkInterface				\
-	org.joval.os.unix.Sudo						\
 	org.joval.os.unix.UnixSystemInfo				\
 	org.joval.os.unix.io.UnixFile					\
 	org.joval.os.unix.system.Environment				\

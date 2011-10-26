@@ -9,7 +9,6 @@ import org.joval.identity.Credential;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.os.unix.Sudo;
 
 public class Exec {
     ISession session;

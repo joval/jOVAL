@@ -32,6 +32,7 @@ class SshProcess implements IProcess {
     private boolean debug=false, interactive = false;
     private StreamLogger debugIn, debugErr;
     private long timeout;
+    private boolean dirty = true;
 
     private static int num = 0;
 
@@ -47,14 +48,6 @@ class SshProcess implements IProcess {
     }
 
     // Implement IProcess
-
-    public String getCommand() {
-	return command;
-    }
-
-    public void setCommand(String command) {
-	this.command = command;
-    }
 
     public void setInteractive(boolean interactive) {
 	this.interactive = interactive;
@@ -113,15 +106,20 @@ class SshProcess implements IProcess {
 	while (!ce.isEOF() && System.currentTimeMillis() < end) {
 	    Thread.sleep(Math.min(end - System.currentTimeMillis(), 250));
 	}
+	if (ce.isEOF()) {
+	    cleanup();
+	}
     }
 
     public int exitValue() throws IllegalThreadStateException {
 	return ce.getExitStatus();
     }
 
-    public void destroy() {
+    public synchronized void destroy() {
 	try {
-	    ce.sendSignal("KILL");
+	    if (ce.isConnected()) {
+		ce.sendSignal("KILL");
+	    }
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
@@ -135,7 +133,14 @@ class SshProcess implements IProcess {
 	return s.replace("\"", "\\\"");
     }
 
+    /**
+     * This method is always called by the first thread to notice that the process is finished (or the first thread to
+     * destroy the process).
+     */
     private synchronized void cleanup() {
+	if (!dirty) {
+	    return;
+	}
 	if (debug) {
 	    try {
 		debugIn.close();
@@ -147,8 +152,13 @@ class SshProcess implements IProcess {
 	    }
 	}
 	if (ce.isConnected()) {
+	    if (!ce.isEOF()) {
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_TIMEOUT, command, timeout);
+	    }
 	    ce.disconnect();
 	}
+	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SSH_PROCESS_END, command);
+	dirty = false;
     }
 
     // Private
@@ -166,12 +176,12 @@ class SshProcess implements IProcess {
 
 	public void run() {
 	    try {
-		p.waitFor(timeout); // 1 hour
-		p.cleanup();
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SSH_PROCESS_END, command);
+		p.waitFor(timeout);
 	    } catch (InterruptedException e) {
 	    } finally {
-		if (!ce.isEOF()) {
+		if (ce.isEOF()) {
+		    p.cleanup();
+		} else {
 		    p.destroy();
 		}
 	    }

@@ -71,30 +71,55 @@ public class WindowsSystemInfo {
 	IWmiProvider wmi = session.getWmiProvider();
 	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	boolean regConnected=false, wmiConnected=false;
-	try {
-	    regConnected = registry.connect();
-	    if (regConnected) {
+	regConnected = registry.connect();
+	if (regConnected) {
+	    try {
 		IEnvironment environment = registry.getEnvironment();
 		info.setArchitecture(environment.getenv(ARCHITECTURE));
+	    } catch (Exception e) {
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
 
+	    try {
 		IKey cn = registry.fetchKey(IRegistry.HKLM, COMPUTERNAME_KEY);
 		IValue cnVal = cn.getValue(COMPUTERNAME_VAL);
 		if (cnVal.getType() == IValue.REG_SZ) {
 		    info.setPrimaryHostName(((IStringValue)cnVal).getData());
 		}
+	    } catch (Exception e) {
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+
+	    try {
 		IKey cv = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
 		IValue cvVal = cv.getValue(CURRENTVERSION_VAL);
 		if (cvVal.getType() == IValue.REG_SZ) {
 		    info.setOsVersion(((IStringValue)cvVal).getData());
 		}
+	    } catch (Exception e) {
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+
+	    try {
+		IKey cv = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
 		IValue pnVal = cv.getValue(PRODUCTNAME_VAL);
 		if (pnVal.getType() == IValue.REG_SZ) {
 		    info.setOsName(((IStringValue)pnVal).getData());
 		}
-	    } else {
-		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_CONNECT));
+	    } catch (Exception e) {
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSNAME);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 
+	    registry.disconnect();
+	} else {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_CONNECT);
+	}
+
+	try {
 	    wmiConnected = wmi.connect();
 	    if (wmiConnected) {
 		InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
@@ -120,25 +145,15 @@ public class WindowsSystemInfo {
 		    }
 		}
 		info.setInterfaces(interfacesType);
+		wmi.disconnect();
 	    } else {
 		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_WMI_CONNECT));
 	    }
-	} catch (WmiException e) {
+	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} finally {
-	    try {
-		if (regConnected) {
-		    registry.disconnect();
-		}
-	    } finally {
-		if (wmiConnected) {
-		    wmi.disconnect();
-		}
-	    }
 	}
+
 	return info;
     }
 }

@@ -206,9 +206,10 @@ public class PatchAdapter implements IAdapter {
      * REMIND: Stops if it encounters any exceptions at all; make this more robust?
      */
     private void scanRevisions() {
+	IProcess p = null;
 	BufferedReader br = null;
 	try {
-	    IProcess p = session.createProcess("/usr/bin/showrev -p");
+	    p = session.createProcess("/usr/bin/showrev -p");
 	    p.start();
 	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    String line;
@@ -287,7 +288,9 @@ public class PatchAdapter implements IAdapter {
 	    if (br != null) {
 		try {
 		    br.close();
+		    p.waitFor(0);
 		} catch (IOException e) {
+		} catch (InterruptedException e) {
 		}
 	    }
 	}

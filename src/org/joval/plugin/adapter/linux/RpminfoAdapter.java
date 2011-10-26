@@ -70,6 +70,7 @@ public class RpminfoAdapter implements IAdapter {
 		    list.add(line);
 		}
 		br.close();
+		p.waitFor(0);
 		rpms = list.toArray(new String[list.size()]);
 		return true;
 	    } catch (Exception e) {
@@ -242,6 +243,7 @@ public class RpminfoAdapter implements IAdapter {
 	    }
 	}
 	br.close();
+	p.waitFor(0);
 
 	if (isInstalled) {
 	    item.setStatus(StatusEnumeration.EXISTS);
@@ -251,6 +253,7 @@ public class RpminfoAdapter implements IAdapter {
 	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    String pkgEpoch = br.readLine();
 	    br.close();
+	    p.waitFor(0);
 	    if (pkgEpoch.equals("(none)")) {
 		pkgEpoch = "0";
 	    }
@@ -275,6 +278,8 @@ public class RpminfoAdapter implements IAdapter {
 		filepath.setValue(line.trim());
 		item.getFilepath().add(filepath);
 	    }
+	    br.close();
+	    p.waitFor(0);
 	} else {
 	    EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    name.setValue(packageName);

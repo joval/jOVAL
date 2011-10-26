@@ -323,7 +323,7 @@ class LocalDirectory {
 	    return true;
 	} catch (NoSuchElementException e) {
 	} catch (WmiException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_EXCEPTION, e);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return false;
     }

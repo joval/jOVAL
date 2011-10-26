@@ -81,6 +81,7 @@ public class UnameAdapter implements IAdapter {
 	BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	String result = br.readLine();
 	br.close();
+	p.waitFor(0);
 	machineClass.setValue(result);
 	item.setMachineClass(machineClass);
 
@@ -90,6 +91,7 @@ public class UnameAdapter implements IAdapter {
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	result = br.readLine();
 	br.close();
+	p.waitFor(0);
 	nodeName.setValue(result);
 	item.setNodeName(nodeName);
 
@@ -99,6 +101,7 @@ public class UnameAdapter implements IAdapter {
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	result = br.readLine();
 	br.close();
+	p.waitFor(0);
 	osName.setValue(result);
 	item.setOsName(osName);
 
@@ -108,6 +111,7 @@ public class UnameAdapter implements IAdapter {
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	result = br.readLine();
 	br.close();
+	p.waitFor(0);
 	osRelease.setValue(result);
 	item.setOsRelease(osRelease);
 
@@ -117,6 +121,7 @@ public class UnameAdapter implements IAdapter {
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	result = br.readLine();
 	br.close();
+	p.waitFor(0);
 	osVersion.setValue(result);
 	item.setOsVersion(osVersion);
 
@@ -126,6 +131,7 @@ public class UnameAdapter implements IAdapter {
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	result = br.readLine();
 	br.close();
+	p.waitFor(0);
 	processorType.setValue(result);
 	item.setProcessorType(processorType);
 

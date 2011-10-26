@@ -8,6 +8,7 @@ REMOTE=\
 	org.joval.io.TailDashF						\
 	org.joval.plugin.RemotePlugin					\
 	org.joval.os.embedded.system.IosSession				\
+	org.joval.os.unix.remote.system.Sudo				\
 	org.joval.os.unix.remote.system.UnixSession			\
 	org.joval.os.windows.identity.WindowsCredential			\
 	org.joval.os.windows.remote.identity.SmbACE			\

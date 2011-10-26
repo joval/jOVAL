@@ -31,6 +31,8 @@ public class Environment implements IEnvironment {
 	    p.start();
 	    InputStream in = p.getInputStream();
 	    props.load(in);
+	    in.close();
+	    p.waitFor(0);
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}

@@ -122,9 +122,10 @@ public class RunlevelAdapter implements IAdapter {
 	      }
 
 	      case LINUX: {
+		IProcess p = null;
 		BufferedReader br = null;
 		try {
-		    IProcess p = session.createProcess("/sbin/chkconfig --list");
+		    p = session.createProcess("/sbin/chkconfig --list");
 		    p.start();
 		    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		    String line = null;
@@ -159,7 +160,9 @@ public class RunlevelAdapter implements IAdapter {
 		    if (br != null) {
 			try {
 			    br.close();
+			    p.waitFor(0);
 			} catch (IOException e) {
+			} catch (InterruptedException e) {
 			}
 		    }
 		}

@@ -57,6 +57,10 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	this.env = env;
     }
 
+    public void setJschSession(Session jschSession) {
+	this.jschSession = jschSession;
+    }
+
     public void setAutoExpand(boolean autoExpand) {
 	this.autoExpand = autoExpand;
     }
@@ -138,10 +142,18 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
     // Implement IFilesystem
 
     public boolean connect() {
-	try {
-	    cs = jschSession.openChannel(ChannelType.SFTP);
-	    cs.connect();
+	if (cs != null && cs.isConnected()) {
 	    return true;
+	}
+	try {
+	    if (session.connect()) {
+		cs = jschSession.openChannel(ChannelType.SFTP);
+		cs.connect();
+		return true;
+	    } else {
+		JOVALSystem.getLogger().error(JOVALMsg.ERROR_SSH_DISCONNECTED);
+		return false;
+	    }
 	} catch (JSchException e) {
 	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
@@ -159,6 +171,9 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
     }
 
     public IFile getFile(String path) throws IllegalArgumentException, IOException {
+	if (!connect()) {
+	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
+	}
 	if (env != null && autoExpand) {
 	    path = env.expand(path);
 	}

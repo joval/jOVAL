@@ -1,9 +1,10 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.unix;
+package org.joval.os.unix.remote.system;
 
 import java.io.BufferedReader;
+import java.io.EOFException;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,41 +16,39 @@ import org.joval.intf.identity.ICredential;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;
+import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
  * A tool for running processes as a specific user.  This does not use the sudo command, rather, it makes use of the
- * su command.
+ * su command.  It is used exclusively by the remote Unix session classes.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Sudo implements IProcess {
+class Sudo implements IProcess {
+    private SshSession ssh;
     private IProcess p;
     private IUnixSession.Flavor flavor;
     private ICredential cred;
     private String innerCommand;
+    private long timeout;
+    private boolean debug;
     private InputStream in=null, err=null;
     private OutputStream out=null;
 
-    public Sudo(IProcess p, IUnixSession.Flavor flavor, ICredential cred) {
-	this.p = p;
-	this.flavor = flavor;
+    Sudo(SshSession ssh, IUnixSession.Flavor flavor, ICredential cred, String cmd, long ms, boolean debug) throws Exception {
+	this.ssh = ssh;
 	this.cred = cred;
-	setCommand(p.getCommand());
+	this.flavor = flavor;
+	innerCommand = cmd;
+	timeout = ms;
+	this.debug = debug;
+	p = ssh.createProcess(getSuString(cmd), ms, debug);
     }
 
     // Implement IProcess
-
-    public String getCommand() {
-	return innerCommand;
-    }
-
-    public void setCommand(String command) {
-	innerCommand = command;
-	p.setCommand(getSuString(command));
-    }
 
     public void setInteractive(boolean interactive) {
 	p.setInteractive(interactive);
@@ -61,23 +60,42 @@ public class Sudo implements IProcess {
 	}
 	switch(flavor) {
 	  case SOLARIS: {
-	    setInteractive(true);
-	    p.start();
-	    getInputStream();
+	    boolean success = false;
+	    for (int i=0; !success; i++) {
+		try {
+		    setInteractive(true);
+		    p.start();
+		    getInputStream();
 
-	    byte[] buff = new byte[10]; //Password:_
-	    StreamTool.readFully(in, buff);
+		    byte[] buff = new byte[10]; //Password:_
+		    StreamTool.readFully(in, buff);
 
-	    getOutputStream();
-	    out.write(cred.getPassword().getBytes());
-	    out.write('\n');
-	    out.flush();
-	    getInputStream();
-	    String line1 = readLine();
-	    if (line1.indexOf("Sorry") == -1) {
-		String line2 = readLine();
-	    } else {
-		throw new LoginException(JOVALSystem.getMessage(JOVALMsg.ERROR_AUTHENTICATION_FAILED, cred.getUsername()));
+		    getOutputStream();
+		    out.write(cred.getPassword().getBytes());
+		    out.write('\n');
+		    out.flush();
+		    getInputStream();
+		    String line1 = readLine();
+		    if (line1.indexOf("Sorry") == -1) {
+			String line2 = readLine();
+		    } else {
+			String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_AUTHENTICATION_FAILED, cred.getUsername());
+			throw new LoginException(msg);
+		    }
+		    success = true;
+		} catch (EOFException e) {
+		    if (i > 2) {
+			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_PROCESS_RETRY, innerCommand, i);
+			throw e;
+		    } else {
+			JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			// try again
+			in = null;
+			out = null;
+			p = ssh.createProcess(getSuString(innerCommand), timeout, debug);
+			JOVALSystem.getLogger().warn(JOVALMsg.STATUS_SSH_PROCESS_RETRY, innerCommand);
+		    }
+		}
 	    }
 	    break;
 	  }

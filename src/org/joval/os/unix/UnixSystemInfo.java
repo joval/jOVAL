@@ -35,6 +35,9 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class UnixSystemInfo {
+    static final long TIMEOUT = 15000L;
+    static final boolean DEBUG = false;
+
     private IUnixSession session;
     private SystemInfoType info;
 
@@ -52,36 +55,60 @@ public class UnixSystemInfo {
 
 	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	try {
-	    IProcess p = session.createProcess("hostname");
+	    IProcess p = session.createProcess("hostname", TIMEOUT, DEBUG);
 	    p.start();
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    info.setPrimaryHostName(reader.readLine());
 	    reader.close();
+	    p.waitFor(0);
+	} catch (Exception e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
 
-	    p = session.createProcess("uname -r");
+	try {
+	    IProcess p = session.createProcess("uname -r", TIMEOUT, DEBUG);
 	    p.start();
-	    reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    info.setOsVersion(reader.readLine());
 	    reader.close();
+	    p.waitFor(0);
+	} catch (Exception e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
 
+	try {
 	    IFilesystem fs = session.getFilesystem();
 	    for (INode node : fs.getFile("/etc").getChildren(Pattern.compile("^.*-release$"))) {
-		p = session.createProcess("cat " + node.getPath());
+		IProcess p = session.createProcess("cat " + node.getPath());
 		p.start();
-    		reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    		BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		info.setOsName(reader.readLine());
 		reader.close();
+		p.waitFor(0);
 	    }
 	    if (!info.isSetOsName()) {
 		info.setOsName(session.getFlavor().getOsName());
 	    }
+	} catch (Exception e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSNAME);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
 
-	    p = session.createProcess("uname -p");
+	try {
+	    IProcess p = session.createProcess("uname -p", TIMEOUT, DEBUG);
 	    p.start();
-    	    reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+    	    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    info.setArchitecture(reader.readLine());
 	    reader.close();
+	    p.waitFor(0);
+	} catch (Exception e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
 
+	try {
 	    InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
 	    List<NetworkInterface> interfaces = NetworkInterface.getInterfaces(session);
 	    for (NetworkInterface intf : interfaces) {

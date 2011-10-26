@@ -61,11 +61,12 @@ public class PackageAdapter implements IAdapter {
 
     public boolean connect() {
 	if (session != null) {
+	    IProcess p = null;
 	    BufferedReader br = null;
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
-		IProcess p = session.createProcess("pkginfo -x", TIMEOUT * 10, false);
+		p = session.createProcess("pkginfo -x", TIMEOUT * 10, false);
 		p.start();
 		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		String line = null;
@@ -94,7 +95,9 @@ public class PackageAdapter implements IAdapter {
 		if (br != null) {
 		    try {
 			br.close();
+			p.waitFor(0);
 		    } catch (IOException e) {
+		    } catch (InterruptedException e) {
 		    }
 		}
 	    }
@@ -116,8 +119,7 @@ public class PackageAdapter implements IAdapter {
 	    } catch (Exception e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_SOLPKG, (String)pObj.getPkginst().getValue(), e.getMessage());
-		msg.setValue(s);
+		msg.setValue(e.getMessage());
 		rc.addMessage(msg);
 		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
@@ -173,8 +175,8 @@ public class PackageAdapter implements IAdapter {
 		PackageItem item = getItem(packages[i]);
 		packageMap.put((String)item.getPkginst().getValue(), item);
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SOLPKG, packages[i], e.getMessage());
-		JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SOLPKG, packages[i]);
+		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	loaded = true;
@@ -244,6 +246,7 @@ public class PackageAdapter implements IAdapter {
 	} finally {
 	    if (br != null) {
 		br.close();
+		p.waitFor(0);
 	    }
 	}
 

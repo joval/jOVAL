@@ -57,7 +57,6 @@ public class IosSession extends BaseSession implements ILocked, ISession {
      */
     public IProcess createProcess(String command) throws Exception {
 	disconnect();
-	connect();
 	return ssh.createProcess(command);
     }
 

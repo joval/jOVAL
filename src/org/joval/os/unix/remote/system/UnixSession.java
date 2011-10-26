@@ -12,7 +12,6 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.os.unix.Sudo;
 import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.unix.system.Environment;
 import org.joval.ssh.identity.SshCredential;
@@ -55,10 +54,16 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 
     public boolean connect() {
 	if (ssh.connect()) {
-	    env = new Environment(this);
-	    fs = new SftpFilesystem(ssh.getJschSession(), this, env);
+	    if (env == null) {
+		env = new Environment(this);
+	    }
+	    if (fs == null) {
+		fs = new SftpFilesystem(ssh.getJschSession(), this, env);
+	    } else {
+		((SftpFilesystem)fs).setJschSession(ssh.getJschSession());
+	    }
 	    flavor = Flavor.flavorOf(this);
-	    return fs.connect();
+	    return true;
 	} else {
 	    return false;
 	}
@@ -100,17 +105,13 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
     }
 
     public IProcess createProcess(String command, long millis, boolean debug) throws Exception {
-	IProcess p = ssh.createProcess(command, millis, debug);
 	switch(flavor) {
 	  case LINUX:
 	  case SOLARIS:
 	    if (rootCred != null) {
-		p = new Sudo(p, flavor, rootCred);
+		return new Sudo(ssh, flavor, rootCred, command, millis, debug);
 	    }
-	    // fall-through
-
-	  default:
-	    return p;
 	}
+	return ssh.createProcess(command, millis, debug);
     }
 }
