@@ -32,6 +32,42 @@ public class StreamTool {
     }
 
     /**
+     * Read from the InputStream until the buffer is completely filled, but take no more than maxTime milliseconds
+     * to do so.  If the timeout expires, the InputStream is closed and an EOFException will be thrown.
+     */
+    public static final void readFully(InputStream in, byte[] buff, long maxTime) throws IOException {
+	CutoffTimer timer = new CutoffTimer(in, maxTime);
+	timer.start();
+	readFully(in, buff);
+	timer.cancel();
+    }
+
+    /**
+     * Read from a stream until a '\n' is encountered, and return the String (minus the terminating '\n').
+     */
+    public static final String readLine(InputStream in) throws IOException {
+	int ch=0, len=0;
+	byte[] buff = new byte[512];
+	while((ch = in.read()) != -1 && ch != 10) { // 10 == \n
+	    if (len == buff.length) {
+		byte[] old = buff;
+		buff = new byte[old.length + 512];
+		for (int i=0; i < old.length; i++) {
+		    buff[i] = old[i];
+		}
+		old = null;
+	    }
+
+	    buff[len++] = (byte)ch;
+	}
+	if (ch == -1 && len == 0) {
+	    return null;
+	} else {
+	    return new String(buff, 0, len);
+	}
+    }
+
+    /**
      * Useful in debugging...
      */
     public static final void hexDump(byte[] buff, PrintStream out) {
@@ -85,6 +121,40 @@ public class StreamTool {
 		    in.close();
 		} catch (IOException e) {
 		}
+	    }
+	}
+    }
+
+    static class CutoffTimer implements Runnable {
+	InputStream in;
+	long ms;
+	Thread t;
+
+	CutoffTimer(InputStream in, long ms) {
+	    this.in = in;
+	    this.ms = ms;
+	    t = new Thread(this);
+	}
+
+	public void start() {
+	    t.start();
+	}
+
+	public void cancel() {
+	    if (t.isAlive()) {
+		t.interrupt();
+	    }
+	}
+
+	public void run() {
+	    try {
+		Thread.sleep(ms);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_READ_TIMEOUT, ms);
+		in.close();
+	    } catch (IOException e) {
+		// problem closing
+	    } catch (InterruptedException e) {
+		// cancelled
 	    }
 	}
     }

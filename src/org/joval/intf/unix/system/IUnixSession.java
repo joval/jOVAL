@@ -18,6 +18,13 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public interface IUnixSession extends ISession {
+    long TIMEOUT_S	=   15000L;	// 15 sec
+    long TIMEOUT_M	=  120000L;	//  2 min
+    long TIMEOUT_L	=  900000L;	// 15 min
+    long TIMEOUT_XL	= 3600000L;	//  1 hr
+
+    boolean DEBUG = false;
+
     Flavor getFlavor();
 
     /**

@@ -15,6 +15,7 @@ import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.exception.JSchException;
 
 import org.joval.intf.system.IProcess;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamLogger;
 import org.joval.io.StreamTool;
 import org.joval.util.JOVALMsg;
@@ -37,7 +38,7 @@ class SshProcess implements IProcess {
     private static int num = 0;
 
     SshProcess(ChannelExec ce, String command) {
-	this(ce, command, 3600000L, false);
+	this(ce, command, IUnixSession.TIMEOUT_XL, false);
     }
 
     SshProcess(ChannelExec ce, String command, long millis, boolean debug) {
@@ -76,6 +77,7 @@ class SshProcess implements IProcess {
 	    return ce.getInputStream();
 	} catch (IOException e) {
 	}
+	
 	return null;
     }
 

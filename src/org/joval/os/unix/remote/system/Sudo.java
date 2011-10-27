@@ -29,8 +29,8 @@ import org.joval.util.JOVALSystem;
  */
 class Sudo implements IProcess {
     private SshSession ssh;
+    private UnixSession us;
     private IProcess p;
-    private IUnixSession.Flavor flavor;
     private ICredential cred;
     private String innerCommand;
     private long timeout;
@@ -38,10 +38,10 @@ class Sudo implements IProcess {
     private InputStream in=null, err=null;
     private OutputStream out=null;
 
-    Sudo(SshSession ssh, IUnixSession.Flavor flavor, ICredential cred, String cmd, long ms, boolean debug) throws Exception {
-	this.ssh = ssh;
+    Sudo(UnixSession us, ICredential cred, String cmd, long ms, boolean debug) throws Exception {
+	this.us = us;
+	ssh = us.ssh;
 	this.cred = cred;
-	this.flavor = flavor;
 	innerCommand = cmd;
 	timeout = ms;
 	this.debug = debug;
@@ -58,34 +58,51 @@ class Sudo implements IProcess {
 	if (cred.getPassword() == null) {
 	    throw new CredentialException(JOVALSystem.getMessage(JOVALMsg.ERROR_MISSING_PASSWORD, cred.getUsername()));
 	}
-	switch(flavor) {
+	switch(us.getFlavor()) {
 	  case SOLARIS: {
 	    boolean success = false;
-	    for (int i=0; !success; i++) {
+	    for (int attempt=0; !success; attempt++) {
 		try {
 		    setInteractive(true);
 		    p.start();
 		    getInputStream();
 
+		    //
+		    // Take no more than 15 seconds to read the Password prompt
+		    //
 		    byte[] buff = new byte[10]; //Password:_
-		    StreamTool.readFully(in, buff);
+		    if (timeout > IUnixSession.TIMEOUT_S) {
+			StreamTool.readFully(in, buff, IUnixSession.TIMEOUT_S);
+		    } else {
+			StreamTool.readFully(in, buff);
+		    }
 
 		    getOutputStream();
 		    out.write(cred.getPassword().getBytes());
-		    out.write('\n');
+		    out.write('\r');
 		    out.flush();
 		    getInputStream();
-		    String line1 = readLine();
+		    String line1 = StreamTool.readLine(in);
 		    if (line1.indexOf("Sorry") == -1) {
-			String line2 = readLine();
+			//
+			// Skip past the message of the day
+			//
+			int linesToSkip = us.getMotdLines();
+			for (int i=0; i < linesToSkip; i++) {
+			    StreamTool.readLine(in);
+			}
 		    } else {
 			String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_AUTHENTICATION_FAILED, cred.getUsername());
 			throw new LoginException(msg);
 		    }
 		    success = true;
+
+		//
+		// While all this is going on, the underlying SshProcess may time out and close the streams.
+		//
 		} catch (EOFException e) {
-		    if (i > 2) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_PROCESS_RETRY, innerCommand, i);
+		    if (attempt > 2) {
+			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_PROCESS_RETRY, innerCommand, attempt);
 			throw e;
 		    } else {
 			JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -154,14 +171,5 @@ class Sudo implements IProcess {
 	sb.append(command.replace("\"", "\\\""));
 	sb.append("\"");
 	return sb.toString();
-    }
-
-    private String readLine() throws IOException {
-	int ch=0, len=0;
-	byte[] buff = new byte[512];
-	while((ch = in.read()) != -1 && ch != 10 && len < buff.length) { // 10 == \n
-	    buff[len++] = (byte)ch;
-	}
-	return new String(buff, 0, len);
     }
 }

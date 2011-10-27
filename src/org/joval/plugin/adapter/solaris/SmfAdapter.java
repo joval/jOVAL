@@ -45,8 +45,6 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class SmfAdapter implements IAdapter {
-    private static final long TIMEOUT = 30000; // 30 secs.
-
     private IUnixSession session;
     private String[] services = null;
     private Hashtable<String, SmfItem> serviceMap = null;
@@ -68,7 +66,7 @@ public class SmfAdapter implements IAdapter {
 	    BufferedReader br = null;
 	    try {
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SMF);
-		p = session.createProcess("/usr/bin/svcs -o fmri", TIMEOUT * 10, false);
+		p = session.createProcess("/usr/bin/svcs -o fmri", IUnixSession.TIMEOUT_M, IUnixSession.DEBUG);
 		p.start();
 		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		ArrayList<String> list = new ArrayList<String>();
@@ -201,7 +199,7 @@ public class SmfAdapter implements IAdapter {
 
 	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
 	item = JOVALSystem.factories.sc.solaris.createSmfItem();
-	IProcess p = session.createProcess("/usr/bin/svcs -l " + fmri, TIMEOUT, false);
+	IProcess p = session.createProcess("/usr/bin/svcs -l " + fmri, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	p.start();
 	BufferedReader br = null;
 	boolean found = false;
@@ -246,7 +244,7 @@ public class SmfAdapter implements IAdapter {
 	    //
 	    item.setStatus(StatusEnumeration.EXISTS);
 	    boolean inetd = false;
-	    p = session.createProcess("/usr/bin/svcprop " + fmri, TIMEOUT, false);
+	    p = session.createProcess("/usr/bin/svcprop " + fmri, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	    p.start();
 	    try {
 		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -279,7 +277,7 @@ public class SmfAdapter implements IAdapter {
 	    // If this is an inetd-initiated service, we can get protocol information using inetadm
 	    //
 	    if (inetd) {
-		p = session.createProcess("/usr/sbin/inetadm -l " + fmri, TIMEOUT, false);
+		p = session.createProcess("/usr/sbin/inetadm -l " + fmri, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 		p.start();
 		try {
 		    br = new BufferedReader(new InputStreamReader(p.getInputStream()));

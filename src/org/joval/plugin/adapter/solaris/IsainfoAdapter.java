@@ -23,7 +23,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -35,9 +35,9 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class IsainfoAdapter implements IAdapter {
-    private ISession session;
+    private IUnixSession session;
 
-    public IsainfoAdapter(ISession session) {
+    public IsainfoAdapter(IUnixSession session) {
 	this.session = session;
     }
 
@@ -73,7 +73,7 @@ public class IsainfoAdapter implements IAdapter {
     private JAXBElement<IsainfoItem> getItem() throws Exception {
 	IsainfoItem item = JOVALSystem.factories.sc.solaris.createIsainfoItem();
 	EntityItemStringType kernelIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	IProcess p = session.createProcess("isainfo -k");
+	IProcess p = session.createProcess("isainfo -k", IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	p.start();
 	BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	String result = br.readLine();
@@ -83,7 +83,7 @@ public class IsainfoAdapter implements IAdapter {
 	item.setKernelIsa(kernelIsa);
 
 	EntityItemStringType applicationIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("isainfo -n");
+	p = session.createProcess("isainfo -n", IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	p.start();
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	result = br.readLine();
@@ -93,7 +93,7 @@ public class IsainfoAdapter implements IAdapter {
 	item.setApplicationIsa(applicationIsa);
 
 	EntityItemIntType bits = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	p = session.createProcess("isainfo -b");
+	p = session.createProcess("isainfo -b", IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	p.start();
 	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	result = br.readLine();

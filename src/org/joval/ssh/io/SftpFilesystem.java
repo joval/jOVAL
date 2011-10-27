@@ -23,6 +23,7 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITreeBuilder;

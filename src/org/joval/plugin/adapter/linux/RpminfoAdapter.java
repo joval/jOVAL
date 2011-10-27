@@ -28,7 +28,7 @@ import oval.schemas.systemcharacteristics.linux.RpminfoItem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
@@ -42,11 +42,11 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class RpminfoAdapter implements IAdapter {
-    private ISession session;
+    private IUnixSession session;
     private Hashtable<String, RpminfoItem> packageMap;
     private String[] rpms;
 
-    public RpminfoAdapter(ISession session) {
+    public RpminfoAdapter(IUnixSession session) {
 	this.session = session;
 	packageMap = new Hashtable<String, RpminfoItem>();
     }
@@ -62,7 +62,7 @@ public class RpminfoAdapter implements IAdapter {
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_RPMINFO_LIST);
-		IProcess p = session.createProcess("rpm -q -a");
+		IProcess p = session.createProcess("rpm -q -a", IUnixSession.TIMEOUT_M, IUnixSession.DEBUG);
 		p.start();
 		BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		String line = null;
@@ -168,7 +168,7 @@ public class RpminfoAdapter implements IAdapter {
 	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_RPMINFO_RPM, packageName);
 	item = JOVALSystem.factories.sc.linux.createRpminfoItem();
 	String pkgArch=null, pkgVersion=null, pkgRelease=null;
-	IProcess p = session.createProcess("rpm -q " + packageName + " -i");
+	IProcess p = session.createProcess("rpm -q " + packageName + " -i", IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	p.start();
 	BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	boolean isInstalled = false;
@@ -248,7 +248,7 @@ public class RpminfoAdapter implements IAdapter {
 	if (isInstalled) {
 	    item.setStatus(StatusEnumeration.EXISTS);
 
-	    p = session.createProcess("rpm -q --qf '%{EPOCH}\\n' " + packageName);
+	    p = session.createProcess("rpm -q --qf '%{EPOCH}\\n' " + packageName, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	    p.start();
 	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    String pkgEpoch = br.readLine();
@@ -270,7 +270,7 @@ public class RpminfoAdapter implements IAdapter {
 	    extendedName.setValue(packageName + "-" + pkgEpoch + ":" + pkgVersion + "-" + pkgRelease + "." + pkgArch);
 	    item.setExtendedName(extendedName);
 
-	    p = session.createProcess("rpm -ql " + packageName);
+	    p = session.createProcess("rpm -ql " + packageName, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	    p.start();
 	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    while((line = br.readLine()) != null) {

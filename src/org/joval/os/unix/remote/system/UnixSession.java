@@ -3,21 +3,28 @@
 
 package org.joval.os.unix.remote.system;
 
+import java.io.InputStream;
+import java.io.IOException;
+
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
+import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.StreamTool;
 import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.unix.system.Environment;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.io.SftpFilesystem;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.BaseSession;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * A representation of Unix session.
@@ -26,11 +33,15 @@ import org.joval.util.BaseSession;
  * @version %I% %G%
  */
 public class UnixSession extends BaseSession implements ILocked, IUnixSession {
-    private SshSession ssh;
+    private static final String MOTD = "/etc/motd";
+
+    SshSession ssh;
+
     private ICredential cred;
     private Credential rootCred = null;
     private Flavor flavor = Flavor.UNKNOWN;
     private UnixSystemInfo info = null;
+    private int motdLines = 0;
 
     public UnixSession(SshSession ssh) {
 	this.ssh = ssh;
@@ -59,6 +70,16 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 	    }
 	    if (fs == null) {
 		fs = new SftpFilesystem(ssh.getJschSession(), this, env);
+		try {
+		    IFile motd = fs.getFile(MOTD);
+		    InputStream in = motd.getInputStream();
+		    while (StreamTool.readLine(in) != null) {
+			motdLines++;
+		    }
+		    in.close();
+		} catch (IOException e) {
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, MOTD, e.getMessage());
+		}
 	    } else {
 		((SftpFilesystem)fs).setJschSession(ssh.getJschSession());
 	    }
@@ -109,9 +130,19 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 	  case LINUX:
 	  case SOLARIS:
 	    if (rootCred != null) {
-		return new Sudo(ssh, flavor, rootCred, command, millis, debug);
+		return new Sudo(this, rootCred, command, millis, debug);
 	    }
 	}
 	return ssh.createProcess(command, millis, debug);
+    }
+
+    // Internal
+
+    /**
+     * Returns the number of lines in the Message of the Day file.  This allows an interactive session to learn how many
+     * lines of input it should skip (i.e., the Sudo class running on Solaris).
+     */
+    int getMotdLines() {
+	return motdLines;
     }
 }

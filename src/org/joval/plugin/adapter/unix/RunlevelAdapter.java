@@ -125,7 +125,7 @@ public class RunlevelAdapter implements IAdapter {
 		IProcess p = null;
 		BufferedReader br = null;
 		try {
-		    p = session.createProcess("/sbin/chkconfig --list");
+		    p = session.createProcess("/sbin/chkconfig --list", IUnixSession.TIMEOUT_M, IUnixSession.DEBUG);
 		    p.start();
 		    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		    String line = null;

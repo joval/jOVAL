@@ -30,7 +30,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -42,12 +42,12 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class PatchAdapter implements IAdapter {
-    ISession session;
+    IUnixSession session;
     String error = null;
     Hashtable<String, Collection<RevisionEntry>> revisions;
     Hashtable<String, Collection<SupercedenceEntry>> supercedence;
 
-    public PatchAdapter(ISession session) {
+    public PatchAdapter(IUnixSession session) {
 	this.session = session;
 	revisions = new Hashtable<String, Collection<RevisionEntry>>();
 	supercedence = new Hashtable<String, Collection<SupercedenceEntry>>();
@@ -209,7 +209,7 @@ public class PatchAdapter implements IAdapter {
 	IProcess p = null;
 	BufferedReader br = null;
 	try {
-	    p = session.createProcess("/usr/bin/showrev -p");
+	    p = session.createProcess("/usr/bin/showrev -p", IUnixSession.TIMEOUT_L, IUnixSession.DEBUG);
 	    p.start();
 	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    String line;

@@ -42,8 +42,6 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class PackageAdapter implements IAdapter {
-    private static final long TIMEOUT = 30000; // 30 sec
-
     private IUnixSession session;
     private Hashtable<String, PackageItem> packageMap;
     private String[] packages;
@@ -66,7 +64,7 @@ public class PackageAdapter implements IAdapter {
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
-		p = session.createProcess("pkginfo -x", TIMEOUT * 10, false);
+		p = session.createProcess("pkginfo -x", IUnixSession.TIMEOUT_L, IUnixSession.DEBUG);
 		p.start();
 		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		String line = null;
@@ -205,7 +203,7 @@ public class PackageAdapter implements IAdapter {
 
 	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
 	item = JOVALSystem.factories.sc.solaris.createPackageItem();
-	IProcess p = session.createProcess("/usr/bin/pkginfo -l " + pkginst, TIMEOUT, false);
+	IProcess p = session.createProcess("/usr/bin/pkginfo -l " + pkginst, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	p.start();
 	BufferedReader br = null;
 	boolean isInstalled = false;

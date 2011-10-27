@@ -38,7 +38,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
@@ -51,11 +51,11 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class ProcessAdapter implements IAdapter {
-    private ISession session;
+    private IUnixSession session;
     private Hashtable<String,ProcessItem> processes;
     private String error = null;
 
-    public ProcessAdapter(ISession session) {
+    public ProcessAdapter(IUnixSession session) {
 	this.session = session;
 	processes = new Hashtable<String, ProcessItem>();
     }
@@ -150,7 +150,8 @@ public class ProcessAdapter implements IAdapter {
      */
     private void scanProcesses() {
 	try {
-	    IProcess p = session.createProcess("ps -e -o pid,ppid,pri,uid,ruid,tty,class,time,stime,args");
+	    String args = "ps -e -o pid,ppid,pri,uid,ruid,tty,class,time,stime,args";
+	    IProcess p = session.createProcess(args, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	    p.start();
 	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    String line = br.readLine(); // skip over the header row.
@@ -200,11 +201,11 @@ public class ProcessAdapter implements IAdapter {
 		process.setStartTime(startTime);
 
 		EntityItemStringType command = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		String args = tok.nextToken("\n").trim();
-		command.setValue(args);
+		String cmd = tok.nextToken("\n").trim();
+		command.setValue(cmd);
 		process.setCommand(command);
 
-		processes.put(args, process);
+		processes.put(cmd, process);
 	    }
 	    br.close();
 	    p.waitFor(0);

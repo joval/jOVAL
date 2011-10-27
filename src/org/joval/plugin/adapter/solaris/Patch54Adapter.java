@@ -26,7 +26,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -38,7 +38,7 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class Patch54Adapter extends PatchAdapter {
-    public Patch54Adapter(ISession session) {
+    public Patch54Adapter(IUnixSession session) {
 	super(session);
     }
 
