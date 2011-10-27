@@ -3,6 +3,7 @@
 
 package org.joval.plugin.adapter.independent;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
@@ -408,7 +409,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_FS_RECURSE, path);
 		try {
 		    IFile f = (IFile)fs.lookup(path);
-		    if (!f.exists()) {
+		    if (f == null) {
+			// skip permission denied (or other access error)
+		    } else if (!f.exists()) {
 			// skip non-existent files
 		    } else if (recurse != null && recurse.indexOf("symlinks") == -1 && f.isLink()) {
 			// skip the symlink
@@ -436,6 +439,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    // ignore -- not a directory
 		} catch (NoSuchElementException e) {
 		    // dir path doesn't exist.
+		} catch (FileNotFoundException e) {
+		    // link is not a link to a directory
 		} catch (IOException e) {
 		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
 		    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

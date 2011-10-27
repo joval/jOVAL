@@ -25,6 +25,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.io.BaseFile;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -124,7 +125,11 @@ class SftpFile extends BaseFile implements IUnixFile {
 
     public boolean isDirectory() throws IOException {
 	if (isLink()) {
-	    return new SftpFile(this).isDirectory();
+	    try {
+		return new SftpFile(this).isDirectory();
+	    } catch (FileNotFoundException e) {
+		return false;
+	    }
 	} else if (exists()) {
 	    return attrs.isDir();
 	} else {
@@ -389,7 +394,7 @@ class SftpFile extends BaseFile implements IUnixFile {
     private SftpFile(SftpFile link) {
 	super(link.sfs);
 	sfs = link.sfs;
-	this.path = path + fs.getDelimiter();
+	this.path = link.path + fs.getDelimiter();
     }
 
     private int getErrorCode(SftpException e) {

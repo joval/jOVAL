@@ -368,7 +368,11 @@ public class Engine implements IProducer {
 	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
 	    Collection<String> result = resolveInternal(var, vars);
 	    variableMap.put(varId, vars);
-	    return result;
+	    if (result.size() > 0) {
+		return result;
+	    } else {
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_MISSING_VARIABLE, variableId));
+	    }
 	} else {
 	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, varId);
 	    List<String> result = new Vector<String>();
@@ -1809,7 +1813,10 @@ public class Engine implements IProducer {
 	    }
 	    if (o instanceof EntityItemSimpleBaseType) {
 		EntityItemSimpleBaseType entity = (EntityItemSimpleBaseType)o;
-		values.add((String)entity.getValue());
+		String value = (String)entity.getValue();
+		if (value != null) {
+		    values.add((String)entity.getValue());
+		}
 	    } else if (o instanceof List) {
 		return extractItemData(objectId, null, (List)o);
 	    } else if (o instanceof EntityItemRecordType) {
@@ -1817,7 +1824,10 @@ public class Engine implements IProducer {
 		String fieldName = oc.getRecordField();
 		for (EntityItemFieldType field : record.getField()) {
 		    if (field.getName().equals(fieldName)) {
-			values.add((String)field.getValue());
+			String value = (String)field.getValue();
+			if (value != null) {
+			    values.add(value);
+			}
 		    }
 		}
 	    } else {
