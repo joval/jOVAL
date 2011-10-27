@@ -369,6 +369,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 				    // ignore -- not a directory
 				} catch (IllegalArgumentException e) {
        				    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+				} catch (IOException e) {
+				    MessageType msg = JOVALSystem.factories.common.createMessageType();
+				    msg.setLevel(MessageLevelEnumeration.ERROR);
+				    msg.setValue(e.getMessage());
+				    rc.addMessage(msg);
 				}
 			    }
 			}
@@ -380,8 +385,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    }
 	} catch (PatternSyntaxException e) {
        	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (IOException e) {
-       	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (NoSuchElementException e) {
        	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), obj.getId());
 	} catch (ResolveException e) {
