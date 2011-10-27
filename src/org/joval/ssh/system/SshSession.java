@@ -179,6 +179,6 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
     }
 
     public void showMessage(String message) {
-	JOVALSystem.getLogger().info(JOVALMsg.STATUS_AUTHMESSAGE, message);
+	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_AUTHMESSAGE, message);
     }
 }

@@ -155,11 +155,11 @@ class SshProcess implements IProcess {
 	}
 	if (ce.isConnected()) {
 	    if (!ce.isEOF()) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_TIMEOUT, command, timeout);
+		JOVALSystem.getLogger().debug(JOVALMsg.ERROR_PROCESS_TIMEOUT, command, timeout);
 	    }
 	    ce.disconnect();
 	}
-	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SSH_PROCESS_END, command);
+	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SSH_PROCESS_END, command);
 	dirty = false;
     }
 

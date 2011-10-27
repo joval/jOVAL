@@ -110,7 +110,7 @@ class Sudo implements IProcess {
 			in = null;
 			out = null;
 			p = ssh.createProcess(getSuString(innerCommand), timeout, debug);
-			JOVALSystem.getLogger().warn(JOVALMsg.STATUS_SSH_PROCESS_RETRY, innerCommand);
+			JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SSH_PROCESS_RETRY, innerCommand);
 		    }
 		}
 	    }
