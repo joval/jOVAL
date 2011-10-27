@@ -15,6 +15,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.TestType;
 
 import org.joval.oval.TestException;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 
 /**
@@ -52,6 +53,11 @@ public interface IAdapter {
      * the engine will enforce them itself.
      *
      * @see IRequestContext
+     *
+     * @throws CollectionException if items cannot be collected for the request for some reason, such as an unsupported
+     *                       platform, for the adapter, or an unsupported operation on the object.
+     * @throws OvalException if there has been an error which should stop all processing, such as propagation of an 
+     *                       OvalException that has been thrown by a call to IRequestContext.resolve.
      */
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext irc) throws OvalException;
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext irc) throws OvalException, CollectionException;
 }

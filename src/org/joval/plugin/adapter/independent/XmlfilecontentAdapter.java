@@ -36,6 +36,7 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -83,7 +84,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
      * Parse the file as specified by the Object, and decorate the Item.
      */
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, OvalException {
+		throws IOException, CollectionException, OvalException {
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
@@ -145,7 +146,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 	return items;
     }
 
-    private Collection<String> typesafeEval(XPathExpression expr, Document doc) throws OvalException {
+    private Collection<String> typesafeEval(XPathExpression expr, Document doc) {
 	Stack<QName> types = new Stack<QName>();
 	types.push(XPathConstants.BOOLEAN);
 	types.push(XPathConstants.NODE);
@@ -156,7 +157,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 	return typesafeEval(expr, doc, types);
     }
 
-    private Collection<String> typesafeEval(XPathExpression exp, Document doc, Stack<QName> types) throws OvalException {
+    private Collection<String> typesafeEval(XPathExpression exp, Document doc, Stack<QName> types) {
 	Collection<String> list = new Vector<String>();
 	if (types.empty()) {
 	    return list;

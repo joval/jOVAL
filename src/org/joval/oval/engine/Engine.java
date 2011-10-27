@@ -108,6 +108,7 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.os.windows.Timestamp;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
@@ -508,43 +509,60 @@ public class Engine implements IProducer {
 
 	Set s = getObjectSet(obj);
 	if (s == null) {
+	    String error = null;
 	    AdapterManager manager = adapters.get(obj.getClass());
 	    if (manager == null) {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName()));
+		error = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
 	    } else if (manager.isActive()) {
-		Collection<JAXBElement<? extends ItemType>> items = manager.getAdapter().getItems(rc);
-		if (items.size() == 0) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
-		} else {
-		    //
-		    // Apply filters from the object, if there are any
-		    //
-		    items = filterWrappedItems(getFilters(obj), items);
-
-		    //
-		    // Add the object to the SystemCharacteristics, and associate all the items with it.
-		    //
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-		    for (JAXBElement<? extends ItemType> item : items) {
-			BigInteger itemId = sc.storeItem(item);
-			sc.relateItem(objectId, itemId);
+		try {
+		    Collection<JAXBElement<? extends ItemType>> items = manager.getAdapter().getItems(rc);
+		    if (items.size() == 0) {
+			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.INFO);
+			msg.setValue(JOVALSystem.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
+			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
+		    } else {
+			//
+			// Apply filters from the object, if there are any
+			//
+			items = filterWrappedItems(getFilters(obj), items);
+    
+			//
+			// Add the object to the SystemCharacteristics, and associate all the items with it.
+			//
+			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+			for (JAXBElement<? extends ItemType> item : items) {
+			    BigInteger itemId = sc.storeItem(item);
+			    sc.relateItem(objectId, itemId);
+			}
 		    }
+		    for (VariableValueType var : rc.getVars()) {
+			sc.storeVariable(var);
+			sc.relateVariable(objectId, var.getVariableId());
+		    }
+		    Collection<ItemType> unwrapped = new Vector<ItemType>();
+		    for (JAXBElement<? extends ItemType> item : items) {
+			unwrapped.add(item.getValue());
+		    }
+		    return unwrapped;
+		} catch (CollectionException e) {
+		    error = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
 		}
-		for (VariableValueType var : rc.getVars()) {
-		    sc.storeVariable(var);
-		    sc.relateVariable(objectId, var.getVariableId());
-		}
-		Collection<ItemType> unwrapped = new Vector<ItemType>();
-		for (JAXBElement<? extends ItemType> item : items) {
-		    unwrapped.add(item.getValue());
-		}
-		return unwrapped;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_UNAVAILABLE, obj.getClass().getName()));
+		error = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_UNAVAILABLE, obj.getClass().getName());
 	    }
+
+	    //
+	    // If we've reached this point, there has been an error preventing collection of items, so flag and annotate
+	    // the object accordingly.
+	    //
+	    if (!sc.containsObject(objectId)) {
+		MessageType message = JOVALSystem.factories.common.createMessageType();
+		message.setLevel(MessageLevelEnumeration.WARNING);
+		message.setValue(error);
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
+	    }
+	    return new Vector<ItemType>();
 	} else {
 	    try {
 		Collection<ItemType> items = getSetItems(s);

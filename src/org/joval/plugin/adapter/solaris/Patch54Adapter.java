@@ -27,6 +27,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -48,13 +49,13 @@ public class Patch54Adapter extends PatchAdapter {
 	return Patch54Object.class;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
 	Patch54Object pObj = (Patch54Object)rc.getObject();
 	int iBase = 0;
 	try {
 	    iBase = Integer.parseInt((String)pObj.getBase().getValue());
 	} catch (NumberFormatException e) {
-	    throw new OvalException(e);
+	    throw new CollectionException(e);
 	}
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
@@ -78,7 +79,7 @@ public class Patch54Adapter extends PatchAdapter {
 			items.addAll(getItems(pObj, base));
 		    }
 		} catch (NumberFormatException e) {
-		    throw new OvalException(e);
+		    throw new CollectionException(e);
 		}
 	    }
 	    break;
@@ -90,7 +91,7 @@ public class Patch54Adapter extends PatchAdapter {
 			items.addAll(getItems(pObj, base));
 		    }
 		} catch (NumberFormatException e) {
-		    throw new OvalException(e);
+		    throw new CollectionException(e);
 		}
 	    }
 	    break;
@@ -102,7 +103,7 @@ public class Patch54Adapter extends PatchAdapter {
 			items.addAll(getItems(pObj, base));
 		    }
 		} catch (NumberFormatException e) {
-		    throw new OvalException(e);
+		    throw new CollectionException(e);
 		}
 	    }
 	    break;
@@ -114,7 +115,7 @@ public class Patch54Adapter extends PatchAdapter {
 			items.addAll(getItems(pObj, base));
 		    }
 		} catch (NumberFormatException e) {
-		    throw new OvalException(e);
+		    throw new CollectionException(e);
 		}
 	    }
 	    break;
@@ -139,7 +140,7 @@ public class Patch54Adapter extends PatchAdapter {
 
 	  default: {
 	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getBase().getOperation());
-	    throw new OvalException(s);
+	    throw new CollectionException(s);
 	  }
 	}
 
@@ -154,7 +155,7 @@ public class Patch54Adapter extends PatchAdapter {
 
     // Internal
 
-    private Collection<JAXBElement<PatchItem>> getItems(Patch54Object pObj, String base) throws OvalException {
+    private Collection<JAXBElement<PatchItem>> getItems(Patch54Object pObj, String base) throws CollectionException {
 	PatchBehaviors behaviors = pObj.getBehaviors();
 	boolean isSupercedence = false;
 	if (behaviors != null) {
@@ -198,8 +199,8 @@ public class Patch54Adapter extends PatchAdapter {
 		    }
 		    break;
 		  default:
-		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
-								   pObj.getPatchVersion().getOperation()));
+		    throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
+									 pObj.getPatchVersion().getOperation()));
 		}
 	    }
 	}

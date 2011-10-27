@@ -31,6 +31,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -70,13 +71,13 @@ public class PatchAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
 	PatchObject pObj = (PatchObject)rc.getObject();
 	int iBase = 0;
 	try {
 	    iBase = Integer.parseInt((String)pObj.getBase().getValue());
 	} catch (NumberFormatException e) {
-	    throw new OvalException(e);
+	    throw new CollectionException(e);
 	}
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
@@ -100,7 +101,7 @@ public class PatchAdapter implements IAdapter {
 			items.addAll(getItems(base));
 		    }
 		} catch (NumberFormatException e) {
-		    throw new OvalException(e);
+		    throw new CollectionException(e);
 		}
 	    }
 	    break;
@@ -112,7 +113,7 @@ public class PatchAdapter implements IAdapter {
 			items.addAll(getItems(base));
 		    }
 		} catch (NumberFormatException e) {
-		    throw new OvalException(e);
+		    throw new CollectionException(e);
 		}
 	    }
 	    break;
@@ -124,7 +125,7 @@ public class PatchAdapter implements IAdapter {
 			items.addAll(getItems(base));
 		    }
 		} catch (NumberFormatException e) {
-		    throw new OvalException(e);
+		    throw new CollectionException(e);
 		}
 	    }
 	    break;
@@ -136,7 +137,7 @@ public class PatchAdapter implements IAdapter {
 			items.addAll(getItems(base));
 		    }
 		} catch (NumberFormatException e) {
-		    throw new OvalException(e);
+		    throw new CollectionException(e);
 		}
 	    }
 	    break;
@@ -161,7 +162,7 @@ public class PatchAdapter implements IAdapter {
 
 	  default: {
 	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getBase().getOperation());
-	    throw new OvalException(s);
+	    throw new CollectionException(s);
 	  }
 	}
 

@@ -20,6 +20,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.util.CheckData;
@@ -51,7 +52,7 @@ public class VariableAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectionException {
 	VariableObject vObj = (VariableObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	try {

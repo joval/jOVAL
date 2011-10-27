@@ -116,7 +116,7 @@ public class Main implements IObserver {
 			System.exit(ERR);
 		    }
 		} else {
-		    print(getMessage("ERROR_PLUGIN_CONFIG", state.getPluginError()));
+		    print(getMessage("ERROR_PLUGIN_CONFIG", state.getPluginError(), state.logFile));
 		    printPluginHelp();
 		    System.exit(ERR);
 		}
@@ -211,7 +211,7 @@ public class Main implements IObserver {
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {
-		print(line);
+		System.out.println(line);
 	    }
 	    printPluginHelp();
 	} catch (IOException e) {
@@ -224,7 +224,7 @@ public class Main implements IObserver {
      */
     private static void printPluginHelp() {
 	if (state.plugin != null) {
-	    print(state.plugin.getProperty(IJovaldiPlugin.PROP_HELPTEXT));
+	    System.out.println(state.plugin.getProperty(IJovaldiPlugin.PROP_HELPTEXT));
 	}
     }
 

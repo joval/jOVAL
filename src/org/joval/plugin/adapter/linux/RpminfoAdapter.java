@@ -29,6 +29,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
@@ -84,7 +85,7 @@ public class RpminfoAdapter implements IAdapter {
 	packageMap = null;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
 	RpminfoObject rObj = (RpminfoObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	switch(rObj.getName().getOperation()) {
@@ -132,7 +133,7 @@ public class RpminfoAdapter implements IAdapter {
 
 	  default: {
 	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, rObj.getName().getOperation());
-	    throw new OvalException(s);
+	    throw new CollectionException(s);
 	  }
 	}
 

@@ -51,6 +51,7 @@ import org.joval.os.windows.pe.resource.version.VsVersionInfo;
 import org.joval.os.windows.pe.resource.version.StringFileInfo;
 import org.joval.os.windows.pe.resource.version.StringTable;
 import org.joval.os.windows.pe.resource.version.StringStructure;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
@@ -107,7 +108,7 @@ public class FileAdapter extends BaseFileAdapter {
     }
 
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, OvalException {
+		throws IOException, CollectionException, OvalException {
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {

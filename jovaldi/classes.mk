@@ -7,6 +7,7 @@ CLASSES=\
 	org.joval.intf.util.IObserver					\
 	org.joval.intf.util.IProducer					\
 	org.joval.os.windows.Timestamp					\
+	org.joval.oval.CollectionException				\
 	org.joval.oval.OvalException					\
 	org.joval.oval.ResolveException					\
 	org.joval.oval.TestException					\

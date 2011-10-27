@@ -140,7 +140,9 @@ public class RemotePlugin extends OnlinePlugin {
 		    break;
 
 		  default:
-		    break;
+		    base.disconnect();
+		    err = JOVALSystem.getMessage(JOVALMsg.ERROR_SESSIONTYPE, base.getType());
+		    return false;
 	        }
 
 		if (session instanceof ILocked) {

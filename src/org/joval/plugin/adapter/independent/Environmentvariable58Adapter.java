@@ -28,6 +28,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
@@ -53,7 +54,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 	return Environmentvariable58Object.class;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectionException {
 
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	Environmentvariable58Object eObj = (Environmentvariable58Object)rc.getObject();
@@ -85,7 +86,7 @@ Also see:
 http://yong321.freeshell.org/computer/ProcEnv.txt
 
 */
-	    throw new OvalException("Not implemented!");
+	    throw new CollectionException("Not implemented!");
 
 	}
 

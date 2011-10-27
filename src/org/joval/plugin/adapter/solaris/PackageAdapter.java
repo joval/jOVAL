@@ -30,6 +30,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -107,7 +108,7 @@ public class PackageAdapter implements IAdapter {
 	packageMap = null;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
 	PackageObject pObj = (PackageObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	switch(pObj.getPkginst().getOperation()) {
@@ -154,7 +155,7 @@ public class PackageAdapter implements IAdapter {
 
 	  default: {
 	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getPkginst().getOperation());
-	    throw new OvalException(s);
+	    throw new CollectionException(s);
 	  }
 	}
 

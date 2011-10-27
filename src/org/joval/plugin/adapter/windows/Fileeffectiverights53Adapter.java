@@ -38,6 +38,7 @@ import org.joval.intf.windows.io.IWindowsFile;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.io.WindowsFile;
 import org.joval.os.windows.wmi.WmiException;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
@@ -84,7 +85,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
     }
 
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, OvalException {
+		throws IOException, CollectionException, OvalException {
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileeffectiverightsItem) {
@@ -154,7 +155,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 		break;
 
 	      default:
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	    }
 	}
 	return items;

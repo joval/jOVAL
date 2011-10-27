@@ -33,6 +33,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
@@ -181,7 +182,7 @@ public class RunlevelAdapter implements IAdapter {
 	runlevels = null;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
 	RunlevelObject rObj = (RunlevelObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	OperationEnumeration op = rObj.getRunlevel().getOperation();
@@ -221,7 +222,7 @@ public class RunlevelAdapter implements IAdapter {
 	  }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+	    throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	}
 
 	return items;

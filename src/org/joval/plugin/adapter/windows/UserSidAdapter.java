@@ -15,6 +15,7 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALSystem;
@@ -41,7 +42,7 @@ public class UserSidAdapter extends UserSid55Adapter {
     /**
      * @override
      */
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
 	return super.getItems(new USRequestContext(rc));
     }
 

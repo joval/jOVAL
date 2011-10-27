@@ -43,6 +43,7 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
@@ -74,13 +75,9 @@ public abstract class BaseFileAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectionException {
 	ObjectType obj = rc.getObject();
 	String id = obj.getId();
-	if (!obj.getClass().getName().equals(getObjectClass().getName())) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_INSTANCE,
-							   getObjectClass().getName(), obj.getClass().getName()));
-	}
 
 	//
 	// Get the appropriate IFilesystem
@@ -174,7 +171,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			fItem.setFilepath(filepathType);
 		    }
 		} else {
-		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_TEXTFILECONTENT_SPEC, id));
+		    throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_TEXTFILECONTENT_SPEC, id));
 		}
 
 		switch(winView) {
@@ -226,7 +223,7 @@ public abstract class BaseFileAdapter implements IAdapter {
      * @arg it the base ItemType containing filepath, path and filename information already populated
      */
     protected abstract Collection<JAXBElement<? extends ItemType>>
-	getItems(ItemType it, IFile f, IRequestContext rc) throws IOException, OvalException;
+	getItems(ItemType it, IFile f, IRequestContext rc) throws IOException, CollectionException, OvalException;
 
     // Internal
 
