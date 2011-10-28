@@ -3,7 +3,11 @@
 
 package org.joval.io;
 
-import java.io.*;
+import java.io.EOFException;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -36,10 +40,21 @@ public class StreamTool {
      * to do so.  If the timeout expires, the InputStream is closed and an EOFException will be thrown.
      */
     public static final void readFully(InputStream in, byte[] buff, long maxTime) throws IOException {
-	CutoffTimer timer = new CutoffTimer(in, maxTime);
-	timer.start();
-	readFully(in, buff);
-	timer.cancel();
+	TimedReader reader = new TimedReader(in, buff);
+	reader.start();
+	long end = System.currentTimeMillis() + maxTime;
+	while (!reader.isFinished() && System.currentTimeMillis() < end) {
+	    try {
+		Thread.sleep(100);
+	    } catch (InterruptedException e) {
+	    }
+	}
+	if (reader.hasError()) {
+	    throw reader.getError();
+	} else if (!reader.isFinished()) {
+	    reader.cancel();
+	    throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_READ_TIMEOUT, maxTime));
+	}
     }
 
     /**
@@ -125,14 +140,17 @@ public class StreamTool {
 	}
     }
 
-    static class CutoffTimer implements Runnable {
+    static class TimedReader implements Runnable {
 	InputStream in;
-	long ms;
+	byte[] buff;
 	Thread t;
+	boolean finished;
+	IOException error = null;
 
-	CutoffTimer(InputStream in, long ms) {
+	TimedReader(InputStream in, byte[] buff) {
+	    finished = false;
 	    this.in = in;
-	    this.ms = ms;
+	    this.buff = buff;
 	    t = new Thread(this);
 	}
 
@@ -140,22 +158,36 @@ public class StreamTool {
 	    t.start();
 	}
 
-	public void cancel() {
-	    if (t.isAlive()) {
-		t.interrupt();
+	public boolean isFinished() {
+	    return finished;
+	}
+
+	public boolean hasError() {
+	    return error != null;
+	}
+
+	public IOException getError() {
+	    return error;
+	}
+
+	public synchronized void cancel() {
+	    if (!finished) {
+		try {
+		    in.close();
+		} catch (IOException e) {
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
 	    }
+	    finished = true;
 	}
 
 	public void run() {
 	    try {
-		Thread.sleep(ms);
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_READ_TIMEOUT, ms);
-		in.close();
+		StreamTool.readFully(in, buff);
 	    } catch (IOException e) {
-		// problem closing
-	    } catch (InterruptedException e) {
-		// cancelled
+		error = e;
 	    }
+	    finished = true;
 	}
     }
 }

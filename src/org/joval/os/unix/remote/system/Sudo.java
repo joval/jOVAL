@@ -28,6 +28,9 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 class Sudo implements IProcess {
+    private static final long READ_TIMEOUT = 5000L;
+    private static final int MAX_RETRIES = 3; // the number of re-tries, after the original attempt
+
     private SshSession ssh;
     private UnixSession us;
     private IProcess p;
@@ -68,11 +71,11 @@ class Sudo implements IProcess {
 		    getInputStream();
 
 		    //
-		    // Take no more than 15 seconds to read the Password prompt
+		    // Take no more than READ_TIMEOUT seconds to read the Password prompt
 		    //
 		    byte[] buff = new byte[10]; //Password:_
-		    if (timeout > IUnixSession.TIMEOUT_S) {
-			StreamTool.readFully(in, buff, IUnixSession.TIMEOUT_S);
+		    if (timeout > READ_TIMEOUT) {
+			StreamTool.readFully(in, buff, READ_TIMEOUT);
 		    } else {
 			StreamTool.readFully(in, buff);
 		    }
@@ -83,25 +86,29 @@ class Sudo implements IProcess {
 		    out.flush();
 		    getInputStream();
 		    String line1 = StreamTool.readLine(in);
-		    if (line1.indexOf("Sorry") == -1) {
+		    if (line1 == null) {
+			throw new EOFException(null);
+		    } else if (line1.indexOf("Sorry") == -1) {
 			//
 			// Skip past the message of the day
 			//
 			int linesToSkip = us.getMotdLines();
 			for (int i=0; i < linesToSkip; i++) {
-			    StreamTool.readLine(in);
+			    if (StreamTool.readLine(in) == null) {
+				throw new EOFException(null);
+			    }
 			}
+			success = true;
 		    } else {
 			String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_AUTHENTICATION_FAILED, cred.getUsername());
 			throw new LoginException(msg);
 		    }
-		    success = true;
 
 		//
 		// While all this is going on, the underlying SshProcess may time out and close the streams.
 		//
 		} catch (EOFException e) {
-		    if (attempt > 2) {
+		    if (attempt > MAX_RETRIES) {
 			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_PROCESS_RETRY, innerCommand, attempt);
 			throw e;
 		    } else {

@@ -210,7 +210,7 @@ public class PatchAdapter implements IAdapter {
 	IProcess p = null;
 	BufferedReader br = null;
 	try {
-	    p = session.createProcess("/usr/bin/showrev -p", IUnixSession.TIMEOUT_L, IUnixSession.DEBUG);
+	    p = session.createProcess("/usr/bin/showrev -p", IUnixSession.TIMEOUT_M, IUnixSession.DEBUG);
 	    p.start();
 	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    String line;
