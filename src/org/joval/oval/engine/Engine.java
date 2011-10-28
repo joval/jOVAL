@@ -464,32 +464,14 @@ public class Engine implements IProducer {
 		    ObjectType obj = iter.next();
 		    String objectId = obj.getId();
 
-		    Boolean isSetSet = (Boolean)safeInvokeMethod(obj, "isSetSet");
-		    if (isSetSet != null && isSetSet.booleanValue()) {
-			//
-			// Is a Set
-			//
-			Set s = getObjectSet(obj);
-			if (s != null) {
-			    try {
-				sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-				for (ItemType itemType : getSetItems(s)) {
-				    sc.relateItem(objectId, itemType.getId());
-				}
-			    } catch (NoSuchElementException e) {
-				throw new OvalException(e);
-			    }
-			}
-		    } else {
-			//
-			// If items have been retrieved in the course of resolving a Set or a Variable, then skip
-			// its collection.
-			//
-			try {
-			    sc.getObject(objectId);
-			} catch (NoSuchElementException e) {
-			    scanObject(new RequestContext(this, obj));
-			}
+		    //
+		    // If items have been retrieved in the course of resolving a Set or a Variable, then skip
+		    // its collection.
+		    //
+		    try {
+			sc.getObject(objectId);
+		    } catch (NoSuchElementException e) {
+			scanObject(new RequestContext(this, obj));
 		    }
 		}
 	    } finally {
@@ -529,6 +511,7 @@ public class Engine implements IProducer {
     
 			//
 			// Add the object to the SystemCharacteristics, and associate all the items with it.
+			// DAS: TBD, add a mechanism to flag the item collection as incomplete (i.e., permission issues)
 			//
 			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
 			for (JAXBElement<? extends ItemType> item : items) {
