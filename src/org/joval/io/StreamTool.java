@@ -61,9 +61,21 @@ public class StreamTool {
      * Read from a stream until a '\n' is encountered, and return the String (minus the terminating '\n').
      */
     public static final String readLine(InputStream in) throws IOException {
+	byte[] buff = readUntil(in, 10); // 10 == \n
+	if (buff == null) {
+	    return null;
+	} else {
+	    return new String(buff);
+	}
+    }
+
+    /**
+     * Read from a stream until the specified delimiter is encountered, and return the bytes.
+     */
+    public static final byte[] readUntil(InputStream in, int delim) throws IOException {
 	int ch=0, len=0;
 	byte[] buff = new byte[512];
-	while((ch = in.read()) != -1 && ch != 10) { // 10 == \n
+	while((ch = in.read()) != -1 && ch != delim) {
 	    if (len == buff.length) {
 		byte[] old = buff;
 		buff = new byte[old.length + 512];
@@ -78,7 +90,11 @@ public class StreamTool {
 	if (ch == -1 && len == 0) {
 	    return null;
 	} else {
-	    return new String(buff, 0, len);
+	    byte[] result = new byte[len];
+	    for (int i=0; i < len; i++) {
+		result[i] = buff[i];
+	    }
+	    return result;
 	}
     }
 

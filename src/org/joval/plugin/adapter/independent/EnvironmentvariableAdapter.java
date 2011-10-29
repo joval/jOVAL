@@ -36,10 +36,10 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class EnvironmentvariableAdapter implements IAdapter {
-    private IEnvironment env;
+    private IEnvironment environment;
 
     public EnvironmentvariableAdapter(ISession session) {
-	env = session.getEnvironment();
+	environment = session.getEnvironment();
     }
 
     // Implement IAdapter
@@ -49,13 +49,21 @@ public class EnvironmentvariableAdapter implements IAdapter {
     }
 
     public boolean connect() {
-	return env != null;
+	return environment != null;
     }
 
     public void disconnect() {
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectionException {
+	return getItems(rc, environment, null);
+    }
+
+    // Internal
+
+    Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc, IEnvironment env, String reserved)
+		throws CollectionException {
+
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	EnvironmentvariableObject eObj = (EnvironmentvariableObject)rc.getObject();
 	String name = (String)eObj.getName().getValue();
@@ -64,14 +72,14 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	switch(op) {
 	  case EQUALS:
 	    if (env.getenv(name) != null) {
-		items.add(makeItem(name, env.getenv(name)));
+		items.add(makeItem(name, env.getenv(name), reserved));
 	    }
 	    break;
 
 	  case CASE_INSENSITIVE_EQUALS:
 	    for (String varName : env) {
 		if (varName.equalsIgnoreCase(name)) {
-		    items.add(makeItem(varName, env.getenv(varName)));
+		    items.add(makeItem(varName, env.getenv(varName), reserved));
 		    break;
 		}
 	    }
@@ -80,7 +88,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	  case NOT_EQUAL:
 	    for (String varName : env) {
 		if (!name.equals(varName)) {
-		    items.add(makeItem(name, env.getenv(varName)));
+		    items.add(makeItem(name, env.getenv(varName), reserved));
 		}
 	    }
 	    break;
@@ -90,7 +98,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 		Pattern p = Pattern.compile(name);
 		for (String varName : env) {
 		    if (p.matcher(varName).find()) {
-			items.add(makeItem(varName, env.getenv(varName)));
+			items.add(makeItem(varName, env.getenv(varName), reserved));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
@@ -108,9 +116,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	return items;
     }
 
-    // Internal
-
-    private JAXBElement<EnvironmentvariableItem> makeItem(String name, String value) {
+    JAXBElement<? extends ItemType> makeItem(String name, String value, String reserved) {
 	EnvironmentvariableItem item = JOVALSystem.factories.sc.independent.createEnvironmentvariableItem();
 	EntityItemStringType nameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	nameType.setValue(name);

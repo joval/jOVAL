@@ -22,7 +22,9 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class Environment implements IEnvironment {
-    private Properties props;
+    protected Properties props;
+
+    protected Environment() {}
 
     public Environment(ISession session) {
 	props = new Properties();
