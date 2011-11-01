@@ -3,8 +3,6 @@
 
 package org.joval.intf.windows.identity;
 
-import java.util.List;
-
 /**
  * Super-interface for users and groups.
  *

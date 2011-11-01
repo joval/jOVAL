@@ -5,25 +5,11 @@ package org.joval.os.embedded;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.IOException;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.StringTokenizer;
 import java.util.Vector;
 
-import oval.schemas.systemcharacteristics.core.EntityItemIPAddressStringType;
-import oval.schemas.systemcharacteristics.core.InterfacesType;
-import oval.schemas.systemcharacteristics.core.InterfaceType;
-import oval.schemas.systemcharacteristics.core.ObjectFactory;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
-import org.joval.intf.io.IFilesystem;
-import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.util.JOVALSystem;
 
 /**
  * Tool for creating Network Interface information from an ISession attached to an IOS device.

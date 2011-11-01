@@ -6,7 +6,6 @@ package org.joval.intf.io;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.List;
 
 import org.joval.intf.util.tree.ITree;
 

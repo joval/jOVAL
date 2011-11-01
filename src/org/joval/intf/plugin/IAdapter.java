@@ -6,15 +6,8 @@ package org.joval.intf.plugin;
 import java.util.Collection;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.ObjectComponentType;
-import oval.schemas.definitions.core.StateType;
 import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
-import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestType;
 
-import org.joval.oval.TestException;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 

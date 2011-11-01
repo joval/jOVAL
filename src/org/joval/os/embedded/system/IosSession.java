@@ -3,8 +3,6 @@
 
 package org.joval.os.embedded.system;
 
-import java.io.File;
-
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.identity.ICredential;

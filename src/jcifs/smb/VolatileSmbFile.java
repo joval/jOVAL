@@ -5,9 +5,6 @@ package jcifs.smb;
 
 import java.net.MalformedURLException;
 
-import jcifs.dcerpc.*;
-import jcifs.dcerpc.msrpc.*;
-
 /**
  * This is just an SmbFile that doesn't cache information about its length or existence.  This is necessary for jOVAL's TailDashF
  * class to work properly.
@@ -48,7 +45,7 @@ public class VolatileSmbFile extends SmbFile {
             } else if (getUncPath0().length() == 1) {
                 connect0(); // treeConnect is good enough
             } else {
-                Info info = queryPath(getUncPath0(), Trans2QueryPathInformationResponse.SMB_QUERY_FILE_BASIC_INFO);
+                queryPath(getUncPath0(), Trans2QueryPathInformationResponse.SMB_QUERY_FILE_BASIC_INFO);
             }
 
             return true;

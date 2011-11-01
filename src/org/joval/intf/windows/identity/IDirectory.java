@@ -4,10 +4,7 @@
 package org.joval.intf.windows.identity;
 
 import java.util.Collection;
-import java.util.Hashtable;
 import java.util.NoSuchElementException;
-
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.identity.IDirectory;

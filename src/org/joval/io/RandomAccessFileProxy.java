@@ -4,7 +4,6 @@
 package org.joval.io;
 
 import java.io.IOException;
-import java.io.EOFException;
 import java.io.RandomAccessFile;
 
 import org.joval.intf.io.IRandomAccess;

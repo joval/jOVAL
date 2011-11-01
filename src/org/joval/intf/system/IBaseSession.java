@@ -2,8 +2,6 @@
 
 package org.joval.intf.system;
 
-import org.joval.intf.io.IFilesystem;
-
 /**
  * A representation of a basic session.
  *

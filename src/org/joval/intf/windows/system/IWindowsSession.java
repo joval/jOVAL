@@ -4,7 +4,6 @@ package org.joval.intf.windows.system;
 
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.ISession;
-import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.wmi.IWmiProvider;

@@ -4,7 +4,6 @@ package org.joval.intf.unix.system;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.logging.Level;
 
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;

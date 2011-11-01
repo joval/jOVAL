@@ -6,7 +6,6 @@ import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.io.IFilesystem;
-import org.joval.intf.util.IPathRedirector;
 
 /**
  * A representation of a session.

@@ -12,11 +12,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
-import org.joval.intf.identity.ICredential;
 import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
-import org.joval.os.embedded.system.IosSession;
-import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.remote.system.WindowsSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -30,9 +26,6 @@ import org.joval.ssh.system.SshSession;
  */
 public class SessionFactory {
     private static final String HOSTS	= "hosts.xml";
-    private static final String SSH	= "ssh";
-    private static final String WINDOWS	= "windows";
-    private static final String UNKNOWN	= "unknown";
 
     private Properties props;
     private File propsFile;

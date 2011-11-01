@@ -4,11 +4,8 @@
 package org.joval.intf.di;
 
 import java.io.File;
-import java.util.List;
 import java.util.Properties;
 
-import org.joval.oval.OvalException;
-import org.joval.oval.engine.Engine;
 import org.joval.intf.plugin.IPlugin;
 
 /**

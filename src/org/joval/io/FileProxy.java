@@ -14,7 +14,6 @@ import java.io.RandomAccessFile;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
-import org.joval.intf.util.tree.INode;
 
 /**
  * An IFile wrapper for a java.io.File.

@@ -3,10 +3,6 @@
 
 package org.joval.intf.util.tree;
 
-import java.util.Collection;
-import java.util.NoSuchElementException;
-import java.util.regex.Pattern;
-
 /**
  * Extension of ITree with the ability to create new nodes and links.
  *

@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
@@ -21,7 +20,6 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
-import org.joval.io.BaseFile;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
