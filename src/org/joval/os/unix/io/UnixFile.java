@@ -41,6 +41,11 @@ public class UnixFile implements IUnixFile {
 	try {
 	    String command = null;
 	    switch(session.getFlavor()) {
+	      case MACOSX: {
+		command = "/bin/ls -ldn " + f.getLocalName();
+		break;
+	      }
+    
 	      case SOLARIS: {
 		command = "/usr/bin/ls -n " + f.getLocalName();
 		break;
@@ -50,7 +55,7 @@ public class UnixFile implements IUnixFile {
 		command = "/bin/ls -dn " + f.getLocalName();
 		break;
 	      }
-    
+
 	      default:
 		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor()));
 	    }

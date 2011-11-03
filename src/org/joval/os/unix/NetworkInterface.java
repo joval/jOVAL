@@ -30,7 +30,31 @@ class NetworkInterface {
 
 	switch(session.getFlavor()) {
 	  //
-	  // On Solaris, info for every interface starts at char[0] of a line; with additional lines tab-indented
+	  // On Mac OS X, new interfaces start at char0 on a line.  Continutaion info starts with a tab after the first line.
+	  // Interfaces are not separated by blank lines.
+	  //
+	  case MACOSX:
+	    while ((line = reader.readLine()) != null) {
+		if (line.startsWith("\t") || line.startsWith("  ")) {
+		    lines.add(line);
+		} else if (lines.size() > 0) {
+		    interfaces.add(createDarwinInterface(lines));
+		    lines = new Vector<String>();
+		    if (line.trim().length() > 0) {
+			lines.add(line);
+		    }
+		} else if (line.trim().length() > 0) {
+		    lines.add(line);
+		}
+	    }
+	    if (lines.size() > 0) {
+		interfaces.add(createDarwinInterface(lines));
+	    }
+	    break;
+
+	  //
+	  // On Solaris, new interfaces start at char0 on a line.  Continutaion info starts with a tab after the first line.
+	  // Interfaces are not separated by blank lines.
 	  //
 	  case SOLARIS:
 	    while ((line = reader.readLine()) != null) {
@@ -52,9 +76,8 @@ class NetworkInterface {
 	    break;
 
 	  //
-	  // On Linux, info for every interface ends with a blank line.
+	  // On Linux, there is a blank line between each interface spec.
 	  //
-	  default:
 	  case LINUX:
 	    while ((line = reader.readLine()) != null) {
 		if (line.trim().length() == 0) {
@@ -98,6 +121,32 @@ class NetworkInterface {
 	this.ip4 = ip4;
 	this.ip6 = ip6;
 	this.description = description;
+    }
+
+    private static NetworkInterface createDarwinInterface(Vector<String> lines) {
+	String mac="", ip4=null, ip6=null, description="";
+	String firstLine = lines.get(0);
+	description = firstLine.substring(0, firstLine.indexOf(":"));
+
+	for (int i=1; i < lines.size(); i++) {
+	    String line = lines.get(i).trim();
+	    StringTokenizer tok = new StringTokenizer(line);
+	    String token = tok.nextToken().toUpperCase();
+	    if ("INET6".equals(token) && ip6 == null) {
+		String temp = tok.nextToken();
+		int ptr = temp.indexOf("%");
+		if (ptr == -1) {
+		    ip6 = temp;
+		} else {
+		    ip6 = temp.substring(0, ptr);
+		}
+	    } else if ("INET".equals(token)) {
+		ip4 = tok.nextToken();
+	    } else if ("ETHER".equals(token)) {
+		mac = tok.nextToken();
+	    }
+	}
+	return new NetworkInterface(mac, ip4, ip6, description);
     }
 
     private static NetworkInterface createSolarisInterface(Vector<String> lines) {

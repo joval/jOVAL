@@ -68,11 +68,11 @@ public class ProcessAdapter implements IAdapter {
     }
 
     public boolean connect() {
-	if (session != null) {
-	    scanProcesses();
-	    return true;
+	if (session == null) {
+	    return false;
+	} else {
+	    return scanProcesses();
 	}
-	return false;
     }
 
     public void disconnect() {
@@ -149,9 +149,23 @@ public class ProcessAdapter implements IAdapter {
     /**
      * REMIND: Stops if it encounters any exceptions at all; make this more robust?
      */
-    private void scanProcesses() {
+    private boolean scanProcesses() {
+	String keywords = null;
+	switch(session.getFlavor()) {
+	  case MACOSX:
+	    keywords = "pid,ppid,pri,uid,ruid,tty,upr,time,stime,command";
+	    break;
+
+	  case LINUX:
+	  case SOLARIS:
+	    keywords = "pid,ppid,pri,uid,ruid,tty,class,time,stime,args";
+	    break;
+
+	  default:
+	    return false;
+	}
 	try {
-	    String args = "ps -e -o pid,ppid,pri,uid,ruid,tty,class,time,stime,args";
+	    String args = "ps -e -o " + keywords;
 	    IProcess p = session.createProcess(args, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	    p.start();
 	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -214,5 +228,6 @@ public class ProcessAdapter implements IAdapter {
 	    error = e.getMessage();
 	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
+	return true;
     }
 }

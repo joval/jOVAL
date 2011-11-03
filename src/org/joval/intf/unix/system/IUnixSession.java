@@ -37,6 +37,7 @@ public interface IUnixSession extends ISession {
     enum Flavor {
 	UNKNOWN("unknown"),
 	LINUX("Linux"),
+	MACOSX("Darwin"),
 	SOLARIS("SunOS");
     
 	private String osName = null;
