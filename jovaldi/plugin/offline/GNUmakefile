@@ -21,7 +21,7 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 all: $(PRODUCTNAME).jar
 
 install: all
-	mkdir -p $(DIST)
+	mkdir -p $(DIST)/lib
 	cp -R $(RSRC)/* $(DIST)
 	cp $(PRODUCTNAME).jar $(DIST)/lib
 	cp $(SHARED) $(DIST)/lib
