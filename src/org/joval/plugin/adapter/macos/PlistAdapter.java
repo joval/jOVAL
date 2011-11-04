@@ -22,7 +22,6 @@ import com.dd.plist.PropertyListParser;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
-import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.macos.PlistObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
@@ -84,17 +83,19 @@ public class PlistAdapter extends BaseFileAdapter {
 	    PlistItem item = (PlistItem)createFileItem();
 	    item.setFilepath(baseItem.getFilepath());
 
-	    String appId = (String)pObj.getAppId().getValue();
-	    if (appId != null) {
-		EntityItemStringType appIdType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		appIdType.setValue(appId);
-		item.setAppId(appIdType);
+	    String appId = null;
+	    if (pObj.isSetAppId()) {
+		appId = (String)pObj.getAppId().getValue();
+		if (appId != null) {
+		    EntityItemStringType appIdType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    appIdType.setValue(appId);
+		    item.setAppId(appIdType);
+		}
 	    }
 
 	    String key = null;
-	    EntityObjectStringType keyObject = pObj.getKey().getValue();
-	    if (keyObject != null) {
-		key = (String)keyObject.getValue();
+	    if (pObj.isSetKey()) {
+		key = (String)pObj.getKey().getValue().getValue();
 		if (key != null) {
 		    EntityItemStringType keyType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    keyType.setValue(key);

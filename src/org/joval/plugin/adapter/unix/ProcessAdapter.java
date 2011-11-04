@@ -150,22 +150,21 @@ public class ProcessAdapter implements IAdapter {
      * REMIND: Stops if it encounters any exceptions at all; make this more robust?
      */
     private boolean scanProcesses() {
-	String keywords = null;
+	String args = null;
 	switch(session.getFlavor()) {
 	  case MACOSX:
-	    keywords = "pid,ppid,pri,uid,ruid,tty,upr,time,stime,command";
+	    args = "ps -A -o pid,ppid,pri,uid,ruid,tty,time,stime,command";
 	    break;
 
 	  case LINUX:
 	  case SOLARIS:
-	    keywords = "pid,ppid,pri,uid,ruid,tty,class,time,stime,args";
+	    args = "ps -e -o pid,ppid,pri,uid,ruid,tty,class,time,stime,args";
 	    break;
 
 	  default:
 	    return false;
 	}
 	try {
-	    String args = "ps -e -o " + keywords;
 	    IProcess p = session.createProcess(args, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	    p.start();
 	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
@@ -204,7 +203,14 @@ public class ProcessAdapter implements IAdapter {
 		process.setTty(tty);
 
 		EntityItemStringType schedulingClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		schedulingClass.setValue(tok.nextToken());
+		switch(session.getFlavor()) {
+		  case MACOSX:
+		    schedulingClass.setStatus(StatusEnumeration.NOT_COLLECTED);
+		    break;
+		  default:
+		    schedulingClass.setValue(tok.nextToken());
+		    break;
+		}
 		process.setSchedulingClass(schedulingClass);
 
 		EntityItemStringType execTime = JOVALSystem.factories.sc.core.createEntityItemStringType();

@@ -40,6 +40,7 @@ import org.joval.plugin.adapter.independent.Textfilecontent54Adapter;
 import org.joval.plugin.adapter.independent.VariableAdapter;
 import org.joval.plugin.adapter.independent.XmlfilecontentAdapter;
 import org.joval.plugin.adapter.linux.RpminfoAdapter;
+import org.joval.plugin.adapter.macos.PlistAdapter;
 import org.joval.plugin.adapter.solaris.IsainfoAdapter;
 import org.joval.plugin.adapter.solaris.PackageAdapter;
 import org.joval.plugin.adapter.solaris.Patch54Adapter;
@@ -123,6 +124,9 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 		switch(unix.getFlavor()) {
 		  case LINUX:
 		    adapters.add(new RpminfoAdapter(unix));
+		    break;
+		  case MACOSX:
+		    adapters.add(new PlistAdapter(unix));
 		    break;
 		  case SOLARIS:
 		    adapters.add(new IsainfoAdapter(unix));
