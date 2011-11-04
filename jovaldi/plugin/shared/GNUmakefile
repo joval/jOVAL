@@ -19,9 +19,12 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 all: $(PRODUCTNAME).jar
 
 install: all
-	cp $(PRODUCTNAME).jar ../default/
-	cp $(PRODUCTNAME).jar ../remote/
-	cp $(PRODUCTNAME).jar ../offline/
+	cp $(PRODUCTNAME).jar ../default
+	cp $(PRODUCTNAME).jar ../remote
+	cp $(PRODUCTNAME).jar ../offline
+	cp $(LIBDIR)/*.jar ../default/$(LIBDIR)
+	cp $(LIBDIR)/*.jar ../remote/$(LIBDIR)
+	cp $(LIBDIR)/*.jar ../offline/$(LIBDIR)
 
 $(PRODUCTNAME).jar: classes
 	$(JAR) cvf $@ -C $(BUILD)/ .

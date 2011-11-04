@@ -715,22 +715,30 @@ public abstract class BaseFileAdapter implements IAdapter {
 
 	void setFilename(EntityItemStringType filename)
 		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    setFilename.invoke(it, convertFilename(filename));
+	    if (setFilename != null) {
+		setFilename.invoke(it, convertFilename(filename));
+	    }
 	}
 
 	void setFilepath(EntityItemStringType filepath)
 		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    setFilepath.invoke(it, filepath);
+	    if (setFilepath != null) {
+		setFilepath.invoke(it, filepath);
+	    }
 	}
 
 	void setPath(EntityItemStringType path)
 		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    setPath.invoke(it, path);
+	    if (setPath != null) {
+		setPath.invoke(it, path);
+	    }
 	}
 
 	void setStatus(StatusEnumeration status)
 		throws IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-	    setStatus.invoke(it, status);
+	    if (setStatus != null) {
+		setStatus.invoke(it, status);
+	    }
 	}
     }
 }
