@@ -106,16 +106,21 @@ public class Wmi57Adapter implements IAdapter {
 		    item.getResult().add(record);
 		}
 	    }
-	} catch (WmiException e) {
+	} catch (Exception e) {
 	    item.setStatus(StatusEnumeration.ERROR);
 	    item.unsetResult();
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.INFO);
 	    msg.setValue(e.getMessage());
 	    item.getMessage().add(msg);
-	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+
+	    if (e instanceof WmiException) {
+		JOVALSystem.getLogger().debug(JOVALMsg.ERROR_WINWMI_GENERAL, id);
+		JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    } else {
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id);
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
 	}
 	return item;
     }

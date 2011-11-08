@@ -31,11 +31,6 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 
-/* DAS: TBD -- adding view information to the base objects.
-import oval.schemas.systemcharacteristics.independent.EntityItemWindowsViewType;
-import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
-*/
-
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
@@ -109,13 +104,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 	for (String path : paths) {
 	    IFile f = null;
 	    try {
-		ReflectedFileItem fItem = new ReflectedFileItem();
-
 		f = fs.getFile(path);
 		if (!f.exists()) {
 		    throw new NoSuchElementException(path);
 		}
-
 		String dirPath = null;
 		boolean isDirectory = f.isDirectory();
 		if (isDirectory) {
@@ -123,7 +115,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		} else {
 		    dirPath = path.substring(0, path.lastIndexOf(fs.getDelimiter()));
 		}
-
+		ReflectedFileItem fItem = new ReflectedFileItem();
 		if (fObj.isSetFilepath()) {
 		    if (isDirectory) {
 			//
@@ -187,10 +179,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 		// skip it
 	    } catch (IllegalAccessException e) {
 		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
-	    } catch (IllegalArgumentException e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
 	    } catch (InvocationTargetException e) {
 		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
+	    } catch (IllegalArgumentException e) {
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
 	    } catch (IOException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
