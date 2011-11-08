@@ -6,7 +6,7 @@ package org.joval.oval.engine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.Enumeration;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -29,6 +29,8 @@ import oval.schemas.definitions.core.TestsType;
 import oval.schemas.definitions.core.VariableType;
 import oval.schemas.definitions.core.VariablesType;
 
+import org.joval.intf.oval.IDefinitionFilter;
+import org.joval.intf.oval.IDefinitions;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -39,13 +41,13 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-class Definitions {
+public class Definitions implements IDefinitions {
     private static List<String> schematronValidationErrors = null;
 
     /**
      * Unmarshalls an XML file and returns the root OvalDefinitions object.
      */
-    static final OvalDefinitions getOvalDefinitions(File f) throws OvalException {
+    public static final OvalDefinitions getOvalDefinitions(File f) throws OvalException {
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_DEFINITIONS));
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
@@ -61,69 +63,70 @@ class Definitions {
     }
 
     private OvalDefinitions defs;
-    private Hashtable <String, DefinitionType>definitions;
-    private Hashtable <String, TestType>tests;
-    private Hashtable <String, StateType>states;
-    private Hashtable <String, VariableType>variables;
-    private Hashtable <String, ObjectType>objects;
+    private Hashtable<String, DefinitionType> definitions;
+    private Hashtable<String, TestType> tests;
+    private Hashtable<String, StateType> states;
+    private Hashtable<String, VariableType> variables;
+    private Hashtable<String, ObjectType> objects;
 
-    Definitions(OvalDefinitions defs) {
+    /**
+     * Load OVAL definitions from a File.
+     */
+    public Definitions(File f) throws OvalException {
+	this(getOvalDefinitions(f));
+    }
+
+    public Definitions(OvalDefinitions defs) {
 	this.defs = defs;
 
 	objects = new Hashtable <String, ObjectType>();
 	if (defs.getObjects() != null) {
-	    List <JAXBElement <? extends ObjectType>> objectList = defs.getObjects().getObject();
-	    int len = objectList.size();
-	    for (int i=0; i < len; i++) {
-		ObjectType ot = objectList.get(i).getValue();
+	    List<JAXBElement <? extends ObjectType>> objectList = defs.getObjects().getObject();
+	    for (JAXBElement<? extends ObjectType> jot : objectList) {
+		ObjectType ot = jot.getValue();
 		objects.put(ot.getId(), ot);
 	    }
 	}
 
 	tests = new Hashtable <String, TestType>();
-	List <JAXBElement <? extends TestType>> testList = defs.getTests().getTest();
-	int len = testList.size();
-	for (int i=0; i < len; i++) {
-	    TestType tt = testList.get(i).getValue();
+	List<JAXBElement <? extends TestType>> testList = defs.getTests().getTest();
+	for (JAXBElement<? extends TestType> jtt : testList) {
+	    TestType tt = jtt.getValue();
 	    tests.put(tt.getId(), tt);
 	}
 
 	variables = new Hashtable <String, VariableType>();
 	if (defs.getVariables() != null) {
-	    List <JAXBElement <? extends VariableType>> varList = defs.getVariables().getVariable();
-	    len = varList.size();
-	    for (int i=0; i < len; i++) {
-		VariableType vt = varList.get(i).getValue();
+	    List<JAXBElement <? extends VariableType>> varList = defs.getVariables().getVariable();
+	    for (JAXBElement<? extends VariableType> jvt : varList) {
+		VariableType vt = jvt.getValue();
 		variables.put(vt.getId(), vt);
 	    }
 	}
 
 	states = new Hashtable <String, StateType>();
 	if (defs.getStates() != null) {
-	    List <JAXBElement <? extends StateType>> stateList = defs.getStates().getState();
-	    len = stateList.size();
-	    for (int i=0; i < len; i++) {
-		StateType st = stateList.get(i).getValue();
+	    List<JAXBElement<? extends StateType>> stateList = defs.getStates().getState();
+	    for (JAXBElement<? extends StateType> jst : stateList) {
+		StateType st = jst.getValue();
 		states.put(st.getId(), st);
 	    }
 	}
 
 	definitions = new Hashtable <String, DefinitionType>();
-	List <DefinitionType> defList = defs.getDefinitions().getDefinition();
-	len = defList.size();
-	for (int i=0; i < len; i++) {
-	    DefinitionType dt = defList.get(i);
+	List<DefinitionType> defList = defs.getDefinitions().getDefinition();
+	for (DefinitionType dt : defList) {
 	    definitions.put(dt.getId(), dt);
 	}
     }
 
-    OvalDefinitions getOvalDefinitions() {
+    // Implement IDefinitions
+
+    public OvalDefinitions getOvalDefinitions() {
 	return defs;
     }
 
-    // Internal
-
-    <T extends ObjectType> T getObject(String id, Class<T> type) throws OvalException {
+    public <T extends ObjectType> T getObject(String id, Class<T> type) throws OvalException {
 	ObjectType object = objects.get(id);
 	if (object == null) {
 	    throw new OvalException("Unresolved object reference ID=" + id);
@@ -135,11 +138,11 @@ class Definitions {
 	}
     }
 
-    Iterator<ObjectType> iterateObjects(Class type) {
+    public Iterator<ObjectType> iterateObjects(Class type) {
 	return new SpecifiedObjectIterator(type);
     }
 
-    StateType getState(String id) throws OvalException {
+    public StateType getState(String id) throws OvalException {
 	StateType state = states.get(id);
 	if (state == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_STATE, id));
@@ -147,7 +150,7 @@ class Definitions {
 	return state;
     }
 
-    TestType getTest(String id) throws OvalException {
+    public TestType getTest(String id) throws OvalException {
 	TestType test = tests.get(id);
 	if (test == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_TEST, id));
@@ -155,7 +158,7 @@ class Definitions {
 	return test;
     }
 
-    ObjectType getObject(String id) throws OvalException {
+    public ObjectType getObject(String id) throws OvalException {
 	ObjectType object = objects.get(id);
 	if (object == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
@@ -163,7 +166,7 @@ class Definitions {
 	return object;
     }
 
-    VariableType getVariable(String id) throws OvalException {
+    public VariableType getVariable(String id) throws OvalException {
 	VariableType variable = variables.get(id);
 	if (variable == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_VARIABLE, id));
@@ -172,7 +175,7 @@ class Definitions {
 	}
     }
 
-    DefinitionType getDefinition(String id) throws OvalException {
+    public DefinitionType getDefinition(String id) throws OvalException {
 	DefinitionType definition = definitions.get(id);
 	if (definition == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
@@ -183,26 +186,25 @@ class Definitions {
     /**
      * Sort all DefinitionTypes into two lists according to whether the filter allows/disallows them.
      */
-    void filterDefinitions(DefinitionFilter filter, List<DefinitionType> allowed, List<DefinitionType> disallowed) {
+    public void filterDefinitions(IDefinitionFilter filter, Collection<DefinitionType>allow, Collection<DefinitionType>nallow) {
 	for (DefinitionType dt : definitions.values()) {
 	    if (filter.accept(dt.getId())) {
-		allowed.add(dt);
+		allow.add(dt);
 	    } else {
-		disallowed.add(dt);
+		nallow.add(dt);
 	    }
 	}
     }
 
-    Iterator <ObjectType>iterateObjects() {
+    public Iterator <ObjectType>iterateObjects() {
 	return objects.values().iterator();
     }
 
-    Iterator <VariableType>iterateVariables() {
+    public Iterator <VariableType>iterateVariables() {
 	return variables.values().iterator();
     }
 
     // Private
-
 
     class SpecifiedObjectIterator implements Iterator<ObjectType> {
 	Iterator <ObjectType>iter;

@@ -12,6 +12,7 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
@@ -167,7 +168,7 @@ public class SystemCharacteristics {
      * Return a filtered OvalSystemCharacteristics, containing only objects and items pertaining to the specified variables
      * and objects.
      */
-    OvalSystemCharacteristics getOvalSystemCharacteristics(List<String> variables, List<BigInteger> itemIds) {
+    OvalSystemCharacteristics getOvalSystemCharacteristics(Collection<String> variables, Collection<BigInteger> itemIds) {
 	OvalSystemCharacteristics filteredSc = JOVALSystem.factories.sc.core.createOvalSystemCharacteristics();
 	if (osc == null) {
 	    osc = getOvalSystemCharacteristics();
@@ -384,7 +385,7 @@ public class SystemCharacteristics {
     /**
      * Serialize.
      */
-    void write(File f) {
+    public void write(File f) {
 	OutputStream out = null;
 	try {
 	    Marshaller marshaller = ctx.createMarshaller();
@@ -416,7 +417,9 @@ public class SystemCharacteristics {
     private OvalSystemCharacteristics createOvalSystemCharacteristics() {
 	OvalSystemCharacteristics sc = JOVALSystem.factories.sc.core.createOvalSystemCharacteristics();
 	sc.setGenerator(Engine.getGenerator());
-	sc.setSystemInfo(plugin.getSystemInfo());
+	if (plugin != null) {
+	    sc.setSystemInfo(plugin.getSystemInfo());
+	}
 
 	CollectedObjectsType collectedObjects = JOVALSystem.factories.sc.core.createCollectedObjectsType();
 	List <ObjectType>objects = collectedObjects.getObject();

@@ -29,6 +29,10 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 class Variables {
+    public Variables(File f) throws OvalException {
+	this(getOvalVariables(f));
+    }
+
     /**
      * Unmarshal an XML file and return the OvalVariables root object.
      */

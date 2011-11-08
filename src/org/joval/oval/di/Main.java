@@ -44,12 +44,12 @@ import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
 import oval.schemas.results.core.DefinitionType;
 
 import org.joval.intf.di.IJovaldiPlugin;
+import org.joval.intf.oval.IDefinitions;
+import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;
-import org.joval.oval.engine.DefinitionFilter;
-import org.joval.oval.engine.Engine;
 import org.joval.oval.engine.SystemCharacteristics;
 import org.joval.oval.xml.SchematronValidationException;
 import org.joval.oval.xml.SchematronValidator;
@@ -252,39 +252,38 @@ public class Main implements IObserver {
 
     public void notify(IProducer source, int msg, Object arg) {
 	switch(msg) {
-	  case Engine.MESSAGE_OBJECT_PHASE_START:
+	  case IEngine.MESSAGE_OBJECT_PHASE_START:
 	    print(getMessage("MESSAGE_OBJECT_PHASE"));
 	    break;
-	  case Engine.MESSAGE_OBJECT:
+	  case IEngine.MESSAGE_OBJECT:
 	    printStatus(getMessage("MESSAGE_OBJECT", (String)arg));
 	    break;
-	  case Engine.MESSAGE_OBJECT_PHASE_END:
+	  case IEngine.MESSAGE_OBJECT_PHASE_END:
 	    printStatus(getMessage("MESSAGE_OBJECTS_DONE"), true);
 	    break;
-	  case Engine.MESSAGE_DEFINITION_PHASE_START:
+	  case IEngine.MESSAGE_DEFINITION_PHASE_START:
 	    print(getMessage("MESSAGE_DEFINITION_PHASE"));
 	    break;
-	  case Engine.MESSAGE_DEFINITION:
+	  case IEngine.MESSAGE_DEFINITION:
 	    printStatus(getMessage("MESSAGE_DEFINITION", (String)arg));
 	    break;
-	  case Engine.MESSAGE_DEFINITION_PHASE_END:
+	  case IEngine.MESSAGE_DEFINITION_PHASE_END:
 	    printStatus(getMessage("MESSAGE_DEFINITIONS_DONE"), true);
 	    break;
-	  case Engine.MESSAGE_SYSTEMCHARACTERISTICS:
-	    print(getMessage("MESSAGE_SAVING_SYSTEMCHARACTERISTICS", (String)arg));
-	    break;
-	  case Engine.MESSAGE_SYSTEMCHARACTERISTICS_FILE: {
-	    File scFile = (File)arg;
+	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS: {
+	    SystemCharacteristics sc = (SystemCharacteristics)arg;
+	    print(getMessage("MESSAGE_SAVING_SYSTEMCHARACTERISTICS", state.dataFile.toString()));
+	    sc.write(state.dataFile);
 	    if (state.schematronSC) {
 		try {
-		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", scFile.toString()));
-		    if (!validateSchema(scFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
+		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.dataFile.toString()));
+		    if (!validateSchema(state.dataFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
 			state.plugin.disconnect();
 			System.exit(ERR);
 		    }
-		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", scFile.toString()));
-		    OvalSystemCharacteristics sc = SystemCharacteristics.getOvalSystemCharacteristics(scFile);
-		    SchematronValidator.validate(sc, state.getDefsSchematron());
+		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.dataFile.toString()));
+		    OvalSystemCharacteristics osc = SystemCharacteristics.getOvalSystemCharacteristics(state.dataFile);
+		    SchematronValidator.validate(osc, state.getDefsSchematron());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
 		} catch (OvalException e) {
 		    logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON", 0, e.getMessage()), e);
@@ -402,7 +401,7 @@ public class Main implements IObserver {
 	    }
 
 	    print(getMessage("MESSAGE_PARSING_FILE", state.defsFile.toString()));
-	    OvalDefinitions defs = Engine.getOvalDefinitions(state.defsFile);
+	    IDefinitions defs = JOVALSystem.createDefinitions(state.defsFile);
 
 	    print(getMessage("MESSAGE_VALIDATING_XML"));
 	    if (!validateSchema(state.defsFile, DEFINITIONS_SCHEMAS)) {
@@ -410,9 +409,9 @@ public class Main implements IObserver {
 	    }
 
 	    print(getMessage("MESSAGE_SCHEMA_VERSION_CHECK"));
-	    Version schemaVersion = new Version(defs.getGenerator().getSchemaVersion());
+	    Version schemaVersion = new Version(defs.getOvalDefinitions().getGenerator().getSchemaVersion());
 	    print(getMessage("MESSAGE_SCHEMA_VERSION", schemaVersion.toString()));
-	    if (schemaVersion.greaterThan(Engine.SCHEMA_VERSION)) {
+	    if (IEngine.SCHEMA_VERSION.lessThan(schemaVersion)) {
 		print(getMessage("ERROR_SCHEMA_VERSION", schemaVersion.toString()));
 		return ERR;
 	    }
@@ -420,7 +419,7 @@ public class Main implements IObserver {
 	    if (state.schematronDefs) {
 		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.defsFile.toString()));
 		try {
-		    SchematronValidator.validate(defs, state.getDefsSchematron());
+		    SchematronValidator.validate(defs.getOvalDefinitions(), state.getDefsSchematron());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
 		} catch (SchematronValidationException e) {
 		    List<String> errors = e.getErrors();
@@ -442,32 +441,32 @@ public class Main implements IObserver {
 		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
 	    }
 
-	    Engine engine = null;
+	    IEngine engine = JOVALSystem.createEngine();
+	    state.plugin.connect();
+	    engine.setPlugin(state.plugin);
+	    engine.setDefinitions(defs);
 	    if (state.inputFile == null) {
-		state.plugin.connect();
-		engine = new Engine(defs, state.plugin);
 		print(getMessage("MESSAGE_CREATING_SYSTEMCHARACTERISTICS"));
-		engine.setSystemCharacteristicsOutputFile(state.dataFile);
 	    } else {
 		print(" ** parsing " + state.inputFile.toString() + " for analysis.");
 		print(getMessage("MESSAGE_VALIDATING_XML"));
-		if (!validateSchema(state.inputFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
+		if (validateSchema(state.inputFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
+		    engine.setSystemCharacteristicsFile(state.inputFile);
+		} else {
 		    return ERR;
 		}
-		SystemCharacteristics sc = new SystemCharacteristics(state.inputFile);
-		engine = new Engine(defs, state.plugin, sc);
 	    }
 	    if (state.variablesFile.exists() && state.variablesFile.isFile()) {
 		engine.setExternalVariablesFile(state.variablesFile);
 	    }
 	    if (state.inputDefsFile != null) {
 		print(getMessage("MESSAGE_READING_INPUTDEFINITIONS", state.inputDefsFile));
-		engine.setDefinitionFilter(new DefinitionFilter(state.inputDefsFile));
+		engine.setDefinitionFilter(JOVALSystem.createDefinitionFilter(state.inputDefsFile));
 	    } else if (state.definitionIDs != null) {
 		print(getMessage("MESSAGE_PARSING_INPUTDEFINITIONS"));
-		engine.setDefinitionFilter(new DefinitionFilter(state.definitionIDs));
+		engine.setDefinitionFilter(JOVALSystem.createAcceptFilter(state.definitionIDs));
 	    }
-	    engine.addObserver(this, Engine.MESSAGE_MIN, Engine.MESSAGE_MAX);
+	    engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	    engine.run();
 	    state.plugin.disconnect();
 	    switch(engine.getResult()) {
@@ -499,7 +498,7 @@ public class Main implements IObserver {
 	    if (state.schematronResults) {
 		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.resultsXML.toString()));
 		try {
-		    SchematronValidator.validate(defs, state.getResultsSchematron());
+		    SchematronValidator.validate(defs.getOvalDefinitions(), state.getResultsSchematron());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
 		} catch (SchematronValidationException e) {
 		    List<String> errors = e.getErrors();

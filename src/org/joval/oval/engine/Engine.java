@@ -101,6 +101,9 @@ import oval.schemas.systemcharacteristics.core.SystemDataType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.variables.core.OvalVariables;
 
+import org.joval.intf.oval.IDefinitionFilter;
+import org.joval.intf.oval.IDefinitions;
+import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
@@ -128,26 +131,7 @@ import org.joval.util.Version;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Engine implements IProducer {
-    public static final BigDecimal	SCHEMA_VERSION_BD	= new BigDecimal("5.10");
-    public static final Version		SCHEMA_VERSION		= new Version(SCHEMA_VERSION_BD);
-
-    public static final int MESSAGE_MIN				= 0;
-    public static final int MESSAGE_OBJECT_PHASE_START		= 0;
-    public static final int MESSAGE_OBJECT			= 1;
-    public static final int MESSAGE_OBJECT_PHASE_END		= 2;
-    public static final int MESSAGE_SYSTEMCHARACTERISTICS	= 3;
-    public static final int MESSAGE_SYSTEMCHARACTERISTICS_FILE	= 4;
-    public static final int MESSAGE_DEFINITION_PHASE_START	= 5;
-    public static final int MESSAGE_DEFINITION			= 6;
-    public static final int MESSAGE_DEFINITION_PHASE_END	= 7;
-    public static final int MESSAGE_MAX				= 8;
-
-    public enum Result {
-	OK,
-	ERR;
-    }
-
+public class Engine implements IEngine {
     private enum State {
 	CONFIGURE,
 	RUNNING,
@@ -155,61 +139,40 @@ public class Engine implements IProducer {
 	COMPLETE_ERR;
     }
 
-    /**
-     * Unmarshal an XML file and return the OvalDefinitions root object.
-     */
-    public static final OvalDefinitions getOvalDefinitions(File f) throws OvalException {
-	return Definitions.getOvalDefinitions(f);
-    }
-
     private Hashtable <String, Collection<VariableValueType>>variableMap; // A cache of nested VariableValueTypes
-    private Definitions definitions;
     private Variables externalVariables = null;
+    private IDefinitions definitions = null;
+    private IPlugin plugin = null;
     private SystemCharacteristics sc = null;
-    private File scOutputFile = null;
-    private IPlugin plugin;
+    private IDefinitionFilter filter = null;
+    private Hashtable<Class, AdapterManager> adapters = null;
     private OvalException error;
     private Results results;
     private State state;
-    private DefinitionFilter filter;
-    private Hashtable<Class, AdapterManager> adapters;
-    Producer producer;
+    private boolean evalEnabled = true;
+    private Producer producer;
 
     /**
      * Create an engine for evaluating OVAL definitions using a plugin.
      */
-    public Engine(OvalDefinitions defs, IPlugin plugin) {
-	definitions = new Definitions(defs);
-	if (plugin == null) {
-	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_NULL_PLUGIN));
-	}
-	this.plugin = plugin;
+    public Engine() {
+	state = State.CONFIGURE;
+	filter = new DefinitionFilter();
 	adapters = new Hashtable<Class, AdapterManager>();
-	for (IAdapter adapter : plugin.getAdapters()) {
-	    adapters.put(adapter.getObjectClass(), new AdapterManager(adapter));
-	}
 	variableMap = new Hashtable<String, Collection<VariableValueType>>();
 	producer = new Producer();
-	filter = new DefinitionFilter();
-	state = State.CONFIGURE;
     }
 
-    /**
-     * Create an engine for evaluating OVAL definitions against a SystemCharacteristics (for example, one that has been
-     * loaded from a file).
-     */
-    public Engine(OvalDefinitions defs, IPlugin plugin, SystemCharacteristics sc) {
-	this(defs, plugin);
-	this.sc = sc;
+    // Implement IEngine
+
+    public void setDefinitionsFile(File f) throws IllegalThreadStateException, OvalException {
+	setDefinitions(new Definitions(f));
     }
 
-    /**
-     * Set the file from which to read external variable definitions.
-     */
-    public void setExternalVariablesFile(File f) throws IllegalThreadStateException, OvalException {
+    public void setDefinitions(IDefinitions definitions) throws IllegalThreadStateException {
 	switch(state) {
 	  case CONFIGURE:
-	    externalVariables = new Variables(Variables.getOvalVariables(f));
+	    this.definitions = definitions;
 	    break;
 
 	  default:
@@ -217,24 +180,11 @@ public class Engine implements IProducer {
 	}
     }
 
-    /**
-     * Set the file to which to save collected SystemCharacteristics data.
-     */
-    public void setSystemCharacteristicsOutputFile(File f) throws IllegalThreadStateException {
-	switch(state) {
-	  case CONFIGURE:
-	    scOutputFile = f;
-	    break;
-
-	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
-	}
+    public void setDefinitionFilterFile(File f) throws IllegalThreadStateException, OvalException {
+	setDefinitionFilter(new DefinitionFilter(f));
     }
 
-    /**
-     * Set a list of definition IDs to evaluate during the run phase.
-     */
-    public void setDefinitionFilter(DefinitionFilter filter) throws IllegalThreadStateException {
+    public void setDefinitionFilter(IDefinitionFilter filter) throws IllegalThreadStateException {
 	switch(state) {
 	  case CONFIGURE:
 	    this.filter = filter;
@@ -245,9 +195,53 @@ public class Engine implements IProducer {
 	}
     }
 
-    /**
-     * Returns Result.OK or Result.ERR, or throws an exception if the engine hasn't run, or is running.
-     */
+    public void setSystemCharacteristicsFile(File f) throws IllegalThreadStateException, OvalException {
+	switch(state) {
+	  case CONFIGURE:
+	    sc = new SystemCharacteristics(f);
+	    break;
+
+	  default:
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+	}
+    }
+
+    public void setExternalVariablesFile(File f) throws IllegalThreadStateException, OvalException {
+	switch(state) {
+	  case CONFIGURE:
+	    externalVariables = new Variables(f);
+	    break;
+
+	  default:
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+	}
+    }
+
+    public void setPlugin(IPlugin plugin) throws IllegalThreadStateException {
+	switch(state) {
+	  case CONFIGURE:
+	    if (plugin == null) {
+		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_NULL_PLUGIN));
+	    } else {
+		this.plugin = plugin;
+		if (adapters.size() > 0) {
+		    adapters = new Hashtable<Class, AdapterManager>();
+		}
+		for (IAdapter adapter : plugin.getAdapters()) {
+		    adapters.put(adapter.getObjectClass(), new AdapterManager(adapter));
+		}
+	    }
+	    break;
+
+	  default:
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+	}
+    }
+
+    public IProducer getNotificationProducer() {
+	return producer;
+    }
+
     public Result getResult() throws IllegalThreadStateException {
 	switch(state) {
 	  case COMPLETE_OK:
@@ -263,30 +257,14 @@ public class Engine implements IProducer {
 	}
     }
 
-    /**
-     * Return the scan IResults (valid if getResult returned COMPLETE_OK).  Only valid after the run() method has finished.
-     */
     public IResults getResults() throws IllegalThreadStateException {
 	getResult();
 	return results;
     }
 
-    /**
-     * Return the error (valid if getResult returned COMPLETE_ERR).  Only valid after the run() method has finished.
-     */
     public OvalException getError() throws IllegalThreadStateException {
 	getResult();
 	return error;
-    }
-
-    // Implement IProducer
-
-    public void addObserver(IObserver observer, int min, int max) {
-	producer.addObserver(observer, min, max);
-    }
-
-    public void removeObserver(IObserver observer) {
-	producer.removeObserver(observer);
     }
 
     // Implement Runnable
@@ -299,35 +277,31 @@ public class Engine implements IProducer {
 	try {
 	    if (sc == null) {
 		scan();
-		if (scOutputFile != null) {
-		    producer.sendNotify(this, MESSAGE_SYSTEMCHARACTERISTICS, scOutputFile.toString());
-		    sc.write(scOutputFile);
-		    producer.sendNotify(this, MESSAGE_SYSTEMCHARACTERISTICS_FILE, scOutputFile);
-		}
+		producer.sendNotify(MESSAGE_SYSTEMCHARACTERISTICS, sc);
 	    }
 	    results = new Results(definitions, sc);
-	    producer.sendNotify(this, MESSAGE_DEFINITION_PHASE_START, null);
+	    producer.sendNotify(MESSAGE_DEFINITION_PHASE_START, null);
 
 	    //
 	    // Use the filter to separate the definitions into allowed and disallowed lists.  First evaluate all the allowed
 	    // definitions, then go through the disallowed definitions.  This makes it possible to cache both test and
 	    // definition results without having to double-check if they were previously intentionally skipped.
 	    //
-	    List<DefinitionType>allowed = new Vector<DefinitionType>();
-	    List<DefinitionType>disallowed = new Vector<DefinitionType>();
+	    Collection<DefinitionType>allowed = new Vector<DefinitionType>();
+	    Collection<DefinitionType>disallowed = new Vector<DefinitionType>();
 	    definitions.filterDefinitions(filter, allowed, disallowed);
 
-	    filter.setEvaluationAllowed(true);
+	    evalEnabled = true;
 	    for (DefinitionType definition : allowed) {
 		evaluateDefinition(definition);
 	    }
 
-	    filter.setEvaluationAllowed(false);
+	    evalEnabled = false;
 	    for (DefinitionType definition : disallowed) {
 		evaluateDefinition(definition);
 	    }
 
-	    producer.sendNotify(this, MESSAGE_DEFINITION_PHASE_END, null);
+	    producer.sendNotify(MESSAGE_DEFINITION_PHASE_END, null);
 	    state = State.COMPLETE_OK;
 	} catch (OvalException e) {
 	    error = e;
@@ -341,7 +315,7 @@ public class Engine implements IProducer {
 	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
 	generator.setProductName(JOVALSystem.getProperty(JOVALSystem.PROP_PRODUCT));
 	generator.setProductVersion(JOVALSystem.getProperty(JOVALSystem.PROP_VERSION));
-	generator.setSchemaVersion(SCHEMA_VERSION_BD);
+	generator.setSchemaVersion(new BigDecimal(SCHEMA_VERSION.toString()));
 	try {
 	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
 	} catch (DatatypeConfigurationException e) {
@@ -397,7 +371,7 @@ public class Engine implements IProducer {
      * Scan SystemCharactericts using the plugin.
      */
     private void scan() throws OvalException {
-	producer.sendNotify(this, MESSAGE_OBJECT_PHASE_START, null);
+	producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
 	sc = new SystemCharacteristics(plugin);
 
 
@@ -448,7 +422,7 @@ public class Engine implements IProducer {
 		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
 	    }
 	}
-	producer.sendNotify(this, MESSAGE_OBJECT_PHASE_END, null);
+	producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
     }
 
     /**
@@ -487,7 +461,7 @@ public class Engine implements IProducer {
     private Collection<ItemType> scanObject(RequestContext rc) throws OvalException {
 	ObjectType obj = rc.getObject();
 	String objectId = obj.getId();
-	producer.sendNotify(this, MESSAGE_OBJECT, objectId);
+	producer.sendNotify(MESSAGE_OBJECT, objectId);
 
 	Set s = getObjectSet(obj);
 	if (s == null) {
@@ -715,7 +689,7 @@ public class Engine implements IProducer {
 	if (defId == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITION_NOID));
 	}
-	producer.sendNotify(this, MESSAGE_DEFINITION, defId);
+	producer.sendNotify(MESSAGE_DEFINITION, defId);
 	oval.schemas.results.core.DefinitionType defResult = results.getDefinition(defId);
 
 	if (defResult == null) {
@@ -742,7 +716,7 @@ public class Engine implements IProducer {
 	    testResult.setCheckExistence(testDefinition.getCheckExistence());
 	    testResult.setStateOperator(testDefinition.getStateOperator());
 
-	    if (filter.getEvaluationAllowed()) {
+	    if (evalEnabled) {
 		if (testDefinition instanceof UnknownTest) {
 		    testResult.setResult(ResultEnumeration.UNKNOWN);
 		} else {

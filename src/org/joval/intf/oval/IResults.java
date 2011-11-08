@@ -4,7 +4,7 @@
 package org.joval.intf.oval;
 
 import java.io.File;
-import java.util.List;
+import java.util.Collection;
 
 import oval.schemas.results.core.DefinitionType;
 
@@ -23,9 +23,9 @@ public interface IResults {
     void setDirectives(File f) throws OvalException;
 
     /**
-     * Returns an Iterator over all the Definitions in these results.
+     * Returns a Collection of all the Definitions in these results.
      */
-    List<DefinitionType> getDefinitions();
+    Collection<DefinitionType> getDefinitions();
 
     /**
      * Serialize the contents of this IResults to a file.

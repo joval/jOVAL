@@ -1,5 +1,8 @@
 CLASSES=\
 	org.joval.intf.di.IJovaldiPlugin				\
+	org.joval.intf.oval.IDefinitionFilter				\
+	org.joval.intf.oval.IDefinitions				\
+	org.joval.intf.oval.IEngine					\
 	org.joval.intf.oval.IResults					\
 	org.joval.intf.plugin.IAdapter					\
 	org.joval.intf.plugin.IRequestContext				\

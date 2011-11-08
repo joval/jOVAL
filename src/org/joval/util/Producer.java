@@ -22,10 +22,10 @@ public class Producer implements IProducer {
 	observers = new Hashtable<IObserver, ObserverContext>();
     }
 
-    public void sendNotify(IProducer producer, int msg, Object arg) {
+    public void sendNotify(int msg, Object arg) {
 	Iterator<ObserverContext> observerIter = observers.values().iterator();
 	while(observerIter.hasNext()) {
-	    observerIter.next().sendNotify(producer, msg, arg);
+	    observerIter.next().sendNotify(this, msg, arg);
 	}
     }
 

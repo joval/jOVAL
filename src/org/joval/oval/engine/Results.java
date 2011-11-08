@@ -11,8 +11,8 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.Hashtable;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import javax.xml.bind.JAXBContext;
@@ -55,6 +55,7 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
+import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IResults;
 import org.joval.oval.OvalException;
 import org.joval.oval.xml.OvalNamespacePrefixMapper;
@@ -73,7 +74,7 @@ import org.joval.util.JOVALSystem;
 class Results implements IResults {
     private Hashtable<String, DefinitionType> definitionTable;
     private Hashtable<String, TestType> testTable;
-    private Definitions definitions;
+    private IDefinitions definitions;
     private SystemCharacteristics sc;
     private Directives directives;
     private OvalResults or;
@@ -96,7 +97,7 @@ class Results implements IResults {
     /**
      * Create a Results based on the specified Definitions and SystemCharacteristics.
      */
-    Results(Definitions definitions, SystemCharacteristics sc) {
+    Results(IDefinitions definitions, SystemCharacteristics sc) {
 	this.definitions = definitions;
 	this.sc = sc;
 	definitionTable = new Hashtable<String, DefinitionType>();
@@ -113,10 +114,10 @@ class Results implements IResults {
     }
 
     /**
-     * Get a List of definition results, in full or thin format according to the directives.
+     * Get a Collection of definition results, in full or thin format according to the directives.
      */
-    public List<DefinitionType> getDefinitions() {
-	List<DefinitionType> definitions = new Vector<DefinitionType>();
+    public Collection<DefinitionType> getDefinitions() {
+	Collection<DefinitionType> definitions = new Vector<DefinitionType>();
 	for (DefinitionType definition : definitionTable.values()) {
 	    DirectiveType directive = directives.getDirective(definition);
 	    if (directive.isReported()) {
@@ -262,8 +263,8 @@ class Results implements IResults {
 	//
 	// Add OvalSystemCharacteristics filtered by reportable Variable and Object IDs.
 	//
-	List<String> reportableVariables = getVariableIds(reportableTests);
-	List<BigInteger> reportableItems = getItemIds(reportableTests);
+	Collection<String> reportableVariables = getVariableIds(reportableTests);
+	Collection<BigInteger> reportableItems = getItemIds(reportableTests);
 	systemType.setOvalSystemCharacteristics(sc.getOvalSystemCharacteristics(reportableVariables, reportableItems));
 
 	ResultsType resultsType = JOVALSystem.factories.results.createResultsType();
@@ -272,8 +273,8 @@ class Results implements IResults {
 	return or;
     }
 
-    private List<String> getVariableIds(Hashtable<String, TestType> tests) {
-	List<String> variableIds = new Vector<String>();
+    private Collection<String> getVariableIds(Hashtable<String, TestType> tests) {
+	Collection<String> variableIds = new Vector<String>();
 	for (TestType test : tests.values()) {
 	   for (TestedVariableType testedVariableType : test.getTestedVariable()) {
 		String variableId = testedVariableType.getVariableId();
@@ -285,8 +286,8 @@ class Results implements IResults {
 	return variableIds;
     }
 
-    private List<BigInteger> getItemIds(Hashtable<String, TestType> tests) {
-	List<BigInteger> itemIds = new Vector<BigInteger>();
+    private Collection<BigInteger> getItemIds(Hashtable<String, TestType> tests) {
+	Collection<BigInteger> itemIds = new Vector<BigInteger>();
 	for (TestType test : tests.values()) {
 	    for (TestedItemType testedItemType : test.getTestedItem()) {
 		BigInteger itemId = testedItemType.getItemId();
@@ -298,13 +299,13 @@ class Results implements IResults {
 	return itemIds;
     }
 
-    private List<String> getTestIds(DefinitionType definition) {
-	List<String> testIds = new Vector<String>();
+    private Collection<String> getTestIds(DefinitionType definition) {
+	Collection<String> testIds = new Vector<String>();
 	getTestIds(definition.getCriteria(), testIds);
 	return testIds;
     }
 
-    private void getTestIds(CriteriaType criteria, List<String> testIds) {
+    private void getTestIds(CriteriaType criteria, Collection<String> testIds) {
 	if (criteria == null) {
 	    return; // Criteria have been filtered from the definition.
 	}

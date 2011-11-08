@@ -4,7 +4,8 @@
 package org.joval.oval.engine;
 
 import java.io.File;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Collection;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -12,6 +13,7 @@ import javax.xml.bind.Unmarshaller;
 
 import oval.schemas.evaluation.id.EvaluationDefinitionIds;
 
+import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 
@@ -23,11 +25,11 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class DefinitionFilter {
+public class DefinitionFilter implements IDefinitionFilter {
     /**
      * Get a list of Definition ID strings from an Evaluation-IDs file.
      */
-    public static final List<String> getEvaluationDefinitionIds(File f) throws OvalException {
+    public static final Collection<String> getEvaluationDefinitionIds(File f) throws OvalException {
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_EVALUATION_ID));
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
@@ -43,8 +45,7 @@ public class DefinitionFilter {
 	}
     }
 
-    private List<String> definitionIDs;
-    private boolean allowEval = true;
+    private HashSet<String> definitionIDs;
 
     /**
      * Create a DefinitionFilter based on the contents of an evaluation-id schema-compliant file.
@@ -56,8 +57,15 @@ public class DefinitionFilter {
     /**
      * Create a DefinitionFilter based on a list.
      */
-    public DefinitionFilter(List<String> definitionIDs) {
-	this.definitionIDs = definitionIDs;
+    public DefinitionFilter(Collection<String> ids) {
+	if (ids instanceof HashSet) {
+	    definitionIDs = (HashSet<String>)ids;
+	} else {
+	    definitionIDs = new HashSet<String>();
+	    for (String id : ids) {
+		definitionIDs.add(id);
+	    }
+	}
     }
 
     /**
@@ -67,21 +75,13 @@ public class DefinitionFilter {
 	definitionIDs = null;
     }
 
+    // Implement IDefinitionFilter
+
     public boolean accept(String id) {
 	if (definitionIDs == null) {
 	    return true;
 	} else {
 	    return definitionIDs.contains(id);
 	}
-    }
-
-    // Internal
-
-    void setEvaluationAllowed(boolean allow) {
-	allowEval = allow;
-    }
-
-    boolean getEvaluationAllowed() {
-	return allowEval;
     }
 }

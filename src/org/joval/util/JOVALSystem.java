@@ -3,18 +3,35 @@
 
 package org.joval.util;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.logging.FileHandler;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
 
 import ch.qos.cal10n.IMessageConveyor;
 import ch.qos.cal10n.MessageConveyor;
 import ch.qos.cal10n.MessageConveyorException;
 import org.slf4j.cal10n.LocLogger;
 import org.slf4j.cal10n.LocLoggerFactory;
+
+import oval.schemas.evaluation.id.EvaluationDefinitionIds;
+
+import org.joval.intf.oval.IDefinitionFilter;
+import org.joval.intf.oval.IDefinitions;
+import org.joval.intf.oval.IEngine;
+import org.joval.oval.OvalException;
+import org.joval.oval.engine.DefinitionFilter;
+import org.joval.oval.engine.Definitions;
+import org.joval.oval.engine.Engine;
 
 /**
  * This class is used to retrieve JOVAL-wide resources, like SLF4J-based logging, cal10n-based messages and jOVAL and OVAL data
@@ -80,6 +97,33 @@ public class JOVALSystem {
 
     public static LocLogger getLogger() {
 	return logger;
+    }
+
+    /**
+     * Create an IDefinitionFilter based on the supplied File, which should conform to the evaluation-ids schema.
+     *
+     * @throws OvalException if there was an error, such as the file not conforming to the schema.
+     */
+    public static final IDefinitionFilter createDefinitionFilter(File f) throws OvalException {
+	return new DefinitionFilter(f);
+    }
+
+    /**
+     * Create an IDefinitionFilter that will accept only IDs in the supplied collection.
+     */
+    public static final IDefinitionFilter createAcceptFilter(Collection<String> ids) {
+	return new DefinitionFilter(ids);
+    }
+
+    public static final IDefinitions createDefinitions(File f) throws OvalException {
+	return new Definitions(f);
+    }
+
+    /**
+     * Create an engine for evaluating OVAL definitions using a plugin.
+     */
+    public static final IEngine createEngine() {
+	return new Engine();
     }
 
     //
