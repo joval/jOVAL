@@ -88,7 +88,7 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 	return osc;
     }
 
-    public void write(File f) {
+    public void writeXML(File f) {
 	OutputStream out = null;
 	try {
 	    Marshaller marshaller = ctx.createMarshaller();

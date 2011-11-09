@@ -7,6 +7,7 @@ import java.io.File;
 import java.util.Collection;
 
 import oval.schemas.results.core.DefinitionType;
+import oval.schemas.results.core.OvalResults;
 
 import org.joval.oval.OvalException;
 
@@ -23,9 +24,9 @@ public interface IResults {
     void setDirectives(File f) throws OvalException;
 
     /**
-     * Returns a Collection of all the Definitions in these results.
+     * Get the OVAL results, with the system definitions in full or thin format according to the directives.
      */
-    Collection<DefinitionType> getDefinitions();
+    OvalResults getOvalResults();
 
     /**
      * Serialize the contents of this IResults to a file.

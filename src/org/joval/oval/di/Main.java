@@ -273,7 +273,7 @@ public class Main implements IObserver {
 	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS: {
 	    ISystemCharacteristics sc = (ISystemCharacteristics)arg;
 	    print(getMessage("MESSAGE_SAVING_SYSTEMCHARACTERISTICS", state.dataFile.toString()));
-	    sc.write(state.dataFile);
+	    sc.writeXML(state.dataFile);
 	    if (state.schematronSC) {
 		try {
 		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.dataFile.toString()));
@@ -480,9 +480,10 @@ public class Main implements IObserver {
 	    print("");
 	    print(getMessage("MESSAGE_DEFINITION_TABLE_HEAD"));
 	    print(getMessage("MESSAGE_DEFINITION_TABLE_DIV"));
-	    for (DefinitionType definition : results.getDefinitions()) {
-		String id = definition.getDefinitionId();
-		String result = definition.getResult().toString().toLowerCase();
+
+	    for (DefinitionType d : results.getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition()) {
+		String id = d.getDefinitionId();
+		String result = d.getResult().toString().toLowerCase();
 		print(getMessage("MESSAGE_DEFINITION_TABLE_ROW", String.format("%-40s", id), result));
 	    }
 	    print(getMessage("MESSAGE_DEFINITION_TABLE_DIV"));

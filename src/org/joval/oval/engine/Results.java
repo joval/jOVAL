@@ -114,32 +114,6 @@ class Results implements IResults {
     }
 
     /**
-     * Get a Collection of definition results, in full or thin format according to the directives.
-     */
-    public Collection<DefinitionType> getDefinitions() {
-	Collection<DefinitionType> definitions = new Vector<DefinitionType>();
-	for (DefinitionType definition : definitionTable.values()) {
-	    DirectiveType directive = directives.getDirective(definition);
-	    if (directive.isReported()) {
-		switch (directive.getContent()) {
-		  case FULL:
-		    definitions.add(definition);
-		    break;
-		  case THIN: {
-		    DefinitionType thinDefinition = JOVALSystem.factories.results.createDefinitionType();
-		    thinDefinition.setDefinitionId(definition.getDefinitionId());
-		    thinDefinition.setClazz(definition.getClazz());
-		    thinDefinition.setResult(definition.getResult());
-		    definitions.add(thinDefinition);
-		    break;
-		  }
-		}
-	    }
-	}
-	return definitions;
-    }
-
-    /**
      * Serialize to an XML File.
      */
     public void writeXML(File f) {
@@ -187,6 +161,74 @@ class Results implements IResults {
 	}
     }
 
+    public OvalResults getOvalResults() {
+	if (or != null) {
+	    return or;
+	}
+	or = JOVALSystem.factories.results.createOvalResults();
+	or.setGenerator(Engine.getGenerator());
+	OvalDirectives od = directives.getOvalDirectives();
+	or.setDirectives(od.getDirectives());
+	or.getClassDirectives().addAll(od.getClassDirectives());
+	if (directives.includeSource()) {
+	    or.setOvalDefinitions(definitions.getOvalDefinitions());
+	}
+	SystemType systemType = JOVALSystem.factories.results.createSystemType();
+
+	//
+	// Add definitions (using the Directives-filtered method) and simultaneously track reportable tests.
+	//
+	Hashtable<String, TestType> reportableTests = new Hashtable<String, TestType>();
+	DefinitionsType definitionsType = JOVALSystem.factories.results.createDefinitionsType();
+	Collection<DefinitionType> definitions = new Vector<DefinitionType>();
+	for (DefinitionType definition : definitionTable.values()) {
+	    DirectiveType directive = directives.getDirective(definition);
+	    if (directive.isReported()) {
+		switch (directive.getContent()) {
+		  case FULL:
+		    definitions.add(definition);
+		    break;
+		  case THIN: {
+		    DefinitionType thinDefinition = JOVALSystem.factories.results.createDefinitionType();
+		    thinDefinition.setDefinitionId(definition.getDefinitionId());
+		    thinDefinition.setClazz(definition.getClazz());
+		    thinDefinition.setResult(definition.getResult());
+		    definitions.add(thinDefinition);
+		    break;
+		  }
+		}
+	    }
+	}
+	for (DefinitionType definition : definitions) {
+	    definitionsType.getDefinition().add(definition);
+	    for (String testId : getTestIds(definition)) {
+		if (!reportableTests.containsKey(testId)) {
+		    reportableTests.put(testId, testTable.get(testId));
+		}
+	    }
+	}
+	systemType.setDefinitions(definitionsType);
+
+	//
+	// Add only those tests for which there are fully-reportable definitions.
+	//
+	TestsType testsType = JOVALSystem.factories.results.createTestsType();
+	testsType.getTest().addAll(reportableTests.values());
+	systemType.setTests(testsType);
+
+	//
+	// Add OvalSystemCharacteristics filtered by reportable Variable and Object IDs.
+	//
+	Collection<String> reportableVariables = getVariableIds(reportableTests);
+	Collection<BigInteger> reportableItems = getItemIds(reportableTests);
+	systemType.setOvalSystemCharacteristics(sc.getOvalSystemCharacteristics(reportableVariables, reportableItems));
+
+	ResultsType resultsType = JOVALSystem.factories.results.createResultsType();
+	resultsType.getSystem().add(systemType);
+	or.setResults(resultsType);
+	return or;
+    }
+
     // Internal
 
     void storeTestResult(TestType test) {
@@ -223,55 +265,6 @@ class Results implements IResults {
     }
 
     // Private
-
-    private OvalResults getOvalResults() {
-	if (or != null) {
-	    return or;
-	}
-	or = JOVALSystem.factories.results.createOvalResults();
-	or.setGenerator(Engine.getGenerator());
-	OvalDirectives od = directives.getOvalDirectives();
-	or.setDirectives(od.getDirectives());
-	or.getClassDirectives().addAll(od.getClassDirectives());
-	if (directives.includeSource()) {
-	    or.setOvalDefinitions(definitions.getOvalDefinitions());
-	}
-	SystemType systemType = JOVALSystem.factories.results.createSystemType();
-
-	//
-	// Add definitions (using the Directives-filtered method) and simultaneously track reportable tests.
-	//
-	Hashtable<String, TestType> reportableTests = new Hashtable<String, TestType>();
-	DefinitionsType definitionsType = JOVALSystem.factories.results.createDefinitionsType();
-	for (DefinitionType definition : getDefinitions()) {
-	    definitionsType.getDefinition().add(definition);
-	    for (String testId : getTestIds(definition)) {
-		if (!reportableTests.containsKey(testId)) {
-		    reportableTests.put(testId, testTable.get(testId));
-		}
-	    }
-	}
-	systemType.setDefinitions(definitionsType);
-
-	//
-	// Add only those tests for which there are fully-reportable definitions.
-	//
-	TestsType testsType = JOVALSystem.factories.results.createTestsType();
-	testsType.getTest().addAll(reportableTests.values());
-	systemType.setTests(testsType);
-
-	//
-	// Add OvalSystemCharacteristics filtered by reportable Variable and Object IDs.
-	//
-	Collection<String> reportableVariables = getVariableIds(reportableTests);
-	Collection<BigInteger> reportableItems = getItemIds(reportableTests);
-	systemType.setOvalSystemCharacteristics(sc.getOvalSystemCharacteristics(reportableVariables, reportableItems));
-
-	ResultsType resultsType = JOVALSystem.factories.results.createResultsType();
-	resultsType.getSystem().add(systemType);
-	or.setResults(resultsType);
-	return or;
-    }
 
     private Collection<String> getVariableIds(Hashtable<String, TestType> tests) {
 	Collection<String> variableIds = new Vector<String>();

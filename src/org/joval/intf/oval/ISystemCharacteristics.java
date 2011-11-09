@@ -22,5 +22,5 @@ public interface ISystemCharacteristics {
     /**
      * Serialize the OVAL system characteristics to the specified file.
      */
-    public void write(File f);
+    public void writeXML(File f);
 }
