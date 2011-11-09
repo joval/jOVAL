@@ -47,10 +47,10 @@ import org.joval.intf.di.IJovaldiPlugin;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
+import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;
-import org.joval.oval.engine.SystemCharacteristics;
 import org.joval.oval.xml.SchematronValidationException;
 import org.joval.oval.xml.SchematronValidator;
 import org.joval.util.Checksum;
@@ -271,7 +271,7 @@ public class Main implements IObserver {
 	    printStatus(getMessage("MESSAGE_DEFINITIONS_DONE"), true);
 	    break;
 	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS: {
-	    SystemCharacteristics sc = (SystemCharacteristics)arg;
+	    ISystemCharacteristics sc = (ISystemCharacteristics)arg;
 	    print(getMessage("MESSAGE_SAVING_SYSTEMCHARACTERISTICS", state.dataFile.toString()));
 	    sc.write(state.dataFile);
 	    if (state.schematronSC) {
@@ -282,11 +282,9 @@ public class Main implements IObserver {
 			System.exit(ERR);
 		    }
 		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.dataFile.toString()));
-		    OvalSystemCharacteristics osc = SystemCharacteristics.getOvalSystemCharacteristics(state.dataFile);
+		    OvalSystemCharacteristics osc = sc.getOvalSystemCharacteristics();
 		    SchematronValidator.validate(osc, state.getDefsSchematron());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
-		} catch (OvalException e) {
-		    logger.log(Level.SEVERE, getMessage("ERROR_SCHEMATRON", 0, e.getMessage()), e);
 		} catch (SchematronValidationException e) {
 		    List<String> errors = e.getErrors();
 		    if (errors == null) {

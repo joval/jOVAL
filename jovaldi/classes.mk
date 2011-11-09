@@ -4,6 +4,7 @@ CLASSES=\
 	org.joval.intf.oval.IDefinitions				\
 	org.joval.intf.oval.IEngine					\
 	org.joval.intf.oval.IResults					\
+	org.joval.intf.oval.ISystemCharacteristics			\
 	org.joval.intf.plugin.IAdapter					\
 	org.joval.intf.plugin.IRequestContext				\
 	org.joval.intf.plugin.IPlugin					\

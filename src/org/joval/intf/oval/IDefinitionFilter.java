@@ -4,13 +4,17 @@
 package org.joval.intf.oval;
 
 /**
- * Representation of a Definition Filter, which is constructed using either a list of definition IDs or an XML file that is
- * compliant with the evaluation-id schema (that contains definition IDs).  The filter lets the engine know which tests it
- * should evaluate, and which it should skip.
+ * Interface defining an OVAL Definition Filter.  The filter lets the engine know which tests it should evaluate, and which
+ * it should skip.
+ *
+ * @see org.joval.util.JOVALUtil
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public interface IDefinitionFilter {
+    /**
+     * Returns true to indicate that the definition with the corresponding ID should be evaluated.
+     */
     public boolean accept(String id);
 }
