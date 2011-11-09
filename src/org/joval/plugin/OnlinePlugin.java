@@ -29,6 +29,7 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.embedded.IosSystemInfo;
 import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.windows.WindowsSystemInfo;
+import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.cisco.ios.LineAdapter;
 import org.joval.plugin.adapter.cisco.ios.VersionAdapter;
 import org.joval.plugin.adapter.cisco.ios.Version55Adapter;
@@ -80,9 +81,12 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 	super();
     }
 
-    // Implement IJovaldiPlugin
+    // Implement IPlugin
 
-    public void connect() {
+    /**
+     * @override
+     */
+    public void connect() throws OvalException {
 	if (session.connect()) {
 	    adapters.add(new FamilyAdapter(session));
 	    adapters.add(new VariableAdapter());
@@ -147,18 +151,29 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 	      }
 	    }
 	} else {
-	    throw new RuntimeException(getMessage("ERROR_SESSION_CONNECTION"));
+	    throw new OvalException(getMessage("ERROR_SESSION_CONNECTION"));
 	}
     }
 
+    /**
+     * @override
+     */
     public void disconnect() {
 	if (session != null) {
 	    session.disconnect();
 	}
     }
 
+    // Implement IJovaldiPlugin
+
+    /**
+     * @override
+     */
     public abstract boolean configure(Properties props);
 
+    /**
+     * @override
+     */
     public String getLastError() {
 	return err;
     }

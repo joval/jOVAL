@@ -223,13 +223,10 @@ public class Engine implements IEngine {
 	    if (plugin == null) {
 		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_NULL_PLUGIN));
 	    } else {
-		this.plugin = plugin;
 		if (adapters.size() > 0) {
 		    adapters = new Hashtable<Class, AdapterManager>();
 		}
-		for (IAdapter adapter : plugin.getAdapters()) {
-		    adapters.put(adapter.getObjectClass(), new AdapterManager(adapter));
-		}
+		this.plugin = plugin;
 	    }
 	    break;
 
@@ -275,10 +272,21 @@ public class Engine implements IEngine {
     public void run() {
 	state = State.RUNNING;
 	try {
-	    if (sc == null) {
-		scan();
+	    if (sc == null && plugin != null) {
+		try {
+		    plugin.connect();
+		    for (IAdapter adapter : plugin.getAdapters()) {
+			adapters.put(adapter.getObjectClass(), new AdapterManager(adapter));
+		    }
+		    scan();
+		} finally {
+		    if (plugin != null) {
+			plugin.disconnect();
+		    }
+		}
 		producer.sendNotify(MESSAGE_SYSTEMCHARACTERISTICS, sc);
 	    }
+
 	    results = new Results(definitions, sc);
 	    producer.sendNotify(MESSAGE_DEFINITION_PHASE_START, null);
 

@@ -18,6 +18,7 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.di.IJovaldiPlugin;
 import org.joval.intf.plugin.IAdapter;
+import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -64,13 +65,6 @@ public class OfflinePlugin implements IJovaldiPlugin {
 
     // Implement IJovaldiPlugin
 
-    public void connect() {
-	JOVALSystem.getLogger().info(JOVALMsg.STATUS_OFFLINE);
-    }
-
-    public void disconnect() {
-    }
-
     public boolean configure(Properties props) {
 	return true;
     }
@@ -87,6 +81,13 @@ public class OfflinePlugin implements IJovaldiPlugin {
     }
 
     // Implement IPlugin
+
+    public void connect() throws OvalException {
+	JOVALSystem.getLogger().info(JOVALMsg.STATUS_OFFLINE);
+    }
+
+    public void disconnect() {
+    }
 
     public List<IAdapter> getAdapters() {
 	return adapters;

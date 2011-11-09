@@ -26,9 +26,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 class Sudo implements IProcess {
-    private static final long READ_TIMEOUT = 5000L;
-    private static final int MAX_RETRIES = 3; // the number of re-tries, after the original attempt
-
     private SshSession ssh;
     private UnixSession us;
     private IProcess p;
@@ -38,6 +35,25 @@ class Sudo implements IProcess {
     private boolean debug;
     private InputStream in=null, err=null;
     private OutputStream out=null;
+
+    private static long readTimeout = 5000L;
+    private static int execRetries = 3;
+    static {
+	try {
+	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SUDO_READ_TIMEOUT);
+	    if (s != null) {
+		readTimeout = Long.parseLong(s);
+	    }
+	} catch (NumberFormatException e) {
+	}
+	try {
+	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SUDO_MAX_RETRIES);
+	    if (s != null) {
+		execRetries = Integer.parseInt(s);
+	    }
+	} catch (NumberFormatException e) {
+	}
+    }
 
     Sudo(UnixSession us, ICredential cred, String cmd, long ms, boolean debug) throws Exception {
 	this.us = us;
@@ -69,11 +85,11 @@ class Sudo implements IProcess {
 		    getInputStream();
 
 		    //
-		    // Take no more than READ_TIMEOUT seconds to read the Password prompt
+		    // Take no more than readTimeout seconds to read the Password prompt
 		    //
 		    byte[] buff = new byte[10]; //Password:_
-		    if (timeout > READ_TIMEOUT) {
-			StreamTool.readFully(in, buff, READ_TIMEOUT);
+		    if (timeout > readTimeout) {
+			StreamTool.readFully(in, buff, readTimeout);
 		    } else {
 			StreamTool.readFully(in, buff);
 		    }
@@ -106,7 +122,7 @@ class Sudo implements IProcess {
 		// While all this is going on, the underlying SshProcess may time out and close the streams.
 		//
 		} catch (EOFException e) {
-		    if (attempt > MAX_RETRIES) {
+		    if (attempt > execRetries) {
 			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_PROCESS_RETRY, innerCommand, attempt);
 			throw e;
 		    } else {

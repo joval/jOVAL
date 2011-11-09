@@ -45,6 +45,9 @@ public class RemotePlugin extends OnlinePlugin {
 
     // Implement IJovaldiPlugin
 
+    /**
+     * @override
+     */
     public void setDataDirectory(File dir) {
 	try {
 	    sessionFactory = new SessionFactory(dir);
@@ -54,7 +57,7 @@ public class RemotePlugin extends OnlinePlugin {
     }
 
     /**
-     * Create a plugin for data retrieval and test evaluation.
+     * @override
      */
     public boolean configure(Properties props) {
 	if (props == null) {

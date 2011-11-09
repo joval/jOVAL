@@ -440,7 +440,6 @@ public class Main implements IObserver {
 	    }
 
 	    IEngine engine = JOVALSystem.createEngine();
-	    state.plugin.connect();
 	    engine.setPlugin(state.plugin);
 	    engine.setDefinitions(defs);
 	    if (state.inputFile == null) {

@@ -25,6 +25,9 @@ public class DefaultPlugin extends OnlinePlugin {
 
     // Implement IJovaldiPlugin
 
+    /**
+     * @override
+     */
     public boolean configure(Properties props) {
 	session = Local.getSession();
 	return true;

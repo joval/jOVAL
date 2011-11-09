@@ -7,6 +7,8 @@ import java.util.List;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import org.joval.oval.OvalException;
+
 /**
  * The interface for defining a plugin for the Oval Engine.  The plugin is a container for IAdapters, produces the
  * SystemInfoType information, and also returns the family type of the host.
@@ -25,4 +27,16 @@ public interface IPlugin {
     public List<IAdapter> getAdapters();
 
     public SystemInfoType getSystemInfo();
+
+    /**
+     * Connect to any underlying resources required by the plugin (or its adapters).
+     *
+     * @throws OvalException if the plugin failed to establish the connection.
+     */
+    public void connect() throws OvalException;
+
+    /**
+     * Release any underlying resources.
+     */
+    public void disconnect();
 }

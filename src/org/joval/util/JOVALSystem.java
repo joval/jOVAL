@@ -37,6 +37,9 @@ import org.joval.oval.engine.Engine;
  * This class is used to retrieve JOVAL-wide resources, like SLF4J-based logging, cal10n-based messages and jOVAL and OVAL data
  * model properties and object factories.
  *
+ * It is also the primary entry-point into the jOVAL SDK, and can be used to create and configure an Engine, and set properties
+ * that affect the behavior of the product.
+ *
  * @author David A. Solin
  * @version %I% %G%
  */
@@ -51,6 +54,26 @@ public class JOVALSystem {
     public static final String PROP_PRODUCT	= "productName";
     public static final String PROP_VERSION	= "version";
     public static final String PROP_BUILD_DATE	= "build.date";
+
+    /**
+     * Property indicating the number of milliseconds to wait before failing to establish an SSH connection.
+     */
+    public static final String PROP_SSH_CONNECTION_TIMEOUT = "ssh.conn.timeout";
+
+    /**
+     * Property indicating the number of times to re-try establishing an SSH connection in the event of a failure.
+     */
+    public static final String PROP_SSH_CONNECTION_RETRIES = "ssh.conn.retries";
+
+    /**
+     * Property indicating the number of milliseconds to wait for a read before quiting.
+     */
+    public static final String PROP_SUDO_READ_TIMEOUT = "sudo.read.timeout";
+
+    /**
+     * Property indicating the number of times to re-try running a command in the event of an unexpected disconnect.
+     */
+    public static final String PROP_SUDO_MAX_RETRIES = "sudo.exec.retries";
 
     public static final Factories factories = new Factories();
 

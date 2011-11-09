@@ -38,6 +38,25 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
     protected Session session;
     private boolean connected = false;
 
+    private static int connTimeout = 3000;
+    private static int connRetries = 3;
+    static {
+	try {
+	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_CONNECTION_TIMEOUT);
+	    if (s != null) {
+		connTimeout = Integer.parseInt(s);
+	    }
+	} catch (NumberFormatException e) {
+	}
+	try {
+	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_CONNECTION_RETRIES);
+	    if (s != null) {
+		connRetries = Integer.parseInt(s);
+	    }
+	} catch (NumberFormatException e) {
+	}
+    }
+
     public SshSession(String hostname) {
 	this.hostname = hostname;
     }
@@ -78,10 +97,10 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 	    if (connected) {
 		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_DROPPED_CONN, hostname);
 	    }
-	    for (int i=1; i < 4; i++) {
+	    for (int i=1; i <= connRetries; i++) {
 		try {
 		    session.setSocketFactory(SocketFactory.DEFAULT_SOCKET_FACTORY);
-		    session.connect(3000);
+		    session.connect(connTimeout);
 		    JOVALSystem.getLogger().info(JOVALMsg.STATUS_SSH_CONNECT, hostname);
 		    connected = true;
 		    return true;

@@ -32,16 +32,6 @@ public interface IJovaldiPlugin extends IPlugin {
     public boolean configure(Properties props);
 
     /**
-     * Connect to any underlying resources required by the plugin (or its adapters).
-     */
-    public void connect();
-
-    /**
-     * Release any underlying resources.
-     */
-    public void disconnect();
-
-    /**
      * Get the last error.  Generally, this will be a description of the reason that the confiure method might have
      * returned the value "false".
      */
