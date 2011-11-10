@@ -44,15 +44,49 @@ import org.joval.oval.engine.Engine;
  * @version %I% %G%
  */
 public class JOVALSystem {
+    /**
+     * Property indicating the package names for classes in the OVAL definitions schema.
+     */
     public static final String OVAL_PROP_DEFINITIONS		= "definitions.packages";
+
+    /**
+     * Property indicating the package names for classes in the OVAL results schema.
+     */
     public static final String OVAL_PROP_RESULTS		= "results.packages";
+
+    /**
+     * Property indicating the package names for classes in the OVAL system characteristics schema.
+     */
     public static final String OVAL_PROP_SYSTEMCHARACTERISTICS	= "systemcharacteristics.packages";
+
+    /**
+     * Property indicating the package names for classes in the OVAL variables schema.
+     */
     public static final String OVAL_PROP_VARIABLES		= "variables.packages";
+
+    /**
+     * Property indicating the package names for classes in the OVAL evaluation-id schema.
+     */
     public static final String OVAL_PROP_EVALUATION_ID		= "evaluation-id.packages";
+
+    /**
+     * Property indicating the package names for classes in the OVAL directives schema.
+     */
     public static final String OVAL_PROP_DIRECTIVES		= "directives.packages";
 
+    /**
+     * Property indicating the product name.
+     */
     public static final String PROP_PRODUCT	= "productName";
+
+    /**
+     * Property indicating the product version.
+     */
     public static final String PROP_VERSION	= "version";
+
+    /**
+     * Property indicating the product build date.
+     */
     public static final String PROP_BUILD_DATE	= "build.date";
 
     /**
@@ -75,6 +109,9 @@ public class JOVALSystem {
      */
     public static final String PROP_SUDO_MAX_RETRIES = "sudo.exec.retries";
 
+    /**
+     * A data structure providing easy access to the OVAL schema object factories.
+     */
     public static final Factories factories = new Factories();
 
     private static IMessageConveyor mc;
@@ -106,20 +143,36 @@ public class JOVALSystem {
 	}
     }
 
+    /**
+     * Retrieve a localized String, given the key and substitution arguments.
+     */
     public static String getMessage(JOVALMsg key, Object... args) {
 	return mc.getMessage(key, args);
     }
 
+    /**
+     * Retrieve the localized logger used by the jOVAL library.
+     */
+    public static LocLogger getLogger() {
+	return logger;
+    }
+
+    /**
+     * Retrieve a jOVAL property.
+     *
+     * @param key specify one of the PROP_* keys
+     */
     public static String getProperty(String name) {
 	return props.getProperty(name);
     }
 
+    /**
+     * Retrieve an OVAL property.
+     *
+     * @param key specify one of the OVAL_PROP_* keys
+     */
     public static String getOvalProperty(String name) {
 	return ovalProps.getProperty(name);
-    }
-
-    public static LocLogger getLogger() {
-	return logger;
     }
 
     /**
@@ -153,6 +206,9 @@ public class JOVALSystem {
     // Simplify access to all the OVAL Object Factories
     //
 
+    /**
+     * A data structure containing fields and structures for accessing all the OVAL object factories.
+     */
     public static class Factories {
 	public oval.schemas.common.ObjectFactory common;
 	public oval.schemas.directives.core.ObjectFactory directives;
@@ -173,6 +229,9 @@ public class JOVALSystem {
 	}
     }
 
+    /**
+     * A data structure containing fields for all the OVAL definition object factories.
+     */
     public static class DefinitionFactories {
 	public oval.schemas.definitions.aix.ObjectFactory aix;
 	public oval.schemas.definitions.apache.ObjectFactory apache;
@@ -211,6 +270,9 @@ public class JOVALSystem {
 	}
     }
 
+    /**
+     * A data structure containing fields for all the OVAL system characteristics object factories.
+     */
     public static class SystemCharacteristicsFactories {
 	public oval.schemas.systemcharacteristics.aix.ObjectFactory aix;
 	public oval.schemas.systemcharacteristics.apache.ObjectFactory apache;

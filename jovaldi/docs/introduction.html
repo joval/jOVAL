@@ -1,10 +1,126 @@
 <html>
   <head>
-    <title>jOVAL</title>
+    <title>jOVAL&trade;</title>
   </head>
   <body>
-    <h1>The jOVAL Definition Interpreter</h1>
-    <p>jOVAL is an implementation of <a href="http://oval.mitre.org">OVAL</a> in the Java programming language.  jovaldi is an OVAL definition interpreter that is implemented within the jOVAL library, that is intended to function as a drop-in replacement for MITRE's public-domain reference implementation, <a href="http://oval.mitre.org/language/interpreter.html">ovaldi</a>.</p>
-    <p>The primary advantage of jovaldi over ovaldi is that jovaldi features a remote-scanning plug-in, and therefore, it need not be installed on the hosts that it scans.  For more information, please see the <a href="http://www.joval.org">jOVAL home page</a></p>
+    <h1>The jOVAL&trade; Software Development Kit</h1>
+    <p>jOVAL is an implementation of <a href="http://oval.mitre.org">OVAL</a> written in the Java programming language.  It is freely available for use under the <a href="http://www.joval.org/agpl_v3.txt">Affero GPL</a> license, and dual licensing is available for ISVs who require a commercial license.  Source code for jOVAL and all of its dependencies is hosted at Github, at <a href="https://www.github.com/joval">https://www.github.com/joval</a>.</p>
+
+    <h2>jovaldi</h2>
+    <p>jovaldi is an OVAL definition interpreter that is implemented as part of the jOVAL library. It is intended to function as a drop-in replacement for MITRE's public-domain reference implementation, <a href="http://oval.mitre.org/language/interpreter.html">ovaldi</a>.  The primary advantage of jovaldi over ovaldi is that jovaldi features a remote-scanning plug-in, and therefore, it need not be installed on the hosts that it scans.  For more information, please see the <a href="http://www.joval.org">jOVAL home page</a></p>
+
+    <h2>Using jOVAL</h2>
+    <p>The jOVAL library makes it easy to embed OVAL scanning capabilities inside a Java application, but since jovaldi seeks to fully duplicate the functions of ovaldi, it is not necessarily illustrative of how to use the classes in the jOVAL library to implement OVAL scanning.  The following code sample is much simpler.  The basic steps are:</p>
+    <ol>
+      <li>Instantiate an engine using the JOVALSystem class.</li>
+      <li>Configure the engine by adding definitions and a plug-in.  Several plug-ins are already implemented in the <code>org.joval.plugin</code> package.</li>
+      <li>If you want to know what's happening inside the engine while it's running, add a notification observer.</li>
+      <li>Run the engine, and get the results.</li>
+    </ol>
+    <table border=1 cellpadding=15>
+      <tr>
+        <td bgcolor="#EEEEEE">
+          <pre>
+// Copyright (C) 2011 jOVAL.org.  All rights reserved.
+// This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+
+import java.io.*;
+import java.util.Properties;
+
+import org.joval.intf.oval.IEngine;
+import org.joval.intf.oval.ISystemCharacteristics;
+import org.joval.intf.oval.IResults;
+import org.joval.intf.util.IObserver;
+import org.joval.oval.OvalException;
+import org.joval.plugin.RemotePlugin;
+import org.joval.util.JOVALSystem;
+
+/**
+ * A trivial implementation of an OVAL scanner using the jOVAL library.
+ *
+ * @author David A. Solin
+ */
+public class TrivialScanner {
+    /**
+     * The TrivialScanner accepts two command-line arguments.  The first is the path to an XML file containing OVAL
+     * definitions, and the second is the path to a properties file containing configuration information for the
+     * RemotePlugin class.
+     */
+    public static void main(String[] argv) {
+        try {
+            Properties props = new Properties();
+            props.load(new FileInputStream(new File(argv[1])));
+            RemotePlugin plugin = new RemotePlugin();
+            if (plugin.configure(props)) {
+                IEngine engine = JOVALSystem.createEngine();
+                engine.setDefinitionsFile(new File(argv[0]));
+                engine.setPlugin(plugin);
+                engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
+                engine.run();
+                switch(engine.getResult()) {
+                  case OK:
+                    IResults results = engine.getResults();
+                    results.writeXML(new File("results.xml"));
+                    break;
+                  case ERR:
+                    throw engine.getError();
+                    break;
+                }
+	        System.exit(0);
+            } else {
+                System.out.println("Bad plugin configuration: " + plugin.getLastError());
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (OvalException e) {
+            e.printStackTrace();
+        }
+
+	System.exit(1);
+    }
+
+    /**
+     * An inner class that prints out information about Engine notifications.
+     */
+    class Observer implements IObserver {
+        public Observer() {}
+    
+        public void notify(IProducer source, int msg, Object arg) {
+            switch(msg) {
+              case IEngine.MESSAGE_OBJECT_PHASE_START:
+                System.out.println("Scanning...");
+                break;
+              case IEngine.MESSAGE_OBJECT:
+                System.out.println("  Scanning object ID=" + (String)arg);
+                break;
+              case IEngine.MESSAGE_OBJECT_PHASE_END:
+                System.out.println("Done scanning");
+                break;
+              case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
+                System.out.println("Saving system-characteristics.xml");
+                ISystemCharacteristics sc = (ISystemCharacteristics)arg;
+                sc.writeXML(new File("system-characteristics.xml"));
+                break;
+              case IEngine.MESSAGE_DEFINITION_PHASE_START:
+                System.out.println("Evaluating definitions...");
+                break;
+              case IEngine.MESSAGE_DEFINITION:
+                System.out.println("  Evaluating definition ID=" + (String)arg);
+                break;
+              case IEngine.MESSAGE_DEFINITION_PHASE_END:
+                System.out.println("Done evaluating definitions");
+                break;
+              default:
+                System.out.println("Unexpected message: " + msg);
+                break;
+            }
+        }
+    }
+}
+          </pre>
+        </td>
+      </tr>
+    </table>
+    <p>All original material Copyright &copy; 2011, jOVAL.org.  All rights reserved.
   </body>
 </html>

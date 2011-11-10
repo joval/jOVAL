@@ -14,7 +14,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Version {
+public class Version implements Comparable<Version> {
     /**
      * Test whether str is of the form A.B.C.D
      */
@@ -115,6 +115,18 @@ public class Version {
 	    sb.append(Integer.toString(parts[i]));
 	}
 	return sb.toString();
+    }
+
+    // Implement Comparable
+
+    public int compareTo(Version other) {
+	if (equals(other)) {
+	    return 0;
+	} else if (lessThan(other)) {
+	    return -1;
+	} else {
+	    return 1;
+	}
     }
 
     // Private
