@@ -23,7 +23,7 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
- * A plugin with no adapters, exclusively for use with an existing SystemCharacteristics file.
+ * An implementation of an IPlugin with no adapters, exclusively for use with an existing SystemCharacteristics file.
  *
  * @author David A. Solin
  * @version %I% %G%

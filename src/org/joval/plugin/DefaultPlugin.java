@@ -10,7 +10,7 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
 
 /**
- * Implementation of an IJovaldiPlugin for the Windows operating system.
+ * Implementation of an IJovaldiPlugin for scanning the local host.
  *
  * @author David A. Solin
  * @version %I% %G%

@@ -54,6 +54,7 @@ public class IosSession extends BaseSession implements ILocked, ISession {
      * IOS seems to require a session reconnect after every command session disconnect.
      */
     public IProcess createProcess(String command) throws Exception {
+	disconnect();
 	return ssh.createProcess(command);
     }
 

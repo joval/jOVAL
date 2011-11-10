@@ -10,12 +10,8 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import org.joval.oval.OvalException;
 
 /**
- * The interface for defining a plugin for the Oval Engine.  The plugin is a container for IAdapters, produces the
- * SystemInfoType information, and also returns the family type of the host.
- *
- * In order to do its job, the IPlugin should first determine the host type, and then register adapters based on its
- * assessment.  For example, it makes little sense to register Windows adapters for a Linux host.  Similarly, the plugin
- * must know the type of host in order to properly respond to the getFamily call.
+ * The interface for defining a plugin for an IEngine.  The plugin is a container for IAdapters and it also produces the
+ * SystemInfoType information.
  *
  * @author David A. Solin
  * @version %I% %G%

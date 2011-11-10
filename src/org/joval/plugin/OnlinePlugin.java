@@ -65,7 +65,7 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
- * Abstract base class for jovaldi plug-ins.
+ * The abstract base class for all functional jovaldi plug-ins.
  *
  * @author David A. Solin
  * @version %I% %G%

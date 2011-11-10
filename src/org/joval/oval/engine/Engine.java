@@ -1033,7 +1033,7 @@ public class Engine implements IEngine {
     }
 
     /**
-     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#OperationEnumeration
+     * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-common-schema.html#OperationEnumeration
      */
     ResultEnumeration testImpl(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
 	switch (state.getOperation()) {
@@ -1989,7 +1989,7 @@ public class Engine implements IEngine {
     }
 
     /**
-     * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-definitions-schema.html#DateTimeFormatEnumeration
+     * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#DateTimeFormatEnumeration
      */
     long getTime(String s, DateTimeFormatEnumeration format) throws OvalException {
 	try {
