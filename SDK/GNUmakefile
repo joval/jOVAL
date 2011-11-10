@@ -25,3 +25,10 @@ install: all
 	cp engine/jOVAL*.jar sample/rsrc/lib
 	cp plugin/rsrc/lib/*.jar sample/rsrc/lib
 	cp plugin/jOVAL*.jar sample/rsrc/lib
+
+dist: install javadocs
+	mkdir -p $(DIST)
+	cp $(SCHEMALIB) $(DIST)
+	cp engine/jOVAL*.jar $(DIST)
+	cp plugin/jOVAL*.jar $(DIST)
+	cp -r docs $(DIST)

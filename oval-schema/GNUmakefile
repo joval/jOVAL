@@ -25,7 +25,7 @@ $(PRODUCTNAME).jar: sources classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 javadocs: sources
-	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -classpath $(CLASSPATH) $(PACKAGES)
+	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -sourcepath $(GENSRC) -subpackages oval:org
 
 clean:
 	rm -rf $(BUILD)
