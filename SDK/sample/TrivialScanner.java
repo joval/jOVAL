@@ -4,6 +4,7 @@
 import java.io.*;
 import java.util.Properties;
 
+import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IResults;
@@ -28,27 +29,26 @@ public class TrivialScanner {
 	try {
 	    Properties props = new Properties();
 	    props.load(new FileInputStream(new File(argv[1])));
+	    JOVALSystem.setCredentialStore(new SimpleCredentialStore(props));
+	    JOVALSystem.getSessionFactory().setDataDirectory(new File("."));
+
 	    RemotePlugin plugin = new RemotePlugin();
-	    plugin.setDataDirectory(new File("."));
-	    if (plugin.configure(props)) {
-		IEngine engine = JOVALSystem.createEngine();
-		engine.setDefinitionsFile(new File(argv[0]));
-		engine.setPlugin(plugin);
-		engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
-		engine.run();
-		switch(engine.getResult()) {
-		  case OK:
-		    System.out.println("Writing resutls.xml");
-		    IResults results = engine.getResults();
-		    results.writeXML(new File("results.xml"));
-		    break;
-		  case ERR:
-		    throw engine.getError();
-		}
-		System.exit(0);
-	    } else {
-		System.out.println("Bad plugin configuration: " + plugin.getLastError());
+	    plugin.setTarget(props.getProperty("hostname"));
+
+	    IEngine engine = JOVALSystem.createEngine(plugin);
+	    engine.setDefinitionsFile(new File(argv[0]));
+	    engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
+	    engine.run();
+	    switch(engine.getResult()) {
+	      case OK:
+		System.out.println("Writing resutls.xml");
+		IResults results = engine.getResults();
+		results.writeXML(new File("results.xml"));
+		break;
+	      case ERR:
+		throw engine.getError();
 	    }
+	    System.exit(0);
 	} catch (IOException e) {
 	    e.printStackTrace();
 	} catch (OvalException e) {

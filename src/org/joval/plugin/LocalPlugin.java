@@ -3,33 +3,27 @@
 
 package org.joval.plugin;
 
+import java.net.UnknownHostException;
 import java.util.Properties;
 
+import org.joval.intf.discovery.ISessionFactory;
 import org.joval.discovery.Local;
 import org.joval.intf.system.ISession;
-import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.oval.OvalException;
+import org.joval.util.JOVALSystem;
 
 /**
- * Implementation of an IJovaldiPlugin for scanning the local host.
+ * Implementation of an IPlugin for scanning the local host.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class DefaultPlugin extends OnlinePlugin {
+public class LocalPlugin extends BasePlugin {
     /**
      * Create a default plugin.
      */
-    public DefaultPlugin() {
+    public LocalPlugin() {
 	super();
-    }
-
-    // Implement IJovaldiPlugin
-
-    /**
-     * @override
-     */
-    public boolean configure(Properties props) {
-	session = Local.getSession();
-	return true;
+	setTarget(ISessionFactory.LOCALHOST);
     }
 }

@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
+import org.joval.intf.discovery.ISessionFactory;
 import org.joval.intf.system.IBaseSession;
 import org.joval.os.windows.remote.system.WindowsSession;
 import org.joval.util.JOVALMsg;
@@ -24,14 +25,24 @@ import org.joval.ssh.system.SshSession;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SessionFactory {
+public class SessionFactory implements ISessionFactory {
     private static final String HOSTS	= "hosts.xml";
 
     private Properties props;
-    private File propsFile;
+    private File propsFile = null;
+
+    public SessionFactory() {
+	props = new Properties();
+    }
 
     public SessionFactory(File cacheDir) throws IOException {
-	props = new Properties();
+	this();
+	setDataDirectory(cacheDir);
+    }
+
+    // Implement ISessionFactory
+
+    public void setDataDirectory(File cacheDir) throws IOException {
 	propsFile = new File(cacheDir, HOSTS);
 	if (propsFile.exists()) {
 	    props.loadFromXML(new FileInputStream(propsFile));
@@ -55,7 +66,7 @@ public class SessionFactory {
 	    return new WindowsSession(hostname);
 
 	  default:
-	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSIONTYPE, type));
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, type));
 	}
     }
 
@@ -75,10 +86,12 @@ public class SessionFactory {
 	    type = IBaseSession.Type.UNKNOWN;
 	}
 	props.setProperty(hostname, type.toString());
-	try {
-	    props.storeToXML(new FileOutputStream(propsFile), "Session Discovery Database");
-	} catch (IOException e) {
-	    e.printStackTrace();
+	if (propsFile != null) {
+	    try {
+		props.storeToXML(new FileOutputStream(propsFile), "Session Discovery Database");
+	    } catch (IOException e) {
+		e.printStackTrace();
+	    }
 	}
 	return type;
     }

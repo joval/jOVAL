@@ -155,7 +155,8 @@ public class Engine implements IEngine {
     /**
      * Create an engine for evaluating OVAL definitions using a plugin.
      */
-    public Engine() {
+    public Engine(IPlugin plugin) {
+	this.plugin = plugin;
 	state = State.CONFIGURE;
 	filter = new DefinitionFilter();
 	adapters = new Hashtable<Class, AdapterManager>();
@@ -217,24 +218,6 @@ public class Engine implements IEngine {
 	}
     }
 
-    public void setPlugin(IPlugin plugin) throws IllegalThreadStateException {
-	switch(state) {
-	  case CONFIGURE:
-	    if (plugin == null) {
-		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_NULL_PLUGIN));
-	    } else {
-		if (adapters.size() > 0) {
-		    adapters = new Hashtable<Class, AdapterManager>();
-		}
-		this.plugin = plugin;
-	    }
-	    break;
-
-	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
-	}
-    }
-
     public IProducer getNotificationProducer() {
 	return producer;
     }
@@ -272,7 +255,10 @@ public class Engine implements IEngine {
     public void run() {
 	state = State.RUNNING;
 	try {
-	    if (sc == null && plugin != null) {
+	    if (sc == null) {
+		if (plugin == null) {
+		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_NULL_PLUGIN));
+		}
 		try {
 		    plugin.connect();
 		    for (IAdapter adapter : plugin.getAdapters()) {

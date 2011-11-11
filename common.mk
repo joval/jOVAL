@@ -22,7 +22,7 @@ SPACE:=$(NULL) # end of the line
 SHELL=/bin/sh
 CWD=$(shell pwd)
 
-JOVAL_VERSION=A.5.10.2
+JOVAL_VERSION=5.10.0.0_Dev
 OVAL_SCHEMA_VERSION=5.10
 
 # If your system is 32-bit, set ARCH to x86

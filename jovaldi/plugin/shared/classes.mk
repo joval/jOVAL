@@ -1,4 +1,5 @@
 SHARED=\
+	org.joval.identity.SimpleCredentialStore.java			\
 	org.joval.intf.io.IFile						\
 	org.joval.intf.io.IFilesystem					\
 	org.joval.intf.io.IRandomAccess					\
@@ -82,7 +83,7 @@ SHARED=\
 	org.joval.os.windows.registry.WOW3264RegistryRedirector		\
 	org.joval.os.windows.system.Environment				\
 	org.joval.os.windows.wmi.WmiException				\
-	org.joval.plugin.OnlinePlugin					\
+	org.joval.plugin.BasePlugin					\
 	org.joval.plugin.adapter.cisco.ios.LineAdapter			\
 	org.joval.plugin.adapter.cisco.ios.Version55Adapter		\
 	org.joval.plugin.adapter.cisco.ios.VersionAdapter		\

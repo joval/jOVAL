@@ -6,7 +6,6 @@ REMOTE=\
 	org.joval.intf.identity.ILocked					\
 	org.joval.io.StreamLogger					\
 	org.joval.io.TailDashF						\
-	org.joval.plugin.RemotePlugin					\
 	org.joval.os.embedded.system.IosSession				\
 	org.joval.os.unix.remote.system.Sudo				\
 	org.joval.os.unix.remote.system.UnixSession			\
@@ -29,6 +28,8 @@ REMOTE=\
 	org.joval.os.windows.remote.wmi.query.SimpleSWbemObjectSet	\
 	org.joval.os.windows.remote.wmi.query.SimpleSWbemProperty	\
 	org.joval.os.windows.remote.wmi.query.SimpleSWbemPropertySet	\
+	org.joval.oval.di.RemoteContainer				\
+	org.joval.plugin.RemotePlugin					\
 	org.joval.ssh.identity.SshCredential				\
 	org.joval.ssh.io.SftpError					\
 	org.joval.ssh.io.SftpFile					\

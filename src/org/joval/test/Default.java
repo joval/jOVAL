@@ -12,6 +12,7 @@ import java.util.Properties;
 import java.util.logging.*;
 
 import org.joval.discovery.Local;
+import org.joval.intf.discovery.ISessionFactory;
 import org.joval.intf.system.ISession;
 import org.joval.util.JOVALSystem;
 
@@ -35,7 +36,7 @@ public class Default {
 		Logger.getLogger(JOVALSystem.class.getName()).addHandler(consoleHandler);
 	    }
 
-	    ISession session = Local.getSession();
+	    ISession session = (ISession)new Local().createSession(ISessionFactory.LOCALHOST);
 	    if (session.connect()) {
 		if ("true".equals(props.getProperty("test.ad"))) {
 		    new AD(session).test(props.getProperty("ad.user"));

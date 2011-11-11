@@ -14,11 +14,19 @@
     <table cellpadding=10 cellspacing=10 width=1000>
       <tr>
         <td valign="top"><code>org.joval.util</code></td>
-        <td>The primary class of interest in this package is the JOVALSystem, which can be considered the "main" class of the SDK.  The JOVALSystem is used to instantiate an engine, and to configure behaviors of the engine and certain plugin components.</td>
+        <td>The primary class of interest in this package is the <code>JOVALSystem</code>, which can be considered the "main" class of the SDK.  The <code>JOVALSystem</code> is used to instantiate an engine, and to configure behaviors of the engine and certain plugin components.</td>
       </tr>
       <tr>
         <td valign="top"><code>org.joval.plugin</code></td>
-        <td>The primary class of interest in this package is the RemotePlugin, which can be used to scan Windows, Mac OSX, Solaris, Linux and Cisco IOS devices over the network.</td>
+        <td>The primary class of interest in this package is the <code>RemotePlugin</code>, which can be used to scan Windows, Mac OSX, Solaris, Linux and Cisco IOS devices over the network.</td>
+      </tr>
+      <tr>
+        <td valign="top"><code>org.joval.intf.discovery</code></td>
+        <td>Interfaces in this package pertain to the creation of connections to machines.</td>
+      </tr>
+      <tr>
+        <td valign="top"><code>org.joval.intf.identity</code></td>
+        <td>Interfaces in this package pertain to the management of machine access credentials.</td>
       </tr>
       <tr>
         <td valign="top"><code>org.joval.intf.oval</code></td>
@@ -28,14 +36,21 @@
         <td valign="top"><code>org.joval.intf.plugin</code></td>
         <td>Interfaces pertaining to jOVAL plugins and adapters.  The plugin is associated with a target machine, and provides adapters that understand how to probe the machine for items matching an object specification, identified in a request context.</td>
       </tr>
+      <tr>
+        <td valign="top"><code>org.joval.intf.system</code></td>
+        <td>Interfaces in this package pertain to the execution of activities on machines.</td>
+      </tr>
     </table>
     <p>The full public API javadoc documentation can be found <a href="api/index.html">here</a>.</p>
 
     <h2>Using jOVAL</h2>
     <p>The jOVAL library makes it easy to embed OVAL scanning capabilities inside a Java application, but since jovaldi seeks to fully duplicate the functions of ovaldi, it is not necessarily illustrative of how to use the classes.  Therefore, the following TrivialScanner code sample has been developed as a guide.  The basic steps are:</p>
     <ol>
-      <li>Instantiate an engine using the <code>JOVALSystem</code> class.</li>
-      <li>Configure the engine by adding definitions and a plug-in.  Several plug-ins are already implemented in the <code>org.joval.plugin</code> package, the most useful being the <code>RemotePlugin</code>.</li>
+      <li>Create an implementation of the <code>ICredentialStore</code> interface, and set it as the credential store for the <code>JOVALSystem</code>.  The sample app (and jovaldi) only scan a single machine, so they use the <code>SimpleCredentialStore</code> which contains credentials for only that one machine.  If your application will be scanning many devices, you'll need to implement a store that is able to provide credentials for all of them.</li>
+      <li>(Optional) By default, <code>jOVALSystem</code> will provide a <code>SessionFactory</code> to plugins via the <code>getSessionFactory()</code> call.  The default factory can cache basic information about hosts (i.e., if they are Windows or SSH-enabled machines), so to prevent re-discovery and to get faster repeat-performance, it's a good idea to provide the factory with a data directory inside of which it can safely persist its cache file.</li>
+      <li>Construct an instance of the <code>RemotePlugin</code> class, and set the target hostname or address using the <code>setTarget</code> method.</li>
+      <li>Instantiate an engine using the <code>createEngine</code> method of the <code>JOVALSystem</code> class.</li>
+      <li>Configure the engine by adding definitions (at minimum), and optionally add directives, a definition filter, etc.</li>
       <li>If you want to know what's happening inside the engine while it's running, register an <code>IObserver</code> to get notifications.</li>
       <li>Run the engine and get the <code>IResults</code>, which can be explored by accessing the data model via the <code>getOvalResults()</code> method.</li>
     </ol>
@@ -49,6 +64,7 @@
 import java.io.*;
 import java.util.Properties;
 
+import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IResults;
@@ -73,34 +89,33 @@ public class TrivialScanner {
         try {
             Properties props = new Properties();
             props.load(new FileInputStream(new File(argv[1])));
+            JOVALSystem.setCredentialStore(new SimpleCredentialStore(props));
+            JOVALSystem.getSessionFactory().setDataDirectory(new File("."));
+
             RemotePlugin plugin = new RemotePlugin();
-            plugin.setDataDirectory(new File("."));
-            if (plugin.configure(props)) {
-                IEngine engine = JOVALSystem.createEngine();
-                engine.setDefinitionsFile(new File(argv[0]));
-                engine.setPlugin(plugin);
-                engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
-                engine.run();
-                switch(engine.getResult()) {
-                  case OK:
-                    System.out.println("Writing results.xml");
-                    IResults results = engine.getResults();
-                    results.writeXML(new File("results.xml"));
-                    break;
-                  case ERR:
-                    throw engine.getError();
-                }
-	        System.exit(0);
-            } else {
-                System.out.println("Bad plugin configuration: " + plugin.getLastError());
+            plugin.setTarget(props.getProperty("hostname"));
+
+            IEngine engine = JOVALSystem.createEngine(plugin);
+            engine.setDefinitionsFile(new File(argv[0]));
+            engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
+            engine.run();
+            switch(engine.getResult()) {
+              case OK:
+                System.out.println("Writing resutls.xml");
+                IResults results = engine.getResults();
+                results.writeXML(new File("results.xml"));
+                break;
+              case ERR:
+                throw engine.getError();
             }
+            System.exit(0);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (OvalException e) {
             e.printStackTrace();
         }
 
-	System.exit(1);
+        System.exit(1);
     }
 
     /**
@@ -108,7 +123,7 @@ public class TrivialScanner {
      */
     static class Observer implements IObserver {
         public Observer() {}
-    
+
         public void notify(IProducer source, int msg, Object arg) {
             switch(msg) {
               case IEngine.MESSAGE_OBJECT_PHASE_START:

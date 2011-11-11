@@ -14,5 +14,6 @@ DEFAULT=\
 	org.joval.os.windows.wmi.SWbemPropertySet			\
 	org.joval.os.windows.wmi.WmiException				\
 	org.joval.os.windows.wmi.WmiProvider				\
-	org.joval.plugin.DefaultPlugin					\
+	org.joval.oval.di.DefaultContainer				\
+	org.joval.plugin.LocalPlugin					\
 	org.joval.test.Default

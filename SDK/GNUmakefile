@@ -10,13 +10,18 @@ CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
 all:
 	@$(MAKE) --keep-going --directory=engine all
 	@$(MAKE) --keep-going --directory=plugin all
+	@$(MAKE) --keep-going --directory=sample all
 
 clean:
 	@$(MAKE) --keep-going --directory=engine clean
 	@$(MAKE) --keep-going --directory=plugin clean
+	@$(MAKE) --keep-going --directory=sample clean
 
 javadocs:
 	@$(MAKE) --keep-going --directory=plugin javadocs
+
+test:
+	@$(MAKE) --keep-going --directory=sample test
 
 install: all
 	mkdir -p sample/rsrc/lib

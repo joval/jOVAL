@@ -27,13 +27,13 @@ import org.jinterop.dcom.common.JIException;
 import org.jinterop.winreg.IJIWinReg;
 import org.jinterop.winreg.JIWinRegFactory;
 
+import org.joval.intf.identity.IWindowsCredential;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.os.windows.WindowsSystemInfo;
-import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.os.windows.registry.BaseRegistry;
 import org.joval.os.windows.registry.BinaryValue;
 import org.joval.os.windows.registry.DwordValue;
@@ -68,7 +68,7 @@ public class Registry extends BaseRegistry {
     private final static JIWinRegFactory factory = JIWinRegFactory.getSingleTon();
 
     private String host;
-    private WindowsCredential cred;
+    private IWindowsCredential cred;
     private IJIWinReg registry;
     private Key hklm, hku, hkcu, hkcr;
     private Hashtable <String, Key> map;
@@ -80,9 +80,9 @@ public class Registry extends BaseRegistry {
     private int state = STATE_DISCONNECTED;
 
     /**
-     * Create a new Registry, connected to the specified host using the specified WindowsCredential.
+     * Create a new Registry, connected to the specified host using the specified IWindowsCredential.
      */
-    public Registry(String host, WindowsCredential cred, IPathRedirector redirector) {
+    public Registry(String host, IWindowsCredential cred, IPathRedirector redirector) {
 	super(redirector);
 	this.host = host;
 	this.cred = cred;
@@ -97,7 +97,7 @@ public class Registry extends BaseRegistry {
     public boolean connect() {
 	try {
 	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_CONNECT, host);
-	    registry = factory.getWinreg(cred, host, true);
+	    registry = factory.getWinreg(new AuthInfo(cred), host, true);
 	    state = STATE_ENV;
 	    env = new Environment(this);
 	    state = STATE_CONNECTED;
@@ -401,5 +401,27 @@ public class Registry extends BaseRegistry {
 	    }
 	}
 	return hkcr;
+    }
+
+    class AuthInfo implements IJIAuthInfo {
+	IWindowsCredential wc;
+
+	AuthInfo(IWindowsCredential wc) {
+	    this.wc = wc;
+	}
+
+	// Implement IJIAuthInfo
+
+	public String getUserName() {
+	    return wc.getUsername();
+	}
+
+	public String getPassword() {
+	    return wc.getPassword();
+	}
+
+	public String getDomain() {
+	    return wc.getDomain();
+	}
     }
 }

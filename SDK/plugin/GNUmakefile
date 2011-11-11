@@ -45,8 +45,13 @@ javadocs:
 	mkdir -p ../docs/api
 	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d ../docs/api -sourcepath "$(GENSRC)$(CLN)$(SRC)" -subpackages \
 	oval:org.w3c            \
+	org.joval.intf.discovery \
+	org.joval.intf.identity \
 	org.joval.intf.oval     \
 	org.joval.intf.plugin   \
 	org.joval.intf.di       \
 	org.joval.plugin        \
-	$(SRC)/org/joval/util/JOVALSystem.java $(SRC)/org/joval/util/JOVALMsg.java
+	$(SRC)/org/joval/intf/system/IBaseSession.java		\
+	$(SRC)/org/joval/intf/system/IProcess.java		\
+	$(SRC)/org/joval/util/JOVALSystem.java			\
+	$(SRC)/org/joval/util/JOVALMsg.java

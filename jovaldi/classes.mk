@@ -1,13 +1,19 @@
 CLASSES=\
-	org.joval.intf.di.IJovaldiPlugin				\
+	org.joval.intf.discovery.ISessionFactory			\
+	org.joval.intf.identity.ICredential				\
+	org.joval.intf.identity.ICredentialStore			\
+	org.joval.intf.identity.ISshCredential				\
+	org.joval.intf.identity.IWindowsCredential			\
 	org.joval.intf.oval.IDefinitionFilter				\
 	org.joval.intf.oval.IDefinitions				\
 	org.joval.intf.oval.IEngine					\
 	org.joval.intf.oval.IResults					\
 	org.joval.intf.oval.ISystemCharacteristics			\
 	org.joval.intf.plugin.IAdapter					\
-	org.joval.intf.plugin.IRequestContext				\
 	org.joval.intf.plugin.IPlugin					\
+	org.joval.intf.plugin.IRequestContext				\
+	org.joval.intf.system.IBaseSession				\
+	org.joval.intf.system.IProcess					\
 	org.joval.intf.util.IObserver					\
 	org.joval.intf.util.IProducer					\
 	org.joval.os.windows.Timestamp					\
@@ -16,6 +22,7 @@ CLASSES=\
 	org.joval.oval.ResolveException					\
 	org.joval.oval.TestException					\
 	org.joval.oval.di.ExecutionState				\
+	org.joval.oval.di.IPluginContainer				\
 	org.joval.oval.di.Main						\
 	org.joval.oval.engine.DefinitionFilter				\
 	org.joval.oval.engine.Definitions				\

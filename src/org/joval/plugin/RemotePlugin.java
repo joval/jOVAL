@@ -11,6 +11,7 @@ import org.vngx.jsch.exception.JSchException;
 
 import org.joval.discovery.SessionFactory;
 import org.joval.identity.Credential;
+import org.joval.intf.discovery.ISessionFactory;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.system.IBaseSession;
@@ -20,21 +21,21 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.embedded.system.IosSession;
 import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.identity.WindowsCredential;
+import org.joval.oval.OvalException;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
- * Implementation of an IJovaldiPlugin for remote scanning.
+ * Implementation of an IPlugin for remote scanning.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class RemotePlugin extends OnlinePlugin {
+public class RemotePlugin extends BasePlugin {
     private String hostname;
     private ICredential cred;
-    private SessionFactory sessionFactory;
 
     /**
      * Create a remote plugin.
@@ -43,87 +44,26 @@ public class RemotePlugin extends OnlinePlugin {
 	super();
     }
 
-    // Implement IJovaldiPlugin
+    // Implement IPlugin
 
-    /**
-     * @override
-     */
-    public void setDataDirectory(File dir) {
-	try {
-	    sessionFactory = new SessionFactory(dir);
-	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
+    public void setTarget(String hostname) {
+	this.hostname = hostname;
     }
 
-    /**
-     * @override
-     */
-    public boolean configure(Properties props) {
-	if (props == null) {
-	    return false;
-	}
-
-	String hostname		= props.getProperty("hostname");
-	String domain		= props.getProperty("nt.domain");
-	String username		= props.getProperty("user.name");
-	String password		= props.getProperty("user.password");
-	String passphrase	= props.getProperty("key.password");
-	String rootPassword	= props.getProperty("root.password");
-	String privateKey	= props.getProperty("key.file");
-
+    public void connect() throws OvalException {
 	if (hostname != null) {
 	    try {
 		IBaseSession base = sessionFactory.createSession(hostname);
-		ICredential cred = null;
+		ICredential cred = JOVALSystem.getCredentialStore().getCredential(base);
 		if (base instanceof ILocked) {
-		    if (username == null) {
-			err = getMessage("ERROR_USERNAME");
-			return false;
-		    } else if (privateKey == null && password == null) {
-			err = getMessage("ERROR_PASSWORD");
-			return false;
-		    }
-		    File privateKeyFile = null;
-		    if (privateKey != null) {
-			privateKeyFile = new File(privateKey);
-			if (!privateKeyFile.isFile()) {
-			    err = getMessage("ERROR_PRIVATE_KEY", privateKeyFile.getPath());
-			    return false;
-			}
-		    }
-    
-		    switch (base.getType()) {
-		      case WINDOWS:
-			if (domain == null) {
-			    domain = hostname;
-			}
-			cred = new WindowsCredential(domain, username, password);
-			break;
-    
-		      case SSH: 
-			if (privateKeyFile != null) {
-			    try {
-				cred = new SshCredential(username, privateKeyFile, passphrase, rootPassword);
-			    } catch (JSchException e) {
-				err = getMessage("ERROR_PRIVATE_KEY", e.getMessage());
-				return false;
-			    }
-			} else if (rootPassword != null) {
-			    cred = new SshCredential(username, password, rootPassword);
-			} else {
-			    cred = new Credential(username, password);
-			}
-			break;
-		    }
-    
 		    if (!((ILocked)base).unlock(cred)) {
-			err = getMessage("ERROR_LOCK", cred.getClass().getName(), session.getClass().getName());
-			return false;
+			String baseName = base.getClass().getName();
+			String credName = cred.getClass().getName();
+			throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_LOCK, credName, baseName));
 		    }
 		}
 
-	        switch (base.getType()) {
+		switch (base.getType()) {
 		  case WINDOWS:
 		    session = (IWindowsSession)base;
 		    break;
@@ -144,22 +84,19 @@ public class RemotePlugin extends OnlinePlugin {
 
 		  default:
 		    base.disconnect();
-		    err = JOVALSystem.getMessage(JOVALMsg.ERROR_SESSIONTYPE, base.getType());
-		    return false;
+		    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, base.getType()));
 	        }
 
 		if (session instanceof ILocked) {
 		    ((ILocked)session).unlock(cred);
 		}
 	    } catch (Exception e) {
-		err = e.getMessage();
-		return false;
+		throw new OvalException(e);
 	    }
-
-	    return true;
 	} else {
-	    err = getMessage("ERROR_HOSTNAME");
-	    return false;
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TARGET));
 	}
+
+	super.connect();
     }
 }

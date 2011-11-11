@@ -18,6 +18,7 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
+import org.joval.intf.identity.IWindowsCredential;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
@@ -30,7 +31,6 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.WindowsSystemInfo;
 import org.joval.os.windows.identity.Directory;
-import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.remote.io.SmbFilesystem;
@@ -54,7 +54,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 
     private String host;
     private String tempDir, cwd;
-    private WindowsCredential cred;
+    private IWindowsCredential cred;
     private WmiConnection conn;
     private IRegistry reg, reg32;
     private IFilesystem fs32;
@@ -109,8 +109,8 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
     // Implement ILocked
 
     public boolean unlock(ICredential credential) {
-	if (credential instanceof WindowsCredential) {
-	    cred = (WindowsCredential)credential;
+	if (credential instanceof IWindowsCredential) {
+	    cred = (IWindowsCredential)credential;
 	    return true;
 	} else {
 	    return false;
@@ -118,6 +118,10 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
     }
 
     // Implement ISession
+
+    public String getHostname() {
+	return host;
+    }
 
     public SystemInfoType getSystemInfo() {
 	return info.getSystemInfo();

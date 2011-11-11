@@ -134,13 +134,6 @@ public interface IEngine extends Runnable {
     public void setSystemCharacteristicsFile(File f) throws IllegalThreadStateException, OvalException;
 
     /**
-     * Set the plugin that the engine will use to collect object data.
-     *
-     * @throws IllegalThreadStateException if the engine has already started.
-     */
-    public void setPlugin(IPlugin plugin) throws IllegalThreadStateException;
-
-    /**
      * Get an IProducer associated with the IEngine.  This IProducer can be observed for MESSAGE_ notifications while the
      * engine is running.
      */

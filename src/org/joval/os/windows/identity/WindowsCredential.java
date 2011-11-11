@@ -2,10 +2,8 @@
 
 package org.joval.os.windows.identity;
 
-import jcifs.smb.NtlmPasswordAuthentication;
-import org.jinterop.dcom.common.IJIAuthInfo;
-
 import org.joval.identity.Credential;
+import org.joval.intf.identity.IWindowsCredential;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -15,7 +13,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WindowsCredential extends Credential implements IJIAuthInfo {
+public class WindowsCredential extends Credential implements IWindowsCredential {
     private String domain;
 
     /**
@@ -42,6 +40,8 @@ public class WindowsCredential extends Credential implements IJIAuthInfo {
 	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINCRED_CREATE, getDomainUser());
     }
 
+    // Implement IWindowsCredential
+
     /**
      * Return a username of the form domain\\name.
      */
@@ -49,21 +49,11 @@ public class WindowsCredential extends Credential implements IJIAuthInfo {
 	return new StringBuffer(domain).append('\\').append(username).toString();
     }
 
-    public void setDomain(String domain) {
-	this.domain = domain;
-    }
-
-    public NtlmPasswordAuthentication getNtlmPasswordAuthentication() {
-	return new NtlmPasswordAuthentication(domain, username, password);
-    }
-
-    // Implement IJIAuthInfo
-
-    public String getUserName() {
-	return username;
-    }
-
     public String getDomain() {
 	return domain;
+    }
+
+    public void setDomain(String domain) {
+	this.domain = domain;
     }
 }

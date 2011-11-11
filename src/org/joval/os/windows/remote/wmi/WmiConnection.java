@@ -19,10 +19,10 @@ import com.h9labs.jwbem.SWbemObject;
 import com.h9labs.jwbem.SWbemObjectSet;
 import com.h9labs.jwbem.SWbemServices;
 
+import org.joval.intf.identity.IWindowsCredential;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.os.windows.remote.wmi.query.SimpleSWbemObjectSet;
 import org.joval.os.windows.wmi.WmiException;
 
@@ -36,10 +36,10 @@ import org.joval.os.windows.wmi.WmiException;
 public class WmiConnection implements IWmiProvider {
     private SWbemLocator locator;
     private String host;
-    private WindowsCredential cred;
+    private IWindowsCredential cred;
     private Hashtable <String, SWbemServices>map;
 
-    public WmiConnection(String host, WindowsCredential cred) {
+    public WmiConnection(String host, IWindowsCredential cred) {
 	this.host = host;
 	this.cred = cred;
     }

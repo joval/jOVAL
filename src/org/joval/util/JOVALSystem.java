@@ -25,9 +25,12 @@ import org.slf4j.cal10n.LocLoggerFactory;
 
 import oval.schemas.evaluation.id.EvaluationDefinitionIds;
 
+import org.joval.intf.discovery.ISessionFactory;
+import org.joval.intf.identity.ICredentialStore;
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
+import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
 import org.joval.oval.engine.DefinitionFilter;
 import org.joval.oval.engine.Definitions;
@@ -110,6 +113,11 @@ public class JOVALSystem {
     public static final String PROP_SUDO_MAX_RETRIES = "sudo.exec.retries";
 
     /**
+     * Property indicating the classname of the ISessionFactory implementation. 
+     */
+    public static final String PROP_SESSIONFACTORY = "session.factory";
+
+    /**
      * A data structure providing easy access to the OVAL schema object factories.
      */
     public static final Factories factories = new Factories();
@@ -117,6 +125,7 @@ public class JOVALSystem {
     private static IMessageConveyor mc;
     private static LocLogger logger;
     private static Properties props, ovalProps;
+    private static ISessionFactory sessionFactory;
 
     static {
 	mc = new MessageConveyor(Locale.getDefault());
@@ -143,6 +152,22 @@ public class JOVALSystem {
 	}
     }
 
+    private static ICredentialStore cs;
+
+    /**
+     * Set the credential store for the system.
+     */
+    public static void setCredentialStore(ICredentialStore cs) {
+	JOVALSystem.cs = cs;
+    }
+
+    /**
+     * Return the credential store for the system.
+     */
+    public static ICredentialStore getCredentialStore() {
+	return cs;
+    }
+
     /**
      * Retrieve a localized String, given the key and substitution arguments.
      */
@@ -158,12 +183,21 @@ public class JOVALSystem {
     }
 
     /**
+     * Override a jOVAL property.
+     *
+     * @param key specify one of the PROP_* keys
+     */
+    public static void setProperty(String key, String value) {
+	props.setProperty(key, value);
+    }
+
+    /**
      * Retrieve a jOVAL property.
      *
      * @param key specify one of the PROP_* keys
      */
-    public static String getProperty(String name) {
-	return props.getProperty(name);
+    public static String getProperty(String key) {
+	return props.getProperty(key);
     }
 
     /**
@@ -173,6 +207,28 @@ public class JOVALSystem {
      */
     public static String getOvalProperty(String name) {
 	return ovalProps.getProperty(name);
+    }
+
+    /**
+     * Set the ISessionFactory for the system, if the default factory is not desired.
+     */
+    public static void setSessionFactory(ISessionFactory sessionFactory) {
+	JOVALSystem.sessionFactory = sessionFactory;
+    }
+
+    /**
+     * Retrieve the current system session factory.  The default factory is configurable using PROP_SESSIONFACTORY.
+     */
+    public static ISessionFactory getSessionFactory() {
+	if (sessionFactory == null) {
+	    try {
+		Class clazz = Thread.currentThread().getContextClassLoader().loadClass(getProperty(PROP_SESSIONFACTORY));
+		sessionFactory = (ISessionFactory)clazz.newInstance();
+	    } catch (Exception e) {
+		logger.warn(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	}
+	return sessionFactory;
     }
 
     /**
@@ -191,15 +247,19 @@ public class JOVALSystem {
 	return new DefinitionFilter(ids);
     }
 
+    /**
+     * Create an IDefinitions index for an XML file containing OVAL definitions.
+     */
     public static final IDefinitions createDefinitions(File f) throws OvalException {
 	return new Definitions(f);
     }
 
     /**
-     * Create an engine for evaluating OVAL definitions using a plugin.
+     * Create an engine for evaluating OVAL definitions using a plugin.  A null plugin value can be specified if an
+     * ISystemCharacteristics (or a system-characteristics.xml file) is set before running.
      */
-    public static final IEngine createEngine() {
-	return new Engine();
+    public static final IEngine createEngine(IPlugin plugin) {
+	return new Engine(plugin);
     }
 
     //

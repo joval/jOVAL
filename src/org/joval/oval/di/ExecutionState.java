@@ -15,8 +15,6 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 
-import org.joval.intf.di.IJovaldiPlugin;
-
 /**
  * The ExecutionState is responsible for parsing the command-line arguments, and providing data about the user's choices
  * to the Main class.
@@ -57,7 +55,7 @@ public class ExecutionState {
     String specifiedChecksum;
 
     URLClassLoader pluginClassLoader;
-    IJovaldiPlugin plugin;
+    IPluginContainer container;
     Properties pluginConfig = null;
 
     File dataFile;
@@ -267,19 +265,17 @@ public class ExecutionState {
     }
 
     boolean processPluginArguments() {
-	if (pluginConfig == null) {
-	    pluginConfig = new Properties();
-	    try {
+	try {
+	    if (pluginConfig == null) {
+		pluginConfig = new Properties();
 		pluginConfig.load(new FileInputStream(new File(DEFAULT_CONFIG)));
-	    } catch (IOException e) {
-		Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
 	    }
+	    container.configure(pluginConfig);
+	    return true;
+	} catch (Exception e) {
+	    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
 	}
-	return plugin.configure(pluginConfig);
-    }
-
-    String getPluginError() {
-	return plugin.getLastError();
+	return false;
     }
 
     // Private
@@ -297,7 +293,7 @@ public class ExecutionState {
 	    Main.print(Main.getMessage("ERROR_INPUTFILE", inputFile));
 	    return false;
 	}
-	if (plugin == null) {
+	if (container == null) {
 	    Main.print(Main.getMessage("ERROR_PLUGIN"));
 	}
 	return true;
@@ -351,13 +347,13 @@ public class ExecutionState {
 				return false;
 			    } else {
 				Object pluginObject = pluginClassLoader.loadClass(main).newInstance();
-				if (Class.forName(IJovaldiPlugin.class.getName()).isInstance(pluginObject)) {
-				    plugin = (IJovaldiPlugin)pluginObject;
+				if (Class.forName(IPluginContainer.class.getName()).isInstance(pluginObject)) {
+				    container = (IPluginContainer)pluginObject;
 				    File dataDir = new File(pluginDirs[i], "data");
 				    if (!dataDir.exists()) {
 					dataDir.mkdirs();
 				    }
-				    plugin.setDataDirectory(dataDir);
+				    container.setDataDirectory(dataDir);
 				    return true;
 				} else {
 				    Main.print(Main.getMessage("ERROR_PLUGIN_IPLUGIN", main));

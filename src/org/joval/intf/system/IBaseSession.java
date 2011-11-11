@@ -9,13 +9,15 @@ package org.joval.intf.system;
  * @version %I% %G%
  */
 public interface IBaseSession {
-    public boolean connect();
+    boolean connect();
 
-    public void disconnect();
+    void disconnect();
 
-    public IProcess createProcess(String command) throws Exception;
+    String getHostname();
 
-    public Type getType();
+    IProcess createProcess(String command) throws Exception;
+
+    Type getType();
 
     enum Type {
 	SSH("ssh"),

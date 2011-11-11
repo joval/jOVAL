@@ -38,6 +38,10 @@ public class IosSession extends BaseSession implements ILocked, ISession {
 
     // Implement IBaseSession
 
+    public String getHostname() {
+	return ssh.getHostname();
+    }
+
     public boolean connect() {
 	return ssh.connect();
     }

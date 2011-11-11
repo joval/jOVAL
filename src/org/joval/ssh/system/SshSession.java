@@ -13,12 +13,15 @@ import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.Session;
 import org.vngx.jsch.UserInfo;
 import org.vngx.jsch.exception.JSchException;
+import org.vngx.jsch.userauth.Identity;
+import org.vngx.jsch.userauth.IdentityManager;
+import org.vngx.jsch.userauth.IdentityFile;
 import org.vngx.jsch.util.SocketFactory;
 
 import org.joval.identity.Credential;
-import org.joval.ssh.identity.SshCredential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
+import org.joval.intf.identity.ISshCredential;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
@@ -69,6 +72,21 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 
     public boolean unlock(ICredential cred) {
 	this.cred = cred;
+	if (cred instanceof ISshCredential) {
+	    ISshCredential sshc = (ISshCredential)cred;
+	    if (sshc.getPrivateKey() != null) {
+		try {
+		    Identity id = IdentityFile.newInstance(sshc.getPrivateKey().getPath(), null);
+		    if (sshc.getPassphrase() == null) {
+			IdentityManager.getManager().addIdentity(id, null);
+		    } else {
+			IdentityManager.getManager().addIdentity(id, sshc.getPassphrase().getBytes());
+ 		    }
+		} catch (JSchException e) {
+		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+	    }
+	}
 	return true;
     }
 
@@ -174,8 +192,8 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
     // Implement UserInfo
 
     public String getPassphrase() {
-	if (cred instanceof SshCredential) {
-	    return ((SshCredential)cred).getPassphrase();
+	if (cred instanceof ISshCredential) {
+	    return ((ISshCredential)cred).getPassphrase();
 	} else {
 	    return "";
 	}

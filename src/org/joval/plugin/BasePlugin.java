@@ -20,8 +20,10 @@ import java.util.Vector;
 import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.di.IJovaldiPlugin;
+import org.joval.intf.discovery.ISessionFactory;
 import org.joval.intf.plugin.IAdapter;
+import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
@@ -70,23 +72,49 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class OnlinePlugin extends OfflinePlugin {
+public abstract class BasePlugin implements IPlugin {
+    private String hostname;
+
     protected ISession session;
-    protected String err;
+    protected List<IAdapter> adapters;
+    protected ISessionFactory sessionFactory;
 
     /**
      * Create a plugin for scanning or test evaluation.
      */
-    protected OnlinePlugin() {
-	super();
+    protected BasePlugin() {
+	adapters = new Vector<IAdapter>();
+	sessionFactory = JOVALSystem.getSessionFactory();
     }
 
     // Implement IPlugin
 
+    public List<IAdapter> getAdapters() {
+	return adapters;
+    }
+
+    public void setTarget(String hostname) {
+	this.hostname = hostname;
+    }
+
     /**
-     * @override
+     * Creates a session using the default ISessionFactory (unless a subclass has already set a session).  Then all the
+     * supported adapters are loaded, based on the session type.
      */
     public void connect() throws OvalException {
+	if (session == null) {
+	    try {
+		IBaseSession base = sessionFactory.createSession(hostname);
+		if (base instanceof ISession) {
+		    session = (ISession)base;
+		} else {
+		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, base.getClass().getName()));
+		}
+	    } catch (UnknownHostException e) {
+		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TARGET, e.getMessage()));
+	    }
+	}
 	if (session.connect()) {
 	    adapters.add(new FamilyAdapter(session));
 	    adapters.add(new VariableAdapter());
@@ -100,7 +128,7 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 		adapters.add(new XmlfilecontentAdapter(session));
 	    }
 
-	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SESSIONTYPE, session.getType());
+	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SESSION_TYPE, session.getType());
 	    switch(session.getType()) {
 	      case WINDOWS: {
 		IWindowsSession win = (IWindowsSession)session;
@@ -151,36 +179,16 @@ public abstract class OnlinePlugin extends OfflinePlugin {
 	      }
 	    }
 	} else {
-	    throw new OvalException(getMessage("ERROR_SESSION_CONNECTION"));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 	}
     }
 
-    /**
-     * @override
-     */
     public void disconnect() {
 	if (session != null) {
 	    session.disconnect();
 	}
     }
 
-    // Implement IJovaldiPlugin
-
-    /**
-     * @override
-     */
-    public abstract boolean configure(Properties props);
-
-    /**
-     * @override
-     */
-    public String getLastError() {
-	return err;
-    }
-
-    /**
-     * @override
-     */
     public SystemInfoType getSystemInfo() {
 	return session.getSystemInfo();
     }

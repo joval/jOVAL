@@ -11,6 +11,7 @@ import java.util.Vector;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import org.joval.intf.discovery.ISessionFactory;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.identity.IDirectory;
@@ -85,6 +86,10 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
     }
 
     // Implement ISession
+
+    public String getHostname() {
+	return ISessionFactory.LOCALHOST;
+    }
 
     public SystemInfoType getSystemInfo() {
 	return info.getSystemInfo();

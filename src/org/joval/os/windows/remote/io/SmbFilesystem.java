@@ -16,13 +16,13 @@ import jcifs.smb.SmbFileOutputStream;
 import jcifs.smb.SmbRandomAccessFile;
 import jcifs.smb.VolatileSmbFile;
 
+import org.joval.intf.identity.IWindowsCredential;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
-import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -54,10 +54,10 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
      * @param env The host environment, used to expand variables that are passed inside of paths.  If null, autoExpand is
      *            automatically set to false.
      */
-    public SmbFilesystem(String host, WindowsCredential cred, IEnvironment env, IPathRedirector redirector) {
+    public SmbFilesystem(String host, IWindowsCredential cred, IEnvironment env, IPathRedirector redirector) {
 	super();
 	this.host = host;
-	auth = cred.getNtlmPasswordAuthentication();
+	auth = getNtlmPasswordAuthentication(cred);
 	this.env = env;
 	this.redirector = redirector;
 	autoExpand = true;
@@ -67,9 +67,9 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
      * Create a Filesystem object for a remote host.  The environment is retrieved from the host's registry, so that
      * it can be used to expand variables that are passed inside of paths.
      */
-    public SmbFilesystem(String host, WindowsCredential cred) {
+    public SmbFilesystem(String host, IWindowsCredential cred) {
 	this.host = host;
-	auth = cred.getNtlmPasswordAuthentication();
+	auth = getNtlmPasswordAuthentication(cred);
 	autoExpand = false;
     }
 
@@ -191,5 +191,9 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
      */
     boolean isLetter(char c) {
 	return (c >= 65 && c <= 90) || (c >= 95 && c <= 122);
+    }
+
+    private NtlmPasswordAuthentication getNtlmPasswordAuthentication(IWindowsCredential cred) {
+	return new NtlmPasswordAuthentication(cred.getDomain(), cred.getUsername(), cred.getPassword());
     }
 }

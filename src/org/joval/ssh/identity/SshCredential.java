@@ -4,13 +4,8 @@ package org.joval.ssh.identity;
 
 import java.io.File;
 
-import org.vngx.jsch.exception.JSchException;
-import org.vngx.jsch.userauth.Identity;
-import org.vngx.jsch.userauth.IdentityManager;
-import org.vngx.jsch.userauth.IdentityFile;
-
 import org.joval.identity.Credential;
-import org.joval.util.JOVALSystem;
+import org.joval.intf.identity.ISshCredential;
 
 /**
  * A representation of a Unix credential.
@@ -18,9 +13,10 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SshCredential extends Credential {
+public class SshCredential extends Credential implements ISshCredential {
     private String passphrase;
     private String rootPassword;
+    private File privateKey;
 
     public SshCredential(String username, String password, String rootPassword) {
 	super(username, password);
@@ -30,17 +26,13 @@ public class SshCredential extends Credential {
     /**
      * Create a Credential for a certificate.
      */
-    public SshCredential(String username, File privateKey, String passphrase, String rootPassword) throws JSchException {
-        this.username = username;
-        Identity id = IdentityFile.newInstance(privateKey.getPath(), null);
-        if (passphrase == null) {
-            IdentityManager.getManager().addIdentity(id, null);
-        } else {
-            IdentityManager.getManager().addIdentity(id, passphrase.getBytes());
-        }
-        this.passphrase = passphrase;
-	this.rootPassword = rootPassword;
+    public SshCredential(String username, File privateKey, String passphrase, String rootPassword) {
+	this(username, null, rootPassword);
+	this.passphrase = passphrase;
+	this.privateKey = privateKey;
     }
+
+    // Implement ISshCredential
 
     public String getRootPassword() {
 	return rootPassword;
@@ -48,5 +40,9 @@ public class SshCredential extends Credential {
 
     public String getPassphrase() {
 	return passphrase;
+    }
+
+    public File getPrivateKey() {
+	return privateKey;
     }
 }

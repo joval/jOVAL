@@ -3,22 +3,38 @@
 
 package org.joval.discovery;
 
-import org.joval.intf.system.ISession;
+import java.io.File;
+import java.io.IOException;
+import java.net.UnknownHostException;
+
+import org.joval.intf.discovery.ISessionFactory;
+import org.joval.intf.system.IBaseSession;
 import org.joval.os.unix.system.UnixSession;
 import org.joval.os.windows.system.WindowsSession;
 
 /**
- * Use this class to grab an ISession.
+ * Use this class to grab an IBaseSession for the local machine ONLY.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Local {
-    public static ISession getSession() {
-	if (System.getProperty("os.name").startsWith("Windows")) {
-	    return new WindowsSession();
+public class Local implements ISessionFactory {
+    public Local() {}
+
+    // Implement ISessionFactory
+
+    public void setDataDirectory(File dir) throws IOException {
+    }
+
+    public IBaseSession createSession(String hostname) throws UnknownHostException {
+	if (LOCALHOST.equalsIgnoreCase(hostname)) {
+	    if (System.getProperty("os.name").startsWith("Windows")) {
+		return new WindowsSession();
+	    } else {
+		return new UnixSession();
+	    }
 	} else {
-	    return new UnixSession();
+	    throw new UnknownHostException(hostname);
 	}
     }
 }

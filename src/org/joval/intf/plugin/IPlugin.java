@@ -7,6 +7,7 @@ import java.util.List;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import org.joval.intf.identity.ICredential;
 import org.joval.oval.OvalException;
 
 /**
@@ -18,14 +19,12 @@ import org.joval.oval.OvalException;
  */
 public interface IPlugin {
     /**
-     * List the IAdapters provided by this host.
+     * Set the target hostname and credential to use.
      */
-    public List<IAdapter> getAdapters();
-
-    public SystemInfoType getSystemInfo();
+    public void setTarget(String hostname);
 
     /**
-     * Connect to any underlying resources required by the plugin (or its adapters).
+     * Connect to the specified target, using the specified credential.
      *
      * @throws OvalException if the plugin failed to establish the connection.
      */
@@ -35,4 +34,14 @@ public interface IPlugin {
      * Release any underlying resources.
      */
     public void disconnect();
+
+    /**
+     * List the IAdapters provided by this host.
+     */
+    public List<IAdapter> getAdapters();
+
+    /**
+     * Collect SystemInfoType information from the host.
+     */
+    public SystemInfoType getSystemInfo();
 }

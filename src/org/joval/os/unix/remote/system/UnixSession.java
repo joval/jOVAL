@@ -63,6 +63,10 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 
     // Implement IBaseSession
 
+    public String getHostname() {
+	return ssh.getHostname();
+    }
+
     public boolean connect() {
 	if (ssh.connect()) {
 	    if (env == null) {
