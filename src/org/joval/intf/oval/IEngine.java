@@ -87,6 +87,11 @@ public interface IEngine extends Runnable {
     }
 
     /**
+     * Stop the engine's processing and close all open resources.  This will leave the engine in an error state.
+     */
+    public void destroy();
+
+    /**
      * Set the file from which to read external variable definitions.
      *
      * @throws IllegalThreadStateException if the engine has already started.

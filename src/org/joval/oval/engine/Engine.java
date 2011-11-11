@@ -149,7 +149,7 @@ public class Engine implements IEngine {
     private OvalException error;
     private Results results;
     private State state;
-    private boolean evalEnabled = true;
+    private boolean evalEnabled = true, abort = false;
     private Producer producer;
 
     /**
@@ -245,6 +245,12 @@ public class Engine implements IEngine {
     public OvalException getError() throws IllegalThreadStateException {
 	getResult();
 	return error;
+    }
+
+    public void destroy() {
+	if (state == State.RUNNING) {
+	    abort = true;
+	}
     }
 
     // Implement Runnable
@@ -453,6 +459,13 @@ public class Engine implements IEngine {
      * Scan an object live using an adapter, including crawling down any encountered Sets.
      */
     private Collection<ItemType> scanObject(RequestContext rc) throws OvalException {
+	//
+	// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
+	//
+	if (abort) {
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	}
+
 	ObjectType obj = rc.getObject();
 	String objectId = obj.getId();
 	producer.sendNotify(MESSAGE_OBJECT, objectId);
@@ -902,6 +915,13 @@ public class Engine implements IEngine {
     }
 
     private ResultEnumeration compare(StateType state, ItemType item) throws OvalException, TestException {
+	//
+	// As the lowest level analysis operation, this is a good place to check if the engine is being destroyed.
+	//
+	if (abort) {
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	}
+
 	try {
 	    String stateClassname = state.getClass().getName();
 	    String stateBaseClassname = stateClassname.substring(stateClassname.lastIndexOf(".")+1);
