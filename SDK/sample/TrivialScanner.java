@@ -29,11 +29,10 @@ public class TrivialScanner {
 	try {
 	    Properties props = new Properties();
 	    props.load(new FileInputStream(new File(argv[1])));
-	    JOVALSystem.setCredentialStore(new SimpleCredentialStore(props));
-	    JOVALSystem.getSessionFactory().setDataDirectory(new File("."));
 
-	    RemotePlugin plugin = new RemotePlugin();
-	    plugin.setTarget(props.getProperty("hostname"));
+	    RemotePlugin.setCredentialStore(new SimpleCredentialStore(props));
+	    RemotePlugin.setDataDirectory(new File("."));
+	    RemotePlugin plugin = new RemotePlugin(props.getProperty("hostname"));
 
 	    IEngine engine = JOVALSystem.createEngine(plugin);
 	    engine.setDefinitionsFile(new File(argv[0]));

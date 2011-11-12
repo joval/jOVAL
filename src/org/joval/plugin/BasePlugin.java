@@ -20,7 +20,6 @@ import java.util.Vector;
 import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.discovery.ISessionFactory;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.system.IBaseSession;
@@ -77,45 +76,15 @@ public abstract class BasePlugin implements IPlugin {
 
     protected ISession session;
     protected List<IAdapter> adapters;
-    protected ISessionFactory sessionFactory;
 
-    /**
-     * Create a plugin for scanning or test evaluation.
-     */
-    protected BasePlugin() {
-	adapters = new Vector<IAdapter>();
-	sessionFactory = JOVALSystem.getSessionFactory();
-    }
+    protected BasePlugin() {}
 
     // Implement IPlugin
 
     public List<IAdapter> getAdapters() {
-	return adapters;
-    }
+	if (adapters == null) {
+	    adapters = new Vector<IAdapter>();
 
-    public void setTarget(String hostname) {
-	this.hostname = hostname;
-    }
-
-    /**
-     * Creates a session using the default ISessionFactory (unless a subclass has already set a session).  Then all the
-     * supported adapters are loaded, based on the session type.
-     */
-    public void connect() throws OvalException {
-	if (session == null) {
-	    try {
-		IBaseSession base = sessionFactory.createSession(hostname);
-		if (base instanceof ISession) {
-		    session = (ISession)base;
-		} else {
-		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, base.getClass().getName()));
-		}
-	    } catch (UnknownHostException e) {
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TARGET, e.getMessage()));
-	    }
-	}
-	if (session.connect()) {
 	    adapters.add(new FamilyAdapter(session));
 	    adapters.add(new VariableAdapter());
 	    if (session.getEnvironment() != null) {
@@ -178,7 +147,14 @@ public abstract class BasePlugin implements IPlugin {
 		break;
 	      }
 	    }
-	} else {
+	}
+	return adapters;
+    }
+
+    public void connect() throws OvalException {
+	if (session == null) {
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_NONE));
+	} else if (!session.connect()) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 	}
     }

@@ -3,12 +3,7 @@
 
 package org.joval.discovery;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.UnknownHostException;
-
-import org.joval.intf.discovery.ISessionFactory;
-import org.joval.intf.system.IBaseSession;
+import org.joval.intf.system.ISession;
 import org.joval.os.unix.system.UnixSession;
 import org.joval.os.windows.system.WindowsSession;
 
@@ -18,23 +13,12 @@ import org.joval.os.windows.system.WindowsSession;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Local implements ISessionFactory {
-    public Local() {}
-
-    // Implement ISessionFactory
-
-    public void setDataDirectory(File dir) throws IOException {
-    }
-
-    public IBaseSession createSession(String hostname) throws UnknownHostException {
-	if (LOCALHOST.equalsIgnoreCase(hostname)) {
-	    if (System.getProperty("os.name").startsWith("Windows")) {
-		return new WindowsSession();
-	    } else {
-		return new UnixSession();
-	    }
+public class Local {
+    public static ISession createSession() {
+	if (System.getProperty("os.name").startsWith("Windows")) {
+	    return new WindowsSession();
 	} else {
-	    throw new UnknownHostException(hostname);
+	    return new UnixSession();
 	}
     }
 }

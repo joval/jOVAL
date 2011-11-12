@@ -25,7 +25,6 @@ import org.slf4j.cal10n.LocLoggerFactory;
 
 import oval.schemas.evaluation.id.EvaluationDefinitionIds;
 
-import org.joval.intf.discovery.ISessionFactory;
 import org.joval.intf.identity.ICredentialStore;
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
@@ -113,11 +112,6 @@ public class JOVALSystem {
     public static final String PROP_SUDO_MAX_RETRIES = "sudo.exec.retries";
 
     /**
-     * Property indicating the classname of the ISessionFactory implementation. 
-     */
-    public static final String PROP_SESSIONFACTORY = "session.factory";
-
-    /**
      * A data structure providing easy access to the OVAL schema object factories.
      */
     public static final Factories factories = new Factories();
@@ -125,7 +119,6 @@ public class JOVALSystem {
     private static IMessageConveyor mc;
     private static LocLogger logger;
     private static Properties props, ovalProps;
-    private static ISessionFactory sessionFactory;
 
     static {
 	mc = new MessageConveyor(Locale.getDefault());
@@ -150,22 +143,6 @@ public class JOVALSystem {
 	} catch (IOException e) {
 	    logger.error(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-    }
-
-    private static ICredentialStore cs;
-
-    /**
-     * Set the credential store for the system.
-     */
-    public static void setCredentialStore(ICredentialStore cs) {
-	JOVALSystem.cs = cs;
-    }
-
-    /**
-     * Return the credential store for the system.
-     */
-    public static ICredentialStore getCredentialStore() {
-	return cs;
     }
 
     /**
@@ -207,28 +184,6 @@ public class JOVALSystem {
      */
     public static String getOvalProperty(String name) {
 	return ovalProps.getProperty(name);
-    }
-
-    /**
-     * Set the ISessionFactory for the system, if the default factory is not desired.
-     */
-    public static void setSessionFactory(ISessionFactory sessionFactory) {
-	JOVALSystem.sessionFactory = sessionFactory;
-    }
-
-    /**
-     * Retrieve the current system session factory.  The default factory is configurable using PROP_SESSIONFACTORY.
-     */
-    public static ISessionFactory getSessionFactory() {
-	if (sessionFactory == null) {
-	    try {
-		Class clazz = Thread.currentThread().getContextClassLoader().loadClass(getProperty(PROP_SESSIONFACTORY));
-		sessionFactory = (ISessionFactory)clazz.newInstance();
-	    } catch (Exception e) {
-		logger.warn(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	}
-	return sessionFactory;
     }
 
     /**

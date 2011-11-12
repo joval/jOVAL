@@ -19,11 +19,6 @@ import org.joval.oval.OvalException;
  */
 public interface IPlugin {
     /**
-     * Set the target hostname and credential to use.
-     */
-    public void setTarget(String hostname);
-
-    /**
      * Connect to the specified target, using the specified credential.
      *
      * @throws OvalException if the plugin failed to establish the connection.

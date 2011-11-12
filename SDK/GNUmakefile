@@ -10,7 +10,6 @@ CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
 all:
 	@$(MAKE) --keep-going --directory=engine all
 	@$(MAKE) --keep-going --directory=plugin all
-	@$(MAKE) --keep-going --directory=sample all
 
 clean:
 	@$(MAKE) --keep-going --directory=engine clean
@@ -31,7 +30,10 @@ install: all
 	cp plugin/rsrc/lib/*.jar sample/rsrc/lib
 	cp plugin/jOVAL*.jar sample/rsrc/lib
 
-dist: install javadocs
+sample: install
+	@$(MAKE) --keep-going --directory=sample all
+
+dist: sample javadocs
 	mkdir -p $(DIST)
 	cp $(SCHEMALIB) $(DIST)
 	cp engine/jOVAL*.jar $(DIST)

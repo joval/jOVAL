@@ -21,12 +21,8 @@
         <td>The primary class of interest in this package is the <code>RemotePlugin</code>, which can be used to scan Windows, Mac OSX, Solaris, Linux and Cisco IOS devices over the network.</td>
       </tr>
       <tr>
-        <td valign="top"><code>org.joval.intf.discovery</code></td>
-        <td>Interfaces in this package pertain to the creation of connections to machines.</td>
-      </tr>
-      <tr>
         <td valign="top"><code>org.joval.intf.identity</code></td>
-        <td>Interfaces in this package pertain to the management of machine access credentials.</td>
+        <td>Interfaces in this package pertain to the management of machine access credentials.  The <code>RemotePlugin</code> uses a statically-defined <code>ICredentialStore</code> to look up host credentials.</td>
       </tr>
       <tr>
         <td valign="top"><code>org.joval.intf.oval</code></td>
@@ -37,8 +33,12 @@
         <td>Interfaces pertaining to jOVAL plugins and adapters.  The plugin is associated with a target machine, and provides adapters that understand how to probe the machine for items matching an object specification, identified in a request context.</td>
       </tr>
       <tr>
+        <td valign="top"><code>org.joval.intf.util</code></td>
+        <td>Interfaces pertaining to the producer/observer pattern used for engine notifications.
+      </tr>
+      <tr>
         <td valign="top"><code>org.joval.intf.system</code></td>
-        <td>Interfaces in this package pertain to the execution of activities on machines.</td>
+        <td>Interfaces pertaining to the execution of activities on machines.  The <code>ICredentialStore</code> interface takes an <code>IBaseSession</code> to determine the appropriate set of credentials to return.</td>
       </tr>
     </table>
     <p>The full public API javadoc documentation can be found <a href="api/index.html">here</a>.</p>
@@ -89,11 +89,10 @@ public class TrivialScanner {
         try {
             Properties props = new Properties();
             props.load(new FileInputStream(new File(argv[1])));
-            JOVALSystem.setCredentialStore(new SimpleCredentialStore(props));
-            JOVALSystem.getSessionFactory().setDataDirectory(new File("."));
 
-            RemotePlugin plugin = new RemotePlugin();
-            plugin.setTarget(props.getProperty("hostname"));
+            RemotePlugin.setCredentialStore(new SimpleCredentialStore(props));
+            RemotePlugin.setDataDirectory(new File("."));
+            RemotePlugin plugin = new RemotePlugin(props.getProperty("hostname"));
 
             IEngine engine = JOVALSystem.createEngine(plugin);
             engine.setDefinitionsFile(new File(argv[0]));

@@ -51,7 +51,6 @@ public class DefaultContainer implements IPluginContainer {
     public void setDataDirectory(File dir) {}
 
     public void configure(Properties props) throws Exception {
-	JOVALSystem.setSessionFactory(new Local());
 	plugin = new LocalPlugin();
     }
 

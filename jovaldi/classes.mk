@@ -1,5 +1,4 @@
 CLASSES=\
-	org.joval.intf.discovery.ISessionFactory			\
 	org.joval.intf.identity.ICredential				\
 	org.joval.intf.identity.ICredentialStore			\
 	org.joval.intf.identity.ISshCredential				\

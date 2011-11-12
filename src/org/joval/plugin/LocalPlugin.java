@@ -6,7 +6,6 @@ package org.joval.plugin;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
-import org.joval.intf.discovery.ISessionFactory;
 import org.joval.discovery.Local;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
@@ -23,7 +22,6 @@ public class LocalPlugin extends BasePlugin {
      * Create a default plugin.
      */
     public LocalPlugin() {
-	super();
-	setTarget(ISessionFactory.LOCALHOST);
+	session = Local.createSession();
     }
 }

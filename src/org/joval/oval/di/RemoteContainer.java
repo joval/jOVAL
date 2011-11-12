@@ -10,7 +10,6 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 
-import org.joval.discovery.SessionFactory;
 import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.plugin.RemotePlugin;
@@ -55,13 +54,11 @@ public class RemoteContainer implements IPluginContainer {
     }
 
     public void configure(Properties props) throws Exception {
-	JOVALSystem.setCredentialStore(new SimpleCredentialStore(props));
-	JOVALSystem.setSessionFactory(new SessionFactory());
+	RemotePlugin.setCredentialStore(new SimpleCredentialStore(props));
 	if (dir != null) {
-	    JOVALSystem.getSessionFactory().setDataDirectory(dir);
+	    RemotePlugin.setDataDirectory(dir);
 	}
-	plugin = new RemotePlugin();
-	plugin.setTarget(props.getProperty("hostname"));
+	plugin = new RemotePlugin(props.getProperty("hostname"));
     }
 
     public String getProperty(String key) {

@@ -7,7 +7,6 @@ import java.io.File;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.discovery.ISessionFactory;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.LocalFilesystem;
@@ -32,7 +31,7 @@ public class UnixSession extends BaseSession implements IUnixSession {
     // Implement ISession
 
     public String getHostname() {
-	return ISessionFactory.LOCALHOST;
+	return LOCALHOST;
     }
 
     public SystemInfoType getSystemInfo() {

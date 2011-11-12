@@ -7,12 +7,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.vngx.jsch.exception.JSchException;
-
 import org.joval.discovery.SessionFactory;
-import org.joval.identity.Credential;
-import org.joval.intf.discovery.ISessionFactory;
 import org.joval.intf.identity.ICredential;
+import org.joval.intf.identity.ICredentialStore;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
@@ -20,9 +17,7 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.embedded.system.IosSession;
 import org.joval.os.unix.remote.system.UnixSession;
-import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.oval.OvalException;
-import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -34,34 +29,46 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class RemotePlugin extends BasePlugin {
+    private static SessionFactory sessionFactory = new SessionFactory();
+    private static ICredentialStore cs;
+
+    /**
+     * Set a location where the RemotePlugin class can store host discovery information.
+     */
+    public static void setDataDirectory(File dir) throws IOException {
+	sessionFactory.setDataDirectory(dir);
+    }
+
+    /**
+     * Set the ICredentialStore for the RemotePlugin class.
+     */
+    public static void setCredentialStore(ICredentialStore cs) {
+	RemotePlugin.cs = cs;
+    }
+
     private String hostname;
     private ICredential cred;
 
     /**
      * Create a remote plugin.
      */
-    public RemotePlugin() {
+    public RemotePlugin(String hostname) {
 	super();
+	this.hostname = hostname;
     }
 
     // Implement IPlugin
 
-    public void setTarget(String hostname) {
-	this.hostname = hostname;
-    }
-
+    /**
+     * Creation of the session is deferred until this point because it can be a blocking, time-consuming operation.  By
+     * doing that as part of the connect routine, it happens inside of the IEngine's run method, which can be wrapped inside
+     * a Thread.
+     */
     public void connect() throws OvalException {
 	if (hostname != null) {
 	    try {
 		IBaseSession base = sessionFactory.createSession(hostname);
-		ICredential cred = JOVALSystem.getCredentialStore().getCredential(base);
-		if (base instanceof ILocked) {
-		    if (!((ILocked)base).unlock(cred)) {
-			String baseName = base.getClass().getName();
-			String credName = cred.getClass().getName();
-			throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_LOCK, credName, baseName));
-		    }
-		}
+		setCredential(base);
 
 		switch (base.getType()) {
 		  case WINDOWS:
@@ -71,14 +78,12 @@ public class RemotePlugin extends BasePlugin {
 		  case UNIX:
 		    base.disconnect();
 		    UnixSession us = new UnixSession(new SshSession(hostname));
-		    us.unlock(cred);
 		    session = us;
 		    break;
 
 		  case CISCO_IOS:
 		    base.disconnect();
 		    IosSession is = new IosSession(new SshSession(hostname));
-		    is.unlock(cred);
 		    session = is;
 		    break;
 
@@ -87,9 +92,7 @@ public class RemotePlugin extends BasePlugin {
 		    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, base.getType()));
 	        }
 
-		if (session instanceof ILocked) {
-		    ((ILocked)session).unlock(cred);
-		}
+		setCredential(session);
 	    } catch (Exception e) {
 		throw new OvalException(e);
 	    }
@@ -98,5 +101,22 @@ public class RemotePlugin extends BasePlugin {
 	}
 
 	super.connect();
+    }
+
+    //Private
+
+    private void setCredential(IBaseSession base) throws Exception {
+	if (base instanceof ILocked) {
+	    if (cs == null) {
+		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL_STORE, hostname));
+	    } else {
+		ICredential cred = cs.getCredential(base);
+		if (!((ILocked)base).unlock(cred)) {
+		    String baseName = base.getClass().getName();
+		    String credName = cred.getClass().getName();
+		    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_LOCK, credName, baseName));
+		}
+	    }
+	}
     }
 }

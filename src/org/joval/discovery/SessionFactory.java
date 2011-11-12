@@ -12,7 +12,6 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
-import org.joval.intf.discovery.ISessionFactory;
 import org.joval.intf.system.IBaseSession;
 import org.joval.os.windows.remote.system.WindowsSession;
 import org.joval.util.JOVALMsg;
@@ -25,7 +24,7 @@ import org.joval.ssh.system.SshSession;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SessionFactory implements ISessionFactory {
+public class SessionFactory {
     private static final String HOSTS	= "hosts.xml";
 
     private Properties props;
@@ -39,8 +38,6 @@ public class SessionFactory implements ISessionFactory {
 	this();
 	setDataDirectory(cacheDir);
     }
-
-    // Implement ISessionFactory
 
     public void setDataDirectory(File cacheDir) throws IOException {
 	propsFile = new File(cacheDir, HOSTS);
