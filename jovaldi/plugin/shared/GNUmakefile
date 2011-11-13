@@ -21,10 +21,8 @@ all: $(PRODUCTNAME).jar
 install: all
 	cp $(PRODUCTNAME).jar ../default
 	cp $(PRODUCTNAME).jar ../remote
-	cp $(PRODUCTNAME).jar ../offline
 	cp $(LIBDIR)/*.jar ../default/$(LIBDIR)
 	cp $(LIBDIR)/*.jar ../remote/$(LIBDIR)
-	cp $(LIBDIR)/*.jar ../offline/$(LIBDIR)
 
 $(PRODUCTNAME).jar: classes
 	$(JAR) cvf $@ -C $(BUILD)/ .
@@ -32,7 +30,6 @@ $(PRODUCTNAME).jar: classes
 dist-clean: clean
 	rm -f ../default/$(PRODUCTNAME).jar
 	rm -f ../remote/$(PRODUCTNAME).jar
-	rm -f ../offline/$(PRODUCTNAME).jar
 
 clean:
 	rm -rf $(BUILD)

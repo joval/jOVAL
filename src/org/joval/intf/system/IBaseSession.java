@@ -40,7 +40,7 @@ public interface IBaseSession {
     Type getType();
 
     /**
-     * An enumeration of potential session types.
+     * An enumeration of possible session types.
      */
     enum Type {
 	/**
@@ -48,7 +48,7 @@ public interface IBaseSession {
 	 * implements ILocked, discovery occurs when the getType method is invoked after the session is unlocked with an
 	 * ICredential).
 	 *
-	 * @see ICredential
+	 * @see org.joval.intf.identity.ICredential
 	 */
 	SSH("ssh"),
 

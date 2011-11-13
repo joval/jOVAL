@@ -15,6 +15,7 @@ all: classes
 
 clean:
 	rm -rf *.class
+	rm -rf $(LIBDIR)
 
 classes: $(CLASS_FILES)
 

@@ -3,7 +3,7 @@
 
 package org.joval.intf.plugin;
 
-import java.util.List;
+import java.util.Collection;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
@@ -19,7 +19,7 @@ import org.joval.oval.OvalException;
  */
 public interface IPlugin {
     /**
-     * Connect to the specified target, using the specified credential.
+     * Connect the plugin to whatever it's going to be used to scan.
      *
      * @throws OvalException if the plugin failed to establish the connection.
      */
@@ -33,7 +33,7 @@ public interface IPlugin {
     /**
      * List the IAdapters provided by this host.
      */
-    public List<IAdapter> getAdapters();
+    public Collection<IAdapter> getAdapters();
 
     /**
      * Collect SystemInfoType information from the host.

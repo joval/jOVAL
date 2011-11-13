@@ -33,6 +33,9 @@ install: all
 sample: install
 	@$(MAKE) --keep-going --directory=sample all
 
+dist-clean: clean
+	rm -rf $(DIST)
+
 dist: sample javadocs
 	mkdir -p $(DIST)
 	cp $(SCHEMALIB) $(DIST)

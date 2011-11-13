@@ -3,33 +3,16 @@
 
 package org.joval.plugin;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.UnknownHostException;
-import java.net.URL;
-import java.text.MessageFormat;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Properties;
-import java.util.PropertyResourceBundle;
+import java.util.Collection;
 import java.util.Vector;
 
-import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.os.embedded.IosSystemInfo;
-import org.joval.os.unix.UnixSystemInfo;
-import org.joval.os.windows.WindowsSystemInfo;
 import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.cisco.ios.LineAdapter;
 import org.joval.plugin.adapter.cisco.ios.VersionAdapter;
@@ -75,13 +58,13 @@ public abstract class BasePlugin implements IPlugin {
     private String hostname;
 
     protected ISession session;
-    protected List<IAdapter> adapters;
+    protected Collection<IAdapter> adapters;
 
     protected BasePlugin() {}
 
     // Implement IPlugin
 
-    public List<IAdapter> getAdapters() {
+    public Collection<IAdapter> getAdapters() {
 	if (adapters == null) {
 	    adapters = new Vector<IAdapter>();
 
