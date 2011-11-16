@@ -20,25 +20,23 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 include plugin/shared/classes.mk
 include plugin/default/classes.mk
 include plugin/remote/classes.mk
-include plugin/offline/classes.mk
-
-ALL_CLASSES=$(CLASSES) $(SHARED) $(DEFAULT) $(REMOTE) $(OFFLINE)
-ALL_PACKAGES=$(sort $(basename $(ALL_CLASSES)))
 
 all: $(PRODUCTNAME).jar $(PLUGIN_DIRS)
 	@$(MAKE) --keep-going --directory=plugin/shared install
 	@$(MAKE) --keep-going --directory=plugin/default all
 	@$(MAKE) --keep-going --directory=plugin/remote all
-	@$(MAKE) --keep-going --directory=plugin/offline all
 
 install: all
 	@$(MAKE) --keep-going --directory=plugin/shared install
 	@$(MAKE) --keep-going --directory=plugin/default install
 	@$(MAKE) --keep-going --directory=plugin/remote install
-	@$(MAKE) --keep-going --directory=plugin/offline install
 
 javadocs:
-	$(JAVA_HOME)/bin/javadoc -d $(DOCS) -sourcepath $(SRC) $(ALL_PACKAGES)
+	$(JAVA_HOME)/bin/javadoc -d $(DOCS) -sourcepath $(SRC) -subpackages org
+
+pub-javadocs:
+	mkdir -p docs/pub
+	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d docs/pub -sourcepath "$(GENSRC)$(CLN)$(SRC)" -subpackages oval:org.w3c org.joval.intf.oval org.joval.intf.plugin org.joval.intf.di org.joval.plugin $(SRC)/org/joval/util/JOVALSystem.java $(SRC)/org/joval/util/JOVALMsg.java
 
 $(PRODUCTNAME).jar: classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
@@ -50,7 +48,6 @@ dist-clean: clean
 	@$(MAKE) --keep-going --directory=plugin/shared dist-clean
 	@$(MAKE) --keep-going --directory=plugin/default dist-clean
 	@$(MAKE) --keep-going --directory=plugin/remote dist-clean
-	@$(MAKE) --keep-going --directory=plugin/offline dist-clean
 
 clean:
 	rm -rf $(BUILD)
@@ -58,7 +55,6 @@ clean:
 	@$(MAKE) --keep-going --directory=plugin/shared clean
 	@$(MAKE) --keep-going --directory=plugin/default clean
 	@$(MAKE) --keep-going --directory=plugin/remote clean
-	@$(MAKE) --keep-going --directory=plugin/offline clean
 
 resources:
 	rm -f $(BUILD)/joval*
@@ -76,6 +72,19 @@ $(BUILD)/%.class: $(SRC)/%.java
 $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
 
+#
+# The patch target makes it easy to transport only core jovaldi JAR files to machines with existing installations for testing.
+#
+patch: install
+	mkdir -p $(DIST)/patch
+	mkdir -p $(DIST)/patch/lib
+	cp $(PRODUCTNAME).jar $(DIST)/patch/lib
+	mkdir -p $(DIST)/patch/plugin/default/lib
+	cp -R plugin/default/dist/lib/plugin*jar $(DIST)/patch/plugin/default/lib
+	mkdir -p $(DIST)/patch/plugin/remote/lib
+	cp -R plugin/remote/dist/lib/plugin*jar $(DIST)/patch/plugin/remote/lib
+	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_patch.zip -C $(DIST)/patch .
+
 dist: dist-$(ARCH)
 
 dist-x86: install
@@ -87,8 +96,6 @@ dist-x86: install
 	cp -R plugin/default/dist/* $(DIST)/x86/plugin/default
 	mkdir -p $(DIST)/x86/plugin/remote
 	cp -R plugin/remote/dist/* $(DIST)/x86/plugin/remote
-	mkdir -p $(DIST)/x86/plugin/offline
-	cp -R plugin/offline/dist/* $(DIST)/x86/plugin/offline
 	cp -R $(RSRC)/* $(DIST)/x86
 	cp -R $(JRE_HOME)/x86 $(DIST)/x86/jre
 
@@ -101,8 +108,6 @@ dist-x64: install
 	cp -R plugin/default/dist/* $(DIST)/x64/plugin/default
 	mkdir -p $(DIST)/x64/plugin/remote
 	cp -R plugin/remote/dist/* $(DIST)/x64/plugin/remote
-	mkdir -p $(DIST)/x64/plugin/offline
-	cp -R plugin/offline/dist/* $(DIST)/x64/plugin/offline
 	cp -R $(RSRC)/* $(DIST)/x64
 	cp -R $(JRE_HOME)/x64 $(DIST)/x64/jre
 

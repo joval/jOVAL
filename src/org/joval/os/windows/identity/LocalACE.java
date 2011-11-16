@@ -7,6 +7,12 @@ import com.sun.jna.platform.win32.WinNT;
 
 import org.joval.intf.windows.identity.IACE;
 
+/**
+ * JNA-based implementation of an IACE.
+ *
+ * @author David A. Solin
+ * @version %I% %G%
+ */
 public class LocalACE implements IACE {
     private WinNT.ACCESS_ACEStructure ace;
 

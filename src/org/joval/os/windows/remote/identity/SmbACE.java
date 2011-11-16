@@ -7,6 +7,12 @@ import jcifs.smb.ACE;
 
 import org.joval.intf.windows.identity.IACE;
 
+/**
+ * JCIFS-based implementation of an IACE.
+ *
+ * @author David A. Solin
+ * @version %I% %G%
+ */
 public class SmbACE implements IACE {
     private ACE ace;
 
