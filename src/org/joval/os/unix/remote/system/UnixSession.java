@@ -95,8 +95,12 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
     }
 
     public void disconnect() {
-	fs.disconnect();
-	ssh.disconnect();
+	if (fs != null) {
+	    fs.disconnect();
+	}
+	if (ssh != null) {
+	    ssh.disconnect();
+	}
     }
 
     /**

@@ -77,14 +77,12 @@ public class RemotePlugin extends BasePlugin {
 
 		  case UNIX:
 		    base.disconnect();
-		    UnixSession us = new UnixSession(new SshSession(hostname));
-		    session = us;
+		    session = new UnixSession(new SshSession(hostname));
 		    break;
 
 		  case CISCO_IOS:
 		    base.disconnect();
-		    IosSession is = new IosSession(new SshSession(hostname));
-		    session = is;
+		    session = new IosSession(new SshSession(hostname));
 		    break;
 
 		  default:
@@ -111,7 +109,9 @@ public class RemotePlugin extends BasePlugin {
 		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL_STORE, hostname));
 	    } else {
 		ICredential cred = cs.getCredential(base);
-		if (!((ILocked)base).unlock(cred)) {
+		if (((ILocked)base).unlock(cred)) {
+		    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_CREDENTIAL_SET, hostname);
+		} else {
 		    String baseName = base.getClass().getName();
 		    String credName = cred.getClass().getName();
 		    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_LOCK, credName, baseName));

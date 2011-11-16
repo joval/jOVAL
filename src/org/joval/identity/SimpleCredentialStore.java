@@ -7,8 +7,6 @@ import java.io.File;
 import java.security.AccessControlException;
 import java.util.Properties;
 
-import org.vngx.jsch.exception.JSchException;
-
 import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ICredentialStore;
@@ -58,7 +56,7 @@ public class SimpleCredentialStore implements ICredentialStore {
 		cred = new WindowsCredential(domain, username, password);
 		break;
    
-	      case SSH: 
+	      default:
 		if (privateKey != null) {
 		    cred = new SshCredential(username, new File(privateKey), passphrase, rootPassword);
 		} else if (rootPassword != null) {

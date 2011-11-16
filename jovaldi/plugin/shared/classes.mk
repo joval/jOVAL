@@ -1,5 +1,4 @@
 SHARED=\
-	org.joval.identity.SimpleCredentialStore.java			\
 	org.joval.intf.io.IFile						\
 	org.joval.intf.io.IFilesystem					\
 	org.joval.intf.io.IRandomAccess					\
