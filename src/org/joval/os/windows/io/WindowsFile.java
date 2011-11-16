@@ -11,11 +11,15 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
+import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.WinNT;
+
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFile;
+import org.joval.os.windows.identity.LocalACE;
 
 /**
  * Defines extended attributes of a file on Windows.
@@ -146,6 +150,11 @@ public class WindowsFile implements IWindowsFile {
     }
 
     public IACE[] getSecurity() throws IOException {
-	return null;
+	WinNT.ACCESS_ACEStructure[] aces = Advapi32Util.getFileSecurity(getLocalName(), false);
+	IACE[] result = new IACE[aces.length];
+	for (int i=0; i < aces.length; i++) {
+	    result[i] = new LocalACE(aces[i]);
+	}
+	return result;
     }
 }

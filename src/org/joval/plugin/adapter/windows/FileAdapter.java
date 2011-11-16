@@ -37,7 +37,6 @@ import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.Timestamp;
-import org.joval.os.windows.io.WindowsFile;
 import org.joval.os.windows.pe.ImageDOSHeader;
 import org.joval.os.windows.pe.ImageNTHeaders;
 import org.joval.os.windows.pe.ImageDataDirectory;
@@ -116,7 +115,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    if (f instanceof IWindowsFile) {
 		wf = (IWindowsFile)f;
 	    } else {
-		wf = new WindowsFile(f);
+		throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName()));
 	    }
 	    setItem((FileItem)base, wf);
 	    items.add(JOVALSystem.factories.sc.windows.createFileItem((FileItem)base));

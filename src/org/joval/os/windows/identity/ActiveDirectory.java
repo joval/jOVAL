@@ -96,7 +96,7 @@ class ActiveDirectory {
 		ISWbemPropertySet props = os.iterator().next().getProperties();
 		String name = Directory.getName(netbiosName);
 		String domain = getDomain(netbiosName);
-		String sid = toSid(props.getItem("DS_objectSid").getValueAsString());
+		String sid = Principal.toSid(props.getItem("DS_objectSid").getValueAsString());
 		Collection<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
 		int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
 		boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
@@ -170,7 +170,7 @@ class ActiveDirectory {
 				JOVALSystem.getLogger().warn(JOVALMsg.ERROR_AD_BAD_OU, members[i]);
 			    }
 			}
-			String sid = toSid(columns.getItem("DS_objectSid").getValueAsString());
+			String sid = Principal.toSid(columns.getItem("DS_objectSid").getValueAsString());
 			group = new Group(domain, cn, sid, userNetbiosNames, groupNetbiosNames);
 			groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
 			groupsBySid.put(sid, group);
@@ -341,33 +341,5 @@ class ActiveDirectory {
 	    }
 	}
 	return groups;
-    }
-
-    /**
-     * Convert a hexidecimal String representation of a SID into a "readable" SID String.
-     */
-    private String toSid(String hex) {
-	int rev = Integer.parseInt(hex.substring(0, 2), 16);
-	int subauthCount = Integer.parseInt(hex.substring(2, 4), 16);
-
-	String idAuthStr = hex.substring(4, 16);
-	long idAuth = Long.parseLong(idAuthStr, 16);
-
-	StringBuffer sid = new StringBuffer("S-");
-	sid.append(Integer.toHexString(rev));
-	sid.append("-");
-	sid.append(Long.toHexString(idAuth));
-
-	for (int i=0; i < subauthCount; i++) {
-	    sid.append("-");
-	    byte[] buff = new byte[4];
-	    int base = 16 + i*8;
-	    buff[0] = (byte)Integer.parseInt(hex.substring(base, base+2), 16);
-	    buff[1] = (byte)Integer.parseInt(hex.substring(base+2, base+4), 16);
-	    buff[2] = (byte)Integer.parseInt(hex.substring(base+4, base+6), 16);
-	    buff[3] = (byte)Integer.parseInt(hex.substring(base+6, base+8), 16);
-	    sid.append(Long.toString(LittleEndian.getUInt(buff) & 0xFFFFFFFFL));
-	}
-	return sid.toString();
     }
 }

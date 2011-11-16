@@ -41,6 +41,4 @@ public interface IACE {
 
     int getAccessMask();
     String getSid();
-    boolean isAllow();
-    boolean isInherited();
 }

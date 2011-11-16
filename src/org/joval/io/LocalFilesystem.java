@@ -16,6 +16,7 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.system.IEnvironment;
+import org.joval.os.windows.io.WindowsFile;
 import org.joval.util.tree.CachingTree;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -91,7 +92,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	if (WINDOWS) {
 	    if (realPath.length() > 2 && realPath.charAt(1) == ':') {
 	        if (isLetter(realPath.charAt(0))) {
-		    return new FileProxy(this, new File(realPath), path);
+		    return new WindowsFile(new FileProxy(this, new File(realPath), path));
 	        }
 	    }
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));

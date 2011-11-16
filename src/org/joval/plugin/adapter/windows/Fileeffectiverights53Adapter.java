@@ -36,7 +36,6 @@ import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.io.IWindowsFile;
 import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.os.windows.io.WindowsFile;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
@@ -95,10 +94,10 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 	    if (f instanceof IWindowsFile) {
 		wf = (IWindowsFile)f;
 	    } else {
-		wf = new WindowsFile(f);
+		throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName()));
 	    }
-	    IACE[] aces = wf.getSecurity();
 
+	    IACE[] aces = wf.getSecurity();
 	    Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)rc.getObject();
 	    String sid = (String)fObj.getTrusteeSid().getValue();
 
