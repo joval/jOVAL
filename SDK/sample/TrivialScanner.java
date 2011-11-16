@@ -2,6 +2,12 @@
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 import java.io.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.util.Properties;
 
 import org.joval.identity.SimpleCredentialStore;
@@ -27,6 +33,13 @@ public class TrivialScanner {
      */
     public static void main(String[] argv) {
 	try {
+	    LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
+	    Handler handler = new FileHandler("TrivialScanner.log", false);
+	    handler.setFormatter(new SimpleFormatter());
+	    handler.setLevel(Level.INFO);
+	    Logger logger = Logger.getLogger(JOVALSystem.class.getName());
+	    logger.addHandler(handler);
+
 	    Properties props = new Properties();
 	    props.load(new FileInputStream(new File(argv[1])));
 

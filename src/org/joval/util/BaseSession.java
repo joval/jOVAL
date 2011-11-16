@@ -19,6 +19,7 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 
 /**
  * Base class for the Windows and Unix local ISession implementations.
@@ -58,7 +59,12 @@ public abstract class BaseSession implements ISession {
 	    return FamilyEnumeration.WINDOWS;
 
 	  case UNIX:
-	    return FamilyEnumeration.UNIX;
+	    switch(((IUnixSession)this).getFlavor()) {
+	      case MACOSX:
+		return FamilyEnumeration.MACOS;
+	      default:
+		return FamilyEnumeration.UNIX;
+	    }
 
 	  case CISCO_IOS:
 	    return FamilyEnumeration.IOS;

@@ -30,7 +30,7 @@ install: all
 	cp plugin/rsrc/lib/*.jar sample/rsrc/lib
 	cp plugin/jOVAL*.jar sample/rsrc/lib
 
-sample: install
+sample:
 	@$(MAKE) --keep-going --directory=sample all
 
 dist-clean: clean
