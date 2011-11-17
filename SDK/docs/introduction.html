@@ -43,9 +43,14 @@
     </table>
     <p>The full public API javadoc documentation can be found <a href="api/index.html">here</a>.</p>
 
+    <h2>Logging Integration</h2>
+    <p>jOVAL leverages the <a href="http://www.slf4j.org">Simple Logging Facade for Java</a> (SLF4J), which was designed for the purpose of providing a logging facade for embedded libraries. SLF4J provides for interoperability with all the commonly-used Java logging frameworks such as Log4J, java.util logging, and Jakarta Commons Logging.  Since jOVAL supports localized messages, it also utilizes the <a href="http://cal10n.qos.ch/">Compiler-Assisted Localization</a> (CAL10N) library and the SLF4J localization extension library. These three JAR files (slf4j-api, slf4j-ext and cal10n-api) must therefore be added to the classpath of your application when embedding jOVAL.  You should also add the appropriate SLF4J JAR file to integrate with the logging framework of your choice.</p>
+    <p>Integrating the log messages originating from jOVAL with the framework used by your application is trivially easy: you simply need to add the appropriate SLF4J implementation JAR file to your application's classpath. jOVAL employs a Logger called <code>org.joval.util.JOVALSystem</code> to log all of its messages, warnings and errors, and this key can be used to configure logging for the library in whichever underlying logging framework you have chosen to employ in your application.</p>
+
     <h2>Using jOVAL</h2>
     <p>The jOVAL library makes it easy to embed OVAL scanning capabilities inside a Java application, but since jovaldi seeks to fully duplicate the functions of ovaldi, it is not necessarily illustrative of how to use the classes.  Therefore, the following TrivialScanner code sample has been developed as a guide.  The basic steps are:</p>
     <ol>
+      <li>(Optional) Create and configure the desired logging implementation into which SLF4J will feed.  By design, this is very easily accomplished.  For Java Util Logging (JUL), the Logger to which jOVAL sends all its log messages can be obtained using <code>Logger.getLogger(JOVALSystem.class.getName())</code>.
       <li>Create an implementation of the <code>ICredentialStore</code> interface, and set it as the credential store for the <code>RemotePlugin</code> class.  The sample app (and jovaldi) only scan a single machine, so they use the <code>SimpleCredentialStore</code> which contains credentials for only that one machine.  If your application will be scanning many devices, you'll need to implement a store that is able to provide credentials for all of them.</li>
       <li>(Optional) The <code>RemotePlugin</code> class can cache basic information about hosts (i.e., if they are Windows or SSH-enabled machines), so to prevent re-discovery over the network and to get faster repeat-performance, it's a good idea to provide the class with a data directory inside of which it can safely persist its cache file.</li>
       <li>Construct an instance of the <code>RemotePlugin</code> class, setting the target hostname or address.</li>
@@ -62,6 +67,12 @@
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 import java.io.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.util.Properties;
 
 import org.joval.identity.SimpleCredentialStore;
@@ -87,6 +98,13 @@ public class TrivialScanner {
      */
     public static void main(String[] argv) {
         try {
+            LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
+            Handler handler = new FileHandler("TrivialScanner.log", false);
+            handler.setFormatter(new SimpleFormatter());
+            handler.setLevel(Level.INFO);
+            Logger logger = Logger.getLogger(JOVALSystem.class.getName());
+            logger.addHandler(handler);
+
             Properties props = new Properties();
             props.load(new FileInputStream(new File(argv[1])));
 
@@ -160,10 +178,6 @@ public class TrivialScanner {
       </tr>
     </table>
 
-    <h2>Logging Integration</h2>
-    <p>jOVAL leverages the <a href="http://www.slf4j.org">Simple Logging Facade for Java</a> (SLF4J), which was designed for the purpose of providing a logging facade for embedded libraries. SLF4J provides for interoperability with all the commonly-used Java logging frameworks such as Log4J, java.util logging, and Jakarta Commons Logging.  Since jOVAL supports localized messages, it also utilizes the <a href="http://cal10n.qos.ch/">Compiler-Assisted Localization</a> (CAL10N) library and the SLF4J localization extension library. These three JAR files (slf4j-api, slf4j-ext and cal10n-api) must therefore be added to the classpath of your application when embedding jOVAL.</p>
-    <p>Integrating the log messages originating from jOVAL with the framework used by your application is trivially easy: you simply need to add the appropriate SLF4J implementation JAR file to your application's classpath. jOVAL employs a Logger called <code>org.joval.util.JOVALSystem</code> to log all of its messages, warnings and errors, and this key can be used to configure logging for the library in whichever underlying logging framework you have chosen to employ in your application.</p>
-
     <h2>Dependencies</h2>
     <p>jOVAL depends on a number of third-party libraries, all of which are commercially redistributable, but under various licenses.  jOVAL.org maintains public repositories containing known-good mirrors of the source code for all these dependencies at Github at the following URL: <a href="https://github.com/joval">https://github.com/joval</a>.</p>
     <p>jOVALCore.jar has the following dependencies:</p>
@@ -171,22 +185,26 @@ public class TrivialScanner {
       <tr>
         <td width=130><b>Dependency</b></td>
         <td width=70><b>Version</b></td>
-        <td><b>License</b></td>
+        <td width=150><b>License</b></td>
+        <td><b>Description</b></td>
       </tr>
       <tr>
         <td><a href="http://www.java.com/">Java</a></td>
         <td>1.6.0</td>
         <td><a href="http://joval.org/licenses/Java.txt">Oracle BCLA for Java</a></td>
+	<td>The Java execution environment.</td>
       </tr>
       <tr>
         <td><a href="http://www.slf4j.org/">SLF4J</a></td>
         <td>1.6.2</td>
         <td><a href="http://www.joval.org/licenses/SLF4J.txt">BSD-style</a></td>
+	<td>Logging facade.</td>
       </tr>
       <tr>
         <td><a href="http://cal10n.qos.ch/">cal10n</a></li>
         <td>0.7.4</td>
         <td><a href="http://www.joval.org/licenses/cal10n.txt">BSD-style</a></td>
+	<td>Localization library.</td>
       </tr>
     </table>
     <p>jOVALRemote.jar requires jOVALCore (and by extension, its dependencies), and also has the following dependencies:</p>
@@ -194,37 +212,44 @@ public class TrivialScanner {
       <tr>
         <td width=130><b>Dependency</b></td>
         <td width=70><b>Version</b></td>
-        <td><b>License</b></td>
+        <td width=150><b>License</b></td>
+        <td><b>Description</b></td>
       </tr>
       <tr>
         <td><a href="http://jcifs.samba.org/">JCIFS</a></td>
         <td>1.3.15</td>
         <td><a href="http://www.joval.org/licenses/jcifs.txt">LGPL v2.1</a></td>
+	<td>Pure-Java implementation of the Windows SMB protocol.</td>
       </tr>
       <tr>
         <td><a href="https://github.com/joval/vngx-jsch">JSch</a> (vngx variant)</li>
         <td>0.9</td>
         <td><a href="http://www.joval.org/licenses/JSch.txt">BSD-style</a></td>
+	<td>Java implementation of SSH.</td>
       </tr>
       <tr>
         <td><a href="http://www.jcraft.com/jzlib/">JZlib</a></li>
         <td>1.1.0</td>
         <td><a href="http://www.joval.org/licenses/JZlib.txt">BSD-style</a></td>
+	<td>Java implementation of Zlib, used by JSch.</td>
       </tr>
       <tr>
         <td><a href="http://jwbem.sourceforge.net/">jWbem</a></li>
         <td>0.0.1</td>
         <td><a href="http://www.joval.org/licenses/jWbem.txt">BSD-style</a></td>
+	<td>WMI utility, written on top of j-Interop.</td>
       </tr>
       <tr>
         <td><a href="http://code.google.com/p/plist/">dd-plist</a></li>
         <td>r50</td>
         <td><a href="http://www.opensource.org/licenses/mit-license.php">MIT</a></td>
+	<td>Reads Mac plist file formats.</td>
       </tr>
       <tr>
         <td><a href="http://j-interop.org/">j-Interop</a></li>
         <td>2.08</td>
         <td><a href="http://www.joval.org/licenses/j-Interop.txt">LGPL v3</a></td>
+	<td>Pure-Java Windows DCOM implementation.</td>
       </tr>
     </table>
 

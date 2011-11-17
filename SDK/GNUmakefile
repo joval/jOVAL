@@ -36,7 +36,7 @@ sample:
 dist-clean: clean
 	rm -rf $(DIST)
 
-dist: sample javadocs
+dist: install javadocs
 	mkdir -p $(DIST)
 	cp $(SCHEMALIB) $(DIST)
 	cp engine/jOVAL*.jar $(DIST)

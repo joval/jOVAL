@@ -49,7 +49,6 @@ javadocs:
 	org.joval.intf.oval					\
 	org.joval.intf.plugin					\
 	org.joval.intf.util					\
-	org.joval.intf.di					\
 	org.joval.plugin					\
 	$(SRC)/org/joval/intf/system/IBaseSession.java		\
 	$(SRC)/org/joval/intf/system/IProcess.java		\
