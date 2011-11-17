@@ -172,7 +172,9 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 
     private void addRecursive(ITreeBuilder tree, File f) throws IOException {
 	String path = f.getCanonicalPath();
-	if (f.isFile()) {
+	if (!path.equals(f.getPath())) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE_LINE, path);
+	} else if (f.isFile()) {
 	    INode node = tree.getRoot();
 	    try {
 		while ((path = trimToken(path, getDelimiter())) != null) {
