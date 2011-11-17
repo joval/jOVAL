@@ -15,9 +15,12 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
+import org.joval.intf.util.tree.ITree;
+import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.system.IEnvironment;
 import org.joval.os.windows.io.WindowsFile;
 import org.joval.util.tree.CachingTree;
+import org.joval.util.tree.Tree;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -30,7 +33,7 @@ import org.joval.util.JOVALSystem;
 public class LocalFilesystem extends CachingTree implements IFilesystem {
     private static boolean WINDOWS = System.getProperty("os.name").startsWith("Windows");
 
-    private boolean autoExpand = true;
+    private boolean autoExpand = true, preloaded = false;
     private IEnvironment env;
     private IPathRedirector redirector;
 
@@ -47,7 +50,38 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     // Implement methdos left abstract in CachingTree
 
     public boolean preload() {
-	return false;
+	if (preloaded) {
+	    return true;
+	}
+
+	try {
+	    if (WINDOWS) {
+		File[] roots = File.listRoots();
+		for (int i=0; i < roots.length; i++) {
+		    String name = roots[i].getName();
+		    ITreeBuilder tree = cache.getTreeBuilder(name);
+		    if (tree == null) {
+			tree = new Tree(name, getDelimiter());
+			cache.addTree(tree);
+		    }
+		    addRecursive(tree, roots[i]);
+		}
+	    } else {
+		ITreeBuilder tree = cache.getTreeBuilder("");
+		if (tree == null) {
+		    tree = new Tree("", getDelimiter());
+		    cache.addTree(tree);
+		}
+		addRecursive(tree, new File(getDelimiter()));
+	    }
+
+	    preloaded = true;
+	    return true;
+	} catch (Exception e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    return false;
+	}
     }
 
     public String getDelimiter() {
@@ -134,5 +168,29 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
      */
     boolean isLetter(char c) {
         return (c >= 65 && c <= 90) || (c >= 95 && c <= 122);
+    }
+
+    private void addRecursive(ITreeBuilder tree, File f) throws IOException {
+	String path = f.getCanonicalPath();
+	if (f.isFile()) {
+	    INode node = tree.getRoot();
+	    try {
+		while ((path = trimToken(path, getDelimiter())) != null) {
+		    node = node.getChild(getToken(path, getDelimiter()));
+		}
+	    } catch (UnsupportedOperationException e) {
+		do {
+		    node = tree.makeNode(node, getToken(path, getDelimiter()));
+		} while ((path = trimToken(path, getDelimiter())) != null);
+	    } catch (NoSuchElementException e) {
+		do {
+		    node = tree.makeNode(node, getToken(path, getDelimiter()));
+		} while ((path = trimToken(path, getDelimiter())) != null);
+	    }
+	} else {
+	    for (File child : f.listFiles()) {
+		addRecursive(tree, child);
+	    }
+	}
     }
 }
