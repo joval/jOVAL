@@ -28,7 +28,7 @@ OVAL_SCHEMA_VERSION=5.10
 # If your system is 32-bit, set ARCH to x86
 #ARCH=x86
 ARCH=x64
-JRE_HOME=$(TOP)/../../tools/jre160_27
+JRE_HOME=$(TOP)/../../tools/jre160_26
 JAVA=$(JAVA_HOME)/bin/java
 JAVAC=$(JAVA_HOME)/bin/javac
 JAR=$(JAVA_HOME)/bin/jar

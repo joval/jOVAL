@@ -130,7 +130,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	        }
 	    }
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
-	} else if (realPath.charAt(0) == File.separatorChar) {
+	} else if (realPath.length() > 0 && realPath.charAt(0) == File.separatorChar) {
 	    return new FileProxy(this, new File(realPath), path);
 	} else {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
