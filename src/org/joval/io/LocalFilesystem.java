@@ -189,10 +189,17 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 		    node = tree.makeNode(node, getToken(path, getDelimiter()));
 		} while ((path = trimToken(path, getDelimiter())) != null);
 	    }
-	} else {
-	    for (File child : f.listFiles()) {
-		addRecursive(tree, child);
+	} else if (f.isDirectory()) {
+	    File[] children = f.listFiles();
+	    if (children == null) {
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE_LINE, path);
+	    } else {
+		for (File child : children) {
+		    addRecursive(tree, child);
+		}
 	    }
+	} else {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE_LINE, path);
 	}
     }
 }
