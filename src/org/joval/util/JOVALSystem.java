@@ -112,6 +112,11 @@ public class JOVALSystem {
     public static final String PROP_SUDO_MAX_RETRIES = "sudo.exec.retries";
 
     /**
+     * Property governing the behavior of local filesystem pre-cache behavior.
+     */
+    public static final String PROP_LOCAL_FS_PRECACHE = "local.fs.precache";
+
+    /**
      * A data structure providing easy access to the OVAL schema object factories.
      */
     public static final Factories factories = new Factories();

@@ -50,7 +50,9 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     // Implement methdos left abstract in CachingTree
 
     public boolean preload() {
-	if (preloaded) {
+	if (!"true".equals(JOVALSystem.getProperty(JOVALSystem.PROP_LOCAL_FS_PRECACHE))) {
+	    return false;
+	} else if (preloaded) {
 	    return true;
 	}
 
