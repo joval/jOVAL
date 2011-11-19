@@ -255,7 +255,7 @@ public class RpminfoAdapter implements IAdapter {
 	    String pkgEpoch = br.readLine();
 	    br.close();
 	    p.waitFor(0);
-	    if (pkgEpoch.equals("(none)")) {
+	    if (pkgEpoch.indexOf("(none)") != -1) {
 		pkgEpoch = "0";
 	    }
 	    RpminfoItem.Epoch epoch = JOVALSystem.factories.sc.linux.createRpminfoItemEpoch();
@@ -275,9 +275,11 @@ public class RpminfoAdapter implements IAdapter {
 	    p.start();
 	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    while((line = br.readLine()) != null) {
-		EntityItemStringType filepath = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		filepath.setValue(line.trim());
-		item.getFilepath().add(filepath);
+		if (!"(contains no files)".equals(line.trim())) {
+		    EntityItemStringType filepath = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    filepath.setValue(line.trim());
+		    item.getFilepath().add(filepath);
+		}
 	    }
 	    br.close();
 	    p.waitFor(0);

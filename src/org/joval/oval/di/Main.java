@@ -236,10 +236,12 @@ public class Main implements IObserver {
 	print(getMessage("MESSAGE_VERSION", JOVALSystem.getProperty(JOVALSystem.PROP_VERSION)));
 	print(getMessage("MESSAGE_BUILD_DATE", JOVALSystem.getProperty(JOVALSystem.PROP_BUILD_DATE)));
 	print(getMessage("MESSAGE_COPYRIGHT"));
-	print("");
-	print(getMessage("MESSAGE_PLUGIN_NAME", state.container.getProperty(IPluginContainer.PROP_DESCRIPTION)));
-	print(getMessage("MESSAGE_PLUGIN_VERSION", state.container.getProperty(IPluginContainer.PROP_VERSION)));
-	print(getMessage("MESSAGE_PLUGIN_COPYRIGHT", state.container.getProperty(IPluginContainer.PROP_COPYRIGHT)));
+	if (state.container != null) {
+	    print("");
+	    print(getMessage("MESSAGE_PLUGIN_NAME", state.container.getProperty(IPluginContainer.PROP_DESCRIPTION)));
+	    print(getMessage("MESSAGE_PLUGIN_VERSION", state.container.getProperty(IPluginContainer.PROP_VERSION)));
+	    print(getMessage("MESSAGE_PLUGIN_COPYRIGHT", state.container.getProperty(IPluginContainer.PROP_COPYRIGHT)));
+	}
 	print(getMessage("MESSAGE_DIVIDER"));
 	print("");
 	print(getMessage("MESSAGE_START_TIME", new Date()));
@@ -276,7 +278,7 @@ public class Main implements IObserver {
 		try {
 		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.dataFile.toString()));
 		    if (!validateSchema(state.dataFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
-			state.container.getPlugin().disconnect();
+			state.getPlugin().disconnect();
 			System.exit(ERR);
 		    }
 		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.dataFile.toString()));
@@ -297,7 +299,7 @@ public class Main implements IObserver {
 			    }
 			}
 		    }
-		    state.container.getPlugin().disconnect();
+		    state.getPlugin().disconnect();
 		    System.exit(ERR);
 		} catch (Exception e) {
 		    logger.log(Level.WARNING, e.getMessage(), e);
@@ -437,7 +439,7 @@ public class Main implements IObserver {
 		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
 	    }
 
-	    IEngine engine = JOVALSystem.createEngine(state.container.getPlugin());
+	    IEngine engine = JOVALSystem.createEngine(state.getPlugin());
 	    engine.setDefinitions(defs);
 	    if (state.inputFile == null) {
 		print(getMessage("MESSAGE_CREATING_SYSTEMCHARACTERISTICS"));
@@ -462,7 +464,6 @@ public class Main implements IObserver {
 	    }
 	    engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	    engine.run();
-	    state.container.getPlugin().disconnect();
 	    switch(engine.getResult()) {
 	      case ERR:
 		throw engine.getError();

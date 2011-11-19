@@ -15,6 +15,8 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import org.joval.intf.plugin.IPlugin;
+
 /**
  * The ExecutionState is responsible for parsing the command-line arguments, and providing data about the user's choices
  * to the Main class.
@@ -37,7 +39,6 @@ public class ExecutionState {
     String DEFAULT_RESULTS_SCHEMATRON	= "oval-results-schematron.xsl";
     String DEFAULT_PLUGIN		= "default";
     String DEFAULT_CONFIG		= "config.properties";
-    String OFFLINE_PLUGIN		= "offline";
 
     File inputFile;
     File variablesFile;
@@ -111,8 +112,6 @@ public class ExecutionState {
 	schematronDefs = false;
 	printLogs = false;
 	printHelp = false;
-
-	loadPlugin(DEFAULT_PLUGIN);
     }
 
     File getXMLTransform() {
@@ -145,6 +144,14 @@ public class ExecutionState {
 	} else {
 	    return schematronResultsXform;
 	}
+    }
+
+    IPlugin getPlugin() {
+	IPlugin plugin = null;
+	if (container != null) {
+	    plugin = container.getPlugin();
+	}
+	return plugin;
     }
 
     Properties getPluginConfig() {
@@ -212,7 +219,7 @@ public class ExecutionState {
 		}
 	    } else if (argv[i].equals("-i")) {
 		inputFile = new File(argv[++i]);
-		loadPlugin(OFFLINE_PLUGIN);
+		container = null;
 	    } else if (argv[i].equals("-d")) {
 		dataFile = new File(argv[++i]);
 	    } else if (argv[i].equals("-g")) {
@@ -261,16 +268,21 @@ public class ExecutionState {
 		Main.print(Main.getMessage("WARNING_ARG", argv[i]));
 	    }
 	}
+	if (container == null && inputFile == null) {
+	    loadPlugin(DEFAULT_PLUGIN);
+	}
 	return validState();
     }
 
     boolean processPluginArguments() {
 	try {
-	    if (pluginConfig == null) {
-		pluginConfig = new Properties();
-		pluginConfig.load(new FileInputStream(new File(DEFAULT_CONFIG)));
+	    if (container != null) {
+		if (pluginConfig == null) {
+		    pluginConfig = new Properties();
+		    pluginConfig.load(new FileInputStream(new File(DEFAULT_CONFIG)));
+		}
+		container.configure(pluginConfig);
 	    }
-	    container.configure(pluginConfig);
 	    return true;
 	} catch (Exception e) {
 	    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
@@ -289,12 +301,16 @@ public class ExecutionState {
 	    Main.print(Main.getMessage("ERROR_NOCHECKSUM"));
 	    return false;
 	}
-	if (inputFile != null && !inputFile.exists()) {
-	    Main.print(Main.getMessage("ERROR_INPUTFILE", inputFile));
-	    return false;
-	}
-	if (container == null) {
+	if (inputFile != null) {
+	    if (inputFile.exists()) {
+		return true;
+	    } else {
+		Main.print(Main.getMessage("ERROR_INPUTFILE", inputFile));
+		return false;
+	    }
+	} else if (container == null) {
 	    Main.print(Main.getMessage("ERROR_PLUGIN"));
+	    return false;
 	}
 	return true;
     }
