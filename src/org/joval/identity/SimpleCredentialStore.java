@@ -64,7 +64,7 @@ public class SimpleCredentialStore implements ICredentialStore {
 		} else if (username != null && password != null) {
 		    cred = new Credential(username, password);
 		} else {
-		    JOVALSystem.warn(JOVALMsg.ERROR_SESSION_CREDENTIAL_PASSWORD, username);
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SESSION_CREDENTIAL_PASSWORD, username);
 		}
 		break;
 	    }
