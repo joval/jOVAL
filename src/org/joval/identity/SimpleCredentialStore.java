@@ -61,8 +61,10 @@ public class SimpleCredentialStore implements ICredentialStore {
 		    cred = new SshCredential(username, new File(privateKey), passphrase, rootPassword);
 		} else if (rootPassword != null) {
 		    cred = new SshCredential(username, password, rootPassword);
-		} else {
+		} else if (username != null && password != null) {
 		    cred = new Credential(username, password);
+		} else {
+		    JOVALSystem.warn(JOVALMsg.ERROR_SESSION_CREDENTIAL_PASSWORD, username);
 		}
 		break;
 	    }

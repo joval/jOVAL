@@ -249,13 +249,14 @@ public class RpminfoAdapter implements IAdapter {
 	if (isInstalled) {
 	    item.setStatus(StatusEnumeration.EXISTS);
 
-	    p = session.createProcess("rpm -q --qf '%{EPOCH}\\n' " + packageName, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+//p = session.createProcess("rpm -q --qf '%{EPOCH}\\n' " + packageName, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	    p = session.createProcess("rpm -q --qf %{EPOCH} " + packageName, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
 	    p.start();
 	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    String pkgEpoch = br.readLine();
 	    br.close();
 	    p.waitFor(0);
-	    if (pkgEpoch.indexOf("(none)") != -1) {
+	    if (pkgEpoch.equals("(none)")) {
 		pkgEpoch = "0";
 	    }
 	    RpminfoItem.Epoch epoch = JOVALSystem.factories.sc.linux.createRpminfoItemEpoch();
