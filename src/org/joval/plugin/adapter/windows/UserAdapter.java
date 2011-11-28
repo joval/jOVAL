@@ -53,8 +53,10 @@ public class UserAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return UserObject.class;
+    private static Class[] objectClasses = {UserObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

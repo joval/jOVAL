@@ -22,11 +22,10 @@ public class VersionAdapter extends Version55Adapter {
     
     // Implement IAdapter
 
-    /**
-     * @override
-     */
-    public Class getObjectClass() {
-	return VersionObject.class;
+    private static Class[] objectClasses = {VersionObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     /**

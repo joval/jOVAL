@@ -50,11 +50,10 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 
     // Implement IAdapter
 
-    /**
-     * @override
-     */
-    public Class getObjectClass() {
-	return Textfilecontent54Object.class;
+    private static Class[] objectClasses = {Textfilecontent54Object.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     // Protected

@@ -268,7 +268,9 @@ public class Engine implements IEngine {
 		try {
 		    plugin.connect();
 		    for (IAdapter adapter : plugin.getAdapters()) {
-			adapters.put(adapter.getObjectClass(), new AdapterManager(adapter));
+			for (Class clazz : adapter.getObjectClasses()) {
+			    adapters.put(clazz, new AdapterManager(adapter));
+			}
 		    }
 		    scan();
 		} finally {
@@ -374,24 +376,23 @@ public class Engine implements IEngine {
 	producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
 	sc = new SystemCharacteristics(plugin);
 
-
 	//
 	// First, find all the object types that are referenced by variables
 	//
 	List<Class> varTypes = new Vector<Class>();
 	Iterator<VariableType> varIter = definitions.iterateVariables();
 	while(varIter.hasNext()) {
-	    VariableType vt = varIter.next();
-	    getObjectClasses(vt, varTypes);
+	    getObjectClasses(varIter.next(), varTypes);
 	}
 
 	//
 	// Second, scan all those types (for which there are adapters)
 	//
+	Collection<Class> scannedClasses = new HashSet<Class>();
 	for (Class clazz : varTypes) {
 	    AdapterManager manager = adapters.get(clazz);
 	    if (manager != null) {
-		scanAdapter(manager);
+		scannedClasses.addAll(scanAdapter(manager));
 	    }
 	}
 
@@ -400,10 +401,10 @@ public class Engine implements IEngine {
 	//
 	List<Class> allTypes = getObjectClasses(definitions.iterateObjects());
 	for (Class clazz : allTypes) {
-	    if (!varTypes.contains(clazz)) {
+	    if (!scannedClasses.contains(clazz)) {
 		AdapterManager manager = adapters.get(clazz);
 		if (manager != null) {
-		    scanAdapter(manager);
+		    scannedClasses.addAll(scanAdapter(manager));
 		}
 	    }
 	}
@@ -427,25 +428,31 @@ public class Engine implements IEngine {
 
     /**
      * Fetch all items associated with objects serviced by the given adapter and store them in the SystemCharacteristics.
+     *
+     * @returns the types that were scanned
      */
-    private void scanAdapter(AdapterManager manager) throws OvalException {
+    private Collection<Class> scanAdapter(AdapterManager manager) throws OvalException {
+	Collection<Class> scannedClasses = new Vector<Class>();
 	IAdapter adapter = manager.getAdapter();
 	if (adapter.connect()) {
 	    manager.setActive(true);
 	    try {
-		Iterator<ObjectType> iter = definitions.iterateObjects(adapter.getObjectClass());
-		while (iter.hasNext()) {
-		    ObjectType obj = iter.next();
-		    String objectId = obj.getId();
+		for (Class clazz : adapter.getObjectClasses()) {
+		    scannedClasses.add(clazz);
+		    Iterator<ObjectType> iter = definitions.iterateObjects(clazz);
+		    while (iter.hasNext()) {
+			ObjectType obj = iter.next();
+			String objectId = obj.getId();
 
-		    //
-		    // If items have been retrieved in the course of resolving a Set or a Variable, then skip
-		    // its collection.
-		    //
-		    try {
-			sc.getObject(objectId);
-		    } catch (NoSuchElementException e) {
-			scanObject(new RequestContext(this, obj));
+			//
+			// If items have been retrieved in the course of resolving a Set or a Variable, then skip
+			// its collection.
+			//
+			try {
+			    sc.getObject(objectId);
+			} catch (NoSuchElementException e) {
+			    scanObject(new RequestContext(this, obj));
+			}
 		    }
 		}
 	    } finally {
@@ -453,6 +460,7 @@ public class Engine implements IEngine {
 		adapter.disconnect();
 	    }
 	}
+	return scannedClasses;
     }
 
     /**

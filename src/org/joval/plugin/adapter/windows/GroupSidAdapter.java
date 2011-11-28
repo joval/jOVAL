@@ -45,11 +45,10 @@ public class GroupSidAdapter extends UserAdapter {
 	super(session);
     }
 
-    /**
-     * @override
-     */
-    public Class getObjectClass() {
-	return GroupSidObject.class;
+    private static Class[] objectClasses = {GroupSidObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     /**

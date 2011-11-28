@@ -63,8 +63,10 @@ public class ProcessAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return ProcessObject.class;
+    private static Class[] objectClasses = {ProcessObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

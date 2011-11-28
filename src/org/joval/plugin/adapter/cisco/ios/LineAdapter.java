@@ -43,8 +43,10 @@ public class LineAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return LineObject.class;
+    private static Class[] objectClasses = {LineObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

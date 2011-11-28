@@ -56,8 +56,10 @@ public class PatchAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return PatchObject.class;
+    private static Class[] objectClasses = {PatchObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

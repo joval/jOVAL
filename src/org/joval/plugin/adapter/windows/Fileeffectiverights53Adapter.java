@@ -61,8 +61,10 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return Fileeffectiverights53Object.class;
+    private static Class[] objectClasses = {Fileeffectiverights53Object.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

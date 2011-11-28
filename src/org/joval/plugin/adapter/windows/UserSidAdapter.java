@@ -32,11 +32,10 @@ public class UserSidAdapter extends UserSid55Adapter {
 	super(session);
     }
 
-    /**
-     * @override
-     */
-    public Class getObjectClass() {
-	return UserSidObject.class;
+    private static Class[] objectClasses = {UserSidObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     /**

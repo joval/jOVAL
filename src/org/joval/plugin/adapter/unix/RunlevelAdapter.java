@@ -58,8 +58,10 @@ public class RunlevelAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return RunlevelObject.class;
+    private static Class[] objectClasses = {RunlevelObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

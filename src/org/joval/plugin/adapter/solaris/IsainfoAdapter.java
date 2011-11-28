@@ -44,8 +44,10 @@ public class IsainfoAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return IsainfoObject.class;
+    private static Class[] objectClasses = {IsainfoObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

@@ -45,8 +45,10 @@ public class Patch54Adapter extends PatchAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return Patch54Object.class;
+    private static Class[] objectClasses = {Patch54Object.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {

@@ -35,8 +35,10 @@ public class FamilyAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return FamilyObject.class;
+    private static Class[] objectClasses = {FamilyObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

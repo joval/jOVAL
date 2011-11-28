@@ -54,8 +54,10 @@ public class RpminfoAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return RpminfoObject.class;
+    private static Class[] objectClasses = {RpminfoObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

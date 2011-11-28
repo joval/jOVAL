@@ -20,9 +20,9 @@ import org.joval.oval.OvalException;
  */
 public interface IAdapter {
     /**
-     * Identify the class of a subclass of ObjectType for which this adapter knows how to retrieve item data.
+     * Identify the classes of a subclass of ObjectType for which this adapter knows how to retrieve item data.
      */
-    public Class getObjectClass();
+    public Class[] getObjectClasses();
 
     /**
      * The adapter should open any special resources it's going to need in order to scan objects on the machine.  The engine

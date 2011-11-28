@@ -58,8 +58,10 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return Environmentvariable58Object.class;
+    private static Class[] objectClasses = {Environmentvariable58Object.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectionException {

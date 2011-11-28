@@ -49,8 +49,10 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return TextfilecontentObject.class;
+    private static Class[] objectClasses = {TextfilecontentObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     // Protected

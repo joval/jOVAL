@@ -70,8 +70,10 @@ public class RegistryAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return RegistryObject.class;
+    private static Class[] objectClasses = {RegistryObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

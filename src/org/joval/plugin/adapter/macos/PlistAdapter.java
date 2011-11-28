@@ -54,8 +54,10 @@ public class PlistAdapter extends BaseFileAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return PlistObject.class;
+    private static Class[] objectClasses = {PlistObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     // Protected

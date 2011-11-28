@@ -51,8 +51,10 @@ public class WmiAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return WmiObject.class;
+    private static Class[] objectClasses = {WmiObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

@@ -54,8 +54,10 @@ public class PackageAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return PackageObject.class;
+    private static Class[] objectClasses = {PackageObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

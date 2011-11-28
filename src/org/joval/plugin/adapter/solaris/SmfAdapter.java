@@ -57,8 +57,10 @@ public class SmfAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return SmfObject.class;
+    private static Class[] objectClasses = {SmfObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

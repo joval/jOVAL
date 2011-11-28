@@ -65,8 +65,10 @@ public class FileAdapter extends BaseFileAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return FileObject.class;
+    private static Class[] objectClasses = {FileObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

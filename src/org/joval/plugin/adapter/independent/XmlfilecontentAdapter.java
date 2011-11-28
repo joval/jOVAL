@@ -66,8 +66,10 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return XmlfilecontentObject.class;
+    private static Class[] objectClasses = {XmlfilecontentObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     // Protected

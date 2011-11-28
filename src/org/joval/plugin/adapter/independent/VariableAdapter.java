@@ -41,8 +41,10 @@ public class VariableAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return VariableObject.class;
+    private static Class[] objectClasses = {VariableObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

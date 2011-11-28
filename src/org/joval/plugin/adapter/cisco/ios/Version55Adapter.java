@@ -50,8 +50,10 @@ public class Version55Adapter implements IAdapter {
     
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return Version55Object.class;
+    private static Class[] objectClasses = {Version55Object.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

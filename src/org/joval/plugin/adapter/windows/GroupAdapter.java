@@ -49,11 +49,10 @@ public class GroupAdapter extends UserAdapter {
 
     // Implement IAdapter
 
-    /**
-     * @override
-     */
-    public Class getObjectClass() {
-	return GroupObject.class;
+    private static Class[] objectClasses = {GroupObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     /**

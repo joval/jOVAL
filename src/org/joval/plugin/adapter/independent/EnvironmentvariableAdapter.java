@@ -44,8 +44,10 @@ public class EnvironmentvariableAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return EnvironmentvariableObject.class;
+    private static Class[] objectClasses = {EnvironmentvariableObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {

@@ -47,8 +47,10 @@ public class UnameAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Class getObjectClass() {
-	return UnameObject.class;
+    private static Class[] objectClasses = {UnameObject.class};
+
+    public Class[] getObjectClasses() {
+	return objectClasses;
     }
 
     public boolean connect() {
