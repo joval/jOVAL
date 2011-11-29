@@ -100,8 +100,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	}
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	Collection<String> paths = getPathList(rc, fs, behaviors);
-	for (String path : paths) {
+	for (String path : getPathList(rc, fs, behaviors)) {
 	    IFile f = null;
 	    try {
 		f = fs.getFile(path);
@@ -133,7 +132,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
 		    }
-		} else if (fObj.isSetFilename() && fObj.getFilename() != null) {
+		} else if (!fObj.isFilenameNil() && fObj.isSetFilename() && fObj.getFilename() != null) {
 		    if (isDirectory) {
 			//
 			// Object is looking for files, so skip over this directory
@@ -151,6 +150,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 			fItem.setFilename(filenameType);
 		    }
 		} else if (fObj.isSetPath()) {
+		    if (fObj.isFilenameNil() && !isDirectory) {
+			//
+			// If xsi:nil is set for the filename element, we only want directories
+			//
+			continue;
+		    }
+
 		    EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    pathType.setValue(dirPath);
 		    fItem.setPath(pathType);
@@ -222,6 +228,9 @@ public abstract class BaseFileAdapter implements IAdapter {
     /**
      * Get a list of String paths for this object.  This accommodates searches (from pattern match operations),
      * singletons (from equals operations) and handles recursive searches specified by FileBehaviors.
+     *
+     * The resulting collection may contain extraneous objects.  For instance, it may contain files that match the
+     * object path pattern even though the filename may have been nilled.  Hence, the results should be filtered.
      */
     final Collection<String> getPathList(IRequestContext rc, IFilesystem fs, ReflectedFileBehaviors fb) throws OvalException {
 	ObjectType obj = rc.getObject();
@@ -230,13 +239,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    return list;
 	}
 
-	list = new Vector<String>();
+	list = new HashSet<String>();
 	try {
 	    ReflectedFileObject fObj = new ReflectedFileObject(obj);
 
 	    boolean patternMatch = false;
 	    if (fObj.isSetFilepath()) {
-		Collection<String> filepaths = new Vector<String>();
+		Collection<String> filepaths = new HashSet<String>();
 		EntityObjectStringType filepath = fObj.getFilepath();
 		if (filepath.isSetVarRef()) {
 		    filepaths.addAll(rc.resolve(filepath.getVarRef()));
@@ -261,7 +270,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		//
 		// First, collect all possible matching paths (i.e., dirs)
 		//
-		Collection<String> paths = new Vector<String>();
+		Collection<String> paths = new HashSet<String>();
 		EntityObjectStringType path = fObj.getPath();
 		if (path.isSetVarRef()) {
 		    paths.addAll(rc.resolve(path.getVarRef()));
@@ -276,9 +285,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		  case PATTERN_MATCH:
 		    patternMatch = true;
 		    for (String value : paths) {
-			for (String s : fs.search(Pattern.compile(value), false)) {
-			    list.add(s);
-			}
+			list.addAll(fs.search(Pattern.compile(value), false));
 		    }
 		    break;
 		  default:
@@ -287,87 +294,65 @@ public abstract class BaseFileAdapter implements IAdapter {
 
 		if (fb != null) {
 		    list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs);
-		} else if (patternMatch) {
-		    //
-		    // Wildcard pattern matches are really supposed to be recursive searches, unfortunately
-		    //
-		    Collection<String> newList = new Vector<String>();
-		    for (String value : list) {
-			if (((String)path.getValue()).indexOf(".*") != -1 ||
-			    ((String)path.getValue()).indexOf(".+") != -1) {
-			    Collection<String> l = new Vector<String>();
-			    l.add(value);
-			    newList.addAll(getDirs(l, -1, "down", "directories", fs));
-			}
-		    }
-		    for (String value : newList) {
-			if (!list.contains(value)) {
-			    list.add(value);
-			}
-		    }
 		}
 
-		if (fObj.isSetFilename()) {
+		if (!fObj.isFilenameNil() && fObj.isSetFilename()) {
 		    EntityObjectStringType filename = fObj.getFilename();
-		    if (filename == null) {
-			// False positive for isSetFilename -- happens with nil
+		    Collection<String> fnames = new Vector<String>();
+		    if (filename.isSetVarRef()) {
+			fnames.addAll(rc.resolve(filename.getVarRef()));
 		    } else {
-			Collection<String> fnames = new Vector<String>();
-			if (filename.isSetVarRef()) {
-			    fnames.addAll(rc.resolve(filename.getVarRef()));
-			} else {
-			    fnames.add((String)filename.getValue());
-			}
-			Collection<String> files = new Vector<String>();
-			for (String pathString : list) {
-			    if (!pathString.endsWith(fs.getDelimiter())) {
-				pathString = pathString + fs.getDelimiter();
-			    }
-			    for (String fname : fnames) {
-				try {
-				    switch(filename.getOperation()) {
-				      case PATTERN_MATCH: {
-					IFile f = fs.getFile(pathString);
-					if (f.exists() && f.isDirectory() && f.hasChildren()) {
-					    for (INode child : f.getChildren(Pattern.compile(fname))) {
-						files.add(child.getPath());
-					    }
-					}
-					break;
-				      }
- 
-				      case EQUALS:
-					files.add(pathString + fname);
-					break;
-    
-				      case NOT_EQUAL: {
-					IFile f = fs.getFile(pathString);
-					if (f.exists() && f.isDirectory() && f.hasChildren()) {
-					    for (INode child : f.getChildren(Pattern.compile(fname))) {
-						files.add(child.getPath());
-					    }
-					}
-					break;
-				      }
-     
-				      default:
-					throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
-										       filename.getOperation()));
-				    }
-				} catch (UnsupportedOperationException e) {
-				    // ignore -- not a directory
-				} catch (IllegalArgumentException e) {
-       				    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-				} catch (IOException e) {
-				    MessageType msg = JOVALSystem.factories.common.createMessageType();
-				    msg.setLevel(MessageLevelEnumeration.ERROR);
-				    msg.setValue(e.getMessage());
-				    rc.addMessage(msg);
-				}
-			    }
-			}
-			list = files;
+			fnames.add((String)filename.getValue());
 		    }
+		    Collection<String> files = new Vector<String>();
+		    for (String pathString : list) {
+			if (!pathString.endsWith(fs.getDelimiter())) {
+			    pathString = pathString + fs.getDelimiter();
+			}
+			for (String fname : fnames) {
+			    try {
+				switch(filename.getOperation()) {
+				  case PATTERN_MATCH: {
+				    IFile f = fs.getFile(pathString);
+				    if (f.exists() && f.isDirectory() && f.hasChildren()) {
+					for (INode child : f.getChildren(Pattern.compile(fname))) {
+					    files.add(child.getPath());
+					}
+				    }
+				    break;
+				  }
+ 
+				  case EQUALS:
+				    files.add(pathString + fname);
+				    break;
+
+				  case NOT_EQUAL: {
+				    IFile f = fs.getFile(pathString);
+				    if (f.exists() && f.isDirectory() && f.hasChildren()) {
+					for (INode child : f.getChildren(Pattern.compile(fname))) {
+					    files.add(child.getPath());
+					}
+				    }
+				    break;
+				  }
+ 
+				  default:
+				    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
+										   filename.getOperation()));
+				}
+			    } catch (UnsupportedOperationException e) {
+				// ignore -- not a directory
+			    } catch (IllegalArgumentException e) {
+				JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    } catch (IOException e) {
+				MessageType msg = JOVALSystem.factories.common.createMessageType();
+				msg.setLevel(MessageLevelEnumeration.ERROR);
+				msg.setValue(e.getMessage());
+				rc.addMessage(msg);
+			    }
+			}
+		    }
+		    list = files;
 		}
 	    } else {
 		throw new OvalException("ERROR_BAD_FILEOBJECT" + obj.getId());
@@ -393,7 +378,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	if ("none".equals(direction) || depth == 0) {
 	    return list;
 	} else {
-	    Collection<String> results = new Vector<String>();
+	    Collection<String> results = new HashSet<String>();
 	    for (String path : list) {
 		if (!path.endsWith(fs.getDelimiter())) {
 		    path = path + fs.getDelimiter();
@@ -415,16 +400,16 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    int ptr = 0;
 			    ptr = path.lastIndexOf(fs.getDelimiter(), path.lastIndexOf(fs.getDelimiter())-1);
 			    if (ptr != -1) {
-				Vector<String> v = new Vector<String>();
-				v.add(path.substring(0, ptr));
-				results.addAll(getDirs(v, --depth, direction, recurse, fs));
+				Collection<String> c = new HashSet<String>();
+				c.add(path.substring(0, ptr));
+				results.addAll(getDirs(c, --depth, direction, recurse, fs));
 			    }
 			} else { // recurse down
-			    Vector<String> v = new Vector<String>();
+			    Collection<String> c = new HashSet<String>();
 			    for (INode child : f.getChildren()) {
-				v.add(child.getPath());
+				c.add(child.getPath());
 			    }
-			    results.addAll(getDirs(v, --depth, direction, recurse, fs));
+			    results.addAll(getDirs(c, --depth, direction, recurse, fs));
 			}
 		    }
 		} catch (UnsupportedOperationException e) {	
@@ -438,16 +423,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
-	    //
-	    // Eliminate any duplicates, and remove any trailing slashes
-	    //
-	    HashSet<String> deduped = new HashSet<String>();
-	    for (String s : results) {
-		if (!deduped.contains(s)) {
-		    deduped.add(s);
-		}
-	    }
-	    return deduped;
+	    return results;
 	}
     }
 
@@ -472,6 +448,7 @@ public abstract class BaseFileAdapter implements IAdapter {
     class ReflectedFileObject {
 	ObjectType obj;
 	String id = null;
+	boolean filenameNil = false;
 	EntityObjectStringType filepath = null, path = null, filename = null;
 	ReflectedFileBehaviors behaviors = null;
 
@@ -507,7 +484,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 		Object o = getFilename.invoke(obj);
 		if (o != null) {
 		    if (o instanceof JAXBElement) {
-			o = ((JAXBElement)o).getValue();
+			JAXBElement j = (JAXBElement)o;
+			filenameNil = j.isNil();
+			o = j.getValue();
 		    }
 		    filename = (EntityObjectStringType)o;
 		}
@@ -540,7 +519,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    } catch (IllegalArgumentException e) {
 	    } catch (InvocationTargetException e) {
 	    }
-
 	}
 
 	String getId() {
@@ -553,6 +531,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 
 	EntityObjectStringType getFilepath() {
 	    return filepath;
+	}
+
+	boolean isFilenameNil() {
+	    return filenameNil;
 	}
 
 	boolean isSetFilename() {

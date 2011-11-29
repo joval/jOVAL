@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oval_definitions xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd      http://oval.mitre.org/XMLSchema/oval-definitions-5#independent independent-definitions-schema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:ind-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5">
+  <generator>
+    <oval:schema_version>5.9</oval:schema_version>
+    <oval:timestamp>2009-01-12T10:41:00-05:00</oval:timestamp>
+  </generator>
+  <definitions>
+    <definition id="oval:org.mitre.oval.test:def:352" version="1" class="miscellaneous">
+      <metadata>
+        <title>Evaluate to true if the int datatype is properly supported</title>
+        <description>This definition is intended to evalutate to true if the interpreter properly supports the int datatype and all of its valid operations.</description>
+      </metadata>
+      <criteria operator="AND">
+        <criteria operator="AND" comment="True if the equals operation is supported">
+          <criterion comment="Test that the equals operation is supported with two equal integer values." test_ref="oval:org.mitre.oval.test:tst:1019"/>
+          <criterion negate="true" comment="Test that the equals operation is supported with two unequal integer values." test_ref="oval:org.mitre.oval.test:tst:1182"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the not equal operation is supported">
+          <criterion negate="true" comment="Test that the not equal operation is supported with two equal integer values." test_ref="oval:org.mitre.oval.test:tst:1791"/>
+          <criterion comment="Test that the not equal operation is supported with two unequal integer values." test_ref="oval:org.mitre.oval.test:tst:1781"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the greater than operation is supported">
+          <criterion comment="Test that the greater than operation is supported with a greater than integer value." test_ref="oval:org.mitre.oval.test:tst:1770"/>
+          <criterion negate="true" comment="Test that the greater than operation is supported with two equal integer values." test_ref="oval:org.mitre.oval.test:tst:885"/>
+          <criterion negate="true" comment="Test that the greater than operation is supported with a less than integer value." test_ref="oval:org.mitre.oval.test:tst:1520"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the greater than or equal operation is supported">
+          <criterion comment="Test that the greater than or equal operation is supported with a greater than integer value." test_ref="oval:org.mitre.oval.test:tst:1350"/>
+          <criterion comment="Test that the greater than or equal operation is supported with two equal integer values." test_ref="oval:org.mitre.oval.test:tst:1543"/>
+          <criterion negate="true" comment="Test that the greater than or equal operation is supported with a less than integer value." test_ref="oval:org.mitre.oval.test:tst:1486"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the less than operation is supported">
+          <criterion comment="Test that the less than operation is supported with a less than integer value." test_ref="oval:org.mitre.oval.test:tst:1698"/>
+          <criterion negate="true" comment="Test that the less than operation is supported with two equal integer values." test_ref="oval:org.mitre.oval.test:tst:1327"/>
+          <criterion negate="true" comment="Test that the less than operation is supported with a greater than integer value." test_ref="oval:org.mitre.oval.test:tst:1851"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the less than or equal operation is supported">
+          <criterion comment="Test that the less than or equal operation is supported with a less than integer value." test_ref="oval:org.mitre.oval.test:tst:1709"/>
+          <criterion comment="Test that the less than or equal operation is supported with two equal integer values." test_ref="oval:org.mitre.oval.test:tst:1818"/>
+          <criterion negate="true" comment="Test that the less than or equal operation is supported with a greater than integer value." test_ref="oval:org.mitre.oval.test:tst:1590"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the bitwise and operation is supported">
+          <criterion comment="Test that the bitwise and operation is supported with a single integer where the result is the same as the state mask." test_ref="oval:org.mitre.oval.test:tst:1806"/>
+          <criterion negate="true" comment="Test that the bitwise and operation is supported with a single integer where the result is not the same as the state mask." test_ref="oval:org.mitre.oval.test:tst:1769"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the bitwise or operation is supported">
+          <criterion comment="Test that the bitwise or operation is supported with a single integer where the result is the same as the state mask." test_ref="oval:org.mitre.oval.test:tst:1690"/>
+          <criterion negate="true" comment="Test that the bitwise or operation is supported with a single integer where the result is not the same as the state mask." test_ref="oval:org.mitre.oval.test:tst:1615"/>
+        </criteria>
+      </criteria>
+    </definition>
+  </definitions>
+  <tests>
+    <variable_test id="oval:org.mitre.oval.test:tst:1019" version="1" comment="Test that the equals operation is supported with two equal integer values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:976"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1241"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1182" version="1" comment="Test that the equals operation is supported with two unequal integer values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1138"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1323"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1791" version="1" comment="Test that the not equal operation is supported with two equal integer values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:976"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1225"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1781" version="1" comment="Test that the not equal operation is supported with two unequal integer values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1138"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1439"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1770" version="1" comment="Test that the greater than operation is supported with a greater than integer value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1052"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1455"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:885" version="1" comment="Test that the greater than operation is supported with two equal integer values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:976"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1208"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1520" version="1" comment="Test that the greater than operation is supported with a less than integer value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1138"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1003"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1350" version="1" comment="Test that the greater than or equal operation is supported with a greater than integer value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1052"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1301"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1543" version="1" comment="Test that the greater than or equal operation is supported with two equal integer values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:976"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1398"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1486" version="1" comment="Test that the greater than or equal operation is supported with a less than integer value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1138"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1560"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1698" version="1" comment="Test that the less than operation is supported with a less than integer value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1138"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1073"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1327" version="1" comment="Test that the less than operation is supported with two equal integer values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:976"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1526"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1851" version="1" comment="Test that the less than operation is supported with a greater than integer value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1052"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1157"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1709" version="1" comment="Test that the less than or equal operation is supported with a less than integer value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1138"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:595"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1818" version="1" comment="Test that the less than or equal operation is supported with two equal integer values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:976"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1321"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1590" version="1" comment="Test that the less than or equal operation is supported with a greater than integer value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1052"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1453"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1806" version="1" comment="Test that the bitwise and operation is supported with a single integer where the result is the same as the state mask." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1079"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1395"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1769" version="1" comment="Test that the bitwise and operation is supported with a single integer where the result is not the same as the state mask." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1009"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:605"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1690" version="1" comment="Test that the bitwise or operation is supported with a single integer where the result is the same as the state mask." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1079"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1487"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1615" version="1" comment="Test that the bitwise or operation is supported with a single integer where the result is not the same as the state mask." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1009"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1250"/>
+    </variable_test>
+  </tests>
+  <objects>
+    <variable_object id="oval:org.mitre.oval.test:obj:976" version="1" comment="This variable_object references the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:599</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1138" version="1" comment="This variable_object references the integer value '942'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:935</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1052" version="1" comment="This variable_object references the integer value '5890'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:671</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1079" version="1" comment="This variable_object references the integer value '6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:22</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1009" version="1" comment="This variable_object references the integer value '1'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:75</var_ref>
+    </variable_object>
+  </objects>
+  <states>
+    <variable_state id="oval:org.mitre.oval.test:ste:1241" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1323" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1225" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="not equal">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1439" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="not equal">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1455" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="greater than">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1208" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="greater than">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1003" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="greater than">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1301" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="greater than or equal">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1398" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="greater than or equal">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1560" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="greater than or equal">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1073" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="less than">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1526" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="less than">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1157" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="less than">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:595" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="less than or equal">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1321" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="less than or equal">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1453" version="1" comment="This variable_state represents the integer value '1234'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="less than or equal">1234</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1395" version="1" comment="This variable_state represents the integer value '4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="bitwise and">4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:605" version="1" comment="This variable_state represents the integer value '4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="bitwise and">4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1487" version="1" comment="This variable_state represents the integer value '14'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="bitwise or">14</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1250" version="1" comment="This variable_state represents the integer value '14'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="int" operation="bitwise or">14</value>
+    </variable_state>
+  </states>
+  <variables>
+    <constant_variable id="oval:org.mitre.oval.test:var:599" version="1" comment="This constant_variable represents the integer value '1234'." datatype="int">
+      <value>1234</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:935" version="1" comment="This constant_variable represents the integer value '942'." datatype="int">
+      <value>942</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:671" version="1" comment="This constant_variable represents the integer value '5890'." datatype="int">
+      <value>5890</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:22" version="1" comment="This constant_variable represents the integer value '6'." datatype="int">
+      <value>6</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:75" version="1" comment="This constant_variable represents the integer value '1'." datatype="int">
+      <value>1</value>
+    </constant_variable>
+  </variables>
+</oval_definitions>

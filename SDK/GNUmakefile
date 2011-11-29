@@ -19,9 +19,6 @@ clean:
 javadocs:
 	@$(MAKE) --keep-going --directory=plugin javadocs
 
-test:
-	@$(MAKE) --keep-going --directory=sample test
-
 install: all
 	mkdir -p sample/rsrc/lib
 	cp $(SCHEMALIB) sample/rsrc/lib
@@ -29,6 +26,12 @@ install: all
 	cp engine/jOVAL*.jar sample/rsrc/lib
 	cp plugin/rsrc/lib/*.jar sample/rsrc/lib
 	cp plugin/jOVAL*.jar sample/rsrc/lib
+	mkdir -p test/rsrc/lib
+	cp $(SCHEMALIB) test/rsrc/lib
+	cp engine/rsrc/lib/*.jar test/rsrc/lib
+	cp engine/jOVAL*.jar test/rsrc/lib
+	cp plugin/rsrc/lib/*.jar test/rsrc/lib
+	cp plugin/jOVAL*.jar test/rsrc/lib
 
 sample:
 	@$(MAKE) --keep-going --directory=sample all

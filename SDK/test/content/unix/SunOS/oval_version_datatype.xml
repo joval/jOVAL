@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oval_definitions xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd      http://oval.mitre.org/XMLSchema/oval-definitions-5#independent independent-definitions-schema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:ind-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5">
+  <generator>
+    <oval:schema_version>5.9</oval:schema_version>
+    <oval:timestamp>2009-01-12T10:41:00-05:00</oval:timestamp>
+  </generator>
+  <definitions>
+    <definition id="oval:org.mitre.oval.test:def:341" version="1" class="miscellaneous">
+      <metadata>
+        <title>Evaluate to true if the version datatype is properly supported</title>
+        <description>This definition is intended to evalutate to true if the interpreter properly supports the version datatype and all of its valid operations.</description>
+      </metadata>
+      <criteria operator="AND">
+        <criteria operator="AND" comment="True if the equals operation is supported.">
+          <criterion comment="Test that the equals operation is supported with two equal version values." test_ref="oval:org.mitre.oval.test:tst:1821"/>
+          <criterion negate="true" comment="Test that the equals operation is supported with two unequal version values." test_ref="oval:org.mitre.oval.test:tst:1739"/>
+          <criterion comment="Test that the equals operation is supported with multiple equal version values." test_ref="oval:org.mitre.oval.test:tst:1700"/>
+          <criterion negate="true" comment="Test that the equals operation is supported with multiple unequal version values." test_ref="oval:org.mitre.oval.test:tst:1789"/>
+          <criterion comment="Test that the equals operation is supported with multiple equal version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1297"/>
+          <criterion negate="true" comment="Test that the equals operation is supported with multiple unequal version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1816"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the not equal operation is supported.">
+          <criterion negate="true" comment="Test that the not equal operation is supported with two equal version values." test_ref="oval:org.mitre.oval.test:tst:1624"/>
+          <criterion comment="Test that the not equal operation is supported with two unequal version values." test_ref="oval:org.mitre.oval.test:tst:1666"/>
+          <criterion negate="true" comment="Test that the not equal operation is supported with multiple equal version values." test_ref="oval:org.mitre.oval.test:tst:1823"/>
+          <criterion comment="Test that the not equal operation is supported with multiple unequal version values." test_ref="oval:org.mitre.oval.test:tst:1612"/>
+          <criterion negate="true" comment="Test that the not equal operation is supported with multiple equal version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1570"/>
+          <criterion comment="Test that the not equal operation is supported with multiple unequal version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1404"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the greater than operation is supported.">
+          <criterion comment="Test that the greater than operation is supported with a single greater than version value." test_ref="oval:org.mitre.oval.test:tst:1380"/>
+          <criterion negate="true" comment="Test that the greater than operation is supported with two equal version values." test_ref="oval:org.mitre.oval.test:tst:1592"/>
+          <criterion negate="true" comment="Test that the greater than operation is supported with a single less than version value." test_ref="oval:org.mitre.oval.test:tst:1855"/>
+          <criterion comment="Test that the greater than operation is supported with multiple greater than version values." test_ref="oval:org.mitre.oval.test:tst:1465"/>
+          <criterion negate="true" comment="Test that the greater than operation is supported with multiple equal version values." test_ref="oval:org.mitre.oval.test:tst:1871"/>
+          <criterion negate="true" comment="Test that the greater than operation is supported with multiple less than version values." test_ref="oval:org.mitre.oval.test:tst:1870"/>
+          <criterion comment="Test that the greater than operation is supported with multiple greater than version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1720"/>
+          <criterion negate="true" comment="Test that the greater than operation is supported with multiple equal version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1693"/>
+          <criterion negate="true" comment="Test that the greater than operation is supported with multiple less than version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1660"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the greater than or equal operation is supported.">
+          <criterion comment="Test that the greater than or equal operation is supported with a single greater than version value." test_ref="oval:org.mitre.oval.test:tst:1408"/>
+          <criterion comment="Test that the greater than or equal operation is supported with two equal version values." test_ref="oval:org.mitre.oval.test:tst:1378"/>
+          <criterion negate="true" comment="Test that the greater than or equal operation is supported with a single less than version value." test_ref="oval:org.mitre.oval.test:tst:1723"/>
+          <criterion comment="Test that the greater than or equal operation is supported with multiple greater than version values." test_ref="oval:org.mitre.oval.test:tst:1683"/>
+          <criterion comment="Test that the greater than or equal operation is supported with multiple equal version values." test_ref="oval:org.mitre.oval.test:tst:1682"/>
+          <criterion negate="true" comment="Test that the greater than or equal operation is supported with multiple less than version values." test_ref="oval:org.mitre.oval.test:tst:1873"/>
+          <criterion comment="Test that the greater than or equal operation is supported with multiple greater than version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1701"/>
+          <criterion comment="Test that the greater than or equal operation is supported with multiple equal version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1035"/>
+          <criterion negate="true" comment="Check of greater than or equal operation is supported with multiple less than version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1694"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the less than operation is supported.">
+          <criterion comment="Test that the less than operation is supported with a single less than version value." test_ref="oval:org.mitre.oval.test:tst:1606"/>
+          <criterion negate="true" comment="Test that the less than operation is supported with two equal version values." test_ref="oval:org.mitre.oval.test:tst:2032"/>
+          <criterion negate="true" comment="Test that the less than operation is supported with a single greater than version value." test_ref="oval:org.mitre.oval.test:tst:1848"/>
+          <criterion comment="Test that the less than operation is supported with multiple less than version values." test_ref="oval:org.mitre.oval.test:tst:1637"/>
+          <criterion negate="true" comment="Test that the less than operation is supported with multiple equal version values." test_ref="oval:org.mitre.oval.test:tst:1980"/>
+          <criterion negate="true" comment="Test that the less than operation is supported with multiple greater than version values." test_ref="oval:org.mitre.oval.test:tst:1776"/>
+          <criterion comment="Test that the less than operation is supported with multiple less than version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1835"/>
+          <criterion negate="true" comment="Test that the less than operation is supported with multiple equal version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1847"/>
+          <criterion negate="true" comment="Test that the less than operation is supported with multiple greater than version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1839"/>
+        </criteria>
+        <criteria operator="AND" comment="True if the less than or equal operation is supported.">
+          <criterion comment="Test that the less than or equal operation is supported with a single less than version value." test_ref="oval:org.mitre.oval.test:tst:1450"/>
+          <criterion comment="Test that the less than or equal operation is supported with two equal version values." test_ref="oval:org.mitre.oval.test:tst:1752"/>
+          <criterion negate="true" comment="Test that the less than or equal operation is supported with a single greater than version value." test_ref="oval:org.mitre.oval.test:tst:1572"/>
+          <criterion comment="Test that the less than or equal operation is supported with multiple less than version values." test_ref="oval:org.mitre.oval.test:tst:1368"/>
+          <criterion comment="Test that the less than or equal operation is supported with multiple equal version values." test_ref="oval:org.mitre.oval.test:tst:1527"/>
+          <criterion negate="true" comment="Test that the less than or equal operation is supported with multiple greater than version values." test_ref="oval:org.mitre.oval.test:tst:1935"/>
+          <criterion comment="Test that the less than or equal operation is supported with multiple less than version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1801"/>
+          <criterion comment="Test that the less than or equal operation is supported with multiple equal version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1589"/>
+          <criterion negate="true" comment="Test that the less than or equal operation is supported with multiple greater than version values that utilize mixed delimiters." test_ref="oval:org.mitre.oval.test:tst:1636"/>
+        </criteria>
+      </criteria>
+    </definition>
+  </definitions>
+  <tests>
+    <variable_test id="oval:org.mitre.oval.test:tst:1821" version="1" comment="Test that the equals operation is supported with two equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1122"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1417"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1739" version="1" comment="Test that the equals operation is supported with two unequal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:784"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1544"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1700" version="1" comment="Test that the equals operation is supported with multiple equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1118"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1547"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1789" version="1" comment="Test that the equals operation is supported with multiple unequal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1342"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:693"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1297" version="1" comment="Test that the equals operation is supported with multiple equal version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1207"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1396"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1816" version="1" comment="Test that the equals operation is supported with multiple unequal version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1326"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1479"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1624" version="1" comment="Test that the not equal operation is supported with two equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1122"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1584"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1666" version="1" comment="Test that the not equal operation is supported with two unequal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:784"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1272"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1823" version="1" comment="Test that the not equal operation is supported with multiple equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1118"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1607"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1612" version="1" comment="Test that the not equal operation is supported with multiple unequal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1342"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1367"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1570" version="1" comment="Test that the not equal operation is supported with multiple equal version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1207"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1328"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1404" version="1" comment="Test that the not equal operation is supported with multiple unequal version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1326"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1549"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1380" version="1" comment="Test that the greater than operation is supported with a single greater than version value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1330"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1370"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1592" version="1" comment="Test that the greater than operation is supported with two equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1122"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1535"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1855" version="1" comment="Test that the greater than operation is supported with a single less than version value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1179"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1492"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1465" version="1" comment="Test that the greater than operation is supported with multiple greater than version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1257"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1469"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1871" version="1" comment="Test that the greater than operation is supported with multiple equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1118"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1374"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1870" version="1" comment="Test that the greater than operation is supported with multiple less than version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:897"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1327"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1720" version="1" comment="Test that the greater than operation is supported with multiple greater than version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1039"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1477"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1693" version="1" comment="Test that the greater than operation is supported with multiple equal version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1207"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1330"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1660" version="1" comment="Test that the greater than operation is supported with multiple less than version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1288"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1249"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1408" version="1" comment="Test that the greater than or equal operation is supported with a single greater than version value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1330"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1550"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1378" version="1" comment="Test that the greater than or equal operation is supported with two equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1122"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1043"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1723" version="1" comment="Test that the greater than or equal operation is supported with a single less than version value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1179"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:749"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1683" version="1" comment="Test that the greater than or equal operation is supported with multiple greater than version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1257"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1430"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1682" version="1" comment="Test that the greater than or equal operation is supported with multiple equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1118"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1437"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1873" version="1" comment="Test that the greater than or equal operation is supported with multiple less than version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:897"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:648"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1701" version="1" comment="Test that the greater than or equal operation is supported with multiple greater than version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1039"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1393"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1035" version="1" comment="Test that the greater than or equal operation is supported with multiple equal version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1207"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1606"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1694" version="1" comment="Check of greater than or equal operation is supported with multiple less than version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1288"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1421"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1606" version="1" comment="Test that the less than operation is supported with a single less than version value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1179"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1613"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:2032" version="1" comment="Test that the less than operation is supported with two equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1122"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1542"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1848" version="1" comment="Test that the less than operation is supported with a single greater than version value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1330"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1409"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1637" version="1" comment="Test that the less than operation is supported with multiple less than version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:897"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:832"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1980" version="1" comment="Test that the less than operation is supported with multiple equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1118"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1595"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1776" version="1" comment="Test that the less than operation is supported with multiple greater than version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1257"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1151"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1835" version="1" comment="Test that the less than operation is supported with multiple less than version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1288"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1642"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1847" version="1" comment="Test that the less than operation is supported with multiple equal version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1207"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1014"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1839" version="1" comment="Test that the less than operation is supported with multiple greater than version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1039"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1182"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1450" version="1" comment="Test that the less than or equal operation is supported with a single less than version value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1179"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1288"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1752" version="1" comment="Test that the less than or equal operation is supported with two equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1122"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:707"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1572" version="1" comment="Test that the less than or equal operation is supported with a single greater than version value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1330"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1632"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1368" version="1" comment="Test that the less than or equal operation is supported with multiple less than version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:897"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1406"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1527" version="1" comment="Test that the less than or equal operation is supported with multiple equal version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1118"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1456"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1935" version="1" comment="Test that the less than or equal operation is supported with multiple greater than version values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1257"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1235"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1801" version="1" comment="Test that the less than or equal operation is supported with multiple less than version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1288"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1212"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1589" version="1" comment="Test that the less than or equal operation is supported with multiple equal version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1207"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1639"/>
+    </variable_test>
+    <variable_test id="oval:org.mitre.oval.test:tst:1636" version="1" comment="Test that the less than or equal operation is supported with multiple greater than version values that utilize mixed delimiters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:1039"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1145"/>
+    </variable_test>
+  </tests>
+  <objects>
+    <variable_object id="oval:org.mitre.oval.test:obj:1122" version="1" comment="This variable_object represents the version value '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:933</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:784" version="1" comment="This variable_object represents the version value '1.1.1.1.1'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:981</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1118" version="1" comment="This variable_object represents the set of version values '1.2.3.4', '1.2.3.4', '1.2.3.4', and '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:415</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1342" version="1" comment="This variable_object represents the set of version values '1.1.1.1.1', '1.2.3.4.5', '1,2', '0,1', and '3m4m5m6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:685</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1207" version="1" comment="This variable_object represents the set of version values '1.2.3.4', '1a2s3d4', '1.2.3-04', and '1.2+3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:131</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1326" version="1" comment="This variable_object represents the set of version values '1a1s1d1f1', '1.2-3-4.5', '1,2-4', '0,1.7.65', and '3m488a99'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:100</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1330" version="1" comment="This variable_object represents the version value '1.5.9.3'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:26</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1179" version="1" comment="This variable_object represents the version value '1.0.3.1'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:926</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1257" version="1" comment="This variable_object represents the set of version values '5.7.4.5.2', '1.2.3.4.5', '4,6', '4,9', and '3m4m5m6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:550</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:897" version="1" comment="This variable_object represents the set of version values '1.0.45.2', '1.2.3.3', '0,6', '1,0,4', and '0m4m5m6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:700</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1039" version="1" comment="This variable_object represents the set of version values '5.7.4f5s2', '1c2.3.4c5', '4,6-5.3', '4,9-0p34', and '3m4m5m6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:27</var_ref>
+    </variable_object>
+    <variable_object id="oval:org.mitre.oval.test:obj:1288" version="1" comment="This variable_object represents the set of version values '1x0c45d2', '1,2.3!3', '0+6', '1@0#4', and '0q4,5z6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:615</var_ref>
+    </variable_object>
+  </objects>
+  <states>
+    <variable_state id="oval:org.mitre.oval.test:ste:1417" version="1" comment="This variable_state represents a version value that is equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1544" version="1" comment="This variable_state represents a version value that is equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1547" version="1" comment="This variable_state represents a version value that is equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:693" version="1" comment="This variable_state represents a version value that is equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1396" version="1" comment="This variable_state represents a version value that is equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1479" version="1" comment="This variable_state represents a version value that is equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1584" version="1" comment="This variable_state represents a version value that is not equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="not equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1272" version="1" comment="This variable_state represents a version value that is not equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="not equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1607" version="1" comment="This variable_state represents a version value that is not equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="not equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1367" version="1" comment="This variable_state represents a version value that is not equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="not equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1328" version="1" comment="This variable_state represents a version value that is not equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="not equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1549" version="1" comment="This variable_state represents a version value that is not equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="not equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1370" version="1" comment="This variable_state represents a version value that is greater than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1535" version="1" comment="This variable_state represents a version value that is greater than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1492" version="1" comment="This variable_state represents a version value that is greater than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1469" version="1" comment="This variable_state represents a version value that is greater than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1374" version="1" comment="This variable_state represents a version value that is greater than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1327" version="1" comment="This variable_state represents a version value that is greater than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1477" version="1" comment="This variable_state represents a version value that is greater than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1330" version="1" comment="This variable_state represents a version value that is greater than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1249" version="1" comment="This variable_state represents a version value that is greater than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1550" version="1" comment="This variable_state represents a version value that is greater than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1043" version="1" comment="This variable_state represents a version value that is greater than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:749" version="1" comment="This variable_state represents a version value that is greater than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1430" version="1" comment="This variable_state represents a version value that is greater than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1437" version="1" comment="This variable_state represents a version value that is greater than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:648" version="1" comment="This variable_state represents a version value that is greater than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1393" version="1" comment="This variable_state represents a version value that is greater than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1606" version="1" comment="This variable_state represents a version value that is greater than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1421" version="1" comment="This variable_state represents a version value that is greater than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="greater than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1613" version="1" comment="This variable_state represents a version value that is less than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1542" version="1" comment="This variable_state represents a version value that is less than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1409" version="1" comment="This variable_state represents a version value that is less than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:832" version="1" comment="This variable_state represents a version value that is less than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1595" version="1" comment="This variable_state represents a version value that is less than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1151" version="1" comment="This variable_state represents a version value that is less than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1642" version="1" comment="This variable_state represents a version value that is less than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1014" version="1" comment="This variable_state represents a version value that is less than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1182" version="1" comment="This variable_state represents a version value that is less than '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1288" version="1" comment="This variable_state represents a version value that is less than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:707" version="1" comment="This variable_state represents a version value that is less than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1632" version="1" comment="This variable_state represents a version value that is less than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1406" version="1" comment="This variable_state represents a version value that is less than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1456" version="1" comment="This variable_state represents a version value that is less than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1235" version="1" comment="This variable_state represents a version value that is less than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1212" version="1" comment="This variable_state represents a version value that is less than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1639" version="1" comment="This variable_state represents a version value that is less than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than or equal">1.2.3.4</value>
+    </variable_state>
+    <variable_state id="oval:org.mitre.oval.test:ste:1145" version="1" comment="This variable_state represents a version value that is less than or equal to '1.2.3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value datatype="version" operation="less than or equal">1.2.3.4</value>
+    </variable_state>
+  </states>
+  <variables>
+    <constant_variable id="oval:org.mitre.oval.test:var:933" version="1" comment="This variable represents the version value '1.2.3.4'." datatype="version">
+      <value>1.2.3.4</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:981" version="1" comment="This variable represents the version value '1.1.1.1.1'." datatype="version">
+      <value>1.1.1.1.1</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:415" version="1" comment="This variable represents the set of version values '1.2.3.4', '1.2.3.4', '1.2.3.4', and '1.2.3.4'." datatype="version">
+      <value>1.2.3.4</value>
+      <value>1.2.3.4</value>
+      <value>1.2.3.4</value>
+      <value>1.2.3.4</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:685" version="1" comment="This variable represents the set of version values '1.1.1.1.1', '1.2.3.4.5', '1,2', '0,1', and '3m4m5m6'." datatype="version">
+      <value>1.1.1.1.1</value>
+      <value>1.2.3.4.5</value>
+      <value>1,2</value>
+      <value>0,1</value>
+      <value>3m4m5m6</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:131" version="1" comment="This variable represents the set of version values '1.2.3.4', '1a2s3d4', '1.2.3-04', and '1.2+3.4'." datatype="version">
+      <value>1.2.3.4</value>
+      <value>1a2s3d4</value>
+      <value>1.2.3-04</value>
+      <value>1.2+3.4</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:100" version="1" comment="This variable represents the set of version values '1a1s1d1f1', '1.2-3-4.5', '1,2-4', '0,1.7.65', and '3m488a99'." datatype="version">
+      <value>1a1s1d1f1</value>
+      <value>1.2-3-4.5</value>
+      <value>1,2-4</value>
+      <value>0,1.7.65</value>
+      <value>3m488a99</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:26" version="1" comment="This variable represents the version value '1.5.9.3'." datatype="version">
+      <value>1.5.9.3</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:926" version="1" comment="This variable represents the version value '1.0.3.1'." datatype="version">
+      <value>1.0.3.1</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:550" version="1" comment="This variable represents the set of version values '5.7.4.5.2', '1.2.3.4.5', '4,6', '4,9', and '3m4m5m6'." datatype="version">
+      <value>5.7.4.5.2</value>
+      <value>1.2.3.4.5</value>
+      <value>4,6</value>
+      <value>4,9</value>
+      <value>3m4m5m6</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:700" version="1" comment="This variable represents the set of version values '1.0.45.2', '1.2.3.3', '0,6', '1,0,4', and '0m4m5m6'." datatype="version">
+      <value>1.0.45.2</value>
+      <value>1.2.3.3</value>
+      <value>0,6</value>
+      <value>1,0,4</value>
+      <value>0m4m5m6</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:27" version="1" comment="This variable represents the set of version values '5.7.4f5s2', '1c2.3.4c5', '4,6-5.3', '4,9-0p34', and '3m4m5m6'." datatype="version">
+      <value>5.7.4f5s2</value>
+      <value>1c2.3.4c5</value>
+      <value>4,6-5.3</value>
+      <value>4,9-0p34</value>
+      <value>3m4m5m6</value>
+    </constant_variable>
+    <constant_variable id="oval:org.mitre.oval.test:var:615" version="1" comment="This variable represents the set of version values '1x0c45d2', '1,2.3!3', '0+6', '1@0#4', and '0q4,5z6'." datatype="version">
+      <value>1x0c45d2</value>
+      <value>1,2.3!3</value>
+      <value>0+6</value>
+      <value>1@0#4</value>
+      <value>0q4,5z6</value>
+    </constant_variable>
+  </variables>
+</oval_definitions>

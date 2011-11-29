@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oval_definitions xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd   http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris solaris-definitions-schema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5">
+  <generator>
+    <oval:schema_version>5.9</oval:schema_version>
+    <oval:timestamp>2010-12-05T10:41:00-05:00</oval:timestamp>
+  </generator>
+  <definitions>
+    <definition id="oval:org.mitre.oval.test:def:644" version="1" class="miscellaneous">
+      <metadata>
+        <title>Evaluate to true if the sol-def:patch_test is properly supported</title>
+        <description>This definition is intended to evalutate to true if the interpreter properly supports the sol-def:patch_test.</description>
+      </metadata>
+      <notes>
+        <note>It is important to note that the values used in this test definition are specific to a particular machine, and may not necessarily apply to your system. As a result, in order to have the definition return a result of 'true', you must either change these values to the ones found on your particular system, or you must configure your system to use these values.</note>
+      </notes>
+      <criteria operator="AND">
+        <criterion comment="Test that the patch_object is supported with the base entity equal to some value." test_ref="oval:org.mitre.oval.test:tst:1236"/>
+        <criterion comment="Test that the patch_object is supported with the base entity not equal to some value." test_ref="oval:org.mitre.oval.test:tst:1981"/>
+        <criterion comment="Test that the patch_object is supported with the base entity greater than some value." test_ref="oval:org.mitre.oval.test:tst:2024"/>
+        <criterion comment="Test that the patch_object is supported with the base entity greater than or equal to some value." test_ref="oval:org.mitre.oval.test:tst:1451"/>
+        <criterion comment="Test that the patch_object is supported with the base entity less than some value." test_ref="oval:org.mitre.oval.test:tst:1785"/>
+        <criterion comment="Test that the patch_object is supported with the base entity less than or equal to some value." test_ref="oval:org.mitre.oval.test:tst:2018"/>
+      </criteria>
+    </definition>
+  </definitions>
+  <tests>
+    <patch_test id="oval:org.mitre.oval.test:tst:1236" version="1" comment="Test that the patch_object is supported with the base entity equal to some value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <object object_ref="oval:org.mitre.oval.test:obj:1158"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1298"/>
+    </patch_test>
+    <patch_test id="oval:org.mitre.oval.test:tst:1981" version="1" comment="Test that the patch_object is supported with the base entity not equal to some value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <object object_ref="oval:org.mitre.oval.test:obj:1331"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1298"/>
+    </patch_test>
+    <patch_test id="oval:org.mitre.oval.test:tst:2024" version="1" comment="Test that the patch_object is supported with the base entity greater than some value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <object object_ref="oval:org.mitre.oval.test:obj:437"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1298"/>
+    </patch_test>
+    <patch_test id="oval:org.mitre.oval.test:tst:1451" version="1" comment="Test that the patch_object is supported with the base entity greater than or equal to some value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <object object_ref="oval:org.mitre.oval.test:obj:1139"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1298"/>
+    </patch_test>
+    <patch_test id="oval:org.mitre.oval.test:tst:1785" version="1" comment="Test that the patch_object is supported with the base entity less than some value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <object object_ref="oval:org.mitre.oval.test:obj:469"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1298"/>
+    </patch_test>
+    <patch_test id="oval:org.mitre.oval.test:tst:2018" version="1" comment="Test that the patch_object is supported with the base entity less than or equal to some value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <object object_ref="oval:org.mitre.oval.test:obj:1369"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1298"/>
+    </patch_test>
+  </tests>
+  <objects>
+    <patch_object id="oval:org.mitre.oval.test:obj:1158" version="1" comment="Retrieve a patch_item with a base equal to '118344'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <base datatype="int">118344</base>
+    </patch_object>
+    <patch_object id="oval:org.mitre.oval.test:obj:1331" version="1" comment="Retrieve patch_items with a base not equal to '118344'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <base datatype="int" operation="not equal">118344</base>
+    </patch_object>
+    <patch_object id="oval:org.mitre.oval.test:obj:437" version="1" comment="Retrieve patch_items with a base greater than '118343'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <base datatype="int" operation="greater than">118343</base>
+    </patch_object>
+    <patch_object id="oval:org.mitre.oval.test:obj:1139" version="1" comment="Retrieve patch_items with a base greater than or equal to '118344'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <base datatype="int" operation="greater than or equal">118344</base>
+    </patch_object>
+    <patch_object id="oval:org.mitre.oval.test:obj:469" version="1" comment="Retrieve patch_items with a base less than '118345'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <base datatype="int" operation="less than">118345</base>
+    </patch_object>
+    <patch_object id="oval:org.mitre.oval.test:obj:1369" version="1" comment="Retrieve patch_items with a base less than or equal to '118344'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <base datatype="int" operation="less than or equal">118344</base>
+    </patch_object>
+  </objects>
+  <states>
+    <patch_state id="oval:org.mitre.oval.test:ste:1298" version="1" comment="This state represents a patch_item with a base equal to '118344' and a version equal to '14'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <base datatype="int">118344</base>
+      <version datatype="int">14</version>
+    </patch_state>
+  </states>
+</oval_definitions>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oval_definitions xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd   http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris solaris-definitions-schema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5">
+  <generator>
+    <oval:schema_version>5.9</oval:schema_version>
+    <oval:timestamp>2010-12-05T10:41:00-05:00</oval:timestamp>
+  </generator>
+  <definitions>
+    <definition id="oval:org.mitre.oval.test:def:421" version="1" class="miscellaneous">
+      <metadata>
+        <title>Evaluate to true if the sol-def:package_test is properly supported</title>
+        <description>This definition is intended to evalutate to true if the interpreter properly supports the sol-def:package_test.</description>
+      </metadata>
+      <notes>
+        <note>It is important to note that the values used in this test definition are specific to a particular machine, and may not necessarily apply to your system. As a result, in order to have the definition return a result of 'true', you must either change these values to the ones found on your particular system, or you must configure your system to use these values.</note>
+      </notes>
+      <criteria operator="AND">
+        <criterion comment="Test that the package_object is supported with the pkinst entity equal to some value." test_ref="oval:org.mitre.oval.test:tst:1836"/>
+        <criterion comment="Test that the package_object is supported with the pkinst entity not equal to some value." test_ref="oval:org.mitre.oval.test:tst:1866"/>
+        <criterion comment="Test that the package_object is supported with the pkinst entity matching some regular expression." test_ref="oval:org.mitre.oval.test:tst:1535"/>
+      </criteria>
+    </definition>
+  </definitions>
+  <tests>
+    <package_test id="oval:org.mitre.oval.test:tst:1836" version="1" comment="Test that the package_object is supported with the pkinst entity equal to some value." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <object object_ref="oval:org.mitre.oval.test:obj:415"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1363"/>
+    </package_test>
+    <package_test id="oval:org.mitre.oval.test:tst:1866" version="1" comment="Test that the package_object is supported with the pkinst entity not equal to some value." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <object object_ref="oval:org.mitre.oval.test:obj:1114"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1493"/>
+    </package_test>
+    <package_test id="oval:org.mitre.oval.test:tst:1535" version="1" comment="Test that the package_object is supported with the pkinst entity matching some regular expression." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <object object_ref="oval:org.mitre.oval.test:obj:1083"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1316"/>
+    </package_test>
+  </tests>
+  <objects>
+    <package_object id="oval:org.mitre.oval.test:obj:415" version="1" comment="Retrieve a package_item with a package instance equal to 'SUNWinst'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <pkginst>SUNWinst</pkginst>
+    </package_object>
+    <package_object id="oval:org.mitre.oval.test:obj:1114" version="1" comment="Retrieve package_items with a pakage instance that is not equal to 'SUNWinst'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <pkginst operation="not equal">SUNWinst</pkginst>
+    </package_object>
+    <package_object id="oval:org.mitre.oval.test:obj:1083" version="1" comment="Retrieve package_items with a package instance that matches the regular expression '^[S][U][N][W]inst$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <pkginst operation="pattern match">^[S][U][N][W]inst$</pkginst>
+    </package_object>
+  </objects>
+  <states>
+    <package_state id="oval:org.mitre.oval.test:ste:1363" version="1" comment="This state represents a package_item that has a package instance equal to 'SUNWinst', a name equal to 'Install Software', a category equal to 'system', and a version that matches the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <pkginst>SUNWinst</pkginst>
+      <name>Install Software</name>
+      <category>system</category>
+      <version operation="pattern match">.*</version>
+    </package_state>
+    <package_state id="oval:org.mitre.oval.test:ste:1493" version="1" comment="This state represents package_items that have a package instance not equal to 'SUNWinst', a name not equal to 'Install Software', and a version that matches the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <pkginst operation="not equal">SUNWinst</pkginst>
+      <name operation="not equal">Install Software</name>
+      <version operation="pattern match">.*</version>
+    </package_state>
+    <package_state id="oval:org.mitre.oval.test:ste:1316" version="1" comment="This state represents package_items that have a package instance that matches the regular expression '^[S][U][N][W]inst$', a name equal to 'Install Software', and a version that matches the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+      <pkginst operation="pattern match">^[S][U][N][W]inst$</pkginst>
+      <name>Install Software</name>
+      <version operation="pattern match">.*</version>
+    </package_state>
+  </states>
+</oval_definitions>

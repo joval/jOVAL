@@ -156,12 +156,13 @@ public class Engine implements IEngine {
      * Create an engine for evaluating OVAL definitions using a plugin.
      */
     public Engine(IPlugin plugin) {
-	this.plugin = plugin;
-	state = State.CONFIGURE;
+	if (plugin != null) {
+	    this.plugin = plugin;
+	    loadAdapters();
+	}
 	filter = new DefinitionFilter();
-	adapters = new Hashtable<Class, AdapterManager>();
-	variableMap = new Hashtable<String, Collection<VariableValueType>>();
 	producer = new Producer();
+	reset();
     }
 
     // Implement IEngine
@@ -172,12 +173,18 @@ public class Engine implements IEngine {
 
     public void setDefinitions(IDefinitions definitions) throws IllegalThreadStateException {
 	switch(state) {
-	  case CONFIGURE:
-	    this.definitions = definitions;
-	    break;
+	  case RUNNING:
+	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+
+	  case COMPLETE_OK:
+	  case COMPLETE_ERR:
+	    sc = null;
+	    reset();
+	    // fall-through
 
 	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+	    this.definitions = definitions;
+	    break;
 	}
     }
 
@@ -267,10 +274,8 @@ public class Engine implements IEngine {
 		}
 		try {
 		    plugin.connect();
-		    for (IAdapter adapter : plugin.getAdapters()) {
-			for (Class clazz : adapter.getObjectClasses()) {
-			    adapters.put(clazz, new AdapterManager(adapter));
-			}
+		    if (adapters == null) {
+			loadAdapters();
 		    }
 		    scan();
 		} finally {
@@ -368,6 +373,25 @@ public class Engine implements IEngine {
     }
 
     // Private
+
+    private void loadAdapters() {
+	Collection<IAdapter> coll = plugin.getAdapters();
+	if (coll == null) {
+	    adapters = null;
+	} else {
+	    adapters = new Hashtable<Class, AdapterManager>();
+	    for (IAdapter adapter : coll) {
+		for (Class clazz : adapter.getObjectClasses()) {
+		    adapters.put(clazz, new AdapterManager(adapter));
+		}
+	    }
+	}
+    }
+
+    private void reset() {
+	state = State.CONFIGURE;
+	variableMap = new Hashtable<String, Collection<VariableValueType>>();
+    }
 
     /**
      * Scan SystemCharactericts using the plugin.
@@ -1536,7 +1560,7 @@ public class Engine implements IEngine {
 	} else if (object instanceof EscapeRegexFunctionType) {
 	    Collection<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent((EscapeRegexFunctionType)object), list)) {
-		values.add(escapeRegex(value));
+		values.add(StringTools.escapeRegex(value));
 	    }
 	    return values;
 
@@ -1701,38 +1725,6 @@ public class Engine implements IEngine {
 
 	} else {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, object.getClass().getName()));
-	}
-    }
-
-    private static final String ESCAPE = "\\";
-    private static final String[] REGEX_CHARS = {ESCAPE, "^", ".", "$", "|", "(", ")", "[", "]", "{", "}", "*", "+", "?"};
-
-    private String escapeRegex(String s) {
-	Stack<String> delims = new Stack<String>();
-	for (int i=0; i < REGEX_CHARS.length; i++) {
-	    delims.add(REGEX_CHARS[i]);
-	}
-	return safeEscape(delims, s);
-    }
-
-    private String safeEscape(Stack<String> delims, String s) {
-	if (delims.empty()) {
-	    return s;
-	} else {
-	    String delim = delims.pop();
-	    Stack<String> copy = new Stack<String>();
-	    copy.addAll(delims);
-	    List<String> list = StringTools.toList(StringTools.tokenize(s, delim, false));
-	    int len = list.size();
-	    StringBuffer result = new StringBuffer();
-	    for (int i=0; i < len; i++) {
-		    if (i > 0) {
-			result.append(ESCAPE);
-			result.append(delim);
-		    }
-		    result.append(safeEscape(copy, list.get(i)));
-	    }
-	    return result.toString();
 	}
     }
 

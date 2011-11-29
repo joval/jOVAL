@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Stack;
 import java.util.Vector;
 import java.util.NoSuchElementException;
 
@@ -74,7 +75,43 @@ public class StringTools {
 	return ca;
     }
 
+    /**
+     * Escape any regular expression elements in the string.  This is different from Pattern.quote, which simply puts the
+     * string inside of \Q...\E.
+     */
+    public static String escapeRegex(String s) {
+        Stack<String> delims = new Stack<String>();
+        for (int i=0; i < REGEX_CHARS.length; i++) {
+            delims.add(REGEX_CHARS[i]);
+        }
+        return safeEscape(delims, s);
+    }
+
     // Private
+
+    private static final String ESCAPE = "\\";
+    private static final String[] REGEX_CHARS = {ESCAPE, "^", ".", "$", "|", "(", ")", "[", "]", "{", "}", "*", "+", "?"};
+
+    private static String safeEscape(Stack<String> delims, String s) {
+        if (delims.empty()) {
+            return s;
+        } else {
+            String delim = delims.pop();
+            Stack<String> copy = new Stack<String>();
+            copy.addAll(delims);
+            List<String> list = StringTools.toList(StringTools.tokenize(s, delim, false));
+            int len = list.size();
+            StringBuffer result = new StringBuffer();
+            for (int i=0; i < len; i++) {
+                    if (i > 0) {
+                        result.append(ESCAPE);
+                        result.append(delim);
+                    }
+                    result.append(safeEscape(copy, list.get(i)));
+            }
+            return result.toString();
+        }
+    }
 
     static final class StringComparator implements Comparator<String> {
 	boolean ascending = true;

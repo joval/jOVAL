@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oval_definitions xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd      http://oval.mitre.org/XMLSchema/oval-definitions-5#unix unix-definitions-schema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:unix-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+  <generator>
+    <oval:schema_version>5.9</oval:schema_version>
+    <oval:timestamp>2009-01-12T10:41:00-05:00</oval:timestamp>
+  </generator>
+  <definitions>
+    <definition id="oval:org.mitre.oval.test:def:559" version="1" class="miscellaneous">
+      <metadata>
+        <title>Evaluate to true if the unix-def:file_test is properly supported</title>
+        <description>This definition is intended to evalutate to true if the interpreter properly supports the unix-def:file_test.</description>
+      </metadata>
+      <notes>
+        <note>It is important to note that the values used in this test definition are specific to a particular machine, and may not necessarily apply to your system. As a result, in order to have the definition return a result of 'true', you must either change these values to the ones found on your particular system, or you must configure your system to use these values.</note>
+      </notes>
+      <criteria operator="AND">
+        <criterion comment="Test that the file_object is supported with the path entity equal to some value and the filename entity is set to nil." test_ref="oval:org.mitre.oval.test:tst:1452"/>
+        <criterion comment="Test that the file_object is supported with the path entity matching some regular expression and the filename entity is set to nil." test_ref="oval:org.mitre.oval.test:tst:1923"/>
+        <criterion comment="Test that the file_object is supported with the path entity equal to some value and the filename entity equal to some value." test_ref="oval:org.mitre.oval.test:tst:1878"/>
+        <criterion comment="Test that the file_object is supported with the path entity equal to some value and the filename entity matching some regular expression." test_ref="oval:org.mitre.oval.test:tst:1805"/>
+        <criterion comment="Test that the file_object is supported with the path entity matching some regular expression and the filename entity matching some regular expression." test_ref="oval:org.mitre.oval.test:tst:1786"/>
+        <criterion comment="Test that the file_object is supported with the max_depth behavior set to a limited depth of recursion." test_ref="oval:org.mitre.oval.test:tst:1773"/>
+        <criterion comment="Test that the file_object is supported with the max_depth behavior set to an unlimited depth of recursion." test_ref="oval:org.mitre.oval.test:tst:1876"/>
+        <criterion comment="Test that the recurse_direction behavior is supported." test_ref="oval:org.mitre.oval.test:tst:1879"/>
+        <criterion comment="Test that the file_object is supported with filepath entity equal to some value." test_ref="oval:org.mitre.oval.test:tst:1436"/>
+        <criterion comment="Test that the file_object is supported with the filepath entity matching some regular expression." test_ref="oval:org.mitre.oval.test:tst:1705"/>
+      </criteria>
+    </definition>
+  </definitions>
+  <tests>
+    <file_test id="oval:org.mitre.oval.test:tst:1452" version="1" comment="Test that the file_object is supported with the path entity equal to some value and the filename entity is set to nil." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <object object_ref="oval:org.mitre.oval.test:obj:1036"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1621"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1923" version="1" comment="Test that the file_object is supported with the path entity matching some regular expression and the filename entity is set to nil." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <object object_ref="oval:org.mitre.oval.test:obj:1172"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1345"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1878" version="1" comment="Test that the file_object is supported with the path entity equal to some value and the filename entity equal to some value." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <object object_ref="oval:org.mitre.oval.test:obj:1315"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1024"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1805" version="1" comment="Test that the file_object is supported with the path entity equal to some value and the filename entity matching some regular expression." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <object object_ref="oval:org.mitre.oval.test:obj:1268"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1404"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1786" version="1" comment="Test that the file_object is supported with the path entity matching some regular expression and the filename entity matching some regular expression." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <object object_ref="oval:org.mitre.oval.test:obj:1343"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1558"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1773" version="1" comment="Test that the file_object is supported with the max_depth behavior set to a limited depth of recursion." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <object object_ref="oval:org.mitre.oval.test:obj:1305"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1561"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1876" version="1" comment="Test that the file_object is supported with the max_depth behavior set to an unlimited depth of recursion." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <object object_ref="oval:org.mitre.oval.test:obj:1316"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1267"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1879" version="1" comment="Test that the recurse_direction behavior is supported." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <object object_ref="oval:org.mitre.oval.test:obj:1340"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1561"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1436" version="1" comment="Test that the file_object is supported with filepath entity equal to some value." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <object object_ref="oval:org.mitre.oval.test:obj:1194"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1622"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1705" version="1" comment="Test that the file_object is supported with the filepath entity matching some regular expression." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <object object_ref="oval:org.mitre.oval.test:obj:1293"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1622"/>
+    </file_test>
+  </tests>
+  <objects>
+    <file_object id="oval:org.mitre.oval.test:obj:1036" version="1" comment="Retrieve a file_item with a path equal to '/bin'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/bin</path>
+      <filename xsi:nil="true"/>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1172" version="1" comment="Retrieve file_items with a path that matches the regular expression '^b.n$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path operation="pattern match">^/b.n$</path>
+      <filename xsi:nil="true"/>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1315" version="1" comment="Retrieve a file_item with a path that equals '/bin' and filename that equals 'ls'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/bin</path>
+      <filename>ls</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1268" version="1" comment="Retrieve file_items with a path that equals '/bin' and filename that matches the regular expression '^l'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/bin</path>
+      <filename operation="pattern match">^l</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1343" version="1" comment="Retrieve file_items with a path that matches the regular expression '^/etc/r' and a filename that matches the regular expression '^r'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path operation="pattern match">^/etc/i.+</path>
+      <filename operation="pattern match">^R.+</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1305" version="1" comment="Retrieve a file_item with the path starting at '/etc', recursing down 1 level, and filename that equals 'rc'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <behaviors max_depth="1" recurse_direction="down" recurse="symlinks and directories"/>
+      <path>/bin</path>
+      <filename>ls</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1316" version="1" comment="Retrieve a file_item with the path starting at '/etc', recursing down infinitely, and filename that equals 'rc'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <behaviors max_depth="-1" recurse_direction="down" recurse="symlinks and directories"/>
+      <path>/etc</path>
+      <filename>README</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1340" version="1" comment="Retrieve a file_item with the path starting at '/etc/rc.d', recursing up 1 level, and filename that equals 'profile'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <behaviors max_depth="1" recurse_direction="up" recurse="symlinks and directories"/>
+      <path>/etc/init.d</path>
+      <filename>profile</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1194" version="1" comment="Retrieve a file_item with the filepath equal to '/etc/rc.d/rc'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <filepath>/etc/init.d/README</filepath>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1293" version="1" comment="Retrieve file_items with the filepath matching the regular expression '/etc/ssh/.+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <filepath operation="pattern match">^/etc/ssh/.+</filepath>
+    </file_object>
+  </objects>
+  <states>
+    <file_state id="oval:org.mitre.oval.test:ste:1621" version="1" comment="This state represents a file_item which has a path of '/bin'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/bin</path>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1345" version="1" comment="This state represents file_items which have a path that matches the regular expression '^/b.n$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path operation="pattern match">^/b.n$</path>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1024" version="1" comment="This state represents a file_item which has a path equal to '/bin', a filename equal to 'ls', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/bin</path>
+      <filename>ls</filename>
+      <size datatype="int" operation="greater than">0</size>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1404" version="1" comment="This state represents file_items which have a path equal to '/bin', a filename that matches the regular expression '^l', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/bin</path>
+      <filename operation="pattern match">^l</filename>
+      <size datatype="int" operation="greater than">0</size>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1558" version="1" comment="This state represents file_items which have a path that matches the regular expression '^/etc/r', a filename that matches the regular expression '^r', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path operation="pattern match">^/etc/i</path>
+      <filename operation="pattern match">^R</filename>
+      <size datatype="int" operation="greater than">0</size>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1561" version="1" comment="This state represents a file_item which has a path of '/bin', a filename equal to 'ls', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/bin</path>
+      <filename>ls</filename>
+      <size datatype="int" operation="greater than">0</size>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1267" version="1" comment="This state represents a file_item which has a path that equals '/etc/rc.d', a filename that equals 'rc', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/etc/init.d</path>
+      <filename>README</filename>
+      <size datatype="int" operation="greater than">0</size>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1622" version="1" comment="This state represents file_items which have a path that is not equal to '/bin' and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path operation="not equal">/bin</path>
+      <size datatype="int" operation="greater than">0</size>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1482" version="1" comment="This state represents a file_item which has a filepath equal to '/etc/rc.d/rc', a path equal to '/etc/ssh', a filename equal to 'sshd_config', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <filepath>/etc/ssh/sshd_config</filepath>
+      <path>/etc/ssh</path>
+      <filename>sshd_config</filename>
+      <size datatype="int" operation="greater than">0</size>
+    </file_state>
+  </states>
+</oval_definitions>

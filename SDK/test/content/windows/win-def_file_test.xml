@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oval_definitions xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd      http://oval.mitre.org/XMLSchema/oval-definitions-5#windows windows-definitions-schema.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:win-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+  <generator>
+    <oval:schema_version>5.9</oval:schema_version>
+    <oval:timestamp>2009-01-12T10:41:00-05:00</oval:timestamp>
+  </generator>
+  <definitions>
+    <definition id="oval:org.mitre.oval.test:def:140" version="7" class="miscellaneous">
+      <metadata>
+        <title>Evaluate to true if the win-def:file_test is properly supported</title>
+        <description>This definition is intended to evalutate to true if the interpreter properly supports the win-def:file_test.</description>
+      </metadata>
+      <notes>
+        <note>It is important to note that the values used in this test definition are specific to a particular machine, and may not necessarily apply to your system. As a result, in order to have the definition return a result of 'true', you must either change these values to the ones found on your particular system, or you must configure your system to use these values.</note>
+      </notes>
+      <criteria operator="AND">
+        <criterion comment="Test that a file_object with a path is supported." test_ref="oval:org.mitre.oval.test:tst:1303"/>
+        <criterion comment="Test that a file_object with a path pattern match is supported." test_ref="oval:org.mitre.oval.test:tst:1294"/>
+        <criterion comment="Test that a file_object with a path and filename is supported." test_ref="oval:org.mitre.oval.test:tst:1064"/>
+        <criterion comment="Test that a file_object with a path and filename pattern match is supported." test_ref="oval:org.mitre.oval.test:tst:1189"/>
+        <criterion comment="Test that a file_object with a path pattern match and filename pattern match is supported." test_ref="oval:org.mitre.oval.test:tst:891"/>
+        <criterion comment="Test that the max_depth behavior is supported for limited depth of recursion." test_ref="oval:org.mitre.oval.test:tst:1255"/>
+        <criterion comment="Test that the max_depth behavior is supported for unlimited depth of recursion." test_ref="oval:org.mitre.oval.test:tst:713"/>
+        <criterion comment="Test that the recurse_direction behavior is supported in the 'up' direction." test_ref="oval:org.mitre.oval.test:tst:1416"/>
+        <!--<criterion comment="Test that a file_object with a path not equal is supported." test_ref="oval:org.mitre.oval.test:tst:882"/>-->
+      </criteria>
+    </definition>
+  </definitions>
+  <tests>
+    <file_test id="oval:org.mitre.oval.test:tst:1303" version="1" comment="Test that a file_object with a path is supported." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <object object_ref="oval:org.mitre.oval.test:obj:1060"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1161"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1294" version="3" comment="Test that a file_object with a path pattern match is supported." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <object object_ref="oval:org.mitre.oval.test:obj:614"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:214"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1064" version="1" comment="Test that a file_object with a path and filename is supported." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <object object_ref="oval:org.mitre.oval.test:obj:979"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1167"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1189" version="1" comment="Test that a file_object with a path and filename pattern match is supported." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <object object_ref="oval:org.mitre.oval.test:obj:1066"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:241"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:891" version="3" comment="Test that a file_object with a path pattern match and filename pattern match is supported." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <object object_ref="oval:org.mitre.oval.test:obj:1029"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1142"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1255" version="2" comment="Test that the max_depth behavior is supported for limited depth of recursion." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <object object_ref="oval:org.mitre.oval.test:obj:765"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:216"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:713" version="2" comment="Test that the max_depth behavior is supported for unlimited depth of recursion." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <object object_ref="oval:org.mitre.oval.test:obj:130"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:1035"/>
+    </file_test>
+    <file_test id="oval:org.mitre.oval.test:tst:1416" version="2" comment="Test that the recurse_direction behavior is supported in the 'up' direction." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <object object_ref="oval:org.mitre.oval.test:obj:694"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:216"/>
+    </file_test><!--
+    <file_test id="oval:org.mitre.oval.test:tst:882" version="1" comment="Test that a file_object with a path not equal is supported." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <object object_ref="oval:org.mitre.oval.test:obj:649"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:249"/>
+    </file_test>-->
+  </tests>
+  <objects>
+    <file_object id="oval:org.mitre.oval.test:obj:1060" version="1" comment="Retrieve file object with path equals 'C:\Program Files\Internet Explorer'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path>C:\Program Files\Internet Explorer</path>
+      <filename xsi:nil="true"/>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:614" version="2" comment="Retrieve file object with path that matches '^C:\\Program Files\\Internet Explorer.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path operation="pattern match">^C:\\Program Files\\Internet Explorer.*</path>
+      <filename xsi:nil="true"/>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:979" version="1" comment="Retrieve file object with path equals 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path>C:\Program Files\Internet Explorer</path>
+      <filename>iexplore.exe</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1066" version="1" comment="Retrieve file object with path equals 'C:\Program Files\Internet Explorer' and filename that matches '^i.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path>C:\Program Files\Internet Explorer</path>
+      <filename operation="pattern match">^i.*</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:1029" version="2" comment="Retrieve file object with path that matches '^C:\\Program Files\\Internet Explorer.*' and filename that matches '^i.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path operation="pattern match">^C:\\Program Files\\Internet Explorer.*</path>
+      <filename operation="pattern match">^i.*</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:765" version="1" comment="Retrieve file object with path starting at 'C:\Program Files', recursing down 1 level, and filename equals 'iexplore.exe'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <behaviors max_depth="1" recurse_direction="down"/>
+      <path>C:\Program Files</path>
+      <filename>iexplore.exe</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:130" version="1" comment="Retrieve file object with path starting at 'C:\Program Files', recursing down infinitely, and filename equals 'install.ins'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <behaviors max_depth="-1" recurse_direction="down"/>
+      <path>C:\Program Files</path>
+      <filename>install.ins</filename>
+    </file_object>
+    <file_object id="oval:org.mitre.oval.test:obj:694" version="1" comment="Retrieve file object with path starting at 'C:\Program Files\Internet Explorer\SIGNUP', recursing up 1 level, and filename equals 'iexplore.exe'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <behaviors max_depth="1" recurse_direction="up"/>
+      <path>C:\Program Files\Internet Explorer\SIGNUP</path>
+      <filename>iexplore.exe</filename>
+    </file_object><!--
+    <file_object id="oval:org.mitre.oval.test:obj:649" version="1" comment="Retrieve file object with path not equal to 'C:\Program Files\Internet Explorer\SIGNUP'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path operation="not equal">C:\Program Files\Internet Explorer\SIGNUP</path>
+      <filename xsi:nil="true"/>
+    </file_object>-->
+  </objects>
+  <states>
+    <file_state id="oval:org.mitre.oval.test:ste:1161" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path>C:\Program Files\Internet Explorer</path>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:214" version="2" comment="This state represents a file which has a path that matches '^C:\\Program Files\\Internet Explorer.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path operation="pattern match">^C:\\Program Files\\Internet Explorer.*</path>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1167" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename of 'iexplore.exe'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path>C:\Program Files\Internet Explorer</path>
+      <filename>iexplore.exe</filename>
+      <size datatype="int" operation="greater than">0</size>
+      <a_time datatype="int" operation="greater than">0</a_time>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:241" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename that matches the regular expression 'i.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path>C:\Program Files\Internet Explorer</path>
+      <filename operation="pattern match">^i.*</filename>
+      <size datatype="int" operation="greater than">0</size>
+      <a_time datatype="int" operation="greater than">0</a_time>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1142" version="2" comment="This state represents a file which has a path that matches the regular expression 'C:\\Program Files\\Internet Explorer.*' and filename that matches the regular expression 'i.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path operation="pattern match">^C:\\Program Files\\Internet Explorer.*</path>
+      <filename operation="pattern match">^i.*</filename>
+      <size datatype="int" operation="greater than">0</size>
+      <a_time datatype="int" operation="greater than">0</a_time>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:216" version="2" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename of 'iexplore.exe'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path>C:\Program Files\Internet Explorer</path>
+      <filename>iexplore.exe</filename>
+      <size datatype="int" operation="greater than">0</size>
+      <a_time datatype="int" operation="greater than">0</a_time>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:1035" version="2" comment="This state represents a file which has a path that matches '^C:\\Program Files\\Internet Explorer.*' and filename of 'install.ins'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path operation="pattern match">^C:\\Program Files\\Internet Explorer.*</path>
+      <filename>install.ins</filename>
+      <size datatype="int" operation="greater than">0</size>
+      <a_time datatype="int" operation="greater than">0</a_time>
+    </file_state>
+    <file_state id="oval:org.mitre.oval.test:ste:249" version="1" comment="This state represents a file which has a path that matches '^C:\\Program Files\\Internet Explorer\\.*' and filename of 'install.ins'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+      <path operation="not equal">C:\Program Files\Internet Explorer\SIGNUP</path>
+    </file_state>
+  </states>
+</oval_definitions>

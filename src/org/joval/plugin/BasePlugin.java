@@ -66,8 +66,11 @@ public abstract class BasePlugin implements IPlugin {
 
     public Collection<IAdapter> getAdapters() {
 	if (adapters == null) {
-	    adapters = new Vector<IAdapter>();
+	    if (session == null) {
+		return null;
+	    }
 
+	    adapters = new Vector<IAdapter>();
 	    adapters.add(new FamilyAdapter(session));
 	    adapters.add(new VariableAdapter());
 	    if (session.getEnvironment() != null) {
