@@ -121,12 +121,14 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 		    directory.connect();
 		    return true;
 		} else {
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINWMI_CONNECT);
 		    return false;
 		}
 	    } finally {
 		reg.disconnect();
 	    }
 	} else {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_CONNECT);
 	    return false;
 	}
     }

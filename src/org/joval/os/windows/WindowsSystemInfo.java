@@ -147,7 +147,7 @@ public class WindowsSystemInfo {
 		info.setInterfaces(interfacesType);
 		wmi.disconnect();
 	    } else {
-		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_WMI_CONNECT));
+		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_WINWMI_CONNECT));
 	    }
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);

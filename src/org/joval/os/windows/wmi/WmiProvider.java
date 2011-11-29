@@ -12,6 +12,7 @@ import com.jacob.com.Variant;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -45,6 +46,7 @@ public class WmiProvider implements IWmiProvider {
 	    locator = new ActiveXComponent("WbemScripting.SWbemLocator");
 	    return true;
 	} catch (UnsatisfiedLinkError e) {
+	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }

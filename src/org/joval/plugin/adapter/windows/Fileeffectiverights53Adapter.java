@@ -145,7 +145,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 		} catch (NoSuchElementException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, sid));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINDIR_NOPRINCIPAL, sid));
 		    rc.addMessage(msg);
 		} catch (WmiException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
