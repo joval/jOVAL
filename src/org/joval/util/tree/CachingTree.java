@@ -27,7 +27,7 @@ import org.joval.util.tree.Tree;
 
 /**
  * An abstract tree that is intended to serve as a base class for ITree implementations whose access operations are too
- * expensive for direct, repeated use in searches.  The CachingTree saves search results in an internal cache for better
+ * expensive for direct, repeated use in searches.  The CachingTree stores search results in an in-memory cache for better
  * performance.
  *
  * The CachingTree provides methods (preload and preloadLinks) that should be overridden by subclasses to populate the cache in
@@ -144,18 +144,17 @@ public abstract class CachingTree implements ITree {
     }
 
     /**
-     * Search for a path on the filesystem, relative to the given parent path.  All the other search methods ultimately invoke
+     * Search for a path on the tree, relative to the given parent path.  All the other search methods ultimately invoke
      * this one.  For the sake of efficiency, this class maintains a map of all the files and directories that it encounters
      * when searching for a path.  That way, it can resolve similar path searches very quickly without having to access the
      * underlying implementation.
      *
-     * An alternative approach would have been to maintain a record of previously-encountered searches and cache the result,
-     * but the implemented solution is more general, even though it requires specific patterns to be re-matched in the case of
-     * repeat searches.
+     * @arg parent	The parent path, which is a fully-resolved portion of the path (regex-free).
+     * @arg path	The search pattern, consisting of ESCAPED_DELIM-delimited tokens for matching node names.
+     * @arg followLinks	Specified whether or not filesystem links should be followed by the search.
      *
-     * @arg parent cannot contain any search strings -- this is a fully-resolved portion of the path.
-     * @arg followLinks whether or not filesystem links should be followed by the search.
      * @returns a list of matching local paths
+     *
      * @throws FileNotFoundException if a match cannot be found.
      */
     private Collection<String> treeSearch(String parent, String path, boolean followLinks) throws Exception {
@@ -167,7 +166,7 @@ public abstract class CachingTree implements ITree {
 
 	INode accessor = null;
 	//
-	// Advance to the starting position!
+	// Advance to the starting position, which is either a root node or the node whose path is specified by parent.
 	//
 	ITreeBuilder tree = null;
 	INode node = null;
@@ -207,6 +206,10 @@ public abstract class CachingTree implements ITree {
 		}
 	    }
 	}
+
+	//
+	// Discover the node's children using the accessor, or fetch them from the cache.
+	//
 	boolean cacheRead = node.getType() == INode.Type.BRANCH;
 	List<String> results = new Vector<String>();
 	Collection<INode> children = null;
@@ -243,6 +246,9 @@ public abstract class CachingTree implements ITree {
 	    }
 	}
 
+	//
+	// Search the children for the next token in the search path.
+	//
 	String token = getToken(path, ESCAPED_DELIM);
 	path = trimToken(path, ESCAPED_DELIM);
 	if (isBounded(token)) {
@@ -263,7 +269,7 @@ public abstract class CachingTree implements ITree {
 	    }
 	} else {
 	    //
-	    // Special case -- dangling wildcards (much used in OVAL test content)
+	    // Optimization for wildcard-terminated searches
 	    //
 	    if (token.endsWith(".*") || token.endsWith(".+")) {
 		StringBuffer sb = new StringBuffer(node.getPath()).append(getDelimiter());
@@ -285,8 +291,8 @@ public abstract class CachingTree implements ITree {
 	    }
 
 	    //
-	    // General-purpose logic:
-	    // If the token is not bounded, then we must recurse through all children and find matches
+	    // General-purpose algorithm:
+	    // If the token is not bounded, then recursively gather all children, then filter for matches
 	    //
 	    Vector<String> candidates = new Vector<String>();
 	    for (INode child : children) {
@@ -318,6 +324,9 @@ public abstract class CachingTree implements ITree {
 	return results;
     }
 
+    /**
+     * Returns whether the token represents a pattern for an entire node name.
+     */
     private boolean isBounded(String token) {
 	return token.startsWith("^") && token.endsWith("$");
     }
