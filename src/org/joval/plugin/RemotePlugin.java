@@ -109,7 +109,9 @@ public class RemotePlugin extends BasePlugin {
 		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL_STORE, hostname));
 	    } else {
 		ICredential cred = cs.getCredential(base);
-		if (((ILocked)base).unlock(cred)) {
+		if (cred == null) {
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SESSION_CREDENTIAL);
+		} else if (((ILocked)base).unlock(cred)) {
 		    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_CREDENTIAL_SET, hostname);
 		} else {
 		    String baseName = base.getClass().getName();

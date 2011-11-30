@@ -98,7 +98,6 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 
     public boolean connect() {
 	if (cred == null) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SESSION_CREDENTIAL);
 	    return false;
 	} else if (session == null) {
 	    try {

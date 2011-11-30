@@ -35,25 +35,25 @@
     </process_test>
   </tests>
   <objects>
-    <process_object id="oval:org.mitre.oval.test:obj:783" version="1" comment="Retrieve an process_item with a name equal to 'hald'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command>hald</command>
+    <process_object id="oval:org.mitre.oval.test:obj:783" version="1" comment="Retrieve an process_item with a name equal to 'auditd'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <command>auditd</command>
     </process_object>
-    <process_object id="oval:org.mitre.oval.test:obj:801" version="1" comment="Retrieve process_items with names that are not equal to 'hald'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command operation="not equal">hald</command>
+    <process_object id="oval:org.mitre.oval.test:obj:801" version="1" comment="Retrieve process_items with names that are not equal to 'auditd'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <command operation="not equal">auditd</command>
     </process_object>
-    <process_object id="oval:org.mitre.oval.test:obj:35" version="1" comment="Retrieve process_items with names that match the regular expression '^ha.d$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command operation="pattern match">^ha.d$</command>
+    <process_object id="oval:org.mitre.oval.test:obj:35" version="1" comment="Retrieve process_items with names that match the regular expression '^audi.d$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <command operation="pattern match">^audi.d$</command>
     </process_object>
   </objects>
   <states>
-    <process_state id="oval:org.mitre.oval.test:ste:420" version="1" comment="This state represents an process_item that has a name equal to 'hald'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command>hald</command>
+    <process_state id="oval:org.mitre.oval.test:ste:420" version="1" comment="This state represents an process_item that has a name equal to 'auditd'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <command>auditd</command>
     </process_state>
-    <process_state id="oval:org.mitre.oval.test:ste:743" version="1" comment="This state represents process_items that have a name not equal to 'hald'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command operation="not equal">hald</command>
+    <process_state id="oval:org.mitre.oval.test:ste:743" version="1" comment="This state represents process_items that have a name not equal to 'auditd'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <command operation="not equal">auditd</command>
     </process_state>
-    <process_state id="oval:org.mitre.oval.test:ste:280" version="1" comment="This state represents process_items that have a name that matches the regular expression '^ha.d$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command operation="pattern match">^ha.d$</command>
+    <process_state id="oval:org.mitre.oval.test:ste:280" version="1" comment="This state represents process_items that have a name that matches the regular expression '^audi.d$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <command operation="pattern match">^audi.d$</command>
     </process_state>
   </states>
 </oval_definitions>

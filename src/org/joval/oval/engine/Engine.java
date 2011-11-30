@@ -1195,8 +1195,8 @@ public class Engine implements IEngine {
 
 	  case EVR_STRING:
 	    try {
-		return new Evr((String)item.getValue()).equals(new Evr((String)state.getValue()));
-	    } catch (NumberFormatException e) {
+		return new Evr((String)item.getValue()).compareTo(new Evr((String)state.getValue())) == 0;
+	    } catch (IllegalArgumentException e) {
 		throw new TestException(e);
 	    }
 
@@ -1239,8 +1239,8 @@ public class Engine implements IEngine {
 
 	  case EVR_STRING:
 	    try {
-		return new Evr((String)item.getValue()).greaterThanOrEquals(new Evr((String)state.getValue()));
-	    } catch (NumberFormatException e) {
+		return new Evr((String)item.getValue()).compareTo(new Evr((String)state.getValue())) >= 0;
+	    } catch (IllegalArgumentException e) {
 		throw new TestException(e);
 	    }
 
@@ -1279,8 +1279,8 @@ public class Engine implements IEngine {
 
 	  case EVR_STRING:
 	    try {
-		return new Evr((String)item.getValue()).greaterThan(new Evr((String)state.getValue()));
-	    } catch (NumberFormatException e) {
+		return new Evr((String)item.getValue()).compareTo(new Evr((String)state.getValue())) > 0;
+	    } catch (IllegalArgumentException e) {
 		throw new TestException(e);
 	    }
 
@@ -2150,60 +2150,96 @@ public class Engine implements IEngine {
 	}
     }
 
+    /**
+     * This class is a more or less verbatim copy of the algorithm used by librpm's rpmvercmp(char* a, char* b) function,
+     * as dictated by the OVAL specification. See:
+     * http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#EntityStateEVRStringType
+     */
     class Evr {
-	String epoch, version, release;
+	String evr;
 
 	Evr(String evr) {
-	    int end = evr.indexOf(":");
-	    epoch = evr.substring(0, end);
-	    int begin = end+1;
-	    end = evr.indexOf("-", begin);
-	    version = evr.substring(begin, end);
-	    release = evr.substring(end+1);
+	    this.evr = evr;
 	}
 
-	boolean greaterThanOrEquals(Evr evr) {
-	    if (equals(evr)) {
-		return true;
-	    } else if (greaterThan(evr)) {
-		return true;
-	    } else {
-		return false;
+	/**
+	 * Based on rpmvercmp.c
+	 */
+	int compareTo(Evr other) {
+	    //
+	    // Easy string comparison to check for equivalence
+	    //
+	    if (evr.equals(other.evr)) {
+		return 0;
 	    }
+
+	    byte[] b1 = evr.getBytes();
+	    byte[] b2 = other.evr.getBytes();
+	    int i1 = 0, i2 = 0;
+	    boolean isNum = false;
+
+	    //
+	    // Loop through each version segment of the EVRs and compare them
+	    //
+	    while (i1 < b1.length && i2 < b2.length) {
+		while (i1 < b1.length && !isAlphanumeric(b1[i1])) i1++;
+		while (i2 < b2.length && !isAlphanumeric(b2[i2])) i2++;
+
+		//
+		// If we ran into the end of either, we're done.
+		//
+		if (i1 == b1.length || i2 == b2.length) break;
+
+		//
+		// Grab the first completely alphanumeric segment and compare them
+		//
+		int start1 = i1, start2 = i2;
+		if (isNumeric(b1[i1])) {
+		    while (i1 < b1.length && isNumeric(b1[i1])) i1++;
+		    while (i2 < b2.length && isNumeric(b2[i2])) i2++;
+		    isNum = true;
+		} else {
+		    while (i1 < b1.length && isAlpha(b1[i1])) i1++;
+		    while (i2 < b2.length && isAlpha(b2[i2])) i2++;
+		    isNum = false;
+		}
+
+		if (i1 == start1) return -1; // arbitrary; shouldn't happen
+
+		if (i2 == start2) return (isNum ? 1 : -1);
+
+		if (isNum) {
+		    int int1 = Integer.parseInt(new String(b1, start1, i1));
+		    int int2 = Integer.parseInt(new String(b2, start2, i2));
+
+		    if (int1 > int2) return 1;
+		    if (int2 > int1) return -1;
+		}
+
+		int rc = new String(b1, start1, i2).compareTo(new String(b2, start2, i2));
+		if (rc != 0) {
+		    return (rc < 1 ? -1 : 1);
+		}
+	    }
+
+	    // Take care of the case where all segments compare identically, but only the separator chars differed
+	    if (i1 == b1.length && i2 == b2.length) return 0;
+
+	    // Whichever version still has characters left over wins
+	    if (i1 < b1.length) return 1;
+	    return -1;
 	}
 
-	boolean greaterThan(Evr evr) {
-	    if (Version.isVersion(epoch) && Version.isVersion(evr.epoch)) {
-		if (new Version(epoch).greaterThan(new Version(evr.epoch))) {
-		    return true;
-		}
-	    } else if (epoch.compareTo(evr.epoch) > 0) {
-		return true;
-	    }
-	    if (Version.isVersion(version) && Version.isVersion(evr.version)) {
-		if (new Version(version).greaterThan(new Version(evr.version))) {
-		    return true;
-		}
-	    } else if (version.compareTo(evr.version) > 0) {
-		return true;
-	    }
-	    if (Version.isVersion(release) && Version.isVersion(evr.release)) {
-		if (new Version(release).greaterThan(new Version(evr.release))) {
-		    return true;
-		}
-	    } else if (release.compareTo(evr.release) > 0) {
-		return true;
-	    }
-	    return false;
+	boolean isAlphanumeric(byte b) {
+	    return isAlpha(b) || isNumeric(b);
 	}
 
-	public boolean equals(Object obj) {
-	    if (obj instanceof Evr) {
-		Evr evr = (Evr)obj;
-		return epoch.equals(evr.epoch) && version.equals(evr.version) && release.equals(evr.release);
-	    } else {
-		return false;
-	    }
+	boolean isAlpha(byte b) {
+	    return ('A' <= b && b <= 'Z') || ('a' <= b || b <= 'z');
+	}
+
+	boolean isNumeric(byte b) {
+	    return '0' <= b && b <= '9';
 	}
     }
 }

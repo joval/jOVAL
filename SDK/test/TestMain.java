@@ -10,6 +10,7 @@ import java.io.OutputStream;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.logging.Handler;
 import java.util.logging.FileHandler;
@@ -44,6 +45,16 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  */
 public class TestMain extends RemotePlugin {
+
+    private static HashSet<String> knownFalses		= new HashSet<String>();
+    private static HashSet<String> knownUnknowns	= new HashSet<String>();
+    static {
+	knownFalses.add("oval:org.mitre.oval.test:def:608");
+	knownFalses.add("oval:org.mitre.oval.test:def:997");
+	knownUnknowns.add("oval:org.mitre.oval.test:def:337");
+	knownUnknowns.add("oval:org.mitre.oval.test:def:423");
+    }
+
     public static void main(String[] argv) {
 	try {
 	    LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
@@ -103,13 +114,13 @@ public class TestMain extends RemotePlugin {
 				    break;
 
 				  case FALSE:
-				    if (!"oval:org.mitre.oval.test:def:608".equals(definition.getDefinitionId())) {
+				    if (!knownFalses.contains(definition.getDefinitionId())) {
 					error(definitions, definition);
 				    }
 				    break;
 
 				  case UNKNOWN:
-				    if (!"oval:org.mitre.oval.test:def:423".equals(definition.getDefinitionId())) {
+				    if (!knownUnknowns.contains(definition.getDefinitionId())) {
 					error(definitions, definition);
 				    }
 				    break;
@@ -126,7 +137,6 @@ public class TestMain extends RemotePlugin {
 			    engine.getError().printStackTrace();
 			    break;
 			}
-
 		    } catch (OvalException e) {
 			System.out.println("Problem loading " + xml);
 			e.printStackTrace();
@@ -183,8 +193,8 @@ public class TestMain extends RemotePlugin {
 		sb.append(s);
 	    }
 	    String name = sb.toString();
+	    mkdir(root, entry);
 	    if (!entry.isDirectory()) {
-		mkdir(root, entry);
 		IFile newFile = fs.getFile(name);
 		System.out.println("Installing file " + newFile.getLocalName());
 		byte[] buff = new byte[2048];

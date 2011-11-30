@@ -180,7 +180,7 @@ public class Environment implements IEnvironment {
 		}
 	    }
 	} catch (NoSuchElementException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_VOLENV);
+	    JOVALSystem.getLogger().debug(JOVALMsg.ERROR_WINENV_VOLENV);
 	} finally {
 	    if (volatileEnv != null) {
 		volatileEnv.closeAll();

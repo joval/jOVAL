@@ -132,7 +132,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
 		    }
-		} else if (fObj.getFilename() != null) {
+		} else if (fObj.isSetFilename() && fObj.getFilename().getValue() != null) {
 		    if (isDirectory) {
 			//
 			// Object is looking for files, so skip over this directory
@@ -150,9 +150,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 			fItem.setFilename(filenameType);
 		    }
 		} else if (fObj.isSetPath()) {
-		    if (fObj.isFilenameNil() && !isDirectory) {
+		    if (!isDirectory && fObj.isSetFilename() && fObj.getFilename().getValue() == null) {
 			//
-			// If xsi:nil is set for the filename element, we only want directories
+			// If xsi:nil is set for the filename element, we only want directories...
 			//
 			continue;
 		    }
@@ -296,12 +296,12 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs);
 		}
 
-		if (fObj.getFilename() != null) {
+		if (fObj.isSetFilename()) {
 		    EntityObjectStringType filename = fObj.getFilename();
 		    Collection<String> fnames = new Vector<String>();
 		    if (filename.isSetVarRef()) {
 			fnames.addAll(rc.resolve(filename.getVarRef()));
-		    } else {
+		    } else if (filename.getValue() != null) {
 			fnames.add((String)filename.getValue());
 		    }
 		    Collection<String> files = new Vector<String>();
@@ -398,7 +398,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 			results.add(f.getLocalName());
 			if ("up".equals(direction)) {
 			    int ptr = 0;
-			    ptr = path.lastIndexOf(fs.getDelimiter(), path.lastIndexOf(fs.getDelimiter())-1);
+			    ptr = path.lastIndexOf(fs.getDelimiter(),
+						   path.lastIndexOf(fs.getDelimiter()) - fs.getDelimiter().length());
 			    if (ptr != -1) {
 				Collection<String> c = new HashSet<String>();
 				c.add(path.substring(0, ptr));
