@@ -58,7 +58,7 @@
     </file_test>
     <file_test id="oval:org.mitre.oval.test:tst:1879" version="1" comment="Test that the recurse_direction behavior is supported." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <object object_ref="oval:org.mitre.oval.test:obj:1340"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:1561"/>
+      <state state_ref="oval:org.joval.oval.test:ste:1561"/>
     </file_test>
     <file_test id="oval:org.mitre.oval.test:tst:1436" version="1" comment="Test that the file_object is supported with filepath entity equal to some value." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <object object_ref="oval:org.mitre.oval.test:obj:1194"/>
@@ -134,9 +134,14 @@
       <filename operation="pattern match">^R</filename>
       <size datatype="int" operation="greater than">0</size>
     </file_state>
-    <file_state id="oval:org.mitre.oval.test:ste:1561" version="1" comment="This state represents a file_item which has a path of '/bin', a filename equal to 'ls', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <path>/bin</path>
+    <file_state id="oval:org.mitre.oval.test:ste:1561" version="2" comment="This state represents a file_item which has a path beginning with '/bin', a filename equal to 'ls', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path operation="pattern match">^/bin.*</path>
       <filename>ls</filename>
+      <size datatype="int" operation="greater than">0</size>
+    </file_state>
+    <file_state id="oval:org.joval.oval.test:ste:1561" version="1" comment="This state represents a file_item which has a path of '/etc', a filename equal to 'profile', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/etc</path>
+      <filename>profile</filename>
       <size datatype="int" operation="greater than">0</size>
     </file_state>
     <file_state id="oval:org.mitre.oval.test:ste:1267" version="1" comment="This state represents a file_item which has a path that equals '/etc/rc.d', a filename that equals 'rc', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">

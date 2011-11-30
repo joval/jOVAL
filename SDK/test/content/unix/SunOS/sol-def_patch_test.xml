@@ -15,7 +15,8 @@
       </notes>
       <criteria operator="AND">
         <criterion comment="Test that the patch_object is supported with the base entity equal to some value." test_ref="oval:org.mitre.oval.test:tst:1236"/>
-        <criterion comment="Test that the patch_object is supported with the base entity not equal to some value." test_ref="oval:org.mitre.oval.test:tst:1981"/>
+<!-- DAS intentionally negating the following test result -->
+        <criterion comment="Test that the patch_object is supported with the base entity not equal to some value." test_ref="oval:org.mitre.oval.test:tst:1981" negate="true"/>
         <criterion comment="Test that the patch_object is supported with the base entity greater than some value." test_ref="oval:org.mitre.oval.test:tst:2024"/>
         <criterion comment="Test that the patch_object is supported with the base entity greater than or equal to some value." test_ref="oval:org.mitre.oval.test:tst:1451"/>
         <criterion comment="Test that the patch_object is supported with the base entity less than some value." test_ref="oval:org.mitre.oval.test:tst:1785"/>
@@ -28,7 +29,7 @@
       <object object_ref="oval:org.mitre.oval.test:obj:1158"/>
       <state state_ref="oval:org.mitre.oval.test:ste:1298"/>
     </patch_test>
-    <patch_test id="oval:org.mitre.oval.test:tst:1981" version="1" comment="Test that the patch_object is supported with the base entity not equal to some value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
+    <patch_test id="oval:org.mitre.oval.test:tst:1981" version="2" comment="Test that the patch_object is supported with the base entity not equal to some value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris">
       <object object_ref="oval:org.mitre.oval.test:obj:1331"/>
       <state state_ref="oval:org.mitre.oval.test:ste:1298"/>
     </patch_test>

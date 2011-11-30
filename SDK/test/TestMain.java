@@ -49,10 +49,12 @@ public class TestMain extends RemotePlugin {
     private static HashSet<String> knownFalses		= new HashSet<String>();
     private static HashSet<String> knownUnknowns	= new HashSet<String>();
     static {
-	knownFalses.add("oval:org.mitre.oval.test:def:608");
-	knownFalses.add("oval:org.mitre.oval.test:def:997");
-	knownUnknowns.add("oval:org.mitre.oval.test:def:337");
-	knownUnknowns.add("oval:org.mitre.oval.test:def:423");
+	knownFalses.add("oval:org.mitre.oval.test:def:608");	// Windows
+	knownUnknowns.add("oval:org.mitre.oval.test:def:337");	// Windows
+	knownFalses.add("oval:org.mitre.oval.test:def:997");	// Linux
+	knownUnknowns.add("oval:org.mitre.oval.test:def:423");	// Linux
+	knownFalses.add("oval:org.mitre.oval.test:def:879");	// Solaris
+	knownUnknowns.add("oval:org.mitre.oval.test:def:909");	// Solaris
     }
 
     public static void main(String[] argv) {

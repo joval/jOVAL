@@ -51,16 +51,16 @@
     </file_test>
   </tests>
   <objects>
-    <file_object id="oval:org.mitre.oval.test:obj:1016" version="1" comment="This object represents a file_object with a path equal to '/tmp/ValidationSupportFiles/TextFiles'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <path>/tmp/ValidationSupportFiles/TextFiles</path>
+    <file_object id="oval:org.mitre.oval.test:obj:1016" version="1" comment="This object represents a file_object with a path equal to '/tmp/ValidationSupportFiles2/TextFiles'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/tmp/ValidationSupportFiles2/TextFiles</path>
       <filename xsi:nil="true"/>
     </file_object>
-    <file_object id="oval:org.mitre.oval.test:obj:268" version="2" comment="This object represents a file_object with a path that matches the regular expression '/tmp/ValidationSupportFiles/TextFiles.+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <path operation="pattern match">^/tmp/ValidationSupportFiles/TextFiles.+</path>
+    <file_object id="oval:org.mitre.oval.test:obj:268" version="2" comment="This object represents a file_object with a path that matches the regular expression '/tmp/ValidationSupportFiles2/TextFiles.+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path operation="pattern match">^/tmp/ValidationSupportFiles2/TextFiles.+</path>
       <filename xsi:nil="true"/>
     </file_object>
-    <file_object id="oval:org.mitre.oval.test:obj:689" version="1" comment="This object represents a file_object with a path that matches the regular expression '/tmp/ValidationSupportFiles/TextFiles($|/.*)'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <path operation="pattern match">^/tmp/ValidationSupportFiles/TextFiles($|/.*)</path>
+    <file_object id="oval:org.mitre.oval.test:obj:689" version="1" comment="This object represents a file_object with a path that matches the regular expression '/tmp/ValidationSupportFiles2/TextFiles($|/.*)'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path operation="pattern match">^/tmp/ValidationSupportFiles2/TextFiles($|/.*)</path>
       <filename xsi:nil="true"/>
     </file_object>
     <file_object id="oval:org.mitre.oval.test:obj:274" version="2" comment="This object represents a file_object that is the set ( {a,b,c} COMPLEMENT {b,c} ) which equals set {a}." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
@@ -144,25 +144,25 @@
     </file_object>
   </objects>
   <states>
-    <file_state id="oval:org.mitre.oval.test:ste:1261" version="1" comment="This file_state represents a file_object with a path equal to '/tmp/ValidationSupportFiles/TextFiles'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <path>/tmp/ValidationSupportFiles/TextFiles</path>
+    <file_state id="oval:org.mitre.oval.test:ste:1261" version="1" comment="This file_state represents a file_object with a path equal to '/tmp/ValidationSupportFiles2/TextFiles'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/tmp/ValidationSupportFiles2/TextFiles</path>
     </file_state>
-    <file_state id="oval:org.mitre.oval.test:ste:1286" version="1" comment="This file_state represents a file_object with a path that equals '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest' or '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest/SubTextFileContentTest'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+    <file_state id="oval:org.mitre.oval.test:ste:1286" version="1" comment="This file_state represents a file_object with a path that equals '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest' or '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest/SubTextFileContentTest'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <path var_ref="oval:org.mitre.oval.test:var:241" var_check="only one"/>
     </file_state>
-    <file_state id="oval:org.mitre.oval.test:ste:641" version="1" comment="This file_state represents a file_object with a path that equals '/tmp/ValidationSupportFiles/TextFiles', '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest', or '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest/SubTextFileContentTest'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+    <file_state id="oval:org.mitre.oval.test:ste:641" version="1" comment="This file_state represents a file_object with a path that equals '/tmp/ValidationSupportFiles2/TextFiles', '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest', or '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest/SubTextFileContentTest'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <path var_ref="oval:org.mitre.oval.test:var:587" var_check="only one"/>
     </file_state>
   </states>
   <variables>
-    <constant_variable id="oval:org.mitre.oval.test:var:241" version="1" comment="This constant_variable represents the string values '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest' and '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest/SubTextFileContentTest'." datatype="string">
-      <value>/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest</value>
-      <value>/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest/SubTextFileContentTest</value>
+    <constant_variable id="oval:org.mitre.oval.test:var:241" version="1" comment="This constant_variable represents the string values '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest' and '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest/SubTextFileContentTest'." datatype="string">
+      <value>/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest</value>
+      <value>/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest/SubTextFileContentTest</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:587" version="1" comment="This constant_variable represents the string values '/tmp/ValidationSupportFiles/TextFiles', '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest', and '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest/SubTextFileContentTest'." datatype="string">
-      <value>/tmp/ValidationSupportFiles/TextFiles</value>
-      <value>/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest</value>
-      <value>/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest/SubTextFileContentTest</value>
+    <constant_variable id="oval:org.mitre.oval.test:var:587" version="1" comment="This constant_variable represents the string values '/tmp/ValidationSupportFiles2/TextFiles', '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest', and '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest/SubTextFileContentTest'." datatype="string">
+      <value>/tmp/ValidationSupportFiles2/TextFiles</value>
+      <value>/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest</value>
+      <value>/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest/SubTextFileContentTest</value>
     </constant_variable>
   </variables>
 </oval_definitions>
