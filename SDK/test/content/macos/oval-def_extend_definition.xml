@@ -5,61 +5,61 @@
     <oval:timestamp>2009-01-12T10:41:00-05:00</oval:timestamp>
   </generator>
   <definitions>
-    <definition id="oval:org.mitre.oval.test:def:620" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:322" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true</title>
         <description>This definition is intended to always evaluate to true.</description>
       </metadata>
       <criteria operator="AND">
-        <criterion comment="This test always evaluates to true." test_ref="oval:org.mitre.oval.test:tst:833"/>
+        <criterion comment="This test always evaluates to true." test_ref="oval:org.mitre.oval.test:tst:106"/>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:997" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:87" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to false</title>
         <description>This definition is intended to always evaluate to false.</description>
       </metadata>
       <criteria operator="AND">
-        <criterion negate="true" comment="This test always evaluates to true." test_ref="oval:org.mitre.oval.test:tst:833"/>
+        <criterion negate="true" comment="This test always evaluates to true." test_ref="oval:org.mitre.oval.test:tst:106"/>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:117" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:26" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:extend_definition construct is properly supported</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the oval-def:extend_definition construct with the negate attribute set to false.</description>
       </metadata>
       <criteria operator="AND">
-        <extend_definition comment="Evaluate to true" definition_ref="oval:org.mitre.oval.test:def:620"/>
+        <extend_definition comment="Evaluate to true" definition_ref="oval:org.mitre.oval.test:def:322"/>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:97" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:736" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:extend_definition construct is properly supported</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the oval-def:extend_definition construct with the negate attribute set to true.</description>
       </metadata>
       <criteria operator="AND">
-        <extend_definition negate="true" comment="Evaluate to false" definition_ref="oval:org.mitre.oval.test:def:997"/>
+        <extend_definition negate="true" comment="Evaluate to false" definition_ref="oval:org.mitre.oval.test:def:87"/>
       </criteria>
     </definition>
   </definitions>
   <tests>
-    <variable_test id="oval:org.mitre.oval.test:tst:833" version="1" comment="This test always evaluates to true." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:841"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:266"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:106" version="1" comment="This test always evaluates to true." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:377"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:329"/>
     </variable_test>
   </tests>
   <objects>
-    <variable_object id="oval:org.mitre.oval.test:obj:841" version="1" comment="This variable_object represents the boolean value 'true'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:945</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:377" version="1" comment="This variable_object represents the boolean value 'true'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:87</var_ref>
     </variable_object>
   </objects>
   <states>
-    <variable_state id="oval:org.mitre.oval.test:ste:266" version="1" comment="This variable_state represents a boolean value that is equal to 'true'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:329" version="1" comment="This variable_state represents a boolean value that is equal to 'true'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="boolean">true</value>
     </variable_state>
   </states>
   <variables>
-    <constant_variable id="oval:org.mitre.oval.test:var:945" version="1" comment="This variable represents the boolean value 'true'." datatype="binary">
+    <constant_variable id="oval:org.mitre.oval.test:var:87" version="1" comment="This variable represents the boolean value 'true'." datatype="binary">
       <value>true</value>
     </constant_variable>
   </variables>

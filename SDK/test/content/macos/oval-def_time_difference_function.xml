@@ -5,535 +5,535 @@
     <oval:timestamp>2009-01-12T10:41:00-05:00</oval:timestamp>
   </generator>
   <definitions>
-    <definition id="oval:org.mitre.oval.test:def:336" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:665" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:time_difference function is properly supported</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the oval-def:time_difference function.</description>
       </metadata>
       <criteria operator="AND">
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:878"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:545"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:475"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:55"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:296"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:779"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:351"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:484"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:694"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:601"/>
-        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:542"/>
-        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:41"/>
-        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:88"/>
-        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:808"/>
-        <criterion comment="Test that the time_difference function is supported with a set of month_day_year timedate values and a set of day_month_year values timedate values." test_ref="oval:org.mitre.oval.test:tst:371"/>
-        <criterion comment="Test that the time_difference function is supported with a seconds_since_epoch timedate value (current time) and a seconds_since_epoch timedate value." test_ref="oval:org.mitre.oval.test:tst:135"/>
-        <criterion comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:203"/>
-        <criterion comment="Test that the time_difference function is supported with a day_month_year timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:192"/>
-        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a seconds_since_epoch timedate value." test_ref="oval:org.mitre.oval.test:tst:772"/>
-        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:933"/>
-        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:810"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:536"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:824"/>
-        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:282"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:596"/>
-        <criterion comment="Test that the time_difference function is supported with a day_month_year timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:521"/>
-        <criterion comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:767"/>
-        <criterion comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:690"/>
-        <criterion comment="Test that the time_difference function is supported with a seconds_since_epoch timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:683"/>
-        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:369"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:816"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:821"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:498"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:176"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:909"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:819"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:179"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:598"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:802"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:37"/>
+        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:797"/>
+        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:652"/>
+        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:938"/>
+        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:1001"/>
+        <criterion comment="Test that the time_difference function is supported with a set of month_day_year timedate values and a set of day_month_year values timedate values." test_ref="oval:org.mitre.oval.test:tst:152"/>
+        <criterion comment="Test that the time_difference function is supported with a seconds_since_epoch timedate value (current time) and a seconds_since_epoch timedate value." test_ref="oval:org.mitre.oval.test:tst:749"/>
+        <criterion comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:410"/>
+        <criterion comment="Test that the time_difference function is supported with a day_month_year timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:965"/>
+        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a seconds_since_epoch timedate value." test_ref="oval:org.mitre.oval.test:tst:870"/>
+        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:292"/>
+        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:212"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:506"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:756"/>
+        <criterion comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:600"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:670"/>
+        <criterion comment="Test that the time_difference function is supported with a day_month_year timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:315"/>
+        <criterion comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:807"/>
+        <criterion comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." test_ref="oval:org.mitre.oval.test:tst:198"/>
+        <criterion comment="Test that the time_difference function is supported with a seconds_since_epoch timedate value and a year_month_day timedate value." test_ref="oval:org.mitre.oval.test:tst:222"/>
+        <criterion comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." test_ref="oval:org.mitre.oval.test:tst:206"/>
       </criteria>
     </definition>
   </definitions>
   <tests>
-    <variable_test id="oval:org.mitre.oval.test:tst:878" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:887"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:225"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:816" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:700"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:821"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:545" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:23"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:130"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:821" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:977"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:356"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:475" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:490"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:756"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:498" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:603"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:497"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:55" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:724"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:657"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:176" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:16"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:616"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:296" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:18"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:902"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:909" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:864"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:207"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:779" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:919"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:838"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:819" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:42"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:953"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:351" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:624"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:487"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:179" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:907"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:396"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:484" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:128"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:316"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:598" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:442"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:40"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:694" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:565"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:379"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:802" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:334"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:552"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:601" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:10"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:550"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:37" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:937"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:180"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:542" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:484"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:377"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:797" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:467"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:593"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:41" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:430"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:339"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:652" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:178"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:259"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:88" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:866"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:328"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:938" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:245"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:956"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:808" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:781"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:954"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:1001" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:256"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:141"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:371" version="1" comment="Test that the time_difference function is supported with a set of month_day_year timedate values and a set of day_month_year values timedate values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:596"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:64"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:152" version="1" comment="Test that the time_difference function is supported with a set of month_day_year timedate values and a set of day_month_year values timedate values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:916"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:410"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:135" version="1" comment="Test that the time_difference function is supported with a seconds_since_epoch timedate value (current time) and a seconds_since_epoch timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:495"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:171"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:749" version="1" comment="Test that the time_difference function is supported with a seconds_since_epoch timedate value (current time) and a seconds_since_epoch timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:49"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:739"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:203" version="1" comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:589"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:701"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:410" version="1" comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:45"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:560"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:192" version="1" comment="Test that the time_difference function is supported with a day_month_year timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:316"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:263"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:965" version="1" comment="Test that the time_difference function is supported with a day_month_year timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:446"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:459"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:772" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a seconds_since_epoch timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:824"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:292"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:870" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a seconds_since_epoch timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:672"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:27"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:933" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:78"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:383"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:292" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:326"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:184"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:810" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:238"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:222"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:212" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:870"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:950"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:536" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:524"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:738"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:506" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:273"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:308"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:824" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:543"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:362"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:756" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:416"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:976"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:282" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:216"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:472"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:600" version="1" comment="Test that the time_difference function is supported with a month_day_year timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:656"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:521"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:596" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:525"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:20"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:670" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:629"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:460"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:521" version="1" comment="Test that the time_difference function is supported with a day_month_year timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:742"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:112"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:315" version="1" comment="Test that the time_difference function is supported with a day_month_year timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:981"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:389"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:767" version="1" comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:853"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:226"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:807" version="1" comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:743"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:965"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:690" version="1" comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:853"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:722"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:198" version="1" comment="Test that the time_difference function is supported with a day_month_year timedate value and a month_day_year timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:743"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:123"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:683" version="1" comment="Test that the time_difference function is supported with a seconds_since_epoch timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:310"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:485"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:222" version="1" comment="Test that the time_difference function is supported with a seconds_since_epoch timedate value and a year_month_day timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:657"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:533"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:369" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:714"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:995"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:206" version="1" comment="Test that the time_difference function is supported with a year_month_day timedate value and a win_filetime timedate value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:81"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:898"/>
     </variable_test>
   </tests>
   <objects>
-    <variable_object id="oval:org.mitre.oval.test:obj:887" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:859</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:700" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:555</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:23" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:880</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:977" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:888</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:490" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:271</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:603" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:372</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:724" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:585</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:16" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:458</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:18" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:742</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:864" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:253</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:919" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:770</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:42" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:283</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:624" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:40</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:907" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:228</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:128" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:741</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:442" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:11</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:565" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:618</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:334" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:343</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:10" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:420</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:937" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two year_month_day timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:365</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:484" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two month_day_year timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:384</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:467" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two month_day_year timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:196</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:430" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two month_day_year timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:640</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:178" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two month_day_year timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:971</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:866" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two month_day_year timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:995</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:245" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two month_day_year timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:104</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:781" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two month_day_year timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:633</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:256" version="1" comment="This variable_object references a single time difference value that is equal to the difference between two month_day_year timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:42</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:399" version="1" comment="This variable_object references a set of valid timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:716</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:121" version="1" comment="This variable_object references a set of valid timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:895</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:846" version="1" comment="This variable_object references a set of valid timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:311</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:229" version="1" comment="This variable_object references a set of valid timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:71</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:596" version="1" comment="This variable_object references an array of time difference values that consists of elements formed by the time_difference function being applied to the Cartesian product of a set of month_day_year timedate values and a set of day_month_year timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:109</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:916" version="1" comment="This variable_object references an array of time difference values that consists of elements formed by the time_difference function being applied to the Cartesian product of a set of month_day_year timedate values and a set of day_month_year timedate values." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:735</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:495" version="1" comment="This variable_object references a single time difference value that is equal to the difference between the current timedate value and a seconds_since_epoch timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:499</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:49" version="1" comment="This variable_object references a single time difference value that is equal to the difference between the current timedate value and a seconds_since_epoch timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:461</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:589" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a day_month_year timedate value and a month_day_year timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:451</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:45" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a day_month_year timedate value and a month_day_year timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:408</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:316" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:828</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:446" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:171</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:824" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a month_day_year timedate value and a seconds_since_epoch timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:972</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:672" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a month_day_year timedate value and a seconds_since_epoch timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:124</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:78" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:812</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:326" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:41</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:238" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:670</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:870" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:714</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:524" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:122</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:273" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:886</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:543" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:937</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:416" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:839</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:216" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:145</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:656" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:936</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:525" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:590</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:629" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:218</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:742" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:292</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:981" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:358</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:853" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:727</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:743" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:222</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:310" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a seconds_since_epoch timedate value and a year_month_day timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:728</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:657" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a seconds_since_epoch timedate value and a year_month_day timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:209</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:714" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:535</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:81" version="1" comment="This variable_object references a single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:525</var_ref>
     </variable_object>
   </objects>
   <states>
-    <variable_state id="oval:org.mitre.oval.test:ste:225" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:821" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157876942</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:130" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:356" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157876942</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:756" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:497" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157876942</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:657" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:616" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157876942</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:902" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:207" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157876942</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:838" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:953" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157852800</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:487" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:396" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157852800</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:316" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:40" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157852800</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:379" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:552" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157852800</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:550" version="1" comment="The time difference between two timedate values is 157832319 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:180" version="1" comment="The time difference between two timedate values is 157832319 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157832319</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:377" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:593" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157876942</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:339" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:259" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157852800</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:328" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:956" version="1" comment="The time difference between two timedate values is 157876942 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157876942</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:954" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:141" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157852800</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:64" version="1" comment="The time difference between two timedate values is 162774000 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:410" version="1" comment="The time difference between two timedate values is 162774000 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>162774000</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:171" version="1" comment="The time difference between two timedate values is 86400 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:739" version="1" comment="The time difference between two timedate values is 86400 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="int" operation="greater than">86400</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:701" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:560" version="1" comment="The time difference between two timedate values is 157852800 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>157852800</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:263" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:459" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>0</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:292" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:27" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>0</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:383" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:184" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>0</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:222" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:950" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>0</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:738" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:308" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>0</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:362" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:976" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>0</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:472" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:521" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>0</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:20" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:460" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>0</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:112" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:389" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>0</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:226" version="1" comment="The time difference between two timedate values is 10364400 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:965" version="1" comment="The time difference between two timedate values is 10364400 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>10364400</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:722" version="1" comment="The time difference between two timedate values is 10364400 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:123" version="1" comment="The time difference between two timedate values is 10364400 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>10364400</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:485" version="1" comment="The time difference between two timedate values is 1243741186 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:533" version="1" comment="The time difference between two timedate values is 1243741186 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>1243741186</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:995" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:898" version="1" comment="The time difference between two timedate values is 0 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>0</value>
     </variable_state>
   </states>
   <variables>
-    <local_variable id="oval:org.mitre.oval.test:var:859" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:555" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
       <time_difference format_1="year_month_day" format_2="year_month_day">
         <literal_component>20090204T122343</literal_component>
         <literal_component>20040204T054121</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:880" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:888" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
       <time_difference format_1="year_month_day" format_2="year_month_day">
         <literal_component>2009/02/04 12:23:43</literal_component>
         <literal_component>2004/02/04 05:41:21</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:271" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:372" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
       <time_difference format_1="year_month_day" format_2="year_month_day">
         <literal_component>2009/02/04 12:23:43</literal_component>
         <literal_component>2004-02-04 05:41:21</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:585" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:458" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
       <time_difference format_1="year_month_day" format_2="year_month_day">
         <literal_component>2009-02-04 12:23:43</literal_component>
         <literal_component>2004/02/04 05:41:21</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:742" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:253" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
       <time_difference format_1="year_month_day" format_2="year_month_day">
         <literal_component>2009-02-04 12:23:43</literal_component>
         <literal_component>2004-02-04 05:41:21</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:770" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:283" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
       <time_difference format_1="year_month_day" format_2="year_month_day">
         <literal_component>2009-02-04</literal_component>
         <literal_component>2004-02-04</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:40" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:228" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
       <time_difference format_1="year_month_day" format_2="year_month_day">
         <literal_component>2009-02-04</literal_component>
         <literal_component>2004/02/04</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:741" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:11" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
       <time_difference format_1="year_month_day" format_2="year_month_day">
         <literal_component>2009/02/04</literal_component>
         <literal_component>2004-02-04</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:618" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:343" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
       <time_difference format_1="year_month_day" format_2="year_month_day">
         <literal_component>2009/02/04</literal_component>
         <literal_component>2004/02/04</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:420" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:365" version="1" comment="A single time difference value that is equal to the difference between two year_month_day timedate values." datatype="string">
       <time_difference format_1="year_month_day" format_2="year_month_day">
         <literal_component>20090204</literal_component>
         <literal_component>2004-02-04 05:41:21</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:384" version="1" comment="A single time difference value that is equal to the difference between two month_day_year timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:196" version="1" comment="A single time difference value that is equal to the difference between two month_day_year timedate values." datatype="string">
       <time_difference format_1="month_day_year" format_2="month_day_year">
         <literal_component>02/04/2009 12:23:43</literal_component>
         <literal_component>02-04-2004 05:41:21</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:640" version="1" comment="A single time difference value that is equal to the difference between two month_day_year timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:971" version="1" comment="A single time difference value that is equal to the difference between two month_day_year timedate values." datatype="string">
       <time_difference format_1="month_day_year" format_2="month_day_year">
         <literal_component>02/04/2009</literal_component>
         <literal_component>02-04-2004</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:995" version="1" comment="A single time difference value that is equal to the difference between two month_day_year timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:104" version="1" comment="A single time difference value that is equal to the difference between two month_day_year timedate values." datatype="string">
       <time_difference format_1="month_day_year" format_2="month_day_year">
         <literal_component>Feb, 04 2009 12:23:43</literal_component>
         <literal_component>Feb, 04 2004 05:41:21</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:633" version="1" comment="A single time difference value that is equal to the difference between two month_day_year timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:42" version="1" comment="A single time difference value that is equal to the difference between two month_day_year timedate values." datatype="string">
       <time_difference format_1="month_day_year" format_2="month_day_year">
         <literal_component>February, 04 2009</literal_component>
         <literal_component>February, 04 2004</literal_component>
       </time_difference>
     </local_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:716" version="1" comment="A set of valid timedate values." datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:895" version="1" comment="A set of valid timedate values." datatype="string">
       <value>04/02/2009</value>
       <value>04/02/2009</value>
       <value>04/02/2009</value>
       <value>04/02/2009</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:311" version="1" comment="A set of valid timedate values." datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:71" version="1" comment="A set of valid timedate values." datatype="string">
       <value>04-02-2004</value>
       <value>04-02-2004</value>
       <value>04-02-2004</value>
       <value>04-02-2004</value>
     </constant_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:109" version="1" comment="An array of time difference values that consists of elements formed by the time_difference function being applied to the Cartesian product of a set of month_day_year timedate values and a set of day_month_year timedate values." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:735" version="1" comment="An array of time difference values that consists of elements formed by the time_difference function being applied to the Cartesian product of a set of month_day_year timedate values and a set of day_month_year timedate values." datatype="string">
       <time_difference format_1="month_day_year" format_2="day_month_year">
-        <object_component object_ref="oval:org.mitre.oval.test:obj:399" item_field="value"/>
-        <object_component object_ref="oval:org.mitre.oval.test:obj:846" item_field="value"/>
+        <object_component object_ref="oval:org.mitre.oval.test:obj:121" item_field="value"/>
+        <object_component object_ref="oval:org.mitre.oval.test:obj:229" item_field="value"/>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:499" version="1" comment="A single time difference value that is equal to the difference between the current timedate value and a seconds_since_epoch timedate value." datatype="int">
+    <local_variable id="oval:org.mitre.oval.test:var:461" version="1" comment="A single time difference value that is equal to the difference between the current timedate value and a seconds_since_epoch timedate value." datatype="int">
       <time_difference format_2="seconds_since_epoch">
         <literal_component>1238506200</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:451" version="1" comment="A single time difference value that is equal to the difference between a day_month_year timedate value and a month_day_year timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:408" version="1" comment="A single time difference value that is equal to the difference between a day_month_year timedate value and a month_day_year timedate value." datatype="string">
       <time_difference format_1="day_month_year" format_2="month_day_year">
         <literal_component>04-02-2009 01:54:23</literal_component>
         <literal_component>February, 04 2004 01:54:23</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:828" version="1" comment="A single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:171" version="1" comment="A single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." datatype="string">
       <time_difference format_1="day_month_year" format_2="win_filetime">
         <literal_component>1/1/1970</literal_component>
         <literal_component>19db1ded53e8000</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:972" version="1" comment="A single time difference value that is equal to the difference between a month_day_year timedate value and a seconds_since_epoch timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:124" version="1" comment="A single time difference value that is equal to the difference between a month_day_year timedate value and a seconds_since_epoch timedate value." datatype="string">
       <time_difference format_1="month_day_year" format_2="seconds_since_epoch">
         <literal_component>1-1-1970</literal_component>
         <literal_component>0</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:812" version="1" comment="A single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:41" version="1" comment="A single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." datatype="string">
       <time_difference format_1="month_day_year" format_2="win_filetime">
         <literal_component>January, 01 1970</literal_component>
         <literal_component>19db1ded53e8000</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:670" version="1" comment="A single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:714" version="1" comment="A single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." datatype="string">
       <time_difference format_1="month_day_year" format_2="win_filetime">
         <literal_component>Jan, 01 1970</literal_component>
         <literal_component>19db1ded53e8000</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:122" version="1" comment="A single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:886" version="1" comment="A single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." datatype="string">
       <time_difference format_1="year_month_day" format_2="win_filetime">
         <literal_component>19700101</literal_component>
         <literal_component>19db1ded53e8000</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:937" version="1" comment="A single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:839" version="1" comment="A single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." datatype="string">
       <time_difference format_1="year_month_day" format_2="win_filetime">
         <literal_component>1970-01-01</literal_component>
         <literal_component>19db1ded53e8000</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:145" version="1" comment="A single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:936" version="1" comment="A single time difference value that is equal to the difference between a month_day_year timedate value and a win_filetime timedate value." datatype="string">
       <time_difference format_1="month_day_year" format_2="win_filetime">
         <literal_component>01/01/1970</literal_component>
         <literal_component>19db1ded53e8000</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:590" version="1" comment="A single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:218" version="1" comment="A single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." datatype="string">
       <time_difference format_1="year_month_day" format_2="win_filetime">
         <literal_component>19700101T000000</literal_component>
         <literal_component>19db1ded53e8000</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:292" version="1" comment="A single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:358" version="1" comment="A single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." datatype="string">
       <time_difference format_1="day_month_year" format_2="win_filetime">
         <literal_component>01/01/1970</literal_component>
         <literal_component>19db1ded53e8000</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:727" version="1" comment="A single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:222" version="1" comment="A single time difference value that is equal to the difference between a day_month_year timedate value and a win_filetime timedate value." datatype="string">
       <time_difference format_1="day_month_year" format_2="month_day_year">
         <literal_component>05-05-1975 05:05:05</literal_component>
         <literal_component>01-05-1975 05:05:05</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:728" version="1" comment="A single time difference value that is equal to the difference between a seconds_since_epoch timedate value and a year_month_day timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:209" version="1" comment="A single time difference value that is equal to the difference between a seconds_since_epoch timedate value and a year_month_day timedate value." datatype="string">
       <time_difference format_1="seconds_since_epoch" format_2="year_month_day">
         <literal_component>1724038267</literal_component>
         <literal_component>1985/03/21 23:51:21</literal_component>
       </time_difference>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:535" version="1" comment="A single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:525" version="1" comment="A single time difference value that is equal to the difference between a year_month_day timedate value and a win_filetime timedate value." datatype="string">
       <time_difference format_1="year_month_day" format_2="win_filetime">
         <literal_component>2005/08/01 02:14:19</literal_component>
         <literal_component>1C5963EB93F4F80</literal_component>

@@ -5,196 +5,196 @@
     <oval:timestamp>2009-01-12T10:41:00-05:00</oval:timestamp>
   </generator>
   <definitions>
-    <definition id="oval:org.mitre.oval.test:def:392" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:981" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the evr_string datatype is properly supported</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the evr_string datatype and all of its valid operations.</description>
       </metadata>
       <criteria operator="AND">
         <criteria operator="AND" comment="True if the equals operation is supported">
-          <criterion comment="Test that the equals operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:715"/>
-          <criterion negate="true" comment="Test that the equals operation is supported with two unequal evr_string values." test_ref="oval:org.mitre.oval.test:tst:58"/>
+          <criterion comment="Test that the equals operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:142"/>
+          <criterion negate="true" comment="Test that the equals operation is supported with two unequal evr_string values." test_ref="oval:org.mitre.oval.test:tst:571"/>
         </criteria>
         <criteria operator="AND" comment="True if the not equal operation is supported">
-          <criterion negate="true" comment="Test that the not equal operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:140"/>
-          <criterion comment="Test that the not equal operation is supported with two unequal evr_string values." test_ref="oval:org.mitre.oval.test:tst:26"/>
+          <criterion negate="true" comment="Test that the not equal operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:890"/>
+          <criterion comment="Test that the not equal operation is supported with two unequal evr_string values." test_ref="oval:org.mitre.oval.test:tst:227"/>
         </criteria>
         <criteria operator="AND" comment="True if the greater than operation is supported">
-          <criterion comment="Test that the greater than operation is supported with a greater than evr_string value." test_ref="oval:org.mitre.oval.test:tst:114"/>
-          <criterion negate="true" comment="Test that the greater than operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:923"/>
-          <criterion negate="true" comment="Test that the greater than operation is supported with a less than evr_string value." test_ref="oval:org.mitre.oval.test:tst:244"/>
+          <criterion comment="Test that the greater than operation is supported with a greater than evr_string value." test_ref="oval:org.mitre.oval.test:tst:712"/>
+          <criterion negate="true" comment="Test that the greater than operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:676"/>
+          <criterion negate="true" comment="Test that the greater than operation is supported with a less than evr_string value." test_ref="oval:org.mitre.oval.test:tst:97"/>
         </criteria>
         <criteria operator="AND" comment="True if the greater than or equal operation is supported">
-          <criterion comment="Test that the greater than or equal operation is supported with a greater than evr_string value." test_ref="oval:org.mitre.oval.test:tst:470"/>
-          <criterion comment="Test that the greater than or equal operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:975"/>
-          <criterion negate="true" comment="Test that the greater than or equal operation is supported with a less than evr_string value." test_ref="oval:org.mitre.oval.test:tst:298"/>
+          <criterion comment="Test that the greater than or equal operation is supported with a greater than evr_string value." test_ref="oval:org.mitre.oval.test:tst:169"/>
+          <criterion comment="Test that the greater than or equal operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:736"/>
+          <criterion negate="true" comment="Test that the greater than or equal operation is supported with a less than evr_string value." test_ref="oval:org.mitre.oval.test:tst:928"/>
         </criteria>
         <criteria operator="AND" comment="True if the less than operation is supported">
-          <criterion comment="Test that the less than operation is supported with a less than evr_string value." test_ref="oval:org.mitre.oval.test:tst:500"/>
-          <criterion negate="true" comment="Test that the less than operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:293"/>
-          <criterion negate="true" comment="Test that the less than operation is supported with a greater than evr_string value." test_ref="oval:org.mitre.oval.test:tst:960"/>
+          <criterion comment="Test that the less than operation is supported with a less than evr_string value." test_ref="oval:org.mitre.oval.test:tst:795"/>
+          <criterion negate="true" comment="Test that the less than operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:332"/>
+          <criterion negate="true" comment="Test that the less than operation is supported with a greater than evr_string value." test_ref="oval:org.mitre.oval.test:tst:368"/>
         </criteria>
         <criteria operator="AND" comment="True if the less than or equal operation is supported">
-          <criterion comment="Test that the less than or equal operation is supported with a less than evr_string value." test_ref="oval:org.mitre.oval.test:tst:168"/>
-          <criterion comment="Test that the less than or equal operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:39"/>
-          <criterion negate="true" comment="Test that the less than or equal operation is supported with a greater than evr_string value." test_ref="oval:org.mitre.oval.test:tst:744"/>
+          <criterion comment="Test that the less than or equal operation is supported with a less than evr_string value." test_ref="oval:org.mitre.oval.test:tst:702"/>
+          <criterion comment="Test that the less than or equal operation is supported with two equal evr_string values." test_ref="oval:org.mitre.oval.test:tst:384"/>
+          <criterion negate="true" comment="Test that the less than or equal operation is supported with a greater than evr_string value." test_ref="oval:org.mitre.oval.test:tst:739"/>
         </criteria>
       </criteria>
     </definition>
   </definitions>
   <tests>
-    <variable_test id="oval:org.mitre.oval.test:tst:715" version="1" comment="Test that the equals operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:181"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:33"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:142" version="1" comment="Test that the equals operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:924"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:639"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:58" version="1" comment="Test that the equals operation is supported with two unequal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:832"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:729"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:571" version="1" comment="Test that the equals operation is supported with two unequal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:610"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:296"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:140" version="1" comment="Test that the not equal operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:515"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:355"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:890" version="1" comment="Test that the not equal operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:7"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:817"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:26" version="1" comment="Test that the not equal operation is supported with two unequal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:904"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:883"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:227" version="1" comment="Test that the not equal operation is supported with two unequal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:279"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:369"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:114" version="1" comment="Test that the greater than operation is supported with a greater than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:181"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:391"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:712" version="1" comment="Test that the greater than operation is supported with a greater than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:924"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:5"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:923" version="1" comment="Test that the greater than operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:515"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:62"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:676" version="1" comment="Test that the greater than operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:7"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:493"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:244" version="1" comment="Test that the greater than operation is supported with a less than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:832"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:393"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:97" version="1" comment="Test that the greater than operation is supported with a less than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:610"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:949"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:470" version="1" comment="Test that the greater than or equal operation is supported with a greater than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:882"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:528"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:169" version="1" comment="Test that the greater than or equal operation is supported with a greater than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:740"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:364"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:975" version="1" comment="Test that the greater than or equal operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:515"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:31"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:736" version="1" comment="Test that the greater than or equal operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:7"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:238"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:298" version="1" comment="Test that the greater than or equal operation is supported with a less than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:832"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:833"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:928" version="1" comment="Test that the greater than or equal operation is supported with a less than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:610"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:554"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:500" version="1" comment="Test that the less than operation is supported with a less than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:832"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:509"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:795" version="1" comment="Test that the less than operation is supported with a less than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:610"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:495"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:293" version="1" comment="Test that the less than operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:515"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:604"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:332" version="1" comment="Test that the less than operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:7"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:492"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:960" version="1" comment="Test that the less than operation is supported with a greater than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:882"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:91"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:368" version="1" comment="Test that the less than operation is supported with a greater than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:740"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:231"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:168" version="1" comment="Test that the less than or equal operation is supported with a less than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:832"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:217"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:702" version="1" comment="Test that the less than or equal operation is supported with a less than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:610"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:419"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:39" version="1" comment="Test that the less than or equal operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:515"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:315"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:384" version="1" comment="Test that the less than or equal operation is supported with two equal evr_string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:7"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:568"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:744" version="1" comment="Test that the less than or equal operation is supported with a greater than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:882"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:511"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:739" version="1" comment="Test that the less than or equal operation is supported with a greater than evr_string value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:740"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:864"/>
     </variable_test>
   </tests>
   <objects>
-    <variable_object id="oval:org.mitre.oval.test:obj:515" version="1" comment="This variable_object references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:597</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:7" version="1" comment="This variable_object references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:904</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:832" version="1" comment="This variable_object references the evr_string value '1:0.1.2-3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:406</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:610" version="1" comment="This variable_object references the evr_string value '1:0.1.2-3.4'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:787</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:882" version="1" comment="This variable_object references the evr_string value '15:4.9.3-6.7.8.9'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:67</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:740" version="1" comment="This variable_object references the evr_string value '15:4.9.3-6.7.8.9'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:28</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:904" version="1" comment="This variable_object references the evr_string value ':3.5ssa-0.20030801.48'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:235</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:279" version="1" comment="This variable_object references the evr_string value ':3.5ssa-0.20030801.48'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:391</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:181" version="1" comment="This variable_object references the evr_string value '5:1.9.10-1.RHEL'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:678</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:924" version="1" comment="This variable_object references the evr_string value '5:1.9.10-1.RHEL'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:666</var_ref>
     </variable_object>
   </objects>
   <states>
-    <variable_state id="oval:org.mitre.oval.test:ste:33" version="1" comment="This variable_state references the evr_string value '5:1.9.10-1.RHEL'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:639" version="1" comment="This variable_state references the evr_string value '5:1.9.10-1.RHEL'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string">5:1.9.10-1.RHEL</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:729" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:296" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:355" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:817" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="not equal">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:883" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:369" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="not equal">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:391" version="1" comment="This variable_state references the evr_string value ':3.5ssa-0.20030801.48'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:5" version="1" comment="This variable_state references the evr_string value ':3.5ssa-0.20030801.48'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="greater than">:3.5ssa-0.20030801.48</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:62" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:493" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="greater than">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:393" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:949" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="greater than">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:528" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:364" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="greater than or equal">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:31" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:238" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="greater than or equal">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:833" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:554" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="greater than or equal">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:509" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:495" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="less than">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:604" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:492" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="less than">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:91" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:231" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="less than">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:217" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:419" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="less than or equal">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:315" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:568" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="less than or equal">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:511" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:864" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="less than or equal">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:804" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:629" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="less than or equal">1:2.3.4-5.6</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:32" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:236" version="1" comment="This variable_state references the evr_string value '1:2.3.4-5.6'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="evr_string" operation="less than or equal">1:2.3.4-5.6</value>
     </variable_state>
   </states>
   <variables>
-    <constant_variable id="oval:org.mitre.oval.test:var:597" version="1" comment="This variable_object represents the evr_string value '1:2.3.4-5.6'." datatype="evr_string">
+    <constant_variable id="oval:org.mitre.oval.test:var:904" version="1" comment="This variable_object represents the evr_string value '1:2.3.4-5.6'." datatype="evr_string">
       <value>1:2.3.4-5.6</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:406" version="1" comment="This variable_object represents the evr_string value '1:0.1.2-3.4'." datatype="evr_string">
+    <constant_variable id="oval:org.mitre.oval.test:var:787" version="1" comment="This variable_object represents the evr_string value '1:0.1.2-3.4'." datatype="evr_string">
       <value>1:0.1.2-3.4</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:67" version="1" comment="This variable_object represents the evr_string value '15:4.9.3-6.7.8.9'." datatype="evr_string">
+    <constant_variable id="oval:org.mitre.oval.test:var:28" version="1" comment="This variable_object represents the evr_string value '15:4.9.3-6.7.8.9'." datatype="evr_string">
       <value>15:4.9.3-6.7.8.9</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:235" version="1" comment="This variable_object represents the evr_string value ':3.5ssa-0.20030801.48'." datatype="evr_string">
+    <constant_variable id="oval:org.mitre.oval.test:var:391" version="1" comment="This variable_object represents the evr_string value ':3.5ssa-0.20030801.48'." datatype="evr_string">
       <value>:3.5ssa-0.20030801.48</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:678" version="1" comment="This variable_object represents the evr_string value '5:1.9.10-1.RHEL'." datatype="evr_string">
+    <constant_variable id="oval:org.mitre.oval.test:var:666" version="1" comment="This variable_object represents the evr_string value '5:1.9.10-1.RHEL'." datatype="evr_string">
       <value>5:1.9.10-1.RHEL</value>
     </constant_variable>
   </variables>

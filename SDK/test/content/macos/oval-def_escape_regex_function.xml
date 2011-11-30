@@ -5,61 +5,61 @@
     <oval:timestamp>2009-05-21T11:46:00-04:00</oval:timestamp>
   </generator>
   <definitions>
-    <definition id="oval:org.mitre.oval.test:def:167" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:529" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the escape_regex function is properly supported</title>
         <description>This definition is intended to evaluate to true if the interpreter properly supports the escape_regex function.</description>
       </metadata>
       <criteria operator="AND">
-        <criterion comment="Test that the escape_regex function is supported with a single component that returns a single string value that contains regular expression characters." test_ref="oval:org.mitre.oval.test:tst:546"/>
-        <criterion comment="Test that the escape_regex function is supported with a single component that returns multiple string values that contain regular expression characters." test_ref="oval:org.mitre.oval.test:tst:905"/>
+        <criterion comment="Test that the escape_regex function is supported with a single component that returns a single string value that contains regular expression characters." test_ref="oval:org.mitre.oval.test:tst:529"/>
+        <criterion comment="Test that the escape_regex function is supported with a single component that returns multiple string values that contain regular expression characters." test_ref="oval:org.mitre.oval.test:tst:925"/>
       </criteria>
     </definition>
   </definitions>
   <tests>
-    <variable_test id="oval:org.mitre.oval.test:tst:546" version="1" comment="Test that the escape_regex function is supported with a single component that returns a single string value that contains regular expression characters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:626"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:275"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:529" version="1" comment="Test that the escape_regex function is supported with a single component that returns a single string value that contains regular expression characters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:331"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:358"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:905" version="1" comment="Test that the escape_regex function is supported with a single component that returns multiple string values that contain regular expression characters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:758"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:477"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:925" version="1" comment="Test that the escape_regex function is supported with a single component that returns multiple string values that contain regular expression characters." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:830"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:848"/>
     </variable_test>
   </tests>
   <objects>
-    <variable_object id="oval:org.mitre.oval.test:obj:626" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:780</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:331" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:294</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:758" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:324</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:830" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:743</var_ref>
     </variable_object>
   </objects>
   <states>
-    <variable_state id="oval:org.mitre.oval.test:ste:275" version="1" comment="The string '\\\^\.\$\|\(\)\[\]\{\}\*\+\?'" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:358" version="1" comment="The string '\\\^\.\$\|\(\)\[\]\{\}\*\+\?'" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>\\\^\.\$\|\(\)\[\]\{\}\*\+\?</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:477" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <value var_ref="oval:org.mitre.oval.test:var:763" var_check="only one"/>
+    <variable_state id="oval:org.mitre.oval.test:ste:848" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value var_ref="oval:org.mitre.oval.test:var:153" var_check="only one"/>
     </variable_state>
   </states>
   <variables>
-    <local_variable id="oval:org.mitre.oval.test:var:780" version="1" comment="Applying the escape_regex function to the string '\^.$|()[]{}*+?'." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:294" version="1" comment="Applying the escape_regex function to the string '\^.$|()[]{}*+?'." datatype="string">
       <escape_regex>
         <literal_component datatype="string">\^.$|()[]{}*+?</literal_component>
       </escape_regex>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:324" version="1" comment="Applying the escape_regex function to a multi-valued variable." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:743" version="1" comment="Applying the escape_regex function to a multi-valued variable." datatype="string">
       <escape_regex>
-        <variable_component var_ref="oval:org.mitre.oval.test:var:601"/>
+        <variable_component var_ref="oval:org.mitre.oval.test:var:803"/>
       </escape_regex>
     </local_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:601" version="1" comment="multi" datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:803" version="1" comment="multi" datatype="string">
       <value>\^$|</value>
       <value>()[]{}</value>
       <value>*+?</value>
       <value>\^.$|()[]{}*+?</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:763" version="1" comment="multi" datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:153" version="1" comment="multi" datatype="string">
       <value>\\\^\$\|</value>
       <value>\(\)\[\]\{\}</value>
       <value>\*\+\?</value>

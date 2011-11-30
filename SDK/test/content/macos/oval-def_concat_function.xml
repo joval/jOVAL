@@ -5,119 +5,119 @@
     <oval:timestamp>2009-05-21T11:46:00-04:00</oval:timestamp>
   </generator>
   <definitions>
-    <definition id="oval:org.mitre.oval.test:def:65" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:898" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the concat function is properly supported</title>
         <description>This definition is intended to evaluate to true if the interpreter properly supports the concat function.</description>
       </metadata>
       <criteria operator="AND">
-        <criterion comment="Test that the concat function is supported with two components each of which return a single value." test_ref="oval:org.mitre.oval.test:tst:291"/>
-        <criterion comment="Test that the concat function is supported with two components each of which return multiple values." test_ref="oval:org.mitre.oval.test:tst:722"/>
-        <criterion comment="Test that the concat function is supported with more than two components each of which return a single value." test_ref="oval:org.mitre.oval.test:tst:614"/>
-        <criterion comment="Test that the concat function is supported with more than two components each of which return multiple values." test_ref="oval:org.mitre.oval.test:tst:333"/>
+        <criterion comment="Test that the concat function is supported with two components each of which return a single value." test_ref="oval:org.mitre.oval.test:tst:619"/>
+        <criterion comment="Test that the concat function is supported with two components each of which return multiple values." test_ref="oval:org.mitre.oval.test:tst:155"/>
+        <criterion comment="Test that the concat function is supported with more than two components each of which return a single value." test_ref="oval:org.mitre.oval.test:tst:129"/>
+        <criterion comment="Test that the concat function is supported with more than two components each of which return multiple values." test_ref="oval:org.mitre.oval.test:tst:441"/>
       </criteria>
     </definition>
   </definitions>
   <tests>
-    <variable_test id="oval:org.mitre.oval.test:tst:291" version="1" comment="Test that the concat function is supported with two components each of which return a single value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:770"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:244"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:619" version="1" comment="Test that the concat function is supported with two components each of which return a single value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:839"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:56"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:722" version="1" comment="Test that the concat function is supported with two components each of which return multiple values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:793"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:796"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:155" version="1" comment="Test that the concat function is supported with two components each of which return multiple values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:55"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:179"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:614" version="1" comment="Test that the concat function is supported with more than two components each of which return a single value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:782"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:737"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:129" version="1" comment="Test that the concat function is supported with more than two components each of which return a single value." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:318"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:126"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:333" version="1" comment="Test that the concat function is supported with more than two components each of which return multiple values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:652"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:68"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:441" version="1" comment="Test that the concat function is supported with more than two components each of which return multiple values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:99"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:754"/>
     </variable_test>
   </tests>
   <objects>
-    <variable_object id="oval:org.mitre.oval.test:obj:770" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:694</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:839" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:796</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:793" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:885</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:55" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:342</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:782" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:689</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:318" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:744</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:652" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:479</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:99" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:614</var_ref>
     </variable_object>
   </objects>
   <states>
-    <variable_state id="oval:org.mitre.oval.test:ste:244" version="1" comment="The string 'abcdef'" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:56" version="1" comment="The string 'abcdef'" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>abcdef</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:796" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <value var_ref="oval:org.mitre.oval.test:var:322" var_check="only one"/>
+    <variable_state id="oval:org.mitre.oval.test:ste:179" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value var_ref="oval:org.mitre.oval.test:var:161" var_check="only one"/>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:737" version="1" comment="The string 'abcdefghi'" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:126" version="1" comment="The string 'abcdefghi'" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>abcdefghi</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:68" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <value var_ref="oval:org.mitre.oval.test:var:875" var_check="only one"/>
+    <variable_state id="oval:org.mitre.oval.test:ste:754" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value var_ref="oval:org.mitre.oval.test:var:185" var_check="only one"/>
     </variable_state>
   </states>
   <variables>
-    <local_variable id="oval:org.mitre.oval.test:var:694" version="1" comment="Applying the concat function to the strings 'abc' and 'def'." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:796" version="1" comment="Applying the concat function to the strings 'abc' and 'def'." datatype="string">
       <concat>
         <literal_component datatype="string">abc</literal_component>
         <literal_component datatype="string">def</literal_component>
       </concat>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:885" version="1" comment="Applying the concat function to two multi-value variables." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:342" version="1" comment="Applying the concat function to two multi-value variables." datatype="string">
       <concat>
-        <variable_component var_ref="oval:org.mitre.oval.test:var:443"/>
-        <variable_component var_ref="oval:org.mitre.oval.test:var:711"/>
+        <variable_component var_ref="oval:org.mitre.oval.test:var:773"/>
+        <variable_component var_ref="oval:org.mitre.oval.test:var:588"/>
       </concat>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:689" version="1" comment="Applying the concat function to the strings 'abc', 'def', 'ghi'." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:744" version="1" comment="Applying the concat function to the strings 'abc', 'def', 'ghi'." datatype="string">
       <concat>
         <literal_component datatype="string">abc</literal_component>
         <literal_component datatype="string">def</literal_component>
         <literal_component datatype="string">ghi</literal_component>
       </concat>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:479" version="1" comment="Applying the concat to three multi-value variables." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:614" version="1" comment="Applying the concat to three multi-value variables." datatype="string">
       <concat>
-        <variable_component var_ref="oval:org.mitre.oval.test:var:452"/>
-        <variable_component var_ref="oval:org.mitre.oval.test:var:149"/>
-        <variable_component var_ref="oval:org.mitre.oval.test:var:722"/>
+        <variable_component var_ref="oval:org.mitre.oval.test:var:805"/>
+        <variable_component var_ref="oval:org.mitre.oval.test:var:34"/>
+        <variable_component var_ref="oval:org.mitre.oval.test:var:705"/>
       </concat>
     </local_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:443" version="1" comment="The strings 'abc' and 'def'" datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:773" version="1" comment="The strings 'abc' and 'def'" datatype="string">
       <value>abc</value>
       <value>def</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:711" version="1" comment="The strings '123' and '456'" datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:588" version="1" comment="The strings '123' and '456'" datatype="string">
       <value>123</value>
       <value>456</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:452" version="1" comment="The strings 'abc' and 'def'" datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:805" version="1" comment="The strings 'abc' and 'def'" datatype="string">
       <value>abc</value>
       <value>def</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:149" version="1" comment="The strings '123' and '456'" datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:34" version="1" comment="The strings '123' and '456'" datatype="string">
       <value>123</value>
       <value>456</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:722" version="1" comment="The strings 'uvw' and 'xyz'" datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:705" version="1" comment="The strings 'uvw' and 'xyz'" datatype="string">
       <value>uvw</value>
       <value>xyz</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:322" version="1" comment="The results of the concat function on two multi-value variables." datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:161" version="1" comment="The results of the concat function on two multi-value variables." datatype="string">
       <value>abc123</value>
       <value>abc456</value>
       <value>def123</value>
       <value>def456</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:875" version="1" comment="The results of the concat function on three multi-value-variables." datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:185" version="1" comment="The results of the concat function on three multi-value-variables." datatype="string">
       <value>abc123uvw</value>
       <value>abc123xyz</value>
       <value>abc456uvw</value>

@@ -5,146 +5,146 @@
     <oval:timestamp>2009-01-12T10:41:00-05:00</oval:timestamp>
   </generator>
   <definitions>
-    <definition id="oval:org.mitre.oval.test:def:252" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:347" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the string datatype is properly supported</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the string datatype and all of its valid operations.</description>
       </metadata>
       <criteria operator="AND">
         <criteria operator="AND" comment="True if the equals operation is supported">
-          <criterion comment="Test that the equals operation is supported with two equal string values." test_ref="oval:org.mitre.oval.test:tst:3"/>
-          <criterion negate="true" comment="Test that the equals operation is supported with two unequal string values." test_ref="oval:org.mitre.oval.test:tst:246"/>
+          <criterion comment="Test that the equals operation is supported with two equal string values." test_ref="oval:org.mitre.oval.test:tst:573"/>
+          <criterion negate="true" comment="Test that the equals operation is supported with two unequal string values." test_ref="oval:org.mitre.oval.test:tst:340"/>
         </criteria>
         <criteria operator="AND" comment="True if the not equal operation is supported">
-          <criterion negate="true" comment="Test that the not equal operation is supported with two equal string values." test_ref="oval:org.mitre.oval.test:tst:945"/>
-          <criterion comment="Test that the not equal operation is supported with two unequal string values." test_ref="oval:org.mitre.oval.test:tst:336"/>
+          <criterion negate="true" comment="Test that the not equal operation is supported with two equal string values." test_ref="oval:org.mitre.oval.test:tst:464"/>
+          <criterion comment="Test that the not equal operation is supported with two unequal string values." test_ref="oval:org.mitre.oval.test:tst:537"/>
         </criteria>
         <criteria operator="AND" comment="True if the case insensitive equals operation is supported">
-          <criterion comment="Test that the case insensitive equals operation is supported with two mixed case equal string values." test_ref="oval:org.mitre.oval.test:tst:468"/>
-          <criterion negate="true" comment="Test that the case insensitive equals operation is supported with two mixed case unequal string values." test_ref="oval:org.mitre.oval.test:tst:684"/>
+          <criterion comment="Test that the case insensitive equals operation is supported with two mixed case equal string values." test_ref="oval:org.mitre.oval.test:tst:134"/>
+          <criterion negate="true" comment="Test that the case insensitive equals operation is supported with two mixed case unequal string values." test_ref="oval:org.mitre.oval.test:tst:642"/>
         </criteria>
         <criteria operator="AND" comment="True if the case insensitive not equal operation is supported">
-          <criterion negate="true" comment="Test that the case insensitive not equal operation is supported with two mixed case equal string values." test_ref="oval:org.mitre.oval.test:tst:931"/>
-          <criterion comment="Test that the case insensitive not equal operation is supported with two mixed case unequal string values." test_ref="oval:org.mitre.oval.test:tst:914"/>
+          <criterion negate="true" comment="Test that the case insensitive not equal operation is supported with two mixed case equal string values." test_ref="oval:org.mitre.oval.test:tst:790"/>
+          <criterion comment="Test that the case insensitive not equal operation is supported with two mixed case unequal string values." test_ref="oval:org.mitre.oval.test:tst:181"/>
         </criteria>
         <criteria operator="AND" comment="True if the pattern match operation is supported">
-          <criterion comment="Test that the pattern match operation is supported with a string value that matches the specified regular expression." test_ref="oval:org.mitre.oval.test:tst:42"/>
-          <criterion negate="true" comment="Test that the pattern match operation is supported with a string value that doesn't match the specified regular expression." test_ref="oval:org.mitre.oval.test:tst:262"/>
+          <criterion comment="Test that the pattern match operation is supported with a string value that matches the specified regular expression." test_ref="oval:org.mitre.oval.test:tst:113"/>
+          <criterion negate="true" comment="Test that the pattern match operation is supported with a string value that doesn't match the specified regular expression." test_ref="oval:org.mitre.oval.test:tst:558"/>
         </criteria>
       </criteria>
     </definition>
   </definitions>
   <tests>
-    <variable_test id="oval:org.mitre.oval.test:tst:3" version="1" comment="Test that the equals operation is supported with two equal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:972"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:116"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:573" version="1" comment="Test that the equals operation is supported with two equal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:768"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:188"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:246" version="1" comment="Test that the equals operation is supported with two unequal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:485"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:849"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:340" version="1" comment="Test that the equals operation is supported with two unequal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:474"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:907"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:945" version="1" comment="Test that the not equal operation is supported with two equal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:972"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:208"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:464" version="1" comment="Test that the not equal operation is supported with two equal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:768"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:978"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:336" version="1" comment="Test that the not equal operation is supported with two unequal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:485"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:909"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:537" version="1" comment="Test that the not equal operation is supported with two unequal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:474"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:694"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:468" version="1" comment="Test that the case insensitive equals operation is supported with two mixed case equal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:994"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:87"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:134" version="1" comment="Test that the case insensitive equals operation is supported with two mixed case equal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:56"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:969"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:684" version="1" comment="Test that the case insensitive equals operation is supported with two mixed case unequal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:59"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:151"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:642" version="1" comment="Test that the case insensitive equals operation is supported with two mixed case unequal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:497"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:589"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:931" version="1" comment="Test that the case insensitive not equal operation is supported with two mixed case equal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:994"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:176"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:790" version="1" comment="Test that the case insensitive not equal operation is supported with two mixed case equal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:56"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:924"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:914" version="1" comment="Test that the case insensitive not equal operation is supported with two mixed case unequal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:59"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:527"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:181" version="1" comment="Test that the case insensitive not equal operation is supported with two mixed case unequal string values." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:497"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:588"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:42" version="1" comment="Test that the pattern match operation is supported with a string value that matches the specified regular expression." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:668"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:323"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:113" version="1" comment="Test that the pattern match operation is supported with a string value that matches the specified regular expression." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:890"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:448"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:262" version="1" comment="Test that the pattern match operation is supported with a string value that doesn't match the specified regular expression." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:106"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:892"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:558" version="1" comment="Test that the pattern match operation is supported with a string value that doesn't match the specified regular expression." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:91"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:992"/>
     </variable_test>
   </tests>
   <objects>
-    <variable_object id="oval:org.mitre.oval.test:obj:972" version="1" comment="This variable_object references the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:719</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:768" version="1" comment="This variable_object references the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:29</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:485" version="1" comment="This variable_object references the string value 'string_test'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:651</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:474" version="1" comment="This variable_object references the string value 'string_test'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:360</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:994" version="1" comment="This variable_object references the string value 'TeSt_StRiNg'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:382</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:56" version="1" comment="This variable_object references the string value 'TeSt_StRiNg'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:530</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:59" version="1" comment="This variable_object references the string value 'StRiNg_TeSt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:739</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:497" version="1" comment="This variable_object references the string value 'StRiNg_TeSt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:668</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:668" version="1" comment="This variable_object references the string value '9test9'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:425</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:890" version="1" comment="This variable_object references the string value '9test9'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:992</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:106" version="1" comment="This variable_object references the string value 'test'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:190</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:91" version="1" comment="This variable_object references the string value 'test'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:355</var_ref>
     </variable_object>
   </objects>
   <states>
-    <variable_state id="oval:org.mitre.oval.test:ste:116" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:188" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>test_string</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:849" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:907" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>test_string</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:208" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:978" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value operation="not equal">test_string</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:909" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:694" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value operation="not equal">test_string</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:87" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:969" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value operation="case insensitive equals">test_string</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:151" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:589" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value operation="case insensitive equals">test_string</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:176" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:924" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value operation="case insensitive not equal">test_string</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:527" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:588" version="1" comment="This variable_state represents the string value 'test_string'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value operation="case insensitive not equal">test_string</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:323" version="1" comment="This variable_state represents any string value that matches the regular expression '[0-9]([a-z])*[0-9]'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:448" version="1" comment="This variable_state represents any string value that matches the regular expression '[0-9]([a-z])*[0-9]'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value operation="pattern match">[0-9]([a-z])*[0-9]</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:892" version="1" comment="This variable_state represents any string value that matches the regular expression '[0-9]([a-z])*[0-9]'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:992" version="1" comment="This variable_state represents any string value that matches the regular expression '[0-9]([a-z])*[0-9]'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value operation="pattern match">[0-9]([a-z])*[0-9]</value>
     </variable_state>
   </states>
   <variables>
-    <constant_variable id="oval:org.mitre.oval.test:var:719" version="1" comment="This constant_variable represents the string value 'test_string'." datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:29" version="1" comment="This constant_variable represents the string value 'test_string'." datatype="string">
       <value>test_string</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:651" version="1" comment="This constant_variable represents the string value 'string_test'." datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:360" version="1" comment="This constant_variable represents the string value 'string_test'." datatype="string">
       <value>string_test</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:382" version="1" comment="This constant_variable represents the string value 'TeSt_StRiNg'." datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:530" version="1" comment="This constant_variable represents the string value 'TeSt_StRiNg'." datatype="string">
       <value>TeSt_StRiNg</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:739" version="1" comment="This constant_variable represents the string value 'StRiNg_TeSt'." datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:668" version="1" comment="This constant_variable represents the string value 'StRiNg_TeSt'." datatype="string">
       <value>StRiNg_TeSt</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:425" version="1" comment="This constant_variable represents the string value '9test9'." datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:992" version="1" comment="This constant_variable represents the string value '9test9'." datatype="string">
       <value>9test9</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:190" version="1" comment="This constant_variable represents the string value 'test'." datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:355" version="1" comment="This constant_variable represents the string value 'test'." datatype="string">
       <value>test</value>
     </constant_variable>
   </variables>

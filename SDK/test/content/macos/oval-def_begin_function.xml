@@ -5,73 +5,73 @@
     <oval:timestamp>2009-05-21T11:46:00-04:00</oval:timestamp>
   </generator>
   <definitions>
-    <definition id="oval:org.mitre.oval.test:def:826" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:988" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the begin function is properly supported</title>
         <description>This definition is intended to evaluate to true if the interpreter properly supports the begin function.</description>
       </metadata>
       <criteria operator="AND">
-        <criterion comment="Test that the begin function is supported with a character value for the character attribute and a single string component that does not start with the character value specified in the character attribute." test_ref="oval:org.mitre.oval.test:tst:35"/>
-        <criterion comment="Test that the begin function is supported with a character value for the character attribute and a single string component that starts with the character value specified in the character attribute." test_ref="oval:org.mitre.oval.test:tst:209"/>
-        <criterion comment="Test that the begin function is supported with a string value for the character attribute and a single string component that does not start with the string value specified in the character attribute." test_ref="oval:org.mitre.oval.test:tst:446"/>
-        <criterion comment="Test that the begin function is supported with a string value for the character attribute and a single string component that starts with the string value specified in the character attribute." test_ref="oval:org.mitre.oval.test:tst:101"/>
+        <criterion comment="Test that the begin function is supported with a character value for the character attribute and a single string component that does not start with the character value specified in the character attribute." test_ref="oval:org.mitre.oval.test:tst:455"/>
+        <criterion comment="Test that the begin function is supported with a character value for the character attribute and a single string component that starts with the character value specified in the character attribute." test_ref="oval:org.mitre.oval.test:tst:426"/>
+        <criterion comment="Test that the begin function is supported with a string value for the character attribute and a single string component that does not start with the string value specified in the character attribute." test_ref="oval:org.mitre.oval.test:tst:337"/>
+        <criterion comment="Test that the begin function is supported with a string value for the character attribute and a single string component that starts with the string value specified in the character attribute." test_ref="oval:org.mitre.oval.test:tst:557"/>
       </criteria>
     </definition>
   </definitions>
   <tests>
-    <variable_test id="oval:org.mitre.oval.test:tst:35" version="1" comment="Test that the begin function is supported with a character value for the character attribute and a single string component that does not start with the character value specified in the character attribute." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:852"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:904"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:455" version="1" comment="Test that the begin function is supported with a character value for the character attribute and a single string component that does not start with the character value specified in the character attribute." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:586"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:929"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:209" version="1" comment="Test that the begin function is supported with a character value for the character attribute and a single string component that starts with the character value specified in the character attribute." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:606"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:904"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:426" version="1" comment="Test that the begin function is supported with a character value for the character attribute and a single string component that starts with the character value specified in the character attribute." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:807"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:929"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:446" version="1" comment="Test that the begin function is supported with a string value for the character attribute and a single string component that does not start with the string value specified in the character attribute." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:951"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:904"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:337" version="1" comment="Test that the begin function is supported with a string value for the character attribute and a single string component that does not start with the string value specified in the character attribute." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:828"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:929"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:101" version="1" comment="Test that the begin function is supported with a string value for the character attribute and a single string component that starts with the string value specified in the character attribute." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:374"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:904"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:557" version="1" comment="Test that the begin function is supported with a string value for the character attribute and a single string component that starts with the string value specified in the character attribute." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:149"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:929"/>
     </variable_test>
   </tests>
   <objects>
-    <variable_object id="oval:org.mitre.oval.test:obj:852" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:826</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:586" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:99</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:606" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:398</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:807" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:402</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:951" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:916</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:828" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:698</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:374" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:427</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:149" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:101</var_ref>
     </variable_object>
   </objects>
   <states>
-    <variable_state id="oval:org.mitre.oval.test:ste:904" version="1" comment="The string 'apple'" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:929" version="1" comment="The string 'apple'" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>apple</value>
     </variable_state>
   </states>
   <variables>
-    <local_variable id="oval:org.mitre.oval.test:var:826" version="1" comment="Applying the begin function with a character argument 'a' to the string 'pple'." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:99" version="1" comment="Applying the begin function with a character argument 'a' to the string 'pple'." datatype="string">
       <begin character="a">
         <literal_component datatype="string">pple</literal_component>
       </begin>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:398" version="1" comment="Applying the begin function with a character argument 'a' to the string 'apple'." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:402" version="1" comment="Applying the begin function with a character argument 'a' to the string 'apple'." datatype="string">
       <begin character="a">
         <literal_component datatype="string">apple</literal_component>
       </begin>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:916" version="1" comment="Applying the begin function with a string argument 'appl' to the string 'e'." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:698" version="1" comment="Applying the begin function with a string argument 'appl' to the string 'e'." datatype="string">
       <begin character="appl">
         <literal_component datatype="string">e</literal_component>
       </begin>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:427" version="1" comment="Applying the begin function with a string argument 'appl' to the string 'apple'." datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:101" version="1" comment="Applying the begin function with a string argument 'appl' to the string 'apple'." datatype="string">
       <begin character="appl">
         <literal_component datatype="string">apple</literal_component>
       </begin>

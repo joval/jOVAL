@@ -5,112 +5,112 @@
     <oval:timestamp>2009-05-21T11:46:00-04:00</oval:timestamp>
   </generator>
   <definitions>
-    <definition id="oval:org.mitre.oval.test:def:560" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:281" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:criteria element is properly supported</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the oval-def:criteria element and all of its operators.</description>
       </metadata>
       <criteria>
-        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with the AND operator" definition_ref="oval:org.mitre.oval.test:def:404"/>
-        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with the ONE operator" definition_ref="oval:org.mitre.oval.test:def:599"/>
-        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with the OR operator" definition_ref="oval:org.mitre.oval.test:def:503"/>
-        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with the XOR operator" definition_ref="oval:org.mitre.oval.test:def:142"/>
-        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with the negate attribute set to true" definition_ref="oval:org.mitre.oval.test:def:357"/>
-        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with one level of nesting" definition_ref="oval:org.mitre.oval.test:def:903"/>
-        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with two levels of nesting" definition_ref="oval:org.mitre.oval.test:def:388"/>
-        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with three levels of nesting" definition_ref="oval:org.mitre.oval.test:def:962"/>
+        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with the AND operator" definition_ref="oval:org.mitre.oval.test:def:795"/>
+        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with the ONE operator" definition_ref="oval:org.mitre.oval.test:def:848"/>
+        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with the OR operator" definition_ref="oval:org.mitre.oval.test:def:107"/>
+        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with the XOR operator" definition_ref="oval:org.mitre.oval.test:def:597"/>
+        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with the negate attribute set to true" definition_ref="oval:org.mitre.oval.test:def:519"/>
+        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with one level of nesting" definition_ref="oval:org.mitre.oval.test:def:565"/>
+        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with two levels of nesting" definition_ref="oval:org.mitre.oval.test:def:846"/>
+        <extend_definition comment="Evaluate to true if the oval-def:criteria element is properly supported with three levels of nesting" definition_ref="oval:org.mitre.oval.test:def:993"/>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:404" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:795" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:criteria element is properly supported with the AND operator</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the oval-def:criteria element with the AND operator.</description>
       </metadata>
       <criteria operator="AND">
         <criteria operator="AND" comment="Test that the criteria element is supported with the operator attribute set to AND where both criterion evaluate to true.">
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
         </criteria>
         <criteria negate="true" operator="AND" comment="Test that the criteria element is supported with the operator attribute set to AND where one criterion evaluates to true and one criterion evaluates to false.">
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
         </criteria>
         <criteria negate="true" operator="AND" comment="Test that the criteria element is supported with the operator attribute set to AND where two criterion evaluate to false.">
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
         </criteria>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:599" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:848" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:criteria element is properly supported with the ONE operator</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the oval-def:criteria element with the ONE operator.</description>
       </metadata>
       <criteria operator="AND">
         <criteria negate="true" operator="ONE" comment="Test that the criteria element is supported with the operator attribute set to ONE where both criterion that evaluate to false.">
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
         </criteria>
         <criteria operator="ONE" comment="Test that the criteria element is supported with the operator attribute set to ONE where one criterion evaluates to true and one criterion evaluates to false.">
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
         </criteria>
         <criteria negate="true" operator="ONE" comment="Test that the criteria element is supported with the operator attribute set to ONE where both criterion evaluate to true.">
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
         </criteria>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:503" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:107" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:criteria element is properly supported with the OR operator</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the oval-def:criteria element with the OR operator.</description>
       </metadata>
       <criteria operator="AND">
         <criteria negate="true" operator="OR" comment="Test that the criteria element is supported with the operator attribute set to OR where both criterion evaluate to false.">
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
         </criteria>
         <criteria operator="OR" comment="Test that the criteria element is supported with the operator attribute set to OR where one criterion evaluates to true and one criterion evaluates to false.">
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
         </criteria>
         <criteria operator="OR" comment="Test that the criteria element is supported with the operator attribute set to OR where both criterion evaluate to true.">
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
         </criteria>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:142" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:597" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:criteria element is properly supported with the XOR operator</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the oval-def:criteria element with the XOR operator.</description>
       </metadata>
       <criteria operator="AND">
         <criteria negate="true" operator="XOR" comment="Test that the criteria element is supported with the operator attribute set to XOR where both criterion evaluate to false.">
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
         </criteria>
         <criteria operator="XOR" comment="Test that the criteria element is supported with the operator attribute set to XOR where one criterion evaluates to true and one criterion evaluates to false.">
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
         </criteria>
         <criteria negate="true" operator="XOR" comment="Test that the criteria element is supported with the operator attribute set to XOR where both criterion evaluate to true.">
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
         </criteria>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:357" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:519" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:criteria element is properly supported with the negate attribute set to true</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports the oval-def:criteria element with the negate attribute set to true.</description>
       </metadata>
       <criteria negate="true" operator="AND">
-        <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+        <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:903" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:565" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:criteria element is properly supported with one level of nesting</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports one level of nested oval-def:criteria elements.</description>
@@ -121,21 +121,21 @@
       <criteria>
         <criteria operator="XOR">
           <criteria operator="AND">
-            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
           </criteria>
           <criteria operator="ONE">
-            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
           </criteria>
           <criteria operator="OR">
-            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
-            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
+            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
           </criteria>
         </criteria>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:388" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:846" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:criteria element is properly supported with two levels of nesting</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports two levels of nested oval-def:criteria elements.</description>
@@ -145,26 +145,26 @@
       </metadata>
       <criteria operator="OR">
         <criteria operator="AND">
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
           <criteria operator="XOR">
-            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
           </criteria>
         </criteria>
         <criteria operator="ONE">
           <criteria operator="AND">
-            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
           </criteria>
           <criteria operator="ONE">
-            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
           </criteria>
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
         </criteria>
       </criteria>
     </definition>
-    <definition id="oval:org.mitre.oval.test:def:962" version="1" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:993" version="1" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the oval-def:criteria element is properly supported with three levels of nesting</title>
         <description>This definition is intended to evalutate to true if the interpreter properly supports three levels of nested oval-def:criteria elements.</description>
@@ -174,59 +174,59 @@
       </metadata>
       <criteria operator="XOR">
         <criteria operator="AND">
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+          <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
           <criteria operator="XOR">
-            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
             <criteria operator="XOR">
-              <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+              <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
             </criteria>
-            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
           </criteria>
         </criteria>
         <criteria operator="ONE">
           <criteria operator="AND">
-            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
+            <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
           </criteria>
           <criteria operator="ONE">
             <criteria operator="OR">
-              <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:123"/>
-              <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
-              <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+              <criterion comment="This test is intended to evaluate to true." test_ref="oval:org.mitre.oval.test:tst:957"/>
+              <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
+              <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
             </criteria>
-            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
-            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
+            <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
           </criteria>
-          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:966"/>
+          <criterion comment="This test is intended to evaluate to false." test_ref="oval:org.mitre.oval.test:tst:452"/>
         </criteria>
       </criteria>
     </definition>
   </definitions>
   <tests>
-    <variable_test id="oval:org.mitre.oval.test:tst:123" version="1" comment="This test is intended to evaluate to true." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:996"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:195"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:957" version="1" comment="This test is intended to evaluate to true." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:397"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:2"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:966" version="1" comment="This test is intended to evaluate to false." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:996"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:906"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:452" version="1" comment="This test is intended to evaluate to false." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:397"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:625"/>
     </variable_test>
   </tests>
   <objects>
-    <variable_object id="oval:org.mitre.oval.test:obj:996" version="1" comment="This variable_object references the boolean value 'true'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:814</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:397" version="1" comment="This variable_object references the boolean value 'true'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:985</var_ref>
     </variable_object>
   </objects>
   <states>
-    <variable_state id="oval:org.mitre.oval.test:ste:195" version="1" comment="This state represents a variable_object where the boolean value is equal to 'true'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:2" version="1" comment="This state represents a variable_object where the boolean value is equal to 'true'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="boolean">true</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:906" version="1" comment="This state represents a variable_object where the boolean value is equal to 'false'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:625" version="1" comment="This state represents a variable_object where the boolean value is equal to 'false'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="boolean">false</value>
     </variable_state>
   </states>
   <variables>
-    <constant_variable id="oval:org.mitre.oval.test:var:814" version="1" comment="This constant_variable represents the boolean value 'true'." datatype="boolean">
+    <constant_variable id="oval:org.mitre.oval.test:var:985" version="1" comment="This constant_variable represents the boolean value 'true'." datatype="boolean">
       <value>true</value>
     </constant_variable>
   </variables>

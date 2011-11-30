@@ -5,113 +5,113 @@
     <oval:timestamp>2009-06-11T10:22:26-04:00</oval:timestamp>
   </generator>
   <definitions>
-    <definition id="oval:org.mitre.oval.test:def:29" version="2" class="miscellaneous">
+    <definition id="oval:org.mitre.oval.test:def:765" version="2" class="miscellaneous">
       <metadata>
         <title>Evaluate to true if the split function is properly supported</title>
         <description>This definition is intended to evaluate to true if the interpreter properly supports the split function.</description>
       </metadata>
       <criteria operator="AND">
-        <criterion comment="Test that the split function is supported with a single component that contains a single string value that contains multiple instances of the string value specified in the delimiter attribute." test_ref="oval:org.mitre.oval.test:tst:513"/>
-        <criterion comment="Test that the split function is supported with a single component that contains a single string value that starts and ends with the string value specified in the delimiter attribute and returns a single valued result." test_ref="oval:org.mitre.oval.test:tst:217"/>
-        <criterion comment="Test that the split function is supported with a single component that contains a single string value that starts and ends with the string value specified in the delimiter attribute and returns a multiple valued result." test_ref="oval:org.mitre.oval.test:tst:566"/>
-        <criterion comment="Test that the split function is supported with a single component that contains a single string value that does not contain the string value specified in the delimiter attribute." test_ref="oval:org.mitre.oval.test:tst:479"/>
-        <criterion comment="Test that the split function is supported with a single component that contains multiple string values." test_ref="oval:org.mitre.oval.test:tst:25"/>
+        <criterion comment="Test that the split function is supported with a single component that contains a single string value that contains multiple instances of the string value specified in the delimiter attribute." test_ref="oval:org.mitre.oval.test:tst:387"/>
+        <criterion comment="Test that the split function is supported with a single component that contains a single string value that starts and ends with the string value specified in the delimiter attribute and returns a single valued result." test_ref="oval:org.mitre.oval.test:tst:655"/>
+        <criterion comment="Test that the split function is supported with a single component that contains a single string value that starts and ends with the string value specified in the delimiter attribute and returns a multiple valued result." test_ref="oval:org.mitre.oval.test:tst:15"/>
+        <criterion comment="Test that the split function is supported with a single component that contains a single string value that does not contain the string value specified in the delimiter attribute." test_ref="oval:org.mitre.oval.test:tst:595"/>
+        <criterion comment="Test that the split function is supported with a single component that contains multiple string values." test_ref="oval:org.mitre.oval.test:tst:358"/>
       </criteria>
     </definition>
   </definitions>
   <tests>
-    <variable_test id="oval:org.mitre.oval.test:tst:513" version="1" comment="Test that the split function is supported with a single component that contains a single string value that contains multiple instances of the string value specified in the delimiter attribute." check_existence="all_exist" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:534"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:118"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:387" version="1" comment="Test that the split function is supported with a single component that contains a single string value that contains multiple instances of the string value specified in the delimiter attribute." check_existence="all_exist" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:231"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:42"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:217" version="1" comment="Test that the split function is supported with a single component that contains a single string value that starts and ends with the string value specified in the delimiter attribute and returns a single valued result." check_existence="all_exist" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:136"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:547"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:655" version="1" comment="Test that the split function is supported with a single component that contains a single string value that starts and ends with the string value specified in the delimiter attribute and returns a single valued result." check_existence="all_exist" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:127"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:570"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:566" version="2" comment="Test that the split function is supported with a single component that contains a single string value that starts and ends with the string value specified in the delimiter attribute and returns a multiple valued result." check_existence="all_exist" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:627"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:278"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:15" version="2" comment="Test that the split function is supported with a single component that contains a single string value that starts and ends with the string value specified in the delimiter attribute and returns a multiple valued result." check_existence="all_exist" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:77"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:221"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:479" version="1" comment="Test that the split function is supported with a single component that contains a single string value that does not contain the string value specified in the delimiter attribute." check_existence="all_exist" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:859"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:251"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:595" version="1" comment="Test that the split function is supported with a single component that contains a single string value that does not contain the string value specified in the delimiter attribute." check_existence="all_exist" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:867"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:592"/>
     </variable_test>
-    <variable_test id="oval:org.mitre.oval.test:tst:25" version="1" comment="Test that the split function is supported with a single component that contains multiple string values." check_existence="all_exist" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <object object_ref="oval:org.mitre.oval.test:obj:205"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:959"/>
+    <variable_test id="oval:org.mitre.oval.test:tst:358" version="1" comment="Test that the split function is supported with a single component that contains multiple string values." check_existence="all_exist" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <object object_ref="oval:org.mitre.oval.test:obj:356"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:490"/>
     </variable_test>
   </tests>
   <objects>
-    <variable_object id="oval:org.mitre.oval.test:obj:534" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:200</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:231" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:988</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:136" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:966</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:127" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:113</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:627" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:502</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:77" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:696</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:859" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:83</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:867" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:674</var_ref>
     </variable_object>
-    <variable_object id="oval:org.mitre.oval.test:obj:205" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <var_ref>oval:org.mitre.oval.test:var:239</var_ref>
+    <variable_object id="oval:org.mitre.oval.test:obj:356" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <var_ref>oval:org.mitre.oval.test:var:285</var_ref>
     </variable_object>
   </objects>
   <states>
-    <variable_state id="oval:org.mitre.oval.test:ste:118" version="1" comment="The state of all values being equal to 'a'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:42" version="1" comment="The state of all values being equal to 'a'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>a</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:547" version="1" comment="The state of all values being equal to ''." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:570" version="1" comment="The state of all values being equal to ''." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value/>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:278" version="2" comment="The state where each value is either an empty string or a '-'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <value var_ref="oval:org.mitre.oval.test:var:983" var_check="at least one"/>
+    <variable_state id="oval:org.mitre.oval.test:ste:221" version="2" comment="The state where each value is either an empty string or a '-'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value var_ref="oval:org.mitre.oval.test:var:527" var_check="at least one"/>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:251" version="1" comment="The string 'foobar'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <variable_state id="oval:org.mitre.oval.test:ste:592" version="1" comment="The string 'foobar'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>foobar</value>
     </variable_state>
-    <variable_state id="oval:org.mitre.oval.test:ste:959" version="1" comment="A multi-valued variable." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <value var_ref="oval:org.mitre.oval.test:var:948" var_check="at least one"/>
+    <variable_state id="oval:org.mitre.oval.test:ste:490" version="1" comment="A multi-valued variable." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <value var_ref="oval:org.mitre.oval.test:var:347" var_check="at least one"/>
     </variable_state>
   </states>
   <variables>
-    <local_variable id="oval:org.mitre.oval.test:var:200" version="1" comment="a-a-a => 'a','a','a'" datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:988" version="1" comment="a-a-a => 'a','a','a'" datatype="string">
       <split delimiter="-">
         <literal_component>a-a-a</literal_component>
       </split>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:966" version="1" comment="hihihi => '','','',''" datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:113" version="1" comment="hihihi => '','','',''" datatype="string">
       <split delimiter="hi">
         <literal_component>hihihi</literal_component>
       </split>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:502" version="1" comment="a-a-a => '','-','-',''" datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:696" version="1" comment="a-a-a => '','-','-',''" datatype="string">
       <split delimiter="a">
         <literal_component>a-a-a</literal_component>
       </split>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:83" version="1" comment="foobar => foobar" datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:674" version="1" comment="foobar => foobar" datatype="string">
       <split delimiter="noexist">
         <literal_component>foobar</literal_component>
       </split>
     </local_variable>
-    <local_variable id="oval:org.mitre.oval.test:var:239" version="1" comment="split function on multiple values" datatype="string">
+    <local_variable id="oval:org.mitre.oval.test:var:285" version="1" comment="split function on multiple values" datatype="string">
       <split delimiter="-">
-        <variable_component var_ref="oval:org.mitre.oval.test:var:411"/>
+        <variable_component var_ref="oval:org.mitre.oval.test:var:543"/>
       </split>
     </local_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:411" version="1" comment="multi-value variable" datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:543" version="1" comment="multi-value variable" datatype="string">
       <value>a-a-a</value>
       <value>b-b-b</value>
       <value>c-c-c</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:948" version="1" comment="multi-valued variable" datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:347" version="1" comment="multi-valued variable" datatype="string">
       <value>a</value>
       <value>b</value>
       <value>c</value>
     </constant_variable>
-    <constant_variable id="oval:org.mitre.oval.test:var:983" version="1" comment="match empty string and '-'" datatype="string">
+    <constant_variable id="oval:org.mitre.oval.test:var:527" version="1" comment="match empty string and '-'" datatype="string">
       <value/>
       <value>-</value>
     </constant_variable>

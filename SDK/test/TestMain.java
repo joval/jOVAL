@@ -100,6 +100,10 @@ public class TestMain extends RemotePlugin {
 		    try {
 			File definitions = new File(testDir, xml);
 			engine.setDefinitionsFile(definitions);
+
+			//
+			// Set the external variables file for the external variables test!
+			//
 			if ("oval-def_external_variable.xml".equals(xml)) {
 			    engine.setExternalVariablesFile(new File(testDir, "_external-variables.xml"));
 			}
@@ -239,7 +243,6 @@ public class TestMain extends RemotePlugin {
 	    }
 	}
     }
-
 
     // Private static
 
