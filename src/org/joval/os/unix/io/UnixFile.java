@@ -126,6 +126,10 @@ public class UnixFile implements IUnixFile {
 	return f.exists();
     }
 
+    public boolean mkdir() {
+	return f.mkdir();
+    }
+
     public InputStream getInputStream() throws IOException {
 	return f.getInputStream();
     }

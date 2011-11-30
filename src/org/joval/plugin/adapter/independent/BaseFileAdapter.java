@@ -132,7 +132,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
 		    }
-		} else if (!fObj.isFilenameNil() && fObj.isSetFilename() && fObj.getFilename() != null) {
+		} else if (fObj.getFilename() != null) {
 		    if (isDirectory) {
 			//
 			// Object is looking for files, so skip over this directory
@@ -296,7 +296,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs);
 		}
 
-		if (!fObj.isFilenameNil() && fObj.isSetFilename()) {
+		if (fObj.getFilename() != null) {
 		    EntityObjectStringType filename = fObj.getFilename();
 		    Collection<String> fnames = new Vector<String>();
 		    if (filename.isSetVarRef()) {

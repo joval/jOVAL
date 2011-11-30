@@ -34,8 +34,6 @@ public class WindowsFile implements IWindowsFile {
 	this.f = f;
     }
 
-    // Implement IFile
-
     // Implement INode
 
     public Collection<INode> getChildren() throws NoSuchElementException, UnsupportedOperationException {
@@ -82,6 +80,10 @@ public class WindowsFile implements IWindowsFile {
 
     public boolean exists() throws IOException {
 	return f.exists();
+    }
+
+    public boolean mkdir() {
+	return f.mkdir();
     }
 
     public InputStream getInputStream() throws IOException {

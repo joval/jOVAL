@@ -24,6 +24,8 @@ import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFile;
 import org.joval.io.BaseFile;
 import org.joval.os.windows.remote.identity.SmbACE;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * An IFile wrapper for an SmbFile.
@@ -72,6 +74,17 @@ class SmbFileProxy extends BaseFile implements IWindowsFile {
 
     public boolean exists() throws IOException {
 	return smbFile.exists();
+    }
+
+    public boolean mkdir() {
+	try {
+	    smbFile.mkdir();
+	    return true;
+	} catch (SmbException e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString());
+	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    return false;
+	}
     }
 
     public InputStream getInputStream() throws IOException {

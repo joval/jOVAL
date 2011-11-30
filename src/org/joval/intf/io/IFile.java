@@ -32,6 +32,11 @@ public interface IFile extends INode {
     public boolean exists() throws IOException;
 
     /**
+     * Create a directory at this IFile's path.
+     */
+    public boolean mkdir();
+
+    /**
      * Get an InputStream of the file contents.
      */
     public InputStream getInputStream() throws IOException;

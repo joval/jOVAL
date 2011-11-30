@@ -74,7 +74,6 @@ class SftpFile extends BaseFile implements IUnixFile {
 
     public boolean exists() throws IOException {
 	if (!tested) {
-	    tested = true;
 	    try {
 		attrs = sfs.getCS().lstat(path);
 		permissions = attrs.getPermissionsString();
@@ -82,17 +81,39 @@ class SftpFile extends BaseFile implements IUnixFile {
 		    throw new IOException("\"" + permissions + "\"");
 		}
 		doesExist = true;
+		tested = true;
 	    } catch (SftpException e) {
 		switch(getErrorCode(e)) {
 		  case SftpError.NO_SUCH_FILE:
 		    doesExist = false;
 		    break;
+
 		  default:
 		    throw new IOException(e);
 		}
 	    }
 	}
 	return doesExist;
+    }
+
+    public boolean mkdir() {
+	try {
+	    if (exists()) {
+		return false;
+	    } else {
+		tested = false;
+		sfs.getCS().mkdir(path + fs.getDelimiter());
+		return exists();
+	    }
+	} catch (SftpException e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
+	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    return false;
+	} catch (IOException e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
+	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    return false;
+	}
     }
 
     public InputStream getInputStream() throws IOException {
@@ -108,14 +129,21 @@ class SftpFile extends BaseFile implements IUnixFile {
     }
 
     public OutputStream getOutputStream(boolean append) throws IOException {
-	if (isFile()) {
+	if (isLink()) {
+	    return fs.getFile(toString()).getOutputStream(append);
+	} else if (exists() && isDirectory()) {
+	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_IO, path, JOVALSystem.getMessage(JOVALMsg.ERROR_IO_NOT_FILE));
+	    throw new IOException(s);
+	} else {
+	    int mode = ChannelSftp.OVERWRITE;
+	    if (append) {
+		mode = ChannelSftp.APPEND;
+	    }
 	    try {
-		return sfs.getCS().put(path);
+		return sfs.getCS().put(path, mode);
 	    } catch (SftpException e) {
 		throw new IOException(e);
 	    }
-	} else {
-	    throw new IOException("Cannot write to a directory: " + path);
 	}
     }
 
