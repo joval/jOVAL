@@ -2209,14 +2209,14 @@ public class Engine implements IEngine {
 		if (i2 == start2) return (isNum ? 1 : -1);
 
 		if (isNum) {
-		    int int1 = Integer.parseInt(new String(b1, start1, i1));
-		    int int2 = Integer.parseInt(new String(b2, start2, i2));
+		    int int1 = Integer.parseInt(new String(b1).substring(start1, i1));
+		    int int2 = Integer.parseInt(new String(b2).substring(start2, i2));
 
 		    if (int1 > int2) return 1;
 		    if (int2 > int1) return -1;
 		}
 
-		int rc = new String(b1, start1, i2).compareTo(new String(b2, start2, i2));
+		int rc = new String(b1).substring(start1, i1).compareTo(new String(b2).substring(start2, i2));
 		if (rc != 0) {
 		    return (rc < 1 ? -1 : 1);
 		}
