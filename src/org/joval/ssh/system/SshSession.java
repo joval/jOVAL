@@ -11,7 +11,10 @@ import org.vngx.jsch.JSch;
 import org.vngx.jsch.ChannelExec;
 import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.Session;
+import org.vngx.jsch.UIKeyboardInteractive;
 import org.vngx.jsch.UserInfo;
+import org.vngx.jsch.config.SSHConfigConstants;
+import org.vngx.jsch.config.SessionConfig;
 import org.vngx.jsch.exception.JSchException;
 import org.vngx.jsch.userauth.Identity;
 import org.vngx.jsch.userauth.IdentityManager;
@@ -28,6 +31,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.JSchLogger;
 
 /**
  * A representation of an SSH session, which simply uses JSch to implement an IBaseSession.
@@ -35,7 +39,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SshSession implements IBaseSession, ILocked, UserInfo {
+public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardInteractive {
     protected String hostname;
     protected ICredential cred;
     protected Session session;
@@ -44,6 +48,8 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
     private static int connTimeout = 3000;
     private static int connRetries = 3;
     static {
+//	JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
+
 	try {
 	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_CONNECTION_TIMEOUT);
 	    if (s != null) {
@@ -101,8 +107,9 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 	    return false;
 	} else if (session == null) {
 	    try {
-		JSch jsch = JSch.getInstance();
-		session = jsch.createSession(cred.getUsername(), hostname);
+		SessionConfig config = new SessionConfig();
+		config.setProperty(SSHConfigConstants.STRICT_HOST_KEY_CHECKING, "no");
+		session = JSch.getInstance().createSession(cred.getUsername(), hostname, 22, config);
 		session.setUserInfo(this);
 	    } catch (JSchException e) {
 		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -115,6 +122,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 	    if (connected) {
 		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_DROPPED_CONN, hostname);
 	    }
+	    Exception lastError = null;
 	    for (int i=1; i <= connRetries; i++) {
 		try {
 		    session.setSocketFactory(SocketFactory.DEFAULT_SOCKET_FACTORY);
@@ -123,8 +131,12 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
 		    connected = true;
 		    return true;
 		} catch (JSchException e) {
+		    lastError = e;
 		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_CONNECT, hostname, i, e.getMessage());
 		}
+	    }
+	    if (lastError != null) {
+		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), lastError);
 	    }
 	    return false;
 	}
@@ -204,18 +216,40 @@ public class SshSession implements IBaseSession, ILocked, UserInfo {
     }
 
     public boolean promptPassphrase(String message) {
+System.out.println(message);
 	return true;
     }
 
     public boolean promptPassword(String message) {
+System.out.println(message);
 	return true;
     }
 
     public boolean promptYesNo(String message) {
+System.out.println(message);
 	return true;
     }
 
     public void showMessage(String message) {
+System.out.println(message);
 	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_AUTHMESSAGE, message);
+    }
+
+    // Implement UIKeyboardInteractive
+
+    /**
+     * Mac OS X allows private key and interactive logins only by default, so this interface must be implemented.
+     */
+    public String[] promptKeyboardInteractive(String dest, String name, String instruction, String[] prompt, boolean[] echo) {
+System.out.println("Destination: " + dest);
+System.out.println("Name: " + name);
+System.out.println("Instruction: " + instruction);
+for (int i=0; i < prompt.length; i++) {
+    System.out.println("Prompt[" + i + "]: " + prompt[i]);
+}
+for (int i=0; i < echo.length; i++) {
+    System.out.println("Echo[" + i + "]: " + echo[i]);
+}
+	return null;
     }
 }
