@@ -94,11 +94,11 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		  //
 		  // On Linux, we do not search under the /proc directory.  It's just a big mess under there.
 		  //
-		  case LINUX:
+		  case LINUX: {
 		    IFile[] roots = getFile(DELIM_STR).listFiles();
 		    Collection<String> filtered = new Vector<String>();
 		    for (int i=0; i < roots.length; i++) {
-			if ("proc".equals(roots[i].getName())) {
+			if (!"proc".equals(roots[i].getName())) {
 			    filtered.add(roots[i].getPath());
 			}
 		    }
@@ -108,6 +108,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		    }
 		    command = sb.toString().trim();
 		    break;
+		  }
 
 		  default:
 		    command = "find -L /";
