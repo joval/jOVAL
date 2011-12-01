@@ -179,13 +179,13 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_DELETE, f.toString());
 	    }
 	}
-	if (conn != null) {
-	    conn.disconnect();
-	    conn = null;
-	}
 	if (directory != null) {
 	    directory.disconnect();
 	    directory = null;
+	}
+	if (conn != null) {
+	    conn.disconnect();
+	    conn = null;
 	}
     }
 

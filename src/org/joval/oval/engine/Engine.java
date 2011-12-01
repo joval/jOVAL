@@ -158,7 +158,6 @@ public class Engine implements IEngine {
     public Engine(IPlugin plugin) {
 	if (plugin != null) {
 	    this.plugin = plugin;
-	    loadAdapters();
 	}
 	filter = new DefinitionFilter();
 	producer = new Producer();

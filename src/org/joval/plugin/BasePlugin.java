@@ -108,19 +108,26 @@ public abstract class BasePlugin implements IPlugin {
 		adapters.add(new ProcessAdapter(unix));
 		adapters.add(new RunlevelAdapter(unix));
 		adapters.add(new UnameAdapter(unix));
-		switch(unix.getFlavor()) {
+		IUnixSession.Flavor flavor = unix.getFlavor();
+		switch(flavor) {
 		  case LINUX:
 		    adapters.add(new RpminfoAdapter(unix));
 		    break;
+
 		  case MACOSX:
 		    adapters.add(new PlistAdapter(unix));
 		    break;
+
 		  case SOLARIS:
 		    adapters.add(new IsainfoAdapter(unix));
 		    adapters.add(new PackageAdapter(unix));
 		    adapters.add(new Patch54Adapter(unix));
 		    adapters.add(new PatchAdapter(unix));
 		    adapters.add(new SmfAdapter(unix));
+		    break;
+
+		  default:
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, flavor);
 		    break;
 		}
 		break;
@@ -138,6 +145,7 @@ public abstract class BasePlugin implements IPlugin {
     }
 
     public void connect() throws OvalException {
+	JOVALSystem.getLogger().info(JOVALMsg.STATUS_PLUGIN_CONNECT);
 	if (session == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_NONE));
 	} else if (!session.connect()) {
@@ -146,6 +154,7 @@ public abstract class BasePlugin implements IPlugin {
     }
 
     public void disconnect() {
+	JOVALSystem.getLogger().info(JOVALMsg.STATUS_PLUGIN_DISCONNECT);
 	if (session != null) {
 	    session.disconnect();
 	}

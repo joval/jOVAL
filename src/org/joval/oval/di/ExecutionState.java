@@ -279,7 +279,10 @@ public class ExecutionState {
 	    if (container != null) {
 		if (pluginConfig == null) {
 		    pluginConfig = new Properties();
-		    pluginConfig.load(new FileInputStream(new File(DEFAULT_CONFIG)));
+		    File config = new File(DEFAULT_CONFIG);
+		    if (config.exists()) {
+			pluginConfig.load(new FileInputStream(new File(DEFAULT_CONFIG)));
+		    }
 		}
 		container.configure(pluginConfig);
 	    }
