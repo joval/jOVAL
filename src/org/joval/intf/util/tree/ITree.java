@@ -35,5 +35,5 @@ public interface ITree {
      * Recursively search this node for children with paths patching the given pattern.  Note that this node may itself be
      * included in the results.  Returns a list of paths.
      */
-    public Collection<String> search(Pattern p, boolean followLinks);
+    public Collection<String> search(Pattern p);
 }

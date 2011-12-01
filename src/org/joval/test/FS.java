@@ -38,7 +38,7 @@ public class FS {
 	try {
 	    if (path.startsWith("search:")) {
 		path = path.substring(7);
-		Collection<String> list = fs.search(Pattern.compile(path), false);
+		Collection<String> list = fs.search(Pattern.compile(path));
 		System.out.println("Found " + list.size() + " matches");
 		for (String item : list) {
 		    System.out.println("Match: " + item);

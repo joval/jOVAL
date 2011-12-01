@@ -76,11 +76,13 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 		fs = new SftpFilesystem(ssh.getJschSession(), this, env);
 		try {
 		    IFile motd = fs.getFile(MOTD);
-		    InputStream in = motd.getInputStream();
-		    while (StreamTool.readLine(in) != null) {
-			motdLines++;
+		    if (motd.exists()) {
+			InputStream in = motd.getInputStream();
+			while (StreamTool.readLine(in) != null) {
+			    motdLines++;
+			}
+			in.close();
 		    }
-		    in.close();
 		} catch (IOException e) {
 		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, MOTD, e.getMessage());
 		}

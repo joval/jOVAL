@@ -160,16 +160,14 @@ public class Node implements INode, Cloneable {
 
     // Internal
 
-    Collection<String> search(Pattern p, boolean followLinks) {
+    Collection<String> search(Pattern p) {
 	Collection<String> result = new Vector<String>();
 	if (p.matcher(getPath()).find()) {
 	    result.add(getPath());
 	}
-	if (!followLinks && getType() == Type.LINK) {
-	    // don't follow the link
-	} else if (hasChildren()) {
+	if (hasChildren()) {
 	    for (INode child : getChildren()) {
-		result.addAll(((Node)child).search(p, followLinks));
+		result.addAll(((Node)child).search(p));
 	    }
 	}
 	return result;

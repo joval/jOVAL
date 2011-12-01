@@ -56,10 +56,10 @@ public class Forest implements IForest {
 	return trees.values();
     }
 
-    public Collection<String> search(Pattern p, boolean followLinks) {
+    public Collection<String> search(Pattern p) {
 	Collection<String> result = new Vector<String>();
 	for (ITree tree : getTrees()) {
-	    result.addAll(tree.search(p, followLinks));
+	    result.addAll(tree.search(p));
 	}
 	return result;
     }

@@ -243,7 +243,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 	try {
 	    ReflectedFileObject fObj = new ReflectedFileObject(obj);
 
-	    boolean patternMatch = false;
 	    if (fObj.isSetFilepath()) {
 		Collection<String> filepaths = new HashSet<String>();
 		EntityObjectStringType filepath = fObj.getFilepath();
@@ -256,13 +255,17 @@ public abstract class BaseFileAdapter implements IAdapter {
 		switch(op) {
 		  case EQUALS:
 		    list.addAll(filepaths);
+		    //
+		    // REMIND (DAS): Do behaviors need to be processed in the Filepath case?
+		    //
 		    break;
+
 		  case PATTERN_MATCH:
-		    patternMatch = true;
 		    for (String value : filepaths) {
-			list.addAll(fs.search(Pattern.compile(value), false));
+			list.addAll(fs.search(Pattern.compile(value)));
 		    }
 		    break;
+
 		  default:
 		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 		}
@@ -281,19 +284,23 @@ public abstract class BaseFileAdapter implements IAdapter {
 		switch(op) {
 		  case EQUALS:
 		    list.addAll(paths);
-		    break;
-		  case PATTERN_MATCH:
-		    patternMatch = true;
-		    for (String value : paths) {
-			list.addAll(fs.search(Pattern.compile(value), false));
+		    if (fb != null) {
+			//
+			// Recursive search File Behaviors always only apply exclusively to well-defined paths, never
+			// patterns.
+			//
+			list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs);
 		    }
 		    break;
+
+		  case PATTERN_MATCH:
+		    for (String value : paths) {
+			list.addAll(fs.search(Pattern.compile(value)));
+		    }
+		    break;
+
 		  default:
 		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
-		}
-
-		if (fb != null) {
-		    list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs);
 		}
 
 		if (fObj.isSetFilename()) {
@@ -594,7 +601,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 		} catch (NoSuchMethodException e) {
 		    recurse = null;
 		}
-
 
 		try {
 		    //

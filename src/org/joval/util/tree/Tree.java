@@ -59,8 +59,8 @@ public class Tree implements ITreeBuilder {
 	return delimiter;
     }
 
-    public Collection<String> search(Pattern p, boolean followLinks) {
-	return root.search(p, followLinks);
+    public Collection<String> search(Pattern p) {
+	return root.search(p);
     }
 
     public INode getRoot() {

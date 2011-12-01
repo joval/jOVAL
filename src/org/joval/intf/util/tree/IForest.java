@@ -30,5 +30,5 @@ public interface IForest {
     /**
      * Get all the ITrees in the forest whose paths match the specified Pattern.
      */
-    public Collection<String> search(Pattern p, boolean followLinks);
+    public Collection<String> search(Pattern p);
 }

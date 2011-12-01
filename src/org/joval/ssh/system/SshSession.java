@@ -48,7 +48,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     private static int connTimeout = 3000;
     private static int connRetries = 3;
     static {
-//	JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
+	JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
 
 	try {
 	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_CONNECTION_TIMEOUT);
@@ -216,22 +216,18 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     }
 
     public boolean promptPassphrase(String message) {
-System.out.println(message);
 	return true;
     }
 
     public boolean promptPassword(String message) {
-System.out.println(message);
 	return true;
     }
 
     public boolean promptYesNo(String message) {
-System.out.println(message);
 	return true;
     }
 
     public void showMessage(String message) {
-System.out.println(message);
 	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_AUTHMESSAGE, message);
     }
 
@@ -241,15 +237,6 @@ System.out.println(message);
      * Mac OS X allows private key and interactive logins only by default, so this interface must be implemented.
      */
     public String[] promptKeyboardInteractive(String dest, String name, String instruction, String[] prompt, boolean[] echo) {
-System.out.println("Destination: " + dest);
-System.out.println("Name: " + name);
-System.out.println("Instruction: " + instruction);
-for (int i=0; i < prompt.length; i++) {
-    System.out.println("Prompt[" + i + "]: " + prompt[i]);
-}
-for (int i=0; i < echo.length; i++) {
-    System.out.println("Echo[" + i + "]: " + echo[i]);
-}
 	return null;
     }
 }

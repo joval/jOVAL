@@ -10,6 +10,8 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.Collection;
+import java.util.Vector;
 import java.util.NoSuchElementException;
 
 import org.vngx.jsch.Session;
@@ -85,7 +87,39 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    cache.addTree(tree);
 	}
 	try {
-	    IProcess p = session.createProcess("find / *");
+	    String command = null;
+	    switch(session.getType()) {
+	      case UNIX:
+		switch(((IUnixSession)session).getFlavor()) {
+		  //
+		  // On Linux, we do not search under the /proc directory.  It's just a big mess under there.
+		  //
+		  case LINUX:
+		    IFile[] roots = getFile(DELIM_STR).listFiles();
+		    Collection<String> filtered = new Vector<String>();
+		    for (int i=0; i < roots.length; i++) {
+			if ("proc".equals(roots[i].getName())) {
+			    filtered.add(roots[i].getPath());
+			}
+		    }
+		    StringBuffer sb = new StringBuffer("find -L ");
+		    for (String s : filtered) {
+			sb.append(s).append(" ");
+		    }
+		    command = sb.toString().trim();
+		    break;
+
+		  default:
+		    command = "find -L /";
+		    break;
+		}
+		break;
+
+	      default:
+		return false;
+	    }
+
+	    IProcess p = session.createProcess(command);
 	    p.start();
 	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	    ErrorReader er = new ErrorReader(p.getErrorStream());

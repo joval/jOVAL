@@ -60,17 +60,17 @@ public abstract class CachingTree implements ITree {
 	throw new UnsupportedOperationException();
     }
 
-    public Collection<String> search(Pattern p, boolean followLinks) {
+    public Collection<String> search(Pattern p) {
 	if (preload()) {
 	    try {
-		return cache.search(p, followLinks);
+		return cache.search(p);
 	    } catch (PatternSyntaxException e) {
 		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PATTERN, p.pattern());
 		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    return null;
 	} else {
-	    return treeSearch(p.pattern(), followLinks);
+	    return treeSearch(p.pattern());
 	}
     }
 
@@ -109,7 +109,7 @@ public abstract class CachingTree implements ITree {
      * is prepended with a ^ and appended with a $.  The method then iterates down the filesystem searching for each token,
      * in sequence, using the Matcher.find method.
      */
-    private Collection<String> treeSearch(String path, boolean followLinks) {
+    private Collection<String> treeSearch(String path) {
 	Collection<String> result = new Vector<String>();
 	try {
 	    if (path.startsWith("^")) {
@@ -136,7 +136,7 @@ public abstract class CachingTree implements ITree {
 		    sb.append(ESCAPED_DELIM);
 		}
 	    }
-	    result.addAll(treeSearch(null, sb.toString(), followLinks));
+	    result.addAll(treeSearch(null, sb.toString()));
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
@@ -151,13 +151,12 @@ public abstract class CachingTree implements ITree {
      *
      * @arg parent	The parent path, which is a fully-resolved portion of the path (regex-free).
      * @arg path	The search pattern, consisting of ESCAPED_DELIM-delimited tokens for matching node names.
-     * @arg followLinks	Specified whether or not filesystem links should be followed by the search.
      *
      * @returns a list of matching local paths
      *
      * @throws FileNotFoundException if a match cannot be found.
      */
-    private Collection<String> treeSearch(String parent, String path, boolean followLinks) throws Exception {
+    private Collection<String> treeSearch(String parent, String path) throws Exception {
 	if (path == null || path.length() < 1) {
 	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_NULLPATH));
 	}
@@ -222,9 +221,6 @@ public abstract class CachingTree implements ITree {
 	    }
 	    try {
 		accessor = lookup(nodePath);
-		if (accessor.getType() == INode.Type.LINK && !followLinks) {
-		    return results;
-		}
 	    } catch (IllegalArgumentException e) {
 	    } catch (NoSuchElementException e) {
 		// the node has disappeared since being discovered
@@ -258,14 +254,14 @@ public abstract class CachingTree implements ITree {
 		    if (path == null) {
 			results.add(child.getPath());
 		    } else {
-			results.addAll(treeSearch(child.getPath(), path, followLinks));
+			results.addAll(treeSearch(child.getPath(), path));
 		    }
 		}
 	    }
 	} else if (".*".equals(token)) {
 	    for (INode child : children) {
 		results.add(child.getPath());
-		results.addAll(treeSearch(child.getPath(), ".*", followLinks));
+		results.addAll(treeSearch(child.getPath(), ".*"));
 	    }
 	} else {
 	    //
@@ -283,7 +279,7 @@ public abstract class CachingTree implements ITree {
 			    } else if (token.endsWith(".+") && childPath.length() > prefix.length()) {
 				results.add(childPath);
 			    }
-			    results.addAll(treeSearch(childPath, ".*", followLinks));
+			    results.addAll(treeSearch(childPath, ".*"));
 			}
 		    }
 		    return results;
@@ -297,7 +293,7 @@ public abstract class CachingTree implements ITree {
 	    Vector<String> candidates = new Vector<String>();
 	    for (INode child : children) {
 		candidates.add(child.getPath());
-		candidates.addAll(treeSearch(child.getPath(), ".*", followLinks));
+		candidates.addAll(treeSearch(child.getPath(), ".*"));
 	    }
 
 	    StringBuffer pattern = new StringBuffer(StringTools.escapeRegex(node.getPath()));

@@ -55,6 +55,8 @@ public class TestMain extends RemotePlugin {
 	knownUnknowns.add("oval:org.mitre.oval.test:def:423");	// Linux
 	knownFalses.add("oval:org.mitre.oval.test:def:879");	// Solaris
 	knownUnknowns.add("oval:org.mitre.oval.test:def:909");	// Solaris
+	knownFalses.add("oval:org.mitre.oval.test:def:87");	// MacOS X
+	knownUnknowns.add("oval:org.mitre.oval.test:def:581");	// MacOS X
     }
 
     public static void main(String[] argv) {
@@ -325,6 +327,8 @@ public class TestMain extends RemotePlugin {
     private static class LogfileFormatter extends Formatter {
 	public String format(LogRecord record) {
 	    StringBuffer line = new StringBuffer(currentDateString());
+	    line.append(" - ");
+	    line.append(record.getLevel().getName());
 	    line.append(" - ");
 	    line.append(record.getMessage());
 	    line.append(LF);
