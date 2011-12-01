@@ -288,7 +288,7 @@ public class ExecutionState {
 	    }
 	    return true;
 	} catch (Exception e) {
-	    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
+	    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage(), logFile));
 	}
 	return false;
     }
