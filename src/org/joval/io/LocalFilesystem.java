@@ -50,7 +50,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     // Implement methdos left abstract in CachingTree
 
     public boolean preload() {
-	if (!"true".equals(JOVALSystem.getProperty(JOVALSystem.PROP_LOCAL_FS_PRECACHE))) {
+	if (!"true".equals(JOVALSystem.getProperty(JOVALSystem.PROP_LOCAL_FS_PRELOAD))) {
 	    return false;
 	} else if (preloaded) {
 	    return true;
@@ -80,7 +80,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	    preloaded = true;
 	    return true;
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD);
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
@@ -175,7 +175,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     private void addRecursive(ITreeBuilder tree, File f) throws IOException {
 	String path = f.getCanonicalPath();
 	if (!path.equals(f.getPath())) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE_LINE, path);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
 	} else if (f.isFile()) {
 	    INode node = tree.getRoot();
 	    try {
@@ -194,14 +194,14 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	} else if (f.isDirectory()) {
 	    File[] children = f.listFiles();
 	    if (children == null) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE_LINE, path);
+		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
 	    } else {
 		for (File child : children) {
 		    addRecursive(tree, child);
 		}
 	    }
 	} else {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE_LINE, path);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
 	}
     }
 }

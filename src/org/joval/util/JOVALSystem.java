@@ -92,6 +92,11 @@ public class JOVALSystem {
     public static final String PROP_BUILD_DATE	= "build.date";
 
     /**
+     * Property indicating whether to log messages from JSch to the JOVALSystem logger (true/false).
+     */
+    public static final String PROP_SSH_ATTACH_LOG = "ssh.attach.log";
+
+    /**
      * Property indicating the number of milliseconds to wait before failing to establish an SSH connection.
      */
     public static final String PROP_SSH_CONNECTION_TIMEOUT = "ssh.conn.timeout";
@@ -112,9 +117,12 @@ public class JOVALSystem {
     public static final String PROP_SUDO_MAX_RETRIES = "sudo.exec.retries";
 
     /**
-     * Property governing the behavior of local filesystem pre-cache behavior.
+     * Property governing the behavior of local filesystem map cache pre-load behavior (true/false).  If false, any
+     * local IFilesystem implementation will use the tree-search algorithm to resolve searches.  If true, it will
+     * scan (and cache) all file paths on the entire filesystem, and then subsequently perform regular expression
+     * matching directly on the paths.
      */
-    public static final String PROP_LOCAL_FS_PRECACHE = "local.fs.precache";
+    public static final String PROP_LOCAL_FS_PRELOAD = "local.fs.preload";
 
     /**
      * A data structure providing easy access to the OVAL schema object factories.

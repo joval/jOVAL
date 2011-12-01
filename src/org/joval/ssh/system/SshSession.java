@@ -48,7 +48,9 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     private static int connTimeout = 3000;
     private static int connRetries = 3;
     static {
-//	JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
+	if ("true".equals(JOVALSystem.getProperty(JOVALSystem.PROP_SSH_ATTACH_LOG))) {
+	    JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
+	}
 
 	try {
 	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_CONNECTION_TIMEOUT);
@@ -143,10 +145,12 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     }
 
     public void disconnect() {
-	if (session != null) {
-	    JOVALSystem.getLogger().info(JOVALMsg.STATUS_SSH_DISCONNECT, hostname);
-	    session.disconnect();
-	    connected = false;
+	synchronized(session) {
+	    if (session != null && connected) {
+		JOVALSystem.getLogger().info(JOVALMsg.STATUS_SSH_DISCONNECT, hostname);
+		session.disconnect();
+		connected = false;
+	    }
 	}
     }
 

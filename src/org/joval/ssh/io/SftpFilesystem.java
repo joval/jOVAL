@@ -155,7 +155,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    preloaded = true;
 	    return true;
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE);
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD);
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
@@ -281,7 +281,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		BufferedReader br = new BufferedReader(new InputStreamReader(err));
 		String line = null;
 		while((line = br.readLine()) != null) {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECACHE_LINE, line);
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, line);
 		}
 	    } catch (IOException e) {
 		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
