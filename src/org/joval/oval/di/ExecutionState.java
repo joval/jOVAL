@@ -25,20 +25,20 @@ import org.joval.intf.plugin.IPlugin;
  * @version %I% %G%
  */
 public class ExecutionState {
-    String DEFAULT_DEFINITIONS		= "definitions.xml";
-    String DEFAULT_DATA			= "system-characteristics.xml";
-    String DEFAULT_DIRECTIVES		= "directives.xml";
-    String DEFAULT_RESULTS_XML		= "results.xml";
-    String DEFAULT_RESULTS_XFORM	= "results.html";
-    String DEFAULT_VARIABLES		= "external-variables.xml";
-    String DEFAULT_LOGFILE		= "jovaldi.log";
-    String DEFAULT_XMLDIR		= "xml";
-    String DEFAULT_XFORM		= "results_to_html.xsl";
-    String DEFAULT_DEFS_SCHEMATRON	= "oval-definitions-schematron.xsl";
-    String DEFAULT_SC_SCHEMATRON	= "oval-system-characteristics-schematron.xsl";
-    String DEFAULT_RESULTS_SCHEMATRON	= "oval-results-schematron.xsl";
-    String DEFAULT_PLUGIN		= "default";
-    String DEFAULT_CONFIG		= "config.properties";
+    static final String DEFAULT_DEFINITIONS		= "definitions.xml";
+    static final String DEFAULT_DATA			= "system-characteristics.xml";
+    static final String DEFAULT_DIRECTIVES		= "directives.xml";
+    static final String DEFAULT_RESULTS_XML		= "results.xml";
+    static final String DEFAULT_RESULTS_XFORM		= "results.html";
+    static final String DEFAULT_VARIABLES		= "external-variables.xml";
+    static final String DEFAULT_LOGFILE			= "jovaldi.log";
+    static final String DEFAULT_XMLDIR			= "xml";
+    static final String DEFAULT_XFORM			= "results_to_html.xsl";
+    static final String DEFAULT_DEFS_SCHEMATRON		= "oval-definitions-schematron.xsl";
+    static final String DEFAULT_SC_SCHEMATRON		= "oval-system-characteristics-schematron.xsl";
+    static final String DEFAULT_RESULTS_SCHEMATRON	= "oval-results-schematron.xsl";
+    static final String DEFAULT_PLUGIN			= "default";
+    static final String DEFAULT_CONFIG			= "config.properties";
 
     File inputFile;
     File variablesFile;
@@ -281,6 +281,7 @@ public class ExecutionState {
 		    pluginConfig = new Properties();
 		    File config = new File(DEFAULT_CONFIG);
 		    if (config.exists()) {
+			pluginConfig.setProperty("config.file", config.getCanonicalPath());
 			pluginConfig.load(new FileInputStream(new File(DEFAULT_CONFIG)));
 		    }
 		}

@@ -64,7 +64,7 @@ public class TestMain extends RemotePlugin {
 	    LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
 	    Handler handler = new FileHandler("test.log", false);
 	    handler.setFormatter(new LogfileFormatter());
-	    handler.setLevel(Level.INFO);
+	    handler.setLevel(Level.FINEST);
 	    Logger logger = Logger.getLogger(JOVALSystem.class.getName());
 	    logger.addHandler(handler);
 

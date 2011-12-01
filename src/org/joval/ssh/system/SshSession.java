@@ -79,6 +79,10 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     // Implement ILocked
 
     public boolean unlock(ICredential cred) {
+	if (cred == null) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SESSION_CREDENTIAL);
+	    return false;
+	}
 	this.cred = cred;
 	if (cred instanceof ISshCredential) {
 	    ISshCredential sshc = (ISshCredential)cred;
@@ -145,11 +149,13 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     }
 
     public void disconnect() {
-	synchronized(session) {
-	    if (session != null && connected) {
-		JOVALSystem.getLogger().info(JOVALMsg.STATUS_SSH_DISCONNECT, hostname);
-		session.disconnect();
-		connected = false;
+	if (session != null) {
+		synchronized(session) {
+	        if (session != null && connected) {
+		    JOVALSystem.getLogger().info(JOVALMsg.STATUS_SSH_DISCONNECT, hostname);
+		    session.disconnect();
+		    connected = false;
+		}
 	    }
 	}
     }

@@ -6,6 +6,7 @@ package org.joval.plugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
+import javax.security.auth.login.LoginException;
 
 import org.joval.discovery.SessionFactory;
 import org.joval.intf.identity.ICredential;
@@ -110,7 +111,7 @@ public class RemotePlugin extends BasePlugin {
 	    } else {
 		ICredential cred = cs.getCredential(base);
 		if (cred == null) {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SESSION_CREDENTIAL);
+		    throw new LoginException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL));
 		} else if (((ILocked)base).unlock(cred)) {
 		    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_CREDENTIAL_SET, hostname);
 		} else {
