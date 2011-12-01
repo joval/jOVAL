@@ -25,6 +25,8 @@ import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.remote.wmi.query.SimpleSWbemObjectSet;
 import org.joval.os.windows.wmi.WmiException;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * A thin wrapper class around the JWbem packages that maintains one SWbemServices per namespace associated with
@@ -46,6 +48,7 @@ public class WmiConnection implements IWmiProvider {
 
     public boolean connect() {
 	if (locator == null) {
+	    JOVALSystem.getLogger().info(JOVALMsg.STATUS_WMI_CONNECT);
 	    map = new Hashtable <String, SWbemServices>();
 	    locator = new SWbemLocator(); 
 	}
@@ -54,6 +57,7 @@ public class WmiConnection implements IWmiProvider {
 
     public void disconnect() {
 	if (locator != null) {
+	    JOVALSystem.getLogger().info(JOVALMsg.STATUS_WMI_DISCONNECT);
 	    locator.disconnect();
 	    locator = null;
 	}

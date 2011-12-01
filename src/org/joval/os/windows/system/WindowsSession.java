@@ -45,7 +45,6 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
     public WindowsSession() {
 	super();
 	info = new WindowsSystemInfo(this);
-	directory = new Directory(this);
     }
 
     // Implement IWindowsSession extensions
@@ -118,6 +117,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 	    cwd = new File(env.expand("%SystemRoot%"));
 	    try {
 		if (wmi.connect()) {
+		    directory = new Directory(this);
 		    directory.connect();
 		    info.getSystemInfo();
 		    return true;
@@ -137,6 +137,11 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
     public void disconnect() {
 	if (wmi != null) {
 	    wmi.disconnect();
+	    wmi = null;
+	}
+	if (directory != null) {
+	    directory.disconnect();
+	    directory = null;
 	}
     }
 

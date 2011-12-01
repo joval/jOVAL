@@ -43,7 +43,10 @@ public class WmiProvider implements IWmiProvider {
 		}
 	        libLoaded = true;
 	    }
-	    locator = new ActiveXComponent("WbemScripting.SWbemLocator");
+	    if (locator == null) {
+		JOVALSystem.getLogger().info(JOVALMsg.STATUS_WMI_CONNECT);
+		locator = new ActiveXComponent("WbemScripting.SWbemLocator");
+	    }
 	    return true;
 	} catch (UnsatisfiedLinkError e) {
 	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -53,7 +56,9 @@ public class WmiProvider implements IWmiProvider {
 
     public void disconnect() {
 	if (locator != null) {
+	    JOVALSystem.getLogger().info(JOVALMsg.STATUS_WMI_DISCONNECT);
 	    locator.safeRelease();
+	    locator = null;
 	}
 	map.clear();
     }

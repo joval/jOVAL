@@ -381,8 +381,9 @@ public class Engine implements IEngine {
 	} else {
 	    adapters = new Hashtable<Class, AdapterManager>();
 	    for (IAdapter adapter : coll) {
+		AdapterManager mgr = new AdapterManager(adapter);
 		for (Class clazz : adapter.getObjectClasses()) {
-		    adapters.put(clazz, new AdapterManager(adapter));
+		    adapters.put(clazz, mgr);
 		}
 	    }
 	}

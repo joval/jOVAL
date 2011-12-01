@@ -171,55 +171,59 @@ public class TestMain extends RemotePlugin {
     }
 
     private void installSupportFiles(File testDir) throws IOException {
-	fs = session.getFilesystem();
-
 	File f = new File((testDir), "ValidationSupportFiles.zip");
-	ZipFile zip = new ZipFile(f, ZipFile.OPEN_READ);
 
-	IFile root = null;
-	switch(session.getType()) {
-	  case WINDOWS:
-	    root = fs.getFile("C:\\ValidationSupportFiles\\");
-	    break;
-
-	  case UNIX:
-	    root = fs.getFile("/tmp/ValidationSupportFiles2");
-	    break;
-
-	  default:
-	    throw new IOException("Unsupported type: " + session.getType());
-	}
-
-	Enumeration<? extends ZipEntry> entries = zip.entries();
-	while (entries.hasMoreElements()) {
-	    ZipEntry entry = entries.nextElement();
-	    StringBuffer sb = new StringBuffer(root.getPath());
-	    for (String s : StringTools.toList(StringTools.tokenize(entry.getName(), "/"))) {
-		if (sb.length() > 0) {
-		    sb.append(fs.getDelimiter());
-		}
-		sb.append(s);
+	if (!f.exists()) {
+	    System.out.println("Warning: no available validation support files to install");
+	} else {
+	    fs = session.getFilesystem();
+	    ZipFile zip = new ZipFile(f, ZipFile.OPEN_READ);
+    
+	    IFile root = null;
+	    switch(session.getType()) {
+	      case WINDOWS:
+		root = fs.getFile("C:\\ValidationSupportFiles\\");
+		break;
+    
+	      case UNIX:
+		root = fs.getFile("/tmp/ValidationSupportFiles2");
+		break;
+    
+	      default:
+		throw new IOException("Unsupported type: " + session.getType());
 	    }
-	    String name = sb.toString();
-	    mkdir(root, entry);
-	    if (!entry.isDirectory()) {
-		IFile newFile = fs.getFile(name);
-		System.out.println("Installing file " + newFile.getLocalName());
-		byte[] buff = new byte[2048];
-		InputStream in = zip.getInputStream(entry);
-		OutputStream out = newFile.getOutputStream(false);
-		try {
-		    int len = 0;
-		    while((len = in.read(buff)) > 0) {
-			out.write(buff, 0, len);
+    
+	    Enumeration<? extends ZipEntry> entries = zip.entries();
+	    while (entries.hasMoreElements()) {
+		ZipEntry entry = entries.nextElement();
+		StringBuffer sb = new StringBuffer(root.getPath());
+		for (String s : StringTools.toList(StringTools.tokenize(entry.getName(), "/"))) {
+		    if (sb.length() > 0) {
+			sb.append(fs.getDelimiter());
 		    }
-		    in.close();
-		} finally {
-		    if (out != null) {
-			try {
-			    out.close();
-			} catch (IOException e) {
-			    e.printStackTrace();
+		    sb.append(s);
+		}
+		String name = sb.toString();
+		mkdir(root, entry);
+		if (!entry.isDirectory()) {
+		    IFile newFile = fs.getFile(name);
+		    System.out.println("Installing file " + newFile.getLocalName());
+		    byte[] buff = new byte[2048];
+		    InputStream in = zip.getInputStream(entry);
+		    OutputStream out = newFile.getOutputStream(false);
+		    try {
+			int len = 0;
+			while((len = in.read(buff)) > 0) {
+			    out.write(buff, 0, len);
+			}
+			in.close();
+		    } finally {
+			if (out != null) {
+			    try {
+				out.close();
+			    } catch (IOException e) {
+				e.printStackTrace();
+			    }
 			}
 		    }
 		}

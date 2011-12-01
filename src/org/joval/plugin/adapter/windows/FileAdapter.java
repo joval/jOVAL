@@ -74,7 +74,6 @@ public class FileAdapter extends BaseFileAdapter {
 
     public FileAdapter(IWindowsSession session) {
 	super(session);
-	wmi = session.getWmiProvider();
     }
 
     // Implement IAdapter
@@ -86,10 +85,10 @@ public class FileAdapter extends BaseFileAdapter {
     }
 
     public boolean connect() {
-	if (wmi != null) {
-	    return wmi.connect();
+	if (wmi == null) {
+	    wmi = ((IWindowsSession)session).getWmiProvider();
 	}
-	return false;
+	return wmi.connect();
     }
 
     public void disconnect() {

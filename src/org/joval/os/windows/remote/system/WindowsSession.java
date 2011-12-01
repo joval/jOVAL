@@ -67,7 +67,6 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	this.host = host;
 	tempFiles = new Vector<IFile>();
 	info = new WindowsSystemInfo(this);
-	directory = new Directory(this);
     }
 
     // Implement IWindowsSession extensions
@@ -153,6 +152,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 		cwd = env.expand("%SystemRoot%");
 		conn = new WmiConnection(host, cred);
 		if (conn.connect()) {
+		    directory = new Directory(this);
 		    directory.connect();
 		    info.getSystemInfo();
 		    return true;
@@ -181,9 +181,11 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	}
 	if (conn != null) {
 	    conn.disconnect();
+	    conn = null;
 	}
 	if (directory != null) {
 	    directory.disconnect();
+	    directory = null;
 	}
     }
 
