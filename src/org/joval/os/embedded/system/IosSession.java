@@ -43,7 +43,11 @@ public class IosSession extends BaseSession implements ILocked, ISession {
     }
 
     public boolean connect() {
-	return ssh.connect();
+	if (ssh.connect()) {
+	    info.getSystemInfo();
+	    return true;
+	}
+	return false;
     }
 
     public void disconnect() {

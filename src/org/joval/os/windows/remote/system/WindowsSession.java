@@ -154,6 +154,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 		conn = new WmiConnection(host, cred);
 		if (conn.connect()) {
 		    directory.connect();
+		    info.getSystemInfo();
 		    return true;
 		} else {
 		    return false;

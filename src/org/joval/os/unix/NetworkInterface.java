@@ -93,6 +93,7 @@ class NetworkInterface {
 	}
 
 	reader.close();
+	p.waitFor(0);
 	return interfaces;
     }
 

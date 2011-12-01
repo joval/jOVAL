@@ -119,6 +119,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 	    try {
 		if (wmi.connect()) {
 		    directory.connect();
+		    info.getSystemInfo();
 		    return true;
 		} else {
 		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINWMI_CONNECT);

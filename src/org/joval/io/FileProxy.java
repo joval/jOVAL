@@ -66,6 +66,10 @@ class FileProxy extends BaseFile {
 	return file.exists();
     }
 
+    public boolean mkdir() {
+	return file.mkdir();
+    }
+
     public InputStream getInputStream() throws IOException {
 	return new FileInputStream(file);
     }

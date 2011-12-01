@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Vector;
 import java.util.NoSuchElementException;
 
@@ -92,13 +93,17 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	      case UNIX:
 		switch(((IUnixSession)session).getFlavor()) {
 		  //
-		  // On Linux, we do not search under the /proc directory.  It's just a big mess under there.
+		  // On Linux, we do not search under the /proc or /sys directories.
+		  // It's just a big ugly mess under there...
 		  //
 		  case LINUX: {
+		    HashSet<String> forbidden = new HashSet<String>();
+		    forbidden.add("proc");
+		    forbidden.add("sys");
 		    IFile[] roots = getFile(DELIM_STR).listFiles();
 		    Collection<String> filtered = new Vector<String>();
 		    for (int i=0; i < roots.length; i++) {
-			if (!"proc".equals(roots[i].getName())) {
+			if (!forbidden.contains(roots[i].getName())) {
 			    filtered.add(roots[i].getPath());
 			}
 		    }
@@ -200,6 +205,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	try {
 	    if (cs != null && cs.isConnected()) {
 		cs.disconnect();
+		session.disconnect();
 	    }
 	} catch (Throwable e) {
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

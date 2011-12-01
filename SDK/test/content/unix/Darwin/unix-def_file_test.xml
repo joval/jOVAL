@@ -50,7 +50,7 @@
     </file_test>
     <file_test id="oval:org.mitre.oval.test:tst:357" version="1" comment="Test that the file_object is supported with the max_depth behavior set to a limited depth of recursion." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <object object_ref="oval:org.mitre.oval.test:obj:38"/>
-      <state state_ref="oval:org.mitre.oval.test:ste:769"/>
+      <state state_ref="oval:org.mitre.oval.test:ste:687"/>
     </file_test>
     <file_test id="oval:org.mitre.oval.test:tst:948" version="1" comment="Test that the file_object is supported with the max_depth behavior set to an unlimited depth of recursion." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <object object_ref="oval:org.mitre.oval.test:obj:957"/>

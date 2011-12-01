@@ -43,6 +43,7 @@ public class UnixSession extends BaseSession implements IUnixSession {
 	fs = new LocalFilesystem(env, null);
 	cwd = new File(".");
 	flavor = Flavor.flavorOf(this);
+	info.getSystemInfo();
 	return true;
     }
 

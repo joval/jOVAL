@@ -12,7 +12,6 @@ import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
@@ -90,6 +89,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 		((SftpFilesystem)fs).setJschSession(ssh.getJschSession());
 	    }
 	    flavor = Flavor.flavorOf(this);
+	    info.getSystemInfo();
 	    return true;
 	} else {
 	    return false;

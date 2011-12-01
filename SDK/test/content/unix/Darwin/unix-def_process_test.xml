@@ -36,24 +36,24 @@
   </tests>
   <objects>
     <process_object id="oval:org.mitre.oval.test:obj:314" version="1" comment="Retrieve an process_item with a name equal to 'launchd'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command>launchd</command>
+      <command>/sbin/launchd</command>
     </process_object>
     <process_object id="oval:org.mitre.oval.test:obj:933" version="1" comment="Retrieve process_items with names that are not equal to 'launchd'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command operation="not equal">launchd</command>
+      <command operation="not equal">/sbin/launchd</command>
     </process_object>
     <process_object id="oval:org.mitre.oval.test:obj:62" version="1" comment="Retrieve process_items with names that match the regular expression '^lau.c.d$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command operation="pattern match">^lau.c.d$</command>
+      <command operation="pattern match">lau.c.d$</command>
     </process_object>
   </objects>
   <states>
     <process_state id="oval:org.mitre.oval.test:ste:285" version="1" comment="This state represents an process_item that has a name equal to 'launchd'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command>launchd</command>
+      <command>/sbin/launchd</command>
     </process_state>
     <process_state id="oval:org.mitre.oval.test:ste:750" version="1" comment="This state represents process_items that have a name not equal to 'launchd'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command operation="not equal">launchd</command>
+      <command operation="not equal">/sbin/launchd</command>
     </process_state>
     <process_state id="oval:org.mitre.oval.test:ste:966" version="1" comment="This state represents process_items that have a name that matches the regular expression '^lau.c.d$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command operation="pattern match">^lau.c.d$</command>
+      <command operation="pattern match">lau.c.d$</command>
     </process_state>
   </states>
 </oval_definitions>
