@@ -3,14 +3,14 @@
 
 package org.joval.os.unix;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.StreamTool;
 
 /**
  * Tool for creating a SystemInfoType from an IUnixSession implementation.
@@ -24,7 +24,7 @@ class NetworkInterface {
 
 	IProcess p = session.createProcess("/sbin/ifconfig -a", UnixSystemInfo.TIMEOUT, UnixSystemInfo.DEBUG);
 	p.start();
-	BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	InputStream in = p.getInputStream();
 	Vector<String> lines = new Vector<String>();
 	String line = null;
 
@@ -34,7 +34,7 @@ class NetworkInterface {
 	  // Interfaces are not separated by blank lines.
 	  //
 	  case MACOSX:
-	    while ((line = reader.readLine()) != null) {
+	    while ((line = StreamTool.readLine(in, UnixSystemInfo.TIMEOUT)) != null) {
 		if (line.startsWith("\t") || line.startsWith("  ")) {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
@@ -57,7 +57,7 @@ class NetworkInterface {
 	  // Interfaces are not separated by blank lines.
 	  //
 	  case SOLARIS:
-	    while ((line = reader.readLine()) != null) {
+	    while ((line = StreamTool.readLine(in, UnixSystemInfo.TIMEOUT)) != null) {
 		if (line.startsWith("\t") || line.startsWith("  ")) {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
@@ -79,7 +79,7 @@ class NetworkInterface {
 	  // On Linux, there is a blank line between each interface spec.
 	  //
 	  case LINUX:
-	    while ((line = reader.readLine()) != null) {
+	    while ((line = StreamTool.readLine(in, UnixSystemInfo.TIMEOUT)) != null) {
 		if (line.trim().length() == 0) {
 		    if (lines.size() > 0) {
 			interfaces.add(createLinuxInterface(lines));
@@ -92,7 +92,7 @@ class NetworkInterface {
 	    break;
 	}
 
-	reader.close();
+	in.close();
 	p.waitFor(0);
 	return interfaces;
     }

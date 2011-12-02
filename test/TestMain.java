@@ -89,14 +89,14 @@ public class TestMain extends RemotePlugin {
 		reportDir.mkdir();
 	    }
 	    Hashtable<String, ReportEntry> reports = new Hashtable<String, ReportEntry>();
-	    for (String name : config.listSections()) {
-		System.out.println("Starting test suite run for " + name);
-		Properties props = config.getSection(name);
+	    for (String suite : config.listSections()) {
+		System.out.println("Starting test suite run for " + suite);
+		Properties props = config.getSection(suite);
 		scs.add(props);
-		ReportEntry report = new ReportEntry(props);
+		ReportEntry report = new ReportEntry(suite, props);
 		runTests(new TestMain(props.getProperty(SimpleCredentialStore.PROP_HOSTNAME)), report);
-		reports.put(name, report);
-		System.out.println("Tests completed for " + name);
+		reports.put(suite, report);
+		System.out.println("Tests completed for " + suite);
 	    }
 	    writeReport(reports);
 	    System.exit(0);
@@ -496,11 +496,13 @@ public class TestMain extends RemotePlugin {
     }
 
     private static class ReportEntry {
+	private String suite;
 	private Properties props;
 	private Hashtable<String, TestData> results;
 	private Hashtable<String, Exception> errors;
 
-	ReportEntry(Properties props) {
+	ReportEntry(String suite, Properties props) {
+	    this.suite = suite;
 	    this.props = props;
 	    results = new Hashtable<String, TestData>();
 	    errors = new Hashtable<String, Exception>();
@@ -544,7 +546,7 @@ public class TestMain extends RemotePlugin {
 	    // If there was any kind of imperfect result, the results XML is saved so it can be analyzed.
 	    //
 	    if (data.tally.containsValue(Boolean.FALSE)) {
-		File f = new File(reportDir, "results_" + xml);
+		File f = new File(reportDir, suite + "_results_" + xml);
 		res.writeXML(f);
 	    }
 	}
@@ -573,7 +575,8 @@ public class TestMain extends RemotePlugin {
 			    StringBuffer sb = new StringBuffer();
 			    sb.append("<tr><td width=600>").append(id).append("</td>");
 			    sb.append("<td><font color=#ff0000 weight=bold>FAILED</font></td>");
-			    sb.append("<td><a href=\"results_").append(xml).append("\">results.xml</a></td></tr>");
+			    sb.append("<td><a href=\"").append(suite);
+			    sb.append("_results_").append(xml).append("\">results.xml</a></td></tr>");
 			    rows.add(sb.toString());
 			}
 		    }
