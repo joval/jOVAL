@@ -47,7 +47,7 @@ public class RemotePlugin extends BasePlugin {
 	RemotePlugin.cs = cs;
     }
 
-    private String hostname;
+    protected String hostname;
     private ICredential cred;
 
     /**

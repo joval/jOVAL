@@ -5,6 +5,7 @@ package org.joval.identity;
 
 import java.io.File;
 import java.security.AccessControlException;
+import java.util.Hashtable;
 import java.util.Properties;
 
 import org.joval.identity.Credential;
@@ -17,41 +18,63 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
- * Trivial implementation of an ICredentialStore that contains only one credential.
+ * Trivial implementation of an ICredentialStore that contains credentials keyed by hostname.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class SimpleCredentialStore implements ICredentialStore {
-    private Properties props;
+    public static final String PROP_HOSTNAME		= "hostname";
+    public static final String PROP_DOMAIN		= "nt.domain";
+    public static final String PROP_USERNAME		= "user.name";
+    public static final String PROP_PASSWORD		= "user.password";
+    public static final String PROP_PASSPHRASE		= "key.password";
+    public static final String PROP_ROOT_PASSWORD	= "root.password";
+    public static final String PROP_PRIVATE_KEY		= "key.file";
+
+    private Hashtable<String, Properties> table;
 
     /**
      * Create from Properties.
      */
-    public SimpleCredentialStore(Properties props) {
-	this.props = props;
+    public SimpleCredentialStore() {
+	table = new Hashtable<String, Properties>();
+    }
+
+    /**
+     * Add properties for a credential.
+     *
+     * @throws IllegalArgumentException if a PROP_HOSTNAME is not specified.
+     */
+    public void add(Properties props) throws IllegalArgumentException {
+	String hostname = props.getProperty(PROP_HOSTNAME);
+	if (hostname == null) {
+	    throw new IllegalArgumentException(PROP_HOSTNAME);
+	} else {
+	    table.put(hostname, props);
+	}
     }
 
     // Implement ICredentialStore
 
     public ICredential getCredential(IBaseSession base) throws AccessControlException {
-	ICredential cred = null;
+	Properties props = table.get(base.getHostname());
 	if (props == null) {
 	    return null;
 	}
-	String hostname		= props.getProperty("hostname");
-	String domain		= props.getProperty("nt.domain");
-	String username		= props.getProperty("user.name");
-	String password		= props.getProperty("user.password");
-	String passphrase	= props.getProperty("key.password");
-	String rootPassword	= props.getProperty("root.password");
-	String privateKey	= props.getProperty("key.file");
+	String domain		= props.getProperty(PROP_DOMAIN);
+	String username		= props.getProperty(PROP_USERNAME);
+	String password		= props.getProperty(PROP_PASSWORD);
+	String passphrase	= props.getProperty(PROP_PASSPHRASE);
+	String rootPassword	= props.getProperty(PROP_ROOT_PASSWORD);
+	String privateKey	= props.getProperty(PROP_PRIVATE_KEY);
 
-	if (base.getHostname().equalsIgnoreCase(hostname) && props != null) {
+	ICredential cred = null;
+	if (base.getHostname().equalsIgnoreCase(props.getProperty(PROP_HOSTNAME))) {
 	    switch (base.getType()) {
 	      case WINDOWS:
 		if (domain == null) {
-		    domain = hostname;
+		    domain = props.getProperty(PROP_HOSTNAME).toUpperCase();
 		}
 		cred = new WindowsCredential(domain, username, password);
 		break;

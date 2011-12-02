@@ -56,14 +56,14 @@ public class RemoteContainer implements IPluginContainer {
     public void configure(Properties props) throws Exception {
 	if (props.getProperty("config.file") == null) {
 	    throw new Exception("Missing configuration file: " + ExecutionState.DEFAULT_CONFIG);
-	} if (props.getProperty("hostname") == null) {
-	    throw new Exception("Missing property: hostname");
 	}
-	RemotePlugin.setCredentialStore(new SimpleCredentialStore(props));
+	SimpleCredentialStore scs = new SimpleCredentialStore();
+	scs.add(props);
+	RemotePlugin.setCredentialStore(scs);
 	if (dir != null) {
 	    RemotePlugin.setDataDirectory(dir);
 	}
-	plugin = new RemotePlugin(props.getProperty("hostname"));
+	plugin = new RemotePlugin(props.getProperty(SimpleCredentialStore.PROP_HOSTNAME));
     }
 
     public String getProperty(String key) {

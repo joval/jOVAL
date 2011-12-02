@@ -1,16 +1,20 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Properties;
 import java.util.logging.Handler;
 import java.util.logging.FileHandler;
@@ -68,37 +72,41 @@ public class TestMain extends RemotePlugin {
 	    Logger logger = Logger.getLogger(JOVALSystem.class.getName());
 	    logger.addHandler(handler);
 
-	    Properties props = new Properties();
-	    props.load(new FileInputStream(new File(argv[0])));
-
-	    IEngine engine = null;
-	    setCredentialStore(new SimpleCredentialStore(props));
+	    IniFile config = new IniFile(new File("test.ini"));
+	    SimpleCredentialStore scs = new SimpleCredentialStore();
+	    setCredentialStore(scs);
 	    setDataDirectory(new File("."));
-	    TestMain plugin = new TestMain(props.getProperty("hostname"));
-	    File testDir = null;
-	    try {
-		plugin.connect();
-		File content = new File("content");
-		testDir = new File(content, plugin.session.getType().toString());
-		if (plugin.session.getType() == IBaseSession.Type.UNIX) {
-		    testDir = new File(testDir, ((IUnixSession)plugin.session).getFlavor().getOsName());
-		}
+
+	    for (String name : config.listSections()) {
+		System.out.println("Starting test suite run for " + name);
+		Properties props = config.getSection(name);
+		scs.add(props);
+		runTests(new TestMain(props.getProperty(SimpleCredentialStore.PROP_HOSTNAME)));
+		System.out.println("Tests completed for " + name);
+	    }
+	    System.exit(0);
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+
+	System.exit(1);
+    }
+
+    private static void runTests(TestMain plugin) {
+	try {
+	    plugin.connect();
+	    File content = new File("content");
+	    File testDir = new File(content, plugin.session.getType().toString());
+	    if (plugin.session.getType() == IBaseSession.Type.UNIX) {
+		testDir = new File(testDir, ((IUnixSession)plugin.session).getFlavor().getOsName());
+	    }
+	    if (testDir.exists()) {
 		System.out.println("Base directory for tests: " + testDir.getCanonicalPath());
 		plugin.installSupportFiles(testDir);
 		plugin.disconnect();
-		engine = JOVALSystem.createEngine(plugin);
-	    } catch (IOException e) {
-		System.out.println("Failed to install validation support files");
-		e.printStackTrace();
-		System.exit(1);
-	    } catch (OvalException e) {
-		System.out.println("Failed to create OVAL engine");
-		e.printStackTrace();
-		System.exit(1);
-	    }
-
-	    if (testDir.exists()) {
+		IEngine engine = JOVALSystem.createEngine(plugin);
 		engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
+
 		for (String xml : testDir.list(new XMLFilter())) {
 		    System.out.println("Processing " + xml);
 		    try {
@@ -150,16 +158,16 @@ public class TestMain extends RemotePlugin {
 			e.printStackTrace();
 		    }
 		}
-		System.exit(0);
 	    } else {
-		System.out.println("No test content found: " + testDir.getPath());
-		System.exit(1);
+		System.out.println("No test content found for " + plugin.hostname + " at " + testDir.getPath());
 	    }
 	} catch (IOException e) {
+	    System.out.println("Failed to install validation support files for " + plugin.hostname);
+	    e.printStackTrace();
+	} catch (OvalException e) {
+	    System.out.println("Failed to create OVAL engine for " + plugin.hostname);
 	    e.printStackTrace();
 	}
-
-	System.exit(1);
     }
 
     // Private instance
@@ -393,6 +401,56 @@ public class TestMain extends RemotePlugin {
 
 	public boolean accept(File dir, String name) {
 	    return !name.startsWith("_") && name.toLowerCase().endsWith(".xml");
+	}
+    }
+
+    private static class IniFile {
+	Hashtable<String, Properties> sections;
+
+	private IniFile(File f) throws IOException {
+	    sections = new Hashtable<String, Properties>();
+	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
+	    String line = null;
+	    Properties section = null;
+	    String name = null;
+	    int ptr;
+	    while ((line = br.readLine()) != null) {
+		if (line.startsWith("[") && line.trim().endsWith("]")) {
+		    if (section != null) {
+			sections.put(name, section);
+		    }
+		    section = new Properties();
+		    name = line.substring(1, line.length() - 1);
+		} else if (line.startsWith("#")) {
+		    // skip comment
+		} else if ((ptr = line.indexOf("=")) > 0) {
+		    if (section != null) {
+			String key = line.substring(0,ptr);
+			String val = line.substring(ptr+1);
+			section.setProperty(key, val);
+		    }
+		}
+	    }
+	    if (section != null) {
+		sections.put(name, section);
+	    }
+	}
+
+	private Collection<String> listSections() {
+	    return sections.keySet();
+	}
+
+	private Properties getSection(String name) {
+	    return sections.get(name);
+	}
+
+	private String getProperty(String section, String key) {
+	    Properties p = getSection(section);
+	    String val = null;
+	    if (p != null) {
+		val = p.getProperty(key);
+	    }
+	    return val;
 	}
     }
 }
