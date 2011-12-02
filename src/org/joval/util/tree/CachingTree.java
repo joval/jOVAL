@@ -138,6 +138,7 @@ public abstract class CachingTree implements ITree {
 	    }
 	    result.addAll(treeSearch(null, sb.toString()));
 	} catch (Exception e) {
+e.printStackTrace();
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return result;
@@ -226,7 +227,11 @@ public abstract class CachingTree implements ITree {
 		// the node has disappeared since being discovered
 	    }
 	    if (!nodePath.endsWith(getDelimiter())) {
-		accessor = lookup(nodePath + getDelimiter());
+		try {
+		    accessor = lookup(nodePath + getDelimiter());
+		} catch (NoSuchElementException e) {
+		    return results; // accessor is a leaf
+		}
 	    }
 	    try {
 		if (accessor.hasChildren()) {
@@ -311,8 +316,9 @@ public abstract class CachingTree implements ITree {
 		} while ((path = trimToken(path, ESCAPED_DELIM)) != null);
 	    }
 
+	    Pattern p = Pattern.compile(pattern.toString());
 	    for (String candidate : candidates) {
-		if (Pattern.matches(pattern.toString(), candidate)) {
+		if (p.matcher(candidate).find()) {
 		    results.add(candidate);
 		}
 	    }

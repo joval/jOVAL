@@ -24,7 +24,7 @@ clean:
 
 javadocs:
 	mkdir -p $(DOCS)
-	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -sourcepath "$(GENSRC)$(CLN)$(SRC)" -subpackages \
+	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -classpath $(CLASSPATH) -sourcepath "$(GENSRC)$(CLN)$(SRC)" -subpackages \
 	oval:org.w3c            				\
 	org.joval.intf.identity					\
 	org.joval.intf.oval					\
@@ -40,7 +40,7 @@ dist-clean: clean
 	rm -rf $(DIST)
 	rm -rf $(DOCS)
 
-dist: all javadocs
+install: all
 	mkdir -p $(DIST)
 	cp $(SCHEMALIB) $(DIST)
 	cp engine/jOVAL*.jar $(DIST)
@@ -48,4 +48,6 @@ dist: all javadocs
 	cp plugin/local/jOVALPluginLocal.jar $(DIST)
 	cp plugin/remote/jOVALPluginRemote.jar $(DIST)
 	cp -r $(RSRC)/* $(DIST)
+
+dist: install javadocs
 	cp -r docs $(DIST)

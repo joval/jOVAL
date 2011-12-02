@@ -46,10 +46,6 @@ sources: $(GENSRC)
 $(GENSRC):
 	mkdir -p $@
 
-nowhere/%.xsd: $(SCHEMADIR)/%.xsd
-	$(XJC) $< -d $(GENSRC)
-	touch $@
-
 $(BUILD)/%.class: $(GENSRC)/%.java
 	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<
 
