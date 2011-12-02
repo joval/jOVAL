@@ -66,7 +66,7 @@ dist-x86: all
 	cp -R $(COMPONENTS)/sdk/$(DIST)/jOVALPluginRemote.jar $(DIST)/x86/plugin/remote/lib
 	cp -R $(COMPONENTS)/sdk/plugin/remote/$(LIBDIR)/*.jar $(DIST)/x86/plugin/remote/lib
 	cp -R $(RSRC)/* $(DIST)/x86
-#	cp -R $(JRE_HOME)/x86 $(DIST)/x86/jre
+	cp -R $(JRE_HOME)/x86 $(DIST)/x86/jre
 
 dist-x64: all
 	mkdir -p $(DIST)/x64
@@ -85,7 +85,7 @@ dist-x64: all
 	cp -R $(COMPONENTS)/sdk/$(DIST)/jOVALPluginRemote.jar $(DIST)/x64/plugin/remote/lib
 	cp -R $(COMPONENTS)/sdk/plugin/remote/$(LIBDIR)/*.jar $(DIST)/x64/plugin/remote/lib
 	cp -R $(RSRC)/* $(DIST)/x64
-#	cp -R $(JRE_HOME)/x64 $(DIST)/x64/jre
+	cp -R $(JRE_HOME)/x64 $(DIST)/x64/jre
 
 release-win32: dist-x86
 	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x86.zip -C $(DIST)/x86 .

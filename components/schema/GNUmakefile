@@ -21,7 +21,7 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 all: $(PRODUCTNAME).jar
 
-$(PRODUCTNAME).jar: sources classes resources
+$(PRODUCTNAME).jar: sources classes resources javadocs
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 javadocs: sources
