@@ -40,14 +40,14 @@ class Sudo implements IProcess {
     private static int execRetries = 3;
     static {
 	try {
-	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SUDO_READ_TIMEOUT);
+	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_READ_TIMEOUT);
 	    if (s != null) {
 		readTimeout = Long.parseLong(s);
 	    }
 	} catch (NumberFormatException e) {
 	}
 	try {
-	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SUDO_MAX_RETRIES);
+	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_MAX_RETRIES);
 	    if (s != null) {
 		execRetries = Integer.parseInt(s);
 	    }

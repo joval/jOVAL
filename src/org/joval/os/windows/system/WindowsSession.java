@@ -50,6 +50,9 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
     // Implement IWindowsSession extensions
 
     public IDirectory getDirectory() {
+	if (directory == null) {
+	    directory = new Directory(this);
+	}
 	return directory;
     }
 
@@ -80,6 +83,9 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
     }
 
     public IWmiProvider getWmiProvider() {
+	if (wmi == null) {
+	    wmi = new WmiProvider();
+	}
 	return wmi;
     }
 

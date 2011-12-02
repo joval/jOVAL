@@ -70,6 +70,31 @@ public class StreamTool {
     }
 
     /**
+     * Read a line from the InputStream until a newline character is reached (or the stream is closed or otherwise ends),
+     * but take no more than maxTime milliseconds to do so.  If the timeout expires, the InputStream is closed and an
+     * EOFException will be thrown.
+     */
+    public static final String readLine(InputStream in, long maxTime) throws IOException {
+	TimedLineReader reader = new TimedLineReader(in);
+	reader.start();
+	long end = System.currentTimeMillis() + maxTime;
+	while (!reader.isFinished() && System.currentTimeMillis() < end) {
+	    try {
+		Thread.sleep(100);
+	    } catch (InterruptedException e) {
+	    }
+	}
+	if (reader.hasError()) {
+	    throw reader.getError();
+	} else if (!reader.isFinished()) {
+	    reader.cancel();
+	    throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_READ_TIMEOUT, maxTime));
+	} else {
+	    return reader.getResult();
+	}
+    }
+
+    /**
      * Read from a stream until the specified delimiter is encountered, and return the bytes.
      */
     public static final byte[] readUntil(InputStream in, int delim) throws IOException {
@@ -204,6 +229,27 @@ public class StreamTool {
 		error = e;
 	    }
 	    finished = true;
+	}
+    }
+
+    static class TimedLineReader extends TimedReader {
+	String result = null;
+
+	TimedLineReader(InputStream in) {
+	    super(in, null);
+	}
+
+	public void run() {
+	    try {
+		result = readLine(in);
+	    } catch (IOException e) {
+		error = e;
+	    }
+	    finished = true;
+	}
+
+	public String getResult() {
+	    return result;
 	}
     }
 }

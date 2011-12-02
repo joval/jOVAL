@@ -72,6 +72,9 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
     // Implement IWindowsSession extensions
 
     public IDirectory getDirectory() {
+	if (directory == null) {
+	    directory = new Directory(this);
+	}
 	return directory;
     }
 
@@ -102,6 +105,9 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
     }
 
     public IWmiProvider getWmiProvider() {
+	if (conn == null) {
+	    conn = new WmiConnection(host, cred);
+	}
 	return conn;
     }
 

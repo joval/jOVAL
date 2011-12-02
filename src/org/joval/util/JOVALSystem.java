@@ -109,12 +109,12 @@ public class JOVALSystem {
     /**
      * Property indicating the number of milliseconds to wait for a read before quiting.
      */
-    public static final String PROP_SUDO_READ_TIMEOUT = "sudo.read.timeout";
+    public static final String PROP_SSH_READ_TIMEOUT = "ssh.read.timeout";
 
     /**
      * Property indicating the number of times to re-try running a command in the event of an unexpected disconnect.
      */
-    public static final String PROP_SUDO_MAX_RETRIES = "sudo.exec.retries";
+    public static final String PROP_SSH_MAX_RETRIES = "ssh.exec.retries";
 
     /**
      * Property governing the behavior of local filesystem map cache pre-load behavior (true/false).  If false, any
