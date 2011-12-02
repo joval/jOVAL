@@ -9,13 +9,17 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Properties;
+import java.util.Vector;
 import java.util.logging.Handler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -34,6 +38,7 @@ import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.oval.IEngine;
+import org.joval.intf.oval.IResults;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.unix.system.IUnixSession;
@@ -49,6 +54,9 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  */
 public class TestMain extends RemotePlugin {
+
+    private static File contentDir = new File("content");
+    private static File reportDir = new File("report");
 
     private static HashSet<String> knownFalses		= new HashSet<String>();
     private static HashSet<String> knownUnknowns	= new HashSet<String>();
@@ -77,13 +85,20 @@ public class TestMain extends RemotePlugin {
 	    setCredentialStore(scs);
 	    setDataDirectory(new File("."));
 
+	    if (!reportDir.exists()) {
+		reportDir.mkdir();
+	    }
+	    Hashtable<String, ReportEntry> reports = new Hashtable<String, ReportEntry>();
 	    for (String name : config.listSections()) {
 		System.out.println("Starting test suite run for " + name);
 		Properties props = config.getSection(name);
 		scs.add(props);
-		runTests(new TestMain(props.getProperty(SimpleCredentialStore.PROP_HOSTNAME)));
+		ReportEntry report = new ReportEntry(props);
+		runTests(new TestMain(props.getProperty(SimpleCredentialStore.PROP_HOSTNAME)), report);
+		reports.put(name, report);
 		System.out.println("Tests completed for " + name);
 	    }
+	    writeReport(reports);
 	    System.exit(0);
 	} catch (IOException e) {
 	    e.printStackTrace();
@@ -92,11 +107,10 @@ public class TestMain extends RemotePlugin {
 	System.exit(1);
     }
 
-    private static void runTests(TestMain plugin) {
+    private static void runTests(TestMain plugin, ReportEntry report) {
 	try {
 	    plugin.connect();
-	    File content = new File("content");
-	    File testDir = new File(content, plugin.session.getType().toString());
+	    File testDir = new File(contentDir, plugin.session.getType().toString());
 	    if (plugin.session.getType() == IBaseSession.Type.UNIX) {
 		testDir = new File(testDir, ((IUnixSession)plugin.session).getFlavor().getOsName());
 	    }
@@ -120,37 +134,16 @@ public class TestMain extends RemotePlugin {
 			    engine.setExternalVariablesFile(new File(testDir, "_external-variables.xml"));
 			}
 
+			long elapsed = System.currentTimeMillis();
 			engine.run();
+			elapsed = System.currentTimeMillis() - elapsed;
 			switch(engine.getResult()) {
 			  case OK:
-			    ResultsType results = engine.getResults().getOvalResults().getResults();
-			    for (DefinitionType definition : results.getSystem().get(0).getDefinitions().getDefinition()) {
-				switch(definition.getResult()) {
-				  case TRUE:
-				    break;
-
-				  case FALSE:
-				    if (!knownFalses.contains(definition.getDefinitionId())) {
-					error(definitions, definition);
-				    }
-				    break;
-
-				  case UNKNOWN:
-				    if (!knownUnknowns.contains(definition.getDefinitionId())) {
-					error(definitions, definition);
-				    }
-				    break;
-
-				  default:
-				    error(definitions, definition);
-				    break;
-				}
-			    }
+			    report.add(xml, engine.getResults(), elapsed);
 			    break;
-    
+
 			  case ERR:
-			    System.out.println("Problem running engine:");
-			    engine.getError().printStackTrace();
+			    report.add(xml, engine.getError());
 			    break;
 			}
 		    } catch (OvalException e) {
@@ -166,6 +159,41 @@ public class TestMain extends RemotePlugin {
 	    e.printStackTrace();
 	} catch (OvalException e) {
 	    System.out.println("Failed to create OVAL engine for " + plugin.hostname);
+	    e.printStackTrace();
+	}
+    }
+
+    private static void writeReport(Hashtable<String, ReportEntry> reports) {
+	File reportFile = new File(reportDir, "report.html");
+
+	try {
+	    PrintStream out = new PrintStream(reportFile);
+	    out.println("<html>");
+	    out.println("  <head>");
+	    out.println("    <title>jOVAL automated test report</title>");
+	    out.println("  </head>");
+	    out.println("  <body>");
+	    out.println("    <h2>jOVAL automated test report</h2>");
+	    out.println("    <p>Generated: " + new Date().toString() + "</p>");
+	    out.println("    <table border=0 cellspacing=10>");
+
+	    for (String name : reports.keySet()) {
+		out.println("      <tr>");
+		out.println("        <td style=\"border-style: solid; border-width: 1px\">");
+		out.println("          <table width=800 cellpadding=5 cellspacing=0 border=0>");
+		out.println("            <tr><td height=50 colspan=3 bgcolor=#dddddd><b>Test Suite: "+name+"</b></td></tr>");
+		for (String row : reports.get(name).toRows()) {
+		    out.println("            " + row);
+		}
+		out.println("          </table>");
+		out.println("        </td>");
+		out.println("      </tr>");
+	    }
+
+	    out.println("    </table>");
+	    out.println("  </body>");
+	    out.println("</html>");
+	} catch (IOException e) {
 	    e.printStackTrace();
 	}
     }
@@ -194,7 +222,7 @@ public class TestMain extends RemotePlugin {
 		break;
     
 	      case UNIX:
-		root = fs.getFile("/tmp/ValidationSupportFiles2");
+		root = fs.getFile("/tmp/ValidationSupportFiles");
 		break;
     
 	      default:
@@ -263,13 +291,6 @@ public class TestMain extends RemotePlugin {
     // Private static
 
     /**
-     * TBD
-     */
-    private static void error(File f, DefinitionType def) {
-	System.out.println("Problem result (" + def.getResult() + ") for definition " + def.getDefinitionId());
-    }
-
-    /**
      * An inner class that prints out information about Engine notifications.
      */
     private static class Observer implements IObserver {
@@ -280,13 +301,11 @@ public class TestMain extends RemotePlugin {
 	public void notify(IProducer source, int msg, Object arg) {
 	    switch(msg) {
 	      case IEngine.MESSAGE_OBJECT_PHASE_START:
-		System.out.println("  Scanning objects...");
-		System.out.print("    ");
+		System.out.print("  Scanning objects... ");
 		break;
 
 	      case IEngine.MESSAGE_DEFINITION_PHASE_START:
-		System.out.println("  Evaluating definitions...");
-		System.out.print("    ");
+		System.out.print("  Evaluating definitions... ");
 		break;
 
 	      case IEngine.MESSAGE_DEFINITION:
@@ -396,18 +415,40 @@ public class TestMain extends RemotePlugin {
 	return sb.toString();
     }
 
+    private static String toString(Throwable t) {
+	StringBuffer sb = new StringBuffer(t.getClass().getName());
+	sb.append(":").append(t.getMessage()).append("\n");
+	StackTraceElement[] ste = t.getStackTrace();
+	for (int i=0; i < ste.length; i++) {
+	    sb.append("    ").append(ste[i].toString()).append("\n");
+	}
+	Throwable cause = t.getCause();
+	if (cause != null) {
+	    sb.append("caused by:\n");
+	    sb.append(toString(cause));
+	}
+	return sb.toString();
+    }
+
+    // Private data structures
+
     private static class XMLFilter implements FilenameFilter {
-	private XMLFilter() {}
+	XMLFilter() {}
+
+	// Implement FilenameFilter
 
 	public boolean accept(File dir, String name) {
 	    return !name.startsWith("_") && name.toLowerCase().endsWith(".xml");
 	}
     }
 
+    /**
+     * A class for interpreting an ini-style config file.  Each header is treated as a section full of properties.
+     */
     private static class IniFile {
 	Hashtable<String, Properties> sections;
 
-	private IniFile(File f) throws IOException {
+	IniFile(File f) throws IOException {
 	    sections = new Hashtable<String, Properties>();
 	    BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 	    String line = null;
@@ -436,21 +477,128 @@ public class TestMain extends RemotePlugin {
 	    }
 	}
 
-	private Collection<String> listSections() {
+	Collection<String> listSections() {
 	    return sections.keySet();
 	}
 
-	private Properties getSection(String name) {
+	Properties getSection(String name) {
 	    return sections.get(name);
 	}
 
-	private String getProperty(String section, String key) {
+	String getProperty(String section, String key) {
 	    Properties p = getSection(section);
 	    String val = null;
 	    if (p != null) {
 		val = p.getProperty(key);
 	    }
 	    return val;
+	}
+    }
+
+    private static class ReportEntry {
+	private Properties props;
+	private Hashtable<String, TestData> results;
+	private Hashtable<String, Exception> errors;
+
+	ReportEntry(Properties props) {
+	    this.props = props;
+	    results = new Hashtable<String, TestData>();
+	    errors = new Hashtable<String, Exception>();
+	}
+
+	void add(String xml, IResults res, long elapsed) {
+	    TestData data = new TestData(elapsed);
+	    results.put(xml, data);
+
+	    boolean saveResults = false;
+	    for (DefinitionType def : res.getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition()) {
+		String id = def.getDefinitionId();
+		switch(def.getResult()) {
+		  case TRUE:
+		    data.tally.put(id, Boolean.TRUE);
+		    break;
+
+		  case FALSE:
+		    if (knownFalses.contains(id)) {
+			data.tally.put(id, Boolean.TRUE);
+		    } else {
+			data.tally.put(id, Boolean.FALSE);
+		    }
+		    break;
+
+		  case UNKNOWN:
+		    if (knownUnknowns.contains(id)) {
+			data.tally.put(id, Boolean.TRUE);
+		    } else {
+			data.tally.put(id, Boolean.FALSE);
+		    }
+		    break;
+
+		  default:
+		    data.tally.put(id, Boolean.FALSE);
+		    break;
+		}
+	    }
+
+	    //
+	    // If there was any kind of imperfect result, the results XML is saved so it can be analyzed.
+	    //
+	    if (data.tally.containsValue(Boolean.FALSE)) {
+		File f = new File(reportDir, "results_" + xml);
+		res.writeXML(f);
+	    }
+	}
+
+	void add(String xml, Exception error) {
+	    errors.put(xml, error);
+	}
+
+	/**
+	 * Convert the ReportEntry to a collection of HTML table rows.
+	 */
+	List<String> toRows() {
+	    List<String> rows = new Vector<String>();
+	    if (results.size() > 0) {
+		for (String xml : results.keySet()) {
+		    TestData data = results.get(xml);
+		    rows.add("<tr bgcolor=#eeeeee><td height=25><b>" + xml + "</b></td><td colspan=2>Run time: " +
+			 data.elapsed + "ms</td></tr>");
+		    for (String id : data.tally.keySet()) {
+			if (data.tally.get(id).booleanValue()) {
+			    StringBuffer sb = new StringBuffer();
+			    sb.append("<tr><td width=600>").append(id).append("</td>");
+			    sb.append("<td colspan=2><font color=#00ee00>PASSED</font></td></tr>");
+			    rows.add(sb.toString());
+			} else {
+			    StringBuffer sb = new StringBuffer();
+			    sb.append("<tr><td width=600>").append(id).append("</td>");
+			    sb.append("<td><font color=#ff0000 weight=bold>FAILED</font></td>");
+			    sb.append("<td><a href=\"results_").append(xml).append("\">results.xml</a></td></tr>");
+			    rows.add(sb.toString());
+			}
+		    }
+		}
+	    }
+	    if (errors.size() > 0) {
+		for (String xml : errors.keySet()) {
+		    rows.add("<tr><td height=25 bgcolor=#eeeeee colspan=3><b>" + xml + "</b></td></tr>");
+		    Exception e = errors.get(xml);
+		    StringBuffer sb = new StringBuffer("<tr><td colspan=3><p>Encountered exception loading XML:</p>");
+		    sb.append("<pre>").append(TestMain.toString(e)).append("</pre></td></tr>");
+		    rows.add(sb.toString());
+		}
+	    }
+	    return rows;
+	}
+
+	private class TestData {
+	    long elapsed;
+	    Hashtable<String, Boolean> tally;
+
+	    TestData(long elapsed) {
+		this.elapsed = elapsed;
+		tally = new Hashtable<String, Boolean>();
+	    }
 	}
     }
 }

@@ -50,48 +50,48 @@
     </textfilecontent_test>
   </tests>
   <objects>
-    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1373" version="1" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path equals '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest' and the filename equals 'build.win32.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <path>/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest</path>
+    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1373" version="1" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path equals '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest' and the filename equals 'build.win32.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <path>/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest</path>
       <filename>build.win32.txt</filename>
       <line operation="pattern match">OVAL Interpreter</line>
     </textfilecontent_object>
-    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1260" version="2" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path matches the regular expression '^/tmp/ValidationSupportFiles2.+' and the filename equals 'build.win32.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <path operation="pattern match">^/tmp/ValidationSupportFiles2.+</path>
+    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1260" version="2" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path matches the regular expression '^/tmp/ValidationSupportFiles.+' and the filename equals 'build.win32.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <path operation="pattern match">^/tmp/ValidationSupportFiles.+</path>
       <filename>build.win32.txt</filename>
       <line operation="pattern match">OVAL Interpreter</line>
     </textfilecontent_object>
-    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1175" version="1" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path equals '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest' and the filename matches the regular expression 'build.win[0-9]{2}\.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <path>/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest</path>
+    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1175" version="1" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path equals '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest' and the filename matches the regular expression 'build.win[0-9]{2}\.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <path>/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest</path>
       <filename operation="pattern match">build.win[0-9]{2}\.txt</filename>
       <line operation="pattern match">OVAL Interpreter</line>
     </textfilecontent_object>
-    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1333" version="1" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path equals '/tmp/ValidationSupportFiles2/TextFiles', recursing down one level, and the filename equals 'build.win32.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1333" version="1" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path equals '/tmp/ValidationSupportFiles/TextFiles', recursing down one level, and the filename equals 'build.win32.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <behaviors max_depth="1" recurse_direction="down"/>
-      <path>/tmp/ValidationSupportFiles2/TextFiles</path>
+      <path>/tmp/ValidationSupportFiles/TextFiles</path>
       <filename>build.win32.txt</filename>
       <line operation="pattern match">OVAL Interpreter</line>
     </textfilecontent_object>
-    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1308" version="1" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path equals '/tmp/ValidationSupportFiles2', recursing down infinitely, and the filename equals 'build.win32.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1308" version="1" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path equals '/tmp/ValidationSupportFiles', recursing down infinitely, and the filename equals 'build.win32.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <behaviors max_depth="-1" recurse_direction="down"/>
-      <path>/tmp/ValidationSupportFiles2</path>
+      <path>/tmp/ValidationSupportFiles</path>
       <filename>build.win32.txt</filename>
       <line operation="pattern match">OVAL Interpreter</line>
     </textfilecontent_object>
-    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1190" version="1" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path equals '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest/SubTextFileContentTest', recursing up one level, and the filename equals 'build.win32.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <textfilecontent_object id="oval:org.mitre.oval.test:obj:1190" version="1" comment="This textfilecontent_object retrieves all lines that match the regular expression 'OVAL Interpreter' in the file where the path equals '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest/SubTextFileContentTest', recursing up one level, and the filename equals 'build.win32.txt'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <behaviors max_depth="1" recurse_direction="up"/>
-      <path>/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest/SubTextFileContentTest</path>
+      <path>/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest/SubTextFileContentTest</path>
       <filename>build.win32.txt</filename>
       <line operation="pattern match">OVAL Interpreter</line>
     </textfilecontent_object>
   </objects>
   <states>
-    <textfilecontent_state id="oval:org.mitre.oval.test:ste:1601" version="1" comment="This textfilecontent_state represents a textfilecontent_item where the path equals '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest', filename equals 'build.win32.txt', and line matches the regular expression 'OVAL Interpreter'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <path>/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest</path>
+    <textfilecontent_state id="oval:org.mitre.oval.test:ste:1601" version="1" comment="This textfilecontent_state represents a textfilecontent_item where the path equals '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest', filename equals 'build.win32.txt', and line matches the regular expression 'OVAL Interpreter'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <path>/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest</path>
       <filename>build.win32.txt</filename>
       <line operation="pattern match">OVAL Interpreter</line>
     </textfilecontent_state>
-    <textfilecontent_state id="oval:org.mitre.oval.test:ste:1543" version="2" comment="This textfilecontent_state represents a textfilecontent_item where the path equals '/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest', filename equals 'build.win32.txt', and line matches the regular expression 'OVAL Interpreter'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <path>/tmp/ValidationSupportFiles2/TextFiles/TextFileContentTest</path>
+    <textfilecontent_state id="oval:org.mitre.oval.test:ste:1543" version="2" comment="This textfilecontent_state represents a textfilecontent_item where the path equals '/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest', filename equals 'build.win32.txt', and line matches the regular expression 'OVAL Interpreter'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+      <path>/tmp/ValidationSupportFiles/TextFiles/TextFileContentTest</path>
       <filename>build.win32.txt</filename>
       <line operation="pattern match">OVAL Interpreter</line>
     </textfilecontent_state>
