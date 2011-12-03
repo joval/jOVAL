@@ -11,6 +11,7 @@ import javax.security.auth.login.CredentialException;
 import javax.security.auth.login.LoginException;
 
 import org.joval.intf.identity.ICredential;
+import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;
@@ -32,7 +33,7 @@ class Sudo implements IProcess {
     private ICredential cred;
     private String innerCommand;
     private long timeout;
-    private InputStream in=null, err=null;
+    private ReaderInputStream in=null, err=null;
     private OutputStream out=null;
 
     private static long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_SUDO_READ_TIMEOUT);
@@ -67,21 +68,16 @@ class Sudo implements IProcess {
 		    getInputStream();
 
 		    //
-		    // Take no more than readTimeout seconds to read the Password prompt
+		    // Read the Password prompt
 		    //
 		    byte[] buff = new byte[10]; //Password:_
-		    if (timeout > readTimeout) {
-			StreamTool.readFully(in, buff, readTimeout);
-		    } else {
-			StreamTool.readFully(in, buff);
-		    }
+		    in.readFully(buff);
 
 		    getOutputStream();
 		    out.write(cred.getPassword().getBytes());
 		    out.write('\r');
 		    out.flush();
-		    getInputStream();
-		    String line1 = StreamTool.readLine(in);
+		    String line1 = in.readLine();
 		    if (line1 == null) {
 			throw new EOFException(null);
 		    } else if (line1.indexOf("Sorry") == -1) {
@@ -90,7 +86,7 @@ class Sudo implements IProcess {
 			//
 			int linesToSkip = us.getMotdLines();
 			for (int i=0; i < linesToSkip; i++) {
-			    if (StreamTool.readLine(in) == null) {
+			    if (in.readLine() == null) {
 				throw new EOFException(null);
 			    }
 			}
@@ -134,14 +130,14 @@ class Sudo implements IProcess {
 
     public InputStream getInputStream() {
 	if (in == null) {
-	    in = p.getInputStream();
+	    in = new ReaderInputStream(StreamTool.getSafeReader(p.getInputStream(), readTimeout));
 	}
 	return in;
     }
 
     public InputStream getErrorStream() {
 	if (err == null) {
-	    err = p.getErrorStream();
+	    err = new ReaderInputStream(StreamTool.getSafeReader(p.getErrorStream(), readTimeout));
 	}
 	return err;
     }
@@ -174,5 +170,29 @@ class Sudo implements IProcess {
 	sb.append(command.replace("\"", "\\\""));
 	sb.append("\"");
 	return sb.toString();
+    }
+
+    private class ReaderInputStream extends InputStream {
+	IReader reader;
+
+	ReaderInputStream(IReader reader) {
+	    this.reader = reader;
+	}
+
+	public int read() throws IOException {
+	    return reader.read();
+	}
+
+	public void close() throws IOException {
+	    reader.close();
+	}
+
+	public String readLine() throws IOException {
+	    return reader.readLine();
+	}
+
+	public void readFully(byte[] buff) throws IOException {
+	    reader.readFully(buff);
+	}
     }
 }

@@ -3,7 +3,6 @@
 
 package org.joval.os.unix;
 
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -13,6 +12,7 @@ import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.io.IFilesystem;
+import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
@@ -46,9 +46,9 @@ public class UnixSystemInfo {
 	try {
 	    IProcess p = session.createProcess("hostname");
 	    p.start();
-	    InputStream in = p.getInputStream();
-	    info.setPrimaryHostName(StreamTool.readLine(in, IUnixSession.TIMEOUT_S));
-	    in.close();
+	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    info.setPrimaryHostName(reader.readLine());
+	    reader.close();
 	    p.waitFor(0);
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
@@ -58,9 +58,9 @@ public class UnixSystemInfo {
 	try {
 	    IProcess p = session.createProcess("uname -r");
 	    p.start();
-	    InputStream in = p.getInputStream();
-	    info.setOsVersion(StreamTool.readLine(in, IUnixSession.TIMEOUT_S));
-	    in.close();
+	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    info.setOsVersion(reader.readLine());
+	    reader.close();
 	    p.waitFor(0);
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
@@ -72,9 +72,9 @@ public class UnixSystemInfo {
 	    for (INode node : fs.getFile("/etc").getChildren(Pattern.compile("^.*-release$"))) {
 		IProcess p = session.createProcess("cat " + node.getPath());
 		p.start();
-		InputStream in = p.getInputStream();
-		info.setOsName(StreamTool.readLine(in, IUnixSession.TIMEOUT_S));
-		in.close();
+		IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+		info.setOsName(reader.readLine());
+		reader.close();
 		p.waitFor(0);
 	    }
 	    if (!info.isSetOsName()) {
@@ -88,9 +88,9 @@ public class UnixSystemInfo {
 	try {
 	    IProcess p = session.createProcess("uname -p");
 	    p.start();
-	    InputStream in = p.getInputStream();
-	    info.setArchitecture(StreamTool.readLine(in, IUnixSession.TIMEOUT_S));
-	    in.close();
+	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    info.setArchitecture(reader.readLine());
+	    reader.close();
 	    p.waitFor(0);
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);

@@ -2,6 +2,7 @@ SHARED=\
 	org.joval.intf.io.IFile						\
 	org.joval.intf.io.IFilesystem					\
 	org.joval.intf.io.IRandomAccess					\
+	org.joval.intf.io.IReader					\
 	org.joval.intf.system.IEnvironment				\
 	org.joval.intf.system.IProcess					\
 	org.joval.intf.system.ISession					\

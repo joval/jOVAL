@@ -3,7 +3,6 @@
 
 package org.joval.plugin.adapter.unix;
 
-import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,6 +27,7 @@ import oval.schemas.systemcharacteristics.unix.RunlevelItem;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
+import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
@@ -126,13 +126,13 @@ public class RunlevelAdapter implements IAdapter {
 
 	      case LINUX: {
 		IProcess p = null;
-		StreamTool.ManagedReader mr = null;
+		IReader reader = null;
 		try {
 		    p = session.createProcess("/sbin/chkconfig --list");
 		    p.start();
-		    mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
+		    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
 		    String line = null;
-		    while ((line = mr.readLine()) != null) {
+		    while ((line = reader.readLine()) != null) {
 			StringTokenizer tok = new StringTokenizer(line);
 			if (tok.countTokens() == 8) {
 			    String serviceName = tok.nextToken();
@@ -160,9 +160,9 @@ public class RunlevelAdapter implements IAdapter {
 		} catch (Exception e) {
 		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		} finally {
-		    if (mr != null) {
+		    if (reader != null) {
 			try {
-			    mr.close();
+			    reader.close();
 			    p.waitFor(0);
 			} catch (IOException e) {
 			} catch (InterruptedException e) {

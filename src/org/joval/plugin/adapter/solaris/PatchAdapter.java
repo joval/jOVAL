@@ -3,8 +3,6 @@
 
 package org.joval.plugin.adapter.solaris;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Hashtable;
@@ -27,6 +25,7 @@ import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.solaris.PatchItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
@@ -211,13 +210,13 @@ public class PatchAdapter implements IAdapter {
      */
     private void scanRevisions() {
 	IProcess p = null;
-	StreamTool.ManagedReader mr = null;
+	IReader reader = null;
 	try {
 	    p = session.createProcess("/usr/bin/showrev -p");
 	    p.start();
-	    mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
+	    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
 	    String line;
-	    while((line = mr.readLine()) != null) {
+	    while((line = reader.readLine()) != null) {
 		if (!line.startsWith(PATCH)) {
 		    continue;
 		}
@@ -289,9 +288,9 @@ public class PatchAdapter implements IAdapter {
 	    error = e.getMessage();
 	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
-	    if (mr != null) {
+	    if (reader != null) {
 		try {
-		    mr.close();
+		    reader.close();
 		    p.waitFor(0);
 		} catch (IOException e) {
 		} catch (InterruptedException e) {

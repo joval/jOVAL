@@ -3,9 +3,6 @@
 
 package org.joval.plugin.adapter.linux;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
@@ -26,6 +23,7 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemEVRStringType;
 import oval.schemas.systemcharacteristics.linux.RpminfoItem;
 
+import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
@@ -70,11 +68,11 @@ public class RpminfoAdapter implements IAdapter {
 		IProcess p = session.createProcess("rpm -q -a");
 		p.start();
 		String line = null;
-		StreamTool.ManagedReader mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
-		while ((line = mr.readLine()) != null) {
+		IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
+		while ((line = reader.readLine()) != null) {
 		    list.add(line);
 		}
-		mr.close();
+		reader.close();
 		p.waitFor(0);
 		rpms = list.toArray(new String[list.size()]);
 		return true;
@@ -175,10 +173,10 @@ public class RpminfoAdapter implements IAdapter {
 	String pkgArch=null, pkgVersion=null, pkgRelease=null;
 	IProcess p = session.createProcess("rpm -q " + packageName + " -i");
 	p.start();
-	StreamTool.ManagedReader mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	boolean isInstalled = false;
 	String line = null;
-	for (int lineNum=1; (line = mr.readLine()) != null; lineNum++) {
+	for (int lineNum=1; (line = reader.readLine()) != null; lineNum++) {
 	    String param=null, value=null;
 	    switch(lineNum) {
 	      case 1:
@@ -199,7 +197,7 @@ public class RpminfoAdapter implements IAdapter {
 
 	    if ("Description".equals(param)) {
 		StringBuffer sb = new StringBuffer();
-		for(lineNum = 1; (line = mr.readLine()) != null; lineNum++) {
+		for(lineNum = 1; (line = reader.readLine()) != null; lineNum++) {
 		    switch(lineNum) {
 		      case 1:
 			sb = new StringBuffer(line);
@@ -247,16 +245,16 @@ public class RpminfoAdapter implements IAdapter {
 		item.setSignatureKeyid(signatureKeyid);
 	    }
 	}
-	mr.close();
+	reader.close();
 	p.waitFor(0);
 
 	if (isInstalled) {
 	    item.setStatus(StatusEnumeration.EXISTS);
 	    p = session.createProcess("rpm -q --qf %{EPOCH} " + packageName);
 	    p.start();
-	    InputStream in = p.getInputStream();
-	    String pkgEpoch = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	    in.close();
+	    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    String pkgEpoch = reader.readLine();
+	    reader.close();
 	    p.waitFor(0);
 	    if (pkgEpoch.equals("(none)")) {
 		pkgEpoch = "0";
@@ -276,15 +274,15 @@ public class RpminfoAdapter implements IAdapter {
 
 	    p = session.createProcess("rpm -ql " + packageName);
 	    p.start();
-	    mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    while((line = mr.readLine()) != null) {
+	    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    while((line = reader.readLine()) != null) {
 		if (!"(contains no files)".equals(line.trim())) {
 		    EntityItemStringType filepath = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    filepath.setValue(line.trim());
 		    item.getFilepath().add(filepath);
 		}
 	    }
-	    mr.close();
+	    reader.close();
 	    p.waitFor(0);
 	} else {
 	    EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();

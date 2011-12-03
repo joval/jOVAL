@@ -12,6 +12,7 @@ import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IReader;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
@@ -80,11 +81,11 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 		try {
 		    IFile motd = fs.getFile(MOTD);
 		    if (motd.exists()) {
-			InputStream in = motd.getInputStream();
-			while (StreamTool.readLine(in) != null) {
+			IReader reader = StreamTool.getSafeReader(motd.getInputStream(), TIMEOUT_M);
+			while (reader.readLine() != null) {
 			    motdLines++;
 			}
-			in.close();
+			reader.close();
 		    }
 		} catch (IOException e) {
 		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, MOTD, e.getMessage());

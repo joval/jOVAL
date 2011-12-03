@@ -3,7 +3,6 @@
 
 package org.joval.plugin.adapter.unix;
 
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Hashtable;
@@ -22,6 +21,7 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.unix.UnameItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
@@ -81,9 +81,9 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType machineClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	IProcess p = session.createProcess("uname -m");
 	p.start();
-	InputStream in = p.getInputStream();
-	String result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	in.close();
+	IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	String result = reader.readLine();
+	reader.close();
 	p.waitFor(0);
 	machineClass.setValue(result);
 	item.setMachineClass(machineClass);
@@ -91,9 +91,9 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType nodeName = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -n");
 	p.start();
-	in = p.getInputStream();
-	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	in.close();
+	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	result = reader.readLine();
+	reader.close();
 	p.waitFor(0);
 	nodeName.setValue(result);
 	item.setNodeName(nodeName);
@@ -101,9 +101,9 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType osName = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -s");
 	p.start();
-	in = p.getInputStream();
-	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	in.close();
+	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	result = reader.readLine();
+	reader.close();
 	p.waitFor(0);
 	osName.setValue(result);
 	item.setOsName(osName);
@@ -111,9 +111,9 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType osRelease = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -r");
 	p.start();
-	in = p.getInputStream();
-	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	in.close();
+	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	result = reader.readLine();
+	reader.close();
 	p.waitFor(0);
 	osRelease.setValue(result);
 	item.setOsRelease(osRelease);
@@ -121,9 +121,9 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType osVersion = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -v");
 	p.start();
-	in = p.getInputStream();
-	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	in.close();
+	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	result = reader.readLine();
+	reader.close();
 	p.waitFor(0);
 	osVersion.setValue(result);
 	item.setOsVersion(osVersion);
@@ -131,9 +131,9 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType processorType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -p");
 	p.start();
-	in = p.getInputStream();
-	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	in.close();
+	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	result = reader.readLine();
+	reader.close();
 	p.waitFor(0);
 	processorType.setValue(result);
 	item.setProcessorType(processorType);

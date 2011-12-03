@@ -28,6 +28,7 @@ import oval.schemas.systemcharacteristics.independent.Environmentvariable58Item;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IEnvironment;
@@ -105,9 +106,9 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 				processEnv = new Properties();
 				IProcess p = us.createProcess("pargs -e " + pid);
 				p.start();
-				StreamTool.ManagedReader mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+				IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 				String line;
-				while ((line = mr.readLine()) != null) {
+				while ((line = reader.readLine()) != null) {
 				    if (line.startsWith("envp")) {
 					String pair = line.substring(line.indexOf(" ")).trim();
 					int ptr = pair.indexOf("=");
@@ -118,7 +119,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 					}
 				    }
 				}
-				mr.close();
+				reader.close();
 				p.waitFor(0);
 			    }
 			} else {
@@ -137,14 +138,14 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 
 		  case LINUX: {
 		    String path = "/proc/" + pid + "/environ";
-		    InputStream in = null;
+		    IReader reader = null;
 		    try {
 			IFile proc = session.getFilesystem().getFile(path);
 			if (proc.exists()) {
 			    processEnv = new Properties();
-			    in = proc.getInputStream();
+			    reader = StreamTool.getSafeReader(proc.getInputStream(), IUnixSession.TIMEOUT_M);
 			    String pair;
-			    while ((pair = new String(StreamTool.readUntil(in, 127))) != null) { // 127 == delimiter char
+			    while ((pair = new String(reader.readUntil(127))) != null) { // 127 == delimiter char
 				int ptr = pair.indexOf("=");
 				if (ptr > 0) {
 				    String key = pair.substring(0,ptr);
@@ -160,9 +161,9 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			rc.addMessage(msg);
 			JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    } finally {
-			if (in != null) {
+			if (reader != null) {
 			    try {
-				in.close();
+				reader.close();
 			    } catch (IOException e) {
 			    }
 			}

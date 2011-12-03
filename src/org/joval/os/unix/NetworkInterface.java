@@ -10,6 +10,7 @@ import java.util.Vector;
 
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.intf.io.IReader;
 import org.joval.io.StreamTool;
 
 /**
@@ -24,7 +25,7 @@ class NetworkInterface {
 
 	IProcess p = session.createProcess("/sbin/ifconfig -a");
 	p.start();
-	StreamTool.ManagedReader in = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	Vector<String> lines = new Vector<String>();
 	String line = null;
 
@@ -34,7 +35,7 @@ class NetworkInterface {
 	  // Interfaces are not separated by blank lines.
 	  //
 	  case MACOSX:
-	    while ((line = in.readLine()) != null) {
+	    while ((line = reader.readLine()) != null) {
 		if (line.startsWith("\t") || line.startsWith("  ")) {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
@@ -57,7 +58,7 @@ class NetworkInterface {
 	  // Interfaces are not separated by blank lines.
 	  //
 	  case SOLARIS:
-	    while ((line = in.readLine()) != null) {
+	    while ((line = reader.readLine()) != null) {
 		if (line.startsWith("\t") || line.startsWith("  ")) {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
@@ -79,7 +80,7 @@ class NetworkInterface {
 	  // On Linux, there is a blank line between each interface spec.
 	  //
 	  case LINUX:
-	    while ((line = in.readLine()) != null) {
+	    while ((line = reader.readLine()) != null) {
 		if (line.trim().length() == 0) {
 		    if (lines.size() > 0) {
 			interfaces.add(createLinuxInterface(lines));
@@ -92,7 +93,7 @@ class NetworkInterface {
 	    break;
 	}
 
-	in.close();
+	reader.close();
 	p.waitFor(0);
 	return interfaces;
     }

@@ -3,7 +3,6 @@
 
 package org.joval.plugin.adapter.solaris;
 
-import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Vector;
@@ -19,6 +18,7 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.solaris.IsainfoItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
@@ -78,9 +78,9 @@ public class IsainfoAdapter implements IAdapter {
 	EntityItemStringType kernelIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	IProcess p = session.createProcess("isainfo -k");
 	p.start();
-	InputStream in = p.getInputStream();
-	String result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	in.close();
+	IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	String result = reader.readLine();
+	reader.close();
 	p.waitFor(0);
 	kernelIsa.setValue(result);
 	item.setKernelIsa(kernelIsa);
@@ -88,9 +88,9 @@ public class IsainfoAdapter implements IAdapter {
 	EntityItemStringType applicationIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("isainfo -n");
 	p.start();
-	in = p.getInputStream();
-	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	in.close();
+	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	result = reader.readLine();
+	reader.close();
 	p.waitFor(0);
 	applicationIsa.setValue(result);
 	item.setApplicationIsa(applicationIsa);
@@ -98,9 +98,9 @@ public class IsainfoAdapter implements IAdapter {
 	EntityItemIntType bits = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	p = session.createProcess("isainfo -b");
 	p.start();
-	in = p.getInputStream();
-	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	in.close();
+	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	result = reader.readLine();
+	reader.close();
 	p.waitFor(0);
 	bits.setValue(result);
 	bits.setDatatype(SimpleDatatypeEnumeration.INT.value());

@@ -15,6 +15,7 @@ import java.util.regex.Pattern;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.system.IUnixSession;
@@ -62,9 +63,9 @@ public class UnixFile implements IUnixFile {
     
 	    IProcess p = session.createProcess(command);
 	    p.start();
-	    InputStream in = p.getInputStream();
-	    String line = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
-	    in.close();
+	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    String line = reader.readLine();
+	    reader.close();
 	    unixType = line.charAt(0);
 	    permissions = line.substring(1, 10);
 	    if (line.charAt(11) == '+') {

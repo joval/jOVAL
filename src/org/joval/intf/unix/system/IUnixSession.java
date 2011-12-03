@@ -3,8 +3,8 @@
 package org.joval.intf.unix.system;
 
 import java.io.EOFException;
-import java.io.InputStream;
 
+import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.io.StreamTool;
@@ -58,10 +58,10 @@ public interface IUnixSession extends ISession {
 		    try {
 			IProcess p = session.createProcess(command);
 			p.start();
-			InputStream in = p.getInputStream();
-			String osName = StreamTool.readLine(in, TIMEOUT_S);
+			IReader reader = StreamTool.getSafeReader(p.getInputStream(), TIMEOUT_S);
+			String osName = reader.readLine();
 			success = true;
-			in.close();
+			reader.close();
 			p.waitFor(0);
 			for (Flavor f : values()) {
 			    if (f.getOsName().equals(osName)) {

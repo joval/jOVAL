@@ -3,8 +3,6 @@
 
 package org.joval.plugin.adapter.solaris;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -29,6 +27,7 @@ import oval.schemas.systemcharacteristics.solaris.EntityItemSmfServiceStateType;
 import oval.schemas.systemcharacteristics.solaris.SmfItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
@@ -67,15 +66,15 @@ public class SmfAdapter implements IAdapter {
     public boolean connect() {
 	if (session != null) {
 	    IProcess p = null;
-	    StreamTool.ManagedReader mr = null;
+	    IReader reader = null;
 	    try {
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SMF);
 		p = session.createProcess("/usr/bin/svcs -o fmri");
 		p.start();
-		mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
+		reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
 		ArrayList<String> list = new ArrayList<String>();
 		String line = null;
-		while((line = mr.readLine()) != null) {
+		while((line = reader.readLine()) != null) {
 		    if (line.startsWith("FMRI")) {
 			continue;
 		    }
@@ -90,9 +89,9 @@ public class SmfAdapter implements IAdapter {
 	    } catch (Exception e) {
 		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
-		if (mr != null) {
+		if (reader != null) {
 		    try {
-			mr.close();
+			reader.close();
 			p.waitFor(0);
 		    } catch (IOException e) {
 		    } catch (InterruptedException e) {
@@ -205,12 +204,12 @@ public class SmfAdapter implements IAdapter {
 	item = JOVALSystem.factories.sc.solaris.createSmfItem();
 	IProcess p = session.createProcess("/usr/bin/svcs -l " + fmri);
 	p.start();
-	StreamTool.ManagedReader mr = null;
+	IReader reader = null;
 	boolean found = false;
 	try {
-	    mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    String line = null;
-	    while((line = mr.readLine()) != null) {
+	    while((line = reader.readLine()) != null) {
 		line = line.trim();
 		if (line.length() == 0) {
 		    break;
@@ -237,8 +236,8 @@ public class SmfAdapter implements IAdapter {
 		}
 	    }
 	} finally {
-	    if (mr != null) {
-		mr.close();
+	    if (reader != null) {
+		reader.close();
 	    }
 	}
 
@@ -251,9 +250,9 @@ public class SmfAdapter implements IAdapter {
 	    p = session.createProcess("/usr/bin/svcprop " + fmri);
 	    p.start();
 	    try {
-		mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+		reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 		String line = null;
-		while ((line = mr.readLine()) != null) {
+		while ((line = reader.readLine()) != null) {
 		    if (line.startsWith(START_EXEC_PROP)) {
 			setExecAndArgs(item, line.substring(START_EXEC_PROP.length()).trim());
 		    } else if (line.startsWith(INETD_USER_PROP)) {
@@ -272,8 +271,8 @@ public class SmfAdapter implements IAdapter {
 		    }
 		}
 	    } finally {
-		if (mr != null) {
-		    mr.close();
+		if (reader != null) {
+		    reader.close();
 		}
 	    }
 
@@ -284,9 +283,9 @@ public class SmfAdapter implements IAdapter {
 		p = session.createProcess("/usr/sbin/inetadm -l " + fmri);
 		p.start();
 		try {
-		    mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+		    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 		    String line = null;
-		    while ((line = mr.readLine()) != null) {
+		    while ((line = reader.readLine()) != null) {
 			if (line.trim().startsWith("proto=")) {
 			    String protocol = line.trim().substring(6);
 			    if (protocol.startsWith("\"") && protocol.endsWith("\"")) {
@@ -299,8 +298,8 @@ public class SmfAdapter implements IAdapter {
 			}
 		    }
 		} finally {
-		    if (mr != null) {
-			mr.close();
+		    if (reader != null) {
+			reader.close();
 		    }
 		}
 	    }
