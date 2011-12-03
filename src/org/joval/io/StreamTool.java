@@ -3,11 +3,15 @@
 
 package org.joval.io;
 
+import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.HashSet;
+import java.util.Vector;
 
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -38,22 +42,28 @@ public class StreamTool {
     /**
      * Read from the InputStream until the buffer is completely filled, but take no more than maxTime milliseconds
      * to do so.  If the timeout expires, the InputStream is closed and an EOFException will be thrown.
+     *
+     * @arg maxTime set to 0 to wait potentially forever
      */
     public static final void readFully(InputStream in, byte[] buff, long maxTime) throws IOException {
-	TimedReader reader = new TimedReader(in, buff);
-	reader.start();
-	long end = System.currentTimeMillis() + maxTime;
-	while (!reader.isFinished() && System.currentTimeMillis() < end) {
-	    try {
-		Thread.sleep(100);
-	    } catch (InterruptedException e) {
+	if (maxTime > 0) {
+	    TimedFullReader reader = new TimedFullReader(in, buff);
+	    reader.start();
+	    long end = System.currentTimeMillis() + maxTime;
+	    while (!reader.isFinished() && System.currentTimeMillis() < end) {
+		try {
+		    Thread.sleep(100);
+		} catch (InterruptedException e) {
+		}
 	    }
-	}
-	if (reader.hasError()) {
-	    throw reader.getError();
-	} else if (!reader.isFinished()) {
-	    reader.cancel();
-	    throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_READ_TIMEOUT, maxTime));
+	    if (reader.hasError()) {
+		throw reader.getError();
+	    } else if (!reader.isFinished()) {
+		reader.cancel();
+		throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_READ_TIMEOUT, maxTime));
+	    }
+	} else {
+	    readFully(in, buff);
 	}
     }
 
@@ -61,7 +71,7 @@ public class StreamTool {
      * Read from a stream until a '\n' is encountered, and return the String (minus the terminating '\n').
      */
     public static final String readLine(InputStream in) throws IOException {
-	byte[] buff = readUntil(in, 10); // 10 == \n
+	byte[] buff = readUntil(in, '\n');
 	if (buff == null) {
 	    return null;
 	} else {
@@ -73,24 +83,112 @@ public class StreamTool {
      * Read a line from the InputStream until a newline character is reached (or the stream is closed or otherwise ends),
      * but take no more than maxTime milliseconds to do so.  If the timeout expires, the InputStream is closed and an
      * EOFException will be thrown.
+     *
+     * @arg maxTime set to 0 to wait potentially forever
      */
     public static final String readLine(InputStream in, long maxTime) throws IOException {
-	TimedLineReader reader = new TimedLineReader(in);
-	reader.start();
-	long end = System.currentTimeMillis() + maxTime;
-	while (!reader.isFinished() && System.currentTimeMillis() < end) {
-	    try {
-		Thread.sleep(100);
-	    } catch (InterruptedException e) {
+	if (maxTime > 0) {
+	    TimedLineReader reader = new TimedLineReader(in);
+	    reader.start();
+	    long end = System.currentTimeMillis() + maxTime;
+	    while (!reader.isFinished() && System.currentTimeMillis() < end) {
+		try {
+		    Thread.sleep(100);
+		} catch (InterruptedException e) {
+		}
+	    }
+	    if (reader.hasError()) {
+		throw reader.getError();
+	    } else if (reader.isFinished()) {
+		try {
+		    reader.join();
+		} catch (InterruptedException e) {
+		}
+		return reader.getResult();
+	    } else {
+		reader.cancel();
+		throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_READ_TIMEOUT, maxTime));
+	    }
+	} else {
+	    return readLine(in);
+	}
+    }
+
+    /**
+     * Create a new ManagedReader using the given InputStream and read timeout.
+     *
+     * @arg maxTime the maximum time between successful reads, in milliseconds.  If <=0, the default of 1hr will apply.
+     */
+    public static synchronized ManagedReader getManagedReader(InputStream in, long maxTime) {
+	ManagedReader reader = new ManagedReader(in, maxTime);
+	readers.add(reader);
+	if (!timer.running()) {
+	    timer.start();
+	}
+	return reader;
+    }
+
+    /**
+     * A ManagedReader is a stream reader that is periodically checked to see if it's blocking on a read beyond the
+     * pre-set expiration interval.  In that event, the underlying stream is closed so that the blocking Thread can continue.
+     *
+     * All managed readers are managed by a timer/watcher in the StreamTool class.
+     */
+    public static class ManagedReader {
+	InputStream in;
+	BufferedReader reader;
+	boolean closed;
+	long expires;
+	long timeout;
+
+	ManagedReader(InputStream in, long timeout) {
+	    this.in = in;
+	    if (timeout <= 0) {
+		this.timeout = 3600000L; // 1hr
+	    } else {
+		this.timeout = timeout;
+	    }
+	    reader = new BufferedReader(new InputStreamReader(in));
+	    closed = false;
+	}
+
+	/**
+	 * Close the stream.  This removed the reader from the manager.
+	 */
+	public synchronized void close() throws IOException {
+	    if (!closed)  {
+		closed = true;
+		in.close();
+		reader.close();
+		readers.remove(this);
 	    }
 	}
-	if (reader.hasError()) {
-	    throw reader.getError();
-	} else if (!reader.isFinished()) {
-	    reader.cancel();
-	    throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_READ_TIMEOUT, maxTime));
-	} else {
-	    return reader.getResult();
+
+	/**
+	 * Read the next line of text from the input.
+	 */
+	public String readLine() throws IOException {
+	    String line = reader.readLine();
+	    reset();
+	    return line;
+	}
+
+	// Internal
+
+	void reset() {
+	    expires = System.currentTimeMillis() + timeout;
+	}
+
+	boolean checkClosed() {
+	    return closed;
+	}
+
+	boolean checkExpired() {
+	    if (expires > 0) {
+		return expires <= System.currentTimeMillis();
+	    } else {
+		return false;
+	    }
 	}
     }
 
@@ -109,7 +207,6 @@ public class StreamTool {
 		}
 		old = null;
 	    }
-
 	    buff[len++] = (byte)ch;
 	}
 	if (ch == -1 && len == 0) {
@@ -181,34 +278,35 @@ public class StreamTool {
 	}
     }
 
-    static class TimedReader implements Runnable {
+    static abstract class TimedReader implements Runnable {
 	InputStream in;
-	byte[] buff;
-	Thread t;
 	boolean finished;
-	IOException error = null;
+	String result;
+	IOException error;
+	Thread t;
 
-	TimedReader(InputStream in, byte[] buff) {
+	TimedReader() {
 	    finished = false;
-	    this.in = in;
-	    this.buff = buff;
+	    result = null;
+	    error = null;
 	    t = new Thread(this);
 	}
 
-	public void start() {
+	TimedReader(InputStream in) {
+	    this();
+	    this.in = in;
+	}
+
+	void start() {
 	    t.start();
 	}
 
-	public boolean isFinished() {
+	boolean isFinished() {
 	    return finished;
 	}
 
-	public boolean hasError() {
+	boolean hasError() {
 	    return error != null;
-	}
-
-	public IOException getError() {
-	    return error;
 	}
 
 	public synchronized void cancel() {
@@ -222,6 +320,27 @@ public class StreamTool {
 	    finished = true;
 	}
 
+	public String getResult() {
+	    return result;
+	}
+
+	public IOException getError() {
+	    return error;
+	}
+
+	public void join() throws InterruptedException {
+	    t.join();
+	}
+    }
+
+    static class TimedFullReader extends TimedReader {
+	byte[] buff;
+
+	TimedFullReader(InputStream in, byte[] buff) {
+	    super(in);
+	    this.buff = buff;
+	}
+
 	public void run() {
 	    try {
 		StreamTool.readFully(in, buff);
@@ -233,23 +352,72 @@ public class StreamTool {
     }
 
     static class TimedLineReader extends TimedReader {
-	String result = null;
-
 	TimedLineReader(InputStream in) {
-	    super(in, null);
+	    super(in);
 	}
 
 	public void run() {
 	    try {
-		result = readLine(in);
+		result = StreamTool.readLine(in);
 	    } catch (IOException e) {
 		error = e;
 	    }
 	    finished = true;
 	}
+    }
 
-	public String getResult() {
-	    return result;
+    private static HashSet<ManagedReader>readers = new HashSet<ManagedReader>();
+    private static IOTimer timer = new IOTimer();
+
+    private static class IOTimer implements Runnable {
+	Thread thread;
+	boolean stop;
+
+	public IOTimer() {
+	    stop = true;
+	}
+
+	public void start() {
+	    stop = false;
+	    thread = new Thread(this);
+	    thread.start();
+	}
+
+	public void stop() {
+	    stop = true;
+	}
+
+	public boolean running() {
+	    return !stop;
+	}
+
+	public void run() {
+	    while (!stop) {
+		Vector<ManagedReader> zombies = new Vector<ManagedReader>();
+		for (ManagedReader reader : readers) {
+		    if (reader.checkExpired()) {
+			try {
+System.out.println(">>>>>>>>> EXPIRED READER <<<<<<<<<<<<");
+			    reader.close();
+			} catch (IOException e) {
+			}
+		    }
+		    if (reader.checkClosed()) {
+			zombies.add(reader);
+		    }
+		}
+		for (ManagedReader zombie : zombies) {
+		    readers.remove(zombie);
+		}
+		if (readers.size() == 0) {
+		    stop = true;
+		} else {
+		    try {
+			Thread.sleep(1000);
+		    } catch (InterruptedException e) {
+		    }
+		}
+	    }
 	}
     }
 }

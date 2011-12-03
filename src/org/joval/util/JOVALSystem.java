@@ -49,47 +49,52 @@ public class JOVALSystem {
     /**
      * Property indicating the package names for classes in the OVAL definitions schema.
      */
-    public static final String OVAL_PROP_DEFINITIONS		= "definitions.packages";
+    public static final String OVAL_PROP_DEFINITIONS = "definitions.packages";
 
     /**
      * Property indicating the package names for classes in the OVAL results schema.
      */
-    public static final String OVAL_PROP_RESULTS		= "results.packages";
+    public static final String OVAL_PROP_RESULTS = "results.packages";
 
     /**
      * Property indicating the package names for classes in the OVAL system characteristics schema.
      */
-    public static final String OVAL_PROP_SYSTEMCHARACTERISTICS	= "systemcharacteristics.packages";
+    public static final String OVAL_PROP_SYSTEMCHARACTERISTICS = "systemcharacteristics.packages";
 
     /**
      * Property indicating the package names for classes in the OVAL variables schema.
      */
-    public static final String OVAL_PROP_VARIABLES		= "variables.packages";
+    public static final String OVAL_PROP_VARIABLES = "variables.packages";
 
     /**
      * Property indicating the package names for classes in the OVAL evaluation-id schema.
      */
-    public static final String OVAL_PROP_EVALUATION_ID		= "evaluation-id.packages";
+    public static final String OVAL_PROP_EVALUATION_ID = "evaluation-id.packages";
 
     /**
      * Property indicating the package names for classes in the OVAL directives schema.
      */
-    public static final String OVAL_PROP_DIRECTIVES		= "directives.packages";
+    public static final String OVAL_PROP_DIRECTIVES = "directives.packages";
 
     /**
      * Property indicating the product name.
      */
-    public static final String PROP_PRODUCT	= "productName";
+    public static final String PROP_PRODUCT = "productName";
 
     /**
      * Property indicating the product version.
      */
-    public static final String PROP_VERSION	= "version";
+    public static final String PROP_VERSION = "version";
 
     /**
      * Property indicating the product build date.
      */
-    public static final String PROP_BUILD_DATE	= "build.date";
+    public static final String PROP_BUILD_DATE = "build.date";
+
+    /**
+     * Property indicating whether to log messages from JSch to the JOVALSystem logger (true/false).
+     */
+    public static final String PROP_SSH_DEBUG = "ssh.debug";
 
     /**
      * Property indicating whether to log messages from JSch to the JOVALSystem logger (true/false).
@@ -109,12 +114,12 @@ public class JOVALSystem {
     /**
      * Property indicating the number of milliseconds to wait for a read before quiting.
      */
-    public static final String PROP_SSH_READ_TIMEOUT = "ssh.read.timeout";
+    public static final String PROP_SUDO_READ_TIMEOUT = "sudo.read.timeout";
 
     /**
      * Property indicating the number of times to re-try running a command in the event of an unexpected disconnect.
      */
-    public static final String PROP_SSH_MAX_RETRIES = "ssh.exec.retries";
+    public static final String PROP_SUDO_MAX_RETRIES = "sudo.exec.retries";
 
     /**
      * Property governing the behavior of local filesystem map cache pre-load behavior (true/false).  If false, any
@@ -188,6 +193,47 @@ public class JOVALSystem {
      */
     public static String getProperty(String key) {
 	return props.getProperty(key);
+    }
+
+    /**
+     * Retrieve a jOVAL property as a long.
+     *
+     * @return 0 if the key is not found
+     */
+    public static long getLongProperty(String key) {
+	long l = 0;
+	try {
+	    String s = props.getProperty(key);
+	    if (s != null) {
+		l = Long.parseLong(s);
+	    }
+	} catch (NumberFormatException e) {
+	}
+	return l;
+    }
+
+    /**
+     * Retrieve a jOVAL property as an int.
+     *
+     * @return 0 if the key is not found
+     */
+    public static int getIntProperty(String key) {
+	int i = 0;
+	try {
+	    String s = props.getProperty(key);
+	    if (s != null) {
+		i = Integer.parseInt(s);
+	    }
+	} catch (NumberFormatException e) {
+	}
+	return i;
+    }
+
+    /**
+     * Retrieve a jOVAL property as a boolean.  Default value is false.
+     */
+    public static boolean getBooleanProperty(String key) {
+	return "true".equalsIgnoreCase(props.getProperty(key));
     }
 
     /**

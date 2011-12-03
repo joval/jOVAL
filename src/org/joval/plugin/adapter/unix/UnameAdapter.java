@@ -3,8 +3,7 @@
 
 package org.joval.plugin.adapter.unix;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Hashtable;
@@ -27,6 +26,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.StreamTool;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -79,61 +79,61 @@ public class UnameAdapter implements IAdapter {
     private JAXBElement<UnameItem> getItem() throws Exception {
 	UnameItem item = JOVALSystem.factories.sc.unix.createUnameItem();
 	EntityItemStringType machineClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	IProcess p = session.createProcess("uname -m", IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	IProcess p = session.createProcess("uname -m");
 	p.start();
-	BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	String result = br.readLine();
-	br.close();
+	InputStream in = p.getInputStream();
+	String result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
+	in.close();
 	p.waitFor(0);
 	machineClass.setValue(result);
 	item.setMachineClass(machineClass);
 
 	EntityItemStringType nodeName = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("uname -n", IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	p = session.createProcess("uname -n");
 	p.start();
-	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	result = br.readLine();
-	br.close();
+	in = p.getInputStream();
+	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
+	in.close();
 	p.waitFor(0);
 	nodeName.setValue(result);
 	item.setNodeName(nodeName);
 
 	EntityItemStringType osName = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("uname -s", IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	p = session.createProcess("uname -s");
 	p.start();
-	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	result = br.readLine();
-	br.close();
+	in = p.getInputStream();
+	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
+	in.close();
 	p.waitFor(0);
 	osName.setValue(result);
 	item.setOsName(osName);
 
 	EntityItemStringType osRelease = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("uname -r", IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	p = session.createProcess("uname -r");
 	p.start();
-	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	result = br.readLine();
-	br.close();
+	in = p.getInputStream();
+	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
+	in.close();
 	p.waitFor(0);
 	osRelease.setValue(result);
 	item.setOsRelease(osRelease);
 
 	EntityItemStringType osVersion = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("uname -v", IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	p = session.createProcess("uname -v");
 	p.start();
-	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	result = br.readLine();
-	br.close();
+	in = p.getInputStream();
+	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
+	in.close();
 	p.waitFor(0);
 	osVersion.setValue(result);
 	item.setOsVersion(osVersion);
 
 	EntityItemStringType processorType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("uname -p", IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	p = session.createProcess("uname -p");
 	p.start();
-	br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	result = br.readLine();
-	br.close();
+	in = p.getInputStream();
+	result = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
+	in.close();
 	p.waitFor(0);
 	processorType.setValue(result);
 	item.setProcessorType(processorType);

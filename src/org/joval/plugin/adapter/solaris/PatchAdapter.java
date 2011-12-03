@@ -31,6 +31,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.StreamTool;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -210,13 +211,13 @@ public class PatchAdapter implements IAdapter {
      */
     private void scanRevisions() {
 	IProcess p = null;
-	BufferedReader br = null;
+	StreamTool.ManagedReader mr = null;
 	try {
-	    p = session.createProcess("/usr/bin/showrev -p", IUnixSession.TIMEOUT_M, IUnixSession.DEBUG);
+	    p = session.createProcess("/usr/bin/showrev -p");
 	    p.start();
-	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
 	    String line;
-	    while((line = br.readLine()) != null) {
+	    while((line = mr.readLine()) != null) {
 		if (!line.startsWith(PATCH)) {
 		    continue;
 		}
@@ -288,9 +289,9 @@ public class PatchAdapter implements IAdapter {
 	    error = e.getMessage();
 	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
-	    if (br != null) {
+	    if (mr != null) {
 		try {
-		    br.close();
+		    mr.close();
 		    p.waitFor(0);
 		} catch (IOException e) {
 		} catch (InterruptedException e) {

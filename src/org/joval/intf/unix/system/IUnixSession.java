@@ -23,14 +23,12 @@ public interface IUnixSession extends ISession {
     long TIMEOUT_L	=  900000L;	// 15 min
     long TIMEOUT_XL	= 3600000L;	//  1 hr
 
-    boolean DEBUG = false;
-
     Flavor getFlavor();
 
     /**
      * Create a process that should last no longer than the specified number of milliseconds.
      */
-    IProcess createProcess(String command, long millis, boolean debug) throws Exception;
+    IProcess createProcess(String command, long millis) throws Exception;
 
     /**
      * Enumeration of Unix flavors.
@@ -51,25 +49,6 @@ public interface IUnixSession extends ISession {
 	    return osName;
 	}
     
-	private static long readTimeout = 5000L;
-	private static int execRetries = 3;
-	static {
-	    try {
-	        String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_READ_TIMEOUT);
-	        if (s != null) {
-	            readTimeout = Long.parseLong(s);
-	        }
-	    } catch (NumberFormatException e) {
-	    }
-	    try {
-	        String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_MAX_RETRIES);
-	        if (s != null) {
-	            execRetries = Integer.parseInt(s);
-	        }
-	    } catch (NumberFormatException e) {
-	    }
-	}
-
 	public static Flavor flavorOf(IUnixSession session) {
 	    Flavor flavor = UNKNOWN;
 	    try {
@@ -80,7 +59,7 @@ public interface IUnixSession extends ISession {
 			IProcess p = session.createProcess(command);
 			p.start();
 			InputStream in = p.getInputStream();
-			String osName = StreamTool.readLine(in, readTimeout);
+			String osName = StreamTool.readLine(in, TIMEOUT_S);
 			success = true;
 			in.close();
 			p.waitFor(0);
@@ -91,11 +70,14 @@ public interface IUnixSession extends ISession {
 			    }
 			}
 		    } catch (EOFException e) {
-			if (attempt > execRetries) {
-			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_PROCESS_RETRY, command, attempt);
+			//
+			// Try up to four times in total before giving up.
+			//
+			if (attempt > 3) {
+			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_RETRY, command, attempt);
 			    throw e;
 			} else {
-			    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SSH_PROCESS_RETRY, command);
+			    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_PROCESS_RETRY, command);
 			}
 		    }
 		}

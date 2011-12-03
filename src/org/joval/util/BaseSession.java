@@ -31,11 +31,16 @@ public abstract class BaseSession implements ISession {
     protected File cwd;
     protected IEnvironment env;
     protected IFilesystem fs;
+    protected boolean debug = false;
 
     protected BaseSession() {
     }
 
     // Implement ISession
+
+    public void setDebug(boolean debug) {
+	this.debug = debug;
+    }
 
     public void setWorkingDir(String path) {
 	cwd = new File(path);

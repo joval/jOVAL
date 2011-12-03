@@ -15,6 +15,11 @@ public interface IBaseSession {
     String LOCALHOST = "localhost";
 
     /**
+     * Set the session to use debugging mode.
+     */
+    void setDebug(boolean debug);
+
+    /**
      * Connect the session.
      */
     boolean connect();

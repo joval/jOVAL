@@ -3,7 +3,6 @@
 
 package org.joval.os.unix.io;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -20,6 +19,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
+import org.joval.io.StreamTool;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -60,11 +60,11 @@ public class UnixFile implements IUnixFile {
 		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor()));
 	    }
     
-	    IProcess p = session.createProcess(command, 5000, true);
+	    IProcess p = session.createProcess(command);
 	    p.start();
-	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	    String line = br.readLine();
-	    br.close();
+	    InputStream in = p.getInputStream();
+	    String line = StreamTool.readLine(in, IUnixSession.TIMEOUT_S);
+	    in.close();
 	    unixType = line.charAt(0);
 	    permissions = line.substring(1, 10);
 	    if (line.charAt(11) == '+') {

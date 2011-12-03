@@ -22,9 +22,9 @@ class NetworkInterface {
     static List<NetworkInterface> getInterfaces(IUnixSession session) throws Exception {
 	Vector<NetworkInterface> interfaces = new Vector<NetworkInterface>();
 
-	IProcess p = session.createProcess("/sbin/ifconfig -a", UnixSystemInfo.TIMEOUT, UnixSystemInfo.DEBUG);
+	IProcess p = session.createProcess("/sbin/ifconfig -a");
 	p.start();
-	InputStream in = p.getInputStream();
+	StreamTool.ManagedReader in = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	Vector<String> lines = new Vector<String>();
 	String line = null;
 
@@ -34,7 +34,7 @@ class NetworkInterface {
 	  // Interfaces are not separated by blank lines.
 	  //
 	  case MACOSX:
-	    while ((line = StreamTool.readLine(in, UnixSystemInfo.TIMEOUT)) != null) {
+	    while ((line = in.readLine()) != null) {
 		if (line.startsWith("\t") || line.startsWith("  ")) {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
@@ -57,7 +57,7 @@ class NetworkInterface {
 	  // Interfaces are not separated by blank lines.
 	  //
 	  case SOLARIS:
-	    while ((line = StreamTool.readLine(in, UnixSystemInfo.TIMEOUT)) != null) {
+	    while ((line = in.readLine()) != null) {
 		if (line.startsWith("\t") || line.startsWith("  ")) {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
@@ -79,7 +79,7 @@ class NetworkInterface {
 	  // On Linux, there is a blank line between each interface spec.
 	  //
 	  case LINUX:
-	    while ((line = StreamTool.readLine(in, UnixSystemInfo.TIMEOUT)) != null) {
+	    while ((line = in.readLine()) != null) {
 		if (line.trim().length() == 0) {
 		    if (lines.size() > 0) {
 			interfaces.add(createLinuxInterface(lines));

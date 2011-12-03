@@ -32,6 +32,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
+import org.joval.io.StreamTool;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
@@ -66,15 +67,15 @@ public class SmfAdapter implements IAdapter {
     public boolean connect() {
 	if (session != null) {
 	    IProcess p = null;
-	    BufferedReader br = null;
+	    StreamTool.ManagedReader mr = null;
 	    try {
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SMF);
-		p = session.createProcess("/usr/bin/svcs -o fmri", IUnixSession.TIMEOUT_M, IUnixSession.DEBUG);
+		p = session.createProcess("/usr/bin/svcs -o fmri");
 		p.start();
-		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
 		ArrayList<String> list = new ArrayList<String>();
 		String line = null;
-		while((line = br.readLine()) != null) {
+		while((line = mr.readLine()) != null) {
 		    if (line.startsWith("FMRI")) {
 			continue;
 		    }
@@ -89,9 +90,9 @@ public class SmfAdapter implements IAdapter {
 	    } catch (Exception e) {
 		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
-		if (br != null) {
+		if (mr != null) {
 		    try {
-			br.close();
+			mr.close();
 			p.waitFor(0);
 		    } catch (IOException e) {
 		    } catch (InterruptedException e) {
@@ -202,14 +203,14 @@ public class SmfAdapter implements IAdapter {
 
 	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
 	item = JOVALSystem.factories.sc.solaris.createSmfItem();
-	IProcess p = session.createProcess("/usr/bin/svcs -l " + fmri, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	IProcess p = session.createProcess("/usr/bin/svcs -l " + fmri);
 	p.start();
-	BufferedReader br = null;
+	StreamTool.ManagedReader mr = null;
 	boolean found = false;
 	try {
-	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    String line = null;
-	    while((line = br.readLine()) != null) {
+	    while((line = mr.readLine()) != null) {
 		line = line.trim();
 		if (line.length() == 0) {
 		    break;
@@ -236,8 +237,8 @@ public class SmfAdapter implements IAdapter {
 		}
 	    }
 	} finally {
-	    if (br != null) {
-		br.close();
+	    if (mr != null) {
+		mr.close();
 	    }
 	}
 
@@ -247,12 +248,12 @@ public class SmfAdapter implements IAdapter {
 	    //
 	    item.setStatus(StatusEnumeration.EXISTS);
 	    boolean inetd = false;
-	    p = session.createProcess("/usr/bin/svcprop " + fmri, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	    p = session.createProcess("/usr/bin/svcprop " + fmri);
 	    p.start();
 	    try {
-		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 		String line = null;
-		while ((line = br.readLine()) != null) {
+		while ((line = mr.readLine()) != null) {
 		    if (line.startsWith(START_EXEC_PROP)) {
 			setExecAndArgs(item, line.substring(START_EXEC_PROP.length()).trim());
 		    } else if (line.startsWith(INETD_USER_PROP)) {
@@ -271,8 +272,8 @@ public class SmfAdapter implements IAdapter {
 		    }
 		}
 	    } finally {
-		if (br != null) {
-		    br.close();
+		if (mr != null) {
+		    mr.close();
 		}
 	    }
 
@@ -280,12 +281,12 @@ public class SmfAdapter implements IAdapter {
 	    // If this is an inetd-initiated service, we can get protocol information using inetadm
 	    //
 	    if (inetd) {
-		p = session.createProcess("/usr/sbin/inetadm -l " + fmri, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+		p = session.createProcess("/usr/sbin/inetadm -l " + fmri);
 		p.start();
 		try {
-		    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		    mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 		    String line = null;
-		    while ((line = br.readLine()) != null) {
+		    while ((line = mr.readLine()) != null) {
 			if (line.trim().startsWith("proto=")) {
 			    String protocol = line.trim().substring(6);
 			    if (protocol.startsWith("\"") && protocol.endsWith("\"")) {
@@ -298,8 +299,8 @@ public class SmfAdapter implements IAdapter {
 			}
 		    }
 		} finally {
-		    if (br != null) {
-			br.close();
+		    if (mr != null) {
+			mr.close();
 		    }
 		}
 	    }

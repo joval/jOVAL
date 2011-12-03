@@ -30,6 +30,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.StreamTool;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -63,15 +64,15 @@ public class PackageAdapter implements IAdapter {
     public boolean connect() {
 	if (session != null) {
 	    IProcess p = null;
-	    BufferedReader br = null;
+	    StreamTool.ManagedReader mr = null;
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
-		p = session.createProcess("pkginfo -x", IUnixSession.TIMEOUT_L, IUnixSession.DEBUG);
+		p = session.createProcess("pkginfo -x");
 		p.start();
-		br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_L);
 		String line = null;
-		while ((line = br.readLine()) != null) {
+		while ((line = mr.readLine()) != null) {
 		    if (line.length() == 0) {
 			break;
 		    }
@@ -93,9 +94,9 @@ public class PackageAdapter implements IAdapter {
 	    } catch (Exception e) {
 		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
-		if (br != null) {
+		if (mr != null) {
 		    try {
-			br.close();
+			mr.close();
 			p.waitFor(0);
 		    } catch (IOException e) {
 		    } catch (InterruptedException e) {
@@ -206,14 +207,14 @@ public class PackageAdapter implements IAdapter {
 
 	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
 	item = JOVALSystem.factories.sc.solaris.createPackageItem();
-	IProcess p = session.createProcess("/usr/bin/pkginfo -l " + pkginst, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	IProcess p = session.createProcess("/usr/bin/pkginfo -l " + pkginst);
 	p.start();
-	BufferedReader br = null;
+	StreamTool.ManagedReader mr = null;
 	boolean isInstalled = false;
 	try {
-	    br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    String line = null;
-	    while((line = br.readLine()) != null) {
+	    while((line = mr.readLine()) != null) {
 		line = line.trim();
 		if (line.length() == 0) {
 		    break;
@@ -245,8 +246,8 @@ public class PackageAdapter implements IAdapter {
 		}
 	    }
 	} finally {
-	    if (br != null) {
-		br.close();
+	    if (mr != null) {
+		mr.close();
 		p.waitFor(0);
 	    }
 	}

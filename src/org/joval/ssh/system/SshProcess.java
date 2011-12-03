@@ -118,6 +118,7 @@ class SshProcess implements IProcess {
     }
 
     public synchronized void destroy() {
+	JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_KILL, command);
 	try {
 	    if (ce.isConnected()) {
 		ce.sendSignal("KILL");

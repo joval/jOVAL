@@ -43,33 +43,19 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     protected String hostname;
     protected ICredential cred;
     protected Session session;
-    private boolean connected = false;
+    private boolean connected = false, debug = false;
 
-    private static int connTimeout = 3000;
-    private static int connRetries = 3;
+    private static int connTimeout = JOVALSystem.getIntProperty(JOVALSystem.PROP_SSH_CONNECTION_TIMEOUT);
+    private static int connRetries = JOVALSystem.getIntProperty(JOVALSystem.PROP_SSH_CONNECTION_RETRIES);
     static {
-	if ("true".equals(JOVALSystem.getProperty(JOVALSystem.PROP_SSH_ATTACH_LOG))) {
+	if (JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_ATTACH_LOG)) {
 	    JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
-	}
-
-	try {
-	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_CONNECTION_TIMEOUT);
-	    if (s != null) {
-		connTimeout = Integer.parseInt(s);
-	    }
-	} catch (NumberFormatException e) {
-	}
-	try {
-	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_CONNECTION_RETRIES);
-	    if (s != null) {
-		connRetries = Integer.parseInt(s);
-	    }
-	} catch (NumberFormatException e) {
 	}
     }
 
     public SshSession(String hostname) {
 	this.hostname = hostname;
+	this.debug = JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_DEBUG);
     }
 
     public Session getJschSession() {
@@ -106,6 +92,10 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 
     public String getHostname() {
 	return hostname;
+    }
+
+    public void setDebug(boolean debug) {
+	this.debug = debug;
     }
 
     public boolean connect() {
@@ -160,7 +150,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 	}
     }
 
-    public IProcess createProcess(String command, long millis, boolean debug) throws Exception {
+    public IProcess createProcess(String command, long millis) throws Exception {
 	if (connect()) {
 	    ChannelExec ce = session.openChannel(ChannelType.EXEC);
 	    return new SshProcess(ce, command, millis, debug);

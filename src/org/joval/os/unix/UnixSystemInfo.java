@@ -27,9 +27,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class UnixSystemInfo {
-    static final long TIMEOUT = 15000L;
-    static final boolean DEBUG = false;
-
     private IUnixSession session;
     private SystemInfoType info;
 
@@ -47,10 +44,10 @@ public class UnixSystemInfo {
 
 	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	try {
-	    IProcess p = session.createProcess("hostname", TIMEOUT, DEBUG);
+	    IProcess p = session.createProcess("hostname");
 	    p.start();
 	    InputStream in = p.getInputStream();
-	    info.setPrimaryHostName(StreamTool.readLine(in, TIMEOUT));
+	    info.setPrimaryHostName(StreamTool.readLine(in, IUnixSession.TIMEOUT_S));
 	    in.close();
 	    p.waitFor(0);
 	} catch (Exception e) {
@@ -59,10 +56,10 @@ public class UnixSystemInfo {
 	}
 
 	try {
-	    IProcess p = session.createProcess("uname -r", TIMEOUT, DEBUG);
+	    IProcess p = session.createProcess("uname -r");
 	    p.start();
 	    InputStream in = p.getInputStream();
-	    info.setOsVersion(StreamTool.readLine(in, TIMEOUT));
+	    info.setOsVersion(StreamTool.readLine(in, IUnixSession.TIMEOUT_S));
 	    in.close();
 	    p.waitFor(0);
 	} catch (Exception e) {
@@ -76,7 +73,7 @@ public class UnixSystemInfo {
 		IProcess p = session.createProcess("cat " + node.getPath());
 		p.start();
 		InputStream in = p.getInputStream();
-		info.setOsName(StreamTool.readLine(in, TIMEOUT));
+		info.setOsName(StreamTool.readLine(in, IUnixSession.TIMEOUT_S));
 		in.close();
 		p.waitFor(0);
 	    }
@@ -89,10 +86,10 @@ public class UnixSystemInfo {
 	}
 
 	try {
-	    IProcess p = session.createProcess("uname -p", TIMEOUT, DEBUG);
+	    IProcess p = session.createProcess("uname -p");
 	    p.start();
 	    InputStream in = p.getInputStream();
-	    info.setArchitecture(StreamTool.readLine(in, TIMEOUT));
+	    info.setArchitecture(StreamTool.readLine(in, IUnixSession.TIMEOUT_S));
 	    in.close();
 	    p.waitFor(0);
 	} catch (Exception e) {

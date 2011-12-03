@@ -32,37 +32,19 @@ class Sudo implements IProcess {
     private ICredential cred;
     private String innerCommand;
     private long timeout;
-    private boolean debug;
     private InputStream in=null, err=null;
     private OutputStream out=null;
 
-    private static long readTimeout = 5000L;
-    private static int execRetries = 3;
-    static {
-	try {
-	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_READ_TIMEOUT);
-	    if (s != null) {
-		readTimeout = Long.parseLong(s);
-	    }
-	} catch (NumberFormatException e) {
-	}
-	try {
-	    String s = JOVALSystem.getProperty(JOVALSystem.PROP_SSH_MAX_RETRIES);
-	    if (s != null) {
-		execRetries = Integer.parseInt(s);
-	    }
-	} catch (NumberFormatException e) {
-	}
-    }
+    private static long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_SUDO_READ_TIMEOUT);
+    private static int execRetries = JOVALSystem.getIntProperty(JOVALSystem.PROP_SUDO_MAX_RETRIES);
 
-    Sudo(UnixSession us, ICredential cred, String cmd, long ms, boolean debug) throws Exception {
+    Sudo(UnixSession us, ICredential cred, String cmd, long ms) throws Exception {
 	this.us = us;
 	ssh = us.ssh;
 	this.cred = cred;
 	innerCommand = cmd;
 	timeout = ms;
-	this.debug = debug;
-	p = ssh.createProcess(getSuString(cmd), ms, debug);
+	p = ssh.createProcess(getSuString(cmd), ms);
     }
 
     // Implement IProcess
@@ -123,15 +105,15 @@ class Sudo implements IProcess {
 		//
 		} catch (EOFException e) {
 		    if (attempt > execRetries) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_PROCESS_RETRY, innerCommand, attempt);
+			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_RETRY, innerCommand, attempt);
 			throw e;
 		    } else {
 			JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			// try again
 			in = null;
 			out = null;
-			p = ssh.createProcess(getSuString(innerCommand), timeout, debug);
-			JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SSH_PROCESS_RETRY, innerCommand);
+			p = ssh.createProcess(getSuString(innerCommand), timeout);
+			JOVALSystem.getLogger().debug(JOVALMsg.STATUS_PROCESS_RETRY, innerCommand);
 		    }
 		}
 	    }

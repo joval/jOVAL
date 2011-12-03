@@ -62,6 +62,10 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 
     // Implement IBaseSession
 
+    public void setDebug(boolean debug) {
+	ssh.setDebug(debug);
+    }
+
     public String getHostname() {
 	return ssh.getHostname();
     }
@@ -109,7 +113,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
      * @override
      */
     public IProcess createProcess(String command) throws Exception {
-	return createProcess(command, 3600000L, false);
+	return createProcess(command, 3600000L);
     }
 
     public Type getType() {
@@ -135,15 +139,15 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 	return flavor;
     }
 
-    public IProcess createProcess(String command, long millis, boolean debug) throws Exception {
+    public IProcess createProcess(String command, long millis) throws Exception {
 	switch(flavor) {
 	  case LINUX:
 	  case SOLARIS:
 	    if (rootCred != null) {
-		return new Sudo(this, rootCred, command, millis, debug);
+		return new Sudo(this, rootCred, command, millis);
 	    }
 	}
-	return ssh.createProcess(command, millis, debug);
+	return ssh.createProcess(command, millis);
     }
 
     // Internal

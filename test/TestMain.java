@@ -4,6 +4,7 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -88,6 +89,8 @@ public class TestMain extends RemotePlugin {
 	    if (!reportDir.exists()) {
 		reportDir.mkdir();
 	    }
+	    copy(new File("xmldoc.gif"), new File(reportDir, "xmldoc.gif"));
+
 	    Hashtable<String, ReportEntry> reports = new Hashtable<String, ReportEntry>();
 	    for (String suite : config.listSections()) {
 		System.out.println("Starting test suite run for " + suite);
@@ -290,6 +293,66 @@ public class TestMain extends RemotePlugin {
 
     // Private static
 
+    private static void copy(File source, File destination) throws IOException {
+	FileInputStream in = new FileInputStream(source);
+	FileOutputStream out = new FileOutputStream(destination);
+	byte[] buff = new byte[1024];
+	int len = 0;
+	while ((len = in.read(buff)) > 0) {
+	    out.write(buff, 0, len);
+	}
+	in.close();
+	out.close();
+    }
+
+    private static String currentDateString() {
+	StringBuffer sb = new StringBuffer();
+	Calendar date = new GregorianCalendar();
+	sb.append(date.get(Calendar.YEAR)).append(".");
+	int month = 1 + date.get(Calendar.MONTH);
+	sb.append(pad(month)).append(".");
+	sb.append(pad(date.get(Calendar.DAY_OF_MONTH))).append(" ");
+	sb.append(pad(date.get(Calendar.HOUR_OF_DAY))).append(":");
+	sb.append(pad(date.get(Calendar.MINUTE))).append(":");
+	sb.append(pad(date.get(Calendar.SECOND))).append(".");
+	sb.append(pad(date.get(Calendar.MILLISECOND), 3));
+	return sb.toString();
+    }
+
+    private static String pad(int val) {
+	return pad(val, 2);
+    }
+
+    private static String pad(int val, int width) {
+	StringBuffer sb = new StringBuffer();
+	for (int i=(width-1); i > 0; i--) {
+	    if (val < Math.pow(10, i)) {
+		sb.append("0");
+	    } else {
+		break;
+	    }
+	}
+	sb.append(Integer.toString(val));
+	return sb.toString();
+    }
+
+    private static String toString(Throwable t) {
+	StringBuffer sb = new StringBuffer(t.getClass().getName());
+	sb.append(":").append(t.getMessage()).append("\n");
+	StackTraceElement[] ste = t.getStackTrace();
+	for (int i=0; i < ste.length; i++) {
+	    sb.append("    ").append(ste[i].toString()).append("\n");
+	}
+	Throwable cause = t.getCause();
+	if (cause != null) {
+	    sb.append("caused by:\n");
+	    sb.append(toString(cause));
+	}
+	return sb.toString();
+    }
+
+    // Private data structures
+
     /**
      * An inner class that prints out information about Engine notifications.
      */
@@ -383,54 +446,6 @@ public class TestMain extends RemotePlugin {
 	    return line.toString();
 	}
     }
-
-    private static String currentDateString() {
-	StringBuffer sb = new StringBuffer();
-	Calendar date = new GregorianCalendar();
-	sb.append(date.get(Calendar.YEAR)).append(".");
-	int month = 1 + date.get(Calendar.MONTH);
-	sb.append(pad(month)).append(".");
-	sb.append(pad(date.get(Calendar.DAY_OF_MONTH))).append(" ");
-	sb.append(pad(date.get(Calendar.HOUR_OF_DAY))).append(":");
-	sb.append(pad(date.get(Calendar.MINUTE))).append(":");
-	sb.append(pad(date.get(Calendar.SECOND))).append(".");
-	sb.append(pad(date.get(Calendar.MILLISECOND), 3));
-	return sb.toString();
-    }
-
-    private static String pad(int val) {
-	return pad(val, 2);
-    }
-
-    private static String pad(int val, int width) {
-	StringBuffer sb = new StringBuffer();
-	for (int i=(width-1); i > 0; i--) {
-	    if (val < Math.pow(10, i)) {
-		sb.append("0");
-	    } else {
-		break;
-	    }
-	}
-	sb.append(Integer.toString(val));
-	return sb.toString();
-    }
-
-    private static String toString(Throwable t) {
-	StringBuffer sb = new StringBuffer(t.getClass().getName());
-	sb.append(":").append(t.getMessage()).append("\n");
-	StackTraceElement[] ste = t.getStackTrace();
-	for (int i=0; i < ste.length; i++) {
-	    sb.append("    ").append(ste[i].toString()).append("\n");
-	}
-	Throwable cause = t.getCause();
-	if (cause != null) {
-	    sb.append("caused by:\n");
-	    sb.append(toString(cause));
-	}
-	return sb.toString();
-    }
-
-    // Private data structures
 
     private static class XMLFilter implements FilenameFilter {
 	XMLFilter() {}
@@ -575,8 +590,9 @@ public class TestMain extends RemotePlugin {
 			    StringBuffer sb = new StringBuffer();
 			    sb.append("<tr><td width=600>").append(id).append("</td>");
 			    sb.append("<td><font color=#ff0000 weight=bold>FAILED</font></td>");
-			    sb.append("<td><a href=\"").append(suite);
-			    sb.append("_results_").append(xml).append("\">results.xml</a></td></tr>");
+			    sb.append("<td><a href=\"").append(suite).append("_results_").append(xml).append("\">");
+			    sb.append("<img width=16 height=16 src=\"xmldoc.gif\" border=0/>");
+			    sb.append("</a></td></tr>");
 			    rows.add(sb.toString());
 			}
 		    }

@@ -22,6 +22,8 @@ all: classes
 
 clean:
 	rm -rf *.class
+	rm test.log
+	rm -rf report
 
 classes: $(CLASS_FILES)
 

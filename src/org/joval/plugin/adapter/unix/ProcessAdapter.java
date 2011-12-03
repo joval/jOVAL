@@ -3,7 +3,7 @@
 
 package org.joval.plugin.adapter.unix;
 
-import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 import java.util.Collection;
@@ -39,6 +39,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.StreamTool;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
@@ -167,11 +168,11 @@ public class ProcessAdapter implements IAdapter {
 	    return false;
 	}
 	try {
-	    IProcess p = session.createProcess(args, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+	    IProcess p = session.createProcess(args);
 	    p.start();
-	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	    String line = br.readLine(); // skip over the header row.
-	    while((line = br.readLine()) != null) {
+	    StreamTool.ManagedReader mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    String line = mr.readLine(); // skip over the header row.
+	    while((line = mr.readLine()) != null) {
 		StringTokenizer tok = new StringTokenizer(line);
 		ProcessItem process = JOVALSystem.factories.sc.unix.createProcessItem();
 
@@ -230,7 +231,7 @@ public class ProcessAdapter implements IAdapter {
 
 		processes.put(cmd, process);
 	    }
-	    br.close();
+	    mr.close();
 	    p.waitFor(0);
 	} catch (Exception e) {
 	    error = e.getMessage();

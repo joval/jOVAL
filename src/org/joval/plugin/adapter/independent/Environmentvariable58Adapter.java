@@ -103,11 +103,11 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			    IFile proc = session.getFilesystem().getFile("/proc/" + pid);
 			    if (proc.exists() && proc.isDirectory()) {
 				processEnv = new Properties();
-				IProcess p = us.createProcess("pargs -e " + pid, IUnixSession.TIMEOUT_S, IUnixSession.DEBUG);
+				IProcess p = us.createProcess("pargs -e " + pid);
 				p.start();
-				InputStream in = p.getInputStream();
+				StreamTool.ManagedReader mr = StreamTool.getManagedReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
 				String line;
-				while ((line = StreamTool.readLine(in)) != null) {
+				while ((line = mr.readLine()) != null) {
 				    if (line.startsWith("envp")) {
 					String pair = line.substring(line.indexOf(" ")).trim();
 					int ptr = pair.indexOf("=");
@@ -118,7 +118,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 					}
 				    }
 				}
-				in.close();
+				mr.close();
 				p.waitFor(0);
 			    }
 			} else {
