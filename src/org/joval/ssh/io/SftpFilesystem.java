@@ -3,10 +3,8 @@
 
 package org.joval.ssh.io;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
@@ -23,6 +21,7 @@ import org.vngx.jsch.exception.JSchException;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.io.IReader;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
@@ -31,6 +30,7 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.system.IEnvironment;
+import org.joval.io.StreamTool;
 import org.joval.util.tree.CachingTree;
 import org.joval.util.tree.Tree;
 import org.joval.util.JOVALMsg;
@@ -127,11 +127,11 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
 	    IProcess p = session.createProcess(command);
 	    p.start();
-	    BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
-	    ErrorReader er = new ErrorReader(p.getErrorStream());
+	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    ErrorReader er = new ErrorReader(StreamTool.getSafeReader(p.getErrorStream(), IUnixSession.TIMEOUT_XL));
 	    er.start();
 	    String line = null;
-	    while((line = br.readLine()) != null) {
+	    while((line = reader.readLine()) != null) {
 		String path = line;
 		if (!path.equals(getDelimiter())) { // skip the root node
 		    INode node = tree.getRoot();
@@ -150,7 +150,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		    }
 		}
 	    }
-	    br.close();
+	    reader.close();
 	    er.join();
 	    preloaded = true;
 	    return true;
@@ -260,10 +260,10 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
     // Private
 
     class ErrorReader implements Runnable {
-	InputStream err;
+	IReader err;
 	Thread t;
 
-	ErrorReader(InputStream err) {
+	ErrorReader(IReader err) {
 	    this.err = err;
 	}
 
@@ -278,9 +278,8 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
 	public void run() {
 	    try {
-		BufferedReader br = new BufferedReader(new InputStreamReader(err));
 		String line = null;
-		while((line = br.readLine()) != null) {
+		while((line = err.readLine()) != null) {
 		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, line);
 		}
 	    } catch (IOException e) {

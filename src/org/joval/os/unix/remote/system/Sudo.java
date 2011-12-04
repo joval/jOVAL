@@ -6,6 +6,7 @@ package org.joval.os.unix.remote.system;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import javax.security.auth.login.CredentialException;
 import javax.security.auth.login.LoginException;
@@ -14,6 +15,7 @@ import org.joval.intf.identity.ICredential;
 import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.intf.util.IPerishable;
 import org.joval.io.StreamTool;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
@@ -97,19 +99,24 @@ class Sudo implements IProcess {
 		    }
 
 		//
-		// While all this is going on, the underlying SshProcess may time out and close the streams.
+		// While all this is going on, the underlying SshProcess may time out and close the streams.  This can result
+		// in either an InterruptedIOException or an EOFException, depending on how the problem happens.
 		//
-		} catch (EOFException e) {
-		    if (attempt > execRetries) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_RETRY, innerCommand, attempt);
-			throw e;
+		} catch (IOException e) {
+		    if (e instanceof EOFException || e instanceof InterruptedIOException) {
+			if (attempt > execRetries) {
+			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_RETRY, innerCommand, attempt);
+			    throw e;
+			} else {
+			    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    // try again
+			    in = null;
+			    out = null;
+			    p = ssh.createProcess(getSuString(innerCommand), timeout);
+			    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_PROCESS_RETRY, innerCommand);
+			}
 		    } else {
-			JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			// try again
-			in = null;
-			out = null;
-			p = ssh.createProcess(getSuString(innerCommand), timeout);
-			JOVALSystem.getLogger().debug(JOVALMsg.STATUS_PROCESS_RETRY, innerCommand);
+			throw e;
 		    }
 		}
 	    }
@@ -172,7 +179,7 @@ class Sudo implements IProcess {
 	return sb.toString();
     }
 
-    private class ReaderInputStream extends InputStream {
+    private class ReaderInputStream extends InputStream implements IPerishable {
 	IReader reader;
 
 	ReaderInputStream(IReader reader) {
@@ -193,6 +200,22 @@ class Sudo implements IProcess {
 
 	public void readFully(byte[] buff) throws IOException {
 	    reader.readFully(buff);
+	}
+
+	// Implement IPerishable
+
+	public void setTimeout(long timeout) {
+	    if (reader instanceof IPerishable) {
+		((IPerishable)reader).setTimeout(timeout);
+	    }
+	}
+
+	public boolean checkExpired() {
+	    if (reader instanceof IPerishable) {
+		return ((IPerishable)reader).checkExpired();
+	    } else {
+		return false;
+	    }
 	}
     }
 }

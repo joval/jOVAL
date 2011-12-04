@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Vector;
 
 import org.joval.intf.io.IReader;
+import org.joval.intf.util.IPerishable;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -24,7 +25,7 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class StreamTool {
-    private static HashSet<SafeReader>readers = new HashSet<SafeReader>();
+    private static HashSet<PerishableReader>readers = new HashSet<PerishableReader>();
     private static IOTimer timer = new IOTimer();
 
     /**
@@ -35,11 +36,15 @@ public class StreamTool {
      * @arg maxTime the maximum amount of time that should be allowed to elapse between successful reads, in milliseconds.
      *              If maxTime <= 0, the default of 1hr will apply.
      */
-    public static synchronized IReader getSafeReader(InputStream in, long maxTime) {
-	SafeReader reader = new SafeReader(in, maxTime);
-	readers.add(reader);
-	if (!timer.running()) {
-	    timer.start();
+    public static IReader getSafeReader(InputStream in, long maxTime) {
+	PerishableReader reader = new PerishableReader(in, maxTime);
+	synchronized(readers) {
+	    readers.add(reader);
+	}
+	synchronized(timer) {
+	    if (!timer.running()) {
+		timer.start();
+	    }
 	}
 	return reader;
     }
@@ -125,7 +130,7 @@ public class StreamTool {
 	}
     }
 
-    private static class SafeReader implements IReader {
+    private static class PerishableReader implements IReader, IPerishable {
 	InputStream in;
 	BufferedReader reader;
 	boolean closed;
@@ -133,12 +138,16 @@ public class StreamTool {
 	long timeout;
 	Thread thread;
 
-	SafeReader(InputStream in, long timeout) {
+	PerishableReader(InputStream in, long timeout) {
 	    this.in = in;
-	    if (timeout <= 0) {
-		this.timeout = 3600000L; // 1hr
-	    } else {
-		this.timeout = timeout;
+	    setTimeout(timeout);
+
+	    //
+	    // If the underlying stream is actually a wrapper around another PerishableReader, which happens with the
+	    // Sudo class, then overstamp its original timeout.
+	    //
+	    if (in instanceof IPerishable) {
+		((IPerishable)in).setTimeout(this.timeout);
 	    }
 	    reader = new BufferedReader(new InputStreamReader(in));
 	    closed = false;
@@ -153,6 +162,10 @@ public class StreamTool {
 		reader.close();
 		readers.remove(this);
 	    }
+	}
+
+	public boolean checkClosed() {
+	    return closed;
 	}
 
 	public String readLine() throws IOException {
@@ -209,18 +222,9 @@ public class StreamTool {
 	    return i;
 	}
 
-	// Internal
+	// Implement IPerishable
 
-	void reset() {
-	    expires = System.currentTimeMillis() + timeout;
-	    thread = null;
-	}
-
-	boolean checkClosed() {
-	    return closed;
-	}
-
-	boolean checkExpired() {
+	public boolean checkExpired() {
 	    if (expires > 0) {
 		return expires <= System.currentTimeMillis();
 	    } else {
@@ -228,10 +232,35 @@ public class StreamTool {
 	    }
 	}
 
+	public void setTimeout(long timeout) {
+	    if (timeout <= 0) {
+		this.timeout = 3600000L; // 1hr
+	    } else {
+		this.timeout = timeout;
+	    }
+	    expires = System.currentTimeMillis() + this.timeout;
+	}
+
+	// Internal
+
 	void interrupt() {
 	    if (thread != null) {
 		thread.interrupt();
 	    }
+	}
+
+	// Private
+
+	private void reset() {
+	    expires = System.currentTimeMillis() + timeout;
+
+	    //
+	    // Cause a reset if the underlying InputStream is another PerishableReader
+	    //
+	    if (in instanceof IPerishable) {
+		((IPerishable)in).setTimeout(timeout);
+	    }
+	    thread = null;
 	}
     }
 
@@ -259,30 +288,33 @@ public class StreamTool {
 
 	public void run() {
 	    while (!stop) {
-		Vector<SafeReader> zombies = new Vector<SafeReader>();
-		for (SafeReader reader : readers) {
-		    if (reader.checkExpired()) {
-			try {
-System.out.println(">>>>>>>>> EXPIRED READER <<<<<<<<<<<<");
-			    reader.interrupt();
-			    reader.close();
-			} catch (IOException e) {
+		Vector<PerishableReader> zombies = new Vector<PerishableReader>();
+
+		synchronized(readers) {
+		    for (PerishableReader reader : (HashSet<PerishableReader>)readers.clone()) {
+			if (reader.checkExpired()) {
+			    try {
+				JOVALSystem.getLogger().warn(JOVALMsg.ERROR_READ_TIMEOUT, reader.timeout);
+				reader.interrupt();
+				reader.close();
+			    } catch (IOException e) {
+			    }
+			}
+			if (reader.checkClosed()) {
+			    zombies.add(reader);
 			}
 		    }
-		    if (reader.checkClosed()) {
-			zombies.add(reader);
+		    for (PerishableReader zombie : zombies) {
+			readers.remove(zombie);
+		    }
+		    if (readers.size() == 0) {
+			stop = true;
+			return;
 		    }
 		}
-		for (SafeReader zombie : zombies) {
-		    readers.remove(zombie);
-		}
-		if (readers.size() == 0) {
-		    stop = true;
-		} else {
-		    try {
-			Thread.sleep(1000);
-		    } catch (InterruptedException e) {
-		    }
+		try {
+		    Thread.sleep(1000);
+		} catch (InterruptedException e) {
 		}
 	    }
 	}
