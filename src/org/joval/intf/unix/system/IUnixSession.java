@@ -18,6 +18,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public interface IUnixSession extends ISession {
+
+// REMIND (DAS): migrate these timeouts to JOVALSystem properties.
     long TIMEOUT_S	=   15000L;	// 15 sec
     long TIMEOUT_M	=  120000L;	//  2 min
     long TIMEOUT_L	=  900000L;	// 15 min

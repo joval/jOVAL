@@ -47,7 +47,8 @@ public class IosSystemInfo {
 	try {
 	    IProcess p = session.createProcess("show config");
 	    p.start();
-	    IReader reader = new PerishableReader(p.getInputStream(), JOVALSystem.getLongProperty(PROP_IOS_READ_TIMEOUT));
+	    IReader reader = PerishableReader.newInstance(p.getInputStream(),
+							  JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT));
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {
 		if (line.startsWith("hostname")) {
@@ -59,7 +60,8 @@ public class IosSystemInfo {
 
 	    p = session.createProcess("show version");
 	    p.start();
-	    reader = new PerishableReader(p.getInputStream(), JOVALSystem.getLongProperty(PROP_IOS_READ_TIMEOUT));
+	    reader = PerishableReader.newInstance(p.getInputStream(),
+						  JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT));
 	    while ((line = reader.readLine()) != null) {
 		if (line.startsWith("Cisco IOS")) {
 		    int ptr = line.indexOf("Version ");

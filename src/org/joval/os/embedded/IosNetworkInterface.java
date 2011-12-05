@@ -10,6 +10,7 @@ import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.io.PerishableReader;
+import org.joval.util.JOVALSystem;
 
 /**
  * Tool for creating Network Interface information from an ISession attached to an IOS device.
@@ -23,7 +24,8 @@ class IosNetworkInterface {
 
 	IProcess p = session.createProcess("show interfaces");
 	p.start();
-	IReader reader = new PerishableReader(p.getInputStream(), JOVALSystem.getLongProperty(PROP_IOS_READ_TIMEOUT));
+	IReader reader = PerishableReader.newInstance(p.getInputStream(),
+						      JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT));
 	Vector<String> lines = new Vector<String>();
 	String line = null;
 	while ((line = reader.readLine()) != null) {

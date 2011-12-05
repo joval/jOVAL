@@ -90,7 +90,8 @@ public class LineAdapter implements IAdapter {
 	StringBuffer sb = new StringBuffer();
 	IProcess p = session.createProcess("show " + subcommand);
 	p.start();
-	IReader reader = new PerishableReader(p.getInputStream(), JOVALSystem.getLongProperty(PROP_IOS_READ_TIMEOUT));
+	IReader reader = PerishableReader.newInstance(p.getInputStream(),
+						      JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT));
 	try {
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {
