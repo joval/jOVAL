@@ -621,7 +621,7 @@ public class TestMain extends RemotePlugin {
 		for (String xml : results.keySet()) {
 		    TestData data = results.get(xml);
 		    rows.add("<tr bgcolor=#eeeeee><td height=25><b>" + xml + "</b></td><td colspan=2>Run time: " +
-			 data.elapsed + "ms</td></tr>");
+			 getTimeString(data.elapsed) + "</td></tr>");
 		    for (String id : data.tally.keySet()) {
 			if (data.tally.get(id).booleanValue()) {
 			    StringBuffer sb = new StringBuffer();

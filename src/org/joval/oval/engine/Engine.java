@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.SimpleTimeZone;
 import java.util.Stack;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
@@ -2119,7 +2120,10 @@ public class Engine implements IEngine {
 	    if (sdf != null) {
 		SimpleDateFormat df = new SimpleDateFormat(sdf);
 		df.setTimeZone(TimeZone.getTimeZone("GMT"));
-		return df.parse(s).getTime();
+		Date date = df.parse(s);
+		df.applyPattern("dd MMM yyyy HH:mm:ss z");
+		JOVALSystem.getLogger().debug(JOVALMsg.STATUS_DATECONVERSION, s, format, df.format(date), date.getTime());
+		return date.getTime();
 	    }
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

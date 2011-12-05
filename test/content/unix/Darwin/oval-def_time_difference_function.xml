@@ -305,7 +305,8 @@
       <value>157852800</value>
     </variable_state>
     <variable_state id="oval:org.mitre.oval.test:ste:410" version="1" comment="The time difference between two timedate values is 162774000 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <value>162774000</value>
+<!-- DAS changed from 162774000 -->
+      <value>162777600</value>
     </variable_state>
     <variable_state id="oval:org.mitre.oval.test:ste:739" version="1" comment="The time difference between two timedate values is 86400 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value datatype="int" operation="greater than">86400</value>
@@ -341,10 +342,12 @@
       <value>0</value>
     </variable_state>
     <variable_state id="oval:org.mitre.oval.test:ste:965" version="1" comment="The time difference between two timedate values is 10364400 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <value>10364400</value>
+<!-- DAS changed from 10364400 -->
+      <value>10368000</value>
     </variable_state>
     <variable_state id="oval:org.mitre.oval.test:ste:123" version="1" comment="The time difference between two timedate values is 10364400 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-      <value>10364400</value>
+<!-- DAS changed from 10364400 -->
+      <value>10368000</value>
     </variable_state>
     <variable_state id="oval:org.mitre.oval.test:ste:533" version="1" comment="The time difference between two timedate values is 1243741186 seconds." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <value>1243741186</value>
