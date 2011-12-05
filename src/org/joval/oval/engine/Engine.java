@@ -872,7 +872,14 @@ public class Engine implements IEngine {
    
 	ResultEnumeration existenceResult = existence.getResult(testDefinition.getCheckExistence());
 	if (state == null) {
-	    testResult.setResult(existenceResult);
+	    //
+	    // DAS: Note, the NONE_EXIST check is deprecated as of 5.3, and will be eliminated in 6.0
+	    //
+	    if (testDefinition.getCheck() == CheckEnumeration.NONE_EXIST) {
+		testResult.setResult(existence.getResult(ExistenceEnumeration.NONE_EXIST));
+	    } else {
+		testResult.setResult(existenceResult);
+	    }
 	} else {
 	    switch(existenceResult) {
 	      case TRUE:

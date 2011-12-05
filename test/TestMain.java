@@ -86,10 +86,18 @@ public class TestMain extends RemotePlugin {
 	    setCredentialStore(scs);
 	    setDataDirectory(new File("."));
 
-	    if (!reportDir.exists()) {
-		reportDir.mkdir();
+	    int i=0;
+	    if (reportDir.exists() && reportDir.list(new HtmlFilter()).length > 0) {
+		File destination = null;
+		do {
+		    destination = new File("report." + i++);
+		} while (destination.exists());
+		if (!reportDir.renameTo(destination)) {
+		    throw new IOException("Failed to rename existing report directory.");
+		}
+		reportDir = new File("report");
 	    }
-	    copy(new File("xmldoc.gif"), new File(reportDir, "xmldoc.gif"));
+	    reportDir.mkdir();
 
 	    long runtime = System.currentTimeMillis();
 	    Hashtable<String, ReportEntry> reports = new Hashtable<String, ReportEntry>();
@@ -103,6 +111,8 @@ public class TestMain extends RemotePlugin {
 		System.out.println("Tests completed for " + suite);
 	    }
 	    runtime = System.currentTimeMillis() - runtime;
+
+	    copy(new File("xmldoc.gif"), new File(reportDir, "xmldoc.gif"));
 	    writeReport(reports, runtime);
 	    System.exit(0);
 	} catch (IOException e) {
@@ -113,6 +123,7 @@ public class TestMain extends RemotePlugin {
     }
 
     private static void runTests(TestMain plugin, ReportEntry report) {
+	long tm = System.currentTimeMillis();
 	try {
 	    plugin.connect();
 	    File testDir = new File(contentDir, plugin.session.getType().toString());
@@ -166,6 +177,7 @@ public class TestMain extends RemotePlugin {
 	    System.out.println("Failed to create OVAL engine for " + plugin.hostname);
 	    e.printStackTrace();
 	}
+	report.runtime = System.currentTimeMillis() - tm;
     }
 
     private static void writeReport(Hashtable<String, ReportEntry> reports, long runtime) {
@@ -184,11 +196,15 @@ public class TestMain extends RemotePlugin {
 	    out.println("    <table border=0 cellspacing=10>");
 
 	    for (String name : reports.keySet()) {
+		ReportEntry reportEntry = reports.get(name);
 		out.println("      <tr>");
 		out.println("        <td style=\"border-style: solid; border-width: 1px\">");
 		out.println("          <table width=800 cellpadding=5 cellspacing=0 border=0>");
-		out.println("            <tr><td height=50 colspan=3 bgcolor=#dddddd><b>Test Suite: "+name+"</b></td></tr>");
-		for (String row : reports.get(name).toRows()) {
+		out.println("            <tr>");
+		out.println("              <td height=50 bgcolor=#dddddd><b>Test Suite: "+name+"</b></td>");
+		out.println("              <td colspan=2 bgcolor=#dddddd>Run time: "+getTimeString(reportEntry.runtime)+"</td>");
+		out.println("            </tr>");
+		for (String row : reportEntry.toRows()) {
 		    out.println("            " + row);
 		}
 		out.println("          </table>");
@@ -333,30 +349,44 @@ public class TestMain extends RemotePlugin {
 	    if (secs < 10) {
 		sb.append("0");
 	    }
-	    sb.append(Integer.toString(secs)).append(":");
-	    sb.append(getTimeString(millis % HOUR));
-	} else if (millis >= MINUTE) {
-	    int mins = (int)(millis / MINUTE);
+	    sb.append(Integer.toString(secs));
+	} else {
+	    sb.append("00");
+	}
+	sb.append(":");
+	long remainder = millis % HOUR;
+	if (remainder >= MINUTE) {
+	    int mins = (int)(remainder / MINUTE);
 	    if (mins < 10) {
 		sb.append("0");
 	    }
-	    sb.append(Integer.toString(mins)).append(":");
-	    sb.append(getTimeString(millis % MINUTE));
-	} else if (millis >= SECOND) {
-	    int secs = (int)(millis / SECOND);
+	    sb.append(Integer.toString(mins));
+	} else {
+	    sb.append("00");
+	}
+	sb.append(":");
+	remainder = millis % MINUTE;
+	if (remainder >= SECOND) {
+	    int secs = (int)(remainder / SECOND);
 	    if (secs < 10) {
 		sb.append("0");
 	    }
-	    sb.append(Integer.toString(secs)).append(".");
-	    sb.append(getTimeString(millis % SECOND));
+	    sb.append(Integer.toString(secs));
 	} else {
-	    if (millis < 100) {
+	    sb.append("00");
+	}
+	sb.append(".");
+	remainder = millis % SECOND;
+	if (remainder > 0) {
+	    if (remainder < 100) {
 		sb.append("0");
 	    }
-	    if (millis < 10) {
+	    if (remainder < 10) {
 		sb.append("0");
 	    }
-	    sb.append(Long.toString(millis));
+	    sb.append(Long.toString(remainder));
+	} else {
+	    sb.append("000");
 	}
 	return sb.toString();
     }
@@ -489,6 +519,16 @@ public class TestMain extends RemotePlugin {
 	}
     }
 
+    private static class HtmlFilter implements FilenameFilter {
+	HtmlFilter() {}
+
+	// Implement FilenameFilter
+
+	public boolean accept(File dir, String name) {
+	   return name.toLowerCase().endsWith(".html");
+	}
+    }
+
     private static class XMLFilter implements FilenameFilter {
 	XMLFilter() {}
 
@@ -557,6 +597,7 @@ public class TestMain extends RemotePlugin {
 	private Properties props;
 	private Hashtable<String, TestData> results;
 	private Hashtable<String, Exception> errors;
+	private long runtime;
 
 	ReportEntry(String suite, Properties props) {
 	    this.suite = suite;
