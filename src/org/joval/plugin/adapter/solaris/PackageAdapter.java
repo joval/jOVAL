@@ -29,7 +29,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -69,7 +69,7 @@ public class PackageAdapter implements IAdapter {
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
 		p = session.createProcess("pkginfo -x");
 		p.start();
-		reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_L);
+		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_L);
 		String line = null;
 		while ((line = reader.readLine()) != null) {
 		    if (line.length() == 0) {
@@ -211,7 +211,7 @@ public class PackageAdapter implements IAdapter {
 	IReader reader = null;
 	boolean isInstalled = false;
 	try {
-	    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    String line = null;
 	    while((line = reader.readLine()) != null) {
 		line = line.trim();
@@ -246,8 +246,12 @@ public class PackageAdapter implements IAdapter {
 	    }
 	} finally {
 	    if (reader != null) {
-		reader.close();
-		p.waitFor(0);
+		try {
+		    reader.close();
+		    p.waitFor(0);
+		} catch (IOException e) {
+		} catch (InterruptedException e) {
+		}
 	    }
 	}
 

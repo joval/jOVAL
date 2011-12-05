@@ -28,7 +28,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
@@ -68,7 +68,7 @@ public class RpminfoAdapter implements IAdapter {
 		IProcess p = session.createProcess("rpm -q -a");
 		p.start();
 		String line = null;
-		IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
+		IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_M);
 		while ((line = reader.readLine()) != null) {
 		    list.add(line);
 		}
@@ -173,7 +173,7 @@ public class RpminfoAdapter implements IAdapter {
 	String pkgArch=null, pkgVersion=null, pkgRelease=null;
 	IProcess p = session.createProcess("rpm -q " + packageName + " -i");
 	p.start();
-	IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	boolean isInstalled = false;
 	String line = null;
 	for (int lineNum=1; (line = reader.readLine()) != null; lineNum++) {
@@ -252,7 +252,7 @@ public class RpminfoAdapter implements IAdapter {
 	    item.setStatus(StatusEnumeration.EXISTS);
 	    p = session.createProcess("rpm -q --qf %{EPOCH} " + packageName);
 	    p.start();
-	    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    String pkgEpoch = reader.readLine();
 	    reader.close();
 	    p.waitFor(0);
@@ -274,7 +274,7 @@ public class RpminfoAdapter implements IAdapter {
 
 	    p = session.createProcess("rpm -ql " + packageName);
 	    p.start();
-	    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    while((line = reader.readLine()) != null) {
 		if (!"(contains no files)".equals(line.trim())) {
 		    EntityItemStringType filepath = JOVALSystem.factories.sc.core.createEntityItemStringType();

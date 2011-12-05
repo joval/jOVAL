@@ -91,6 +91,7 @@ public class TestMain extends RemotePlugin {
 	    }
 	    copy(new File("xmldoc.gif"), new File(reportDir, "xmldoc.gif"));
 
+	    long runtime = System.currentTimeMillis();
 	    Hashtable<String, ReportEntry> reports = new Hashtable<String, ReportEntry>();
 	    for (String suite : config.listSections()) {
 		System.out.println("Starting test suite run for " + suite);
@@ -101,7 +102,8 @@ public class TestMain extends RemotePlugin {
 		reports.put(suite, report);
 		System.out.println("Tests completed for " + suite);
 	    }
-	    writeReport(reports);
+	    runtime = System.currentTimeMillis() - runtime;
+	    writeReport(reports, runtime);
 	    System.exit(0);
 	} catch (IOException e) {
 	    e.printStackTrace();
@@ -166,7 +168,7 @@ public class TestMain extends RemotePlugin {
 	}
     }
 
-    private static void writeReport(Hashtable<String, ReportEntry> reports) {
+    private static void writeReport(Hashtable<String, ReportEntry> reports, long runtime) {
 	File reportFile = new File(reportDir, "report.html");
 
 	try {
@@ -177,6 +179,7 @@ public class TestMain extends RemotePlugin {
 	    out.println("  </head>");
 	    out.println("  <body>");
 	    out.println("    <h2>jOVAL automated test report</h2>");
+	    out.println("    <p>Elapsed time: " + getTimeString(runtime));
 	    out.println("    <p>Generated: " + new Date().toString() + "</p>");
 	    out.println("    <table border=0 cellspacing=10>");
 
@@ -316,6 +319,45 @@ public class TestMain extends RemotePlugin {
 	sb.append(pad(date.get(Calendar.MINUTE))).append(":");
 	sb.append(pad(date.get(Calendar.SECOND))).append(".");
 	sb.append(pad(date.get(Calendar.MILLISECOND), 3));
+	return sb.toString();
+    }
+
+    static final long SECOND = 1000L;
+    static final long MINUTE = SECOND * 60L;
+    static final long HOUR = MINUTE * 60L;
+
+    private static String getTimeString(long millis) {
+	StringBuffer sb = new StringBuffer();
+	if (millis >= HOUR) {
+	    int secs = (int)(millis / HOUR);
+	    if (secs < 10) {
+		sb.append("0");
+	    }
+	    sb.append(Integer.toString(secs)).append(":");
+	    sb.append(getTimeString(millis % HOUR));
+	} else if (millis >= MINUTE) {
+	    int mins = (int)(millis / MINUTE);
+	    if (mins < 10) {
+		sb.append("0");
+	    }
+	    sb.append(Integer.toString(mins)).append(":");
+	    sb.append(getTimeString(millis % MINUTE));
+	} else if (millis >= SECOND) {
+	    int secs = (int)(millis / SECOND);
+	    if (secs < 10) {
+		sb.append("0");
+	    }
+	    sb.append(Integer.toString(secs)).append(".");
+	    sb.append(getTimeString(millis % SECOND));
+	} else {
+	    if (millis < 100) {
+		sb.append("0");
+	    }
+	    if (millis < 10) {
+		sb.append("0");
+	    }
+	    sb.append(Long.toString(millis));
+	}
 	return sb.toString();
     }
 

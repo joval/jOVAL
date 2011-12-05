@@ -20,7 +20,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -63,7 +63,7 @@ public class UnixFile implements IUnixFile {
     
 	    IProcess p = session.createProcess(command);
 	    p.start();
-	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    String line = reader.readLine();
 	    reader.close();
 	    unixType = line.charAt(0);

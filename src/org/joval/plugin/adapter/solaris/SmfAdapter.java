@@ -31,7 +31,7 @@ import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
@@ -71,7 +71,7 @@ public class SmfAdapter implements IAdapter {
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SMF);
 		p = session.createProcess("/usr/bin/svcs -o fmri");
 		p.start();
-		reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
+		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_M);
 		ArrayList<String> list = new ArrayList<String>();
 		String line = null;
 		while((line = reader.readLine()) != null) {
@@ -207,7 +207,7 @@ public class SmfAdapter implements IAdapter {
 	IReader reader = null;
 	boolean found = false;
 	try {
-	    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    String line = null;
 	    while((line = reader.readLine()) != null) {
 		line = line.trim();
@@ -250,7 +250,7 @@ public class SmfAdapter implements IAdapter {
 	    p = session.createProcess("/usr/bin/svcprop " + fmri);
 	    p.start();
 	    try {
-		reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 		String line = null;
 		while ((line = reader.readLine()) != null) {
 		    if (line.startsWith(START_EXEC_PROP)) {
@@ -283,7 +283,7 @@ public class SmfAdapter implements IAdapter {
 		p = session.createProcess("/usr/sbin/inetadm -l " + fmri);
 		p.start();
 		try {
-		    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+		    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 		    String line = null;
 		    while ((line = reader.readLine()) != null) {
 			if (line.trim().startsWith("proto=")) {

@@ -3,8 +3,6 @@
 
 package org.joval.os.embedded;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -15,8 +13,10 @@ import oval.schemas.systemcharacteristics.core.InterfacesType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
+import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -47,7 +47,7 @@ public class IosSystemInfo {
 	try {
 	    IProcess p = session.createProcess("show config");
 	    p.start();
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    IReader reader = new PerishableReader(p.getInputStream(), JOVALSystem.getLongProperty(PROP_IOS_READ_TIMEOUT));
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {
 		if (line.startsWith("hostname")) {
@@ -59,7 +59,7 @@ public class IosSystemInfo {
 
 	    p = session.createProcess("show version");
 	    p.start();
-	    reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	    reader = new PerishableReader(p.getInputStream(), JOVALSystem.getLongProperty(PROP_IOS_READ_TIMEOUT));
 	    while ((line = reader.readLine()) != null) {
 		if (line.startsWith("Cisco IOS")) {
 		    int ptr = line.indexOf("Version ");

@@ -3,8 +3,6 @@
 
 package org.joval.plugin.adapter.cisco.ios;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Vector;
 import javax.xml.bind.JAXBElement;
@@ -20,10 +18,12 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.ios.LineItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.IBaseSession;
+import org.joval.io.PerishableReader;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -90,7 +90,7 @@ public class LineAdapter implements IAdapter {
 	StringBuffer sb = new StringBuffer();
 	IProcess p = session.createProcess("show " + subcommand);
 	p.start();
-	BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	IReader reader = new PerishableReader(p.getInputStream(), JOVALSystem.getLongProperty(PROP_IOS_READ_TIMEOUT));
 	try {
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {

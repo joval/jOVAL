@@ -3,13 +3,13 @@
 
 package org.joval.os.embedded;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.util.List;
 import java.util.Vector;
 
+import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
+import org.joval.io.PerishableReader;
 
 /**
  * Tool for creating Network Interface information from an ISession attached to an IOS device.
@@ -23,7 +23,7 @@ class IosNetworkInterface {
 
 	IProcess p = session.createProcess("show interfaces");
 	p.start();
-	BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	IReader reader = new PerishableReader(p.getInputStream(), JOVALSystem.getLongProperty(PROP_IOS_READ_TIMEOUT));
 	Vector<String> lines = new Vector<String>();
 	String line = null;
 	while ((line = reader.readLine()) != null) {

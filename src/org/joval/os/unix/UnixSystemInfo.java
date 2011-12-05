@@ -16,7 +16,7 @@ import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -46,7 +46,7 @@ public class UnixSystemInfo {
 	try {
 	    IProcess p = session.createProcess("hostname");
 	    p.start();
-	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    info.setPrimaryHostName(reader.readLine());
 	    reader.close();
 	    p.waitFor(0);
@@ -58,7 +58,7 @@ public class UnixSystemInfo {
 	try {
 	    IProcess p = session.createProcess("uname -r");
 	    p.start();
-	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    info.setOsVersion(reader.readLine());
 	    reader.close();
 	    p.waitFor(0);
@@ -72,7 +72,7 @@ public class UnixSystemInfo {
 	    for (INode node : fs.getFile("/etc").getChildren(Pattern.compile("^.*-release$"))) {
 		IProcess p = session.createProcess("cat " + node.getPath());
 		p.start();
-		IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+		IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 		info.setOsName(reader.readLine());
 		reader.close();
 		p.waitFor(0);
@@ -88,7 +88,7 @@ public class UnixSystemInfo {
 	try {
 	    IProcess p = session.createProcess("uname -p");
 	    p.start();
-	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    info.setArchitecture(reader.readLine());
 	    reader.close();
 	    p.waitFor(0);

@@ -30,7 +30,7 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.system.IEnvironment;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.util.tree.CachingTree;
 import org.joval.util.tree.Tree;
 import org.joval.util.JOVALMsg;
@@ -127,8 +127,8 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
 	    IProcess p = session.createProcess(command);
 	    p.start();
-	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    ErrorReader er = new ErrorReader(StreamTool.getSafeReader(p.getErrorStream(), IUnixSession.TIMEOUT_XL));
+	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    ErrorReader er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), IUnixSession.TIMEOUT_XL));
 	    er.start();
 	    String line = null;
 	    while((line = reader.readLine()) != null) {

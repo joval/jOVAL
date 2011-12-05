@@ -11,7 +11,7 @@ import java.util.Vector;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.io.IReader;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 
 /**
  * Tool for creating a SystemInfoType from an IUnixSession implementation.
@@ -25,7 +25,7 @@ class NetworkInterface {
 
 	IProcess p = session.createProcess("/sbin/ifconfig -a");
 	p.start();
-	IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	Vector<String> lines = new Vector<String>();
 	String line = null;
 

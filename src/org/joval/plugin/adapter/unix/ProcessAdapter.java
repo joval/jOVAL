@@ -38,7 +38,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
@@ -169,7 +169,7 @@ public class ProcessAdapter implements IAdapter {
 	try {
 	    IProcess p = session.createProcess(args);
 	    p.start();
-	    IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	    String line = reader.readLine(); // skip over the header row.
 	    while((line = reader.readLine()) != null) {
 		StringTokenizer tok = new StringTokenizer(line);

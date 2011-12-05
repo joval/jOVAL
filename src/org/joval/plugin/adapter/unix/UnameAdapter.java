@@ -26,7 +26,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -81,7 +81,7 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType machineClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	IProcess p = session.createProcess("uname -m");
 	p.start();
-	IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	String result = reader.readLine();
 	reader.close();
 	p.waitFor(0);
@@ -91,7 +91,7 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType nodeName = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -n");
 	p.start();
-	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	result = reader.readLine();
 	reader.close();
 	p.waitFor(0);
@@ -101,7 +101,7 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType osName = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -s");
 	p.start();
-	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	result = reader.readLine();
 	reader.close();
 	p.waitFor(0);
@@ -111,7 +111,7 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType osRelease = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -r");
 	p.start();
-	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	result = reader.readLine();
 	reader.close();
 	p.waitFor(0);
@@ -121,7 +121,7 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType osVersion = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -v");
 	p.start();
-	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	result = reader.readLine();
 	reader.close();
 	p.waitFor(0);
@@ -131,7 +131,7 @@ public class UnameAdapter implements IAdapter {
 	EntityItemStringType processorType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("uname -p");
 	p.start();
-	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	result = reader.readLine();
 	reader.close();
 	p.waitFor(0);

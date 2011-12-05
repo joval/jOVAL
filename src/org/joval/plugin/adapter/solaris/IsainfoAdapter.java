@@ -23,7 +23,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -78,7 +78,7 @@ public class IsainfoAdapter implements IAdapter {
 	EntityItemStringType kernelIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	IProcess p = session.createProcess("isainfo -k");
 	p.start();
-	IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	String result = reader.readLine();
 	reader.close();
 	p.waitFor(0);
@@ -88,7 +88,7 @@ public class IsainfoAdapter implements IAdapter {
 	EntityItemStringType applicationIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	p = session.createProcess("isainfo -n");
 	p.start();
-	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	result = reader.readLine();
 	reader.close();
 	p.waitFor(0);
@@ -98,7 +98,7 @@ public class IsainfoAdapter implements IAdapter {
 	EntityItemIntType bits = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	p = session.createProcess("isainfo -b");
 	p.start();
-	reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	result = reader.readLine();
 	reader.close();
 	p.waitFor(0);

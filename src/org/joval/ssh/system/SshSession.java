@@ -3,9 +3,7 @@
 
 package org.joval.ssh.system;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 
 import org.vngx.jsch.JSch;
 import org.vngx.jsch.ChannelExec;
@@ -29,6 +27,8 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
+import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.JSchLogger;
@@ -170,11 +170,11 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 
     public Type getType() {
 	if (connect()) {
-	    BufferedReader reader = null;
+	    PerishableReader reader = null;
 	    try {
 		IProcess p = createProcess("pwd");
 		p.start();
-		reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 		String line = null;
 		while ((line = reader.readLine()) != null) {
 		    if (line.startsWith("flash")) {

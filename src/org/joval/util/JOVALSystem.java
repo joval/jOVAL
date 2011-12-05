@@ -122,6 +122,11 @@ public class JOVALSystem {
     public static final String PROP_SUDO_MAX_RETRIES = "sudo.exec.retries";
 
     /**
+     * Property indicating the number of milliseconds to wait for an IOS command to begin to return data.
+     */
+    public static final String PROP_IOS_READ_TIMEOUT = "ios.read.timeout";
+
+    /**
      * Property governing the behavior of local filesystem map cache pre-load behavior (true/false).  If false, any
      * local IFilesystem implementation will use the tree-search algorithm to resolve searches.  If true, it will
      * scan (and cache) all file paths on the entire filesystem, and then subsequently perform regular expression

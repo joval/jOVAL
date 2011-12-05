@@ -32,7 +32,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
@@ -130,7 +130,7 @@ public class RunlevelAdapter implements IAdapter {
 		try {
 		    p = session.createProcess("/sbin/chkconfig --list");
 		    p.start();
-		    reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_M);
+		    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_M);
 		    String line = null;
 		    while ((line = reader.readLine()) != null) {
 			StringTokenizer tok = new StringTokenizer(line);

@@ -7,7 +7,7 @@ import java.io.EOFException;
 import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -58,7 +58,7 @@ public interface IUnixSession extends ISession {
 		    try {
 			IProcess p = session.createProcess(command);
 			p.start();
-			IReader reader = StreamTool.getSafeReader(p.getInputStream(), TIMEOUT_S);
+			IReader reader = PerishableReader.newInstance(p.getInputStream(), TIMEOUT_S);
 			String osName = reader.readLine();
 			success = true;
 			reader.close();

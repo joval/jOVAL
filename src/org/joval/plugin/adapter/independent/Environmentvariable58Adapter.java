@@ -35,7 +35,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.os.unix.system.Environment;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
@@ -106,7 +106,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 				processEnv = new Properties();
 				IProcess p = us.createProcess("pargs -e " + pid);
 				p.start();
-				IReader reader = StreamTool.getSafeReader(p.getInputStream(), IUnixSession.TIMEOUT_S);
+				IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 				String line;
 				while ((line = reader.readLine()) != null) {
 				    if (line.startsWith("envp")) {
@@ -143,7 +143,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			IFile proc = session.getFilesystem().getFile(path);
 			if (proc.exists()) {
 			    processEnv = new Properties();
-			    reader = StreamTool.getSafeReader(proc.getInputStream(), IUnixSession.TIMEOUT_M);
+			    reader = PerishableReader.newInstance(proc.getInputStream(), IUnixSession.TIMEOUT_M);
 			    String pair;
 			    while ((pair = new String(reader.readUntil(127))) != null) { // 127 == delimiter char
 				int ptr = pair.indexOf("=");

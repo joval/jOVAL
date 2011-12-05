@@ -9,6 +9,7 @@ SHARED=\
 	org.joval.intf.unix.io.IUnixFile				\
 	org.joval.intf.unix.system.IUnixSession				\
 	org.joval.intf.util.IPathRedirector				\
+	org.joval.intf.util.IPerishable					\
 	org.joval.intf.util.tree.IForest				\
 	org.joval.intf.util.tree.INode					\
 	org.joval.intf.util.tree.ITree					\
@@ -35,6 +36,7 @@ SHARED=\
 	org.joval.intf.windows.wmi.IWmiProvider				\
 	org.joval.io.BaseFile						\
 	org.joval.io.LittleEndian					\
+	org.joval.io.PerishableReader					\
 	org.joval.io.StreamTool						\
 	org.joval.os.embedded.IosNetworkInterface			\
 	org.joval.os.embedded.IosSystemInfo				\

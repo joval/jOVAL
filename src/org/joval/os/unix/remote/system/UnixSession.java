@@ -16,7 +16,7 @@ import org.joval.intf.io.IReader;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.StreamTool;
+import org.joval.io.PerishableReader;
 import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.unix.system.Environment;
 import org.joval.ssh.identity.SshCredential;
@@ -81,7 +81,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 		try {
 		    IFile motd = fs.getFile(MOTD);
 		    if (motd.exists()) {
-			IReader reader = StreamTool.getSafeReader(motd.getInputStream(), TIMEOUT_M);
+			IReader reader = PerishableReader.newInstance(motd.getInputStream(), TIMEOUT_M);
 			while (reader.readLine() != null) {
 			    motdLines++;
 			}
