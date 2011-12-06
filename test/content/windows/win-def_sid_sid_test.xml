@@ -59,7 +59,8 @@
       <trustee_sid>S-1-5-32-544</trustee_sid>
     </sid_sid_object>
     <sid_sid_object id="oval:org.mitre.oval.test:obj:431" version="1" comment="Retrieves a sid_sid_object with trustee_sid equals 'S-1-5-32-544' and with resolve_group behavior set to false." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
-      <behaviors resolve_group="false" include_group="false"/>
+<!-- DAS: changed value of include_group from "false" -->
+      <behaviors resolve_group="false" include_group="true"/>
       <trustee_sid>S-1-5-32-544</trustee_sid>
     </sid_sid_object>
   </objects>
