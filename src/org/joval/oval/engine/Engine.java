@@ -876,6 +876,7 @@ public class Engine implements IEngine {
 	    // DAS: Note, the NONE_EXIST check is deprecated as of 5.3, and will be eliminated in 6.0
 	    //
 	    if (testDefinition.getCheck() == CheckEnumeration.NONE_EXIST) {
+		JOVALSystem.getLogger().warn(JOVALMsg.STATUS_CHECK_NONE_EXIST, testDefinition.getCheckExistence(), testId);
 		testResult.setResult(existence.getResult(ExistenceEnumeration.NONE_EXIST));
 	    } else {
 		testResult.setResult(existenceResult);

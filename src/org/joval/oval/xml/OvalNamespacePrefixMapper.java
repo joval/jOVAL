@@ -37,7 +37,7 @@ public class OvalNamespacePrefixMapper extends NamespacePrefixMapper {
 
     public static void configure(Marshaller marshaller, URI uri) throws PropertyException {
 	marshaller.setProperty(PREFIXMAPPER_PROP, new OvalNamespacePrefixMapper(uri, marshaller));
-	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, new Boolean(true));
+	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
     }
 
     // Overrides

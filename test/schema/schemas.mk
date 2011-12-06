@@ -1,0 +1,2 @@
+SCHEMAS=\
+	report.xsd

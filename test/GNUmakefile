@@ -5,30 +5,36 @@ TOP=..
 
 include $(TOP)/common.mk
 
-API=$(JOVAL_CORE)/jOVALCore.jar$(CLN)$(JOVAL_DEPS)$(CLN)$(SCHEMALIB)
-PSHARED=$(COMPONENTS)/sdk/$(DIST)/jOVALPluginShared.jar
+REPORT_SCHEMA_LIB=schema/ReportSchema.jar
+PLUGIN=$(PLUGIN_SHARED)/jOVALPluginShared.jar$(CLN)$(PLUGIN_REMOTE)/jOVALPluginRemote.jar$(CLN)$(PLUGIN_REMOTE_DEPS)
+API=$(SCHEMALIB)$(CLN)$(JOVAL_CORE)/jOVALCore.jar$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(PLUGIN)$(CLN)$(REPORT_SCHEMA_LIB)
+CLASSPATH="$(CLASSLIB)$(CLN)$(API)$(CLN)$(PLUGIN)$(CLN)$(SRC)"
+RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(PLUGIN)$(CLN)$(BUILD)"
 
-REMOTELIBDIR=$(COMPONENTS)/sdk/plugin/remote/$(LIBDIR)
-REMOTEDEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(REMOTELIBDIR)/*)))
-PREMOTE=$(COMPONENTS)/sdk/$(DIST)/jOVALPluginRemote.jar$(CLN)$(REMOTEDEPS)
+include classes.mk
 
-CLASSPATH="$(CLASSLIB)$(CLN)$(CLN)$(API)$(CLN)$(PSHARED)$(CLN)$(PREMOTE)$(CLN)$(SRC)"
-RUNTIMECP="$(CLASSLIB)$(CLN)$(CLN)$(API)$(CLN)$(PSHARED)$(CLN)$(PREMOTE)$(CLN)."
+CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
+PACKAGES=$(sort $(basename $(CLASSES)))
+PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-CLASSES=TestMain
-CLASS_FILES:=$(foreach class, $(CLASSES), $(subst .,/,$(class)).class)
-
-all: classes
-
-clean:
-	rm -rf *.class
-	rm test.log
-	rm -rf report
-
-classes: $(CLASS_FILES)
-
-%.class: %.java
-	$(JAVAC) $(JAVACFLAGS) -classpath $(CLASSPATH) $<
+all: $(REPORT_SCHEMA_LIB) classes
 
 test:
-	$(JAVA) -classpath $(RUNTIMECP) TestMain plugin.properties
+	$(JAVA) -classpath $(RUNTIMECP) org.joval.test.automation.Main test.ini
+
+clean:
+	@$(MAKE) --keep-going --directory=schema clean
+	rm -rf $(BUILD)
+
+classes: classdirs $(CLASS_FILES)
+
+classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
+
+$(BUILD)/%.class: $(SRC)/%.java
+	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<
+
+$(BUILD)/%/:
+	mkdir -p $(subst PKG,,$@)
+
+$(REPORT_SCHEMA_LIB): schema/xsd/report.xsd
+	@$(MAKE) --keep-going --directory=schema all

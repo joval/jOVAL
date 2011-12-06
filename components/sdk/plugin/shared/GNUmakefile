@@ -7,7 +7,7 @@ include $(TOP)/common.mk
 
 PRODUCTNAME=jOVALPluginShared
 
-API=$(JOVAL_CORE)/jOVALCore.jar$(CLN)$(JOVAL_DEPS)$(CLN)$(SCHEMALIB)
+API=$(JOVAL_CORE)/jOVALCore.jar$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
 
 include classes.mk

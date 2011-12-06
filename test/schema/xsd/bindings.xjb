@@ -1,0 +1,37 @@
+<jxb:bindings version="1.0"
+              xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+              xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <jxb:bindings>
+    <jxb:globalBindings generateIsSetMethod="true"/>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="../../../components/schema/xsd-5.10/oval-common-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="oval.schemas.common"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="../../../components/schema/xsd-5.10/oval-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="oval.schemas.definitions.core"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="../../../components/schema/xsd-5.10/oval-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="oval.schemas.systemcharacteristics.core"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="../../../components/schema/xsd-5.10/oval-results-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="oval.schemas.results.core"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="../../../components/schema/xsd-5.10/xmldsig-core-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.w3c.xml.signature"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="report.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.joval.test.automation.schema"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+</jxb:bindings>
