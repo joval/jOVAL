@@ -70,6 +70,8 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  */
 public class Main {
+    private static final String LOCAL = "Local";
+
     private static String PACKAGES = "org.joval.test.automation.schema:" +
 				     JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS);
 
@@ -115,27 +117,22 @@ public class Main {
 	    Report report = factory.createReport();
 	    long runtime = System.currentTimeMillis();
 
-	    //
-	    // Run all the remote tests
-	    //
 	    IniFile config = new IniFile(new File(argv[0]));
 	    for (String name : config.listSections()) {
 		System.out.println("Starting test suite run for " + name);
-		TestSuite suite = runTests(new PolymorphicPlugin(config.getSection(name)));
+
+		PolymorphicPlugin plugin;
+		if (LOCAL.equals(name)) {
+		    plugin = new PolymorphicPlugin();
+		} else {
+		    plugin = new PolymorphicPlugin(config.getSection(name));
+		}
+
+		TestSuite suite = runTests(plugin);
 		suite.setName(name);
 		report.getTestSuite().add(suite);
 		System.out.println("Tests completed for " + name);
 	    }
-
-	    //
-	    // Run a local test
-	    //
-	    System.out.println("Starting local test suite run");
-	    TestSuite suite = runTests(new PolymorphicPlugin());
-	    suite.setName("Local");
-	    report.getTestSuite().add(suite);
-	    System.out.println("Local tests completed");
-
 	    runtime = System.currentTimeMillis() - runtime;
 	    report.setRuntime(datatype.newDuration(runtime));
 	    report.setDate(datatype.newXMLGregorianCalendar(new GregorianCalendar()));
