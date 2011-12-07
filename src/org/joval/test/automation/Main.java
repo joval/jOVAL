@@ -4,6 +4,7 @@
 package org.joval.test.automation;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FilenameFilter;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -26,6 +27,7 @@ import java.util.zip.ZipFile;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -34,6 +36,12 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import oval.schemas.results.core.DefinitionType;
 import oval.schemas.results.core.OvalResults;
@@ -62,6 +70,9 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  */
 public class Main {
+    private static String PACKAGES = "org.joval.test.automation.schema:" +
+				     JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS);
+
     private static final ObjectFactory factory = new ObjectFactory();
 
     private static final File contentDir	= new File("content");
@@ -111,7 +122,7 @@ public class Main {
 		TestSuite suite = runTests(config.getSection(name));
 		suite.setName(name);
 		report.getTestSuite().add(suite);
-		System.out.println("Tests completed for " + suite);
+		System.out.println("Tests completed for " + name);
 	    }
 	    runtime = System.currentTimeMillis() - runtime;
 	    report.setRuntime(datatype.newDuration(runtime));
@@ -119,9 +130,7 @@ public class Main {
 	    writeReport(report);
 
 	    System.exit(0);
-	} catch (DatatypeConfigurationException e) {
-	    e.printStackTrace();
-	} catch (IOException e) {
+	} catch (Exception e) {
 	    e.printStackTrace();
 	}
 
@@ -225,25 +234,18 @@ public class Main {
 	return suite;
     }
 
-    private static void writeReport(Report report) {
-	String fname = "report." + reportDir.list(new ReportFilter()).length + ".xml";
-	File reportFile = new File(reportDir, fname);
+    private static void writeReport(Report report) throws Exception {
+	String fbase = "report." + reportDir.list(new ReportFilter()).length;
+	File reportFile = new File(reportDir, fbase + ".xml");
+	System.out.println("Writing XML report " + reportFile);
 
 	OutputStream out = null;
 	try {
-	    StringBuffer packages = new StringBuffer("org.joval.test.automation.schema");
-	    packages.append(":").append(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS));
-	    JAXBContext ctx = JAXBContext.newInstance(packages.toString());
+	    JAXBContext ctx = JAXBContext.newInstance(PACKAGES);
 	    Marshaller marshaller = ctx.createMarshaller();
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    out = new FileOutputStream(reportFile);
 	    marshaller.marshal(report, out);
-	} catch (JAXBException e) {
-	    e.printStackTrace();
-	} catch (FactoryConfigurationError e) {
-	    e.printStackTrace();
-	} catch (FileNotFoundException e) {
-	    e.printStackTrace();
 	} finally {
 	    if (out != null) {
 		try {
@@ -252,6 +254,27 @@ public class Main {
 		    e.printStackTrace();
 		}
 	    }
+	}
+
+        writeTransform(report, new File("transform.xsl"), new File(reportDir, fbase + ".html"));
+    }
+
+    private static void writeTransform(Report report, File transform, File output) throws Exception {
+	System.out.println("Writing transform " + output);
+	TransformerFactory xf = TransformerFactory.newInstance();
+	Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(transform)));
+	JAXBContext ctx = JAXBContext.newInstance(PACKAGES);
+	transformer.transform(new JAXBSource(ctx, report), new StreamResult(output));
+    }
+
+    private static final Report readReport(File f) throws Exception {
+	JAXBContext ctx = JAXBContext.newInstance(PACKAGES);
+	Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	Object rootObj = unmarshaller.unmarshal(f);
+	if (rootObj instanceof Report) {
+	    return (Report)rootObj;
+	} else {
+	    throw new Exception("Not a report file: " + f);
 	}
     }
 
