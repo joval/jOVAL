@@ -12,13 +12,16 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.joval.discovery.Local;
 import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IProducer;
+import org.joval.oval.OvalException;
 import org.joval.plugin.RemotePlugin;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
@@ -27,7 +30,7 @@ import org.joval.util.StringTools;
  *
  * @author David A. Solin
  */
-class Plugin extends RemotePlugin {
+class PolymorphicPlugin extends RemotePlugin {
     static final SimpleCredentialStore SCS = new SimpleCredentialStore();
     static {
 	setCredentialStore(SCS);
@@ -40,9 +43,39 @@ class Plugin extends RemotePlugin {
 
     private IFilesystem fs;
 
-    Plugin(Properties props) {
+    /**
+     * Create a plugin using a local session implementation.
+     */
+    PolymorphicPlugin() {
+	super(IBaseSession.LOCALHOST);
+	session = Local.createSession();
+    }
+
+    /**
+     * Create a plugin using a remote session implementation.
+     */
+    PolymorphicPlugin(Properties props) {
 	super(props.getProperty(SimpleCredentialStore.PROP_HOSTNAME));
 	SCS.add(props);
+    }
+
+    /**
+     * If this is a local session, perform the connect of the BasePlugin class.  If a remote session, call the super-class
+     * connect method.
+     *
+     * @override
+     */
+    public void connect() throws OvalException {
+	if (IBaseSession.LOCALHOST.equals(hostname)) {
+	    JOVALSystem.getLogger().info(JOVALMsg.STATUS_PLUGIN_CONNECT);
+	    if (session == null) {
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_NONE));
+	    } else if (!session.connect()) {
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
+	    }
+	} else {
+	    super.connect();
+	}
     }
 
     IBaseSession.Type getSessionType() {

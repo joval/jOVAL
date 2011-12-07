@@ -5,8 +5,6 @@ TOP=../..
 
 include $(TOP)/common.mk
 
-PRODUCTNAME=oval-schema-$(OVAL_SCHEMA_VERSION)
-
 SCHEMADIR=xsd-$(OVAL_SCHEMA_VERSION)
 BINDINGS=$(SCHEMADIR)/bindings.xjb
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(GENSRC)"
@@ -19,16 +17,16 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(PRODUCTNAME).jar
+all: $(SCHEMALIB)
 
-$(PRODUCTNAME).jar: sources classes resources javadocs
+$(SCHEMALIB): sources classes resources javadocs
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 javadocs: sources
 	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -sourcepath $(GENSRC) -subpackages oval:org
 
 clean:
-	rm -f $(PRODUCTNAME).jar
+	rm -f $(SCHEMALIB)
 	rm -rf $(BUILD)
 	rm -rf $(GENSRC)
 	rm -rf $(DOCS)

@@ -9,9 +9,8 @@ PRODUCTNAME=jovaldi
 ZIPNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_Windows
 TARNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_`uname -s`_`uname -p`
 
-API=$(JOVAL_CORE)/jOVALCore.jar$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)
-PSHARED=$(COMPONENTS)/sdk/$(DIST)/jOVALPluginShared.jar
-CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(PSHARED)$(CLN)$(SRC)"
+API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)
+CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
 
 include classes.mk
 
@@ -51,40 +50,44 @@ dist: dist-$(ARCH)
 
 dist-x86: all
 	mkdir -p $(DIST)/x86
-	mkdir -p $(DIST)/x86/lib
+	cp -R $(RSRC)/* $(DIST)/x86
 	cp $(PRODUCTNAME).jar $(DIST)/x86/lib
 	cp $(SCHEMALIB) $(DIST)/x86/lib
-	cp $(JOVAL_CORE)/jOVALCore.jar $(DIST)/x86/lib
+	cp $(JOVAL_CORE_LIB) $(DIST)/x86/lib
+	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST)/x86/lib
 	mkdir -p $(DIST)/x86/plugin/default/lib
 	cp -R plugin/default/rsrc/* $(DIST)/x86/plugin/default
-	cp -R $(COMPONENTS)/sdk/$(DIST)/jOVALPluginShared.jar $(DIST)/x86/plugin/default/lib
-	cp -R $(COMPONENTS)/sdk/$(DIST)/jOVALPluginLocal.jar $(DIST)/x86/plugin/default/lib
-	cp -R $(COMPONENTS)/sdk/plugin/local/$(LIBDIR)/* $(DIST)/x86/plugin/default/lib
+	cp -R $(PLUGIN_SHARED_LIB) $(DIST)/x86/plugin/default/lib
+	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/* $(DIST)/x86/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL_LIB) $(DIST)/x86/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/x86/plugin/default/lib
 	mkdir -p $(DIST)/x86/plugin/remote/lib
 	cp -R plugin/remote/rsrc/* $(DIST)/x86/plugin/remote
-	cp -R $(COMPONENTS)/sdk/$(DIST)/jOVALPluginShared.jar $(DIST)/x86/plugin/remote/lib
-	cp -R $(COMPONENTS)/sdk/$(DIST)/jOVALPluginRemote.jar $(DIST)/x86/plugin/remote/lib
-	cp -R $(COMPONENTS)/sdk/plugin/remote/$(LIBDIR)/*.jar $(DIST)/x86/plugin/remote/lib
-	cp -R $(RSRC)/* $(DIST)/x86
+	cp -R $(PLUGIN_SHARED_LIB) $(DIST)/x86/plugin/remote/lib
+	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/*.jar $(DIST)/x86/plugin/remote/lib
+	cp -R $(PLUGIN_REMOTE_LIB) $(DIST)/x86/plugin/remote/lib
+	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST)/x86/plugin/remote/lib
 	cp -R $(JRE_HOME)/x86 $(DIST)/x86/jre
 
 dist-x64: all
 	mkdir -p $(DIST)/x64
-	mkdir -p $(DIST)/x64/lib
+	cp -R $(RSRC)/* $(DIST)/x64
 	cp $(PRODUCTNAME).jar $(DIST)/x64/lib
 	cp $(SCHEMALIB) $(DIST)/x64/lib
-	cp $(JOVAL_CORE)/jOVALCore.jar $(DIST)/x64/lib
+	cp $(JOVAL_CORE_LIB) $(DIST)/x64/lib
+	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST)/x64/lib
 	mkdir -p $(DIST)/x64/plugin/default/lib
 	cp -R plugin/default/rsrc/* $(DIST)/x64/plugin/default
-	cp -R $(COMPONENTS)/sdk/$(DIST)/jOVALPluginShared.jar $(DIST)/x64/plugin/default/lib
-	cp -R $(COMPONENTS)/sdk/$(DIST)/jOVALPluginLocal.jar $(DIST)/x64/plugin/default/lib
-	cp -R $(COMPONENTS)/sdk/plugin/local/$(LIBDIR)/* $(DIST)/x64/plugin/default/lib
+	cp -R $(PLUGIN_SHARED_LIB) $(DIST)/x64/plugin/default/lib
+	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/* $(DIST)/x64/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL_LIB) $(DIST)/x64/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/x64/plugin/default/lib
 	mkdir -p $(DIST)/x64/plugin/remote/lib
 	cp -R plugin/remote/rsrc/* $(DIST)/x64/plugin/remote
-	cp -R $(COMPONENTS)/sdk/$(DIST)/jOVALPluginShared.jar $(DIST)/x64/plugin/remote/lib
-	cp -R $(COMPONENTS)/sdk/$(DIST)/jOVALPluginRemote.jar $(DIST)/x64/plugin/remote/lib
-	cp -R $(COMPONENTS)/sdk/plugin/remote/$(LIBDIR)/*.jar $(DIST)/x64/plugin/remote/lib
-	cp -R $(RSRC)/* $(DIST)/x64
+	cp -R $(PLUGIN_SHARED_LIB) $(DIST)/x64/plugin/remote/lib
+	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/*.jar $(DIST)/x64/plugin/remote/lib
+	cp -R $(PLUGIN_REMOTE_LIB) $(DIST)/x64/plugin/remote/lib
+	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST)/x64/plugin/remote/lib
 	cp -R $(JRE_HOME)/x64 $(DIST)/x64/jre
 
 release-win32: dist-x86

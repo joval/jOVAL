@@ -5,8 +5,9 @@ TOP=../../..
 
 include $(TOP)/common.mk
 
-CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)."
-RUNTIMECP="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(DEPS)$(CLN)."
+ENGINE=$(SCHEMALIB)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)
+PLUGIN=$(PLUGIN_SHARED_LIB)$(CLN)$(PLUGIN_SHARED_DEPS)$(CLN)$(PLUGIN_REMOTE_LIB)$(CLN)$(PLUGIN_REMOTE_DEPS)
+CLASSPATH="$(CLASSLIB)$(CLN)$(ENGINE)$(CLN)$(PLUGIN)$(CLN)$(LIB)$(CLN)."
 
 CLASSES=TrivialScanner
 CLASS_FILES:=$(foreach class, $(CLASSES), $(subst .,/,$(class)).class)
@@ -15,7 +16,6 @@ all: classes
 
 clean:
 	rm -rf *.class
-	rm -rf $(LIBDIR)
 
 classes: $(CLASS_FILES)
 
@@ -23,4 +23,4 @@ classes: $(CLASS_FILES)
 	$(JAVAC) $(JAVACFLAGS) -classpath $(CLASSPATH) $<
 
 test:
-	$(JAVA) -classpath $(RUNTIMECP) TrivialScanner definitions.xml plugin.properties
+	$(JAVA) -classpath $(CLASSPATH) TrivialScanner definitions.xml plugin.properties

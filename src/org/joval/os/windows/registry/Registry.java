@@ -136,6 +136,11 @@ public class Registry extends BaseRegistry {
 	    return new MultiStringValue(key, name, (String[])data);
 	} else if (data instanceof byte[]) {
 	    return new BinaryValue(key, name, (byte[])data);
+	} else if (data instanceof Long) {
+	    long l = ((Long)data).longValue();
+	    int i = ((Long)data).intValue();
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECISION, l, i);
+	    return new DwordValue(key, name, i);
 	} else if (data instanceof Integer) {
 	    return new DwordValue(key, name, ((Integer)data).intValue());
 	} else if (data instanceof String) {

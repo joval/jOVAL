@@ -43,7 +43,9 @@ public class TrivialScanner {
 	    Properties props = new Properties();
 	    props.load(new FileInputStream(new File(argv[1])));
 
-	    RemotePlugin.setCredentialStore(new SimpleCredentialStore(props));
+	    SimpleCredentialStore scs = new SimpleCredentialStore();
+	    scs.add(props);
+	    RemotePlugin.setCredentialStore(scs);
 	    RemotePlugin.setDataDirectory(new File("."));
 	    RemotePlugin plugin = new RemotePlugin(props.getProperty("hostname"));
 

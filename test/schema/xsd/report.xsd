@@ -22,6 +22,7 @@
     <xs:complexType>
       <xs:sequence>
         <xs:element maxOccurs="unbounded" ref="report:TestDocument"/>
+        <xs:element ref="report:Error"/>
       </xs:sequence>
       <xs:attribute name="Name" use="required" type="xs:NCName"/>
       <xs:attribute name="Runtime" use="required" type="xs:duration"/>

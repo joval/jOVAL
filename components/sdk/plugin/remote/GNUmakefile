@@ -5,12 +5,10 @@ TOP=../../../..
 
 include $(TOP)/common.mk
 
-PRODUCTNAME=jOVALPluginRemote
-
 API=$(JOVAL_CORE)/jOVALCore.jar$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)
 SHARED=$(PLUGIN_SHARED)/jOVALPluginShared.jar
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)$(CLN)$(SHARED)"
-RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(SHARED)$(CLN)$(PRODUCTNAME).jar"
+RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(SHARED)$(CLN)$(PLUGIN_REMOTE_LIB)"
 
 include classes.mk
 
@@ -18,17 +16,17 @@ CLASS_FILES:=$(foreach class, $(REMOTE), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(REMOTE)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(PRODUCTNAME).jar
+all: $(PLUGIN_REMOTE_LIB)
 
-$(PRODUCTNAME).jar: classes resources
+$(PLUGIN_REMOTE_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 test:
-	$(JRE_HOME)/$(ARCH)/bin/java -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.test.Default test.properties
+	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.test.Remote test.properties
 
 clean:
 	rm -rf $(BUILD)
-	rm -f $(PRODUCTNAME).jar
+	rm -f $(PLUGIN_REMOTE_LIB)
 
 resources:
 	rm -f $(BUILD)/*.properties*

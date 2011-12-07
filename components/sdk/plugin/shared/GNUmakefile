@@ -5,8 +5,6 @@ TOP=../../../..
 
 include $(TOP)/common.mk
 
-PRODUCTNAME=jOVALPluginShared
-
 API=$(JOVAL_CORE)/jOVALCore.jar$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
 
@@ -16,14 +14,14 @@ CLASS_FILES:=$(foreach class, $(SHARED), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(SHARED)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(PRODUCTNAME).jar
+all: $(PLUGIN_SHARED_LIB)
 
-$(PRODUCTNAME).jar: classes
+$(PLUGIN_SHARED_LIB): classes
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
 	rm -rf $(BUILD)
-	rm -f $(PRODUCTNAME).jar
+	rm -f $(PLUGIN_SHARED_LIB)
 
 classes: classdirs $(CLASS_FILES)
 

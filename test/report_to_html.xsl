@@ -35,18 +35,7 @@
                         <xsl:with-param name="duration" select="./@Runtime"/>
                       </xsl:call-template>
                     </td>
-
-                    <xsl:for-each select="report:TestDocument">
-                      <tr bgcolor="#eeeeee">
-                        <td height="25"><b><xsl:value-of select="./@FileName"/></b></td>
-                        <td colspan="2">Run time: 
-                          <xsl:call-template name="printDuration">
-                            <xsl:with-param name="duration" select="./@Runtime"/>
-                          </xsl:call-template>
-                        </td>
-                      </tr>
-                      <xsl:apply-templates/>
-                    </xsl:for-each>
+                    <xsl:apply-templates/>
                   </tr>
                 </table>
               </td>
@@ -56,6 +45,18 @@
         </table>
       </body>
     </html>
+  </xsl:template>
+
+  <xsl:template match="//report:TestDocument">
+    <tr bgcolor="#eeeeee">
+      <td height="25"><b><xsl:value-of select="./@FileName"/></b></td>
+        <td colspan="2">Run time: 
+          <xsl:call-template name="printDuration">
+            <xsl:with-param name="duration" select="./@Runtime"/>
+          </xsl:call-template>
+        </td>
+      </tr>
+    <xsl:apply-templates/>
   </xsl:template>
 
   <xsl:template match="//report:Error">

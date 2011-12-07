@@ -109,21 +109,33 @@ public class Main {
 	    Logger logger = Logger.getLogger(JOVALSystem.class.getName());
 	    logger.addHandler(handler);
 
-	    IniFile config = new IniFile(new File(argv[0]));
-
 	    if (!reportDir.exists()) {
 		reportDir.mkdir();
 	    }
-
 	    Report report = factory.createReport();
 	    long runtime = System.currentTimeMillis();
+
+	    //
+	    // Run all the remote tests
+	    //
+	    IniFile config = new IniFile(new File(argv[0]));
 	    for (String name : config.listSections()) {
 		System.out.println("Starting test suite run for " + name);
-		TestSuite suite = runTests(config.getSection(name));
+		TestSuite suite = runTests(new PolymorphicPlugin(config.getSection(name)));
 		suite.setName(name);
 		report.getTestSuite().add(suite);
 		System.out.println("Tests completed for " + name);
 	    }
+
+	    //
+	    // Run a local test
+	    //
+	    System.out.println("Starting local test suite run");
+	    TestSuite suite = runTests(new PolymorphicPlugin());
+	    suite.setName("Local");
+	    report.getTestSuite().add(suite);
+	    System.out.println("Local tests completed");
+
 	    runtime = System.currentTimeMillis() - runtime;
 	    report.setRuntime(datatype.newDuration(runtime));
 	    report.setDate(datatype.newXMLGregorianCalendar(new GregorianCalendar()));
@@ -139,10 +151,9 @@ public class Main {
 
     // Private
 
-    private static TestSuite runTests(Properties props) {
+    private static TestSuite runTests(PolymorphicPlugin plugin) {
 	TestSuite suite = factory.createTestSuite();
 	long tm = System.currentTimeMillis();
-	Plugin plugin = new Plugin(props);
 	try {
 	    plugin.connect();
 	    File testDir = new File(contentDir, plugin.getSessionType().toString());
@@ -227,7 +238,7 @@ public class Main {
 	    e.printStackTrace();
 	} catch (OvalException e) {
 	    System.out.println("Failed to create OVAL engine for " + plugin.getHostname());
-	    e.printStackTrace();
+	    suite.setError(LogFormatter.toString(e));
 	}
 	tm = System.currentTimeMillis() - tm;
 	suite.setRuntime(datatype.newDuration(tm));
@@ -256,7 +267,7 @@ public class Main {
 	    }
 	}
 
-        writeTransform(report, new File("transform.xsl"), new File(reportDir, fbase + ".html"));
+        writeTransform(report, new File("report_to_html.xsl"), new File(reportDir, fbase + ".html"));
     }
 
     private static void writeTransform(Report report, File transform, File output) throws Exception {

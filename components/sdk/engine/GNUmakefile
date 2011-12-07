@@ -5,11 +5,9 @@ TOP=../../..
 
 include $(TOP)/common.mk
 
-PRODUCTNAME=jOVALCore
-
 API=$(SCHEMALIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
-RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(DEPS)$(CLN)$(PRODUCTNAME).jar"
+RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(DEPS)$(CLN)$(JOVAL_CORE_LIB)"
 
 include classes.mk
 
@@ -17,14 +15,14 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(PRODUCTNAME).jar
+all: $(JOVAL_CORE_LIB)
 
-$(PRODUCTNAME).jar: classes resources
+$(JOVAL_CORE_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
 	rm -rf $(BUILD)
-	rm -f $(PRODUCTNAME).jar
+	rm -f $(JOVAL_CORE_LIB)
 
 resources:
 	rm -f $(BUILD)/*.properties

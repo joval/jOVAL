@@ -5,10 +5,8 @@ TOP=../..
 
 include $(TOP)/common.mk
 
-SHARED_LIBS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLUGIN_SHARED)/$(LIBDIR)/*)))
-REMOTE_LIBS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard plugin/remote/$(LIBDIR)/*)))
-ENGINE_LIBS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard engine/$(LIBDIR)/*)))
-CLASSPATH="$(SHARED_LIBS)$(CLN)$(REMOTE_LIBS)$(CLN)$(ENGINE_LIBS)"
+SOURCEPATH="$(GENSRC)$(CLN)$(SRC)"
+CLASSPATH="$(PLUGIN_SHARED_DEPS)$(CLN)$(PLUGIN_REMOTE_DEPS)$(CLN)$(JOVAL_CORE_DEPS)"
 
 all:
 	@$(MAKE) --keep-going --directory=engine all
@@ -24,7 +22,7 @@ clean:
 
 javadocs:
 	mkdir -p $(DOCS)
-	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -classpath $(CLASSPATH) -sourcepath "$(GENSRC)$(CLN)$(SRC)" -subpackages \
+	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -subpackages \
 	oval:org.w3c            				\
 	org.joval.intf.identity					\
 	org.joval.intf.oval					\
@@ -42,11 +40,11 @@ dist-clean: clean
 
 install: all
 	mkdir -p $(DIST)
-	cp $(SCHEMALIB) $(DIST)
-	cp engine/jOVAL*.jar $(DIST)
-	cp plugin/shared/jOVALPluginShared.jar $(DIST)
-	cp plugin/local/jOVALPluginLocal.jar $(DIST)
-	cp plugin/remote/jOVALPluginRemote.jar $(DIST)
+	cp $(SCHEMALIB)         $(DIST)
+	cp $(JOVAL_CORE_LIB)    $(DIST)
+	cp $(PLUGIN_SHARED_LIB) $(DIST)
+	cp $(PLUGIN_LOCAL_LIB)  $(DIST)
+	cp $(PLUGIN_REMOTE_LIB) $(DIST)
 	cp -r $(RSRC)/* $(DIST)
 
 dist: install javadocs
