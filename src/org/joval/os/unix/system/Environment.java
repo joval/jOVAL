@@ -9,11 +9,11 @@ import java.util.Iterator;
 import java.util.Properties;
 import java.util.regex.Matcher;
 
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.system.IEnvironment;
-import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * A representation of an environment on a Unix machine.
@@ -26,15 +26,15 @@ public class Environment implements IEnvironment {
 
     protected Environment() {}
 
-    public Environment(ISession session) {
+    public Environment(IUnixSession session) {
 	props = new Properties();
 	try {
-	    IProcess p = session.createProcess("env");
-	    p.start();
-	    InputStream in = p.getInputStream();
-	    props.load(in);
-	    in.close();
-	    p.waitFor(0);
+	    for (String line : SafeCLI.multiLine("env", session, IUnixSession.TIMEOUT_S)) {
+		int ptr = line.indexOf("=");
+		if (ptr > 0) {
+		    props.setProperty(line.substring(0, ptr), line.substring(ptr+1));
+		}
+	    }
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}

@@ -8,10 +8,8 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.io.IReader;
-import org.joval.io.PerishableReader;
+import org.joval.util.SafeCLI;
 
 /**
  * Tool for creating a SystemInfoType from an IUnixSession implementation.
@@ -22,12 +20,8 @@ import org.joval.io.PerishableReader;
 class NetworkInterface {
     static List<NetworkInterface> getInterfaces(IUnixSession session) throws Exception {
 	Vector<NetworkInterface> interfaces = new Vector<NetworkInterface>();
-
-	IProcess p = session.createProcess("/sbin/ifconfig -a");
-	p.start();
-	IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	Vector<String> lines = new Vector<String>();
-	String line = null;
+	List<String> rawOutput = SafeCLI.multiLine("/sbin/ifconfig -a", session, IUnixSession.TIMEOUT_S);
 
 	switch(session.getFlavor()) {
 	  //
@@ -35,7 +29,7 @@ class NetworkInterface {
 	  // Interfaces are not separated by blank lines.
 	  //
 	  case MACOSX:
-	    while ((line = reader.readLine()) != null) {
+	    for (String line : rawOutput) {
 		if (line.startsWith("\t") || line.startsWith("  ")) {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
@@ -58,7 +52,7 @@ class NetworkInterface {
 	  // Interfaces are not separated by blank lines.
 	  //
 	  case SOLARIS:
-	    while ((line = reader.readLine()) != null) {
+	    for (String line : rawOutput) {
 		if (line.startsWith("\t") || line.startsWith("  ")) {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
@@ -80,7 +74,7 @@ class NetworkInterface {
 	  // On Linux, there is a blank line between each interface spec.
 	  //
 	  case LINUX:
-	    while ((line = reader.readLine()) != null) {
+	    for (String line : rawOutput) {
 		if (line.trim().length() == 0) {
 		    if (lines.size() > 0) {
 			interfaces.add(createLinuxInterface(lines));
@@ -93,8 +87,6 @@ class NetworkInterface {
 	    break;
 	}
 
-	reader.close();
-	p.waitFor(0);
 	return interfaces;
     }
 

@@ -127,6 +127,7 @@ SHARED=\
 	org.joval.test.WMI						\
 	org.joval.util.Base64						\
 	org.joval.util.BaseSession					\
+	org.joval.util.SafeCLI						\
 	org.joval.util.tree.CachingTree					\
 	org.joval.util.tree.PropertyHierarchy				\
 	org.joval.util.tree.Forest					\

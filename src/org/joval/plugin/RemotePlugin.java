@@ -71,7 +71,8 @@ public class RemotePlugin extends BasePlugin {
 		IBaseSession base = sessionFactory.createSession(hostname);
 		setCredential(base);
 
-		switch (base.getType()) {
+		IBaseSession.Type type = base.getType();
+		switch(type) {
 		  case WINDOWS:
 		    session = (IWindowsSession)base;
 		    break;
@@ -88,7 +89,7 @@ public class RemotePlugin extends BasePlugin {
 
 		  default:
 		    base.disconnect();
-		    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, base.getType()));
+		    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, type));
 	        }
 
 		setCredential(session);

@@ -32,7 +32,6 @@ import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IEnvironment;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.PerishableReader;
@@ -42,6 +41,7 @@ import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * Evaluates Environmentvariable OVAL tests.
@@ -104,11 +104,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			    IFile proc = session.getFilesystem().getFile("/proc/" + pid);
 			    if (proc.exists() && proc.isDirectory()) {
 				processEnv = new Properties();
-				IProcess p = us.createProcess("pargs -e " + pid);
-				p.start();
-				IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-				String line;
-				while ((line = reader.readLine()) != null) {
+				for (String line : SafeCLI.multiLine("pargs -e " + pid, us, IUnixSession.TIMEOUT_S)) {
 				    if (line.startsWith("envp")) {
 					String pair = line.substring(line.indexOf(" ")).trim();
 					int ptr = pair.indexOf("=");
@@ -119,8 +115,6 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 					}
 				    }
 				}
-				reader.close();
-				p.waitFor(0);
 			    }
 			} else {
 			    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OS_VERSION, osVersion);

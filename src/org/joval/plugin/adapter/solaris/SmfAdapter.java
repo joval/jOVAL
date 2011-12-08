@@ -27,16 +27,14 @@ import oval.schemas.systemcharacteristics.solaris.EntityItemSmfServiceStateType;
 import oval.schemas.systemcharacteristics.solaris.SmfItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IProcess;
-import org.joval.io.PerishableReader;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
 
 /**
@@ -65,16 +63,10 @@ public class SmfAdapter implements IAdapter {
 
     public boolean connect() {
 	if (session != null) {
-	    IProcess p = null;
-	    IReader reader = null;
 	    try {
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SMF);
-		p = session.createProcess("/usr/bin/svcs -o fmri");
-		p.start();
-		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_M);
 		ArrayList<String> list = new ArrayList<String>();
-		String line = null;
-		while((line = reader.readLine()) != null) {
+		for (String line : SafeCLI.multiLine("/usr/bin/svcs -o fmri", session, IUnixSession.TIMEOUT_M)) {
 		    if (line.startsWith("FMRI")) {
 			continue;
 		    }
@@ -88,15 +80,6 @@ public class SmfAdapter implements IAdapter {
 		services = list.toArray(new String[list.size()]);
 	    } catch (Exception e) {
 		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    } finally {
-		if (reader != null) {
-		    try {
-			reader.close();
-			p.waitFor(0);
-		    } catch (IOException e) {
-		    } catch (InterruptedException e) {
-		    }
-		}
 	    }
 	}
 	return services != null;
@@ -202,42 +185,31 @@ public class SmfAdapter implements IAdapter {
 
 	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
 	item = JOVALSystem.factories.sc.solaris.createSmfItem();
-	IProcess p = session.createProcess("/usr/bin/svcs -l " + fmri);
-	p.start();
-	IReader reader = null;
 	boolean found = false;
-	try {
-	    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    String line = null;
-	    while((line = reader.readLine()) != null) {
-		line = line.trim();
-		if (line.length() == 0) {
-		    break;
-		} else if (line.startsWith(FMRI)) {
-		    found = true;
+	for (String line : SafeCLI.multiLine("/usr/bin/svcs -l " + fmri, session, IUnixSession.TIMEOUT_S)) {
+	    line = line.trim();
+	    if (line.length() == 0) {
+		break;
+	    } else if (line.startsWith(FMRI)) {
+		found = true;
 
-		    EntityItemStringType fmriType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    String fullFmri = getFullFmri(line.substring(FMRI.length()).trim());
-		    fmriType.setValue(fullFmri);
-		    item.setFmri(fmriType);
+		EntityItemStringType fmriType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		String fullFmri = getFullFmri(line.substring(FMRI.length()).trim());
+		fmriType.setValue(fullFmri);
+		item.setFmri(fmriType);
 
-		    //
-		    // Name is based on the FMRI.  See:
-		    // http://making-security-measurable.1364806.n2.nabble.com/Solaris-10-SMF-test-request-UNCLASSIFIED-tt23753.html#a23757
-		    //
-		    EntityItemStringType nameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    nameType.setValue(getName(fullFmri));
-		    item.setServiceName(nameType);
-		} else if (line.startsWith(STATE_TIME)) { // NB: this MUST appear before STATE
-		} else if (line.startsWith(STATE)) {
-		    EntityItemSmfServiceStateType type = JOVALSystem.factories.sc.solaris.createEntityItemSmfServiceStateType();
-		    type.setValue(line.substring(STATE.length()).trim().toUpperCase());
-		    item.setServiceState(type);
-		}
-	    }
-	} finally {
-	    if (reader != null) {
-		reader.close();
+		//
+		// Name is based on the FMRI.  See:
+		// http://making-security-measurable.1364806.n2.nabble.com/Solaris-10-SMF-test-request-UNCLASSIFIED-tt23753.html#a23757
+		//
+		EntityItemStringType nameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		nameType.setValue(getName(fullFmri));
+		item.setServiceName(nameType);
+	    } else if (line.startsWith(STATE_TIME)) { // NB: this condition MUST appear before STATE
+	    } else if (line.startsWith(STATE)) {
+		EntityItemSmfServiceStateType type = JOVALSystem.factories.sc.solaris.createEntityItemSmfServiceStateType();
+		type.setValue(line.substring(STATE.length()).trim().toUpperCase());
+		item.setServiceState(type);
 	    }
 	}
 
@@ -247,32 +219,22 @@ public class SmfAdapter implements IAdapter {
 	    //
 	    item.setStatus(StatusEnumeration.EXISTS);
 	    boolean inetd = false;
-	    p = session.createProcess("/usr/bin/svcprop " + fmri);
-	    p.start();
-	    try {
-		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-		String line = null;
-		while ((line = reader.readLine()) != null) {
-		    if (line.startsWith(START_EXEC_PROP)) {
-			setExecAndArgs(item, line.substring(START_EXEC_PROP.length()).trim());
-		    } else if (line.startsWith(INETD_USER_PROP)) {
-			inetd = true;
-			String suspects = line.substring(INETD_USER_PROP.length()).trim();
-			List<String> list = StringTools.toList(StringTools.tokenize(suspects, " "));
-			if (list.size() > 0) {
-			    String user = list.get(list.size() - 1);
-			    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			    type.setValue(user);
-			    item.setExecAsUser(type);
-			}
-		    } else if (line.startsWith(INETD_EXEC_PROP)) {
-			inetd = true;
-			setExecAndArgs(item, line.substring(INETD_EXEC_PROP.length()).trim());
+	    for (String line : SafeCLI.multiLine("/usr/bin/svcprop " + fmri, session, IUnixSession.TIMEOUT_S)) {
+		if (line.startsWith(START_EXEC_PROP)) {
+		    setExecAndArgs(item, line.substring(START_EXEC_PROP.length()).trim());
+		} else if (line.startsWith(INETD_USER_PROP)) {
+		    inetd = true;
+		    String suspects = line.substring(INETD_USER_PROP.length()).trim();
+		    List<String> list = StringTools.toList(StringTools.tokenize(suspects, " "));
+		    if (list.size() > 0) {
+			String user = list.get(list.size() - 1);
+			EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			type.setValue(user);
+			item.setExecAsUser(type);
 		    }
-		}
-	    } finally {
-		if (reader != null) {
-		    reader.close();
+		} else if (line.startsWith(INETD_EXEC_PROP)) {
+		    inetd = true;
+		    setExecAndArgs(item, line.substring(INETD_EXEC_PROP.length()).trim());
 		}
 	    }
 
@@ -280,26 +242,15 @@ public class SmfAdapter implements IAdapter {
 	    // If this is an inetd-initiated service, we can get protocol information using inetadm
 	    //
 	    if (inetd) {
-		p = session.createProcess("/usr/sbin/inetadm -l " + fmri);
-		p.start();
-		try {
-		    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-		    String line = null;
-		    while ((line = reader.readLine()) != null) {
-			if (line.trim().startsWith("proto=")) {
-			    String protocol = line.trim().substring(6);
-			    if (protocol.startsWith("\"") && protocol.endsWith("\"")) {
-				protocol = protocol.substring(1, protocol.length() - 1);
-				EntityItemSmfProtocolType type =
-					JOVALSystem.factories.sc.solaris.createEntityItemSmfProtocolType();
-				type.setValue(protocol);
-				item.setProtocol(type);
-			    }
+		for (String line : SafeCLI.multiLine("/usr/sbin/inetadm -l " + fmri, session, IUnixSession.TIMEOUT_S)) {
+		    if (line.trim().startsWith("proto=")) {
+			String protocol = line.trim().substring(6);
+			if (protocol.startsWith("\"") && protocol.endsWith("\"")) {
+			    protocol = protocol.substring(1, protocol.length() - 1);
+			    EntityItemSmfProtocolType type = JOVALSystem.factories.sc.solaris.createEntityItemSmfProtocolType();
+			    type.setValue(protocol);
+			    item.setProtocol(type);
 			}
-		    }
-		} finally {
-		    if (reader != null) {
-			reader.close();
 		    }
 		}
 	    }

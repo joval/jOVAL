@@ -15,14 +15,12 @@ import java.util.regex.Pattern;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IRandomAccess;
-import org.joval.intf.io.IReader;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
-import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * Gets extended attributes of a file on Unix.
@@ -61,11 +59,7 @@ public class UnixFile implements IUnixFile {
 		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor()));
 	    }
     
-	    IProcess p = session.createProcess(command);
-	    p.start();
-	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    String line = reader.readLine();
-	    reader.close();
+	    String line = SafeCLI.exec(command, session, IUnixSession.TIMEOUT_S);
 	    unixType = line.charAt(0);
 	    permissions = line.substring(1, 10);
 	    if (line.charAt(11) == '+') {

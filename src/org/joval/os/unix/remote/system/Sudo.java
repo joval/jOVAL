@@ -23,7 +23,7 @@ import org.joval.util.JOVALSystem;
 
 /**
  * A tool for running processes as a specific user.  This does not use the sudo command, rather, it makes use of the
- * su command.  It is used exclusively by the remote Unix session classes.
+ * su command.  It is used exclusively by the remote UnixSession class.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -37,9 +37,6 @@ class Sudo implements IProcess {
     private long timeout;
     private PerishableReader in=null, err=null;
     private OutputStream out=null;
-
-    private static long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_SUDO_READ_TIMEOUT);
-    private static int execRetries = JOVALSystem.getIntProperty(JOVALSystem.PROP_SUDO_MAX_RETRIES);
 
     Sudo(UnixSession us, ICredential cred, String cmd, long ms) throws Exception {
 	this.us = us;
@@ -60,83 +57,21 @@ class Sudo implements IProcess {
 	if (cred.getPassword() == null) {
 	    throw new CredentialException(JOVALSystem.getMessage(JOVALMsg.ERROR_MISSING_PASSWORD, cred.getUsername()));
 	}
+
 	switch(us.getFlavor()) {
-	  case SOLARIS: {
-	    boolean success = false;
-	    for (int attempt=0; !success; attempt++) {
-		try {
-		    setInteractive(true);
-		    p.start();
-		    getInputStream();
-
-		    //
-		    // Read the Password prompt
-		    //
-		    byte[] buff = new byte[10]; //Password:_
-		    in.readFully(buff);
-
-		    getOutputStream();
-		    out.write(cred.getPassword().getBytes());
-		    out.write('\r');
-		    out.flush();
-		    String line1 = in.readLine();
-		    if (line1 == null) {
-			throw new EOFException(null);
-		    } else if (line1.indexOf("Sorry") == -1) {
-			//
-			// Skip past the message of the day
-			//
-			int linesToSkip = us.getMotdLines();
-			for (int i=0; i < linesToSkip; i++) {
-			    if (in.readLine() == null) {
-				throw new EOFException(null);
-			    }
-			}
-			success = true;
-		    } else {
-			String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_AUTHENTICATION_FAILED, cred.getUsername());
-			throw new LoginException(msg);
-		    }
-
-		//
-		// While all this is going on, the underlying SshProcess may time out and close the streams.  This can result
-		// in either an InterruptedIOException or an EOFException, depending on how the problem happens.
-		//
-		} catch (IOException e) {
-		    if (e instanceof EOFException || e instanceof InterruptedIOException) {
-			if (attempt > execRetries) {
-			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_RETRY, innerCommand, attempt);
-			    throw e;
-			} else {
-			    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			    // try again
-			    in = null;
-			    out = null;
-			    p = ssh.createProcess(getSuString(innerCommand), timeout);
-			    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_PROCESS_RETRY, innerCommand);
-			}
-		    } else {
-			throw e;
-		    }
-		}
-	    }
+	  case SOLARIS:
+	    loginSolaris();
 	    break;
-	  }
 
 	  default:
-	  case LINUX: {
-	    p.start();
-	    getOutputStream();
-	    out.write(cred.getPassword().getBytes());
-	    out.write('\n');
-	    out.flush();
+	    loginDefault();
 	    break;
-	  }
 	}
     }
 
     public InputStream getInputStream() {
 	if (in == null) {
+	    long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_SUDO_READ_TIMEOUT);
 	    in = (PerishableReader)PerishableReader.newInstance(p.getInputStream(), readTimeout);
 	}
 	return in;
@@ -144,6 +79,7 @@ class Sudo implements IProcess {
 
     public InputStream getErrorStream() {
 	if (err == null) {
+	    long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_SUDO_READ_TIMEOUT);
 	    err = (PerishableReader)PerishableReader.newInstance(p.getErrorStream(), readTimeout);
 	}
 	return err;
@@ -169,6 +105,49 @@ class Sudo implements IProcess {
     }
 
     // Private
+
+    /**
+     * Perform a normal login, by simply writing the root password to the su process standard input.
+     */
+    private void loginDefault() throws Exception {
+	p.start();
+	getOutputStream();
+	out.write(cred.getPassword().getBytes());
+	out.write('\n');
+	out.flush();
+    }
+
+    /**
+     * Perform an interactive login on Solaris, and skip past the Message Of The Day (if any).
+     */
+    private void loginSolaris() throws Exception {
+	setInteractive(true);
+	p.start();
+	getInputStream();
+	byte[] buff = new byte[10]; //Password:_
+	in.readFully(buff);
+	getOutputStream();
+	out.write(cred.getPassword().getBytes());
+	out.write('\r');
+	out.flush();
+	String line1 = in.readLine();
+	if (line1 == null) {
+	    throw new EOFException(null);
+	} else if (line1.indexOf("Sorry") == -1) {
+	    //
+	    // Skip past the message of the day
+	    //
+	    int linesToSkip = us.getMotdLines();
+	    for (int i=0; i < linesToSkip; i++) {
+		if (in.readLine() == null) {
+		    throw new EOFException(null);
+		}
+	    }
+	} else {
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_AUTHENTICATION_FAILED, cred.getUsername());
+	    throw new LoginException(msg);
+	}
+    }
 
     private String getSuString(String command) {
 	StringBuffer sb = new StringBuffer("su - ");

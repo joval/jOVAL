@@ -27,17 +27,15 @@ import oval.schemas.systemcharacteristics.unix.RunlevelItem;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 import org.joval.util.Version;
 
 /**
@@ -125,14 +123,8 @@ public class RunlevelAdapter implements IAdapter {
 	      }
 
 	      case LINUX: {
-		IProcess p = null;
-		IReader reader = null;
 		try {
-		    p = session.createProcess("/sbin/chkconfig --list");
-		    p.start();
-		    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_M);
-		    String line = null;
-		    while ((line = reader.readLine()) != null) {
+		    for (String line : SafeCLI.multiLine("/sbin/chkconfig --list", session, IUnixSession.TIMEOUT_M)) {
 			StringTokenizer tok = new StringTokenizer(line);
 			if (tok.countTokens() == 8) {
 			    String serviceName = tok.nextToken();
@@ -159,15 +151,6 @@ public class RunlevelAdapter implements IAdapter {
 		    return true;
 		} catch (Exception e) {
 		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		} finally {
-		    if (reader != null) {
-			try {
-			    reader.close();
-			    p.waitFor(0);
-			} catch (IOException e) {
-			} catch (InterruptedException e) {
-			}
-		    }
 		}
 		break;
 	      }

@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
@@ -33,17 +34,15 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.unix.ProcessItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * Evaluates ProcessTest OVAL tests.
@@ -167,12 +166,9 @@ public class ProcessAdapter implements IAdapter {
 	    return false;
 	}
 	try {
-	    IProcess p = session.createProcess(args);
-	    p.start();
-	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    String line = reader.readLine(); // skip over the header row.
-	    while((line = reader.readLine()) != null) {
-		StringTokenizer tok = new StringTokenizer(line);
+	    List<String> lines = SafeCLI.multiLine(args, session, IUnixSession.TIMEOUT_S);
+	    for (int i=1; i < lines.size(); i++) { // skip the header at line 0
+		StringTokenizer tok = new StringTokenizer(lines.get(i));
 		ProcessItem process = JOVALSystem.factories.sc.unix.createProcessItem();
 
 		EntityItemIntType pid = JOVALSystem.factories.sc.core.createEntityItemIntType();
@@ -230,8 +226,6 @@ public class ProcessAdapter implements IAdapter {
 
 		processes.put(cmd, process);
 	    }
-	    reader.close();
-	    p.waitFor(0);
 	} catch (Exception e) {
 	    error = e.getMessage();
 	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

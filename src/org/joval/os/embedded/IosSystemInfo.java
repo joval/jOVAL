@@ -14,11 +14,10 @@ import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.io.IReader;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * Tool for creating a SystemInfoType from a Cisco IOS-attached ISession.
@@ -29,11 +28,13 @@ import org.joval.util.JOVALSystem;
 public class IosSystemInfo {
     private ISession session;
     private SystemInfoType info;
+    private long readTimeout;
 
     /**
      * Create a plugin for scanning or test evaluation.
      */
     public IosSystemInfo(ISession session) {
+	readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
 	this.session = session;
     }
 
@@ -45,24 +46,13 @@ public class IosSystemInfo {
 	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	info.setOsName("Cisco IOS");
 	try {
-	    IProcess p = session.createProcess("show config");
-	    p.start();
-	    IReader reader = PerishableReader.newInstance(p.getInputStream(),
-							  JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT));
-	    String line = null;
-	    while ((line = reader.readLine()) != null) {
+	    for (String line : SafeCLI.multiLine("show config", session, readTimeout)) {
 		if (line.startsWith("hostname")) {
 		    info.setPrimaryHostName(line.substring(9).trim());
 		}
 	    }
-	    reader.close();
-	    p.waitFor(0);
 
-	    p = session.createProcess("show version");
-	    p.start();
-	    reader = PerishableReader.newInstance(p.getInputStream(),
-						  JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT));
-	    while ((line = reader.readLine()) != null) {
+	    for (String line : SafeCLI.multiLine("show version", session, readTimeout)) {
 		if (line.startsWith("Cisco IOS")) {
 		    int ptr = line.indexOf("Version ");
 		    if (ptr != -1) {
@@ -79,8 +69,6 @@ public class IosSystemInfo {
 		    info.setArchitecture(line.substring(0, ptr).trim());
 		}
 	    }
-	    reader.close();
-	    p.waitFor(0);
 
 	    InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
 	    List<IosNetworkInterface> interfaces = IosNetworkInterface.getInterfaces(session);

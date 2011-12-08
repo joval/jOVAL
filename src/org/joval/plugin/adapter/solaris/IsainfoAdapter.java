@@ -18,16 +18,14 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.solaris.IsainfoItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * Evaluates IsainfoTest OVAL tests.
@@ -76,33 +74,15 @@ public class IsainfoAdapter implements IAdapter {
     private JAXBElement<IsainfoItem> getItem() throws Exception {
 	IsainfoItem item = JOVALSystem.factories.sc.solaris.createIsainfoItem();
 	EntityItemStringType kernelIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	IProcess p = session.createProcess("isainfo -k");
-	p.start();
-	IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	String result = reader.readLine();
-	reader.close();
-	p.waitFor(0);
-	kernelIsa.setValue(result);
+	kernelIsa.setValue(SafeCLI.exec("isainfo -k", session, IUnixSession.TIMEOUT_S));
 	item.setKernelIsa(kernelIsa);
 
 	EntityItemStringType applicationIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("isainfo -n");
-	p.start();
-	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	result = reader.readLine();
-	reader.close();
-	p.waitFor(0);
-	applicationIsa.setValue(result);
+	applicationIsa.setValue(SafeCLI.exec("isainfo -n", session, IUnixSession.TIMEOUT_S));
 	item.setApplicationIsa(applicationIsa);
 
 	EntityItemIntType bits = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	p = session.createProcess("isainfo -b");
-	p.start();
-	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	result = reader.readLine();
-	reader.close();
-	p.waitFor(0);
-	bits.setValue(result);
+	bits.setValue(SafeCLI.exec("isainfo -b", session, IUnixSession.TIMEOUT_S));
 	bits.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setBits(bits);
 

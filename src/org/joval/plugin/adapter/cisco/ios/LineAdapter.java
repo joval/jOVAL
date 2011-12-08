@@ -18,15 +18,14 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.ios.LineItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.system.IBaseSession;
 import org.joval.io.PerishableReader;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * Provides Cisco IOS Line OVAL items.
@@ -36,8 +35,10 @@ import org.joval.util.JOVALSystem;
  */
 public class LineAdapter implements IAdapter {
     IBaseSession session;
+    long readTimeout;
 
     public LineAdapter(IBaseSession session) {
+	readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
 	this.session = session;
     }
 
@@ -88,21 +89,11 @@ public class LineAdapter implements IAdapter {
 
     private LineItem getItem(String subcommand) throws Exception {
 	StringBuffer sb = new StringBuffer();
-	IProcess p = session.createProcess("show " + subcommand);
-	p.start();
-	IReader reader = PerishableReader.newInstance(p.getInputStream(),
-						      JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT));
-	try {
-	    String line = null;
-	    while ((line = reader.readLine()) != null) {
-		if (sb.length() > 0) {
-		    sb.append('\n');
-		}
-		sb.append(line);
+	for (String line : SafeCLI.multiLine("show " + subcommand, session, readTimeout)) {
+	    if (sb.length() > 0) {
+		sb.append('\n');
 	    }
-	} finally {
-	    reader.close();
-	    p.waitFor(0);
+	    sb.append(line);
 	}
 
 	LineItem item = JOVALSystem.factories.sc.ios.createLineItem();

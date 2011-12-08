@@ -13,12 +13,11 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IReader;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
-import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * Tool for creating a SystemInfoType from a Unix ISession implementation.
@@ -44,24 +43,14 @@ public class UnixSystemInfo {
 
 	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	try {
-	    IProcess p = session.createProcess("hostname");
-	    p.start();
-	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    info.setPrimaryHostName(reader.readLine());
-	    reader.close();
-	    p.waitFor(0);
+	    info.setPrimaryHostName(SafeCLI.exec("hostname", session, IUnixSession.TIMEOUT_S));
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	try {
-	    IProcess p = session.createProcess("uname -r");
-	    p.start();
-	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    info.setOsVersion(reader.readLine());
-	    reader.close();
-	    p.waitFor(0);
+	    info.setOsVersion(SafeCLI.exec("uname -r", session, IUnixSession.TIMEOUT_S));
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -70,12 +59,8 @@ public class UnixSystemInfo {
 	try {
 	    IFilesystem fs = session.getFilesystem();
 	    for (INode node : fs.getFile("/etc").getChildren(Pattern.compile("^.*-release$"))) {
-		IProcess p = session.createProcess("cat " + node.getPath());
-		p.start();
-		IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-		info.setOsName(reader.readLine());
-		reader.close();
-		p.waitFor(0);
+		info.setOsName(SafeCLI.exec("cat " + node.getPath(), session, IUnixSession.TIMEOUT_S));
+		break;
 	    }
 	    if (!info.isSetOsName()) {
 		info.setOsName(session.getFlavor().getOsName());
@@ -86,12 +71,7 @@ public class UnixSystemInfo {
 	}
 
 	try {
-	    IProcess p = session.createProcess("uname -p");
-	    p.start();
-	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    info.setArchitecture(reader.readLine());
-	    reader.close();
-	    p.waitFor(0);
+	    info.setArchitecture(SafeCLI.exec("uname -p", session, IUnixSession.TIMEOUT_S));
 	} catch (Exception e) {
 	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

@@ -25,16 +25,14 @@ import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.solaris.PatchItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * Evaluates the legacy Solaris Patch OVAL tests.
@@ -209,14 +207,8 @@ public class PatchAdapter implements IAdapter {
      * REMIND: Stops if it encounters any exceptions at all; make this more robust?
      */
     private void scanRevisions() {
-	IProcess p = null;
-	IReader reader = null;
 	try {
-	    p = session.createProcess("/usr/bin/showrev -p");
-	    p.start();
-	    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_M);
-	    String line;
-	    while((line = reader.readLine()) != null) {
+	    for (String line : SafeCLI.multiLine("/usr/bin/showrev -p", session, IUnixSession.TIMEOUT_M)) {
 		if (!line.startsWith(PATCH)) {
 		    continue;
 		}
@@ -287,15 +279,6 @@ public class PatchAdapter implements IAdapter {
 	} catch (Exception e) {
 	    error = e.getMessage();
 	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} finally {
-	    if (reader != null) {
-		try {
-		    reader.close();
-		    p.waitFor(0);
-		} catch (IOException e) {
-		} catch (InterruptedException e) {
-		}
-	    }
 	}
     }
 

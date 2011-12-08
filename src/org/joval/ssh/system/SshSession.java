@@ -4,6 +4,7 @@
 package org.joval.ssh.system;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.vngx.jsch.JSch;
 import org.vngx.jsch.ChannelExec;
@@ -28,10 +29,10 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.JSchLogger;
+import org.joval.util.SafeCLI;
 
 /**
  * A representation of an SSH session, which simply uses JSch to implement an IBaseSession.
@@ -140,7 +141,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 
     public void disconnect() {
 	if (session != null) {
-		synchronized(session) {
+	    synchronized(session) {
 	        if (session != null && connected) {
 		    JOVALSystem.getLogger().info(JOVALMsg.STATUS_SSH_DISCONNECT, hostname);
 		    session.disconnect();
@@ -169,16 +170,11 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     }
 
     public Type getType() {
-	if (connect()) {
-	    PerishableReader reader = null;
+	if (cred != null) {
 	    try {
-		IProcess p = createProcess("pwd");
-		p.start();
-		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-		String line = null;
-		while ((line = reader.readLine()) != null) {
+		for (String line : SafeCLI.multiLine("pwd", this, IUnixSession.TIMEOUT_S)) {
 		    if (line.startsWith("flash")) {
-	 		return Type.CISCO_IOS;
+			return Type.CISCO_IOS;
 		    } else if (line.startsWith("/")) {
 			return Type.UNIX;
 		    } else if (line.equals("")) {
@@ -188,14 +184,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 		    }
 		}
 	    } catch (Exception e) {
-		e.printStackTrace();
-	    } finally {
-		if (reader != null) {
-		    try {
-			reader.close();
-		    } catch (IOException e) {
-		    }
-		}
+		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return Type.SSH;

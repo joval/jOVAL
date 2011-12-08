@@ -21,16 +21,14 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.unix.UnameItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * Evaluates UnameTest OVAL tests.
@@ -79,63 +77,27 @@ public class UnameAdapter implements IAdapter {
     private JAXBElement<UnameItem> getItem() throws Exception {
 	UnameItem item = JOVALSystem.factories.sc.unix.createUnameItem();
 	EntityItemStringType machineClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	IProcess p = session.createProcess("uname -m");
-	p.start();
-	IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	String result = reader.readLine();
-	reader.close();
-	p.waitFor(0);
-	machineClass.setValue(result);
+	machineClass.setValue(SafeCLI.exec("uname -m", session, IUnixSession.TIMEOUT_S));
 	item.setMachineClass(machineClass);
 
 	EntityItemStringType nodeName = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("uname -n");
-	p.start();
-	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	result = reader.readLine();
-	reader.close();
-	p.waitFor(0);
-	nodeName.setValue(result);
+	nodeName.setValue(SafeCLI.exec("uname -n", session, IUnixSession.TIMEOUT_S));
 	item.setNodeName(nodeName);
 
 	EntityItemStringType osName = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("uname -s");
-	p.start();
-	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	result = reader.readLine();
-	reader.close();
-	p.waitFor(0);
-	osName.setValue(result);
+	osName.setValue(SafeCLI.exec("uname -s", session, IUnixSession.TIMEOUT_S));
 	item.setOsName(osName);
 
 	EntityItemStringType osRelease = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("uname -r");
-	p.start();
-	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	result = reader.readLine();
-	reader.close();
-	p.waitFor(0);
-	osRelease.setValue(result);
+	osRelease.setValue(SafeCLI.exec("uname -r", session, IUnixSession.TIMEOUT_S));
 	item.setOsRelease(osRelease);
 
 	EntityItemStringType osVersion = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("uname -v");
-	p.start();
-	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	result = reader.readLine();
-	reader.close();
-	p.waitFor(0);
-	osVersion.setValue(result);
+	osVersion.setValue(SafeCLI.exec("uname -v", session, IUnixSession.TIMEOUT_S));
 	item.setOsVersion(osVersion);
 
 	EntityItemStringType processorType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	p = session.createProcess("uname -p");
-	p.start();
-	reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	result = reader.readLine();
-	reader.close();
-	p.waitFor(0);
-	processorType.setValue(result);
+	processorType.setValue(SafeCLI.exec("uname -p", session, IUnixSession.TIMEOUT_S));
 	item.setProcessorType(processorType);
 
 	return JOVALSystem.factories.sc.unix.createUnameItem(item);

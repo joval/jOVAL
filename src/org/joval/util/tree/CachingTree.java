@@ -61,17 +61,19 @@ public abstract class CachingTree implements ITree {
     }
 
     public Collection<String> search(Pattern p) {
-	if (preload()) {
-	    try {
+	try {
+	    if (preload()) {
 		return cache.search(p);
-	    } catch (PatternSyntaxException e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PATTERN, p.pattern());
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    } else {
+		return treeSearch(p.pattern());
 	    }
-	    return null;
-	} else {
-	    return treeSearch(p.pattern());
+	} catch (PatternSyntaxException e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PATTERN, p.pattern());
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (IllegalArgumentException e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TREESEARCH, p.pattern());
 	}
+	return null;
     }
 
     // Internal
@@ -108,8 +110,16 @@ public abstract class CachingTree implements ITree {
      * Search for a path.  This method converts the path string into tokens delimited by the separator character. Each token
      * is prepended with a ^ and appended with a $.  The method then iterates down the filesystem searching for each token,
      * in sequence, using the Matcher.find method.
+     *
+     * This method can not accommodate search strings that contain regex groups incorporating the delimiter itself.  Support
+     * for those patterns require use of the preload method.
+     * 
      */
-    private Collection<String> treeSearch(String path) {
+    private Collection<String> treeSearch(String path) throws IllegalArgumentException {
+	if (!treeSearchSupported(path)) {
+	    throw new IllegalArgumentException(path);
+	}
+
 	Collection<String> result = new Vector<String>();
 	try {
 	    if (path.startsWith("^")) {
@@ -138,10 +148,52 @@ public abstract class CachingTree implements ITree {
 	    }
 	    result.addAll(treeSearch(null, sb.toString()));
 	} catch (Exception e) {
-e.printStackTrace();
 	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return result;
+    }
+
+    private static final String[] OPENS		= {"(", "{", "["};
+    private static final String[] CLOSES	= {")", "}", "]"};
+
+    /**
+     * Searches for ESCAPED_DELIM inside of a regex group, and returns false if found.
+     */
+    private boolean treeSearchSupported(String s) throws PatternSyntaxException {
+	for (int i=0; i < OPENS.length; i++) {
+	    String open = OPENS[i];
+	    String close = CLOSES[i];
+
+	    int ptr1 = s.indexOf(open);
+	    while (ptr1 >= 0) {
+		if (ptr1 == 0 || s.charAt(ptr1-1) != '\\') {
+		    int ptr2 = s.indexOf(close, ptr1+1);
+		    while (ptr2 > 0 && s.charAt(ptr2-1) == '\\') {
+			ptr2 = s.indexOf(close, ptr2+1);
+		    }
+		    if (ptr2 > 0) {
+			String group = s.substring(ptr1+1, ptr2);
+			if (group.indexOf(ESCAPED_DELIM) != -1) {
+			    return false;
+			}
+		    } else {
+			//
+			// This should never actually happen because s was extracted from a valid Pattern.
+			//
+			StringBuffer sb = new StringBuffer();
+			while(sb.length() < ptr1) {
+			    sb.append(" ");
+			}
+			sb.append("^");
+			throw new PatternSyntaxException("Unclosed group", s, ptr1);
+		    }
+		}
+
+		// test the next group
+		ptr1 = s.indexOf(open, ptr1+1);
+	    }
+	}
+	return true;
     }
 
     /**

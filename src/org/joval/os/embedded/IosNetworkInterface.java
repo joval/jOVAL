@@ -7,10 +7,9 @@ import java.util.List;
 import java.util.Vector;
 
 import org.joval.intf.io.IReader;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.io.PerishableReader;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * Tool for creating Network Interface information from an ISession attached to an IOS device.
@@ -20,15 +19,11 @@ import org.joval.util.JOVALSystem;
  */
 class IosNetworkInterface {
     static List<IosNetworkInterface> getInterfaces(ISession session) throws Exception {
-	Vector<IosNetworkInterface> interfaces = new Vector<IosNetworkInterface>();
+	long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
 
-	IProcess p = session.createProcess("show interfaces");
-	p.start();
-	IReader reader = PerishableReader.newInstance(p.getInputStream(),
-						      JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT));
+	Vector<IosNetworkInterface> interfaces = new Vector<IosNetworkInterface>();
 	Vector<String> lines = new Vector<String>();
-	String line = null;
-	while ((line = reader.readLine()) != null) {
+	for (String line : SafeCLI.multiLine("show interfaces", session, readTimeout)) {
 	    if (line.startsWith(" ")) {
 		lines.add(line);
 	    } else if (lines.size() > 0) {
@@ -45,7 +40,6 @@ class IosNetworkInterface {
 	    interfaces.add(createIosInterface(lines));
 	}
 
-	reader.close();
 	return interfaces;
     }
 

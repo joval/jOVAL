@@ -24,16 +24,14 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemEVRStringType;
 import oval.schemas.systemcharacteristics.solaris.PackageItem;
 
-import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 import org.joval.util.Version;
 
 /**
@@ -62,16 +60,10 @@ public class PackageAdapter implements IAdapter {
 
     public boolean connect() {
 	if (session != null) {
-	    IProcess p = null;
-	    IReader reader = null;
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
-		p = session.createProcess("pkginfo -x");
-		p.start();
-		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_L);
-		String line = null;
-		while ((line = reader.readLine()) != null) {
+		for (String line : SafeCLI.multiLine("pkginfo -x", session, IUnixSession.TIMEOUT_L)) {
 		    if (line.length() == 0) {
 			break;
 		    }
@@ -92,15 +84,6 @@ public class PackageAdapter implements IAdapter {
 		return true;
 	    } catch (Exception e) {
 		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    } finally {
-		if (reader != null) {
-		    try {
-			reader.close();
-			p.waitFor(0);
-		    } catch (IOException e) {
-		    } catch (InterruptedException e) {
-		    }
-		}
 	    }
 	}
 	return false;
@@ -206,52 +189,36 @@ public class PackageAdapter implements IAdapter {
 
 	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
 	item = JOVALSystem.factories.sc.solaris.createPackageItem();
-	IProcess p = session.createProcess("/usr/bin/pkginfo -l " + pkginst);
-	p.start();
-	IReader reader = null;
 	boolean isInstalled = false;
-	try {
-	    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    String line = null;
-	    while((line = reader.readLine()) != null) {
-		line = line.trim();
-		if (line.length() == 0) {
-		    break;
-		} else if (line.startsWith(PKGINST)) {
-		    isInstalled = true;
-		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    type.setValue(line.substring(PKGINST.length()).trim());
-		    item.setPkginst(type);
-		} else if (line.startsWith(NAME)) {
-		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    type.setValue(line.substring(NAME.length()).trim());
-		    item.setName(type);
-		} else if (line.startsWith(DESC)) {
-		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    type.setValue(line.substring(DESC.length()).trim());
-		    item.setDescription(type);
-		} else if (line.startsWith(CATEGORY)) {
-		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    type.setValue(line.substring(CATEGORY.length()).trim());
-		    item.setCategory(type);
-		} else if (line.startsWith(VENDOR)) {
-		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    type.setValue(line.substring(VENDOR.length()).trim());
-		    item.setVendor(type);
-		} else if (line.startsWith(VERSION)) {
-		    EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    type.setValue(line.substring(VERSION.length()).trim());
-		    item.setPackageVersion(type);
-		}
-	    }
-	} finally {
-	    if (reader != null) {
-		try {
-		    reader.close();
-		    p.waitFor(0);
-		} catch (IOException e) {
-		} catch (InterruptedException e) {
-		}
+	for (String line : SafeCLI.multiLine("/usr/bin/pkginfo -l " + pkginst, session, IUnixSession.TIMEOUT_S)) {
+	    line = line.trim();
+	    if (line.length() == 0) {
+		break;
+	    } else if (line.startsWith(PKGINST)) {
+		isInstalled = true;
+		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		type.setValue(line.substring(PKGINST.length()).trim());
+		item.setPkginst(type);
+	    } else if (line.startsWith(NAME)) {
+		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		type.setValue(line.substring(NAME.length()).trim());
+		item.setName(type);
+	    } else if (line.startsWith(DESC)) {
+		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		type.setValue(line.substring(DESC.length()).trim());
+		item.setDescription(type);
+	    } else if (line.startsWith(CATEGORY)) {
+		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		type.setValue(line.substring(CATEGORY.length()).trim());
+		item.setCategory(type);
+	    } else if (line.startsWith(VENDOR)) {
+		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		type.setValue(line.substring(VENDOR.length()).trim());
+		item.setVendor(type);
+	    } else if (line.startsWith(VERSION)) {
+		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		type.setValue(line.substring(VERSION.length()).trim());
+		item.setPackageVersion(type);
 	    }
 	}
 

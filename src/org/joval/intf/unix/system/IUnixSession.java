@@ -7,9 +7,9 @@ import java.io.EOFException;
 import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 
 /**
  * A representation of a Unix command-line session.
@@ -54,33 +54,11 @@ public interface IUnixSession extends ISession {
 	public static Flavor flavorOf(IUnixSession session) {
 	    Flavor flavor = UNKNOWN;
 	    try {
-		boolean success = false;
-		String command = "uname -s";
-		for (int attempt=0; !success; attempt++) {
-		    try {
-			IProcess p = session.createProcess(command);
-			p.start();
-			IReader reader = PerishableReader.newInstance(p.getInputStream(), TIMEOUT_S);
-			String osName = reader.readLine();
-			success = true;
-			reader.close();
-			p.waitFor(0);
-			for (Flavor f : values()) {
-			    if (f.getOsName().equals(osName)) {
-				flavor = f;
-				break;
-			    }
-			}
-		    } catch (EOFException e) {
-			//
-			// Try up to four times in total before giving up.
-			//
-			if (attempt > 3) {
-			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_RETRY, command, attempt);
-			    throw e;
-			} else {
-			    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_PROCESS_RETRY, command);
-			}
+		String osName = SafeCLI.exec("uname -s", session, TIMEOUT_S);
+		for (Flavor f : values()) {
+		    if (f.getOsName().equals(osName)) {
+			flavor = f;
+			break;
 		    }
 		}
 	    } catch (Exception e) {

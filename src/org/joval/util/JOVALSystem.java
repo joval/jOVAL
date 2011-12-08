@@ -117,9 +117,20 @@ public class JOVALSystem {
     public static final String PROP_SUDO_READ_TIMEOUT = "sudo.read.timeout";
 
     /**
-     * Property indicating the number of times to re-try running a command in the event of an unexpected disconnect.
+     * Property indicating the number of times to re-try running a command on a non-Unix SSH-enabled device in the event of an
+     * unexpected disconnect.
      */
-    public static final String PROP_SUDO_MAX_RETRIES = "sudo.exec.retries";
+    public static final String PROP_SSH_EXEC_RETRIES = "exec.retries.ssh";
+
+    /**
+     * Property indicating the number of times to re-try running a command on Unix in the event of an unexpected disconnect.
+     */
+    public static final String PROP_UNIX_EXEC_RETRIES = "exec.retries.unix";
+
+    /**
+     * Property indicating the number of times to re-try running a command on Windows in the event of an unexpected disconnect.
+     */
+    public static final String PROP_WINDOWS_EXEC_RETRIES = "exec.retries.windows";
 
     /**
      * Property indicating the number of milliseconds to wait for an IOS command to begin to return data.

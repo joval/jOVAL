@@ -37,7 +37,6 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.io.IFile;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;

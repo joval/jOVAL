@@ -6,6 +6,7 @@ package org.joval.plugin.adapter.linux;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -23,17 +24,15 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemEVRStringType;
 import oval.schemas.systemcharacteristics.linux.RpminfoItem;
 
-import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.PerishableReader;
 import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 import org.joval.util.Version;
 
 /**
@@ -65,15 +64,9 @@ public class RpminfoAdapter implements IAdapter {
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
 		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_RPMINFO_LIST);
-		IProcess p = session.createProcess("rpm -q -a");
-		p.start();
-		String line = null;
-		IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_M);
-		while ((line = reader.readLine()) != null) {
+		for (String line : SafeCLI.multiLine("rpm -q -a", session, IUnixSession.TIMEOUT_M)) {
 		    list.add(line);
 		}
-		reader.close();
-		p.waitFor(0);
 		rpms = list.toArray(new String[list.size()]);
 		return true;
 	    } catch (Exception e) {
@@ -171,17 +164,17 @@ public class RpminfoAdapter implements IAdapter {
 	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_RPMINFO_RPM, packageName);
 	item = JOVALSystem.factories.sc.linux.createRpminfoItem();
 	String pkgArch=null, pkgVersion=null, pkgRelease=null;
-	IProcess p = session.createProcess("rpm -q " + packageName + " -i");
-	p.start();
-	IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
 	boolean isInstalled = false;
-	String line = null;
-	for (int lineNum=1; (line = reader.readLine()) != null; lineNum++) {
+
+	Iterator<String> lines = SafeCLI.multiLine("rpm -q " + packageName + " -i", session, IUnixSession.TIMEOUT_S).iterator();
+	for (int lineNum=1; lines.hasNext(); lineNum++) {
+	    String line = lines.next();
 	    String param=null, value=null;
 	    switch(lineNum) {
 	      case 1:
 		if (line.indexOf("not installed") == -1) {
 		    isInstalled = true;
+		    // NB: fall-through to default case
 		} else {
 		    break;
 		}
@@ -195,9 +188,12 @@ public class RpminfoAdapter implements IAdapter {
 		break;
 	    }
 
-	    if ("Description".equals(param)) {
+	    if (param == null) {
+		// unexpected or blank line; continue processing remaining lines
+	    } else if ("Description".equals(param)) {
 		StringBuffer sb = new StringBuffer();
-		for(lineNum = 1; (line = reader.readLine()) != null; lineNum++) {
+		for (lineNum = 1; lines.hasNext(); lineNum++) {
+		    line = lines.next();
 		    switch(lineNum) {
 		      case 1:
 			sb = new StringBuffer(line);
@@ -245,18 +241,11 @@ public class RpminfoAdapter implements IAdapter {
 		item.setSignatureKeyid(signatureKeyid);
 	    }
 	}
-	reader.close();
-	p.waitFor(0);
 
 	if (isInstalled) {
 	    item.setStatus(StatusEnumeration.EXISTS);
-	    p = session.createProcess("rpm -q --qf %{EPOCH} " + packageName);
-	    p.start();
-	    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    String pkgEpoch = reader.readLine();
-	    reader.close();
-	    p.waitFor(0);
-	    if (pkgEpoch.equals("(none)")) {
+	    String pkgEpoch = SafeCLI.exec("rpm -q --qf %{EPOCH} " + packageName, session, IUnixSession.TIMEOUT_S);
+	    if ("(none)".equals(pkgEpoch)) {
 		pkgEpoch = "0";
 	    }
 	    RpminfoItem.Epoch epoch = JOVALSystem.factories.sc.linux.createRpminfoItemEpoch();
@@ -272,18 +261,13 @@ public class RpminfoAdapter implements IAdapter {
 	    extendedName.setValue(packageName + "-" + pkgEpoch + ":" + pkgVersion + "-" + pkgRelease + "." + pkgArch);
 	    item.setExtendedName(extendedName);
 
-	    p = session.createProcess("rpm -ql " + packageName);
-	    p.start();
-	    reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    while((line = reader.readLine()) != null) {
+	    for (String line : SafeCLI.multiLine("rpm -ql " + packageName, session, IUnixSession.TIMEOUT_S)) {
 		if (!"(contains no files)".equals(line.trim())) {
 		    EntityItemStringType filepath = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    filepath.setValue(line.trim());
 		    item.getFilepath().add(filepath);
 		}
 	    }
-	    reader.close();
-	    p.waitFor(0);
 	} else {
 	    EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    name.setValue(packageName);
