@@ -8,7 +8,6 @@ import java.io.InputStream;
 import org.joval.identity.Credential;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.intf.unix.system.IUnixSession;
 
 public class Exec {
     ISession session;

@@ -77,6 +77,7 @@ public class WmiConnection implements IWmiProvider {
 	String key = new StringBuffer(target).append(":").append(namespace).toString();
 	SWbemServices services = map.get(key);
 	if (services == null) {
+	    connect();
 	    services = locator.connect(host, target, namespace, cred.getDomainUser(), cred.getPassword());
 	    map.put(key, services);
 	}
