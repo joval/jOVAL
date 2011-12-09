@@ -29,7 +29,9 @@
               <td style="border-style: solid; border-width: 1px">
                 <table border="0" cellpadding="5" cellspacing="0" width="800">
                   <tr>
-                    <td height="50" bgcolor="#dddddd" width="600"><b><xsl:value-of select="./@Name"/></b></td>
+                    <td height="50" bgcolor="#dddddd" width="600">
+                      <p><b><xsl:value-of select="./@Name"/> (<xsl:value-of select="./@OS"/>)</b></p>
+                    </td>
                     <td colspan="2" bgcolor="#dddddd" width="200">Run time:
                       <xsl:call-template name="printDuration">
                         <xsl:with-param name="duration" select="./@Runtime"/>

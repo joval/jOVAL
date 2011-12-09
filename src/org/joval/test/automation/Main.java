@@ -158,6 +158,9 @@ public class Main {
 		testDir = new File(testDir, plugin.getSessionFlavor().getOsName());
 	    }
 	    if (testDir.exists()) {
+		SystemInfoType info = plugin.getSystemInfo();
+		suite.setOS(info.getOsName());
+
 		System.out.println("Base directory for tests: " + testDir.getCanonicalPath());
 		plugin.installSupportFiles(testDir);
 		plugin.disconnect();

@@ -25,6 +25,7 @@
         <xs:element ref="report:Error"/>
       </xs:sequence>
       <xs:attribute name="Name" use="required" type="xs:NCName"/>
+      <xs:attribute name="OS" use="required" type="xs:NCName"/>
       <xs:attribute name="Runtime" use="required" type="xs:duration"/>
     </xs:complexType>
   </xs:element>
