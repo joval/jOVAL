@@ -55,7 +55,7 @@ public class RemoteContainer implements IPluginContainer {
 
     public void configure(Properties props) throws Exception {
 	if (props.getProperty("config.file") == null) {
-	    throw new Exception("Missing configuration file: " + ExecutionState.DEFAULT_CONFIG);
+	    throw new Exception("Missing configuration file: " + DEFAULT_FILE);
 	}
 	SimpleCredentialStore scs = new SimpleCredentialStore();
 	scs.add(props);

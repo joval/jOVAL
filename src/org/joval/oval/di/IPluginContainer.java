@@ -15,6 +15,16 @@ import org.joval.intf.plugin.IPlugin;
  * @version %I% %G%
  */
 public interface IPluginContainer {
+    /**
+     * The default filename for a plugin configuration.
+     */
+    String DEFAULT_FILE = "config.properties";
+
+    /**
+     * The property indicating the plugin filename.  This is a required property.
+     */
+    String PROP_CONFIGFILE = "config.file";
+
     String PROP_DESCRIPTION = "description";
     String PROP_VERSION = "version";
     String PROP_COPYRIGHT = "copyright";

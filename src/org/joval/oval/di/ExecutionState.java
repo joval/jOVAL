@@ -38,7 +38,6 @@ public class ExecutionState {
     static final String DEFAULT_SC_SCHEMATRON		= "oval-system-characteristics-schematron.xsl";
     static final String DEFAULT_RESULTS_SCHEMATRON	= "oval-results-schematron.xsl";
     static final String DEFAULT_PLUGIN			= "default";
-    static final String DEFAULT_CONFIG			= "config.properties";
 
     File inputFile;
     File variablesFile;
@@ -258,6 +257,7 @@ public class ExecutionState {
 		pluginConfig = new Properties();
 		try {
 		    pluginConfig.load(new FileInputStream(new File(argv[++i])));
+		    pluginConfig.setProperty(IPluginContainer.PROP_CONFIGFILE, argv[i]);
 		} catch (IOException e) {
 		    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
 		    return false;
@@ -279,10 +279,10 @@ public class ExecutionState {
 	    if (container != null) {
 		if (pluginConfig == null) {
 		    pluginConfig = new Properties();
-		    File config = new File(DEFAULT_CONFIG);
+		    File config = new File(IPluginContainer.DEFAULT_FILE);
 		    if (config.exists()) {
-			pluginConfig.setProperty("config.file", config.getCanonicalPath());
-			pluginConfig.load(new FileInputStream(new File(DEFAULT_CONFIG)));
+			pluginConfig.setProperty(IPluginContainer.PROP_CONFIGFILE, config.getCanonicalPath());
+			pluginConfig.load(new FileInputStream(new File(IPluginContainer.DEFAULT_FILE)));
 		    }
 		}
 		container.configure(pluginConfig);

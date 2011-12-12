@@ -93,7 +93,9 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 	    } else {
 		((SftpFilesystem)fs).setJschSession(ssh.getJschSession());
 	    }
-	    flavor = Flavor.flavorOf(this);
+	    if (flavor == Flavor.UNKNOWN) {
+		flavor = Flavor.flavorOf(this);
+	    }
 	    info.getSystemInfo();
 	    return true;
 	} else {
