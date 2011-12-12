@@ -1,6 +1,6 @@
 @REM Copyright (c) 2011 jOVAL.org.  All rights reserved.
 @REM This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
-@REM@ECHO OFF
+@ECHO OFF
 
 IF NOT DEFINED JAVA_HOME SET JAVA_HOME=jre
 IF %PROCESSOR_ARCHITECTURE% EQU x86 (
