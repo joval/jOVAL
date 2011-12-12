@@ -869,19 +869,16 @@ public class Engine implements IEngine {
 	    existence.addStatus(StatusEnumeration.NOT_COLLECTED);
 	    break;
 	}
-   
-	ResultEnumeration existenceResult = existence.getResult(testDefinition.getCheckExistence());
-	if (state == null) {
+
+	if (testDefinition.getCheck() == CheckEnumeration.NONE_EXIST) {
 	    //
-	    // DAS: Note, the NONE_EXIST check is deprecated as of 5.3, and will be eliminated in 6.0
+	    // Per D. Haynes, in this case, any state and/or check should be ignored.
+	    // Note that the NONE_EXIST check is deprecated as of 5.3, and will be eliminated in 6.0.
 	    //
-	    if (testDefinition.getCheck() == CheckEnumeration.NONE_EXIST) {
-		JOVALSystem.getLogger().warn(JOVALMsg.STATUS_CHECK_NONE_EXIST, testDefinition.getCheckExistence(), testId);
-		testResult.setResult(existence.getResult(ExistenceEnumeration.NONE_EXIST));
-	    } else {
-		testResult.setResult(existenceResult);
-	    }
+	    JOVALSystem.getLogger().warn(JOVALMsg.STATUS_CHECK_NONE_EXIST, testDefinition.getCheckExistence(), testId);
+	    testResult.setResult(existence.getResult(ExistenceEnumeration.NONE_EXIST));
 	} else {
+	    ResultEnumeration existenceResult = existence.getResult(testDefinition.getCheckExistence());
 	    switch(existenceResult) {
 	      case TRUE:
 		testResult.setResult(check.getResult(testDefinition.getCheck()));
