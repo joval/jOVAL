@@ -1,4 +1,10 @@
 <?xml version="1.0"?>
+<!--
+
+  Copyright (C) 2011 jOVAL.org.  All rights reserved.
+  This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+
+-->
 <xsl:stylesheet xmlns:xs="http://www.w3.org/2001/XMLSchema"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"
                 xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
