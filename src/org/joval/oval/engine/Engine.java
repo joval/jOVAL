@@ -870,13 +870,24 @@ public class Engine implements IEngine {
 	    break;
 	}
 
+	//
+	// Note that the NONE_EXIST check is deprecated as of 5.3, and will be eliminated in 6.0.
+	// Per D. Haynes, in this case, any state and/or check should be ignored.
+	//
 	if (testDefinition.getCheck() == CheckEnumeration.NONE_EXIST) {
-	    //
-	    // Per D. Haynes, in this case, any state and/or check should be ignored.
-	    // Note that the NONE_EXIST check is deprecated as of 5.3, and will be eliminated in 6.0.
-	    //
 	    JOVALSystem.getLogger().warn(JOVALMsg.STATUS_CHECK_NONE_EXIST, testDefinition.getCheckExistence(), testId);
 	    testResult.setResult(existence.getResult(ExistenceEnumeration.NONE_EXIST));
+
+	//
+	// If there are no items matching the object, or if there is no state for the test, then the result of the test is
+	// simply the result of the existence check.
+	//
+	} else if (sc.getItemsByObjectId(objectId).size() == 0 || stateId == null) {
+	    testResult.setResult(existence.getResult(testDefinition.getCheckExistence()));
+
+	//
+	// If there are items matching the object, then check the existence check, then (if successful) the check.
+	//
 	} else {
 	    ResultEnumeration existenceResult = existence.getResult(testDefinition.getCheckExistence());
 	    switch(existenceResult) {
