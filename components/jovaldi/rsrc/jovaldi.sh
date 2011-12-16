@@ -5,4 +5,4 @@
 if [ "x${JAVA_HOME}" == x ]; then
     export JAVA_HOME=./jre
 fi
-${JAVA_HOME}/bin/java -Xmx1024m -cp lib/jovaldi.jar:lib/oval-schema-5.10.jar:lib/jOVALCore.jar:lib/cal10n-api-0.7.4.jar:lib/slf4j-api-1.6.2.jar:lib/slf4j-ext-1.6.2.jar:lib/slf4j-jdk14-1.6.2.jar org.joval.oval.di.Main "$@"
+${JAVA_HOME}/bin/java -Xmx1024m -cp lib/jovaldi.jar:lib/oval-schema-5.10.1.jar:lib/jOVALCore.jar:lib/cal10n-api-0.7.4.jar:lib/slf4j-api-1.6.2.jar:lib/slf4j-ext-1.6.2.jar:lib/slf4j-jdk14-1.6.2.jar org.joval.oval.di.Main "$@"

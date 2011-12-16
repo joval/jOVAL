@@ -322,7 +322,7 @@ public class Engine implements IEngine {
 	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
 	generator.setProductName(JOVALSystem.getProperty(JOVALSystem.PROP_PRODUCT));
 	generator.setProductVersion(JOVALSystem.getProperty(JOVALSystem.PROP_VERSION));
-	generator.setSchemaVersion(new BigDecimal(SCHEMA_VERSION.toString()));
+	generator.setSchemaVersion(SCHEMA_VERSION.toString());
 	try {
 	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
 	} catch (DatatypeConfigurationException e) {

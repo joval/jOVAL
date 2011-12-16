@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+            xmlns:aix-sc="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#aix"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#aix"
+            elementFormDefault="qualified"
+            version="5.10.1">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"
+               schemaLocation="oval-system-characteristics-schema.xsd"/>
+   <xsd:element name="interim_fix_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="vuid" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="label" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="abstract" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="state" type="aix-sc:EntityItemInterimFixStateType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="fileset_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="flstinst" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="level" type="oval-sc:EntityItemVersionType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="state" type="aix-sc:EntityItemFilesetStateType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="description" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="fix_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="apar_number" type="oval-sc:EntityItemStringType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="abstract" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="symptom" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="installation_status" type="aix-sc:EntityItemFixInstallationStatusType"
+                               minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="no_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="tunable" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"/>
+                  <xsd:element name="value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0" maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="oslevel_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="maintenance_level" type="oval-sc:EntityItemVersionType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:complexType name="EntityItemFilesetStateType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="APPLIED"/>
+            <xsd:enumeration value="APPLYING"/>
+            <xsd:enumeration value="BROKEN"/>
+            <xsd:enumeration value="COMMITTED"/>
+            <xsd:enumeration value="COMMITTING"/>
+            <xsd:enumeration value="EFIX LOCKED"/>
+            <xsd:enumeration value="OBSOLETE"/>
+            <xsd:enumeration value="REJECTING"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemFixInstallationStatusType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="ALL_INSTALLED"/>
+            <xsd:enumeration value="SOME_INSTALLED"/>
+            <xsd:enumeration value="NONE_INSTALLED"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+   <xsd:complexType name="EntityItemInterimFixStateType">
+      <xsd:simpleContent>
+         <xsd:restriction base="oval-sc:EntityItemStringType">
+            <xsd:enumeration value="STABLE"/>
+            <xsd:enumeration value="MOUNTED"/>
+            <xsd:enumeration value="UNMOUNTED"/>
+            <xsd:enumeration value="BROKEN"/>
+            <xsd:enumeration value="INSTALLING"/>
+            <xsd:enumeration value="REBOOT_REQUIRED"/>
+            <xsd:enumeration value="REMOVING"/>
+            <xsd:enumeration value=""/>
+         </xsd:restriction>
+      </xsd:simpleContent>
+   </xsd:complexType>
+</xsd:schema>

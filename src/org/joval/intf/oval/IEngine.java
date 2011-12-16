@@ -22,7 +22,7 @@ public interface IEngine extends Runnable {
     /**
      * The version of the OVAL schema supported by the engine.
      */
-    Version SCHEMA_VERSION = new Version("5.10");
+    Version SCHEMA_VERSION = new Version("5.10.1");
 
     /**
      * The minimum message value that will be produced by the engine's IProducer.
