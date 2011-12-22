@@ -357,10 +357,10 @@ public class Main implements IObserver {
 
     private Main() {
 	try {
-	    InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream("jovaldi.logging.properties");
-	    LogManager.getLogManager().readConfiguration(in);
+	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	    LogManager.getLogManager().readConfiguration(cl.getResourceAsStream("jovaldi.logging.properties"));
 
-	    Logger jSysLogger = Logger.getLogger(JOVALSystem.class.getName());
+	    Logger jSysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
 	    Handler logHandler = new FileHandler(state.logFile.toString(), false);
 	    logHandler.setFormatter(new LogfileFormatter());
 	    logHandler.setLevel(state.logLevel);
