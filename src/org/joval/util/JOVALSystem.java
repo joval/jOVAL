@@ -23,8 +23,6 @@ import ch.qos.cal10n.MessageConveyorException;
 import org.slf4j.cal10n.LocLogger;
 import org.slf4j.cal10n.LocLoggerFactory;
 
-import oval.schemas.evaluation.id.EvaluationDefinitionIds;
-
 import org.joval.intf.identity.ICredentialStore;
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;

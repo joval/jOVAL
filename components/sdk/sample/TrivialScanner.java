@@ -37,7 +37,7 @@ public class TrivialScanner {
 	    Handler handler = new FileHandler("TrivialScanner.log", false);
 	    handler.setFormatter(new SimpleFormatter());
 	    handler.setLevel(Level.INFO);
-	    Logger logger = Logger.getLogger(JOVALSystem.class.getName());
+	    Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
 	    logger.addHandler(handler);
 
 	    Properties props = new Properties();

@@ -108,7 +108,7 @@ public class Main {
 	    Handler handler = new FileHandler("test.log", false);
 	    handler.setFormatter(new LogFormatter());
 	    handler.setLevel(Level.FINEST);
-	    Logger logger = Logger.getLogger(JOVALSystem.class.getName());
+	    Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
 	    logger.addHandler(handler);
 
 	    if (!reportDir.exists()) {
