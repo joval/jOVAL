@@ -83,7 +83,10 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 			Collection<String> forbidden = StringTools.toList(StringTools.tokenize(skip, ":", true));
 			String[] children = root.list();
 			for (int i=0; i < children.length; i++) {
-			    if (!forbidden.contains(children[i])) {
+			    if (forbidden.contains(children[i])) {
+				JOVALSystem.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, children[i]);
+			    } else {
+				JOVALSystem.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, children[i]);
 				roots.add(new File(root, children[i]));
 			    }
 			}

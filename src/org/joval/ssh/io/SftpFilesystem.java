@@ -103,7 +103,10 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 			IFile[] roots = getFile(DELIM_STR).listFiles();
 			Collection<String> filtered = new Vector<String>();
 			for (int i=0; i < roots.length; i++) {
-			    if (!forbidden.contains(roots[i].getName())) {
+			    if (forbidden.contains(roots[i].getName())) {
+				JOVALSystem.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, roots[i]);
+			    } else {
+				JOVALSystem.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, roots[i]);
 				filtered.add(roots[i].getPath());
 			    }
 			}
@@ -117,6 +120,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		    // else fall-through
 
 		  default:
+		    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, "/");
 		    command = "find -L /";
 		    break;
 		}
