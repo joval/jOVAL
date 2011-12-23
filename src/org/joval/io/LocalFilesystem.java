@@ -8,7 +8,9 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.Collection;
 import java.util.NoSuchElementException;
+import java.util.Vector;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
@@ -23,6 +25,7 @@ import org.joval.util.tree.CachingTree;
 import org.joval.util.tree.Tree;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.StringTools;
 
 /**
  * A pure-Java implementation of the IFilesystem interface.
@@ -31,7 +34,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class LocalFilesystem extends CachingTree implements IFilesystem {
-    private static boolean WINDOWS = System.getProperty("os.name").startsWith("Windows");
+    private static boolean LINUX	= System.getProperty("os.name").toLowerCase().indexOf("linux") >= 0;
+    private static boolean WINDOWS	= System.getProperty("os.name").startsWith("Windows");
 
     private boolean autoExpand = true, preloaded = false;
     private IEnvironment env;
@@ -69,12 +73,33 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 		    addRecursive(tree, roots[i]);
 		}
 	    } else {
+		File root = new File(getDelimiter());
+		Collection<File> roots = new Vector<File>();
+		if (LINUX) {
+		    String skip = JOVALSystem.getProperty(JOVALSystem.PROP_LINUX_FS_SKIP);
+		    if (skip == null) {
+			roots.add(root);
+		    } else {
+			Collection<String> forbidden = StringTools.toList(StringTools.tokenize(skip, ":", true));
+			String[] children = root.list();
+			for (int i=0; i < children.length; i++) {
+			    if (!forbidden.contains(children[i])) {
+				roots.add(new File(root, children[i]));
+			    }
+			}
+		    }
+		} else {
+		    roots.add(root);
+		}
+
 		ITreeBuilder tree = cache.getTreeBuilder("");
 		if (tree == null) {
 		    tree = new Tree("", getDelimiter());
 		    cache.addTree(tree);
 		}
-		addRecursive(tree, new File(getDelimiter()));
+		for (File f : roots) {
+		    addRecursive(tree, f);
+		}
 	    }
 
 	    preloaded = true;

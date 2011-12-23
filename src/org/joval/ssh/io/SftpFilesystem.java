@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Vector;
 import java.util.NoSuchElementException;
 
@@ -35,6 +34,7 @@ import org.joval.util.tree.CachingTree;
 import org.joval.util.tree.Tree;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.StringTools;
 
 /**
  * An implementation of the IFilesystem interface for SSH-connected sessions.
@@ -96,24 +96,25 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		  // On Linux, we do not search under the /proc or /sys directories.
 		  // It's just a big ugly mess under there...
 		  //
-		  case LINUX: {
-		    HashSet<String> forbidden = new HashSet<String>();
-		    forbidden.add("proc");
-		    forbidden.add("sys");
-		    IFile[] roots = getFile(DELIM_STR).listFiles();
-		    Collection<String> filtered = new Vector<String>();
-		    for (int i=0; i < roots.length; i++) {
-			if (!forbidden.contains(roots[i].getName())) {
-			    filtered.add(roots[i].getPath());
+		  case LINUX:
+		    String skip = JOVALSystem.getProperty(JOVALSystem.PROP_LINUX_FS_SKIP);
+		    if (skip != null) {
+			Collection<String> forbidden = StringTools.toList(StringTools.tokenize(skip, ":", true));
+			IFile[] roots = getFile(DELIM_STR).listFiles();
+			Collection<String> filtered = new Vector<String>();
+			for (int i=0; i < roots.length; i++) {
+			    if (!forbidden.contains(roots[i].getName())) {
+				filtered.add(roots[i].getPath());
+			    }
 			}
+			StringBuffer sb = new StringBuffer("find -L ");
+			for (String s : filtered) {
+			    sb.append(s).append(" ");
+			}
+			command = sb.toString().trim();
+			break;
 		    }
-		    StringBuffer sb = new StringBuffer("find -L ");
-		    for (String s : filtered) {
-			sb.append(s).append(" ");
-		    }
-		    command = sb.toString().trim();
-		    break;
-		  }
+		    // else fall-through
 
 		  default:
 		    command = "find -L /";

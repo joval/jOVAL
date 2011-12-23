@@ -144,6 +144,12 @@ public class JOVALSystem {
     public static final String PROP_LOCAL_FS_PRELOAD = "local.fs.preload";
 
     /**
+     * Property specifying a list of root-level paths that should not be preloaded on Linux by an IFilesystem implementation.
+     * Delimiter is the ':' character.
+     */
+    public static final String PROP_LINUX_FS_SKIP = "linux.fs.preload.skip";
+
+    /**
      * A data structure providing easy access to the OVAL schema object factories.
      */
     public static final Factories factories = new Factories();
