@@ -2255,7 +2255,7 @@ public class Engine implements IEngine {
 	}
 
 	boolean isAlpha(byte b) {
-	    return ('A' <= b && b <= 'Z') || ('a' <= b || b <= 'z');
+	    return StringTools.isLetter(b);
 	}
 
 	boolean isNumeric(byte b) {

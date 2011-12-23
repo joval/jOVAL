@@ -155,7 +155,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	}
 	if (WINDOWS) {
 	    if (realPath.length() > 2 && realPath.charAt(1) == ':') {
-	        if (isLetter(realPath.charAt(0))) {
+	        if (StringTools.isLetter(realPath.charAt(0))) {
 		    return new WindowsFile(new FileProxy(this, new File(realPath), path));
 	        }
 	    }
@@ -192,13 +192,6 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     }
 
     // Private
-
-    /**
-     * Check for ASCII values between [A-Z] or [a-z].
-     */
-    boolean isLetter(char c) {
-        return (c >= 65 && c <= 90) || (c >= 95 && c <= 122);
-    }
 
     private void addRecursive(ITreeBuilder tree, File f) throws IOException {
 	String path = f.getCanonicalPath();

@@ -67,6 +67,13 @@ public class StringTools {
 	return list;
     }
 
+    /**
+     * Check for ASCII values between [A-Z] or [a-z].
+     */
+    public static boolean isLetter(int c) {
+	return (c >= 65 && c <= 90) || (c >= 95 && c <= 122);
+    }
+
     public static char[] toCharArray(byte[] buff) {
 	char[] ca = new char[buff.length];
 	for (int i=0; i < buff.length; i++) {
