@@ -391,11 +391,9 @@ public class Key implements IKey {
 								      new Integer(index), Key.this.toString()));
 		}
 	    } catch (IllegalArgumentException e) {
-		String message = "Index: " + index;
-		throw new NoSuchElementException(message);
+		throw new NoSuchElementException(e.getMessage());
 	    } catch (JIException e) {
-		String message = "Index: " + index;
-		throw new NoSuchElementException(message);
+		throw new NoSuchElementException(e.getMessage());
 	    }
 	}
 

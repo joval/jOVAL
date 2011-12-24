@@ -40,6 +40,7 @@ import org.joval.os.windows.registry.BinaryValue;
 import org.joval.os.windows.registry.DwordValue;
 import org.joval.os.windows.registry.ExpandStringValue;
 import org.joval.os.windows.registry.MultiStringValue;
+import org.joval.os.windows.registry.QwordValue;
 import org.joval.os.windows.registry.StringValue;
 import org.joval.os.windows.registry.Value;
 import org.joval.os.windows.system.Environment;
@@ -269,6 +270,11 @@ public class Registry extends BaseRegistry {
 
 	      case IJIWinReg.REG_DWORD: {
         	val = new DwordValue(key, name, DwordValue.byteArrayToInt((byte[])oa[1]));
+		break;
+	      }
+
+	      case IJIWinReg.REG_QWORD: {
+        	val = new QwordValue(key, name, QwordValue.byteArrayToLong((byte[])oa[1]));
 		break;
 	      }
 
