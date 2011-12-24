@@ -89,7 +89,7 @@ public class SidSidAdapter extends UserAdapter {
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 		break;
     

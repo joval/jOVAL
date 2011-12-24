@@ -155,7 +155,7 @@ public class PatchAdapter implements IAdapter {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 	  }
@@ -278,7 +278,7 @@ public class PatchAdapter implements IAdapter {
 	    }
 	} catch (Exception e) {
 	    error = e.getMessage();
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 

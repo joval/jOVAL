@@ -36,9 +36,11 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class EnvironmentvariableAdapter implements IAdapter {
+    private ISession session;
     private IEnvironment environment;
 
     public EnvironmentvariableAdapter(ISession session) {
+	this.session = session;
 	environment = session.getEnvironment();
     }
 
@@ -108,7 +110,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 

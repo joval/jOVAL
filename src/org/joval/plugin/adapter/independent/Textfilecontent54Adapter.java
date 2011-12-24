@@ -127,7 +127,7 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		    throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 		}
 	    } catch (PatternSyntaxException e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
+		session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
 		throw new IOException(e);
 	    } catch (ResolveException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
@@ -140,7 +140,7 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		    try {
 			in.close();
 		    } catch (IOException e) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
+			session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
 		    }
 		}
 	    }

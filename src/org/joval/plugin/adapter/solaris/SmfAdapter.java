@@ -64,7 +64,7 @@ public class SmfAdapter implements IAdapter {
     public boolean connect() {
 	if (session != null) {
 	    try {
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SMF);
+		session.getLogger().trace(JOVALMsg.STATUS_SMF);
 		ArrayList<String> list = new ArrayList<String>();
 		for (String line : SafeCLI.multiLine("/usr/bin/svcs -o fmri", session, IUnixSession.TIMEOUT_M)) {
 		    if (line.startsWith("FMRI")) {
@@ -72,14 +72,14 @@ public class SmfAdapter implements IAdapter {
 		    }
 		    String fmri = getFullFmri(line.trim());
 		    if (fmri == null) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FMRI, line);
+			session.getLogger().warn(JOVALMsg.ERROR_FMRI, line);
 		    } else {
 			list.add(fmri);
 		    }
 		}
 		services = list.toArray(new String[list.size()]);
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return services != null;
@@ -104,7 +104,7 @@ public class SmfAdapter implements IAdapter {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
@@ -132,7 +132,7 @@ public class SmfAdapter implements IAdapter {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 	  }
@@ -157,8 +157,8 @@ public class SmfAdapter implements IAdapter {
 		SmfItem item = getItem(services[i]);
 		serviceMap.put((String)item.getFmri().getValue(), item);
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SMF, services[i]);
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.ERROR_SMF, services[i]);
+		session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	loaded = true;
@@ -183,7 +183,7 @@ public class SmfAdapter implements IAdapter {
 	    return item;
 	}
 
-	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
+	session.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
 	item = JOVALSystem.factories.sc.solaris.createSmfItem();
 	boolean found = false;
 	for (String line : SafeCLI.multiLine("/usr/bin/svcs -l " + fmri, session, IUnixSession.TIMEOUT_S)) {

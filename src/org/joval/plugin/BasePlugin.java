@@ -6,6 +6,8 @@ package org.joval.plugin;
 import java.util.Collection;
 import java.util.Vector;
 
+import org.slf4j.cal10n.LocLogger;
+
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.plugin.IAdapter;
@@ -57,10 +59,23 @@ import org.joval.util.JOVALSystem;
 public abstract class BasePlugin implements IPlugin {
     private String hostname;
 
+    protected LocLogger logger;
     protected ISession session;
     protected Collection<IAdapter> adapters;
 
-    protected BasePlugin() {}
+    protected BasePlugin() {
+	logger = JOVALSystem.getLogger();
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
 
     // Implement IPlugin
 
@@ -145,16 +160,19 @@ public abstract class BasePlugin implements IPlugin {
     }
 
     public void connect() throws OvalException {
-	JOVALSystem.getLogger().info(JOVALMsg.STATUS_PLUGIN_CONNECT);
+	logger.info(JOVALMsg.STATUS_PLUGIN_CONNECT);
 	if (session == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_NONE));
-	} else if (!session.connect()) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
+	} else {
+	    session.setLogger(logger);
+	    if (!session.connect()) {
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
+	    }
 	}
     }
 
     public void disconnect() {
-	JOVALSystem.getLogger().info(JOVALMsg.STATUS_PLUGIN_DISCONNECT);
+	logger.info(JOVALMsg.STATUS_PLUGIN_DISCONNECT);
 	if (session != null) {
 	    session.disconnect();
 	}

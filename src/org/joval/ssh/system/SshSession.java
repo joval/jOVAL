@@ -6,6 +6,8 @@ package org.joval.ssh.system;
 import java.io.IOException;
 import java.util.List;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.vngx.jsch.JSch;
 import org.vngx.jsch.ChannelExec;
 import org.vngx.jsch.ChannelType;
@@ -41,6 +43,7 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardInteractive {
+    protected LocLogger logger;
     protected String hostname;
     protected ICredential cred;
     protected Session session;
@@ -57,6 +60,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     public SshSession(String hostname) {
 	this.hostname = hostname;
 	this.debug = JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_DEBUG);
+	logger = JOVALSystem.getLogger();
     }
 
     public Session getJschSession() {
@@ -67,7 +71,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 
     public boolean unlock(ICredential cred) {
 	if (cred == null) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SESSION_CREDENTIAL);
+	    logger.warn(JOVALMsg.ERROR_SESSION_CREDENTIAL);
 	    return false;
 	}
 	this.cred = cred;
@@ -82,11 +86,21 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 			IdentityManager.getManager().addIdentity(id, sshc.getPassphrase().getBytes());
  		    }
 		} catch (JSchException e) {
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
 	return true;
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
     }
 
     // Implement IBaseSession
@@ -109,7 +123,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 		session = JSch.getInstance().createSession(cred.getUsername(), hostname, 22, config);
 		session.setUserInfo(this);
 	    } catch (JSchException e) {
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    }
 	}
@@ -117,23 +131,23 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 	    return true; // already connected
 	} else {
 	    if (connected) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_DROPPED_CONN, hostname);
+		logger.warn(JOVALMsg.ERROR_SSH_DROPPED_CONN, hostname);
 	    }
 	    Exception lastError = null;
 	    for (int i=1; i <= connRetries; i++) {
 		try {
 		    session.setSocketFactory(SocketFactory.DEFAULT_SOCKET_FACTORY);
 		    session.connect(connTimeout);
-		    JOVALSystem.getLogger().info(JOVALMsg.STATUS_SSH_CONNECT, hostname);
+		    logger.info(JOVALMsg.STATUS_SSH_CONNECT, hostname);
 		    connected = true;
 		    return true;
 		} catch (JSchException e) {
 		    lastError = e;
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_CONNECT, hostname, i, e.getMessage());
+		    logger.warn(JOVALMsg.ERROR_SSH_CONNECT, hostname, i, e.getMessage());
 		}
 	    }
 	    if (lastError != null) {
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), lastError);
+		logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), lastError);
 	    }
 	    return false;
 	}
@@ -143,7 +157,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 	if (session != null) {
 	    synchronized(session) {
 	        if (session != null && connected) {
-		    JOVALSystem.getLogger().info(JOVALMsg.STATUS_SSH_DISCONNECT, hostname);
+		    logger.info(JOVALMsg.STATUS_SSH_DISCONNECT, hostname);
 		    session.disconnect();
 		    connected = false;
 		}
@@ -154,7 +168,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     public IProcess createProcess(String command) throws Exception {
 	if (connect()) {
 	    ChannelExec ce = session.openChannel(ChannelType.EXEC);
-	    return new SshProcess(ce, command);
+	    return new SshProcess(ce, command, debug);
 	} else {
 	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
 	}
@@ -171,11 +185,11 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 		    } else if (line.equals("")) {
 			// ignore;
 		    } else {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SSH_UNEXPECTED_RESPONSE, line);
+			logger.warn(JOVALMsg.ERROR_SSH_UNEXPECTED_RESPONSE, line);
 		    }
 		}
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return Type.SSH;
@@ -208,7 +222,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     }
 
     public void showMessage(String message) {
-	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_AUTHMESSAGE, message);
+	logger.debug(JOVALMsg.STATUS_AUTHMESSAGE, message);
     }
 
     // Implement UIKeyboardInteractive

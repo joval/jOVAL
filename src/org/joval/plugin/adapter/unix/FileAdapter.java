@@ -107,7 +107,7 @@ public class FileAdapter extends BaseFileAdapter {
 	} else {
 	    file = new UnixFile(us, f);
 	}
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_UNIX_FILE, file.getLocalName());
+	session.getLogger().trace(JOVALMsg.STATUS_UNIX_FILE, file.getLocalName());
 	EntityItemIntType aTime = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	aTime.setValue(Long.toString(file.accessTime()/1000L));
 	aTime.setDatatype(SimpleDatatypeEnumeration.INT.value());

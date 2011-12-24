@@ -161,13 +161,13 @@ public class PlistAdapter extends BaseFileAdapter {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PLIST_PARSE, f.getLocalName(), e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
 		if (in != null) {
 		    try {
 			in.close();
 		    } catch (IOException e) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
+			session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
 		    }
 		}
 	    }

@@ -158,7 +158,7 @@ public class RegistryAdapter implements IAdapter {
 		String variableId = rObj.getKey().getValue().getVarRef();
 		list.addAll(rc.resolve(variableId));
 	    } catch (NoSuchElementException e) {
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), rObj.getId());
+		session.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), rObj.getId());
 	    } catch (ResolveException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -308,7 +308,7 @@ public class RegistryAdapter implements IAdapter {
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 		break;
     

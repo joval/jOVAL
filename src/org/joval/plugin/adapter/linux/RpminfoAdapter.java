@@ -63,14 +63,14 @@ public class RpminfoAdapter implements IAdapter {
 	if (session != null) {
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_RPMINFO_LIST);
+		session.getLogger().trace(JOVALMsg.STATUS_RPMINFO_LIST);
 		for (String line : SafeCLI.multiLine("rpm -q -a", session, IUnixSession.TIMEOUT_M)) {
 		    list.add(line);
 		}
 		rpms = list.toArray(new String[list.size()]);
 		return true;
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return false;
@@ -93,7 +93,7 @@ public class RpminfoAdapter implements IAdapter {
 		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_RPMINFO, (String)rObj.getName().getValue(), e.getMessage());
 		msg.setValue(s);
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().warn(s, e);
+		session.getLogger().warn(s, e);
 	    }
 	    break;
 
@@ -111,7 +111,7 @@ public class RpminfoAdapter implements IAdapter {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
@@ -141,15 +141,15 @@ public class RpminfoAdapter implements IAdapter {
     private void loadFullPackageMap() {
 	if (loaded) return;
 
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_RPMINFO_FULL);
+	session.getLogger().trace(JOVALMsg.STATUS_RPMINFO_FULL);
 	packageMap = new Hashtable<String, RpminfoItem>();
 	for (int i=0; i < rpms.length; i++) {
 	    try {
 		RpminfoItem item = getItem(rpms[i]);
 		packageMap.put((String)item.getName().getValue(), item);
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_RPMINFO, rpms[i]);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.ERROR_RPMINFO, rpms[i]);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	loaded = true;
@@ -161,7 +161,7 @@ public class RpminfoAdapter implements IAdapter {
 	    return item;
 	}
 
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_RPMINFO_RPM, packageName);
+	session.getLogger().trace(JOVALMsg.STATUS_RPMINFO_RPM, packageName);
 	item = JOVALSystem.factories.sc.linux.createRpminfoItem();
 	String pkgArch=null, pkgVersion=null, pkgRelease=null;
 	boolean isInstalled = false;

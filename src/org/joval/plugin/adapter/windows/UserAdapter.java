@@ -45,9 +45,11 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class UserAdapter implements IAdapter {
+    protected IWindowsSession session;
     protected IDirectory directory;
 
     public UserAdapter(IWindowsSession session) {
+	this.session = session;
 	this.directory = session.getDirectory();
     }
 
@@ -82,7 +84,7 @@ public class UserAdapter implements IAdapter {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.WARNING);
 		    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, user);
-		    JOVALSystem.getLogger().warn(s);
+		    session.getLogger().warn(s);
 		    msg.setValue(s);
 		    rc.addMessage(msg);
 		}
@@ -115,7 +117,7 @@ public class UserAdapter implements IAdapter {
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 		break;
     

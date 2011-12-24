@@ -2,13 +2,15 @@
 
 package org.joval.intf.system;
 
+import org.joval.intf.util.ILoggable;
+
 /**
  * An interface representing of a basic session.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IBaseSession {
+public interface IBaseSession extends ILoggable {
     /**
      * A constant defining the String "localhost".
      */

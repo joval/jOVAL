@@ -184,11 +184,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    } catch (NoSuchElementException e) {
 		// skip it
 	    } catch (IllegalAccessException e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
+		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
 	    } catch (InvocationTargetException e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
+		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
 	    } catch (IllegalArgumentException e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+		session.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
 	    } catch (IOException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -350,7 +350,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    } catch (UnsupportedOperationException e) {
 				// ignore -- not a directory
 			    } catch (IllegalArgumentException e) {
-				JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+				session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			    } catch (IOException e) {
 				MessageType msg = JOVALSystem.factories.common.createMessageType();
 				msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -365,9 +365,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 		throw new OvalException("ERROR_BAD_FILEOBJECT" + obj.getId());
 	    }
 	} catch (PatternSyntaxException e) {
-       	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+       	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (NoSuchElementException e) {
-       	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), obj.getId());
+       	    session.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), obj.getId());
 	} catch (ResolveException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -390,7 +390,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		if (!path.endsWith(fs.getDelimiter())) {
 		    path = path + fs.getDelimiter();
 		}
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_FS_RECURSE, path);
+		session.getLogger().trace(JOVALMsg.STATUS_FS_RECURSE, path);
 		try {
 		    IFile f = (IFile)fs.lookup(path);
 		    if (f == null) {
@@ -427,8 +427,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 		} catch (FileNotFoundException e) {
 		    // link is not a link to a directory
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
-		    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    session.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+		    session.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	    return results;
@@ -615,7 +615,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		Method getRecurseFileSystem = obj.getClass().getMethod("getRecurseFileSystem");
 		recurseFS = (String)getRecurseFileSystem.invoke(obj);
 		if (!"all".equals(recurseFS)) {
-		    JOVALSystem.getLogger().error(JOVALMsg.ERROR_UNSUPPORTED_BEHAVIOR, recurseFS);
+		    session.getLogger().error(JOVALMsg.ERROR_UNSUPPORTED_BEHAVIOR, recurseFS);
 		}
 	    }
 	    if ("none".equals(recurseDirection)) {

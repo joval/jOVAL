@@ -6,6 +6,8 @@ package org.joval.os.unix.remote.system;
 import java.io.InputStream;
 import java.io.IOException;
 
+import org.slf4j.cal10n.LocLogger;
+
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.identity.Credential;
@@ -37,6 +39,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 
     SshSession ssh;
 
+    private LocLogger logger;
     private ICredential cred;
     private Credential rootCred = null;
     private Flavor flavor = Flavor.UNKNOWN;
@@ -46,6 +49,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
     public UnixSession(SshSession ssh) {
 	this.ssh = ssh;
 	info = new UnixSystemInfo(this);
+	logger = JOVALSystem.getLogger();
     }
 
     // Implement ILocked
@@ -59,6 +63,16 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 	}
 	this.cred = cred;
 	return ssh.unlock(cred);
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
     }
 
     // Implement IBaseSession
@@ -88,7 +102,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 			reader.close();
 		    }
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, MOTD, e.getMessage());
+		    logger.warn(JOVALMsg.ERROR_IO, MOTD, e.getMessage());
 		}
 	    } else {
 		((SftpFilesystem)fs).setJschSession(ssh.getJschSession());

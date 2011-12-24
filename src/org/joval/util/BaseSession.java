@@ -11,6 +11,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import org.slf4j.cal10n.LocLogger;
+
 import oval.schemas.common.FamilyEnumeration;
 
 import org.joval.intf.io.IFile;
@@ -28,12 +30,24 @@ import org.joval.intf.unix.system.IUnixSession;
  * @version %I% %G%
  */
 public abstract class BaseSession implements ISession {
+    protected LocLogger logger;
     protected File cwd;
     protected IEnvironment env;
     protected IFilesystem fs;
     protected boolean debug = false;
 
     protected BaseSession() {
+	logger = JOVALSystem.getLogger();
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
     }
 
     // Implement ISession

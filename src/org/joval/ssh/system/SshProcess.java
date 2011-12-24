@@ -36,9 +36,10 @@ class SshProcess implements IProcess {
 
     private static int num = 0;
 
-    SshProcess(ChannelExec ce, String command) {
+    SshProcess(ChannelExec ce, String command, boolean debug) {
 	this.ce = ce;
 	this.command = command;
+	this.debug = debug;
     }
 
     // Implement IProcess

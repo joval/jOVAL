@@ -73,8 +73,8 @@ public class LineAdapter implements IAdapter {
 		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_SHOW, subcommand, e.getMessage());
 		msg.setValue(s);
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().warn(s);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(s);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 

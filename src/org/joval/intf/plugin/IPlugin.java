@@ -7,7 +7,7 @@ import java.util.Collection;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.identity.ICredential;
+import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 
 /**
@@ -17,7 +17,7 @@ import org.joval.oval.OvalException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IPlugin {
+public interface IPlugin extends ILoggable {
     /**
      * Connect the plugin to whatever it's going to be used to scan.
      *

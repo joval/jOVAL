@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Vector;
 import java.util.logging.Level;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.jinterop.dcom.common.JISystem;
 
 import com.h9labs.jwbem.SWbemLocator;
@@ -52,6 +54,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	JISystem.setJavaCoClassAutoCollection(false);
     }
 
+    private LocLogger logger;
     private String host;
     private String tempDir, cwd;
     private IWindowsCredential cred;
@@ -67,6 +70,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	this.host = host;
 	tempFiles = new Vector<IFile>();
 	info = new WindowsSystemInfo(this);
+	logger = JOVALSystem.getLogger();
     }
 
     // Implement IWindowsSession extensions
@@ -120,6 +124,16 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	} else {
 	    return false;
 	}
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
     }
 
     // Implement ISession

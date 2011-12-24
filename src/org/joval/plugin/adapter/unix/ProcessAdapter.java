@@ -228,7 +228,7 @@ public class ProcessAdapter implements IAdapter {
 	    }
 	} catch (Exception e) {
 	    error = e.getMessage();
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return true;
     }

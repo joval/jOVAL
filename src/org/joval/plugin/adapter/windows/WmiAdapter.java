@@ -43,9 +43,11 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class WmiAdapter implements IAdapter {
+    private IWindowsSession session;
     private IWmiProvider wmi;
 
     public WmiAdapter(IWindowsSession session) {
+	this.session = session;
 	wmi = session.getWmiProvider();
     }
 
@@ -133,11 +135,11 @@ public class WmiAdapter implements IAdapter {
 	    item.getMessage().add(msg);
 
 	    if (e instanceof WmiException) {
-		JOVALSystem.getLogger().debug(JOVALMsg.ERROR_WINWMI_GENERAL, id);
-		JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().debug(JOVALMsg.ERROR_WINWMI_GENERAL, id);
+		session.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } else {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return item;

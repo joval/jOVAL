@@ -62,7 +62,7 @@ public class PackageAdapter implements IAdapter {
 	if (session != null) {
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
+		session.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
 		for (String line : SafeCLI.multiLine("pkginfo -x", session, IUnixSession.TIMEOUT_L)) {
 		    if (line.length() == 0) {
 			break;
@@ -83,7 +83,7 @@ public class PackageAdapter implements IAdapter {
 		packages = list.toArray(new String[list.size()]);
 		return true;
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return false;
@@ -105,7 +105,7 @@ public class PackageAdapter implements IAdapter {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
@@ -123,7 +123,7 @@ public class PackageAdapter implements IAdapter {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
@@ -159,8 +159,8 @@ public class PackageAdapter implements IAdapter {
 		PackageItem item = getItem(packages[i]);
 		packageMap.put((String)item.getPkginst().getValue(), item);
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SOLPKG, packages[i]);
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.ERROR_SOLPKG, packages[i]);
+		session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	loaded = true;
@@ -187,7 +187,7 @@ public class PackageAdapter implements IAdapter {
 	    return item;
 	}
 
-	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
+	session.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
 	item = JOVALSystem.factories.sc.solaris.createPackageItem();
 	boolean isInstalled = false;
 	for (String line : SafeCLI.multiLine("/usr/bin/pkginfo -l " + pkginst, session, IUnixSession.TIMEOUT_S)) {

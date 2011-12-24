@@ -229,7 +229,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    if (file.length() > 0) {
 		readPEHeaders(file, fItem);
 	    } else {
-		JOVALSystem.getLogger().info(JOVALMsg.STATUS_EMPTY_FILE, file.toString());
+		session.getLogger().info(JOVALMsg.STATUS_EMPTY_FILE, file.toString());
 
 		EntityItemVersionType versionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
 		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
@@ -249,7 +249,7 @@ public class FileAdapter extends BaseFileAdapter {
      */
     private void readPEHeaders(IFile file, FileItem fItem) throws IOException {
 	IRandomAccess ra = file.getRandomAccess("r");
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_PE_READ, file.toString());
+	session.getLogger().trace(JOVALMsg.STATUS_PE_READ, file.toString());
 	try {
 	    ImageDOSHeader dh = new ImageDOSHeader(ra);
 	    ra.seek((long)dh.getELFHeaderRVA());
@@ -376,8 +376,8 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	    fItem.setDevelopmentClass(developmentClassType);
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().info(JOVALMsg.ERROR_PE, file.getLocalName());
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getLocalName());
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    boolean reported = false;
 	    for (MessageType msg : fItem.getMessage()) {
 		if (((String)msg.getValue()).equals(e.getMessage())) {
@@ -396,8 +396,8 @@ public class FileAdapter extends BaseFileAdapter {
 		try {
 		    ra.close();
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_FILE_STREAM_CLOSE, file.toString()));
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_FILE_STREAM_CLOSE, file.toString()));
+		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
