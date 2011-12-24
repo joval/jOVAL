@@ -156,7 +156,8 @@ public class JOVALSystem {
     public static final Factories factories = new Factories();
 
     private static IMessageConveyor mc;
-    private static LocLogger logger;
+    private static LocLoggerFactory loggerFactory;
+    private static LocLogger sysLogger;
     private static Properties props, ovalProps;
 
     static {
@@ -172,7 +173,8 @@ public class JOVALSystem {
 	    //
 	    mc = new MessageConveyor(Locale.ENGLISH);
 	}
-	logger = new LocLoggerFactory(mc).getLocLogger(JOVALSystem.class);
+	loggerFactory = new LocLoggerFactory(mc);
+	sysLogger = loggerFactory.getLocLogger(JOVALSystem.class);
 	props = new Properties();
 	ovalProps = new Properties();
 	try {
@@ -180,7 +182,7 @@ public class JOVALSystem {
 	    props.load(cl.getResourceAsStream("joval.system.properties"));
 	    ovalProps.load(cl.getResourceAsStream("oval.properties"));
 	} catch (IOException e) {
-	    logger.error(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    sysLogger.error(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -192,10 +194,18 @@ public class JOVALSystem {
     }
 
     /**
-     * Retrieve the localized logger used by the jOVAL library.
+     * Retrieve the default localized system logger used by the jOVAL library.
      */
     public static LocLogger getLogger() {
-	return logger;
+	return sysLogger;
+    }
+
+    /**
+     * Retrieve/create a localized jOVAL logger with a particular name.  This is useful for passing to an IPlugin, if you
+     * want all of the plugin's log messages routed to a specific logger.
+     */
+    public static LocLogger getLogger(String name) {
+	return loggerFactory.getLocLogger(name);
     }
 
     public static ILoggable getLoggable() {
@@ -418,7 +428,7 @@ public class JOVALSystem {
 	// Implement ILoggable
 
 	public LocLogger getLogger() {
-	    return logger;
+	    return sysLogger;
 	}
 
 	public void setLogger(LocLogger logger) {

@@ -78,7 +78,8 @@ public class Main {
     private static final ObjectFactory factory = new ObjectFactory();
 
     private static final File contentDir	= new File("content");
-    private static final File reportDir	= new File("reports");
+    private static final File reportDir		= new File("reports");
+    private static final File logDir		= new File("logs");
 
     private static HashSet<String> knownFalses		= new HashSet<String>();
     private static HashSet<String> knownUnknowns	= new HashSet<String>();
@@ -94,6 +95,7 @@ public class Main {
     }
 
     private static DatatypeFactory datatype;
+    private static Logger sysLogger;
 
     public static void main(String[] argv) {
 	if (argv.length != 1) {
@@ -105,11 +107,19 @@ public class Main {
 	try {
 	    datatype = DatatypeFactory.newInstance();
 
-	    Handler handler = new FileHandler("test.log", false);
-	    handler.setFormatter(new LogFormatter());
-	    handler.setLevel(Level.FINEST);
-	    Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
-	    logger.addHandler(handler);
+	    if (logDir.exists()) {
+		File[] logs = logDir.listFiles();
+		for (int i=0; i < logs.length; i++) {
+		    logs[i].delete();
+		}
+	    } else {
+		logDir.mkdir();
+	    }
+	    Handler sysHandler = new FileHandler("logs/main.log", false);
+	    sysHandler.setFormatter(new LogFormatter());
+	    sysHandler.setLevel(Level.FINEST);
+	    sysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	    sysLogger.addHandler(sysHandler);
 
 	    if (!reportDir.exists()) {
 		reportDir.mkdir();
@@ -127,9 +137,13 @@ public class Main {
 		} else {
 		    plugin = new PolymorphicPlugin(config.getSection(name));
 		}
+		plugin.setLogger(JOVALSystem.getLogger(name));
+		Handler handler = new FileHandler("logs/target-" + plugin.getHostname() + ".log", false);
+		handler.setFormatter(new LogFormatter());
+		handler.setLevel(Level.FINEST);
+		Logger.getLogger(name).addHandler(handler);
 
-		TestSuite suite = runTests(plugin);
-		suite.setName(name);
+		TestSuite suite = runTests(name, plugin);
 		report.getTestSuite().add(suite);
 		System.out.println("Tests completed for " + name);
 	    }
@@ -148,8 +162,10 @@ public class Main {
 
     // Private
 
-    private static TestSuite runTests(PolymorphicPlugin plugin) {
+    private static TestSuite runTests(String name, PolymorphicPlugin plugin) {
 	TestSuite suite = factory.createTestSuite();
+	suite.setName(name);
+	sysLogger.info("Started test suite " + name);
 	long tm = System.currentTimeMillis();
 	try {
 	    plugin.connect();
@@ -169,6 +185,7 @@ public class Main {
 
 		for (String xml : testDir.list(new XMLFilter())) {
 		    System.out.println("Processing " + xml);
+		    sysLogger.info("Processing " + name + " - " + xml);
 		    File definitions = new File(testDir, xml);
 		    engine.setDefinitionsFile(definitions);
 		    TestDocument doc = factory.createTestDocument();
@@ -242,6 +259,7 @@ public class Main {
 	}
 	tm = System.currentTimeMillis() - tm;
 	suite.setRuntime(datatype.newDuration(tm));
+	sysLogger.info("Completed test suite " + name);
 	return suite;
     }
 

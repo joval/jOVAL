@@ -37,6 +37,7 @@ import org.joval.intf.windows.registry.IDwordValue;
 import org.joval.intf.windows.registry.IExpandStringValue;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IMultiStringValue;
+import org.joval.intf.windows.registry.IQwordValue;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
@@ -381,10 +382,19 @@ public class RegistryAdapter implements IAdapter {
 
 	      case IValue.REG_DWORD: {
 		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
-		valueType.setValue("" + ((IDwordValue)val).getData());
+		valueType.setValue(Integer.toString(((IDwordValue)val).getData()));
 		valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		values.add(valueType);
 		typeType.setValue("reg_dword");
+		break;
+	      }
+
+	      case IValue.REG_QWORD: {
+		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		valueType.setValue(Long.toString(((IQwordValue)val).getData()));
+		valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		values.add(valueType);
+		typeType.setValue("reg_qword");
 		break;
 	      }
 

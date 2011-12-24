@@ -16,6 +16,7 @@ public interface IValue {
     int REG_SZ		= 3;
     int REG_EXPAND_SZ	= 4;
     int REG_MULTI_SZ	= 5;
+    int REG_QWORD	= 6;
 
     /**
      * Returns the corresponding REG_ constant.
