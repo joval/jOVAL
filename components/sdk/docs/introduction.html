@@ -50,7 +50,7 @@
     <h2>Using jOVAL</h2>
     <p>The jOVAL library makes it easy to embed OVAL scanning capabilities inside a Java application, but since jovaldi seeks to fully duplicate the functions of ovaldi, it is not necessarily illustrative of how to use the classes.  Therefore, the following TrivialScanner code sample has been developed as a guide.  The basic steps are:</p>
     <ol>
-      <li>(Optional) Create and configure the desired logging implementation into which SLF4J will feed.  By design, this is very easily accomplished.  For Java Util Logging (JUL), the Logger to which jOVAL sends all its log messages can be obtained using <code>Logger.getLogger(JOVALSystem.class.getName())</code>.
+      <li>(Optional) Create and configure the desired logging implementation into which SLF4J will feed.  By design, this is very easily accomplished.  For Java Util Logging (JUL), the Logger to which jOVAL sends all its log messages can be obtained using <code>Logger.getLogger(JOVALSystem.getLogger().getName())</code>.
       <li>Create an implementation of the <code>ICredentialStore</code> interface, and set it as the credential store for the <code>RemotePlugin</code> class.  The sample app (and jovaldi) only scan a single machine, so they use the <code>SimpleCredentialStore</code> which contains credentials for only that one machine.  If your application will be scanning many devices, you'll need to implement a store that is able to provide credentials for all of them.</li>
       <li>(Optional) The <code>RemotePlugin</code> class can cache basic information about hosts (i.e., if they are Windows or SSH-enabled machines), so to prevent re-discovery over the network and to get faster repeat-performance, it's a good idea to provide the class with a data directory inside of which it can safely persist its cache file.</li>
       <li>Construct an instance of the <code>RemotePlugin</code> class, setting the target hostname or address.</li>
@@ -102,7 +102,7 @@ public class TrivialScanner {
             Handler handler = new FileHandler("TrivialScanner.log", false);
             handler.setFormatter(new SimpleFormatter());
             handler.setLevel(Level.INFO);
-            Logger logger = Logger.getLogger(JOVALSystem.class.getName());
+            Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
             logger.addHandler(handler);
 
             Properties props = new Properties();

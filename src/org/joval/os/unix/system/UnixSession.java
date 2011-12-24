@@ -59,12 +59,4 @@ public class UnixSession extends BaseSession implements IUnixSession {
     public Flavor getFlavor() {
 	return flavor;
     }
-
-    public IProcess createProcess(String command, long millis) throws Exception {
-	return createProcess(command);
-    }
-
-    public IProcess createProcess(String command, boolean debug) throws Exception {
-	return createProcess(command);
-    }
 }

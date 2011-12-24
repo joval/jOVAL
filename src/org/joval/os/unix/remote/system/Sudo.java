@@ -34,17 +34,15 @@ class Sudo implements IProcess {
     private IProcess p;
     private ICredential cred;
     private String innerCommand;
-    private long timeout;
     private PerishableReader in=null, err=null;
     private OutputStream out=null;
 
-    Sudo(UnixSession us, ICredential cred, String cmd, long ms) throws Exception {
+    Sudo(UnixSession us, ICredential cred, String cmd) throws Exception {
 	this.us = us;
 	ssh = us.ssh;
 	this.cred = cred;
 	innerCommand = cmd;
-	timeout = ms;
-	p = ssh.createProcess(getSuString(cmd), ms);
+	p = ssh.createProcess(getSuString(cmd));
     }
 
     // Implement IProcess

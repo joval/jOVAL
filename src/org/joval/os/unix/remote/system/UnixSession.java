@@ -116,7 +116,14 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
      * @override
      */
     public IProcess createProcess(String command) throws Exception {
-	return createProcess(command, 3600000L);
+	switch(flavor) {
+	  case LINUX:
+	  case SOLARIS:
+	    if (rootCred != null) {
+		return new Sudo(this, rootCred, command);
+	    }
+	}
+	return ssh.createProcess(command);
     }
 
     public Type getType() {
@@ -140,17 +147,6 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 
     public Flavor getFlavor() {
 	return flavor;
-    }
-
-    public IProcess createProcess(String command, long millis) throws Exception {
-	switch(flavor) {
-	  case LINUX:
-	  case SOLARIS:
-	    if (rootCred != null) {
-		return new Sudo(this, rootCred, command, millis);
-	    }
-	}
-	return ssh.createProcess(command, millis);
     }
 
     // Internal

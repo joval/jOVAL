@@ -151,15 +151,6 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 	}
     }
 
-    public IProcess createProcess(String command, long millis) throws Exception {
-	if (connect()) {
-	    ChannelExec ce = session.openChannel(ChannelType.EXEC);
-	    return new SshProcess(ce, command, millis, debug);
-	} else {
-	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
-	}
-    }
-
     public IProcess createProcess(String command) throws Exception {
 	if (connect()) {
 	    ChannelExec ce = session.openChannel(ChannelType.EXEC);

@@ -32,20 +32,13 @@ class SshProcess implements IProcess {
     private String command;
     private boolean debug=false, interactive = false;
     private StreamLogger debugIn, debugErr;
-    private long timeout;
     private boolean dirty = true;
 
     private static int num = 0;
 
     SshProcess(ChannelExec ce, String command) {
-	this(ce, command, IUnixSession.TIMEOUT_XL, false);
-    }
-
-    SshProcess(ChannelExec ce, String command, long millis, boolean debug) {
 	this.ce = ce;
 	this.command = command;
-	timeout = millis;
-	this.debug = debug;
     }
 
     // Implement IProcess
@@ -59,7 +52,6 @@ class SshProcess implements IProcess {
 	ce.setPty(interactive);
 	ce.setCommand(command);
 	ce.connect();
-	new Monitor(this).start();
 	if (debug) {
 	    debugIn = new StreamLogger(command, ce.getInputStream(), new File("out." + num + ".log"));
 	    debugIn.start();
@@ -156,38 +148,11 @@ class SshProcess implements IProcess {
 	}
 	if (ce.isConnected()) {
 	    if (!ce.isEOF()) {
-		JOVALSystem.getLogger().debug(JOVALMsg.ERROR_PROCESS_TIMEOUT, command, timeout);
+		JOVALSystem.getLogger().debug(JOVALMsg.ERROR_PROCESS_DESTROY, command);
 	    }
 	    ce.disconnect();
 	}
 	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SSH_PROCESS_END, command);
 	dirty = false;
-    }
-
-    // Private
-
-    class Monitor implements Runnable {
-	SshProcess p;
-
-	Monitor(SshProcess p) {
-	    this.p = p;
-	}
-
-	void start() {
-	    new Thread(this).start();
-	}
-
-	public void run() {
-	    try {
-		p.waitFor(timeout);
-	    } catch (InterruptedException e) {
-	    } finally {
-		if (ce.isEOF()) {
-		    p.cleanup();
-		} else {
-		    p.destroy();
-		}
-	    }
-	}
     }
 }
