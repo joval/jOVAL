@@ -8,6 +8,8 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.jinterop.dcom.common.IJIAuthInfo;
 import org.jinterop.dcom.common.JIDefaultAuthInfoImpl;
 import org.jinterop.dcom.common.JIException;
@@ -20,6 +22,7 @@ import com.h9labs.jwbem.SWbemObjectSet;
 import com.h9labs.jwbem.SWbemServices;
 
 import org.joval.intf.identity.IWindowsCredential;
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;
@@ -39,16 +42,18 @@ public class WmiConnection implements IWmiProvider {
     private SWbemLocator locator;
     private String host;
     private IWindowsCredential cred;
+    private ILoggable log;
     private Hashtable <String, SWbemServices>map;
 
-    public WmiConnection(String host, IWindowsCredential cred) {
+    public WmiConnection(String host, IWindowsCredential cred, ILoggable log) {
 	this.host = host;
 	this.cred = cred;
+	this.log = log;
     }
 
     public boolean connect() {
 	if (locator == null) {
-	    JOVALSystem.getLogger().info(JOVALMsg.STATUS_WMI_CONNECT);
+	    log.getLogger().info(JOVALMsg.STATUS_WMI_CONNECT);
 	    map = new Hashtable <String, SWbemServices>();
 	    locator = new SWbemLocator(); 
 	}
@@ -57,7 +62,7 @@ public class WmiConnection implements IWmiProvider {
 
     public void disconnect() {
 	if (locator != null) {
-	    JOVALSystem.getLogger().info(JOVALMsg.STATUS_WMI_DISCONNECT);
+	    log.getLogger().info(JOVALMsg.STATUS_WMI_DISCONNECT);
 	    locator.disconnect();
 	    locator = null;
 	}
@@ -82,6 +87,16 @@ public class WmiConnection implements IWmiProvider {
 	    map.put(key, services);
 	}
 	return services;
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return log.getLogger();
+    }
+
+    public void setLogger(LocLogger logger) {
+	log.setLogger(logger);
     }
 
     // Implement IWmiProvider

@@ -12,9 +12,12 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITree;
@@ -38,20 +41,30 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     private static boolean WINDOWS	= System.getProperty("os.name").startsWith("Windows");
 
     private boolean autoExpand = true, preloaded = false;
+    private ILoggable log;
     private IEnvironment env;
     private IPathRedirector redirector;
 
-    public LocalFilesystem (IEnvironment env, IPathRedirector redirector) {
+    public LocalFilesystem (IEnvironment env, IPathRedirector redirector, ILoggable log) {
 	super();
 	this.env = env;
 	this.redirector = redirector;
+	this.log = log;
     }
 
     public void setAutoExpand(boolean autoExpand) {
 	this.autoExpand = autoExpand;
     }
 
-    // Implement methdos left abstract in CachingTree
+    // Implement methods left abstract in CachingTree
+
+    public LocLogger getLogger() {
+	return log.getLogger();
+    }
+
+    public void setLogger(LocLogger logger) {
+	log.setLogger(logger);
+    }
 
     public boolean preload() {
 	if (!"true".equals(JOVALSystem.getProperty(JOVALSystem.PROP_LOCAL_FS_PRELOAD))) {
@@ -84,9 +97,9 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 			String[] children = root.list();
 			for (int i=0; i < children.length; i++) {
 			    if (forbidden.contains(children[i])) {
-				JOVALSystem.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, children[i]);
+				log.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, children[i]);
 			    } else {
-				JOVALSystem.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, children[i]);
+				log.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, children[i]);
 				roots.add(new File(root, children[i]));
 			    }
 			}
@@ -108,8 +121,8 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	    preloaded = true;
 	    return true;
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    log.getLogger().warn(JOVALMsg.ERROR_PRELOAD);
+	    log.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }
@@ -127,8 +140,8 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 		throw new NoSuchElementException(path);
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString(), e.getMessage());
-	    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    log.getLogger().warn(JOVALMsg.ERROR_IO, toString(), e.getMessage());
+	    log.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return null;
     }
@@ -196,7 +209,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     private void addRecursive(ITreeBuilder tree, File f) throws IOException {
 	String path = f.getCanonicalPath();
 	if (!path.equals(f.getPath())) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
+	    log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
 	} else if (f.isFile()) {
 	    INode node = tree.getRoot();
 	    try {
@@ -215,14 +228,14 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	} else if (f.isDirectory()) {
 	    File[] children = f.listFiles();
 	    if (children == null) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
+		log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
 	    } else {
 		for (File child : children) {
 		    addRecursive(tree, child);
 		}
 	    }
 	} else {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
+	    log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
 	}
     }
 }

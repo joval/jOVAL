@@ -45,15 +45,15 @@ public class UnixSystemInfo {
 	try {
 	    info.setPrimaryHostName(SafeCLI.exec("hostname", session, IUnixSession.TIMEOUT_S));
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	try {
 	    info.setOsVersion(SafeCLI.exec("uname -r", session, IUnixSession.TIMEOUT_S));
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	try {
@@ -66,15 +66,15 @@ public class UnixSystemInfo {
 		info.setOsName(session.getFlavor().getOsName());
 	    }
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSNAME);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSNAME);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	try {
 	    info.setArchitecture(SafeCLI.exec("uname -p", session, IUnixSession.TIMEOUT_S));
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	try {
@@ -97,8 +97,8 @@ public class UnixSystemInfo {
 	    }
 	    info.setInterfaces(interfacesType);
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return info;
     }

@@ -57,8 +57,8 @@ public interface IUnixSession extends ISession {
 		    }
 		}
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_UNIX_FLAVOR);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.ERROR_UNIX_FLAVOR);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    return flavor;
 	}

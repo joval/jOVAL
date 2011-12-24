@@ -6,6 +6,7 @@ package org.joval.intf.windows.identity;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IGroup;
@@ -19,7 +20,7 @@ import org.joval.os.windows.wmi.WmiException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IDirectory {
+public interface IDirectory extends ILoggable {
     public boolean connect();
 
     public void disconnect();

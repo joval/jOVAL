@@ -23,7 +23,6 @@ public class BinaryValue extends Value implements IBinaryValue {
 	this.parent = parent;
 	this.name = name;
 	this.data = data;
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, toString());
     }
 
     public byte[] getData() {

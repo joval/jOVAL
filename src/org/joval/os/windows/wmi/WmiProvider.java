@@ -5,10 +5,13 @@ package org.joval.os.windows.wmi;
 
 import java.util.Hashtable;
 
+import org.slf4j.cal10n.LocLogger;
+
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Dispatch;
 import com.jacob.com.Variant;
 
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
@@ -26,9 +29,21 @@ public class WmiProvider implements IWmiProvider {
 
     private ActiveXComponent locator;
     private Hashtable <String, Dispatch>map;
+    private ILoggable log;
 
-    public WmiProvider() {
+    public WmiProvider(ILoggable log) {
+	this.log = log;
 	map = new Hashtable<String, Dispatch>();
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return log.getLogger();
+    }
+
+    public void setLogger(LocLogger logger) {
+	log.setLogger(logger);
     }
 
     // Implement ISWbemProvider
@@ -44,19 +59,19 @@ public class WmiProvider implements IWmiProvider {
 	        libLoaded = true;
 	    }
 	    if (locator == null) {
-		JOVALSystem.getLogger().info(JOVALMsg.STATUS_WMI_CONNECT);
+		log.getLogger().info(JOVALMsg.STATUS_WMI_CONNECT);
 		locator = new ActiveXComponent("WbemScripting.SWbemLocator");
 	    }
 	    return true;
 	} catch (UnsatisfiedLinkError e) {
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }
 
     public void disconnect() {
 	if (locator != null) {
-	    JOVALSystem.getLogger().info(JOVALMsg.STATUS_WMI_DISCONNECT);
+	    log.getLogger().info(JOVALMsg.STATUS_WMI_DISCONNECT);
 	    locator.safeRelease();
 	    locator = null;
 	}

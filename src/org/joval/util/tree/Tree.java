@@ -8,8 +8,11 @@ import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.util.tree.INode;
+import org.joval.util.JOVALSystem;
 
 /**
  * A class that represents a tree structure and its nodes, with String representations using a specified delimiter.
@@ -21,10 +24,22 @@ import org.joval.intf.util.tree.INode;
 public class Tree implements ITreeBuilder {
     String delimiter;
     Node root;
+    LocLogger logger;
 
     public Tree(String name, String delimiter) {
 	this.delimiter = delimiter;
 	root = new Node(this, name);
+	logger = JOVALSystem.getLogger();
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
     }
 
     // Implement ITreeBuilder

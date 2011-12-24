@@ -71,8 +71,9 @@ public class WOW3264RegistryRedirector implements IPathRedirector {
 		    return flavor;
 		}
 	    }
+	    reg.getLogger().warn(JOVALMsg.STATUS_WINREG_REDIRECT_UNSUPPORTED, productName);
 	} catch (NoSuchElementException e) {
-	    JOVALSystem.getLogger().error(JOVALMsg.ERROR_WINREG_FLAVOR, e.getMessage());
+	    reg.getLogger().error(JOVALMsg.ERROR_WINREG_FLAVOR, e.getMessage());
 	}
 	return Flavor.UNSUPPORTED;
     }
@@ -83,14 +84,7 @@ public class WOW3264RegistryRedirector implements IPathRedirector {
      * Create a new redirector.
      */
     public WOW3264RegistryRedirector(Flavor flavor) {
-	switch(flavor) {
-	  case UNSUPPORTED:
-	    JOVALSystem.getLogger().warn(JOVALMsg.STATUS_WINREG_REDIRECT_OVERRIDE, flavor);
-	    // fall-through
-	  default:
-	    this.flavor = flavor;
-	    break;
-	}
+	this.flavor = flavor;
     }
 
     private static final String WOW6432NODE		= "Wow6432Node";

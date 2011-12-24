@@ -8,6 +8,8 @@ import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IGroup;
@@ -39,19 +41,21 @@ public class Directory implements IDirectory {
     }
 
     private IWindowsSession session;
+    private LocLogger logger;
     private IWmiProvider wmi;
     private ActiveDirectory ad;
     private LocalDirectory local;
 
     public Directory(IWindowsSession session) {
 	this.session = session;
+	logger = session.getLogger();
     }
 
     public boolean connect() {
 	wmi = session.getWmiProvider();
 	if (wmi.connect()) {
-	    ad = new ActiveDirectory(wmi);
-	    local = new LocalDirectory(session.getSystemInfo().getPrimaryHostName(), wmi);
+	    ad = new ActiveDirectory(wmi, logger);
+	    local = new LocalDirectory(session.getSystemInfo().getPrimaryHostName(), wmi, logger);
 	    return true;
 	} else {
 	    return false;
@@ -65,6 +69,16 @@ public class Directory implements IDirectory {
 	}
 	ad = null;
 	local = null;
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
     }
 
     // Implement IDirectory
@@ -210,18 +224,18 @@ public class Directory implements IDirectory {
 			try {
 			    getAllPrincipalsInternal(queryUser(netbiosName), resolve, principals);
 			} catch (IllegalArgumentException e) {
-			    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			} catch (NoSuchElementException e) {
-			    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			}
 		    }
 		    for (String netbiosName : g.getMemberGroupNetbiosNames()) {
 			try {
 			    getAllPrincipalsInternal(queryGroup(netbiosName), resolve, principals);
 			} catch (IllegalArgumentException e) {
-			    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			} catch (NoSuchElementException e) {
-			    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			}
 		    }
 		}

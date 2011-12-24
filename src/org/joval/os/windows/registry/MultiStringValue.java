@@ -22,7 +22,6 @@ public class MultiStringValue extends Value implements IMultiStringValue {
 	this.parent = parent;
 	this.name = name;
 	this.data = data;
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, toString());
     }
 
     public String[] getData() {

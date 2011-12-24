@@ -138,6 +138,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			if (proc.exists()) {
 			    processEnv = new Properties();
 			    reader = PerishableReader.newInstance(proc.getInputStream(), IUnixSession.TIMEOUT_M);
+			    reader.setLogger(session.getLogger());
 			    String pair;
 			    while ((pair = new String(reader.readUntil(127))) != null) { // 127 == delimiter char
 				int ptr = pair.indexOf("=");

@@ -67,11 +67,14 @@ class PolymorphicPlugin extends RemotePlugin {
      */
     public void connect() throws OvalException {
 	if (IBaseSession.LOCALHOST.equals(hostname)) {
-	    JOVALSystem.getLogger().info(JOVALMsg.STATUS_PLUGIN_CONNECT);
+	    logger.info(JOVALMsg.STATUS_PLUGIN_CONNECT);
 	    if (session == null) {
 		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_NONE));
-	    } else if (!session.connect()) {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
+	    } else {
+		session.setLogger(logger);
+		if (!session.connect()) {
+		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
+		}
 	    }
 	} else {
 	    super.connect();

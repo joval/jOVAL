@@ -28,6 +28,7 @@ import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 import org.joval.oval.engine.DefinitionFilter;
 import org.joval.oval.engine.Definitions;
@@ -195,6 +196,10 @@ public class JOVALSystem {
      */
     public static LocLogger getLogger() {
 	return logger;
+    }
+
+    public static ILoggable getLoggable() {
+	return new Loggable();
     }
 
     /**
@@ -402,6 +407,22 @@ public class JOVALSystem {
 	    solaris = new oval.schemas.systemcharacteristics.solaris.ObjectFactory();
 	    unix = new oval.schemas.systemcharacteristics.unix.ObjectFactory();
 	    windows = new oval.schemas.systemcharacteristics.windows.ObjectFactory();
+	}
+    }
+
+    // Private
+
+    private static class Loggable implements ILoggable {
+	Loggable() {}
+
+	// Implement ILoggable
+
+	public LocLogger getLogger() {
+	    return logger;
+	}
+
+	public void setLogger(LocLogger logger) {
+	    // no-op
 	}
     }
 }

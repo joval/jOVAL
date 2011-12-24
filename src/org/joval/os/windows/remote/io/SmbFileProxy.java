@@ -81,8 +81,8 @@ class SmbFileProxy extends BaseFile implements IWindowsFile {
 	    smbFile.mkdir();
 	    return true;
 	} catch (SmbException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, toString());
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    fs.getLogger().warn(JOVALMsg.ERROR_IO, toString());
+	    fs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }

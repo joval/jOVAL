@@ -7,13 +7,15 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
+import org.joval.intf.util.ILoggable;
+
 /**
  * Representation of tree of nodes.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface ITree {
+public interface ITree extends ILoggable {
     /**
      * Get the root node of the tree.
      */

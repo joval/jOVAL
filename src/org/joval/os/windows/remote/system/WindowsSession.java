@@ -110,7 +110,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 
     public IWmiProvider getWmiProvider() {
 	if (conn == null) {
-	    conn = new WmiConnection(host, cred);
+	    conn = new WmiConnection(host, cred, this);
 	}
 	return conn;
     }
@@ -150,15 +150,15 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	if (cred == null) {
 	    return false;
 	} else {
-	    reg = new Registry(host, cred, null);
+	    reg = new Registry(host, cred, null, this);
 	    if (reg.connect()) {
 		env = reg.getEnvironment();
-		fs = new SmbFilesystem(host, cred, env, null);
+		fs = new SmbFilesystem(host, cred, env, null, this);
 		is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 		if (is64bit) {
 		    WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
-		    reg32 = new Registry(host, cred, new WOW3264RegistryRedirector(flavor));
-		    fs32 = new SmbFilesystem(host, cred, env, new WOW3264FilesystemRedirector(env));
+		    reg32 = new Registry(host, cred, new WOW3264RegistryRedirector(flavor), this);
+		    fs32 = new SmbFilesystem(host, cred, env, new WOW3264FilesystemRedirector(env), this);
 		} else {
 		    reg32 = reg;
 		    fs32 = fs;
@@ -170,7 +170,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 		    return false;
 		}
 		cwd = env.expand("%SystemRoot%");
-		conn = new WmiConnection(host, cred);
+		conn = new WmiConnection(host, cred, this);
 		if (conn.connect()) {
 		    directory = new Directory(this);
 		    directory.connect();
@@ -196,7 +196,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 		    }
 		}
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_DELETE, f.toString());
+		logger.warn(JOVALMsg.ERROR_FILE_DELETE, f.toString());
 	    }
 	}
 	if (directory != null) {

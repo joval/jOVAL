@@ -3,7 +3,9 @@
 
 package org.joval.os.unix.remote.system;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 
 import org.slf4j.cal10n.LocLogger;
@@ -14,7 +16,6 @@ import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFile;
-import org.joval.intf.io.IReader;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
@@ -95,7 +96,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 		try {
 		    IFile motd = fs.getFile(MOTD);
 		    if (motd.exists()) {
-			IReader reader = PerishableReader.newInstance(motd.getInputStream(), TIMEOUT_M);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(motd.getInputStream()));
 			while (reader.readLine() != null) {
 			    motdLines++;
 			}

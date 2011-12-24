@@ -37,6 +37,8 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
 
+import org.slf4j.cal10n.LocLogger;
+
 import oval.schemas.common.CheckEnumeration;
 import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.common.GeneratorType;
@@ -152,12 +154,16 @@ public class Engine implements IEngine {
     private State state;
     private boolean evalEnabled = true, abort = false;
     private Producer producer;
+    private LocLogger logger;
 
     /**
      * Create an engine for evaluating OVAL definitions using a plugin.
      */
     public Engine(IPlugin plugin) {
-	if (plugin != null) {
+	if (plugin == null) {
+	    logger = JOVALSystem.getLogger();
+	} else {
+	    logger = plugin.getLogger();
 	    this.plugin = plugin;
 	}
 	filter = new DefinitionFilter();
@@ -347,7 +353,7 @@ public class Engine implements IEngine {
 	String varId = var.getId();
 	Collection<VariableValueType> cachedList = variableMap.get(varId);
 	if (cachedList == null) {
-	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
+	    logger.trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
 	    Collection<String> result = resolveInternal(var, vars);
 	    variableMap.put(varId, vars);
 	    if (result.size() > 0) {
@@ -356,7 +362,7 @@ public class Engine implements IEngine {
 		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_MISSING_VARIABLE, variableId));
 	    }
 	} else {
-	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, varId);
+	    logger.trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, varId);
 	    List<String> result = new Vector<String>();
 	    vars.addAll(cachedList);
 	    for (VariableValueType variableValueType : cachedList) {
@@ -619,8 +625,8 @@ public class Engine implements IEngine {
 			break;
 		    }
 		} catch (TestException e) {
-		    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
-		    JOVALSystem.getLogger().trace(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.debug(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
+		    logger.trace(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
@@ -654,8 +660,8 @@ public class Engine implements IEngine {
 			break;
 		    }
 		} catch (TestException e) {
-		    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
-		    JOVALSystem.getLogger().trace(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.debug(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
+		    logger.trace(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
@@ -827,8 +833,8 @@ public class Engine implements IEngine {
 			try {
 			    checkResult = compare(state, item);
 			} catch (TestException e) {
-			    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TESTEXCEPTION, testId, e.getMessage());
-			    JOVALSystem.getLogger().debug(JOVALMsg.ERROR_EXCEPTION, e);
+			    logger.warn(JOVALMsg.ERROR_TESTEXCEPTION, testId, e.getMessage());
+			    logger.debug(JOVALMsg.ERROR_EXCEPTION, e);
 
 			    MessageType message = JOVALSystem.factories.common.createMessageType();
 			    message.setLevel(MessageLevelEnumeration.ERROR);
@@ -875,7 +881,7 @@ public class Engine implements IEngine {
 	// Per D. Haynes, in this case, any state and/or check should be ignored.
 	//
 	if (testDefinition.getCheck() == CheckEnumeration.NONE_EXIST) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.STATUS_CHECK_NONE_EXIST, testDefinition.getCheckExistence(), testId);
+	    logger.warn(JOVALMsg.STATUS_CHECK_NONE_EXIST, testDefinition.getCheckExistence(), testId);
 	    testResult.setResult(existence.getResult(ExistenceEnumeration.NONE_EXIST));
 
 	//
@@ -1007,13 +1013,13 @@ public class Engine implements IEngine {
 	    }
 	    return ResultEnumeration.TRUE;
 	} catch (NoSuchMethodException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage()));
 	} catch (IllegalAccessException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage()));
 	} catch (InvocationTargetException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage()));
 	}
     }
@@ -1803,13 +1809,13 @@ public class Engine implements IEngine {
 		    Method method = item.getClass().getMethod(methodName);
 		    o = method.invoke(item);
 		} catch (NoSuchMethodException e) {
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    return null;
 		} catch (IllegalAccessException e) {
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    return null;
 		} catch (InvocationTargetException e) {
-		    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    return null;
 		}
 	    }
@@ -1943,9 +1949,9 @@ public class Engine implements IEngine {
 	} catch (NoSuchMethodException e) {
 	    // Object doesn't implement the method; no big deal.
 	} catch (IllegalAccessException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return result;
     }
@@ -1964,11 +1970,11 @@ public class Engine implements IEngine {
 		}
 	    }
 	} catch (NoSuchMethodException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (IllegalAccessException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_TEST_NOOBJREF, test.getId()));
@@ -1984,11 +1990,11 @@ public class Engine implements IEngine {
 		return ((StateRefType)o).getStateRef();
 	    }
 	} catch (NoSuchMethodException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (IllegalAccessException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return null;
     }
@@ -2004,9 +2010,9 @@ public class Engine implements IEngine {
 	} catch (NoSuchMethodException e) {
 	    // Object doesn't support Sets; no big deal.
 	} catch (IllegalAccessException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return objectSet;
     }
@@ -2138,11 +2144,11 @@ public class Engine implements IEngine {
 		df.setTimeZone(TimeZone.getTimeZone("GMT"));
 		Date date = df.parse(s);
 		df.applyPattern("dd MMM yyyy HH:mm:ss z");
-		JOVALSystem.getLogger().debug(JOVALMsg.STATUS_DATECONVERSION, s, format, df.format(date), date.getTime());
+		logger.debug(JOVALMsg.STATUS_DATECONVERSION, s, format, df.format(date), date.getTime());
 		return date.getTime();
 	    }
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_TIME_PARSE, s, format));
 	}
 

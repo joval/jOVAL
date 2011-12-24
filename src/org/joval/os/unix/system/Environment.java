@@ -36,7 +36,7 @@ public class Environment implements IEnvironment {
 		}
 	    }
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 

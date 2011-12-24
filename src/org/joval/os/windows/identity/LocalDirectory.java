@@ -10,6 +10,8 @@ import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Matcher;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.identity.IUser;
@@ -53,12 +55,14 @@ class LocalDirectory {
 
     private String hostname;
     private IWmiProvider wmi;
+    private LocLogger logger;
     private boolean preloadedUsers = false;
     private boolean preloadedGroups = false;
 
-    LocalDirectory(String hostname, IWmiProvider wmi) {
+    LocalDirectory(String hostname, IWmiProvider wmi, LocLogger logger) {
 	this.hostname = hostname;
 	this.wmi = wmi;
+	this.logger = logger;
 	usersByNetbiosName = new Hashtable<String, IUser>();
 	usersBySid = new Hashtable<String, IUser>();
 	groupsByNetbiosName = new Hashtable<String, IGroup>();
@@ -323,7 +327,7 @@ class LocalDirectory {
 	    return true;
 	} catch (NoSuchElementException e) {
 	} catch (WmiException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return false;
     }

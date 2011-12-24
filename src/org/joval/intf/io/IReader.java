@@ -5,13 +5,15 @@ package org.joval.intf.io;
 
 import java.io.IOException;
 
+import org.joval.intf.util.ILoggable;
+
 /**
  * A convenience interface for reading data.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IReader {
+public interface IReader extends ILoggable {
     /**
      * Read a byte.
      */

@@ -39,7 +39,6 @@ public class DwordValue extends Value implements IDwordValue {
 	this.parent = parent;
 	this.name = name;
 	this.data = data;
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, toString());
     }
 
     public int getData() {

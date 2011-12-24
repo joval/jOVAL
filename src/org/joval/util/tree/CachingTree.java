@@ -15,6 +15,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITree;
@@ -68,10 +69,10 @@ public abstract class CachingTree implements ITree {
 		return treeSearch(p.pattern());
 	    }
 	} catch (PatternSyntaxException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PATTERN, p.pattern());
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    getLogger().warn(JOVALMsg.ERROR_PATTERN, p.pattern());
+	    getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (IllegalArgumentException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TREESEARCH, p.pattern());
+	    getLogger().warn(JOVALMsg.ERROR_TREESEARCH, p.pattern());
 	}
 	return null;
     }
@@ -148,7 +149,7 @@ public abstract class CachingTree implements ITree {
 	    }
 	    result.addAll(treeSearch(null, sb.toString()));
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return result;
     }
@@ -214,7 +215,7 @@ public abstract class CachingTree implements ITree {
 	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_NULLPATH));
 	}
 	String parentName = parent == null ? "[root]" : parent;
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_FS_SEARCH, parentName, path);
+	getLogger().trace(JOVALMsg.STATUS_FS_SEARCH, parentName, path);
 
 	INode accessor = null;
 	//

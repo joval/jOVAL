@@ -9,6 +9,7 @@ import java.util.Collection;
 import oval.schemas.results.core.DefinitionType;
 import oval.schemas.results.core.OvalResults;
 
+import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 
 /**
@@ -17,7 +18,7 @@ import org.joval.oval.OvalException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IResults {
+public interface IResults extends ILoggable {
     /**
      * Set a file containing OVAL directives, to govern the behavior of this IResults.
      */

@@ -29,6 +29,7 @@ import org.jinterop.winreg.JIWinRegFactory;
 
 import org.joval.intf.identity.IWindowsCredential;
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
@@ -82,8 +83,8 @@ public class Registry extends BaseRegistry {
     /**
      * Create a new Registry, connected to the specified host using the specified IWindowsCredential.
      */
-    public Registry(String host, IWindowsCredential cred, IPathRedirector redirector) {
-	super(redirector);
+    public Registry(String host, IWindowsCredential cred, IPathRedirector redirector, ILoggable log) {
+	super(redirector, log);
 	this.host = host;
 	this.cred = cred;
 	map = new Hashtable <String, Key>();
@@ -96,16 +97,16 @@ public class Registry extends BaseRegistry {
      */
     public boolean connect() {
 	try {
-	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_CONNECT, host);
+	    log.getLogger().trace(JOVALMsg.STATUS_WINREG_CONNECT, host);
 	    registry = factory.getWinreg(new AuthInfo(cred), host, true);
 	    state = STATE_ENV;
 	    env = new Environment(this);
 	    state = STATE_CONNECTED;
 	    return true;
 	} catch (UnknownHostException e) {
-	    JOVALSystem.getLogger().error(JOVALMsg.ERROR_UNKNOWN_HOST, host);
+	    log.getLogger().error(JOVALMsg.ERROR_UNKNOWN_HOST, host);
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return false;
     }
@@ -119,7 +120,7 @@ public class Registry extends BaseRegistry {
 	    while (keys.hasMoreElements()) {
 		Key key = keys.nextElement();
 		if (key.open) {
-		    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLEAN, key.toString());
+		    log.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLEAN, key.toString());
 		    key.close();
 		}
 	    }
@@ -128,8 +129,8 @@ public class Registry extends BaseRegistry {
 	    searchMap.clear();
 	    map.clear();
 	} catch (JIException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_DISCONNECT);
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_DISCONNECT);
+	    log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -192,7 +193,7 @@ public class Registry extends BaseRegistry {
 	    if (redirector != null) {
 		String alt = redirector.getRedirect(fullPath);
 		if (alt != null) {
-		    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_REDIRECT, fullPath, alt);
+		    log.getLogger().trace(JOVALMsg.STATUS_WINREG_REDIRECT, fullPath, alt);
 		    return fetchKey(alt);
 		}
 	    }
@@ -244,6 +245,7 @@ public class Registry extends BaseRegistry {
     }
 
     Value createValue(Key key, String name) throws IllegalArgumentException, JIException {
+	Value val = null;
 	int len = name.equalsIgnoreCase(PATH) ? PATH_BUFFER_SIZE : DEFAULT_BUFFER_SIZE;
 	Object[] oa = registry.winreg_QueryValue(key.handle, name, len);
 	if (oa.length == 2) {
@@ -255,16 +257,19 @@ public class Registry extends BaseRegistry {
 		for (int i=0; i < data.length; i++) {
 		    sa[i] = getString(data[i]);
 		}
-		return new MultiStringValue(key, name, sa);
+		val = new MultiStringValue(key, name, sa);
+		break;
 	      }
 
 	      case IJIWinReg.REG_BINARY: {
 		byte[] data = (byte[])oa[1];
-		return new BinaryValue(key, name, data);
+		val = new BinaryValue(key, name, data);
+		break;
 	      }
 
 	      case IJIWinReg.REG_DWORD: {
-        	return new DwordValue(key, name, DwordValue.byteArrayToInt((byte[])oa[1]));
+        	val = new DwordValue(key, name, DwordValue.byteArrayToInt((byte[])oa[1]));
+		break;
 	      }
 
 	      case IJIWinReg.REG_EXPAND_SZ: {
@@ -273,18 +278,23 @@ public class Registry extends BaseRegistry {
 		if (state != STATE_ENV) {
 		    expanded = env.expand(raw);
 		}
-		return new ExpandStringValue(key, name, raw, expanded);
+		val = new ExpandStringValue(key, name, raw, expanded);
+		break;
 	      }
 
 	      case IJIWinReg.REG_SZ:
-		return new StringValue(key, name, getString((byte[])oa[1]));
+		val = new StringValue(key, name, getString((byte[])oa[1]));
+		break;
 
 	      case IJIWinReg.REG_NONE:
 	      default:
 		throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_TYPE, type));
 	    }
+	} else {
+	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_QUERYVAL, new Integer(oa.length)));
 	}
-	throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_QUERYVAL, new Integer(oa.length)));
+	log.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, val.toString());
+	return val;
     }
 
     /**
@@ -294,13 +304,13 @@ public class Registry extends BaseRegistry {
     void registerKey(Key key) {
 	String path = key.toString();
 	if (map.containsKey(path)) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_REKEY, path);
+	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_REKEY, path);
 	    Key k = map.get(path);
 	    k.close();
 	    map.remove(path);
 	}
 	map.put(path, key);
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYREG, path);
+	log.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYREG, path);
     }
 
     void deregisterKey(Key key) {
@@ -316,7 +326,7 @@ public class Registry extends BaseRegistry {
 	}
 	if (map.containsKey(path)) {
 	    map.remove(path);
-	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYDEREG, path);
+	    log.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYDEREG, path);
 	}
     }
 
@@ -325,18 +335,18 @@ public class Registry extends BaseRegistry {
      *
      * TBD: i18n
      */
-    static final String getString(byte[] b) {
+    String getString(byte[] b) {
 	String s = null;
 	try {
 	    if (b != null) {
 		s = new String(b, Charset.forName(DEFAULT_ENCODING));
 	    }
 	} catch (IllegalCharsetNameException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_CONVERSION);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_CONVERSION);
+	    log.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (UnsupportedCharsetException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_CONVERSION);
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_CONVERSION);
+	    log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return s;
     }
@@ -351,8 +361,8 @@ public class Registry extends BaseRegistry {
 	    try {
 		hklm = new Key(this, HKLM, registry.winreg_OpenHKLM());
 	    } catch (JIException e) {
-		JOVALSystem.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKLM);
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		log.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKLM);
+		log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return hklm;
@@ -366,8 +376,8 @@ public class Registry extends BaseRegistry {
 	    try {
 		hku = new Key(this, HKU, registry.winreg_OpenHKU());
 	    } catch (JIException e) {
-		JOVALSystem.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKU);
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		log.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKU);
+		log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return hku;
@@ -381,8 +391,8 @@ public class Registry extends BaseRegistry {
 	    try {
 		hkcu = new Key(this, HKCU, registry.winreg_OpenHKCU());
 	    } catch (JIException e) {
-		JOVALSystem.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKCU);
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		log.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKCU);
+		log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return hkcu;
@@ -396,8 +406,8 @@ public class Registry extends BaseRegistry {
 	    try {
 		hkcr = new Key(this, HKCR, registry.winreg_OpenHKCR());
 	    } catch (JIException e) {
-		JOVALSystem.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKCR);
-		JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		log.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKCR);
+		log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return hkcr;

@@ -75,7 +75,7 @@ public class SafeCLI {
 		break;
 
 	      default:
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SESSION_TYPE, type);
+		session.getLogger().warn(JOVALMsg.ERROR_SESSION_TYPE, type);
 		break;
 	    }
 	} else {
@@ -100,6 +100,7 @@ public class SafeCLI {
 		p = session.createProcess(cmd);
 		p.start();
 		in = PerishableReader.newInstance(p.getInputStream(), readTimeout);
+		in.setLogger(session.getLogger());
 		output = new Vector<String>();
 		String line = null;
 		while((line = in.readLine()) != null) {
@@ -109,13 +110,13 @@ public class SafeCLI {
 	    } catch (IOException e) {
 		if (e instanceof InterruptedIOException || e instanceof EOFException) {
 		    if (attempt > execRetries) {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_RETRY, cmd, attempt);
+			session.getLogger().warn(JOVALMsg.ERROR_PROCESS_RETRY, cmd, attempt);
 			throw e;
 		    } else {
 			// Something's probably wrong with the connection, so reconnect it.
 			session.disconnect();
 			session.connect();
-			JOVALSystem.getLogger().info(JOVALMsg.STATUS_PROCESS_RETRY, cmd);
+			session.getLogger().info(JOVALMsg.STATUS_PROCESS_RETRY, cmd);
 		    }
 		} else {
 		    throw e;

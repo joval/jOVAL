@@ -23,7 +23,6 @@ public class ExpandStringValue extends Value implements IExpandStringValue {
 	this.name = name;
 	this.data = data;
 	this.expandedData = expandedData;
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, toString());
     }
 
     public String getData() {

@@ -8,6 +8,7 @@ import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.util.ILoggable;
 
 /**
  * An interface for accessing a Windows registry.
@@ -15,7 +16,7 @@ import org.joval.intf.system.IEnvironment;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IRegistry {
+public interface IRegistry extends ILoggable {
     String HKLM		= "HKEY_LOCAL_MACHINE";
     String HKU		= "HKEY_USERS";
     String HKCU		= "HKEY_CURRENT_USER";

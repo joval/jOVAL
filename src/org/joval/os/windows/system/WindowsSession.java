@@ -84,7 +84,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 
     public IWmiProvider getWmiProvider() {
 	if (wmi == null) {
-	    wmi = new WmiProvider();
+	    wmi = new WmiProvider(this);
 	}
 	return wmi;
     }
@@ -100,23 +100,23 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
     }
 
     public boolean connect() {
-	reg = new Registry(null);
-	wmi = new WmiProvider();
+	reg = new Registry(null, this);
+	wmi = new WmiProvider(this);
 	if (reg.connect()) {
 	    env = reg.getEnvironment();
-	    fs = new LocalFilesystem(env, null);
+	    fs = new LocalFilesystem(env, null, this);
 	    is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 	    if (is64bit) {
 		if (!"64".equals(System.getProperty("sun.arch.data.model"))) {
 		    reg.disconnect();
 		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINDOWS_BITNESS_INCOMPATIBLE));
 		}
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "64");
+		logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "64");
 		WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
-		reg32 = new Registry(new WOW3264RegistryRedirector(flavor));
-		fs32 = new LocalFilesystem(env, new WOW3264FilesystemRedirector(env));
+		reg32 = new Registry(new WOW3264RegistryRedirector(flavor), this);
+		fs32 = new LocalFilesystem(env, new WOW3264FilesystemRedirector(env), this);
 	    } else {
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
+		logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
 		reg32 = reg;
 		fs32 = fs;
 	    }
@@ -128,14 +128,14 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 		    info.getSystemInfo();
 		    return true;
 		} else {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINWMI_CONNECT);
+		    logger.warn(JOVALMsg.ERROR_WINWMI_CONNECT);
 		    return false;
 		}
 	    } finally {
 		reg.disconnect();
 	    }
 	} else {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_CONNECT);
+	    logger.warn(JOVALMsg.ERROR_WINREG_CONNECT);
 	    return false;
 	}
     }

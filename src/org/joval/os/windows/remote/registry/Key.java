@@ -61,11 +61,11 @@ public class Key implements IKey {
 	    try {
 		registry.getWinreg().winreg_CloseKey(handle);
 		registry.deregisterKey(this);
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLOSED, toString());
+		registry.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLOSED, toString());
 		return true;
 	    } catch (JIException e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_KEYCLOSE, toString());
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_KEYCLOSE, toString());
+		registry.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    }
 	}
@@ -184,7 +184,7 @@ public class Key implements IKey {
 	    if (sa.length == 2) {
 		return sa[0];
 	    } else {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMKEY, n, toString());
+		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMKEY, n, toString());
 		return null;
 	    }
 	} catch (JIException e) {
@@ -256,7 +256,7 @@ public class Key implements IKey {
 	    if (oa.length == 2) {
 		return (String)oa[0];
 	    } else {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMVAL, n, toString());
+		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMVAL, n, toString());
 		return null;
 	    }
 	} catch (JIException e) {

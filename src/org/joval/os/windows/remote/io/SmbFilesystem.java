@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.NoSuchElementException;
 
+import org.slf4j.cal10n.LocLogger;
+
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
@@ -21,6 +23,7 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
@@ -46,6 +49,7 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
     private NtlmPasswordAuthentication auth;
     private IEnvironment env;
     private IPathRedirector redirector;
+    private ILoggable log;
     private boolean autoExpand;
 
     /**
@@ -54,23 +58,14 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
      * @param env The host environment, used to expand variables that are passed inside of paths.  If null, autoExpand is
      *            automatically set to false.
      */
-    public SmbFilesystem(String host, IWindowsCredential cred, IEnvironment env, IPathRedirector redirector) {
+    public SmbFilesystem(String host, IWindowsCredential cred, IEnvironment env, IPathRedirector redirector, ILoggable log) {
 	super();
 	this.host = host;
 	auth = getNtlmPasswordAuthentication(cred);
 	this.env = env;
 	this.redirector = redirector;
+	this.log = log;
 	autoExpand = true;
-    }
-
-    /**
-     * Create a Filesystem object for a remote host.  The environment is retrieved from the host's registry, so that
-     * it can be used to expand variables that are passed inside of paths.
-     */
-    public SmbFilesystem(String host, IWindowsCredential cred) {
-	this.host = host;
-	auth = getNtlmPasswordAuthentication(cred);
-	autoExpand = false;
     }
 
     /**
@@ -82,6 +77,14 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
     }
 
     // Implement methods left abstract in CachingTree
+
+    public LocLogger getLogger() {
+	return log.getLogger();
+    }
+
+    public void setLogger(LocLogger logger) {
+	log.setLogger(logger);
+    }
 
     public String getDelimiter() {
 	return LOCAL_DELIM_STR;
@@ -105,7 +108,7 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 		throw new NoSuchElementException(path);
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    log.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return null;
 	}
     }
@@ -147,7 +150,7 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 		if (realPath.length() > 0) {
 		    sb.append(realPath.substring(2).replace(LOCAL_DELIM_CH,SMBURL_DELIM_CH));
 		}
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINSMB_MAP, path, sb.toString());
+		log.getLogger().trace(JOVALMsg.STATUS_WINSMB_MAP, path, sb.toString());
 		SmbFile smbFile = null;
 		if (vol) {
 		    smbFile = new VolatileSmbFile(sb.toString(), auth);

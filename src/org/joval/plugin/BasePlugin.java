@@ -98,7 +98,7 @@ public abstract class BasePlugin implements IPlugin {
 		adapters.add(new XmlfilecontentAdapter(session));
 	    }
 
-	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SESSION_TYPE, session.getType());
+	    logger.trace(JOVALMsg.STATUS_SESSION_TYPE, session.getType());
 	    switch(session.getType()) {
 	      case WINDOWS: {
 		IWindowsSession win = (IWindowsSession)session;
@@ -142,7 +142,7 @@ public abstract class BasePlugin implements IPlugin {
 		    break;
 
 		  default:
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, flavor);
+		    logger.warn(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, flavor);
 		    break;
 		}
 		break;

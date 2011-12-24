@@ -12,6 +12,8 @@ import java.util.Collection;
 import java.util.Vector;
 import java.util.NoSuchElementException;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.vngx.jsch.Session;
 import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.ChannelSftp;
@@ -77,6 +79,14 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
     // Implement methods left abstract in CachingTree
 
+    public LocLogger getLogger() {
+	return session.getLogger();
+    }
+
+    public void setLogger(LocLogger logger) {
+	session.setLogger(logger);
+    }
+
     public boolean preload() {
 	if (preloaded) {
 	    return true;
@@ -104,9 +114,9 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 			Collection<String> filtered = new Vector<String>();
 			for (int i=0; i < roots.length; i++) {
 			    if (forbidden.contains(roots[i].getName())) {
-				JOVALSystem.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, roots[i]);
+				session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, roots[i]);
 			    } else {
-				JOVALSystem.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, roots[i]);
+				session.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, roots[i]);
 				filtered.add(roots[i].getPath());
 			    }
 			}
@@ -120,7 +130,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		    // else fall-through
 
 		  default:
-		    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, "/");
+		    session.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, "/");
 		    command = "find -L /";
 		    break;
 		}
@@ -133,6 +143,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    IProcess p = session.createProcess(command);
 	    p.start();
 	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
+	    reader.setLogger(session.getLogger());
 	    ErrorReader er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), IUnixSession.TIMEOUT_XL));
 	    er.start();
 	    String line = null;
@@ -160,8 +171,8 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    preloaded = true;
 	    return true;
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_PRELOAD);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }
@@ -179,8 +190,8 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		throw new NoSuchElementException(path);
 	    }
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
-	    JOVALSystem.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+	    session.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return null;
 	}
     }
@@ -197,11 +208,11 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		cs.connect();
 		return true;
 	    } else {
-		JOVALSystem.getLogger().error(JOVALMsg.ERROR_SSH_DISCONNECTED);
+		session.getLogger().error(JOVALMsg.ERROR_SSH_DISCONNECTED);
 		return false;
 	    }
 	} catch (JSchException e) {
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }
@@ -213,7 +224,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		session.disconnect();
 	    }
 	} catch (Throwable e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -269,6 +280,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	Thread t;
 
 	ErrorReader(IReader err) {
+	    err.setLogger(session.getLogger());
 	    this.err = err;
 	}
 
@@ -285,10 +297,10 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    try {
 		String line = null;
 		while((line = err.readLine()) != null) {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, line);
+		    session.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, line);
 		}
 	    } catch (IOException e) {
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
 		try {
 		    err.close();

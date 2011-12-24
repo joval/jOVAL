@@ -31,6 +31,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.slf4j.cal10n.LocLogger;
+
 import oval.schemas.common.GeneratorType;
 import oval.schemas.common.MessageType;
 import oval.schemas.directives.core.OvalDirectives;
@@ -78,6 +80,7 @@ class Results implements IResults {
     private SystemCharacteristics sc;
     private Directives directives;
     private OvalResults or;
+    private LocLogger logger;
 
     public static final OvalResults getOvalResults(File f) throws OvalException {
 	try {
@@ -100,10 +103,21 @@ class Results implements IResults {
     Results(IDefinitions definitions, SystemCharacteristics sc) {
 	this.definitions = definitions;
 	this.sc = sc;
+	logger = sc.getLogger();
 	definitionTable = new Hashtable<String, DefinitionType>();
 	testTable = new Hashtable<String, TestType>();
 	directives = new Directives();
 	or = null;
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
     }
 
     // Implement IResults
@@ -125,17 +139,17 @@ class Results implements IResults {
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOvalResults(), out);
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	} catch (FactoryConfigurationError e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	} catch (FileNotFoundException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	} finally {
 	    if (out != null) {
 		try {
 		    out.close();
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_CLOSE,  e.toString());
+		    logger.warn(JOVALMsg.ERROR_FILE_CLOSE,  e.toString());
 		}
 	    }
 	}
@@ -151,13 +165,13 @@ class Results implements IResults {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS));
 	    transformer.transform(new JAXBSource(ctx, getOvalResults()), new StreamResult(output));
 	} catch (FileNotFoundException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, output);
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, output);
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (TransformerConfigurationException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, output);
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (TransformerException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, output);
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	}
     }
 
@@ -232,7 +246,7 @@ class Results implements IResults {
     // Internal
 
     void storeTestResult(TestType test) {
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_TEST, test.getTestId());
+	logger.trace(JOVALMsg.STATUS_TEST, test.getTestId());
 	testTable.put(test.getTestId(), test);
     }
 

@@ -27,6 +27,8 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 
+import org.slf4j.cal10n.LocLogger;
+
 import oval.schemas.common.GeneratorType;
 import oval.schemas.common.MessageType;
 import oval.schemas.systemcharacteristics.core.CollectedObjectsType;
@@ -57,6 +59,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class SystemCharacteristics implements ISystemCharacteristics {
+    private LocLogger logger;
+
     /**
      * Load a SystemCharacteristics from a File.
      */
@@ -79,6 +83,16 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 	}
     }
 
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
     // Implement ISystemCharacteristics
 
     public OvalSystemCharacteristics getOvalSystemCharacteristics() {
@@ -96,20 +110,20 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOvalSystemCharacteristics(), out);
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FileNotFoundException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    if (out != null) {
 		try {
 		    out.close();
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
+		    logger.warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
 		}
 	    }
 	}
@@ -137,14 +151,15 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 	variableTable = new Hashtable<String, List<VariableValueType>>();
 	itemChecksums = new Hashtable<String, BigInteger>();
 	this.plugin = plugin;
+	logger = plugin.getLogger();
 	try {
 	    ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS));
 	    csMarshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(csMarshaller, OvalNamespacePrefixMapper.URI.SC);
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -152,6 +167,7 @@ public class SystemCharacteristics implements ISystemCharacteristics {
      * Create a SystemCharacteristics from an OvalSystemCharacteristics (i.e., from a parsed File).
      */
     SystemCharacteristics(OvalSystemCharacteristics osc) {
+	logger = JOVALSystem.getLogger();
 	this.osc = osc;
 
 	itemTable = new Hashtable<BigInteger, JAXBElement<? extends ItemType>>();
@@ -215,14 +231,14 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 	    for (ReferenceType ref : obj.getReference()) {
 		if (!itemIds.contains(ref.getItemRef())) {
 		    add = false;
-		    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SC_FILTER_ITEM, ref.getItemRef(), obj.getId());
+		    logger.trace(JOVALMsg.STATUS_SC_FILTER_ITEM, ref.getItemRef(), obj.getId());
 		    break;
 		}
 	    }
 	    if (add) {
 		for (VariableValueType var : obj.getVariableValue()) {
 		    if (!variables.contains(var.getVariableId())) {
-			JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SC_FILTER_VARIABLE, var.getVariableId(), obj.getId());
+			logger.trace(JOVALMsg.STATUS_SC_FILTER_VARIABLE, var.getVariableId(), obj.getId());
 			add = false;
 			break;
 		    }
@@ -452,9 +468,9 @@ public class SystemCharacteristics implements ISystemCharacteristics {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (JAXBException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
         }
 	return null;
     }

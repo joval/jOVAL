@@ -10,6 +10,8 @@ import java.io.OutputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.vngx.jsch.ChannelExec;
 import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.exception.JSchException;
@@ -33,13 +35,15 @@ class SshProcess implements IProcess {
     private boolean debug=false, interactive = false;
     private StreamLogger debugIn, debugErr;
     private boolean dirty = true;
+    private LocLogger logger;
 
     private static int num = 0;
 
-    SshProcess(ChannelExec ce, String command, boolean debug) {
+    SshProcess(ChannelExec ce, String command, boolean debug, LocLogger logger) {
 	this.ce = ce;
 	this.command = command;
 	this.debug = debug;
+	this.logger = logger;
     }
 
     // Implement IProcess
@@ -49,14 +53,14 @@ class SshProcess implements IProcess {
     }
 
     public void start() throws Exception {
-	JOVALSystem.getLogger().debug(JOVALMsg.STATUS_SSH_PROCESS_START, command);
+	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, command);
 	ce.setPty(interactive);
 	ce.setCommand(command);
 	ce.connect();
 	if (debug) {
-	    debugIn = new StreamLogger(command, ce.getInputStream(), new File("out." + num + ".log"));
+	    debugIn = new StreamLogger(command, ce.getInputStream(), new File("out." + num + ".log"), logger);
 	    debugIn.start();
-	    debugErr = new StreamLogger(ce.getErrStream(), new File("err." + num + ".log"));
+	    debugErr = new StreamLogger(command, ce.getErrStream(), new File("err." + num + ".log"), logger);
 	    debugErr.start();
 	    num++;
 	}
@@ -111,13 +115,13 @@ class SshProcess implements IProcess {
     }
 
     public synchronized void destroy() {
-	JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PROCESS_KILL, command);
+	logger.warn(JOVALMsg.ERROR_PROCESS_KILL, command);
 	try {
 	    if (ce.isConnected()) {
 		ce.sendSignal("KILL");
 	    }
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    cleanup();
 	}
@@ -149,11 +153,11 @@ class SshProcess implements IProcess {
 	}
 	if (ce.isConnected()) {
 	    if (!ce.isEOF()) {
-		JOVALSystem.getLogger().debug(JOVALMsg.ERROR_PROCESS_DESTROY, command);
+		logger.debug(JOVALMsg.ERROR_PROCESS_DESTROY, command);
 	    }
 	    ce.disconnect();
 	}
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_SSH_PROCESS_END, command);
+	logger.trace(JOVALMsg.STATUS_SSH_PROCESS_END, command);
 	dirty = false;
     }
 }

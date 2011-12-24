@@ -11,6 +11,7 @@ import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.io.LittleEndian;
+import org.joval.util.JOVALSystem;
 
 /**
  * A class that can interpret a License registry key.
@@ -22,7 +23,7 @@ import org.joval.io.LittleEndian;
 public class LicenseData {
     public static void main(String[] argv) {
 	try {
-	    LicenseData ld = new LicenseData(new org.joval.os.windows.registry.Registry(null));
+	    LicenseData ld = new LicenseData(new org.joval.os.windows.registry.Registry(null, JOVALSystem.getLoggable()));
 	    Hashtable<String, Entry> ht = ld.getEntries();
 	    for (Entry entry : ht.values()) {
 		System.out.println(entry.toString());

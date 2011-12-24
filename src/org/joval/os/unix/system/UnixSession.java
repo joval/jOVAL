@@ -40,7 +40,7 @@ public class UnixSession extends BaseSession implements IUnixSession {
 
     public boolean connect() {
 	env = new Environment(this);
-	fs = new LocalFilesystem(env, null);
+	fs = new LocalFilesystem(env, null, this);
 	cwd = new File(".");
 	flavor = Flavor.flavorOf(this);
 	info.getSystemInfo();

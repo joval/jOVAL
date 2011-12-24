@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -23,19 +25,21 @@ public class StreamLogger extends InputStream implements Runnable {
     private Thread t;
     private InputStream in;
     private File outLog;
+    private LocLogger logger;
     private String comment;
     private int pos, len, triggerLen;
     private byte[] buff;
     private boolean forceClosed = false;
 
     public StreamLogger(InputStream in, File outLog) throws IOException {
-	this(null, in, outLog);
+	this(null, in, outLog, JOVALSystem.getLogger());
     }
 
-    public StreamLogger(String comment, InputStream in, File outLog) throws IOException {
+    public StreamLogger(String comment, InputStream in, File outLog, LocLogger logger) throws IOException {
 	this.comment = comment;
 	this.in = in;
 	this.outLog = outLog;
+	this.logger = logger;
 	buff = new byte[1024];
 	triggerLen = 1023;
 	pos = 0;
@@ -61,7 +65,7 @@ public class StreamLogger extends InputStream implements Runnable {
 	    }
 	} catch (IOException e) {
 	    if (!forceClosed) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, in.getClass().getName(), e.getMessage());
+		logger.warn(JOVALMsg.ERROR_IO, in.getClass().getName(), e.getMessage());
 	    }
 	}
     }
@@ -82,7 +86,7 @@ public class StreamLogger extends InputStream implements Runnable {
 
     public void close() throws IOException {
 	if (t.isAlive()) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_STREAMLOGGER_CLOSE, outLog);
+	    logger.warn(JOVALMsg.ERROR_STREAMLOGGER_CLOSE, outLog);
 	    forceClosed = true;
 	    t.interrupt();
 	}
@@ -119,7 +123,7 @@ public class StreamLogger extends InputStream implements Runnable {
 	    }
 	    out.write(buff, 0, len);
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, outLog, e.getMessage());
+	    logger.warn(JOVALMsg.ERROR_IO, outLog, e.getMessage());
 	} finally {
 	    if (out != null) {
 		try {

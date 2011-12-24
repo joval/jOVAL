@@ -10,6 +10,8 @@ import java.util.Properties;
 import java.util.Vector;
 import java.util.regex.Matcher;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
@@ -45,6 +47,7 @@ public class Environment implements IEnvironment {
     private Properties props;
 
     public Environment(IRegistry registry) {
+	LocLogger logger = registry.getLogger();
 	props = new Properties();
 	Vector <String>toExpand = new Vector <String>();
 
@@ -70,7 +73,7 @@ public class Environment implements IEnvironment {
 		    toExpand.addElement(name);
 		    props.setProperty(name, ((IExpandStringValue)val).getData());
 		} else {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
+		    logger.warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
 		}
 	    }
 
@@ -114,7 +117,7 @@ public class Environment implements IEnvironment {
 		}
 	    }
 	} catch (NoSuchElementException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_SYSENV);
+	    logger.warn(JOVALMsg.ERROR_WINENV_SYSENV);
 	} finally {
 	    if (cv != null) {
 		cv.closeAll();
@@ -151,11 +154,11 @@ public class Environment implements IEnvironment {
 			props.setProperty(name, s);
 		    }
 		} else {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
+		    logger.warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
 		}
 	    }
 	} catch (NoSuchElementException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_USRENV);
+	    logger.warn(JOVALMsg.ERROR_WINENV_USRENV);
 	} finally {
 	    if (userEnv != null) {
 		userEnv.closeAll();
@@ -176,11 +179,11 @@ public class Environment implements IEnvironment {
 		    }
 		    props.setProperty(name, ((IExpandStringValue)val).getData());
 		} else {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
+		    logger.warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
 		}
 	    }
 	} catch (NoSuchElementException e) {
-	    JOVALSystem.getLogger().debug(JOVALMsg.ERROR_WINENV_VOLENV);
+	    logger.debug(JOVALMsg.ERROR_WINENV_VOLENV);
 	} finally {
 	    if (volatileEnv != null) {
 		volatileEnv.closeAll();

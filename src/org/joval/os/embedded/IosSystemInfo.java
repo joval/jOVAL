@@ -89,8 +89,8 @@ public class IosSystemInfo {
 	    }
 	    info.setInterfaces(interfacesType);
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return info;
     }

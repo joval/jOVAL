@@ -16,6 +16,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Vector;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.io.IReader;
 import org.joval.intf.util.IPerishable;
 import org.joval.util.JOVALMsg;
@@ -67,6 +69,17 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     private long expires;
     private long timeout;
     private Thread thread;
+    private LocLogger logger;
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
 
     // Implement IReader
 
@@ -222,7 +235,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 			for (PerishableReader reader : readers) {
 			    if (reader.checkExpired()) {
 				try {
-				    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_READ_TIMEOUT, reader.timeout);
+				    reader.getLogger().warn(JOVALMsg.ERROR_READ_TIMEOUT, reader.timeout);
 				    reader.interrupt();
 				    reader.close();
 				} catch (IOException e) {

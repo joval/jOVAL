@@ -69,6 +69,7 @@ public class RemotePlugin extends BasePlugin {
 	if (hostname != null) {
 	    try {
 		IBaseSession base = sessionFactory.createSession(hostname);
+		base.setLogger(logger);
 		setCredential(base);
 
 		IBaseSession.Type type = base.getType();
@@ -114,7 +115,7 @@ public class RemotePlugin extends BasePlugin {
 		if (cred == null) {
 		    throw new LoginException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL));
 		} else if (((ILocked)base).unlock(cred)) {
-		    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_CREDENTIAL_SET, hostname);
+		    logger.debug(JOVALMsg.STATUS_CREDENTIAL_SET, hostname);
 		} else {
 		    String baseName = base.getClass().getName();
 		    String credName = cred.getClass().getName();

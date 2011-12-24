@@ -3,6 +3,7 @@
 
 package org.joval.intf.windows.wmi;
 
+import org.joval.intf.util.ILoggable;
 import org.joval.os.windows.wmi.WmiException;
 
 /**
@@ -11,7 +12,7 @@ import org.joval.os.windows.wmi.WmiException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IWmiProvider {
+public interface IWmiProvider extends ILoggable {
     public static final String CIMv2 = "root\\cimv2";
 
     /**

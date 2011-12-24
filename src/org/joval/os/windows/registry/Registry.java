@@ -19,6 +19,7 @@ import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
@@ -43,8 +44,8 @@ public class Registry extends BaseRegistry {
     /**
      * Create a new Registry, connected to the specified host using the specified Credential.
      */
-    public Registry(IPathRedirector redirector) {
-	super(redirector);
+    public Registry(IPathRedirector redirector, ILoggable log) {
+	super(redirector, log);
     }
 
     // Implement IRegistry
@@ -109,7 +110,7 @@ public class Registry extends BaseRegistry {
 	if (redirector != null) {
 	    String alt = redirector.getRedirect(fullPath);
 	    if (alt != null) {
-		JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINREG_REDIRECT, fullPath, alt);
+		log.getLogger().trace(JOVALMsg.STATUS_WINREG_REDIRECT, fullPath, alt);
 		return fetchKey(alt);
 	    }
 	}
@@ -132,17 +133,18 @@ public class Registry extends BaseRegistry {
     // Internal
 
     Value createValue(Key key, String name, Object data) throws IllegalArgumentException {
+	Value val = null;
 	if (data instanceof String[]) {
-	    return new MultiStringValue(key, name, (String[])data);
+	    val = new MultiStringValue(key, name, (String[])data);
 	} else if (data instanceof byte[]) {
-	    return new BinaryValue(key, name, (byte[])data);
+	    val = new BinaryValue(key, name, (byte[])data);
 	} else if (data instanceof Long) {
 	    long l = ((Long)data).longValue();
 	    int i = ((Long)data).intValue();
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PRECISION, l, i);
-	    return new DwordValue(key, name, i);
+	    log.getLogger().warn(JOVALMsg.ERROR_PRECISION, l, i);
+	    val = new DwordValue(key, name, i);
 	} else if (data instanceof Integer) {
-	    return new DwordValue(key, name, ((Integer)data).intValue());
+	    val = new DwordValue(key, name, ((Integer)data).intValue());
 	} else if (data instanceof String) {
 	    //
 	    // Guess whether this might be an Expand type by counting the number of times the character '%' appears.
@@ -158,13 +160,15 @@ public class Registry extends BaseRegistry {
 		}
 	    }
 	    if (appearances > 0 && (appearances % 2) == 0 && !loadingEnv) {
-		return new ExpandStringValue(key, name, value, env.expand(value));
+		val = new ExpandStringValue(key, name, value, env.expand(value));
 	    } else {
-		return new StringValue(key, name, value);
+		val = new StringValue(key, name, value);
 	    }
 	} else {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_TYPE, data.getClass().getName()));
 	}
+	log.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, val.toString());
+	return val;
     }
 
     // Private 

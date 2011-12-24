@@ -106,12 +106,12 @@ class SftpFile extends BaseFile implements IUnixFile {
 		return exists();
 	    }
 	} catch (SftpException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    sfs.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
+	    sfs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
-	    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    sfs.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
+	    sfs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }

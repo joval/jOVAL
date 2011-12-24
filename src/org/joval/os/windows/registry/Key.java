@@ -126,11 +126,11 @@ public class Key implements IKey {
 	    switch(e.getHR().intValue()) {
 	      case 0x80070005: {
 		String subkeyPath = getHive() + Registry.DELIM_STR + sb.toString();
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_ACCESS, subkeyPath);
+		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ACCESS, subkeyPath);
 		break;
 	      }
 	      default:
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		registry.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		break;
 	    }
 	    return false;

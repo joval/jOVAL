@@ -12,7 +12,10 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.system.IEnvironment;
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
@@ -30,15 +33,27 @@ import org.joval.util.StringTools;
  */
 public abstract class BaseRegistry implements IRegistry {
     protected IPathRedirector redirector;
+    protected ILoggable log;
     protected Environment env = null;
     protected Hashtable<String, List<IKey>> searchMap;
 
     /**
      * Create a new Registry, connected to the specified host using the specified Credential.
      */
-    protected BaseRegistry(IPathRedirector redirector) {
+    protected BaseRegistry(IPathRedirector redirector, ILoggable log) {
 	this.redirector = redirector;
+	this.log = log;
 	searchMap = new Hashtable<String, List<IKey>>();
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return log.getLogger();
+    }
+
+    public void setLogger(LocLogger logger) {
+	log.setLogger(logger);
     }
 
     // Implement IRegistry (sparsely)
@@ -103,7 +118,7 @@ public abstract class BaseRegistry implements IRegistry {
 		}
 	    }
 	} catch (PatternSyntaxException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    log.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new NoSuchElementException(cacheKey);
 	}
 	searchMap.put(cacheKey, list);

@@ -7,13 +7,15 @@ import java.io.File;
 
 import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
 
+import org.joval.intf.util.ILoggable;
+
 /**
  * Interface defining OVAL System Characteristics.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface ISystemCharacteristics {
+public interface ISystemCharacteristics extends ILoggable {
     /**
      * Return a raw OVAL system characteristics object containing the underlying data.
      */

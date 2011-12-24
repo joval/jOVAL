@@ -77,8 +77,8 @@ public class WindowsSystemInfo {
 		IEnvironment environment = registry.getEnvironment();
 		info.setArchitecture(environment.getenv(ARCHITECTURE));
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 
 	    try {
@@ -88,8 +88,8 @@ public class WindowsSystemInfo {
 		    info.setPrimaryHostName(((IStringValue)cnVal).getData());
 		}
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 
 	    try {
@@ -99,8 +99,8 @@ public class WindowsSystemInfo {
 		    info.setOsVersion(((IStringValue)cvVal).getData());
 		}
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 
 	    try {
@@ -110,13 +110,13 @@ public class WindowsSystemInfo {
 		    info.setOsName(((IStringValue)pnVal).getData());
 		}
 	    } catch (Exception e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSNAME);
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSNAME);
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 
 	    registry.disconnect();
 	} else {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINREG_CONNECT);
+	    session.getLogger().warn(JOVALMsg.ERROR_WINREG_CONNECT);
 	}
 
 	try {
@@ -150,8 +150,8 @@ public class WindowsSystemInfo {
 		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_WINWMI_CONNECT));
 	    }
 	} catch (Exception e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	return info;

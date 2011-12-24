@@ -10,6 +10,8 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.io.LittleEndian;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.intf.windows.wmi.ISWbemObject;
@@ -39,6 +41,7 @@ class ActiveDirectory {
     private static final String SID_CONDITION = "DS_objectSid=\"$sid\"";
 
     private IWmiProvider wmi;
+    private LocLogger logger;
     private Hashtable<String, User> usersByUpn;
     private Hashtable<String, User> usersBySid;
     private Hashtable<String, Group> groupsByNetbiosName;
@@ -46,8 +49,9 @@ class ActiveDirectory {
     private Hashtable<String, String> domains;
     private boolean initialized = false;
 
-    ActiveDirectory(IWmiProvider wmi) {
+    ActiveDirectory(IWmiProvider wmi, LocLogger logger) {
 	this.wmi = wmi;
+	this.logger = logger;
 	domains = new Hashtable<String, String>();
 	usersByUpn = new Hashtable<String, User>();
 	usersBySid = new Hashtable<String, User>();
@@ -132,7 +136,7 @@ class ActiveDirectory {
 		    } else if (members[i].indexOf(",OU=Domain Users") != -1) {
 			userNetbiosNames.add(toNetbiosName(members[i]));
 		    } else {
-			JOVALSystem.getLogger().warn(JOVALMsg.ERROR_AD_BAD_OU, members[i]);
+			logger.warn(JOVALMsg.ERROR_AD_BAD_OU, members[i]);
 		    }
 		}
 		group = new Group(domain, cn, sid, userNetbiosNames, groupNetbiosNames);
@@ -167,7 +171,7 @@ class ActiveDirectory {
 			    } else if (members[i].indexOf(",OU=Domain Users") != -1) {
 				userNetbiosNames.add(toNetbiosName(members[i]));
 			    } else {
-				JOVALSystem.getLogger().warn(JOVALMsg.ERROR_AD_BAD_OU, members[i]);
+				logger.warn(JOVALMsg.ERROR_AD_BAD_OU, members[i]);
 			    }
 			}
 			String sid = Principal.toSid(columns.getItem("DS_objectSid").getValueAsString());
@@ -175,7 +179,7 @@ class ActiveDirectory {
 			groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
 			groupsBySid.put(sid, group);
 		    } else {
-			JOVALSystem.getLogger().trace(JOVALMsg.STATUS_AD_GROUP_SKIP, dn, dc);
+			logger.trace(JOVALMsg.STATUS_AD_GROUP_SKIP, dn, dc);
 		    }
 		}
 		if (group == null) {
@@ -215,7 +219,7 @@ class ActiveDirectory {
 	    return true;
 	} catch (NoSuchElementException e) {
 	} catch (WmiException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return false;
     }
@@ -236,16 +240,16 @@ class ActiveDirectory {
 		String dns = columns.getItem("DnsForestName").getValueAsString();
 		String name = columns.getItem("Name").getValueAsString();
 		if (domain == null || dns == null) {
-		    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_AD_DOMAIN_SKIP, name);
+		    logger.trace(JOVALMsg.STATUS_AD_DOMAIN_SKIP, name);
 		} else {
-		    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_AD_DOMAIN_ADD, domain, dns);
+		    logger.trace(JOVALMsg.STATUS_AD_DOMAIN_ADD, domain, dns);
 		    domains.put(domain.toUpperCase(), dns);
 		}
 	    }
 	    initialized = true;
 	} catch (WmiException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_AD_INIT);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.ERROR_AD_INIT);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -257,7 +261,7 @@ class ActiveDirectory {
 	if (isMember(netbiosName)) {
 	    String dns = domains.get(domain.toUpperCase());
 	    String upn = new StringBuffer(Directory.getName(netbiosName)).append("@").append(dns).toString();
-	    JOVALSystem.getLogger().trace(JOVALMsg.STATUS_UPN_CONVERT, netbiosName, upn);
+	    logger.trace(JOVALMsg.STATUS_UPN_CONVERT, netbiosName, upn);
 	    return upn;
 	} else {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, netbiosName));
@@ -324,7 +328,7 @@ class ActiveDirectory {
 	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.STATUS_NAME_DOMAIN_ERR, dn));
 	}
 	String name = domain + "\\" + groupName;
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_NAME_DOMAIN_OK, dn, name);
+	logger.trace(JOVALMsg.STATUS_NAME_DOMAIN_OK, dn, name);
 	return name;
     }
 
@@ -337,7 +341,7 @@ class ActiveDirectory {
 	    try {
 		groups.add(toNetbiosName(sa[i]));
 	    } catch (NoSuchElementException e) {
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return groups;
