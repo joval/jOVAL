@@ -19,6 +19,7 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.windows.RegistryBehaviors;
 import oval.schemas.definitions.windows.RegistryObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
+import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -329,6 +330,11 @@ public class RegistryAdapter implements IAdapter {
 	EntityItemRegistryHiveType hiveType = JOVALSystem.factories.sc.windows.createEntityItemRegistryHiveType();
 	hiveType.setValue(key.getHive());
 	item.setHive(hiveType);
+
+	// REMIND (DAS): lastWriteTime implementation is TBD
+	EntityItemIntType lastWriteTimeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	lastWriteTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	item.setLastWriteTime(lastWriteTimeType);
 
 	EntityItemWindowsViewType viewType = JOVALSystem.factories.sc.windows.createEntityItemWindowsViewType();
 	if (session.supports(IWindowsSession.View._64BIT)) {

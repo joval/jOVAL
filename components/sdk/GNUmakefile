@@ -40,10 +40,10 @@ dist-clean: clean
 
 install: all
 	mkdir -p $(DIST)
-	cp $(SCHEMALIB)         $(DIST)
-	cp $(JOVAL_CORE_LIB)    $(DIST)
+	cp $(SCHEMALIB) $(DIST)
+	cp $(JOVAL_CORE_LIB) $(DIST)
 	cp $(PLUGIN_SHARED_LIB) $(DIST)
-	cp $(PLUGIN_LOCAL_LIB)  $(DIST)
+	cp $(PLUGIN_LOCAL_LIB) $(DIST)
 	cp $(PLUGIN_REMOTE_LIB) $(DIST)
 	cp -r $(RSRC)/* $(DIST)
 
