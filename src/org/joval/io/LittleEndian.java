@@ -130,14 +130,7 @@ public class LittleEndian {
     }
 
     public static final long getLong(byte[] buff, int offset) {
-	return	 buff[offset]		 |
-		(buff[offset + 1] << 8)	 |
-		(buff[offset + 2] << 16) |
-		(buff[offset + 3] << 24) |
-		(buff[offset + 4] << 32) |
-		(buff[offset + 5] << 40) |	
-		(buff[offset + 6] << 48) |
-		(buff[offset + 7] << 56);
+	return (long)getInt(buff, offset) + (((long)getInt(buff, offset + 4)) << 32);
     }
 
     public static final long getULong(byte[] buff) {
@@ -145,14 +138,7 @@ public class LittleEndian {
     }
 
     public static final long getULong(byte[] buff, int offset) {
-	return   (buff[offset] & 0xFF)            |
-		((buff[offset + 1] & 0xFF) << 8)  |
-		((buff[offset + 2] & 0xFF) << 16) |
-		((buff[offset + 3] & 0xFF) << 24) |
-		((buff[offset + 4] & 0xFF) << 32) |
-		((buff[offset + 5] & 0xFF) << 40) |
-		((buff[offset + 6] & 0xFF) << 48) |
-		((buff[offset + 7] & 0xFF) << 56);
+	return (long)getUInt(buff, offset) + (((long)getUInt(buff, offset + 4)) << 32);
     }
 
     /**

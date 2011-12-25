@@ -5,6 +5,7 @@ package org.joval.os.windows.registry;
 
 import org.joval.intf.windows.registry.IDwordValue;
 import org.joval.intf.windows.registry.IKey;
+import org.joval.io.LittleEndian;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -18,20 +19,13 @@ public class DwordValue extends Value implements IDwordValue {
     private int data;
 
     /**
-     * Conversion of an int to a little-endian 4-byte DWORD.
-     */
-    public static final byte[] intToByteArray(int value) {
-        return new byte[] {(byte)value, (byte)(value >>> 8), (byte)(value >>> 16), (byte)(value >>> 24)};
-    }
-
-    /**
      * Conversion of a little-endian 4-byte DWORD to an int.
      */
     public static final int byteArrayToInt(byte [] b) throws IllegalArgumentException {
 	if (b == null || b.length != 4) {
 	    throw new IllegalArgumentException("buffer should be 4 bytes");
 	}
-        return (b[3] << 24) + ((b[2] & 0xFF) << 16) + ((b[1] & 0xFF) << 8) + (b[0] & 0xFF);
+        return LittleEndian.getUInt(b);
     }
 
     public DwordValue(IKey parent, String name, int data) {
