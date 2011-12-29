@@ -16,12 +16,16 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 all: $(PLUGIN_SHARED_LIB)
 
-$(PLUGIN_SHARED_LIB): classes
+$(PLUGIN_SHARED_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
 	rm -rf $(BUILD)
 	rm -f $(PLUGIN_SHARED_LIB)
+
+resources:
+	rm -f $(BUILD)/*.properties
+	cp $(RSRC)/*.properties $(BUILD)
 
 classes: classdirs $(CLASS_FILES)
 

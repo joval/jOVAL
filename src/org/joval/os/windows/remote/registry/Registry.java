@@ -54,9 +54,6 @@ import org.joval.util.StringTools;
  * One nice feature about this utility class is that it manages all the open references to registry keys
  * and will clean them up for you when you call the disconnect method.
  *
- * DAS: Need to complete the implementation of Wow64 registry redirection; see:
- *      http://msdn.microsoft.com/en-us/library/aa384253%28v=vs.85%29.aspx
- *
  * @author David A. Solin
  * @version %I% %G%
  */

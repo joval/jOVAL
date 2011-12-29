@@ -29,8 +29,8 @@ clean:
 	rm -f $(PLUGIN_LOCAL_LIB)
 
 resources:
-	rm -f $(BUILD)/*.properties*
-	cp $(SRC)/rsrc/plugin-local/* $(BUILD)
+	rm -f $(BUILD)/*.properties
+	cp $(RSRC)/*.properties $(BUILD)
 	echo version=$(JOVAL_VERSION) >> $(BUILD)/plugin.resources.properties
 
 classes: classdirs $(CLASS_FILES)

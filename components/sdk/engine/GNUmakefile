@@ -26,8 +26,7 @@ clean:
 
 resources:
 	rm -f $(BUILD)/*.properties
-	cp $(SRC)/rsrc/joval.system.properties $(BUILD)
-	cp $(SRC)/rsrc/jovalmsg*.properties $(BUILD)
+	cp $(RSRC)/*.properties $(BUILD)
 	echo "version=$(JOVAL_VERSION)" >> $(BUILD)/joval.system.properties
 	echo "build.date=`date`" >> $(BUILD)/joval.system.properties
 

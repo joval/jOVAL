@@ -246,6 +246,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    ReflectedFileObject fObj = new ReflectedFileObject(obj);
 
 	    if (fObj.isSetFilepath()) {
+		//
+		// Windows view is already handled, and FileBehaviors recursion is ignored in the Filepath case, so
+		// all we need to do is add the discovered paths to the return list.
+		//
 		Collection<String> filepaths = new HashSet<String>();
 		EntityObjectStringType filepath = fObj.getFilepath();
 		if (filepath.isSetVarRef()) {
@@ -257,9 +261,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 		switch(op) {
 		  case EQUALS:
 		    list.addAll(filepaths);
-		    //
-		    // REMIND (DAS): Do behaviors need to be processed in the Filepath case?
-		    //
 		    break;
 
 		  case PATTERN_MATCH:
