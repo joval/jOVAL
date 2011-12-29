@@ -23,6 +23,8 @@ import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.ObjectType;
+import oval.schemas.definitions.macos.Plist510Object;
+import oval.schemas.definitions.macos.PlistObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -361,8 +363,12 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    }
 		    list = files;
 		}
+	    } else if (isPlistObject(obj)) {
+		for (String path : getPlistPaths(obj, rc)) {
+		    list.add(path);
+		}
 	    } else {
-		throw new OvalException("ERROR_BAD_FILEOBJECT" + obj.getId());
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, obj.getId()));
 	    }
 	} catch (PatternSyntaxException e) {
        	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -376,6 +382,44 @@ public abstract class BaseFileAdapter implements IAdapter {
 	}
 	pathMap.put(obj.getId(), list);
 	return list;
+    }
+
+    /**
+     * Does the object represent a MacOS X plist object?
+     */
+    private boolean isPlistObject(ObjectType obj) {
+	return obj instanceof PlistObject || obj instanceof Plist510Object;
+    }
+
+    /**
+     * Get the path of the plist file based on the app_id.
+     */
+    private Collection<String> getPlistPaths(ObjectType obj, IRequestContext rc) throws OvalException, ResolveException {
+	EntityObjectStringType appIdType = null;
+	if (obj instanceof PlistObject) {
+	    appIdType = ((PlistObject)obj).getAppId();
+	} else if (obj instanceof Plist510Object) {
+	    appIdType = ((Plist510Object)obj).getAppId();
+	}
+	if (appIdType == null) {
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_PLIST_OBJECT, obj.getId()));
+	} else {
+	    Collection<String> paths = new Vector<String>();
+
+	    StringBuffer sb = new StringBuffer(session.getEnvironment().getenv("HOME"));
+	    sb.append("/Library/Preferences/");
+	    if (appIdType.isSetValue()) {
+		paths.add(sb.append((String)appIdType.getValue()).append(".plist").toString());
+	    } else if (appIdType.isSetVarRef()) {
+		for (String appId : rc.resolve(appIdType.getVarRef())) {
+		    paths.add(new StringBuffer(sb.toString()).append(appId).append(".plist").toString());
+		}
+	    } else {
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_PLIST_OBJECT, obj.getId()));
+	    }
+
+	    return paths;
+	}
     }
 
     /**

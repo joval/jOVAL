@@ -45,3 +45,6 @@ registry class from the TrustedInstaller to the Administrators group:
   9. Click 'Ok'
 
 (From http://www.opennms.org/wiki/WmiConfiguration)
+
+Enabling remote WMI is also documented here:
+http://www.poweradmin.com/help/enableWMI.aspx
