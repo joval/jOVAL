@@ -67,7 +67,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     }
 
     public boolean preload() {
-	if (!"true".equals(JOVALSystem.getProperty(JOVALSystem.PROP_LOCAL_FS_PRELOAD))) {
+	if (WINDOWS && !"true".equals(JOVALSystem.getProperty(JOVALSystem.PROP_LOCAL_FS_WINDOWS_PRELOAD))) {
 	    return false;
 	} else if (preloaded) {
 	    return true;
@@ -209,7 +209,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     private void addRecursive(ITreeBuilder tree, File f) throws IOException {
 	String path = f.getCanonicalPath();
 	if (!path.equals(f.getPath())) {
-	    log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
+	    log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path); // skip links
 	} else if (f.isFile()) {
 	    INode node = tree.getRoot();
 	    try {

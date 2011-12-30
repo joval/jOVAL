@@ -39,6 +39,7 @@ public class VsVersionInfo {
     StringFileInfo sfi;
     VarFileInfo vfi;
     Hashtable<String, Hashtable<String, String>> stringTables;
+    String defaultLangAndCodepage;
 
     public VsVersionInfo(IRandomAccess ra) throws IOException {
 	length		= LittleEndian.readUShort(ra);
@@ -77,6 +78,9 @@ padding2 = LittleEndian.read32BitAlignPadding(ra);
 		    Hashtable<String, String> table = new Hashtable<String, String>();
 		    for (StringStructure string : st.getChildren()) {
 			table.put(string.getKey().trim(), string.getValue().trim());
+		    }
+		    if (defaultLangAndCodepage == null) {
+			defaultLangAndCodepage = key;
 		    }
 		    stringTables.put(key, table);
 		}
@@ -159,6 +163,14 @@ padding2 = LittleEndian.read32BitAlignPadding(ra);
 
     public VsFixedFileInfo getValue() {
 	return value;
+    }
+
+    public VarFileInfo getVarFileInfo() {
+	return vfi;
+    }
+
+    public String getDefaultTranslation() {
+	return defaultLangAndCodepage == null ? LANGID_KEY : defaultLangAndCodepage;
     }
 
     public Hashtable<String, String> getStringTable(Var.LangAndCodepage lac) {
