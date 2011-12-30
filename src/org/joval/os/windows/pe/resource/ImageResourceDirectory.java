@@ -41,16 +41,31 @@ public class ImageResourceDirectory {
 	return numberOfNamedEntries + numberOfIdEntries;
     }
 
-    public void debugPrint(PrintStream out) {
-	out.println("IMAGE_RESOURCE_DIRECTORY:");
-	out.println("  characteristics:      " + LittleEndian.toHexString(characteristics));
-	out.println("  timeDateStamp:        " + new Date(timeDateStamp).toString());
-	out.println("  majorVersion:         " + LittleEndian.toHexString(majorVersion));
-	out.println("  minorVersion:         " + LittleEndian.toHexString(minorVersion));
-	out.println("  numberOfNamedEntries: " + LittleEndian.toHexString(numberOfNamedEntries));
-	out.println("  numberOfIdEntries:    " + LittleEndian.toHexString(numberOfIdEntries));
+    public void debugPrint(PrintStream out, int level) {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < level; i++) {
+	    sb.append("  ");
+	}
+	String indent = sb.toString();
+
+	out.print(indent);
+	out.println("characteristics:      " + LittleEndian.toHexString(characteristics));
+	out.print(indent);
+	out.println("timeDateStamp:        " + new Date(timeDateStamp).toString());
+	out.print(indent);
+	out.println("majorVersion:         " + LittleEndian.toHexString(majorVersion));
+	out.print(indent);
+	out.println("minorVersion:         " + LittleEndian.toHexString(minorVersion));
+	out.print(indent);
+	out.println("numberOfNamedEntries: " + LittleEndian.toHexString(numberOfNamedEntries));
+	out.print(indent);
+	out.println("numberOfIdEntries:    " + LittleEndian.toHexString(numberOfIdEntries));
 	for (int i=0; i < entries.length; i++) {
-	    entries[i].debugPrint(out);
+	    out.print(indent);
+	    out.print("entry[" + i + "]: {");
+	    entries[i].debugPrint(out, level + 1);
+	    out.print(indent);
+	    out.println("}");
 	}
     }
 
