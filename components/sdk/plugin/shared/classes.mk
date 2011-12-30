@@ -55,6 +55,7 @@ SHARED=\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector		\
 	org.joval.os.windows.pe.Characteristics				\
 	org.joval.os.windows.pe.DLLCharacteristics			\
+	org.joval.os.windows.pe.Header					\
 	org.joval.os.windows.pe.ImageDOSHeader				\
 	org.joval.os.windows.pe.ImageFileHeader				\
 	org.joval.os.windows.pe.ImageNTHeaders				\
@@ -134,4 +135,5 @@ SHARED=\
 	org.joval.util.tree.PropertyHierarchy				\
 	org.joval.util.tree.Forest					\
 	org.joval.util.tree.Node					\
-	org.joval.util.tree.Tree
+	org.joval.util.tree.Tree					\
+	org.joval.util.tree.TreeHash

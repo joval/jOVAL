@@ -60,13 +60,23 @@ public class StringTable {
 	}
     }
 
-    public void debugPrint(PrintStream out) {
-	out.println("STRING_TABLE:");
-	out.println("  length:           " + LittleEndian.toHexString(length));
-	out.println("  valueLength:      " + LittleEndian.toHexString(valueLength));
-	out.println("  type:             " + LittleEndian.toHexString(type));
-	out.println("  key:              " + key);
-	out.print("  padding:          {");
+    public void debugPrint(PrintStream out, int level) {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < level; i++) {
+	    sb.append("  ");
+	}
+	String indent = sb.toString();
+
+	out.print(indent);
+	out.println("length:           " + LittleEndian.toHexString(length));
+	out.print(indent);
+	out.println("valueLength:      " + LittleEndian.toHexString(valueLength));
+	out.print(indent);
+	out.println("type:             " + LittleEndian.toHexString(type));
+	out.print(indent);
+	out.println("key:              " + key);
+	out.print(indent);
+	out.print("padding:          {");
 	for (int i=0; i < padding.length; i++) {
 	    if (i > 0) {
 		out.print(", ");
@@ -74,9 +84,13 @@ public class StringTable {
  	    out.print(LittleEndian.toHexString(padding[i]));
 	}
 	out.println("}");
-	Iterator <StringStructure>iter = children.iterator();
-	for (int i=0; iter.hasNext(); i++) {
-	    iter.next().debugPrint(out);
+	int i=0;
+	for (StringStructure string : children) {
+	    out.print(indent);
+	    out.println("child[" + i++ + "]: {");
+	    string.debugPrint(out, level + 1);
+	    out.print(indent);
+	    out.println("}");
 	}
     }
 

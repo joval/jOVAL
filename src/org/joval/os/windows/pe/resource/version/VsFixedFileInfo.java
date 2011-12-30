@@ -50,22 +50,44 @@ public class VsFixedFileInfo {
 	loadFromBuffer();
     }
 
-    public void debugPrint(PrintStream out) {
-	StreamTool.hexDump(buff, out);
-	out.println("VS_FIXEDFILEINFO:");
-	out.println("  signature:        " + LittleEndian.toHexString(signature));
-	out.println("  strucVersion:     " + LittleEndian.toHexString(strucVersion));
-	out.println("  fileVersionMS:    " + LittleEndian.toHexString(fileVersionMS));
-	out.println("  fileVersionLS:    " + LittleEndian.toHexString(fileVersionLS));
-	out.println("  productVersionMS: " + LittleEndian.toHexString(productVersionMS));
-	out.println("  productVersionLS: " + LittleEndian.toHexString(productVersionLS));
-	out.println("  fileFlagsMask:    " + LittleEndian.toHexString(fileFlagsMask));
-	out.println("  fileFlags:        " + LittleEndian.toHexString(fileFlags));
-	out.println("  fileOS:           " + LittleEndian.toHexString(fileOS));
-	out.println("  fileType:         " + LittleEndian.toHexString(fileType));
-	out.println("  fileSubtype:      " + LittleEndian.toHexString(fileSubtype));
-	out.println("  fileDateMS:       " + LittleEndian.toHexString(fileDateMS));
-	out.println("  fileDateLS:       " + LittleEndian.toHexString(fileDateLS));
+    public void debugPrint(PrintStream out, int level) {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < level; i++) {
+	    sb.append("  ");
+	}
+	String indent = sb.toString();
+
+	out.print(indent);
+	out.println("signature:        " + LittleEndian.toHexString(signature));
+	out.print(indent);
+	out.println("strucVersion:     " + LittleEndian.toHexString(strucVersion));
+	out.print(indent);
+	out.println("fileVersionMS:    " + LittleEndian.toHexString(fileVersionMS));
+	out.print(indent);
+	out.println("fileVersionLS:    " + LittleEndian.toHexString(fileVersionLS));
+	out.print(indent);
+	out.println("productVersionMS: " + LittleEndian.toHexString(productVersionMS));
+	out.print(indent);
+	out.println("productVersionLS: " + LittleEndian.toHexString(productVersionLS));
+	out.print(indent);
+	out.println("fileFlagsMask:    " + LittleEndian.toHexString(fileFlagsMask));
+	out.print(indent);
+	out.println("fileFlags:        " + LittleEndian.toHexString(fileFlags));
+	out.print(indent);
+	out.println("fileOS:           " + LittleEndian.toHexString(fileOS));
+	out.print(indent);
+	out.println("fileType:         " + LittleEndian.toHexString(fileType));
+	out.print(indent);
+	out.println("fileSubtype:      " + LittleEndian.toHexString(fileSubtype));
+	out.print(indent);
+	out.println("fileDateMS:       " + LittleEndian.toHexString(fileDateMS));
+	out.print(indent);
+	out.println("fileDateLS:       " + LittleEndian.toHexString(fileDateLS));
+
+	out.print(indent);
+	out.println("PRODUCT VERSION STRING: " + getProductVersion().toString());
+	out.print(indent);
+	out.println("FILE VERSION STRING: " + getFileVersion().toString());
     }
 
     public Version getFileVersion() {

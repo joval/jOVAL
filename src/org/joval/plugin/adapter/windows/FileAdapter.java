@@ -5,6 +5,7 @@ package org.joval.plugin.adapter.windows;
 
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -37,6 +38,7 @@ import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.Timestamp;
+import org.joval.os.windows.pe.Header;
 import org.joval.os.windows.pe.ImageDOSHeader;
 import org.joval.os.windows.pe.ImageNTHeaders;
 import org.joval.os.windows.pe.ImageDataDirectory;
@@ -248,133 +250,105 @@ public class FileAdapter extends BaseFileAdapter {
      * Read the Portable Execution format header information, including String Tables.
      */
     private void readPEHeaders(IFile file, FileItem fItem) throws IOException {
-	IRandomAccess ra = file.getRandomAccess("r");
 	session.getLogger().trace(JOVALMsg.STATUS_PE_READ, file.toString());
 	try {
-	    ImageDOSHeader dh = new ImageDOSHeader(ra);
-	    ra.seek((long)dh.getELFHeaderRVA());
-	    ImageNTHeaders nh = new ImageNTHeaders(ra);
+	    Header header = new Header(file, session.getLogger());
 
 	    // Get the MS Checksum
 	    EntityItemStringType msChecksumType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    msChecksumType.setValue(new Integer(nh.getImageOptionalHeader().getChecksum()).toString());
+	    msChecksumType.setValue(new Integer(header.getNTHeader().getImageOptionalHeader().getChecksum()).toString());
 	    fItem.setMsChecksum(msChecksumType);
-
-	    //
-	    // Get the version directory entry from the image resource directory
-	    //
-	    long rba = nh.getResourceBaseAddress(ImageDataDirectory.RESOURCE_TABLE);
-	    if (rba == 0) {
-		throw new IOException("Missing resource section!");
-	    }
-	    ra.seek(rba);
-	    ImageResourceDirectory root = new ImageResourceDirectory(ra);
-	    ImageResourceDataEntry vde = getDirectoryEntry(Types.RT_VERSION, root, 1, ra, rba).getDataEntry(ra, rba);
-	    ra.seek(vde.getDataAddress(rba, nh.getImageDirEntryRVA(ImageDataDirectory.RESOURCE_TABLE)));
-	    VsVersionInfo vi = new VsVersionInfo(ra);
-	    VsFixedFileInfo vffi = vi.getValue();
 
 	    //
 	    // Get the file version from the VsFixedFileInfo structure
 	    //
 	    EntityItemVersionType versionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
-	    versionType.setValue(vffi.getFileVersion().toString());
+	    versionType.setValue(header.getVersionInfo().getValue().getFileVersion().toString());
 	    versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	    fItem.setFileVersion(versionType);
 
 	    //
 	    // Look at the StringTables for any interesting information
 	    //
-	    String companyName=null, internalName=null, productName=null, originalFilename=null, productVersion=null,
-		   fileVersion=null;
-	    for (Object obj : vi.getChildren()) {
-		if (obj instanceof StringFileInfo) {
-		    StringFileInfo sfi = (StringFileInfo)obj;
-		    List <StringTable>stringTables = sfi.getChildren();
-		    if (stringTables.size() > 0) {
-			StringTable st = stringTables.get(0); //DAS: just going with the first String Table
-			String key = st.getKey();
-			EntityItemStringType languageType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			String locale = LanguageConstants.getLocaleString(key);
-			if (locale == null) {
-			    languageType.setStatus(StatusEnumeration.ERROR);
-			    MessageType msg = JOVALSystem.factories.common.createMessageType();
-			    msg.setLevel(MessageLevelEnumeration.INFO);
-			    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_LANGUAGE, key));
-			    fItem.getMessage().add(msg);
-			} else {
-			    languageType.setValue(LanguageConstants.getLocaleString(key));
-			}
-			fItem.setLanguage(languageType);
-			for (StringStructure string : st.getChildren()) {
-			    if (string.getKey().trim().equals("CompanyName")) {
-				companyName = string.getValue().trim();
-			    } else if (string.getKey().trim().equals("InternalName")) {
-				internalName = string.getValue().trim();
-			    } else if (string.getKey().trim().equals("ProductName")) {
-				productName = string.getValue().trim();
-			    } else if (string.getKey().trim().equals("OriginalFilename")) {
-				originalFilename = string.getValue().trim();
-			    } else if (string.getKey().trim().equals("ProductVersion")) {
-				productVersion = string.getValue().trim();
-			    } else if (string.getKey().trim().equals("FileVersion")) {
-				fileVersion = string.getValue().trim();
-			    }
-			}
-		    }
-		}
-	    }
-	    EntityItemStringType companyType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    if (companyName == null) {
-		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		companyType.setValue(companyName);
-	    }
-	    fItem.setCompany(companyType);
-	    EntityItemStringType internalNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    if (internalName == null) {
-		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		internalNameType.setValue(internalName);
-	    }
-	    fItem.setInternalName(internalNameType);
-	    EntityItemStringType productNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    if (productName == null) {
-		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		productNameType.setValue(productName);
-	    }
-	    fItem.setProductName(productNameType);
-	    EntityItemStringType originalFilenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    if (originalFilename == null) {
-		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		originalFilenameType.setValue(originalFilename);
-	    }
-	    fItem.setOriginalFilename(originalFilenameType);
-	    EntityItemVersionType productVersionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
-	    if (productVersion == null) {
-		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		productVersionType.setValue(productVersion);
-	    }
-	    productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-	    fItem.setProductVersion(productVersionType);
-	    EntityItemStringType developmentClassType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    if (fileVersion == null) {
-		developmentClassType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    } else {
-		try {
-		    developmentClassType.setValue(getDevelopmentClass(fileVersion));
-		} catch (IllegalArgumentException e) {
+	    String key = "040904B0";
+	    Hashtable<String, String> stringTable = header.getVersionInfo().getStringTable(key);
+	    if (stringTable != null) {
+		EntityItemStringType languageType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		String locale = LanguageConstants.getLocaleString(key);
+		if (locale == null) {
+		    languageType.setStatus(StatusEnumeration.ERROR);
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_DEVCLASS, e.getMessage()));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_LANGUAGE, key));
 		    fItem.getMessage().add(msg);
-		    developmentClassType.setStatus(StatusEnumeration.ERROR);
+		} else {
+		    languageType.setValue(LanguageConstants.getLocaleString(key));
 		}
+		fItem.setLanguage(languageType);
+
+		String companyName = stringTable.get("CompanyName");
+		EntityItemStringType companyType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		if (companyName == null) {
+		    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		} else {
+		    companyType.setValue(companyName);
+		}
+		fItem.setCompany(companyType);
+
+		String internalName = stringTable.get("InternalName");
+		EntityItemStringType internalNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		if (internalName == null) {
+		    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		} else {
+		    internalNameType.setValue(internalName);
+		}
+		fItem.setInternalName(internalNameType);
+
+		String productName = stringTable.get("ProductName");
+		EntityItemStringType productNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		if (productName == null) {
+		    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		} else {
+		    productNameType.setValue(productName);
+		}
+		fItem.setProductName(productNameType);
+
+		String originalFilename = stringTable.get("OriginalFilename");
+		EntityItemStringType originalFilenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		if (originalFilename == null) {
+		    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		} else {
+		    originalFilenameType.setValue(originalFilename);
+		}
+		fItem.setOriginalFilename(originalFilenameType);
+
+		String productVersion = stringTable.get("ProductVersion");
+		EntityItemVersionType productVersionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
+		if (productVersion == null) {
+		    companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		} else {
+		    productVersionType.setValue(productVersion);
+		}
+		productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+		fItem.setProductVersion(productVersionType);
+
+		String fileVersion = stringTable.get("FileVersion");
+		EntityItemStringType developmentClassType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		if (fileVersion == null) {
+		    developmentClassType.setStatus(StatusEnumeration.NOT_COLLECTED);
+		} else {
+		    try {
+			developmentClassType.setValue(getDevelopmentClass(fileVersion));
+		    } catch (IllegalArgumentException e) {
+			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.INFO);
+			msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_DEVCLASS, e.getMessage()));
+			fItem.getMessage().add(msg);
+			developmentClassType.setStatus(StatusEnumeration.ERROR);
+		    }
+		}
+		fItem.setDevelopmentClass(developmentClassType);
 	    }
-	    fItem.setDevelopmentClass(developmentClassType);
 	} catch (Exception e) {
 	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getLocalName());
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -390,15 +364,6 @@ public class FileAdapter extends BaseFileAdapter {
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(e.getMessage());
 		fItem.getMessage().add(msg);
-	    }
-	} finally {
-	    if (ra != null) {
-		try {
-		    ra.close();
-		} catch (IOException e) {
-		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_FILE_STREAM_CLOSE, file.toString()));
-		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		}
 	    }
 	}
     }

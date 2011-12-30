@@ -52,12 +52,21 @@ public class ImageResourceDirectoryEntry {
 	loadFromBuffer();
     }
 
-    public void debugPrint(PrintStream out) {
-	out.println("IMAGE_RESOURCE_DIRECTORY_ENTRY:");
-	out.println("  name:       " + LittleEndian.toHexString(name));
-	out.println("  dataOffset: " + LittleEndian.toHexString(dataOffset));
-	out.println("  isDir:      " + isDir());
-	out.println("  offset:     " + Integer.toHexString(getOffset()));
+    public void debugPrint(PrintStream out, int level) {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < level; i++) {
+	    sb.append("  ");
+	}
+	String indent = sb.toString();
+
+	out.print(indent);
+	out.println("name:       " + LittleEndian.toHexString(name));
+	out.print(indent);
+	out.println("dataOffset: " + LittleEndian.toHexString(dataOffset));
+	out.print(indent);
+	out.println("isDir:      " + isDir());
+	out.print(indent);
+	out.println("offset:     " + Integer.toHexString(getOffset()));
     }
 
     public boolean isDir() {
@@ -75,10 +84,10 @@ public class ImageResourceDirectoryEntry {
 	return !isDir();
     }
 
-    public ImageResourceDataEntry getDataEntry(IRandomAccess ra, long rba) throws IOException {
+    public ImageResourceDataEntry getDataEntry(IRandomAccess ra, long rba, long rva) throws IOException {
 	if (hasDataEntry()) {
 	    ra.seek(rba + (long)getOffset());
-	    return new ImageResourceDataEntry(ra);
+	    return new ImageResourceDataEntry(ra, rba, rva);
 	}
 	return null;
     }

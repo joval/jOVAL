@@ -5,6 +5,7 @@ package org.joval.os.windows.pe.resource.version;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
 
 import org.joval.io.LittleEndian;
 
@@ -27,13 +28,26 @@ public class VarFileInfo {
 	children		= new Var(buff, offset, fileOffset);
     }
 
-    public void debugPrint(PrintStream out) {
-	out.println("VARFILEINFO:");
-	out.println("  length:           " + LittleEndian.toHexString(length));
-	out.println("  valueLength:      " + LittleEndian.toHexString(valueLength));
-	out.println("  type:             " + LittleEndian.toHexString(type));
-	out.println("  key:              " + KEY);
-	out.print("  padding:          {");
+    public List<Var.LangAndCodepage> getTranslations() {
+	return children.children;
+    }
+
+    public void debugPrint(PrintStream out, int level) {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < level; i++) {
+	    sb.append("  ");
+	}
+	String indent = sb.toString();
+	out.print(indent);
+	out.println("length:           " + LittleEndian.toHexString(length));
+	out.print(indent);
+	out.println("valueLength:      " + LittleEndian.toHexString(valueLength));
+	out.print(indent);
+	out.println("type:             " + LittleEndian.toHexString(type));
+	out.print(indent);
+	out.println("key:              " + KEY);
+	out.print(indent);
+	out.print("padding:          {");
 	for (int i=0; i < padding.length; i++) {
 	    if (i > 0) {
 		out.print(", ");
@@ -41,6 +55,10 @@ public class VarFileInfo {
  	    out.print(LittleEndian.toHexString(padding[i]));
 	}
 	out.println("}");
-	children.debugPrint(out);
+	out.print(indent);
+	out.println("children: {");
+	children.debugPrint(out, level + 1);
+	out.print(indent);
+	out.println("}");
     }
 }

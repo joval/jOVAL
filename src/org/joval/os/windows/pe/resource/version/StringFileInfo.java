@@ -19,7 +19,7 @@ public class StringFileInfo {
     short type;
     String key;
     byte[] padding;
-    List <StringTable> children;
+    List<StringTable> children;
 
     StringFileInfo(short len, short vLen, short type, byte[] buff, int fileOffset) throws IOException {
 	this.length = len;
@@ -42,13 +42,22 @@ public class StringFileInfo {
 	}
     }
 
-    public void debugPrint(PrintStream out) {
-	out.println("STRINGFILEINFO:");
-	out.println("  length:           " + LittleEndian.toHexString(length));
-	out.println("  valueLength:      " + LittleEndian.toHexString(valueLength));
-	out.println("  type:             " + LittleEndian.toHexString(type));
-	out.println("  key:              " + KEY);
-	out.print("  padding:          {");
+    public void debugPrint(PrintStream out, int level) {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < level; i++) {
+	    sb.append("  ");
+	}
+	String indent = sb.toString();
+	out.print(indent);
+	out.println("length:           " + LittleEndian.toHexString(length));
+	out.print(indent);
+	out.println("valueLength:      " + LittleEndian.toHexString(valueLength));
+	out.print(indent);
+	out.println("type:             " + LittleEndian.toHexString(type));
+	out.print(indent);
+	out.println("key:              " + KEY);
+	out.print(indent);
+	out.print("padding:          {");
 	for (int i=0; i < padding.length; i++) {
 	    if (i > 0) {
 		out.print(", ");
@@ -56,9 +65,13 @@ public class StringFileInfo {
  	    out.print(LittleEndian.toHexString(padding[i]));
 	}
 	out.println("}");
-	Iterator <StringTable>iter = children.iterator();
-	while(iter.hasNext()) {
-	    iter.next().debugPrint(out);
+	int i=0;
+	for (StringTable st : children) {
+	    out.print(indent);
+	    out.println("children[" + i++ + "]: {");
+	    st.debugPrint(out, level + 1);
+	    out.print(indent);
+	    out.println("}");
 	}
     }
 

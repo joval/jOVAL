@@ -22,31 +22,40 @@ public class ImageResourceDataEntry {
     int size;
     int codePage;
     int reserved;
+    long address = 0;
 
     private byte[] buff;
 
-    public ImageResourceDataEntry(IRandomAccess ra) throws IOException {
-	buff = new byte[BUFFER_SIZE];
-	ra.readFully(buff);
-	loadFromBuffer();
-    }
-
-    public void debugPrint(PrintStream out) {
-	out.println("IMAGE_RESOURCE_DATA_ENTRY:");
-	out.println("  rawDataPtr: " + LittleEndian.toHexString(rawDataPtr));
-	out.println("  size:       " + LittleEndian.toHexString(size));
-	out.println("  codePage:   " + LittleEndian.toHexString(codePage));
-	out.println("  reserved:   " + LittleEndian.toHexString(reserved));
-    }
-
     /**
-     * Return the absolute address (from the start of the file) to the data section of the resource.
-     *
      * @param rba the address of the beginning of the resource section of the file (resource base address).
      * @param rva the RVA of the resource image directory
      */
-    public long getDataAddress(long rba, long rva) {
-	return rba + ((long)rawDataPtr) - rva;
+    ImageResourceDataEntry(IRandomAccess ra, long rba, long rva) throws IOException {
+	buff = new byte[BUFFER_SIZE];
+	ra.readFully(buff);
+	loadFromBuffer();
+	address = rba + ((long)rawDataPtr) - rva;
+    }
+
+    public void debugPrint(PrintStream out, int level) {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < level; i++) {
+	    sb.append("  ");
+	}
+	String indent = sb.toString();
+
+	out.print(indent);
+	out.println("rawDataPtr: " + LittleEndian.toHexString(rawDataPtr));
+	out.print(indent);
+	out.println("size:       " + LittleEndian.toHexString(size));
+	out.print(indent);
+	out.println("codePage:   " + LittleEndian.toHexString(codePage));
+	out.print(indent);
+	out.println("reserved:   " + LittleEndian.toHexString(reserved));
+    }
+
+    public long getDataAddress() {
+	return address;
     }
 
     // Private

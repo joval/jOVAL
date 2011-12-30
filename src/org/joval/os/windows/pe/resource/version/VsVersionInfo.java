@@ -5,6 +5,7 @@ package org.joval.os.windows.pe.resource.version;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -35,7 +36,9 @@ public class VsVersionInfo {
     byte[] padding1;
     VsFixedFileInfo value;
     byte[] padding2;
-    List <Object> children;
+    StringFileInfo sfi;
+    VarFileInfo vfi;
+    Hashtable<String, Hashtable<String, String>> stringTables;
 
     public VsVersionInfo(IRandomAccess ra) throws IOException {
 	length		= LittleEndian.readUShort(ra);
@@ -53,7 +56,9 @@ public class VsVersionInfo {
 	    value = new VsFixedFileInfo(buff);
 	}
 
-	children = new Vector<Object>();
+//DAS: this class worked fine without reading for padding here
+padding2 = LittleEndian.read32BitAlignPadding(ra);
+        stringTables = new Hashtable<String, Hashtable<String, String>>();
 	for (int i=0; i < 2; i++) {
 	    short childLength = LittleEndian.readUShort(ra);
 	    if (childLength == 0) {
@@ -66,22 +71,52 @@ public class VsVersionInfo {
 	    short childType = LittleEndian.getUShort(childBuff, 2);
 	    String childKey = LittleEndian.getSzUTF16LEString(childBuff, 4, -1);
 	    if (StringFileInfo.KEY.equals(childKey)) {
-		children.add(new StringFileInfo(childLength, childValueLength, childType, childBuff, fileOffset));
+		sfi = new StringFileInfo(childLength, childValueLength, childType, childBuff, fileOffset);
+		for (StringTable st : sfi.getChildren()) {
+		    String key = st.getKey().toLowerCase();
+		    Hashtable<String, String> table = new Hashtable<String, String>();
+		    for (StringStructure string : st.getChildren()) {
+			table.put(string.getKey().trim(), string.getValue().trim());
+		    }
+		    stringTables.put(key, table);
+		}
 	    } else if (VarFileInfo.KEY.equals(childKey)) {
-		children.add(new VarFileInfo(childLength, childValueLength, childType, childBuff, fileOffset));
+		vfi = new VarFileInfo(childLength, childValueLength, childType, childBuff, fileOffset);
 	    } else {
 		throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_VSVKEY, childKey));
 	    }
 	}
+
+/*
+	if (vfi != null) {
+	    for (Var.LangAndCodepage lac : vfi.getTranslations()) {
+		if (getStringTable(lac) == null) {
+//
+// DAS: a translation was specified that doesn't exist -- an internal inconsistency that is not allowed.
+//
+		    throw new IOException("PE inconsistency: " + lac.toString() + " strings not found");
+		}
+	    }
+	}
+*/
     }
 
-    public void debugPrint(PrintStream out) {
-	out.println("VERSION_INFO:");
-	out.println("  length:           " + LittleEndian.toHexString(length));
-	out.println("  valueLength:      " + LittleEndian.toHexString(valueLength));
-	out.println("  type:             " + LittleEndian.toHexString(type));
-	out.println("  key:              " + key);
-	out.print("  padding1:         {");
+    public void debugPrint(PrintStream out, int level) {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < level; i++) {
+	    sb.append("  ");
+	}
+	String indent = sb.toString();
+	out.print(indent);
+	out.println("length:           " + LittleEndian.toHexString(length));
+	out.print(indent);
+	out.println("valueLength:      " + LittleEndian.toHexString(valueLength));
+	out.print(indent);
+	out.println("type:             " + LittleEndian.toHexString(type));
+	out.print(indent);
+	out.println("key:              " + key);
+	out.print(indent);
+	out.print("padding1:         {");
 	for (int i=0; i < padding1.length; i++) {
 	    if (i > 0) {
 		out.print(", ");
@@ -89,26 +124,36 @@ public class VsVersionInfo {
  	    out.print(LittleEndian.toHexString(padding1[i]));
 	}
 	out.println("}");
+	out.print(indent);
+	out.println("value: {");
 	if (value != null) {
-	    value.debugPrint(out);
+	    value.debugPrint(out, level + 1);
 	}
-/*
-	out.print("  padding2:         {");
+	out.print(indent);
+	out.println("}");
+	out.print(indent);
+	out.print("padding2:         {");
 	for (int i=0; i < padding2.length; i++) {
 	    if (i > 0) {
 		out.print(", ");
 	    }
- 	    out.print(LittleEndian.toHexString(padding1[i]));
+ 	    out.print(LittleEndian.toHexString(padding2[i]));
 	}
-*/
-	Iterator <Object>iter = children.iterator();
-	while (iter.hasNext()) {
-	    Object obj = iter.next();
-	    if (obj instanceof StringFileInfo) {
-		((StringFileInfo)obj).debugPrint(out);
-	    } else if (obj instanceof VarFileInfo) {
-		((VarFileInfo)obj).debugPrint(out);
-	    }
+	out.println("}");
+
+	if (sfi != null) {
+	    out.print(indent);
+	    out.println("children[StringFileInfo]: {");
+	    sfi.debugPrint(out, level + 1);
+	    out.print(indent);
+	    out.println("}");
+	}
+	if (vfi != null) {
+	    out.print(indent);
+	    out.println("children[VarFileInfo]: {");
+	    vfi.debugPrint(out, level + 1);
+	    out.print(indent);
+	    out.println("}");
 	}
     }
 
@@ -116,10 +161,11 @@ public class VsVersionInfo {
 	return value;
     }
 
-    /**
-     * Returns a list with elements of type StringFileInfo and VarFileInfo.
-     */
-    public List<Object>getChildren() {
-	return children;
+    public Hashtable<String, String> getStringTable(Var.LangAndCodepage lac) {
+        return getStringTable(lac.toString());
+    }
+
+    public Hashtable<String, String> getStringTable(String key) {
+        return stringTables.get(key.toLowerCase());
     }
 }
