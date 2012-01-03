@@ -136,6 +136,16 @@ public class JOVALSystem {
      */
     public static final String PROP_IOS_READ_TIMEOUT = "ios.read.timeout";
 
+    public static final String PROP_UNIX_READ_TIMEOUT_S = "unix.read.timeout.small";
+    public static final String PROP_UNIX_READ_TIMEOUT_M = "unix.read.timeout.medium";
+    public static final String PROP_UNIX_READ_TIMEOUT_L = "unix.read.timeout.large";
+    public static final String PROP_UNIX_READ_TIMEOUT_XL = "unix.read.timeout.xl";
+
+    /**
+     * Property governing the maximum number of paths to pre-load into the filesystem map cache.
+     */
+    public static final String PROP_FS_PRELOAD_MAXSIZE = "fs.preload.maxSize";
+
     /**
      * Property governing the behavior of local filesystem map cache pre-load behavior (true/false) on Windows.
      *

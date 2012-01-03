@@ -147,23 +147,31 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    ErrorReader er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), IUnixSession.TIMEOUT_XL));
 	    er.start();
 	    String line = null;
+	    int maxSize = JOVALSystem.getIntProperty(JOVALSystem.PROP_FS_PRELOAD_MAXSIZE);
+	    int size = 0;
 	    while((line = reader.readLine()) != null) {
-		String path = line;
-		if (!path.equals(getDelimiter())) { // skip the root node
-		    INode node = tree.getRoot();
-		    try {
-			while ((path = trimToken(path, getDelimiter())) != null) {
-			    node = node.getChild(getToken(path, getDelimiter()));
+		if (size++ < maxSize) {
+		    String path = line;
+		    if (!path.equals(getDelimiter())) { // skip the root node
+			INode node = tree.getRoot();
+			try {
+			    while ((path = trimToken(path, getDelimiter())) != null) {
+				node = node.getChild(getToken(path, getDelimiter()));
+			    }
+			} catch (UnsupportedOperationException e) {
+			    do {
+				node = tree.makeNode(node, getToken(path, getDelimiter()));
+			    } while ((path = trimToken(path, getDelimiter())) != null);
+			} catch (NoSuchElementException e) {
+			    do {
+				node = tree.makeNode(node, getToken(path, getDelimiter()));
+			    } while ((path = trimToken(path, getDelimiter())) != null);
 			}
-		    } catch (UnsupportedOperationException e) {
-			do {
-			    node = tree.makeNode(node, getToken(path, getDelimiter()));
-			} while ((path = trimToken(path, getDelimiter())) != null);
-		    } catch (NoSuchElementException e) {
-			do {
-			    node = tree.makeNode(node, getToken(path, getDelimiter()));
-			} while ((path = trimToken(path, getDelimiter())) != null);
 		    }
+		} else {
+		    session.getLogger().warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxSize);
+		    p.destroy();
+		    break;
 		}
 	    }
 	    reader.close();

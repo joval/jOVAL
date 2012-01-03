@@ -19,11 +19,10 @@ import org.joval.util.SafeCLI;
  */
 public interface IUnixSession extends ISession {
 
-// REMIND (DAS): migrate these timeouts to JOVALSystem properties.
-    long TIMEOUT_S	=   15000L;	// 15 sec
-    long TIMEOUT_M	=  120000L;	//  2 min
-    long TIMEOUT_L	=  900000L;	// 15 min
-    long TIMEOUT_XL	= 3600000L;	//  1 hr
+    long TIMEOUT_S	= JOVALSystem.getLongProperty(JOVALSystem.PROP_UNIX_READ_TIMEOUT_S);
+    long TIMEOUT_M	= JOVALSystem.getLongProperty(JOVALSystem.PROP_UNIX_READ_TIMEOUT_M);
+    long TIMEOUT_L	= JOVALSystem.getLongProperty(JOVALSystem.PROP_UNIX_READ_TIMEOUT_L);
+    long TIMEOUT_XL	= JOVALSystem.getLongProperty(JOVALSystem.PROP_UNIX_READ_TIMEOUT_XL);
 
     Flavor getFlavor();
 

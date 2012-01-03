@@ -40,6 +40,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     private static boolean LINUX	= System.getProperty("os.name").toLowerCase().indexOf("linux") >= 0;
     private static boolean WINDOWS	= System.getProperty("os.name").startsWith("Windows");
 
+    private int size, maxSize;
     private boolean autoExpand = true, preloaded = false;
     private ILoggable log;
     private IEnvironment env;
@@ -73,6 +74,8 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	    return true;
 	}
 
+	size = 0;
+	maxSize = JOVALSystem.getIntProperty(JOVALSystem.PROP_FS_PRELOAD_MAXSIZE);
 	try {
 	    if (WINDOWS) {
 		File[] roots = File.listRoots();
@@ -117,7 +120,8 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 		    addRecursive(tree, f);
 		}
 	    }
-
+	} catch (PreloadOverflowException e) {
+	    log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxSize);
 	    preloaded = true;
 	    return true;
 	} catch (Exception e) {
@@ -125,6 +129,9 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 	    log.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
+
+	preloaded = true;
+	return true;
     }
 
     public String getDelimiter() {
@@ -206,36 +213,46 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 
     // Private
 
+    private class PreloadOverflowException extends IOException {
+	private PreloadOverflowException() {
+	    super();
+	}
+    }
+
     private void addRecursive(ITreeBuilder tree, File f) throws IOException {
-	String path = f.getCanonicalPath();
-	if (!path.equals(f.getPath())) {
-	    log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path); // skip links
-	} else if (f.isFile()) {
-	    INode node = tree.getRoot();
-	    try {
-		while ((path = trimToken(path, getDelimiter())) != null) {
-		    node = node.getChild(getToken(path, getDelimiter()));
+	if (size++ < maxSize) {
+	    String path = f.getCanonicalPath();
+	    if (!path.equals(f.getPath())) {
+		log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path); // skip links
+	    } else if (f.isFile()) {
+		INode node = tree.getRoot();
+		try {
+		    while ((path = trimToken(path, getDelimiter())) != null) {
+			node = node.getChild(getToken(path, getDelimiter()));
+		    }
+		} catch (UnsupportedOperationException e) {
+		    do {
+			node = tree.makeNode(node, getToken(path, getDelimiter()));
+		    } while ((path = trimToken(path, getDelimiter())) != null);
+		} catch (NoSuchElementException e) {
+		    do {
+			node = tree.makeNode(node, getToken(path, getDelimiter()));
+		    } while ((path = trimToken(path, getDelimiter())) != null);
 		}
-	    } catch (UnsupportedOperationException e) {
-		do {
-		    node = tree.makeNode(node, getToken(path, getDelimiter()));
-		} while ((path = trimToken(path, getDelimiter())) != null);
-	    } catch (NoSuchElementException e) {
-		do {
-		    node = tree.makeNode(node, getToken(path, getDelimiter()));
-		} while ((path = trimToken(path, getDelimiter())) != null);
-	    }
-	} else if (f.isDirectory()) {
-	    File[] children = f.listFiles();
-	    if (children == null) {
-		log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
+	    } else if (f.isDirectory()) {
+		File[] children = f.listFiles();
+		if (children == null) {
+		    log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
+		} else {
+		    for (File child : children) {
+			addRecursive(tree, child);
+		    }
+		}
 	    } else {
-		for (File child : children) {
-		    addRecursive(tree, child);
-		}
+		log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
 	    }
 	} else {
-	    log.getLogger().warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
+	    throw new PreloadOverflowException();
 	}
     }
 }
