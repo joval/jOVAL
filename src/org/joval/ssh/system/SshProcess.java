@@ -58,38 +58,33 @@ class SshProcess implements IProcess {
 	ce.setCommand(command);
 	ce.connect();
 	if (debug) {
-	    debugIn = new StreamLogger(command, ce.getInputStream(), new File("out." + num + ".log"), logger);
-	    debugIn.start();
-	    debugErr = new StreamLogger(command, ce.getErrStream(), new File("err." + num + ".log"), logger);
-	    debugErr.start();
 	    num++;
 	}
     }
 
-    public InputStream getInputStream() {
+    public InputStream getInputStream() throws IOException {
 	if (debug) {
+	    if (debugIn == null) {
+		debugIn = new StreamLogger(command, ce.getInputStream(), new File("out." + num + ".log"), logger);
+	    }
 	    return debugIn;
-	}
-	try {
+	} else {
 	    return ce.getInputStream();
-	} catch (IOException e) {
 	}
-	
-	return null;
     }
 
-    public InputStream getErrorStream() {
+    public InputStream getErrorStream() throws IOException {
 	if (debug) {
+	    if (debugErr == null) {
+		debugErr = new StreamLogger(command, ce.getErrStream(), new File("err." + num + ".log"), logger);
+	    }
 	    return debugErr;
-	}
-	try {
+	} else {
 	    return ce.getErrStream();
-	} catch (IOException e) {
 	}
-	return null;
     }
 
-    public OutputStream getOutputStream() {
+    public OutputStream getOutputStream() throws IOException {
 	try {
 	    return ce.getOutputStream();
 	} catch (IOException e) {
@@ -142,13 +137,17 @@ class SshProcess implements IProcess {
 	    return;
 	}
 	if (debug) {
-	    try {
-		debugIn.close();
-	    } catch (IOException e) {
+	    if (debugIn != null) {
+		try {
+		    debugIn.close();
+		} catch (IOException e) {
+		}
 	    }
-	    try {
-		debugErr.close();
-	    } catch (IOException e) {
+	    if (debugErr != null) {
+		try {
+		    debugErr.close();
+		} catch (IOException e) {
+		}
 	    }
 	}
 	if (ce.isConnected()) {

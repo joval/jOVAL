@@ -67,7 +67,7 @@ class Sudo implements IProcess {
 	}
     }
 
-    public InputStream getInputStream() {
+    public InputStream getInputStream() throws IOException {
 	if (in == null) {
 	    long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_SUDO_READ_TIMEOUT);
 	    in = (PerishableReader)PerishableReader.newInstance(p.getInputStream(), readTimeout);
@@ -76,7 +76,7 @@ class Sudo implements IProcess {
 	return in;
     }
 
-    public InputStream getErrorStream() {
+    public InputStream getErrorStream() throws IOException {
 	if (err == null) {
 	    long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_SUDO_READ_TIMEOUT);
 	    err = (PerishableReader)PerishableReader.newInstance(p.getErrorStream(), readTimeout);
@@ -85,7 +85,7 @@ class Sudo implements IProcess {
 	return err;
     }
 
-    public OutputStream getOutputStream() {
+    public OutputStream getOutputStream() throws IOException {
 	if (out == null) {
 	    out = p.getOutputStream();
 	}

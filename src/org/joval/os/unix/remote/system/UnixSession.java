@@ -45,6 +45,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
     private Credential rootCred = null;
     private Flavor flavor = Flavor.UNKNOWN;
     private UnixSystemInfo info = null;
+    private boolean computedMotdLines = false;
     private int motdLines = 0;
 
     public UnixSession(SshSession ssh) {
@@ -93,18 +94,6 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 	    }
 	    if (fs == null) {
 		fs = new SftpFilesystem(ssh.getJschSession(), this, env);
-		try {
-		    IFile motd = fs.getFile(MOTD);
-		    if (motd.exists()) {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(motd.getInputStream()));
-			while (reader.readLine() != null) {
-			    motdLines++;
-			}
-			reader.close();
-		    }
-		} catch (IOException e) {
-		    logger.warn(JOVALMsg.ERROR_IO, MOTD, e.getMessage());
-		}
 	    } else {
 		((SftpFilesystem)fs).setJschSession(ssh.getJschSession());
 	    }
@@ -171,6 +160,22 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
      * lines of input it should skip (i.e., the Sudo class running on Solaris).
      */
     int getMotdLines() {
+	if (!computedMotdLines) {
+	    try {
+		IFile motd = fs.getFile(MOTD);
+		if (motd.exists()) {
+		    BufferedReader reader = new BufferedReader(new InputStreamReader(motd.getInputStream()));
+		    String line = null;
+		    while ((line = reader.readLine()) != null) {
+			motdLines++;
+		    }
+		    reader.close();
+		}
+		computedMotdLines = true;
+	    } catch (IOException e) {
+		logger.warn(JOVALMsg.ERROR_IO, MOTD, e.getMessage());
+	    }
+	}
 	return motdLines;
     }
 }

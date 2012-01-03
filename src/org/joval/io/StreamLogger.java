@@ -21,116 +21,88 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class StreamLogger extends InputStream implements Runnable {
-    private Thread t;
+public class StreamLogger extends InputStream {
     private InputStream in;
-    private File outLog;
+    private FileOutputStream out;
     private LocLogger logger;
-    private String comment;
-    private int pos, len, triggerLen;
-    private byte[] buff;
-    private boolean forceClosed = false;
+    private boolean closed = false;
 
     public StreamLogger(InputStream in, File outLog) throws IOException {
 	this(null, in, outLog, JOVALSystem.getLogger());
     }
 
     public StreamLogger(String comment, InputStream in, File outLog, LocLogger logger) throws IOException {
-	this.comment = comment;
 	this.in = in;
-	this.outLog = outLog;
-	this.logger = logger;
-	buff = new byte[1024];
-	triggerLen = 1023;
-	pos = 0;
-	len = 0;
-
-
-    }
-
-    public void start() {
-	t = new Thread(this);
-	t.start();
-    }
-
-    public void join() throws InterruptedException {
-	t.join();
-    }
-
-    public void run() {
-	try {
-	    int ch;
-	    while((ch = in.read()) != -1) {
-		add(ch);
-	    }
-	} catch (IOException e) {
-	    if (!forceClosed) {
-		logger.warn(JOVALMsg.ERROR_IO, in.getClass().getName(), e.getMessage());
-	    }
+	out = new FileOutputStream(outLog);
+	if (comment != null) {
+	    StringBuffer sb = new StringBuffer("# ");
+	    sb.append(comment);
+	    sb.append(System.getProperty("line.separator"));
+	    out.write(sb.toString().getBytes());
 	}
+	this.logger = logger;
     }
 
     public int read() throws IOException {
-	if (pos < len) {
-	    return buff[pos++];
-	} else if (t.isAlive()) {
-	    try {
-		Thread.sleep(200);
-	    } catch (InterruptedException e) {
-	    }
-	    return read();
-	} else {
-	    return -1;
+	int ch = in.read();
+	if (ch != -1) {
+	    out.write(ch);
 	}
+	return ch;
+    }
+
+    public int read(byte[] buff) throws IOException {
+	return read(buff, 0, buff.length);
+    }
+
+    public int read(byte[] buff, int offset, int len) throws IOException {
+	int bytesRead = in.read(buff, offset, len);
+	if (bytesRead > 0) {
+	    out.write(buff, offset, bytesRead);
+	}
+	return bytesRead;
+    }
+
+    public long skip(long n) throws IOException {
+	return in.skip(n);
+    }
+
+    public int available() throws IOException {
+	return in.available();
     }
 
     public void close() throws IOException {
-	if (t.isAlive()) {
-	    logger.warn(JOVALMsg.ERROR_STREAMLOGGER_CLOSE, outLog);
-	    forceClosed = true;
-	    t.interrupt();
+	if (closed) {
+	    return;
 	}
-	if (len > 0) {
-	    save();
-	}
-    }
 
-    // Private
-
-    private void add(int ch) {
-	if (len == triggerLen) {
-	    int newLen = buff.length + 1024;
-	    byte[] old = buff;
-	    buff = new byte[newLen];
-	    for (int i=0; i < old.length; i++) {
-		buff[i] = old[i];
-	    }
-	    old = null;
-	    triggerLen = newLen - 1;
-	}
-	buff[len++] = (byte)ch;
-    }
-
-    private void save() {
-	OutputStream out = null;
+	IOException ex = null;
 	try {
-	    out = new FileOutputStream(outLog);
-	    if (comment != null) {
-		StringBuffer sb = new StringBuffer("# ");
-		sb.append(comment);
-		sb.append(System.getProperty("line.separator"));
-		out.write(sb.toString().getBytes());
-	    }
-	    out.write(buff, 0, len);
+	    in.close();
 	} catch (IOException e) {
-	    logger.warn(JOVALMsg.ERROR_IO, outLog, e.getMessage());
-	} finally {
-	    if (out != null) {
-		try {
-		    out.close();
-		} catch (IOException e) {
-		}
-	    }
+	    ex = e;
+	}
+	try {
+	    out.close();
+	} catch (IOException e) {
+	    logger.warn(JOVALMsg.ERROR_STREAMLOGGER_CLOSE, e.getMessage());
+	}
+	closed = true;
+	if (ex != null) {
+	    throw ex;
 	}
     }
+
+    public void mark(int readLimit) {
+	in.mark(readLimit);
+    }
+
+    public void reset() throws IOException {
+	in.reset();
+    }
+
+    public boolean markSupported() {
+	return in.markSupported();
+    }
+
 }

@@ -2,6 +2,7 @@
 
 package org.joval.intf.system;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
@@ -25,17 +26,17 @@ public interface IProcess {
     /**
      * Get the process's stdout
      */
-    public InputStream getInputStream();
+    public InputStream getInputStream() throws IOException;
 
     /**
      * Get the process's stderr
      */
-    public InputStream getErrorStream();
+    public InputStream getErrorStream() throws IOException;
 
     /**
      * Get the process's stdin
      */
-    public OutputStream getOutputStream();
+    public OutputStream getOutputStream() throws IOException;
 
     /**
      * Wait for the process to complete.
