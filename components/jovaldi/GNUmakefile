@@ -1,4 +1,4 @@
-# Copyright (C) 2011 jOVAL.org.  All rights reserved.
+# Copyright (C) 2011, 2012 jOVAL.org.  All rights reserved.
 # This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 TOP=../..
@@ -8,6 +8,8 @@ include $(TOP)/common.mk
 PRODUCTNAME=jovaldi
 ZIPNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_Windows
 TARNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_`uname -s`_`uname -p`
+DIST32=$(DIST)/x86
+DIST64=$(DIST)/x64
 
 API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
@@ -50,51 +52,53 @@ dist: dist-$(ARCH)
 
 dist-x86: all
 	mkdir -p $(DIST)/x86
-	cp -R $(RSRC)/* $(DIST)/x86
-	cp $(PRODUCTNAME).jar $(DIST)/x86/lib
-	cp $(SCHEMALIB) $(DIST)/x86/lib
-	cp $(JOVAL_CORE_LIB) $(DIST)/x86/lib
-	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST)/x86/lib
-	mkdir -p $(DIST)/x86/plugin/default/lib
-	cp -R plugin/default/rsrc/* $(DIST)/x86/plugin/default
-	cp -R $(PLUGIN_SHARED_LIB) $(DIST)/x86/plugin/default/lib
-	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/* $(DIST)/x86/plugin/default/lib
-	cp -R $(PLUGIN_LOCAL_LIB) $(DIST)/x86/plugin/default/lib
-	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/x86/plugin/default/lib
+	cp -R $(RSRC)/* $(DIST32)
+	cp -R $(OVAL)/xsd-$(OVAL_SCHEMA_VERSION)/*.xsd $(DIST32)/xml
+	cp $(PRODUCTNAME).jar $(DIST32)/lib
+	cp $(SCHEMALIB) $(DIST32)/lib
+	cp $(JOVAL_CORE_LIB) $(DIST32)/lib
+	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST32)/lib
+	mkdir -p $(DIST32)/plugin/default/lib
+	cp -R plugin/default/rsrc/* $(DIST32)/plugin/default
+	cp -R $(PLUGIN_SHARED_LIB) $(DIST32)/plugin/default/lib
+	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/* $(DIST32)/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL_LIB) $(DIST32)/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST32)/plugin/default/lib
 	mkdir -p $(DIST)/x86/plugin/remote/lib
-	cp -R plugin/remote/rsrc/* $(DIST)/x86/plugin/remote
-	cp -R $(PLUGIN_SHARED_LIB) $(DIST)/x86/plugin/remote/lib
-	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/*.jar $(DIST)/x86/plugin/remote/lib
-	cp -R $(PLUGIN_REMOTE_LIB) $(DIST)/x86/plugin/remote/lib
-	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST)/x86/plugin/remote/lib
-	cp -R $(JRE_HOME)/x86 $(DIST)/x86/jre
+	cp -R plugin/remote/rsrc/* $(DIST32)/plugin/remote
+	cp -R $(PLUGIN_SHARED_LIB) $(DIST32)/plugin/remote/lib
+	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/*.jar $(DIST32)/plugin/remote/lib
+	cp -R $(PLUGIN_REMOTE_LIB) $(DIST32)/plugin/remote/lib
+	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST32)/plugin/remote/lib
+	cp -R $(JRE_HOME)/x86 $(DIST32)/jre
 
 dist-x64: all
-	mkdir -p $(DIST)/x64
-	cp -R $(RSRC)/* $(DIST)/x64
-	cp $(PRODUCTNAME).jar $(DIST)/x64/lib
-	cp $(SCHEMALIB) $(DIST)/x64/lib
-	cp $(JOVAL_CORE_LIB) $(DIST)/x64/lib
-	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST)/x64/lib
-	mkdir -p $(DIST)/x64/plugin/default/lib
-	cp -R plugin/default/rsrc/* $(DIST)/x64/plugin/default
-	cp -R $(PLUGIN_SHARED_LIB) $(DIST)/x64/plugin/default/lib
-	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/* $(DIST)/x64/plugin/default/lib
-	cp -R $(PLUGIN_LOCAL_LIB) $(DIST)/x64/plugin/default/lib
-	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST)/x64/plugin/default/lib
+	mkdir -p $(DIST64)
+	cp -R $(RSRC)/* $(DIST64)
+	cp -R $(OVAL)/xsd-$(OVAL_SCHEMA_VERSION)/*.xsd $(DIST64)/xml
+	cp $(PRODUCTNAME).jar $(DIST64)/lib
+	cp $(SCHEMALIB) $(DIST64)/lib
+	cp $(JOVAL_CORE_LIB) $(DIST64)/lib
+	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST64)/lib
+	mkdir -p $(DIST64)/plugin/default/lib
+	cp -R plugin/default/rsrc/* $(DIST64)/plugin/default
+	cp -R $(PLUGIN_SHARED_LIB) $(DIST64)/plugin/default/lib
+	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/* $(DIST64)/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL_LIB) $(DIST64)/plugin/default/lib
+	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST64)/plugin/default/lib
 	mkdir -p $(DIST)/x64/plugin/remote/lib
-	cp -R plugin/remote/rsrc/* $(DIST)/x64/plugin/remote
-	cp -R $(PLUGIN_SHARED_LIB) $(DIST)/x64/plugin/remote/lib
-	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/*.jar $(DIST)/x64/plugin/remote/lib
-	cp -R $(PLUGIN_REMOTE_LIB) $(DIST)/x64/plugin/remote/lib
-	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST)/x64/plugin/remote/lib
-	cp -R $(JRE_HOME)/x64 $(DIST)/x64/jre
+	cp -R plugin/remote/rsrc/* $(DIST64)/plugin/remote
+	cp -R $(PLUGIN_SHARED_LIB) $(DIST64)/plugin/remote/lib
+	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/*.jar $(DIST64)/plugin/remote/lib
+	cp -R $(PLUGIN_REMOTE_LIB) $(DIST64)/plugin/remote/lib
+	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST64)/plugin/remote/lib
+	cp -R $(JRE_HOME)/x64 $(DIST64)/jre
 
 release-win32: dist-x86
-	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x86.zip -C $(DIST)/x86 .
+	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x86.zip -C $(DIST32) .
 
 release-win64: dist-x64
-	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x64.zip -C $(DIST)/x64 .
+	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x64.zip -C $(DIST64) .
 
 release-tar: dist-$(ARCH)
 	tar -cvf $(TARNAME).tar -C $(DIST)/$(ARCH) .
