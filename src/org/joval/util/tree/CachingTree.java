@@ -323,12 +323,16 @@ public abstract class CachingTree implements ITree {
 	    }
 	} else {
 	    //
-	    // Optimization for wildcard-terminated searches
+	    // Optimization for simple wildcard-terminated searches
 	    //
 	    if (token.endsWith(".*") || token.endsWith(".+")) {
 		StringBuffer sb = new StringBuffer(node.getPath()).append(getDelimiter());
 		String prefix = sb.append(token.substring(0, token.length() - 2)).toString();
-		if (prefix.indexOf(".*") == -1 && prefix.indexOf(".+") == -1) {
+		//
+		// DAS: do a better job of searching for unescaped regex characters
+		//
+		if (prefix.indexOf("*") == -1 && prefix.indexOf("+") == -1 &&
+		    prefix.indexOf("(") == -1 && prefix.indexOf("[") == -1) {
 		    for (INode child : children) {
 			String childPath = child.getPath();
 			if (childPath.startsWith(prefix)) {
