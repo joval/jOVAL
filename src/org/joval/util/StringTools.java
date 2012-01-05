@@ -94,6 +94,45 @@ public class StringTools {
         return safeEscape(delims, s);
     }
 
+    /**
+     * Returns true if the specified String contains any regular expression syntax.
+     */
+    public static boolean containsRegex(String s) {
+	for (String ch : REGEX_CHARS) {
+	    if (s.indexOf(ch) != -1) {
+		return true;
+	    }
+	}
+	return false;
+    }
+
+    /**
+     * Returns true if the specified String contains any regular expression syntax that is not escaped.
+     */
+    public static boolean containsUnescapedRegex(String s) {
+	for (int i=1; i < REGEX_CHARS.length; i++) { // skip ESCAPE
+	    int ptr = -1;
+	    while ((ptr = s.indexOf(REGEX_CHARS[i], ptr+1)) != -1) {
+		int escapes = 0, ptr2 = ptr;
+		while (ptr2-- > 0) {
+		    if ('\\' == s.charAt(ptr2)) {
+			escapes++;
+		    } else {
+			break;
+		    }
+		}
+
+		//
+		// If the regex character is preceded by an even number of escapes, then it is unescaped.
+		//
+		if (escapes % 2 == 0) {
+		    return true;
+		}
+	    }
+	}
+	return false;
+    }
+
     // Private
 
     private static final String ESCAPE = "\\";

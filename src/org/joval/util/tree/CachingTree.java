@@ -79,12 +79,31 @@ public abstract class CachingTree implements ITree {
 
     // Internal
 
+    private static final String[] OPEN = {"{", "(", "["};
+    private static final String[] CLOSE = {"}", ")", "]"};
+
     /**
      * Get the first token from the given path.  The delimiter is the escaped result of getDelimiter().
+     *
+     * If the next delimiter is contained by a regex group, then the token is the whole path.
      */
     protected final String getToken(String path, String delim) {
 	int ptr = path.indexOf(delim);
 	if (ptr == -1) {
+	    return path;
+	}
+
+	int groupPtr = -1;
+	for (String s : OPEN) {
+	    int candidate = path.indexOf(s);
+	    if (candidate > ptr) {
+		continue;
+	    } else if (candidate < groupPtr) {
+		groupPtr = candidate;
+	    }
+	}
+
+	if (-1 < groupPtr && groupPtr < ptr) {
 	    return path;
 	} else {
 	    return path.substring(0, ptr);
@@ -92,109 +111,39 @@ public abstract class CachingTree implements ITree {
     }
 
     /**
-     * Remove the first token from the given path.  The delimiter is the escaped result of getDelimiter().
+     * Strip the first token from the given path.  The delimiter is the escaped result of getDelimiter().
      */
     protected final String trimToken(String path, String delim) {
-	int ptr = path.indexOf(delim);
-	if (ptr == 0) {
-	    return path.substring(1);
-	} else if (ptr > 0) {
-	    return path.substring(ptr + delim.length());
-	} else {
+	String token = getToken(path, delim);
+	if (token.equals(path)) {
 	    return null;
+	} else {
+	    if (path.substring(token.length()).startsWith(delim)) {
+		return path.substring(token.length() + delim.length());
+	    } else {
+		getLogger().warn(JOVALMsg.ERROR_TREESEARCH_TOKEN, token, path);
+		return null;
+	    }
 	}
     }
 
     // Private
 
     /**
-     * Search for a path.  This method converts the path string into tokens delimited by the separator character. Each token
-     * is prepended with a ^ and appended with a $.  The method then iterates down the filesystem searching for each token,
-     * in sequence, using the Matcher.find method.
-     *
-     * This method can not accommodate search strings that contain regex groups incorporating the delimiter itself.  Support
-     * for those patterns require use of the preload method.
-     * 
+     * Search for a path.
      */
     private Collection<String> treeSearch(String path) throws IllegalArgumentException {
-	if (!treeSearchSupported(path)) {
-	    throw new IllegalArgumentException(path);
-	}
-
 	Collection<String> result = new Vector<String>();
 	try {
 	    if (path.startsWith("^")) {
-		path = path.substring(1);
+		result.addAll(treeSearch(null, path.substring(1)));
+	    } else {
+		throw new IllegalArgumentException(path);
 	    }
-	    if (path.endsWith("$")) {
-		path = path.substring(0, path.length()-1);
-	    }
-	    StringBuffer sb = new StringBuffer();
-	    Iterator<String> iter = StringTools.tokenize(path, ESCAPED_DELIM, false);
-	    for (int i=0; iter.hasNext(); i++) {
-		String token = iter.next();
-		if (token.length() > 0) {
-		    boolean bound = i > 0 && token.indexOf(".*") == -1 && token.indexOf(".+") == -1;
-		    if (bound && !token.startsWith("^")) {
-			sb.append('^');
-		    }
-		    sb.append(token);
-		    if (bound && !token.endsWith("$")) {
-			sb.append('$');
-		    }
-		}
-		if (iter.hasNext()) {
-		    sb.append(ESCAPED_DELIM);
-		}
-	    }
-	    result.addAll(treeSearch(null, sb.toString()));
 	} catch (Exception e) {
 	    getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return result;
-    }
-
-    private static final String[] OPENS		= {"(", "{", "["};
-    private static final String[] CLOSES	= {")", "}", "]"};
-
-    /**
-     * Searches for ESCAPED_DELIM inside of a regex group, and returns false if found.
-     */
-    private boolean treeSearchSupported(String s) throws PatternSyntaxException {
-	for (int i=0; i < OPENS.length; i++) {
-	    String open = OPENS[i];
-	    String close = CLOSES[i];
-
-	    int ptr1 = s.indexOf(open);
-	    while (ptr1 >= 0) {
-		if (ptr1 == 0 || s.charAt(ptr1-1) != '\\') {
-		    int ptr2 = s.indexOf(close, ptr1+1);
-		    while (ptr2 > 0 && s.charAt(ptr2-1) == '\\') {
-			ptr2 = s.indexOf(close, ptr2+1);
-		    }
-		    if (ptr2 > 0) {
-			String group = s.substring(ptr1+1, ptr2);
-			if (group.indexOf(ESCAPED_DELIM) != -1) {
-			    return false;
-			}
-		    } else {
-			//
-			// This should never actually happen because s was extracted from a valid Pattern.
-			//
-			StringBuffer sb = new StringBuffer();
-			while(sb.length() < ptr1) {
-			    sb.append(" ");
-			}
-			sb.append("^");
-			throw new PatternSyntaxException("Unclosed group", s, ptr1);
-		    }
-		}
-
-		// test the next group
-		ptr1 = s.indexOf(open, ptr1+1);
-	    }
-	}
-	return true;
     }
 
     /**
@@ -305,10 +254,14 @@ public abstract class CachingTree implements ITree {
 	//
 	String token = getToken(path, ESCAPED_DELIM);
 	path = trimToken(path, ESCAPED_DELIM);
-	if (isBounded(token)) {
+
+	//
+	// The token contains only simple regex that can be matched against the children
+	//
+	if (!StringTools.containsUnescapedRegex(token)) {
 	    Pattern p = Pattern.compile(token);
 	    for (INode child : children) {
-	 	if (p.matcher(child.getName()).find()) {
+	 	if (p.matcher(child.getName()).matches()) {
 		    if (path == null) {
 			results.add(child.getPath());
 		    } else {
@@ -316,77 +269,67 @@ public abstract class CachingTree implements ITree {
 		    }
 		}
 	    }
-	} else if (".*".equals(token)) {
-	    for (INode child : children) {
-		results.add(child.getPath());
-		results.addAll(treeSearch(child.getPath(), ".*"));
-	    }
+
+	//
+	// Process the final token if it contains an active regular expression
+	//
 	} else {
 	    //
-	    // Optimization for simple wildcard-terminated searches
+	    // The wildcard case causes a resursive search of all children
 	    //
-	    if (token.endsWith(".*") || token.endsWith(".+")) {
-		StringBuffer sb = new StringBuffer(node.getPath()).append(getDelimiter());
-		String prefix = sb.append(token.substring(0, token.length() - 2)).toString();
-		//
-		// DAS: do a better job of searching for unescaped regex characters
-		//
-		if (prefix.indexOf("*") == -1 && prefix.indexOf("+") == -1 &&
-		    prefix.indexOf("(") == -1 && prefix.indexOf("[") == -1) {
-		    for (INode child : children) {
-			String childPath = child.getPath();
-			if (childPath.startsWith(prefix)) {
-			    if (token.endsWith(".*")) {
-				results.add(childPath);
-			    } else if (token.endsWith(".+") && childPath.length() > prefix.length()) {
-				results.add(childPath);
-			    }
-			    results.addAll(treeSearch(childPath, ".*"));
-			}
-		    }
-		    return results;
+	    if (".*".equals(token)) {
+		for (INode child : children) {
+		    results.add(child.getPath());
+		    results.addAll(treeSearch(child.getPath(), ".*"));
 		}
-	    }
+	    } else {
+		//
+		// Optimization for simple wildcard-terminated searches
+		//
+		if (token.endsWith(".*") || token.endsWith(".*$") ||
+		    token.endsWith(".+") || token.endsWith(".+$")) {
 
-	    //
-	    // General-purpose algorithm:
-	    // If the token is not bounded, then recursively gather all children, then filter for matches
-	    //
-	    Vector<String> candidates = new Vector<String>();
-	    for (INode child : children) {
-		candidates.add(child.getPath());
-		candidates.addAll(treeSearch(child.getPath(), ".*"));
-	    }
-
-	    StringBuffer pattern = new StringBuffer(StringTools.escapeRegex(node.getPath()));
-	    pattern.append(ESCAPED_DELIM).append(token);
-	    if (path != null) {
-		// Reconstruct the remaining path and append it to the pattern
-		do {
-		    pattern.append(ESCAPED_DELIM);
-		    token = getToken(path, ESCAPED_DELIM);
-		    if (isBounded(token)) {
-			pattern.append(token.substring(1, token.length() - 1));
+		    StringBuffer sb = new StringBuffer(node.getPath()).append(getDelimiter());
+		    if (token.endsWith("$")) {
+			sb.append(token.substring(0, token.length() - 3));
 		    } else {
-			pattern.append(token);
+			sb.append(token.substring(0, token.length() - 2));
 		    }
-		} while ((path = trimToken(path, ESCAPED_DELIM)) != null);
-	    }
+		    String prefix = sb.toString();
+		    if (!StringTools.containsUnescapedRegex(prefix)) {
+			for (INode child : children) {
+			    String childPath = child.getPath();
+			    if (childPath.startsWith(prefix)) {
+				if (token.endsWith(".*")) {
+				    results.add(childPath);
+				} else if (token.endsWith(".+") && childPath.length() > prefix.length()) {
+				    results.add(childPath);
+				}
+				results.addAll(treeSearch(childPath, ".*"));
+			    }
+			}
+			return results;
+		    }
+		}
 
-	    Pattern p = Pattern.compile(pattern.toString());
-	    for (String candidate : candidates) {
-		if (p.matcher(candidate).find()) {
-		    results.add(candidate);
+		//
+		// General-purpose algorithm: recursively gather all children, then filter for matches
+		//
+		Vector<String> candidates = new Vector<String>();
+		for (INode child : children) {
+		    candidates.add(child.getPath());
+		    candidates.addAll(treeSearch(child.getPath(), ".*"));
+		}
+ 
+		Pattern p = Pattern.compile(StringTools.escapeRegex(node.getPath()) + ESCAPED_DELIM + token);
+		for (String candidate : candidates) {
+		    if (p.matcher(candidate).matches()) {
+			results.add(candidate);
+		    }
 		}
 	    }
 	}
-	return results;
-    }
 
-    /**
-     * Returns whether the token represents a pattern for an entire node name.
-     */
-    private boolean isBounded(String token) {
-	return token.startsWith("^") && token.endsWith("$");
+	return results;
     }
 }
