@@ -73,7 +73,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-class Results implements IResults {
+public class Results implements IResults {
     private Hashtable<String, DefinitionType> definitionTable;
     private Hashtable<String, TestType> testTable;
     private IDefinitions definitions;

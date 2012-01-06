@@ -54,6 +54,7 @@ dist-x86: all
 	mkdir -p $(DIST)/x86
 	cp -R $(RSRC)/* $(DIST32)
 	cp -R $(OVAL)/xsd-$(OVAL_SCHEMA_VERSION)/*.xsd $(DIST32)/xml
+	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST32)/xml
 	cp $(PRODUCTNAME).jar $(DIST32)/lib
 	cp $(SCHEMALIB) $(DIST32)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST32)/lib
@@ -76,6 +77,7 @@ dist-x64: all
 	mkdir -p $(DIST64)
 	cp -R $(RSRC)/* $(DIST64)
 	cp -R $(OVAL)/xsd-$(OVAL_SCHEMA_VERSION)/*.xsd $(DIST64)/xml
+	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST64)/xml
 	cp $(PRODUCTNAME).jar $(DIST64)/lib
 	cp $(SCHEMALIB) $(DIST64)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST64)/lib

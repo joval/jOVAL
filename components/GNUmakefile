@@ -9,10 +9,11 @@ rebuild:
 
 clean:
 	@$(MAKE) --keep-going --directory=schema clean
+	@$(MAKE) --keep-going --directory=schematron clean
 	@$(MAKE) --keep-going --directory=sdk dist-clean
 	@$(MAKE) --keep-going --directory=jovaldi dist-clean
 
-_jovaldi: _sdk
+_jovaldi: _sdk _schematron
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
 _sdk: _schema
@@ -20,3 +21,6 @@ _sdk: _schema
 
 _schema:
 	@$(MAKE) --keep-going --directory=schema all
+
+_schematron:
+	@$(MAKE) --keep-going --directory=schematron all

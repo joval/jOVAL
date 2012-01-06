@@ -42,8 +42,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class Definitions implements IDefinitions {
-    private static List<String> schematronValidationErrors = null;
-
     /**
      * Unmarshalls an XML file and returns the root OvalDefinitions object.
      */
