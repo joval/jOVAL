@@ -33,8 +33,6 @@ CLASSES=\
 	org.joval.oval.util.ItemSet					\
 	org.joval.oval.util.OperatorData				\
 	org.joval.oval.xml.OvalNamespacePrefixMapper			\
-	org.joval.oval.xml.SchematronValidationException		\
-	org.joval.oval.xml.SchematronValidator				\
 	org.joval.util.Checksum						\
 	org.joval.util.JOVALMsg						\
 	org.joval.util.JOVALSystem					\

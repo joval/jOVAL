@@ -32,6 +32,10 @@ test:
 %.xsl: $(SCHDIR)/%.sch
 	$(JRE) -classpath $(RUNTIMECP) org.joval.oval.xml.SchematronCompiler $(RSRC)/ISO $< $@
 
+sources:
+	mkdir -p gen-src
+	$(XJC) xsd/svrl.xsd -b xsd/bindings.xjb -d gen-src
+
 classes: classdirs $(CLASS_FILES)
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)

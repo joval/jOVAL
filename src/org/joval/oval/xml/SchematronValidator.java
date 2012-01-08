@@ -10,6 +10,7 @@ import java.util.List;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.util.JAXBSource;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.Transformer;
@@ -124,13 +125,15 @@ public class SchematronValidator {
 	try {
 	    TransformerFactory xf = TransformerFactory.newInstance();
 	    Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(template)));
-	    if (output != null) {
-		transformer.transform(src, new StreamResult(output));
-	    }
 	    DOMResult result = new DOMResult();
 	    transformer.transform(src, result);
 	    Node root = result.getNode();
 	    if (root.getNodeType() == Node.DOCUMENT_NODE) {
+		if (output != null) {
+		    transformer = xf.newTransformer();
+		    transformer.setParameter(OutputKeys.INDENT, "yes");
+		    transformer.transform(src, new StreamResult(output));
+		}
 		NodeList children = root.getChildNodes();
 		int len = children.getLength();
 		if (len > 0) {
