@@ -5,8 +5,6 @@ TOP=../../..
 
 include $(TOP)/common.mk
 
-PRODUCTNAME=svrl
-
 SCHEMADIR=xsd
 GEN=gen-src
 BINDINGS=$(SCHEMADIR)/bindings.xjb
@@ -18,30 +16,31 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(PRODUCTNAME).jar
+all: $(SVRL)
 
-$(PRODUCTNAME).jar: classes resources
+$(SVRL): $(GEN) classes resources $(DOCS)
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
+$(DOCS): $(GEN)
+	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -sourcepath $(GEN) -subpackages org.iso.svrl
+
 clean:
-	rm -rf $(GEN)
+	rm -f $(SVRL)
 	rm -rf $(BUILD)
-	rm -f $(PRODUCTNAME).jar
+	rm -rf $(GEN)
+	rm -rf $(DOCS)
 
 resources:
 	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/*.properties $(BUILD)
 
-$(GEN): xsd/svrl.xsd
-	mkdir -p $(GEN)
-	$(XJC) xsd/svrl.xsd -b $(BINDINGS) -d $(GEN)
-
-javadocs: $(GEN)
-	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -sourcepath $(GEN) -subpackages org.iso.svrl
-
 classes: $(GEN) classdirs $(CLASS_FILES)
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
+
+$(GEN): xsd/svrl.xsd
+	mkdir -p $@
+	$(XJC) xsd/svrl.xsd -b $(BINDINGS) -d $(GEN)
 
 $(BUILD)/%.class: $(GEN)/%.java
 	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<

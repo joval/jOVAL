@@ -20,7 +20,7 @@ include schemas.mk
 
 TRANSFORM_FILES:=$(foreach base, $(SCHEMAS), $(base).xsl)
 
-all: classes $(TRANSFORM_FILES) svrl
+all: classes $(TRANSFORM_FILES)
 
 clean:
 	rm -rf $(BUILD)
@@ -36,7 +36,7 @@ test:
 svrl:
 	@$(MAKE) --keep-going --directory=schema all
 
-classes: classdirs $(CLASS_FILES)
+classes: svrl classdirs $(CLASS_FILES)
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 

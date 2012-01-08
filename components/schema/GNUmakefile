@@ -5,9 +5,10 @@ TOP=../..
 
 include $(TOP)/common.mk
 
+GEN=gen-src
 SCHEMADIR=xsd-$(OVAL_SCHEMA_VERSION)
 BINDINGS=$(SCHEMADIR)/bindings.xjb
-CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(GENSRC)"
+CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(GEN)"
 
 include classes.mk
 include schemas.mk
@@ -19,16 +20,16 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 all: $(SCHEMALIB)
 
-$(SCHEMALIB): sources classes resources javadocs
+$(SCHEMALIB): $(GEN) classes resources $(DOCS)
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
-javadocs: sources
-	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -sourcepath $(GENSRC) -subpackages oval:org
+$(DOCS): $(GEN)
+	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -sourcepath $(GEN) -subpackages oval:org
 
 clean:
 	rm -f $(SCHEMALIB)
 	rm -rf $(BUILD)
-	rm -rf $(GENSRC)
+	rm -rf $(GEN)
 	rm -rf $(DOCS)
 
 resources:
@@ -38,13 +39,11 @@ classes: classdirs $(CLASS_FILES)
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 
-sources: $(GENSRC)
-	$(XJC) $(SCHEMA_FILES) -b $(BINDINGS) -d $(GENSRC)
-
-$(GENSRC):
+$(GEN): $(SCHEMA_FILES)
 	mkdir -p $@
+	$(XJC) $(SCHEMA_FILES) -b $(BINDINGS) -d $(GEN)
 
-$(BUILD)/%.class: $(GENSRC)/%.java
+$(BUILD)/%.class: $(GEN)/%.java
 	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<
 
 $(BUILD)/%/:
