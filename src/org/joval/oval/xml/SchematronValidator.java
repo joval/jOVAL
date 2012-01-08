@@ -70,9 +70,9 @@ public class SchematronValidator {
 		File xsl = new File(argv[2]);
 		if (argv[0].equals("definitions")) {
 		    validate(Definitions.getOvalDefinitions(xml), xsl);
-		} else if (argv[1].equals("sc")) {
+		} else if (argv[0].equals("sc")) {
 		    validate(SystemCharacteristics.getOvalSystemCharacteristics(xml), xsl);
-		} else if (argv[2].equals("results")) {
+		} else if (argv[0].equals("results")) {
 		    validate(Results.getOvalResults(xml), xsl);
 		}
 		System.out.println("Validation successful");

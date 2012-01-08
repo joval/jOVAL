@@ -28,7 +28,9 @@ clean:
 	@$(MAKE) --keep-going --directory=schema clean
 
 test:
-	$(JRE) -classpath $(RUNTIMECP) org.joval.oval.xml.SchematronValidator definitions $(TOP)/test/content/windows/win-def_file_test.xml oval-definitions-schematron.xsl
+#	$(JRE) -classpath $(RUNTIMECP) org.joval.oval.xml.SchematronValidator definitions $(TOP)/test/content/windows/win-def_file_test.xml oval-definitions-schematron.xsl
+#	$(JRE) -classpath $(RUNTIMECP) org.joval.oval.xml.SchematronValidator sc $(COMPONENTS)/jovaldi/dist/$(ARCH)/system-characteristics.xml oval-system-characteristics-schematron.xsl
+	$(JRE) -classpath $(RUNTIMECP) org.joval.oval.xml.SchematronValidator results $(COMPONENTS)/jovaldi/dist/$(ARCH)/results.xml oval-results-schematron.xsl
 
 %.xsl: $(SCHDIR)/%.sch
 	$(JRE) -classpath $(RUNTIMECP) org.joval.oval.xml.SchematronCompiler $(RSRC)/ISO $< $@
