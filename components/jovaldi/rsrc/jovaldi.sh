@@ -10,4 +10,4 @@ if [ `uname -p` == x86_64 ]; then
 else
     export JMEM=-Xmx1024m
 fi
-${JAVA_HOME}/bin/java ${JMEM} -cp lib/jovaldi.jar:lib/oval-schema-5.10.1.jar:lib/jOVALCore.jar:lib/cal10n-api-0.7.4.jar:lib/slf4j-api-1.6.2.jar:lib/slf4j-ext-1.6.2.jar:lib/slf4j-jdk14-1.6.2.jar org.joval.oval.di.Main "$@"
+${JAVA_HOME}/bin/java ${JMEM} -cp lib/jovaldi.jar:lib/oval-schema-5.10.1.jar:lib/jOVALCore.jar:lib/cal10n-api-0.7.4.jar:lib/slf4j-api-1.6.2.jar:lib/slf4j-ext-1.6.2.jar:lib/slf4j-jdk14-1.6.2.jar:lib/svrl.jar org.joval.oval.di.Main "$@"

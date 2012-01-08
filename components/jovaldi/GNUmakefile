@@ -11,7 +11,7 @@ TARNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_`uname -s`_`uname -p`
 DIST32=$(DIST)/x86
 DIST64=$(DIST)/x64
 
-API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)
+API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)$(CLN)$(SVRL)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
 
 include classes.mk
@@ -57,6 +57,7 @@ dist-x86: all
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST32)/xml
 	cp $(PRODUCTNAME).jar $(DIST32)/lib
 	cp $(SCHEMALIB) $(DIST32)/lib
+	cp $(SVRL) $(DIST32)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST32)/lib
 	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST32)/lib
 	mkdir -p $(DIST32)/plugin/default/lib
@@ -80,6 +81,7 @@ dist-x64: all
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST64)/xml
 	cp $(PRODUCTNAME).jar $(DIST64)/lib
 	cp $(SCHEMALIB) $(DIST64)/lib
+	cp $(SVRL) $(DIST64)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST64)/lib
 	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST64)/lib
 	mkdir -p $(DIST64)/plugin/default/lib

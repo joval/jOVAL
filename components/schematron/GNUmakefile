@@ -7,8 +7,8 @@ include $(TOP)/common.mk
 
 SCHDIR=sch-$(OVAL_SCHEMA_VERSION)
 
-CLASSPATH="$(CLASSLIB)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)$(CLN)$(SRC)"
-RUNTIMECP="$(CLASSLIB)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)$(CLN)$(BUILD)"
+CLASSPATH="$(CLASSLIB)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)$(CLN)$(SVRL)$(CLN)$(SRC)"
+RUNTIMECP="$(CLASSLIB)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)$(CLN)$(SVRL)$(CLN)$(BUILD)"
 
 include classes.mk
 
@@ -20,21 +20,21 @@ include schemas.mk
 
 TRANSFORM_FILES:=$(foreach base, $(SCHEMAS), $(base).xsl)
 
-all: classes $(TRANSFORM_FILES)
+all: classes $(TRANSFORM_FILES) svrl
 
 clean:
 	rm -rf $(BUILD)
 	rm -f *.xsl
+	@$(MAKE) --keep-going --directory=schema clean
 
 test:
-	$(JRE) -classpath $(RUNTIMECP) org.joval.oval.xml.SchematronValidator definitions $(TOP)/content/test/microsoft.windows.7.xml oval-definitions-schematron.xsl out.xml
+	$(JRE) -classpath $(RUNTIMECP) org.joval.oval.xml.SchematronValidator definitions $(TOP)/test/content/windows/win-def_file_test.xml oval-definitions-schematron.xsl
 
 %.xsl: $(SCHDIR)/%.sch
 	$(JRE) -classpath $(RUNTIMECP) org.joval.oval.xml.SchematronCompiler $(RSRC)/ISO $< $@
 
-sources:
-	mkdir -p gen-src
-	$(XJC) xsd/svrl.xsd -b xsd/bindings.xjb -d gen-src
+svrl:
+	@$(MAKE) --keep-going --directory=schema all
 
 classes: classdirs $(CLASS_FILES)
 

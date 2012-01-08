@@ -47,6 +47,7 @@ LIB=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(LIBDIR)/*)))
 OVAL=$(COMPONENTS)/schema
 GENSRC=$(OVAL)/gen-src
 SCHEMALIB=$(OVAL)/oval-schema-$(OVAL_SCHEMA_VERSION).jar
+SVRL=$(COMPONENTS)/schematron/schema/svrl.jar
 SDK=$(COMPONENTS)/sdk
 JOVAL_CORE=$(SDK)/engine
 JOVAL_CORE_LIB=$(JOVAL_CORE)/jOVALCore.jar
