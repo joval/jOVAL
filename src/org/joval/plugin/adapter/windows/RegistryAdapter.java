@@ -334,6 +334,7 @@ public class RegistryAdapter implements IAdapter {
 	// REMIND (DAS): lastWriteTime implementation is TBD
 	EntityItemIntType lastWriteTimeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	lastWriteTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	lastWriteTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setLastWriteTime(lastWriteTimeType);
 
 	EntityItemWindowsViewType viewType = JOVALSystem.factories.sc.windows.createEntityItemWindowsViewType();
