@@ -329,7 +329,7 @@ public class FileAdapter extends BaseFileAdapter {
 
 	    EntityItemStringType internalNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    if (internalName == null) {
-		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		internalNameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		internalNameType.setValue(internalName);
 	    }
@@ -337,7 +337,7 @@ public class FileAdapter extends BaseFileAdapter {
 
 	    EntityItemStringType productNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    if (productName == null) {
-		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		productNameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		productNameType.setValue(productName);
 	    }
@@ -345,7 +345,7 @@ public class FileAdapter extends BaseFileAdapter {
 
 	    EntityItemStringType originalFilenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    if (originalFilename == null) {
-		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		originalFilenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		originalFilenameType.setValue(originalFilename);
 	    }
@@ -353,7 +353,7 @@ public class FileAdapter extends BaseFileAdapter {
 
 	    EntityItemVersionType productVersionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
 	    if (productVersion == null) {
-		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		productVersionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		productVersionType.setValue(productVersion);
 	    }
