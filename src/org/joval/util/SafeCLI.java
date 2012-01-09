@@ -74,6 +74,11 @@ public class SafeCLI {
 		execRetries = JOVALSystem.getIntProperty(JOVALSystem.PROP_WINDOWS_EXEC_RETRIES);
 		break;
 
+	      case CISCO_IOS:
+	      case SSH:
+		execRetries = JOVALSystem.getIntProperty(JOVALSystem.PROP_SSH_EXEC_RETRIES);
+		break;
+
 	      default:
 		session.getLogger().warn(JOVALMsg.ERROR_SESSION_TYPE, type);
 		break;
