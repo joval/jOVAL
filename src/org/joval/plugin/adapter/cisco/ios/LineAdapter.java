@@ -88,8 +88,11 @@ public class LineAdapter implements IAdapter {
     // Private
 
     private LineItem getItem(String subcommand) throws Exception {
+	if (!subcommand.toLowerCase().startsWith("show ")) {
+	    subcommand = new StringBuffer("show ").append(subcommand).toString();
+	}
 	StringBuffer sb = new StringBuffer();
-	for (String line : SafeCLI.multiLine("show " + subcommand, session, readTimeout)) {
+	for (String line : SafeCLI.multiLine(subcommand, session, readTimeout)) {
 	    if (sb.length() > 0) {
 		sb.append('\n');
 	    }
