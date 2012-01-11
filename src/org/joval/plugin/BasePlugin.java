@@ -75,6 +75,9 @@ public abstract class BasePlugin implements IPlugin {
 
     public void setLogger(LocLogger logger) {
 	this.logger = logger;
+	if (session != null) {
+	    session.setLogger(logger);
+	}
     }
 
     // Implement IPlugin

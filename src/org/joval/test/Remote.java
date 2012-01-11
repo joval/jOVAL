@@ -6,6 +6,7 @@ package org.joval.test;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -23,7 +24,6 @@ import org.joval.intf.system.ISession;
 import org.joval.os.embedded.system.IosSession;
 import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.identity.WindowsCredential;
-import org.joval.os.windows.remote.system.WindowsSession;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALSystem;
@@ -42,11 +42,16 @@ public class Remote {
 		System.exit(1);
 	    }
 
+	    Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
 	    if ("true".equals(props.getProperty("joval.verbose"))) {
-		Handler consoleHandler = new ConsoleHandler();
-		consoleHandler.setFormatter(new ConsoleFormatter());
-		consoleHandler.setLevel(Level.FINEST);
-		Logger.getLogger(JOVALSystem.class.getName()).addHandler(consoleHandler);
+		logger.setUseParentHandlers(false);
+		logger.setLevel(Level.FINEST);
+		Handler handler = new ConsoleHandler();
+		handler.setFormatter(new TestFormatter());
+		handler.setLevel(Level.FINEST);
+		logger.addHandler(handler);
+	    } else {
+		logger.setLevel(Level.WARNING);
 	    }
 	    if ("true".equals(props.getProperty("jinterop.verbose"))) {
 		JISystem.setInBuiltLogHandler(true);
@@ -145,9 +150,9 @@ public class Remote {
 	System.exit(0);
     }
 
-    private static class ConsoleFormatter extends Formatter {
+    private static class TestFormatter extends Formatter {
         public String format(LogRecord record) {
-            StringBuffer line = new StringBuffer(record.getMessage());
+            StringBuffer line = new StringBuffer(new Date().toString()).append(" - ").append(record.getMessage());
             line.append('\n');
             return line.toString();
         }
