@@ -117,8 +117,9 @@ public class Main {
 	    }
 	    Handler sysHandler = new FileHandler("logs/main.log", false);
 	    sysHandler.setFormatter(new LogFormatter());
-	    sysHandler.setLevel(Level.FINEST);
+	    sysHandler.setLevel(Level.FINER);
 	    sysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	    sysLogger.setLevel(Level.FINER);
 	    sysLogger.addHandler(sysHandler);
 
 	    if (!reportDir.exists()) {
@@ -130,21 +131,39 @@ public class Main {
 	    IniFile config = new IniFile(new File(argv[0]));
 	    for (String name : config.listSections()) {
 		System.out.println("Starting test suite run for " + name);
-
+		Properties props = config.getSection(name);
 		PolymorphicPlugin plugin;
 		if (LOCAL.equals(name)) {
 		    plugin = new PolymorphicPlugin();
 		} else {
-		    plugin = new PolymorphicPlugin(config.getSection(name));
+		    plugin = new PolymorphicPlugin(props);
 		}
 		plugin.setLogger(JOVALSystem.getLogger(name));
 		Handler handler = new FileHandler("logs/target-" + plugin.getHostname() + ".log", false);
 		handler.setFormatter(new LogFormatter());
-		handler.setLevel(Level.FINEST);
-		Logger.getLogger(name).addHandler(handler);
-
-		TestSuite suite = runTests(name, plugin);
-		report.getTestSuite().add(suite);
+		Level level = Level.INFO;
+		String logLevel = props.getProperty("logging.level");
+		if (logLevel != null) {
+		    if (logLevel.equalsIgnoreCase("info")) {
+			level = Level.INFO;
+		    } else if (logLevel.equalsIgnoreCase("finest")) {
+			level = Level.FINEST;
+		    } else if (logLevel.equalsIgnoreCase("finer")) {
+			level = Level.FINER;
+		    } else if (logLevel.equalsIgnoreCase("warning")) {
+			level = Level.WARNING;
+		    } else if (logLevel.equalsIgnoreCase("severe")) {
+			level = Level.SEVERE;
+		    } else if (logLevel.equalsIgnoreCase("off")) {
+			level = Level.OFF;
+		    }
+		}
+		handler.setLevel(level);
+		Logger logger = Logger.getLogger(name);
+		logger.addHandler(handler);
+		logger.setLevel(level);
+		report.getTestSuite().add(runTests(name, plugin));
+		handler.close();
 		System.out.println("Tests completed for " + name);
 	    }
 	    runtime = System.currentTimeMillis() - runtime;

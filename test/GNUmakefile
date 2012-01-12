@@ -24,7 +24,7 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 all: $(REPORT_SCHEMA_LIB) classes
 
 test:
-	$(JRE) -classpath $(RUNTIMECP) -Djava.library.path=$(PLUGIN_LOCAL)/$(LIBDIR) org.joval.test.automation.Main test.ini
+	$(JRE) -Xmx2048m -classpath $(RUNTIMECP) -Djava.library.path=$(PLUGIN_LOCAL)/$(LIBDIR) org.joval.test.automation.Main test.ini
 
 clean:
 	@$(MAKE) --keep-going --directory=schema clean

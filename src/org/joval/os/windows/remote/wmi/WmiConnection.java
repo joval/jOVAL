@@ -75,6 +75,7 @@ public class WmiConnection implements IWmiProvider {
     public SWbemObjectSet <SWbemObject>execQuery(String target, String ns, String wql)
 		throws UnknownHostException, JIException {
 
+	log.getLogger().debug(JOVALMsg.STATUS_WMI_QUERY, target, ns, wql);
 	return getServices(target, ns).execQuery(wql);
     }
 
