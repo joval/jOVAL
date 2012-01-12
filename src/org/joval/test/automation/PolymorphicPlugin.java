@@ -100,7 +100,7 @@ class PolymorphicPlugin extends RemotePlugin {
 	File f = new File((testDir), "ValidationSupportFiles.zip");
 
 	if (!f.exists()) {
-	    System.out.println("Warning: no available validation support files to install");
+	    logger.warn("Warning: no available validation support files to install");
 	} else {
 	    fs = session.getFilesystem();
 	    ZipFile zip = new ZipFile(f, ZipFile.OPEN_READ);
@@ -133,7 +133,7 @@ class PolymorphicPlugin extends RemotePlugin {
 		mkdir(root, entry);
 		if (!entry.isDirectory()) {
 		    IFile newFile = fs.getFile(name);
-		    System.out.println("Installing file " + newFile.getLocalName());
+		    logger.info("Installing file " + newFile.getLocalName());
 		    byte[] buff = new byte[2048];
 		    InputStream in = zip.getInputStream(entry);
 		    OutputStream out = newFile.getOutputStream(false);

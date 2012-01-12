@@ -75,6 +75,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 
     public void setLogger(LocLogger logger) {
 	this.logger = logger;
+	ssh.setLogger(logger);
     }
 
     // Implement IBaseSession

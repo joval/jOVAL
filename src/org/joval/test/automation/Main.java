@@ -15,6 +15,10 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Handler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -69,7 +73,7 @@ import org.joval.util.StringTools;
  *
  * @author David A. Solin
  */
-public class Main {
+public class Main extends ThreadPoolExecutor {
     private static final String LOCAL = "Local";
 
     private static String PACKAGES = "org.joval.test.automation.schema:" +
@@ -77,22 +81,8 @@ public class Main {
 
     private static final ObjectFactory factory = new ObjectFactory();
 
-    private static final File contentDir	= new File("content");
     private static final File reportDir		= new File("reports");
     private static final File logDir		= new File("logs");
-
-    private static HashSet<String> knownFalses		= new HashSet<String>();
-    private static HashSet<String> knownUnknowns	= new HashSet<String>();
-    static {
-	knownFalses.add("oval:org.mitre.oval.test:def:608");	// Windows
-	knownUnknowns.add("oval:org.mitre.oval.test:def:337");	// Windows
-	knownFalses.add("oval:org.mitre.oval.test:def:997");	// Linux
-	knownUnknowns.add("oval:org.mitre.oval.test:def:423");	// Linux
-	knownFalses.add("oval:org.mitre.oval.test:def:879");	// Solaris
-	knownUnknowns.add("oval:org.mitre.oval.test:def:909");	// Solaris
-	knownFalses.add("oval:org.mitre.oval.test:def:87");	// MacOS X
-	knownUnknowns.add("oval:org.mitre.oval.test:def:581");	// MacOS X
-    }
 
     private static DatatypeFactory datatype;
     private static Logger sysLogger;
@@ -125,12 +115,11 @@ public class Main {
 	    if (!reportDir.exists()) {
 		reportDir.mkdir();
 	    }
-	    Report report = factory.createReport();
-	    long runtime = System.currentTimeMillis();
 
+	    BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
 	    IniFile config = new IniFile(new File(argv[0]));
 	    for (String name : config.listSections()) {
-		System.out.println("Starting test suite run for " + name);
+		System.out.println("Queuing test suite " + name);
 		Properties props = config.getSection(name);
 		PolymorphicPlugin plugin;
 		if (LOCAL.equals(name)) {
@@ -138,39 +127,22 @@ public class Main {
 		} else {
 		    plugin = new PolymorphicPlugin(props);
 		}
-		plugin.setLogger(JOVALSystem.getLogger(name));
-		Handler handler = new FileHandler("logs/target-" + plugin.getHostname() + ".log", false);
-		handler.setFormatter(new LogFormatter());
-		Level level = Level.INFO;
-		String logLevel = props.getProperty("logging.level");
-		if (logLevel != null) {
-		    if (logLevel.equalsIgnoreCase("info")) {
-			level = Level.INFO;
-		    } else if (logLevel.equalsIgnoreCase("finest")) {
-			level = Level.FINEST;
-		    } else if (logLevel.equalsIgnoreCase("finer")) {
-			level = Level.FINER;
-		    } else if (logLevel.equalsIgnoreCase("warning")) {
-			level = Level.WARNING;
-		    } else if (logLevel.equalsIgnoreCase("severe")) {
-			level = Level.SEVERE;
-		    } else if (logLevel.equalsIgnoreCase("off")) {
-			level = Level.OFF;
-		    }
-		}
-		handler.setLevel(level);
-		Logger logger = Logger.getLogger(name);
-		logger.addHandler(handler);
-		logger.setLevel(level);
-		report.getTestSuite().add(runTests(name, plugin));
-		handler.close();
-		System.out.println("Tests completed for " + name);
+		queue.add(new TestExecutor(name, props, plugin));
 	    }
+
+	    Report report = factory.createReport();
+	    long runtime = System.currentTimeMillis();
+
+	    ThreadPoolExecutor executor = new Main(report, 2, 3, 1L, TimeUnit.SECONDS, queue);
+	    executor.shutdown();
+	    executor.awaitTermination(5, TimeUnit.HOURS);
+
 	    runtime = System.currentTimeMillis() - runtime;
 	    report.setRuntime(datatype.newDuration(runtime));
 	    report.setDate(datatype.newXMLGregorianCalendar(new GregorianCalendar()));
 	    writeReport(report);
 
+	    sysHandler.close();
 	    System.exit(0);
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -179,107 +151,29 @@ public class Main {
 	System.exit(1);
     }
 
+    /**
+     * @override
+     */
+    protected void afterExecute(Runnable r, Throwable t) {
+	if (r instanceof TestExecutor) {
+	    TestExecutor te = (TestExecutor)r;
+	    TestSuite suite = te.getTestSuite();
+	    if (t != null) {
+		suite.setError(LogFormatter.toString(t));
+	    }
+	    synchronized(report) {
+		report.getTestSuite().add(suite);
+	    }
+	}
+    }
+
     // Private
 
-    private static TestSuite runTests(String name, PolymorphicPlugin plugin) {
-	TestSuite suite = factory.createTestSuite();
-	suite.setName(name);
-	sysLogger.info("Started test suite " + name);
-	long tm = System.currentTimeMillis();
-	try {
-	    plugin.connect();
-	    File testDir = new File(contentDir, plugin.getSessionType().toString());
-	    if (plugin.getSessionType() == IBaseSession.Type.UNIX) {
-		testDir = new File(testDir, plugin.getSessionFlavor().getOsName());
-	    }
-	    if (testDir.exists()) {
-		SystemInfoType info = plugin.getSystemInfo();
-		suite.setOS(info.getOsName());
+    private Report report;
 
-		System.out.println("Base directory for tests: " + testDir.getCanonicalPath());
-		plugin.installSupportFiles(testDir);
-		plugin.disconnect();
-		IEngine engine = JOVALSystem.createEngine(plugin);
-		engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
-
-		for (String xml : testDir.list(new XMLFilter())) {
-		    System.out.println("Processing " + xml);
-		    sysLogger.info("Processing " + name + " - " + xml);
-		    File definitions = new File(testDir, xml);
-		    engine.setDefinitionsFile(definitions);
-		    TestDocument doc = factory.createTestDocument();
-		    doc.setFileName(xml);
-
-		    //
-		    // Set the external variables file for the external variables test!
-		    //
-		    if ("oval-def_external_variable.xml".equals(xml)) {
-			engine.setExternalVariablesFile(new File(testDir, "_external-variables.xml"));
-		    }
-
-		    long elapsed = System.currentTimeMillis();
-		    engine.run();
-		    elapsed = System.currentTimeMillis() - elapsed;
-		    doc.setRuntime(datatype.newDuration(elapsed));
-		    switch(engine.getResult()) {
-		      case OK:
-			TestResults results = factory.createTestResults();
-			OvalResults or = engine.getResults().getOvalResults();
-			results.setOvalResults(or);
-			for (DefinitionType def : or.getResults().getSystem().get(0).getDefinitions().getDefinition()) {
-			    TestResult result = factory.createTestResult();
-			    String id = def.getDefinitionId();
-			    result.setDefinitionId(id);
-			    switch(def.getResult()) {
-			      case TRUE:
-				result.setResult(TestResultEnumeration.PASSED);
-				break;
-
-			      case FALSE:
-				if (knownFalses.contains(id)) {
-				    result.setResult(TestResultEnumeration.PASSED);
-				} else {
-				    result.setResult(TestResultEnumeration.FAILED);
-				}
-				break;
-
-			      case UNKNOWN:
-				if (knownUnknowns.contains(id)) {
-				    result.setResult(TestResultEnumeration.PASSED);
-				} else {
-				    result.setResult(TestResultEnumeration.FAILED);
-				}
-				break;
-
-			      default:
-				result.setResult(TestResultEnumeration.FAILED);
-				break;
-			    }
-			    results.getTestResult().add(result);
-			}
-			doc.setTestResults(results);
-			break;
-
-		      case ERR:
-			doc.setError(LogFormatter.toString(engine.getError()));
-			break;
-		    }
-		    suite.getTestDocument().add(doc);
-		}
-	    } else {
-		System.out.println("No test content found for " + plugin.getHostname() + " at " + testDir.getPath());
-	    }
-	} catch (IOException e) {
-	    System.out.println("Failed to install validation support files for " + plugin.getHostname());
-	    e.printStackTrace();
-	} catch (OvalException e) {
-	    System.out.println("Failed to create OVAL engine for " + plugin.getHostname());
-	    suite.setError(LogFormatter.toString(e));
-	}
-	tm = System.currentTimeMillis() - tm;
-	suite.setRuntime(datatype.newDuration(tm));
-	sysLogger.info("Completed test suite " + name);
-	return suite;
+    private Main(Report report, int minThreads, int maxThreads, long timeout, TimeUnit unit, BlockingQueue<Runnable> q) {
+	super(minThreads, maxThreads, timeout, unit, q);
+	this.report = report;
     }
 
     private static void writeReport(Report report) throws Exception {
@@ -334,79 +228,6 @@ public class Main {
 	public boolean accept(File dir, String name) {
 	   name = name.toLowerCase();
 	   return name.startsWith("report.") && name.endsWith(".xml");
-	}
-    }
-
-    private static class XMLFilter implements FilenameFilter {
-	XMLFilter() {}
-
-	// Implement FilenameFilter
-
-	public boolean accept(File dir, String name) {
-	    return !name.startsWith("_") && name.toLowerCase().endsWith(".xml");
-	}
-    }
-
-    /**
-     * An inner class that prints out information about Engine notifications.
-     */
-    private static class Observer implements IObserver {
-	private String lastMessage = null;
-
-	public Observer() {}
-    
-	public void notify(IProducer source, int msg, Object arg) {
-	    switch(msg) {
-	      case IEngine.MESSAGE_OBJECT_PHASE_START:
-		System.out.print("  Scanning objects... ");
-		break;
-
-	      case IEngine.MESSAGE_DEFINITION_PHASE_START:
-		System.out.print("  Evaluating definitions... ");
-		break;
-
-	      case IEngine.MESSAGE_DEFINITION:
-	      case IEngine.MESSAGE_OBJECT: {
-		String s = (String)arg;
-		int offset=0;
-		if (lastMessage != null) {
-		    int len = lastMessage.length();
-		    int n = Math.min(len, s.length());
-		    for (int i=0; i < n; i++) {
-			if (s.charAt(i) == lastMessage.charAt(i)) {
-			    offset++;
-			}
-		    }
-		    StringBuffer back = new StringBuffer();
-		    StringBuffer clean = new StringBuffer();
-		    int toClear = len - offset;
-		    for (int i=0; i < toClear; i++) {
-			back.append('\b');
-			clean.append(' ');
-		    }
-		    System.out.print(back.toString());
-		    System.out.print(clean.toString());
-		    System.out.print(back.toString());
-		}
-		System.out.print(s.substring(offset));
-		lastMessage = s;
-		break;
-	      }
-
-	      case IEngine.MESSAGE_OBJECT_PHASE_END:
-	      case IEngine.MESSAGE_DEFINITION_PHASE_END:
-		notify(source, IEngine.MESSAGE_DEFINITION, "DONE");
-		System.out.println("");
-		lastMessage = null;
-		break;
-
-	      case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
-		break;
-
-	      default:
-		System.out.println("  Unexpected message: " + msg);
-		break;
-	    }
 	}
     }
 }
