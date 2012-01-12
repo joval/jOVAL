@@ -1,50 +1,100 @@
-Copyright (C) 2011 jOVAL.org.  All rights reserved.
+Copyright (C) 2011, 2012 jOVAL.org.  All rights reserved.
 
 NOTES ON USING THE REMOTE PLUGIN TO SCAN WINDOWS MACHINES
 
-Windows 7 ships with remote management completely disabled. To scan Windows 7 machines, follow
-these steps:
+By default, Windows is configured to disallow remote administration.  However,
+in order to scan your machine without the overhead of deploying an agent, jOVAL
+must use the built-in remote management features of the Windows operating
+system.
 
-First, you must start the Remote Registry service:
-  Control Panel->System and Security->Administrative Tools->Services
+The simplest way to configure your Windows environment to enable remote access
+is to enable the following rule in Group Policy:
 
-Second, you must enable remote administration:
-  1. Start cmd.exe as Administrator
-  2. Run the command: winrm qc
+   "Windows Firewall: Allow remote administration exception"
 
-Alternatively:
-  1. Start Powershell as Administrator
-  2. Run the commandlet: Enable-PSRemoting
+If you are not using Group Policy to manage your Windows machines, it is
+possible to enable remote administration individually on each machine by
+following these steps:
 
-Next, the Windows Firewall must be configured in order to allow remote access to COM servers.
-The following article explains how this is accomplished:
+1) Open a command prompt (Start->Run->cmd.exe).  On Windows Vista and Windows 7,
+   you must right-click and select the "Run As Administrator" option.
 
-http://msdn.microsoft.com/en-us/library/aa822854%28v=vs.85%29.aspx
+2) Configure the Remote registry service to auto-start (and start it) by
+   entering the following commands at the command prompt:
 
-These are, more or less, the rules you'll need to allow incoming connections to arbitrary DCOM
-servers:
-  netsh advfirewall firewall add rule dir=in name="DCOM" service=rpcss action=allow protocol=TCP localport=135
-  netsh advfirewall firewall add rule dir=in name ="UnsecApp" [remoteip=<range>] action=allow
+   sc config RemoteRegistry start= auto
+   sc start RemoteRegistry
 
-Since access to WMI is specifically required, the following utility can be helpful in debugging
-problems with remote WMI access:
-  http://www.microsoft.com/downloads/en/details.aspx?familyid=d7ba3cd6-18d1-4d05-b11e-4c64192ae97d&displaylang=en
+3) Configure the Windows Firewall to permit RPC and DCOM traffic by entering
+   the following commands:
 
-At this point, you will be able to browse a remote registry.  In order to use DCOM components
-like WMI, you will need to be able to register them remotely.  This requires you to have
-permission to do so, which in some cases /MAY/ require you to change ownership of the relevant
-registry class from the TrustedInstaller to the Administrators group:
-  1. Launch 'regedit.exe' as 'Administrator'
-  2. Find the following registry key: 'HKEY_CLASSES_ROOT\CLSID\{76A64158-CB41-11D1-8B02-00600806D9B6}'
-  3. Right click and select 'Permissions'
-  4. Click the 'Advanced' button.
-  5. Select the tab labeled 'Owner'
-  6. Add the user you want to allow to connect to the owners list
-  7. Click the 'Ok' button.
-  8. Now highlight the user and grant Full Control
-  9. Click 'Ok'
+   netsh firewall set service RemoteAdmin enable
+   netsh firewall add portopening protocol=tcp port=135 name=DCOM_TCP135
+   netsh firewall add allowedprogram program=%windir%\system32\wbem\unsecapp.exe name=WMI
+   netsh firewall add allowedprogram program=%windir%\system32\dllhost.exe name=Dllhost
 
-(From http://www.opennms.org/wiki/WmiConfiguration)
+You should now be able to scan your Windows machine remotely using jOVAL!
 
-Enabling remote WMI is also documented here:
-http://www.poweradmin.com/help/enableWMI.aspx
+To verify if the Windows Firewall policies are set correctly on a machine, you
+can enter the following command from a prompt:
+
+   netsh firewall show state
+
+The output should resemble the following:
+
+   Firewall status:
+   -------------------------------------------------------------------
+   Profile                           = [Domain or Standard]
+   Operational mode                  = Enable
+   Exception mode                    = Enable
+   Multicast/broadcast response mode = Enable
+   Notification mode                 = Enable
+   Group policy version              = Windows Firewall
+   Remote admin mode                 = Enable
+
+
+--------------------------------------------------------------------------------
+
+DETAILS ABOUT REQUIRED CONNECTIVITY
+
+Your network administrator may want to write custom firewall rules to
+accommodate remote scanning.  The following describes the interactions that are
+required for successful DCOM communication.
+
+DCOM uses a TCP connection to the RPC service (RpcSs) on port 135.  The RPC
+service is hosted in the process:
+   %SystemRoot%\system32\svchost.exe
+
+DCOM calls may require asynchronous inbound redirection using TCP to COM
+components hosted inside one of the following processes: 
+   %SystemRoot%\system32\wbem\unsecapp.exe
+   %SystemRoot%\system32\dllhost.exe
+
+In the case of WMI, traffic may be redirected to the WMI service (Winmgmt) on
+any port via TCP.  The WMI service is hosted in the process:
+   %SystemRoot%\system32\svchost.exe
+
+Asynchronous redirection can occur on any port (typically above port 5000).
+However, it is possible to restrict the ports used for RPC for the purpose of
+managing the traffic through firewalls.  See the following KB article:
+   http://support.microsoft.com/kb/154596
+
+--------------------------------------------------------------------------------
+
+TROUBLESHOOTING WINDOWS REMOTE ACCESS
+
+If you still have problems, here is some additional material that may be of some
+help:
+
+Group Policy and Network settings:
+   http://technet.microsoft.com/en-ca/library/bb878049.aspx
+
+Connecting to WMI remotely starting with Windows Vista:
+   http://msdn.microsoft.com/en-us/library/aa822854%28v=vs.85%29.aspx
+
+Configuration instructions for a few other products that use remote WMI:
+   http://www.opennms.org/wiki/WmiConfiguration
+   http://www.poweradmin.com/help/enableWMI.aspx
+
+Microsoft has a utility that can be helpful in debugging problems with WMI:
+   http://www.microsoft.com/downloads/en/details.aspx?familyid=d7ba3cd6-18d1-4d05-b11e-4c64192ae97d&displaylang=en
