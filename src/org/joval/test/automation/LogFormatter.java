@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import java.util.logging.Formatter;
@@ -45,6 +46,26 @@ public class LogFormatter extends Formatter {
 	    sb.append(toString(cause));
 	}
 	return sb.toString();
+    }
+
+    public static Level toLevel(String logLevel) {
+	Level level = Level.INFO;
+	if (logLevel != null) {
+	    if (logLevel.equalsIgnoreCase("info")) {
+		level = Level.INFO;
+	    } else if (logLevel.equalsIgnoreCase("finest")) {
+		level = Level.FINEST;
+	    } else if (logLevel.equalsIgnoreCase("finer")) {
+		level = Level.FINER;
+	    } else if (logLevel.equalsIgnoreCase("warning")) {
+		level = Level.WARNING;
+	    } else if (logLevel.equalsIgnoreCase("severe")) {
+		level = Level.SEVERE;
+	    } else if (logLevel.equalsIgnoreCase("off")) {
+		level = Level.OFF;
+	    }
+	}
+	return level;
     }
 
     private int type;

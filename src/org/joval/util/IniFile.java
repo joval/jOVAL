@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.test.automation;
+package org.joval.util;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -13,14 +13,16 @@ import java.util.Hashtable;
 import java.util.Properties;
 
 /**
- * A class for interpreting an ini-style config file.  Each header is treated as a section full of properties.
+ * A class for interpreting an ini-style config file.  Each header is treated as a section full of properties.  Comment
+ * lines begin with a ';'.
  *
  * @author David A. Solin
+ * @version %I% %G%
  */
-class IniFile {
-    Hashtable<String, Properties> sections;
+public class IniFile {
+    private Hashtable<String, Properties> sections;
 
-    IniFile(File f) throws IOException {
+    public IniFile(File f) throws IOException {
 	sections = new Hashtable<String, Properties>();
 	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(f)));
 	String line = null;
@@ -34,7 +36,7 @@ class IniFile {
 		}
 		section = new Properties();
 		name = line.substring(1, line.length() - 1);
-	    } else if (line.startsWith("#")) {
+	    } else if (line.startsWith(";")) {
 		// skip comment
 	    } else if ((ptr = line.indexOf("=")) > 0) {
 		if (section != null) {
@@ -49,15 +51,15 @@ class IniFile {
 	}
     }
 
-    Collection<String> listSections() {
+    public Collection<String> listSections() {
 	return sections.keySet();
     }
 
-    Properties getSection(String name) {
+    public Properties getSection(String name) {
 	return sections.get(name);
     }
 
-    String getProperty(String section, String key) {
+    public String getProperty(String section, String key) {
 	Properties p = getSection(section);
 	String val = null;
 	if (p != null) {

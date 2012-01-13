@@ -3,6 +3,8 @@
 
 package org.joval.os.embedded.system;
 
+import org.slf4j.cal10n.LocLogger;
+
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.identity.ICredential;
@@ -26,6 +28,7 @@ public class IosSession extends BaseSession implements ILocked, ISession {
     private IosSystemInfo info;
 
     public IosSession(SshSession ssh) {
+	super();
 	this.ssh = ssh;
 	info = new IosSystemInfo(this);
     }
@@ -54,16 +57,24 @@ public class IosSession extends BaseSession implements ILocked, ISession {
 	ssh.disconnect();
     }
 
-    public Type getType() {
-	return Type.CISCO_IOS;
-    }
-
     /**
      * IOS seems to require a session reconnect after every command session disconnect.
      */
     public IProcess createProcess(String command) throws Exception {
 	disconnect();
 	return ssh.createProcess(command);
+    }
+
+    public Type getType() {
+	return Type.CISCO_IOS;
+    }
+
+    /**
+     * @override
+     */
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
+	ssh.setLogger(logger);
     }
 
     // Implement ISession

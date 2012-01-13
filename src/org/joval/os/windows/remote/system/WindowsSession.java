@@ -54,7 +54,6 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	JISystem.setJavaCoClassAutoCollection(false);
     }
 
-    private LocLogger logger;
     private String host;
     private String tempDir, cwd;
     private IWindowsCredential cred;
@@ -67,10 +66,10 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
     private Directory directory = null;
 
     public WindowsSession(String host) {
+	super();
 	this.host = host;
 	tempFiles = new Vector<IFile>();
 	info = new WindowsSystemInfo(this);
-	logger = JOVALSystem.getLogger();
     }
 
     // Implement IWindowsSession extensions
@@ -124,16 +123,6 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	} else {
 	    return false;
 	}
-    }
-
-    // Implement ILoggable
-
-    public LocLogger getLogger() {
-	return logger;
-    }
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
     }
 
     // Implement ISession

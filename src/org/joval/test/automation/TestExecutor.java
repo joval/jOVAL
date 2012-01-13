@@ -93,7 +93,7 @@ public class TestExecutor implements Runnable {
 	    plugin.setLogger(JOVALSystem.getLogger(name));
 	    handler = new FileHandler("logs/target-" + plugin.getHostname() + ".log", false);
 	    handler.setFormatter(new LogFormatter(LogFormatter.FILE));
-	    Level level = toLevel(props.getProperty("logging.level"));
+	    Level level = LogFormatter.toLevel(props.getProperty("logging.level"));
 	    handler.setLevel(level);
 	    Logger logger = Logger.getLogger(plugin.getLogger().getName());
 	    logger.addHandler(handler);
@@ -207,26 +207,6 @@ public class TestExecutor implements Runnable {
 
     // Private
 
-    private Level toLevel(String logLevel) {
-	Level level = Level.INFO;
-	if (logLevel != null) {
-		if (logLevel.equalsIgnoreCase("info")) {
-		    level = Level.INFO;
-		} else if (logLevel.equalsIgnoreCase("finest")) {
-		    level = Level.FINEST;
-		} else if (logLevel.equalsIgnoreCase("finer")) {
-		    level = Level.FINER;
-		} else if (logLevel.equalsIgnoreCase("warning")) {
-		    level = Level.WARNING;
-		} else if (logLevel.equalsIgnoreCase("severe")) {
-		    level = Level.SEVERE;
-		} else if (logLevel.equalsIgnoreCase("off")) {
-		    level = Level.OFF;
-		}
-	}
-	return level;
-    }
-
     /**
      * A FilenameFilter that lists the definition XML files for the Test Suite being executed.
      */
@@ -257,7 +237,7 @@ public class TestExecutor implements Runnable {
 		break;
 
 	      case IEngine.MESSAGE_DEFINITION:
-		sysLogger.fine(name + " - Computing " + (String)arg);
+		sysLogger.fine(name + " - Evaluating " + (String)arg);
 		break;
 
 	      case IEngine.MESSAGE_OBJECT:
@@ -269,7 +249,7 @@ public class TestExecutor implements Runnable {
 		break;
 
 	      case IEngine.MESSAGE_DEFINITION_PHASE_END:
-		sysLogger.info(name + " - Finished computing definitions");
+		sysLogger.info(name + " - Finished evaluating definitions");
 		break;
 
 	      case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:

@@ -49,9 +49,9 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
     private int motdLines = 0;
 
     public UnixSession(SshSession ssh) {
+	super();
 	this.ssh = ssh;
 	info = new UnixSystemInfo(this);
-	logger = JOVALSystem.getLogger();
     }
 
     // Implement ILocked
@@ -65,17 +65,6 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 	}
 	this.cred = cred;
 	return ssh.unlock(cred);
-    }
-
-    // Implement ILoggable
-
-    public LocLogger getLogger() {
-	return logger;
-    }
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
-	ssh.setLogger(logger);
     }
 
     // Implement IBaseSession
@@ -133,6 +122,14 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 
     public Type getType() {
 	return Type.UNIX;
+    }
+
+    /**
+     * @override
+     */
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
+	ssh.setLogger(logger);
     }
 
     // Implement ISession
