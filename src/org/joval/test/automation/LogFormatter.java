@@ -19,6 +19,9 @@ import java.util.logging.Formatter;
  * @author David A. Solin
  */
 public class LogFormatter extends Formatter {
+    public static final int FILE	= 1;
+    public static final int CONSOLE	= 2;
+
     private static final String LF = System.getProperty("line.separator");
     private static File resources = new File("rsrc");
     static {
@@ -44,26 +47,44 @@ public class LogFormatter extends Formatter {
 	return sb.toString();
     }
 
-    LogFormatter() {
+    private int type;
+
+    LogFormatter(int type) {
 	super();
+	this.type = type;
     }
 
     // Implement abstract methods from Formatter
 
     public String format(LogRecord record) {
-	StringBuffer line = new StringBuffer(currentDateString());
-	line.append(" - ");
-	line.append(record.getLevel().getName());
-	line.append(" - ");
-	line.append(record.getMessage());
-	line.append(LF);
+	StringBuffer line = new StringBuffer();
+
+	switch(type) {
+	  case FILE:
+	    line.append(currentDateString());
+	    line.append(" - ");
+	    line.append(record.getLevel().getName());
+	    line.append(" - ");
+	    line.append(record.getMessage());
+	    line.append(LF);
+	    break;
+
+	  case CONSOLE:
+	  default:
+	    line.append(record.getMessage());
+	    line.append(LF);
+	    break;
+	}
 
 	Throwable thrown = record.getThrown();
 	if (thrown != null) {
 	    line.append(toString(thrown));
 	}
+
 	return line.toString();
     }
+
+    // Private
 
     private static String currentDateString() {
 	StringBuffer sb = new StringBuffer();

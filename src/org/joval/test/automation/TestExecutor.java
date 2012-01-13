@@ -21,6 +21,7 @@ import oval.schemas.results.core.OvalResults;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.test.automation.schema.ObjectFactory;
+import org.joval.test.automation.schema.Report;
 import org.joval.test.automation.schema.TestDocument;
 import org.joval.test.automation.schema.TestResult;
 import org.joval.test.automation.schema.TestResultEnumeration;
@@ -67,12 +68,14 @@ public class TestExecutor implements Runnable {
     private Properties props;
     private String name;
     private PolymorphicPlugin plugin;
+    private Report report;
     private TestSuite suite;
 
-    TestExecutor(String name, Properties props, PolymorphicPlugin plugin) {
+    TestExecutor(String name, Properties props, PolymorphicPlugin plugin, Report report) {
 	this.name = name;
 	this.props = props;
 	this.plugin = plugin;
+	this.report = report;
 	suite = factory.createTestSuite();
 	suite.setName(name);
     }
@@ -89,11 +92,10 @@ public class TestExecutor implements Runnable {
 	try {
 	    plugin.setLogger(JOVALSystem.getLogger(name));
 	    handler = new FileHandler("logs/target-" + plugin.getHostname() + ".log", false);
-	    handler.setFormatter(new LogFormatter());
+	    handler.setFormatter(new LogFormatter(LogFormatter.FILE));
 	    Level level = toLevel(props.getProperty("logging.level"));
 	    handler.setLevel(level);
 	    Logger logger = Logger.getLogger(plugin.getLogger().getName());
-System.out.println("Suite " + name + " using logger " + logger.getName());
 	    logger.addHandler(handler);
 	    logger.setLevel(level);
 
@@ -192,6 +194,9 @@ System.out.println("Suite " + name + " using logger " + logger.getName());
 	    if (tm > 0) {
 		tm = System.currentTimeMillis() - tm;
 		suite.setRuntime(datatype.newDuration(tm));
+	    }
+	    synchronized(report) {
+		report.getTestSuite().add(suite);
 	    }
 	    sysLogger.info(name + " - Completed test suite");
 	    if (handler != null) {

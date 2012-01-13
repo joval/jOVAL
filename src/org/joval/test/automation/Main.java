@@ -15,10 +15,10 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Properties;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -73,19 +73,11 @@ import org.joval.util.StringTools;
  *
  * @author David A. Solin
  */
-public class Main extends ThreadPoolExecutor {
+public class Main {
+    private static final Logger sysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
+    private static final File reportDir = new File("reports");
     private static final String LOCAL = "Local";
-
-    private static String PACKAGES = "org.joval.test.automation.schema:" +
-				     JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS);
-
-    private static final ObjectFactory factory = new ObjectFactory();
-
-    private static final File reportDir		= new File("reports");
-    private static final File logDir		= new File("logs");
-
-    private static DatatypeFactory datatype;
-    private static Logger sysLogger;
+    private static final int THREAD_COUNT = 3;
 
     public static void main(String[] argv) {
 	if (argv.length != 1) {
@@ -95,8 +87,7 @@ public class Main extends ThreadPoolExecutor {
 	}
 
 	try {
-	    datatype = DatatypeFactory.newInstance();
-
+	    File logDir = new File("logs");
 	    if (logDir.exists()) {
 		File[] logs = logDir.listFiles();
 		for (int i=0; i < logs.length; i++) {
@@ -106,20 +97,26 @@ public class Main extends ThreadPoolExecutor {
 		logDir.mkdir();
 	    }
 	    Handler sysHandler = new FileHandler("logs/main.log", false);
-	    sysHandler.setFormatter(new LogFormatter());
+	    sysHandler.setFormatter(new LogFormatter(LogFormatter.FILE));
 	    sysHandler.setLevel(Level.FINER);
-	    sysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
 	    sysLogger.setLevel(Level.FINER);
 	    sysLogger.addHandler(sysHandler);
+	    ConsoleHandler consoleHandler = new ConsoleHandler();
+	    consoleHandler.setFormatter(new LogFormatter(LogFormatter.CONSOLE));
+	    consoleHandler.setLevel(Level.INFO);
+	    sysLogger.addHandler(consoleHandler);
 
 	    if (!reportDir.exists()) {
 		reportDir.mkdir();
 	    }
 
-	    BlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
+	    ExecutorService pool = Executors.newFixedThreadPool(THREAD_COUNT);
+	    Report report = new ObjectFactory().createReport();
 	    IniFile config = new IniFile(new File(argv[0]));
+
+	    long runtime = System.currentTimeMillis();
+
 	    for (String name : config.listSections()) {
-		System.out.println("Queuing test suite " + name);
 		Properties props = config.getSection(name);
 		PolymorphicPlugin plugin;
 		if (LOCAL.equals(name)) {
@@ -127,17 +124,14 @@ public class Main extends ThreadPoolExecutor {
 		} else {
 		    plugin = new PolymorphicPlugin(props);
 		}
-		queue.add(new TestExecutor(name, props, plugin));
+		pool.execute(new TestExecutor(name, props, plugin, report));
 	    }
 
-	    Report report = factory.createReport();
-	    long runtime = System.currentTimeMillis();
-
-	    ThreadPoolExecutor executor = new Main(report, 2, 3, 1L, TimeUnit.SECONDS, queue);
-	    executor.shutdown();
-	    executor.awaitTermination(5, TimeUnit.HOURS);
+	    pool.shutdown();
+	    pool.awaitTermination(5, TimeUnit.HOURS);
 
 	    runtime = System.currentTimeMillis() - runtime;
+	    DatatypeFactory datatype = DatatypeFactory.newInstance();
 	    report.setRuntime(datatype.newDuration(runtime));
 	    report.setDate(datatype.newXMLGregorianCalendar(new GregorianCalendar()));
 	    writeReport(report);
@@ -151,35 +145,18 @@ public class Main extends ThreadPoolExecutor {
 	System.exit(1);
     }
 
-    /**
-     * @override
-     */
-    protected void afterExecute(Runnable r, Throwable t) {
-	if (r instanceof TestExecutor) {
-	    TestExecutor te = (TestExecutor)r;
-	    TestSuite suite = te.getTestSuite();
-	    if (t != null) {
-		suite.setError(LogFormatter.toString(t));
-	    }
-	    synchronized(report) {
-		report.getTestSuite().add(suite);
-	    }
-	}
-    }
-
     // Private
 
-    private Report report;
-
-    private Main(Report report, int minThreads, int maxThreads, long timeout, TimeUnit unit, BlockingQueue<Runnable> q) {
-	super(minThreads, maxThreads, timeout, unit, q);
-	this.report = report;
+    private static String PACKAGES;
+    static {
+	StringBuffer sb = new StringBuffer("org.joval.test.automation.schema:");
+	PACKAGES = sb.append(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS)).toString();
     }
 
     private static void writeReport(Report report) throws Exception {
 	String fbase = "report." + reportDir.list(new ReportFilter()).length;
 	File reportFile = new File(reportDir, fbase + ".xml");
-	System.out.println("Writing XML report " + reportFile);
+	sysLogger.info("Writing XML report " + reportFile);
 
 	OutputStream out = null;
 	try {
@@ -202,7 +179,7 @@ public class Main extends ThreadPoolExecutor {
     }
 
     private static void writeTransform(Report report, File transform, File output) throws Exception {
-	System.out.println("Writing transform " + output);
+	sysLogger.info("Writing transform " + output);
 	TransformerFactory xf = TransformerFactory.newInstance();
 	Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(transform)));
 	JAXBContext ctx = JAXBContext.newInstance(PACKAGES);
