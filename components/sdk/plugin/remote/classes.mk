@@ -20,15 +20,15 @@ REMOTE=\
 	org.joval.os.windows.remote.system.WindowsProcess		\
 	org.joval.os.windows.remote.system.WindowsSession		\
 	org.joval.os.windows.remote.wmi.WmiConnection			\
-	org.joval.os.windows.remote.wmi.process.ICreateFlags		\
-	org.joval.os.windows.remote.wmi.process.IShowWindow		\
-	org.joval.os.windows.remote.wmi.process.SWbemSecurity		\
-	org.joval.os.windows.remote.wmi.process.Win32Process		\
-	org.joval.os.windows.remote.wmi.process.Win32ProcessStartup	\
-	org.joval.os.windows.remote.wmi.query.SimpleSWbemObject		\
-	org.joval.os.windows.remote.wmi.query.SimpleSWbemObjectSet	\
-	org.joval.os.windows.remote.wmi.query.SimpleSWbemProperty	\
-	org.joval.os.windows.remote.wmi.query.SimpleSWbemPropertySet	\
+	org.joval.os.windows.constants.ICreateFlags			\
+	org.joval.os.windows.constants.IShowWindow			\
+	org.joval.os.windows.remote.wmi.scripting.SWbemObject		\
+	org.joval.os.windows.remote.wmi.scripting.SWbemObjectSet	\
+	org.joval.os.windows.remote.wmi.scripting.SWbemProperty		\
+	org.joval.os.windows.remote.wmi.scripting.SWbemPropertySet	\
+	org.joval.os.windows.remote.wmi.scripting.SWbemSecurity		\
+	org.joval.os.windows.remote.wmi.win32.Win32Process		\
+	org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup	\
 	org.joval.oval.di.RemoteContainer				\
 	org.joval.plugin.RemotePlugin					\
 	org.joval.ssh.identity.SshCredential				\

@@ -15,6 +15,7 @@ import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
+import org.joval.os.windows.wmi.scripting.SWbemObjectSet;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 

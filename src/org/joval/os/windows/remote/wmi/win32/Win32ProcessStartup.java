@@ -1,21 +1,14 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.windows.remote.wmi.process;
+package org.joval.os.windows.remote.wmi.win32;
 
 import java.util.Map;
 import java.util.Iterator;
 
-import org.jinterop.dcom.common.IJIAuthInfo;
 import org.jinterop.dcom.common.JIException;
-import org.jinterop.dcom.common.JISystem;
 import org.jinterop.dcom.core.IJIComObject;
 import org.jinterop.dcom.core.JIArray;
-import org.jinterop.dcom.core.JIClsid;
-import org.jinterop.dcom.core.JIComServer;
-import org.jinterop.dcom.core.JILocalCoClass;
-import org.jinterop.dcom.core.JILocalInterfaceDefinition;
-import org.jinterop.dcom.core.JISession;
 import org.jinterop.dcom.core.JIString;
 import org.jinterop.dcom.core.JIVariant;
 import org.jinterop.dcom.impls.JIObjectFactory;

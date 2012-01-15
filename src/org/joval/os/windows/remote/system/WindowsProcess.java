@@ -17,9 +17,9 @@ import com.h9labs.jwbem.SWbemObjectSet;
 import org.joval.intf.io.IFile;
 import org.joval.intf.system.IProcess;
 import org.joval.io.TailDashF;
-import org.joval.os.windows.remote.wmi.process.SWbemSecurity;
-import org.joval.os.windows.remote.wmi.process.Win32Process;
-import org.joval.os.windows.remote.wmi.process.Win32ProcessStartup;
+import org.joval.os.windows.remote.wmi.scripting.SWbemSecurity;
+import org.joval.os.windows.remote.wmi.win32.Win32Process;
+import org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup;
 
 /**
  * Remote Windows implementation of an IProcess.

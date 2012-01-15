@@ -1,9 +1,9 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.windows.wmi;
+package org.joval.os.windows.remote.wmi.scripting;
 
-import com.jacob.com.Dispatch;
+import org.jinterop.dcom.common.JIException;
 
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
@@ -18,15 +18,19 @@ import org.joval.os.windows.wmi.WmiException;
  * @version %I% %G%
  */
 public class SWbemObject implements ISWbemObject {
-    private Dispatch dispatch;
+    private com.h9labs.jwbem.SWbemObject object;
 
-    SWbemObject(Dispatch dispatch) {
-	this.dispatch = dispatch;
+    SWbemObject(com.h9labs.jwbem.SWbemObject object) {
+	this.object = object;
     }
 
     // Implement ISWbemObject
 
     public ISWbemPropertySet getProperties() throws WmiException {
-	return new SWbemPropertySet(Dispatch.call(dispatch, "Properties_").toDispatch());
+	try {
+	    return new SWbemPropertySet(object.getProperties());
+	} catch (JIException e) {
+	    throw new WmiException(e);
+	}
     }
 }

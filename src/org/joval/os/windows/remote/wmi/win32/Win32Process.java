@@ -1,22 +1,9 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.windows.remote.wmi.process;
+package org.joval.os.windows.remote.wmi.win32;
 
-import java.net.UnknownHostException;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Vector;
-
-import org.jinterop.dcom.common.IJIAuthInfo;
 import org.jinterop.dcom.common.JIException;
-import org.jinterop.dcom.common.JISystem;
-import org.jinterop.dcom.core.IJIComObject;
-import org.jinterop.dcom.core.JICallBuilder;
-import org.jinterop.dcom.core.JIClsid;
-import org.jinterop.dcom.core.JIComServer;
-import org.jinterop.dcom.core.JIFlags;
-import org.jinterop.dcom.core.JISession;
 import org.jinterop.dcom.core.JIString;
 import org.jinterop.dcom.core.JIVariant;
 import org.jinterop.dcom.impls.JIObjectFactory;
@@ -24,7 +11,6 @@ import org.jinterop.dcom.impls.automation.IJIDispatch;
 import org.jinterop.dcom.impls.automation.JIExcepInfo;
 
 import com.h9labs.jwbem.SWbemServices;
-import com.h9labs.jwbem.SWbemObjectSet;
 
 /**
  * Sparse implementation of a Win32_Process WMI class.

@@ -17,8 +17,6 @@ import org.jinterop.dcom.core.JISession;
 import org.jinterop.dcom.impls.automation.IJIDispatch;
 
 import com.h9labs.jwbem.SWbemLocator;
-import com.h9labs.jwbem.SWbemObject;
-import com.h9labs.jwbem.SWbemObjectSet;
 import com.h9labs.jwbem.SWbemServices;
 
 import org.joval.intf.identity.IWindowsCredential;
@@ -26,7 +24,7 @@ import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.remote.wmi.query.SimpleSWbemObjectSet;
+import org.joval.os.windows.remote.wmi.scripting.SWbemObjectSet;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -69,16 +67,6 @@ public class WmiConnection implements IWmiProvider {
 	map.clear();
     }
 
-    /**
-     * Execute a query on another host, using the locator on the connected server as a proxy.
-     */
-    public SWbemObjectSet <SWbemObject>execQuery(String target, String ns, String wql)
-		throws UnknownHostException, JIException {
-
-	log.getLogger().debug(JOVALMsg.STATUS_WMI_QUERY, target, ns, wql);
-	return getServices(target, ns).execQuery(wql);
-    }
-
     public SWbemServices getServices(String target, String namespace) throws UnknownHostException, JIException {
 	String key = new StringBuffer(target).append(":").append(namespace).toString();
 	SWbemServices services = map.get(key);
@@ -107,7 +95,8 @@ public class WmiConnection implements IWmiProvider {
      */
     public ISWbemObjectSet execQuery(String ns, String wql) throws WmiException {
 	try {
-	    return new SimpleSWbemObjectSet(getServices(host, ns).execQuery(wql));
+	    log.getLogger().debug(JOVALMsg.STATUS_WMI_QUERY, host, ns, wql);
+	    return new SWbemObjectSet(getServices(host, ns).execQuery(wql));
 	} catch (UnknownHostException e) {
 	    throw new WmiException(e);
 	} catch (JIException e) {

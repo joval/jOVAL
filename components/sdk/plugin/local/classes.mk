@@ -10,12 +10,12 @@ DEFAULT=\
 	org.joval.os.windows.registry.Registry				\
 	org.joval.os.windows.registry.LicenseData			\
 	org.joval.os.windows.system.WindowsSession			\
-	org.joval.os.windows.wmi.SWbemObject				\
-	org.joval.os.windows.wmi.SWbemObjectSet				\
-	org.joval.os.windows.wmi.SWbemProperty				\
-	org.joval.os.windows.wmi.SWbemPropertySet			\
 	org.joval.os.windows.wmi.WmiException				\
 	org.joval.os.windows.wmi.WmiProvider				\
+	org.joval.os.windows.wmi.scripting.SWbemObject			\
+	org.joval.os.windows.wmi.scripting.SWbemObjectSet		\
+	org.joval.os.windows.wmi.scripting.SWbemProperty		\
+	org.joval.os.windows.wmi.scripting.SWbemPropertySet		\
 	org.joval.oval.di.DefaultContainer				\
 	org.joval.plugin.LocalPlugin					\
 	org.joval.test.Default
