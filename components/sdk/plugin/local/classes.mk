@@ -8,7 +8,6 @@ DEFAULT=\
 	org.joval.os.windows.io.WindowsFile				\
 	org.joval.os.windows.registry.Key				\
 	org.joval.os.windows.registry.Registry				\
-	org.joval.os.windows.registry.LicenseData			\
 	org.joval.os.windows.system.WindowsSession			\
 	org.joval.os.windows.wmi.WmiException				\
 	org.joval.os.windows.wmi.WmiProvider				\

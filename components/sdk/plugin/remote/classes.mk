@@ -7,6 +7,8 @@ REMOTE=\
 	org.joval.intf.identity.ILocked					\
 	org.joval.io.StreamLogger					\
 	org.joval.io.TailDashF						\
+	org.joval.os.embedded.IosNetworkInterface			\
+	org.joval.os.embedded.IosSystemInfo				\
 	org.joval.os.embedded.system.IosSession				\
 	org.joval.os.unix.remote.system.Sudo				\
 	org.joval.os.unix.remote.system.UnixSession			\

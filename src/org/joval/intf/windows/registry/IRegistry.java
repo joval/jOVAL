@@ -39,6 +39,8 @@ public interface IRegistry extends ILoggable {
      */
     public IEnvironment getEnvironment();
 
+    public ILicenseData getLicenseData();
+
     /**
      * Get a particular hive.  Accepts the HK constants.
      */

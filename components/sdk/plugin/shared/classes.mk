@@ -39,8 +39,6 @@ SHARED=\
 	org.joval.io.LittleEndian					\
 	org.joval.io.PerishableReader					\
 	org.joval.io.StreamTool						\
-	org.joval.os.embedded.IosNetworkInterface			\
-	org.joval.os.embedded.IosSystemInfo				\
 	org.joval.os.unix.NetworkInterface				\
 	org.joval.os.unix.UnixSystemInfo				\
 	org.joval.os.unix.io.UnixFile					\
@@ -80,6 +78,7 @@ SHARED=\
 	org.joval.os.windows.registry.BinaryValue			\
 	org.joval.os.windows.registry.DwordValue			\
 	org.joval.os.windows.registry.ExpandStringValue			\
+	org.joval.os.windows.registry.LicenseData			\
 	org.joval.os.windows.registry.MultiStringValue			\
 	org.joval.os.windows.registry.QwordValue			\
 	org.joval.os.windows.registry.StringValue			\

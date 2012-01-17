@@ -53,10 +53,16 @@ public class Registry extends BaseRegistry {
     public boolean connect() {
 	if (env == null) {
 	    if (Platform.isWindows()) {
-		loadingEnv = true;
-		env = new Environment(this);
-		loadingEnv = false;
-		return true;
+		try {
+		    loadingEnv = true;
+		    env = new Environment(this);
+		    license = new LicenseData(this);
+		    loadingEnv = false;
+		    return true;
+		} catch (Exception e) {
+		    log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    return false;
+		}
 	    } else {
 		return false;
 	    }

@@ -18,6 +18,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
+import org.joval.intf.windows.registry.ILicenseData;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.os.windows.system.Environment;
@@ -35,6 +36,7 @@ public abstract class BaseRegistry implements IRegistry {
     protected IPathRedirector redirector;
     protected ILoggable log;
     protected Environment env = null;
+    protected LicenseData license = null;
     protected Hashtable<String, List<IKey>> searchMap;
 
     /**
@@ -67,6 +69,13 @@ public abstract class BaseRegistry implements IRegistry {
 	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_STATE));
 	}
 	return env;
+    }
+
+    public ILicenseData getLicenseData() throws IllegalStateException {
+	if (license == null) {
+	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_STATE));
+	}
+	return license;
     }
 
     public List<IKey> search(String hive, String path) throws NoSuchElementException {

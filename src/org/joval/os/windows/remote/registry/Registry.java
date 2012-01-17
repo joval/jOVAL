@@ -39,6 +39,7 @@ import org.joval.os.windows.registry.BaseRegistry;
 import org.joval.os.windows.registry.BinaryValue;
 import org.joval.os.windows.registry.DwordValue;
 import org.joval.os.windows.registry.ExpandStringValue;
+import org.joval.os.windows.registry.LicenseData;
 import org.joval.os.windows.registry.MultiStringValue;
 import org.joval.os.windows.registry.QwordValue;
 import org.joval.os.windows.registry.StringValue;
@@ -99,6 +100,7 @@ public class Registry extends BaseRegistry {
 	    registry = factory.getWinreg(new AuthInfo(cred), host, true);
 	    state = STATE_ENV;
 	    env = new Environment(this);
+	    license = new LicenseData(this);
 	    state = STATE_CONNECTED;
 	    return true;
 	} catch (UnknownHostException e) {

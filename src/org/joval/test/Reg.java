@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -19,6 +20,8 @@ import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.registry.IBinaryValue;
 import org.joval.intf.windows.registry.IDwordValue;
 import org.joval.intf.windows.registry.IExpandStringValue;
+import org.joval.intf.windows.registry.ILicenseData;
+import org.joval.intf.windows.registry.ILicenseData.IEntry;
 import org.joval.intf.windows.registry.IMultiStringValue;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.system.IWindowsSession;
@@ -37,6 +40,11 @@ public class Reg {
 	try {
 	    IRegistry r = session.getRegistry(IWindowsSession.View._64BIT);
 	    if (r.connect()) {
+        	Hashtable<String, IEntry> ht = r.getLicenseData().getEntries();
+        	for (IEntry entry : ht.values()) {
+                    System.out.println(entry.toString());
+        	}
+
 		IKey key = r.fetchKey(keyName);
 
 		if (valueName == null) {

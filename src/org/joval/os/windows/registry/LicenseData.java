@@ -8,6 +8,11 @@ import java.util.Hashtable;
 
 import org.joval.intf.windows.registry.IBinaryValue;
 import org.joval.intf.windows.registry.IKey;
+import org.joval.intf.windows.registry.ILicenseData;
+import org.joval.intf.windows.registry.ILicenseData.IBinaryEntry;
+import org.joval.intf.windows.registry.ILicenseData.IDwordEntry;
+import org.joval.intf.windows.registry.ILicenseData.IEntry;
+import org.joval.intf.windows.registry.ILicenseData.IStringEntry;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.io.LittleEndian;
@@ -20,23 +25,11 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class LicenseData {
-    public static void main(String[] argv) {
-	try {
-	    LicenseData ld = new LicenseData(new org.joval.os.windows.registry.Registry(null, JOVALSystem.getLoggable()));
-	    Hashtable<String, Entry> ht = ld.getEntries();
-	    for (Entry entry : ht.values()) {
-		System.out.println(entry.toString());
-	    }
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
-    }
-
-    private Hashtable<String, Entry> entries;
+public class LicenseData implements ILicenseData {
+    private Hashtable<String, IEntry> entries;
 
     public LicenseData(IRegistry reg) throws Exception {
-	entries = new Hashtable<String, Entry>();
+	entries = new Hashtable<String, IEntry>();
 	IKey key = reg.fetchKey(IRegistry.HKLM + "\\SYSTEM\\CurrentControlSet\\Control\\ProductOptions");
 	IValue value = reg.fetchValue(key, "ProductPolicy");
 	switch(value.getType()) {
@@ -55,7 +48,7 @@ public class LicenseData {
 		if (len == buff.length) {
 		    int offset = 0x14;
 		    for (int bytesRead=0; bytesRead < valueLen; ) {
-			Entry entry = new Entry(buff, offset);
+			IEntry entry = readEntry(buff, offset);
 			entries.put(entry.getName(), entry);
 			bytesRead = bytesRead + entry.length();
 			offset = offset + entry.length();
@@ -74,85 +67,115 @@ public class LicenseData {
 	}
     }
 
-    Hashtable<String, Entry> getEntries() {
+    public Hashtable<String, IEntry> getEntries() {
 	return entries;
     }
 
-    class Entry {
-	static final int TYPE_SZ	= 1;
-	static final int TYPE_BINARY	= 2;
-	static final int TYPE_DWORD	= 4;
+    // Private
 
-	short len;
-	String name;
-	short dataType;
-	short dataLen;
-	byte[] data;
-	int flags;
-	int padding;
+    private IEntry readEntry(byte[] buff, int offset) throws Exception {
+	short len	= LittleEndian.getUShort(buff, offset);
+	short nameLen	= LittleEndian.getUShort(buff, offset + 0x02);
+	short dataType	= LittleEndian.getUShort(buff, offset + 0x04);
+	short dataLen	= LittleEndian.getUShort(buff, offset + 0x06);
+	int flags	= LittleEndian.getUInt(buff, offset + 0x08);
+	int padding	= LittleEndian.getUInt(buff, offset + 0x0C);
+	String name	= LittleEndian.getSzUTF16LEString(buff, offset + 0x10, (int)nameLen);
+	byte[] data	= Arrays.copyOfRange(buff, offset + 0x10 + nameLen, offset + 0x10 + nameLen + dataLen);
 
-	Entry(byte[] buff, int offset) {
-	    len			= LittleEndian.getUShort(buff, offset);
-	    short nameLen	= LittleEndian.getUShort(buff, offset + 0x02);
-	    dataType		= LittleEndian.getUShort(buff, offset + 0x04);
-	    dataLen		= LittleEndian.getUShort(buff, offset + 0x06);
-	    flags		= LittleEndian.getUInt(buff, offset + 0x08);
-	    padding		= LittleEndian.getUInt(buff, offset + 0x0C);
-	    name		= LittleEndian.getSzUTF16LEString(buff, offset + 0x10, (int)nameLen);
-	    data		= Arrays.copyOfRange(buff, offset + 0x10 + nameLen, offset + 0x10 + nameLen + dataLen);
-
-	    switch(getType()) {
-	      case TYPE_DWORD:
-		if (dataLen != 4) {
-		    throw new RuntimeException("Illegal length for DWORD data: " + dataLen);
-		}
-		break;
+	switch(dataType) {
+	  case IEntry.TYPE_DWORD:
+	    if (dataLen == 4) {
+		return new DwordEntry(len, dataType, name, data);
+	    } else {
+		throw new RuntimeException("Illegal length for DWORD data: " + dataLen);
 	    }
+
+	  case IEntry.TYPE_SZ:
+	    return new StringEntry(len, dataType, name, data);
+
+	  case IEntry.TYPE_BINARY:
+	  default:
+	    return new BinaryEntry(len, dataType, name, data);
+	}
+    }
+
+    abstract class Entry implements IEntry {
+	int len, dataType;
+	String name;
+
+	Entry(int len, int dataType, String name) {
+	    this.len = len;
+	    this.dataType = dataType;
+	    this.name = name;
 	}
 
-	int length() {
+	public int length() {
 	    return len;
 	}
 
-	int getType() {
+	public int getType() {
 	    return dataType;
 	}
 
-	String getName() {
+	public String getName() {
 	    return name;
+	}
+    }
+
+    class BinaryEntry extends Entry implements IBinaryEntry {
+	private byte[] data;
+
+	BinaryEntry(int len, int dataType, String name, byte[] data) {
+	    super(len, dataType, name);
+	    this.data = data;
+	}
+
+	public byte[] getData() {
+	    return data;
 	}
 
 	public String toString() {
 	    StringBuffer sb = new StringBuffer(name);
-	    sb.append(": ");
-
-	    switch(getType()) {
-	      case TYPE_SZ:
-		sb.append("String: ");
-		sb.append(LittleEndian.getSzUTF16LEString(data, 0, dataLen));
-		break;
-
-	      case TYPE_BINARY:
-		sb.append("BINARY: ");
-		for (int i=0; i < data.length; i++) {
-		    sb.append(LittleEndian.toHexString(data[i]));
-		}
-		break;
-
-	      case TYPE_DWORD:
-		sb.append("DWORD=").append(Integer.toHexString(LittleEndian.getUInt(data, 0)));
-		break;
-
-	      default:
-		sb.append("Unknown type ").append(dataType);
-		sb.append(" RAW: ");
-		for (int i=0; i < data.length; i++) {
-		    sb.append(LittleEndian.toHexString(data[i]));
-		}
-		break;
+	    sb.append(": BINARY: ");
+	    for (int i=0; i < data.length; i++) {
+		sb.append(LittleEndian.toHexString(data[i]));
 	    }
-
 	    return sb.toString();
+	}
+    }
+
+    class DwordEntry extends Entry implements IDwordEntry {
+	private int data;
+
+	DwordEntry(int len, int dataType, String name, byte[] data) {
+	    super(len, dataType, name);
+	    this.data = LittleEndian.getUInt(data, 0);
+	}
+
+	public int getData() {
+	    return data;
+	}
+
+	public String toString() {
+	    return name + ": DWORD: " + Integer.toHexString(data);
+	}
+    }
+
+    class StringEntry extends Entry implements IStringEntry {
+	private String data;
+
+	StringEntry(int len, int dataType, String name, byte[] data) {
+	    super(len, dataType, name);
+	    this.data = LittleEndian.getSzUTF16LEString(data, 0, data.length);
+	}
+
+	public String getData() {
+	    return data;
+	}
+
+	public String toString() {
+	    return name + ": String: " + data;
 	}
     }
 }
