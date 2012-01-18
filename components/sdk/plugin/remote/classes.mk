@@ -3,6 +3,8 @@ REMOTE=\
 	org.joval.identity.SimpleCredentialStore			\
 	org.joval.discovery.SessionFactory				\
 	org.joval.identity.Credential					\
+	org.joval.intf.cisco.system.IIosSession				\
+	org.joval.intf.cisco.system.ITechSupport			\
 	org.joval.intf.identity.ICredential				\
 	org.joval.intf.identity.ILocked					\
 	org.joval.io.StreamLogger					\
@@ -10,6 +12,7 @@ REMOTE=\
 	org.joval.os.embedded.IosNetworkInterface			\
 	org.joval.os.embedded.IosSystemInfo				\
 	org.joval.os.embedded.system.IosSession				\
+	org.joval.os.embedded.system.TechSupport			\
 	org.joval.os.unix.remote.system.Sudo				\
 	org.joval.os.unix.remote.system.UnixSession			\
 	org.joval.os.windows.identity.WindowsCredential			\

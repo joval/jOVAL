@@ -6,7 +6,7 @@ package org.joval.plugin.adapter.cisco.ios;
 import oval.schemas.definitions.ios.VersionObject;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 
-import org.joval.intf.system.ISession;
+import org.joval.intf.cisco.system.IIosSession;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -16,7 +16,7 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class VersionAdapter extends Version55Adapter {
-    public VersionAdapter(ISession session) {
+    public VersionAdapter(IIosSession session) {
 	super(session);
     }
     

@@ -4,20 +4,15 @@
 package org.joval.os.embedded;
 
 import java.util.List;
-import java.util.Properties;
-import java.util.StringTokenizer;
-import java.util.Vector;
-import java.util.regex.Pattern;
+import java.util.NoSuchElementException;
 
 import oval.schemas.systemcharacteristics.core.InterfacesType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.io.IReader;
-import org.joval.intf.system.ISession;
+import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
-import org.joval.util.SafeCLI;
 
 /**
  * Tool for creating a SystemInfoType from a Cisco IOS-attached ISession.
@@ -26,33 +21,22 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class IosSystemInfo {
-    private ISession session;
     private SystemInfoType info;
-    private long readTimeout;
 
     /**
      * Create a plugin for scanning or test evaluation.
      */
-    public IosSystemInfo(ISession session) {
-	readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
-	this.session = session;
-    }
-
-    public SystemInfoType getSystemInfo() {
-	if (info != null) {
-	    return info;
-	}
-
+    public IosSystemInfo(ITechSupport techSupport) throws NoSuchElementException {
 	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	info.setOsName("Cisco IOS");
-	try {
-	    for (String line : SafeCLI.multiLine("show config", session, readTimeout)) {
+	    for (String line : techSupport.getData("show running-config")) {
 		if (line.startsWith("hostname")) {
 		    info.setPrimaryHostName(line.substring(9).trim());
+		    break;
 		}
 	    }
 
-	    for (String line : SafeCLI.multiLine("show version", session, readTimeout)) {
+	    for (String line : techSupport.getData("show version")) {
 		if (line.startsWith("Cisco IOS")) {
 		    int ptr = line.indexOf("Version ");
 		    if (ptr != -1) {
@@ -71,7 +55,7 @@ public class IosSystemInfo {
 	    }
 
 	    InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
-	    List<IosNetworkInterface> interfaces = IosNetworkInterface.getInterfaces(session);
+	    List<IosNetworkInterface> interfaces = IosNetworkInterface.getInterfaces(techSupport);
 	    for (IosNetworkInterface intf : interfaces) {
 		InterfaceType interfaceType = JOVALSystem.factories.sc.core.createInterfaceType();
 		interfaceType.setMacAddress(intf.getMacAddress());
@@ -88,10 +72,9 @@ public class IosSystemInfo {
 		}
 	    }
 	    info.setInterfaces(interfacesType);
-	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
-	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
+    }
+
+    public SystemInfoType getSystemInfo() {
 	return info;
     }
 }

@@ -5,11 +5,10 @@ package org.joval.os.embedded;
 
 import java.util.List;
 import java.util.Vector;
+import java.util.NoSuchElementException;
 
-import org.joval.intf.io.IReader;
-import org.joval.intf.system.ISession;
+import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.util.JOVALSystem;
-import org.joval.util.SafeCLI;
 
 /**
  * Tool for creating Network Interface information from an ISession attached to an IOS device.
@@ -18,12 +17,12 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 class IosNetworkInterface {
-    static List<IosNetworkInterface> getInterfaces(ISession session) throws Exception {
+    static List<IosNetworkInterface> getInterfaces(ITechSupport techSupport) throws NoSuchElementException {
 	long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
 
 	Vector<IosNetworkInterface> interfaces = new Vector<IosNetworkInterface>();
 	Vector<String> lines = new Vector<String>();
-	for (String line : SafeCLI.multiLine("show interfaces", session, readTimeout)) {
+	for (String line : techSupport.getData("show interfaces")) {
 	    if (line.startsWith(" ")) {
 		lines.add(line);
 	    } else if (lines.size() > 0) {

@@ -4,6 +4,8 @@
 package org.joval.plugin.adapter.cisco.ios;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 import javax.xml.bind.JAXBElement;
 
@@ -18,9 +20,9 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.ios.LineItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IBaseSession;
 import org.joval.io.PerishableReader;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -34,10 +36,10 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class LineAdapter implements IAdapter {
-    IBaseSession session;
+    IIosSession session;
     long readTimeout;
 
-    public LineAdapter(IBaseSession session) {
+    public LineAdapter(IIosSession session) {
 	readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
 	this.session = session;
     }
@@ -91,8 +93,16 @@ public class LineAdapter implements IAdapter {
 	if (!subcommand.toLowerCase().startsWith("show ")) {
 	    subcommand = new StringBuffer("show ").append(subcommand).toString();
 	}
+
+	List<String> lines = null;
+	try {
+	    lines = session.getTechSupport().getData(subcommand);
+	} catch (NoSuchElementException e) {
+	    lines = SafeCLI.multiLine(subcommand, session, readTimeout);
+	}
+
 	StringBuffer sb = new StringBuffer();
-	for (String line : SafeCLI.multiLine(subcommand, session, readTimeout)) {
+	for (String line : lines) {
 	    if (sb.length() > 0) {
 		sb.append('\n');
 	    }

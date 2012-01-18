@@ -23,9 +23,9 @@ import oval.schemas.systemcharacteristics.ios.VersionItem;
 import oval.schemas.systemcharacteristics.core.EntityItemIOSVersionType;
 import oval.schemas.results.core.ResultEnumeration;
 
+import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALSystem;
@@ -41,9 +41,9 @@ public class Version55Adapter implements IAdapter {
     static final String CLOSE_PEREN = ")";
 
     VersionItem item;
-    ISession session;
+    IIosSession session;
 
-    public Version55Adapter(ISession session) {
+    public Version55Adapter(IIosSession session) {
 	this.session = session;
     }
     

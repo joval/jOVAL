@@ -13,6 +13,7 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.system.ISession;
+import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.OvalException;
@@ -152,9 +153,10 @@ public abstract class BasePlugin implements IPlugin {
 	      }
 
 	      case CISCO_IOS: {
-		adapters.add(new LineAdapter(session));
-		adapters.add(new VersionAdapter(session));
-		adapters.add(new Version55Adapter(session));
+		IIosSession ios = (IIosSession)session;
+		adapters.add(new LineAdapter(ios));
+		adapters.add(new VersionAdapter(ios));
+		adapters.add(new Version55Adapter(ios));
 		break;
 	      }
 	    }

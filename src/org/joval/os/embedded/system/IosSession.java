@@ -3,19 +3,24 @@
 
 package org.joval.os.embedded.system;
 
+import java.util.NoSuchElementException;
+
 import org.slf4j.cal10n.LocLogger;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import org.joval.intf.cisco.system.IIosSession;
+import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
 import org.joval.os.embedded.IosSystemInfo;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.BaseSession;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * A simple session implementation for Cisco IOS devices, which is really just an SSH session.
@@ -23,14 +28,16 @@ import org.joval.util.BaseSession;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class IosSession extends BaseSession implements ILocked, ISession {
+public class IosSession extends BaseSession implements ILocked, IIosSession {
     private SshSession ssh;
+    private TechSupport techSupport;
     private IosSystemInfo info;
+    private boolean initialized;
 
     public IosSession(SshSession ssh) {
 	super();
 	this.ssh = ssh;
-	info = new IosSystemInfo(this);
+	initialized = false;
     }
 
     // Implement ILocked
@@ -47,10 +54,24 @@ public class IosSession extends BaseSession implements ILocked, ISession {
 
     public boolean connect() {
 	if (ssh.connect()) {
-	    info.getSystemInfo();
-	    return true;
+	    if (initialized) {
+		return true;
+	    } else {
+		try {
+		    techSupport = new TechSupport(this);
+		    info = new IosSystemInfo(techSupport);
+		    initialized = true;
+		    return true;
+		} catch (NoSuchElementException e) {
+		    logger.warn(JOVALMsg.ERROR_IOS_TECH_SHOW, e.getMessage());
+		} catch (Exception e) {
+		    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+		return false;
+	    }
+	} else {
+	    return false;
 	}
-	return false;
     }
 
     public void disconnect() {
@@ -102,5 +123,11 @@ public class IosSession extends BaseSession implements ILocked, ISession {
      */
     public IEnvironment getEnvironment() {
 	return null;
+    }
+
+    // Implement IIosSession
+
+    public ITechSupport getTechSupport() {
+	return techSupport;
     }
 }
