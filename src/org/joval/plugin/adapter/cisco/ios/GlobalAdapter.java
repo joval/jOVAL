@@ -13,11 +13,11 @@ import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.ios.LineObject;
+import oval.schemas.definitions.ios.GlobalObject;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.ios.LineItem;
+import oval.schemas.systemcharacteristics.ios.GlobalItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.cisco.system.IIosSession;
@@ -31,23 +31,21 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
- * Provides Cisco IOS Line OVAL items.
+ * Provides Cisco IOS Global OVAL items.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class LineAdapter implements IAdapter {
+public class GlobalAdapter implements IAdapter {
     IIosSession session;
-    long readTimeout;
 
-    public LineAdapter(IIosSession session) {
-	readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
+    public GlobalAdapter(IIosSession session) {
 	this.session = session;
     }
 
     // Implement IAdapter
 
-    private static Class[] objectClasses = {LineObject.class};
+    private static Class[] objectClasses = {GlobalObject.class};
 
     public Class[] getObjectClasses() {
 	return objectClasses;
@@ -62,44 +60,18 @@ public class LineAdapter implements IAdapter {
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-
-	LineObject lObj = (LineObject)rc.getObject();
-	String subcommand = (String)lObj.getShowSubcommand().getValue();
-	OperationEnumeration op = lObj.getShowSubcommand().getOperation();
-	switch(op) {
-	  case EQUALS:
-            try {
-		items.add(JOVALSystem.factories.sc.ios.createLineItem(getItem((subcommand))));
-	    } catch (Exception e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_SHOW, subcommand, e.getMessage());
-		msg.setValue(s);
-		rc.addMessage(msg);
-		session.getLogger().warn(s);
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	    break;
-
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
-	}
-
+	items.add(JOVALSystem.factories.sc.ios.createGlobalItem(getItem()));
 	return items;
     }
 
     // Private
 
-    private LineItem getItem(String subcommand) throws Exception {
-	if (!subcommand.toLowerCase().startsWith("show ")) {
-	    subcommand = new StringBuffer("show ").append(subcommand).toString();
-	}
-
+    private GlobalItem getItem() throws CollectionException {
 	List<String> lines = null;
 	try {
-	    lines = session.getTechSupport().getData(subcommand);
+	    lines = session.getTechSupport().getData("show running-config");
 	} catch (NoSuchElementException e) {
-	    lines = SafeCLI.multiLine(subcommand, session, readTimeout);
+	    throw new CollectionException(e);
 	}
 
 	StringBuffer sb = new StringBuffer();
@@ -110,14 +82,11 @@ public class LineAdapter implements IAdapter {
 	    sb.append(line);
 	}
 
-	LineItem item = JOVALSystem.factories.sc.ios.createLineItem();
-	EntityItemStringType showSubcommand = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	showSubcommand.setValue(subcommand);
-	item.setShowSubcommand(showSubcommand);
+	GlobalItem item = JOVALSystem.factories.sc.ios.createGlobalItem();
 	if (sb.length() > 0) {
-	    EntityItemStringType configLine = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    configLine.setValue(sb.toString());
-	    item.setConfigLine(configLine);
+	    EntityItemStringType globalCommand = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    globalCommand.setValue(sb.toString());
+	    item.setGlobalCommand(globalCommand);
 	}
 	return item;
     }
