@@ -29,8 +29,8 @@ public class TechSupport implements ITechSupport {
      * Create a plugin for scanning or test evaluation.
      */
     public TechSupport(ISession session) throws Exception {
+	data = new Hashtable<String, List<String>>();
 	long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
-
 	String heading = null;
 	List<String> body = null;
 
@@ -41,11 +41,16 @@ public class TechSupport implements ITechSupport {
 		}
 		heading = getHeading(line);
 		body = new Vector<String>();
-	    }
-	    if (heading == null) {
-		session.getLogger().warn(JOVALMsg.ERROR_IOS_TECH_ORPHAN, line);
+	    } else if (heading == null) {
+		if (line.length() > 0) {
+		    session.getLogger().warn(JOVALMsg.ERROR_IOS_TECH_ORPHAN, line);
+		}
 	    } else {
-		body.add(line);
+		if (body.size() == 0 && line.length() == 0) {
+		    // skip empty lines under header
+		} else {
+		    body.add(line);
+		}
 	    }
 	}
     }
