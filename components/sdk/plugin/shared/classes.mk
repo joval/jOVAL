@@ -88,6 +88,7 @@ SHARED=\
 	org.joval.os.windows.wmi.WmiException				\
 	org.joval.plugin.BasePlugin					\
 	org.joval.plugin.adapter.cisco.ios.GlobalAdapter		\
+	org.joval.plugin.adapter.cisco.ios.InterfaceAdapter		\
 	org.joval.plugin.adapter.cisco.ios.LineAdapter			\
 	org.joval.plugin.adapter.cisco.ios.SnmpAdapter			\
 	org.joval.plugin.adapter.cisco.ios.TclshAdapter			\

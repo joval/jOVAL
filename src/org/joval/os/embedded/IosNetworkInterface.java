@@ -18,8 +18,6 @@ import org.joval.util.JOVALSystem;
  */
 class IosNetworkInterface {
     static List<IosNetworkInterface> getInterfaces(ITechSupport techSupport) throws NoSuchElementException {
-	long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
-
 	Vector<IosNetworkInterface> interfaces = new Vector<IosNetworkInterface>();
 	Vector<String> lines = new Vector<String>();
 	for (String line : techSupport.getData("show interfaces")) {

@@ -18,6 +18,7 @@ import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.cisco.ios.GlobalAdapter;
+import org.joval.plugin.adapter.cisco.ios.InterfaceAdapter;
 import org.joval.plugin.adapter.cisco.ios.LineAdapter;
 import org.joval.plugin.adapter.cisco.ios.SnmpAdapter;
 import org.joval.plugin.adapter.cisco.ios.TclshAdapter;
@@ -158,6 +159,7 @@ public abstract class BasePlugin implements IPlugin {
 	      case CISCO_IOS: {
 		IIosSession ios = (IIosSession)session;
 		adapters.add(new GlobalAdapter(ios));
+		adapters.add(new InterfaceAdapter(ios));
 		adapters.add(new LineAdapter(ios));
 		adapters.add(new SnmpAdapter(ios));
 		adapters.add(new TclshAdapter(ios));
