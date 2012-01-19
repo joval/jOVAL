@@ -82,18 +82,50 @@ public class SnmpAdapter implements IAdapter {
 	for (String line : lines) {
 	    if (line.toLowerCase().startsWith("snmp-server community ")) {
 		StringTokenizer tok = new StringTokenizer(line);
-		if (tok.countTokens() == 4) {
+		String name = null;
+		String number = null;
+		int numTokens = tok.countTokens();
+		if (numTokens >= 3) {
+		    SnmpItem item = JOVALSystem.factories.sc.ios.createSnmpItem();
+
 		    tok.nextToken(); // "snmp-server"
 		    tok.nextToken(); // "community"
-		    SnmpItem item = JOVALSystem.factories.sc.ios.createSnmpItem();
 
 		    EntityItemStringType communityName = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    communityName.setValue(tok.nextToken());
 		    item.setCommunityName(communityName);
 
-		    EntityItemStringType accessList = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    accessList.setValue(tok.nextToken());
-		    item.setAccessList(accessList);
+		    if (numTokens > 3) {
+			String access = null;
+			String temp = tok.nextToken();
+			if (temp.equals("view")) {
+			    String viewName = tok.nextToken();
+			    temp = null;
+			}
+			//
+			// Get the final argument from the command
+			//
+			while(tok.hasMoreTokens()) {
+			    temp = tok.nextToken();
+			}
+			if (temp != null) {
+			    int i = 0;
+			    try {
+				i = Integer.parseInt(temp);
+			    } catch (NumberFormatException e) {
+				// not a valid access list
+			    }
+			    //
+			    // Valid values are between 1 and 99, inclusive.  See:
+			    // http://www.cisco.com/en/US/docs/ios/12_1/configfun/command/reference/frd3001.html#wp1022436
+			    //
+			    if (0 < i && i < 100) {
+				EntityItemStringType accessList = JOVALSystem.factories.sc.core.createEntityItemStringType();
+				accessList.setValue(temp);
+				item.setAccessList(accessList);
+			    }
+			}
+		    }
 
 		    items.add(item);
 		} else {
