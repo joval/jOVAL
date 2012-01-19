@@ -19,6 +19,8 @@ public interface ITechSupport {
      */
     String DASHES = "------------------";
 
+    String GLOBAL = "show running-config";
+
     /**
      * A list of subcommands for which information is available.
      */

@@ -69,7 +69,7 @@ public class LineAdapter implements IAdapter {
 	switch(op) {
 	  case EQUALS:
             try {
-		items.add(JOVALSystem.factories.sc.ios.createLineItem(getItem((subcommand))));
+		items.add(JOVALSystem.factories.sc.ios.createLineItem(getItem(subcommand)));
 	    } catch (Exception e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);

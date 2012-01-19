@@ -6,6 +6,7 @@ package org.joval.plugin.adapter.cisco.ios;
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 import java.util.Vector;
 import javax.xml.bind.JAXBElement;
 
@@ -13,11 +14,11 @@ import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.ios.GlobalObject;
+import oval.schemas.definitions.ios.SnmpObject;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.ios.GlobalItem;
+import oval.schemas.systemcharacteristics.ios.SnmpItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.cisco.system.IIosSession;
@@ -32,21 +33,21 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
- * Provides Cisco IOS Global OVAL items.
+ * Provides Cisco IOS SNMP OVAL items.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class GlobalAdapter implements IAdapter {
+public class SnmpAdapter implements IAdapter {
     IIosSession session;
 
-    public GlobalAdapter(IIosSession session) {
+    public SnmpAdapter(IIosSession session) {
 	this.session = session;
     }
 
     // Implement IAdapter
 
-    private static Class[] objectClasses = {GlobalObject.class};
+    private static Class[] objectClasses = {SnmpObject.class};
 
     public Class[] getObjectClasses() {
 	return objectClasses;
@@ -61,13 +62,15 @@ public class GlobalAdapter implements IAdapter {
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	items.add(JOVALSystem.factories.sc.ios.createGlobalItem(getItem()));
+	for (SnmpItem item : getItems()) {
+	    items.add(JOVALSystem.factories.sc.ios.createSnmpItem(item));
+	}
 	return items;
     }
 
     // Private
 
-    private GlobalItem getItem() throws CollectionException {
+    private Collection<SnmpItem> getItems() throws CollectionException {
 	List<String> lines = null;
 	try {
 	    lines = session.getTechSupport().getData(ITechSupport.GLOBAL);
@@ -75,20 +78,29 @@ public class GlobalAdapter implements IAdapter {
 	    throw new CollectionException(e);
 	}
 
-	StringBuffer sb = new StringBuffer();
+	Collection<SnmpItem> items = new Vector<SnmpItem>();
 	for (String line : lines) {
-	    if (sb.length() > 0) {
-		sb.append('\n');
-	    }
-	    sb.append(line);
-	}
+	    if (line.toLowerCase().startsWith("snmp-server community ")) {
+		StringTokenizer tok = new StringTokenizer(line);
+		if (tok.countTokens() == 4) {
+		    tok.nextToken(); // "snmp-server"
+		    tok.nextToken(); // "community"
+		    SnmpItem item = JOVALSystem.factories.sc.ios.createSnmpItem();
 
-	GlobalItem item = JOVALSystem.factories.sc.ios.createGlobalItem();
-	if (sb.length() > 0) {
-	    EntityItemStringType globalCommand = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    globalCommand.setValue(sb.toString());
-	    item.setGlobalCommand(globalCommand);
+		    EntityItemStringType communityName = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    communityName.setValue(tok.nextToken());
+		    item.setCommunityName(communityName);
+
+		    EntityItemStringType accessList = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    accessList.setValue(tok.nextToken());
+		    item.setAccessList(accessList);
+
+		    items.add(item);
+		} else {
+		    session.getLogger().warn(JOVALMsg.ERROR_IOS_SNMP, line);
+		}
+	    }
 	}
-	return item;
+	return items;
     }
 }

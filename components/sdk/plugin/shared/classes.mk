@@ -89,6 +89,7 @@ SHARED=\
 	org.joval.plugin.BasePlugin					\
 	org.joval.plugin.adapter.cisco.ios.GlobalAdapter		\
 	org.joval.plugin.adapter.cisco.ios.LineAdapter			\
+	org.joval.plugin.adapter.cisco.ios.SnmpAdapter			\
 	org.joval.plugin.adapter.cisco.ios.Version55Adapter		\
 	org.joval.plugin.adapter.cisco.ios.VersionAdapter		\
 	org.joval.plugin.adapter.independent.BaseFileAdapter		\
