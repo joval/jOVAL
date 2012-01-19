@@ -19,6 +19,8 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.cisco.ios.GlobalAdapter;
 import org.joval.plugin.adapter.cisco.ios.LineAdapter;
+import org.joval.plugin.adapter.cisco.ios.SnmpAdapter;
+import org.joval.plugin.adapter.cisco.ios.TclshAdapter;
 import org.joval.plugin.adapter.cisco.ios.VersionAdapter;
 import org.joval.plugin.adapter.cisco.ios.Version55Adapter;
 import org.joval.plugin.adapter.independent.Environmentvariable58Adapter;
@@ -157,6 +159,8 @@ public abstract class BasePlugin implements IPlugin {
 		IIosSession ios = (IIosSession)session;
 		adapters.add(new GlobalAdapter(ios));
 		adapters.add(new LineAdapter(ios));
+		adapters.add(new SnmpAdapter(ios));
+		adapters.add(new TclshAdapter(ios));
 		adapters.add(new VersionAdapter(ios));
 		adapters.add(new Version55Adapter(ios));
 		break;
