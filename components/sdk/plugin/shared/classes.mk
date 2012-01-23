@@ -88,6 +88,7 @@ SHARED=\
 	org.joval.os.windows.wmi.WmiException				\
 	org.joval.plugin.BasePlugin					\
 	org.joval.plugin.adapter.aix.FilesetAdapter			\
+	org.joval.plugin.adapter.aix.FixAdapter				\
 	org.joval.plugin.adapter.aix.OslevelAdapter			\
 	org.joval.plugin.adapter.cisco.ios.GlobalAdapter		\
 	org.joval.plugin.adapter.cisco.ios.InterfaceAdapter		\

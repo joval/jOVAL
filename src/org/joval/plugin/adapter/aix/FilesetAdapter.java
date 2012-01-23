@@ -73,46 +73,9 @@ public class FilesetAdapter implements IAdapter {
 		    items.add(JOVALSystem.factories.sc.aix.createFilesetItem(item));
 		}
 	    } catch (Exception e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_AIX_FILESET,
-						  (String)fObj.getFlstinst().getValue(), e.getMessage());
-		msg.setValue(s);
-		rc.addMessage(msg);
-		session.getLogger().warn(s, e);
+		throw new CollectionException(e);
 	    }
 	    break;
-
-/*
-	  case PATTERN_MATCH:
-	    loadFullPackageMap();
-	    try {
-		Pattern p = Pattern.compile((String)fObj.getFlstinst().getValue());
-		for (String packageName : packageMap.keySet()) {
-		    if (p.matcher(packageName).find()) {
-			items.add(JOVALSystem.factories.sc.linux.createFilesetItem(packageMap.get(packageName)));
-		    }
-		}
-	    } catch (PatternSyntaxException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	    break;
-
-	  case NOT_EQUAL: {
-	    loadFullPackageMap();
-	    String name = (String)fObj.getFlstinst().getValue();
-	    for (String packageName : packageMap.keySet()) {
-		if (!packageName.equals(name)) {
-		    items.add(JOVALSystem.factories.sc.linux.createFilesetItem(packageMap.get(packageName)));
-		}
-	    }
-	    break;
-	  }
-*/
 
 	  default: {
 	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, fObj.getFlstinst().getOperation());
