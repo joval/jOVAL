@@ -58,7 +58,7 @@ public class UnixSystemInfo {
 	try {
 	    switch(session.getFlavor()) {
 	      case AIX:
-		info.setOsVersion(SafeCLI.exec("uname -v", session, IUnixSession.TIMEOUT_S));
+		info.setOsVersion(SafeCLI.exec("oslevel -r", session, IUnixSession.TIMEOUT_S));
 		break;
 
 	      default:

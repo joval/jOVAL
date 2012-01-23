@@ -17,6 +17,9 @@ import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.OvalException;
+//import org.joval.plugin.adapter.aix.FixAdapter;
+import org.joval.plugin.adapter.aix.FilesetAdapter;
+import org.joval.plugin.adapter.aix.OslevelAdapter;
 import org.joval.plugin.adapter.cisco.ios.GlobalAdapter;
 import org.joval.plugin.adapter.cisco.ios.InterfaceAdapter;
 import org.joval.plugin.adapter.cisco.ios.LineAdapter;
@@ -133,6 +136,13 @@ public abstract class BasePlugin implements IPlugin {
 		adapters.add(new UnameAdapter(unix));
 		IUnixSession.Flavor flavor = unix.getFlavor();
 		switch(flavor) {
+		  case AIX:
+//		    adapters.add(new FixAdapter(unix));
+		    adapters.add(new FilesetAdapter(unix));
+		    adapters.add(new OslevelAdapter(unix));
+		    adapters.add(new RpminfoAdapter(unix)); // Yes, also on AIX
+		    break;
+
 		  case LINUX:
 		    adapters.add(new RpminfoAdapter(unix));
 		    break;
