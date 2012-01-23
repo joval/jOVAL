@@ -29,24 +29,40 @@ public class SessionFactory {
 
     private Properties props;
     private File propsFile = null;
+    private SshSession gateway = null;
 
     public SessionFactory() {
 	props = new Properties();
     }
 
     public SessionFactory(File cacheDir) throws IOException {
+	this(cacheDir, null);
+    }
+
+    public SessionFactory(File cacheDir, SshSession gateway) throws IOException {
 	this();
 	setDataDirectory(cacheDir);
+	setSshGateway(gateway);
     }
 
     public void setDataDirectory(File cacheDir) throws IOException {
-	propsFile = new File(cacheDir, HOSTS);
-	if (propsFile.exists()) {
-	    props.loadFromXML(new FileInputStream(propsFile));
+	if (cacheDir != null) {
+	    propsFile = new File(cacheDir, HOSTS);
+	    if (propsFile.exists()) {
+		props.loadFromXML(new FileInputStream(propsFile));
+	    }
 	}
     }
 
+    public void setSshGateway(SshSession gateway) {
+	this.gateway = gateway;
+    }
+
     public IBaseSession createSession(String hostname) throws UnknownHostException {
+	if (gateway != null) {
+	    return new SshSession(hostname, gateway);
+	}
+
 	IBaseSession.Type type = IBaseSession.Type.UNKNOWN;
 	String s = props.getProperty(hostname);
 	if (s == null) {

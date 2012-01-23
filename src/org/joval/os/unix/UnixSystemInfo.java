@@ -41,6 +41,9 @@ public class UnixSystemInfo {
 	    return info;
 	}
 
+	//
+	// Hostname
+	//
 	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	try {
 	    info.setPrimaryHostName(SafeCLI.exec("hostname", session, IUnixSession.TIMEOUT_S));
@@ -49,27 +52,52 @@ public class UnixSystemInfo {
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
+	//
+	// OS Version
+	//
 	try {
-	    info.setOsVersion(SafeCLI.exec("uname -r", session, IUnixSession.TIMEOUT_S));
+	    switch(session.getFlavor()) {
+	      case AIX:
+		info.setOsVersion(SafeCLI.exec("uname -v", session, IUnixSession.TIMEOUT_S));
+		break;
+
+	      default:
+		info.setOsVersion(SafeCLI.exec("uname -r", session, IUnixSession.TIMEOUT_S));
+		break;
+	    }
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
+	//
+	// OS Name
+	//
 	try {
-	    IFilesystem fs = session.getFilesystem();
-	    for (INode node : fs.getFile("/etc").getChildren(Pattern.compile("^.*-release$"))) {
-		info.setOsName(SafeCLI.exec("cat " + node.getPath(), session, IUnixSession.TIMEOUT_S));
+	    switch(session.getFlavor()) {
+	      case AIX:
+		info.setOsName("AIX");
 		break;
-	    }
-	    if (!info.isSetOsName()) {
-		info.setOsName(session.getFlavor().getOsName());
+
+	      default:
+		IFilesystem fs = session.getFilesystem();
+		for (INode node : fs.getFile("/etc").getChildren(Pattern.compile("^.*-release$"))) {
+		    info.setOsName(SafeCLI.exec("cat " + node.getPath(), session, IUnixSession.TIMEOUT_S));
+		    break;
+		}
+		if (!info.isSetOsName()) {
+		    info.setOsName(session.getFlavor().getOsName());
+		}
+		break;
 	    }
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSNAME);
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
+	//
+	// Processor Architecture
+	//
 	try {
 	    info.setArchitecture(SafeCLI.exec("uname -p", session, IUnixSession.TIMEOUT_S));
 	} catch (Exception e) {
@@ -77,6 +105,9 @@ public class UnixSystemInfo {
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
+	//
+	// Network Interfaces
+	//
 	try {
 	    InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
 	    List<NetworkInterface> interfaces = NetworkInterface.getInterfaces(session);

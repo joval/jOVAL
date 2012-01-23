@@ -46,6 +46,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     protected LocLogger logger;
     protected String hostname;
     protected ICredential cred;
+    protected SshSession gateway;
     protected Session session;
     private boolean connected = false, debug = false;
 
@@ -58,7 +59,12 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     }
 
     public SshSession(String hostname) {
+	this(hostname, null);
+    }
+
+    public SshSession(String hostname, SshSession gateway) {
 	this.hostname = hostname;
+	this.gateway = gateway;
 	this.debug = JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_DEBUG);
 	logger = JOVALSystem.getLogger();
     }
@@ -114,13 +120,24 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     }
 
     public boolean connect() {
+	if (gateway != null && !gateway.connect()) {
+	    return false;
+	}
+
 	if (cred == null) {
 	    return false;
 	} else if (session == null) {
 	    try {
 		SessionConfig config = new SessionConfig();
 		config.setProperty(SSHConfigConstants.STRICT_HOST_KEY_CHECKING, "no");
-		session = JSch.getInstance().createSession(cred.getUsername(), hostname, 22, config);
+		JSch jsch = JSch.getInstance();
+		if (gateway == null) {
+		    session = jsch.createSession(cred.getUsername(), hostname, 22, config);
+		} else {
+		    // use gateway port forwarding
+		    int localPort = gateway.session.setPortForwardingL(0, hostname, 22);
+		    session = jsch.createSession(cred.getUsername(), LOCALHOST, localPort, config);
+		}
 		session.setUserInfo(this);
 	    } catch (JSchException e) {
 		logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -162,6 +179,9 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 		    connected = false;
 		}
 	    }
+	}
+	if (gateway != null) {
+	    gateway.disconnect();
 	}
     }
 

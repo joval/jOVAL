@@ -10,9 +10,11 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 
+import org.joval.identity.Credential;
 import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.plugin.RemotePlugin;
+import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -59,6 +61,18 @@ public class RemoteContainer implements IPluginContainer {
 	}
 	SimpleCredentialStore scs = new SimpleCredentialStore();
 	scs.add(props);
+
+	String gwHost = props.getProperty("gw.host");
+	if (gwHost != null) {
+	    SshSession gateway = new SshSession(gwHost);
+	    String user = props.getProperty("gw.user");
+	    String pass = props.getProperty("gw.pass");
+	    if (user != null) {
+		gateway.unlock(new Credential(user, pass));
+	    }
+	    RemotePlugin.setSshGateway(gateway);
+	}
+
 	RemotePlugin.setCredentialStore(scs);
 	if (dir != null) {
 	    RemotePlugin.setDataDirectory(dir);

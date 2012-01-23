@@ -31,6 +31,7 @@ import org.joval.util.JOVALSystem;
  */
 public class RemotePlugin extends BasePlugin {
     private static SessionFactory sessionFactory = new SessionFactory();
+    private static SshSession gateway = null;
     private static ICredentialStore cs;
 
     /**
@@ -38,6 +39,14 @@ public class RemotePlugin extends BasePlugin {
      */
     public static void setDataDirectory(File dir) throws IOException {
 	sessionFactory.setDataDirectory(dir);
+    }
+
+    /**
+     * Set an SSH gateway for the plugin.  If set, the RemotePlugin will not be able to connect to Windows machines.
+     */
+    public static void setSshGateway(SshSession gateway) {
+	sessionFactory.setSshGateway(gateway);
+	RemotePlugin.gateway = gateway;
     }
 
     /**
@@ -80,12 +89,12 @@ public class RemotePlugin extends BasePlugin {
 
 		  case UNIX:
 		    base.disconnect();
-		    session = new UnixSession(new SshSession(hostname));
+		    session = new UnixSession(new SshSession(hostname, gateway));
 		    break;
 
 		  case CISCO_IOS:
 		    base.disconnect();
-		    session = new IosSession(new SshSession(hostname));
+		    session = new IosSession(new SshSession(hostname, gateway));
 		    break;
 
 		  default:

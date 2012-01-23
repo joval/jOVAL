@@ -63,6 +63,17 @@ public class Remote {
 		JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
 	    }
 
+	    SshSession gateway = null;
+	    String gwHost = props.getProperty("gateway.host");
+	    if (gwHost != null) {
+		gateway = new SshSession(gwHost);
+		String username = props.getProperty("gateway.username");
+		String password = props.getProperty("gateway.password");
+		if (username != null) {
+		    gateway.unlock(new Credential(username, password));
+		}
+	    }
+
 	    String host = props.getProperty("host");
 	    String domain = props.getProperty("domain");
 	    String username = props.getProperty("username");
@@ -71,7 +82,7 @@ public class Remote {
 	    String passphrase = props.getProperty("passphrase");
 	    String rootPassword = props.getProperty("rootPassword");
 
-	    SessionFactory factory = new SessionFactory(new File("."));
+	    SessionFactory factory = new SessionFactory(new File("."), gateway);
 	    IBaseSession base = factory.createSession(host);
 	    ISession session = null;
 	    ICredential cred = null;
@@ -100,7 +111,7 @@ public class Remote {
 	    switch(type) {
 	      case UNIX:
 		base.disconnect();
-		UnixSession us = new UnixSession(new SshSession(host));
+		UnixSession us = new UnixSession(new SshSession(host, gateway));
 		us.unlock(cred);
 		session = us;
 		break;

@@ -32,6 +32,7 @@ public interface IUnixSession extends ISession {
      */
     enum Flavor {
 	UNKNOWN("unknown"),
+	AIX("AIX"),
 	LINUX("Linux"),
 	MACOSX("Darwin"),
 	SOLARIS("SunOS");

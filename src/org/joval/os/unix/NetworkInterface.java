@@ -21,7 +21,15 @@ class NetworkInterface {
     static List<NetworkInterface> getInterfaces(IUnixSession session) throws Exception {
 	Vector<NetworkInterface> interfaces = new Vector<NetworkInterface>();
 	Vector<String> lines = new Vector<String>();
-	List<String> rawOutput = SafeCLI.multiLine("/sbin/ifconfig -a", session, IUnixSession.TIMEOUT_S);
+	List<String> rawOutput = null;
+	switch(session.getFlavor()) {
+	  case AIX:
+	    rawOutput = SafeCLI.multiLine("/etc/ifconfig -a", session, IUnixSession.TIMEOUT_S);
+	    break;
+	  default:
+	    rawOutput = SafeCLI.multiLine("/sbin/ifconfig -a", session, IUnixSession.TIMEOUT_S);
+	    break;
+	}
 
 	switch(session.getFlavor()) {
 	  //
@@ -48,15 +56,16 @@ class NetworkInterface {
 	    break;
 
 	  //
-	  // On Solaris, new interfaces start at char0 on a line.  Continutaion info starts with a tab after the first line.
-	  // Interfaces are not separated by blank lines.
+	  // On AIX and Solaris, new interfaces start at char0 on a line.  Continutaion info starts with a tab after the first
+	  // line.  Interfaces are not separated by blank lines.
 	  //
+	  case AIX:
 	  case SOLARIS:
 	    for (String line : rawOutput) {
 		if (line.startsWith("\t") || line.startsWith("  ")) {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
-		    interfaces.add(createSolarisInterface(lines));
+		    interfaces.add(createUnixInterface(lines));
 		    lines = new Vector<String>();
 		    if (line.trim().length() > 0) {
 			lines.add(line);
@@ -66,7 +75,7 @@ class NetworkInterface {
 		}
 	    }
 	    if (lines.size() > 0) {
-		interfaces.add(createSolarisInterface(lines));
+		interfaces.add(createUnixInterface(lines));
 	    }
 	    break;
 
@@ -143,26 +152,20 @@ class NetworkInterface {
 	return new NetworkInterface(mac, ip4, ip6, description);
     }
 
-    private static NetworkInterface createSolarisInterface(Vector<String> lines) {
+    private static NetworkInterface createUnixInterface(Vector<String> lines) {
 	String mac="", ip4=null, ip6=null, description="";
 	String firstLine = lines.get(0);
 	description = firstLine.substring(0, firstLine.indexOf(":"));
-	if (lines.size() > 1) {
-	    String line2 = lines.get(1).trim();
-	    StringTokenizer tok = new StringTokenizer(line2);
+	for (int i=1; i < lines.size(); i++) {
+	    String line = lines.get(i).trim();
+	    StringTokenizer tok = new StringTokenizer(line);
 	    String addressType = tok.nextToken().toUpperCase();
 	    if ("INET6".equals(addressType)) {
 		String temp = tok.nextToken();
 		ip6 = temp.substring(0, temp.indexOf("/"));
 	    } else if ("INET".equals(addressType)) {
 		ip4 = tok.nextToken();
-	    }
-	}
-	if (lines.size() > 2) {
-	    String line3 = lines.get(2).trim();
-	    StringTokenizer tok = new StringTokenizer(line3);
-	    String token = tok.nextToken().toUpperCase();
-	    if ("ETHER".equals(token)) {
+	    } else if ("ETHER".equals(addressType)) {
 		mac = tok.nextToken();
 	    }
 	}

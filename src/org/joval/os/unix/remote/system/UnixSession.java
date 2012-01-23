@@ -110,14 +110,11 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
      * @override
      */
     public IProcess createProcess(String command) throws Exception {
-	switch(flavor) {
-	  case LINUX:
-	  case SOLARIS:
-	    if (rootCred != null) {
-		return new Sudo(this, rootCred, command);
-	    }
+	if (rootCred == null) {
+	    return ssh.createProcess(command);
+	} else {
+	    return new Sudo(this, rootCred, command);
 	}
-	return ssh.createProcess(command);
     }
 
     public Type getType() {
