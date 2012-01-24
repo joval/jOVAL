@@ -10,6 +10,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import javax.xml.bind.JAXBElement;
 
+import oval.schemas.common.ComplexDatatypeEnumeration;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.definitions.windows.Wmi57Object;
@@ -31,7 +32,6 @@ import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
-import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -72,7 +72,7 @@ public class Wmi57Adapter implements IAdapter {
 	}
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
 	items.add(JOVALSystem.factories.sc.windows.createWmi57Item(getItem((Wmi57Object)rc.getObject())));
 	return items;
@@ -101,6 +101,7 @@ public class Wmi57Adapter implements IAdapter {
 	    } else {
 		for (ISWbemObject swbObj : objSet) {
 		    EntityItemRecordType record = JOVALSystem.factories.sc.core.createEntityItemRecordType();
+		    record.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
 		    for (ISWbemProperty prop : swbObj.getProperties()) {
 			EntityItemFieldType field = JOVALSystem.factories.sc.core.createEntityItemFieldType();
 			field.setName(prop.getName());

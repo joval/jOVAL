@@ -114,7 +114,7 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.os.windows.Timestamp;
-import org.joval.oval.CollectionException;
+import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
@@ -548,7 +548,7 @@ public class Engine implements IEngine {
 			unwrapped.add(item.getValue());
 		    }
 		    return unwrapped;
-		} catch (CollectionException e) {
+		} catch (NotCollectableException e) {
 		    error = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
 		}
 	    } else {
@@ -2177,8 +2177,8 @@ public class Engine implements IEngine {
     }
 
     /**
-     * This class is a more or less verbatim copy of the algorithm used by librpm's rpmvercmp(char* a, char* b) function,
-     * as dictated by the OVAL specification. See:
+     * This class is a more or less exact reimplementation of the algorithm used by librpm's rpmvercmp(char* a, char* b)
+     * function, as dictated by the OVAL specification. See:
      * http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#EntityStateEVRStringType
      */
     class Evr {

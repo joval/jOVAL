@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.Stack;
+import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -36,7 +38,7 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.PerishableReader;
 import org.joval.os.unix.system.Environment;
-import org.joval.oval.CollectionException;
+import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
@@ -65,9 +67,10 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectionException {
-	Environmentvariable58Object eObj = (Environmentvariable58Object)rc.getObject();
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
+	    throws OvalException, NotCollectableException {
 
+	Environmentvariable58Object eObj = (Environmentvariable58Object)rc.getObject();
 	if (eObj.isSetPid() && eObj.getPid().getValue() != null) {
 	    //
 	    // In the absence of a pid, just leverage the legacy adapter.
@@ -118,7 +121,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			    }
 			} else {
 			    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OS_VERSION, osVersion);
-			    throw new CollectionException(msg);
+			    throw new NotCollectableException(msg);
 			}
 		    } catch (Exception e) {
 			MessageType msg = JOVALSystem.factories.common.createMessageType();
@@ -166,9 +169,42 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 		    break;
 		  }
 
+		  case AIX: {
+		    try {
+			for (String line : SafeCLI.multiLine("ps eww " + pid, us, IUnixSession.TIMEOUT_S)) {
+			    line = line.trim();
+			    if (line.startsWith(pid)) {
+				StringTokenizer tok = new StringTokenizer(line);
+				Stack<String> stack = new Stack<String>();
+				while (tok.hasMoreTokens()) {
+				    stack.push(tok.nextToken());
+				}
+				processEnv = new Properties();
+				while (!stack.empty()) {
+				    String token = stack.pop();
+				    int ptr = token.indexOf("=");
+				    if (ptr > 0) {
+					String key = token.substring(0,ptr);
+					String val = token.substring(ptr+1);
+					processEnv.setProperty(key, val);
+				    } else {
+					break; // no more environment variables
+				    }
+				}
+			    }
+			}
+		    } catch (Exception e) {
+			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.ERROR);
+			msg.setValue(e.getMessage());
+			rc.addMessage(msg);
+			session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    }
+		  }
+
 		  default: {
 		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, us.getFlavor());
-		    throw new CollectionException(msg);
+		    throw new NotCollectableException(msg);
 		  }
 		}
 		break;
@@ -176,7 +212,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 
 	      default: {
 		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_SESSION_TYPE, session.getType());
-		throw new CollectionException(msg);
+		throw new NotCollectableException(msg);
 	      }
 	    }
 

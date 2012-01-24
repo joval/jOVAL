@@ -16,7 +16,6 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
-import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 
@@ -48,7 +47,7 @@ public class FamilyAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectionException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	items.add(JOVALSystem.factories.sc.independent.createFamilyItem(getItem()));
 	return items;

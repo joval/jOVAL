@@ -29,7 +29,7 @@ import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.identity.IUser;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
-import org.joval.oval.CollectionException;
+import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -54,7 +54,9 @@ public class GroupSidAdapter extends UserAdapter {
     /**
      * @override
      */
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
+	    throws NotCollectableException, OvalException {
+
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	OperationEnumeration op = ((GroupSidObject)rc.getObject()).getGroupSid().getOperation();
 	String groupSid = (String)((GroupSidObject)rc.getObject()).getGroupSid().getValue();
@@ -91,7 +93,7 @@ public class GroupSidAdapter extends UserAdapter {
 		break;
     
 	      default:
-		throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	    }
 	} catch (NoSuchElementException e) {
 	    // No match.

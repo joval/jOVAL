@@ -40,7 +40,7 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.oval.CollectionException;
+import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
@@ -72,7 +72,9 @@ public abstract class BaseFileAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectionException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
+	    throws OvalException, NotCollectableException {
+
 	ObjectType obj = rc.getObject();
 	String id = obj.getId();
 
@@ -171,7 +173,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			fItem.setFilepath(filepathType);
 		    }
 		} else {
-		    throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_TEXTFILECONTENT_SPEC, id));
+		    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_TEXTFILECONTENT_SPEC, id));
 		}
 
 		switch(winView) {
@@ -223,7 +225,7 @@ public abstract class BaseFileAdapter implements IAdapter {
      * @arg it the base ItemType containing filepath, path and filename information already populated
      */
     protected abstract Collection<JAXBElement<? extends ItemType>>
-	getItems(ItemType it, IFile f, IRequestContext rc) throws IOException, CollectionException, OvalException;
+	getItems(ItemType it, IFile f, IRequestContext rc) throws IOException, NotCollectableException, OvalException;
 
     // Internal
 

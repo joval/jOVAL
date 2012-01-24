@@ -8,7 +8,7 @@ import javax.xml.bind.JAXBElement;
 
 import oval.schemas.systemcharacteristics.core.ItemType;
 
-import org.joval.oval.CollectionException;
+import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 
 /**
@@ -47,11 +47,12 @@ public interface IAdapter {
      *
      * @see IRequestContext
      *
-     * @throws CollectionException if items cannot be collected for the request for some reason, such as an unsupported
+     * @throws NotCollectableException if items cannot be collected for the request for some reason, such as an unsupported
      *                       platform for the adapter, or an unsupported operation on the object.  The OVAL object will
      *                       have a resulting status of "not collected".
      * @throws OvalException if there has been an error which should stop all processing, such as propagation of an 
      *                       OvalException that has been thrown by a call to IRequestContext.resolve.
      */
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext irc) throws OvalException, CollectionException;
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext irc)
+	throws OvalException, NotCollectableException;
 }

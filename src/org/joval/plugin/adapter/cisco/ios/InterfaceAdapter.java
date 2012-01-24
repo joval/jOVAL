@@ -26,7 +26,6 @@ import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.io.PerishableReader;
-import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -57,27 +56,28 @@ public class InterfaceAdapter implements IAdapter {
 	return session != null;
     }
 
-    public void disconnect() {
-    }
+    public void disconnect() {}
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	for (InterfaceItem item : getItems()) {
-	    items.add(JOVALSystem.factories.sc.ios.createInterfaceItem(item));
+	try {
+	    for (InterfaceItem item : getItems()) {
+		items.add(JOVALSystem.factories.sc.ios.createInterfaceItem(item));
+	    }
+	} catch (NoSuchElementException e) {
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ITechSupport.GLOBAL));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
     }
 
     // Private
 
-    private Collection<InterfaceItem> getItems() throws CollectionException {
-	List<String> lines = null;
-	try {
-	    lines = session.getTechSupport().getData(ITechSupport.GLOBAL);
-	} catch (NoSuchElementException e) {
-	    throw new CollectionException(e);
-	}
-
+    private Collection<InterfaceItem> getItems() throws NoSuchElementException {
+	List<String> lines = session.getTechSupport().getData(ITechSupport.GLOBAL);
 	InterfaceItem item = null;
 	Collection<InterfaceItem> items = new Vector<InterfaceItem>();
 	for (String line : lines) {

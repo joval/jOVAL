@@ -27,7 +27,7 @@ import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.io.PerishableReader;
-import org.joval.oval.CollectionException;
+import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
@@ -65,7 +65,9 @@ public class GlobalAdapter implements IAdapter {
     private static final String BUILDING = "Building configuration...";
     private static final String CURRENT = "Current configuration";
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
+	     throws NotCollectableException, OvalException {
+
 	GlobalObject gObj = (GlobalObject)rc.getObject();
 	EntityObjectStringType globalCommand = gObj.getGlobalCommand();
 	OperationEnumeration op = globalCommand.getOperation();
@@ -85,7 +87,7 @@ public class GlobalAdapter implements IAdapter {
 	} catch (NoSuchElementException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_GLOBAL, e.getMessage()));
+	    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ITechSupport.GLOBAL));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
@@ -106,7 +108,7 @@ public class GlobalAdapter implements IAdapter {
 			break;
 
 		      default:
-			throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+			throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 		    }
 
 		    if (add) {

@@ -44,7 +44,7 @@ import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.LittleEndian;
-import org.joval.oval.CollectionException;
+import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
@@ -102,13 +102,15 @@ public class RegistryAdapter implements IAdapter {
 	}
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
+	    throws NotCollectableException, OvalException {
+
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	RegistryObject rObj = (RegistryObject)rc.getObject();
 
 	String id = rObj.getId();
 	if (rObj.getHive() == null || rObj.getHive().getValue() == null) {
-	    throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, id));
+	    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, id));
 	}
 	String hive = (String)rObj.getHive().getValue();
 
@@ -141,7 +143,7 @@ public class RegistryAdapter implements IAdapter {
      * pattern match operations), singletons (from equals operations), and searches based on RegistryBehaviors.
      */
     private Collection<String> getPathList(RegistryObject rObj, String hive, IRequestContext rc)
-		throws CollectionException, OvalException {
+		throws NotCollectableException, OvalException {
 
 	Collection<String> list = pathMap.get(rObj.getId());
 	if (list != null) {
@@ -197,7 +199,7 @@ public class RegistryAdapter implements IAdapter {
 	  }
 
 	  default:
-	    throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+	    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	}
 
 	if (rObj.isSetBehaviors()) {
@@ -274,7 +276,7 @@ public class RegistryAdapter implements IAdapter {
      * Get all items corresponding to a concrete path, given the hive and RegistryObject.
      */
     private Collection<RegistryItem> getItems(RegistryObject rObj, String hive, String path, IRequestContext rc)
-		throws NoSuchElementException, CollectionException {
+		throws NoSuchElementException, NotCollectableException {
 
 	boolean win32 = false;
 	if (rObj.isSetBehaviors()) {
@@ -315,7 +317,7 @@ public class RegistryAdapter implements IAdapter {
 		break;
     
 	      default:
-		throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	    }
 	}
 
@@ -325,7 +327,7 @@ public class RegistryAdapter implements IAdapter {
     /**
      * Get an item given a concrete hive, key path and value name.
      */
-    private RegistryItem getItem(IKey key, String name, boolean win32) throws NoSuchElementException, CollectionException {
+    private RegistryItem getItem(IKey key, String name, boolean win32) throws NoSuchElementException, NotCollectableException {
 	RegistryItem item = JOVALSystem.factories.sc.windows.createRegistryItem();
 	EntityItemRegistryHiveType hiveType = JOVALSystem.factories.sc.windows.createEntityItemRegistryHiveType();
 	hiveType.setValue(key.getHive());
@@ -432,8 +434,8 @@ public class RegistryAdapter implements IAdapter {
 	      }
 
 	      default:
-		throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_VALUETOSTR,
-								     key.toString(), name, val.getClass().getName()));
+		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_VALUETOSTR,
+									 key.toString(), name, val.getClass().getName()));
 	    }
 	    item.getValue().addAll(values);
 	    item.setType(typeType);

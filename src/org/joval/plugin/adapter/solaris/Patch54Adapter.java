@@ -26,8 +26,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.oval.CollectionException;
-import org.joval.oval.OvalException;
+import org.joval.oval.NotCollectableException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -50,99 +49,13 @@ public class Patch54Adapter extends PatchAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
 	Patch54Object pObj = (Patch54Object)rc.getObject();
 	int iBase = 0;
 	try {
 	    iBase = Integer.parseInt((String)pObj.getBase().getValue());
 	} catch (NumberFormatException e) {
-	    throw new CollectionException(e);
-	}
-
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	switch(pObj.getBase().getOperation()) {
-	  case EQUALS:
-	    items.addAll(getItems(pObj, Integer.toString(iBase)));
-	    break;
-
-	  case NOT_EQUAL:
-	    for (String base : revisions.keySet()) {
-		if (!base.equals(pObj.getBase())) {
-		    items.addAll(getItems(pObj, base));
-		}
-	    }
-	    break;
-
-	  case LESS_THAN:
-	    for (String base : revisions.keySet()) {
-		try {
-		    if (Integer.parseInt(base) < iBase) {
-			items.addAll(getItems(pObj, base));
-		    }
-		} catch (NumberFormatException e) {
-		    throw new CollectionException(e);
-		}
-	    }
-	    break;
-
-	  case LESS_THAN_OR_EQUAL:
-	    for (String base : revisions.keySet()) {
-		try {
-		    if (Integer.parseInt(base) <= iBase) {
-			items.addAll(getItems(pObj, base));
-		    }
-		} catch (NumberFormatException e) {
-		    throw new CollectionException(e);
-		}
-	    }
-	    break;
-
-	  case GREATER_THAN:
-	    for (String base : revisions.keySet()) {
-		try {
-		    if (Integer.parseInt(base) > iBase) {
-			items.addAll(getItems(pObj, base));
-		    }
-		} catch (NumberFormatException e) {
-		    throw new CollectionException(e);
-		}
-	    }
-	    break;
-
-	  case GREATER_THAN_OR_EQUAL:
-	    for (String base : revisions.keySet()) {
-		try {
-		    if (Integer.parseInt(base) >= iBase) {
-			items.addAll(getItems(pObj, base));
-		    }
-		} catch (NumberFormatException e) {
-		    throw new CollectionException(e);
-		}
-	    }
-	    break;
-
-	  case PATTERN_MATCH: {
-	    try {
-		Pattern p = Pattern.compile((String)pObj.getBase().getValue());
-		for (String base : revisions.keySet()) {
-		    if (p.matcher(base).find()) {
-			items.addAll(getItems(pObj, base));
-		    }
-		}
-	    } catch (PatternSyntaxException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	    break;
-	  }
-
-	  default: {
-	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getBase().getOperation());
-	    throw new CollectionException(s);
-	  }
+	    throw new NotCollectableException(e);
 	}
 
 	if (error != null) {
@@ -151,12 +64,87 @@ public class Patch54Adapter extends PatchAdapter {
 	    msg.setValue(error);
 	    rc.addMessage(msg);
 	}
+
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	try {
+	    switch(pObj.getBase().getOperation()) {
+	      case EQUALS:
+		items.addAll(getItems(pObj, Integer.toString(iBase)));
+		break;
+
+	      case NOT_EQUAL:
+		for (String base : revisions.keySet()) {
+		    if (!base.equals(pObj.getBase())) {
+			items.addAll(getItems(pObj, base));
+		    }
+		}
+		break;
+
+	      case LESS_THAN:
+		for (String base : revisions.keySet()) {
+		    if (Integer.parseInt(base) < iBase) {
+			items.addAll(getItems(pObj, base));
+		    }
+		}
+		break;
+
+	      case LESS_THAN_OR_EQUAL:
+		for (String base : revisions.keySet()) {
+		    if (Integer.parseInt(base) <= iBase) {
+			items.addAll(getItems(pObj, base));
+		    }
+		}
+		break;
+
+	      case GREATER_THAN:
+		for (String base : revisions.keySet()) {
+		    if (Integer.parseInt(base) > iBase) {
+			items.addAll(getItems(pObj, base));
+		    }
+		}
+		break;
+
+	      case GREATER_THAN_OR_EQUAL:
+		for (String base : revisions.keySet()) {
+		    if (Integer.parseInt(base) >= iBase) {
+			items.addAll(getItems(pObj, base));
+		    }
+		}
+		break;
+
+	      case PATTERN_MATCH:
+		Pattern p = Pattern.compile((String)pObj.getBase().getValue());
+		for (String base : revisions.keySet()) {
+		    if (p.matcher(base).find()) {
+			items.addAll(getItems(pObj, base));
+		    }
+		}
+		break;
+
+	      default:
+		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getBase().getOperation());
+		throw new NotCollectableException(s);
+	    }
+	} catch (NumberFormatException e) {
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (PatternSyntaxException e) {
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+
 	return items;
     }
 
     // Internal
 
-    private Collection<JAXBElement<PatchItem>> getItems(Patch54Object pObj, String base) throws CollectionException {
+    private Collection<JAXBElement<PatchItem>> getItems(Patch54Object pObj, String base) throws NotCollectableException {
 	PatchBehaviors behaviors = pObj.getBehaviors();
 	boolean isSupercedence = false;
 	if (behaviors != null) {
@@ -200,8 +188,8 @@ public class Patch54Adapter extends PatchAdapter {
 		    }
 		    break;
 		  default:
-		    throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
-									 pObj.getPatchVersion().getOperation()));
+		    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
+									     pObj.getPatchVersion().getOperation()));
 		}
 	    }
 	}

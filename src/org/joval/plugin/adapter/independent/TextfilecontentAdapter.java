@@ -28,7 +28,7 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
-import org.joval.oval.CollectionException;
+import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -69,7 +69,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
      * Parse the file as specified by the Object, and decorate the Item.
      */
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectionException, OvalException {
+		throws IOException, NotCollectableException, OvalException {
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
@@ -111,7 +111,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		  }
 
 		  default:
-		    throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 		}
 	    } catch (PatternSyntaxException e) {
 		session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());

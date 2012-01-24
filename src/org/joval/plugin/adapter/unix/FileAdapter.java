@@ -41,7 +41,6 @@ import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;
 import org.joval.os.unix.io.UnixFile;
-import org.joval.oval.CollectionException;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.plugin.adapter.independent.BaseFileAdapter;
@@ -85,7 +84,7 @@ public class FileAdapter extends BaseFileAdapter {
     }
 
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectionException, OvalException {
+		throws IOException, OvalException {
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {

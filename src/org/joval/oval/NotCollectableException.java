@@ -5,17 +5,18 @@ package org.joval.oval;
 
 /**
  * An exception class for OVAL item collection.  This is used by implementations of IAdapter to signify that, for some
- * reason, an Object's items could not be collected.
+ * reason, an Object's items could not be collected.  When a NotCollectableException is thrown from a call to
+ * IAdapter.getItems, the corresponding object is flagged as "not collected".
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class CollectionException extends Exception {
-    public CollectionException(String message) {
+public class NotCollectableException extends Exception {
+    public NotCollectableException(String message) {
 	super(message);
     }
 
-    public CollectionException(Exception e) {
+    public NotCollectableException(Exception e) {
 	super(e);
     }
 }

@@ -28,7 +28,7 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
-import org.joval.oval.CollectionException;
+import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -53,7 +53,9 @@ public class SidAdapter extends UserAdapter {
     /**
      * @override
      */
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
+	    throws NotCollectableException, OvalException {
+
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	SidObject sObj = (SidObject)rc.getObject();
 	OperationEnumeration op = sObj.getTrusteeName().getOperation();
@@ -94,7 +96,7 @@ public class SidAdapter extends UserAdapter {
 		break;
     
 	      default:
-		throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	    }
 	} catch (NoSuchElementException e) {
 	    // No match.

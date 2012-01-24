@@ -37,8 +37,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.oval.CollectionException;
-import org.joval.oval.OvalException;
+import org.joval.oval.NotCollectableException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -79,7 +78,7 @@ public class ProcessAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
 	ProcessObject pObj = (ProcessObject)rc.getObject();
 	Collection<JAXBElement <? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
@@ -138,7 +137,7 @@ public class ProcessAdapter implements IAdapter {
 
 	  default: {
 	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getCommand().getOperation());
-	    throw new CollectionException(s);
+	    throw new NotCollectableException(s);
 	  }
 	}
 

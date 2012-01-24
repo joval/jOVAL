@@ -25,8 +25,6 @@ import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.io.PerishableReader;
-import org.joval.oval.CollectionException;
-import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
@@ -61,9 +59,17 @@ public class TclshAdapter implements IAdapter {
     public void disconnect() {
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectionException, OvalException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	items.add(JOVALSystem.factories.sc.ios.createTclshItem(getItem()));
+	try {
+	    items.add(JOVALSystem.factories.sc.ios.createTclshItem(getItem()));
+	} catch (Exception e) {
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
 	return items;
     }
 
@@ -71,27 +77,23 @@ public class TclshAdapter implements IAdapter {
 
     private static final String ERROR = "Line has invalid autocommand \"tclsh\"";
 
-    private TclshItem getItem() throws CollectionException {
-	try {
-	    boolean result = true;
-	    for (String line : SafeCLI.multiLine("tclsh", session, readTimeout)) {
-		if (ERROR.equalsIgnoreCase(line)) {
-		    result = false;
-		}
+    private TclshItem getItem() throws Exception {
+	boolean result = true;
+	for (String line : SafeCLI.multiLine("tclsh", session, readTimeout)) {
+	    if (ERROR.equalsIgnoreCase(line)) {
+		result = false;
 	    }
-
-	    TclshItem item = JOVALSystem.factories.sc.ios.createTclshItem();
-	    EntityItemBoolType available = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	    if (result) {
-		available.setValue("true");
-	    } else {
-		available.setValue("false");
-	    }
-	    available.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-	    item.setAvailable(available);
-	    return item;
-	} catch (Exception e) {
-	    throw new CollectionException(e);
 	}
+
+	TclshItem item = JOVALSystem.factories.sc.ios.createTclshItem();
+	EntityItemBoolType available = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	if (result) {
+	    available.setValue("true");
+	} else {
+	    available.setValue("false");
+	}
+	available.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	item.setAvailable(available);
+	return item;
     }
 }
