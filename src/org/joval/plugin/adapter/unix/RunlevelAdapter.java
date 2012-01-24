@@ -63,100 +63,28 @@ public class RunlevelAdapter implements IAdapter {
 
     public boolean connect() {
 	if (session != null) {
-	    switch(session.getFlavor()) {
-	      case SOLARIS: {
-		try {
-		    IFilesystem fs = session.getFilesystem();
-		    for (String path : fs.search(Pattern.compile("/etc/rc.\\.d"))) {
-			IFile dir = fs.getFile(path);
-			if (dir.isDirectory()) {
-			    String rl = path.substring(path.lastIndexOf(fs.getDelimiter())+1).substring(2, 3);
-			    Hashtable<String, Boolean> runlevel = runlevels.get(rl);
-			    if (runlevel == null) {
-				runlevel = new Hashtable<String, Boolean>();
-				runlevels.put(rl, runlevel);
-			    }
-			    String[] children = dir.list();
-			    for (int i=0; i < children.length; i++) {
-				int len = children[i].length();
-				int ptr=1;
-				boolean done = false;
-				for (; ptr < len; ptr++) {
-				    switch(children[i].charAt(ptr)) {
-				      case '0':
-				      case '1':
-				      case '2':
-				      case '3':
-				      case '4':
-				      case '5':
-				      case '6':
-				      case '7':
-				      case '8':
-				      case '9':
-					break;
-				      default:
-					done = true;
-					break;
-				    }
-				    if (done) {
-					break;
-				    }
-				}
-				String serviceName = children[i].substring(ptr);
-				switch(children[i].charAt(0)) {
-				  case 'S':
-				    runlevel.put(serviceName, new Boolean(true));
-				    break;
-				  case 'K':
-				    runlevel.put(serviceName, new Boolean(false));
-				    break;
-				}
-			    }
-			}
-		    }
-		    return true;
-		} catch (IOException e) {
-		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		}
-		break;
-	      }
+	    try {
+		switch(session.getFlavor()) {
+		  case AIX:
+		    initUnixRunlevels("/etc/rc.d");
+		    break;
 
-	      case LINUX: {
-		try {
-		    for (String line : SafeCLI.multiLine("/sbin/chkconfig --list", session, IUnixSession.TIMEOUT_M)) {
-			StringTokenizer tok = new StringTokenizer(line);
-			if (tok.countTokens() == 8) {
-			    String serviceName = tok.nextToken();
-			    for (int i=0; i <= 6; i++) {
-				String rl = "" + i;
-				if (tok.nextToken().equals(rl + ":on")) {
-				    Hashtable<String, Boolean> runlevel = runlevels.get(rl);
-				    if (runlevel == null) {
-					runlevel = new Hashtable<String, Boolean>();
-					runlevels.put(rl, runlevel);
-				    }
-				    runlevel.put(serviceName, new Boolean(true));
-				} else {
-				    Hashtable<String, Boolean> runlevel = runlevels.get(rl);
-				    if (runlevel == null) {
-					runlevel = new Hashtable<String, Boolean>();
-					runlevels.put(rl, runlevel);
-				    }
-				    runlevel.put(serviceName, new Boolean(false));
-				}
-			    }
-			}
-		    }
-		    return true;
-		} catch (Exception e) {
-		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		}
-		break;
-	      }
+		  case SOLARIS:
+		    initUnixRunlevels("/etc");
+		    break;
 
-	      default:
-		session.getLogger().warn(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor());
-		break;
+		  case LINUX:
+		    initLinuxRunlevels();
+		    break;
+
+		  default:
+		    session.getLogger().warn(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor());
+		    break;
+		}
+
+		return true;
+	    } catch (Exception e) {
+		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return false;
@@ -299,5 +227,83 @@ public class RunlevelAdapter implements IAdapter {
 	item.setStatus(StatusEnumeration.EXISTS);
 
 	return JOVALSystem.factories.sc.unix.createRunlevelItem(item);
+    }
+
+    private void initUnixRunlevels(String baseDir) throws IOException {
+	IFilesystem fs = session.getFilesystem();
+	for (String path : fs.search(Pattern.compile(baseDir + fs.getDelimiter() + "rc.\\.d"))) {
+	    IFile dir = fs.getFile(path);
+	    if (dir.isDirectory()) {
+		String rl = path.substring(path.lastIndexOf(fs.getDelimiter())+1).substring(2, 3);
+		Hashtable<String, Boolean> runlevel = runlevels.get(rl);
+		if (runlevel == null) {
+		    runlevel = new Hashtable<String, Boolean>();
+		    runlevels.put(rl, runlevel);
+		}
+		String[] children = dir.list();
+		for (int i=0; i < children.length; i++) {
+		    int len = children[i].length();
+		    int ptr=1;
+		    boolean done = false;
+		    for (; ptr < len; ptr++) {
+			switch(children[i].charAt(ptr)) {
+			  case '0':
+			  case '1':
+			  case '2':
+			  case '3':
+			  case '4':
+			  case '5':
+			  case '6':
+			  case '7':
+			  case '8':
+			  case '9':
+			    break;
+			  default:
+			    done = true;
+			    break;
+			}
+			if (done) {
+			    break;
+			}
+		    }
+		    String serviceName = children[i].substring(ptr);
+		    switch(children[i].charAt(0)) {
+		      case 'S':
+			runlevel.put(serviceName, new Boolean(true));
+			break;
+		      case 'K':
+			runlevel.put(serviceName, new Boolean(false));
+			break;
+		    }
+		}
+	    }
+	}
+    }
+
+    private void initLinuxRunlevels() throws Exception {
+	for (String line : SafeCLI.multiLine("/sbin/chkconfig --list", session, IUnixSession.TIMEOUT_M)) {
+	    StringTokenizer tok = new StringTokenizer(line);
+	    if (tok.countTokens() == 8) {
+		String serviceName = tok.nextToken();
+		for (int i=0; i <= 6; i++) {
+		    String rl = "" + i;
+		    if (tok.nextToken().equals(rl + ":on")) {
+			Hashtable<String, Boolean> runlevel = runlevels.get(rl);
+			if (runlevel == null) {
+			    runlevel = new Hashtable<String, Boolean>();
+			    runlevels.put(rl, runlevel);
+			}
+			runlevel.put(serviceName, new Boolean(true));
+		    } else {
+			Hashtable<String, Boolean> runlevel = runlevels.get(rl);
+			if (runlevel == null) {
+			    runlevel = new Hashtable<String, Boolean>();
+			    runlevels.put(rl, runlevel);
+			}
+			runlevel.put(serviceName, new Boolean(false));
+		    }
+		}
+	    }
+	}
     }
 }

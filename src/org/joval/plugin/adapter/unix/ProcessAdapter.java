@@ -156,6 +156,7 @@ public class ProcessAdapter implements IAdapter {
 	    args = "ps -A -o pid,ppid,pri,uid,ruid,tty,time,stime,command";
 	    break;
 
+	  case AIX:
 	  case LINUX:
 	  case SOLARIS:
 	    args = "ps -e -o pid,ppid,pri,uid,ruid,tty,class,time,stime,args";

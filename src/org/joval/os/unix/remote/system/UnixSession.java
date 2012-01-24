@@ -90,6 +90,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 	    if (flavor == Flavor.UNKNOWN) {
 		flavor = Flavor.flavorOf(this);
 	    }
+	    info.getSystemInfo();
 	    return true;
 	} else {
 	    return false;
