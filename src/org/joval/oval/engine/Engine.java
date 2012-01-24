@@ -61,6 +61,8 @@ import oval.schemas.definitions.core.DefinitionsType;
 import oval.schemas.definitions.core.EndFunctionType;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.EntitySimpleBaseType;
+import oval.schemas.definitions.core.EntityStateFieldType;
+import oval.schemas.definitions.core.EntityStateRecordType;
 import oval.schemas.definitions.core.EntityStateSimpleBaseType;
 import oval.schemas.definitions.core.EscapeRegexFunctionType;
 import oval.schemas.definitions.core.ExtendDefinitionType;
@@ -978,12 +980,12 @@ public class Engine implements IEngine {
 	}
 
 	try {
-	    String stateClassname = state.getClass().getName();
-	    String stateBaseClassname = stateClassname.substring(stateClassname.lastIndexOf(".")+1);
 	    for (String methodName : getMethodNames(state.getClass())) {
-		if (methodName.startsWith("get") && !stateMethodNames.contains(methodName)) {
+		if (methodName.startsWith("get") && !stateBaseMethodNames.contains(methodName)) {
 		    Object stateEntityObj = state.getClass().getMethod(methodName).invoke(state);
-		    if (stateEntityObj != null && stateEntityObj instanceof EntityStateSimpleBaseType) {
+		    if (stateEntityObj == null) {
+			// continue
+		    } else if (stateEntityObj instanceof EntityStateSimpleBaseType) {
 			EntityStateSimpleBaseType stateEntity = (EntityStateSimpleBaseType)stateEntityObj;
 			Object itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
 			ResultEnumeration result = ResultEnumeration.UNKNOWN;
@@ -1008,6 +1010,36 @@ public class Engine implements IEngine {
 			if (result != ResultEnumeration.TRUE) {
 			    return result;
 			}
+		    } else if (stateEntityObj instanceof EntityStateRecordType) {
+			EntityStateRecordType stateEntity = (EntityStateRecordType)stateEntityObj;
+			Object itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
+			ResultEnumeration result = ResultEnumeration.UNKNOWN;
+			if (itemEntityObj instanceof EntityItemRecordType) {
+			    result = compare(stateEntity, (EntityItemRecordType)itemEntityObj);
+			} else if (itemEntityObj instanceof Collection) {
+			    CheckData cd = new CheckData();
+			    for (Object entityObj : (Collection)itemEntityObj) {
+				if (entityObj instanceof EntityItemRecordType) {
+				    cd.addResult(compare(stateEntity, (EntityItemRecordType)entityObj));
+				} else {
+				    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+									entityObj.getClass().getName(), item.getId());
+				    throw new OvalException(msg);
+				}
+			    }
+			    result = cd.getResult(stateEntity.getEntityCheck());
+			} else {
+			    String message = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+								    itemEntityObj.getClass().getName(), item.getId());
+	    		    throw new OvalException(message);
+			}
+			if (result != ResultEnumeration.TRUE) {
+			    return result;
+			}
+		    } else {
+			String message = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+								item.getClass().getName(), item.getId());
+	    		throw new OvalException(message);
 		    }
 		}
 	    }
@@ -1024,8 +1056,47 @@ public class Engine implements IEngine {
 	}
     }
 
-    private static List<String> stateMethodNames = getMethodNames(StateType.class);
-    private static List<String> itemMethodNames = getMethodNames(ItemType.class);
+    /**
+     * Compare a state and item record.  All fields must match for a TRUE result.
+     *
+     * See:
+     * http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#EntityStateRecordType
+     */
+    private ResultEnumeration compare(EntityStateRecordType stateRecord, EntityItemRecordType itemRecord)
+	    throws OvalException, TestException {
+
+	ResultEnumeration result = ResultEnumeration.UNKNOWN;
+
+	for (EntityStateFieldType stateField : stateRecord.getField()) {
+	    EntityStateSimpleBaseType state = null;
+	    EntityItemSimpleBaseType item = null;
+
+	    for (EntityItemFieldType itemField : itemRecord.getField()) {
+		if (itemField.getName().equals(stateField.getName())) {
+		    state = new StateFieldBridge(stateField);
+		    item = new ItemFieldBridge(itemField);
+		    break;
+		}
+	    }
+	    if (item == null) {
+		return ResultEnumeration.FALSE;
+	    } else {
+		result = compare(state, item);
+		switch(result) {
+		  case TRUE:
+		    break;
+
+		  default:
+		    return result;
+		}
+	    }
+	}
+
+	return result;
+    }
+
+    private static List<String> stateBaseMethodNames = getMethodNames(StateType.class);
+    private static List<String> itemBaseMethodNames = getMethodNames(ItemType.class);
 
     private static List<String> getMethodNames(Class clazz) {
 	List<String> names = new Vector<String>();
@@ -2266,6 +2337,26 @@ public class Engine implements IEngine {
 
 	boolean isNumeric(byte b) {
 	    return '0' <= b && b <= '9';
+	}
+    }
+
+    class StateFieldBridge extends EntityStateSimpleBaseType {
+	StateFieldBridge(EntityStateFieldType field) {
+	    datatype = field.getDatatype();
+	    mask = field.isMask();
+	    operation = field.getOperation();
+	    value = field.getValue();
+	    varCheck = field.getVarCheck();
+	    varRef = field.getVarRef();
+	    entityCheck = field.getEntityCheck();
+	}
+    }
+
+    class ItemFieldBridge extends EntityItemSimpleBaseType {
+	ItemFieldBridge(EntityItemFieldType field) {
+	    datatype = field.getDatatype();
+	    mask = field.isMask();
+	    value = field.getValue();
 	}
     }
 }

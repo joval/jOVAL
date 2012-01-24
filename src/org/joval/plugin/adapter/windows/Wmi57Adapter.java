@@ -104,7 +104,7 @@ public class Wmi57Adapter implements IAdapter {
 		    record.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
 		    for (ISWbemProperty prop : swbObj.getProperties()) {
 			EntityItemFieldType field = JOVALSystem.factories.sc.core.createEntityItemFieldType();
-			field.setName(prop.getName());
+			field.setName(prop.getName().toLowerCase()); // upper-case chars are not allowed per the OVAL spec.
 			field.setValue(prop.getValueAsString());
 			record.getField().add(field);
 		    }
