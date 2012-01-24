@@ -110,8 +110,7 @@ public class Remote {
 	    ISession.Type type = base.getType();
 	    switch(type) {
 	      case UNIX:
-		base.disconnect();
-		UnixSession us = new UnixSession(new SshSession(host, gateway));
+		UnixSession us = new UnixSession((SshSession)base);
 		us.unlock(cred);
 		session = us;
 		break;

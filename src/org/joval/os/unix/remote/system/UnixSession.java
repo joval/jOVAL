@@ -90,7 +90,6 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 	    if (flavor == Flavor.UNKNOWN) {
 		flavor = Flavor.flavorOf(this);
 	    }
-	    info.getSystemInfo();
 	    return true;
 	} else {
 	    return false;
@@ -110,7 +109,7 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
      * @override
      */
     public IProcess createProcess(String command) throws Exception {
-	if (rootCred == null) {
+	if (rootCred == null || flavor == Flavor.UNKNOWN) {
 	    return ssh.createProcess(command);
 	} else {
 	    return new Sudo(this, rootCred, command);

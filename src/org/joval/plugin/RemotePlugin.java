@@ -88,8 +88,7 @@ public class RemotePlugin extends BasePlugin {
 		    break;
 
 		  case UNIX:
-		    base.disconnect();
-		    session = new UnixSession(new SshSession(hostname, gateway));
+		    session = new UnixSession((SshSession)base);
 		    break;
 
 		  case CISCO_IOS:
