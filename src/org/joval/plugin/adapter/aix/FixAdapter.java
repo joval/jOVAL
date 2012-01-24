@@ -76,7 +76,7 @@ public class FixAdapter implements IAdapter {
 
 	  default: {
 	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, fObj.getAparNumber().getOperation());
-	    throw new OvalException(s);
+	    throw new CollectionException(s);
 	  }
 	}
 

@@ -83,7 +83,11 @@ public class GlobalAdapter implements IAdapter {
 	} catch (ResolveException e) {
 	    throw new OvalException(e);
 	} catch (NoSuchElementException e) {
-	    throw new CollectionException(e);
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_GLOBAL, e.getMessage()));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	Collection<GlobalItem> items = new Vector<GlobalItem>();
@@ -102,7 +106,7 @@ public class GlobalAdapter implements IAdapter {
 			break;
 
 		      default:
-			throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+			throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 		    }
 
 		    if (add) {

@@ -82,7 +82,7 @@ public class LineAdapter implements IAdapter {
 	    break;
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+	    throw new CollectionException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	}
 
 	return items;

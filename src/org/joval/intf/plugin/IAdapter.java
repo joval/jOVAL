@@ -48,7 +48,8 @@ public interface IAdapter {
      * @see IRequestContext
      *
      * @throws CollectionException if items cannot be collected for the request for some reason, such as an unsupported
-     *                       platform, for the adapter, or an unsupported operation on the object.
+     *                       platform for the adapter, or an unsupported operation on the object.  The OVAL object will
+     *                       have a resulting status of "not collected".
      * @throws OvalException if there has been an error which should stop all processing, such as propagation of an 
      *                       OvalException that has been thrown by a call to IRequestContext.resolve.
      */
