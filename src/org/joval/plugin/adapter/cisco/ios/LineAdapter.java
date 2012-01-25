@@ -28,6 +28,7 @@ import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.PropertyUtil;
 import org.joval.util.SafeCLI;
 
 /**
@@ -38,10 +39,10 @@ import org.joval.util.SafeCLI;
  */
 public class LineAdapter implements IAdapter {
     IIosSession session;
-    long readTimeout;
+    long readTimeout = 0;
 
     public LineAdapter(IIosSession session) {
-	readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
+	readTimeout = session.getProperties().getLongProperty(IIosSession.PROP_READ_TIMEOUT);
 	this.session = session;
     }
 

@@ -19,8 +19,8 @@ import org.jinterop.dcom.impls.automation.IJIDispatch;
 import com.h9labs.jwbem.SWbemLocator;
 import com.h9labs.jwbem.SWbemServices;
 
-import org.joval.intf.identity.IWindowsCredential;
 import org.joval.intf.util.ILoggable;
+import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;

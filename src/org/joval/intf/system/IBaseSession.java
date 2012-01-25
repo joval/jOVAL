@@ -3,6 +3,7 @@
 package org.joval.intf.system;
 
 import org.joval.intf.util.ILoggable;
+import org.joval.intf.util.IProperty;
 
 /**
  * An interface representing of a basic session.
@@ -11,6 +12,16 @@ import org.joval.intf.util.ILoggable;
  * @version %I% %G%
  */
 public interface IBaseSession extends ILoggable {
+    /**
+     * Property indicating the number of times to re-try running a command in the event of an unexpected disconnect.
+     */
+    String PROP_EXEC_RETRIES = "exec.retries";
+
+    /**
+     * Property indicating the number of milliseconds to wait for a command to begin to return data.
+     */
+    public static final String PROP_READ_TIMEOUT = "read.timeout";
+
     /**
      * A constant defining the String "localhost".
      */
@@ -35,6 +46,8 @@ public interface IBaseSession extends ILoggable {
      * Get the name of the host to which the session is connected.
      */
     String getHostname();
+
+    IProperty getProperties();
 
     /**
      * Create a process on the machine.

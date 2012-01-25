@@ -15,12 +15,12 @@ import org.joval.intf.windows.wmi.IWmiProvider;
  * @version %I% %G%
  */
 public interface IWindowsSession extends ISession {
+    String ENV_ARCH = "PROCESSOR_ARCHITECTURE";
+
     public enum View {
 	_32BIT,
 	_64BIT;
     }
-
-    String ENV_ARCH = "PROCESSOR_ARCHITECTURE";
 
     IRegistry getRegistry(View view);
 

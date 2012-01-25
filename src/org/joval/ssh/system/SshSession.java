@@ -4,6 +4,7 @@
 package org.joval.ssh.system;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 import org.slf4j.cal10n.LocLogger;
@@ -25,15 +26,17 @@ import org.vngx.jsch.util.SocketFactory;
 import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
-import org.joval.intf.identity.ISshCredential;
 import org.joval.intf.io.IFilesystem;
-import org.joval.intf.system.IBaseSession;
+import org.joval.intf.ssh.identity.ISshCredential;
+import org.joval.intf.ssh.system.ISshSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.intf.util.IProperty;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.JSchLogger;
+import org.joval.util.PropertyUtil;
 import org.joval.util.SafeCLI;
 
 /**
@@ -42,21 +45,17 @@ import org.joval.util.SafeCLI;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardInteractive {
-    protected LocLogger logger;
-    protected String hostname;
-    protected ICredential cred;
-    protected SshSession gateway;
-    protected Session session;
-    private boolean connected = false, debug = false;
+public class SshSession implements ISshSession, ILocked, UserInfo, UIKeyboardInteractive {
+    private static int connTimeout = 0;
+    private static int connRetries = 0;
 
-    private static int connTimeout = JOVALSystem.getIntProperty(JOVALSystem.PROP_SSH_CONNECTION_TIMEOUT);
-    private static int connRetries = JOVALSystem.getIntProperty(JOVALSystem.PROP_SSH_CONNECTION_RETRIES);
-    static {
-	if (JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_ATTACH_LOG)) {
-	    JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
-	}
-    }
+    private LocLogger logger;
+    private String hostname;
+    private ICredential cred;
+    private SshSession gateway;
+    private Session session;
+    private InternalProperties internalProps;
+    private boolean connected = false, debug = false;
 
     public SshSession(String hostname) {
 	this(hostname, null);
@@ -65,8 +64,8 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
     public SshSession(String hostname, SshSession gateway) {
 	this.hostname = hostname;
 	this.gateway = gateway;
-	this.debug = JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_DEBUG);
 	logger = JOVALSystem.getLogger();
+	internalProps = new InternalProperties();
     }
 
     public Session getJschSession() {
@@ -113,6 +112,10 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 
     public String getHostname() {
 	return hostname;
+    }
+
+    public IProperty getProperties() {
+	return internalProps;
     }
 
     public void setDebug(boolean debug) {
@@ -260,5 +263,51 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 	session.connect(connTimeout);
 	connected = true;
 	logger.info(JOVALMsg.STATUS_SSH_CONNECT, hostname);
+    }
+
+    private class InternalProperties implements IProperty {
+	PropertyUtil props;
+
+	InternalProperties() {
+	    props = new PropertyUtil();
+	}
+
+	// Implement IProperty
+    
+	public void setProperty(String key, String value) {
+	    props.setProperty(key, value);
+    
+	    if (PROP_ATTACH_LOG.equals(key)) {
+		if (props.getBooleanProperty(key)) {
+		    JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
+		}
+	    } else if (PROP_CONNECTION_TIMEOUT.equals(key)) {
+		SshSession.connTimeout = props.getIntProperty(key);
+	    } else if (PROP_CONNECTION_RETRIES.equals(key)) {
+		SshSession.connRetries = props.getIntProperty(key);
+	    } else if (PROP_DEBUG.equals(key)) {
+		SshSession.this.debug = props.getBooleanProperty(key);
+	    }
+	}
+    
+	public String getProperty(String key) {
+	    return props.getProperty(key);
+	}
+    
+	public long getLongProperty(String key) {
+	    return props.getLongProperty(key);
+	}
+    
+	public int getIntProperty(String key) {
+	    return props.getIntProperty(key);
+	}
+    
+	public boolean getBooleanProperty(String key) {
+	    return props.getBooleanProperty(key);
+	}
+    
+	public Iterator<String> iterator() {
+	    return props.iterator();
+	}
     }
 }

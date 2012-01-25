@@ -29,6 +29,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IPathRedirector;
+import org.joval.intf.util.IProperty;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.system.IEnvironment;
@@ -52,6 +53,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
     private Session jschSession;
     private IBaseSession session;
     private IEnvironment env;
+    private IProperty props;
     private boolean autoExpand = true;
     private boolean preloaded = false;
 
@@ -59,10 +61,11 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
     public SftpFilesystem(Session jschSession, IBaseSession session, IEnvironment env) {
 	super();
-	cache.setLogger(session.getLogger());
 	this.jschSession = jschSession;
 	this.session = session;
+	props = session.getProperties();
 	this.env = env;
+	cache.setLogger(session.getLogger());
     }
 
     public void setJschSession(Session jschSession) {
@@ -91,7 +94,9 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
     }
 
     public boolean preload() {
-	if (preloaded) {
+	if (props.getBooleanProperty(PROP_PRELOAD_REMOTE)) {
+	    return false;
+	} else if (preloaded) {
 	    return true;
 	}
 
@@ -105,11 +110,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    String command = null;
 	    switch(session.getType()) {
 	      case UNIX:
-		if (preloadDisabled((IUnixSession)session)) {
-		    return false;
-		} else {
-		    command = getFindCommand((IUnixSession)session);
-		}
+		command = getFindCommand((IUnixSession)session);
 		break;
 
 	      default:
@@ -117,13 +118,13 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    }
 
 	    int entries = 0;
-	    int maxEntries = JOVALSystem.getIntProperty(JOVALSystem.PROP_FS_PRELOAD_MAXENTRIES);
-	    String method = JOVALSystem.getProperty(JOVALSystem.PROP_FS_PRELOAD_METHOD);
+	    int maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
+	    String method = props.getProperty(PROP_PRELOAD_METHOD);
 
 	    IProcess p = null;
 	    IReader reader = null;
 	    ErrorReader er = null;
-	    if (JOVALSystem.FILE_METHOD.equals(method)) {
+	    if (VAL_FILE_METHOD.equals(method)) {
 		IFile temp = getFile("/tmp/.joval_find");
 		command = new StringBuffer(command).append(" > ").append(temp.getPath()).toString();
 		if (isStale(temp)) {
@@ -142,7 +143,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		}
 		reader = PerishableReader.newInstance(temp.getInputStream(), IUnixSession.TIMEOUT_S);
 	    } else {
-		method = JOVALSystem.STREAM_METHOD;
+		method = VAL_STREAM_METHOD;
 		p = session.createProcess(command);
 		p.start();
 		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
@@ -177,7 +178,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    }
 	    reader.close();
 
-	    if (method.equals(JOVALSystem.STREAM_METHOD)) {
+	    if (method.equals(VAL_STREAM_METHOD)) {
 		p.waitFor(0);
 		er.join();
 	    }
@@ -288,38 +289,9 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
     // Private
 
-    private boolean preloadDisabled(IUnixSession us) {
-	switch(us.getFlavor()) {
-	  case AIX:
-	    return !JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_FS_AIX_PRELOAD);
-
-	  case LINUX:
-	    return !JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_FS_LINUX_PRELOAD);
-
-	  case MACOSX:
-	    return !JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_FS_MACOSX_PRELOAD);
-
-	  case SOLARIS:
-	    return !JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_FS_SOLARIS_PRELOAD);
-
-	  default:
-	    return false;
-	}
-    }
-
     private String getFindCommand(IUnixSession us) throws IOException {
 	String command = null;
-	String skip = null;
-	switch(us.getFlavor()) {
-	  case LINUX:
-	    skip = JOVALSystem.getProperty(JOVALSystem.PROP_LINUX_FS_SKIP);
-	    break;
-
-	  case AIX:
-	    skip = JOVALSystem.getProperty(JOVALSystem.PROP_AIX_FS_SKIP);
-	    break;
-	}
-
+	String skip = props.getProperty(PROP_PRELOAD_SKIP);
 	if (skip == null) {
 	    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD, "/");
 	    command = "find -L /";
@@ -347,7 +319,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
     private boolean isStale(IFile f) {
 	try {
 	    if (f.exists()) {
-		long expires = f.lastModified() + JOVALSystem.getLongProperty(JOVALSystem.PROP_FS_PRELOAD_MAXAGE);
+		long expires = f.lastModified() + props.getLongProperty(PROP_PRELOAD_MAXAGE);
 		return System.currentTimeMillis() >= expires;
 	    }
 	} catch (IOException e) {

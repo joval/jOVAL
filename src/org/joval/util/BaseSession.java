@@ -22,6 +22,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.intf.util.IProperty;
 
 /**
  * Base class for the Windows and Unix local ISession implementations.
@@ -35,9 +36,11 @@ public abstract class BaseSession implements ISession {
     protected IEnvironment env;
     protected IFilesystem fs;
     protected boolean debug = false;
+    protected PropertyUtil props;
 
     protected BaseSession() {
 	logger = JOVALSystem.getLogger();
+	props = new PropertyUtil();
     }
 
     // Implement ILoggable
@@ -54,6 +57,10 @@ public abstract class BaseSession implements ISession {
     }
 
     // Implement ISession
+
+    public IProperty getProperties() {
+	return props;
+    }
 
     public void setDebug(boolean debug) {
 	this.debug = debug;

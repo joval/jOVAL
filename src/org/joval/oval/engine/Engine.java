@@ -328,8 +328,8 @@ public class Engine implements IEngine {
 
     static final GeneratorType getGenerator() {
 	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
-	generator.setProductName(JOVALSystem.getProperty(JOVALSystem.PROP_PRODUCT));
-	generator.setProductVersion(JOVALSystem.getProperty(JOVALSystem.PROP_VERSION));
+	generator.setProductName(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_PRODUCT));
+	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
 	generator.setSchemaVersion(SCHEMA_VERSION.toString());
 	try {
 	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));

@@ -30,7 +30,7 @@ public class TechSupport implements ITechSupport {
      */
     public TechSupport(ISession session) throws Exception {
 	data = new Hashtable<String, List<String>>();
-	long readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
+	long readTimeout = session.getProperties().getLongProperty(ISession.PROP_READ_TIMEOUT);
 	String heading = null;
 	List<String> body = null;
 

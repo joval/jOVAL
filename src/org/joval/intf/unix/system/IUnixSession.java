@@ -19,11 +19,20 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public interface IUnixSession extends ISession {
+    /**
+     * Property indicating the number of milliseconds to wait for a read before quiting.
+     */
+    String PROP_SUDO_READ_TIMEOUT = "sudo.read.timeout";
 
-    long TIMEOUT_S	= JOVALSystem.getLongProperty(JOVALSystem.PROP_UNIX_READ_TIMEOUT_S);
-    long TIMEOUT_M	= JOVALSystem.getLongProperty(JOVALSystem.PROP_UNIX_READ_TIMEOUT_M);
-    long TIMEOUT_L	= JOVALSystem.getLongProperty(JOVALSystem.PROP_UNIX_READ_TIMEOUT_L);
-    long TIMEOUT_XL	= JOVALSystem.getLongProperty(JOVALSystem.PROP_UNIX_READ_TIMEOUT_XL);
+    String PROP_READ_TIMEOUT_S = "read.timeout.small";
+    String PROP_READ_TIMEOUT_M = "read.timeout.medium";
+    String PROP_READ_TIMEOUT_L = "read.timeout.large";
+    String PROP_READ_TIMEOUT_XL = "read.timeout.xl";
+
+    long TIMEOUT_S	= 15000L;
+    long TIMEOUT_M	= 120000L;
+    long TIMEOUT_L	= 900000L;
+    long TIMEOUT_XL	= 3600000L;
 
     Flavor getFlavor();
 
@@ -37,14 +46,14 @@ public interface IUnixSession extends ISession {
 	MACOSX("Darwin"),
 	SOLARIS("SunOS");
     
-	private String osName = null;
+	private String value = null;
     
-	private Flavor(String osName) {
-	    this.osName = osName;
+	private Flavor(String value) {
+	    this.value = value;
 	}
 
-	public String getOsName() {
-	    return osName;
+	public String value() {
+	    return value;
 	}
     
 	public static Flavor flavorOf(IUnixSession session) {
@@ -52,7 +61,7 @@ public interface IUnixSession extends ISession {
 	    try {
 		String osName = SafeCLI.exec("uname -s", session, TIMEOUT_S);
 		for (Flavor f : values()) {
-		    if (f.getOsName().equals(osName)) {
+		    if (f.value().equals(osName)) {
 			flavor = f;
 			break;
 		    }

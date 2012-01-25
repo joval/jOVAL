@@ -20,7 +20,6 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
-import org.joval.intf.identity.IWindowsCredential;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
@@ -28,6 +27,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.identity.IDirectory;
+import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;

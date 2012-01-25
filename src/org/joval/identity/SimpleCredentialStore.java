@@ -12,10 +12,12 @@ import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ICredentialStore;
 import org.joval.intf.system.IBaseSession;
+import org.joval.intf.util.IProperty;
 import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.PropertyUtil;
 
 /**
  * Trivial implementation of an ICredentialStore that contains credentials keyed by hostname.
@@ -32,49 +34,58 @@ public class SimpleCredentialStore implements ICredentialStore {
     public static final String PROP_ROOT_PASSWORD	= "root.password";
     public static final String PROP_PRIVATE_KEY		= "key.file";
 
-    private Hashtable<String, Properties> table;
+    private Hashtable<String, IProperty> table;
 
     /**
      * Create from Properties.
      */
     public SimpleCredentialStore() {
-	table = new Hashtable<String, Properties>();
+	table = new Hashtable<String, IProperty>();
     }
 
     /**
-     * Add properties for a credential.
+     * Add properties for a credential from an IProperty.
+     *
+     * @throws IllegalArgumentException if a PROP_HOSTNAME is not specified.
+     */
+    public void add(IProperty prop) throws IllegalArgumentException {
+	String hostname = prop.getProperty(PROP_HOSTNAME);
+	if (hostname == null) {
+	    throw new IllegalArgumentException(PROP_HOSTNAME);
+	} else {
+	    table.put(hostname, prop);
+	}
+    }
+
+    /**
+     * Add properties for a credential from a java.util.Properties.
      *
      * @throws IllegalArgumentException if a PROP_HOSTNAME is not specified.
      */
     public void add(Properties props) throws IllegalArgumentException {
-	String hostname = props.getProperty(PROP_HOSTNAME);
-	if (hostname == null) {
-	    throw new IllegalArgumentException(PROP_HOSTNAME);
-	} else {
-	    table.put(hostname, props);
-	}
+	add(new PropertyUtil(props));
     }
 
     // Implement ICredentialStore
 
     public ICredential getCredential(IBaseSession base) throws AccessControlException {
-	Properties props = table.get(base.getHostname());
-	if (props == null) {
+	IProperty prop = table.get(base.getHostname());
+	if (prop == null) {
 	    return null;
 	}
-	String domain		= props.getProperty(PROP_DOMAIN);
-	String username		= props.getProperty(PROP_USERNAME);
-	String password		= props.getProperty(PROP_PASSWORD);
-	String passphrase	= props.getProperty(PROP_PASSPHRASE);
-	String rootPassword	= props.getProperty(PROP_ROOT_PASSWORD);
-	String privateKey	= props.getProperty(PROP_PRIVATE_KEY);
+	String domain		= prop.getProperty(PROP_DOMAIN);
+	String username		= prop.getProperty(PROP_USERNAME);
+	String password		= prop.getProperty(PROP_PASSWORD);
+	String passphrase	= prop.getProperty(PROP_PASSPHRASE);
+	String rootPassword	= prop.getProperty(PROP_ROOT_PASSWORD);
+	String privateKey	= prop.getProperty(PROP_PRIVATE_KEY);
 
 	ICredential cred = null;
-	if (base.getHostname().equalsIgnoreCase(props.getProperty(PROP_HOSTNAME))) {
+	if (base.getHostname().equalsIgnoreCase(prop.getProperty(PROP_HOSTNAME))) {
 	    switch (base.getType()) {
 	      case WINDOWS:
 		if (domain == null) {
-		    domain = props.getProperty(PROP_HOSTNAME).toUpperCase();
+		    domain = prop.getProperty(PROP_HOSTNAME).toUpperCase();
 		}
 		cred = new WindowsCredential(domain, username, password);
 		break;

@@ -7,6 +7,9 @@ REMOTE=\
 	org.joval.intf.cisco.system.ITechSupport			\
 	org.joval.intf.identity.ICredential				\
 	org.joval.intf.identity.ILocked					\
+	org.joval.intf.ssh.identity.ISshCredential			\
+	org.joval.intf.ssh.system.ISshSession				\
+	org.joval.intf.windows.identity.IWindowsCredential		\
 	org.joval.io.StreamLogger					\
 	org.joval.io.TailDashF						\
 	org.joval.os.embedded.IosNetworkInterface			\

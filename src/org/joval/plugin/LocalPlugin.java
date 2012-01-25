@@ -23,5 +23,6 @@ public class LocalPlugin extends BasePlugin {
      */
     public LocalPlugin() {
 	session = Local.createSession();
+	JOVALSystem.configureSession(session);
     }
 }

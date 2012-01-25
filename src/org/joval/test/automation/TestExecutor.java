@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Properties;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -32,6 +31,7 @@ import org.joval.intf.oval.IEngine;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
+import org.joval.intf.util.IProperty;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 
@@ -65,13 +65,13 @@ public class TestExecutor implements Runnable {
 	}
     }
 
-    private Properties props;
+    private IProperty props;
     private String name;
     private PolymorphicPlugin plugin;
     private Report report;
     private TestSuite suite;
 
-    TestExecutor(String name, Properties props, PolymorphicPlugin plugin, Report report) {
+    TestExecutor(String name, IProperty props, PolymorphicPlugin plugin, Report report) {
 	this.name = name;
 	this.props = props;
 	this.plugin = plugin;
@@ -104,7 +104,7 @@ public class TestExecutor implements Runnable {
 	    plugin.connect();
 	    File testDir = new File(contentDir, plugin.getSessionType().toString());
 	    if (plugin.getSessionType() == IBaseSession.Type.UNIX) {
-		testDir = new File(testDir, plugin.getSessionFlavor().getOsName());
+		testDir = new File(testDir, plugin.getSessionFlavor().value());
 	    }
 	    if (testDir.exists()) {
 		SystemInfoType info = plugin.getSystemInfo();

@@ -233,8 +233,8 @@ public class Main implements IObserver {
 	print("");
 	print(getMessage("MESSAGE_DIVIDER"));
 	print(getMessage("MESSAGE_PRODUCT"));
-	print(getMessage("MESSAGE_VERSION", JOVALSystem.getProperty(JOVALSystem.PROP_VERSION)));
-	print(getMessage("MESSAGE_BUILD_DATE", JOVALSystem.getProperty(JOVALSystem.PROP_BUILD_DATE)));
+	print(getMessage("MESSAGE_VERSION", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION)));
+	print(getMessage("MESSAGE_BUILD_DATE", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_BUILD_DATE)));
 	print(getMessage("MESSAGE_COPYRIGHT"));
 	if (state.container != null) {
 	    print("");

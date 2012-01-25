@@ -1,8 +1,6 @@
 CLASSES=\
 	org.joval.intf.identity.ICredential				\
 	org.joval.intf.identity.ICredentialStore			\
-	org.joval.intf.identity.ISshCredential				\
-	org.joval.intf.identity.IWindowsCredential			\
 	org.joval.intf.oval.IDefinitionFilter				\
 	org.joval.intf.oval.IDefinitions				\
 	org.joval.intf.oval.IEngine					\
@@ -15,6 +13,7 @@ CLASSES=\
 	org.joval.intf.system.IProcess					\
 	org.joval.intf.util.IObserver					\
 	org.joval.intf.util.IProducer					\
+	org.joval.intf.util.IProperty					\
 	org.joval.os.windows.Timestamp					\
 	org.joval.oval.NotCollectableException				\
 	org.joval.oval.OvalException					\
@@ -34,8 +33,10 @@ CLASSES=\
 	org.joval.oval.util.OperatorData				\
 	org.joval.oval.xml.OvalNamespacePrefixMapper			\
 	org.joval.util.Checksum						\
+	org.joval.oval.IniFile						\
 	org.joval.util.JOVALMsg						\
 	org.joval.util.JOVALSystem					\
 	org.joval.util.Producer						\
+	org.joval.oval.PropertyUtil					\
 	org.joval.util.StringTools					\
 	org.joval.util.Version

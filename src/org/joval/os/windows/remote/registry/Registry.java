@@ -27,10 +27,10 @@ import org.jinterop.dcom.common.JIException;
 import org.jinterop.winreg.IJIWinReg;
 import org.jinterop.winreg.JIWinRegFactory;
 
-import org.joval.intf.identity.IWindowsCredential;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
+import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;

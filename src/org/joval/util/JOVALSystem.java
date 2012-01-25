@@ -10,6 +10,7 @@ import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.logging.FileHandler;
 import javax.xml.bind.JAXBContext;
@@ -28,7 +29,9 @@ import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.ILoggable;
+import org.joval.intf.util.IProperty;
 import org.joval.oval.OvalException;
 import org.joval.oval.engine.DefinitionFilter;
 import org.joval.oval.engine.Definitions;
@@ -78,126 +81,30 @@ public class JOVALSystem {
     /**
      * Property indicating the product name.
      */
-    public static final String PROP_PRODUCT = "productName";
+    public static final String SYSTEM_PROP_PRODUCT = "productName";
 
     /**
      * Property indicating the product version.
      */
-    public static final String PROP_VERSION = "version";
+    public static final String SYSTEM_PROP_VERSION = "version";
 
     /**
      * Property indicating the product build date.
      */
-    public static final String PROP_BUILD_DATE = "build.date";
-
-    /**
-     * Property indicating whether to log messages from JSch to the JOVALSystem logger (true/false).
-     */
-    public static final String PROP_SSH_DEBUG = "ssh.debug";
-
-    /**
-     * Property indicating whether to log messages from JSch to the JOVALSystem logger (true/false).
-     */
-    public static final String PROP_SSH_ATTACH_LOG = "ssh.attach.log";
-
-    /**
-     * Property indicating the number of milliseconds to wait before failing to establish an SSH connection.
-     */
-    public static final String PROP_SSH_CONNECTION_TIMEOUT = "ssh.conn.timeout";
-
-    /**
-     * Property indicating the number of times to re-try establishing an SSH connection in the event of a failure.
-     */
-    public static final String PROP_SSH_CONNECTION_RETRIES = "ssh.conn.retries";
-
-    /**
-     * Property indicating the number of milliseconds to wait for a read before quiting.
-     */
-    public static final String PROP_SUDO_READ_TIMEOUT = "sudo.read.timeout";
-
-    /**
-     * Property indicating the number of times to re-try running a command on a non-Unix SSH-enabled device in the event of an
-     * unexpected disconnect.
-     */
-    public static final String PROP_SSH_EXEC_RETRIES = "exec.retries.ssh";
-
-    /**
-     * Property indicating the number of times to re-try running a command on Unix in the event of an unexpected disconnect.
-     */
-    public static final String PROP_UNIX_EXEC_RETRIES = "exec.retries.unix";
-
-    /**
-     * Property indicating the number of times to re-try running a command on Windows in the event of an unexpected disconnect.
-     */
-    public static final String PROP_WINDOWS_EXEC_RETRIES = "exec.retries.windows";
-
-    /**
-     * Property indicating the number of milliseconds to wait for an IOS command to begin to return data.
-     */
-    public static final String PROP_IOS_READ_TIMEOUT = "ios.read.timeout";
-
-    public static final String PROP_UNIX_READ_TIMEOUT_S = "unix.read.timeout.small";
-    public static final String PROP_UNIX_READ_TIMEOUT_M = "unix.read.timeout.medium";
-    public static final String PROP_UNIX_READ_TIMEOUT_L = "unix.read.timeout.large";
-    public static final String PROP_UNIX_READ_TIMEOUT_XL = "unix.read.timeout.xl";
-
-    /**
-     * Property governing the method used when preloading the cache.  Valid methods are FILE_METHOD and STREAM_METHOD.
-     */
-    public static final String PROP_FS_PRELOAD_METHOD = "fs.preload.method";
-
-    public static final String FILE_METHOD = "file";
-    public static final String STREAM_METHOD = "stream";
-
-    /**
-     * Property governing the maximum number of paths to pre-load into the filesystem map cache.
-     */
-    public static final String PROP_FS_PRELOAD_MAXENTRIES = "fs.preload.maxEntries";
-
-    /**
-     * Property governing the maximum age, in milliseconds, of the file storing the find results used by precaching.  This
-     * is only relevant when the preload method is "file".
-     */
-    public static final String PROP_FS_PRELOAD_MAXAGE = "fs.preload.maxAge";
-
-    /**
-     * Property governing the behavior of local filesystem map cache pre-load behavior (true/false) on Windows.
-     *
-     * If false, the local IFilesystem implementation will use the tree-search algorithm to resolve searches.  If true, it
-     * will scan (and cache) all file paths on the entire filesystem, and then subsequently perform regular expression
-     * matching directly on the paths.
-     */
-    public static final String PROP_LOCAL_FS_WINDOWS_PRELOAD = "local.fs.windows.preload";
-
-    /**
-     * Properties governing the behavior of SSH filesystem map cache pre-load behavior (true/false) on SSH-accessed OSes.
-     */
-    public static final String PROP_SSH_FS_AIX_PRELOAD		= "ssh.fs.aix.preload";
-    public static final String PROP_SSH_FS_LINUX_PRELOAD	= "ssh.fs.linux.preload";
-    public static final String PROP_SSH_FS_MACOSX_PRELOAD	= "ssh.fs.macosx.preload";
-    public static final String PROP_SSH_FS_SOLARIS_PRELOAD	= "ssh.fs.solaris.preload";
-
-    /**
-     * Property specifying a list of root-level paths that should not be preloaded on AIX by an IFilesystem implementation.
-     * Delimiter is the ':' character.
-     */
-    public static final String PROP_AIX_FS_SKIP = "aix.fs.preload.skip";
-
-    /**
-     * Property specifying a list of root-level paths that should not be preloaded on Linux by an IFilesystem implementation.
-     * Delimiter is the ':' character.
-     */
-    public static final String PROP_LINUX_FS_SKIP = "linux.fs.preload.skip";
+    public static final String SYSTEM_PROP_BUILD_DATE = "build.date";
 
     /**
      * A data structure providing easy access to the OVAL schema object factories.
      */
     public static final Factories factories = new Factories();
 
+    private static final String SYSTEM_SECTION = JOVALSystem.class.getName();
+
     private static IMessageConveyor mc;
     private static LocLoggerFactory loggerFactory;
     private static LocLogger sysLogger;
-    private static Properties props, ovalProps;
+    private static Properties ovalProps;
+    private static IniFile config;
 
     static {
 	mc = new MessageConveyor(Locale.getDefault());
@@ -214,12 +121,12 @@ public class JOVALSystem {
 	}
 	loggerFactory = new LocLoggerFactory(mc);
 	sysLogger = loggerFactory.getLocLogger(JOVALSystem.class);
-	props = new Properties();
+	config = new IniFile();
 	ovalProps = new Properties();
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    props.load(cl.getResourceAsStream("joval.system.properties"));
 	    ovalProps.load(cl.getResourceAsStream("oval.properties"));
+	    config = new IniFile(cl.getResourceAsStream("session.ini"));
 	} catch (IOException e) {
 	    sysLogger.error(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
@@ -247,71 +154,37 @@ public class JOVALSystem {
 	return loggerFactory.getLocLogger(name);
     }
 
-    public static ILoggable getLoggable() {
-	return new Loggable();
+    /**
+     * Grab the jOVAL system configuration.
+     */
+    public static IniFile getConfiguration() {
+	return config;
     }
 
     /**
-     * Override a jOVAL property.
+     * Configure a session in accordance with the jOVAL system configuration.
+     */
+    public static void configureSession(IBaseSession session) {
+	for (Class clazz : session.getClass().getInterfaces()) {
+	    configureInterface(clazz, session.getProperties());
+	}
+    }
+
+    /**
+     * Retrieve an OVAL system property.
      *
      * @param key specify one of the PROP_* keys
      */
-    public static void setProperty(String key, String value) {
-	props.setProperty(key, value);
-    }
-
-    /**
-     * Retrieve a jOVAL property.
-     *
-     * @param key specify one of the PROP_* keys
-     */
-    public static String getProperty(String key) {
-	return props.getProperty(key);
-    }
-
-    /**
-     * Retrieve a jOVAL property as a long.
-     *
-     * @return 0 if the key is not found
-     */
-    public static long getLongProperty(String key) {
-	long l = 0;
+    public static String getSystemProperty(String key) {
 	try {
-	    String s = props.getProperty(key);
-	    if (s != null) {
-		l = Long.parseLong(s);
-	    }
-	} catch (NumberFormatException e) {
+	    return config.getProperty(SYSTEM_SECTION, key);
+	} catch (NoSuchElementException e) {
 	}
-	return l;
+	return null;
     }
 
     /**
-     * Retrieve a jOVAL property as an int.
-     *
-     * @return 0 if the key is not found
-     */
-    public static int getIntProperty(String key) {
-	int i = 0;
-	try {
-	    String s = props.getProperty(key);
-	    if (s != null) {
-		i = Integer.parseInt(s);
-	    }
-	} catch (NumberFormatException e) {
-	}
-	return i;
-    }
-
-    /**
-     * Retrieve a jOVAL property as a boolean.  Default value is false.
-     */
-    public static boolean getBooleanProperty(String key) {
-	return "true".equalsIgnoreCase(props.getProperty(key));
-    }
-
-    /**
-     * Retrieve an OVAL property.
+     * Retrieve an OVAL schema property.
      *
      * @param key specify one of the OVAL_PROP_* keys
      */
@@ -461,17 +334,26 @@ public class JOVALSystem {
 
     // Private
 
-    private static class Loggable implements ILoggable {
-	Loggable() {}
-
-	// Implement ILoggable
-
-	public LocLogger getLogger() {
-	    return sysLogger;
+    /**
+     * Recursively configure the class.
+     */
+    private static void configureInterface(Class clazz, IProperty prop) {
+	//
+	// First, configure all super-interfaces
+	//
+	for (Class intf : clazz.getInterfaces()) {
+	    configureInterface(intf, prop);
 	}
 
-	public void setLogger(LocLogger logger) {
-	    // no-op
+	//
+	// Next, configure all properties from this interface
+	//
+	try {
+	    String section = clazz.getName();
+	    for (String key : config.getSection(section)) {
+		prop.setProperty(key, config.getProperty(section, key));
+	    }
+	} catch (NoSuchElementException e) {
 	}
     }
 }

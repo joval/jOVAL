@@ -3,7 +3,7 @@
 package org.joval.os.windows.identity;
 
 import org.joval.identity.Credential;
-import org.joval.intf.identity.IWindowsCredential;
+import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 

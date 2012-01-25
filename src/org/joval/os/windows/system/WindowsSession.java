@@ -118,7 +118,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 	wmi = new WmiProvider(this);
 	if (reg.connect()) {
 	    env = reg.getEnvironment();
-	    fs = new LocalFilesystem(env, null, logger);
+	    fs = new LocalFilesystem(this, env, null, logger);
 	    is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 	    if (is64bit) {
 		if (!"64".equals(System.getProperty("sun.arch.data.model"))) {
@@ -128,7 +128,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 		logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "64");
 		WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
 		reg32 = new Registry(new WOW3264RegistryRedirector(flavor), this);
-		fs32 = new LocalFilesystem(env, new WOW3264FilesystemRedirector(env), logger);
+		fs32 = new LocalFilesystem(this, env, new WOW3264FilesystemRedirector(env), logger);
 	    } else {
 		logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
 		reg32 = reg;

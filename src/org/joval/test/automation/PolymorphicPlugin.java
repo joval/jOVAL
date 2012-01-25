@@ -19,6 +19,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IProducer;
+import org.joval.intf.util.IProperty;
 import org.joval.oval.OvalException;
 import org.joval.plugin.RemotePlugin;
 import org.joval.util.JOVALMsg;
@@ -49,12 +50,13 @@ class PolymorphicPlugin extends RemotePlugin {
     PolymorphicPlugin() {
 	super(IBaseSession.LOCALHOST);
 	session = Local.createSession();
+	JOVALSystem.configureSession(session);
     }
 
     /**
      * Create a plugin using a remote session implementation.
      */
-    PolymorphicPlugin(Properties props) {
+    PolymorphicPlugin(IProperty props) {
 	super(props.getProperty(SimpleCredentialStore.PROP_HOSTNAME));
 	SCS.add(props);
     }

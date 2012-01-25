@@ -13,11 +13,8 @@ import org.joval.intf.io.IReader;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A tool for attempting to run a command-line repeatedly until it spits out some results.  It can only be used for commands
@@ -59,33 +56,7 @@ public class SafeCLI {
 	this.cmd = cmd;
 	this.session = session;
 	this.readTimeout = readTimeout;
-
-	//
-	// Avoid calling SshSession.getType(), as that would result in an infinite loop!
-	//
-	if (session instanceof ISession) {
-	    IBaseSession.Type type = session.getType();
-	    switch(type) {
-	      case UNIX:
-		execRetries = JOVALSystem.getIntProperty(JOVALSystem.PROP_UNIX_EXEC_RETRIES);
-		break;
-
-	      case WINDOWS:
-		execRetries = JOVALSystem.getIntProperty(JOVALSystem.PROP_WINDOWS_EXEC_RETRIES);
-		break;
-
-	      case CISCO_IOS:
-	      case SSH:
-		execRetries = JOVALSystem.getIntProperty(JOVALSystem.PROP_SSH_EXEC_RETRIES);
-		break;
-
-	      default:
-		session.getLogger().warn(JOVALMsg.ERROR_SESSION_TYPE, type);
-		break;
-	    }
-	} else {
-	    execRetries = JOVALSystem.getIntProperty(JOVALSystem.PROP_SSH_EXEC_RETRIES);
-	}
+	execRetries = session.getProperties().getIntProperty(IBaseSession.PROP_EXEC_RETRIES);
     }
 
     private List<String> output() throws Exception {

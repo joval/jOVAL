@@ -31,7 +31,6 @@ import org.joval.util.JOVALSystem;
  */
 public class RemotePlugin extends BasePlugin {
     private static SessionFactory sessionFactory = new SessionFactory();
-    private static SshSession gateway = null;
     private static ICredentialStore cs;
 
     /**
@@ -46,7 +45,6 @@ public class RemotePlugin extends BasePlugin {
      */
     public static void setSshGateway(SshSession gateway) {
 	sessionFactory.setSshGateway(gateway);
-	RemotePlugin.gateway = gateway;
     }
 
     /**
@@ -78,6 +76,7 @@ public class RemotePlugin extends BasePlugin {
 	if (hostname != null) {
 	    try {
 		IBaseSession base = sessionFactory.createSession(hostname);
+		JOVALSystem.configureSession(base);
 		base.setLogger(logger);
 		setCredential(base);
 
@@ -93,7 +92,7 @@ public class RemotePlugin extends BasePlugin {
 
 		  case CISCO_IOS:
 		    base.disconnect();
-		    session = new IosSession(new SshSession(hostname, gateway));
+		    session = new IosSession((SshSession)base);
 		    break;
 
 		  default:
@@ -101,6 +100,7 @@ public class RemotePlugin extends BasePlugin {
 		    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, type));
 	        }
 
+		JOVALSystem.configureSession(session);
 		setCredential(session);
 	    } catch (Exception e) {
 		throw new OvalException(e);

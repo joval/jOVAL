@@ -27,8 +27,10 @@ clean:
 resources:
 	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/*.properties $(BUILD)
-	echo "version=$(JOVAL_VERSION)" >> $(BUILD)/joval.system.properties
-	echo "build.date=`date`" >> $(BUILD)/joval.system.properties
+	rm -f $(BUILD)/*.ini
+	cp $(RSRC)/*.ini $(BUILD)
+	echo -e "version=$(JOVAL_VERSION)\r\n" >> $(BUILD)/session.ini
+	echo "build.date=`date`" >> $(BUILD)/session.ini
 
 classes: classdirs $(CLASS_FILES)
 

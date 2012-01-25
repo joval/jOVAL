@@ -86,7 +86,7 @@ public class UnixSystemInfo {
 		    break;
 		}
 		if (!info.isSetOsName()) {
-		    info.setOsName(session.getFlavor().getOsName());
+		    info.setOsName(session.getFlavor().value());
 		}
 		break;
 	    }

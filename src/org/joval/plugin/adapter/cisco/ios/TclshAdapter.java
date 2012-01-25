@@ -41,7 +41,7 @@ public class TclshAdapter implements IAdapter {
 
     public TclshAdapter(IIosSession session) {
 	this.session = session;
-	readTimeout = JOVALSystem.getLongProperty(JOVALSystem.PROP_IOS_READ_TIMEOUT);
+	readTimeout = session.getProperties().getLongProperty(IIosSession.PROP_READ_TIMEOUT);
     }
 
     // Implement IAdapter

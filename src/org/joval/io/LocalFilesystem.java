@@ -19,9 +19,11 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
+import org.joval.intf.util.IProperty;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITree;
 import org.joval.intf.util.tree.ITreeBuilder;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.os.windows.io.WindowsFile;
 import org.joval.util.tree.CachingTree;
@@ -37,19 +39,22 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class LocalFilesystem extends CachingTree implements IFilesystem {
-    private static boolean LINUX	= System.getProperty("os.name").toLowerCase().indexOf("linux") >= 0;
-    private static boolean WINDOWS	= System.getProperty("os.name").startsWith("Windows");
+    private static final boolean WINDOWS = System.getProperty("os.name").toLowerCase().startsWith("windows");
 
     private int entries, maxEntries;
     private boolean autoExpand = true, preloaded = false;
     private LocLogger logger;
+    private IProperty props;
+    private IBaseSession session;
     private IEnvironment env;
     private IPathRedirector redirector;
 
-    public LocalFilesystem (IEnvironment env, IPathRedirector redirector, LocLogger logger) {
+    public LocalFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector, LocLogger logger) {
 	super();
 	cache.setLogger(logger);
+	this.session = session;
 	this.env = env;
+	props = session.getProperties();
 	this.redirector = redirector;
 	this.logger = logger;
     }
@@ -70,46 +75,50 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     }
 
     public boolean preload() {
-	if (WINDOWS && !"true".equals(JOVALSystem.getProperty(JOVALSystem.PROP_LOCAL_FS_WINDOWS_PRELOAD))) {
+	if (props.getBooleanProperty(PROP_PRELOAD_LOCAL)) {
 	    return false;
 	} else if (preloaded) {
 	    return true;
 	}
 
 	entries = 0;
-	maxEntries = JOVALSystem.getIntProperty(JOVALSystem.PROP_FS_PRELOAD_MAXENTRIES);
+	maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
 	try {
+	    Collection<String> skips = new Vector<String>();
+	    String skipStr = props.getProperty(PROP_PRELOAD_SKIP);
+	    if (skipStr != null) {
+		skips.addAll(StringTools.toList(StringTools.tokenize(skipStr, ":", true)));
+	    }
+
 	    if (WINDOWS) {
 		File[] roots = File.listRoots();
 		for (int i=0; i < roots.length; i++) {
 		    String name = roots[i].getName();
-		    ITreeBuilder tree = cache.getTreeBuilder(name);
-		    if (tree == null) {
-			tree = new Tree(name, getDelimiter());
-			cache.addTree(tree);
+		    if (skips.contains(name)) {
+			logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, name);
+		    } else {
+			logger.debug(JOVALMsg.STATUS_FS_PRELOAD, name);
+			ITreeBuilder tree = cache.getTreeBuilder(name);
+			if (tree == null) {
+			    tree = new Tree(name, getDelimiter());
+			    cache.addTree(tree);
+			}
+			addRecursive(tree, roots[i]);
 		    }
-		    addRecursive(tree, roots[i]);
 		}
 	    } else {
 		File root = new File(getDelimiter());
 		Collection<File> roots = new Vector<File>();
-		if (LINUX) {
-		    String skip = JOVALSystem.getProperty(JOVALSystem.PROP_LINUX_FS_SKIP);
-		    if (skip == null) {
-			roots.add(root);
-		    } else {
-			Collection<String> forbidden = StringTools.toList(StringTools.tokenize(skip, ":", true));
-			String[] children = root.list();
-			for (int i=0; i < children.length; i++) {
-			    if (forbidden.contains(children[i])) {
-				logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, children[i]);
-			    } else {
-				logger.debug(JOVALMsg.STATUS_FS_PRELOAD, children[i]);
-				roots.add(new File(root, children[i]));
-			    }
+		if (skips.size() > 0) {
+		    for (String child : root.list()) {
+			if (skips.contains(child)) {
+			    logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, child);
+			} else {
+			    roots.add(new File(root, child));
 			}
 		    }
 		} else {
+		    logger.debug(JOVALMsg.STATUS_FS_PRELOAD, root.getPath());
 		    roots.add(root);
 		}
 
@@ -119,6 +128,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 		    cache.addTree(tree);
 		}
 		for (File f : roots) {
+		    logger.debug(JOVALMsg.STATUS_FS_PRELOAD, f.getName());
 		    addRecursive(tree, f);
 		}
 	    }

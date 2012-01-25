@@ -18,7 +18,6 @@ import jcifs.smb.SmbFileOutputStream;
 import jcifs.smb.SmbRandomAccessFile;
 import jcifs.smb.VolatileSmbFile;
 
-import org.joval.intf.identity.IWindowsCredential;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
@@ -26,6 +25,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
+import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;

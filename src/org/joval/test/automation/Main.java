@@ -64,6 +64,7 @@ import org.joval.intf.oval.IResults;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
+import org.joval.intf.util.IProperty;
 import org.joval.oval.OvalException;
 import org.joval.util.IniFile;
 import org.joval.util.JOVALSystem;
@@ -119,7 +120,7 @@ public class Main {
 
 	    for (String name : config.listSections()) {
 		if (name.startsWith("Suite: ")) {
-		    Properties props = config.getSection(name);
+		    IProperty props = config.getSection(name);
 		    PolymorphicPlugin plugin;
 		    if (LOCAL.equals(name)) {
 			plugin = new PolymorphicPlugin();

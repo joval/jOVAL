@@ -5,7 +5,7 @@ package org.joval.ssh.identity;
 import java.io.File;
 
 import org.joval.identity.Credential;
-import org.joval.intf.identity.ISshCredential;
+import org.joval.intf.ssh.identity.ISshCredential;
 
 /**
  * A representation of a Unix credential.
