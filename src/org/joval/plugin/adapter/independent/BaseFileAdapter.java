@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Stack;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -81,7 +82,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	//
 	// Get the appropriate IFilesystem
 	//
-	ReflectedFileObject fObj = new ReflectedFileObject(obj);
+	ReflectedFileObject fObj = new ReflectedFileObject(rc);
 	ReflectedFileBehaviors behaviors = null;
 	if (fObj.isSetBehaviors()) {
 	    behaviors = fObj.getBehaviors();
@@ -104,7 +105,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	}
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	for (String path : getPathList(rc, fs, behaviors)) {
+	for (String path : getPathList(fObj, rc, fs)) {
 	    IFile f = null;
 	    try {
 		f = fs.getFile(path);
@@ -236,17 +237,16 @@ public abstract class BaseFileAdapter implements IAdapter {
      * The resulting collection may contain extraneous objects.  For instance, it may contain files that match the
      * object path pattern even though the filename may have been nilled.  Hence, the results should be filtered.
      */
-    final Collection<String> getPathList(IRequestContext rc, IFilesystem fs, ReflectedFileBehaviors fb) throws OvalException {
-	ObjectType obj = rc.getObject();
-	Collection<String> list = pathMap.get(obj.getId());
+    final Collection<String> getPathList(ReflectedFileObject fObj, IRequestContext rc, IFilesystem fs) throws OvalException {
+	String id = fObj.getId();
+	Collection<String> list = pathMap.get(id);
 	if (list != null) {
 	    return list;
 	}
 
+	ReflectedFileBehaviors fb = fObj.getBehaviors();
 	list = new HashSet<String>();
 	try {
-	    ReflectedFileObject fObj = new ReflectedFileObject(obj);
-
 	    if (fObj.isSetFilepath()) {
 		//
 		// Windows view is already handled, and FileBehaviors recursion is ignored in the Filepath case, so
@@ -294,7 +294,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			// Recursive search File Behaviors always only apply exclusively to well-defined paths, never
 			// patterns.
 			//
-			list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs);
+			list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs, null);
 		    }
 		    break;
 
@@ -366,29 +366,29 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    }
 		    list = files;
 		}
-	    } else if (isPlistObject(obj)) {
-		for (String path : getPlistPaths(obj, rc)) {
+	    } else if (isPlistObject(rc.getObject())) {
+		for (String path : getPlistPaths(rc)) {
 		    list.add(path);
 		}
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, obj.getId()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, id));
 	    }
 	} catch (PatternSyntaxException e) {
        	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (NoSuchElementException e) {
-       	    session.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), obj.getId());
+       	    session.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), id);
 	} catch (ResolveException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
 	}
-	pathMap.put(obj.getId(), list);
+	pathMap.put(id, list);
 	return list;
     }
 
     /**
-     * Does the object represent a MacOS X plist object?
+     * Is the object a Plist type?
      */
     private boolean isPlistObject(ObjectType obj) {
 	return obj instanceof PlistObject || obj instanceof Plist510Object;
@@ -397,7 +397,8 @@ public abstract class BaseFileAdapter implements IAdapter {
     /**
      * Get the path of the plist file based on the app_id.
      */
-    private Collection<String> getPlistPaths(ObjectType obj, IRequestContext rc) throws OvalException, ResolveException {
+    private Collection<String> getPlistPaths(IRequestContext rc) throws OvalException, ResolveException {
+	ObjectType obj = rc.getObject();
 	EntityObjectStringType appIdType = null;
 	if (obj instanceof PlistObject) {
 	    appIdType = ((PlistObject)obj).getAppId();
@@ -428,12 +429,16 @@ public abstract class BaseFileAdapter implements IAdapter {
     /**
      * Finds directories recursively based on FileBahaviors.
      */
-    private Collection<String> getDirs(Collection<String> list, int depth, String direction, String recurse, IFilesystem fs) {
+    private Collection<String> getDirs(Collection<String> list, int depth, String direction, String recurse,
+				       IFilesystem fs, Stack<String> ancestors) {
 	if ("none".equals(direction) || depth == 0) {
 	    return list;
 	} else {
 	    Collection<String> results = new HashSet<String>();
 	    for (String path : list) {
+		if (ancestors == null) {
+		    ancestors = new Stack<String>();
+		}
 		if (!path.endsWith(fs.getDelimiter())) {
 		    path = path + fs.getDelimiter();
 		}
@@ -448,8 +453,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 			// skip the symlink
 		    } else if (recurse != null && recurse.indexOf("directories") == -1 && f.isDirectory()) {
 			// skip the directory
+		    } else if (f.isLink() && ancestors.contains(f.getCanonicalPath())) {
+			// Skip the loop back to an ancestor!
+			// NB: This point is only reached if symlinks are being followed
+			session.getLogger().warn(JOVALMsg.STATUS_FS_LOOP, f.getLocalName());
 		    } else if (f.isDirectory()) {
 			results.add(f.getLocalName());
+			ancestors.push(f.getCanonicalPath());
 			if ("up".equals(direction)) {
 			    int ptr = 0;
 			    ptr = path.lastIndexOf(fs.getDelimiter(),
@@ -457,14 +467,14 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    if (ptr != -1) {
 				Collection<String> c = new HashSet<String>();
 				c.add(path.substring(0, ptr));
-				results.addAll(getDirs(c, --depth, direction, recurse, fs));
+				results.addAll(getDirs(c, --depth, direction, recurse, fs, cloneStack(ancestors)));
 			    }
 			} else { // recurse down
 			    Collection<String> c = new HashSet<String>();
 			    for (INode child : f.getChildren()) {
 				c.add(child.getPath());
 			    }
-			    results.addAll(getDirs(c, --depth, direction, recurse, fs));
+			    results.addAll(getDirs(c, --depth, direction, recurse, fs, cloneStack(ancestors)));
 			}
 		    }
 		} catch (UnsupportedOperationException e) {	
@@ -493,6 +503,12 @@ public abstract class BaseFileAdapter implements IAdapter {
 	}
     }
 
+    private Stack<String> cloneStack(Stack<String> source) {
+	Stack<String> newStack = new Stack<String>();
+	newStack.addAll(source);
+	return newStack;
+    }
+
     /**
      * A reflection proxy for:
      *     oval.schemas.definitions.independent.Textfilecontent54Object
@@ -507,8 +523,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 	EntityObjectStringType filepath = null, path = null, filename = null;
 	ReflectedFileBehaviors behaviors = null;
 
-	ReflectedFileObject(ObjectType obj) {
-	    this.obj = obj;
+	ReflectedFileObject(IRequestContext rc) {
+	    obj = rc.getObject();
 
 	    try {
 		Method getId = obj.getClass().getMethod("getId");

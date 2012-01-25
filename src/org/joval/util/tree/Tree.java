@@ -12,6 +12,7 @@ import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.util.tree.INode;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -54,6 +55,7 @@ public class Tree implements ITreeBuilder {
 	    p.children = new Vector<INode>();
 	}
 	p.children.add(node);
+	logger.trace(JOVALMsg.STATUS_TREE_MKNODE, root.getName(), node.getPath());
 	return node;
     }
 

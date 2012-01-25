@@ -142,9 +142,23 @@ public class JOVALSystem {
     public static final String PROP_UNIX_READ_TIMEOUT_XL = "unix.read.timeout.xl";
 
     /**
+     * Property governing the method used when preloading the cache.  Valid methods are FILE_METHOD and STREAM_METHOD.
+     */
+    public static final String PROP_FS_PRELOAD_METHOD = "fs.preload.method";
+
+    public static final String FILE_METHOD = "file";
+    public static final String STREAM_METHOD = "stream";
+
+    /**
      * Property governing the maximum number of paths to pre-load into the filesystem map cache.
      */
-    public static final String PROP_FS_PRELOAD_MAXSIZE = "fs.preload.maxSize";
+    public static final String PROP_FS_PRELOAD_MAXENTRIES = "fs.preload.maxEntries";
+
+    /**
+     * Property governing the maximum age, in milliseconds, of the file storing the find results used by precaching.  This
+     * is only relevant when the preload method is "file".
+     */
+    public static final String PROP_FS_PRELOAD_MAXAGE = "fs.preload.maxAge";
 
     /**
      * Property governing the behavior of local filesystem map cache pre-load behavior (true/false) on Windows.
@@ -154,6 +168,20 @@ public class JOVALSystem {
      * matching directly on the paths.
      */
     public static final String PROP_LOCAL_FS_WINDOWS_PRELOAD = "local.fs.windows.preload";
+
+    /**
+     * Properties governing the behavior of SSH filesystem map cache pre-load behavior (true/false) on SSH-accessed OSes.
+     */
+    public static final String PROP_SSH_FS_AIX_PRELOAD		= "ssh.fs.aix.preload";
+    public static final String PROP_SSH_FS_LINUX_PRELOAD	= "ssh.fs.linux.preload";
+    public static final String PROP_SSH_FS_MACOSX_PRELOAD	= "ssh.fs.macosx.preload";
+    public static final String PROP_SSH_FS_SOLARIS_PRELOAD	= "ssh.fs.solaris.preload";
+
+    /**
+     * Property specifying a list of root-level paths that should not be preloaded on AIX by an IFilesystem implementation.
+     * Delimiter is the ':' character.
+     */
+    public static final String PROP_AIX_FS_SKIP = "aix.fs.preload.skip";
 
     /**
      * Property specifying a list of root-level paths that should not be preloaded on Linux by an IFilesystem implementation.

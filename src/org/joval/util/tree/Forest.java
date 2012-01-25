@@ -8,12 +8,16 @@ import java.util.Hashtable;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
+import org.slf4j.cal10n.LocLogger;
+
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.ITree;
 import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.util.tree.INode;
+import org.joval.util.JOVALSystem;
 
 /**
  * Utility class for an IProducer.
@@ -23,18 +27,34 @@ import org.joval.intf.util.tree.INode;
  */
 public class Forest implements IForest {
     Hashtable<String, ITree> trees;
+    LocLogger logger;
 
     public Forest() {
 	trees = new Hashtable<String, ITree>();
+	logger = JOVALSystem.getLogger();
     }
 
     public ITree addTree(ITree tree) {
-	return trees.put(tree.getRoot().getName(), tree);
+	return addTree(tree, tree.getRoot().getName());
+    }
+
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+	for (ITree tree : getTrees()) {
+	    tree.setLogger(logger);
+	}
+    }
+
+    public LocLogger getLogger() {
+	return logger;
     }
 
     // Implement IForest
 
     public ITree addTree(ITree tree, String name) {
+	tree.setLogger(logger);
 	return trees.put(name, tree);
     }
 

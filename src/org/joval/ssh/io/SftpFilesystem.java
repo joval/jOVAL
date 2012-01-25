@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Vector;
 import java.util.NoSuchElementException;
 
@@ -58,6 +59,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
     public SftpFilesystem(Session jschSession, IBaseSession session, IEnvironment env) {
 	super();
+	cache.setLogger(session.getLogger());
 	this.jschSession = jschSession;
 	this.session = session;
 	this.env = env;
@@ -84,6 +86,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
     }
 
     public void setLogger(LocLogger logger) {
+	cache.setLogger(logger);
 	session.setLogger(logger);
     }
 
@@ -97,42 +100,15 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    tree = new Tree("", DELIM_STR);
 	    cache.addTree(tree);
 	}
+
 	try {
 	    String command = null;
 	    switch(session.getType()) {
 	      case UNIX:
-		switch(((IUnixSession)session).getFlavor()) {
-		  //
-		  // On Linux, we do not search under the /proc or /sys directories.
-		  // It's just a big ugly mess under there...
-		  //
-		  case LINUX:
-		    String skip = JOVALSystem.getProperty(JOVALSystem.PROP_LINUX_FS_SKIP);
-		    if (skip != null) {
-			Collection<String> forbidden = StringTools.toList(StringTools.tokenize(skip, ":", true));
-			IFile[] roots = getFile(DELIM_STR).listFiles();
-			Collection<String> filtered = new Vector<String>();
-			for (int i=0; i < roots.length; i++) {
-			    if (forbidden.contains(roots[i].getName())) {
-				session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, roots[i]);
-			    } else {
-				session.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, roots[i]);
-				filtered.add(roots[i].getPath());
-			    }
-			}
-			StringBuffer sb = new StringBuffer("find -L ");
-			for (String s : filtered) {
-			    sb.append(s).append(" ");
-			}
-			command = sb.toString().trim();
-			break;
-		    }
-		    // else fall-through
-
-		  default:
-		    session.getLogger().debug(JOVALMsg.STATUS_FS_PRELOAD, "/");
-		    command = "find -L /";
-		    break;
+		if (preloadDisabled((IUnixSession)session)) {
+		    return false;
+		} else {
+		    command = getFindCommand((IUnixSession)session);
 		}
 		break;
 
@@ -140,17 +116,43 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		return false;
 	    }
 
-	    IProcess p = session.createProcess(command);
-	    p.start();
-	    IReader reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-	    reader.setLogger(session.getLogger());
-	    ErrorReader er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), IUnixSession.TIMEOUT_XL));
-	    er.start();
+	    int entries = 0;
+	    int maxEntries = JOVALSystem.getIntProperty(JOVALSystem.PROP_FS_PRELOAD_MAXENTRIES);
+	    String method = JOVALSystem.getProperty(JOVALSystem.PROP_FS_PRELOAD_METHOD);
+
+	    IProcess p = null;
+	    IReader reader = null;
+	    ErrorReader er = null;
+	    if (JOVALSystem.FILE_METHOD.equals(method)) {
+		IFile temp = getFile("/tmp/.joval_find");
+		command = new StringBuffer(command).append(" > ").append(temp.getPath()).toString();
+		if (isStale(temp)) {
+		    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_CREATE, temp.getPath());
+		    p = session.createProcess(command);
+		    p.start();
+		    er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), IUnixSession.TIMEOUT_XL));
+		    er.start();
+		    p.waitFor(IUnixSession.TIMEOUT_XL);
+		    if (p.isRunning()) {
+			p.destroy();
+		    }
+		    er.join();
+		} else {
+		    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_REUSE, temp.getPath());
+		}
+		reader = PerishableReader.newInstance(temp.getInputStream(), IUnixSession.TIMEOUT_S);
+	    } else {
+		method = JOVALSystem.STREAM_METHOD;
+		p = session.createProcess(command);
+		p.start();
+		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
+		er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), IUnixSession.TIMEOUT_XL));
+		er.start();
+	    }
+
 	    String line = null;
-	    int maxSize = JOVALSystem.getIntProperty(JOVALSystem.PROP_FS_PRELOAD_MAXSIZE);
-	    int size = 0;
 	    while((line = reader.readLine()) != null) {
-		if (size++ < maxSize) {
+		if (entries++ < maxEntries) {
 		    String path = line;
 		    if (!path.equals(getDelimiter())) { // skip the root node
 			INode node = tree.getRoot();
@@ -169,13 +171,16 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 			}
 		    }
 		} else {
-		    session.getLogger().warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxSize);
-		    p.destroy();
+		    session.getLogger().warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
 		    break;
 		}
 	    }
 	    reader.close();
-	    er.join();
+
+	    if (method.equals(JOVALSystem.STREAM_METHOD)) {
+		p.waitFor(0);
+		er.join();
+	    }
 	    preloaded = true;
 	    return true;
 	} catch (Exception e) {
@@ -282,6 +287,74 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
     }
 
     // Private
+
+    private boolean preloadDisabled(IUnixSession us) {
+	switch(us.getFlavor()) {
+	  case AIX:
+	    return !JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_FS_AIX_PRELOAD);
+
+	  case LINUX:
+	    return !JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_FS_LINUX_PRELOAD);
+
+	  case MACOSX:
+	    return !JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_FS_MACOSX_PRELOAD);
+
+	  case SOLARIS:
+	    return !JOVALSystem.getBooleanProperty(JOVALSystem.PROP_SSH_FS_SOLARIS_PRELOAD);
+
+	  default:
+	    return false;
+	}
+    }
+
+    private String getFindCommand(IUnixSession us) throws IOException {
+	String command = null;
+	String skip = null;
+	switch(us.getFlavor()) {
+	  case LINUX:
+	    skip = JOVALSystem.getProperty(JOVALSystem.PROP_LINUX_FS_SKIP);
+	    break;
+
+	  case AIX:
+	    skip = JOVALSystem.getProperty(JOVALSystem.PROP_AIX_FS_SKIP);
+	    break;
+	}
+
+	if (skip == null) {
+	    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD, "/");
+	    command = "find -L /";
+	} else {
+	    Collection<String> forbidden = StringTools.toList(StringTools.tokenize(skip, ":", true));
+	    IFile[] roots = getFile(DELIM_STR).listFiles();
+	    Collection<String> filtered = new Vector<String>();
+	    for (int i=0; i < roots.length; i++) {
+		if (forbidden.contains(roots[i].getName())) {
+		    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, roots[i]);
+		} else {
+		    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD, roots[i]);
+		    filtered.add(roots[i].getPath());
+		}
+	    }
+	    StringBuffer sb = new StringBuffer("find -L ");
+	    for (String s : filtered) {
+		sb.append(s).append(" ");
+	    }
+	    command = sb.toString().trim();
+	}
+	return command;
+    }
+
+    private boolean isStale(IFile f) {
+	try {
+	    if (f.exists()) {
+		long expires = f.lastModified() + JOVALSystem.getLongProperty(JOVALSystem.PROP_FS_PRELOAD_MAXAGE);
+		return System.currentTimeMillis() >= expires;
+	    }
+	} catch (IOException e) {
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return true;
+    }
 
     class ErrorReader implements Runnable {
 	IReader err;

@@ -104,20 +104,24 @@ class WindowsProcess implements IProcess {
 	if (millis > 0) {
 	    end = System.currentTimeMillis() + millis;
 	}
-	String wql = "Select ProcessId from Win32_Process where ProcessId=" + pid;
-	while (running && System.currentTimeMillis() < end) {
-	    SWbemObjectSet set = services.execQuery(wql);
-	    if (set.getSize() == 0) {
-		running = false;
-		break;
-	    } else {
-		Thread.sleep(Math.min(end - System.currentTimeMillis(), 250));
-	    }
+	while (isRunning() && System.currentTimeMillis() < end) {
+	    Thread.sleep(Math.min(end - System.currentTimeMillis(), 250));
 	}
     }
 
     public int exitValue() {
 	return exitCode;
+    }
+
+    public boolean isRunning() {
+	if (running) {
+	    String wql = "Select ProcessId from Win32_Process where ProcessId=" + pid;
+	    SWbemObjectSet set = services.execQuery(wql);
+	    if (set.getSize() == 0) {
+		running = false;
+	    }
+	}
+	return running;
     }
 
     public void destroy() {
@@ -148,6 +152,9 @@ class WindowsProcess implements IProcess {
 	public void run() {
 	    try {
 		p.waitFor(3600000); // 1 hour
+		if (p.isRunning()) {
+		    p.destroy();
+		}
 		synchronized(p.err) {
 		    if (p.errTail != null) {
 			if (p.errTail.isAlive()) {

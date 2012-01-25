@@ -60,6 +60,7 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
      */
     public SmbFilesystem(String host, IWindowsCredential cred, IEnvironment env, IPathRedirector redirector, ILoggable log) {
 	super();
+	cache.setLogger(log.getLogger());
 	this.host = host;
 	auth = getNtlmPasswordAuthentication(cred);
 	this.env = env;
@@ -83,6 +84,7 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
     }
 
     public void setLogger(LocLogger logger) {
+	cache.setLogger(logger);
 	log.setLogger(logger);
     }
 

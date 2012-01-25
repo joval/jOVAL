@@ -86,6 +86,7 @@ class SftpFile extends BaseFile implements IUnixFile {
 		switch(getErrorCode(e)) {
 		  case SftpError.NO_SUCH_FILE:
 		    doesExist = false;
+		    tested = true;
 		    break;
 
 		  default:
@@ -234,6 +235,7 @@ class SftpFile extends BaseFile implements IUnixFile {
 	if (exists()) {
 	    try {
 		sfs.getCS().rm(path);
+		tested = false;
 	    } catch (SftpException e) {
 		throw new IOException(e);
 	    }

@@ -58,4 +58,9 @@ public interface IProcess {
      * return.
      */
     public void destroy();
+
+    /**
+     * Query whether the process is still running.
+     */
+    public boolean isRunning();
 }

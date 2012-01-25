@@ -114,6 +114,18 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	return conn;
     }
 
+    // Implement ILoggable
+
+    /**
+     * @override
+     */
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
+	if (fs32 != null && !fs32.equals(fs)) {
+	    fs32.setLogger(logger);
+	}
+    }
+
     // Implement ILocked
 
     public boolean unlock(ICredential credential) {

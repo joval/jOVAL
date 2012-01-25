@@ -100,7 +100,7 @@ public class Registry extends BaseRegistry {
 	    registry = factory.getWinreg(new AuthInfo(cred), host, true);
 	    state = STATE_ENV;
 	    env = new Environment(this);
-	    license = new LicenseData(this);
+//	    license = new LicenseData(this);
 	    state = STATE_CONNECTED;
 	    return true;
 	} catch (UnknownHostException e) {

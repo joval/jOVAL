@@ -128,20 +128,10 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 	    return false;
 	} else if (session == null) {
 	    try {
-		SessionConfig config = new SessionConfig();
-		config.setProperty(SSHConfigConstants.STRICT_HOST_KEY_CHECKING, "no");
-		JSch jsch = JSch.getInstance();
-		if (gateway == null) {
-		    session = jsch.createSession(cred.getUsername(), hostname, 22, config);
-		} else {
-		    // use gateway port forwarding
-		    int localPort = gateway.session.setPortForwardingL(0, hostname, 22);
-		    session = jsch.createSession(cred.getUsername(), LOCALHOST, localPort, config);
-		}
-		session.setUserInfo(this);
+		connectInternal();
+		return true;
 	    } catch (JSchException e) {
 		logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		return false;
 	    }
 	}
 	if (session.isConnected()) {
@@ -153,10 +143,7 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
 	    Exception lastError = null;
 	    for (int i=1; i <= connRetries; i++) {
 		try {
-		    session.setSocketFactory(SocketFactory.DEFAULT_SOCKET_FACTORY);
-		    session.connect(connTimeout);
-		    logger.info(JOVALMsg.STATUS_SSH_CONNECT, hostname);
-		    connected = true;
+		    connectInternal();
 		    return true;
 		} catch (JSchException e) {
 		    lastError = e;
@@ -252,5 +239,26 @@ public class SshSession implements IBaseSession, ILocked, UserInfo, UIKeyboardIn
      */
     public String[] promptKeyboardInteractive(String dest, String name, String instruction, String[] prompt, boolean[] echo) {
 	return null;
+    }
+
+    // Private
+
+    private void connectInternal() throws JSchException {
+	SessionConfig config = new SessionConfig();
+	config.setProperty(SSHConfigConstants.STRICT_HOST_KEY_CHECKING, "no");
+	JSch jsch = JSch.getInstance();
+	if (gateway == null) {
+	    if (session == null) {
+		session = jsch.createSession(cred.getUsername(), hostname, 22, config);
+	    }
+	} else {
+	    // use gateway port forwarding
+	    int localPort = gateway.session.setPortForwardingL(0, hostname, 22);
+	    session = jsch.createSession(cred.getUsername(), LOCALHOST, localPort, config);
+	}
+	session.setUserInfo(this);
+	session.connect(connTimeout);
+	connected = true;
+	logger.info(JOVALMsg.STATUS_SSH_CONNECT, hostname);
     }
 }

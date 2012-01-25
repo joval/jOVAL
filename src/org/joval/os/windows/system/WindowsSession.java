@@ -9,6 +9,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 
+import org.slf4j.cal10n.LocLogger;
+
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.io.IFilesystem;
@@ -89,6 +91,18 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 	return wmi;
     }
 
+    // Implement ILoggable
+
+    /**
+     * @override
+     */
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
+	if (fs32 != null && !fs32.equals(fs)) {
+	    fs32.setLogger(logger);
+	}
+    }
+
     // Implement ISession
 
     public String getHostname() {
@@ -104,7 +118,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 	wmi = new WmiProvider(this);
 	if (reg.connect()) {
 	    env = reg.getEnvironment();
-	    fs = new LocalFilesystem(env, null, this);
+	    fs = new LocalFilesystem(env, null, logger);
 	    is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 	    if (is64bit) {
 		if (!"64".equals(System.getProperty("sun.arch.data.model"))) {
@@ -114,7 +128,7 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 		logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "64");
 		WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
 		reg32 = new Registry(new WOW3264RegistryRedirector(flavor), this);
-		fs32 = new LocalFilesystem(env, new WOW3264FilesystemRedirector(env), this);
+		fs32 = new LocalFilesystem(env, new WOW3264FilesystemRedirector(env), logger);
 	    } else {
 		logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
 		reg32 = reg;

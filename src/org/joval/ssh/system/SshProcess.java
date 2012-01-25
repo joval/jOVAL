@@ -34,7 +34,7 @@ class SshProcess implements IProcess {
     private String command;
     private boolean debug=false, interactive = false;
     private StreamLogger debugIn, debugErr;
-    private boolean dirty = true;
+    private boolean dirty = true, running = false;
     private LocLogger logger;
 
     private static int num = 0;
@@ -60,6 +60,7 @@ class SshProcess implements IProcess {
 	if (debug) {
 	    num++;
 	}
+	running = true;
     }
 
     public InputStream getInputStream() throws IOException {
@@ -85,11 +86,7 @@ class SshProcess implements IProcess {
     }
 
     public OutputStream getOutputStream() throws IOException {
-	try {
-	    return ce.getOutputStream();
-	} catch (IOException e) {
-	}
-	return null;
+	return ce.getOutputStream();
     }
 
     public void waitFor(long millis) throws InterruptedException {
@@ -119,6 +116,24 @@ class SshProcess implements IProcess {
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    cleanup();
+	}
+    }
+
+    public boolean isRunning() {
+	if (!running) {
+	    return false;
+	} else {
+	    if (ce != null && ce.isConnected()) {
+		if (ce.isEOF()) {
+		    cleanup();
+		    return false;
+		} else {
+		    return true;
+		}
+	    } else {
+		running = false;
+		return false;
+	    }
 	}
     }
 
@@ -158,5 +173,6 @@ class SshProcess implements IProcess {
 	}
 	logger.trace(JOVALMsg.STATUS_SSH_PROCESS_END, command);
 	dirty = false;
+	running = false;
     }
 }

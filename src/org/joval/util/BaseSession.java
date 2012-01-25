@@ -48,6 +48,9 @@ public abstract class BaseSession implements ISession {
 
     public void setLogger(LocLogger logger) {
 	this.logger = logger;
+	if (fs != null) {
+	    fs.setLogger(logger);
+	}
     }
 
     // Implement ISession
@@ -135,6 +138,15 @@ public abstract class BaseSession implements ISession {
 
 	public void destroy() {
 	    p.destroy();
+	}
+
+	public boolean isRunning() {
+	    try {
+		exitValue();
+		return false;
+	    } catch (IllegalThreadStateException e) {
+		return true;
+	    }
 	}
     }
 

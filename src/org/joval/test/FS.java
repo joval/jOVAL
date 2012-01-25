@@ -60,7 +60,7 @@ public class FS {
 			System.out.println(children[i]);
 		    }
 		} else if (f.isFile()) {
-		    in = fs.getInputStream(path);
+		    in = f.getInputStream();
 		    String cs = getMD5Checksum(in);
 		    System.out.println("Path:  " + path);
 		    System.out.println(" Size: " + f.length());

@@ -6,13 +6,15 @@ package org.joval.intf.util.tree;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
+import org.joval.intf.util.ILoggable;
+
 /**
  * Representation of a node on a tree.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IForest {
+public interface IForest extends ILoggable {
     /**
      * @returns the tree that was displaced, if any
      */

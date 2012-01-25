@@ -104,6 +104,10 @@ class Sudo implements IProcess {
 	p.destroy();
     }
 
+    public boolean isRunning() {
+	return p.isRunning();
+    }
+
     // Private
 
     /**
