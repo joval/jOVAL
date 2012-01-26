@@ -60,7 +60,7 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
     }
 
     public boolean preload() {
-	if (props.getBooleanProperty(PROP_PRELOAD_LOCAL)) {
+	if (!props.getBooleanProperty(PROP_PRELOAD_LOCAL)) {
 	    return false;
 	} else if (preloaded) {
 	    return true;
