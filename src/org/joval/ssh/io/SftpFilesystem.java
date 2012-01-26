@@ -38,6 +38,7 @@ import org.joval.util.tree.CachingTree;
 import org.joval.util.tree.Tree;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
 
 /**
@@ -56,6 +57,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
     private IProperty props;
     private boolean autoExpand = true;
     private boolean preloaded = false;
+    private long S, M, L, XL;
 
     ChannelSftp cs;
 
@@ -66,6 +68,11 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	this.env = env;
 	props = session.getProperties();
 	setLogger(session.getLogger());
+
+	S = session.getTimeout(IUnixSession.Timeout.S);
+	M = session.getTimeout(IUnixSession.Timeout.M);
+	L = session.getTimeout(IUnixSession.Timeout.L);
+	XL= session.getTimeout(IUnixSession.Timeout.XL);
     }
 
     public void setJschSession(Session jschSession) {
@@ -108,50 +115,28 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		return false;
 	    }
 
-	    int entries = 0;
-	    int maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
-	    String method = props.getProperty(PROP_PRELOAD_METHOD);
-
+	    //
+	    // Get either a reader for a remote file containing the results of a find command, or a reader
+	    // attached to a running find command, depending on the configured method.
+	    //
 	    IProcess p = null;
-	    IReader reader = null;
 	    ErrorReader er = null;
-	    if (VAL_FILE_METHOD.equals(method)) {
-		IFile temp = getFile("/tmp/.joval_find");
-		command = new StringBuffer(command).append(" > ").append(temp.getPath()).toString();
-		if (isStale(temp)) {
-		    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_CREATE, temp.getPath());
-		    p = session.createProcess(command);
-		    p.start();
-		    InputStream in = p.getInputStream();
-		    if (in instanceof PerishableReader) {
-			// This could take a while!
-			((PerishableReader)in).setTimeout(session.getTimeout(IUnixSession.Timeout.XL));
-		    }
-		    er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(),
-								      session.getTimeout(IUnixSession.Timeout.XL)));
-		    er.start();
-		    byte[] buff = new byte[1024];
-		    while (in.read(buff) > 0) {} // wait...
-		    if (p.isRunning()) {
-			p.destroy();
-		    }
-		    er.join();
-		    in.close();
-		    temp = getFile(temp.getPath()); // get a new handle on the file
-		} else {
-		    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_REUSE, temp.getPath());
-		}
-		reader = PerishableReader.newInstance(temp.getInputStream(), session.getTimeout(IUnixSession.Timeout.S));
+	    IReader reader = null;
+	    if (VAL_FILE_METHOD.equals(props.getProperty(PROP_PRELOAD_METHOD))) {
+		reader = PerishableReader.newInstance(getFindCache(command).getInputStream(), S);
 	    } else {
-		method = VAL_STREAM_METHOD;
 		p = session.createProcess(command);
 		p.start();
-		reader = PerishableReader.newInstance(p.getInputStream(), session.getTimeout(IUnixSession.Timeout.S));
-		er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(),
-								  session.getTimeout(IUnixSession.Timeout.XL)));
+		reader = PerishableReader.newInstance(p.getInputStream(), S);
+		er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), XL));
 		er.start();
 	    }
 
+	    //
+	    // Add entries to the cache, but no more than the maximum configured number
+	    //
+	    int entries = 0;
+	    int maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
 	    String line = null;
 	    while((line = reader.readLine()) != null) {
 		if (entries++ < maxEntries) {
@@ -177,10 +162,15 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		    break;
 		}
 	    }
-	    reader.close();
 
-	    if (method.equals(VAL_STREAM_METHOD)) {
+	    //
+	    // Clean-up
+	    //
+	    reader.close();
+	    if (p != null) {
 		p.waitFor(0);
+	    }
+	    if (er != null) {
 		er.join();
 	    }
 	    preloaded = true;
@@ -290,6 +280,9 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
     // Private
 
+    /**
+     * REMIND (DAS): Add logic to skip over any NFS mounts.
+     */
     private String getFindCommand(IUnixSession us) throws IOException {
 	String command = null;
 	String skip = props.getProperty(PROP_PRELOAD_SKIP);
@@ -317,16 +310,48 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	return command;
     }
 
-    private boolean isStale(IFile f) {
-	try {
-	    if (f.exists()) {
-		long expires = f.lastModified() + props.getLongProperty(PROP_PRELOAD_MAXAGE);
-		return System.currentTimeMillis() >= expires;
+    private IFile getFindCache(String command) throws Exception {
+	String tempTemp = "/tmp/.jOVAL.find~";
+	String tempDest = "/tmp/.jOVAL.find";
+	IFile temp = getFile(tempDest);
+
+	boolean rebuild = true;
+	if (temp.exists()) {
+	    long expires = temp.lastModified() + props.getLongProperty(PROP_PRELOAD_MAXAGE);
+	    if (System.currentTimeMillis() >= expires) {
+		temp.delete();
+	    } else {
+		session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_REUSE, temp.getPath());
+		rebuild = false;
 	    }
-	} catch (IOException e) {
-	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-	return true;
+
+	if (rebuild) {
+	    temp = null;
+	    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_CREATE, tempTemp);
+	    command = new StringBuffer(command).append(" > ").append(tempTemp).toString();
+	    IProcess p = session.createProcess(command);
+	    p.start();
+	    InputStream in = p.getInputStream();
+	    if (in instanceof PerishableReader) {
+		// This could take a while!
+		((PerishableReader)in).setTimeout(XL);
+	    }
+	    ErrorReader er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), XL));
+	    er.start();
+	    byte[] buff = new byte[1024];
+	    while (in.read(buff) > 0) {} // wait...
+	    if (p.isRunning()) {
+		p.destroy();
+	    }
+	    er.join();
+	    in.close();
+
+	    SafeCLI.exec("mv " + tempTemp + " " + tempDest, session, IUnixSession.Timeout.S);
+	    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_CREATE, tempDest);
+	}
+
+	return getFile(tempDest);
     }
 
     class ErrorReader implements Runnable {

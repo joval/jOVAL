@@ -28,8 +28,14 @@ public class SafeCLI {
      * Run a command and get the first line of output.
      */
     public static final String exec(String cmd, IBaseSession session, IBaseSession.Timeout to) throws Exception {
-	SafeCLI sc = new SafeCLI(cmd, session, to);
-	List<String> output = sc.output();
+	return exec(cmd, session, session.getTimeout(to));
+    }
+
+    /**
+     * Run a command and get the first line of output.
+     */
+    public static final String exec(String cmd, IBaseSession session, long readTimeout) throws Exception {
+	List<String> output = multiLine(cmd, session, readTimeout);
 	if (output != null && output.size() > 0) {
 	    return output.get(0);
 	} else {
@@ -41,7 +47,7 @@ public class SafeCLI {
      * Run a command and get the resulting lines of output.
      */
     public static final List<String> multiLine(String cmd, IBaseSession session, IBaseSession.Timeout to) throws Exception {
-	return new SafeCLI(cmd, session, to).output();
+	return new SafeCLI(cmd, session, session.getTimeout(to)).output();
     }
 
     /**
@@ -58,10 +64,6 @@ public class SafeCLI {
     private List<String> output;
     private long readTimeout;
     private int execRetries = 0;
-
-    private SafeCLI(String cmd, IBaseSession session, IBaseSession.Timeout to) throws Exception {
-	this(cmd, session, session.getTimeout(to));
-    }
 
     private SafeCLI(String cmd, IBaseSession session, long readTimeout) throws Exception {
 	this.cmd = cmd;
