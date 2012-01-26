@@ -122,14 +122,22 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_CREATE, temp.getPath());
 		    p = session.createProcess(command);
 		    p.start();
+		    InputStream in = p.getInputStream();
+		    if (in instanceof PerishableReader) {
+			// This could take a while!
+			((PerishableReader)in).setTimeout(session.getTimeout(IUnixSession.Timeout.XL));
+		    }
 		    er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(),
 								      session.getTimeout(IUnixSession.Timeout.XL)));
 		    er.start();
-		    p.waitFor(session.getTimeout(IUnixSession.Timeout.XL));
+		    byte[] buff = new byte[1024];
+		    while (in.read(buff) > 0) {} // wait...
 		    if (p.isRunning()) {
 			p.destroy();
 		    }
 		    er.join();
+		    in.close();
+		    temp = getFile(temp.getPath()); // get a new handle on the file
 		} else {
 		    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_REUSE, temp.getPath());
 		}
