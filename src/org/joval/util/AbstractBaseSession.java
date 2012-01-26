@@ -16,7 +16,14 @@ import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IProperty;
 
 /**
- * Base class for the SSH IBaseSession implementation, and the AbstractSession.
+ * This is the base class for ALL the implementations of all the different types of jOVAL sessions:
+ *
+ * @see org.joval.os.embedded.system.IosSession
+ * @see org.joval.os.unix.system.UnixSession
+ * @see org.joval.os.unix.remote.system.UnixSession
+ * @see org.joval.os.windows.system.WindowsSession
+ * @see org.joval.os.windows.remote.system.WindowsSession
+ * @see org.joval.ssh.system.SshSession
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -29,6 +36,7 @@ public abstract class AbstractBaseSession implements IBaseSession {
     protected AbstractBaseSession() {
 	logger = JOVALSystem.getLogger();
 	internalProps = new InternalProperties();
+	JOVALSystem.configureSession(this);
     }
 
     /**

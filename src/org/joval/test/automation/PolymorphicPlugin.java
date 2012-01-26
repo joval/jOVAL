@@ -51,7 +51,6 @@ class PolymorphicPlugin extends RemotePlugin {
     PolymorphicPlugin() {
 	super(IBaseSession.LOCALHOST);
 	session = Local.createSession();
-	JOVALSystem.configureSession(session);
     }
 
     /**

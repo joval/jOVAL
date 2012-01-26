@@ -76,7 +76,6 @@ public class RemotePlugin extends BasePlugin {
 	if (hostname != null) {
 	    try {
 		IBaseSession base = sessionFactory.createSession(hostname);
-		JOVALSystem.configureSession(base);
 		base.setLogger(logger);
 		setCredential(base);
 
@@ -100,7 +99,6 @@ public class RemotePlugin extends BasePlugin {
 		    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, type));
 	        }
 
-		JOVALSystem.configureSession(session);
 		setCredential(session);
 	    } catch (Exception e) {
 		throw new OvalException(e);

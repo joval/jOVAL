@@ -156,10 +156,13 @@ public class JOVALSystem {
     }
 
     /**
-     * Grab the jOVAL system configuration.
+     * Load a jOVAL system configuration from a file.
+     *
+     * jOVAL is equipped with a default configuration that is loaded by this class's static initializer. When using
+     * this method to override the defaults, make sure to do so prior to the creation of any session objects.
      */
-    public static IniFile getConfiguration() {
-	return config;
+    public static void setConfiguration(File f) throws IOException {
+	config = new IniFile(f);
     }
 
     /**
