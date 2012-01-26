@@ -26,7 +26,7 @@ import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.registry.Registry;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.wmi.WmiProvider;
-import org.joval.util.BaseSession;
+import org.joval.util.AbstractSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -36,7 +36,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WindowsSession extends BaseSession implements IWindowsSession {
+public class WindowsSession extends AbstractSession implements IWindowsSession {
     private WmiProvider wmi;
     private boolean is64bit = false;
     private Registry reg32, reg;
@@ -103,14 +103,10 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 	}
     }
 
-    // Implement ISession
+    // Implement IBaseSession
 
     public String getHostname() {
 	return LOCALHOST;
-    }
-
-    public SystemInfoType getSystemInfo() {
-	return info.getSystemInfo();
     }
 
     public boolean connect() {
@@ -167,5 +163,11 @@ public class WindowsSession extends BaseSession implements IWindowsSession {
 
     public Type getType() {
 	return Type.WINDOWS;
+    }
+
+    // Implement ISession
+
+    public SystemInfoType getSystemInfo() {
+	return info.getSystemInfo();
     }
 }

@@ -42,6 +42,7 @@ SHARED=\
 	org.joval.os.unix.NetworkInterface				\
 	org.joval.os.unix.UnixSystemInfo				\
 	org.joval.os.unix.io.UnixFile					\
+	org.joval.os.unix.system.BaseUnixSession			\
 	org.joval.os.unix.system.Environment				\
 	org.joval.os.windows.WindowsSystemInfo				\
 	org.joval.os.windows.identity.ActiveDirectory			\
@@ -135,7 +136,8 @@ SHARED=\
 	org.joval.test.Reg						\
 	org.joval.test.WMI						\
 	org.joval.util.Base64						\
-	org.joval.util.BaseSession					\
+	org.joval.util.AbstractBaseSession				\
+	org.joval.util.AbstractSession					\
 	org.joval.util.SafeCLI						\
 	org.joval.util.tree.CachingTree					\
 	org.joval.util.tree.PropertyHierarchy				\

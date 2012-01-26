@@ -33,7 +33,7 @@ CLASSES=\
 	org.joval.oval.util.OperatorData				\
 	org.joval.oval.xml.OvalNamespacePrefixMapper			\
 	org.joval.util.Checksum						\
-	org.joval.oval.IniFile						\
+	org.joval.util.IniFile						\
 	org.joval.util.JOVALMsg						\
 	org.joval.util.JOVALSystem					\
 	org.joval.util.Producer						\

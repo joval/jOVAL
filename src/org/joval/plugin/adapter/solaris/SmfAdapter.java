@@ -65,7 +65,7 @@ public class SmfAdapter implements IAdapter {
 	    try {
 		session.getLogger().trace(JOVALMsg.STATUS_SMF);
 		ArrayList<String> list = new ArrayList<String>();
-		for (String line : SafeCLI.multiLine("/usr/bin/svcs -o fmri", session, IUnixSession.TIMEOUT_M)) {
+		for (String line : SafeCLI.multiLine("/usr/bin/svcs -o fmri", session, IUnixSession.Timeout.M)) {
 		    if (line.startsWith("FMRI")) {
 			continue;
 		    }
@@ -185,7 +185,7 @@ public class SmfAdapter implements IAdapter {
 	session.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
 	item = JOVALSystem.factories.sc.solaris.createSmfItem();
 	boolean found = false;
-	for (String line : SafeCLI.multiLine("/usr/bin/svcs -l " + fmri, session, IUnixSession.TIMEOUT_S)) {
+	for (String line : SafeCLI.multiLine("/usr/bin/svcs -l " + fmri, session, IUnixSession.Timeout.S)) {
 	    line = line.trim();
 	    if (line.length() == 0) {
 		break;
@@ -218,7 +218,7 @@ public class SmfAdapter implements IAdapter {
 	    //
 	    item.setStatus(StatusEnumeration.EXISTS);
 	    boolean inetd = false;
-	    for (String line : SafeCLI.multiLine("/usr/bin/svcprop " + fmri, session, IUnixSession.TIMEOUT_S)) {
+	    for (String line : SafeCLI.multiLine("/usr/bin/svcprop " + fmri, session, IUnixSession.Timeout.S)) {
 		if (line.startsWith(START_EXEC_PROP)) {
 		    setExecAndArgs(item, line.substring(START_EXEC_PROP.length()).trim());
 		} else if (line.startsWith(INETD_USER_PROP)) {
@@ -241,7 +241,7 @@ public class SmfAdapter implements IAdapter {
 	    // If this is an inetd-initiated service, we can get protocol information using inetadm
 	    //
 	    if (inetd) {
-		for (String line : SafeCLI.multiLine("/usr/sbin/inetadm -l " + fmri, session, IUnixSession.TIMEOUT_S)) {
+		for (String line : SafeCLI.multiLine("/usr/sbin/inetadm -l " + fmri, session, IUnixSession.Timeout.S)) {
 		    if (line.trim().startsWith("proto=")) {
 			String protocol = line.trim().substring(6);
 			if (protocol.startsWith("\"") && protocol.endsWith("\"")) {

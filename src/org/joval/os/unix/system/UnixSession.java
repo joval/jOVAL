@@ -11,7 +11,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.LocalFilesystem;
 import org.joval.os.unix.UnixSystemInfo;
-import org.joval.util.BaseSession;
+import org.joval.util.AbstractSession;
 
 /**
  * A simple session implementation for Unix machines.
@@ -19,23 +19,16 @@ import org.joval.util.BaseSession;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixSession extends BaseSession implements IUnixSession {
-    private Flavor flavor = Flavor.UNKNOWN;
-    private UnixSystemInfo info = null;
-
+public class UnixSession extends BaseUnixSession {
     public UnixSession() {
 	super();
 	info = new UnixSystemInfo(this);
     }
 
-    // Implement ISession
+    // Implement IBaseSession
 
     public String getHostname() {
 	return LOCALHOST;
-    }
-
-    public SystemInfoType getSystemInfo() {
-	return info.getSystemInfo();
     }
 
     public boolean connect() {
@@ -48,15 +41,5 @@ public class UnixSession extends BaseSession implements IUnixSession {
     }
 
     public void disconnect() {
-    }
-
-    public Type getType() {
-	return Type.UNIX;
-    }
-
-    // Implement IUnixSession
-
-    public Flavor getFlavor() {
-	return flavor;
     }
 }

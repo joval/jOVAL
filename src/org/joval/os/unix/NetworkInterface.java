@@ -24,10 +24,10 @@ class NetworkInterface {
 	List<String> rawOutput = null;
 	switch(session.getFlavor()) {
 	  case AIX:
-	    rawOutput = SafeCLI.multiLine("/etc/ifconfig -a", session, IUnixSession.TIMEOUT_S);
+	    rawOutput = SafeCLI.multiLine("/etc/ifconfig -a", session, IUnixSession.Timeout.S);
 	    break;
 	  default:
-	    rawOutput = SafeCLI.multiLine("/sbin/ifconfig -a", session, IUnixSession.TIMEOUT_S);
+	    rawOutput = SafeCLI.multiLine("/sbin/ifconfig -a", session, IUnixSession.Timeout.S);
 	    break;
 	}
 

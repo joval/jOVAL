@@ -3,7 +3,7 @@
 
 package org.joval.intf.cisco.system;
 
-import org.joval.intf.system.ISession;
+import org.joval.intf.system.IBaseSession;
 
 /**
  * A representation of a Unix command-line session.
@@ -11,6 +11,6 @@ import org.joval.intf.system.ISession;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IIosSession extends ISession {
+public interface IIosSession extends IBaseSession {
     ITechSupport getTechSupport();
 }

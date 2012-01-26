@@ -23,6 +23,8 @@ import org.vngx.jsch.userauth.IdentityManager;
 import org.vngx.jsch.userauth.IdentityFile;
 import org.vngx.jsch.util.SocketFactory;
 
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
+
 import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
@@ -33,6 +35,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IProperty;
+import org.joval.util.AbstractBaseSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.JSchLogger;
@@ -45,31 +48,36 @@ import org.joval.util.SafeCLI;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SshSession implements ISshSession, ILocked, UserInfo, UIKeyboardInteractive {
-    private static int connTimeout = 0;
-    private static int connRetries = 0;
-
-    private LocLogger logger;
+public class SshSession extends AbstractBaseSession implements ISshSession, ILocked, UserInfo, UIKeyboardInteractive {
     private String hostname;
     private ICredential cred;
     private SshSession gateway;
     private Session session;
-    private InternalProperties internalProps;
-    private boolean connected = false, debug = false;
+    private boolean connected = false;
 
     public SshSession(String hostname) {
 	this(hostname, null);
     }
 
     public SshSession(String hostname, SshSession gateway) {
+	super();
 	this.hostname = hostname;
 	this.gateway = gateway;
-	logger = JOVALSystem.getLogger();
-	internalProps = new InternalProperties();
     }
 
     public Session getJschSession() {
 	return session;
+    }
+
+    protected void handlePropertyChange(String key, String value) {
+	super.handlePropertyChange(key, value);
+	if (PROP_ATTACH_LOG.equals(key)) {
+	    if (internalProps.getBooleanProperty(key)) {
+		JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
+	    } else {
+		JSch.setLogger(null);
+	    }
+	}
     }
 
     // Implement ILocked
@@ -98,28 +106,22 @@ public class SshSession implements ISshSession, ILocked, UserInfo, UIKeyboardInt
 	return true;
     }
 
-    // Implement ILoggable
-
-    public LocLogger getLogger() {
-	return logger;
-    }
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
-    }
-
     // Implement IBaseSession
+
+    /**
+     * @override
+     */
+    public IProcess createProcess(String command) throws Exception {
+	if (connect()) {
+	    ChannelExec ce = session.openChannel(ChannelType.EXEC);
+	    return new SshProcess(ce, command, getDebug(), logger);
+	} else {
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
+	}
+    }
 
     public String getHostname() {
 	return hostname;
-    }
-
-    public IProperty getProperties() {
-	return internalProps;
-    }
-
-    public void setDebug(boolean debug) {
-	this.debug = debug;
     }
 
     public boolean connect() {
@@ -144,7 +146,8 @@ public class SshSession implements ISshSession, ILocked, UserInfo, UIKeyboardInt
 		logger.warn(JOVALMsg.ERROR_SSH_DROPPED_CONN, hostname);
 	    }
 	    Exception lastError = null;
-	    for (int i=1; i <= connRetries; i++) {
+	    int retries = internalProps.getIntProperty(PROP_CONNECTION_RETRIES);
+	    for (int i=1; i <= retries; i++) {
 		try {
 		    connectInternal();
 		    return true;
@@ -175,19 +178,10 @@ public class SshSession implements ISshSession, ILocked, UserInfo, UIKeyboardInt
 	}
     }
 
-    public IProcess createProcess(String command) throws Exception {
-	if (connect()) {
-	    ChannelExec ce = session.openChannel(ChannelType.EXEC);
-	    return new SshProcess(ce, command, debug, logger);
-	} else {
-	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
-	}
-    }
-
     public Type getType() {
 	if (cred != null) {
 	    try {
-		for (String line : SafeCLI.multiLine("pwd", this, IUnixSession.TIMEOUT_S)) {
+		for (String line : SafeCLI.multiLine("pwd", this, Timeout.S)) {
 		    if (line.startsWith("flash")) {
 			return Type.CISCO_IOS;
 		    } else if (line.startsWith("/")) {
@@ -199,10 +193,19 @@ public class SshSession implements ISshSession, ILocked, UserInfo, UIKeyboardInt
 		    }
 		}
 	    } catch (Exception e) {
+e.printStackTrace();
 		logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return Type.SSH;
+    }
+
+    public SystemInfoType getSystemInfo() {
+	return null;
+    }
+
+    public boolean getDebug() {
+	return internalProps.getBooleanProperty(PROP_DEBUG);
     }
 
     // Implement UserInfo
@@ -253,61 +256,21 @@ public class SshSession implements ISshSession, ILocked, UserInfo, UIKeyboardInt
 	if (gateway == null) {
 	    if (session == null) {
 		session = jsch.createSession(cred.getUsername(), hostname, 22, config);
+		session.setUserInfo(this);
 	    }
 	} else {
 	    // use gateway port forwarding
 	    int localPort = gateway.session.setPortForwardingL(0, hostname, 22);
+	    if (session != null) {
+		session.disconnect();
+		session = null;
+	    }
 	    session = jsch.createSession(cred.getUsername(), LOCALHOST, localPort, config);
+	    session.setUserInfo(this);
 	}
-	session.setUserInfo(this);
-	session.connect(connTimeout);
+	session.setSocketFactory(SocketFactory.DEFAULT_SOCKET_FACTORY);
+	session.connect(internalProps.getIntProperty(PROP_CONNECTION_TIMEOUT));
 	connected = true;
 	logger.info(JOVALMsg.STATUS_SSH_CONNECT, hostname);
-    }
-
-    private class InternalProperties implements IProperty {
-	PropertyUtil props;
-
-	InternalProperties() {
-	    props = new PropertyUtil();
-	}
-
-	// Implement IProperty
-    
-	public void setProperty(String key, String value) {
-	    props.setProperty(key, value);
-    
-	    if (PROP_ATTACH_LOG.equals(key)) {
-		if (props.getBooleanProperty(key)) {
-		    JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
-		}
-	    } else if (PROP_CONNECTION_TIMEOUT.equals(key)) {
-		SshSession.connTimeout = props.getIntProperty(key);
-	    } else if (PROP_CONNECTION_RETRIES.equals(key)) {
-		SshSession.connRetries = props.getIntProperty(key);
-	    } else if (PROP_DEBUG.equals(key)) {
-		SshSession.this.debug = props.getBooleanProperty(key);
-	    }
-	}
-    
-	public String getProperty(String key) {
-	    return props.getProperty(key);
-	}
-    
-	public long getLongProperty(String key) {
-	    return props.getLongProperty(key);
-	}
-    
-	public int getIntProperty(String key) {
-	    return props.getIntProperty(key);
-	}
-    
-	public boolean getBooleanProperty(String key) {
-	    return props.getBooleanProperty(key);
-	}
-    
-	public Iterator<String> iterator() {
-	    return props.iterator();
-	}
     }
 }

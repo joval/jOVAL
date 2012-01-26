@@ -38,7 +38,7 @@ import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.remote.io.SmbFilesystem;
 import org.joval.os.windows.remote.registry.Registry;
 import org.joval.os.windows.remote.wmi.WmiConnection;
-import org.joval.util.BaseSession;
+import org.joval.util.AbstractSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -46,7 +46,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WindowsSession extends BaseSession implements IWindowsSession, ILocked {
+public class WindowsSession extends AbstractSession implements IWindowsSession, ILocked {
     private static int counter = 0;
     static {
 	JISystem.getLogger().setLevel(Level.WARNING);
@@ -137,14 +137,36 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	}
     }
 
-    // Implement ISession
+    // Implement IBaseSession
+
+    /**
+     * @override
+     */
+    public void setWorkingDir(String path) {
+	cwd = env.expand(path);
+    }
+
+    /**
+     * @override
+     */
+    public IProcess createProcess(String command) throws Exception {
+	StringBuffer sb = new StringBuffer(tempDir).append(fs.getDelimiter()).append("rexec_");
+	sb.append(Integer.toHexString(counter++));
+
+	IFile out = fs.getFile(sb.toString() + ".out", true);
+	out.getOutputStream(false).close(); // create/clear tmpOutFile
+	tempFiles.add(out);
+
+	IFile err = fs.getFile(sb.toString() + ".err", true);
+	err.getOutputStream(false).close(); // create/clear tmpErrFile
+	tempFiles.add(err);
+
+	WindowsProcess p = new WindowsProcess(conn.getServices(host, IWmiProvider.CIMv2), command, cwd, out, err);
+	return p;
+    }
 
     public String getHostname() {
 	return host;
-    }
-
-    public SystemInfoType getSystemInfo() {
-	return info.getSystemInfo();
     }
 
     public boolean connect() {
@@ -210,34 +232,14 @@ public class WindowsSession extends BaseSession implements IWindowsSession, ILoc
 	}
     }
 
-    /**
-     * @override
-     */
-    public void setWorkingDir(String path) {
-	cwd = env.expand(path);
-    }
-
     public Type getType() {
 	return Type.WINDOWS;
     }
 
-    /**
-     * @override
-     */
-    public IProcess createProcess(String command) throws Exception {
-	StringBuffer sb = new StringBuffer(tempDir).append(fs.getDelimiter()).append("rexec_");
-	sb.append(Integer.toHexString(counter++));
+    // Implement ISession
 
-	IFile out = fs.getFile(sb.toString() + ".out", true);
-	out.getOutputStream(false).close(); // create/clear tmpOutFile
-	tempFiles.add(out);
-
-	IFile err = fs.getFile(sb.toString() + ".err", true);
-	err.getOutputStream(false).close(); // create/clear tmpErrFile
-	tempFiles.add(err);
-
-	WindowsProcess p = new WindowsProcess(conn.getServices(host, IWmiProvider.CIMv2), command, cwd, out, err);
-	return p;
+    public SystemInfoType getSystemInfo() {
+	return info.getSystemInfo();
     }
 
     // Private

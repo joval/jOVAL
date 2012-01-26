@@ -76,27 +76,27 @@ public class UnameAdapter implements IAdapter {
     private JAXBElement<UnameItem> getItem() throws Exception {
 	UnameItem item = JOVALSystem.factories.sc.unix.createUnameItem();
 	EntityItemStringType machineClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	machineClass.setValue(SafeCLI.exec("uname -m", session, IUnixSession.TIMEOUT_S));
+	machineClass.setValue(SafeCLI.exec("uname -m", session, IUnixSession.Timeout.S));
 	item.setMachineClass(machineClass);
 
 	EntityItemStringType nodeName = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	nodeName.setValue(SafeCLI.exec("uname -n", session, IUnixSession.TIMEOUT_S));
+	nodeName.setValue(SafeCLI.exec("uname -n", session, IUnixSession.Timeout.S));
 	item.setNodeName(nodeName);
 
 	EntityItemStringType osName = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	osName.setValue(SafeCLI.exec("uname -s", session, IUnixSession.TIMEOUT_S));
+	osName.setValue(SafeCLI.exec("uname -s", session, IUnixSession.Timeout.S));
 	item.setOsName(osName);
 
 	EntityItemStringType osRelease = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	osRelease.setValue(SafeCLI.exec("uname -r", session, IUnixSession.TIMEOUT_S));
+	osRelease.setValue(SafeCLI.exec("uname -r", session, IUnixSession.Timeout.S));
 	item.setOsRelease(osRelease);
 
 	EntityItemStringType osVersion = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	osVersion.setValue(SafeCLI.exec("uname -v", session, IUnixSession.TIMEOUT_S));
+	osVersion.setValue(SafeCLI.exec("uname -v", session, IUnixSession.Timeout.S));
 	item.setOsVersion(osVersion);
 
 	EntityItemStringType processorType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	processorType.setValue(SafeCLI.exec("uname -p", session, IUnixSession.TIMEOUT_S));
+	processorType.setValue(SafeCLI.exec("uname -p", session, IUnixSession.Timeout.S));
 	item.setProcessorType(processorType);
 
 	return JOVALSystem.factories.sc.unix.createUnameItem(item);

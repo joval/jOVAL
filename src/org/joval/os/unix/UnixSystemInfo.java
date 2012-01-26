@@ -46,7 +46,7 @@ public class UnixSystemInfo {
 	//
 	info = JOVALSystem.factories.sc.core.createSystemInfoType();
 	try {
-	    info.setPrimaryHostName(SafeCLI.exec("hostname", session, IUnixSession.TIMEOUT_S));
+	    info.setPrimaryHostName(SafeCLI.exec("hostname", session, IUnixSession.Timeout.S));
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -58,11 +58,11 @@ public class UnixSystemInfo {
 	try {
 	    switch(session.getFlavor()) {
 	      case AIX:
-		info.setOsVersion(SafeCLI.exec("oslevel -r", session, IUnixSession.TIMEOUT_S));
+		info.setOsVersion(SafeCLI.exec("oslevel -r", session, IUnixSession.Timeout.S));
 		break;
 
 	      default:
-		info.setOsVersion(SafeCLI.exec("uname -r", session, IUnixSession.TIMEOUT_S));
+		info.setOsVersion(SafeCLI.exec("uname -r", session, IUnixSession.Timeout.S));
 		break;
 	    }
 	} catch (Exception e) {
@@ -82,7 +82,7 @@ public class UnixSystemInfo {
 	      default:
 		IFilesystem fs = session.getFilesystem();
 		for (INode node : fs.getFile("/etc").getChildren(Pattern.compile("^.*-release$"))) {
-		    info.setOsName(SafeCLI.exec("cat " + node.getPath(), session, IUnixSession.TIMEOUT_S));
+		    info.setOsName(SafeCLI.exec("cat " + node.getPath(), session, IUnixSession.Timeout.S));
 		    break;
 		}
 		if (!info.isSetOsName()) {
@@ -99,7 +99,7 @@ public class UnixSystemInfo {
 	// Processor Architecture
 	//
 	try {
-	    info.setArchitecture(SafeCLI.exec("uname -p", session, IUnixSession.TIMEOUT_S));
+	    info.setArchitecture(SafeCLI.exec("uname -p", session, IUnixSession.Timeout.S));
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

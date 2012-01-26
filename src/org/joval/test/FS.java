@@ -18,24 +18,25 @@ import java.util.regex.PatternSyntaxException;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 
 public class FS {
     private ISession session;
-    private IEnvironment env;
-    private IFilesystem fs;
 
-    public FS(ISession session) {
-	this.session = session;
-	fs = session.getFilesystem();
-//	fs = ((org.joval.intf.windows.system.IWindowsSession)session).getFilesystem(org.joval.intf.windows.system.IWindowsSession.View._32BIT);
-	env = session.getEnvironment();
+    public FS(IBaseSession session) {
+	if (session instanceof ISession) {
+	    this.session = (ISession)session;
+	}
     }
 
     public synchronized void test(String path) {
 	InputStream in = null;
 	try {
+//fs = ((org.joval.intf.windows.system.IWindowsSession)session).getFilesystem(org.joval.intf.windows.system.IWindowsSession.View._32BIT);
+	    IFilesystem fs = session.getFilesystem();
+	    IEnvironment env = session.getEnvironment();
 	    if (path.startsWith("search:")) {
 		path = path.substring(7);
 		Collection<String> list = fs.search(Pattern.compile(path));
@@ -104,15 +105,5 @@ public class FS {
         } catch (NoSuchAlgorithmException e) {
             throw new IOException (e.getMessage());
         }
-    }
-
-    private String getFileName(IFile f) {
-	String path = f.getLocalName();
-	int ptr = path.lastIndexOf(fs.getDelimiter());
-	if (ptr > 0) {
-	    return path.substring(ptr+1);
-	} else {
-	    return path;
-	}
     }
 }

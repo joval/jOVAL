@@ -17,6 +17,7 @@ import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
+import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IProducer;
 import org.joval.intf.util.IProperty;
@@ -103,8 +104,8 @@ class PolymorphicPlugin extends RemotePlugin {
 
 	if (!f.exists()) {
 	    logger.warn("Warning: no available validation support files to install");
-	} else {
-	    fs = session.getFilesystem();
+	} else if (session instanceof ISession) {
+	    fs = ((ISession)session).getFilesystem();
 	    ZipFile zip = new ZipFile(f, ZipFile.OPEN_READ);
     
 	    IFile root = null;
@@ -156,6 +157,8 @@ class PolymorphicPlugin extends RemotePlugin {
 		    }
 		}
 	    }
+	} else {
+	    logger.warn("Warning: session type cannot install available validation support files");
 	}
     }
 

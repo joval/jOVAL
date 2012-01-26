@@ -29,7 +29,7 @@ public class Environment implements IEnvironment {
     public Environment(IUnixSession session) {
 	props = new Properties();
 	try {
-	    for (String line : SafeCLI.multiLine("env", session, IUnixSession.TIMEOUT_S)) {
+	    for (String line : SafeCLI.multiLine("env", session, IUnixSession.Timeout.S)) {
 		int ptr = line.indexOf("=");
 		if (ptr > 0) {
 		    props.setProperty(line.substring(0, ptr), line.substring(ptr+1));

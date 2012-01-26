@@ -9,26 +9,15 @@ public interface ISshSession extends IBaseSession {
     /**
      * Property indicating whether to log messages from JSch to the JOVALSystem logger (true/false).
      */
-    String PROP_DEBUG = "ssh.debug";
-
-    /**
-     * Property indicating whether to log messages from JSch to the JOVALSystem logger (true/false).
-     */
-    String PROP_ATTACH_LOG = "ssh.attach.log";
+    String PROP_ATTACH_LOG = "attach.log";
 
     /**
      * Property indicating the number of milliseconds to wait before failing to establish an SSH connection.
      */
-    String PROP_CONNECTION_TIMEOUT = "ssh.conn.timeout";
+    String PROP_CONNECTION_TIMEOUT = "conn.timeout";
 
     /**
      * Property indicating the number of times to re-try establishing an SSH connection in the event of a failure.
      */
-    String PROP_CONNECTION_RETRIES = "ssh.conn.retries";
-
-    /**
-     * Property indicating the number of times to re-try running a command on a non-Unix SSH-enabled device in the event of an
-     * unexpected disconnect.
-     */
-    String PROP_EXEC_RETRIES = "exec.retries.ssh";
+    String PROP_CONNECTION_RETRIES = "conn.retries";
 }

@@ -5,7 +5,7 @@ package org.joval.test;
 
 import java.util.NoSuchElementException;
 
-import org.joval.intf.system.ISession;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.identity.IUser;
@@ -16,7 +16,7 @@ import org.joval.os.windows.wmi.WmiException;
 public class AD {
     IWindowsSession session;
 
-    public AD(ISession session) {
+    public AD(IBaseSession session) {
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	}

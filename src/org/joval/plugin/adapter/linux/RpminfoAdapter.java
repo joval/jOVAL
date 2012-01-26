@@ -63,7 +63,7 @@ public class RpminfoAdapter implements IAdapter {
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
 		session.getLogger().trace(JOVALMsg.STATUS_RPMINFO_LIST);
-		for (String line : SafeCLI.multiLine("rpm -q -a", session, IUnixSession.TIMEOUT_M)) {
+		for (String line : SafeCLI.multiLine("rpm -q -a", session, IUnixSession.Timeout.M)) {
 		    list.add(line);
 		}
 		rpms = list.toArray(new String[list.size()]);
@@ -165,7 +165,7 @@ public class RpminfoAdapter implements IAdapter {
 	String pkgArch=null, pkgVersion=null, pkgRelease=null;
 	boolean isInstalled = false;
 
-	Iterator<String> lines = SafeCLI.multiLine("rpm -q " + packageName + " -i", session, IUnixSession.TIMEOUT_S).iterator();
+	Iterator<String> lines = SafeCLI.multiLine("rpm -q " + packageName + " -i", session, IUnixSession.Timeout.S).iterator();
 	for (int lineNum=1; lines.hasNext(); lineNum++) {
 	    String line = lines.next();
 	    String param=null, value=null;
@@ -243,7 +243,7 @@ public class RpminfoAdapter implements IAdapter {
 
 	if (isInstalled) {
 	    item.setStatus(StatusEnumeration.EXISTS);
-	    String pkgEpoch = SafeCLI.exec("rpm -q --qf %{EPOCH} " + packageName, session, IUnixSession.TIMEOUT_S);
+	    String pkgEpoch = SafeCLI.exec("rpm -q --qf %{EPOCH} " + packageName, session, IUnixSession.Timeout.S);
 	    if ("(none)".equals(pkgEpoch)) {
 		pkgEpoch = "0";
 	    }
@@ -260,7 +260,7 @@ public class RpminfoAdapter implements IAdapter {
 	    extendedName.setValue(packageName + "-" + pkgEpoch + ":" + pkgVersion + "-" + pkgRelease + "." + pkgArch);
 	    item.setExtendedName(extendedName);
 
-	    for (String line : SafeCLI.multiLine("rpm -ql " + packageName, session, IUnixSession.TIMEOUT_S)) {
+	    for (String line : SafeCLI.multiLine("rpm -ql " + packageName, session, IUnixSession.Timeout.S)) {
 		if (!"(contains no files)".equals(line.trim())) {
 		    EntityItemStringType filepath = JOVALSystem.factories.sc.core.createEntityItemStringType();
 		    filepath.setValue(line.trim());

@@ -36,6 +36,7 @@ public class Default {
 	    }
 
 	    ISession session = Local.createSession();
+	    JOVALSystem.configureSession(session);
 	    if (session.connect()) {
 		if ("true".equals(props.getProperty("test.ad"))) {
 		    new AD(session).test(props.getProperty("ad.user"));

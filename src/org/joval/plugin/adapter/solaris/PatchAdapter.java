@@ -194,7 +194,7 @@ public class PatchAdapter implements IAdapter {
      */
     private void scanRevisions() {
 	try {
-	    for (String line : SafeCLI.multiLine("/usr/bin/showrev -p", session, IUnixSession.TIMEOUT_M)) {
+	    for (String line : SafeCLI.multiLine("/usr/bin/showrev -p", session, IUnixSession.Timeout.M)) {
 		if (!line.startsWith(PATCH)) {
 		    continue;
 		}

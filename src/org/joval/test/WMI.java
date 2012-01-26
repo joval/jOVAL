@@ -6,7 +6,7 @@ package org.joval.test;
 import java.net.UnknownHostException;
 import java.util.Iterator;
 
-import org.joval.intf.system.ISession;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.intf.windows.wmi.ISWbemObject;
@@ -18,7 +18,7 @@ import org.joval.os.windows.wmi.WmiException;
 public class WMI {
     IWindowsSession session;
 
-    public WMI(ISession session) {
+    public WMI(IBaseSession session) {
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	}

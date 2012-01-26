@@ -18,7 +18,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.os.embedded.IosSystemInfo;
 import org.joval.ssh.system.SshSession;
-import org.joval.util.BaseSession;
+import org.joval.util.AbstractBaseSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -28,7 +28,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class IosSession extends BaseSession implements ILocked, IIosSession {
+public class IosSession extends AbstractBaseSession implements ILocked, IIosSession {
     private SshSession ssh;
     private TechSupport techSupport;
     private IosSystemInfo info;
@@ -40,10 +40,28 @@ public class IosSession extends BaseSession implements ILocked, IIosSession {
 	initialized = false;
     }
 
+    protected void handlePropertyChange(String key, String value) {}
+
+    // Implement IIosSession
+
+    public ITechSupport getTechSupport() {
+	return techSupport;
+    }
+
     // Implement ILocked
 
     public boolean unlock(ICredential cred) {
 	return ssh.unlock(cred);
+    }
+
+    // Implement ILogger
+
+    /**
+     * @override
+     */
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
+	ssh.setLogger(logger);
     }
 
     // Implement IBaseSession
@@ -90,44 +108,7 @@ public class IosSession extends BaseSession implements ILocked, IIosSession {
 	return Type.CISCO_IOS;
     }
 
-    /**
-     * @override
-     */
-    public void setLogger(LocLogger logger) {
-	super.setLogger(logger);
-	ssh.setLogger(logger);
-    }
-
-    // Implement ISession
-
     public SystemInfoType getSystemInfo() {
 	return info.getSystemInfo();
-    }
-
-    /**
-     * @override
-     */
-    public void setWorkingDir(String dir) {
-	// no-op
-    }
-
-    /**
-     * @override
-     */
-    public IFilesystem getFilesystem() {
-	return null;
-    }
-
-    /**
-     * @override
-     */
-    public IEnvironment getEnvironment() {
-	return null;
-    }
-
-    // Implement IIosSession
-
-    public ITechSupport getTechSupport() {
-	return techSupport;
     }
 }

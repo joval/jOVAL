@@ -101,7 +101,7 @@ public class FixAdapter implements IAdapter {
 	aparNumber.setValue(apar);
 	item.setAparNumber(aparNumber);
 
-	List<String> lines = SafeCLI.multiLine("/usr/sbin/instfix -iavk " + apar, session, IUnixSession.TIMEOUT_M);
+	List<String> lines = SafeCLI.multiLine("/usr/sbin/instfix -iavk " + apar, session, IUnixSession.Timeout.M);
 	Iterator<String> iter = lines.iterator();
 
 	String line = null;

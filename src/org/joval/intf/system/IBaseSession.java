@@ -2,6 +2,9 @@
 
 package org.joval.intf.system;
 
+import oval.schemas.common.FamilyEnumeration;
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
+
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IProperty;
 
@@ -12,6 +15,43 @@ import org.joval.intf.util.IProperty;
  * @version %I% %G%
  */
 public interface IBaseSession extends ILoggable {
+    /**
+     * An enumeration of timeouts.
+     */
+    public enum Timeout {
+	S, M, L, XL;
+    }
+
+    /**
+     * Get the timeout value corresponding to the Timeout enumeration.
+     */
+    long getTimeout(Timeout to);
+
+    /**
+     * Property key used to define a "small" amount of time.
+     */
+    String PROP_READ_TIMEOUT_S = "read.timeout.small";
+
+    /**
+     * Property key used to define a "medium" amount of time.
+     */
+    String PROP_READ_TIMEOUT_M = "read.timeout.medium";
+
+    /**
+     * Property key used to define a "large" amount of time.
+     */
+    String PROP_READ_TIMEOUT_L = "read.timeout.large";
+
+    /**
+     * Property key used to define an "extra-large" amount of time.
+     */
+    String PROP_READ_TIMEOUT_XL = "read.timeout.xl";
+
+    /**
+     * Property indicating whether the session should run in debug mode (true/false).
+     */
+    String PROP_DEBUG = "debug";
+
     /**
      * Property indicating the number of times to re-try running a command in the event of an unexpected disconnect.
      */
@@ -28,9 +68,9 @@ public interface IBaseSession extends ILoggable {
     String LOCALHOST = "localhost";
 
     /**
-     * Set the session to use debugging mode.
+     * Check if the session is using debugging mode.
      */
-    void setDebug(boolean debug);
+    boolean isDebug();
 
     /**
      * Connect the session.
@@ -53,6 +93,16 @@ public interface IBaseSession extends ILoggable {
      * Create a process on the machine.
      */
     IProcess createProcess(String command) throws Exception;
+
+    /**
+     * Fetch OVAL SystemInformation for the session.
+     */
+    public SystemInfoType getSystemInfo();
+
+    /**
+     * Return the FamilyEnumeration member against which the host should be tested for FamilyTest applicability.
+     */
+    public FamilyEnumeration getFamily();
 
     /**
      * Get the session type.

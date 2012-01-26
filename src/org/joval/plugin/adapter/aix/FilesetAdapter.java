@@ -95,7 +95,7 @@ public class FilesetAdapter implements IAdapter {
 	session.getLogger().trace(JOVALMsg.STATUS_AIX_FILESET, fileset);
 	Collection<FilesetItem> items = new Vector<FilesetItem>();
 
-	for (String line : SafeCLI.multiLine("lslpp -lac " + fileset, session, IUnixSession.TIMEOUT_M)) {
+	for (String line : SafeCLI.multiLine("lslpp -lac " + fileset, session, IUnixSession.Timeout.M)) {
 	    if (!line.startsWith("#")) {
 		List<String> info = StringTools.toList(StringTools.tokenize(line, ":"));
 		if (info.get(0).equals("/etc/objrepos")) {

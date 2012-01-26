@@ -67,6 +67,7 @@ public class Remote {
 	    String gwHost = props.getProperty("gateway.host");
 	    if (gwHost != null) {
 		gateway = new SshSession(gwHost);
+		JOVALSystem.configureSession(gateway);
 		String username = props.getProperty("gateway.username");
 		String password = props.getProperty("gateway.password");
 		if (username != null) {
@@ -84,7 +85,8 @@ public class Remote {
 
 	    SessionFactory factory = new SessionFactory(new File("."), gateway);
 	    IBaseSession base = factory.createSession(host);
-	    ISession session = null;
+	    JOVALSystem.configureSession(base);
+	    IBaseSession session = null;
 	    ICredential cred = null;
 	    if (base instanceof ILocked) {
 		ILocked locked = (ILocked)base;
@@ -123,12 +125,13 @@ public class Remote {
 		break;
 
 	      case WINDOWS:
-		session = (ISession)base;
+		session = base;
 		break;
 
 	      default:
 		System.out.println("Bad type: " + type);
 	    }
+	    JOVALSystem.configureSession(session);
 	    if (session.connect()) {
 		if ("true".equals(props.getProperty("test.ad"))) {
 		    AD ad = new AD(session);

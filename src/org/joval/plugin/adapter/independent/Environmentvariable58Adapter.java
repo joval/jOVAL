@@ -107,7 +107,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			    IFile proc = session.getFilesystem().getFile("/proc/" + pid);
 			    if (proc.exists() && proc.isDirectory()) {
 				processEnv = new Properties();
-				for (String line : SafeCLI.multiLine("pargs -e " + pid, us, IUnixSession.TIMEOUT_S)) {
+				for (String line : SafeCLI.multiLine("pargs -e " + pid, us, IUnixSession.Timeout.S)) {
 				    if (line.startsWith("envp")) {
 					String pair = line.substring(line.indexOf(" ")).trim();
 					int ptr = pair.indexOf("=");
@@ -140,7 +140,8 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			IFile proc = session.getFilesystem().getFile(path);
 			if (proc.exists()) {
 			    processEnv = new Properties();
-			    reader = PerishableReader.newInstance(proc.getInputStream(), IUnixSession.TIMEOUT_M);
+			    long timeout = session.getTimeout(IUnixSession.Timeout.M);
+			    reader = PerishableReader.newInstance(proc.getInputStream(), timeout);
 			    reader.setLogger(session.getLogger());
 			    String pair;
 			    while ((pair = new String(reader.readUntil(127))) != null) { // 127 == delimiter char
@@ -171,7 +172,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 
 		  case AIX: {
 		    try {
-			for (String line : SafeCLI.multiLine("ps eww " + pid, us, IUnixSession.TIMEOUT_S)) {
+			for (String line : SafeCLI.multiLine("ps eww " + pid, us, IUnixSession.Timeout.S)) {
 			    line = line.trim();
 			    if (line.startsWith(pid)) {
 				StringTokenizer tok = new StringTokenizer(line);

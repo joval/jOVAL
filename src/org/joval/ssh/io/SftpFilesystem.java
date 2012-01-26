@@ -131,9 +131,10 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_CREATE, temp.getPath());
 		    p = session.createProcess(command);
 		    p.start();
-		    er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), IUnixSession.TIMEOUT_XL));
+		    er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(),
+								      session.getTimeout(IUnixSession.Timeout.XL)));
 		    er.start();
-		    p.waitFor(IUnixSession.TIMEOUT_XL);
+		    p.waitFor(session.getTimeout(IUnixSession.Timeout.XL));
 		    if (p.isRunning()) {
 			p.destroy();
 		    }
@@ -141,13 +142,14 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		} else {
 		    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_REUSE, temp.getPath());
 		}
-		reader = PerishableReader.newInstance(temp.getInputStream(), IUnixSession.TIMEOUT_S);
+		reader = PerishableReader.newInstance(temp.getInputStream(), session.getTimeout(IUnixSession.Timeout.S));
 	    } else {
 		method = VAL_STREAM_METHOD;
 		p = session.createProcess(command);
 		p.start();
-		reader = PerishableReader.newInstance(p.getInputStream(), IUnixSession.TIMEOUT_S);
-		er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), IUnixSession.TIMEOUT_XL));
+		reader = PerishableReader.newInstance(p.getInputStream(), session.getTimeout(IUnixSession.Timeout.S));
+		er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(),
+								  session.getTimeout(IUnixSession.Timeout.XL)));
 		er.start();
 	    }
 

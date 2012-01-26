@@ -15,7 +15,7 @@ import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.ISession;
+import org.joval.intf.system.IBaseSession;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
 
@@ -26,9 +26,9 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class FamilyAdapter implements IAdapter {
-    private ISession session;
+    private IBaseSession session;
 
-    public FamilyAdapter(ISession session) {
+    public FamilyAdapter(IBaseSession session) {
 	this.session = session;
     }
 

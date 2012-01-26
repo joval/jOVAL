@@ -6,13 +6,13 @@ package org.joval.test;
 import java.io.InputStream;
 
 import org.joval.identity.Credential;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
 
 public class Exec {
-    ISession session;
+    IBaseSession session;
 
-    public Exec(ISession session) {
+    public Exec(IBaseSession session) {
 	this.session = session;
     }
 

@@ -72,15 +72,15 @@ public class IsainfoAdapter implements IAdapter {
     private JAXBElement<IsainfoItem> getItem() throws Exception {
 	IsainfoItem item = JOVALSystem.factories.sc.solaris.createIsainfoItem();
 	EntityItemStringType kernelIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	kernelIsa.setValue(SafeCLI.exec("isainfo -k", session, IUnixSession.TIMEOUT_S));
+	kernelIsa.setValue(SafeCLI.exec("isainfo -k", session, IUnixSession.Timeout.S));
 	item.setKernelIsa(kernelIsa);
 
 	EntityItemStringType applicationIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	applicationIsa.setValue(SafeCLI.exec("isainfo -n", session, IUnixSession.TIMEOUT_S));
+	applicationIsa.setValue(SafeCLI.exec("isainfo -n", session, IUnixSession.Timeout.S));
 	item.setApplicationIsa(applicationIsa);
 
 	EntityItemIntType bits = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	bits.setValue(SafeCLI.exec("isainfo -b", session, IUnixSession.TIMEOUT_S));
+	bits.setValue(SafeCLI.exec("isainfo -b", session, IUnixSession.Timeout.S));
 	bits.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setBits(bits);
 

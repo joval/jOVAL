@@ -4,67 +4,49 @@
 package org.joval.util;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.common.FamilyEnumeration;
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.util.IProperty;
 
 /**
- * Base class for the Windows and Unix local ISession implementations.
+ * Base class for the local and remote Windows and Unix ISession implementations.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class BaseSession implements ISession {
-    protected LocLogger logger;
+public abstract class AbstractSession extends AbstractBaseSession implements ISession {
     protected File cwd;
     protected IEnvironment env;
     protected IFilesystem fs;
-    protected boolean debug = false;
-    protected PropertyUtil props;
 
-    protected BaseSession() {
-	logger = JOVALSystem.getLogger();
-	props = new PropertyUtil();
+    protected AbstractSession() {
+	super();
     }
 
     // Implement ILoggable
 
-    public LocLogger getLogger() {
-	return logger;
-    }
-
+    /**
+     * @override
+     *
+     * Here, we harmonize the IFilesystem's logger with the ISession's logger.
+     */
     public void setLogger(LocLogger logger) {
-	this.logger = logger;
+	super.setLogger(logger);
 	if (fs != null) {
 	    fs.setLogger(logger);
 	}
     }
 
     // Implement ISession
-
-    public IProperty getProperties() {
-	return props;
-    }
-
-    public void setDebug(boolean debug) {
-	this.debug = debug;
-    }
 
     public void setWorkingDir(String path) {
 	cwd = new File(path);
@@ -78,30 +60,26 @@ public abstract class BaseSession implements ISession {
 	return fs;
     }
 
+    /**
+     * @override
+     *
+     * Here, we provide an implementation for local ISessions.
+     */
     public IProcess createProcess(String command) throws Exception {
 	return new JavaProcess(command);
     }
 
-    public FamilyEnumeration getFamily() {
-	switch(getType()) {
-	  case WINDOWS:
-	    return FamilyEnumeration.WINDOWS;
+    // All the abstract methods, for reference
 
-	  case UNIX:
-	    switch(((IUnixSession)this).getFlavor()) {
-	      case MACOSX:
-		return FamilyEnumeration.MACOS;
-	      default:
-		return FamilyEnumeration.UNIX;
-	    }
+    public abstract boolean connect();
 
-	  case CISCO_IOS:
-	    return FamilyEnumeration.IOS;
+    public abstract void disconnect();
 
-	  default:
-	    return FamilyEnumeration.UNDEFINED;
-	}
-    }
+    public abstract String getHostname();
+
+    public abstract Type getType();
+
+    public abstract SystemInfoType getSystemInfo();
 
     // Private
 

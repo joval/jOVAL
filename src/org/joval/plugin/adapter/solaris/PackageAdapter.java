@@ -62,7 +62,7 @@ public class PackageAdapter implements IAdapter {
 	    try {
 		ArrayList<String> list = new ArrayList<String>();
 		session.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
-		for (String line : SafeCLI.multiLine("pkginfo -x", session, IUnixSession.TIMEOUT_L)) {
+		for (String line : SafeCLI.multiLine("pkginfo -x", session, IUnixSession.Timeout.L)) {
 		    if (line.length() == 0) {
 			break;
 		    }
@@ -189,7 +189,7 @@ public class PackageAdapter implements IAdapter {
 	session.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
 	item = JOVALSystem.factories.sc.solaris.createPackageItem();
 	boolean isInstalled = false;
-	for (String line : SafeCLI.multiLine("/usr/bin/pkginfo -l " + pkginst, session, IUnixSession.TIMEOUT_S)) {
+	for (String line : SafeCLI.multiLine("/usr/bin/pkginfo -l " + pkginst, session, IUnixSession.Timeout.S)) {
 	    line = line.trim();
 	    if (line.length() == 0) {
 		break;

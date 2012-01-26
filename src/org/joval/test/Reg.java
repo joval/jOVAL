@@ -13,7 +13,7 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.logging.*;
 
-import org.joval.intf.system.ISession;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IValue;
@@ -30,7 +30,7 @@ import org.joval.io.LittleEndian;
 public class Reg {
     IWindowsSession session;
 
-    public Reg(ISession session) {
+    public Reg(IBaseSession session) {
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	}

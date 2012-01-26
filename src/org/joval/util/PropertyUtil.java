@@ -98,7 +98,7 @@ public class PropertyUtil implements IProperty {
 	    }
 	    return l;
 	}
-    
+
 	public int getIntProperty(String key) {
 	    int i = 0;
 	    try {
@@ -110,7 +110,7 @@ public class PropertyUtil implements IProperty {
 	    }
 	    return i;
 	}
-    
+
 	public boolean getBooleanProperty(String key) {
 	    return "true".equalsIgnoreCase(prop.getProperty(key));
 	}

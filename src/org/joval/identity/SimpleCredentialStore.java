@@ -89,7 +89,7 @@ public class SimpleCredentialStore implements ICredentialStore {
 		}
 		cred = new WindowsCredential(domain, username, password);
 		break;
-   
+
 	      default:
 		if (privateKey != null) {
 		    cred = new SshCredential(username, new File(privateKey), passphrase, rootPassword);

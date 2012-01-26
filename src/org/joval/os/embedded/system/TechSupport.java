@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
+import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.cisco.system.ITechSupport;
-import org.joval.intf.system.ISession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
@@ -28,9 +28,9 @@ public class TechSupport implements ITechSupport {
     /**
      * Create a plugin for scanning or test evaluation.
      */
-    public TechSupport(ISession session) throws Exception {
+    public TechSupport(IIosSession session) throws Exception {
 	data = new Hashtable<String, List<String>>();
-	long readTimeout = session.getProperties().getLongProperty(ISession.PROP_READ_TIMEOUT);
+	long readTimeout = session.getProperties().getLongProperty(IIosSession.PROP_READ_TIMEOUT);
 	String heading = null;
 	List<String> body = null;
 

@@ -22,17 +22,7 @@ public interface IUnixSession extends ISession {
     /**
      * Property indicating the number of milliseconds to wait for a read before quiting.
      */
-    String PROP_SUDO_READ_TIMEOUT = "sudo.read.timeout";
-
-    String PROP_READ_TIMEOUT_S = "read.timeout.small";
-    String PROP_READ_TIMEOUT_M = "read.timeout.medium";
-    String PROP_READ_TIMEOUT_L = "read.timeout.large";
-    String PROP_READ_TIMEOUT_XL = "read.timeout.xl";
-
-    long TIMEOUT_S	= 15000L;
-    long TIMEOUT_M	= 120000L;
-    long TIMEOUT_L	= 900000L;
-    long TIMEOUT_XL	= 3600000L;
+    String PROP_SUDO_READ_TIMEOUT = "read.timeout.sudo";
 
     Flavor getFlavor();
 
@@ -59,7 +49,7 @@ public interface IUnixSession extends ISession {
 	public static Flavor flavorOf(IUnixSession session) {
 	    Flavor flavor = UNKNOWN;
 	    try {
-		String osName = SafeCLI.exec("uname -s", session, TIMEOUT_S);
+		String osName = SafeCLI.exec("uname -s", session, Timeout.S);
 		for (Flavor f : values()) {
 		    if (f.value().equals(osName)) {
 			flavor = f;

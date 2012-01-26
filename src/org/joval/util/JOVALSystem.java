@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.Vector;
 import java.util.logging.FileHandler;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -165,8 +166,18 @@ public class JOVALSystem {
      * Configure a session in accordance with the jOVAL system configuration.
      */
     public static void configureSession(IBaseSession session) {
+	List<Class> visited = new Vector<Class>();
 	for (Class clazz : session.getClass().getInterfaces()) {
-	    configureInterface(clazz, session.getProperties());
+	    configureInterface(clazz, session.getProperties(), visited);
+	}
+	Class clazz = session.getClass().getSuperclass();
+	while(clazz != null) {
+	    for (Class intf : clazz.getInterfaces()) {
+		if (!visited.contains(intf)) {
+		    configureInterface(intf, session.getProperties(), visited);
+		}
+	    }
+	    clazz = clazz.getSuperclass();
 	}
     }
 
@@ -337,18 +348,21 @@ public class JOVALSystem {
     /**
      * Recursively configure the class.
      */
-    private static void configureInterface(Class clazz, IProperty prop) {
+    private static void configureInterface(Class clazz, IProperty prop, List<Class> visited) {
 	//
 	// First, configure all super-interfaces
 	//
 	for (Class intf : clazz.getInterfaces()) {
-	    configureInterface(intf, prop);
+	    if (!visited.contains(intf)) {
+		configureInterface(intf, prop, visited);
+	    }
 	}
 
 	//
 	// Next, configure all properties from this interface
 	//
 	try {
+	    visited.add(clazz);
 	    String section = clazz.getName();
 	    for (String key : config.getSection(section)) {
 		prop.setProperty(key, config.getProperty(section, key));

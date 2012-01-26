@@ -59,7 +59,7 @@ public class UnixFile implements IUnixFile {
 		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor()));
 	    }
     
-	    String line = SafeCLI.exec(command, session, IUnixSession.TIMEOUT_S);
+	    String line = SafeCLI.exec(command, session, IUnixSession.Timeout.S);
 	    unixType = line.charAt(0);
 	    permissions = line.substring(1, 10);
 	    if (line.charAt(11) == '+') {

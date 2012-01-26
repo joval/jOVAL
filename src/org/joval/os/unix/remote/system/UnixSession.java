@@ -21,11 +21,12 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.PerishableReader;
 import org.joval.os.unix.UnixSystemInfo;
+import org.joval.os.unix.system.BaseUnixSession;
 import org.joval.os.unix.system.Environment;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.io.SftpFilesystem;
 import org.joval.ssh.system.SshSession;
-import org.joval.util.BaseSession;
+import org.joval.util.AbstractSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -35,23 +36,30 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixSession extends BaseSession implements ILocked, IUnixSession {
+public class UnixSession extends BaseUnixSession implements ILocked {
     private static final String MOTD = "/etc/motd";
 
     SshSession ssh;
 
-    private LocLogger logger;
     private ICredential cred;
     private Credential rootCred = null;
-    private Flavor flavor = Flavor.UNKNOWN;
-    private UnixSystemInfo info = null;
     private boolean computedMotdLines = false;
     private int motdLines = 0;
 
     public UnixSession(SshSession ssh) {
 	super();
-	this.ssh = ssh;
 	info = new UnixSystemInfo(this);
+	this.ssh = ssh;
+    }
+
+    // Implement ILoggable
+
+    /**
+     * @override
+     */
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
+	ssh.setLogger(logger);
     }
 
     // Implement ILocked
@@ -68,10 +76,6 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
     }
 
     // Implement IBaseSession
-
-    public void setDebug(boolean debug) {
-	ssh.setDebug(debug);
-    }
 
     public String getHostname() {
 	return ssh.getHostname();
@@ -117,35 +121,11 @@ public class UnixSession extends BaseSession implements ILocked, IUnixSession {
 	}
     }
 
-    public Type getType() {
-	return Type.UNIX;
-    }
-
-    /**
-     * @override
-     */
-    public void setLogger(LocLogger logger) {
-	super.setLogger(logger);
-	ssh.setLogger(logger);
-    }
-
-    // Implement ISession
-
-    public SystemInfoType getSystemInfo() {
-	return info.getSystemInfo();
-    }
-
     /**
      * @override
      */
     public void setWorkingDir(String path) {
 	// no-op
-    }
-
-    // Implement IUnixSession
-
-    public Flavor getFlavor() {
-	return flavor;
     }
 
     // Internal

@@ -12,6 +12,7 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.unix.system.IUnixSession;
@@ -68,7 +69,7 @@ public abstract class BasePlugin implements IPlugin {
     private String hostname;
 
     protected LocLogger logger;
-    protected ISession session;
+    protected IBaseSession session;
     protected Collection<IAdapter> adapters;
 
     protected BasePlugin() {
@@ -99,14 +100,14 @@ public abstract class BasePlugin implements IPlugin {
 	    adapters = new Vector<IAdapter>();
 	    adapters.add(new FamilyAdapter(session));
 	    adapters.add(new VariableAdapter());
-	    if (session.getEnvironment() != null) {
-		adapters.add(new Environmentvariable58Adapter(session));
-		adapters.add(new EnvironmentvariableAdapter(session));
-	    }
-	    if (session.getFilesystem() != null) {
-		adapters.add(new Textfilecontent54Adapter(session));
-		adapters.add(new TextfilecontentAdapter(session));
-		adapters.add(new XmlfilecontentAdapter(session));
+
+	    if (session instanceof ISession) {
+		ISession s = (ISession)session;
+		adapters.add(new Environmentvariable58Adapter(s));
+		adapters.add(new EnvironmentvariableAdapter(s));
+		adapters.add(new Textfilecontent54Adapter(s));
+		adapters.add(new TextfilecontentAdapter(s));
+		adapters.add(new XmlfilecontentAdapter(s));
 	    }
 
 	    logger.trace(JOVALMsg.STATUS_SESSION_TYPE, session.getType());

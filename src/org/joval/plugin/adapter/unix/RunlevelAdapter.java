@@ -281,7 +281,7 @@ public class RunlevelAdapter implements IAdapter {
     }
 
     private void initLinuxRunlevels() throws Exception {
-	for (String line : SafeCLI.multiLine("/sbin/chkconfig --list", session, IUnixSession.TIMEOUT_M)) {
+	for (String line : SafeCLI.multiLine("/sbin/chkconfig --list", session, IUnixSession.Timeout.M)) {
 	    StringTokenizer tok = new StringTokenizer(line);
 	    if (tok.countTokens() == 8) {
 		String serviceName = tok.nextToken();

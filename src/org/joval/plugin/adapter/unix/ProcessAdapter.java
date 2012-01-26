@@ -166,7 +166,7 @@ public class ProcessAdapter implements IAdapter {
 	    return false;
 	}
 	try {
-	    List<String> lines = SafeCLI.multiLine(args, session, IUnixSession.TIMEOUT_S);
+	    List<String> lines = SafeCLI.multiLine(args, session, IUnixSession.Timeout.S);
 	    for (int i=1; i < lines.size(); i++) { // skip the header at line 0
 		StringTokenizer tok = new StringTokenizer(lines.get(i));
 		ProcessItem process = JOVALSystem.factories.sc.unix.createProcessItem();
