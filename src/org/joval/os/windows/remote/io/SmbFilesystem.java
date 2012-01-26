@@ -49,7 +49,6 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
     private NtlmPasswordAuthentication auth;
     private IEnvironment env;
     private IPathRedirector redirector;
-    private ILoggable log;
     private boolean autoExpand;
 
     /**
@@ -58,14 +57,13 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
      * @param env The host environment, used to expand variables that are passed inside of paths.  If null, autoExpand is
      *            automatically set to false.
      */
-    public SmbFilesystem(String host, IWindowsCredential cred, IEnvironment env, IPathRedirector redirector, ILoggable log) {
+    public SmbFilesystem(String host, IWindowsCredential cred, IEnvironment env, IPathRedirector fsr, LocLogger logger) {
 	super();
-	cache.setLogger(log.getLogger());
 	this.host = host;
 	auth = getNtlmPasswordAuthentication(cred);
 	this.env = env;
-	this.redirector = redirector;
-	this.log = log;
+	redirector = fsr;
+	setLogger(logger);
 	autoExpand = true;
     }
 
@@ -78,15 +76,6 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
     }
 
     // Implement methods left abstract in CachingTree
-
-    public LocLogger getLogger() {
-	return log.getLogger();
-    }
-
-    public void setLogger(LocLogger logger) {
-	cache.setLogger(logger);
-	log.setLogger(logger);
-    }
 
     public String getDelimiter() {
 	return LOCAL_DELIM_STR;
@@ -110,7 +99,7 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 		throw new NoSuchElementException(path);
 	    }
 	} catch (IOException e) {
-	    log.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return null;
 	}
     }
@@ -152,7 +141,7 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 		if (realPath.length() > 0) {
 		    sb.append(realPath.substring(2).replace(LOCAL_DELIM_CH,SMBURL_DELIM_CH));
 		}
-		log.getLogger().trace(JOVALMsg.STATUS_WINSMB_MAP, path, sb.toString());
+		logger.trace(JOVALMsg.STATUS_WINSMB_MAP, path, sb.toString());
 		SmbFile smbFile = null;
 		if (vol) {
 		    smbFile = new VolatileSmbFile(sb.toString(), auth);
