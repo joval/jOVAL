@@ -114,6 +114,15 @@ public class IniFile {
     private static final String EQUAL = "=";
 
     private int delimIndex(String line) {
-	return Math.max(line.indexOf(COLON), line.indexOf(EQUAL));
+	int i1 = line.indexOf(COLON);
+	int i2 = line.indexOf(EQUAL);
+
+	if (i1 == -1) {
+	    return i2;
+	} else if (i2 == -1) {
+	    return i1;
+	} else {
+	    return Math.min(i1, i2);
+	}
     }
 }
