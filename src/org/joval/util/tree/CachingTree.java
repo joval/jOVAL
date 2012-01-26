@@ -15,7 +15,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.joval.intf.util.ILoggable;
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITree;
@@ -40,11 +41,14 @@ import org.joval.util.tree.Tree;
  */
 public abstract class CachingTree implements ITree {
     private String ESCAPED_DELIM;
-    protected IForest cache;
 
-    public CachingTree() {
+    protected IForest cache;
+    protected LocLogger logger;
+
+    protected CachingTree() {
 	cache = new Forest();
 	ESCAPED_DELIM = Matcher.quoteReplacement(getDelimiter());
+	setLogger(JOVALSystem.getLogger());
     }
 
     protected boolean preload() {
@@ -55,6 +59,17 @@ public abstract class CachingTree implements ITree {
 	return false;
     }
 
+    // Implement ILogger
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+	cache.setLogger(logger);
+    }
+
     // Implement ITree (sparsely) -- subclasses must implement the getDelimiter and lookup methods.
 
     public INode getRoot() {
@@ -63,10 +78,13 @@ public abstract class CachingTree implements ITree {
 
     public Collection<String> search(Pattern p) {
 	try {
+	    String pattern = p.pattern();
 	    if (preload()) {
+		logger.debug(JOVALMsg.STATUS_CACHESEARCH, pattern);
 		return cache.search(p);
 	    } else {
-		return treeSearch(p.pattern());
+		logger.debug(JOVALMsg.STATUS_TREESEARCH, pattern);
+		return treeSearch(pattern);
 	    }
 	} catch (PatternSyntaxException e) {
 	    getLogger().warn(JOVALMsg.ERROR_PATTERN, p.pattern());

@@ -12,8 +12,6 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
-import org.slf4j.cal10n.LocLogger;
-
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
@@ -43,35 +41,22 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 
     private int entries, maxEntries;
     private boolean autoExpand = true, preloaded = false;
-    private LocLogger logger;
     private IProperty props;
     private IBaseSession session;
     private IEnvironment env;
     private IPathRedirector redirector;
 
-    public LocalFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector, LocLogger logger) {
+    public LocalFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector) {
 	super();
-	cache.setLogger(logger);
 	this.session = session;
 	this.env = env;
-	props = session.getProperties();
 	this.redirector = redirector;
-	this.logger = logger;
+	props = session.getProperties();
+	setLogger(session.getLogger());
     }
 
     public void setAutoExpand(boolean autoExpand) {
 	this.autoExpand = autoExpand;
-    }
-
-    // Implement methods left abstract in CachingTree
-
-    public LocLogger getLogger() {
-	return logger;
-    }
-
-    public void setLogger(LocLogger logger) {
-	cache.setLogger(logger);
-	this.logger = logger;
     }
 
     public boolean preload() {
@@ -118,7 +103,6 @@ public class LocalFilesystem extends CachingTree implements IFilesystem {
 			}
 		    }
 		} else {
-		    logger.debug(JOVALMsg.STATUS_FS_PRELOAD, root.getPath());
 		    roots.add(root);
 		}
 

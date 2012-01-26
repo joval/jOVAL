@@ -127,7 +127,7 @@ public class JOVALSystem {
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	    ovalProps.load(cl.getResourceAsStream("oval.properties"));
-	    config = new IniFile(cl.getResourceAsStream("session.ini"));
+	    config = new IniFile(cl.getResourceAsStream("defaults.ini"));
 	} catch (IOException e) {
 	    sysLogger.error(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}

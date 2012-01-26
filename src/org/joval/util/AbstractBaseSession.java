@@ -32,8 +32,8 @@ public abstract class AbstractBaseSession implements IBaseSession {
     }
 
     /**
-     * Subclasses may override this method in order to define an override key for any key that should specify an override
-     * property key.  In the event the override key does not exist, the original key is used to fetch the value.
+     * Subclasses may override this method in order to define an "override key" for any property key whose value, if it
+     * exists, should override the value associated with the original property key.
      */
     protected String getOverrideKey(String key) {
         return null;
@@ -133,6 +133,9 @@ public abstract class AbstractBaseSession implements IBaseSession {
 	    handlePropertyChange(key, value);
 	}
 
+	/**
+	 * First checks for a property with the override key, then returns the requested key if none exists.
+	 */
 	public String getProperty(String key) {
 	    String ok = getOverrideKey(key);
 	    if (ok != null) {

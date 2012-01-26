@@ -29,8 +29,8 @@ resources:
 	cp $(RSRC)/*.properties $(BUILD)
 	rm -f $(BUILD)/*.ini
 	cp $(RSRC)/*.ini $(BUILD)
-	echo -e "version=$(JOVAL_VERSION)\r\n" >> $(BUILD)/session.ini
-	echo "build.date=`date`" >> $(BUILD)/session.ini
+	echo -e "version=$(JOVAL_VERSION)\r\n" >> $(BUILD)/defaults.ini
+	echo "build.date=`date`" >> $(BUILD)/defaults.ini
 
 classes: classdirs $(CLASS_FILES)
 

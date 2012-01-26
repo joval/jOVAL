@@ -33,7 +33,7 @@ public class UnixSession extends BaseUnixSession {
 
     public boolean connect() {
 	env = new Environment(this);
-	fs = new LocalFilesystem(this, env, null, logger);
+	fs = new LocalFilesystem(this, env, null);
 	cwd = new File(".");
 	flavor = Flavor.flavorOf(this);
 	info.getSystemInfo();

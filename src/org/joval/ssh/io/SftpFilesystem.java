@@ -63,9 +63,9 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	super();
 	this.jschSession = jschSession;
 	this.session = session;
-	props = session.getProperties();
 	this.env = env;
-	cache.setLogger(session.getLogger());
+	props = session.getProperties();
+	setLogger(session.getLogger());
     }
 
     public void setJschSession(Session jschSession) {
@@ -84,17 +84,8 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
     // Implement methods left abstract in CachingTree
 
-    public LocLogger getLogger() {
-	return session.getLogger();
-    }
-
-    public void setLogger(LocLogger logger) {
-	cache.setLogger(logger);
-	session.setLogger(logger);
-    }
-
     public boolean preload() {
-	if (props.getBooleanProperty(PROP_PRELOAD_REMOTE)) {
+	if (!props.getBooleanProperty(PROP_PRELOAD_REMOTE)) {
 	    return false;
 	} else if (preloaded) {
 	    return true;
