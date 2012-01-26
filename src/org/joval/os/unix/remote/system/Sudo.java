@@ -69,7 +69,7 @@ class Sudo implements IProcess {
 
     public InputStream getInputStream() throws IOException {
 	if (in == null) {
-	    long readTimeout = us.getProperties().getLongProperty(IUnixSession.PROP_READ_TIMEOUT);
+	    long readTimeout = us.getProperties().getLongProperty(IUnixSession.PROP_SUDO_READ_TIMEOUT);
 	    in = (PerishableReader)PerishableReader.newInstance(p.getInputStream(), readTimeout);
 	    in.setLogger(us.getLogger());
 	}

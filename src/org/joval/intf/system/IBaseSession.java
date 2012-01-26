@@ -58,11 +58,6 @@ public interface IBaseSession extends ILoggable {
     String PROP_EXEC_RETRIES = "exec.retries";
 
     /**
-     * Property indicating the number of milliseconds to wait for a command to begin to return data.
-     */
-    public static final String PROP_READ_TIMEOUT = "read.timeout";
-
-    /**
      * A constant defining the String "localhost".
      */
     String LOCALHOST = "localhost";

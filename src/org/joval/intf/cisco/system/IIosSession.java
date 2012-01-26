@@ -12,5 +12,10 @@ import org.joval.intf.system.IBaseSession;
  * @version %I% %G%
  */
 public interface IIosSession extends IBaseSession {
+    /**
+     * Property indicating the number of milliseconds to wait for a command to begin to return data.
+     */
+    public static final String PROP_READ_TIMEOUT = "ios.read.timeout";
+
     ITechSupport getTechSupport();
 }
