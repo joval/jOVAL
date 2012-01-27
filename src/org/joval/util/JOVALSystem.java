@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.Timer;
 import java.util.Vector;
 import java.util.logging.FileHandler;
 import javax.xml.bind.JAXBContext;
@@ -101,6 +102,7 @@ public class JOVALSystem {
 
     private static final String SYSTEM_SECTION = JOVALSystem.class.getName();
 
+    private static Timer timer;
     private static IMessageConveyor mc;
     private static LocLoggerFactory loggerFactory;
     private static LocLogger sysLogger;
@@ -108,6 +110,7 @@ public class JOVALSystem {
     private static IniFile config;
 
     static {
+	timer = new Timer("jOVAL system timer", true);
 	mc = new MessageConveyor(Locale.getDefault());
 	try {
 	    //
@@ -138,6 +141,13 @@ public class JOVALSystem {
      */
     public static String getMessage(JOVALMsg key, Object... args) {
 	return mc.getMessage(key, args);
+    }
+
+    /**
+     * Retrieve the daemon Timer used for scheduled jOVAL tasks.
+     */
+    public static Timer getTimer() {
+	return timer;
     }
 
     /**

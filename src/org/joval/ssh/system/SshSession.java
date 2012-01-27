@@ -52,6 +52,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
     private String hostname;
     private ICredential cred;
     private SshSession gateway;
+    private int gatewayPort = 0;
     private Session session;
     private boolean connected = false;
 
@@ -174,6 +175,13 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 	    }
 	}
 	if (gateway != null) {
+	    if (gatewayPort > 0) {
+		try {
+		    gateway.session.delPortForwardingL(gatewayPort);
+		} catch (JSchException e) {
+		}
+		gatewayPort = 0;
+	    }
 	    gateway.disconnect();
 	}
     }
@@ -193,7 +201,6 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 		    }
 		}
 	    } catch (Exception e) {
-e.printStackTrace();
 		logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
@@ -259,13 +266,22 @@ e.printStackTrace();
 		session.setUserInfo(this);
 	    }
 	} else {
-	    // use gateway port forwarding
-	    int localPort = gateway.session.setPortForwardingL(0, hostname, 22);
+	    // First, disconnect if applicable
 	    if (session != null) {
 		session.disconnect();
 		session = null;
 	    }
-	    session = jsch.createSession(cred.getUsername(), LOCALHOST, localPort, config);
+	    if (gatewayPort > 0) {
+		try {
+		    gateway.session.delPortForwardingL(gatewayPort);
+		} catch (JSchException e) {
+		}
+		gatewayPort = 0;
+	    }
+
+	    // Then, use gateway port forwarding
+	    gatewayPort = gateway.session.setPortForwardingL(0, hostname, 22);
+	    session = jsch.createSession(cred.getUsername(), LOCALHOST, gatewayPort, config);
 	    session.setUserInfo(this);
 	}
 	session.setSocketFactory(SocketFactory.DEFAULT_SOCKET_FACTORY);

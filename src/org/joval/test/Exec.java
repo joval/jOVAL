@@ -20,6 +20,7 @@ public class Exec {
 	try {
 	    IProcess p = session.createProcess(command);
 	    p.start();
+
 	    InputStream in = p.getInputStream();
 	    int len = 0;
 	    byte[] buff = new byte[1024];

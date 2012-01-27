@@ -6,6 +6,8 @@ package org.joval.util;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Date;
+import java.util.TimerTask;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -16,6 +18,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.util.JOVALSystem;
 
 /**
  * Base class for the local and remote Windows and Unix ISession implementations.
@@ -113,8 +116,18 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	}
 
 	public void waitFor(long millis) throws InterruptedException {
-	    new Timer(millis, new TimerClient(Thread.currentThread()));
-	    p.waitFor();
+	    TimerTask task = new InterruptTask(Thread.currentThread());
+	    long expires = System.currentTimeMillis() + millis;
+	    JOVALSystem.getTimer().schedule(task, new Date(expires));
+	    try {
+		p.waitFor();
+		task.cancel();
+		JOVALSystem.getTimer().purge();
+	    } catch (InterruptedException e) {
+		if (System.currentTimeMillis() < expires) {
+		    throw e;
+		}
+	    }
 	}
 
 	public int exitValue() throws IllegalThreadStateException {
@@ -135,46 +148,14 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	}
     }
 
-    class Timer implements Runnable {
-	private long millis;
-	private TimerClient client;
-	private Thread t;
-
-	Timer(long millis, TimerClient client) {
-	    this.millis = millis;
-	    this.client = client;
-	    t = new Thread(this);
-	}
-
-	void start() {
-	    t.start();
-	}
-
-	void cancel() {
-	    if (t.isAlive()) {
-		t.interrupt();
-	    }
-	}
-
-	// Implement Runnable
-
-	public void run() {
-	    try {
-		Thread.sleep(millis);
-		client.ding();
-	    } catch (InterruptedException e) {
-	    }
-	}
-    }
-
-    class TimerClient {
+    class InterruptTask extends TimerTask {
 	Thread t;
 
-	TimerClient (Thread t) {
+	InterruptTask(Thread t) {
 	    this.t = t;
 	}
 
-	void ding() {
+	public void run() {
 	    if (t.isAlive()) {
 		t.interrupt();
 	    }

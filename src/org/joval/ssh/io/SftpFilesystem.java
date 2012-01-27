@@ -280,15 +280,12 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
     // Private
 
-    /**
-     * REMIND (DAS): Add logic to skip over any NFS mounts.
-     */
     private String getFindCommand(IUnixSession us) throws IOException {
-	String command = null;
+	StringBuffer command = new StringBuffer("find -L");
 	String skip = props.getProperty(PROP_PRELOAD_SKIP);
 	if (skip == null) {
 	    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD, "/");
-	    command = "find -L /";
+	    command.append(" /");
 	} else {
 	    Collection<String> forbidden = StringTools.toList(StringTools.tokenize(skip, ":", true));
 	    IFile[] roots = getFile(DELIM_STR).listFiles();
@@ -301,13 +298,20 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 		    filtered.add(roots[i].getPath());
 		}
 	    }
-	    StringBuffer sb = new StringBuffer("find -L ");
 	    for (String s : filtered) {
-		sb.append(s).append(" ");
+		command.append(" ").append(s);
 	    }
-	    command = sb.toString().trim();
 	}
-	return command;
+
+	//
+ 	// REMIND (DAS): Add logic to skip over NFS mounts for all Unix flavors.
+	//
+	switch(us.getFlavor()) {
+	  case AIX:
+	    command.append(" -fstype jfs2");
+	    break;
+	}
+	return command.toString();
     }
 
     private IFile getFindCache(String command) throws Exception {
