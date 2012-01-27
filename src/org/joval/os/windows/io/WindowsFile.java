@@ -12,6 +12,7 @@ import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
 import com.sun.jna.platform.win32.Advapi32Util;
+import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.platform.win32.WinNT;
 
 import org.joval.intf.io.IFile;
@@ -148,15 +149,28 @@ public class WindowsFile implements IWindowsFile {
      * Returns one of the FILE_TYPE_ constants.
      */
     public int getWindowsFileType() throws IOException {
-	return FILE_TYPE_DISK;
+	try {
+	    int dirAttr = FILE_ATTRIBUTE_DIRECTORY & Kernel32Util.getFileAttributes(getPath());
+	    if (FILE_ATTRIBUTE_DIRECTORY == dirAttr) {
+		return FILE_ATTRIBUTE_DIRECTORY;
+	    } else {
+		return Kernel32Util.getFileType();
+	    }
+	} catch (Win32Exception e) {
+	    throw new IOException(e);
+	}
     }
 
     public IACE[] getSecurity() throws IOException {
-	WinNT.ACCESS_ACEStructure[] aces = Advapi32Util.getFileSecurity(getLocalName(), false);
-	IACE[] result = new IACE[aces.length];
-	for (int i=0; i < aces.length; i++) {
-	    result[i] = new LocalACE(aces[i]);
+	try {
+	    WinNT.ACCESS_ACEStructure[] aces = Advapi32Util.getFileSecurity(getLocalName(), false);
+	    IACE[] result = new IACE[aces.length];
+	    for (int i=0; i < aces.length; i++) {
+		result[i] = new LocalACE(aces[i]);
+	    }
+	    return result;
+	} catch (Win32Exception e) {
+	    throw new IOException(e);
 	}
-	return result;
     }
 }

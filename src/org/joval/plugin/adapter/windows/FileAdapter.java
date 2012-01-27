@@ -140,6 +140,9 @@ public class FileAdapter extends BaseFileAdapter {
 	fItem.setStatus(StatusEnumeration.EXISTS);
 	EntityItemFileTypeType typeType = JOVALSystem.factories.sc.windows.createEntityItemFileTypeType();
 	switch(file.getWindowsFileType()) {
+	  case IWindowsFile.FILE_ATTRIBUTE_DIRECTORY:
+	    typeType.setValue("FILE_ATTRIBUTE_DIRECTORY");
+	    break;
 	  case IWindowsFile.FILE_TYPE_DISK:
 	    typeType.setValue("FILE_TYPE_DISK");
 	    break;

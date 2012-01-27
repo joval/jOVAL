@@ -41,6 +41,11 @@ public interface IWindowsFile extends IFile {
     int FILE_TYPE_REMOTE = 0x8000;
 
     /**
+     * The handle that identifies a directory.
+     */
+    int FILE_ATTRIBUTE_DIRECTORY = 0x10;
+
+    /**
      * Returns one of the FILE_TYPE_ constants.
      */
     public int getWindowsFileType() throws IOException;

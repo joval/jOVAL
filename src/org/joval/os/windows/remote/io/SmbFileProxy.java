@@ -157,20 +157,28 @@ class SmbFileProxy extends BaseFile implements IWindowsFile {
     // Implement IWindowsFile
 
     public int getWindowsFileType() throws IOException {
-	switch(smbFile.getType()) {
-	  case SmbFile.TYPE_FILESYSTEM:
-	    return FILE_TYPE_DISK;
-	  case SmbFile.TYPE_WORKGROUP:
-	  case SmbFile.TYPE_SERVER:
-	  case SmbFile.TYPE_SHARE:
-	    return FILE_TYPE_REMOTE;
-	  case SmbFile.TYPE_NAMED_PIPE:
-	    return FILE_TYPE_PIPE;
-	  case SmbFile.TYPE_PRINTER:
-	  case SmbFile.TYPE_COMM:
-	    return FILE_TYPE_CHAR;
-	  default:
-	    return FILE_TYPE_UNKNOWN;
+	if (isDirectory()) {
+	    return FILE_ATTRIBUTE_DIRECTORY;
+	} else {
+	    switch(smbFile.getType()) {
+	      case SmbFile.TYPE_FILESYSTEM:
+		return FILE_TYPE_DISK;
+    
+	      case SmbFile.TYPE_WORKGROUP:
+	      case SmbFile.TYPE_SERVER:
+	      case SmbFile.TYPE_SHARE:
+		return FILE_TYPE_REMOTE;
+    
+	      case SmbFile.TYPE_NAMED_PIPE:
+		return FILE_TYPE_PIPE;
+    
+	      case SmbFile.TYPE_PRINTER:
+	      case SmbFile.TYPE_COMM:
+		return FILE_TYPE_CHAR;
+    
+	      default:
+		return FILE_TYPE_UNKNOWN;
+	    }
 	}
     }
 
