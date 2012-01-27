@@ -332,7 +332,7 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 
 	if (rebuild) {
 	    temp = null;
-	    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_CREATE, tempTemp);
+	    session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_TEMP, tempTemp);
 	    command = new StringBuffer(command).append(" > ").append(tempTemp).toString();
 	    IProcess p = session.createProcess(command);
 	    p.start();
@@ -343,9 +343,19 @@ public class SftpFilesystem extends CachingTree implements IFilesystem {
 	    }
 	    ErrorReader er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), XL));
 	    er.start();
-	    byte[] buff = new byte[1024];
-	    while (in.read(buff) > 0) {} // wait...
-	    if (p.isRunning()) {
+	    boolean done = false;
+	    for (int i=0; !done && i < 240; i++) {
+		for (int j=0; !done && j < 15; j++) {
+		    if (p.isRunning()) {
+			Thread.sleep(1000);
+		    } else {
+			done = true;
+		    }
+		}
+		temp = getFile(tempTemp);
+		session.getLogger().info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, temp.length());
+	    }
+	    if (!done) {
 		p.destroy();
 	    }
 	    er.join();
