@@ -5,6 +5,7 @@ package org.joval.os.unix.io;
 
 import java.io.File;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
@@ -366,8 +367,9 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	    if (!done) {
 		p.destroy();
 	    }
-	    er.join();
 	    in.close();
+	    er.close();
+	    er.join();
 	}
 
 	SafeCLI.exec("mv " + tempPath + " " + destPath, session, S);
@@ -393,12 +395,20 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	    t.join();
 	}
 
+	void close() {
+	    if (t.isAlive()) {
+		t.interrupt();
+	    }
+	}
+
 	public void run() {
 	    try {
 		String line = null;
 		while((line = err.readLine()) != null) {
 		    logger.warn(JOVALMsg.ERROR_PRELOAD_LINE, line);
 		}
+	    } catch (InterruptedIOException e) {
+		// ignore
 	    } catch (IOException e) {
 		logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {

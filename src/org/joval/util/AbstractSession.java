@@ -120,19 +120,23 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	}
 
 	public void waitFor(long millis) throws InterruptedException {
-	    TimerTask task = new InterruptTask(Thread.currentThread());
-	    long expires = System.currentTimeMillis() + millis;
-	    JOVALSystem.getTimer().schedule(task, new Date(expires));
-	    InterruptedException ie = null;
-	    try {
+	    if (millis == 0) {
 		p.waitFor();
-	    } catch (InterruptedException e) {
-		ie = e;
-	    }
-	    if (task.cancel()) {
-		JOVALSystem.getTimer().purge();
-		if (ie != null) {
-		    throw ie;
+	    } else {
+		TimerTask task = new InterruptTask(Thread.currentThread());
+		long expires = System.currentTimeMillis() + millis;
+		JOVALSystem.getTimer().schedule(task, new Date(expires));
+		InterruptedException ie = null;
+		try {
+		    p.waitFor();
+		} catch (InterruptedException e) {
+		    ie = e;
+		}
+		if (task.cancel()) {
+		    JOVALSystem.getTimer().purge();
+		    if (ie != null) {
+			throw ie;
+		    }
 		}
 	    }
 	}

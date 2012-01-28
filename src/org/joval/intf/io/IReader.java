@@ -32,6 +32,8 @@ public interface IReader extends ILoggable {
 
     /**
      * Read from the stream until the specified byte is encountered, and return the bytes read.
+     *
+     * @throws EOFException if the end of the stream is reached
      */
     byte[] readUntil(int ch) throws IOException;
 
@@ -44,4 +46,9 @@ public interface IReader extends ILoggable {
      * Returns true iff the close() method has ever been called.
      */
     boolean checkClosed();
+
+    /**
+     * Returns true if the end of the underlying stream has been reached.
+     */
+    boolean checkEOF();
 }

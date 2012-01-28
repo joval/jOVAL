@@ -103,6 +103,7 @@ public class SafeCLI {
 			throw e;
 		    } else {
 			// Something's probably wrong with the connection, so reconnect it.
+			p.destroy();
 			session.disconnect();
 			session.connect();
 			session.getLogger().info(JOVALMsg.STATUS_PROCESS_RETRY, cmd);

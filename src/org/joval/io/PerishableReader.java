@@ -14,6 +14,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TimerTask;
 import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
@@ -32,9 +33,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class PerishableReader extends InputStream implements IReader, IPerishable {
-    private static Set<PerishableReader>readers = Collections.synchronizedSet(new HashSet<PerishableReader>());
-    private static final IOTimer timer = new IOTimer();
-
     /**
      * Create a new instance using the given InputStream and initial timeout.  The clock begins ticking immediately, so
      * it is important to start reading before the timeout has expired.
@@ -51,24 +49,15 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	    reader.setTimeout(maxTime);
 	} else {
 	    reader = new PerishableReader(in, maxTime);
-	    synchronized(readers) {
-		readers.add(reader);
-	    }
-	    synchronized(timer) {
-		if (!timer.running()) {
-		    timer.start();
-		}
-	    }
 	}
 	return reader;
     }
 
     private InputStream in;
     private BufferedReader reader;
-    private boolean closed;
-    private long expires;
+    private boolean isEOF, closed, expired;
     private long timeout;
-    private Thread thread;
+    private TimerTask task;
     private LocLogger logger;
 
     // Implement ILoggable
@@ -83,14 +72,15 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 
     // Implement IReader
 
-    public void close() throws IOException {
+    public synchronized void close() throws IOException {
 	if (!closed)  {
-	    closed = true;
+	    if (task != null) {
+		task.cancel();
+		task = null;
+	    }
 	    in.close();
 	    reader.close();
-	    synchronized(readers) {
-		readers.remove(this);
-	    }
+	    closed = true;
 	}
     }
 
@@ -98,18 +88,25 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	return closed;
     }
 
+    public boolean checkEOF() {
+	return isEOF;
+    }
+
     public String readLine() throws IOException {
-	thread = Thread.currentThread();
 	String line = reader.readLine();
-	reset();
+	if (line == null) {
+	    isEOF = true;
+	} else {
+	    reset();
+	}
 	return line;
     }
 
     public void readFully(byte[] buff) throws IOException {
-	thread = Thread.currentThread();
 	for (int i=0; i < buff.length; i++) {
 	    int ch = reader.read();
 	    if (ch == -1) {
+		isEOF = true;
 		throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_EOS));
 	    } else {
 		buff[i] = (byte)(ch & 0xFF);
@@ -119,7 +116,6 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     }
 
     public byte[] readUntil(int delim) throws IOException {
-	thread = Thread.currentThread();
 	int ch=0, len=0;
 	byte[] buff = new byte[512];
 	while((ch = reader.read()) != -1 && ch != delim) {
@@ -134,6 +130,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	    buff[len++] = (byte)ch;
 	}
 	if (ch == -1 && len == 0) {
+	    isEOF = true;
 	    return null;
 	} else {
 	    byte[] result = new byte[len];
@@ -146,20 +143,19 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     }
 
     public int read() throws IOException {
-	thread = Thread.currentThread();
 	int i = reader.read();
-	reset();
+	if (i == -1) {
+	    isEOF = true;
+	} else {
+	    reset();
+	}
 	return i;
     }
 
     // Implement IPerishable
 
     public boolean checkExpired() {
-	if (expires > 0) {
-	    return expires <= System.currentTimeMillis();
-	} else {
-	    return false;
-	}
+	return expired;
     }
 
     public void setTimeout(long timeout) {
@@ -168,12 +164,15 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	} else {
 	    this.timeout = timeout;
 	}
-	expires = System.currentTimeMillis() + this.timeout;
+	reset();
     }
 
-    public void reset() {
-	expires = System.currentTimeMillis() + timeout;
-	thread = null;
+    public synchronized void reset() {
+	if (task != null) {
+	    task.cancel();
+	}
+	task = new InterruptTask(Thread.currentThread());
+	JOVALSystem.getTimer().schedule(task, timeout);
     }
 
     // Private
@@ -182,80 +181,30 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	this.in = in;
 	setTimeout(timeout);
 	reader = new BufferedReader(new InputStreamReader(in));
+	isEOF = false;
 	closed = false;
+	expired = false;
+	reset();
     }
 
-    private void interrupt() {
-	if (thread != null) {
-	    thread.interrupt();
-	}
-    }
+    class InterruptTask extends TimerTask {
+	Thread t;
 
-    private static class IOTimer implements Runnable {
-	Thread thread;
-	boolean stop;
-
-	public IOTimer() {
-	    stop = true;
-	}
-
-	public synchronized void start() {
-	    if (stop) {
-		if (thread != null && thread.isAlive()) {
-		    try {
-			thread.join();
-		    } catch (InterruptedException e) {
-		    }
-		}
-		stop = false;
-		thread = new Thread(this);
-		thread.start();
-	    }
-	}
-
-	public void stop() {
-	    stop = true;
-	}
-
-	public boolean running() {
-	    return !stop;
+	InterruptTask(Thread t) {
+	    this.t = t;
 	}
 
 	public void run() {
-	    while (!stop) {
-		Vector<PerishableReader>zombies = new Vector<PerishableReader>();
-
+	    if (PerishableReader.this.isEOF) {
 		try {
-		    Thread.sleep(1000);
-		} catch (InterruptedException e) {
+		    PerishableReader.this.close();
+		} catch (IOException e) {
 		}
-
-		synchronized(readers) {
-		    try {
-			for (PerishableReader reader : readers) {
-			    if (reader.checkExpired()) {
-				try {
-				    reader.getLogger().warn(JOVALMsg.ERROR_READ_TIMEOUT, reader.timeout);
-				    reader.interrupt();
-				    reader.close();
-				} catch (IOException e) {
-				}
-			    }
-			    if (reader.checkClosed()) {
-				zombies.add(reader);
-			    }
-			}
-		    } catch (ConcurrentModificationException e) {
-			JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    }
-		    for (PerishableReader zombie : zombies) {
-			readers.remove(zombie);
-		    }
-		    if (readers.size() == 0) {
-			stop = true;
-		    }
-		}
+	    } else if (t.isAlive()) {
+		t.interrupt();
+		PerishableReader.this.expired = true;
 	    }
+	    JOVALSystem.getTimer().purge();
 	}
     }
 }

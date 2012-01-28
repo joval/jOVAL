@@ -115,6 +115,8 @@ class SshProcess implements IProcess {
 	try {
 	    if (ce.isConnected()) {
 		ce.sendSignal("KILL");
+		ce.getInputStream().close();
+		ce.getErrStream().close();
 	    }
 	} catch (Exception e) {
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
