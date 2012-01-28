@@ -7,6 +7,7 @@ SHARED=\
 	org.joval.intf.system.IProcess					\
 	org.joval.intf.system.ISession					\
 	org.joval.intf.unix.io.IUnixFile				\
+	org.joval.intf.unix.io.IUnixFilesystem				\
 	org.joval.intf.unix.system.IUnixSession				\
 	org.joval.intf.util.IPathRedirector				\
 	org.joval.intf.util.IPerishable					\
@@ -20,6 +21,7 @@ SHARED=\
 	org.joval.intf.windows.identity.IPrincipal			\
 	org.joval.intf.windows.identity.IUser				\
 	org.joval.intf.windows.io.IWindowsFile				\
+	org.joval.intf.windows.io.IWindowsFilesystem			\
 	org.joval.intf.windows.registry.IKey				\
 	org.joval.intf.windows.registry.IRegistry			\
 	org.joval.intf.windows.registry.IBinaryValue			\
@@ -36,12 +38,14 @@ SHARED=\
 	org.joval.intf.windows.wmi.ISWbemPropertySet			\
 	org.joval.intf.windows.wmi.IWmiProvider				\
 	org.joval.io.BaseFile						\
+	org.joval.io.BaseFilesystem					\
 	org.joval.io.LittleEndian					\
 	org.joval.io.PerishableReader					\
 	org.joval.io.StreamTool						\
 	org.joval.os.unix.NetworkInterface				\
 	org.joval.os.unix.UnixSystemInfo				\
 	org.joval.os.unix.io.UnixFile					\
+	org.joval.os.unix.io.UnixFilesystem				\
 	org.joval.os.unix.system.BaseUnixSession			\
 	org.joval.os.unix.system.Environment				\
 	org.joval.os.windows.WindowsSystemInfo				\
@@ -51,6 +55,7 @@ SHARED=\
 	org.joval.os.windows.identity.LocalDirectory			\
 	org.joval.os.windows.identity.Principal				\
 	org.joval.os.windows.identity.User				\
+	org.joval.os.windows.io.WOW3264FilesystemRedirector		\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector		\
 	org.joval.os.windows.pe.Characteristics				\
 	org.joval.os.windows.pe.DLLCharacteristics			\

@@ -32,9 +32,9 @@ import org.joval.util.tree.Tree;
  * expensive for direct, repeated use in searches.  The CachingTree stores search results in an in-memory cache for better
  * performance.
  *
- * The CachingTree provides methods (preload and preloadLinks) that should be overridden by subclasses to populate the cache in
- * bulk, and it also provides internal methods that convert regular expression searches into progressive tree node searches,
- * which are used when the preload methods return false.
+ * The CachingTree provides methods abstract that must be overridden by subclasses to populate the cache in bulk, and it
+ * also provides internal methods that convert regular expression searches into progressive tree node searches, which are
+ * used when the preload methods return false.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -55,10 +55,6 @@ public abstract class CachingTree implements ITree {
 	return false;
     }
 
-    protected boolean preloadLinks() {
-	return false;
-    }
-
     // Implement ILogger
 
     public LocLogger getLogger() {
@@ -70,7 +66,7 @@ public abstract class CachingTree implements ITree {
 	cache.setLogger(logger);
     }
 
-    // Implement ITree (sparsely) -- subclasses must implement the getDelimiter and lookup methods.
+    // Implement ITree
 
     public INode getRoot() {
 	throw new UnsupportedOperationException();
@@ -94,6 +90,12 @@ public abstract class CachingTree implements ITree {
 	}
 	return null;
     }
+
+    // Abstract (methods not implemented from ITree, listed for convenience)
+
+    public abstract String getDelimiter();
+
+    public abstract INode lookup(String path) throws NoSuchElementException;
 
     // Internal
 

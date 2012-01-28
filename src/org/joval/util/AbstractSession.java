@@ -96,6 +96,10 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 
 	// Implement IProcess
 
+	public String getCommand() {
+	    return command;
+	}
+
 	public void setInteractive(boolean interactive) {
 	}
 
@@ -119,13 +123,16 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	    TimerTask task = new InterruptTask(Thread.currentThread());
 	    long expires = System.currentTimeMillis() + millis;
 	    JOVALSystem.getTimer().schedule(task, new Date(expires));
+	    InterruptedException ie = null;
 	    try {
 		p.waitFor();
-		task.cancel();
-		JOVALSystem.getTimer().purge();
 	    } catch (InterruptedException e) {
-		if (System.currentTimeMillis() < expires) {
-		    throw e;
+		ie = e;
+	    }
+	    if (task.cancel()) {
+		JOVALSystem.getTimer().purge();
+		if (ie != null) {
+		    throw ie;
 		}
 	    }
 	}

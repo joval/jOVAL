@@ -47,6 +47,10 @@ class Sudo implements IProcess {
 
     // Implement IProcess
 
+    public String getCommand() {
+	return innerCommand;
+    }
+
     public void setInteractive(boolean interactive) {
 	p.setInteractive(interactive);
     }

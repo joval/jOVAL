@@ -6,6 +6,7 @@ package org.joval.intf.io;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collection;
 
 import org.joval.intf.util.tree.ITree;
 
@@ -36,10 +37,10 @@ public interface IFilesystem extends ITree {
     String PROP_PRELOAD_MAXAGE = "fs.preload.maxAge";
 
     /**
-     * Property specifying a list of root-level paths that should not be preloaded by an IFilesystem implementation.
+     * Property specifying a list of filesystem types that should not be preloaded by an IFilesystem implementation.
      * Delimiter is the ':' character.
      */
-    public static final String PROP_PRELOAD_SKIP = "fs.preload.skip";
+    public static final String PROP_PRELOAD_FSTYPE_FILTER = "fs.preload.filter";
 
     /**
      * Property governing the map cache pre-load behavior for local filesystems (true/false).

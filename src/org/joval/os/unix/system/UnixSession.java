@@ -9,7 +9,7 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.LocalFilesystem;
+import org.joval.os.unix.io.UnixFilesystem;
 import org.joval.os.unix.UnixSystemInfo;
 import org.joval.util.AbstractSession;
 
@@ -33,7 +33,7 @@ public class UnixSession extends BaseUnixSession {
 
     public boolean connect() {
 	env = new Environment(this);
-	fs = new LocalFilesystem(this, env, null);
+	fs = new UnixFilesystem(this, env);
 	cwd = new File(".");
 	flavor = Flavor.flavorOf(this);
 	info.getSystemInfo();

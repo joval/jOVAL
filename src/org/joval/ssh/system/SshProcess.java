@@ -48,12 +48,16 @@ class SshProcess implements IProcess {
 
     // Implement IProcess
 
+    public String getCommand() {
+	return command;
+    }
+
     public void setInteractive(boolean interactive) {
 	this.interactive = interactive;
     }
 
     public void start() throws Exception {
-	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, command);
+	logger.debug(JOVALMsg.STATUS_PROCESS_START, command);
 	ce.setPty(interactive);
 	ce.setCommand(command);
 	ce.connect();
@@ -171,7 +175,7 @@ class SshProcess implements IProcess {
 	    }
 	    ce.disconnect();
 	}
-	logger.trace(JOVALMsg.STATUS_SSH_PROCESS_END, command);
+	logger.trace(JOVALMsg.STATUS_PROCESS_END, command);
 	dirty = false;
 	running = false;
     }

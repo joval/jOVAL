@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.ssh.io;
+package org.joval.intf.ssh;
 
 /**
  * Error codes for SFTP, as near as I can tell.
@@ -9,7 +9,7 @@ package org.joval.ssh.io;
  * @author David A. Solin
  * @version %I% %G%
  */
-interface SftpError {
+public interface ISftpError {
     int OK = 0;
     int EOF = 1;
     int NO_SUCH_FILE = 2;

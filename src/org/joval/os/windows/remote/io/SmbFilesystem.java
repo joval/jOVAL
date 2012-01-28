@@ -21,11 +21,14 @@ import jcifs.smb.VolatileSmbFile;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.windows.identity.IWindowsCredential;
+import org.joval.intf.windows.io.IWindowsFilesystem;
+import org.joval.io.BaseFilesystem;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -39,7 +42,7 @@ import org.joval.util.tree.CachingTree;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SmbFilesystem extends CachingTree implements IFilesystem {
+public class SmbFilesystem extends BaseFilesystem implements IWindowsFilesystem {
     static final String	LOCAL_DELIM_STR		= "\\";
     static final char	LOCAL_DELIM_CH		= '\\';
     static final String	SMBURL_DELIM_STR	= "/";
@@ -47,9 +50,6 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 
     private String host;
     private NtlmPasswordAuthentication auth;
-    private IEnvironment env;
-    private IPathRedirector redirector;
-    private boolean autoExpand;
 
     /**
      * Create an IFilesystem object for a remote host.
@@ -57,30 +57,24 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
      * @param env The host environment, used to expand variables that are passed inside of paths.  If null, autoExpand is
      *            automatically set to false.
      */
-    public SmbFilesystem(String host, IWindowsCredential cred, IEnvironment env, IPathRedirector fsr, LocLogger logger) {
-	super();
-	this.host = host;
+    public SmbFilesystem(IBaseSession session, IWindowsCredential cred, IEnvironment env, IPathRedirector fsr) {
+	super(session, env, fsr);
+	host = session.getHostname();
 	auth = getNtlmPasswordAuthentication(cred);
-	this.env = env;
-	redirector = fsr;
-	setLogger(logger);
-	autoExpand = true;
     }
+
+    // Implement ITree (CachingTree abstract and overriden)
 
     /**
-     * Enable/disable the automatic expanding of environment variables that appear in path names in the form %variable_name%.
-     * By default this is set to true, unless a null Environment was passed to the constructor.
+     * @override
      */
-    public void setAutoExpand(boolean autoExpand) {
-	this.autoExpand = autoExpand;
-    }
-
-    // Implement methods left abstract in CachingTree
-
     public String getDelimiter() {
 	return LOCAL_DELIM_STR;
     }
 
+    /**
+     * @override
+     */
     public INode lookup(String path) throws NoSuchElementException {
 	try {
 	    IFile f = null;
@@ -106,18 +100,23 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 
     // Implement IFilesystem
 
-    public boolean connect() {
-	return true;
+    /**
+     * A remote SMB filesystem cannot be preloaded.  It's just too inefficient.
+     */
+    public boolean preload() {
+	return false;
     }
 
-    public void disconnect() {
-    }
-
+    /**
+     * @override
+     */
     public IFile getFile(String path) throws IllegalArgumentException, IOException {
 	return getFile(path, false);
     }
 
     /**
+     * @override
+     *
      * Return an SmbFile on the remote machine using a local filesystem path, e.g., "C:\Windows\System32\notepad.exe", or
      * more interestingly, if autoExpand is true, "%SystemRoot%\System32\notepad.exe".
      *
@@ -154,6 +153,9 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 	throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
     }
 
+    /**
+     * @override
+     */
     public IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
 	if (file instanceof SmbFileProxy) {
 	    return new SmbRandomAccessProxy(new SmbRandomAccessFile(((SmbFileProxy)file).getSmbFile(), mode));
@@ -162,20 +164,25 @@ public class SmbFilesystem extends CachingTree implements IFilesystem {
 								  SmbFileProxy.class.getName(), file.getClass().getName()));
     }
 
+    /**
+     * @override
+     */
     public IRandomAccess getRandomAccess(String path, String mode) throws IllegalArgumentException, IOException {
 	return new SmbRandomAccessProxy(new SmbRandomAccessFile(((SmbFileProxy)getFile(path)).getSmbFile(), mode));
     }
 
+    /**
+     * @override
+     */
     public InputStream getInputStream(String path) throws IllegalArgumentException, IOException {
 	return getFile(path).getInputStream();
     }
 
+    /**
+     * @override
+     */
     public OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException {
 	return getOutputStream(path, false);
-    }
-
-    public OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException {
-	return getFile(path).getOutputStream(append);
     }
 
     // Private

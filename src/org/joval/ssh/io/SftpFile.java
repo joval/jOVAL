@@ -23,6 +23,7 @@ import org.vngx.jsch.exception.SftpException;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
+import org.joval.intf.ssh.ISftpError;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.io.BaseFile;
 import org.joval.util.JOVALMsg;
@@ -84,7 +85,7 @@ class SftpFile extends BaseFile implements IUnixFile {
 		tested = true;
 	    } catch (SftpException e) {
 		switch(getErrorCode(e)) {
-		  case SftpError.NO_SUCH_FILE:
+		  case ISftpError.NO_SUCH_FILE:
 		    doesExist = false;
 		    tested = true;
 		    break;

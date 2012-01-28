@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.Kernel32Util;
+import com.sun.jna.platform.win32.Win32Exception;
 import com.sun.jna.platform.win32.WinNT;
 
 import org.joval.intf.io.IFile;
@@ -154,7 +155,7 @@ public class WindowsFile implements IWindowsFile {
 	    if (FILE_ATTRIBUTE_DIRECTORY == dirAttr) {
 		return FILE_ATTRIBUTE_DIRECTORY;
 	    } else {
-		return Kernel32Util.getFileType();
+		return Kernel32Util.getFileType(getLocalName());
 	    }
 	} catch (Win32Exception e) {
 	    throw new IOException(e);

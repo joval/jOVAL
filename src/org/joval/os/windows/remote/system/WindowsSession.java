@@ -176,12 +176,12 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	    reg = new Registry(host, cred, null, this);
 	    if (reg.connect()) {
 		env = reg.getEnvironment();
-		fs = new SmbFilesystem(host, cred, env, null, logger);
+		fs = new SmbFilesystem(this, cred, env, null);
 		is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 		if (is64bit) {
 		    WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
 		    reg32 = new Registry(host, cred, new WOW3264RegistryRedirector(flavor), this);
-		    fs32 = new SmbFilesystem(host, cred, env, new WOW3264FilesystemRedirector(env), logger);//DAS
+		    fs32 = new SmbFilesystem(this, cred, env, new WOW3264FilesystemRedirector(env));
 		} else {
 		    reg32 = reg;
 		    fs32 = fs;

@@ -14,6 +14,11 @@ import java.io.OutputStream;
  */
 public interface IProcess {
     /**
+     * Return the command used to spawn the process.
+     */
+    public String getCommand();
+
+    /**
      * Set the interactive property for the process.
      */
     public void setInteractive(boolean interactive);

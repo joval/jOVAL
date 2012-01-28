@@ -51,10 +51,6 @@ class WindowsProcess implements IProcess {
 	return command;
     }
 
-    public void setCommand(String command) {
-	this.command = command;
-    }
-
     public void setInteractive(boolean interactive) {
 	// DAS: implement this
     }

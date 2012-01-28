@@ -1,11 +1,9 @@
 DEFAULT=\
 	org.joval.discovery.Local					\
-	org.joval.io.FileProxy						\
-	org.joval.io.LocalFilesystem					\
-	org.joval.io.RandomAccessFileProxy				\
 	org.joval.os.unix.system.UnixSession				\
 	org.joval.os.windows.identity.LocalACE				\
 	org.joval.os.windows.io.WindowsFile				\
+	org.joval.os.windows.io.WindowsFilesystem			\
 	org.joval.os.windows.registry.Key				\
 	org.joval.os.windows.registry.Registry				\
 	org.joval.os.windows.system.WindowsSession			\
