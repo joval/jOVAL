@@ -102,10 +102,8 @@ public class SafeCLI {
 			session.getLogger().warn(JOVALMsg.ERROR_PROCESS_RETRY, cmd, attempt);
 			throw e;
 		    } else {
-			// Something's probably wrong with the connection, so reconnect it.
+			// the process has hung up, so kill it
 			p.destroy();
-			session.disconnect();
-			session.connect();
 			session.getLogger().info(JOVALMsg.STATUS_PROCESS_RETRY, cmd);
 		    }
 		} else {
