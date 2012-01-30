@@ -37,6 +37,6 @@ CLASSES=\
 	org.joval.util.JOVALMsg						\
 	org.joval.util.JOVALSystem					\
 	org.joval.util.Producer						\
-	org.joval.oval.PropertyUtil					\
+	org.joval.util.PropertyUtil					\
 	org.joval.util.StringTools					\
 	org.joval.util.Version

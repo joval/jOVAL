@@ -22,7 +22,7 @@ $(PLUGIN_CISCO_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 test:
-        $(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.plugin.CiscoPlugin $(TOP)/content/test/cisco/cisco.ios.xml ios-tech.txt
+	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.plugin.CiscoPlugin $(TOP)/content/test/cisco/cisco.ios.xml ios-tech.txt
 
 clean:
 	rm -rf $(BUILD)
