@@ -3,12 +3,18 @@
 
 package org.joval.os.embedded.system;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
+
+import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.cisco.system.ITechSupport;
@@ -17,42 +23,47 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
- * Executes and stores the result from the "show tech-support" command.
+ * A structure that stores the result from the "show tech-support" command.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class TechSupport implements ITechSupport {
-    private Hashtable<String, List<String>> data;
+    private Hashtable<String, List<String>> data = new Hashtable<String, List<String>>();
+    private LocLogger logger;
 
     /**
-     * Create a plugin for scanning or test evaluation.
+     * Load tech-support information from a stream source.
      */
-    public TechSupport(IIosSession session) throws Exception {
-	data = new Hashtable<String, List<String>>();
-	long readTimeout = session.getProperties().getLongProperty(IIosSession.PROP_READ_TIMEOUT);
-	String heading = null;
-	List<String> body = null;
-
-	for (String line : SafeCLI.multiLine("show tech-support", session, readTimeout)) {
-	    if (isHeading(line)) {
-		if (heading != null) {
-		    data.put(heading, body);
-		}
-		heading = getHeading(line);
-		body = new Vector<String>();
-	    } else if (heading == null) {
-		if (line.length() > 0) {
-		    session.getLogger().warn(JOVALMsg.ERROR_IOS_TECH_ORPHAN, line);
-		}
-	    } else {
-		if (body.size() == 0 && line.length() == 0) {
-		    // skip empty lines under header
-		} else {
-		    body.add(line);
+    public TechSupport(InputStream in) throws IOException {
+	logger = JOVALSystem.getLogger();
+	BufferedReader br = null;
+	try {
+	    br = new BufferedReader(new InputStreamReader(in));
+	    List<String> lines = new Vector<String>();
+	    String line = null;
+	    while ((line = br.readLine()) != null) {
+		lines.add(line);
+	    }
+	    load(lines);
+	} finally {
+	    if (br != null) {
+		try {
+		    br.close();
+		} catch (IOException e) {
+		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION, e));
 		}
 	    }
 	}
+    }
+
+    /**
+     * Gather tech-support information from the session.
+     */
+    public TechSupport(IIosSession session) throws Exception {
+	logger = session.getLogger();
+	long readTimeout = session.getProperties().getLongProperty(IIosSession.PROP_READ_TIMEOUT);
+	load(SafeCLI.multiLine("show tech-support", session, readTimeout));
     }
 
     // Implement ITechSupport
@@ -81,6 +92,33 @@ public class TechSupport implements ITechSupport {
     }
 
     // Private
+
+    /**
+     * Populate the structure from a sequential list of lines.
+     */
+    private void load(List<String> lines) {
+	String heading = null;
+	List<String> body = null;
+	for (String line : lines) {
+	    if (isHeading(line)) {
+		if (heading != null) {
+		    data.put(heading, body);
+		}
+		heading = getHeading(line);
+		body = new Vector<String>();
+	    } else if (heading == null) {
+		if (line.length() > 0) {
+		    logger.warn(JOVALMsg.ERROR_IOS_TECH_ORPHAN, line);
+		}
+	    } else {
+		if (body.size() == 0 && line.length() == 0) {
+		    // skip empty lines under header
+		} else {
+		    body.add(line);
+		}
+	    }
+	}
+    }
 
     private static final int DASHLEN = DASHES.length();
 

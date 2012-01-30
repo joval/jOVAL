@@ -66,8 +66,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public abstract class BasePlugin implements IPlugin {
-    private String hostname;
-
     protected LocLogger logger;
     protected IBaseSession session;
     protected Collection<IAdapter> adapters;

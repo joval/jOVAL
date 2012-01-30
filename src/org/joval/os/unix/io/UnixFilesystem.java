@@ -230,9 +230,9 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		    fsType = tok.nextToken();
 
 		    if (fsTypeFilter.contains(fsType)) {
-			logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, mountPoint);
+			logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, mountPoint, fsType);
 		    } else if (mountPoint.startsWith(DELIM_STR)) {
-			logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, mountPoint);
+			logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, mountPoint, fsType);
 			mounts.add(mountPoint);
 		    }
 		}
@@ -259,7 +259,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 			mountPoint = tok.nextToken();
 		    }
 		    if (mountPoint.startsWith(DELIM_STR)) {
-			logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, mountPoint);
+			logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, mountPoint, "?");
 			mounts.add(mountPoint);
 		    }
 		}
@@ -278,9 +278,9 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		    String mountPoint = tok.nextToken();
 		    String fsType = tok.nextToken();
 		    if (fsTypeFilter.contains(fsType)) {
-			logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, mountPoint);
+			logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, mountPoint, fsType);
 		    } else if (mountPoint.startsWith(DELIM_STR)) {
-			logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, mountPoint);
+			logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, mountPoint, fsType);
 			mounts.add(mountPoint);
 		    }
 		}
@@ -299,9 +299,9 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 			mountPoint = tok.nextToken();
 		    }
 		    if (fsTypeFilter.contains(fsType)) {
-			logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, mountPoint);
+			logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, mountPoint, fsType);
 		    } else if (mountPoint.startsWith(DELIM_STR) && !mounts.contains(mountPoint)) { // skip over-mounts
-			logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, mountPoint);
+			logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, mountPoint, fsType);
 			mounts.add(mountPoint);
 		    }
 		}

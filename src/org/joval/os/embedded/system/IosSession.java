@@ -32,12 +32,24 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     private SshSession ssh;
     private TechSupport techSupport;
     private IosSystemInfo info;
-    private boolean initialized;
+    private boolean initialized, offline;
 
+    /**
+     * Create an IOS session with a live SSH connection to a router.
+     */
     public IosSession(SshSession ssh) {
 	super();
 	this.ssh = ssh;
 	initialized = false;
+    }
+
+    /**
+     * Create an IOS session in offline mode, using the supplied tech support information.
+     */
+    public IosSession(TechSupport techSupport) {
+	super();
+	this.techSupport = techSupport;
+	info = new IosSystemInfo(techSupport);
     }
 
     protected void handlePropertyChange(String key, String value) {}
@@ -71,7 +83,9 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     }
 
     public boolean connect() {
-	if (ssh.connect()) {
+	if (ssh == null) {
+	    return false;
+	} else if (ssh.connect()) {
 	    if (initialized) {
 		return true;
 	    } else {
@@ -100,8 +114,12 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
      * IOS seems to require a session reconnect after every command session disconnect.
      */
     public IProcess createProcess(String command) throws Exception {
-	disconnect();
-	return ssh.createProcess(command);
+	if (ssh == null) {
+	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_OFFLINE));
+	} else {
+	    disconnect();
+	    return ssh.createProcess(command);
+	}
     }
 
     public Type getType() {

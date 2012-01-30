@@ -71,6 +71,8 @@ public class LineAdapter implements IAdapter {
 	  case EQUALS:
             try {
 		items.add(JOVALSystem.factories.sc.ios.createLineItem(getItem(subcommand)));
+	    } catch (IllegalStateException e) {
+		throw new NotCollectableException(e);
 	    } catch (Exception e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);

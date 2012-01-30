@@ -1,5 +1,6 @@
 REMOTE=\
 	jcifs.smb.VolatileSmbFile					\
+	org.joval.disco.Disco						\
 	org.joval.identity.SimpleCredentialStore			\
 	org.joval.discovery.SessionFactory				\
 	org.joval.identity.Credential					\

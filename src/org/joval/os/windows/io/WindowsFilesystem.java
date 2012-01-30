@@ -87,12 +87,12 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
 
 	    File[] roots = File.listRoots();
 	    for (int i=0; i < roots.length; i++) {
-		String name = roots[i].getName();
+		String name = roots[i].getPath();
 		FsType type = FsType.typeOf(Kernel32Util.getDriveType(name));
 		if (filter.contains(type.value())) {
-		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, name);
+		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, name, type.value());
 		} else {
-		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, name);
+		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, name, type.value());
 		    ITreeBuilder tree = cache.getTreeBuilder(name);
 		    if (tree == null) {
 			tree = new Tree(name, getDelimiter());
