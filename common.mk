@@ -60,3 +60,5 @@ PLUGIN_REMOTE_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PL
 PLUGIN_LOCAL=$(SDK)/plugin/local
 PLUGIN_LOCAL_LIB=$(PLUGIN_LOCAL)/jOVALPluginLocal.jar
 PLUGIN_LOCAL_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLUGIN_LOCAL)/$(LIBDIR)/*)))
+PLUGIN_CISCO=$(SDK)/plugin/cisco
+PLUGIN_CISCO_LIB=$(PLUGIN_CISCO)/jOVALPluginCisco.jar

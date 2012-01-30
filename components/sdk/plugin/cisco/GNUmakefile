@@ -7,8 +7,8 @@ include $(TOP)/common.mk
 
 SLF4J_IMPL=$(COMPONENTS)/jovaldi/$(LIBDIR)/slf4j-jdk14-1.6.2.jar
 API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCHEMALIB)
-CLASSPATH="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(PLUGIN_SHARED_LIB)$(CLN)$(SRC)"
-RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(PLUGIN_SHARED_LIB)$(CLN)$(PLUGIN_REMOTE_LIB)$(CLN)$(SLF4J_IMPL)"
+CLASSPATH="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(PLUGIN_SHARED_LIB)$(CLN)$(PLUGIN_REMOTE_DEPS)$(CLN)$(SRC)"
+RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(PLUGIN_SHARED_LIB)$(CLN)$(PLUGIN_CISCO_LIB)$(CLN)$(SLF4J_IMPL)"
 
 include classes.mk
 
@@ -16,17 +16,17 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(PLUGIN_REMOTE_LIB)
+all: $(PLUGIN_CISCO_LIB)
 
-$(PLUGIN_REMOTE_LIB): classes resources
+$(PLUGIN_CISCO_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 test:
-	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.test.Remote test.properties
+        $(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.plugin.CiscoPlugin $(TOP)/content/test/cisco/cisco.ios.xml ios-tech.txt
 
 clean:
 	rm -rf $(BUILD)
-	rm -f $(PLUGIN_REMOTE_LIB)
+	rm -f $(PLUGIN_CISCO_LIB)
 
 resources:
 	rm -f $(BUILD)/*.properties

@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.disco;
+package org.joval.plugin;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -18,6 +18,11 @@ import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.LogManager;
+import java.util.logging.Logger;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -51,21 +56,49 @@ import org.joval.util.JOVALSystem;
  *
  * @author David A. Solin
  */
-public class Disco implements IPlugin {
+public class CiscoPlugin implements IPlugin {
     /**
-     * The Disco utility accepts two command-line arguments.  The first is the path to an XML file containing OVAL
+     * The Cisco utility accepts two command-line arguments.  The first is the path to an XML file containing OVAL
      * definitions, and the second is a URL to information returned from the command "show tech-support" run on a Cisco
      * IOS device.  If a second argument is not supplied, then the data will be read from the standard input.
      */
     public static void main(String[] argv) {
+	File definitions = null;
+	String input = null;
+
+	if (argv.length == 2) {
+	    definitions = new File(argv[0]);
+	    input = argv[1];
+	} else if (argv.length == 1) {
+	    definitions = new File(argv[0]);
+	}
+
+	if (definitions == null) {
+	    usage();
+	    System.exit(1);
+	} else if (!definitions.isFile()) {
+	    System.out.println("No such file: " + definitions.toString());
+	    usage();
+	    System.exit(1);
+	}
+
 	try {
+	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	    LogManager.getLogManager().readConfiguration(cl.getResourceAsStream("jovaldi.logging.properties"));
+	    Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	    Handler logHandler = new FileHandler("disco.log", false);
+	    logHandler.setFormatter(new SimpleFormatter());
+	    logHandler.setLevel(Level.INFO);
+	    logger.setLevel(Level.INFO);
+	    logger.addHandler(logHandler);
+
 	    TechSupport tech = null;
-	    if (argv.length == 2) {
+	    if (input != null) {
 		try {
-		    URL url = new URL(argv[1]);
+		    URL url = new URL(input);
 		    tech = new TechSupport(url.openStream());
 		} catch (MalformedURLException e) {
-		    File f = new File(argv[1]);
+		    File f = new File(input);
 		    if (f.isFile()) {
 			tech = new TechSupport(new FileInputStream(f));
 		    } else {
@@ -76,7 +109,7 @@ public class Disco implements IPlugin {
 		tech = new TechSupport(System.in);
 	    }
 
-	    Disco plugin = new Disco(tech);
+	    CiscoPlugin plugin = new CiscoPlugin(tech);
 	    IEngine engine = JOVALSystem.createEngine(plugin);
 	    engine.setDefinitionsFile(new File(argv[0]));
 	    engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
@@ -103,6 +136,21 @@ public class Disco implements IPlugin {
 	System.exit(1);
     }
 
+    static void usage() {
+	System.out.println("jOVAL(TM) Disco utility: An offline OVAL evaluator for Cisco IOS devices.");
+	System.out.println("Copyright(C) 2012, jOVAL.org.  All rights reserved.");
+	System.out.println("");
+	System.out.println("Usage:");
+	System.out.println("  disco [defs] [input]");
+	System.out.println("");
+	System.out.println("Arguments:");
+	System.out.println("  [defs]  = Required argument specifying the path to an XML file containing");
+        System.out.println("            OVAL definitions.");
+	System.out.println("  [input] = Optional argument specifying the URL or path to a file containing");
+	System.out.println("            the contents of the IOS command \"show tech-support\".  If not,");
+	System.out.println("            specified, data is read from the standard input.");
+    }
+
     /**
      * An inner class that prints out information about Engine notifications.
      */
@@ -121,9 +169,9 @@ public class Disco implements IPlugin {
 		System.out.println("Done scanning");
 		break;
 	      case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
-		System.out.println("Saving system-characteristics.xml");
+		System.out.println("Saving system-characteristics to disco-sc.xml");
 		ISystemCharacteristics sc = (ISystemCharacteristics)arg;
-		sc.writeXML(new File("system-characteristics.xml"));
+		sc.writeXML(new File("disco-sc.xml"));
 		break;
 	      case IEngine.MESSAGE_DEFINITION_PHASE_START:
 		System.out.println("Evaluating definitions...");
@@ -141,13 +189,11 @@ public class Disco implements IPlugin {
 	}
     }
 
-    // Private
-
     private LocLogger logger;
     private IosSession session;
     private Collection<IAdapter> adapters;
 
-    private Disco(TechSupport techSupport) {
+    public CiscoPlugin(TechSupport techSupport) {
 	logger = JOVALSystem.getLogger();
 	session = new IosSession(techSupport);
 

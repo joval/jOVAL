@@ -12,8 +12,8 @@ RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(SHARED)$(CLN)$(PLUGIN_LOCA
 
 include classes.mk
 
-CLASS_FILES:=$(foreach class, $(DEFAULT), $(BUILD)/$(subst .,/,$(class)).class)
-PACKAGES=$(sort $(basename $(DEFAULT)))
+CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
+PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 all: $(PLUGIN_LOCAL_LIB)

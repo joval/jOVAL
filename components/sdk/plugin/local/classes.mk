@@ -1,4 +1,4 @@
-DEFAULT=\
+CLASSES=\
 	org.joval.discovery.Local					\
 	org.joval.os.unix.system.UnixSession				\
 	org.joval.os.windows.identity.LocalACE				\

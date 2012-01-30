@@ -13,12 +13,14 @@ all:
 	@$(MAKE) --keep-going --directory=plugin/shared all
 	@$(MAKE) --keep-going --directory=plugin/local all
 	@$(MAKE) --keep-going --directory=plugin/remote all
+	@$(MAKE) --keep-going --directory=plugin/cisco all
 
 clean:
 	@$(MAKE) --keep-going --directory=engine clean
 	@$(MAKE) --keep-going --directory=plugin/shared clean
 	@$(MAKE) --keep-going --directory=plugin/local clean
 	@$(MAKE) --keep-going --directory=plugin/remote clean
+	@$(MAKE) --keep-going --directory=plugin/cisco clean
 
 javadocs:
 	mkdir -p $(DOCS)
