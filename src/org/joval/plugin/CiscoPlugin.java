@@ -84,7 +84,7 @@ public class CiscoPlugin implements IPlugin {
 
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    LogManager.getLogManager().readConfiguration(cl.getResourceAsStream("jovaldi.logging.properties"));
+	    LogManager.getLogManager().readConfiguration(cl.getResourceAsStream("disco.logging.properties"));
 	    Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
 	    Handler logHandler = new FileHandler("disco.log", false);
 	    logHandler.setFormatter(new SimpleFormatter());

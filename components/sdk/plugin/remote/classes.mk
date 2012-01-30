@@ -7,6 +7,7 @@ CLASSES=\
 	org.joval.intf.cisco.system.ITechSupport			\
 	org.joval.intf.identity.ICredential				\
 	org.joval.intf.identity.ILocked					\
+	org.joval.intf.ssh.ISftpError					\
 	org.joval.intf.ssh.identity.ISshCredential			\
 	org.joval.intf.ssh.system.ISshSession				\
 	org.joval.intf.windows.identity.IWindowsCredential		\
@@ -40,7 +41,6 @@ CLASSES=\
 	org.joval.oval.di.RemoteContainer				\
 	org.joval.plugin.RemotePlugin					\
 	org.joval.ssh.identity.SshCredential				\
-	org.joval.ssh.io.SftpError					\
 	org.joval.ssh.io.SftpFile					\
 	org.joval.ssh.io.SftpFilesystem					\
 	org.joval.ssh.system.SshProcess					\
