@@ -6,4 +6,6 @@ CLASSES=\
 	org.joval.os.embedded.system.IosSession				\
 	org.joval.os.embedded.system.TechSupport			\
 	org.joval.oval.di.CiscoContainer				\
-	org.joval.plugin.CiscoPlugin
+	org.joval.plugin.CiscoPlugin					\
+	org.joval.protocol.tftp.Handler					\
+	org.joval.protocol.tftp.TftpURLConnection

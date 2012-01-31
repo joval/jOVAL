@@ -8,4 +8,4 @@ IF %PROCESSOR_ARCHITECTURE% EQU x86 (
 ) ELSE (
     SET JMEM=-Xmx2048m
 )
-%JAVA_HOME%\bin\java %JMEM% -cp lib\jOVALCore.jar;lib\oval-schema-5.10.1.jar;lib\cal10n-api-0.7.4.jar;lib\slf4j-api-1.6.2.jar;lib\slf4j-ext-1.6.2.jar;lib\slf4j-jdk14-1.6.2.jar;plugin\cisco\lib\jOVALPluginShared.jar;plugin\cisco\lib\jOVALPluginCisco.jar org.joval.plugin.CiscoPlugin %*
+%JAVA_HOME%\bin\java %JMEM% -Djava.protocol.handler.pkgs=org.joval.protocol -cp lib\jOVALCore.jar;lib\oval-schema-5.10.1.jar;lib\cal10n-api-0.7.4.jar;lib\slf4j-api-1.6.2.jar;lib\slf4j-ext-1.6.2.jar;lib\slf4j-jdk14-1.6.2.jar;plugin\cisco\lib\jOVALPluginShared.jar;plugin\cisco\lib\jOVALPluginCisco.jar org.joval.plugin.CiscoPlugin %*
