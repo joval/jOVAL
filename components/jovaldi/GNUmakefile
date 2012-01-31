@@ -76,6 +76,7 @@ dist-x86: all
 	cp -R plugin/cisco/rsrc/* $(DIST32)/plugin/cisco
 	cp -R $(PLUGIN_SHARED_LIB) $(DIST32)/plugin/cisco/lib
 	cp -R $(PLUGIN_CISCO_LIB) $(DIST32)/plugin/cisco/lib
+	cp -R $(PLUGIN_CISCO)/$(LIBDIR)/*.jar $(DIST32)/plugin/cisco/lib
 	cp -R $(JRE_HOME)/x86 $(DIST32)/jre
 
 dist-x64: all
@@ -104,6 +105,7 @@ dist-x64: all
 	cp -R plugin/cisco/rsrc/* $(DIST64)/plugin/cisco
 	cp -R $(PLUGIN_SHARED_LIB) $(DIST64)/plugin/cisco/lib
 	cp -R $(PLUGIN_CISCO_LIB) $(DIST64)/plugin/cisco/lib
+	cp -R $(PLUGIN_CISCO)/$(LIBDIR)/*.jar $(DIST64)/plugin/cisco/lib
 	cp -R $(JRE_HOME)/x64 $(DIST64)/jre
 
 release-win32: dist-x86

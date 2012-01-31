@@ -7,6 +7,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
+import org.apache.commons.net.tftp.TFTP;
+
 /**
  * Stream handler class for TFTP URLs.
  *
@@ -19,6 +21,6 @@ public class Handler extends URLStreamHandler {
     }
 
     protected int getDefaultPort() {
-	return TftpURLConnection.DEFAULT_PORT;
+	return TFTP.DEFAULT_PORT;
     }
 }
