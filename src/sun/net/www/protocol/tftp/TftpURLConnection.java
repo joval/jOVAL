@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.protocol.tftp;
+package sun.net.www.protocol.tftp;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +12,7 @@ import java.io.PrintStream;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 
@@ -47,7 +48,7 @@ public class TftpURLConnection extends URLConnection implements Runnable, ILogga
     private PipedInputStream in;
     private PipedOutputStream out;
 
-    TftpURLConnection(URL url) {
+    public TftpURLConnection(URL url) {
 	super(url);
 	client = new TFTPClient();
 	logger = JOVALSystem.getLogger();
@@ -72,7 +73,7 @@ public class TftpURLConnection extends URLConnection implements Runnable, ILogga
 	}
 	out = new PipedOutputStream();
 	in = new PipedInputStream(out);
-	new Thread(this).start();
+	new Thread(this, "TFTP Client").start();
 	return in;
     }
 
@@ -84,7 +85,9 @@ public class TftpURLConnection extends URLConnection implements Runnable, ILogga
 
     public void run() {
 	try {
-	    client.receiveFile(url.getPath(), TFTP.OCTET_MODE, out, host, port);
+	    if (0 == client.receiveFile(url.getPath(), TFTP.OCTET_MODE, out, host, port)) {
+		logger.warn(JOVALMsg.ERROR_TFTP, url.getPath());
+	    }
 	} catch (IOException e) {
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
