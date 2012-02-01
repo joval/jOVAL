@@ -5,6 +5,7 @@ package org.joval.plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.util.Properties;
 import javax.security.auth.login.LoginException;
 
@@ -18,7 +19,6 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.embedded.system.IosSession;
 import org.joval.os.unix.remote.system.UnixSession;
-import org.joval.oval.OvalException;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -72,7 +72,7 @@ public class RemotePlugin extends BasePlugin {
      * doing that as part of the connect routine, it happens inside of the IEngine's run method, which can be wrapped inside
      * a Thread.
      */
-    public void connect() throws OvalException {
+    public void connect() throws ConnectException {
 	if (hostname != null) {
 	    try {
 		IBaseSession base = sessionFactory.createSession(hostname);
@@ -101,10 +101,10 @@ public class RemotePlugin extends BasePlugin {
 
 		setCredential(session);
 	    } catch (Exception e) {
-		throw new OvalException(e);
+		throw new ConnectException(e.getMessage());
 	    }
 	} else {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TARGET));
+	    throw new ConnectException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TARGET));
 	}
 
 	super.connect();

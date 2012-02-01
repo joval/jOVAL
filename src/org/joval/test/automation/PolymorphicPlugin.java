@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
@@ -21,7 +22,6 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IProducer;
 import org.joval.intf.util.IProperty;
-import org.joval.oval.OvalException;
 import org.joval.plugin.RemotePlugin;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -67,15 +67,15 @@ class PolymorphicPlugin extends RemotePlugin {
      *
      * @override
      */
-    public void connect() throws OvalException {
+    public void connect() throws ConnectException {
 	if (IBaseSession.LOCALHOST.equals(hostname)) {
 	    logger.info(JOVALMsg.STATUS_PLUGIN_CONNECT);
 	    if (session == null) {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_NONE));
+		throw new ConnectException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_NONE));
 	    } else {
 		session.setLogger(logger);
 		if (!session.connect()) {
-		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
+		    throw new ConnectException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 		}
 	    }
 	} else {

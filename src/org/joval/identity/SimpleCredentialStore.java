@@ -46,15 +46,21 @@ public class SimpleCredentialStore implements ICredentialStore {
     /**
      * Add properties for a credential from an IProperty.
      *
-     * @throws IllegalArgumentException if a PROP_HOSTNAME is not specified.
+     * @throws IllegalArgumentException if PROP_HOSTNAME, PROP_USERNAME and either PROP_PASSWORD or PROP_PRIVATE_KEY
+     *         are not all specified.
      */
     public void add(IProperty prop) throws IllegalArgumentException {
 	String hostname = prop.getProperty(PROP_HOSTNAME);
 	if (hostname == null) {
 	    throw new IllegalArgumentException(PROP_HOSTNAME);
-	} else {
-	    table.put(hostname, prop);
 	}
+	if (prop.getProperty(PROP_USERNAME) == null) {
+	    throw new IllegalArgumentException(PROP_USERNAME);
+	}
+	if (prop.getProperty(PROP_PASSWORD) == null && prop.getProperty(PROP_PRIVATE_KEY) == null) {
+	    throw new IllegalArgumentException(PROP_PASSWORD);
+	}
+	table.put(hostname, prop);
     }
 
     /**

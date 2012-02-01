@@ -3,6 +3,7 @@
 
 package org.joval.plugin;
 
+import java.net.ConnectException;
 import java.util.Collection;
 import java.util.Vector;
 
@@ -17,7 +18,6 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.aix.FixAdapter;
 import org.joval.plugin.adapter.aix.FilesetAdapter;
 import org.joval.plugin.adapter.aix.OslevelAdapter;
@@ -181,14 +181,14 @@ public abstract class BasePlugin implements IPlugin {
 	return adapters;
     }
 
-    public void connect() throws OvalException {
+    public void connect() throws ConnectException {
 	logger.info(JOVALMsg.STATUS_PLUGIN_CONNECT);
 	if (session == null) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_NONE));
+	    throw new ConnectException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_NONE));
 	} else {
 	    session.setLogger(logger);
 	    if (!session.connect()) {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
+		throw new ConnectException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 	    }
 	}
     }

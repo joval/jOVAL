@@ -162,5 +162,5 @@ public interface IEngine extends Runnable {
      *
      * @throws IllegalThreadStateException if the engine hasn't run, or is running.
      */
-    public OvalException getError() throws IllegalThreadStateException;
+    public Exception getError() throws IllegalThreadStateException;
 }

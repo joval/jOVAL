@@ -151,7 +151,7 @@ public class Engine implements IEngine {
     private SystemCharacteristics sc = null;
     private IDefinitionFilter filter = null;
     private Hashtable<Class, AdapterManager> adapters = null;
-    private OvalException error;
+    private Exception error;
     private Results results;
     private State state;
     private boolean evalEnabled = true, abort = false;
@@ -257,7 +257,7 @@ public class Engine implements IEngine {
 	return results;
     }
 
-    public OvalException getError() throws IllegalThreadStateException {
+    public Exception getError() throws IllegalThreadStateException {
 	getResult();
 	return error;
     }
@@ -318,7 +318,7 @@ public class Engine implements IEngine {
 
 	    producer.sendNotify(MESSAGE_DEFINITION_PHASE_END, null);
 	    state = State.COMPLETE_OK;
-	} catch (OvalException e) {
+	} catch (Exception e) {
 	    error = e;
 	    state = State.COMPLETE_ERR;
 	}
@@ -400,6 +400,7 @@ public class Engine implements IEngine {
     private void reset() {
 	state = State.CONFIGURE;
 	variableMap = new Hashtable<String, Collection<VariableValueType>>();
+	error = null;
     }
 
     /**
@@ -513,10 +514,10 @@ public class Engine implements IEngine {
 
 	Set s = getObjectSet(obj);
 	if (s == null) {
-	    String error = null;
+	    String err = null;
 	    AdapterManager manager = adapters.get(obj.getClass());
 	    if (manager == null) {
-		error = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
+		err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
 	    } else if (manager.isActive()) {
 		try {
 		    Collection<JAXBElement<? extends ItemType>> items = manager.getAdapter().getItems(rc);
@@ -551,10 +552,10 @@ public class Engine implements IEngine {
 		    }
 		    return unwrapped;
 		} catch (NotCollectableException e) {
-		    error = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
+		    err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
 		}
 	    } else {
-		error = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_UNAVAILABLE, obj.getClass().getName());
+		err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_UNAVAILABLE, obj.getClass().getName());
 	    }
 
 	    //
@@ -564,7 +565,7 @@ public class Engine implements IEngine {
 	    if (!sc.containsObject(objectId)) {
 		MessageType message = JOVALSystem.factories.common.createMessageType();
 		message.setLevel(MessageLevelEnumeration.WARNING);
-		message.setValue(error);
+		message.setValue(err);
 		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
 	    }
 	    return new Vector<ItemType>();

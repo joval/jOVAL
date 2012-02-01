@@ -3,6 +3,7 @@
 
 package org.joval.intf.plugin;
 
+import java.net.ConnectException;
 import java.util.Collection;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
@@ -21,9 +22,9 @@ public interface IPlugin extends ILoggable {
     /**
      * Connect the plugin to whatever it's going to be used to scan.
      *
-     * @throws OvalException if the plugin failed to establish the connection.
+     * @throws ConnectException if the plugin failed to establish the connection.
      */
-    public void connect() throws OvalException;
+    public void connect() throws ConnectException;
 
     /**
      * Release any underlying resources.
