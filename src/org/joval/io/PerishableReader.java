@@ -74,10 +74,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 
     public synchronized void close() throws IOException {
 	if (!closed)  {
-	    if (task != null) {
-		task.cancel();
-		task = null;
-	    }
+	    defuse();
 	    in.close();
 	    reader.close();
 	    closed = true;
@@ -95,6 +92,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     public String readLine() throws IOException {
 	String line = reader.readLine();
 	if (line == null) {
+	    defuse();
 	    isEOF = true;
 	} else {
 	    reset();
@@ -106,6 +104,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	for (int i=0; i < buff.length; i++) {
 	    int ch = reader.read();
 	    if (ch == -1) {
+		defuse();
 		isEOF = true;
 		throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_EOS));
 	    } else {
@@ -130,6 +129,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	    buff[len++] = (byte)ch;
 	}
 	if (ch == -1 && len == 0) {
+	    defuse();
 	    isEOF = true;
 	    return null;
 	} else {
@@ -145,6 +145,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     public int read() throws IOException {
 	int i = reader.read();
 	if (i == -1) {
+	    defuse();
 	    isEOF = true;
 	} else {
 	    reset();
@@ -158,6 +159,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 
     public void restoreCheckpoint() throws IOException {
 	reader.reset();
+	reset();
     }
 
     // Implement IPerishable
@@ -176,16 +178,26 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     }
 
     public synchronized void reset() {
-	if (task != null) {
-	    task.cancel();
-	}
+	defuse();
 	task = new InterruptTask(Thread.currentThread());
 	JOVALSystem.getTimer().schedule(task, timeout);
     }
 
     // Private
 
+    /**
+     * Kill the scheduled interrupt task and purge it from the timer.
+     */
+    private void defuse() {
+	if (task != null) {
+	    task.cancel();
+	    task = null;
+	}
+	JOVALSystem.getTimer().purge();
+    }
+
     private PerishableReader(InputStream in, long timeout) {
+	logger = JOVALSystem.getLogger();
 	this.in = in;
 	setTimeout(timeout);
 	reader = new BufferedReader(new InputStreamReader(in));
@@ -208,7 +220,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 		    PerishableReader.this.close();
 		} catch (IOException e) {
 		}
-	    } else if (t.isAlive()) {
+	    } else if (!closed && t.isAlive()) {
 		t.interrupt();
 		PerishableReader.this.expired = true;
 	    }

@@ -115,6 +115,10 @@ public class SafeCLI {
 		    } catch (IOException e) {
 		    }
 		}
+		try {
+		    p.getErrorStream().close();
+		} catch (IOException e) {
+		}
 		if (p != null) {
 		    try {
 			p.waitFor(0);

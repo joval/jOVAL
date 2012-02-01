@@ -174,6 +174,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		throw new PreloadOverflowException();
 	    }
 	}
+	reader.close();
     }
 
     /**
