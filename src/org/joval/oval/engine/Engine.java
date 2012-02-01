@@ -1165,10 +1165,26 @@ public class Engine implements IEngine {
     }
 
     /**
+     * Perform the the OVAL test by comparing the state and item.  Relies on the state to carry any datatype information.
+     *
      * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-common-schema.html#OperationEnumeration
      */
     ResultEnumeration testImpl(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
 	switch (state.getOperation()) {
+	  case BITWISE_AND:
+	    if (bitwiseAnd(state, item)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
+	  case BITWISE_OR:
+	    if (bitwiseOr(state, item)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
 	  case CASE_INSENSITIVE_EQUALS:
 	    if (equalsIgnoreCase(state, item)) {
 		return ResultEnumeration.TRUE;
@@ -1176,11 +1192,11 @@ public class Engine implements IEngine {
 		return ResultEnumeration.FALSE;
 	    }
 
-	  case EQUALS:
-	    if (equals(state, item)) {
-		return ResultEnumeration.TRUE;
-	    } else {
+	  case CASE_INSENSITIVE_NOT_EQUAL:
+	    if (equalsIgnoreCase(state, item)) {
 		return ResultEnumeration.FALSE;
+	    } else {
+		return ResultEnumeration.TRUE;
 	    }
 
 	  case PATTERN_MATCH: // Always treat as Strings
@@ -1196,60 +1212,46 @@ public class Engine implements IEngine {
 		throw new TestException(e);
 	    }
 
-	  case CASE_INSENSITIVE_NOT_EQUAL:
-	    if (equalsIgnoreCase(state, item)) {
-		return ResultEnumeration.FALSE;
-	    } else {
+	  case EQUALS:
+	    if (compareValues(state, item) == 0) {
 		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
 	    }
 
 	  case NOT_EQUAL:
-	    if (equals(state, item)) {
+	    if (compareValues(state, item) != 0) {
 		return ResultEnumeration.FALSE;
 	    } else {
 		return ResultEnumeration.TRUE;
 	    }
 
 	  case GREATER_THAN_OR_EQUAL:
-	    if (greaterThanOrEqual(state, item)) {
+	    if (compareValues(state, item) >= 0) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
 	    }
 
 	  case GREATER_THAN:
-	    if (greaterThan(state, item)) {
+	    if (compareValues(state, item) > 0) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
 	    }
 
 	  case LESS_THAN_OR_EQUAL:
-	    if (greaterThan(state, item)) {
+	    if (compareValues(state, item) <= 0) {
 		return ResultEnumeration.FALSE;
 	    } else {
 		return ResultEnumeration.TRUE;
 	    }
 
 	  case LESS_THAN:
-	    if (greaterThanOrEqual(state, item)) {
+	    if (compareValues(state, item) < 0) {
 		return ResultEnumeration.FALSE;
 	    } else {
 		return ResultEnumeration.TRUE;
-	    }
-
-	  case BITWISE_AND:
-	    if (bitwiseAnd(state, item)) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-
-	  case BITWISE_OR:
-	    if (bitwiseOr(state, item)) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
 	    }
 
 	  default:
@@ -1257,130 +1259,53 @@ public class Engine implements IEngine {
 	}
     }
 
-    boolean equals(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+    /**
+     * Perform the equivalent of state.getValue().compareTo(item.getValue()).
+     */
+    int compareValues(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
-		return new BigInteger((String)item.getValue()).equals(new BigInteger((String)state.getValue()));
+		return new BigInteger((String)item.getValue()).compareTo(new BigInteger((String)state.getValue()));
 	    } catch (NumberFormatException e) {
 		throw new TestException(e);
 	    }
 
 	  case FLOAT:
 	    try {
-		return new Float((String)item.getValue()).equals(new Float((String)state.getValue()));
+		return new Float((String)item.getValue()).compareTo(new Float((String)state.getValue()));
 	    } catch (NumberFormatException e) {
 		throw new TestException(e);
 	    }
 
 	  case BOOLEAN:
-	    return getBoolean((String)state.getValue()) == getBoolean((String)item.getValue());
+	    if (getBoolean((String)state.getValue()) == getBoolean((String)item.getValue())) {
+		return 0;
+	    } else {
+		return 1;
+	    }
 
 	  case VERSION:
-	    if (Version.isVersion((String)item.getValue()) && Version.isVersion((String)state.getValue())) {
-		try {
-		    return new Version(item.getValue()).equals(new Version(state.getValue()));
-		} catch (NumberFormatException e) {
-		    throw new TestException(e);
-		}
-	    } else {
-		return ((String)item.getValue()).compareTo((String)state.getValue()) == 0;
+	    try {
+		return new Version(item.getValue()).compareTo(new Version(state.getValue()));
+	    } catch (IllegalArgumentException e) {
+		throw new TestException(e);
 	    }
 
 	  case EVR_STRING:
 	    try {
-		return new Evr((String)item.getValue()).compareTo(new Evr((String)state.getValue())) == 0;
+		return new Evr((String)item.getValue()).compareTo(new Evr((String)state.getValue()));
 	    } catch (IllegalArgumentException e) {
 		throw new TestException(e);
 	    }
 
 	  case BINARY:
 	  case STRING:
-	    return ((String)state.getValue()).equals((String)item.getValue());
+	    return ((String)state.getValue()).compareTo((String)item.getValue());
 
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
 							   state.getDatatype(), OperationEnumeration.EQUALS));
-	}
-    }
-
-    boolean greaterThanOrEqual(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
-	switch(getDatatype(state.getDatatype())) {
-	  case INT:
-	    try {
-		return new BigInteger((String)item.getValue()).compareTo(new BigInteger((String)state.getValue())) >= 0;
-	    } catch (NumberFormatException e) {
-		throw new TestException(e);
-	    }
-
-	  case FLOAT:
-	    try {
-		return new Float((String)item.getValue()).compareTo(new Float((String)state.getValue())) >= 0;
-	    } catch (NumberFormatException e) {
-		throw new TestException(e);
-	    }
-
-	  case VERSION:
-	    if (Version.isVersion((String)item.getValue()) && Version.isVersion((String)state.getValue())) {
-		try {
-		    return new Version(item.getValue()).greaterThanOrEquals(new Version(state.getValue()));
-		} catch (NumberFormatException e) {
-		    throw new TestException(e);
-		}
-	    } else {
-		return ((String)item.getValue()).compareTo((String)state.getValue()) >= 0;
-	    }
-
-	  case EVR_STRING:
-	    try {
-		return new Evr((String)item.getValue()).compareTo(new Evr((String)state.getValue())) >= 0;
-	    } catch (IllegalArgumentException e) {
-		throw new TestException(e);
-	    }
-
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							   state.getDatatype(), OperationEnumeration.GREATER_THAN_OR_EQUAL));
-	}
-    }
-
-    boolean greaterThan(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
-	switch(getDatatype(state.getDatatype())) {
-	  case INT:
-	    try {
-		return new BigInteger((String)item.getValue()).compareTo(new BigInteger((String)state.getValue())) > 0;
-	    } catch (NumberFormatException e) {
-		throw new TestException(e);
-	    }
-
-	  case FLOAT:
-	    try {
-		return new Float((String)item.getValue()).compareTo(new Float((String)state.getValue())) > 0;
-	    } catch (NumberFormatException e) {
-		throw new TestException(e);
-	    }
-
-	  case VERSION:
-	    if (Version.isVersion((String)item.getValue()) && Version.isVersion((String)state.getValue())) {
-		try {
-		    return new Version(item.getValue()).greaterThan(new Version(state.getValue()));
-		} catch (NumberFormatException e) {
-		    throw new TestException(e);
-		}
-	    } else {
-		return ((String)item.getValue()).compareTo((String)state.getValue()) > 0;
-	    }
-
-	  case EVR_STRING:
-	    try {
-		return new Evr((String)item.getValue()).compareTo(new Evr((String)state.getValue())) > 0;
-	    } catch (IllegalArgumentException e) {
-		throw new TestException(e);
-	    }
-
-	  default:
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							   state.getDatatype(), OperationEnumeration.GREATER_THAN_OR_EQUAL));
 	}
     }
 

@@ -29,7 +29,7 @@ public class Version implements Comparable<Version> {
 
     private int[] parts;
 
-    public Version (Object object) throws IllegalArgumentException, NumberFormatException {
+    public Version (Object object) throws IllegalArgumentException {
 	if (object instanceof String) {
 	    build((String)object);
 	} else if (object instanceof BigDecimal) {
@@ -55,57 +55,6 @@ public class Version implements Comparable<Version> {
 	parts[3] = minor_lo & 0xFFFF;
     }
 
-    /**
-     * Answers the question: is this object's value greater than v's value?
-     */
-    public boolean greaterThan(Version v) {
-	int num = Math.min(parts.length, v.parts.length);
-	for (int i=0; i < num; i++) {
-	    if (parts[i] > v.parts[i]) {
-		return true;
-	    } else if (parts[i] < v.parts[i]) {
-		return false;
-	    }
-	}
-	if (parts.length > v.parts.length) {
-	    for (int i=num; i < parts.length; i++) {
-		if (parts[i] > 0) {
-		    return true;
-		}
-	    }
-	    return false;
-	}
-	return false;
-    }
-
-    public boolean lessThan(Version v) {
-	if (equals(v) || greaterThan(v)) {
-	    return false;
-	} else {
-	    return true;
-	}
-    }
-
-    public boolean lessThanOrEquals(Version v) {
-	return v.greaterThan(this);
-    }
-
-    public boolean greaterThanOrEquals(Version v) {
-	return !v.greaterThan(this);
-    }
-
-    public boolean equals(Version v) {
-	if (parts.length == v.parts.length) {
-	    for (int i=0; i < parts.length; i++) {
-		if (parts[i] != v.parts[i]) {
-		    return false;
-		}
-	    }
-	    return true;
-	}
-	return false;
-    }
-
     public String toString() {
 	StringBuffer sb = new StringBuffer();
 	for (int i=0; i < parts.length; i++) {
@@ -120,13 +69,28 @@ public class Version implements Comparable<Version> {
     // Implement Comparable
 
     public int compareTo(Version other) {
-	if (equals(other)) {
-	    return 0;
-	} else if (lessThan(other)) {
-	    return -1;
-	} else {
-	    return 1;
+	int num = Math.min(parts.length, other.parts.length);
+	for (int i=0; i < num; i++) {
+	    if (parts[i] > other.parts[i]) {
+		return 1;
+	    } else if (parts[i] < other.parts[i]) {
+		return -1;
+	    }
 	}
+	if (parts.length > other.parts.length) {
+	    for (int i=num; i < parts.length; i++) {
+		if (parts[i] > 0) {
+		    return 1;
+		}
+	    }
+	} else if (parts.length < other.parts.length) {
+	    for (int i=num; i < other.parts.length; i++) {
+		if (other.parts[i] > 0) {
+		    return -1;
+		}
+	    }
+	}
+	return 0;
     }
 
     // Private

@@ -256,6 +256,7 @@ public class FileAdapter extends BaseFileAdapter {
      */
     private void readPEHeader(IFile file, FileItem fItem) throws IOException {
 	session.getLogger().trace(JOVALMsg.STATUS_PE_READ, file.toString());
+	String error = null;
 	try {
 	    Header header = new Header(file, session.getLogger());
 
@@ -378,12 +379,18 @@ public class FileAdapter extends BaseFileAdapter {
 		}
 	    }
 	    fItem.setDevelopmentClass(developmentClassType);
+	} catch (IllegalArgumentException e) {
+	    error = e.getMessage();
+	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getLocalName(), error);
 	} catch (Exception e) {
-	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getLocalName());
+	    error = e.getMessage();
+	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getLocalName(), error);
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	if (error != null) {
 	    boolean reported = false;
 	    for (MessageType msg : fItem.getMessage()) {
-		if (((String)msg.getValue()).equals(e.getMessage())) {
+		if (((String)msg.getValue()).equals(error)) {
 		    reported = true;
 		    break;
 		}
@@ -391,7 +398,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    if (!reported) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue(e.getMessage());
+		msg.setValue(error);
 		fItem.getMessage().add(msg);
 	    }
 	}

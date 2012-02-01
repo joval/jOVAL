@@ -97,7 +97,7 @@ public class Main implements IObserver {
      * Definition Interpreter application entry-point.
      */
     public static void main (String[] argv) {
-	if (new Version(MIN_JAVA_VERSION).greaterThan(new Version(JAVA_VERSION))) {
+	if (new Version(JAVA_VERSION).compareTo(new Version(MIN_JAVA_VERSION)) < 0) {
 	    print(getMessage("ERROR_JAVAVERSION", JAVA_VERSION, MIN_JAVA_VERSION));
 	    System.exit(ERR);
 	} else {
@@ -409,7 +409,7 @@ public class Main implements IObserver {
 	    print(getMessage("MESSAGE_SCHEMA_VERSION_CHECK"));
 	    Version schemaVersion = new Version(defs.getOvalDefinitions().getGenerator().getSchemaVersion());
 	    print(getMessage("MESSAGE_SCHEMA_VERSION", schemaVersion.toString()));
-	    if (IEngine.SCHEMA_VERSION.lessThan(schemaVersion)) {
+	    if (IEngine.SCHEMA_VERSION.compareTo(schemaVersion) < 0) {
 		print(getMessage("ERROR_SCHEMA_VERSION", schemaVersion.toString()));
 		return ERR;
 	    }
