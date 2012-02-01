@@ -52,6 +52,10 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 	this.ssh = ssh;
     }
 
+    ICredential getSessionCredential() {
+	return cred;
+    }
+
     // Implement ILoggable
 
     /**

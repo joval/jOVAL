@@ -6,7 +6,6 @@ package org.joval.intf.oval;
 import java.io.File;
 import java.util.Collection;
 
-import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;

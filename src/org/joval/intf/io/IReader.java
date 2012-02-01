@@ -51,4 +51,14 @@ public interface IReader extends ILoggable {
      * Returns true if the end of the underlying stream has been reached.
      */
     boolean checkEOF();
+
+    /**
+     * Set a checkpoint to which the reader can be reset.
+     */
+    void setCheckpoint(int readAheadLimit) throws IOException;
+
+    /**
+     * Return the stream to the last mark position.
+     */
+    void restoreCheckpoint() throws IOException;
 }

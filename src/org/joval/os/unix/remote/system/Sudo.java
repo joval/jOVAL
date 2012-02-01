@@ -29,6 +29,9 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 class Sudo implements IProcess {
+    static final int CR = 0x0D;
+    static final int LF = 0x0A;
+
     private SshSession ssh;
     private UnixSession us;
     private IProcess p;
@@ -61,12 +64,24 @@ class Sudo implements IProcess {
 	}
 
 	switch(us.getFlavor()) {
+	  case AIX:
+	    loginAIX();
+	    break;
+
+	  case LINUX:
+	    loginLinux();
+	    break;
+
+	  case MACOSX:
+	    sudoMacOSX();
+	    break;
+
 	  case SOLARIS:
 	    loginSolaris();
 	    break;
 
 	  default:
-	    loginDefault();
+	    loginLinux();
 	    break;
 	}
     }
@@ -115,18 +130,60 @@ class Sudo implements IProcess {
     // Private
 
     /**
-     * Perform a normal login, by simply writing the root password to the su process standard input.
+     * Perform a normal login by reading the prompt from the error stream, and entering LF after the password.
      */
-    private void loginDefault() throws Exception {
+    private void loginLinux() throws Exception {
 	p.start();
+	getErrorStream();
+	byte[] buff = new byte[10]; //Password:_
+	err.readFully(buff);
 	getOutputStream();
 	out.write(cred.getPassword().getBytes());
-	out.write('\n');
+	out.write(LF);
 	out.flush();
     }
 
     /**
-     * Perform an interactive login on Solaris, and skip past the Message Of The Day (if any).
+     * On Mac OSX, perform an interactive login by reading the prompt from the input stream, and entering CR after the
+     * 9-character password prompt.
+     *
+     * Note that root is not normally enabled, and when it is, you're not allowed to su to root from a remote terminal.
+     */
+    private void sudoMacOSX() throws Exception {
+	setInteractive(true);
+	p.start();
+	getInputStream();
+	in.setCheckpoint(1);
+	if ('?' == in.read()) {
+	    getOutputStream();
+	    out.write(us.getSessionCredential().getPassword().getBytes());
+	    out.write(LF);
+	    out.flush();
+	} else {
+	    in.restoreCheckpoint();
+	}
+    }
+
+    /**
+     * Perform an interactive login on AIX by reading the prompt from the input stream, and entering CR after the password.
+     * Then read one line.
+     */
+    private void loginAIX() throws Exception {
+	setInteractive(true);
+	p.start();
+	getInputStream();
+	byte[] buff = new byte[17]; //root's Password:_
+	in.readFully(buff);
+	getOutputStream();
+	out.write(cred.getPassword().getBytes());
+	out.write(CR);
+	out.flush();
+	in.readLine();
+    }
+
+    /**
+     * Perform an interactive login on Solaris by reading the prompt from the input stream, entering CR, then skipping past
+     * the Message Of The Day (if any).
      */
     private void loginSolaris() throws Exception {
 	setInteractive(true);
@@ -136,7 +193,7 @@ class Sudo implements IProcess {
 	in.readFully(buff);
 	getOutputStream();
 	out.write(cred.getPassword().getBytes());
-	out.write('\r');
+	out.write(CR);
 	out.flush();
 	String line1 = in.readLine();
 	if (line1 == null) {
@@ -158,11 +215,20 @@ class Sudo implements IProcess {
     }
 
     private String getSuString(String command) {
-	StringBuffer sb = new StringBuffer("su - ");
-	sb.append(cred.getUsername());
-	sb.append(" -c \"");
-	sb.append(command.replace("\"", "\\\""));
-	sb.append("\"");
+	StringBuffer sb = new StringBuffer();
+	switch(us.getFlavor()) {
+	  case MACOSX:
+	    sb.append("sudo -p ? ").append(command);
+	    break;
+
+	  default:
+	    sb.append("su - ");
+	    sb.append(cred.getUsername());
+	    sb.append(" -c \"");
+	    sb.append(command.replace("\"", "\\\""));
+	    sb.append("\"");
+	    break;
+	}
 	return sb.toString();
     }
 }

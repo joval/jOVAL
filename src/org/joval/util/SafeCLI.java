@@ -38,9 +38,8 @@ public class SafeCLI {
 	List<String> output = multiLine(cmd, session, readTimeout);
 	if (output != null && output.size() > 0) {
 	    return output.get(0);
-	} else {
-	    return null;
 	}
+	return null;
     }
 
     /**

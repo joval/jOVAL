@@ -19,6 +19,7 @@ components/sdk/plugin/shared/jOVALPluginShared.jar
 components/sdk/plugin/cisco/jOVALPluginCisco.jar
 components/sdk/plugin/local/jOVALPluginLocal.jar
 components/sdk/plugin/remote/jOVALPluginRemote.jar
+test/test.ini
 test/reports
 test/schema/docs/
 test/schema/ReportSchema.jar

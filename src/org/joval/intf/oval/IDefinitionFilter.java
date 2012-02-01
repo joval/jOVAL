@@ -7,8 +7,6 @@ package org.joval.intf.oval;
  * Interface defining an OVAL Definition Filter.  The filter lets the engine know which tests it should evaluate, and which
  * it should skip.
  *
- * @see org.joval.util.JOVALUtil
- *
  * @author David A. Solin
  * @version %I% %G%
  */

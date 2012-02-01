@@ -17,7 +17,7 @@ public interface ICredentialStore {
     /**
      * Return the appropriate credential for the specified IBaseSession.
      *
-     * @returns null if no credential is found
+     * @return null if no credential is found
      *
      * @throws AccessControlException if access to the requested credential is not allowed.
      */

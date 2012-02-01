@@ -5,8 +5,8 @@ TOP=../..
 
 include $(TOP)/common.mk
 
-SOURCEPATH="$(GENSRC)$(CLN)$(SRC)"
-CLASSPATH="$(PLUGIN_SHARED_DEPS)$(CLN)$(PLUGIN_REMOTE_DEPS)$(CLN)$(JOVAL_CORE_DEPS)"
+SOURCEPATH="$(OVAL)/gen-src$(CLN)$(SRC)"
+CLASSPATH="$(CLASSLIB)$(CLN)$(PLUGIN_SHARED_DEPS)$(CLN)$(PLUGIN_REMOTE_DEPS)$(CLN)$(PLUGIN_LOCAL_DEPS)$(CLN)$(JOVAL_CORE_DEPS)"
 
 all:
 	@$(MAKE) --keep-going --directory=engine all
@@ -24,13 +24,16 @@ clean:
 
 javadocs:
 	mkdir -p $(DOCS)
-	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -subpackages \
+	$(JAVA_HOME)/bin/javadoc -quiet -J-Xmx512m -d $(DOCS) -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -subpackages \
 	oval:org.w3c            				\
 	org.joval.intf.identity					\
 	org.joval.intf.oval					\
 	org.joval.intf.plugin					\
 	org.joval.intf.util					\
-	org.joval.plugin					\
+	$(SRC)/org/joval/oval/NotCollectableException.java	\
+	$(SRC)/org/joval/oval/OvalException.java		\
+	$(SRC)/org/joval/plugin/BasePlugin.java			\
+	$(SRC)/org/joval/plugin/RemotePlugin.java		\
 	$(SRC)/org/joval/intf/system/IBaseSession.java		\
 	$(SRC)/org/joval/intf/system/IProcess.java		\
 	$(SRC)/org/joval/util/JOVALSystem.java			\
@@ -42,12 +45,11 @@ dist-clean: clean
 
 install: all
 	mkdir -p $(DIST)
+	cp -r $(RSRC)/* $(DIST)
 	cp $(SCHEMALIB) $(DIST)
 	cp $(JOVAL_CORE_LIB) $(DIST)
-	cp $(PLUGIN_SHARED_LIB) $(DIST)
-	cp $(PLUGIN_LOCAL_LIB) $(DIST)
-	cp $(PLUGIN_REMOTE_LIB) $(DIST)
-	cp -r $(RSRC)/* $(DIST)
+	$(JAR) cvf $(DIST)/jOVALRemote.jar -C $(PLUGIN_SHARED)/$(BUILD)/ .
+	$(JAR) uvf $(DIST)/jOVALRemote.jar -C $(PLUGIN_REMOTE)/$(BUILD)/ .
 
 dist: install javadocs
 	cp -r docs $(DIST)

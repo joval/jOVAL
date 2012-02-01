@@ -1,9 +1,9 @@
 <html>
   <head>
-    <title>The jOVAL&trade; Software Development Kit</title>
+    <title>The jOVAL&trade; Software Development Kit, v5.10.1.0</title>
   </head>
   <body>
-    <h1>The jOVAL&trade; Software Development Kit</h1>
+    <h1>The jOVAL&trade; Software Development Kit, v5.10.1.0</h1>
     <p>jOVAL is an implementation of <a href="http://oval.mitre.org">OVAL</a> written in the Java programming language.  It is freely available for use under the <a href="http://www.joval.org/agpl_v3.txt">Affero GPL</a> license, and dual licensing is available for ISVs who require a commercial license.  Source code for jOVAL and all of its dependencies is hosted at Github, at <a href="https://www.github.com/joval">https://www.github.com/joval</a>.</p>
 
     <h2>jovaldi</h2>
@@ -14,7 +14,7 @@
     <table cellpadding=10 cellspacing=10 width=1000>
       <tr>
         <td valign="top"><code>org.joval.plugin</code></td>
-        <td>The primary class of interest in this package is the <code>RemotePlugin</code>, which can be used to scan Windows, Mac OSX, Solaris, Linux and Cisco IOS devices over the network.  The <code>RemotePlugin</code> requires an <code>ICredentialStore</code>, which must be implemented by you, dear user!  An example is <code>org.joval.identity.SimpleCredentialStore</code>.</td>
+        <td>The primary class of interest in this package is the <code>RemotePlugin</code>, which can be used to scan Windows, Mac OSX, Solaris, Linux and Cisco IOS devices over the network.  The <code>RemotePlugin</code> requires an <code>ICredentialStore</code>, an example of which is <code>org.joval.identity.SimpleCredentialStore</code>.</td>
       </tr>
       <tr>
         <td valign="top"><code>org.joval.util</code></td>
@@ -51,7 +51,7 @@
     <p>The jOVAL library makes it easy to embed OVAL scanning capabilities inside a Java application, but since jovaldi seeks to fully duplicate the functions of ovaldi, it is not necessarily illustrative of how to use the classes.  Therefore, the following TrivialScanner code sample has been developed as a guide.  The basic steps are:</p>
     <ol>
       <li>(Optional) Create and configure the desired logging implementation into which SLF4J will feed.  By design, this is very easily accomplished.  For Java Util Logging (JUL), the Logger to which jOVAL sends all its log messages can be obtained using <code>Logger.getLogger(JOVALSystem.getLogger().getName())</code>.
-      <li>Create an implementation of the <code>ICredentialStore</code> interface, and set it as the credential store for the <code>RemotePlugin</code> class.  The sample app (and jovaldi) only scan a single machine, so they use the <code>SimpleCredentialStore</code> which contains credentials for only that one machine.  If your application will be scanning many devices, you'll need to implement a store that is able to provide credentials for all of them.</li>
+      <li>(Optional) Create an implementation of the <code>ICredentialStore</code> interface, and set it as the credential store for the <code>RemotePlugin</code> class.  The sample app (and jovaldi) use the <code>SimpleCredentialStore</code> which uses Java Properties to store credentials for machines.  If your application has complex encryption and access control requirements, you'll want to implement a store that is suitable for your application.</li>
       <li>(Optional) The <code>RemotePlugin</code> class can cache basic information about hosts (i.e., if they are Windows or SSH-enabled machines), so to prevent re-discovery over the network and to get faster repeat-performance, it's a good idea to provide the class with a data directory inside of which it can safely persist its cache file.</li>
       <li>Construct an instance of the <code>RemotePlugin</code> class, setting the target hostname or address.</li>
       <li>Instantiate an engine that will use the plugin instance using the <code>createEngine</code> method of the <code>JOVALSystem</code> class.</li>
@@ -97,80 +97,82 @@ public class TrivialScanner {
      * RemotePlugin class.
      */
     public static void main(String[] argv) {
-        try {
-            LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
-            Handler handler = new FileHandler("TrivialScanner.log", false);
-            handler.setFormatter(new SimpleFormatter());
-            handler.setLevel(Level.INFO);
-            Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
-            logger.addHandler(handler);
+	try {
+	    LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
+	    Handler handler = new FileHandler("TrivialScanner.log", false);
+	    handler.setFormatter(new SimpleFormatter());
+	    handler.setLevel(Level.INFO);
+	    Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	    logger.addHandler(handler);
 
-            Properties props = new Properties();
-            props.load(new FileInputStream(new File(argv[1])));
+	    Properties props = new Properties();
+	    props.load(new FileInputStream(new File(argv[1])));
 
-            RemotePlugin.setCredentialStore(new SimpleCredentialStore(props));
-            RemotePlugin.setDataDirectory(new File("."));
-            RemotePlugin plugin = new RemotePlugin(props.getProperty("hostname"));
+	    SimpleCredentialStore scs = new SimpleCredentialStore();
+	    scs.add(props);
+	    RemotePlugin.setCredentialStore(scs);
+	    RemotePlugin.setDataDirectory(new File("."));
+	    RemotePlugin plugin = new RemotePlugin(props.getProperty("hostname"));
 
-            IEngine engine = JOVALSystem.createEngine(plugin);
-            engine.setDefinitionsFile(new File(argv[0]));
-            engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
-            engine.run();
-            switch(engine.getResult()) {
-              case OK:
-                System.out.println("Writing resutls.xml");
-                IResults results = engine.getResults();
-                results.writeXML(new File("results.xml"));
-                break;
-              case ERR:
-                throw engine.getError();
-            }
-            System.exit(0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (OvalException e) {
-            e.printStackTrace();
-        }
+	    IEngine engine = JOVALSystem.createEngine(plugin);
+	    engine.setDefinitionsFile(new File(argv[0]));
+	    engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
+	    engine.run();
+	    switch(engine.getResult()) {
+	      case OK:
+		System.out.println("Writing resutls.xml");
+		IResults results = engine.getResults();
+		results.writeXML(new File("results.xml"));
+		break;
+	      case ERR:
+		throw engine.getError();
+	    }
+	    System.exit(0);
+	} catch (IOException e) {
+	    e.printStackTrace();
+	} catch (OvalException e) {
+	    e.printStackTrace();
+	}
 
-        System.exit(1);
+	System.exit(1);
     }
 
     /**
      * An inner class that prints out information about Engine notifications.
      */
     static class Observer implements IObserver {
-        public Observer() {}
-
-        public void notify(IProducer source, int msg, Object arg) {
-            switch(msg) {
-              case IEngine.MESSAGE_OBJECT_PHASE_START:
-                System.out.println("Scanning objects...");
-                break;
-              case IEngine.MESSAGE_OBJECT:
-                System.out.println("  " + (String)arg);
-                break;
-              case IEngine.MESSAGE_OBJECT_PHASE_END:
-                System.out.println("Done scanning");
-                break;
-              case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
-                System.out.println("Saving system-characteristics.xml");
-                ISystemCharacteristics sc = (ISystemCharacteristics)arg;
-                sc.writeXML(new File("system-characteristics.xml"));
-                break;
-              case IEngine.MESSAGE_DEFINITION_PHASE_START:
-                System.out.println("Evaluating definitions...");
-                break;
-              case IEngine.MESSAGE_DEFINITION:
-                System.out.println("  " + (String)arg);
-                break;
-              case IEngine.MESSAGE_DEFINITION_PHASE_END:
-                System.out.println("Done evaluating definitions");
-                break;
-              default:
-                System.out.println("Unexpected message: " + msg);
-                break;
-            }
-        }
+	public Observer() {}
+    
+	public void notify(IProducer source, int msg, Object arg) {
+	    switch(msg) {
+	      case IEngine.MESSAGE_OBJECT_PHASE_START:
+		System.out.println("Scanning objects...");
+		break;
+	      case IEngine.MESSAGE_OBJECT:
+		System.out.println("  " + (String)arg);
+		break;
+	      case IEngine.MESSAGE_OBJECT_PHASE_END:
+		System.out.println("Done scanning");
+		break;
+	      case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
+		System.out.println("Saving system-characteristics.xml");
+		ISystemCharacteristics sc = (ISystemCharacteristics)arg;
+		sc.writeXML(new File("system-characteristics.xml"));
+		break;
+	      case IEngine.MESSAGE_DEFINITION_PHASE_START:
+		System.out.println("Evaluating definitions...");
+		break;
+	      case IEngine.MESSAGE_DEFINITION:
+		System.out.println("  " + (String)arg);
+		break;
+	      case IEngine.MESSAGE_DEFINITION_PHASE_END:
+		System.out.println("Done evaluating definitions");
+		break;
+	      default:
+		System.out.println("Unexpected message: " + msg);
+		break;
+	    }
+	}
     }
 }
           </pre>
@@ -206,6 +208,12 @@ public class TrivialScanner {
         <td><a href="http://www.joval.org/licenses/cal10n.txt">BSD-style</a></td>
 	<td>Localization library.</td>
       </tr>
+      <tr>
+        <td><a href="http://code.google.com/p/plist/">dd-plist</a></td>
+        <td>r50</td>
+        <td><a href="http://joval.org/licenses/dd-plist.txt">MIT</a></td>
+	<td>Reads Mac plist file formats.</td>
+      </tr>
     </table>
     <p>jOVALRemote.jar requires jOVALCore (and by extension, its dependencies), and also has the following dependencies:</p>
     <table cellspacing=5>
@@ -240,12 +248,6 @@ public class TrivialScanner {
 	<td>WMI utility, written on top of j-Interop.</td>
       </tr>
       <tr>
-        <td><a href="http://code.google.com/p/plist/">dd-plist</a></li>
-        <td>r50</td>
-        <td><a href="http://www.joval.org/licenses/dd-plist.txt">MIT</a></td>
-	<td>Reads Mac plist file formats.</td>
-      </tr>
-      <tr>
         <td><a href="http://j-interop.org/">j-Interop</a></li>
         <td>2.08</td>
         <td><a href="http://www.joval.org/licenses/j-Interop.txt">LGPL v3</a></td>
@@ -277,7 +279,7 @@ public class TrivialScanner {
       </tr>
     </table>
     <hr>
-    <p>All original material Copyright &copy; 2011, jOVAL.org.  All rights reserved.</p>
+    <p>All original material Copyright &copy; 2011, 2012, jOVAL.org.  All rights reserved.</p>
     <p><img width=100 height=50 src="powered.jpg"/></p>
   </body>
 </html>

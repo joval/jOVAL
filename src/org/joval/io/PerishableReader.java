@@ -152,6 +152,14 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	return i;
     }
 
+    public void setCheckpoint(int readAheadLimit) throws IOException {
+	reader.mark(readAheadLimit);
+    }
+
+    public void restoreCheckpoint() throws IOException {
+	reader.reset();
+    }
+
     // Implement IPerishable
 
     public boolean checkExpired() {

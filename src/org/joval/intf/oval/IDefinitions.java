@@ -19,8 +19,6 @@ import org.joval.oval.OvalException;
  * Interface defining an index to an OvalDefinitions object, facilitating fast look-up of definitions, tests, variables,
  * objects and states defined in the document.
  *
- * @see org.joval.util.JOVALUtil
- *
  * @author David A. Solin
  * @version %I% %G%
  */
