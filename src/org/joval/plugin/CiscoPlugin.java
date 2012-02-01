@@ -8,7 +8,10 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.ConnectException;
 import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLStreamHandler;
 import java.util.Collection;
 import java.util.Vector;
 import java.util.logging.FileHandler;
@@ -47,6 +50,7 @@ import org.joval.plugin.adapter.cisco.ios.VersionAdapter;
 import org.joval.plugin.adapter.cisco.ios.Version55Adapter;
 import org.joval.plugin.adapter.independent.FamilyAdapter;
 import org.joval.plugin.adapter.independent.VariableAdapter;
+import org.joval.protocol.tftp.TftpURLConnection;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -94,17 +98,7 @@ public class CiscoPlugin implements IPlugin {
 
 	    TechSupport tech = null;
 	    if (input != null) {
-		try {
-		    URL url = new URL(input);
-		    tech = new TechSupport(url.openStream());
-		} catch (MalformedURLException e) {
-		    File f = new File(input);
-		    if (f.isFile()) {
-			tech = new TechSupport(new FileInputStream(f));
-		    } else {
-			throw e;
-		    }
-		}
+		tech = new TechSupport(toURL(input).openStream());
 	    } else {
 		tech = new TechSupport(System.in);
 	    }
@@ -129,11 +123,34 @@ public class CiscoPlugin implements IPlugin {
 	    e.printStackTrace();
 	} catch (IOException e) {
 	    e.printStackTrace();
-	} catch (OvalException e) {
+	} catch (Exception e) {
 	    e.printStackTrace();
 	}
 
 	System.exit(1);
+    }
+
+    /**
+     * Convert a string representing a regular URL, TFTP URL, or file path to a URL.
+     */
+    public static URL toURL(String str) throws MalformedURLException, SecurityException {
+	MalformedURLException ex = null;
+	try {
+	    return new URL(str);
+	} catch (MalformedURLException e) {
+	    ex = e;
+	}
+	try {
+	    return new URL(null, str, new CiscoURLStreamHandler());
+	} catch (MalformedURLException e) {
+	} catch (SecurityException e) {
+	    throw e;
+	}
+	File f = new File(str);
+	if (f.isFile()) {
+	    return f.toURI().toURL();
+	}
+	throw ex;
     }
 
     static void usage() {
@@ -189,6 +206,19 @@ public class CiscoPlugin implements IPlugin {
 	}
     }
 
+    static class CiscoURLStreamHandler extends URLStreamHandler {
+	CiscoURLStreamHandler() {
+	}
+    
+	public URLConnection openConnection(URL u) throws IOException {
+	    if ("tftp".equals(u.getProtocol())) {
+		return new TftpURLConnection(u);
+	    } else {
+		throw new MalformedURLException(JOVALSystem.getMessage(JOVALMsg.ERROR_PROTOCOL, u.getProtocol()));
+	    }
+	}
+    }
+
     private LocLogger logger;
     private IosSession session;
     private Collection<IAdapter> adapters;
@@ -227,7 +257,7 @@ public class CiscoPlugin implements IPlugin {
 	return adapters;
     }
 
-    public void connect() throws OvalException {
+    public void connect() throws ConnectException {
     }
 
     public void disconnect() {

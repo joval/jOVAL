@@ -5,6 +5,7 @@ package org.joval.util;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.util.List;
 import java.util.Vector;
@@ -115,11 +116,14 @@ public class SafeCLI {
 		    } catch (IOException e) {
 		    }
 		}
-		try {
-		    p.getErrorStream().close();
-		} catch (IOException e) {
-		}
 		if (p != null) {
+		    try {
+			InputStream err = p.getErrorStream();
+			if (err != null) {
+			    err.close();
+			}
+		    } catch (IOException e) {
+		    }
 		    try {
 			p.waitFor(0);
 		    } catch (InterruptedException e) {

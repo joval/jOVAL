@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URLStreamHandler;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.Locale;
@@ -17,7 +16,6 @@ import java.util.PropertyResourceBundle;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.os.embedded.system.TechSupport;
 import org.joval.plugin.CiscoPlugin;
-import org.joval.protocol.tftp.TftpURLConnection;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -59,31 +57,8 @@ public class CiscoContainer implements IPluginContainer {
 	TechSupport tech = null;
 	String str = props.getProperty("tech.url");
 	Exception ex = null;
-	try {
-	    URL url = new URL(str);
-	    tech = new TechSupport(url.openStream());
-	} catch (MalformedURLException e) {
-	    ex = e;
-	}
-	if (tech == null) {
-	    try {
-		URL url = new URL(null, str, new CiscoURLStreamHandler());
-		tech = new TechSupport(url.openStream());
-	    } catch (MalformedURLException e) {
-	    } catch (SecurityException e) {
-		e.printStackTrace();
-	    }
-	}
-	if (tech == null) {
-	    File f = new File(str);
-	    if (f.isFile()) {
-		tech = new TechSupport(new FileInputStream(f));
-	    } else {
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), ex);
-		throw ex;
-	    }
-	}
-	plugin = new CiscoPlugin(tech);
+	URL url = CiscoPlugin.toURL(props.getProperty("tech.url"));
+	plugin = new CiscoPlugin(new TechSupport(url.openStream()));
     }
 
     public String getProperty(String key) {
@@ -93,17 +68,4 @@ public class CiscoContainer implements IPluginContainer {
     public IPlugin getPlugin() {
 	return plugin;
     }
-
-class CiscoURLStreamHandler extends URLStreamHandler {
-    CiscoURLStreamHandler() {
-    }
-
-    public URLConnection openConnection(URL u) throws IOException {
-        if ("tftp".equals(u.getProtocol())) {
-            return new TftpURLConnection(u);
-        } else {
-            throw new MalformedURLException(JOVALSystem.getMessage(JOVALMsg.ERROR_PROTOCOL, u.getProtocol()));
-        }
-    }
-}
 }
