@@ -1213,45 +1213,45 @@ public class Engine implements IEngine {
 	    }
 
 	  case EQUALS:
-	    if (compareValues(state, item) == 0) {
+	    if (compareValues(item, state) == 0) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
 	    }
 
 	  case NOT_EQUAL:
-	    if (compareValues(state, item) != 0) {
-		return ResultEnumeration.FALSE;
-	    } else {
+	    if (compareValues(item, state) != 0) {
 		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
 	    }
 
 	  case GREATER_THAN_OR_EQUAL:
-	    if (compareValues(state, item) >= 0) {
+	    if (compareValues(item, state) >= 0) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
 	    }
 
 	  case GREATER_THAN:
-	    if (compareValues(state, item) > 0) {
+	    if (compareValues(item, state) > 0) {
 		return ResultEnumeration.TRUE;
 	    } else {
 		return ResultEnumeration.FALSE;
 	    }
 
 	  case LESS_THAN_OR_EQUAL:
-	    if (compareValues(state, item) <= 0) {
-		return ResultEnumeration.FALSE;
-	    } else {
+	    if (compareValues(item, state) <= 0) {
 		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
 	    }
 
 	  case LESS_THAN:
-	    if (compareValues(state, item) < 0) {
-		return ResultEnumeration.FALSE;
-	    } else {
+	    if (compareValues(item, state) < 0) {
 		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
 	    }
 
 	  default:
@@ -1260,9 +1260,9 @@ public class Engine implements IEngine {
     }
 
     /**
-     * Perform the equivalent of state.getValue().compareTo(item.getValue()).
+     * Perform the equivalent of item.getValue().compareTo(state.getValue()).
      */
-    int compareValues(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+    int compareValues(EntityItemSimpleBaseType item, EntitySimpleBaseType state) throws TestException, OvalException {
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
@@ -1279,7 +1279,7 @@ public class Engine implements IEngine {
 	    }
 
 	  case BOOLEAN:
-	    if (getBoolean((String)state.getValue()) == getBoolean((String)item.getValue())) {
+	    if (getBoolean((String)item.getValue()) == getBoolean((String)state.getValue())) {
 		return 0;
 	    } else {
 		return 1;
@@ -1301,7 +1301,7 @@ public class Engine implements IEngine {
 
 	  case BINARY:
 	  case STRING:
-	    return ((String)state.getValue()).compareTo((String)item.getValue());
+	    return ((String)item.getValue()).compareTo((String)state.getValue());
 
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
