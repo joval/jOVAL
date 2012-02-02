@@ -8,7 +8,7 @@ include $(TOP)/common.mk
 GEN=gen-src
 SCHEMADIR=xsd-$(OVAL_SCHEMA_VERSION)
 BINDINGS=$(SCHEMADIR)/bindings.xjb
-CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(GEN)"
+CLASSPATH="$(CLASSLIB)$(CLN)$(GEN)"
 
 include classes.mk
 include schemas.mk
