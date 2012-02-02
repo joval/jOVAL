@@ -16,16 +16,6 @@ public interface IWmiProvider extends ILoggable {
     public static final String CIMv2 = "root\\cimv2";
 
     /**
-     * Connect to the underlying WMI provider.
-     */
-    public boolean connect();
-
-    /**
-     * Release any resources being consumed by the WMI provider.
-     */
-    public void disconnect();
-
-    /**
      * Execute a WQL query on the given namespace.
      */
     public ISWbemObjectSet execQuery(String ns, String wql) throws WmiException;

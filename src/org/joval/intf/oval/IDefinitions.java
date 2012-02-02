@@ -71,19 +71,9 @@ public interface IDefinitions {
     DefinitionType getDefinition(String id) throws OvalException;
 
     /**
-     * Iterate over all the objects.
+     * Get a collection of all the objects.
      */
-    Iterator<ObjectType> iterateObjects();
-
-    /**
-     * Iterate over all the objects of the specified type.
-     */
-    Iterator<ObjectType> iterateObjects(Class type);
-
-    /**
-     * Iterate over all the variables.
-     */
-    Iterator<VariableType> iterateVariables();
+    Collection<ObjectType> getObjects();
 
     /**
      * Sort all DefinitionTypes into two lists according to whether or not the filter allows them.

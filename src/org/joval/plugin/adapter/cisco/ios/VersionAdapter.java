@@ -31,26 +31,23 @@ public class VersionAdapter extends Version55Adapter {
     /**
      * @override
      */
-    public boolean connect() {
-	if (super.connect()) {
-	    StringBuffer sb = new StringBuffer();
-	    sb.append((String)item.getMajorVersion().getValue());
-	    sb.append(".");
-	    sb.append((String)item.getMinorVersion().getValue());
-	    EntityItemStringType trainNumber = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    trainNumber.setValue(sb.toString());
-	    item.setTrainNumber(trainNumber);
+    protected void init() {
+	super.init();
 
-	    sb.append("(");
-	    sb.append((String)item.getTrainIdentifier().getValue());
-	    sb.append(")");
-	    sb.append((String)item.getRebuild().getValue());
-	    EntityItemStringType majorRelease = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    majorRelease.setValue(sb.toString());
-	    item.setMajorRelease(majorRelease);
-	    return true;
-	} else {
-	    return false;
-	}
+	StringBuffer sb = new StringBuffer();
+	sb.append((String)item.getMajorVersion().getValue());
+	sb.append(".");
+	sb.append((String)item.getMinorVersion().getValue());
+	EntityItemStringType trainNumber = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	trainNumber.setValue(sb.toString());
+	item.setTrainNumber(trainNumber);
+
+	sb.append("(");
+	sb.append((String)item.getTrainIdentifier().getValue());
+	sb.append(")");
+	sb.append((String)item.getRebuild().getValue());
+	EntityItemStringType majorRelease = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	majorRelease.setValue(sb.toString());
+	item.setMajorRelease(majorRelease);
     }
 }

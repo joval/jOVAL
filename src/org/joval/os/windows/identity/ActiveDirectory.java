@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
 import org.slf4j.cal10n.LocLogger;
 
 import org.joval.io.LittleEndian;
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
@@ -30,7 +31,7 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-class ActiveDirectory {
+class ActiveDirectory implements ILoggable {
     private static final String DOMAIN_WQL = "SELECT Name, DomainName, DnsForestName FROM Win32_NTDomain";
 
     private static final String AD_NAMESPACE = "root\\directory\\ldap";
@@ -222,6 +223,16 @@ class ActiveDirectory {
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return false;
+    }
+
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
     }
 
     // Private

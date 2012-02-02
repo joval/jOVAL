@@ -14,7 +14,6 @@ import org.jinterop.dcom.common.JIDefaultAuthInfoImpl;
 import org.jinterop.dcom.common.JIException;
 import org.jinterop.winreg.IJIWinReg;
 import org.jinterop.winreg.JIPolicyHandle;
-import org.jinterop.winreg.JIWinRegFactory;
 
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IValue;
@@ -59,7 +58,7 @@ public class Key implements IKey {
 	if (open) {
 	    open = false;
 	    try {
-		registry.getWinreg().winreg_CloseKey(handle);
+		registry.wrCloseKey(handle);
 		registry.deregisterKey(this);
 		registry.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLOSED, toString());
 		return true;
@@ -180,7 +179,7 @@ public class Key implements IKey {
     public String getSubkeyName(int n) throws NoSuchElementException, IllegalStateException {
 	checkOpen();
 	try {
-	    String[] sa = registry.getWinreg().winreg_EnumKey(handle, n);
+	    String[] sa = registry.wrEnumKey(handle, n);
 	    if (sa.length == 2) {
 		return sa[0];
 	    } else {
@@ -252,7 +251,7 @@ public class Key implements IKey {
     public String getValueName(int n) throws NoSuchElementException, IllegalStateException {
 	checkOpen();
 	try {
-	    Object[] oa = registry.getWinreg().winreg_EnumValue(handle, n);
+	    Object[] oa = registry.wrEnumValue(handle, n);
 	    if (oa.length == 2) {
 		return (String)oa[0];
 	    } else {
@@ -283,7 +282,7 @@ public class Key implements IKey {
     Key getSubkey(String name) throws NoSuchElementException, IllegalStateException {
 	checkOpen();
 	try {
-	    return new Key(this, name, registry.getWinreg().winreg_OpenKey(handle, name, IJIWinReg.KEY_READ));
+	    return new Key(this, name, registry.wrOpenKey(handle, name, IJIWinReg.KEY_READ));
 	} catch (JIException e) {
 	    throw new NoSuchElementException(toString() + Registry.DELIM_STR + name);
 	}
@@ -337,10 +336,10 @@ public class Key implements IKey {
 	    }
 
 	    try {
-		String[] sa = registry.getWinreg().winreg_EnumKey(handle, index++);
+		String[] sa = registry.wrEnumKey(handle, index++);
 		if (sa.length == 2) {
 		    String subkey = sa[0];
-		    JIPolicyHandle hSubkey = registry.getWinreg().winreg_OpenKey(handle, subkey, IJIWinReg.KEY_READ);
+		    JIPolicyHandle hSubkey = registry.wrOpenKey(handle, subkey, IJIWinReg.KEY_READ);
 		    return new Key(Key.this, subkey, hSubkey);
 		} else {
 		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_ENUMKEY,
@@ -382,7 +381,7 @@ public class Key implements IKey {
 	    }
 
 	    try {
-		Object[] oa = registry.getWinreg().winreg_EnumValue(handle, index++);
+		Object[] oa = registry.wrEnumValue(handle, index++);
 		if (oa.length == 2) {
 		    String name = (String)oa[0];
 		    return registry.createValue(Key.this, name);

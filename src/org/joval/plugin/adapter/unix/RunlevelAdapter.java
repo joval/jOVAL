@@ -4,7 +4,6 @@
 package org.joval.plugin.adapter.unix;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
@@ -47,6 +46,7 @@ import org.joval.util.Version;
 public class RunlevelAdapter implements IAdapter {
     private IUnixSession session;
     private Hashtable<String, Hashtable<String, Boolean>> runlevels;
+    private boolean initialized = false;
 
     public RunlevelAdapter(IUnixSession session) {
 	this.session = session;
@@ -61,40 +61,10 @@ public class RunlevelAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
-	if (session != null) {
-	    try {
-		switch(session.getFlavor()) {
-		  case AIX:
-		    initUnixRunlevels("/etc/rc.d");
-		    break;
-
-		  case SOLARIS:
-		    initUnixRunlevels("/etc");
-		    break;
-
-		  case LINUX:
-		    initLinuxRunlevels();
-		    break;
-
-		  default:
-		    session.getLogger().warn(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor());
-		    break;
-		}
-
-		return true;
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	}
-	return false;
-    }
-
-    public void disconnect() {
-	runlevels = null;
-    }
-
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
+	if (!initialized) {
+	    init();
+	}
 	RunlevelObject rObj = (RunlevelObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	OperationEnumeration op = rObj.getRunlevel().getOperation();
@@ -229,6 +199,31 @@ public class RunlevelAdapter implements IAdapter {
 	return JOVALSystem.factories.sc.unix.createRunlevelItem(item);
     }
 
+    private void init() throws NotCollectableException {
+	try {
+	    switch(session.getFlavor()) {
+	      case AIX:
+		initUnixRunlevels("/etc/rc.d");
+		break;
+
+	      case SOLARIS:
+		initUnixRunlevels("/etc");
+		break;
+
+	      case LINUX:
+		initLinuxRunlevels();
+		break;
+
+	      default:
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor());
+		throw new NotCollectableException(msg);
+	    }
+	} catch (IOException e) {
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	initialized = true;
+    }
+
     private void initUnixRunlevels(String baseDir) throws IOException {
 	IFilesystem fs = session.getFilesystem();
 	for (String path : fs.search(Pattern.compile(baseDir + fs.getDelimiter() + "rc.\\.d"))) {
@@ -280,30 +275,34 @@ public class RunlevelAdapter implements IAdapter {
 	}
     }
 
-    private void initLinuxRunlevels() throws Exception {
-	for (String line : SafeCLI.multiLine("/sbin/chkconfig --list", session, IUnixSession.Timeout.M)) {
-	    StringTokenizer tok = new StringTokenizer(line);
-	    if (tok.countTokens() == 8) {
-		String serviceName = tok.nextToken();
-		for (int i=0; i <= 6; i++) {
-		    String rl = "" + i;
-		    if (tok.nextToken().equals(rl + ":on")) {
-			Hashtable<String, Boolean> runlevel = runlevels.get(rl);
-			if (runlevel == null) {
-			    runlevel = new Hashtable<String, Boolean>();
-			    runlevels.put(rl, runlevel);
+    private void initLinuxRunlevels() {
+	try {
+	    for (String line : SafeCLI.multiLine("/sbin/chkconfig --list", session, IUnixSession.Timeout.M)) {
+		StringTokenizer tok = new StringTokenizer(line);
+		if (tok.countTokens() == 8) {
+		    String serviceName = tok.nextToken();
+		    for (int i=0; i <= 6; i++) {
+			String rl = "" + i;
+			if (tok.nextToken().equals(rl + ":on")) {
+			    Hashtable<String, Boolean> runlevel = runlevels.get(rl);
+			    if (runlevel == null) {
+				runlevel = new Hashtable<String, Boolean>();
+				runlevels.put(rl, runlevel);
+			    }
+			    runlevel.put(serviceName, new Boolean(true));
+			} else {
+			    Hashtable<String, Boolean> runlevel = runlevels.get(rl);
+			    if (runlevel == null) {
+				runlevel = new Hashtable<String, Boolean>();
+				runlevels.put(rl, runlevel);
+			    }
+			    runlevel.put(serviceName, new Boolean(false));
 			}
-			runlevel.put(serviceName, new Boolean(true));
-		    } else {
-			Hashtable<String, Boolean> runlevel = runlevels.get(rl);
-			if (runlevel == null) {
-			    runlevel = new Hashtable<String, Boolean>();
-			    runlevels.put(rl, runlevel);
-			}
-			runlevel.put(serviceName, new Boolean(false));
 		    }
 		}
 	    }
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 }

@@ -194,26 +194,26 @@ public class Results implements IResults {
 	//
 	Hashtable<String, TestType> reportableTests = new Hashtable<String, TestType>();
 	DefinitionsType definitionsType = JOVALSystem.factories.results.createDefinitionsType();
-	Collection<DefinitionType> definitions = new Vector<DefinitionType>();
+	Collection<DefinitionType> defs Vector<DefinitionType>();
 	for (DefinitionType definition : definitionTable.values()) {
 	    DirectiveType directive = directives.getDirective(definition);
 	    if (directive.isReported()) {
 		switch (directive.getContent()) {
 		  case FULL:
-		    definitions.add(definition);
+		    defs.add(definition);
 		    break;
 		  case THIN: {
 		    DefinitionType thinDefinition = JOVALSystem.factories.results.createDefinitionType();
 		    thinDefinition.setDefinitionId(definition.getDefinitionId());
 		    thinDefinition.setClazz(definition.getClazz());
 		    thinDefinition.setResult(definition.getResult());
-		    definitions.add(thinDefinition);
+		    defs.add(thinDefinition);
 		    break;
 		  }
 		}
 	    }
 	}
-	for (DefinitionType definition : definitions) {
+	for (DefinitionType definition : defs) {
 	    definitionsType.getDefinition().add(definition);
 	    for (String testId : getTestIds(definition)) {
 		if (!reportableTests.containsKey(testId)) {

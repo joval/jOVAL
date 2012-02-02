@@ -29,7 +29,6 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.NotCollectableException;
-import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
@@ -43,6 +42,7 @@ import org.joval.util.SafeCLI;
 public class PatchAdapter implements IAdapter {
     IUnixSession session;
     String error = null;
+    boolean initialized = false;
     Hashtable<String, Collection<RevisionEntry>> revisions;
     Hashtable<String, Collection<SupercedenceEntry>> supercedence;
 
@@ -60,19 +60,10 @@ public class PatchAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
-	if (session != null) {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
+	if (!initialized) {
 	    scanRevisions();
-	    return true;
 	}
-	return false;
-    }
-
-    public void disconnect() {
-    }
-
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-	    throws NotCollectableException, OvalException {
 
 	PatchObject pObj = (PatchObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
@@ -192,7 +183,7 @@ public class PatchAdapter implements IAdapter {
     /**
      * REMIND: Stops if it encounters any exceptions at all; make this more robust?
      */
-    private void scanRevisions() {
+    protected void scanRevisions() {
 	try {
 	    for (String line : SafeCLI.multiLine("/usr/bin/showrev -p", session, IUnixSession.Timeout.M)) {
 		if (!line.startsWith(PATCH)) {
@@ -266,6 +257,7 @@ public class PatchAdapter implements IAdapter {
 	    error = e.getMessage();
 	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
+	initialized = true;
     }
 
     class RevisionEntry {

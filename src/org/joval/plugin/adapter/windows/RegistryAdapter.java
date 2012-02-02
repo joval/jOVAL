@@ -78,33 +78,17 @@ public class RegistryAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
+	    throws NotCollectableException, OvalException {
+
 	if (reg32 == null) {
 	    reg32 = session.getRegistry(IWindowsSession.View._32BIT);
 	    if (session.supports(IWindowsSession.View._64BIT)) {
 		reg = session.getRegistry(IWindowsSession.View._64BIT);
-		return	reg.connect() &&
-			reg32.connect();
 	    } else {
 		reg = reg32;
-		return reg32.connect();
 	    }
 	}
-	return false;
-    }
-
-    public void disconnect() {
-	if (reg32 != null) {
-	    reg32.disconnect();
-	}
-	if (reg != null && !reg.equals(reg32)) {
-	    reg.disconnect();
-	}
-    }
-
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-	    throws NotCollectableException, OvalException {
-
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	RegistryObject rObj = (RegistryObject)rc.getObject();
 

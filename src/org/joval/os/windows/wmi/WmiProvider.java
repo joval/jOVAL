@@ -30,26 +30,24 @@ public class WmiProvider implements IWmiProvider {
 
     private ActiveXComponent locator;
     private Hashtable <String, Dispatch>map;
-    private ILoggable log;
+    private LocLogger logger;
 
     public WmiProvider(ILoggable log) {
-	this.log = log;
+	logger = log.getLogger();
 	map = new Hashtable<String, Dispatch>();
     }
 
     // Implement ILoggable
 
     public LocLogger getLogger() {
-	return log.getLogger();
+	return logger;
     }
 
     public void setLogger(LocLogger logger) {
-	log.setLogger(logger);
+	this.logger = logger;
     }
 
-    // Implement ISWbemProvider
-
-    public boolean connect() {
+    public boolean register() {
 	try {
 	    if (!libLoaded) {
 		if ("32".equals(System.getProperty("sun.arch.data.model"))) {
@@ -60,24 +58,26 @@ public class WmiProvider implements IWmiProvider {
 	        libLoaded = true;
 	    }
 	    if (locator == null) {
-		log.getLogger().info(JOVALMsg.STATUS_WMI_CONNECT);
+		logger.info(JOVALMsg.STATUS_WMI_CONNECT);
 		locator = new ActiveXComponent("WbemScripting.SWbemLocator");
 	    }
 	    return true;
 	} catch (UnsatisfiedLinkError e) {
-	    log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }
 
-    public void disconnect() {
+    public void deregister() {
 	if (locator != null) {
-	    log.getLogger().info(JOVALMsg.STATUS_WMI_DISCONNECT);
+	    logger.info(JOVALMsg.STATUS_WMI_DISCONNECT);
 	    locator.safeRelease();
 	    locator = null;
 	}
 	map.clear();
     }
+
+    // Implement ISWbemProvider
 
     public ISWbemObjectSet execQuery(String ns, String wql) throws WmiException {
 	Dispatch services = map.get(ns);

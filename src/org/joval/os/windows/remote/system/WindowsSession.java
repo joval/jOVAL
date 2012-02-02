@@ -58,7 +58,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private String tempDir, cwd;
     private IWindowsCredential cred;
     private WmiConnection conn;
-    private IRegistry reg, reg32;
+    private Registry reg, reg32;
     private IFilesystem fs32;
     private Vector<IFile> tempFiles;
     private boolean is64bit = false;
@@ -108,9 +108,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     }
 
     public IWmiProvider getWmiProvider() {
-	if (conn == null) {
-	    conn = new WmiConnection(host, cred, this);
-	}
 	return conn;
     }
 
@@ -123,6 +120,12 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	super.setLogger(logger);
 	if (fs32 != null && !fs32.equals(fs)) {
 	    fs32.setLogger(logger);
+	}
+	if (conn != null) {
+	    conn.setLogger(logger);
+	}
+	if (directory != null) {
+	    directory.setLogger(logger);
 	}
     }
 
@@ -181,12 +184,15 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		if (is64bit) {
 		    WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
 		    reg32 = new Registry(host, cred, new WOW3264RegistryRedirector(flavor), this);
+		    if (!reg32.connect()) {
+			reg.disconnect();
+			return false;
+		    }
 		    fs32 = new SmbFilesystem(this, cred, env, new WOW3264FilesystemRedirector(env));
 		} else {
 		    reg32 = reg;
 		    fs32 = fs;
 		}
-		reg.disconnect();
 		try {
 		    tempDir = getTempDir();
 		} catch (IOException e) {
@@ -196,10 +202,13 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		conn = new WmiConnection(host, cred, this);
 		if (conn.connect()) {
 		    directory = new Directory(this);
-		    directory.connect();
 		    info.getSystemInfo();
 		    return true;
 		} else {
+		    reg.disconnect();
+		    if (is64bit) {
+			reg32.disconnect();
+		    }
 		    return false;
 		}
 	    } else {
@@ -222,13 +231,12 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		logger.warn(JOVALMsg.ERROR_FILE_DELETE, f.toString());
 	    }
 	}
-	if (directory != null) {
-	    directory.disconnect();
-	    directory = null;
+	reg.disconnect();
+	if (is64bit) {
+	    reg32.disconnect();
 	}
 	if (conn != null) {
 	    conn.disconnect();
-	    conn = null;
 	}
     }
 

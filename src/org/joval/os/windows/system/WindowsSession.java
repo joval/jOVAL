@@ -85,9 +85,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     }
 
     public IWmiProvider getWmiProvider() {
-	if (wmi == null) {
-	    wmi = new WmiProvider(this);
-	}
 	return wmi;
     }
 
@@ -101,6 +98,12 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	if (fs32 != null && !fs32.equals(fs)) {
 	    fs32.setLogger(logger);
 	}
+	if (wmi != null) {
+	    wmi.setLogger(logger);
+	}
+	if (directory != null) {
+	    directory.setLogger(logger);
+	}
     }
 
     // Implement IBaseSession
@@ -111,54 +114,35 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 
     public boolean connect() {
 	reg = new Registry(null, this);
-	wmi = new WmiProvider(this);
-	if (reg.connect()) {
-	    env = reg.getEnvironment();
-	    fs = new WindowsFilesystem(this, env, null);
-	    is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
-	    if (is64bit) {
-		if (!"64".equals(System.getProperty("sun.arch.data.model"))) {
-		    reg.disconnect();
-		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINDOWS_BITNESS_INCOMPATIBLE));
-		}
-		logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "64");
-		WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
-		reg32 = new Registry(new WOW3264RegistryRedirector(flavor), this);
-		fs32 = new WindowsFilesystem(this, env, new WOW3264FilesystemRedirector(env));
-	    } else {
-		logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
-		reg32 = reg;
-		fs32 = fs;
+	env = reg.getEnvironment();
+	fs = new WindowsFilesystem(this, env, null);
+	is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
+	if (is64bit) {
+	    if (!"64".equals(System.getProperty("sun.arch.data.model"))) {
+		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINDOWS_BITNESS_INCOMPATIBLE));
 	    }
-	    cwd = new File(env.expand("%SystemRoot%"));
-	    try {
-		if (wmi.connect()) {
-		    directory = new Directory(this);
-		    directory.connect();
-		    info.getSystemInfo();
-		    return true;
-		} else {
-		    logger.warn(JOVALMsg.ERROR_WINWMI_CONNECT);
-		    return false;
-		}
-	    } finally {
-		reg.disconnect();
-	    }
+	    logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "64");
+	    WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
+	    reg32 = new Registry(new WOW3264RegistryRedirector(flavor), this);
+	    fs32 = new WindowsFilesystem(this, env, new WOW3264FilesystemRedirector(env));
 	} else {
-	    logger.warn(JOVALMsg.ERROR_WINREG_CONNECT);
+	    logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
+	    reg32 = reg;
+	    fs32 = fs;
+	}
+	cwd = new File(env.expand("%SystemRoot%"));
+	wmi = new WmiProvider(this);
+	if (wmi.register()) {
+	    directory = new Directory(this);
+	    info.getSystemInfo();
+	    return true;
+	} else {
 	    return false;
 	}
     }
 
     public void disconnect() {
-	if (wmi != null) {
-	    wmi.disconnect();
-	    wmi = null;
-	}
-	if (directory != null) {
-	    directory.disconnect();
-	    directory = null;
-	}
+	wmi.deregister();
     }
 
     public Type getType() {

@@ -69,10 +69,6 @@ public class FileAdapter extends BaseFileAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
-	return us != null;
-    }
-
     // Protected
 
     protected Object convertFilename(EntityItemStringType filename) {

@@ -25,18 +25,6 @@ public interface IAdapter {
     public Class[] getObjectClasses();
 
     /**
-     * The adapter should open any special resources it's going to need in order to scan objects on the machine.  The engine
-     * will call this method after init, but before any call to getItems.
-     */
-    public boolean connect();
-
-    /**
-     * The adapter should release and/or clean-up any resource that it's opened for scanning purposes.  The engine will call
-     * this method after all calls to getItems have been made to the adapter.
-     */
-    public void disconnect();
-
-    /**
      * Retrieve items associated with the given object by scanning the machine.  The ItemTypes returned must be wrapped in a
      * JAXBElement so that they can be marshalled into an OvalSystemCharacteristics.  If no corresponding items are found,
      * this method should return an empty list, and the Engine will add a message indicating that no items were found.

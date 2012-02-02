@@ -74,10 +74,12 @@ public class FileAdapter extends BaseFileAdapter {
 						  "WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
     private static final String TIME_WQL	= "SELECT * FROM CIM_DataFile WHERE Name='$path'";
 
+    private IWindowsSession ws;
     private IWmiProvider wmi;
 
     public FileAdapter(IWindowsSession session) {
 	super(session);
+	ws = session;
     }
 
     // Implement IAdapter
@@ -86,19 +88,6 @@ public class FileAdapter extends BaseFileAdapter {
 
     public Class[] getObjectClasses() {
 	return objectClasses;
-    }
-
-    public boolean connect() {
-	if (wmi == null) {
-	    wmi = ((IWindowsSession)session).getWmiProvider();
-	}
-	return wmi.connect();
-    }
-
-    public void disconnect() {
-	if (wmi != null) {
-	    wmi.disconnect();
-	}
     }
 
     // Protected
@@ -114,6 +103,7 @@ public class FileAdapter extends BaseFileAdapter {
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
 		throws IOException, NotCollectableException, OvalException {
 
+	wmi = ws.getWmiProvider();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {
 	    IWindowsFile wf = null;

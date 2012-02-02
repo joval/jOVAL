@@ -46,13 +46,6 @@ public class VariableAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
-	return true;
-    }
-
-    public void disconnect() {
-    }
-
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	VariableObject vObj = (VariableObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();

@@ -44,7 +44,6 @@ import org.joval.util.StringTools;
  */
 public class SmfAdapter implements IAdapter {
     private IUnixSession session;
-    private String[] services = null;
     private Hashtable<String, SmfItem> serviceMap = null;
 
     public SmfAdapter(IUnixSession session) {
@@ -58,33 +57,6 @@ public class SmfAdapter implements IAdapter {
 
     public Class[] getObjectClasses() {
 	return objectClasses;
-    }
-
-    public boolean connect() {
-	if (session != null) {
-	    try {
-		session.getLogger().trace(JOVALMsg.STATUS_SMF);
-		ArrayList<String> list = new ArrayList<String>();
-		for (String line : SafeCLI.multiLine("/usr/bin/svcs -o fmri", session, IUnixSession.Timeout.M)) {
-		    if (line.startsWith("FMRI")) {
-			continue;
-		    }
-		    String fmri = getFullFmri(line.trim());
-		    if (fmri == null) {
-			session.getLogger().warn(JOVALMsg.ERROR_FMRI, line);
-		    } else {
-			list.add(fmri);
-		    }
-		}
-		services = list.toArray(new String[list.size()]);
-	    } catch (Exception e) {
-		session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	}
-	return services != null;
-    }
-
-    public void disconnect() {
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
@@ -150,17 +122,33 @@ public class SmfAdapter implements IAdapter {
     private void loadFullServiceMap() {
 	if (loaded) return;
 
-	serviceMap = new Hashtable<String, SmfItem>();
-	for (int i=0; i < services.length; i++) {
-	    try {
-		SmfItem item = getItem(services[i]);
-		serviceMap.put((String)item.getFmri().getValue(), item);
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALMsg.ERROR_SMF, services[i]);
-		session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	try {
+	    session.getLogger().trace(JOVALMsg.STATUS_SMF);
+	    List<String> services = new Vector<String>();
+	    for (String line : SafeCLI.multiLine("/usr/bin/svcs -o fmri", session, IUnixSession.Timeout.M)) {
+		if (line.startsWith("FMRI")) {
+		    continue;
+		}
+		String fmri = getFullFmri(line.trim());
+		if (fmri == null) {
+		    session.getLogger().warn(JOVALMsg.ERROR_FMRI, line);
+		} else {
+		    services.add(fmri);
+		}
 	    }
+	    for (String service : services) {
+		try {
+		    SmfItem item = getItem(service);
+		    serviceMap.put((String)item.getFmri().getValue(), item);
+		} catch (Exception e) {
+		    session.getLogger().warn(JOVALMsg.ERROR_SMF, service);
+		    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+	    }
+	    loaded = true;
+	} catch (Exception e) {
+	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-	loaded = true;
     }
 
     private static final String FMRI		= "fmri";

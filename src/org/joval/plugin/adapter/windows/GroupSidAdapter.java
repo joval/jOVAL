@@ -57,6 +57,7 @@ public class GroupSidAdapter extends UserAdapter {
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
 	    throws NotCollectableException, OvalException {
 
+	directory = session.getDirectory();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	OperationEnumeration op = ((GroupSidObject)rc.getObject()).getGroupSid().getOperation();
 	String groupSid = (String)((GroupSidObject)rc.getObject()).getGroupSid().getValue();

@@ -56,6 +56,7 @@ public class SidAdapter extends UserAdapter {
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
 	    throws NotCollectableException, OvalException {
 
+	directory = session.getDirectory();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	SidObject sObj = (SidObject)rc.getObject();
 	OperationEnumeration op = sObj.getTrusteeName().getOperation();

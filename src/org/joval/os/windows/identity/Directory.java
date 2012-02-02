@@ -42,33 +42,15 @@ public class Directory implements IDirectory {
 
     private IWindowsSession session;
     private LocLogger logger;
-    private IWmiProvider wmi;
     private ActiveDirectory ad;
     private LocalDirectory local;
 
     public Directory(IWindowsSession session) {
 	this.session = session;
 	logger = session.getLogger();
-    }
-
-    public boolean connect() {
-	wmi = session.getWmiProvider();
-	if (wmi.connect()) {
-	    ad = new ActiveDirectory(wmi, logger);
-	    local = new LocalDirectory(session.getSystemInfo().getPrimaryHostName(), wmi, logger);
-	    return true;
-	} else {
-	    return false;
-	}
-    }
-
-    public void disconnect() {
-	if (wmi != null) {
-	    wmi.disconnect();
-	    wmi = null;
-	}
-	ad = null;
-	local = null;
+	IWmiProvider wmi = session.getWmiProvider();
+	ad = new ActiveDirectory(wmi, logger);
+	local = new LocalDirectory(session.getSystemInfo().getPrimaryHostName(), wmi, logger);
     }
 
     // Implement ILoggable
@@ -79,6 +61,8 @@ public class Directory implements IDirectory {
 
     public void setLogger(LocLogger logger) {
 	this.logger = logger;
+	ad.setLogger(logger);
+	local.setLogger(logger);
     }
 
     // Implement IDirectory

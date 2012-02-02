@@ -66,13 +66,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public boolean connect() {
-	return true;
-    }
-
-    public void disconnect() {
-    }
-
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
 	    throws OvalException, NotCollectableException {
 

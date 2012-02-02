@@ -50,7 +50,6 @@ public class UserAdapter implements IAdapter {
 
     public UserAdapter(IWindowsSession session) {
 	this.session = session;
-	this.directory = session.getDirectory();
     }
 
     // Implement IAdapter
@@ -61,17 +60,10 @@ public class UserAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
-	return directory.connect();
-    }
-
-    public void disconnect() {
-	directory.disconnect();
-    }
-
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
 	    throws NotCollectableException, OvalException {
 
+	directory = session.getDirectory();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	UserObject uObj = (UserObject)rc.getObject();
 	OperationEnumeration op = uObj.getUser().getOperation();

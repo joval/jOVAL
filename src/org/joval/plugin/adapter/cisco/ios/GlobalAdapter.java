@@ -55,13 +55,6 @@ public class GlobalAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
-	return session != null;
-    }
-
-    public void disconnect() {
-    }
-
     private static final String BUILDING = "Building configuration...";
     private static final String CURRENT = "Current configuration";
 

@@ -40,9 +40,9 @@ import org.joval.util.JOVALSystem;
  */
 public class WindowsSystemInfo {
     public static final String ARCHITECTURE	= "PROCESSOR_ARCHITECTURE";
+    public static final String COMPUTERNAME_KEY	= "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
+    public static final String COMPUTERNAME_VAL	= "ComputerName";
 
-    static final String COMPUTERNAME_KEY	= "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
-    static final String COMPUTERNAME_VAL	= "ComputerName";
     static final String CURRENTVERSION_KEY	= "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
     static final String CURRENTVERSION_VAL	= "CurrentVersion";
     static final String PRODUCTNAME_VAL		= "ProductName";
@@ -70,85 +70,71 @@ public class WindowsSystemInfo {
 	IRegistry registry = session.getRegistry(IWindowsSession.View._64BIT);
 	IWmiProvider wmi = session.getWmiProvider();
 	info = JOVALSystem.factories.sc.core.createSystemInfoType();
-	boolean regConnected=false, wmiConnected=false;
-	regConnected = registry.connect();
-	if (regConnected) {
-	    try {
-		IEnvironment environment = registry.getEnvironment();
-		info.setArchitecture(environment.getenv(ARCHITECTURE));
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-
-	    try {
-		IKey cn = registry.fetchKey(IRegistry.HKLM, COMPUTERNAME_KEY);
-		IValue cnVal = cn.getValue(COMPUTERNAME_VAL);
-		if (cnVal.getType() == IValue.REG_SZ) {
-		    info.setPrimaryHostName(((IStringValue)cnVal).getData());
-		}
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-
-	    try {
-		IKey cv = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
-		IValue cvVal = cv.getValue(CURRENTVERSION_VAL);
-		if (cvVal.getType() == IValue.REG_SZ) {
-		    info.setOsVersion(((IStringValue)cvVal).getData());
-		}
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-
-	    try {
-		IKey cv = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
-		IValue pnVal = cv.getValue(PRODUCTNAME_VAL);
-		if (pnVal.getType() == IValue.REG_SZ) {
-		    info.setOsName(((IStringValue)pnVal).getData());
-		}
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSNAME);
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-
-	    registry.disconnect();
-	} else {
-	    session.getLogger().warn(JOVALMsg.ERROR_WINREG_CONNECT);
+	try {
+	    IEnvironment environment = registry.getEnvironment();
+	    info.setArchitecture(environment.getenv(ARCHITECTURE));
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	try {
-	    wmiConnected = wmi.connect();
-	    if (wmiConnected) {
-		InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
-		ISWbemObjectSet result = wmi.execQuery(IWmiProvider.CIMv2, ADAPTER_WQL);
-		Iterator <ISWbemObject>iter = result.iterator();
-		while (iter.hasNext()) {
-		    ISWbemPropertySet row = iter.next().getProperties();
-		    String macAddress = row.getItem(MAC_ADDR_FIELD).getValueAsString();
-		    if (macAddress != null) {
-			String[] ipAddresses = row.getItem(IP_ADDR_FIELD).getValueAsArray();
-			if (ipAddresses != null && ipAddresses.length > 0) {
-			    for (int i=0; i < 2 && i < ipAddresses.length; i++) {
-				InterfaceType interfaceType = JOVALSystem.factories.sc.core.createInterfaceType();
-				interfaceType.setMacAddress(macAddress);
-				String description = row.getItem(DESCRIPTION_FIELD).getValueAsString();
-				if (description != null) {
-				    interfaceType.setInterfaceName(description);
-				}
-				interfaceType.setIpAddress(ipAddresses[i]);
-				interfacesType.getInterface().add(interfaceType);
+	    IKey cn = registry.fetchKey(IRegistry.HKLM, COMPUTERNAME_KEY);
+	    IValue cnVal = cn.getValue(COMPUTERNAME_VAL);
+	    if (cnVal.getType() == IValue.REG_SZ) {
+		info.setPrimaryHostName(((IStringValue)cnVal).getData());
+	    }
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+
+	try {
+	    IKey cv = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
+	    IValue cvVal = cv.getValue(CURRENTVERSION_VAL);
+	    if (cvVal.getType() == IValue.REG_SZ) {
+		info.setOsVersion(((IStringValue)cvVal).getData());
+	    }
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+
+	try {
+	    IKey cv = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
+	    IValue pnVal = cv.getValue(PRODUCTNAME_VAL);
+	    if (pnVal.getType() == IValue.REG_SZ) {
+		info.setOsName(((IStringValue)pnVal).getData());
+	    }
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSNAME);
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+
+	try {
+	    InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
+	    ISWbemObjectSet result = wmi.execQuery(IWmiProvider.CIMv2, ADAPTER_WQL);
+	    Iterator <ISWbemObject>iter = result.iterator();
+	    while (iter.hasNext()) {
+		ISWbemPropertySet row = iter.next().getProperties();
+		String macAddress = row.getItem(MAC_ADDR_FIELD).getValueAsString();
+		if (macAddress != null) {
+		    String[] ipAddresses = row.getItem(IP_ADDR_FIELD).getValueAsArray();
+		    if (ipAddresses != null && ipAddresses.length > 0) {
+			for (int i=0; i < 2 && i < ipAddresses.length; i++) {
+			    InterfaceType interfaceType = JOVALSystem.factories.sc.core.createInterfaceType();
+			    interfaceType.setMacAddress(macAddress);
+			    String description = row.getItem(DESCRIPTION_FIELD).getValueAsString();
+			    if (description != null) {
+				interfaceType.setInterfaceName(description);
 			    }
+			    interfaceType.setIpAddress(ipAddresses[i]);
+			    interfacesType.getInterface().add(interfaceType);
 			}
 		    }
 		}
-		info.setInterfaces(interfacesType);
-		wmi.disconnect();
-	    } else {
-		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_WINWMI_CONNECT));
 	    }
+	    info.setInterfaces(interfacesType);
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

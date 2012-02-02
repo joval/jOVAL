@@ -40,18 +40,18 @@ public class WmiConnection implements IWmiProvider {
     private SWbemLocator locator;
     private String host;
     private IWindowsCredential cred;
-    private ILoggable log;
+    private LocLogger logger;
     private Hashtable <String, SWbemServices>map;
 
     public WmiConnection(String host, IWindowsCredential cred, ILoggable log) {
 	this.host = host;
 	this.cred = cred;
-	this.log = log;
+	logger = log.getLogger();
     }
 
     public boolean connect() {
 	if (locator == null) {
-	    log.getLogger().info(JOVALMsg.STATUS_WMI_CONNECT);
+	    logger.info(JOVALMsg.STATUS_WMI_CONNECT);
 	    map = new Hashtable <String, SWbemServices>();
 	    locator = new SWbemLocator(); 
 	}
@@ -60,7 +60,7 @@ public class WmiConnection implements IWmiProvider {
 
     public void disconnect() {
 	if (locator != null) {
-	    log.getLogger().info(JOVALMsg.STATUS_WMI_DISCONNECT);
+	    logger.info(JOVALMsg.STATUS_WMI_DISCONNECT);
 	    locator.disconnect();
 	    locator = null;
 	}
@@ -81,11 +81,11 @@ public class WmiConnection implements IWmiProvider {
     // Implement ILoggable
 
     public LocLogger getLogger() {
-	return log.getLogger();
+	return logger;
     }
 
     public void setLogger(LocLogger logger) {
-	log.setLogger(logger);
+	this.logger = logger;
     }
 
     // Implement IWmiProvider
@@ -95,7 +95,7 @@ public class WmiConnection implements IWmiProvider {
      */
     public ISWbemObjectSet execQuery(String ns, String wql) throws WmiException {
 	try {
-	    log.getLogger().debug(JOVALMsg.STATUS_WMI_QUERY, host, ns, wql);
+	    logger.debug(JOVALMsg.STATUS_WMI_QUERY, host, ns, wql);
 	    return new SWbemObjectSet(getServices(host, ns).execQuery(wql));
 	} catch (UnknownHostException e) {
 	    throw new WmiException(e);

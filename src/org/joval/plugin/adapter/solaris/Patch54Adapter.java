@@ -50,6 +50,9 @@ public class Patch54Adapter extends PatchAdapter {
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
+	if (!initialized) {
+	    scanRevisions();
+	}
 	Patch54Object pObj = (Patch54Object)rc.getObject();
 	int iBase = 0;
 	try {

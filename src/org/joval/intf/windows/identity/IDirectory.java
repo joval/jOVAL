@@ -21,10 +21,6 @@ import org.joval.os.windows.wmi.WmiException;
  * @version %I% %G%
  */
 public interface IDirectory extends ILoggable {
-    public boolean connect();
-
-    public void disconnect();
-
     /**
      * Returns the user corresponding to the specified SID.
      */

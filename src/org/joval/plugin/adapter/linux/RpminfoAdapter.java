@@ -3,7 +3,6 @@
 
 package org.joval.plugin.adapter.linux;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -43,7 +42,6 @@ import org.joval.util.Version;
 public class RpminfoAdapter implements IAdapter {
     private IUnixSession session;
     private Hashtable<String, RpminfoItem> packageMap;
-    private String[] rpms;
 
     public RpminfoAdapter(IUnixSession session) {
 	this.session = session;
@@ -56,27 +54,6 @@ public class RpminfoAdapter implements IAdapter {
 
     public Class[] getObjectClasses() {
 	return objectClasses;
-    }
-
-    public boolean connect() {
-	if (session != null) {
-	    try {
-		ArrayList<String> list = new ArrayList<String>();
-		session.getLogger().trace(JOVALMsg.STATUS_RPMINFO_LIST);
-		for (String line : SafeCLI.multiLine("rpm -q -a", session, IUnixSession.Timeout.M)) {
-		    list.add(line);
-		}
-		rpms = list.toArray(new String[list.size()]);
-		return true;
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	}
-	return false;
-    }
-
-    public void disconnect() {
-	packageMap = null;
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
@@ -138,20 +115,26 @@ public class RpminfoAdapter implements IAdapter {
 
     private boolean loaded = false;
     private void loadFullPackageMap() {
-	if (loaded) return;
-
-	session.getLogger().trace(JOVALMsg.STATUS_RPMINFO_FULL);
-	packageMap = new Hashtable<String, RpminfoItem>();
-	for (int i=0; i < rpms.length; i++) {
-	    try {
-		RpminfoItem item = getItem(rpms[i]);
-		packageMap.put((String)item.getName().getValue(), item);
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALMsg.ERROR_RPMINFO, rpms[i]);
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
+	if (loaded) {
+	    return;
 	}
-	loaded = true;
+
+	try {
+	    session.getLogger().info(JOVALMsg.STATUS_RPMINFO_LIST);
+	    packageMap = new Hashtable<String, RpminfoItem>();
+	    for (String rpm : SafeCLI.multiLine("rpm -q -a", session, IUnixSession.Timeout.M)) {
+		try {
+		    RpminfoItem item = getItem(rpm);
+		    packageMap.put((String)item.getName().getValue(), item);
+		} catch (Exception e) {
+		    session.getLogger().warn(JOVALMsg.ERROR_RPMINFO, rpm);
+		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+	    }
+	    loaded = true;
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
     }
 
     private RpminfoItem getItem(String packageName) throws Exception {

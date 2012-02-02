@@ -51,6 +51,7 @@ import org.joval.util.SafeCLI;
  */
 public class ProcessAdapter implements IAdapter {
     private IUnixSession session;
+    private boolean initialized = false;
     private Hashtable<String,ProcessItem> processes;
     private String error = null;
 
@@ -67,18 +68,10 @@ public class ProcessAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
-	if (session == null) {
-	    return false;
-	} else {
-	    return scanProcesses();
-	}
-    }
-
-    public void disconnect() {
-    }
-
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
+	if (!initialized) {
+	    scanProcesses();
+	}
 	ProcessObject pObj = (ProcessObject)rc.getObject();
 	Collection<JAXBElement <? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
@@ -149,7 +142,7 @@ public class ProcessAdapter implements IAdapter {
     /**
      * REMIND: Stops if it encounters any exceptions at all; make this more robust?
      */
-    private boolean scanProcesses() {
+    private void scanProcesses() {
 	String args = null;
 	switch(session.getFlavor()) {
 	  case MACOSX:
@@ -163,7 +156,7 @@ public class ProcessAdapter implements IAdapter {
 	    break;
 
 	  default:
-	    return false;
+	    return;
 	}
 	try {
 	    List<String> lines = SafeCLI.multiLine(args, session, IUnixSession.Timeout.S);
@@ -230,6 +223,6 @@ public class ProcessAdapter implements IAdapter {
 	    error = e.getMessage();
 	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-	return true;
+	initialized = true;
     }
 }

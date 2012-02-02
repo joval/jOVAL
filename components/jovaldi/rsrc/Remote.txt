@@ -86,6 +86,10 @@ TROUBLESHOOTING WINDOWS REMOTE ACCESS
 If you still have problems, here is some additional material that may be of some
 help:
 
+Christofer Dutz created a fantastic Wiki page detailing his experiences getting
+j-Interop working on a number of Windows versions:
+   https://dev.c-ware.de/confluence/display/PUBLIC/j-interop
+
 Group Policy and Network settings:
    http://technet.microsoft.com/en-ca/library/bb878049.aspx
 

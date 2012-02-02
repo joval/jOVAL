@@ -58,6 +58,7 @@ public class UserSid55Adapter extends UserAdapter {
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
 	    throws NotCollectableException, OvalException {
 
+	directory = session.getDirectory();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	UserSid55Object uObj = (UserSid55Object)rc.getObject();
 	String sid = (String)uObj.getUserSid().getValue();

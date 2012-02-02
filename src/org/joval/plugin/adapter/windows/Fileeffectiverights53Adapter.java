@@ -52,11 +52,12 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class Fileeffectiverights53Adapter extends BaseFileAdapter {
+    private IWindowsSession ws;
     private IDirectory directory;
 
     public Fileeffectiverights53Adapter(IWindowsSession session) {
 	super(session);
-	directory = session.getDirectory();
+	ws = session;
     }
 
     // Implement IAdapter
@@ -65,14 +66,6 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 
     public Class[] getObjectClasses() {
 	return objectClasses;
-    }
-
-    public boolean connect() {
-	return directory.connect();
-    }
-
-    public void disconnect() {
-	directory.disconnect();
     }
 
     // Protected
@@ -88,6 +81,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
 		throws IOException, NotCollectableException, OvalException {
 
+	directory = ws.getDirectory();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileeffectiverightsItem) {
 	    FileeffectiverightsItem baseItem = (FileeffectiverightsItem)base;

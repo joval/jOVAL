@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.TimerTask;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -25,6 +26,7 @@ import java.util.regex.PatternSyntaxException;
 import org.jinterop.dcom.common.IJIAuthInfo;
 import org.jinterop.dcom.common.JIException;
 import org.jinterop.winreg.IJIWinReg;
+import org.jinterop.winreg.JIPolicyHandle;
 import org.jinterop.winreg.JIWinRegFactory;
 
 import org.joval.intf.system.IEnvironment;
@@ -59,17 +61,19 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class Registry extends BaseRegistry {
-    public final static int DEFAULT_BUFFER_SIZE	= 2048;
-    public final static int PATH_BUFFER_SIZE	= 2048;
+    public static final int DEFAULT_BUFFER_SIZE	= 2048;
+    public static final int PATH_BUFFER_SIZE	= 2048;
 
-    public final static String PATH		= "path";
-    public final static String DEFAULT_ENCODING	= "US-ASCII";
+    public static final String PATH		= "path";
+    public static final String DEFAULT_ENCODING	= "US-ASCII";
 
-    private final static JIWinRegFactory factory = JIWinRegFactory.getSingleTon();
+    private static final long INTERVAL = 5000L; // a registry operation should never take longer than this
+    private static final JIWinRegFactory factory = JIWinRegFactory.getSingleTon();
 
     private String host;
     private IWindowsCredential cred;
-    private IJIWinReg registry;
+    private IJIWinReg winreg;
+    private RegistryTask heartbeat;
     private Key hklm, hku, hkcu, hkcr;
     private Hashtable <String, Key> map;
 
@@ -87,17 +91,17 @@ public class Registry extends BaseRegistry {
 	this.host = host;
 	this.cred = cred;
 	map = new Hashtable <String, Key>();
+	heartbeat = new RegistryTask();
     }
-
-    // Implement IRegistry
 
     /**
      * Connect to the remote host.  This causes the environment information to be retrieved.
      */
-    public boolean connect() {
+    public synchronized boolean connect() {
 	try {
+	    JOVALSystem.getTimer().scheduleAtFixedRate(heartbeat, INTERVAL, INTERVAL);
 	    log.getLogger().trace(JOVALMsg.STATUS_WINREG_CONNECT, host);
-	    registry = factory.getWinreg(new AuthInfo(cred), host, true);
+	    winreg = factory.getWinreg(new AuthInfo(cred), host, true);
 	    state = STATE_ENV;
 	    env = new Environment(this);
 //	    license = new LicenseData(this);
@@ -114,8 +118,9 @@ public class Registry extends BaseRegistry {
     /**
      * Closes the connection to the remote host.  This will cause any open keys to be closed.
      */
-    public void disconnect() {
+    public synchronized void disconnect() {
 	try {
+	    heartbeat.cancel();
 	    Enumeration <Key>keys = map.elements();
 	    while (keys.hasMoreElements()) {
 		Key key = keys.nextElement();
@@ -124,15 +129,15 @@ public class Registry extends BaseRegistry {
 		    key.close();
 		}
 	    }
-	    registry.closeConnection();
+	    winreg.closeConnection();
 	    state = STATE_DISCONNECTED;
-	    searchMap.clear();
-	    map.clear();
 	} catch (JIException e) {
 	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_DISCONNECT);
 	    log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
+
+    // Implement IRegistry
 
     /**
      * A convenience method to retrieve a top-level hive using its String name.
@@ -240,14 +245,38 @@ public class Registry extends BaseRegistry {
 
     // Package-level access
 
-    IJIWinReg getWinreg() {
-	return registry;
+    /**
+     * Thread-safe proxy for IJIWinReg.winreg_OpenKey.
+     */
+    synchronized JIPolicyHandle wrOpenKey(JIPolicyHandle handle, String name, int mode) throws JIException {
+	return winreg.winreg_OpenKey(handle, name, mode);
     }
 
-    Value createValue(Key key, String name) throws IllegalArgumentException, JIException {
+    /**
+     * Thread-safe proxy for IJIWinReg.winreg_CloseKey.
+     */
+    synchronized void wrCloseKey(JIPolicyHandle handle) throws JIException {
+	winreg.winreg_CloseKey(handle);
+    }
+
+    /**
+     * Thread-safe proxy for IJIWinReg.winreg_EnumKey.
+     */
+    synchronized String[] wrEnumKey(JIPolicyHandle handle, int n) throws JIException {
+	return winreg.winreg_EnumKey(handle, n);
+    }
+
+    /**
+     * Thread-safe proxy for IJIWinReg.winreg_EnumValue.
+     */
+    synchronized Object[] wrEnumValue(JIPolicyHandle handle, int n) throws JIException {
+	return winreg.winreg_EnumValue(handle, n);
+    }
+
+    synchronized Value createValue(Key key, String name) throws IllegalArgumentException, JIException {
 	Value val = null;
 	int len = name.equalsIgnoreCase(PATH) ? PATH_BUFFER_SIZE : DEFAULT_BUFFER_SIZE;
-	Object[] oa = registry.winreg_QueryValue(key.handle, name, len);
+	Object[] oa = winreg.winreg_QueryValue(key.handle, name, len);
 	if (oa.length == 2) {
 	    int type = ((Integer)oa[0]).intValue();
 	    switch(type) {
@@ -356,15 +385,13 @@ public class Registry extends BaseRegistry {
 	return s;
     }
 
-    // Private 
-
     /**
      * Get the HKEY_LOCAL_MACHINE key.
      */
-    private Key getHKLM() {
+    synchronized Key getHKLM() {
 	if (hklm == null) {
 	    try {
-		hklm = new Key(this, HKLM, registry.winreg_OpenHKLM());
+		hklm = new Key(this, HKLM, winreg.winreg_OpenHKLM());
 	    } catch (JIException e) {
 		log.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKLM);
 		log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -376,10 +403,10 @@ public class Registry extends BaseRegistry {
     /**
      * Get the HKEY_USERS key.
      */
-    private Key getHKU() {
+    synchronized Key getHKU() {
 	if (hku == null) {
 	    try {
-		hku = new Key(this, HKU, registry.winreg_OpenHKU());
+		hku = new Key(this, HKU, winreg.winreg_OpenHKU());
 	    } catch (JIException e) {
 		log.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKU);
 		log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -391,10 +418,10 @@ public class Registry extends BaseRegistry {
     /**
      * Get the HKEY_CURRENT_USER key.
      */
-    private Key getHKCU() {
+    synchronized Key getHKCU() {
 	if (hkcu == null) {
 	    try {
-		hkcu = new Key(this, HKCU, registry.winreg_OpenHKCU());
+		hkcu = new Key(this, HKCU, winreg.winreg_OpenHKCU());
 	    } catch (JIException e) {
 		log.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKCU);
 		log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -406,10 +433,10 @@ public class Registry extends BaseRegistry {
     /**
      * Get the HKEY_CLASSES_ROOT key.
      */
-    private Key getHKCR() {
+    synchronized Key getHKCR() {
 	if (hkcr == null) {
 	    try {
-		hkcr = new Key(this, HKCR, registry.winreg_OpenHKCR());
+		hkcr = new Key(this, HKCR, winreg.winreg_OpenHKCR());
 	    } catch (JIException e) {
 		log.getLogger().error(JOVALMsg.ERROR_WINREG_HIVE_OPEN,  HKCR);
 		log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -417,6 +444,8 @@ public class Registry extends BaseRegistry {
 	}
 	return hkcr;
     }
+
+    // Private
 
     class AuthInfo implements IJIAuthInfo {
 	IWindowsCredential wc;
@@ -437,6 +466,21 @@ public class Registry extends BaseRegistry {
 
 	public String getDomain() {
 	    return wc.getDomain();
+	}
+    }
+
+    class RegistryTask extends TimerTask {
+	RegistryTask() {
+	    super();
+	}
+
+	public void run() {
+	    try {
+		IKey key = fetchKey(HKLM, WindowsSystemInfo.COMPUTERNAME_KEY);
+		IValue val = fetchValue(key, WindowsSystemInfo.COMPUTERNAME_VAL);
+	    } catch (Exception e) {
+		log.getLogger().warn(JOVALMsg.ERROR_WINREG_HEARTBEAT, e.getMessage());
+	    }
 	}
     }
 }

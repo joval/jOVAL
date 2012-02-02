@@ -27,22 +27,19 @@ public class WMI {
     public synchronized void test(String ns, String wql) {
 	try {
 	    IWmiProvider provider = session.getWmiProvider();
-	    if (provider.connect()) {
-		ISWbemObjectSet objSet = provider.execQuery(ns, wql);
-		System.out.println("Objects: " + objSet.getSize());
-		Iterator <ISWbemObject>iter = objSet.iterator();
-		while (iter.hasNext()) {
-		    ISWbemObject obj = iter.next();
-		    System.out.println("Object");
-		    ISWbemPropertySet props = obj.getProperties();
-		    Iterator <ISWbemProperty>propIter = props.iterator();
-		    while (propIter.hasNext()) {
-			ISWbemProperty prop = propIter.next();
-			System.out.println("  " + prop.getName() + "=" + prop.getValue() +
-					   ", Class: " + prop.getValue().getClass().getName());
-		    }
+	    ISWbemObjectSet objSet = provider.execQuery(ns, wql);
+	    System.out.println("Objects: " + objSet.getSize());
+	    Iterator <ISWbemObject>iter = objSet.iterator();
+	    while (iter.hasNext()) {
+		ISWbemObject obj = iter.next();
+		System.out.println("Object");
+		ISWbemPropertySet props = obj.getProperties();
+		Iterator <ISWbemProperty>propIter = props.iterator();
+		while (propIter.hasNext()) {
+		    ISWbemProperty prop = propIter.next();
+		    System.out.println("  " + prop.getName() + "=" + prop.getValue() +
+				       ", Class: " + prop.getValue().getClass().getName());
 		}
-		provider.disconnect();
 	    }
 	} catch (WmiException e) {
 	    e.printStackTrace();

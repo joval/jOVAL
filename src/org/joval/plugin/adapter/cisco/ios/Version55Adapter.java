@@ -40,11 +40,14 @@ public class Version55Adapter implements IAdapter {
     static final String OPEN_PEREN = "(";
     static final String CLOSE_PEREN = ")";
 
-    VersionItem item;
-    IIosSession session;
+    private boolean initialized;
+    private IIosSession session;
+
+    protected VersionItem item;
 
     public Version55Adapter(IIosSession session) {
 	this.session = session;
+	initialized = false;
     }
     
     // Implement IAdapter
@@ -55,7 +58,19 @@ public class Version55Adapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	if (!initialized) {
+	    init();
+	}
+
+	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	items.add(JOVALSystem.factories.sc.ios.createVersionItem(item));
+	return items;
+    }
+
+    // Internal
+
+    protected void init() {
 	item = JOVALSystem.factories.sc.ios.createVersionItem();
 	int begin = 0;
 	String version = session.getSystemInfo().getOsVersion();
@@ -153,16 +168,7 @@ public class Version55Adapter implements IAdapter {
 	versionString.setDatatype(SimpleDatatypeEnumeration.IOS_VERSION.value());
 	item.setVersionString(versionString);
 
-	return true;
-    }
-
-    public void disconnect() {
-    }
-
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	items.add(JOVALSystem.factories.sc.ios.createVersionItem(item));
-	return items;
+	initialized = true;
     }
 
     // Private

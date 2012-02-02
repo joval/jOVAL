@@ -4,10 +4,10 @@
 package org.joval.plugin.adapter.solaris;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
@@ -42,7 +42,6 @@ import org.joval.util.Version;
 public class PackageAdapter implements IAdapter {
     private IUnixSession session;
     private Hashtable<String, PackageItem> packageMap;
-    private String[] packages;
 
     public PackageAdapter(IUnixSession session) {
 	this.session = session;
@@ -55,41 +54,6 @@ public class PackageAdapter implements IAdapter {
 
     public Class[] getObjectClasses() {
 	return objectClasses;
-    }
-
-    public boolean connect() {
-	if (session != null) {
-	    try {
-		ArrayList<String> list = new ArrayList<String>();
-		session.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
-		for (String line : SafeCLI.multiLine("pkginfo -x", session, IUnixSession.Timeout.L)) {
-		    if (line.length() == 0) {
-			break;
-		    }
-		    switch(line.charAt(0)) {
-		      case ' ':
-		      case '\t':
-			break;
-
-		      default:
-			StringTokenizer tok = new StringTokenizer(line);
-			if (tok.countTokens() > 0) {
-			    list.add(tok.nextToken());
-			}
-			break;
-		    }
-		}
-		packages = list.toArray(new String[list.size()]);
-		return true;
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	}
-	return false;
-    }
-
-    public void disconnect() {
-	packageMap = null;
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
@@ -152,17 +116,39 @@ public class PackageAdapter implements IAdapter {
     private void loadFullPackageMap() {
 	if (loaded) return;
 
-	packageMap = new Hashtable<String, PackageItem>();
-	for (int i=0; i < packages.length; i++) {
-	    try {
-		PackageItem item = getItem(packages[i]);
-		packageMap.put((String)item.getPkginst().getValue(), item);
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALMsg.ERROR_SOLPKG, packages[i]);
-		session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	try {
+	    List<String> packages = new Vector<String>();
+	    session.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
+	    for (String line : SafeCLI.multiLine("pkginfo -x", session, IUnixSession.Timeout.L)) {
+		if (line.length() == 0) {
+		    break;
+		}
+		switch(line.charAt(0)) {
+		  case ' ':
+		  case '\t':
+		    break;
+
+		  default:
+		    StringTokenizer tok = new StringTokenizer(line);
+		    if (tok.countTokens() > 0) {
+			packages.add(tok.nextToken());
+		    }
+		    break;
+		}
 	    }
+	    for (String pkg : packages) {
+		try {
+		    PackageItem item = getItem(pkg);
+		    packageMap.put((String)item.getPkginst().getValue(), item);
+		} catch (Exception e) {
+		    session.getLogger().warn(JOVALMsg.ERROR_SOLPKG, pkg);
+		    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+	    }
+	    loaded = true;
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-	loaded = true;
     }
 
     private static final String PKGINST		= "PKGINST:";

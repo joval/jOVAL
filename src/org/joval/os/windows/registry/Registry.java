@@ -46,34 +46,19 @@ public class Registry extends BaseRegistry {
      */
     public Registry(IPathRedirector redirector, ILoggable log) {
 	super(redirector, log);
-    }
-
-    // Implement IRegistry
-
-    public boolean connect() {
-	if (env == null) {
-	    if (Platform.isWindows()) {
-		try {
-		    loadingEnv = true;
-		    env = new Environment(this);
-		    license = new LicenseData(this);
-		    loadingEnv = false;
-		    return true;
-		} catch (Exception e) {
-		    log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    return false;
-		}
-	    } else {
-		return false;
+	if (Platform.isWindows()) {
+	    try {
+		loadingEnv = true;
+		env = new Environment(this);
+		license = new LicenseData(this);
+		loadingEnv = false;
+	    } catch (Exception e) {
+		log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
-	} else {
-	    return true;
 	}
     }
 
-    public void disconnect() {
-	searchMap.clear();
-    }
+    // Implement IRegistry
 
     public IKey getHive(String name) throws IllegalArgumentException {
 	Key hive = null;

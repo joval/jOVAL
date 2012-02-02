@@ -48,7 +48,6 @@ public class Wmi57Adapter implements IAdapter {
 
     public Wmi57Adapter(IWindowsSession session) {
 	this.session = session;
-	wmi = session.getWmiProvider();
     }
 
     // Implement IAdapter
@@ -59,20 +58,8 @@ public class Wmi57Adapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
-	if (wmi != null) {
-	    return wmi.connect();
-	}
-	return false;
-    }
-
-    public void disconnect() {
-	if (wmi != null) {
-	    wmi.disconnect();
-	}
-    }
-
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+	wmi = session.getWmiProvider();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
 	items.add(JOVALSystem.factories.sc.windows.createWmi57Item(getItem((Wmi57Object)rc.getObject())));
 	return items;

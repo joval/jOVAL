@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 
 import org.slf4j.cal10n.LocLogger;
 
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.identity.IUser;
@@ -31,7 +32,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-class LocalDirectory {
+class LocalDirectory implements ILoggable {
     static final String USER_WQL		= "SELECT SID, Name, Domain, Disabled FROM Win32_UserAccount";
     static final String SYSUSER_WQL		= "SELECT SID, Name, Domain FROM Win32_SystemAccount";
     static final String GROUP_WQL		= "SELECT SID, Name, Domain FROM Win32_Group";
@@ -341,6 +342,16 @@ class LocalDirectory {
 	    domain = hostname.toUpperCase();
 	}
 	return domain + "\\" + Directory.getName(netbiosName);
+    }
+
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
     }
 
     // Private

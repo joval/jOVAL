@@ -52,13 +52,6 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
-	return environment != null;
-    }
-
-    public void disconnect() {
-    }
-
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
 	    throws OvalException, NotCollectableException {
 

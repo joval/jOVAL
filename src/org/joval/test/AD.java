@@ -24,36 +24,30 @@ public class AD {
 
     public void test(String name) {
 	try {
-	    IWmiProvider wmi = session.getWmiProvider();
-	    if (wmi.connect()) {
-		IDirectory ad = session.getDirectory();
-		try {
-		    IUser user = ad.queryUser(name);
-		    System.out.println("User Name: " + name);
-		    System.out.println("SID: " + user.getSid());
-		    System.out.println("Enabled: " + user.isEnabled());
-		    for (String group : user.getGroupNetbiosNames()) {
-			System.out.println("Group: " + group);
-		    }
-		} catch (NoSuchElementException e) {
-		    System.out.println("User " + name + " not found.");
+	    IDirectory ad = session.getDirectory();
+	    try {
+		IUser user = ad.queryUser(name);
+		System.out.println("User Name: " + name);
+		System.out.println("SID: " + user.getSid());
+		System.out.println("Enabled: " + user.isEnabled());
+		for (String group : user.getGroupNetbiosNames()) {
+		    System.out.println("Group: " + group);
 		}
-		try {
-		    IGroup group = ad.queryGroup(name);
-		    System.out.println("Group Name: " + name);
-		    System.out.println("SID: " + group.getSid());
-		    for (String userMember : group.getMemberUserNetbiosNames()) {
-			System.out.println("Member User: " + userMember);
-		    }
-		    for (String groupMember : group.getMemberGroupNetbiosNames()) {
-			System.out.println("Member Group: " + groupMember);
-		    }
-		} catch (NoSuchElementException e) {
-		    System.out.println("Group " + name + " not found.");
+	    } catch (NoSuchElementException e) {
+		System.out.println("User " + name + " not found.");
+	    }
+	    try {
+		IGroup group = ad.queryGroup(name);
+		System.out.println("Group Name: " + name);
+		System.out.println("SID: " + group.getSid());
+		for (String userMember : group.getMemberUserNetbiosNames()) {
+		    System.out.println("Member User: " + userMember);
 		}
-		wmi.disconnect();
-	    } else {
-	 	System.out.println("Failed to connect to WMI");
+		for (String groupMember : group.getMemberGroupNetbiosNames()) {
+		    System.out.println("Member Group: " + groupMember);
+		}
+	    } catch (NoSuchElementException e) {
+		System.out.println("Group " + name + " not found.");
 	    }
 	} catch (IllegalArgumentException e) {
 	    e.printStackTrace();

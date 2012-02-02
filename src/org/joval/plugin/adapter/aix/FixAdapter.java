@@ -55,12 +55,6 @@ public class FixAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public boolean connect() {
-	return session != null;
-    }
-
-    public void disconnect() {}
-
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
 	FixObject fObj = (FixObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();

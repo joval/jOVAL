@@ -25,20 +25,13 @@ public interface IRegistry extends ILoggable {
     char   DELIM_CH	= '\\';
 
     /**
-     * Connect to the registry.
-     */
-    public boolean connect();
-
-    /**
-     * Disconnect from any underlying resources used to access this registry.
-     */
-    public void disconnect();
-
-    /**
      * Get an environment based on this registry view.
      */
     public IEnvironment getEnvironment();
 
+    /**
+     * Get Windows license data from the registry.
+     */
     public ILicenseData getLicenseData();
 
     /**

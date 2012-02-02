@@ -136,8 +136,8 @@ public class Definitions implements IDefinitions {
 	}
     }
 
-    public Iterator<ObjectType> iterateObjects(Class type) {
-	return new SpecifiedObjectIterator(type);
+    public Collection<ObjectType> getObjects() {
+	return objects.values();
     }
 
     public StateType getState(String id) throws OvalException {
@@ -191,57 +191,6 @@ public class Definitions implements IDefinitions {
 	    } else {
 		nallow.add(dt);
 	    }
-	}
-    }
-
-    public Iterator <ObjectType>iterateObjects() {
-	return objects.values().iterator();
-    }
-
-    public Iterator <VariableType>iterateVariables() {
-	return variables.values().iterator();
-    }
-
-    // Private
-
-    class SpecifiedObjectIterator implements Iterator<ObjectType> {
-	Iterator <ObjectType>iter;
-	Class type;
-	ObjectType next;
-
-	SpecifiedObjectIterator(Class type) {
-	    this.type = type;
-	    iter = objects.values().iterator();
-	}
-
-	public boolean hasNext() {
-	    if (next != null) {
-		return true;
-	    }
-	    try {
-		next = next();
-		return true;
-	    } catch (NoSuchElementException e) {
-	    }
-	    return false;
-	}
-
-	public ObjectType next() throws NoSuchElementException {
-	    if (next != null) {
-		ObjectType temp = next;
-		next = null;
-		return temp;
-	    }
-	    while (true) {
-		ObjectType temp = iter.next();
-		if (type.isInstance(temp)) {
-		    return temp;
-		}
-	    }
-	}
-
-	public void remove() throws UnsupportedOperationException {
-	    throw new UnsupportedOperationException("remove");
 	}
     }
 }

@@ -210,7 +210,7 @@ public class JOVALSystem {
     /**
      * Retrieve an OVAL schema property.
      *
-     * @param key specify one of the OVAL_PROP_* keys
+     * @param name specify one of the OVAL_PROP_* keys
      */
     public static String getOvalProperty(String name) {
 	return ovalProps.getProperty(name);

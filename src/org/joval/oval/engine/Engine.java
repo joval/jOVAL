@@ -150,7 +150,7 @@ public class Engine implements IEngine {
     private IPlugin plugin = null;
     private SystemCharacteristics sc = null;
     private IDefinitionFilter filter = null;
-    private Hashtable<Class, AdapterManager> adapters = null;
+    private Hashtable<Class, IAdapter> adapters = null;
     private Exception error;
     private Results results;
     private State state;
@@ -168,8 +168,8 @@ public class Engine implements IEngine {
 	    logger = plugin.getLogger();
 	    this.plugin = plugin;
 	}
-	filter = new DefinitionFilter();
 	producer = new Producer();
+	filter = new DefinitionFilter();
 	reset();
     }
 
@@ -186,7 +186,6 @@ public class Engine implements IEngine {
 
 	  case COMPLETE_OK:
 	  case COMPLETE_ERR:
-	    sc = null;
 	    reset();
 	    // fall-through
 
@@ -387,17 +386,17 @@ public class Engine implements IEngine {
 	if (coll == null) {
 	    adapters = null;
 	} else {
-	    adapters = new Hashtable<Class, AdapterManager>();
+	    adapters = new Hashtable<Class, IAdapter>();
 	    for (IAdapter adapter : coll) {
-		AdapterManager mgr = new AdapterManager(adapter);
 		for (Class clazz : adapter.getObjectClasses()) {
-		    adapters.put(clazz, mgr);
+		    adapters.put(clazz, adapter);
 		}
 	    }
 	}
     }
 
     private void reset() {
+	sc = null;
 	state = State.CONFIGURE;
 	variableMap = new Hashtable<String, Collection<VariableValueType>>();
 	error = null;
@@ -410,95 +409,18 @@ public class Engine implements IEngine {
 	producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
 	sc = new SystemCharacteristics(plugin);
 
-	//
-	// First, find all the object types that are referenced by variables
-	//
-	List<Class> varTypes = new Vector<Class>();
-	Iterator<VariableType> varIter = definitions.iterateVariables();
-	while(varIter.hasNext()) {
-	    getObjectClasses(varIter.next(), varTypes);
-	}
-
-	//
-	// Second, scan all those types (for which there are adapters)
-	//
-	Collection<Class> scannedClasses = new HashSet<Class>();
-	for (Class clazz : varTypes) {
-	    AdapterManager manager = adapters.get(clazz);
-	    if (manager != null) {
-		scannedClasses.addAll(scanAdapter(manager));
-	    }
-	}
-
-	//
-	// Third, scan all remaining types for which there are adapters
-	//
-	List<Class> allTypes = getObjectClasses(definitions.iterateObjects());
-	for (Class clazz : allTypes) {
-	    if (!scannedClasses.contains(clazz)) {
-		AdapterManager manager = adapters.get(clazz);
-		if (manager != null) {
-		    scannedClasses.addAll(scanAdapter(manager));
-		}
-	    }
-	}
-
-	//
-	// Finally, add all objects for which there are no adapters and flag them NOT_COLLECTED
-	//
-	Iterator<ObjectType> allObjects = definitions.iterateObjects();
-	while(allObjects.hasNext()) {
-	    ObjectType obj = allObjects.next();
+	for (ObjectType obj : definitions.getObjects()) {
 	    String objectId = obj.getId();
 	    if (!sc.containsObject(objectId)) {
-		MessageType message = JOVALSystem.factories.common.createMessageType();
-		message.setLevel(MessageLevelEnumeration.WARNING);
-		message.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName()));
-		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
+		scanObject(new RequestContext(this, obj));
 	    }
 	}
 	producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
     }
 
     /**
-     * Fetch all items associated with objects serviced by the given adapter and store them in the SystemCharacteristics.
-     *
-     * @returns the types that were scanned
-     */
-    private Collection<Class> scanAdapter(AdapterManager manager) throws OvalException {
-	Collection<Class> scannedClasses = new Vector<Class>();
-	IAdapter adapter = manager.getAdapter();
-	if (adapter.connect()) {
-	    manager.setActive(true);
-	    try {
-		for (Class clazz : adapter.getObjectClasses()) {
-		    scannedClasses.add(clazz);
-		    Iterator<ObjectType> iter = definitions.iterateObjects(clazz);
-		    while (iter.hasNext()) {
-			ObjectType obj = iter.next();
-			String objectId = obj.getId();
-
-			//
-			// If items have been retrieved in the course of resolving a Set or a Variable, then skip
-			// its collection.
-			//
-			try {
-			    sc.getObject(objectId);
-			} catch (NoSuchElementException e) {
-			    scanObject(new RequestContext(this, obj));
-			}
-		    }
-		}
-	    } finally {
-		manager.setActive(false);
-		adapter.disconnect();
-	    }
-	}
-	return scannedClasses;
-    }
-
-    /**
-     * Scan an object live using an adapter, including crawling down any encountered Sets.
+     * Scan an object live using an adapter, including crawling down any encountered Sets.  Items are stored in the
+     * system-characteristics as they are collected.
      */
     private Collection<ItemType> scanObject(RequestContext rc) throws OvalException {
 	//
@@ -515,12 +437,12 @@ public class Engine implements IEngine {
 	Set s = getObjectSet(obj);
 	if (s == null) {
 	    String err = null;
-	    AdapterManager manager = adapters.get(obj.getClass());
-	    if (manager == null) {
+	    IAdapter adapter = adapters.get(obj.getClass());
+	    if (adapter == null) {
 		err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
-	    } else if (manager.isActive()) {
+	    } else {
 		try {
-		    Collection<JAXBElement<? extends ItemType>> items = manager.getAdapter().getItems(rc);
+		    Collection<JAXBElement<? extends ItemType>> items = adapter.getItems(rc);
 		    if (items.size() == 0) {
 			MessageType msg = JOVALSystem.factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.INFO);
@@ -554,8 +476,6 @@ public class Engine implements IEngine {
 		} catch (NotCollectableException e) {
 		    err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
 		}
-	    } else {
-		err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_UNAVAILABLE, obj.getClass().getName());
 	    }
 
 	    //
@@ -1403,53 +1323,6 @@ public class Engine implements IEngine {
     }
 
     /**
-     * Get a List of all the distinct ObjectType classes that appear in the Iterator.
-     */
-    private List<Class> getObjectClasses(Iterator<ObjectType> iter) {
-	List<Class> classes = new Vector<Class>();
-	while(iter.hasNext()) {
-	    Class clazz = iter.next().getClass();
-	    if (!classes.contains(clazz)) {
-		classes.add(clazz);
-	    }
-	}
-	return classes;
-    }
-
-    /**
-     * Crawl down the rabbit hole and add any new object type class names to the list.
-     */
-    private void getObjectClasses(Object object, List<Class> list) throws OvalException {
-	if (object == null) {
-	    return; // Terminated in a constant type
-	} else if (object instanceof VariableComponentType) {
-	    return; // The variable this references will add any classes.
-	} else if (object instanceof ExternalVariable) {
-	    return; // Just a String.
-	} else if (object instanceof ConstantVariable) {
-	    return; // Just a String.
-	} else if (object instanceof LiteralComponentType) {
-	    return; // Just a String.
-	} else if (object instanceof ObjectComponentType) {
-	    ObjectComponentType oct = (ObjectComponentType)object;
-	    String objectId = oct.getObjectRef();
-	    Class clazz = definitions.getObject(objectId).getClass();
-	    if (!list.contains(clazz)) {
-		list.add(clazz);
-	    }
-	} else {
-	    Object obj = getComponent(object);
-	    if (obj instanceof List) {
-		for (Object child : (List)obj) {
-		    getObjectClasses(child, list);
-		}
-	    } else {
-		getObjectClasses(getComponent(object), list);
-	    }
-	}
-    }
-
-    /**
      * Resolve the component.  If the component is a variable, resolve it and append it to the list, appending its value to
      * the value that is ultimately returned.
      *
@@ -2150,27 +2023,6 @@ public class Engine implements IEngine {
 	}
 
 	throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ILLEGAL_TIME, format, s));
-    }
-
-    class AdapterManager {
-	IAdapter adapter;
-	boolean active = false;
-
-	AdapterManager(IAdapter adapter) {
-	    this.adapter = adapter;
-	}
-
-	void setActive(boolean active) {
-	    this.active = active;
-	}
-
-	boolean isActive() {
-	    return active;
-	}
-
-	IAdapter getAdapter() {
-	    return adapter;
-	}
     }
 
     /**
