@@ -194,7 +194,7 @@ public class Results implements IResults {
 	//
 	Hashtable<String, TestType> reportableTests = new Hashtable<String, TestType>();
 	DefinitionsType definitionsType = JOVALSystem.factories.results.createDefinitionsType();
-	Collection<DefinitionType> defs Vector<DefinitionType>();
+	Collection<DefinitionType> defs = new Vector<DefinitionType>();
 	for (DefinitionType definition : definitionTable.values()) {
 	    DirectiveType directive = directives.getDirective(definition);
 	    if (directive.isReported()) {

@@ -7,5 +7,5 @@ CLASSES=\
 	org.joval.os.embedded.system.TechSupport			\
 	org.joval.oval.di.CiscoContainer				\
 	org.joval.plugin.CiscoPlugin					\
-	sun.net.www.protocol.tftp.Handler				\
-	sun.net.www.protocol.tftp.TftpURLConnection
+	org.joval.protocol.tftp.Handler					\
+	org.joval.protocol.tftp.TftpURLConnection
