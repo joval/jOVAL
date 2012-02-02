@@ -203,11 +203,11 @@ public class RunlevelAdapter implements IAdapter {
 	try {
 	    switch(session.getFlavor()) {
 	      case AIX:
-		initUnixRunlevels("/etc/rc.d");
+		initUnixRunlevels("^/etc/rc\\.d");
 		break;
 
 	      case SOLARIS:
-		initUnixRunlevels("/etc");
+		initUnixRunlevels("^/etc");
 		break;
 
 	      case LINUX:
@@ -226,7 +226,7 @@ public class RunlevelAdapter implements IAdapter {
 
     private void initUnixRunlevels(String baseDir) throws IOException {
 	IFilesystem fs = session.getFilesystem();
-	for (String path : fs.search(Pattern.compile(baseDir + fs.getDelimiter() + "rc.\\.d"))) {
+	for (String path : fs.search(Pattern.compile(baseDir + fs.getDelimiter() + "rc.\\.d$"))) {
 	    IFile dir = fs.getFile(path);
 	    if (dir.isDirectory()) {
 		String rl = path.substring(path.lastIndexOf(fs.getDelimiter())+1).substring(2, 3);

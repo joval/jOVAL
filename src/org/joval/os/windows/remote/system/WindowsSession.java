@@ -4,6 +4,7 @@
 package org.joval.os.windows.remote.system;
 
 import java.io.IOException;
+import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -65,8 +66,9 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private WindowsSystemInfo info = null;
     private Directory directory = null;
 
-    public WindowsSession(String host) {
+    public WindowsSession(String host, File wsdir) {
 	super();
+	this.wsdir = wsdir;
 	this.host = host;
 	tempFiles = new Vector<IFile>();
 	info = new WindowsSystemInfo(this);

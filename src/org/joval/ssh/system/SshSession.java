@@ -4,6 +4,7 @@
 package org.joval.ssh.system;
 
 import java.io.IOException;
+import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 
@@ -57,11 +58,16 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
     private boolean connected = false;
 
     public SshSession(String hostname) {
-	this(hostname, null);
+	this(hostname, null, null);
     }
 
-    public SshSession(String hostname, SshSession gateway) {
+    public SshSession(String hostname, File wsdir) {
+	this(hostname, null, wsdir);
+    }
+
+    public SshSession(String hostname, SshSession gateway, File wsdir) {
 	super();
+	this.wsdir = wsdir;
 	this.hostname = hostname;
 	this.gateway = gateway;
     }

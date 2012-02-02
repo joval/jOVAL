@@ -49,6 +49,7 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 
     public UnixSession(SshSession ssh) {
 	super();
+	wsdir = ssh.getWorkspace();
 	info = new UnixSystemInfo(this);
 	this.ssh = ssh;
     }

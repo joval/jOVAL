@@ -25,32 +25,34 @@ import org.joval.ssh.system.SshSession;
  * @version %I% %G%
  */
 public class SessionFactory {
-    private static final String HOSTS	= "hosts.xml";
+    private static final String ROUTES	= "routes.ini";
+    private static final String PROPS	= "host.properties";
 
-    private Properties props;
-    private File propsFile = null;
+    private File wsDir = null;
     private SshSession gateway = null;
 
+    /**
+     * Create a SessionFactory with no state persistence capability.
+     */
     public SessionFactory() {
-	props = new Properties();
     }
 
-    public SessionFactory(File cacheDir) throws IOException {
-	this(cacheDir, null);
+    public SessionFactory(File wsDir) throws IOException {
+	setDataDirectory(wsDir);
     }
 
-    public SessionFactory(File cacheDir, SshSession gateway) throws IOException {
-	this();
-	setDataDirectory(cacheDir);
+    public SessionFactory(File wsDir, SshSession gateway) throws IOException {
+	setDataDirectory(wsDir);
 	setSshGateway(gateway);
     }
 
-    public void setDataDirectory(File cacheDir) throws IOException {
-	if (cacheDir != null) {
-	    propsFile = new File(cacheDir, HOSTS);
-	    if (propsFile.exists()) {
-		props.loadFromXML(new FileInputStream(propsFile));
-	    }
+    public void setDataDirectory(File wsDir) throws IOException {
+	this.wsDir = wsDir;
+	if (!wsDir.exists()) {
+	    wsDir.mkdirs();
+	}
+	if (!wsDir.isDirectory()) {
+	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_DIRECTORY, wsDir.getPath()));
 	}
     }
 
@@ -59,10 +61,13 @@ public class SessionFactory {
     }
 
     public IBaseSession createSession(String hostname) throws UnknownHostException {
+	File dir = getHostWorkspace(hostname);
+
 	if (gateway != null) {
-	    return new SshSession(hostname, gateway);
+	    return new SshSession(hostname, gateway, dir);
 	}
 
+	Properties props = getProperties(hostname);
 	IBaseSession.Type type = IBaseSession.Type.UNKNOWN;
 	String s = props.getProperty(hostname);
 	if (s == null) {
@@ -73,10 +78,10 @@ public class SessionFactory {
 
 	switch (type) {
 	  case SSH:
-	    return new SshSession(hostname);
+	    return new SshSession(hostname, dir);
 
 	  case WINDOWS:
-	    return new WindowsSession(hostname);
+	    return new WindowsSession(hostname, dir);
 
 	  default:
 	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, type));
@@ -98,14 +103,10 @@ public class SessionFactory {
 	} else {
 	    type = IBaseSession.Type.UNKNOWN;
 	}
+
+	Properties props = getProperties(hostname);
 	props.setProperty(hostname, type.toString());
-	if (propsFile != null) {
-	    try {
-		props.storeToXML(new FileOutputStream(propsFile), "Session Discovery Database");
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
-	}
+	saveProperties(props, hostname);
 	return type;
     }
 
@@ -126,5 +127,44 @@ public class SessionFactory {
 	    }
 	}
 	return false;
+    }
+
+    private File getHostWorkspace(String hostname) {
+	File hostDir = null;
+	if (wsDir != null) {
+	    hostDir = new File(wsDir, hostname);
+	    if (!hostDir.exists()) {
+		hostDir.mkdir();
+	    }
+	}
+	return hostDir;
+    }
+
+    private Properties getProperties(String hostname) {
+	Properties props = new Properties();
+	File hostDir = getHostWorkspace(hostname);
+	if (hostDir != null) {
+	    File hostProps = new File(hostDir, PROPS);
+	    if (hostProps.isFile()) {
+		try {
+		    props.load(new FileInputStream(hostProps));
+		} catch (IOException e) {
+		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, hostProps, e.getMessage());
+		}
+	    }
+	}
+	return props;
+    }
+
+    private void saveProperties(Properties props, String hostname) {
+	File hostDir = getHostWorkspace(hostname);
+	if (hostDir != null) {
+	    File hostProps = new File(hostDir, PROPS);
+	    try {
+		props.store(new FileOutputStream(hostProps), "Session Discovery Data");
+	    } catch (IOException e) {
+		e.printStackTrace();
+	    }
+	}
     }
 }

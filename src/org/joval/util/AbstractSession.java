@@ -31,6 +31,9 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
     protected IEnvironment env;
     protected IFilesystem fs;
 
+    /**
+     * Create an ISession with no workspace to store state information, i.e., for a local ISession.
+     */
     protected AbstractSession() {
 	super();
     }

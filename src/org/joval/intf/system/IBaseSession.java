@@ -2,6 +2,8 @@
 
 package org.joval.intf.system;
 
+import java.io.File;
+
 import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
@@ -88,6 +90,11 @@ public interface IBaseSession extends ILoggable {
      * Create a process on the machine.
      */
     IProcess createProcess(String command) throws Exception;
+
+    /**
+     * Get a directory in which state information can be safely stored.  Returns null if this is a stateless session.
+     */
+    File getWorkspace();
 
     /**
      * Fetch OVAL SystemInformation for the session.

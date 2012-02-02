@@ -34,6 +34,7 @@ import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.system.IEnvironment;
 import org.joval.io.BaseFilesystem;
 import org.joval.io.PerishableReader;
+import org.joval.io.StreamLogger;
 import org.joval.util.tree.CachingTree;
 import org.joval.util.tree.Tree;
 import org.joval.util.JOVALMsg;
@@ -48,6 +49,8 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
+    private final static String LOCAL_INDEX = "fs.index";
+
     protected final static char DELIM_CH = '/';
     protected final static String DELIM_STR = "/";
 
@@ -100,7 +103,47 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	    List<String> mounts = getMounts((IUnixSession)session);
 
 	    if (VAL_FILE_METHOD.equals(props.getProperty(PROP_PRELOAD_METHOD))) {
-		addEntries(PerishableReader.newInstance(getFindCache(command, mounts).getInputStream(), S));
+		IReader reader = null;
+
+		File wsdir = session.getWorkspace();
+		File local = null;
+		long len = 0L;
+		if(wsdir == null) {
+		    //
+		    // State cannot be saved locally, so create one on the remote box.
+		    //
+		    reader = PerishableReader.newInstance(getRemoteCache(command, mounts).getInputStream(), S);
+		} else {
+		    //
+		    // Read from the local state file, or create one while reading from the remote state file.
+		    //
+		    local = new File(wsdir, LOCAL_INDEX);
+		    IFile f = new FileProxy(this, local, local.getPath());
+		    if (isValidCache(f)) {
+			len = f.length();
+			reader = PerishableReader.newInstance(f.getInputStream(), S);
+		    } else {
+			f = getRemoteCache(command, mounts);
+			len = f.length();
+
+/*
+ TBD:  ???
+
+Need to create a properties file containing:
+1) a list of the mounts that were indexed
+2) the length and CRC checksum of the cache file on the server
+Then these properties need to be saved to a local file.
+
+These need to be validated before the next load, so we can determine whether to use the remote cache.
+ -> use a CheckInputStream(in, new CRC32()) to get the CRC checksum of the local file
+
+*/
+
+			InputStream in = new StreamLogger(null, f.getInputStream(), local, logger);
+			reader = PerishableReader.newInstance(in, S);
+		    }
+		}
+		addEntries(reader);
 	    } else {
 		for (String mount : mounts) {
 		    IProcess p = null;
@@ -312,22 +355,38 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	return mounts;
     }
 
+    /**
+     * Check to see if the IFile represents a valid cache of the preload data.  This works on either a local or remote
+     * copy of the cache.  The lastModified date is compared against the expiration, and if stale, the IFile is deleted.
+     */
+    private boolean isValidCache(IFile f) throws IOException {
+	if (f.exists()) {
+	    long expires = f.lastModified() + props.getLongProperty(PROP_PRELOAD_MAXAGE);
+	    if (System.currentTimeMillis() >= expires) {
+		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_EXPIRED, f.getPath(), new Date(expires));
+		f.delete();
+		return false;
+	    }
+	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_REUSE, f.getPath());
+	    return true;
+	} else {
+	    return false;
+	}
+    }
+
     private static final String CACHE_TEMP = "%HOME%/.jOVAL.find~";
     private static final String CACHE_FILE = "%HOME%/.jOVAL.find";
 
-    private IFile getFindCache(String command, List<String> mounts) throws Exception {
+    /**
+     * Return a valid cache file on the remote machine, if available, or create a new one and return it.
+     */
+    private IFile getRemoteCache(String command, List<String> mounts) throws Exception {
 	String tempPath = env.expand(CACHE_TEMP);
 	String destPath = env.expand(CACHE_FILE);
 
 	IFile temp = getFile(destPath);
-	if (temp.exists()) {
-	    long expires = temp.lastModified() + props.getLongProperty(PROP_PRELOAD_MAXAGE);
-	    if (System.currentTimeMillis() >= expires) {
-		temp.delete();
-	    } else {
-		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_REUSE, temp.getPath());
-		return temp;
-	    }
+	if (isValidCache(temp)) {
+	    return temp;
 	}
 
 	logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_TEMP, tempPath);

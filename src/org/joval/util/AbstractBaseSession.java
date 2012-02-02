@@ -3,6 +3,7 @@
 
 package org.joval.util;
 
+import java.io.File;
 import java.util.Iterator;
 
 import org.slf4j.cal10n.LocLogger;
@@ -29,11 +30,13 @@ import org.joval.intf.util.IProperty;
  * @version %I% %G%
  */
 public abstract class AbstractBaseSession implements IBaseSession {
+    protected File wsdir = null;
     protected LocLogger logger;
     protected boolean debug = false;
     protected InternalProperties internalProps;
 
     protected AbstractBaseSession() {
+	this.wsdir = wsdir;
 	logger = JOVALSystem.getLogger();
 	internalProps = new InternalProperties();
 	JOVALSystem.configureSession(this);
@@ -109,6 +112,10 @@ public abstract class AbstractBaseSession implements IBaseSession {
 	  default:
 	    return FamilyEnumeration.UNDEFINED;
 	}
+    }
+
+    public File getWorkspace() {
+	return wsdir;
     }
 
     // All the abstract methods, for reference
