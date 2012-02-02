@@ -57,16 +57,6 @@ public interface IFilesystem extends ITree {
     public static final String PROP_PRELOAD_REMOTE = "fs.preload.remote";
 
     /**
-     * Connect to any resources required to access the IFilesystem.
-     */
-    public boolean connect();
-
-    /**
-     * Release any resources associated with the IFilesystem.
-     */
-    public void disconnect();
-
-    /**
      * An interface with all the methods of java.io.File and jcifs.smb.SmbFile.
      */
     public IFile getFile(String path) throws IllegalArgumentException, IOException;

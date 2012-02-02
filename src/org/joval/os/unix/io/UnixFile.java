@@ -45,8 +45,9 @@ public class UnixFile implements IUnixFile {
 		break;
 	      }
     
+	      case AIX:
 	      case SOLARIS: {
-		command = "/usr/bin/ls -n " + f.getLocalName();
+		command = "/usr/bin/ls dn " + f.getLocalName();
 		break;
 	      }
     
@@ -62,10 +63,10 @@ public class UnixFile implements IUnixFile {
 	    String line = SafeCLI.exec(command, session, IUnixSession.Timeout.S);
 	    unixType = line.charAt(0);
 	    permissions = line.substring(1, 10);
-	    if (line.charAt(11) == '+') {
+	    if (line.charAt(10) == '+') {
 		hasExtendedAcl = true;
 	    }
-	    StringTokenizer tok = new StringTokenizer(line.substring(12));
+	    StringTokenizer tok = new StringTokenizer(line.substring(11));
 	    uid = Integer.parseInt(tok.nextToken());
 	    gid = Integer.parseInt(tok.nextToken());
 	} catch (Exception e) {

@@ -41,6 +41,7 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 
     SshSession ssh;
 
+    private SftpFilesystem sfs;
     private ICredential cred;
     private Credential rootCred = null;
     private boolean computedMotdLines = false;
@@ -90,11 +91,12 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 	    if (env == null) {
 		env = new Environment(this);
 	    }
-	    if (fs == null) {
-		fs = new SftpFilesystem(ssh.getJschSession(), this, env);
+	    if (sfs == null) {
+		sfs = new SftpFilesystem(ssh.getJschSession(), this, env);
 	    } else {
-		((SftpFilesystem)fs).setJschSession(ssh.getJschSession());
+		sfs.setJschSession(ssh.getJschSession());
 	    }
+	    fs = sfs;
 	    if (flavor == Flavor.UNKNOWN) {
 		flavor = Flavor.flavorOf(this);
 	    }
@@ -106,8 +108,8 @@ public class UnixSession extends BaseUnixSession implements ILocked {
     }
 
     public void disconnect() {
-	if (fs != null) {
-	    fs.disconnect();
+	if (sfs != null) {
+	    sfs.disconnect();
 	}
 	if (ssh != null) {
 	    ssh.disconnect();

@@ -64,18 +64,6 @@ public class SftpFilesystem extends UnixFilesystem {
 	this.jschSession = jschSession;
     }
 
-    /**
-     * @override
-     */
-    protected boolean doPreload() {
-	return props.getBooleanProperty(PROP_PRELOAD_REMOTE);
-    }
-
-    // Implement IFilesystem
-
-    /**
-     * @override
-     */
     public boolean connect() {
 	if (cs != null && cs.isConnected()) {
 	    return true;
@@ -95,9 +83,6 @@ public class SftpFilesystem extends UnixFilesystem {
 	}
     }
 
-    /**
-     * @override
-     */
     public void disconnect() {
 	try {
 	    if (cs != null && cs.isConnected()) {
@@ -108,6 +93,15 @@ public class SftpFilesystem extends UnixFilesystem {
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
+
+    /**
+     * @override
+     */
+    protected boolean doPreload() {
+	return props.getBooleanProperty(PROP_PRELOAD_REMOTE);
+    }
+
+    // Implement IFilesystem
 
     /**
      * @override

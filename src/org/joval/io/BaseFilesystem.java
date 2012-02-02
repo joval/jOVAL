@@ -80,13 +80,6 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
 
     // Implement IFilesystem
 
-    public boolean connect() {
-	return true;
-    }
-
-    public void disconnect() {
-    }
-
     public IFile getFile(String path) throws IllegalArgumentException, IOException {
 	if (autoExpand) {
 	    path = env.expand(path);
