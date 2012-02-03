@@ -62,7 +62,6 @@
       <release operation="pattern match">.*</release>
       <version operation="pattern match">.*</version>
       <evr datatype="evr_string" operation="greater than or equal">0</evr>
-      <signature_keyid operation="pattern match">.*</signature_keyid>
     </rpminfo_state>
     <rpminfo_state id="oval:org.mitre.oval.test:ste:525" version="1" comment="This state represents rpminfo_items that have a name that matches the regular expression '^r.m$' and an arch, epoch, release, version, evr, and signature_keyid that match the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
       <name operation="pattern match">^r.m$</name>
