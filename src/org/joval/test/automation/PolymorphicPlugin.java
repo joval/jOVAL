@@ -37,7 +37,7 @@ class PolymorphicPlugin extends RemotePlugin {
     static {
 	setCredentialStore(SCS);
 	try {
-	    setDataDirectory(new File("."));
+	    setDataDirectory(new File("state"));
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}

@@ -45,12 +45,12 @@ import org.joval.util.Version;
  */
 public class RunlevelAdapter implements IAdapter {
     private IUnixSession session;
-    private Hashtable<String, Hashtable<String, Boolean>> runlevels;
+    private Hashtable<String, Hashtable<String, StartStop>> runlevels;
     private boolean initialized = false;
 
     public RunlevelAdapter(IUnixSession session) {
 	this.session = session;
-	runlevels = new Hashtable<String, Hashtable<String, Boolean>>();
+	runlevels = new Hashtable<String, Hashtable<String, StartStop>>();
     }
 
     // Implement IAdapter
@@ -118,14 +118,14 @@ public class RunlevelAdapter implements IAdapter {
     private Collection<JAXBElement<RunlevelItem>> getItems(IRequestContext rc, String rl) {
 	RunlevelObject rObj = (RunlevelObject)rc.getObject();
 	Collection<JAXBElement<RunlevelItem>> items = new Vector<JAXBElement<RunlevelItem>>();
-	Hashtable<String, Boolean> runlevel = runlevels.get(rl);
+	Hashtable<String, StartStop> runlevel = runlevels.get(rl);
 	if (runlevel != null) {
 	    OperationEnumeration op = rObj.getServiceName().getOperation();
 	    switch(op) {
 	      case EQUALS: {
-		Boolean b = runlevel.get(rObj.getServiceName().getValue());
-		if(b != null) {
-		    items.add(makeItem(rl, (String)rObj.getServiceName().getValue(), b.booleanValue()));
+		StartStop actions = runlevel.get(rObj.getServiceName().getValue());
+		if(actions != null) {
+		    items.add(makeItem(rl, (String)rObj.getServiceName().getValue(), actions));
 		}
 		break;
 	      }
@@ -135,8 +135,8 @@ public class RunlevelAdapter implements IAdapter {
 		    Pattern p = Pattern.compile((String)rObj.getServiceName().getValue());
 		    for (String serviceName : runlevel.keySet()) {
 			if(p.matcher(serviceName).find()) {
-			    Boolean b = runlevel.get(serviceName);
-			    items.add(makeItem(rl, serviceName, b.booleanValue()));
+			    StartStop actions = runlevel.get(serviceName);
+			    items.add(makeItem(rl, serviceName, actions));
 			}
 		    }
 		} catch (PatternSyntaxException e) {
@@ -152,7 +152,7 @@ public class RunlevelAdapter implements IAdapter {
 	      case NOT_EQUAL: {
 		for (String serviceName : runlevel.keySet()) {
 		    if (!serviceName.equals((String)rObj.getServiceName().getValue())) {
-			items.add(makeItem(rl, serviceName, runlevel.get(serviceName).booleanValue()));
+			items.add(makeItem(rl, serviceName, runlevel.get(serviceName)));
 		    }
 		}
 		break;
@@ -165,7 +165,7 @@ public class RunlevelAdapter implements IAdapter {
     /**
      * Make a RunlevelItem with the specified characteristics.
      */
-    private JAXBElement<RunlevelItem> makeItem(String runlevel, String serviceName, boolean start) {
+    private JAXBElement<RunlevelItem> makeItem(String runlevel, String serviceName, StartStop actions) {
 	RunlevelItem item = JOVALSystem.factories.sc.unix.createRunlevelItem();
 
 	EntityItemStringType runlevelType = JOVALSystem.factories.sc.core.createEntityItemStringType();
@@ -178,7 +178,7 @@ public class RunlevelAdapter implements IAdapter {
 
 	EntityItemBoolType startType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
 	startType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-	if (start) {
+	if (actions.start) {
 	    startType.setValue("true");
 	} else {
 	    startType.setValue("false");
@@ -187,10 +187,10 @@ public class RunlevelAdapter implements IAdapter {
 
 	EntityItemBoolType kill = JOVALSystem.factories.sc.core.createEntityItemBoolType();
 	kill.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-	if (start) {
-	    kill.setValue("false");
-	} else {
+	if (actions.stop) {
 	    kill.setValue("true");
+	} else {
+	    kill.setValue("false");
 	}
 	item.setKill(kill);
 
@@ -230,9 +230,9 @@ public class RunlevelAdapter implements IAdapter {
 	    IFile dir = fs.getFile(path);
 	    if (dir.isDirectory()) {
 		String rl = path.substring(path.lastIndexOf(fs.getDelimiter())+1).substring(2, 3);
-		Hashtable<String, Boolean> runlevel = runlevels.get(rl);
+		Hashtable<String, StartStop> runlevel = runlevels.get(rl);
 		if (runlevel == null) {
-		    runlevel = new Hashtable<String, Boolean>();
+		    runlevel = new Hashtable<String, StartStop>();
 		    runlevels.put(rl, runlevel);
 		}
 		String[] children = dir.list();
@@ -262,14 +262,19 @@ public class RunlevelAdapter implements IAdapter {
 			}
 		    }
 		    String serviceName = children[i].substring(ptr);
+		    StartStop actions = runlevel.get(serviceName);
+		    if (actions == null) {
+			actions = new StartStop();
+		    }
 		    switch(children[i].charAt(0)) {
 		      case 'S':
-			runlevel.put(serviceName, new Boolean(true));
+			actions.start = true;
 			break;
 		      case 'K':
-			runlevel.put(serviceName, new Boolean(false));
+			actions.stop = true;
 			break;
 		    }
+		    runlevel.put(serviceName, actions);
 		}
 	    }
 	}
@@ -284,25 +289,45 @@ public class RunlevelAdapter implements IAdapter {
 		    for (int i=0; i <= 6; i++) {
 			String rl = "" + i;
 			if (tok.nextToken().equals(rl + ":on")) {
-			    Hashtable<String, Boolean> runlevel = runlevels.get(rl);
+			    Hashtable<String, StartStop> runlevel = runlevels.get(rl);
 			    if (runlevel == null) {
-				runlevel = new Hashtable<String, Boolean>();
+				runlevel = new Hashtable<String, StartStop>();
 				runlevels.put(rl, runlevel);
 			    }
-			    runlevel.put(serviceName, new Boolean(true));
+			    StartStop actions = runlevel.get(serviceName);
+			    if (actions == null) {
+				actions = new StartStop();
+			    }
+			    actions.start = true;
+			    runlevel.put(serviceName, actions);
 			} else {
-			    Hashtable<String, Boolean> runlevel = runlevels.get(rl);
+			    Hashtable<String, StartStop> runlevel = runlevels.get(rl);
 			    if (runlevel == null) {
-				runlevel = new Hashtable<String, Boolean>();
+				runlevel = new Hashtable<String, StartStop>();
 				runlevels.put(rl, runlevel);
 			    }
-			    runlevel.put(serviceName, new Boolean(false));
+			    StartStop actions = runlevel.get(serviceName);
+			    if (actions == null) {
+				actions = new StartStop();
+			    }
+			    actions.stop = true;
+			    runlevel.put(serviceName, actions);
 			}
 		    }
 		}
 	    }
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+    }
+
+    class StartStop {
+	boolean start;
+	boolean stop;
+
+	StartStop() {
+	    start = false;
+	    stop = false;
 	}
     }
 }

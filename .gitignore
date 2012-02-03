@@ -1,6 +1,5 @@
 *.log
 test.properties
-hosts.xml
 id_rsa
 gen-src/
 build/
@@ -20,6 +19,8 @@ components/sdk/plugin/cisco/jOVALPluginCisco.jar
 components/sdk/plugin/local/jOVALPluginLocal.jar
 components/sdk/plugin/remote/jOVALPluginRemote.jar
 test/test.ini
-test/reports
-test/schema/docs/
+test/logs/
+test/reports/
+test/schema/docs
 test/schema/ReportSchema.jar
+test/state/

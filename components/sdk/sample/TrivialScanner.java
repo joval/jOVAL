@@ -46,7 +46,7 @@ public class TrivialScanner {
 	    SimpleCredentialStore scs = new SimpleCredentialStore();
 	    scs.add(props);
 	    RemotePlugin.setCredentialStore(scs);
-	    RemotePlugin.setDataDirectory(new File("."));
+	    RemotePlugin.setDataDirectory(new File("state"));
 	    RemotePlugin plugin = new RemotePlugin(props.getProperty("hostname"));
 
 	    IEngine engine = JOVALSystem.createEngine(plugin);
