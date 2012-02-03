@@ -122,7 +122,7 @@ public class RpminfoAdapter implements IAdapter {
 	try {
 	    session.getLogger().info(JOVALMsg.STATUS_RPMINFO_LIST);
 	    packageMap = new Hashtable<String, RpminfoItem>();
-	    for (String rpm : SafeCLI.multiLine("rpm -q -a", session, IUnixSession.Timeout.M)) {
+	    for (String rpm : SafeCLI.multiLine("rpm -qa", session, IUnixSession.Timeout.M)) {
 		try {
 		    RpminfoItem item = getItem(rpm);
 		    packageMap.put((String)item.getName().getValue(), item);
@@ -145,104 +145,97 @@ public class RpminfoAdapter implements IAdapter {
 
 	session.getLogger().trace(JOVALMsg.STATUS_RPMINFO_RPM, packageName);
 	item = JOVALSystem.factories.sc.linux.createRpminfoItem();
-	String pkgArch=null, pkgVersion=null, pkgRelease=null;
-	boolean isInstalled = false;
 
-	Iterator<String> lines = SafeCLI.multiLine("rpm -q " + packageName + " -i", session, IUnixSession.Timeout.S).iterator();
-	for (int lineNum=1; lines.hasNext(); lineNum++) {
+	String pkgArch = null, pkgEpoch = null, pkgVersion = null, pkgRelease = null;
+	boolean isInstalled = true;
+	StringBuffer command = new StringBuffer("rpm -q --qf \'");
+	command.append("%{NAME}\\n");
+	command.append("%{ARCH}\\n");
+	command.append("%{VERSION}\\n");
+	command.append("%{RELEASE}\\n");
+	command.append("%{EPOCH}\\n");
+	switch(session.getFlavor()) {
+	  case LINUX:
+	    command.append("%{RSAHEADER:pgpsig}\\n");
+	    break;
+	}
+	command.append("\' ").append(packageName);
+	Iterator<String> lines = SafeCLI.multiLine(command.toString(), session, IUnixSession.Timeout.S).iterator();
+
+	for (int lineNum=1; lines.hasNext() && isInstalled; lineNum++) {
 	    String line = lines.next();
-	    String param=null, value=null;
 	    switch(lineNum) {
-	      case 1:
-		if (line.indexOf("not installed") == -1) {
-		    isInstalled = true;
-		    // NB: fall-through to default case
-		} else {
-		    break;
-		}
-
-	      default:
-		int ptr = line.indexOf(":");
-		if (ptr != -1) {
-		    param = line.substring(0,ptr).trim();
-		    value = line.substring(ptr+1).trim();
-		}
-		break;
-	    }
-
-	    if (param == null) {
-		// unexpected or blank line; continue processing remaining lines
-	    } else if ("Description".equals(param)) {
-		StringBuffer sb = new StringBuffer();
-		for (lineNum = 1; lines.hasNext(); lineNum++) {
-		    line = lines.next();
-		    switch(lineNum) {
-		      case 1:
-			sb = new StringBuffer(line);
-			break;
-		      default:
-			sb.append(" ").append(line);
-			break;
-		    }
-		}
-		value = sb.toString();
-		break; // last param; break the enclosing for-loop
-	    } else if ("Name".equals(param)) {
-		packageName = value;
+	      case 1: // NAME
 		EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		if (line.indexOf("not installed") == -1) {
+		    packageName = line;
+		} else {
+		    isInstalled = false;
+		    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		}
 		name.setValue(packageName);
 		item.setName(name);
-	    } else if ("Architecture".equals(param)) {
-		pkgArch = value;
+		break;
+
+	      case 2: // ARCH
+		pkgArch = line;
 		EntityItemStringType arch = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		arch.setValue(value);
+		arch.setValue(pkgArch);
 		item.setArch(arch);
-	    } else if ("Version".equals(param)) {
-		pkgVersion = value;
+		break;
+
+	      case 3: // VERSION
+		pkgVersion = line;
 		RpminfoItem.Version version = JOVALSystem.factories.sc.linux.createRpminfoItemVersion();
 		version.setValue(pkgVersion);
 		item.setRpmVersion(version);
-	    } else if ("Release".equals(param)) {
-		pkgRelease = value;
+		break;
+
+	      case 4: // RELEASE
+		pkgRelease = line;
 		RpminfoItem.Release release = JOVALSystem.factories.sc.linux.createRpminfoItemRelease();
 		release.setValue(pkgRelease);
 		item.setRelease(release);
-	    } else if ("Signature".equals(param)) {
+		break;
+
+	      case 5: // EPOCH
+		if ("(none)".equalsIgnoreCase(line)) {
+		    pkgEpoch = "0";
+		} else {
+		    pkgEpoch = line;
+		}
+		RpminfoItem.Epoch epoch = JOVALSystem.factories.sc.linux.createRpminfoItemEpoch();
+		epoch.setValue(pkgEpoch);
+		item.setEpoch(epoch);
+
+		EntityItemEVRStringType evr = JOVALSystem.factories.sc.core.createEntityItemEVRStringType();
+		evr.setValue(pkgEpoch + ":" + pkgVersion + "-" + pkgRelease);
+		evr.setDatatype(SimpleDatatypeEnumeration.EVR_STRING.value());
+		item.setEvr(evr);
+
+		EntityItemStringType extendedName = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		extendedName.setValue(packageName + "-" + pkgEpoch + ":" + pkgVersion + "-" + pkgRelease + "." + pkgArch);
+		item.setExtendedName(extendedName);
+		break;
+
+	      case 6: // RSAHEADER -- Linux only
 		EntityItemStringType signatureKeyid = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		if (value.toUpperCase().indexOf("(NONE)") != -1) {
+		if (line.toUpperCase().indexOf("(NONE)") != -1) {
 		    signatureKeyid.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		} else if (value.indexOf("Key ID") == -1) {
+		} else if (line.indexOf("Key ID") == -1) {
 		    signatureKeyid.setStatus(StatusEnumeration.ERROR);
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_RPMINFO_SIGKEY, value));
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_RPMINFO_SIGKEY, line));
 		    item.getMessage().add(msg);
 		} else {
-		    signatureKeyid.setValue(value.substring(value.indexOf("Key ID")+7).trim());
+		    signatureKeyid.setValue(line.substring(line.indexOf("Key ID")+7).trim());
 		}
 		item.setSignatureKeyid(signatureKeyid);
 	    }
 	}
 
 	if (isInstalled) {
-	    item.setStatus(StatusEnumeration.EXISTS);
-	    String pkgEpoch = SafeCLI.exec("rpm -q --qf %{EPOCH} " + packageName, session, IUnixSession.Timeout.S);
-	    if ("(none)".equals(pkgEpoch)) {
-		pkgEpoch = "0";
-	    }
-	    RpminfoItem.Epoch epoch = JOVALSystem.factories.sc.linux.createRpminfoItemEpoch();
-	    epoch.setValue(pkgEpoch);
-	    item.setEpoch(epoch);
-
-	    EntityItemEVRStringType evr = JOVALSystem.factories.sc.core.createEntityItemEVRStringType();
-	    evr.setValue(pkgEpoch + ":" + pkgVersion + "-" + pkgRelease);
-	    evr.setDatatype(SimpleDatatypeEnumeration.EVR_STRING.value());
-	    item.setEvr(evr);
-
-	    EntityItemStringType extendedName = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    extendedName.setValue(packageName + "-" + pkgEpoch + ":" + pkgVersion + "-" + pkgRelease + "." + pkgArch);
-	    item.setExtendedName(extendedName);
-
 	    for (String line : SafeCLI.multiLine("rpm -ql " + packageName, session, IUnixSession.Timeout.S)) {
 		if (!"(contains no files)".equals(line.trim())) {
 		    EntityItemStringType filepath = JOVALSystem.factories.sc.core.createEntityItemStringType();
@@ -250,11 +243,6 @@ public class RpminfoAdapter implements IAdapter {
 		    item.getFilepath().add(filepath);
 		}
 	    }
-	} else {
-	    EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    name.setValue(packageName);
-	    item.setName(name);
-	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	}
 
 	packageMap.put(packageName, item);

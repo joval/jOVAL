@@ -131,6 +131,9 @@ public class SessionFactory implements ILoggable {
 		    ssh.disconnect();
 		    session = new IosSession(ssh);
 		    break;
+
+		  default:
+		    session = ssh;
 		}
 		break;
 
@@ -145,6 +148,7 @@ public class SessionFactory implements ILoggable {
 	    setCredential(session);
 	    return session;
 	} catch (Exception e) {
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new ConnectException(e.getMessage());
 	}
     }

@@ -35,43 +35,40 @@
     </rpminfo_test>
   </tests>
   <objects>
-    <rpminfo_object id="oval:org.mitre.oval.test:obj:251" version="1" comment="Retrieve an rpminfo_item with a name equal to 'rpm'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
-      <name>rpm</name>
+    <rpminfo_object id="oval:org.mitre.oval.test:obj:251" version="1" comment="Retrieve an rpminfo_item with a name equal to 'AIX-rpm'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <name>AIX-rpm</name>
     </rpminfo_object>
-    <rpminfo_object id="oval:org.mitre.oval.test:obj:348" version="1" comment="Retrieve rpminfo_items with names that are not equal to 'rpm'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
-      <name operation="not equal">rpm</name>
+    <rpminfo_object id="oval:org.mitre.oval.test:obj:348" version="1" comment="Retrieve rpminfo_items with names that are not equal to 'AIX-rpm'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <name operation="not equal">AIX-rpm</name>
     </rpminfo_object>
-    <rpminfo_object id="oval:org.mitre.oval.test:obj:236" version="1" comment="Retrieve rpminfo_items with names that match the regular expression '^r.m$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
-      <name operation="pattern match">^r.m$</name>
+    <rpminfo_object id="oval:org.mitre.oval.test:obj:236" version="1" comment="Retrieve rpminfo_items with names that match the regular expression '^AIX-r.m$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <name operation="pattern match">^AIX-r.m$</name>
     </rpminfo_object>
   </objects>
   <states>
-    <rpminfo_state id="oval:org.mitre.oval.test:ste:599" version="1" comment="This state represents an rpminfo_item that has a name equal to 'rpm', and an arch, epoch, release, version, evr, and signature_keyid that match the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
-      <name>rpm</name>
+    <rpminfo_state id="oval:org.mitre.oval.test:ste:599" version="1" comment="This state represents an rpminfo_item that has a name equal to 'rpm', and an arch, epoch, release, version, and evr that match the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <name>AIX-rpm</name>
       <arch operation="pattern match">.*</arch>
       <epoch operation="pattern match">.*</epoch>
       <release operation="pattern match">.*</release>
       <version operation="pattern match">.*</version>
       <evr datatype="evr_string" operation="greater than or equal">0</evr>
-      <signature_keyid operation="pattern match">.*</signature_keyid>
     </rpminfo_state>
-    <rpminfo_state id="oval:org.mitre.oval.test:ste:341" version="1" comment="This state represents rpminfo_items that have a name not equal to 'rpm', and an arch, epoch, release, version, evr, and signature_keyid that match the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+    <rpminfo_state id="oval:org.mitre.oval.test:ste:341" version="1" comment="This state represents rpminfo_items that have a name not equal to 'rpm', and an arch, epoch, release, version, and evr that match the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
       <name operation="not equal">rpm</name>
       <arch operation="pattern match">.*</arch>
       <epoch operation="pattern match">.*</epoch>
       <release operation="pattern match">.*</release>
       <version operation="pattern match">.*</version>
       <evr datatype="evr_string" operation="greater than or equal">0</evr>
-      <signature_keyid operation="pattern match">.*</signature_keyid>
     </rpminfo_state>
-    <rpminfo_state id="oval:org.mitre.oval.test:ste:525" version="1" comment="This state represents rpminfo_items that have a name that matches the regular expression '^r.m$' and an arch, epoch, release, version, evr, and signature_keyid that match the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
-      <name operation="pattern match">^r.m$</name>
+    <rpminfo_state id="oval:org.mitre.oval.test:ste:525" version="1" comment="This state represents rpminfo_items that have a name that matches the regular expression '^r.m$' and an arch, epoch, release, version, and evr that match the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#linux">
+      <name operation="pattern match">^AIX-r.m$</name>
       <arch operation="pattern match">.*</arch>
       <epoch operation="pattern match">.*</epoch>
       <release operation="pattern match">.*</release>
       <version operation="pattern match">.*</version>
       <evr datatype="evr_string" operation="greater than or equal">0</evr>
-      <signature_keyid operation="pattern match">.*</signature_keyid>
     </rpminfo_state>
   </states>
 </oval_definitions>

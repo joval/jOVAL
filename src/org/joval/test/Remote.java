@@ -17,6 +17,7 @@ import org.jinterop.dcom.common.JISystem;
 
 import org.joval.discovery.SessionFactory;
 import org.joval.identity.Credential;
+import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.system.IBaseSession;
@@ -63,72 +64,56 @@ public class Remote {
 		JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
 	    }
 
-	    SshSession gateway = null;
-	    String gwHost = props.getProperty("gateway.host");
-	    if (gwHost != null) {
-		gateway = new SshSession(gwHost);
-		String username = props.getProperty("gateway.username");
-		String password = props.getProperty("gateway.password");
-		if (username != null) {
-		    gateway.unlock(new Credential(username, password));
-		}
-	    }
+	    SessionFactory factory = new SessionFactory(new File("."));
+	    SimpleCredentialStore scs = new SimpleCredentialStore();
+	    factory.setCredentialStore(scs);
 
 	    String host = props.getProperty("host");
-	    String domain = props.getProperty("domain");
-	    String username = props.getProperty("username");
-	    String password = props.getProperty("password");
-	    String privateKey = props.getProperty("privateKey");
-	    String passphrase = props.getProperty("passphrase");
-	    String rootPassword = props.getProperty("rootPassword");
-
-	    SessionFactory factory = new SessionFactory(new File("."), gateway);
-	    IBaseSession base = factory.createSession(host);
-	    IBaseSession session = null;
-	    ICredential cred = null;
-	    if (base instanceof ILocked) {
-		ILocked locked = (ILocked)base;
-		switch(base.getType()) {
-		  case SSH:
-		    if (privateKey != null) {
-			cred = new SshCredential(username, new File(privateKey), passphrase, rootPassword);
-		    } else {
-			cred = new SshCredential(username, password, rootPassword);
-		    }
-		    break;
-
-		  case WINDOWS:
-		    cred = new WindowsCredential(domain, username, password);
-		    break;
-
-		  default:
-		    cred = new Credential(username, password);
-		    break;
+	    String gwHost = props.getProperty("gateway.host");
+	    if (gwHost != null) {
+		factory.addRoute(host, gwHost);
+		Properties p = new Properties();
+		p.setProperty(SimpleCredentialStore.PROP_HOSTNAME, gwHost);
+		String username = props.getProperty("gateway.username");
+		if (username != null) {
+		    p.setProperty(SimpleCredentialStore.PROP_USERNAME, username);
 		}
-		locked.unlock(cred);
+		String password = props.getProperty("gateway.password");
+		if (password != null) {
+		    p.setProperty(SimpleCredentialStore.PROP_PASSWORD, password);
+		}
+		scs.add(p);
 	    }
-	    ISession.Type type = base.getType();
-	    switch(type) {
-	      case UNIX:
-		UnixSession us = new UnixSession((SshSession)base);
-		us.unlock(cred);
-		session = us;
-		break;
 
-	      case CISCO_IOS:
-		base.disconnect();
-		IosSession is = new IosSession(new SshSession(host));
-		is.unlock(cred);
-		session = is;
-		break;
-
-	      case WINDOWS:
-		session = base;
-		break;
-
-	      default:
-		System.out.println("Bad type: " + type);
+	    Properties p = new Properties();
+	    p.setProperty(SimpleCredentialStore.PROP_HOSTNAME, host);
+	    String domain = props.getProperty("domain");
+	    if (domain != null) {
+		p.setProperty(SimpleCredentialStore.PROP_DOMAIN, domain);
 	    }
+	    String username = props.getProperty("username");
+	    if (username != null) {
+		p.setProperty(SimpleCredentialStore.PROP_USERNAME, username);
+	    }
+	    String password = props.getProperty("password");
+	    if (password != null) {
+		p.setProperty(SimpleCredentialStore.PROP_PASSWORD, password);
+	    }
+	    String privateKey = props.getProperty("privateKey");
+	    if (privateKey != null) {
+		p.setProperty(SimpleCredentialStore.PROP_PRIVATE_KEY, privateKey);
+	    }
+	    String passphrase = props.getProperty("passphrase");
+	    if (passphrase != null) {
+		p.setProperty(SimpleCredentialStore.PROP_PASSPHRASE, passphrase);
+	    }
+	    String rootPassword = props.getProperty("rootPassword");
+	    if (rootPassword != null) {
+		p.setProperty(SimpleCredentialStore.PROP_ROOT_PASSWORD, rootPassword);
+	    }
+	    scs.add(p);
+
+	    IBaseSession session = factory.createSession(host);
 	    if (session.connect()) {
 		if ("true".equals(props.getProperty("test.ad"))) {
 		    AD ad = new AD(session);
