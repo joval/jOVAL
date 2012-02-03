@@ -59,18 +59,37 @@ public class RemoteContainer implements IPluginContainer {
 	if (props.getProperty("config.file") == null) {
 	    throw new Exception("Missing configuration file: " + DEFAULT_FILE);
 	}
+
+	//
+	// Provision the CredentialStore with the configuration, which will validate that all the necessary
+	// information has been provided.
+	//
 	SimpleCredentialStore scs = new SimpleCredentialStore();
 	scs.add(props);
 
-	String gwHost = props.getProperty("gw.host");
-	if (gwHost != null) {
-	    SshSession gateway = new SshSession(gwHost);
-	    String user = props.getProperty("gw.user");
-	    String pass = props.getProperty("gw.pass");
-	    if (user != null) {
-		gateway.unlock(new Credential(user, pass));
+	//
+	// If a gateway is defined, provision the SessionFactory with the route, and the CredentialStore with its
+	// username/password.
+	//
+	String gateway = props.getProperty("gw.host");
+	if (gateway != null) {
+	    Properties gwProps = new Properties();
+	    gwProps.setProperty(SimpleCredentialStore.PROP_HOSTNAME, gateway);
+	    gwProps.setProperty(SimpleCredentialStore.PROP_USERNAME, props.getProperty("gw.user"));
+	    String temp = null;
+	    if ((temp = props.getProperty("gw.pass")) != null) {
+		gwProps.setProperty(SimpleCredentialStore.PROP_PASSWORD, temp);
 	    }
-	    RemotePlugin.setSshGateway(gateway);
+	    if ((temp = props.getProperty("gw.keyFile")) != null) {
+		gwProps.setProperty(SimpleCredentialStore.PROP_PRIVATE_KEY, temp);
+	    }
+	    if ((temp = props.getProperty("gw.keyPass")) != null) {
+		gwProps.setProperty(SimpleCredentialStore.PROP_PASSPHRASE, temp);
+	    }
+	    scs.add(gwProps);
+
+	    String destination = props.getProperty(SimpleCredentialStore.PROP_HOSTNAME);
+	    RemotePlugin.addRoute(destination, gateway);
 	}
 
 	RemotePlugin.setCredentialStore(scs);

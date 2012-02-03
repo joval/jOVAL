@@ -14,7 +14,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 import org.joval.discovery.Local;
-import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
@@ -33,16 +32,6 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  */
 class PolymorphicPlugin extends RemotePlugin {
-    static final SimpleCredentialStore SCS = new SimpleCredentialStore();
-    static {
-	setCredentialStore(SCS);
-	try {
-	    setDataDirectory(new File("state"));
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-    }
-
     private IFilesystem fs;
 
     /**
@@ -56,9 +45,8 @@ class PolymorphicPlugin extends RemotePlugin {
     /**
      * Create a plugin using a remote session implementation.
      */
-    PolymorphicPlugin(IProperty props) {
-	super(props.getProperty(SimpleCredentialStore.PROP_HOSTNAME));
-	SCS.add(props);
+    PolymorphicPlugin(String hostname) {
+	super(hostname);
     }
 
     /**

@@ -139,6 +139,10 @@ public class Main implements IObserver {
 	}
     }
 
+    static void logException(Throwable thrown) {
+	logger.log(Level.WARNING, getMessage("ERROR_FATAL"), thrown);
+    }
+
     /**
      * Retrieve a message using its key.
      */

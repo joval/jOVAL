@@ -10,13 +10,25 @@ import java.io.IOException;
 import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Hashtable;
+import java.util.List;
 import java.util.Properties;
+import java.util.Vector;
+import javax.security.auth.login.LoginException;
 
+import org.slf4j.cal10n.LocLogger;
+
+import org.joval.intf.identity.ICredential;
+import org.joval.intf.identity.ICredentialStore;
+import org.joval.intf.identity.ILocked;
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.system.IBaseSession;
+import org.joval.os.embedded.system.IosSession;
+import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.remote.system.WindowsSession;
+import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
-import org.joval.ssh.system.SshSession;
 
 /**
  * Use this class to grab an ISession for a host.
@@ -24,26 +36,26 @@ import org.joval.ssh.system.SshSession;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SessionFactory {
-    private static final String ROUTES	= "routes.ini";
-    private static final String PROPS	= "host.properties";
+public class SessionFactory implements ILoggable {
+    private static final String PROPS		= "host.properties";
+    private static final String PROP_SESSION	= "session.type";
 
     private File wsDir = null;
-    private SshSession gateway = null;
+    private ICredentialStore cs;
+    private Hashtable<String, String> routes;
+    private LocLogger logger;
 
     /**
      * Create a SessionFactory with no state persistence capability.
      */
     public SessionFactory() {
+	routes = new Hashtable<String, String>();
+	logger = JOVALSystem.getLogger();
     }
 
     public SessionFactory(File wsDir) throws IOException {
+	this();
 	setDataDirectory(wsDir);
-    }
-
-    public SessionFactory(File wsDir, SshSession gateway) throws IOException {
-	setDataDirectory(wsDir);
-	setSshGateway(gateway);
     }
 
     public void setDataDirectory(File wsDir) throws IOException {
@@ -56,36 +68,95 @@ public class SessionFactory {
 	}
     }
 
-    public void setSshGateway(SshSession gateway) {
-	this.gateway = gateway;
+    public void setCredentialStore(ICredentialStore cs) {
+	this.cs = cs;
     }
 
-    public IBaseSession createSession(String hostname) throws UnknownHostException {
+    public void addRoute(String destination, String gateway) {
+	routes.put(destination, gateway);
+    }
+
+    /**
+     * Given the hostname, return an authenticated session.  The session may or may not be connected.
+     */
+    public IBaseSession createSession(String hostname) throws UnknownHostException, ConnectException {
+	if (hostname == null) {
+	    throw new ConnectException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TARGET));
+	}
+
 	File dir = getHostWorkspace(hostname);
 
-	if (gateway != null) {
-	    return new SshSession(hostname, gateway, dir);
-	}
-
-	Properties props = getProperties(hostname);
 	IBaseSession.Type type = IBaseSession.Type.UNKNOWN;
-	String s = props.getProperty(hostname);
-	if (s == null) {
-	    type = discoverSessionType(hostname);
+	List<String> route = getRoute(hostname);
+	if (route.size() == 0) {
+	    //
+	    // Look up or discover the session type (Windows or SSH)
+	    //
+	    Properties props = getProperties(hostname);
+	    String s = props.getProperty(PROP_SESSION);
+	    if (s == null) {
+		type = discoverSessionType(hostname);
+	    } else {
+		type = IBaseSession.Type.typeOf(s);
+	    }
 	} else {
-	    type = IBaseSession.Type.getType(s);
+	    //
+	    // Only SSH sessions support routes
+	    //
+	    type = IBaseSession.Type.SSH;
 	}
 
-	switch (type) {
-	  case SSH:
-	    return new SshSession(hostname, dir);
+	//
+	// Generate the appropriate session implementation (Windows, Cisco IOS or Unix)
+	//
+	try {
+	    IBaseSession session = null;
+	    switch (type) {
+	      case SSH:
+		SshSession gateway = null;
+		for (String next : route) {
+		    gateway = new SshSession(next, gateway, dir);
+		    gateway.setLogger(logger);
+		    setCredential(gateway);
+		}
+		SshSession ssh = new SshSession(hostname, gateway, dir);
+		ssh.setLogger(logger);
+		setCredential(ssh);
+		switch(ssh.getType()) {
+		  case UNIX:
+		    session = new UnixSession(ssh);
+		    break;
 
-	  case WINDOWS:
-	    return new WindowsSession(hostname, dir);
+		  case CISCO_IOS:
+		    ssh.disconnect();
+		    session = new IosSession(ssh);
+		    break;
+		}
+		break;
 
-	  default:
-	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, type));
+	      case WINDOWS:
+		session = new WindowsSession(hostname, dir);
+		break;
+
+	      default:
+		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, type));
+	    }
+	    session.setLogger(logger);
+	    setCredential(session);
+	    return session;
+	} catch (Exception e) {
+	    throw new ConnectException(e.getMessage());
 	}
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
     }
 
     // Private
@@ -105,9 +176,41 @@ public class SessionFactory {
 	}
 
 	Properties props = getProperties(hostname);
-	props.setProperty(hostname, type.toString());
+	props.setProperty(PROP_SESSION, type.value());
 	saveProperties(props, hostname);
 	return type;
+    }
+
+    private void setCredential(IBaseSession session) throws Exception {
+	if (session instanceof ILocked) {
+	    if (cs == null) {
+		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL_STORE, session.getHostname()));
+	    } else {
+		ICredential cred = cs.getCredential(session);
+		if (cred == null) {
+		    throw new LoginException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL));
+		} else if (((ILocked)session).unlock(cred)) {
+		    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_CREDENTIAL_SET, session.getHostname());
+		} else {
+		    String baseName = session.getClass().getName();
+		    String credName = cred.getClass().getName();
+		    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_LOCK, credName, baseName));
+		}
+	    }
+	}
+    }
+
+    /**
+     * Returns a list of gateways that must be traversed (in the order they must be contacted) to reach the indicated
+     * host.  If the host can be contacted directly (i.e., no route is defined), the list will be empty.
+     */
+    private List<String> getRoute(String hostname) {
+	List<String> route = new Vector<String>();
+	String gateway = hostname;
+	while((gateway = routes.get(gateway)) != null) {
+	    route.add(0, gateway);
+	}
+	return route;
     }
 
     private boolean hasListener(String hostname, int port) throws UnknownHostException {

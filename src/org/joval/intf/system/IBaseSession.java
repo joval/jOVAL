@@ -150,11 +150,11 @@ public interface IBaseSession extends ILoggable {
 	    this.s = s;
 	}
 
-	public String toString() {
+	public String value() {
 	    return s;
 	}
 
-	public static Type getType(String s) {
+	public static Type typeOf(String s) {
 	    for (Type t : values()) {
 		if (t.s.equals(s)) {
 		    return t;

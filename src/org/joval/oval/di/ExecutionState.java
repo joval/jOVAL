@@ -259,6 +259,7 @@ public class ExecutionState {
 		    pluginConfig.load(new FileInputStream(new File(argv[++i])));
 		    pluginConfig.setProperty(IPluginContainer.PROP_CONFIGFILE, argv[i]);
 		} catch (IOException e) {
+		    Main.logException(e);
 		    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
 		    return false;
 		}
@@ -289,6 +290,7 @@ public class ExecutionState {
 	    }
 	    return true;
 	} catch (Exception e) {
+	    Main.logException(e);
 	    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage(), logFile));
 	}
 	return false;

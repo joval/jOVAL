@@ -59,6 +59,7 @@ import org.joval.test.automation.schema.TestResultEnumeration;
 import org.joval.test.automation.schema.TestResults;
 import org.joval.test.automation.schema.TestSuite;
 
+import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.system.IBaseSession;
@@ -113,7 +114,23 @@ public class Main {
 		reportDir.mkdir();
 	    }
 
-	    ExecutorService pool = Executors.newFixedThreadPool(Integer.parseInt(config.getProperty("Config", "concurrency")));
+	    SimpleCredentialStore scs = new SimpleCredentialStore();
+	    for (String name : config.listSections()) {
+		if (name.startsWith("Credential:")) {
+		    String hostname = name.substring(11).trim();
+		    IProperty props = config.getSection(name);
+		    props.setProperty(SimpleCredentialStore.PROP_HOSTNAME, hostname);
+		    scs.add(props);
+		}
+	    }
+	    PolymorphicPlugin.setCredentialStore(scs);
+	    PolymorphicPlugin.setDataDirectory(new File("state"));
+	    IProperty routes = config.getSection("Routes");
+	    for (String destination : routes) {
+		PolymorphicPlugin.addRoute(destination, routes.getProperty(destination));
+	    }
+
+	    ExecutorService pool = Executors.newFixedThreadPool(config.getSection("Config").getIntProperty("concurrency"));
 	    Report report = new ObjectFactory().createReport();
 
 	    long runtime = System.currentTimeMillis();
@@ -125,7 +142,7 @@ public class Main {
 		    if (LOCAL.equals(name)) {
 			plugin = new PolymorphicPlugin();
 		    } else {
-			plugin = new PolymorphicPlugin(props);
+			plugin = new PolymorphicPlugin(props.getProperty("hostname"));
 		    }
 		    pool.execute(new TestExecutor(name, props, plugin, report));
 		}
