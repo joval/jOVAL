@@ -102,7 +102,7 @@ public class TestExecutor implements Runnable {
 	    sysLogger.info(name + " - Started test suite");
 	    tm = System.currentTimeMillis();
 	    plugin.connect();
-	    File testDir = new File(contentDir, plugin.getSessionType().toString());
+	    File testDir = new File(contentDir, plugin.getSessionType().value());
 	    if (plugin.getSessionType() == IBaseSession.Type.UNIX) {
 		testDir = new File(testDir, plugin.getSessionFlavor().value());
 	    }
