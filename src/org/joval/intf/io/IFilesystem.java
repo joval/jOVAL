@@ -18,23 +18,9 @@ import org.joval.intf.util.tree.ITree;
  */
 public interface IFilesystem extends ITree {
     /**
-     * Property governing the method used when preloading the cache.  Valid methods are FILE_METHOD and STREAM_METHOD.
-     */
-    String PROP_PRELOAD_METHOD = "fs.preload.method";
-
-    String VAL_FILE_METHOD      = "file";
-    String VAL_STREAM_METHOD    = "stream";
-
-    /**
      * Property governing the maximum number of paths to pre-load into the filesystem map cache.
      */
     String PROP_PRELOAD_MAXENTRIES = "fs.preload.maxEntries";
-
-    /**
-     * Property governing the maximum age, in milliseconds, of the file storing the find results used by precaching.  This
-     * is only relevant when the preload method is VAL_FILE_METHOD.
-     */
-    String PROP_PRELOAD_MAXAGE = "fs.preload.maxAge";
 
     /**
      * Property specifying a list of filesystem types that should not be preloaded by an IFilesystem implementation.

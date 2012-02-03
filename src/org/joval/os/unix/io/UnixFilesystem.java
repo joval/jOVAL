@@ -9,11 +9,14 @@ import java.io.InterruptedIOException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Vector;
 import java.util.NoSuchElementException;
+import java.util.Properties;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.regex.Matcher;
 
 import org.slf4j.cal10n.LocLogger;
@@ -39,6 +42,7 @@ import org.joval.util.tree.CachingTree;
 import org.joval.util.tree.Tree;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.PropertyUtil;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
 
@@ -49,10 +53,13 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
-    private final static String LOCAL_INDEX = "fs.index";
-
-    protected final static char DELIM_CH = '/';
-    protected final static String DELIM_STR = "/";
+    protected final static String LOCAL_INDEX		= "fs.index";
+    protected final static String INDEX_PROPS		= "fs.index.properties";
+    protected final static String INDEX_PROP_LEN	= "length";
+    protected final static String INDEX_PROP_CRC	= "crc";
+    protected final static String INDEX_PROP_MOUNTS	= "mounts";
+    protected final static String DELIM_STR		= "/";
+    protected final static char   DELIM_CH		= '/';
 
     protected long S, M, L, XL;
 
@@ -103,48 +110,72 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	    List<String> mounts = getMounts((IUnixSession)session);
 
 	    if (VAL_FILE_METHOD.equals(props.getProperty(PROP_PRELOAD_METHOD))) {
+		//
+		// The file method stores the output of the find command in a file...
+		//
 		IReader reader = null;
-
 		File wsdir = session.getWorkspace();
-		File local = null;
-		long len = 0L;
+		IFile remoteCache = null, propsFile = null;
+		boolean cleanRemoteCache = true;
 		if(wsdir == null) {
 		    //
-		    // State cannot be saved locally, so create one on the remote box.
+		    // State cannot be saved locally, so create the file on the remote machine.
 		    //
-		    reader = PerishableReader.newInstance(getRemoteCache(command, mounts).getInputStream(), S);
+		    cleanRemoteCache = false;
+		    remoteCache = getRemoteCache(command, mounts);
+		    propsFile = getRemoteCacheProps();
+		    reader = PerishableReader.newInstance(remoteCache.getInputStream(), S);
 		} else {
 		    //
 		    // Read from the local state file, or create one while reading from the remote state file.
 		    //
-		    local = new File(wsdir, LOCAL_INDEX);
-		    IFile f = new FileProxy(this, local, local.getPath());
-		    if (isValidCache(f)) {
-			len = f.length();
-			reader = PerishableReader.newInstance(f.getInputStream(), S);
+		    File local = new File(wsdir, LOCAL_INDEX);
+		    IFile localCache = new FileProxy(this, local, local.getAbsolutePath());
+		    File localProps = new File(wsdir, INDEX_PROPS);
+		    propsFile = new FileProxy(this, localProps, localProps.getAbsolutePath());
+		    Properties cacheProps = new Properties();
+		    if (propsFile.exists()) {
+			cacheProps.load(propsFile.getInputStream());
+		    }
+		    if (isValidCache(localCache, new PropertyUtil(cacheProps), mounts)) {
+			reader = PerishableReader.newInstance(localCache.getInputStream(), S);
+			cleanRemoteCache = false;
 		    } else {
-			f = getRemoteCache(command, mounts);
-			len = f.length();
-
-/*
- TBD:  ???
-
-Need to create a properties file containing:
-1) a list of the mounts that were indexed
-2) the length and CRC checksum of the cache file on the server
-Then these properties need to be saved to a local file.
-
-These need to be validated before the next load, so we can determine whether to use the remote cache.
- -> use a CheckInputStream(in, new CRC32()) to get the CRC checksum of the local file
-
-*/
-
-			InputStream in = new StreamLogger(null, f.getInputStream(), local, logger);
+			remoteCache = getRemoteCache(command, mounts);
+			InputStream in = new StreamLogger(null, remoteCache.getInputStream(), local, logger);
 			reader = PerishableReader.newInstance(in, S);
 		    }
 		}
+
+		//
+		// Store properties about the remote cache file.  If there is none, then we're using the verified local
+		// cache file, so there's no data to store.
+		//
+		if (remoteCache != null) {
+		    StringBuffer sb = new StringBuffer();
+		    for (String mount : mounts) {
+			if (sb.length() > 0) {
+			    sb.append(":");
+			}
+			sb.append(mount);
+		    }
+		    Properties cacheProps = new Properties();
+		    cacheProps.setProperty(INDEX_PROP_MOUNTS, sb.toString());
+		    cacheProps.setProperty(INDEX_PROP_LEN, Long.toString(remoteCache.length()));
+		    cacheProps.store(propsFile.getOutputStream(false), null);
+		}
+
 		addEntries(reader);
+		if (cleanRemoteCache) {
+		    remoteCache.delete();
+		    if (remoteCache.exists()) {
+			SafeCLI.exec("rm -f " + remoteCache.getLocalName(), session, IUnixSession.Timeout.S);
+		    }
+		}
 	    } else {
+		//
+		// The stream method (default) reads directly from the stdout of the find command on the remote host.
+		//
 		for (String mount : mounts) {
 		    IProcess p = null;
 		    ErrorReader er = null;
@@ -358,34 +389,92 @@ These need to be validated before the next load, so we can determine whether to 
     /**
      * Check to see if the IFile represents a valid cache of the preload data.  This works on either a local or remote
      * copy of the cache.  The lastModified date is compared against the expiration, and if stale, the IFile is deleted.
+     *
+     * After the date is checked, the properties are used to validate the length of the file and the list of filesystem
+     * mounts to be indexed.
      */
-    private boolean isValidCache(IFile f) throws IOException {
+    private boolean isValidCache(IFile f, IProperty cacheProps, List<String> mounts) throws IOException {
 	if (f.exists()) {
+	    //
+	    // Check the expiration date
+	    //
 	    long expires = f.lastModified() + props.getLongProperty(PROP_PRELOAD_MAXAGE);
 	    if (System.currentTimeMillis() >= expires) {
-		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_EXPIRED, f.getPath(), new Date(expires));
+		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_EXPIRED, f.getLocalName(), new Date(expires));
 		f.delete();
 		return false;
 	    }
-	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_REUSE, f.getPath());
+
+	    //
+	    // Check the length
+	    //
+	    long len = cacheProps.getLongProperty(INDEX_PROP_LEN);
+	    if (f.length() != len) {
+		logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), INDEX_PROP_LEN);
+		f.delete();
+		return false;
+	    }
+
+	    //
+	    // Check the mounts
+	    //
+	    String s = cacheProps.getProperty(INDEX_PROP_MOUNTS);
+	    if (s == null) {
+		logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), INDEX_PROP_MOUNTS);
+		f.delete();
+		return false;
+	    } else {
+		List<String> cachedMounts = StringTools.toList(StringTools.tokenize(s, ":", true));
+		if (cachedMounts.size() != mounts.size()) {
+		    logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), INDEX_PROP_MOUNTS);
+		    f.delete();
+		    return false;
+		}
+		String[] a = new String[0];
+		a = new ArrayList<String>(cachedMounts).toArray(a);
+		Arrays.sort(a);
+		String[] b = new String[0];
+		b = new ArrayList<String>(mounts).toArray(b);
+		Arrays.sort(b);
+		for (int i=0; i < a.length; i++) {
+		    if (!a[i].equals(b[i])) {
+			logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), INDEX_PROP_MOUNTS);
+			f.delete();
+			return false;
+		    }
+		}
+	    }
+	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_REUSE, f.getLocalName());
 	    return true;
 	} else {
 	    return false;
 	}
     }
 
-    private static final String CACHE_TEMP = "%HOME%/.jOVAL.find~";
-    private static final String CACHE_FILE = "%HOME%/.jOVAL.find";
+    private static final String CACHE_DIR = "%HOME%";
+    private static final String CACHE_TEMP = ".jOVAL.find~";
+    private static final String CACHE_FILE = ".jOVAL.find";
+    private static final String CACHE_PROPS = ".jOVAL.find.properties";
+
+    private IFile getRemoteCacheProps() throws IOException {
+	return getFile(env.expand(CACHE_DIR + DELIM_STR + CACHE_PROPS));
+    }
 
     /**
      * Return a valid cache file on the remote machine, if available, or create a new one and return it.
      */
     private IFile getRemoteCache(String command, List<String> mounts) throws Exception {
-	String tempPath = env.expand(CACHE_TEMP);
-	String destPath = env.expand(CACHE_FILE);
+	String tempPath = env.expand(CACHE_DIR + DELIM_STR + CACHE_TEMP);
+	String destPath = env.expand(CACHE_DIR + DELIM_STR + CACHE_FILE);
+
+	Properties cacheProps = new Properties();
+	IFile propsFile = getRemoteCacheProps();
+	if (propsFile.exists()) {
+	    cacheProps.load(propsFile.getInputStream());
+	}
 
 	IFile temp = getFile(destPath);
-	if (isValidCache(temp)) {
+	if (isValidCache(temp, new PropertyUtil(cacheProps), mounts)) {
 	    return temp;
 	}
 
