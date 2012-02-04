@@ -379,6 +379,14 @@ public class Main implements IObserver {
 		logger.addHandler(consoleHandler);
 		jSysLogger.addHandler(consoleHandler);
 	    }
+
+	    File configDir = new File("config");
+	    if (configDir.isDirectory()) {
+		File configFile = new File(configDir, "jovaldi.ini");
+		if (configFile.isFile()) {
+		    JOVALSystem.addConfiguration(configFile);
+		}
+	    }
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}

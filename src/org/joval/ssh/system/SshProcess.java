@@ -35,14 +35,16 @@ class SshProcess implements IProcess {
     private boolean debug=false, interactive = false;
     private StreamLogger debugIn, debugErr;
     private boolean dirty = true, running = false;
+    private File wsdir;
     private LocLogger logger;
+    private int pid;
 
-    private static int num = 0;
-
-    SshProcess(ChannelExec ce, String command, boolean debug, LocLogger logger) {
+    SshProcess(ChannelExec ce, String command, boolean debug, File wsdir, int pid, LocLogger logger) {
 	this.ce = ce;
 	this.command = command;
 	this.debug = debug;
+	this.wsdir = wsdir;
+	this.pid = pid;
 	this.logger = logger;
     }
 
@@ -61,16 +63,19 @@ class SshProcess implements IProcess {
 	ce.setPty(interactive);
 	ce.setCommand(command);
 	ce.connect();
-	if (debug) {
-	    num++;
-	}
 	running = true;
     }
 
     public InputStream getInputStream() throws IOException {
 	if (debug) {
 	    if (debugIn == null) {
-		debugIn = new StreamLogger(command, ce.getInputStream(), new File("out." + num + ".log"), logger);
+		File f = null;
+		if (wsdir == null) {
+		    f = new File("out." + pid + ".log");
+		} else {
+		    f = new File(wsdir, "out." + pid + ".log");
+		}
+		debugIn = new StreamLogger(command, ce.getInputStream(), f, logger);
 	    }
 	    return debugIn;
 	} else {
@@ -81,7 +86,13 @@ class SshProcess implements IProcess {
     public InputStream getErrorStream() throws IOException {
 	if (debug) {
 	    if (debugErr == null) {
-		debugErr = new StreamLogger(command, ce.getErrStream(), new File("err." + num + ".log"), logger);
+		File f = null;
+		if (wsdir == null) {
+		    f = new File("err." + pid + ".log");
+		} else {
+		    f = new File(wsdir, "err." + pid + ".log");
+		}
+		debugErr = new StreamLogger(command, ce.getErrStream(), f, logger);
 	    }
 	    return debugErr;
 	} else {

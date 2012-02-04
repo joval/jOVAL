@@ -40,7 +40,7 @@ public class IniFile {
      */
     public IniFile(File f) throws IOException {
 	this();
-	load(new FileInputStream(f));
+	load(f);
     }
 
     /**
@@ -51,6 +51,17 @@ public class IniFile {
 	load(in);
     }
 
+    /**
+     * A convenience method for loading files.
+     */
+    public void load(File f) throws IOException {
+	load(new FileInputStream(f));
+    }
+
+    /**
+     * Add configuratino data from a stream.  If the IniFile already contains configuration information,
+     * the information from the stream is added.
+     */
     public void load(InputStream in) throws IOException {
 	BufferedReader br = null;
 	try {
@@ -61,11 +72,12 @@ public class IniFile {
 	    int ptr;
 	    while ((line = br.readLine()) != null) {
 		if (line.startsWith("[") && line.trim().endsWith("]")) {
-		    if (section != null) {
+		    name = line.substring(1, line.length() - 1);
+		    section = sections.get(name);
+		    if (section == null) {
+			section = new PropertyUtil();
 			sections.put(name, section);
 		    }
-		    section = new PropertyUtil();
-		    name = line.substring(1, line.length() - 1);
 		} else if (line.startsWith(SEMICOLON)) {
 		    // skip comment
 		} else if ((ptr = delimIndex(line)) > 0) {
@@ -75,9 +87,6 @@ public class IniFile {
 			section.setProperty(key, val);
 		    }
 		}
-	    }
-	    if (section != null) {
-		sections.put(name, section);
 	    }
 	} finally {
 	    if (br != null) {

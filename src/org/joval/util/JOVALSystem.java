@@ -130,7 +130,7 @@ public class JOVALSystem {
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	    ovalProps.load(cl.getResourceAsStream("oval.properties"));
-	    config = new IniFile(cl.getResourceAsStream("defaults.ini"));
+	    config.load(cl.getResourceAsStream("defaults.ini"));
 	} catch (IOException e) {
 	    sysLogger.error(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
@@ -166,13 +166,14 @@ public class JOVALSystem {
     }
 
     /**
-     * Load a jOVAL system configuration from a file.
+     * Overlay sectioned jOVAL system configuration parameters from a file.
      *
      * jOVAL is equipped with a default configuration that is loaded by this class's static initializer. When using
      * this method to override the defaults, make sure to do so prior to the creation of any session objects.
      */
-    public static void setConfiguration(File f) throws IOException {
-	config = new IniFile(f);
+    public static void addConfiguration(File f) throws IOException {
+	sysLogger.info(JOVALMsg.STATUS_CONFIG_OVERLAY, f.getPath());
+	config.load(f);
     }
 
     /**

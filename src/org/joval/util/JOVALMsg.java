@@ -19,6 +19,7 @@ import ch.qos.cal10n.BaseName;
           }
 )
 public enum JOVALMsg {
+    STATUS_CONFIG_OVERLAY,
     STATUS_AUTHMESSAGE,
     STATUS_EMPTY_FILE,
     STATUS_EMPTY_OBJECT,
