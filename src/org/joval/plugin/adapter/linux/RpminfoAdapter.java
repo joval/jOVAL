@@ -5,7 +5,7 @@ package org.joval.plugin.adapter.linux;
 
 import java.util.Collection;
 import java.util.Hashtable;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -147,7 +147,6 @@ public class RpminfoAdapter implements IAdapter {
 	item = JOVALSystem.factories.sc.linux.createRpminfoItem();
 
 	String pkgArch = null, pkgEpoch = null, pkgVersion = null, pkgRelease = null;
-	boolean isInstalled = true;
 	StringBuffer command = new StringBuffer("rpm -q --qf \'");
 	command.append("%{NAME}\\n");
 	command.append("%{ARCH}\\n");
@@ -160,21 +159,21 @@ public class RpminfoAdapter implements IAdapter {
 	    break;
 	}
 	command.append("\' ").append(packageName);
-	Iterator<String> lines = SafeCLI.multiLine(command.toString(), session, IUnixSession.Timeout.S).iterator();
+	List<String> lines = SafeCLI.multiLine(command.toString(), session, IUnixSession.Timeout.S);
 
-	for (int lineNum=1; lines.hasNext() && isInstalled; lineNum++) {
-	    String line = lines.next();
-	    switch(lineNum) {
+	boolean isInstalled = lines.size() > 0;
+	int lineNum = 1;
+	for (String line : lines) {
+	    if (!isInstalled) {
+		break;
+	    }
+	    switch(lineNum++) {
 	      case 1: // NAME
-		EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		if (line.indexOf("not installed") == -1) {
+		if (line.indexOf("not installed") == -1 && line.length() > 0) {
 		    packageName = line;
 		} else {
 		    isInstalled = false;
-		    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		}
-		name.setValue(packageName);
-		item.setName(name);
 		break;
 
 	      case 2: // ARCH
@@ -235,6 +234,10 @@ public class RpminfoAdapter implements IAdapter {
 	    }
 	}
 
+	EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	name.setValue(packageName);
+	item.setName(name);
+
 	if (isInstalled) {
 	    for (String line : SafeCLI.multiLine("rpm -ql " + packageName, session, IUnixSession.Timeout.S)) {
 		if (!"(contains no files)".equals(line.trim())) {
@@ -243,6 +246,8 @@ public class RpminfoAdapter implements IAdapter {
 		    item.getFilepath().add(filepath);
 		}
 	    }
+	} else {
+	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	}
 
 	packageMap.put(packageName, item);
