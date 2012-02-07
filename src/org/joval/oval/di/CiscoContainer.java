@@ -54,8 +54,14 @@ public class CiscoContainer implements IPluginContainer {
     public void setDataDirectory(File dir) {}
 
     public void configure(Properties props) throws Exception {
+	if (props == null) {
+	    throw new Exception("Missing configuration file: " + DEFAULT_FILE);
+	}
 	TechSupport tech = null;
 	String str = props.getProperty("tech.url");
+	if (str == null) {
+	    throw new Exception("Missing property: tech.url");
+	}
 	Exception ex = null;
 	URL url = CiscoPlugin.toURL(props.getProperty("tech.url"));
 	plugin = new CiscoPlugin(new TechSupport(url.openStream()));

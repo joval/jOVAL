@@ -39,6 +39,14 @@ public class ExecutionState {
     static final String DEFAULT_RESULTS_SCHEMATRON	= "oval-results-schematron.xsl";
     static final String DEFAULT_PLUGIN			= "default";
 
+    static File BASE_DIR = new File(".");
+    static{
+	String s = System.getProperty("INSTALL_DIR");
+	if (s != null) {
+	    BASE_DIR = new File(s);
+	}
+    }
+
     File inputFile;
     File variablesFile;
     File defsFile;
@@ -85,12 +93,12 @@ public class ExecutionState {
 	inputFile = null;
 	definitionIDs = null;
 	specifiedChecksum = null;
-	defsFile = new File(DEFAULT_DEFINITIONS);
+	defsFile = new File(BASE_DIR, DEFAULT_DEFINITIONS);
 	inputDefsFile = null;
-	directivesFile = new File(DEFAULT_DIRECTIVES);
-	variablesFile = new File(DEFAULT_VARIABLES);
-	logFile = new File(DEFAULT_LOGFILE);
-	xmlDir = new File(DEFAULT_XMLDIR);
+	directivesFile = new File(BASE_DIR, DEFAULT_DIRECTIVES);
+	variablesFile = new File(BASE_DIR, DEFAULT_VARIABLES);
+	logFile = new File(BASE_DIR, DEFAULT_LOGFILE);
+	xmlDir = new File(BASE_DIR, DEFAULT_XMLDIR);
 	xmlTransform = null;
 	schematronDefsXform = null;
 	logLevel = Level.INFO;
@@ -98,9 +106,9 @@ public class ExecutionState {
 	//
 	// Outputs
 	//
-	dataFile = new File(DEFAULT_DATA);
-	resultsXML = new File(DEFAULT_RESULTS_XML);
-	resultsTransform = new File(DEFAULT_RESULTS_XFORM);
+	dataFile = new File(BASE_DIR, DEFAULT_DATA);
+	resultsXML = new File(BASE_DIR, DEFAULT_RESULTS_XML);
+	resultsTransform = new File(BASE_DIR, DEFAULT_RESULTS_XFORM);
 
 	//
 	// Behaviors
@@ -153,9 +161,11 @@ public class ExecutionState {
 	return plugin;
     }
 
+/* DAS
     Properties getPluginConfig() {
 	return new Properties();
     }
+*/
 
     /**
      * Process the command-line arguments.
@@ -279,11 +289,11 @@ public class ExecutionState {
 	try {
 	    if (container != null) {
 		if (pluginConfig == null) {
-		    pluginConfig = new Properties();
-		    File config = new File(IPluginContainer.DEFAULT_FILE);
+		    File config = new File(BASE_DIR, IPluginContainer.DEFAULT_FILE);
 		    if (config.exists()) {
+			pluginConfig = new Properties();
 			pluginConfig.setProperty(IPluginContainer.PROP_CONFIGFILE, config.getCanonicalPath());
-			pluginConfig.load(new FileInputStream(new File(IPluginContainer.DEFAULT_FILE)));
+			pluginConfig.load(new FileInputStream(config));
 		    }
 		}
 		container.configure(pluginConfig);
@@ -338,8 +348,7 @@ public class ExecutionState {
 
     private boolean loadPlugin(String name) {
 	try {
-	    File cwd = new File(".");
-	    File pluginRootDir = new File(cwd, "plugin");
+	    File pluginRootDir = new File(BASE_DIR, "plugin");
 	    File[] pluginDirs = pluginRootDir.listFiles();
 	    for (int i=0; i < pluginDirs.length; i++) {
 		Properties pluginProperties = new Properties();

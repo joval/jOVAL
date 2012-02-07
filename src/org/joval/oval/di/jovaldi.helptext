@@ -55,7 +55,7 @@ Other Options:
 
 Plugin Management Options:
    -plugin <string>  = name of the jovaldi plugin to use for the scan. Valid
-                       choices are "default" and "remote".
+                       choices are "default", "remote" and "cisco".
                        DEFAULT="default"
    -config <string>  = configuration information for the plugin.  See plugin
                        help for information on valid configuration parameters.
