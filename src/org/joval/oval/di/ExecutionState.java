@@ -41,7 +41,7 @@ public class ExecutionState {
 
     static File BASE_DIR = new File(".");
     static{
-	String s = System.getProperty("INSTALL_DIR");
+	String s = System.getProperty("jovaldi.baseDir");
 	if (s != null) {
 	    BASE_DIR = new File(s);
 	}
@@ -349,10 +349,13 @@ public class ExecutionState {
     private boolean loadPlugin(String name) {
 	try {
 	    File pluginRootDir = new File(BASE_DIR, "plugin");
-	    File[] pluginDirs = pluginRootDir.listFiles();
-	    for (int i=0; i < pluginDirs.length; i++) {
+	    if (!pluginRootDir.isDirectory()) {
+		Main.print(Main.getMessage("ERROR_PLUGIN_DIR_NOT_FOUND", pluginRootDir));
+		return false;
+	    }
+	    for (File dir : pluginRootDir.listFiles()) {
 		Properties pluginProperties = new Properties();
-		File propsFile = new File(pluginDirs[i], "plugin.properties");
+		File propsFile = new File(dir, "plugin.properties");
 		if (propsFile.exists()) {
 		    pluginProperties.load(new FileInputStream(propsFile));
 		    if (name.equals(pluginProperties.getProperty("name"))) {
@@ -365,7 +368,7 @@ public class ExecutionState {
 			    StringTokenizer tok = new StringTokenizer(classpath, ":");
 			    while(tok.hasMoreTokens()) {
 				String s = tok.nextToken();
-				File f = new File(pluginDirs[i], s);
+				File f = new File(dir, s);
 				if (f.exists()) {
 				    vUrl.add(f.toURI().toURL());
 				}
@@ -380,7 +383,7 @@ public class ExecutionState {
 				Object pluginObject = pluginClassLoader.loadClass(main).newInstance();
 				if (Class.forName(IPluginContainer.class.getName()).isInstance(pluginObject)) {
 				    container = (IPluginContainer)pluginObject;
-				    File dataDir = new File(pluginDirs[i], "data");
+				    File dataDir = new File(dir, "data");
 				    if (!dataDir.exists()) {
 					dataDir.mkdirs();
 				    }

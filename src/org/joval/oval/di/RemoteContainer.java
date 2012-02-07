@@ -6,6 +6,7 @@ package org.joval.oval.di;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
@@ -14,7 +15,6 @@ import org.joval.identity.Credential;
 import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.plugin.RemotePlugin;
-import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -43,6 +43,13 @@ public class RemoteContainer implements IPluginContainer {
 	}
     }
 
+    /**
+     * Retrieve a message using its key.
+     */
+    static String getMessage(String key, Object... arguments) {
+	return MessageFormat.format(resources.getString(key), arguments);
+    }
+
     private IPlugin plugin;
     private File dir;
 
@@ -57,7 +64,7 @@ public class RemoteContainer implements IPluginContainer {
 
     public void configure(Properties props) throws Exception {
 	if (props == null) {
-	    throw new Exception("Missing configuration file: " + DEFAULT_FILE);
+	    throw new Exception(getMessage("err.configMissing", DEFAULT_FILE));
 	}
 
 	//

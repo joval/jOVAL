@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
@@ -44,6 +45,13 @@ public class CiscoContainer implements IPluginContainer {
 	}
     }
 
+    /**
+     * Retrieve a message using its key.
+     */
+    static String getMessage(String key, Object... arguments) {
+	return MessageFormat.format(resources.getString(key), arguments);
+    }
+
     private IPlugin plugin;
 
     public CiscoContainer() {
@@ -55,12 +63,12 @@ public class CiscoContainer implements IPluginContainer {
 
     public void configure(Properties props) throws Exception {
 	if (props == null) {
-	    throw new Exception("Missing configuration file: " + DEFAULT_FILE);
+	    throw new Exception(getMessage("err.configMissing", DEFAULT_FILE));
 	}
 	TechSupport tech = null;
 	String str = props.getProperty("tech.url");
 	if (str == null) {
-	    throw new Exception("Missing property: tech.url");
+	    throw new Exception(getMessage("err.configPropMissing", "tech.url"));
 	}
 	Exception ex = null;
 	URL url = CiscoPlugin.toURL(props.getProperty("tech.url"));
