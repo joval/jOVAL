@@ -12,6 +12,7 @@ import java.io.RandomAccessFile;
 
 import org.slf4j.cal10n.LocLogger;
 
+import org.joval.intf.io.IFile;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -23,7 +24,7 @@ import org.joval.util.JOVALSystem;
  */
 public class StreamLogger extends InputStream {
     private InputStream in;
-    private FileOutputStream out;
+    private OutputStream out;
     private LocLogger logger;
     private boolean closed = false;
 
@@ -32,8 +33,16 @@ public class StreamLogger extends InputStream {
     }
 
     public StreamLogger(String comment, InputStream in, File outLog, LocLogger logger) throws IOException {
+	this(comment, in, new FileOutputStream(outLog), logger);
+    }
+
+    public StreamLogger(String comment, InputStream in, IFile outLog, LocLogger logger) throws IOException {
+	this(comment, in, outLog.getOutputStream(false), logger);
+    }
+
+    public StreamLogger(String comment, InputStream in, OutputStream out, LocLogger logger) throws IOException {
 	this.in = in;
-	out = new FileOutputStream(outLog);
+	this.out = out;
 	if (comment != null) {
 	    StringBuffer sb = new StringBuffer("# ");
 	    sb.append(comment);

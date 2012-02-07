@@ -132,7 +132,11 @@ class SftpFile extends BaseFile implements IUnixFile {
 
     public OutputStream getOutputStream(boolean append) throws IOException {
 	if (isLink()) {
-	    return fs.getFile(toString()).getOutputStream(append);
+	    try {
+		return fs.getFile(sfs.getCS().realpath(path)).getOutputStream(append);
+	    } catch (SftpException e) {
+		throw new IOException(e);
+	    }
 	} else if (exists() && isDirectory()) {
 	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_IO, path, JOVALSystem.getMessage(JOVALMsg.ERROR_IO_NOT_FILE));
 	    throw new IOException(s);
@@ -156,9 +160,9 @@ class SftpFile extends BaseFile implements IUnixFile {
     public boolean isDirectory() throws IOException {
 	if (isLink()) {
 	    try {
-		return new SftpFile(this).isDirectory();
-	    } catch (FileNotFoundException e) {
-		return false;
+		return fs.getFile(sfs.getCS().realpath(path)).isDirectory();
+	    } catch (SftpException e) {
+		throw new IOException(e);
 	    }
 	} else if (exists()) {
 	    return attrs.isDir();
@@ -169,7 +173,11 @@ class SftpFile extends BaseFile implements IUnixFile {
 
     public boolean isFile() throws IOException {
 	if (isLink()) {
-	    return fs.getFile(toString()).isFile();
+	    try {
+		return fs.getFile(sfs.getCS().realpath(path)).isFile();
+	    } catch (SftpException e) {
+		throw new IOException(e);
+	    }
 	} else if (exists()) {
 	    return !isDirectory();
 	} else {
@@ -203,7 +211,11 @@ class SftpFile extends BaseFile implements IUnixFile {
 
     public String[] list() throws IOException {
 	if (isLink()) {
-	    return new SftpFile(this).list();
+	    try {
+		return fs.getFile(sfs.getCS().realpath(path)).list();
+	    } catch (SftpException e) {
+		throw new IOException(e);
+	    }
 	} else {
 	    try {
 		List<ChannelSftp.LsEntry> list = sfs.getCS().ls(path);

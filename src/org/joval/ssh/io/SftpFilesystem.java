@@ -97,8 +97,8 @@ public class SftpFilesystem extends UnixFilesystem {
     /**
      * @override
      */
-    protected boolean doPreload() {
-	return props.getBooleanProperty(PROP_PRELOAD_REMOTE);
+    protected String getPreloadPropertyKey() {
+	return PROP_PRELOAD_REMOTE;
     }
 
     // Implement IFilesystem

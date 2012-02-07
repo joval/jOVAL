@@ -18,6 +18,8 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Matcher;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -53,7 +55,7 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
-    protected final static String LOCAL_INDEX		= "fs.index";
+    protected final static String LOCAL_INDEX		= "fs.index.gz";
     protected final static String INDEX_PROPS		= "fs.index.properties";
     protected final static String INDEX_PROP_LEN	= "length";
     protected final static String INDEX_PROP_CRC	= "crc";
@@ -82,8 +84,8 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     /**
      * Non-local subclasses should override this method.
      */
-    protected boolean doPreload() {
-	return props.getBooleanProperty(PROP_PRELOAD_LOCAL);
+    protected String getPreloadPropertyKey() {
+	return PROP_PRELOAD_LOCAL;
     }
 
     /**
@@ -94,7 +96,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     }
 
     public boolean preload() {
-	if (!doPreload()) {
+	if (!props.getBooleanProperty(getPreloadPropertyKey())) {
 	    return false;
 	} else if (preloaded) {
 	    return true;
@@ -124,7 +126,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		    cleanRemoteCache = false;
 		    remoteCache = getRemoteCache(command, mounts);
 		    propsFile = getRemoteCacheProps();
-		    reader = PerishableReader.newInstance(remoteCache.getInputStream(), S);
+		    reader = PerishableReader.newInstance(new GZIPInputStream(remoteCache.getInputStream()), S);
 		} else {
 		    //
 		    // Read from the local state file, or create one while reading from the remote state file.
@@ -138,12 +140,13 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 			cacheProps.load(propsFile.getInputStream());
 		    }
 		    if (isValidCache(localCache, new PropertyUtil(cacheProps), mounts)) {
-			reader = PerishableReader.newInstance(localCache.getInputStream(), S);
+			InputStream in = new GZIPInputStream(localCache.getInputStream());
+			reader = PerishableReader.newInstance(in, S);
 			cleanRemoteCache = false;
 		    } else {
 			remoteCache = getRemoteCache(command, mounts);
-			InputStream in = new StreamLogger(null, remoteCache.getInputStream(), local, logger);
-			reader = PerishableReader.newInstance(in, S);
+			InputStream tee = new StreamLogger(null, remoteCache.getInputStream(), localCache, logger);
+			reader = PerishableReader.newInstance(new GZIPInputStream(tee), S);
 		    }
 		}
 
@@ -452,8 +455,8 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     }
 
     private static final String CACHE_DIR = "%HOME%";
-    private static final String CACHE_TEMP = ".jOVAL.find~";
-    private static final String CACHE_FILE = ".jOVAL.find";
+    private static final String CACHE_TEMP = ".jOVAL.find.gz~";
+    private static final String CACHE_FILE = ".jOVAL.find.gz";
     private static final String CACHE_PROPS = ".jOVAL.find.properties";
 
     private IFile getRemoteCacheProps() throws IOException {
@@ -481,10 +484,11 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_TEMP, tempPath);
 	for (int i=0; i < mounts.size(); i++) {
 	    StringBuffer sb = new StringBuffer(command.replace("%MOUNT%", mounts.get(i)));
+	    sb.append(" | gzip ");
 	    if (i > 0) {
-		sb.append(" >> "); // append
+		sb.append(">> "); // append
 	    } else {
-		sb.append(" > ");  // over-write
+		sb.append("> ");  // over-write
 	    }
 	    sb.append(env.expand(tempPath)).toString();
 
