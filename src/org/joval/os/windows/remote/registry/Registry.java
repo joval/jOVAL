@@ -10,6 +10,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -24,6 +25,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.jinterop.dcom.common.IJIAuthInfo;
+import org.jinterop.dcom.common.JIErrorCodes;
 import org.jinterop.dcom.common.JIException;
 import org.jinterop.winreg.IJIWinReg;
 import org.jinterop.winreg.JIPolicyHandle;
@@ -61,8 +63,7 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class Registry extends BaseRegistry {
-    public static final int DEFAULT_BUFFER_SIZE	= 2048;
-    public static final int PATH_BUFFER_SIZE	= 2048;
+    public static final int BUFFER_LEN = 512;
 
     public static final String PATH		= "path";
     public static final String DEFAULT_ENCODING	= "US-ASCII";
@@ -104,7 +105,7 @@ public class Registry extends BaseRegistry {
 	    winreg = factory.getWinreg(new AuthInfo(cred), host, true);
 	    state = STATE_ENV;
 	    env = new Environment(this);
-//	    license = new LicenseData(this);
+	    license = new LicenseData(this);
 	    state = STATE_CONNECTED;
 	    return true;
 	} catch (UnknownHostException e) {
@@ -262,31 +263,79 @@ public class Registry extends BaseRegistry {
     /**
      * Thread-safe proxy for IJIWinReg.winreg_EnumKey.
      */
-    synchronized String[] wrEnumKey(JIPolicyHandle handle, int n) throws JIException {
-	return winreg.winreg_EnumKey(handle, n);
+    synchronized String[] wrEnumKey(JIPolicyHandle handle, int n) throws NoSuchElementException {
+	try {
+	    return winreg.winreg_EnumKey(handle, n);
+	} catch (JIException e) {
+	    switch(e.getErrorCode()) {
+	      case JIErrorCodes.ERROR_NO_MORE_ITEMS:
+		throw new NoSuchElementException(e.getMessage());
+
+	      default:
+		throw new RuntimeException(e);
+	    }
+	}
     }
 
     /**
      * Thread-safe proxy for IJIWinReg.winreg_EnumValue.
      */
-    synchronized Object[] wrEnumValue(JIPolicyHandle handle, int n) throws JIException {
-	return winreg.winreg_EnumValue(handle, n);
+    synchronized Object[] wrEnumValue(JIPolicyHandle handle, int n) throws NoSuchElementException {
+	try {
+	    return winreg.winreg_EnumValue(handle, n);
+	} catch (JIException e) {
+	    switch(e.getErrorCode()) {
+	      case JIErrorCodes.ERROR_NO_MORE_ITEMS:
+		throw new NoSuchElementException(e.getMessage());
+
+	      default:
+		throw new RuntimeException(e);
+	    }
+	}
     }
 
-    synchronized Value createValue(Key key, String name) throws IllegalArgumentException, JIException {
+    synchronized Value createValue(Key key, String name) throws IllegalArgumentException, NoSuchElementException {
 	Value val = null;
-	int len = name.equalsIgnoreCase(PATH) ? PATH_BUFFER_SIZE : DEFAULT_BUFFER_SIZE;
-	Object[] oa = winreg.winreg_QueryValue(key.handle, name, len);
+
+	int len = BUFFER_LEN;
+	Object[] oa = null;
+	boolean retry = false;
+
+	do {
+	    try {
+		oa = winreg.winreg_QueryValue(key.handle, name, len);
+		retry = false;
+	    } catch (JIException e) {
+		switch(e.getErrorCode()) {
+		  case JIErrorCodes.ERROR_NO_MORE_ITEMS:
+		    throw new NoSuchElementException(e.getMessage());
+
+		  case 0x000000EA: // This code appears to mean "insufficient buffer"
+		    retry = true;
+		    len += len;
+		    break;
+
+		  default:
+		    throw new RuntimeException(e);
+		}
+	    }
+	} while (retry);
+
 	if (oa.length == 2) {
 	    int type = ((Integer)oa[0]).intValue();
 	    switch(type) {
 	      case IJIWinReg.REG_MULTI_SZ: {
 		byte[][] data = (byte[][])oa[1];
-		String[] sa = new String[data.length];
+		ArrayList<String> sa = new ArrayList<String>(data.length);
 		for (int i=0; i < data.length; i++) {
-		    sa[i] = getString(data[i]);
+		    String s = getString(data[i]);
+		    if (s == null) {
+			break; // no more values
+		    } else {
+			sa.add(s);
+		    }
 		}
-		val = new MultiStringValue(key, name, sa);
+		val = new MultiStringValue(key, name, sa.toArray(new String[0]));
 		break;
 	      }
 

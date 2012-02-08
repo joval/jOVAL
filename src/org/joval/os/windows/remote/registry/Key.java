@@ -178,16 +178,12 @@ public class Key implements IKey {
      */
     public String getSubkeyName(int n) throws NoSuchElementException, IllegalStateException {
 	checkOpen();
-	try {
-	    String[] sa = registry.wrEnumKey(handle, n);
-	    if (sa.length == 2) {
-		return sa[0];
-	    } else {
-		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMKEY, n, toString());
-		return null;
-	    }
-	} catch (JIException e) {
-	    throw new NoSuchElementException(new Integer(n).toString());
+	String[] sa = registry.wrEnumKey(handle, n);
+	if (sa.length == 2) {
+	    return sa[0];
+	} else {
+	    registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMKEY, n, toString());
+	    return null;
 	}
     }
 
@@ -250,16 +246,12 @@ public class Key implements IKey {
      */
     public String getValueName(int n) throws NoSuchElementException, IllegalStateException {
 	checkOpen();
-	try {
-	    Object[] oa = registry.wrEnumValue(handle, n);
-	    if (oa.length == 2) {
-		return (String)oa[0];
-	    } else {
-		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMVAL, n, toString());
-		return null;
-	    }
-	} catch (JIException e) {
-	    throw new NoSuchElementException(new Integer(n).toString());
+	Object[] oa = registry.wrEnumValue(handle, n);
+	if (oa.length == 2) {
+	    return (String)oa[0];
+	} else {
+	    registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMVAL, n, toString());
+	    return null;
 	}
     }
 
@@ -373,7 +365,7 @@ public class Key implements IKey {
 	    return nextValue != null;
 	}
 
-	public IValue next() {
+	public IValue next() throws NoSuchElementException {
 	    if (nextValue != null) {
 		IValue temp = nextValue;
 		nextValue = null;
@@ -390,8 +382,6 @@ public class Key implements IKey {
 								      new Integer(index), Key.this.toString()));
 		}
 	    } catch (IllegalArgumentException e) {
-		throw new NoSuchElementException(e.getMessage());
-	    } catch (JIException e) {
 		throw new NoSuchElementException(e.getMessage());
 	    }
 	}
