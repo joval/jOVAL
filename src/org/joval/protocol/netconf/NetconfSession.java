@@ -1,4 +1,4 @@
-// Copyright (C) 2011 jOVAL.org.  All rights reserved.
+// Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 package org.joval.protocol.netconf;
@@ -8,13 +8,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import org.slf4j.cal10n.LocLogger;
 
 import org.vngx.jsch.ChannelExec;
 import org.vngx.jsch.ChannelSubsystem;
@@ -22,8 +26,11 @@ import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.Session;
 import org.vngx.jsch.exception.JSchException;
 
+import org.joval.intf.net.INetconf;
 import org.joval.io.PerishableReader;
 import org.joval.ssh.system.SshSession;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * Basic implementation of RFC 4741, to fetch router configurations.
@@ -31,21 +38,44 @@ import org.joval.ssh.system.SshSession;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class NetconfSession {
+public class NetconfSession implements INetconf {
     private static final String SUBSYS	= "netconf";
     private static final String MARKER	= "]]>]]>";
     private static final int ID_GET_CONFIG	= 101;
     private static final int ID_CLOSE_SESSION	= 102;
 
-    private DocumentBuilderFactory factory;
     private SshSession ssh;
+    private long timeout;
+    private LocLogger logger;
+    private DocumentBuilder builder;
 
-    public NetconfSession(SshSession ssh) {
-	factory = DocumentBuilderFactory.newInstance();
+    public NetconfSession(SshSession ssh, long timeout) {
 	this.ssh = ssh;
+	this.timeout = timeout;
+	logger = ssh.getLogger();
+	try {
+	    builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+	} catch (ParserConfigurationException e) {
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
     }
 
-    public void getConfig(long timeout) {
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    // Implement INetconf
+
+    public Document getConfig() throws Exception {
+	Document config = builder.newDocument();
+	MessageSender sender = null;
+
 	try {
 	    ssh.connect();
 	    Session session = ssh.getJschSession();
@@ -55,15 +85,13 @@ public class NetconfSession {
 	    InputStream in = channel.getInputStream();
 	    OutputStream out = channel.getOutputStream();
 
-	    MessageSender sender = new MessageSender(out);
+	    sender = new MessageSender(out);
 	    sender.start();
 
 	    PerishableReader reader = PerishableReader.newInstance(in, timeout);
 	    String data = null;
-
 	    while((data = reader.readUntil(MARKER)) != null) {
 		data = data.trim();
-		DocumentBuilder builder = factory.newDocumentBuilder();
 		Element elt = builder.parse(new ByteArrayInputStream(data.getBytes())).getDocumentElement();
 		String tagName = elt.getTagName();
 
@@ -79,45 +107,64 @@ public class NetconfSession {
 			    sessionId = child.getTextContent();
 			}
 		    }
-		    System.out.println("Session ID: " + sessionId);
+		    logger.info(JOVALMsg.STATUS_NETCONF_SESSIONID, sessionId);
 
 		//
 		// Process RPC response messages
 		//
 		} else if (tagName.equals("rpc-reply")) {
 		    switch(Integer.parseInt(elt.getAttribute("message-id"))) {
-		      case ID_GET_CONFIG:
-			System.out.println(data);
+		      //
+		      // Process the response to the get-config request.
+		      //
+		      case ID_GET_CONFIG: {
+			// First, get the data node from the reply
+			NodeList dataNodes = elt.getElementsByTagName("data");
+			if (dataNodes.getLength() > 0) {
+			    Node dataNode = dataNodes.item(0);
+			    //
+			    // Next, copy all attributes from the rpc-reply to the new data element for our Document.
+			    // This will catch any namespace declarations that would otherwise be lost in the import
+			    // (and cause errors).
+			    //
+			    Element newData = config.createElement("data");
+			    NamedNodeMap attrs = elt.getAttributes();
+			    for (int i=0; i < attrs.getLength(); i++) {
+				Node attr = attrs.item(i);
+				newData.setAttribute(attr.getNodeName(), attr.getNodeValue());
+			    }
+			    //
+			    // Finally, import the children of the data node, and add the new data element to our Document.
+			    //
+			    NodeList list = dataNode.getChildNodes();
+			    for (int i=0; i < list.getLength(); i++) {
+				newData.appendChild(config.importNode(list.item(i), true));
+			    }
+			    config.appendChild(newData);
+			}
 			break;
+		      }
 
 		      case ID_CLOSE_SESSION:
-			ssh.disconnect();
+			channel.disconnect();
 			break;
 		    }
 		}
 	    }
-
-	    sender.join();
-	} catch (ParserConfigurationException e) {
-	    throw new RuntimeException(e);
-	} catch (JSchException e) {
-	    e.printStackTrace();
-	} catch (InterruptedException e) {
-	    e.printStackTrace();
-	} catch (NumberFormatException e) {
-	    e.printStackTrace();
-	} catch (SAXException e) {
-	    e.printStackTrace();
-	} catch (IOException e) {
-	    e.printStackTrace();
+	} finally {
+	    if (sender != null) {
+		sender.join();
+	    }
 	}
+
+	return config;
     }
 
     // Private
 
     class MessageSender implements Runnable {
 	OutputStream out;
-	Thread t;
+	Thread t = null;
 
 	MessageSender(OutputStream out) {
 	    this.out = out;
@@ -129,7 +176,9 @@ public class NetconfSession {
 	}
 
 	public void join() throws InterruptedException {
-	    t.join();
+	    if (t != null) {
+		t.join();
+	    }
 	}
 
 	public void run() {
@@ -137,7 +186,6 @@ public class NetconfSession {
 		//
 		// Say Hello
 		//
-		System.out.println("Writing hello");
 		StringBuffer msg = new StringBuffer();
 		msg.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 		msg.append("<hello><capabilities>");
@@ -150,7 +198,6 @@ public class NetconfSession {
 		//
 		// Request the running config
 		//
-		System.out.println("Writing get-config");
 		msg = new StringBuffer();
 		msg.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 		msg.append("<rpc message-id=\"").append(Integer.toString(ID_GET_CONFIG)).append("\">");
@@ -163,7 +210,6 @@ public class NetconfSession {
 		//
 		// Close the session
 		//
-		System.out.println("Writing close-message");
 		msg = new StringBuffer();
 		msg.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
 		msg.append("<rpc message-id=\"").append(Integer.toString(ID_CLOSE_SESSION)).append("\">");

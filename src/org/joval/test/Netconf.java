@@ -11,6 +11,12 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.logging.*;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import org.vngx.jsch.JSch;
 
@@ -98,8 +104,9 @@ public class Netconf {
 	    SshSession ssh = new SshSession(host, gateway, null);
 	    ssh.unlock(scs.getCredential(ssh));
 
-	    NetconfSession netconf = new NetconfSession(ssh);
-	    netconf.getConfig(5000L);
+	    NetconfSession netconf = new NetconfSession(ssh, 5000L);
+	    Transformer transformer = TransformerFactory.newInstance().newTransformer();
+	    transformer.transform(new DOMSource(netconf.getConfig()), new StreamResult(System.out));
 
 	    ssh.disconnect();
 	} catch (Exception e) {

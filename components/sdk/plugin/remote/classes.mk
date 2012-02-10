@@ -7,16 +7,17 @@ CLASSES=\
 	org.joval.intf.cisco.system.ITechSupport			\
 	org.joval.intf.identity.ICredential				\
 	org.joval.intf.identity.ILocked					\
+	org.joval.intf.net.INetconf					\
 	org.joval.intf.ssh.ISftpError					\
 	org.joval.intf.ssh.identity.ISshCredential			\
 	org.joval.intf.ssh.system.ISshSession				\
 	org.joval.intf.windows.identity.IWindowsCredential		\
 	org.joval.io.StreamLogger					\
 	org.joval.io.TailDashF						\
-	org.joval.os.embedded.IosNetworkInterface			\
-	org.joval.os.embedded.IosSystemInfo				\
-	org.joval.os.embedded.system.IosSession				\
-	org.joval.os.embedded.system.TechSupport			\
+	org.joval.os.cisco.IosNetworkInterface				\
+	org.joval.os.cisco.IosSystemInfo				\
+	org.joval.os.cisco.system.IosSession				\
+	org.joval.os.cisco.system.TechSupport				\
 	org.joval.os.unix.remote.system.Sudo				\
 	org.joval.os.unix.remote.system.UnixSession			\
 	org.joval.os.windows.identity.WindowsCredential			\

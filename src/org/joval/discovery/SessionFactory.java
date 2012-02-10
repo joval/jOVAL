@@ -23,7 +23,7 @@ import org.joval.intf.identity.ICredentialStore;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.system.IBaseSession;
-import org.joval.os.embedded.system.IosSession;
+import org.joval.os.cisco.system.IosSession;
 import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.remote.system.WindowsSession;
 import org.joval.ssh.system.SshSession;

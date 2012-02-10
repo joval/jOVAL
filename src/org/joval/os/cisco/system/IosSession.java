@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.embedded.system;
+package org.joval.os.cisco.system;
 
 import java.util.NoSuchElementException;
 
@@ -14,9 +14,10 @@ import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFilesystem;
+import org.joval.intf.net.INetconf;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
-import org.joval.os.embedded.IosSystemInfo;
+import org.joval.os.cisco.IosSystemInfo;
 import org.joval.protocol.netconf.NetconfSession;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.AbstractBaseSession;
@@ -53,13 +54,13 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 	info = new IosSystemInfo(techSupport);
     }
 
-    public NetconfSession getNetconf() {
-	return new NetconfSession(ssh);
-    }
-
     protected void handlePropertyChange(String key, String value) {}
 
     // Implement IIosSession
+
+    public INetconf getNetconf() {
+	return new NetconfSession(ssh, internalProps.getLongProperty(IIosSession.PROP_READ_TIMEOUT));
+    }
 
     public ITechSupport getTechSupport() {
 	return techSupport;

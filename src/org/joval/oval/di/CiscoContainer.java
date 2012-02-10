@@ -15,7 +15,7 @@ import java.util.Properties;
 import java.util.PropertyResourceBundle;
 
 import org.joval.intf.plugin.IPlugin;
-import org.joval.os.embedded.system.TechSupport;
+import org.joval.os.cisco.system.TechSupport;
 import org.joval.plugin.CiscoPlugin;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;

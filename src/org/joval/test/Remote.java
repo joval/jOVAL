@@ -22,7 +22,7 @@ import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
-import org.joval.os.embedded.system.IosSession;
+import org.joval.os.cisco.system.IosSession;
 import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.ssh.identity.SshCredential;
@@ -64,7 +64,7 @@ public class Remote {
 		JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
 	    }
 
-	    SessionFactory factory = new SessionFactory(new File("."));
+	    SessionFactory factory = new SessionFactory(new File("test"));
 	    SimpleCredentialStore scs = new SimpleCredentialStore();
 	    factory.setCredentialStore(scs);
 

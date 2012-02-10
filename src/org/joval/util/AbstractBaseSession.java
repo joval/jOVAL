@@ -19,7 +19,8 @@ import org.joval.intf.util.IProperty;
 /**
  * This is the base class for ALL the implementations of all the different types of jOVAL sessions:
  *
- * @see org.joval.os.embedded.system.IosSession
+ * @see org.joval.os.cisco.system.IosSession
+ * @see org.joval.os.juniper.system.JunosSession
  * @see org.joval.os.unix.system.UnixSession
  * @see org.joval.os.unix.remote.system.UnixSession
  * @see org.joval.os.windows.system.WindowsSession
