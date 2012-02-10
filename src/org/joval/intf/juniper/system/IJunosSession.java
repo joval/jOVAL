@@ -3,8 +3,7 @@
 
 package org.joval.intf.juniper.system;
 
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.net.INetconf;
+import org.joval.intf.cisco.system.IIosSession;
 
 /**
  * A representation of a JunOS command-line session.
@@ -12,14 +11,11 @@ import org.joval.intf.net.INetconf;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IJunosSession extends IBaseSession {
+public interface IJunosSession extends IIosSession {
     /**
      * Property indicating the number of milliseconds to wait for a command to begin to return data.
+     *
+     * @override
      */
-    public static final String PROP_READ_TIMEOUT = "junos.read.timeout";
-
-    /**
-     * Get a NETCONF channel to the device.
-     */
-    INetconf getNetconf();
+    String PROP_READ_TIMEOUT = "junos.read.timeout";
 }

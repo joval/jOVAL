@@ -24,6 +24,7 @@ import org.joval.intf.identity.ILocked;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.system.IBaseSession;
 import org.joval.os.cisco.system.IosSession;
+import org.joval.os.juniper.system.JunosSession;
 import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.remote.system.WindowsSession;
 import org.joval.ssh.system.SshSession;
@@ -130,6 +131,10 @@ public class SessionFactory implements ILoggable {
 		  case CISCO_IOS:
 		    ssh.disconnect();
 		    session = new IosSession(ssh);
+		    break;
+
+		  case JUNIPER_JUNOS:
+		    session = new JunosSession(ssh);
 		    break;
 
 		  default:

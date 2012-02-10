@@ -64,7 +64,7 @@ public class Remote {
 		JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
 	    }
 
-	    SessionFactory factory = new SessionFactory(new File("test"));
+	    SessionFactory factory = new SessionFactory(new File("data"));
 	    SimpleCredentialStore scs = new SimpleCredentialStore();
 	    factory.setCredentialStore(scs);
 

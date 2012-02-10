@@ -29,8 +29,10 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class TechSupport implements ITechSupport {
-    private Hashtable<String, List<String>> data = new Hashtable<String, List<String>>();
-    private LocLogger logger;
+    protected Hashtable<String, List<String>> data = new Hashtable<String, List<String>>();
+    protected LocLogger logger;
+
+    protected TechSupport() {}
 
     /**
      * Load tech-support information from a stream source.
@@ -91,12 +93,12 @@ public class TechSupport implements ITechSupport {
 	}
     }
 
-    // Private
+    // Internal
 
     /**
      * Populate the structure from a sequential list of lines.
      */
-    private void load(List<String> lines) {
+    protected void load(List<String> lines) {
 	String heading = null;
 	List<String> body = null;
 	for (String line : lines) {
@@ -108,7 +110,7 @@ public class TechSupport implements ITechSupport {
 		body = new Vector<String>();
 	    } else if (heading == null) {
 		if (line.length() > 0) {
-		    logger.warn(JOVALMsg.ERROR_IOS_TECH_ORPHAN, line);
+		    logger.debug(JOVALMsg.ERROR_IOS_TECH_ORPHAN, line);
 		}
 	    } else {
 		if (body.size() == 0 && line.length() == 0) {
@@ -119,6 +121,8 @@ public class TechSupport implements ITechSupport {
 	    }
 	}
     }
+
+    // Private
 
     private static final int DASHLEN = DASHES.length();
 

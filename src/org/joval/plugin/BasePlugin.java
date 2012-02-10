@@ -16,6 +16,7 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.cisco.system.IIosSession;
+import org.joval.intf.juniper.system.IJunosSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.plugin.adapter.aix.FixAdapter;
@@ -162,6 +163,12 @@ public abstract class BasePlugin implements IPlugin {
 		    logger.warn(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, flavor);
 		    break;
 		}
+		break;
+	      }
+
+	      case JUNIPER_JUNOS: {
+		IJunosSession junos = (IJunosSession)session;
+		adapters.add(new LineAdapter(junos));
 		break;
 	      }
 

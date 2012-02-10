@@ -135,6 +135,11 @@ public interface IBaseSession extends ILoggable {
 	CISCO_IOS("ios"),
 
 	/**
+	 * Indicates a session with a device running Cisco IOS.
+	 */
+	JUNIPER_JUNOS("junos"),
+
+	/**
 	 * Indicates a session with a Windows host.
 	 */
 	WINDOWS("windows"),

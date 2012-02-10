@@ -3,6 +3,8 @@
 
 package org.joval.plugin;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -31,6 +33,8 @@ import org.slf4j.cal10n.LocLogger;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import org.joval.intf.cisco.system.ITechSupport;
+import org.joval.intf.juniper.system.ISupportInformation;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IResults;
@@ -40,6 +44,8 @@ import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.os.cisco.system.IosSession;
 import org.joval.os.cisco.system.TechSupport;
+import org.joval.os.juniper.system.JunosSession;
+import org.joval.os.juniper.system.SupportInformation;
 import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.cisco.ios.GlobalAdapter;
 import org.joval.plugin.adapter.cisco.ios.InterfaceAdapter;
@@ -96,11 +102,23 @@ public class CiscoPlugin implements IPlugin {
 	    logger.setLevel(Level.INFO);
 	    logger.addHandler(logHandler);
 
-	    TechSupport tech = null;
+	    ByteArrayOutputStream out = new ByteArrayOutputStream();
+	    InputStream in;
 	    if (input != null) {
-		tech = new TechSupport(toURL(input).openStream());
+		in = toURL(input).openStream();
 	    } else {
-		tech = new TechSupport(System.in);
+		in = System.in;
+	    }
+	    byte[] buff = new byte[1024];
+	    int len = 0;
+	    while((len = in.read(buff)) > 0) {
+		out.write(buff, 0, len);
+	    }
+
+	    ITechSupport tech = null;
+	    tech = new TechSupport(new ByteArrayInputStream(out.toByteArray()));
+	    if (tech.getHeadings().size() == 0) {
+		tech = new SupportInformation(new ByteArrayInputStream(out.toByteArray()));
 	    }
 
 	    CiscoPlugin plugin = new CiscoPlugin(tech);
@@ -214,6 +232,10 @@ public class CiscoPlugin implements IPlugin {
 	    if ("tftp".equals(u.getProtocol())) {
 		return new TftpURLConnection(u);
 	    } else {
+		File f = new File(u.toString());
+		if (f.isFile()) {
+		    return f.toURI().toURL().openConnection();
+		}
 		throw new MalformedURLException(JOVALSystem.getMessage(JOVALMsg.ERROR_PROTOCOL, u.getProtocol()));
 	    }
 	}
@@ -223,19 +245,27 @@ public class CiscoPlugin implements IPlugin {
     private IosSession session;
     private Collection<IAdapter> adapters;
 
-    public CiscoPlugin(TechSupport techSupport) {
+    public CiscoPlugin(ITechSupport techSupport) {
 	logger = JOVALSystem.getLogger();
-	session = new IosSession(techSupport);
-
 	adapters = new Vector<IAdapter>();
-	adapters.add(new FamilyAdapter(session));
-	adapters.add(new VariableAdapter());
-	adapters.add(new GlobalAdapter(session));
-	adapters.add(new InterfaceAdapter(session));
-	adapters.add(new LineAdapter(session));
-	adapters.add(new SnmpAdapter(session));
-	adapters.add(new VersionAdapter(session));
-	adapters.add(new Version55Adapter(session));
+
+	if (techSupport instanceof ISupportInformation) {
+	    session = new JunosSession(techSupport);
+	    adapters.add(new FamilyAdapter(session));
+	    adapters.add(new VariableAdapter());
+	    adapters.add(new GlobalAdapter(session));
+	    adapters.add(new LineAdapter(session));
+	} else {
+	    session = new IosSession(techSupport);
+	    adapters.add(new FamilyAdapter(session));
+	    adapters.add(new VariableAdapter());
+	    adapters.add(new GlobalAdapter(session));
+	    adapters.add(new InterfaceAdapter(session));
+	    adapters.add(new LineAdapter(session));
+	    adapters.add(new SnmpAdapter(session));
+	    adapters.add(new VersionAdapter(session));
+	    adapters.add(new Version55Adapter(session));
+	}
     }
 
     // Implement ILoggable

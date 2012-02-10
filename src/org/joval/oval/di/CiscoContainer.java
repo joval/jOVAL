@@ -3,9 +3,13 @@
 
 package org.joval.oval.di;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -14,8 +18,10 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 
-import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.os.cisco.system.TechSupport;
+import org.joval.os.juniper.system.SupportInformation;
+import org.joval.intf.plugin.IPlugin;
 import org.joval.plugin.CiscoPlugin;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -65,14 +71,25 @@ public class CiscoContainer implements IPluginContainer {
 	if (props == null) {
 	    throw new Exception(getMessage("err.configMissing", DEFAULT_FILE));
 	}
-	TechSupport tech = null;
 	String str = props.getProperty("tech.url");
 	if (str == null) {
 	    throw new Exception(getMessage("err.configPropMissing", "tech.url"));
 	}
-	Exception ex = null;
 	URL url = CiscoPlugin.toURL(props.getProperty("tech.url"));
-	plugin = new CiscoPlugin(new TechSupport(url.openStream()));
+	ByteArrayOutputStream out = new ByteArrayOutputStream();
+	InputStream in = url.openStream();
+	byte[] buff = new byte[1024];
+	int len = 0;
+	while((len = in.read(buff)) > 0) {
+	    out.write(buff, 0, len);
+	}
+
+	ITechSupport tech = new TechSupport(new ByteArrayInputStream(out.toByteArray()));
+	if (tech.getHeadings().size() == 0) {
+	    tech = new SupportInformation(new ByteArrayInputStream(out.toByteArray()));
+	}
+
+	plugin = new CiscoPlugin(tech);
     }
 
     public String getProperty(String key) {

@@ -3,8 +3,6 @@ CLASSES=\
 	org.joval.identity.SimpleCredentialStore			\
 	org.joval.discovery.SessionFactory				\
 	org.joval.identity.Credential					\
-	org.joval.intf.cisco.system.IIosSession				\
-	org.joval.intf.cisco.system.ITechSupport			\
 	org.joval.intf.identity.ICredential				\
 	org.joval.intf.identity.ILocked					\
 	org.joval.intf.net.INetconf					\
@@ -18,6 +16,10 @@ CLASSES=\
 	org.joval.os.cisco.IosSystemInfo				\
 	org.joval.os.cisco.system.IosSession				\
 	org.joval.os.cisco.system.TechSupport				\
+	org.joval.os.juniper.JunosNetworkInterface			\
+	org.joval.os.juniper.JunosSystemInfo				\
+	org.joval.os.juniper.system.JunosSession			\
+	org.joval.os.juniper.system.SupportInformation			\
 	org.joval.os.unix.remote.system.Sudo				\
 	org.joval.os.unix.remote.system.UnixSession			\
 	org.joval.os.windows.identity.WindowsCredential			\

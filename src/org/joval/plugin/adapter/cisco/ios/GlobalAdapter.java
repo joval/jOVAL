@@ -24,6 +24,8 @@ import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.cisco.system.ITechSupport;
+import org.joval.intf.juniper.system.IJunosSession;
+import org.joval.intf.juniper.system.ISupportInformation;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.io.PerishableReader;
@@ -42,9 +44,15 @@ import org.joval.util.SafeCLI;
  */
 public class GlobalAdapter implements IAdapter {
     IIosSession session;
+    String showConfig;
 
     public GlobalAdapter(IIosSession session) {
 	this.session = session;
+	if (session instanceof IJunosSession) {
+	    showConfig = ISupportInformation.GLOBAL;
+	} else {
+	    showConfig = ITechSupport.GLOBAL;
+	}
     }
 
     // Implement IAdapter
@@ -68,7 +76,7 @@ public class GlobalAdapter implements IAdapter {
 	List<String> lines = null;
 	Collection<String> commands = new Vector<String>();
 	try {
-	    lines = session.getTechSupport().getData(ITechSupport.GLOBAL);
+	    lines = session.getTechSupport().getData(showConfig);
 
 	    if (globalCommand.isSetVarRef()) {
 		commands.addAll(rc.resolve(globalCommand.getVarRef()));
@@ -80,7 +88,7 @@ public class GlobalAdapter implements IAdapter {
 	} catch (NoSuchElementException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ITechSupport.GLOBAL));
+	    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, showConfig));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}

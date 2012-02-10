@@ -197,14 +197,17 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 	if (cred != null) {
 	    try {
 		for (String line : SafeCLI.multiLine("pwd", this, Timeout.S)) {
-		    if (line.startsWith("flash")) {
-			return Type.CISCO_IOS;
-		    } else if (line.startsWith("/")) {
+		    if (line.startsWith("/")) {
 			return Type.UNIX;
-		    } else if (line.equals("")) {
-			// ignore;
-		    } else {
-			logger.warn(JOVALMsg.ERROR_SSH_UNEXPECTED_RESPONSE, line);
+		    } else if (line.startsWith("flash")) {
+			return Type.CISCO_IOS;
+		    }
+		}
+		for (String line : SafeCLI.multiLine("show version", this, Timeout.S)) {
+		    if (line.startsWith("JUNOS")) {
+			return Type.JUNIPER_JUNOS;
+		    } else if (line.startsWith("Cisco IOS")) {
+			return Type.CISCO_IOS;
 		    }
 		}
 	    } catch (Exception e) {

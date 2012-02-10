@@ -31,10 +31,11 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class IosSession extends AbstractBaseSession implements ILocked, IIosSession {
-    private SshSession ssh;
-    private TechSupport techSupport;
+    protected SshSession ssh;
+    protected ITechSupport techSupport;
+    protected boolean initialized;
+
     private IosSystemInfo info;
-    private boolean initialized, offline;
 
     /**
      * Create an IOS session with a live SSH connection to a router.
@@ -48,10 +49,9 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     /**
      * Create an IOS session in offline mode, using the supplied tech support information.
      */
-    public IosSession(TechSupport techSupport) {
+    public IosSession(ITechSupport techSupport) {
 	super();
 	this.techSupport = techSupport;
-	info = new IosSystemInfo(techSupport);
     }
 
     protected void handlePropertyChange(String key, String value) {}
@@ -59,7 +59,7 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     // Implement IIosSession
 
     public INetconf getNetconf() {
-	return new NetconfSession(ssh, internalProps.getLongProperty(IIosSession.PROP_READ_TIMEOUT));
+	return new NetconfSession(ssh, internalProps.getLongProperty(PROP_READ_TIMEOUT));
     }
 
     public ITechSupport getTechSupport() {
@@ -79,13 +79,24 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
      */
     public void setLogger(LocLogger logger) {
 	super.setLogger(logger);
-	ssh.setLogger(logger);
+	if (ssh != null) {
+	    ssh.setLogger(logger);
+	}
     }
 
     // Implement IBaseSession
 
     public String getHostname() {
-	return ssh.getHostname();
+	if (ssh != null) {
+	    return ssh.getHostname();
+	} else {
+	    for (String line : techSupport.getData("show running-config")) {
+		if (line.startsWith("hostname ")) {
+		    return line.substring(9).trim();
+		}
+	    }
+	    return null;
+	}
     }
 
     public boolean connect() {
@@ -133,6 +144,9 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     }
 
     public SystemInfoType getSystemInfo() {
+	if (info == null) {
+	    info = new IosSystemInfo(techSupport);
+	}
 	return info.getSystemInfo();
     }
 }
