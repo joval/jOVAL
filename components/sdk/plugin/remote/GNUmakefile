@@ -21,6 +21,9 @@ all: $(PLUGIN_REMOTE_LIB)
 $(PLUGIN_REMOTE_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
+netconf:
+	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.test.Netconf test.properties
+
 test:
 	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.test.Remote test.properties
 

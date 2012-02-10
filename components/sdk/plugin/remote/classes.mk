@@ -40,10 +40,12 @@ CLASSES=\
 	org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup	\
 	org.joval.oval.di.RemoteContainer				\
 	org.joval.plugin.RemotePlugin					\
+	org.joval.protocol.netconf.NetconfSession			\
 	org.joval.ssh.identity.SshCredential				\
 	org.joval.ssh.io.SftpFile					\
 	org.joval.ssh.io.SftpFilesystem					\
 	org.joval.ssh.system.SshProcess					\
 	org.joval.ssh.system.SshSession					\
 	org.joval.util.JSchLogger					\
+	org.joval.test.Netconf						\
 	org.joval.test.Remote

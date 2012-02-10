@@ -101,7 +101,12 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     }
 
     public void readFully(byte[] buff) throws IOException {
-	for (int i=0; i < buff.length; i++) {
+	readFully(buff, 0, buff.length);
+    }
+
+    public void readFully(byte[] buff, int offset, int len) throws IOException {
+	int end = offset + len;
+	for (int i=offset; i < end; i++) {
 	    int ch = reader.read();
 	    if (ch == -1) {
 		defuse();
@@ -112,6 +117,35 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	    }
 	}
 	reset();
+    }
+
+    public String readUntil(String delim) throws IOException {
+	StringBuffer sb = new StringBuffer();
+	boolean found = false;
+	do {
+	    byte[] buff = readUntil((byte)delim.charAt(0));
+	    if (buff == null) {
+		return null;
+	    }
+	    sb.append(new String(buff));
+	    setCheckpoint(delim.length());
+	    byte[] b2 = new byte[delim.length()];
+	    b2[0] = (byte)delim.charAt(0);
+	    try {
+		readFully(b2, 1, b2.length - 1);
+		if (new String(b2).equals(delim)) {
+		    found = true;
+		} else {
+		    sb.append((char)b2[0]);
+		    restoreCheckpoint();
+		}
+	    } catch (EOFException e) {
+		restoreCheckpoint();
+		return readLine();
+	    }
+	} while(!found);
+
+	return sb.toString();
     }
 
     public byte[] readUntil(int delim) throws IOException {
