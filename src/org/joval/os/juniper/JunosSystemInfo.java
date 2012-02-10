@@ -38,7 +38,7 @@ public class JunosSystemInfo {
 		} else if (line.startsWith("JUNOS Base OS Software Suite")) {
 		    int ptr = line.indexOf("[");
 		    if (ptr != -1) {
-			int begin = ptr + 8;
+			int begin = ptr + 1;
 			int end = line.indexOf("]", begin+1);
 			if (end == -1) {
 			    info.setOsVersion(line.substring(begin));
