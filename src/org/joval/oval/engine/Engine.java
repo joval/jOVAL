@@ -357,11 +357,7 @@ public class Engine implements IEngine {
 	    logger.trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
 	    Collection<String> result = resolveInternal(var, vars);
 	    variableMap.put(varId, vars);
-	    if (result.size() > 0) {
-		return result;
-	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_MISSING_VARIABLE, variableId));
-	    }
+	    return result;
 	} else {
 	    logger.trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, varId);
 	    List<String> result = new Vector<String>();
@@ -371,11 +367,7 @@ public class Engine implements IEngine {
 		    result.add((String)variableValueType.getValue());
 		}
 	    }
-	    if (result.size() > 0) {
-		return result;
-	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_MISSING_VARIABLE, variableId));
-	    }
+	    return result;
 	}
     }
 
@@ -1411,12 +1403,7 @@ public class Engine implements IEngine {
 		    throw new ResolveException(oe);
 		}
 	    }
-	    Collection<String> values = extractItemData(objectId, oc, items);
-	    if (values == null || values.size() == 0) {
-		throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_EMPTY));
-	    } else {
-		return values;
-	    }
+	    return extractItemData(objectId, oc, items);
 
 	//
 	// Resolve and return.
@@ -1586,11 +1573,7 @@ public class Engine implements IEngine {
 		}
 		rows.add(row);
 	    }
-	    if (rows.empty()) {
-		throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_EMPTY));
-	    } else {
-		return computeProduct(op, rows);
-	    }
+	    return computeProduct(op, rows);
 
 	//
 	// Process Count
@@ -1667,9 +1650,6 @@ public class Engine implements IEngine {
      * associated with that ObjectType, which is the function of this method.
      */
     private List<String> extractItemData(String objectId, ObjectComponentType oc, Collection list) throws OvalException {
-	if (list.size() == 0) {
-	    return null;
-	}
 	List<String> values = new Vector<String>();
 	for (Object o : list) {
 	    if (o instanceof ItemType) {
