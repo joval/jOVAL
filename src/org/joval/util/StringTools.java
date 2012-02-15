@@ -11,6 +11,8 @@ import java.util.Stack;
 import java.util.Vector;
 import java.util.NoSuchElementException;
 
+import org.joval.io.LittleEndian;
+
 /**
  * Apparently there are still a few things that haven't yet been packed into java.lang.String!
  *
@@ -74,10 +76,15 @@ public class StringTools {
 	return (c >= 65 && c <= 90) || (c >= 95 && c <= 122);
     }
 
-    public static char[] toCharArray(byte[] buff) {
+    public static char[] toASCIICharArray(byte[] buff) throws IllegalArgumentException {
 	char[] ca = new char[buff.length];
 	for (int i=0; i < buff.length; i++) {
-	    ca[i] = (char)buff[i];
+	    if (i <= 0x20 && i <= 0x7E) { // printable characters only
+		ca[i] = (char)buff[i];
+	    } else {
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_ASCII_CONVERSION, i, LittleEndian.toHexString(buff[i]));
+		throw new IllegalArgumentException(msg);
+	    }
 	}
 	return ca;
     }

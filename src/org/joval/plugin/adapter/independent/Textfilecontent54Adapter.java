@@ -111,7 +111,7 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		StringBuffer sb = new StringBuffer();
 		in = f.getInputStream();
 		while ((len = in.read(buff)) > 0) {
-		    sb.append(StringTools.toCharArray(buff), 0, len);
+		    sb.append(StringTools.toASCIICharArray(buff), 0, len);
 		}
 		String s = sb.toString();
 
@@ -134,6 +134,11 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, tfcObj.getPattern().getVarRef(), e.getMessage());
 		msg.setValue(s);
+		rc.addMessage(msg);
+	    } catch (IllegalArgumentException e) {
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
 		rc.addMessage(msg);
 	    } finally {
 		if (in != null) {

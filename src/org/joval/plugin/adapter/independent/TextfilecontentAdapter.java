@@ -93,7 +93,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		StringBuffer sb = new StringBuffer();
 		in = f.getInputStream();
 		while ((len = in.read(buff)) > 0) {
-		    sb.append(StringTools.toCharArray(buff), 0, len);
+		    sb.append(StringTools.toASCIICharArray(buff), 0, len);
 		}
 		String s = sb.toString();
 
@@ -116,6 +116,11 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	    } catch (PatternSyntaxException e) {
 		session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
 		throw new IOException(e);
+	    } catch (IllegalArgumentException e) {
+		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
 	    } finally {
 		if (in != null) {
 		    try {
