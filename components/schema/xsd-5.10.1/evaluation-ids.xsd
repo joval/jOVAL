@@ -11,7 +11,7 @@
         </xsd:appinfo>
     </xsd:annotation>
     
-    <xsd:element name="evaluation-definition-ids">
+    <xsd:element name="evalutation-definition-ids">
         <xsd:annotation>
             <xsd:documentation>The evaluation-definition-ids element is the root the Document. Its purpose is to bind together the a set of definition elements.</xsd:documentation>
         </xsd:annotation>

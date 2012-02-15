@@ -23,6 +23,7 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.definitions.apache"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='httpd_state']//xs:element[@name='version']">
         <jxb:property name="httpd_version" />
     </jxb:bindings>
@@ -31,6 +32,7 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.systemcharacteristics.apache"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='httpd_item']//xs:element[@name='version']">
         <jxb:property name="httpd_version" />
     </jxb:bindings>
@@ -59,11 +61,16 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.evaluation.id"/>
     </jxb:schemaBindings>
+    <!-- Compensate for the misspelling in the XSD file -->
+    <jxb:bindings node="xs:element[@name='evalutation-definition-ids']">
+        <jxb:class name="EvaluationDefinitionIds" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="freebsd-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.definitions.freebsd"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='portinfo_state']//xs:element[@name='version']">
         <jxb:property name="portinfo_version" />
     </jxb:bindings>
@@ -72,6 +79,7 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.systemcharacteristics.freebsd"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='portinfo_item']//xs:element[@name='version']">
         <jxb:property name="portinfo_version" />
     </jxb:bindings>
@@ -80,6 +88,7 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.definitions.hpux"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='swlist_state']//xs:element[@name='version']">
         <jxb:property name="swlist_version" />
     </jxb:bindings>
@@ -88,6 +97,7 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.systemcharacteristics.hpux"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='swlist_item']//xs:element[@name='version']">
         <jxb:property name="swlist_version" />
     </jxb:bindings>
@@ -96,15 +106,19 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.definitions.independent"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='sql_object']//xs:element[@name='version']">
         <jxb:property name="sql_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='sql57_object']//xs:element[@name='version']">
         <jxb:property name="sql_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='sql_state']//xs:element[@name='version']">
         <jxb:property name="sql_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='sql57_state']//xs:element[@name='version']">
         <jxb:property name="sql_version" />
     </jxb:bindings>
@@ -113,9 +127,11 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.systemcharacteristics.independent"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='sql_item']//xs:element[@name='version']">
         <jxb:property name="sql_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='sql57_item']//xs:element[@name='version']">
         <jxb:property name="sql_version" />
     </jxb:bindings>
@@ -134,12 +150,15 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.definitions.linux"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='dpkginfo_state']//xs:element[@name='version']">
         <jxb:property name="dpkginfo_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='rpminfo_state']//xs:element[@name='version']">
         <jxb:property name="rpm_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='slackwarepkginfo_state']//xs:element[@name='version']">
         <jxb:property name="slackwarepkginfo_version" />
     </jxb:bindings>
@@ -148,12 +167,15 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.systemcharacteristics.linux"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='dpkginfo_item']//xs:element[@name='version']">
         <jxb:property name="dpkginfo_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='rpminfo_item']//xs:element[@name='version']">
         <jxb:property name="rpm_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='slackwarepkginfo_item']//xs:element[@name='version']">
         <jxb:property name="slackwarepkginfo_version" />
     </jxb:bindings>
@@ -222,12 +244,15 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.definitions.solaris"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='package_state']//xs:element[@name='version']">
         <jxb:property name="package_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='patch54_object']//xs:element[@name='version']">
         <jxb:property name="patch_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='patch_state']//xs:element[@name='version']">
         <jxb:property name="patch_version" />
     </jxb:bindings>
@@ -236,9 +261,11 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.systemcharacteristics.solaris"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='package_item']//xs:element[@name='version']">
         <jxb:property name="package_version" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='patch_item']//xs:element[@name='version']">
         <jxb:property name="patch_version" />
     </jxb:bindings>
@@ -258,14 +285,18 @@
       <jxb:package name="oval.schemas.definitions.windows"/>
     </jxb:schemaBindings>
     <jxb:bindings node="xs:element[@name='user_sid_object']//xs:element[@name='user']">
+        <!-- pseudo-implement user_sid55_object, to match the user_sid_item parameter names -->
         <jxb:property name="user_sid" />
     </jxb:bindings>
     <jxb:bindings node="xs:element[@name='user_sid_state']//xs:element[@name='user']">
+        <!-- pseudo-implement user_sid55_state, to match the user_sid_item parameter names -->
         <jxb:property name="user_sid" />
     </jxb:bindings>
     <jxb:bindings node="xs:element[@name='user_sid_state']//xs:element[@name='group']">
+        <!-- pseudo-implement user_sid55_state, to match the user_sid_item parameter names -->
         <jxb:property name="group_sid" />
     </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='file_state']//xs:element[@name='version']">
         <jxb:property name="file_version" />
     </jxb:bindings>
@@ -274,6 +305,7 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.systemcharacteristics.windows"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='file_item']//xs:element[@name='version']">
         <jxb:property name="file_version" />
     </jxb:bindings>
