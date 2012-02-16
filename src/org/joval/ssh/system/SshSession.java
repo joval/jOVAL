@@ -116,9 +116,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 
     // Implement IBaseSession
 
-    /**
-     * @override
-     */
+    @Override
     public IProcess createProcess(String command) throws Exception {
 	if (connect()) {
 	    ChannelExec ce = session.openChannel(ChannelType.EXEC);

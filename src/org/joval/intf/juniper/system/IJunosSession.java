@@ -15,7 +15,7 @@ public interface IJunosSession extends IIosSession {
     /**
      * Property indicating the number of milliseconds to wait for a command to begin to return data.
      *
-     * @override
+     * NOTE: This overloads the definition of PROP_READ_TIMEOUT inherited from IIosSession.
      */
     String PROP_READ_TIMEOUT = "junos.read.timeout";
 }

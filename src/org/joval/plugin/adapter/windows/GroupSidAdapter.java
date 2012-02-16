@@ -51,9 +51,7 @@ public class GroupSidAdapter extends UserAdapter {
 	return objectClasses;
     }
 
-    /**
-     * @override
-     */
+    @Override
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
 	    throws NotCollectableException, OvalException {
 

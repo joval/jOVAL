@@ -63,9 +63,7 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 
     // Implement ILoggable
 
-    /**
-     * @override
-     */
+    @Override
     public void setLogger(LocLogger logger) {
 	super.setLogger(logger);
 	ssh.setLogger(logger);
@@ -120,9 +118,7 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 	}
     }
 
-    /**
-     * @override
-     */
+    @Override
     public IProcess createProcess(String command) throws Exception {
 	if (rootCred == null || flavor == Flavor.UNKNOWN) {
 	    return ssh.createProcess(command);
@@ -131,9 +127,7 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 	}
     }
 
-    /**
-     * @override
-     */
+    @Override
     public void setWorkingDir(String path) {
 	// no-op
     }

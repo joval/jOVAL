@@ -7,7 +7,6 @@ include $(TOP)/common.mk
 
 API=$(SCHEMALIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
-RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(DEPS)$(CLN)$(JOVAL_CORE_LIB)"
 
 include classes.mk
 

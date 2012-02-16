@@ -94,18 +94,14 @@ public class SftpFilesystem extends UnixFilesystem {
 	}
     }
 
-    /**
-     * @override
-     */
+    @Override
     protected String getPreloadPropertyKey() {
 	return PROP_PRELOAD_REMOTE;
     }
 
     // Implement IFilesystem
 
-    /**
-     * @override
-     */
+    @Override
     public IFile getFile(String path) throws IllegalArgumentException, IOException {
 	if (!connect()) {
 	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
@@ -126,37 +122,27 @@ public class SftpFilesystem extends UnixFilesystem {
 	}
     }
 
-    /**
-     * @override
-     */
+    @Override
     public IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
 	return file.getRandomAccess(mode);
     }
 
-    /**
-     * @override
-     */
+    @Override
     public IRandomAccess getRandomAccess(String path, String mode) throws IllegalArgumentException, IOException {
 	return getFile(path).getRandomAccess(mode);
     }
 
-    /**
-     * @override
-     */
+    @Override
     public InputStream getInputStream(String path) throws IllegalArgumentException, IOException {
 	return getFile(path).getInputStream();
     }
 
-    /**
-     * @override
-     */
+    @Override
     public OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException {
 	return getFile(path).getOutputStream(false);
     }
 
-    /**
-     * @override
-     */
+    @Override
     public OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException {
 	return getFile(path).getOutputStream(append);
     }

@@ -227,9 +227,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 
     // Internal
 
-    /**
-     * @override
-     */
+    @Override
     JAXBElement<? extends ItemType> makeItem(String name, String value, String pid) {
 	EnvironmentvariableItem evi = (EnvironmentvariableItem)super.makeItem(name, value, pid).getValue();
 	Environmentvariable58Item item = JOVALSystem.factories.sc.independent.createEnvironmentvariable58Item();

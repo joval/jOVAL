@@ -47,9 +47,7 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
 	super(session, env, redirector);
     }
 
-    /**
-     * @override
-     */
+    @Override
     public IFile getFile(String path) throws IllegalArgumentException, IOException {
         if (autoExpand) {
             path = env.expand(path);

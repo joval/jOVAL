@@ -38,9 +38,7 @@ public class UserSidAdapter extends UserSid55Adapter {
 	return objectClasses;
     }
 
-    /**
-     * @override
-     */
+    @Override
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
 	    throws NotCollectableException, OvalException {
 

@@ -23,9 +23,7 @@ public abstract class BaseUnixSession extends AbstractSession implements IUnixSe
 	super();
     }
 
-    /**
-     * @override
-     */
+    @Override
     protected String getOverrideKey(String key) {
 	switch(flavor) {
 	  case UNKNOWN:

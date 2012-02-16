@@ -115,9 +115,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 
     // Implement ILoggable
 
-    /**
-     * @override
-     */
+    @Override
     public void setLogger(LocLogger logger) {
 	super.setLogger(logger);
 	if (fs32 != null && !fs32.equals(fs)) {
@@ -144,16 +142,12 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 
     // Implement IBaseSession
 
-    /**
-     * @override
-     */
+    @Override
     public void setWorkingDir(String path) {
 	cwd = env.expand(path);
     }
 
-    /**
-     * @override
-     */
+    @Override
     public IProcess createProcess(String command) throws Exception {
 	StringBuffer sb = new StringBuffer(tempDir).append(fs.getDelimiter()).append("rexec_");
 	sb.append(Integer.toHexString(counter++));

@@ -28,9 +28,7 @@ public class VersionAdapter extends Version55Adapter {
 	return objectClasses;
     }
 
-    /**
-     * @override
-     */
+    @Override
     protected void init() {
 	super.init();
 

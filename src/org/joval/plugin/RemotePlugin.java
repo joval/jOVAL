@@ -58,9 +58,7 @@ public class RemotePlugin extends BasePlugin {
 
     // Overrides
 
-    /**
-     * @override
-     */
+    @Override
     public void setLogger(LocLogger logger) {
 	super.setLogger(logger);
 	sessionFactory.setLogger(logger);

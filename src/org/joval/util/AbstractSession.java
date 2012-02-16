@@ -41,10 +41,9 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
     // Implement ILoggable
 
     /**
-     * @override
-     *
      * Here, we harmonize the IFilesystem's logger with the ISession's logger.
      */
+    @Override
     public void setLogger(LocLogger logger) {
 	super.setLogger(logger);
 	if (fs != null) {
@@ -67,10 +66,9 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
     }
 
     /**
-     * @override
-     *
      * Here, we provide an implementation for local ISessions.
      */
+    @Override
     public IProcess createProcess(String command) throws Exception {
 	return new JavaProcess(command);
     }

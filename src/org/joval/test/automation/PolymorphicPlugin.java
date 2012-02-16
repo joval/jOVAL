@@ -52,9 +52,8 @@ class PolymorphicPlugin extends RemotePlugin {
     /**
      * If this is a local session, perform the connect of the BasePlugin class.  If a remote session, call the super-class
      * connect method.
-     *
-     * @override
      */
+    @Override
     public void connect() throws ConnectException {
 	if (IBaseSession.LOCALHOST.equals(hostname)) {
 	    logger.info(JOVALMsg.STATUS_PLUGIN_CONNECT);

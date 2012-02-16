@@ -90,9 +90,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 
     // Implement ILoggable
 
-    /**
-     * @override
-     */
+    @Override
     public void setLogger(LocLogger logger) {
 	super.setLogger(logger);
 	if (fs32 != null && !fs32.equals(fs)) {

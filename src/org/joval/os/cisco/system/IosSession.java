@@ -74,9 +74,7 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 
     // Implement ILogger
 
-    /**
-     * @override
-     */
+    @Override
     public void setLogger(LocLogger logger) {
 	super.setLogger(logger);
 	if (ssh != null) {
