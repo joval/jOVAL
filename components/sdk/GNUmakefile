@@ -46,7 +46,7 @@ dist-clean: clean
 install: all
 	mkdir -p $(DIST)
 	cp -r $(RSRC)/* $(DIST)
-	cp $(SCHEMALIB) $(DIST)
+	cp $(OVAL_LIB) $(DIST)
 	cp $(JOVAL_CORE_LIB) $(DIST)
 	$(JAR) cvf $(DIST)/jOVALRemote.jar -C $(PLUGIN_SHARED)/$(BUILD)/ .
 	$(JAR) uvf $(DIST)/jOVALRemote.jar -C $(PLUGIN_REMOTE)/$(BUILD)/ .

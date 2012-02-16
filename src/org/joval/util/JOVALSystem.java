@@ -5,8 +5,7 @@ package org.joval.util;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.text.MessageFormat;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -14,11 +13,6 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.Vector;
-import java.util.logging.FileHandler;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
 
 import ch.qos.cal10n.IMessageConveyor;
 import ch.qos.cal10n.MessageConveyor;
@@ -26,7 +20,6 @@ import ch.qos.cal10n.MessageConveyorException;
 import org.slf4j.cal10n.LocLogger;
 import org.slf4j.cal10n.LocLoggerFactory;
 
-import org.joval.intf.identity.ICredentialStore;
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
@@ -96,17 +89,25 @@ public class JOVALSystem {
     public static final String SYSTEM_PROP_BUILD_DATE = "build.date";
 
     /**
+     * Property indicating the package names for classes in the XCCDF schema.
+     */
+    public static final String XCCDF_PROP_PACKAGES = "xccdf.packages";
+
+    /**
      * A data structure providing easy access to the OVAL schema object factories.
      */
     public static final Factories factories = new Factories();
 
-    private static final String SYSTEM_SECTION = JOVALSystem.class.getName();
+    private static final String SYSTEM_SECTION	= JOVALSystem.class.getName();
+    private static final String CONFIG_RESOURCE	= "defaults.ini";
+    private static final String OVAL_RESOURCE	= "oval.properties";
+    private static final String XCCDF_RESOURCE	= "xccdf.properties";
 
     private static Timer timer;
     private static IMessageConveyor mc;
     private static LocLoggerFactory loggerFactory;
     private static LocLogger sysLogger;
-    private static Properties ovalProps;
+    private static Properties ovalProps, xccdfProps;
     private static IniFile config;
 
     static {
@@ -127,10 +128,30 @@ public class JOVALSystem {
 	sysLogger = loggerFactory.getLocLogger(JOVALSystem.class);
 	config = new IniFile();
 	ovalProps = new Properties();
+	xccdfProps = new Properties();
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    ovalProps.load(cl.getResourceAsStream("oval.properties"));
-	    config.load(cl.getResourceAsStream("defaults.ini"));
+
+	    InputStream rsc = cl.getResourceAsStream(CONFIG_RESOURCE);
+	    if (rsc == null) {
+		sysLogger.warn(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, CONFIG_RESOURCE));
+	    } else {
+		config.load(rsc);
+	    }
+
+	    rsc = cl.getResourceAsStream(OVAL_RESOURCE);
+	    if (rsc == null) {
+		sysLogger.warn(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, OVAL_RESOURCE));
+	    } else {
+		ovalProps.load(rsc);
+	    }
+
+	    rsc = cl.getResourceAsStream("xccdf.properties");
+	    if (rsc == null) {
+		sysLogger.debug(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, XCCDF_RESOURCE));
+	    } else {
+		xccdfProps.load(rsc);
+	    }
 	} catch (IOException e) {
 	    sysLogger.error(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
@@ -215,6 +236,15 @@ public class JOVALSystem {
      */
     public static String getOvalProperty(String name) {
 	return ovalProps.getProperty(name);
+    }
+
+    /**
+     * Retrieve an XCCDF schema property.
+     *
+     * @param name specify one of the XCCDF_PROP_* keys
+     */
+    public static String getXccdfProperty(String name) {
+	return xccdfProps.getProperty(name);
     }
 
     /**

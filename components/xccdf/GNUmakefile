@@ -6,7 +6,7 @@ TOP=../..
 include $(TOP)/common.mk
 
 GEN=gen-src
-SCHEMADIR=xsd-$(OVAL_SCHEMA_VERSION)
+SCHEMADIR=xsd-$(XCCDF_VERSION)
 BINDINGS=$(SCHEMADIR)/bindings.xjb
 CLASSPATH="$(CLASSLIB)$(CLN)$(GEN)"
 
@@ -18,16 +18,16 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(SCHEMALIB)
+all: $(XCCDF_LIB)
 
-$(SCHEMALIB): $(GEN) classes resources $(DOCS)
+$(XCCDF_LIB): $(GEN) classes resources $(DOCS)
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 $(DOCS): $(GEN)
-	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -sourcepath $(GEN) -subpackages oval:org
+	$(JAVA_HOME)/bin/javadoc -J-Xmx512m -d $(DOCS) -sourcepath $(GEN) -subpackages cpe:org:xccdf
 
 clean:
-	rm -f $(SCHEMALIB)
+	rm -f $(XCCDF_LIB)
 	rm -rf $(BUILD)
 	rm -rf $(GEN)
 	rm -rf $(DOCS)

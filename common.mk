@@ -23,7 +23,8 @@ SHELL=/bin/sh
 CWD=$(shell pwd)
 
 JOVAL_VERSION=5.10.1.0
-OVAL_SCHEMA_VERSION=5.10.1
+OVAL_VERSION=5.10.1
+XCCDF_VERSION=1.1
 
 # If your system is 32-bit, set ARCH to x86
 #ARCH=x86
@@ -44,9 +45,11 @@ SRC=$(TOP)/src
 COMPONENTS=$(TOP)/components
 LIBDIR=$(RSRC)/lib
 LIB=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(LIBDIR)/*)))
-OVAL=$(COMPONENTS)/schema
-SCHEMALIB=$(OVAL)/oval-schema-$(OVAL_SCHEMA_VERSION).jar
+OVAL=$(COMPONENTS)/oval
+OVAL_LIB=$(OVAL)/oval-schema-$(OVAL_VERSION).jar
 SVRL=$(COMPONENTS)/schematron/schema/svrl.jar
+XCCDF=$(COMPONENTS)/xccdf
+XCCDF_LIB=$(XCCDF)/xccdf-schema-$(XCCDF_VERSION).jar
 SDK=$(COMPONENTS)/sdk
 JOVAL_CORE=$(SDK)/engine
 JOVAL_CORE_LIB=$(JOVAL_CORE)/jOVALCore.jar

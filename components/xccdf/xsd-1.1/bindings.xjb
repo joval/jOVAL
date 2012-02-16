@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Copyright (C) 2012 jOVAL.org.  All rights reserved.
+  This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+
+-->
+<jxb:bindings version="1.0" xmlns:jxb="http://java.sun.com/xml/ns/jaxb" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <jxb:bindings>
+    <jxb:globalBindings generateIsSetMethod="true"/>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="xccdf-1.1.4.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="xccdf.schemas.core"/>
+    </jxb:schemaBindings>
+    <jxb:bindings node="xs:element[@name='Benchmark']//xs:attribute[@name='id']">
+        <jxb:property name="benchmarkId" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='itemType']//xs:attribute[@name='id']">
+        <jxb:property name="itemId" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='metadataType']/xs:sequence/xs:choice/xs:any[1]">
+        <jxb:property name="purlMetadata" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='metadataType']/xs:sequence/xs:choice/xs:any[2]">
+        <jxb:property name="sccfMetadata" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='profileType']//xs:attribute[@name='id']">
+        <jxb:property name="profileId" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='testResultType']//xs:attribute[@name='id']">
+        <jxb:property name="testResultId" />
+    </jxb:bindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="cpe-1.0.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="cpe.schemas.core"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="cpe-language_2.0.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="cpe.schemas.language"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="platform-0.2.3.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="cpe.schemas.platform"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="simpledc20021212.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.purl.dc"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="xccdfp-1.1.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="xccdf.schemas.platform"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+</jxb:bindings>
