@@ -12,9 +12,9 @@
            xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5"
            elementFormDefault="qualified" attributeFormDefault="unqualified">
   <xs:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
-             schemaLocation="../../../components/schema/xsd-5.10.1/oval-common-schema.xsd"/>
+             schemaLocation="../../../components/oval/xsd-5.10.1/oval-common-schema.xsd"/>
   <xs:import namespace="http://oval.mitre.org/XMLSchema/oval-results-5"
-             schemaLocation="../../../components/schema/xsd-5.10.1/oval-results-schema.xsd"/>
+             schemaLocation="../../../components/oval/xsd-5.10.1/oval-results-schema.xsd"/>
   <xs:element name="Report">
     <xs:complexType>
       <xs:sequence>

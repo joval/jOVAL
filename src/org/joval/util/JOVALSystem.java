@@ -44,44 +44,56 @@ import org.joval.oval.engine.Engine;
  */
 public class JOVALSystem {
     /**
-     * Property indicating the package names for classes in the OVAL definitions schema.
+     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
+     * definitions schema.
      */
     public static final String OVAL_PROP_DEFINITIONS = "oval.definitions.packages";
 
     /**
-     * Property indicating the package names for classes in the OVAL results schema.
+     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
+     * results schema.
      */
     public static final String OVAL_PROP_RESULTS = "oval.results.packages";
 
     /**
-     * Property indicating the package names for classes in the OVAL system characteristics schema.
+     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
+     * system characteristics schema.
      */
     public static final String OVAL_PROP_SYSTEMCHARACTERISTICS = "oval.systemcharacteristics.packages";
 
     /**
-     * Property indicating the package names for classes in the OVAL variables schema.
+     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
+     * variables schema.
      */
     public static final String OVAL_PROP_VARIABLES = "oval.variables.packages";
 
     /**
-     * Property indicating the package names for classes in the OVAL evaluation-id schema.
+     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
+     * evaluation-id schema.
      */
     public static final String OVAL_PROP_EVALUATION_ID = "oval.evaluation-id.packages";
 
     /**
-     * Property indicating the package names for classes in the OVAL directives schema.
+     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
+     * directives schema.
      */
     public static final String OVAL_PROP_DIRECTIVES = "oval.directives.packages";
 
     /**
-     * Property indicating the package names for classes in the XCCDF schema.
+     * Property indicating the package names for classes in the XCCDF (eXtensible Configuration Checklist Description Format)
+     * schema.
      */
     public static final String XCCDF_PROP_PACKAGES = "xccdf.packages";
 
     /**
-     * Property indicating the package names for classes in the CPE schema.
+     * Property indicating the package names for classes in the CPE (Common Platform Enumeration) schema.
      */
     public static final String CPE_PROP_PACKAGES = "cpe.packages";
+
+    /**
+     * Property indicating the package names for classes in the SVRL (Schematron Validation Report Language) schema.
+     */
+    public static final String SVRL_PROP_PACKAGES = "svrl.packages";
 
     /**
      * Property indicating the product name.
@@ -108,6 +120,7 @@ public class JOVALSystem {
     private static final String OVAL_RESOURCE	= "oval.properties";
     private static final String CPE_RESOURCE	= "cpe.properties";
     private static final String XCCDF_RESOURCE	= "xccdf.properties";
+    private static final String SVRL_RESOURCE	= "svrl.properties";
 
     private static Timer timer;
     private static IMessageConveyor mc;
@@ -161,6 +174,13 @@ public class JOVALSystem {
 	    rsc = cl.getResourceAsStream(XCCDF_RESOURCE);
 	    if (rsc == null) {
 		sysLogger.debug(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, XCCDF_RESOURCE));
+	    } else {
+		schemaProps.load(rsc);
+	    }
+
+	    rsc = cl.getResourceAsStream(SVRL_RESOURCE);
+	    if (rsc == null) {
+		sysLogger.debug(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, SVRL_RESOURCE));
 	    } else {
 		schemaProps.load(rsc);
 	    }

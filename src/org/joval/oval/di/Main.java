@@ -31,12 +31,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
-import javax.xml.XMLConstants;
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
-import javax.xml.validation.Schema;
-import javax.xml.validation.SchemaFactory;
-import javax.xml.validation.Validator;
 import org.xml.sax.SAXException;
 
 import oval.schemas.definitions.core.OvalDefinitions;
@@ -50,11 +44,12 @@ import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;
-import org.joval.oval.xml.SchematronValidationException;
-import org.joval.oval.xml.SchematronValidator;
 import org.joval.util.Checksum;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
+import org.joval.xml.SchemaValidator;
+import org.joval.xml.schematron.ValidationException;
+import org.joval.xml.schematron.Validator;
 
 /**
  * Command-Line Interface main class, whose purpose is to replicate the CLI of Ovaldi (the MITRE OVAL Definition
@@ -287,9 +282,9 @@ public class Main implements IObserver {
 		    }
 		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.dataFile.toString()));
 		    OvalSystemCharacteristics osc = sc.getOvalSystemCharacteristics();
-		    SchematronValidator.validate(osc, state.getSCSchematron());
+		    new Validator(state.getSCSchematron()).validate(sc.getSource());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
-		} catch (SchematronValidationException e) {
+		} catch (ValidationException e) {
 		    List<String> errors = e.getErrors();
 		    if (errors == null) {
 			print(e.getMessage());
@@ -429,9 +424,9 @@ public class Main implements IObserver {
 	    if (state.schematronDefs) {
 		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.defsFile.toString()));
 		try {
-		    SchematronValidator.validate(defs.getOvalDefinitions(), state.getDefsSchematron());
+		    new Validator(state.getDefsSchematron()).validate(defs.getSource());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
-		} catch (SchematronValidationException e) {
+		} catch (ValidationException e) {
 		    List<String> errors = e.getErrors();
 		    if (errors == null) {
 			print(e.getMessage());
@@ -506,9 +501,9 @@ public class Main implements IObserver {
 	    if (state.schematronResults) {
 		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.resultsXML.toString()));
 		try {
-		    SchematronValidator.validate(defs.getOvalDefinitions(), state.getResultsSchematron());
+		    new Validator(state.getResultsSchematron()).validate(defs.getSource());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
-		} catch (SchematronValidationException e) {
+		} catch (ValidationException e) {
 		    List<String> errors = e.getErrors();
 		    if (errors == null) {
 			print(e.getMessage());
@@ -553,21 +548,11 @@ public class Main implements IObserver {
     }
 
     private boolean validateSchema(File f, String[] fnames) throws SAXException, IOException {
-	ArrayList<Source> list = new ArrayList<Source>();
-	for (int i=0; i < fnames.length; i++) {
-	    File schemaFile = new File(state.xmlDir, fnames[i]);
-	    if (schemaFile.exists()) {
-		list.add(new StreamSource(schemaFile));
-	    }
-	}
-	Source[] sources = new Source[0];
-	Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(list.toArray(sources));
-	Validator validator = schema.newValidator();
-	try {
-	    validator.validate(new StreamSource(f));
+	SchemaValidator validator = new SchemaValidator(state.xmlDir, fnames);
+	if (validator.validate(f)) {
 	    return true;
-	} catch (SAXException e) {
-	    print(getMessage("ERROR_VALIDATION", e.getMessage()));
+	} else {
+	    print(getMessage("ERROR_VALIDATION", validator.getLastError().getMessage()));
 	    return false;
 	}
     }

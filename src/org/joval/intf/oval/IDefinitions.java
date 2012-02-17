@@ -13,6 +13,7 @@ import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.core.TestType;
 import oval.schemas.definitions.core.VariableType;
 
+import org.joval.intf.xml.ITransformable;
 import org.joval.oval.OvalException;
 
 /**
@@ -22,7 +23,7 @@ import org.joval.oval.OvalException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IDefinitions {
+public interface IDefinitions extends ITransformable {
     /**
      * Get the raw OVAL definitions object.
      */

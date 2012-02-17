@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.xml;
+package org.joval.xml.schematron;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,7 +25,7 @@ import org.w3c.dom.Node;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SchematronCompiler {
+public class Compiler {
     public static void main(String[] argv) {
 	if (argv.length == 3) {
 	    File iso = new File(argv[0]);
@@ -33,7 +33,7 @@ public class SchematronCompiler {
 	    if (input.isFile()) {
 		File output = new File(argv[2]);
 		try {
-		    new SchematronCompiler(iso).compile(input, output);
+		    new Compiler(iso).compile(input, output);
 		    System.exit(0);
 		} catch (Exception e) {
 		    e.printStackTrace();
@@ -44,7 +44,7 @@ public class SchematronCompiler {
 		System.exit(1);
 	    }
 	} else {
-	    System.out.println("Usage: java SchematronCompiler [ISO xsl dir] [input file] [output file]");
+	    System.out.println("Usage: java org.joval.xml.schematron.Compiler [ISO xsl dir] [input file] [output file]");
 	    System.exit(1);
 	}
     }
@@ -58,7 +58,7 @@ public class SchematronCompiler {
     private TransformerFactory factory;
     private File iso;
 
-    private SchematronCompiler(File iso) throws TransformerFactoryConfigurationError {
+    private Compiler(File iso) throws TransformerFactoryConfigurationError {
 	this.iso = iso;
 	factory = TransformerFactory.newInstance();
     }

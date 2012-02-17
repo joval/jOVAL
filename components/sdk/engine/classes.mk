@@ -14,6 +14,7 @@ CLASSES=\
 	org.joval.intf.util.IObserver					\
 	org.joval.intf.util.IProducer					\
 	org.joval.intf.util.IProperty					\
+	org.joval.intf.xml.ITransformable				\
 	org.joval.os.windows.Timestamp					\
 	org.joval.oval.NotCollectableException				\
 	org.joval.oval.OvalException					\

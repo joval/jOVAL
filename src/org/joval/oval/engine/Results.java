@@ -24,6 +24,7 @@ import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.Source;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.Transformer;
@@ -81,6 +82,7 @@ public class Results implements IResults {
     private Directives directives;
     private OvalResults or;
     private LocLogger logger;
+    private JAXBContext ctx;
 
     public static final OvalResults getOvalResults(File f) throws OvalException {
 	try {
@@ -109,16 +111,23 @@ public class Results implements IResults {
 	testTable = new Hashtable<String, TestType>();
 	directives = new Directives();
 	or = null;
+	try {
+	    ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS));
+	} catch (JAXBException e) {
+	    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
     }
 
-    // Implement ILoggable
+    // Implement ITransformable
 
-    public LocLogger getLogger() {
-	return logger;
-    }
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
+    public Source getSource() {
+	Source src = null;
+	try {
+	    src = new JAXBSource(ctx, getOvalResults());
+	} catch (JAXBException e) {
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return src;
     }
 
     // Implement IResults
@@ -134,8 +143,6 @@ public class Results implements IResults {
     public void writeXML(File f) {
 	OutputStream out = null;
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Marshaller marshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.RES);
 	    out = new FileOutputStream(f);
@@ -164,12 +171,8 @@ public class Results implements IResults {
 	try {
 	    TransformerFactory xf = TransformerFactory.newInstance();
 	    Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(transform)));
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    transformer.transform(new JAXBSource(ctx, getOvalResults()), new StreamResult(output));
+	    transformer.transform(getSource(), new StreamResult(output));
 	} catch (FileNotFoundException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
-	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (TransformerConfigurationException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);

@@ -22,9 +22,11 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.Source;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -43,6 +45,7 @@ import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 import org.joval.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALMsg;
@@ -57,7 +60,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SystemCharacteristics implements ISystemCharacteristics {
+public class SystemCharacteristics implements ISystemCharacteristics, ILoggable {
     private LocLogger logger;
 
     /**
@@ -91,6 +94,18 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 
     public void setLogger(LocLogger logger) {
 	this.logger = logger;
+    }
+
+    // Implement ITransformable
+
+    public Source getSource() {
+	Source src = null;
+	try {
+	    src = new JAXBSource(ctx, getOvalSystemCharacteristics());
+	} catch (JAXBException e) {
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return src;
     }
 
     // Implement ISystemCharacteristics

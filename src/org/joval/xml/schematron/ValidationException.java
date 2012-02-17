@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.xml;
+package org.joval.xml.schematron;
 
 import java.util.List;
 import java.util.Vector;
@@ -12,20 +12,20 @@ import java.util.Vector;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SchematronValidationException extends Exception {
+public class ValidationException extends Exception {
     List<String> errors;
 
-    public SchematronValidationException(String message) {
+    public ValidationException(String message) {
 	super(message);
 	this.errors = new Vector<String>();
     }
 
-    public SchematronValidationException(String message, List<String> errors) {
+    public ValidationException(String message, List<String> errors) {
 	super(message);
 	this.errors = errors;
     }
 
-    public SchematronValidationException(Exception e) {
+    public ValidationException(Exception e) {
 	super(e);
 	this.errors = new Vector<String>();
     }

@@ -95,4 +95,9 @@ public class XPERT {
 	benchmark = new XccdfDocument(xccdf).getBenchmark();
 	dictionary = new CpeDictionary(cpeDictionary).getCpeList();
     }
+
+    // Implement Runnable
+
+    public void run() {
+    }
 }

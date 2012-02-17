@@ -16,6 +16,10 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.util.JAXBSource;
+import javax.xml.transform.Source;
+
+import org.slf4j.cal10n.LocLogger;
 
 import oval.schemas.definitions.core.DefinitionType;
 import oval.schemas.definitions.core.DefinitionsType;
@@ -31,6 +35,7 @@ import oval.schemas.definitions.core.VariablesType;
 
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
+import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -41,7 +46,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Definitions implements IDefinitions {
+public class Definitions implements IDefinitions, ILoggable {
     /**
      * Unmarshalls an XML file and returns the root OvalDefinitions object.
      */
@@ -62,6 +67,7 @@ public class Definitions implements IDefinitions {
     }
 
     private OvalDefinitions defs;
+    private LocLogger logger;
     private Hashtable<String, DefinitionType> definitions;
     private Hashtable<String, TestType> tests;
     private Hashtable<String, StateType> states;
@@ -77,27 +83,25 @@ public class Definitions implements IDefinitions {
 
     public Definitions(OvalDefinitions defs) {
 	this.defs = defs;
+	this.logger = JOVALSystem.getLogger();
 
 	objects = new Hashtable <String, ObjectType>();
 	if (defs.getObjects() != null) {
-	    List<JAXBElement <? extends ObjectType>> objectList = defs.getObjects().getObject();
-	    for (JAXBElement<? extends ObjectType> jot : objectList) {
+	    for (JAXBElement<? extends ObjectType> jot : defs.getObjects().getObject()) {
 		ObjectType ot = jot.getValue();
 		objects.put(ot.getId(), ot);
 	    }
 	}
 
 	tests = new Hashtable <String, TestType>();
-	List<JAXBElement <? extends TestType>> testList = defs.getTests().getTest();
-	for (JAXBElement<? extends TestType> jtt : testList) {
+	for (JAXBElement<? extends TestType> jtt : defs.getTests().getTest()) {
 	    TestType tt = jtt.getValue();
 	    tests.put(tt.getId(), tt);
 	}
 
 	variables = new Hashtable <String, VariableType>();
 	if (defs.getVariables() != null) {
-	    List<JAXBElement <? extends VariableType>> varList = defs.getVariables().getVariable();
-	    for (JAXBElement<? extends VariableType> jvt : varList) {
+	    for (JAXBElement<? extends VariableType> jvt : defs.getVariables().getVariable()) {
 		VariableType vt = jvt.getValue();
 		variables.put(vt.getId(), vt);
 	    }
@@ -105,18 +109,39 @@ public class Definitions implements IDefinitions {
 
 	states = new Hashtable <String, StateType>();
 	if (defs.getStates() != null) {
-	    List<JAXBElement<? extends StateType>> stateList = defs.getStates().getState();
-	    for (JAXBElement<? extends StateType> jst : stateList) {
+	    for (JAXBElement<? extends StateType> jst : defs.getStates().getState()) {
 		StateType st = jst.getValue();
 		states.put(st.getId(), st);
 	    }
 	}
 
 	definitions = new Hashtable <String, DefinitionType>();
-	List<DefinitionType> defList = defs.getDefinitions().getDefinition();
-	for (DefinitionType dt : defList) {
+	for (DefinitionType dt : defs.getDefinitions().getDefinition()) {
 	    definitions.put(dt.getId(), dt);
 	}
+    }
+
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    // Implement ITransformable
+
+    public Source getSource() {
+	Source src = null;
+	try {
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DEFINITIONS);
+	    src = new JAXBSource(JAXBContext.newInstance(packages), getOvalDefinitions());
+	} catch (JAXBException e) {
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return src;
     }
 
     // Implement IDefinitions

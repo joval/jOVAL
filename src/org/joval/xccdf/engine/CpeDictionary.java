@@ -38,11 +38,9 @@ class CpeDictionary {
 		if (root.getValue() instanceof ListType) {
 		    return (ListType)root.getValue();
 		} else {
-System.out.println("DAS: " + root.getValue().getClass().getName());
 		    throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_FILE, f.toString()));
 		}
 	    } else {
-System.out.println("DAS: " + rootObj.getClass().getName());
 		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_FILE, f.toString()));
 	    }
 	} catch (JAXBException e) {

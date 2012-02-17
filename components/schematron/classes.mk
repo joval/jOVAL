@@ -1,3 +1,4 @@
 CLASSES=\
-	org.joval.oval.xml.SchematronCompiler	\
-	org.joval.oval.xml.SchematronValidator
+	org.joval.xml.schematron.Compiler		\
+	org.joval.xml.schematron.ValidationException	\
+	org.joval.xml.schematron.Validator
