@@ -43,13 +43,11 @@
       <jxb:package name="cpe.schemas.core"/>
     </jxb:schemaBindings>
   </jxb:bindings>
-<!--
   <jxb:bindings schemaLocation="cpe-language_2.0.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="cpe.schemas.language"/>
     </jxb:schemaBindings>
   </jxb:bindings>
--->
   <jxb:bindings schemaLocation="platform-0.2.3.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="cpe.schemas.platform"/>
