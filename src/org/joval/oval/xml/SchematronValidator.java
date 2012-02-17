@@ -93,7 +93,8 @@ public class SchematronValidator {
      */
     public static void validate(OvalDefinitions defs, File xsl) throws SchematronValidationException, OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_DEFINITIONS));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DEFINITIONS);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    validate(new JAXBSource(ctx, defs), xsl);
 	} catch (JAXBException e) {
 	    throw new SchematronValidationException(e);
@@ -106,7 +107,8 @@ public class SchematronValidator {
      */
     public static void validate(OvalSystemCharacteristics sc, File xsl) throws SchematronValidationException, OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    validate(new JAXBSource(ctx, sc), xsl);
 	} catch (JAXBException e) {
 	    throw new SchematronValidationException(e);
@@ -119,7 +121,8 @@ public class SchematronValidator {
      */
     public static void validate(OvalResults results, File xsl) throws SchematronValidationException, OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    validate(new JAXBSource(ctx, results), xsl);
 	} catch (JAXBException e) {
 	    throw new SchematronValidationException(e);

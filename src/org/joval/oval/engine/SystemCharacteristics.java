@@ -69,7 +69,8 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 
     public static final OvalSystemCharacteristics getOvalSystemCharacteristics(File f) throws OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(f);
 	    if (rootObj instanceof OvalSystemCharacteristics) {
@@ -152,7 +153,8 @@ public class SystemCharacteristics implements ISystemCharacteristics {
 	this.plugin = plugin;
 	logger = plugin.getLogger();
 	try {
-	    ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS);
+	    ctx = JAXBContext.newInstance(packages);
 	    csMarshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(csMarshaller, OvalNamespacePrefixMapper.URI.SC);
 	} catch (JAXBException e) {

@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://scap.nist.gov/schema/cpe-extension/2.3"
+    xmlns:cpe-name="http://cpe.mitre.org/naming/2.0" targetNamespace="http://scap.nist.gov/schema/cpe-extension/2.3"
+    elementFormDefault="qualified" attributeFormDefault="unqualified" version="2.3">
+    <xsd:import namespace="http://cpe.mitre.org/naming/2.0" schemaLocation="cpe-naming_2.3.xsd"/>
+    <xsd:annotation>
+        <xsd:documentation xml:lang="en"> This extension implements the majority of the CPE Dictionary 2.3 data model.
+            All instance documents created using the 2.3 extension schema can validate against the CPE 2.2 dictionary
+            schema if cpe23-item is used as the 'any' element in the CPE 2.2 Dictionary Schema itemType element and if
+            the 'title' element is always supplied for cpe-item. </xsd:documentation>
+        <xsd:appinfo>
+            <schema>CPE 2.3 Dictionary Extension</schema>
+            <author>Paul Cichonski, Dave Waltermire, Adam Halbardier</author>
+            <version>2.3</version>
+            <date>2011-07-29</date>
+        </xsd:appinfo>
+    </xsd:annotation>
+
+    <xsd:element name="cpe23-item" type="itemType"/>
+
+    <xsd:complexType name="itemType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en"> This element captures all CPE 2.3 specific data including the CPE 2.3
+                formatted string binding of the name, provenance data, and deprecation data. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="provenance-record" type="provenanceRecordType" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation> Container for all provenance information for the given identifier name.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="deprecation" type="deprecationType" minOccurs="0" maxOccurs="unbounded">
+                <xsd:annotation>
+                    <xsd:documentation> Holds one or more deprecation entries for the given identifier name. It is
+                        possible for a single identifier name to have multiple deprecations that occur at different time
+                        periods. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:any minOccurs="0" maxOccurs="unbounded" namespace="##other" processContents="lax"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="namePattern" use="required">
+            <xsd:annotation>
+                <xsd:documentation> The identifier name bound to a formatted string. </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="deprecationType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">An element containing information for a specific deprecation of an
+                identifier name. A single deprecation element may contain a list of names that the enclosing identifier
+                name was deprecated by. One deprecation element represents a deprecation that occurred at a specific
+                instant in time; it is possible that additional deprecations will occur at a later instant in time. If a
+                dictionary maintainer must submit deprecation entries after the initial deprecation, then another
+                deprecation element should be added to the identifier name. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="deprecated-by" type="deprecatedInfoType" minOccurs="1" maxOccurs="unbounded"
+                form="qualified">
+                <xsd:annotation>
+                    <xsd:documentation> The list of names that deprecated the identifier name. The names in the list do
+                        not have to be identifier names; they may contain wildcards and represent sets of products.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="date" type="xsd:dateTime" use="optional">
+            <xsd:annotation>
+                <xsd:documentation> When the deprecation occurred. </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="provenanceRecordType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">Element holding all provenance information for the given identifier
+                name.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="submitter" type="organizationType" minOccurs="1">
+                <xsd:annotation>
+                    <xsd:documentation>The organization responsible for submitting the identifier
+                        name.</xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="authority" type="organizationType" minOccurs="1" maxOccurs="unbounded">
+                <xsd:annotation>
+                    <xsd:documentation> The authority responsible for endorsing the identifier name. Multiple
+                        authorities may endorse the same identifier name. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="change-description" type="changeDescriptionType" minOccurs="1" maxOccurs="unbounded">
+                <xsd:annotation>
+                    <xsd:documentation> A description of any changes made to the identifier name or associated metadata.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:any minOccurs="0" maxOccurs="unbounded" namespace="##other" processContents="lax"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="changeDescriptionType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en"> A description of any changes made to the identifier name or associated
+                metadata. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="evidence-reference" type="evidenceReferenceType" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation> Supporting evidence for any changes to a name or associated metadata, including
+                        a link to external information relating to the change. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="comments" type="xsd:token" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation> Comments explaining the rationale for the change. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="change-type" type="changeTypeType" use="required">
+            <xsd:annotation>
+                <xsd:documentation> The type of change that occurred. </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="date" type="xsd:dateTime">
+            <xsd:annotation>
+                <xsd:documentation> When the change occurred. </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="evidenceReferenceType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en"> Supporting evidence for any changes to a name or associated metadata,
+                including a link to external information relating to the change. </xsd:documentation>
+        </xsd:annotation>
+        <xsd:simpleContent>
+            <xsd:extension base="xsd:anyURI">
+                <xsd:attribute name="evidence" type="evidenceType" use="required"/>
+            </xsd:extension>
+        </xsd:simpleContent>
+    </xsd:complexType>
+
+    <xsd:complexType name="organizationType">
+        <xsd:sequence>
+            <xsd:element name="description" type="xsd:token" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation> A high-level description of the organization acting as the submitter or
+                        authority. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="system-id" type="xsd:anyURI" use="required">
+            <xsd:annotation>
+                <xsd:documentation> Unique URI representing the organization. </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="name" type="xsd:token" use="required">
+            <xsd:annotation>
+                <xsd:documentation> Human readable name of the organization. </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="date" type="xsd:dateTime" use="required">
+            <xsd:annotation>
+                <xsd:documentation> The date the organization performed an action relative to an identifier name. For
+                    example, the date the organization submitted or endorsed a particular name. </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:complexType name="deprecatedInfoType">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">The element containing the list of names that deprecated the enclosing
+                identifier name. The name contained within this element does not have to represent an identifier name.
+                This means that the name may contain wildcards (e.g. ANY, *, ?) and may represent a set of products.
+                This provides a more robust mechanism to support One to Many deprecation logic.</xsd:documentation>
+        </xsd:annotation>
+        <xsd:attribute name="name" type="cpe-name:cpe23Type">
+            <xsd:annotation>
+                <xsd:documentation> The name that is deprecating the identifier name. </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+        <xsd:attribute name="type" type="deprecationTypeType" use="required">
+            <xsd:annotation>
+                <xsd:documentation> The type of deprecation. </xsd:documentation>
+            </xsd:annotation>
+        </xsd:attribute>
+    </xsd:complexType>
+
+    <xsd:simpleType name="changeTypeType">
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="ORIGINAL_RECORD">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> This change type should be used when the name is first added to
+                        the dictionary. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:enumeration>
+            <xsd:enumeration value="AUTHORITY_CHANGE ">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> This change type should be used when the authority behind the name
+                        is modified. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:enumeration>
+            <xsd:enumeration value="DEPRECATION">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> This change type should be used when the name is first deprecated.
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:enumeration>
+            <xsd:enumeration value="DEPRECATION_MODIFICATION">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> This change type should be used when additional deprecation
+                        entries are recorded for a deprecated name. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:enumeration>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+
+    <xsd:simpleType name="evidenceType">
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="CURATOR_UPDATE">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> The curator of the dictionary discovered information that led to a
+                        change. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:enumeration>
+            <xsd:enumeration value="VENDOR_FIX">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> The vendor of the product identified in the enclosing WFN
+                        released, or submitted, information that led to a change. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:enumeration>
+            <xsd:enumeration value="THIRD_PARTY_FIX">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> A third party released, or submitted, information that led to a
+                        change. </xsd:documentation>
+                </xsd:annotation>
+            </xsd:enumeration>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="deprecationTypeType">
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="NAME_CORRECTION">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> Specifies the deprecation is of type “Identifier Name Correction”
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:enumeration>
+            <xsd:enumeration value="NAME_REMOVAL">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> Specifies the deprecation is of type “Identifier Name Removal”
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:enumeration>
+            <xsd:enumeration value="ADDITIONAL_INFORMATION">
+                <xsd:annotation>
+                    <xsd:documentation xml:lang="en"> Specifies the deprecation is of type “Additional Information
+                        Discovery” </xsd:documentation>
+                </xsd:annotation>
+            </xsd:enumeration>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="namePattern">
+        <xsd:annotation>
+            <xsd:documentation xml:lang="en">Pattern defining identifier WFN (no embedded *, ?)</xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="cpe-name:cpe23Type">
+            <xsd:pattern
+                value="cpe:2\.3:[aho](:(([a-zA-Z0-9\._]|(\\[\\\*\?!&quot;#$$%&amp;'\(\)\+,/:;&lt;=&gt;@\[\]\^`\{\|}~]))|([a-zA-Z0-9\-\._]|(\\[\\\*\?!&quot;#$$%&amp;'\(\)\+,/:;&lt;=&gt;@\[\]\^`\{\|}~])){2,})){2}(:((([a-zA-Z0-9\-\._]|(\\[\\\*\?!&quot;#$$%&amp;'\(\)\+,/:;&lt;=&gt;@\[\]\^`\{\|}~]))+)|-))(:((([a-zA-Z0-9\-\._]|(\\[\\\*\?!&quot;#$$%&amp;'\(\)\+,/:;&lt;=&gt;@\[\]\^`\{\|}~]))+)|[\*\-])){2}(:(([a-zA-Z]{2,3}(-([a-zA-Z]{2}|[0-9]{3}))?)|[\*\-]))(:((([a-zA-Z0-9\-\._]|(\\[\\\*\?!&quot;#$$%&amp;'\(\)\+,/:;&lt;=&gt;@\[\]\^`\{\|}~]))+)|[\*\-])){4}"
+            />
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <!-- ================================================== -->
+    <!-- =====  Change History  -->
+    <!-- ================================================== -->
+    <!--
+        v2.3 - Initial release 
+    -->
+
+</xsd:schema>

@@ -13,6 +13,12 @@
     <jxb:schemaBindings>
       <jxb:package name="xccdf.schemas.core"/>
     </jxb:schemaBindings>
+    <jxb:bindings node="xs:element[@name='Benchmark']//xs:element[@ref='cdfp:Platform-Specification']">
+        <jxb:property name="cdfpPlatformSpec" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:element[@name='Benchmark']//xs:element[@ref='cpe2:platform-specification']">
+        <jxb:property name="cpePlatformSpec" />
+    </jxb:bindings>
     <jxb:bindings node="xs:element[@name='Benchmark']//xs:attribute[@name='id']">
         <jxb:property name="benchmarkId" />
     </jxb:bindings>
@@ -37,11 +43,13 @@
       <jxb:package name="cpe.schemas.core"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+<!--
   <jxb:bindings schemaLocation="cpe-language_2.0.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="cpe.schemas.language"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+-->
   <jxb:bindings schemaLocation="platform-0.2.3.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="cpe.schemas.platform"/>

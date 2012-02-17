@@ -84,7 +84,8 @@ public class Results implements IResults {
 
     public static final OvalResults getOvalResults(File f) throws OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(f);
 	    if (rootObj instanceof OvalResults) {
@@ -133,7 +134,8 @@ public class Results implements IResults {
     public void writeXML(File f) {
 	OutputStream out = null;
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Marshaller marshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.RES);
 	    out = new FileOutputStream(f);
@@ -162,7 +164,8 @@ public class Results implements IResults {
 	try {
 	    TransformerFactory xf = TransformerFactory.newInstance();
 	    Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(transform)));
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    transformer.transform(new JAXBSource(ctx, getOvalResults()), new StreamResult(output));
 	} catch (FileNotFoundException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);

@@ -171,7 +171,7 @@ public class Main {
     private static String PACKAGES;
     static {
 	StringBuffer sb = new StringBuffer("org.joval.test.automation.schema:");
-	PACKAGES = sb.append(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_RESULTS)).toString();
+	PACKAGES = sb.append(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS)).toString();
     }
 
     private static void writeReport(Report report) throws Exception {

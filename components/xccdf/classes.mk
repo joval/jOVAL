@@ -5,14 +5,6 @@ CLASSES=\
 	cpe.schemas.core.ObjectFactory	\
 	cpe.schemas.core.package-info	\
 	cpe.schemas.core.ReferenceType	\
-	cpe.schemas.language.FactRefType	\
-	cpe.schemas.language.LogicalTestType	\
-	cpe.schemas.language.ObjectFactory	\
-	cpe.schemas.language.OperatorEnumeration	\
-	cpe.schemas.language.package-info	\
-	cpe.schemas.language.PlatformSpecification	\
-	cpe.schemas.language.PlatformType	\
-	cpe.schemas.language.TextType	\
 	cpe.schemas.platform.Application	\
 	cpe.schemas.platform.Hardware	\
 	cpe.schemas.platform.LogicalOperator	\

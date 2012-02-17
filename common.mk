@@ -25,6 +25,7 @@ CWD=$(shell pwd)
 JOVAL_VERSION=5.10.1.0
 OVAL_VERSION=5.10.1
 XCCDF_VERSION=1.1
+CPE_VERSION=2.3
 
 # If your system is 32-bit, set ARCH to x86
 #ARCH=x86
@@ -45,6 +46,8 @@ SRC=$(TOP)/src
 COMPONENTS=$(TOP)/components
 LIBDIR=$(RSRC)/lib
 LIB=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(LIBDIR)/*)))
+CPE=$(COMPONENTS)/cpe
+CPE_LIB=$(CPE)/cpe-schema-$(CPE_VERSION).jar
 OVAL=$(COMPONENTS)/oval
 OVAL_LIB=$(OVAL)/oval-schema-$(OVAL_VERSION).jar
 SVRL=$(COMPONENTS)/schematron/schema/svrl.jar

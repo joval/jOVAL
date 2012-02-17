@@ -31,7 +31,8 @@ public class DefinitionFilter implements IDefinitionFilter {
      */
     public static final Collection<String> getEvaluationDefinitionIds(File f) throws OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_EVALUATION_ID));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_EVALUATION_ID);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(f);
 	    if (rootObj instanceof EvaluationDefinitionIds) {

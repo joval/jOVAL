@@ -36,7 +36,8 @@ class Directives {
      */
     static final OvalDirectives getOvalDirectives(File f) throws OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_DIRECTIVES));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DIRECTIVES);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(f);
 	    if (rootObj instanceof OvalDirectives) {

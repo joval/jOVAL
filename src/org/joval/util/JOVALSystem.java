@@ -46,32 +46,42 @@ public class JOVALSystem {
     /**
      * Property indicating the package names for classes in the OVAL definitions schema.
      */
-    public static final String OVAL_PROP_DEFINITIONS = "definitions.packages";
+    public static final String OVAL_PROP_DEFINITIONS = "oval.definitions.packages";
 
     /**
      * Property indicating the package names for classes in the OVAL results schema.
      */
-    public static final String OVAL_PROP_RESULTS = "results.packages";
+    public static final String OVAL_PROP_RESULTS = "oval.results.packages";
 
     /**
      * Property indicating the package names for classes in the OVAL system characteristics schema.
      */
-    public static final String OVAL_PROP_SYSTEMCHARACTERISTICS = "systemcharacteristics.packages";
+    public static final String OVAL_PROP_SYSTEMCHARACTERISTICS = "oval.systemcharacteristics.packages";
 
     /**
      * Property indicating the package names for classes in the OVAL variables schema.
      */
-    public static final String OVAL_PROP_VARIABLES = "variables.packages";
+    public static final String OVAL_PROP_VARIABLES = "oval.variables.packages";
 
     /**
      * Property indicating the package names for classes in the OVAL evaluation-id schema.
      */
-    public static final String OVAL_PROP_EVALUATION_ID = "evaluation-id.packages";
+    public static final String OVAL_PROP_EVALUATION_ID = "oval.evaluation-id.packages";
 
     /**
      * Property indicating the package names for classes in the OVAL directives schema.
      */
-    public static final String OVAL_PROP_DIRECTIVES = "directives.packages";
+    public static final String OVAL_PROP_DIRECTIVES = "oval.directives.packages";
+
+    /**
+     * Property indicating the package names for classes in the XCCDF schema.
+     */
+    public static final String XCCDF_PROP_PACKAGES = "xccdf.packages";
+
+    /**
+     * Property indicating the package names for classes in the CPE schema.
+     */
+    public static final String CPE_PROP_PACKAGES = "cpe.packages";
 
     /**
      * Property indicating the product name.
@@ -89,11 +99,6 @@ public class JOVALSystem {
     public static final String SYSTEM_PROP_BUILD_DATE = "build.date";
 
     /**
-     * Property indicating the package names for classes in the XCCDF schema.
-     */
-    public static final String XCCDF_PROP_PACKAGES = "xccdf.packages";
-
-    /**
      * A data structure providing easy access to the OVAL schema object factories.
      */
     public static final Factories factories = new Factories();
@@ -101,13 +106,14 @@ public class JOVALSystem {
     private static final String SYSTEM_SECTION	= JOVALSystem.class.getName();
     private static final String CONFIG_RESOURCE	= "defaults.ini";
     private static final String OVAL_RESOURCE	= "oval.properties";
+    private static final String CPE_RESOURCE	= "cpe.properties";
     private static final String XCCDF_RESOURCE	= "xccdf.properties";
 
     private static Timer timer;
     private static IMessageConveyor mc;
     private static LocLoggerFactory loggerFactory;
     private static LocLogger sysLogger;
-    private static Properties ovalProps, xccdfProps;
+    private static Properties schemaProps;
     private static IniFile config;
 
     static {
@@ -127,8 +133,7 @@ public class JOVALSystem {
 	loggerFactory = new LocLoggerFactory(mc);
 	sysLogger = loggerFactory.getLocLogger(JOVALSystem.class);
 	config = new IniFile();
-	ovalProps = new Properties();
-	xccdfProps = new Properties();
+	schemaProps = new Properties();
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
@@ -143,14 +148,21 @@ public class JOVALSystem {
 	    if (rsc == null) {
 		sysLogger.warn(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, OVAL_RESOURCE));
 	    } else {
-		ovalProps.load(rsc);
+		schemaProps.load(rsc);
 	    }
 
-	    rsc = cl.getResourceAsStream("xccdf.properties");
+	    rsc = cl.getResourceAsStream(CPE_RESOURCE);
+	    if (rsc == null) {
+		sysLogger.debug(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, CPE_RESOURCE));
+	    } else {
+		schemaProps.load(rsc);
+	    }
+
+	    rsc = cl.getResourceAsStream(XCCDF_RESOURCE);
 	    if (rsc == null) {
 		sysLogger.debug(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, XCCDF_RESOURCE));
 	    } else {
-		xccdfProps.load(rsc);
+		schemaProps.load(rsc);
 	    }
 	} catch (IOException e) {
 	    sysLogger.error(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -232,19 +244,10 @@ public class JOVALSystem {
     /**
      * Retrieve an OVAL schema property.
      *
-     * @param name specify one of the OVAL_PROP_* keys
+     * @param name specify one of the OVAL_PROP_*, CPE_PROP_* or XCCDF_PROP_* keys
      */
-    public static String getOvalProperty(String name) {
-	return ovalProps.getProperty(name);
-    }
-
-    /**
-     * Retrieve an XCCDF schema property.
-     *
-     * @param name specify one of the XCCDF_PROP_* keys
-     */
-    public static String getXccdfProperty(String name) {
-	return xccdfProps.getProperty(name);
+    public static String getSchemaProperty(String name) {
+	return schemaProps.getProperty(name);
     }
 
     /**

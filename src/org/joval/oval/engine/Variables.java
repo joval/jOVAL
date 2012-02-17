@@ -38,7 +38,7 @@ class Variables {
      */
     static final OvalVariables getOvalVariables(File f) throws OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_VARIABLES));
+	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_VARIABLES));
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(f);
 	    if (rootObj instanceof OvalVariables) {

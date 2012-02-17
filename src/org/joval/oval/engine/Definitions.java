@@ -47,7 +47,8 @@ public class Definitions implements IDefinitions {
      */
     public static final OvalDefinitions getOvalDefinitions(File f) throws OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getOvalProperty(JOVALSystem.OVAL_PROP_DEFINITIONS));
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DEFINITIONS);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(f);
 	    if (rootObj instanceof OvalDefinitions) {
