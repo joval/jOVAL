@@ -404,7 +404,11 @@ public class Engine implements IEngine {
 	for (ObjectType obj : definitions.getObjects()) {
 	    String objectId = obj.getId();
 	    if (!sc.containsObject(objectId)) {
-		scanObject(new RequestContext(this, obj));
+		try {
+		    scanObject(new RequestContext(this, obj));
+		} catch (NoSuchElementException e) {
+		    // ignore
+		}
 	    }
 	}
 	producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
@@ -413,8 +417,11 @@ public class Engine implements IEngine {
     /**
      * Scan an object live using an adapter, including crawling down any encountered Sets.  Items are stored in the
      * system-characteristics as they are collected.
+     *
+     * @throws NoSuchElementException if the object could not be scanned because of an error
+     * @throws OvalException if processing should cease for some good reason
      */
-    private Collection<ItemType> scanObject(RequestContext rc) throws OvalException {
+    private Collection<ItemType> scanObject(RequestContext rc) throws NoSuchElementException, OvalException {
 	//
 	// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
 	//
@@ -480,18 +487,14 @@ public class Engine implements IEngine {
 		message.setValue(err);
 		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
 	    }
-	    return new Vector<ItemType>();
+	    throw new NoSuchElementException(err);
 	} else {
-	    try {
-		Collection<ItemType> items = getSetItems(s);
-		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-		for (ItemType item : items) {
-		    sc.relateItem(objectId, item.getId());
-		}
-		return items;
-	    } catch (NoSuchElementException e) {
-		throw new OvalException(e);
+	    Collection<ItemType> items = getSetItems(s);
+	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+	    for (ItemType item : items) {
+		sc.relateItem(objectId, item.getId());
 	    }
+	    return items;
 	}
     }
 
@@ -715,6 +718,15 @@ public class Engine implements IEngine {
 	String testId = testResult.getTestId();
 	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	String objectId = getObjectRef(testDefinition);
+
+	//
+	// If the object is not found in the SystemCharacteristics, then the test cannot be evaluated.
+	//
+	if (!sc.containsObject(objectId)) {
+	    testResult.setResult(ResultEnumeration.NOT_EVALUATED);
+	    return;
+	}
+
 	String stateId = getStateRef(testDefinition);
 	StateType state = null;
 	if (stateId != null) {
@@ -1420,7 +1432,10 @@ public class Engine implements IEngine {
 	    ConcatFunctionType concat = (ConcatFunctionType)object;
 	    for (Object child : concat.getObjectComponentOrVariableComponentOrLiteralComponent()) {
 		Collection<String> next = resolveInternal(child, list);
-		if (values.size() == 0) {
+		if (next.size() == 0) {
+//DAS -- is this right?
+		    return new Vector<String>();
+		} else if (values.size() == 0) {
 		    values.addAll(next);
 		} else {
 		    Collection<String> newValues = new Vector<String>();
