@@ -4,10 +4,13 @@
 package org.joval.xccdf.engine;
 
 import java.io.File;
+import java.io.InputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 
 import cpe.schemas.dictionary.ListType;
 
@@ -22,15 +25,20 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 class CpeDictionary {
-    /**
-     * Get the root-level node (ListType) of the document.
-     */
     static final ListType getCpeList(File f) throws XccdfException {
+	return getCpeList(new StreamSource(f));
+    }
+
+    static final ListType getCpeList(InputStream in) throws XccdfException {
+	return getCpeList(new StreamSource(in));
+    }
+
+    static final ListType getCpeList(Source source) throws XccdfException {
 	try {
 	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.CPE_PROP_PACKAGES);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
-	    Object rootObj = unmarshaller.unmarshal(f);
+	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof ListType) {
 		return (ListType)rootObj;
 	    } else if (rootObj instanceof JAXBElement) {
@@ -38,10 +46,10 @@ class CpeDictionary {
 		if (root.getValue() instanceof ListType) {
 		    return (ListType)root.getValue();
 		} else {
-		    throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_FILE, f.toString()));
+		    throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_SOURCE, source.getSystemId()));
 		}
 	    } else {
-		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_FILE, f.toString()));
+		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new XccdfException(e);
@@ -55,6 +63,10 @@ class CpeDictionary {
      */
     CpeDictionary(File f) throws XccdfException {
 	this(getCpeList(f));
+    }
+
+    CpeDictionary(InputStream in) throws XccdfException {
+	this(getCpeList(in));
     }
 
     /**

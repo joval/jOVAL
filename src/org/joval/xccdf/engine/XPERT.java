@@ -10,11 +10,14 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 
 import cpe.schemas.dictionary.ListType;
+import oval.schemas.definitions.core.OvalDefinitions;
 import xccdf.schemas.core.Benchmark;
 
-import org.joval.xccdf.XccdfException;
+import org.joval.intf.oval.IDefinitions;
+import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.xccdf.XccdfException;
 
 /**
  * XCCDF Processing Engine and Reporting Tool (XPERT) main class.
@@ -27,58 +30,25 @@ public class XPERT {
      * Run from the command-line.
      */
     public static void main(String[] argv) {
-	File baseDir = null;
-	if (argv.length == 0) {
-	    //
-	    // Use the current directory
-	    //
-	    baseDir = new File(".");
-	} else if (argv.length == 1) {
+	File f = null;
+	if (argv.length == 1) {
 	    //
 	    // Use the specified directory
 	    //
-	    baseDir = new File(argv[0]);
+	    f = new File(argv[0]);
 	}
 
-	if (baseDir == null || !baseDir.isDirectory()) {
-	    System.out.println("Usage: java org.joval.xccdf.XPERT [basedir]");
-	    System.exit(1);
-	}
-
-	File xccdf=null, cpeOval=null, cpeDictionary=null, oval=null;
-	File[] files = baseDir.listFiles();
-	for (File file : files) {
-	    if (file.getName().toLowerCase().endsWith("xccdf.xml")) {
-		xccdf = file;
-	    } else if (file.getName().toLowerCase().endsWith("cpe-dictionary.xml")) {
-		cpeDictionary = file;
-	    } else if (file.getName().toLowerCase().endsWith("cpe-oval.xml")) {
-		cpeOval = file;
-	    } else if (file.getName().toLowerCase().endsWith("oval.xml")) { // NB: after cpe-oval.xml
-		oval = file;
-	    }
-	}
-
-	if (xccdf == null) {
-	    System.out.println("ERROR: Failed to find the XCCDF benchmark file");
-	    System.exit(1);
-	}
-	if (cpeDictionary == null) {
-	    System.out.println("ERROR: Failed to find the CPE dictionary file");
-	    System.exit(1);
-	}
-	if (cpeOval == null) {
-	    System.out.println("ERROR: Failed to find the CPE oval file");
-	    System.exit(1);
-	}
-	if (oval == null) {
-	    System.out.println("ERROR: Failed to find the OVAL definitions file");
+	if (f == null) {
+	    System.out.println("Usage: java org.joval.xccdf.XPERT [path]");
 	    System.exit(1);
 	}
 
 	try {
-	    XPERT engine = new XPERT(xccdf, cpeDictionary, cpeOval, oval);
+	    XPERT engine = new XPERT(new XccdfDocument(f));
 	} catch (XccdfException e) {
+	    e.printStackTrace();
+	    System.exit(1);
+	} catch (OvalException e) {
 	    e.printStackTrace();
 	    System.exit(1);
 	}
@@ -90,10 +60,10 @@ public class XPERT {
 
     private Benchmark benchmark;
     private ListType dictionary;
+    private IDefinitions cpeOval, oval;
 
-    private XPERT(File xccdf, File cpeDictionary, File cpeOval, File oval) throws XccdfException {
-	benchmark = new XccdfDocument(xccdf).getBenchmark();
-	dictionary = new CpeDictionary(cpeDictionary).getCpeList();
+    private XPERT(XccdfDocument doc) {
+	System.out.println("Loaded document");
     }
 
     // Implement Runnable

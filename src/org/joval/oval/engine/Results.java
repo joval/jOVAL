@@ -93,7 +93,7 @@ public class Results implements IResults {
 	    if (rootObj instanceof OvalResults) {
 		return (OvalResults)rootObj;
 	    } else {
-	        throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESULTS_BAD_FILE, f));
+	        throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESULTS_BAD_SOURCE, f));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);

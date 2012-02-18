@@ -6,6 +6,7 @@ package org.joval.oval.engine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -18,6 +19,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -47,19 +49,24 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class Definitions implements IDefinitions, ILoggable {
-    /**
-     * Unmarshalls an XML file and returns the root OvalDefinitions object.
-     */
     public static final OvalDefinitions getOvalDefinitions(File f) throws OvalException {
+	return getOvalDefinitions(new StreamSource(f));
+    }
+
+    public static final OvalDefinitions getOvalDefinitions(InputStream in) throws OvalException {
+	return getOvalDefinitions(new StreamSource(in));
+    }
+
+    public static final OvalDefinitions getOvalDefinitions(Source source) throws OvalException {
 	try {
 	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DEFINITIONS);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
-	    Object rootObj = unmarshaller.unmarshal(f);
+	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof OvalDefinitions) {
 		return (OvalDefinitions)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITIONS_BAD_FILE, f.toString()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITIONS_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);
@@ -79,6 +86,10 @@ public class Definitions implements IDefinitions, ILoggable {
      */
     public Definitions(File f) throws OvalException {
 	this(getOvalDefinitions(f));
+    }
+
+    public Definitions(InputStream in) throws OvalException {
+	this(getOvalDefinitions(in));
     }
 
     public Definitions(OvalDefinitions defs) {

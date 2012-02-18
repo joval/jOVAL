@@ -9,6 +9,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 
 import oval.schemas.common.ClassEnumeration;
 import oval.schemas.directives.core.OvalDirectives;
@@ -35,15 +37,19 @@ class Directives {
      * Get a list of Definition ID strings from an Evaluation-IDs file.
      */
     static final OvalDirectives getOvalDirectives(File f) throws OvalException {
+	return getOvalDirectives(new StreamSource(f));
+    }
+
+    static final OvalDirectives getOvalDirectives(Source source) throws OvalException {
 	try {
 	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DIRECTIVES);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
-	    Object rootObj = unmarshaller.unmarshal(f);
+	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof OvalDirectives) {
 		return (OvalDirectives)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DIRECTIVES_BAD_FILE, f.toString()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DIRECTIVES_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);

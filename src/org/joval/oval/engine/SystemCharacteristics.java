@@ -27,6 +27,7 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLOutputFactory;
 import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -61,6 +62,26 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class SystemCharacteristics implements ISystemCharacteristics, ILoggable {
+    public static final OvalSystemCharacteristics getOvalSystemCharacteristics(File f) throws OvalException {
+	return getOvalSystemCharacteristics(new StreamSource(f));
+    }
+
+    public static final OvalSystemCharacteristics getOvalSystemCharacteristics(Source src) throws OvalException {
+	try {
+	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
+	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Object rootObj = unmarshaller.unmarshal(src);
+	    if (rootObj instanceof OvalSystemCharacteristics) {
+		return (OvalSystemCharacteristics)rootObj;
+	    } else {
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SC_BAD_SOURCE, src.getSystemId()));
+	    }
+	} catch (JAXBException e) {
+	    throw new OvalException(e);
+	}
+    }
+
     private LocLogger logger;
 
     /**
@@ -68,22 +89,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
      */
     public SystemCharacteristics(File f) throws OvalException {
 	this(getOvalSystemCharacteristics(f));
-    }
-
-    public static final OvalSystemCharacteristics getOvalSystemCharacteristics(File f) throws OvalException {
-	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
-	    Object rootObj = unmarshaller.unmarshal(f);
-	    if (rootObj instanceof OvalSystemCharacteristics) {
-		return (OvalSystemCharacteristics)rootObj;
-	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SC_BAD_FILE, f));
-	    }
-	} catch (JAXBException e) {
-	    throw new OvalException(e);
-	}
     }
 
     // Implement ILoggable

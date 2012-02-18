@@ -12,6 +12,8 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.Source;
+import javax.xml.transform.stream.StreamSource;
 import org.w3c.dom.Node;
 
 import oval.schemas.variables.core.OvalVariables;
@@ -37,14 +39,18 @@ class Variables {
      * Unmarshal an XML file and return the OvalVariables root object.
      */
     static final OvalVariables getOvalVariables(File f) throws OvalException {
+	return getOvalVariables(new StreamSource(f));
+    }
+
+    static final OvalVariables getOvalVariables(Source source) throws OvalException {
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_VARIABLES));
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
-	    Object rootObj = unmarshaller.unmarshal(f);
+	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof OvalVariables) {
 		return (OvalVariables)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_VARIABLES_BAD_FILE, f.toString()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_VARIABLES_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);
