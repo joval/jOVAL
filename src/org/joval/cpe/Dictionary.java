@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.xccdf.engine;
+package org.joval.cpe;
 
 import java.io.File;
 import java.io.InputStream;
@@ -14,7 +14,7 @@ import javax.xml.transform.stream.StreamSource;
 
 import cpe.schemas.dictionary.ListType;
 
-import org.joval.xccdf.XccdfException;
+import org.joval.cpe.CpeException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -24,16 +24,16 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-class CpeDictionary {
-    static final ListType getCpeList(File f) throws XccdfException {
+public class Dictionary {
+    public static final ListType getCpeList(File f) throws CpeException {
 	return getCpeList(new StreamSource(f));
     }
 
-    static final ListType getCpeList(InputStream in) throws XccdfException {
+    public static final ListType getCpeList(InputStream in) throws CpeException {
 	return getCpeList(new StreamSource(in));
     }
 
-    static final ListType getCpeList(Source source) throws XccdfException {
+    public static final ListType getCpeList(Source source) throws CpeException {
 	try {
 	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.CPE_PROP_PACKAGES);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
@@ -46,13 +46,13 @@ class CpeDictionary {
 		if (root.getValue() instanceof ListType) {
 		    return (ListType)root.getValue();
 		} else {
-		    throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_SOURCE, source.getSystemId()));
+		    throw new CpeException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_SOURCE, source.getSystemId()));
 		}
 	    } else {
-		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_SOURCE, source.getSystemId()));
+		throw new CpeException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
-	    throw new XccdfException(e);
+	    throw new CpeException(e);
 	}
     }
 
@@ -61,22 +61,22 @@ class CpeDictionary {
     /**
      * Create a Directives based on the contents of a directives file.
      */
-    CpeDictionary(File f) throws XccdfException {
+    public Dictionary(File f) throws CpeException {
 	this(getCpeList(f));
     }
 
-    CpeDictionary(InputStream in) throws XccdfException {
+    public Dictionary(InputStream in) throws CpeException {
 	this(getCpeList(in));
     }
 
     /**
      * Create a Directives from unmarshalled XML.
      */
-    CpeDictionary(ListType list) {
+    public Dictionary(ListType list) {
 	this.list = list;
     }
 
-    ListType getCpeList() {
+    public ListType getCpeList() {
 	return list;
     }
 }

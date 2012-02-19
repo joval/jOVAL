@@ -1,5 +1,6 @@
 CLASSES=\
+	org.joval.cpe.CpeException		\
+	org.joval.cpe.Dictionary		\
+	org.joval.xccdf.XccdfBundle		\
 	org.joval.xccdf.XccdfException		\
-	org.joval.xccdf.engine.CpeDictionary	\
-	org.joval.xccdf.engine.XccdfDocument	\
 	org.joval.xccdf.engine.XPERT

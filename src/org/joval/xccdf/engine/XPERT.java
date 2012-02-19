@@ -13,10 +13,12 @@ import cpe.schemas.dictionary.ListType;
 import oval.schemas.definitions.core.OvalDefinitions;
 import xccdf.schemas.core.Benchmark;
 
+import org.joval.cpe.CpeException;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
 
 /**
@@ -44,11 +46,14 @@ public class XPERT {
 	}
 
 	try {
-	    XPERT engine = new XPERT(new XccdfDocument(f));
-	} catch (XccdfException e) {
+	    XPERT engine = new XPERT(new XccdfBundle(f));
+	} catch (CpeException e) {
 	    e.printStackTrace();
 	    System.exit(1);
 	} catch (OvalException e) {
+	    e.printStackTrace();
+	    System.exit(1);
+	} catch (XccdfException e) {
 	    e.printStackTrace();
 	    System.exit(1);
 	}
@@ -58,16 +63,23 @@ public class XPERT {
 
     // Private
 
-    private Benchmark benchmark;
-    private ListType dictionary;
-    private IDefinitions cpeOval, oval;
+    private XccdfBundle xccdf;
 
-    private XPERT(XccdfDocument doc) {
+    private XPERT(XccdfBundle xccdf) {
+	this.xccdf = xccdf;
 	System.out.println("Loaded document");
     }
 
     // Implement Runnable
 
     public void run() {
+
+//Apparent order of things...
+// Benchmark specifies what Rules/Groups are selected
+// Groups contain rules, rules contain checks, checks export values...
+//   values are specified at the root level; selected group/rule export values become OVAL external variables
+//   checks -- pick the one whose system matches the OVAL definitions schema.  It will reference a definition.
+
+
     }
 }

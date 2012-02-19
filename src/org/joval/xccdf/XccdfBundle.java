@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.xccdf.engine;
+package org.joval.xccdf;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,9 +20,11 @@ import javax.xml.transform.stream.StreamSource;
 import cpe.schemas.dictionary.ListType;
 import xccdf.schemas.core.Benchmark;
 
+import org.joval.cpe.CpeException;
+import org.joval.cpe.Dictionary;
 import org.joval.intf.oval.IDefinitions;
+import org.joval.oval.Definitions;
 import org.joval.oval.OvalException;
-import org.joval.oval.engine.Definitions;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.xccdf.XccdfException;
@@ -33,16 +35,16 @@ import org.joval.xccdf.XccdfException;
  * @author David A. Solin
  * @version %I% %G%
  */
-class XccdfDocument {
-    static final Benchmark getBenchmark(File f) throws XccdfException {
+public class XccdfBundle {
+    public static final Benchmark getBenchmark(File f) throws XccdfException {
 	return getBenchmark(new StreamSource(f));
     }
 
-    static final Benchmark getBenchmark(InputStream in) throws XccdfException {
+    public static final Benchmark getBenchmark(InputStream in) throws XccdfException {
 	return getBenchmark(new StreamSource(in));
     }
 
-    static final Benchmark getBenchmark(Source src) throws XccdfException {
+    public static final Benchmark getBenchmark(Source src) throws XccdfException {
 	try {
 	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.XCCDF_PROP_PACKAGES);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
@@ -59,20 +61,20 @@ class XccdfDocument {
     }
 
     private Benchmark benchmark;
-    private CpeDictionary dictionary;
+    private Dictionary dictionary;
     private IDefinitions cpeOval, oval;
 
     /**
      * Create a Directives based on the contents of a directives file.
      */
-    public XccdfDocument(File f) throws XccdfException, OvalException {
+    public XccdfBundle(File f) throws CpeException, OvalException, XccdfException {
 	if (f.isDirectory()) {
 	    File[] files = f.listFiles();
 	    for (File file : files) {
 		if (file.getName().toLowerCase().endsWith("xccdf.xml")) {
 		    benchmark = getBenchmark(file);
 		} else if (file.getName().toLowerCase().endsWith("cpe-dictionary.xml")) {
-		    dictionary = new CpeDictionary(file);
+		    dictionary = new Dictionary(file);
 		} else if (file.getName().toLowerCase().endsWith("cpe-oval.xml")) {
 		    cpeOval = new Definitions(file);
 		} else if (file.getName().toLowerCase().endsWith("oval.xml")) { // NB: after cpe-oval.xml
@@ -89,7 +91,7 @@ class XccdfDocument {
 			    if (entry.getName().toLowerCase().endsWith("xccdf.xml")) {
 				benchmark = getBenchmark(zip.getInputStream(entry));
 			    } else if (entry.getName().toLowerCase().endsWith("cpe-dictionary.xml")) {
-				dictionary = new CpeDictionary(zip.getInputStream(entry));
+				dictionary = new Dictionary(zip.getInputStream(entry));
 			    } else if (entry.getName().toLowerCase().endsWith("cpe-oval.xml")) {
 				cpeOval = new Definitions(zip.getInputStream(entry));
 			    } else if (entry.getName().toLowerCase().endsWith("oval.xml")) { // NB: after cpe-oval.xml
@@ -104,7 +106,7 @@ class XccdfDocument {
 	}
     }
 
-    public CpeDictionary getDictionary() {
+    public Dictionary getDictionary() {
 	return dictionary;
     }
 
