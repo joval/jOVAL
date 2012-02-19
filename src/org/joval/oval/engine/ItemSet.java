@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.util;
+package org.joval.oval.engine;
 
 import java.math.BigInteger;
 import java.util.Collection;
@@ -17,17 +17,17 @@ import oval.schemas.systemcharacteristics.core.ItemType;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class ItemSet {
+class ItemSet {
     private Hashtable<BigInteger, ItemType> ht;
 
     /**
      * Construct an empty set.
      */
-    public ItemSet() {
+    ItemSet() {
 	ht = new Hashtable<BigInteger, ItemType>();
     }
 
-    public ItemSet(Collection<ItemType> items) {
+    ItemSet(Collection<ItemType> items) {
 	this();
 	for (ItemType item : items) {
 	    ht.put(item.getId(), item);
@@ -49,7 +49,7 @@ public class ItemSet {
 	return sb.toString();
     }
 
-    public ItemSet union(ItemSet other) {
+    ItemSet union(ItemSet other) {
 	Hashtable<BigInteger, ItemType> temp = new Hashtable<BigInteger, ItemType>();
 	for (ItemType item : ht.values()) {
 	    temp.put(item.getId(), item);
@@ -60,7 +60,7 @@ public class ItemSet {
 	return new ItemSet(temp);
     }
 
-    public ItemSet intersection(ItemSet other) {
+    ItemSet intersection(ItemSet other) {
 	Hashtable<BigInteger, ItemType> temp = new Hashtable<BigInteger, ItemType>();
 	for (ItemType item : ht.values()) {
 	    if (other.ht.containsKey(item.getId())) {
@@ -73,7 +73,7 @@ public class ItemSet {
     /**
      * A.complement(B) is the set of everything in A that is not in B.
      */
-    public ItemSet complement(ItemSet other) {
+    ItemSet complement(ItemSet other) {
 	Hashtable<BigInteger, ItemType> temp = new Hashtable<BigInteger, ItemType>();
 	for (ItemType item : toList()) {
 	    if (!other.ht.containsKey(item.getId())) {
@@ -83,7 +83,7 @@ public class ItemSet {
 	return new ItemSet(temp);
     }
 
-    public List<ItemType> toList() {
+    List<ItemType> toList() {
 	Vector<ItemType> v = new Vector<ItemType>();
 	v.addAll(ht.values());
 	return v;

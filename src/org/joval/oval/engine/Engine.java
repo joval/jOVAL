@@ -116,14 +116,16 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.os.windows.Timestamp;
+import org.joval.oval.DefinitionFilter;
+import org.joval.oval.Definitions;
+import org.joval.oval.Directives;
 import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
+import org.joval.oval.Results;
+import org.joval.oval.SystemCharacteristics;
 import org.joval.oval.TestException;
-import org.joval.oval.util.CheckData;
-import org.joval.oval.util.ExistenceData;
-import org.joval.oval.util.ItemSet;
-import org.joval.oval.util.OperatorData;
+import org.joval.oval.Variables;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
@@ -293,7 +295,7 @@ public class Engine implements IEngine {
 		producer.sendNotify(MESSAGE_SYSTEMCHARACTERISTICS, sc);
 	    }
 
-	    results = new Results(definitions, sc);
+	    results = new Results(getGenerator(), definitions, sc);
 	    producer.sendNotify(MESSAGE_DEFINITION_PHASE_START, null);
 
 	    //
@@ -399,7 +401,8 @@ public class Engine implements IEngine {
      */
     private void scan() throws OvalException {
 	producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
-	sc = new SystemCharacteristics(plugin);
+	sc = new SystemCharacteristics(getGenerator(), plugin.getSystemInfo());
+	sc.setLogger(logger);
 
 	for (ObjectType obj : definitions.getObjects()) {
 	    String objectId = obj.getId();

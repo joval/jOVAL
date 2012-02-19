@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.util;
+package org.joval.oval.engine;
 
 import oval.schemas.common.CheckEnumeration;
 import oval.schemas.common.OperationEnumeration;
@@ -14,12 +14,12 @@ import org.joval.util.JOVALSystem;
 /**
  * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#CheckEnumeration
  */
-public class CheckData extends OperatorData {
-    public CheckData() {
+class CheckData extends OperatorData {
+    CheckData() {
 	super();
     }
 
-    public ResultEnumeration getResult(CheckEnumeration check) throws OvalException {
+    ResultEnumeration getResult(CheckEnumeration check) throws OvalException {
 	ResultEnumeration result = ResultEnumeration.UNKNOWN;
 	if (check == null) {
 	    check = CheckEnumeration.ALL; // documented as the default value

@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.engine;
+package org.joval.oval;
 
 import java.io.File;
 import java.util.Iterator;
@@ -32,15 +32,15 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-class Directives {
+public class Directives {
     /**
      * Get a list of Definition ID strings from an Evaluation-IDs file.
      */
-    static final OvalDirectives getOvalDirectives(File f) throws OvalException {
+    public static final OvalDirectives getOvalDirectives(File f) throws OvalException {
 	return getOvalDirectives(new StreamSource(f));
     }
 
-    static final OvalDirectives getOvalDirectives(Source source) throws OvalException {
+    public static final OvalDirectives getOvalDirectives(Source source) throws OvalException {
 	try {
 	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DIRECTIVES);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
@@ -61,21 +61,21 @@ class Directives {
     /**
      * Create a Directives based on the contents of a directives file.
      */
-    Directives(File f) throws OvalException {
+    public Directives(File f) throws OvalException {
 	this(getOvalDirectives(f));
     }
 
     /**
      * Create a Directives from unmarshalled XML.
      */
-    Directives(OvalDirectives directives) {
+    public Directives(OvalDirectives directives) {
 	this.directives = directives;
     }
 
     /**
      * Create a Directives with default behavior (full reporting for everything).
      */
-    Directives() {
+    public Directives() {
 	directives = JOVALSystem.factories.directives.createOvalDirectives();
 	DefaultDirectivesType ddt = JOVALSystem.factories.results.createDefaultDirectivesType();
 	ddt.setIncludeSourceDefinitions(true);
@@ -91,21 +91,21 @@ class Directives {
 	directives.setDirectives(ddt);
     }
 
-    OvalDirectives getOvalDirectives() {
+    public OvalDirectives getOvalDirectives() {
 	return directives;
     }
 
     /**
      * Specifies whether or not the OvalDefinitions source should be included in the results.
      */
-    boolean includeSource() {
+    public boolean includeSource() {
 	return directives.getDirectives().isIncludeSourceDefinitions();
     }
 
     /**
      * Returns the DirectiveType for the given results.DefinitionType.
      */
-    DirectiveType getDirective(DefinitionType definition) {
+    public DirectiveType getDirective(DefinitionType definition) {
 	// Start with defaults
 	DirectivesType dt = directives.getDirectives();
 

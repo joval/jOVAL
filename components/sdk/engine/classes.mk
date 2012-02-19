@@ -16,22 +16,22 @@ CLASSES=\
 	org.joval.intf.util.IProperty					\
 	org.joval.intf.xml.ITransformable				\
 	org.joval.os.windows.Timestamp					\
+	org.joval.oval.DefinitionFilter					\
+	org.joval.oval.Definitions					\
+	org.joval.oval.Directives					\
 	org.joval.oval.NotCollectableException				\
 	org.joval.oval.OvalException					\
 	org.joval.oval.ResolveException					\
+	org.joval.oval.Results						\
+	org.joval.oval.SystemCharacteristics				\
 	org.joval.oval.TestException					\
-	org.joval.oval.engine.DefinitionFilter				\
-	org.joval.oval.engine.Definitions				\
-	org.joval.oval.engine.Directives				\
+	org.joval.oval.Variables					\
 	org.joval.oval.engine.Engine					\
 	org.joval.oval.engine.RequestContext				\
-	org.joval.oval.engine.Results					\
-	org.joval.oval.engine.SystemCharacteristics			\
-	org.joval.oval.engine.Variables					\
-	org.joval.oval.util.CheckData					\
-	org.joval.oval.util.ExistenceData				\
-	org.joval.oval.util.ItemSet					\
-	org.joval.oval.util.OperatorData				\
+	org.joval.oval.engine.CheckData					\
+	org.joval.oval.engine.ExistenceData				\
+	org.joval.oval.engine.ItemSet					\
+	org.joval.oval.engine.OperatorData				\
 	org.joval.oval.xml.OvalNamespacePrefixMapper			\
 	org.joval.util.Checksum						\
 	org.joval.util.IniFile						\

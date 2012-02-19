@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.engine;
+package org.joval.oval;
 
 import java.io.File;
 import java.util.Hashtable;
@@ -30,19 +30,15 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-class Variables {
-    public Variables(File f) throws OvalException {
-	this(getOvalVariables(f));
-    }
-
+public class Variables {
     /**
      * Unmarshal an XML file and return the OvalVariables root object.
      */
-    static final OvalVariables getOvalVariables(File f) throws OvalException {
+    public static final OvalVariables getOvalVariables(File f) throws OvalException {
 	return getOvalVariables(new StreamSource(f));
     }
 
-    static final OvalVariables getOvalVariables(Source source) throws OvalException {
+    public static final OvalVariables getOvalVariables(Source source) throws OvalException {
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_VARIABLES));
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
@@ -60,7 +56,11 @@ class Variables {
     private OvalVariables vars;
     private Hashtable <String, VariableType>variables;
 
-    Variables(OvalVariables vars) {
+    public Variables(File f) throws OvalException {
+	this(getOvalVariables(f));
+    }
+
+    public Variables(OvalVariables vars) {
 	this.vars = vars;
 
 	variables = new Hashtable <String, VariableType>();
@@ -75,7 +75,7 @@ class Variables {
     /**
      * For whatever reason, JAXB failed to generate an appropriate container type, so we do this DOM hack.
      */
-    List<String> getValue(String id) throws OvalException {
+    public List<String> getValue(String id) throws OvalException {
 	VariableType var = variables.get(id);
 	if (var == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_VARIABLE, id));

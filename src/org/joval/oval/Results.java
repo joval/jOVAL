@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.engine;
+package org.joval.oval;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -78,6 +78,7 @@ public class Results implements IResults {
     private Hashtable<String, DefinitionType> definitionTable;
     private Hashtable<String, TestType> testTable;
     private IDefinitions definitions;
+    private GeneratorType generator;
     private SystemCharacteristics sc;
     private Directives directives;
     private OvalResults or;
@@ -103,7 +104,8 @@ public class Results implements IResults {
     /**
      * Create a Results based on the specified Definitions and SystemCharacteristics.
      */
-    Results(IDefinitions definitions, SystemCharacteristics sc) {
+    public Results(GeneratorType generator, IDefinitions definitions, SystemCharacteristics sc) {
+	this.generator = generator;
 	this.definitions = definitions;
 	this.sc = sc;
 	logger = sc.getLogger();
@@ -116,6 +118,39 @@ public class Results implements IResults {
 	} catch (JAXBException e) {
 	    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
+    }
+
+    public void storeTestResult(TestType test) {
+	logger.trace(JOVALMsg.STATUS_TEST, test.getTestId());
+	testTable.put(test.getTestId(), test);
+    }
+
+    public TestType getTest(String testId) {
+	return testTable.get(testId);
+    }
+
+    public ResultEnumeration getTestResult(String testId) {
+	TestType testType = testTable.get(testId);
+	if (testType == null) {
+	    return null;
+	}
+	return testType.getResult();
+    }
+
+    public void storeDefinitionResult(DefinitionType definition) {
+	definitionTable.put(definition.getDefinitionId(), definition);
+    }
+
+    public DefinitionType getDefinition(String definitionId) {
+	return definitionTable.get(definitionId);
+    }
+
+    public ResultEnumeration getDefinitionResult(String definitionId) {
+	DefinitionType definitionType = definitionTable.get(definitionId);
+	if (definitionType == null) {
+	    return null;
+	}
+	return definitionType.getResult();
     }
 
     // Implement ITransformable
@@ -186,7 +221,7 @@ public class Results implements IResults {
 	    return or;
 	}
 	or = JOVALSystem.factories.results.createOvalResults();
-	or.setGenerator(Engine.getGenerator());
+	or.setGenerator(generator);
 	OvalDirectives od = directives.getOvalDirectives();
 	or.setDirectives(od.getDirectives());
 	or.getClassDirectives().addAll(od.getClassDirectives());
@@ -247,41 +282,6 @@ public class Results implements IResults {
 	resultsType.getSystem().add(systemType);
 	or.setResults(resultsType);
 	return or;
-    }
-
-    // Internal
-
-    void storeTestResult(TestType test) {
-	logger.trace(JOVALMsg.STATUS_TEST, test.getTestId());
-	testTable.put(test.getTestId(), test);
-    }
-
-    TestType getTest(String testId) {
-	return testTable.get(testId);
-    }
-
-    ResultEnumeration getTestResult(String testId) {
-	TestType testType = testTable.get(testId);
-	if (testType == null) {
-	    return null;
-	}
-	return testType.getResult();
-    }
-
-    void storeDefinitionResult(DefinitionType definition) {
-	definitionTable.put(definition.getDefinitionId(), definition);
-    }
-
-    DefinitionType getDefinition(String definitionId) {
-	return definitionTable.get(definitionId);
-    }
-
-    ResultEnumeration getDefinitionResult(String definitionId) {
-	DefinitionType definitionType = definitionTable.get(definitionId);
-	if (definitionType == null) {
-	    return null;
-	}
-	return definitionType.getResult();
     }
 
     // Private

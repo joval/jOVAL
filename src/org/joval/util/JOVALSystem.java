@@ -28,8 +28,8 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IProperty;
 import org.joval.oval.OvalException;
-import org.joval.oval.engine.DefinitionFilter;
-import org.joval.oval.engine.Definitions;
+import org.joval.oval.DefinitionFilter;
+import org.joval.oval.Definitions;
 import org.joval.oval.engine.Engine;
 
 /**

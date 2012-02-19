@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.util;
+package org.joval.oval.engine;
 
 import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
@@ -14,17 +14,17 @@ import org.joval.util.JOVALSystem;
 /**
  * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#ExistenceEnumeration
  */
-public class ExistenceData {
+class ExistenceData {
     int ex, de, er, nc;
 
-    public ExistenceData() {
+    ExistenceData() {
 	ex = 0;
 	de = 0;
 	er = 0;
 	nc = 0;
     }
 
-    public void addStatus(StatusEnumeration status) {
+    void addStatus(StatusEnumeration status) {
 	switch(status) {
 	  case DOES_NOT_EXIST:
 	    de++;
@@ -41,7 +41,7 @@ public class ExistenceData {
 	}
     }
 
-    public ResultEnumeration getResult(ExistenceEnumeration existence) throws OvalException {
+    ResultEnumeration getResult(ExistenceEnumeration existence) throws OvalException {
 	ResultEnumeration result = ResultEnumeration.UNKNOWN;
 	switch(existence) {
 	  case ALL_EXIST:
