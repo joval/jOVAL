@@ -91,12 +91,11 @@ public interface IEngine extends Runnable {
     public void destroy();
 
     /**
-     * Set the file from which to read external variable definitions.
+     * Set the source from which to read external variable definitions.
      *
-     * @throws IllegalThreadStateException if the engine has already started.
      * @throws OvalException if there was an exception parsing the file.
      */
-    public void setExternalVariablesFile(File f) throws IllegalThreadStateException, OvalException;
+    public void setExternalVariables(IVariables variables) throws IllegalThreadStateException;
 
     /**
      * Set the file from which to read the OVAL definitions.

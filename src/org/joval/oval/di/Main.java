@@ -41,6 +41,7 @@ import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
+import org.joval.intf.oval.IVariables;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;
@@ -460,7 +461,7 @@ public class Main implements IObserver {
 		}
 	    }
 	    if (state.variablesFile.exists() && state.variablesFile.isFile()) {
-		engine.setExternalVariablesFile(state.variablesFile);
+		engine.setExternalVariables(JOVALSystem.createVariables(state.variablesFile));
 	    }
 	    if (state.inputDefsFile != null) {
 		print(getMessage("MESSAGE_READING_INPUTDEFINITIONS", state.inputDefsFile));

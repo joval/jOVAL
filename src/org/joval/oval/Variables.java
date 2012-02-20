@@ -18,6 +18,7 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
@@ -31,6 +32,7 @@ import oval.schemas.variables.core.VariablesType;
 import oval.schemas.variables.core.VariableType;
 
 import org.joval.intf.util.ILoggable;
+import org.joval.intf.oval.IVariables;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -41,7 +43,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Variables {
+public class Variables implements IVariables {
     /**
      * Unmarshal an XML file and return the OvalVariables root object.
      */
@@ -99,17 +101,35 @@ public class Variables {
 	this.generator = generator;
     }
 
-    public List<String> getValue(String id) throws NoSuchElementException {
-	List<String> values = variables.get(id);
-	if (values == null) {
-	    throw new NoSuchElementException(id);
-	} else {
-	    return values;
-	}
-    }
-
     public void setValue(String id, List<String> value) {
 	variables.put(id, value);
+    }
+
+    public void writeXML(File f) {
+	OutputStream out = null;
+	try {
+	    Marshaller marshaller = ctx.createMarshaller();
+	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+	    out = new FileOutputStream(f);
+	    marshaller.marshal(getOvalVariables(), out);
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (FactoryConfigurationError e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (FileNotFoundException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} finally {
+	    if (out != null) {
+		try {
+		    out.close();
+		} catch (IOException e) {
+		    logger.warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
+		}
+	    }
+	}
     }
 
     public OvalVariables getOvalVariables() {
@@ -119,31 +139,27 @@ public class Variables {
 	return vars;
     }
 
-    public void writeXML(File f) {
-        OutputStream out = null;
-        try {
-            Marshaller marshaller = ctx.createMarshaller();
-	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-            out = new FileOutputStream(f);
-            marshaller.marshal(getOvalVariables(), out);
-        } catch (JAXBException e) {
-            logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-            logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-        } catch (FactoryConfigurationError e) {
-            logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-            logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-        } catch (FileNotFoundException e) {
-            logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-            logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-        } finally {
-            if (out != null) {
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    logger.warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
-                }
-            }
-        }
+    // Implement IVariables
+
+    public List<String> getValue(String id) throws NoSuchElementException {
+	List<String> values = variables.get(id);
+	if (values == null) {
+	    throw new NoSuchElementException(id);
+	} else {
+	    return values;
+	}
+    }
+
+    // Implement ITransformable
+
+    public Source getSource() {
+	Source src = null;
+	try {
+	    src = new JAXBSource(ctx, getOvalVariables());
+	} catch (JAXBException e) {
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return src;
     }
 
     // Implement ILogger
@@ -170,7 +186,7 @@ public class Variables {
 
     private OvalVariables createOvalVariables() {
 	OvalVariables vars = JOVALSystem.factories.variables.createOvalVariables();
-        vars.setGenerator(generator);
+	vars.setGenerator(generator);
 
 	VariablesType vt = JOVALSystem.factories.variables.createVariablesType();
 	for (String key : variables.keySet()) {

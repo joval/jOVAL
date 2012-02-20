@@ -77,10 +77,20 @@ public class DefinitionFilter implements IDefinitionFilter {
     }
 
     /**
-     * Create an unfiltered DefinitionFilter (accept will always return true).
+     * Create an empty (unfiltered) DefinitionFilter.  An empty filter will accept any ID.
      */
     public DefinitionFilter() {
 	definitionIDs = null;
+    }
+
+    /**
+     * Add a definition to the filter.
+     */
+    public void addDefinition(String id) {
+	if (definitionIDs == null) {
+	    definitionIDs = new HashSet<String>();
+	}
+	definitionIDs.add(id);
     }
 
     // Implement IDefinitionFilter

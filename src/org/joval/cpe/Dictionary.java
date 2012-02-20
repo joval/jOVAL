@@ -5,6 +5,7 @@ package org.joval.cpe;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Hashtable;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -12,6 +13,8 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import cpe.schemas.dictionary.CheckType;
+import cpe.schemas.dictionary.ItemType;
 import cpe.schemas.dictionary.ListType;
 
 import org.joval.cpe.CpeException;
@@ -57,6 +60,7 @@ public class Dictionary {
     }
 
     private ListType list;
+    private Hashtable<String, String> ovalMapping;
 
     /**
      * Create a Directives based on the contents of a directives file.
@@ -74,9 +78,21 @@ public class Dictionary {
      */
     public Dictionary(ListType list) {
 	this.list = list;
+	ovalMapping = new Hashtable<String, String>();
+	for (ItemType item : list.getCpeItem()) {
+	    for (CheckType check : item.getCheck()) {
+		if (check.getSystem().equals("http://oval.mitre.org/XMLSchema/oval-definitions-5")) {
+		    ovalMapping.put(item.getName(), check.getValue());
+		}
+	    }
+	}
     }
 
     public ListType getCpeList() {
 	return list;
+    }
+
+    public String getOvalDefinition(String cpeName) {
+	return ovalMapping.get(cpeName);
     }
 }

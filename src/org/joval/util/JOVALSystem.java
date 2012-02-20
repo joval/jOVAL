@@ -23,13 +23,15 @@ import org.slf4j.cal10n.LocLoggerFactory;
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
+import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IProperty;
-import org.joval.oval.OvalException;
 import org.joval.oval.DefinitionFilter;
 import org.joval.oval.Definitions;
+import org.joval.oval.OvalException;
+import org.joval.oval.Variables;
 import org.joval.oval.engine.Engine;
 
 /**
@@ -284,6 +286,13 @@ public class JOVALSystem {
      */
     public static final IDefinitionFilter createAcceptFilter(Collection<String> ids) {
 	return new DefinitionFilter(ids);
+    }
+
+    /**
+     * Create an IVariables based on the supplied File, which should conform to the OVAL variables schema.
+     */
+    public static final IVariables createVariables(File f) throws OvalException {
+	return new Variables(f);
     }
 
     /**

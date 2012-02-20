@@ -110,6 +110,7 @@ import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
+import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.plugin.IRequestContext;
@@ -125,7 +126,6 @@ import org.joval.oval.ResolveException;
 import org.joval.oval.Results;
 import org.joval.oval.SystemCharacteristics;
 import org.joval.oval.TestException;
-import org.joval.oval.Variables;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
@@ -147,7 +147,7 @@ public class Engine implements IEngine {
     }
 
     private Hashtable <String, Collection<VariableValueType>>variableMap; // A cache of nested VariableValueTypes
-    private Variables externalVariables = null;
+    private IVariables externalVariables = null;
     private IDefinitions definitions = null;
     private IPlugin plugin = null;
     private SystemCharacteristics sc = null;
@@ -223,10 +223,10 @@ public class Engine implements IEngine {
 	}
     }
 
-    public void setExternalVariablesFile(File f) throws IllegalThreadStateException, OvalException {
+    public void setExternalVariables(IVariables variables) throws IllegalThreadStateException {
 	switch(state) {
 	  case CONFIGURE:
-	    externalVariables = new Variables(f);
+	    externalVariables = variables;
 	    break;
 
 	  default:

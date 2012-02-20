@@ -6,7 +6,10 @@ TOP=../..
 include $(TOP)/common.mk
 
 PRODUCTNAME=XPERT
-API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(OVAL_LIB)$(CLN)$(SVRL)$(CLN)$(XCCDF_LIB)$(CLN)$(CPE_LIB)
+JOVALDI_LIB=$(COMPONENTS)/jovaldi/jovaldi.jar
+SCAP_LIBS=$(OVAL_LIB)$(CLN)$(SVRL)$(CLN)$(XCCDF_LIB)$(CLN)$(CPE_LIB)$
+PLUGIN=$(PLUGIN_SHARED_LIB)$(CLN)$(PLUGIN_SHARED_DEPS)$(CLN)$(PLUGIN_REMOTE_LIB)$(CLN)$(PLUGIN_REMOTE_DEPS)
+API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCAP_LIBS)$(CLN)$(PLUGIN)$(CLN)$(JOVALDI_LIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
 RUNTIMECP="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(PRODUCTNAME).jar"
 
@@ -36,4 +39,5 @@ $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
 
 test:
-	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/content/xccdf
+#	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/content/xccdf/u_windows_7_v1r7_stig_benchmark_20120127.zip
+	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/../../downloads/xccdf_interpreter/xccdf_interpreter-bin-1.1.4_build_19
