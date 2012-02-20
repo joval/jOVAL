@@ -73,7 +73,9 @@ public class RemotePlugin extends BasePlugin {
      */
     public void connect() throws ConnectException {
 	try {
-	    session = sessionFactory.createSession(hostname);
+	    if (session == null) {
+		session = sessionFactory.createSession(hostname);
+	    }
 	    super.connect();
 	} catch (UnknownHostException e) {
 	    throw new ConnectException(e.getMessage());
