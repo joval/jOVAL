@@ -34,6 +34,7 @@ import org.joval.intf.util.IProducer;
 import org.joval.intf.util.IProperty;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALSystem;
+import org.joval.util.LogFormatter;
 
 /**
  * Executes an OVAL test suite and stores the results.
@@ -92,7 +93,7 @@ public class TestExecutor implements Runnable {
 	try {
 	    plugin.setLogger(JOVALSystem.getLogger(name));
 	    handler = new FileHandler("logs/target-" + plugin.getHostname() + ".log", false);
-	    handler.setFormatter(new LogFormatter(LogFormatter.FILE));
+	    handler.setFormatter(new LogFormatter(LogFormatter.Type.FILE));
 	    Level level = LogFormatter.toLevel(props.getProperty("logging.level"));
 	    handler.setLevel(level);
 	    Logger logger = Logger.getLogger(plugin.getLogger().getName());
@@ -127,7 +128,7 @@ public class TestExecutor implements Runnable {
 		    // Set the external variables file for the external variables test!
 		    //
 		    if ("oval-def_external_variable.xml".equals(xml)) {
-			engine.setExternalVariablesFile(new File(testDir, "_external-variables.xml"));
+			engine.setExternalVariables(JOVALSystem.createVariables(new File(testDir, "_external-variables.xml")));
 		    }
 
 		    long elapsed = System.currentTimeMillis();

@@ -70,6 +70,7 @@ import org.joval.oval.OvalException;
 import org.joval.util.IniFile;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
+import org.joval.util.LogFormatter;
 
 /**
  * A test class that runs jOVAL through all the relevant OVAL test content and generates a report.
@@ -101,12 +102,12 @@ public class Main {
 		logDir.mkdir();
 	    }
 	    Handler sysHandler = new FileHandler("logs/main.log", false);
-	    sysHandler.setFormatter(new LogFormatter(LogFormatter.FILE));
+	    sysHandler.setFormatter(new LogFormatter(LogFormatter.Type.FILE));
 	    sysHandler.setLevel(LogFormatter.toLevel(config.getProperty("Config", "logging.level.file")));
 	    sysLogger.setLevel(LogFormatter.toLevel(config.getProperty("Config", "logging.level.file")));
 	    sysLogger.addHandler(sysHandler);
 	    ConsoleHandler consoleHandler = new ConsoleHandler();
-	    consoleHandler.setFormatter(new LogFormatter(LogFormatter.CONSOLE));
+	    consoleHandler.setFormatter(new LogFormatter(LogFormatter.Type.CONSOLE));
 	    consoleHandler.setLevel(LogFormatter.toLevel(config.getProperty("Config", "logging.level.console")));
 	    sysLogger.addHandler(consoleHandler);
 

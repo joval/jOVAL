@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -36,6 +38,7 @@ import org.joval.cpe.CpeException;
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
+import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
@@ -46,6 +49,7 @@ import org.joval.oval.Variables;
 import org.joval.oval.di.RemoteContainer;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.LogFormatter;
 import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
 
@@ -56,6 +60,9 @@ import org.joval.xccdf.XccdfException;
  * @version %I% %G%
  */
 public class XPERT implements Runnable, IObserver {
+    private static final File ws = new File("artifacts");
+    private static Logger logger;
+
     static final GeneratorType getGenerator() {
 	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
 	generator.setProductName("jOVAL XPERT");
@@ -74,63 +81,56 @@ public class XPERT implements Runnable, IObserver {
      * Run from the command-line.
      */
     public static void main(String[] argv) {
-	File f = null;
-	RemoteContainer container = null;
-
-	if (argv.length > 0) {
-	    //
-	    // Use the specified directory
-	    //
-	    f = new File(argv[0]);
-
-	    //
-	    // Create and configure the RemoteContainer
-	    //
-	    File configFile = null;
-	    if (argv.length > 2 && argv[1].equals("-config")) {
-		configFile = new File(argv[2]);
-	    } else {
-		configFile = new File("config.properties");
+	int exitCode = 1;
+	try {
+	    if (!ws.exists()) {
+		ws.mkdir();
 	    }
-	    if (configFile.isFile()) {
-		Properties config = new Properties();
-		try {
-		    config.load(new FileInputStream(configFile));
-		    container = new RemoteContainer();
-		    container.configure(config);
-		} catch (Exception e) {
-		    e.printStackTrace();
-		    container = null;
+	    logger = LogFormatter.createDuplex(new File(ws, "xpert.log"), Level.INFO);
+
+	    File f = null;
+	    RemoteContainer container = null;
+	    if (argv.length > 0) {
+		f = new File(argv[0]);
+		File configFile = null;
+		if (argv.length > 2 && argv[1].equals("-config")) {
+		    configFile = new File(argv[2]);
+		} else {
+		    configFile = new File("config.properties");
+		}
+		if (configFile.isFile()) {
+		    Properties config = new Properties();
+		    try {
+			config.load(new FileInputStream(configFile));
+			container = new RemoteContainer();
+			container.configure(config);
+		    } catch (Exception e) {
+			logger.severe(LogFormatter.toString(e));
+			container = null;
+		    }
 		}
 	    }
+    
+	    if (f == null || container == null) {
+		System.out.println("Usage: java org.joval.xccdf.XPERT [path-to-xccdf] [-config path-to-config]");
+		System.out.println(new RemoteContainer().getProperty("helpText"));
+	    } else {
+		logger.info("Loading " + f.getPath());
+		XPERT engine = new XPERT(new XccdfBundle(f), container.getPlugin());
+		engine.run();
+		exitCode = 0;
+	    }
+	} catch (Exception e) {
+	    logger.warning(LogFormatter.toString(e));
 	}
 
-	if (f == null || container == null) {
-	    System.out.println("Usage: java org.joval.xccdf.XPERT [path-to-xccdf] [-config path-to-config]");
-	    System.out.println(new RemoteContainer().getProperty("helpText"));
-	    System.exit(1);
-	}
-
-	try {
-	    XPERT engine = new XPERT(new XccdfBundle(f), container.getPlugin());
-	    engine.run();
-	} catch (CpeException e) {
-	    e.printStackTrace();
-	    System.exit(1);
-	} catch (OvalException e) {
-	    e.printStackTrace();
-	    System.exit(1);
-	} catch (XccdfException e) {
-	    e.printStackTrace();
-	    System.exit(1);
-	}
-
-	System.exit(0);
+	System.exit(exitCode);
     }
 
     private XccdfBundle xccdf;
     private IEngine engine;
     private List<RuleType> rules = null;
+    private String phase = null;
 
     /**
      * Create an XCCDF Processing Engine and Report Tool using the specified XCCDF document bundle and jOVAL plugin.
@@ -146,22 +146,25 @@ public class XPERT implements Runnable, IObserver {
     public void notify(IProducer sender, int msg, Object arg) {
 	switch(msg) {
 	  case IEngine.MESSAGE_OBJECT_PHASE_START:
-	    System.out.println("Beginning scan");
+	    logger.info("Beginning scan");
 	    break;
 	  case IEngine.MESSAGE_OBJECT:
-	    System.out.println("Scanning object " + (String)arg);
+	    logger.info("Scanning object " + (String)arg);
 	    break;
 	  case IEngine.MESSAGE_OBJECT_PHASE_END:
-	    System.out.println("Scan complete");
+	    logger.info("Scan complete");
 	    break;
 	  case IEngine.MESSAGE_DEFINITION_PHASE_START:
-	    System.out.println("Evaluating definitions");
+	    logger.info("Evaluating definitions");
 	    break;
 	  case IEngine.MESSAGE_DEFINITION:
-	    System.out.println("Evaluating " + (String)arg);
+	    logger.info("Evaluating " + (String)arg);
 	    break;
 	  case IEngine.MESSAGE_DEFINITION_PHASE_END:
-	    System.out.println("Completed evaluating definitions");
+	    logger.info("Completed evaluating definitions");
+	    break;
+	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
+	    ((ISystemCharacteristics)arg).writeXML(new File(ws, "sc-" + phase + ".xml"));
 	    break;
 	}
     }
@@ -173,14 +176,35 @@ public class XPERT implements Runnable, IObserver {
      */
     public void run() {
 	if (isApplicable()) {
-	    System.out.println("The target system is applicable to the XCCDF bundle, continuing tests...");
+	    phase = "evaluation";
+	    logger.info("The target system is applicable to the XCCDF bundle, continuing tests...");
 
 	    engine.setDefinitions(xccdf.getOval());
 	    engine.setExternalVariables(createVariables());
 	    engine.setDefinitionFilter(createFilter());
-	    engine.run();
 
-engine.getResults().writeXML(new File("results.xml"));
+	    //
+	    // Read previously collected system characteristics data, if available.
+	    //
+	    try {
+		File sc = new File(ws, "sc-input.xml");
+		if(sc.isFile()) {
+		    logger.info("Loading " + sc);
+		    engine.setSystemCharacteristicsFile(sc);
+		}
+	    } catch (OvalException e) {
+		logger.warning(e.getMessage());
+	    }
+
+	    engine.run();
+	    switch(engine.getResult()) {
+	      case ERR:
+		logger.severe(LogFormatter.toString(engine.getError()));
+		return;
+	      case OK:
+		engine.getResults().writeXML(new File(ws, "results.xml"));
+		break;
+	    }
 
 	    Hashtable<String, ResultEnumeration> results = new Hashtable<String, ResultEnumeration>();
 	    for (DefinitionType def :
@@ -192,31 +216,41 @@ engine.getResults().writeXML(new File("results.xml"));
 	    for (RuleType rule : getRules()) {
 		String ruleId = rule.getItemId();
 
+		List<CheckType> checks = rule.getCheck();
+		if (checks == null) {
+		    System.out.println("Skipping rule " + ruleId + ": no checks");
+		    continue;
+		}
 		for (CheckType check : rule.getCheck()) {
 		    for (CheckContentRefType ref : check.getCheckContentRef()) {
+			String definitionId = ref.getName();
+			if (definitionId == null) {
+			    logger.info(ruleId + ": OVAL definition UNDEFINED");
+			    continue;
+			}
 			switch (results.get(ref.getName())) {
 			  case ERROR:
-			    System.out.println(ruleId + ": " + ResultEnumType.ERROR);
+			    logger.info(ruleId + ": " + ResultEnumType.ERROR);
 			    break;
 
 			  case FALSE:
-			    System.out.println(ruleId + ": " + ResultEnumType.FAIL);
+			    logger.info(ruleId + ": " + ResultEnumType.FAIL);
 			    break;
 
 			  case TRUE:
-			    System.out.println(ruleId + ": " + ResultEnumType.PASS);
+			    logger.info(ruleId + ": " + ResultEnumType.PASS);
 			    break;
 
 			  case UNKNOWN:
 			  default:
-			    System.out.println(ruleId + ": " + ResultEnumType.UNKNOWN);
+			    logger.info(ruleId + ": " + ResultEnumType.UNKNOWN);
 			    break;
 			}
 		    }
 		}
 	    }
 	} else {
-	    System.out.println("The target system is not applicable to the XCCDF bundle");
+	    logger.info("The target system is not applicable to the XCCDF bundle");
 	}
     }
 
@@ -226,7 +260,8 @@ engine.getResults().writeXML(new File("results.xml"));
      * Test whether the XCCDF bundle's applicability rules are satisfied.
      */
     private boolean isApplicable() {
-	System.out.println("Determining system applicability...");
+	phase = "discovery";
+	logger.info("Determining system applicability...");
 
 	//
 	// Create a DefinitionFilter containing all the OVAL definitions corresponding to the CPE platforms.

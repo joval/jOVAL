@@ -36,6 +36,11 @@ import org.joval.xccdf.XccdfException;
  * @version %I% %G%
  */
 public class XccdfBundle {
+    public static final String CPE_DICTIONARY	= "cpe-dictionary.xml";
+    public static final String CPE_OVAL		= "cpe-oval.xml";
+    public static final String XCCDF_BENCHMARK	= "xccdf.xml";
+    public static final String XCCDF_OVAL	= "oval.xml";
+
     public static final Benchmark getBenchmark(File f) throws XccdfException {
 	return getBenchmark(new StreamSource(f));
     }
@@ -71,13 +76,13 @@ public class XccdfBundle {
 	if (f.isDirectory()) {
 	    File[] files = f.listFiles();
 	    for (File file : files) {
-		if (file.getName().toLowerCase().endsWith("xccdf.xml")) {
+		if (file.getName().toLowerCase().endsWith(XCCDF_BENCHMARK)) {
 		    benchmark = getBenchmark(file);
-		} else if (file.getName().toLowerCase().endsWith("cpe-dictionary.xml")) {
+		} else if (file.getName().toLowerCase().endsWith(CPE_DICTIONARY)) {
 		    dictionary = new Dictionary(file);
-		} else if (file.getName().toLowerCase().endsWith("cpe-oval.xml")) {
+		} else if (file.getName().toLowerCase().endsWith(CPE_OVAL)) {
 		    cpeOval = new Definitions(file);
-		} else if (file.getName().toLowerCase().endsWith("oval.xml")) { // NB: after cpe-oval.xml
+		} else if (file.getName().toLowerCase().endsWith(XCCDF_OVAL)) { // NB: after cpe-oval.xml
 		    oval = new Definitions(file);
 		}
 	    }
@@ -88,21 +93,35 @@ public class XccdfBundle {
 		    for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
 			ZipEntry entry = entries.nextElement();
 			if (!entry.isDirectory()) {
-			    if (entry.getName().toLowerCase().endsWith("xccdf.xml")) {
+			    if (entry.getName().toLowerCase().endsWith(XCCDF_BENCHMARK)) {
 				benchmark = getBenchmark(zip.getInputStream(entry));
-			    } else if (entry.getName().toLowerCase().endsWith("cpe-dictionary.xml")) {
+			    } else if (entry.getName().toLowerCase().endsWith(CPE_DICTIONARY)) {
 				dictionary = new Dictionary(zip.getInputStream(entry));
-			    } else if (entry.getName().toLowerCase().endsWith("cpe-oval.xml")) {
+			    } else if (entry.getName().toLowerCase().endsWith(CPE_OVAL)) {
 				cpeOval = new Definitions(zip.getInputStream(entry));
-			    } else if (entry.getName().toLowerCase().endsWith("oval.xml")) { // NB: after cpe-oval.xml
+			    } else if (entry.getName().toLowerCase().endsWith(XCCDF_OVAL)) { // NB: after cpe-oval.xml
 				oval = new Definitions(zip.getInputStream(entry));
 			    }
 			}
 		    }
 		} catch (ZipException e) {
+		    throw new XccdfException(e);
 		} catch (IOException e) {
+		    throw new XccdfException(e);
 		}
 	    }
+	}
+	if (dictionary == null) {
+	    throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, CPE_DICTIONARY));
+	}
+	if (cpeOval == null) {
+	    throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, CPE_OVAL));
+	}
+	if (benchmark == null) {
+	    throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, XCCDF_BENCHMARK));
+	}
+	if (oval == null) {
+	    throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, XCCDF_OVAL));
 	}
     }
 

@@ -40,4 +40,4 @@ $(BUILD)/%/:
 
 test:
 #	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/content/xccdf/u_windows_7_v1r7_stig_benchmark_20120127.zip
-	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/../../downloads/xccdf_interpreter/xccdf_interpreter-bin-1.1.4_build_19
+	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/content/xccdf/Win7-54-1.2.0.0/Win7

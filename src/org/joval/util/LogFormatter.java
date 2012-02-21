@@ -1,33 +1,39 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.test.automation;
+package org.joval.util;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import java.util.logging.Formatter;
 
 /**
- * A test class that runs jOVAL through all the relevant OVAL test content and generates a report.
+ * A utility class for formatting java.util.logging log messages.
+ * NB: It will override any pre-existing JUL configuration.
  *
  * @author David A. Solin
  */
 public class LogFormatter extends Formatter {
-    public static final int FILE	= 1;
-    public static final int CONSOLE	= 2;
+    public enum Type {FILE, CONSOLE;}
 
     private static final String LF = System.getProperty("line.separator");
-    private static File resources = new File("rsrc");
     static {
 	try {
-	    LogManager.getLogManager().readConfiguration(new FileInputStream(new File(resources, "logging.properties")));
+	    InputStream in = new ByteArrayInputStream("java.util.logging.handlers=".getBytes());
+	    LogManager.getLogManager().readConfiguration(in);
 	} catch (IOException e) {
 	    e.printStackTrace();
 	}
@@ -68,9 +74,32 @@ public class LogFormatter extends Formatter {
 	return level;
     }
 
-    private int type;
+    /**
+     * Set up a pair of Handlers for jOVAL system logging events, one logging to the specified logFile and the other to the
+     * console, at the indicated logging level, and return a Logger configured to use them.
+     */
+    public static Logger createDuplex(File logFile, Level level) throws IOException {
+	Handler logfileHandler = new FileHandler(logFile.getPath(), false);
+	logfileHandler.setFormatter(new LogFormatter(Type.FILE));
+	logfileHandler.setLevel(level);
 
-    LogFormatter(int type) {
+	Handler consoleHandler = new ConsoleHandler();
+	consoleHandler.setFormatter(new LogFormatter(Type.CONSOLE));
+	consoleHandler.setLevel(level);
+
+	Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	logger.setLevel(level);
+	logger.addHandler(logfileHandler);
+	logger.addHandler(consoleHandler);
+	return logger;
+    }
+
+    private Type type;
+
+    /**
+     * Create a new LogFormatter of the specified type.
+     */
+    public LogFormatter(Type type) {
 	super();
 	this.type = type;
     }

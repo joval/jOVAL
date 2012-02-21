@@ -657,18 +657,18 @@ public class Engine implements IEngine {
 	if (defId == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITION_NOID));
 	}
-	producer.sendNotify(MESSAGE_DEFINITION, defId);
 	oval.schemas.results.core.DefinitionType defResult = results.getDefinition(defId);
 
 	if (defResult == null) {
 	    logger.debug(JOVALMsg.STATUS_DEFINITION, defId);
+	    producer.sendNotify(MESSAGE_DEFINITION, defId);
 	    defResult = JOVALSystem.factories.results.createDefinitionType();
 	    defResult.setDefinitionId(defId);
 	    defResult.setVersion(defDefinition.getVersion());
 	    defResult.setClazz(defDefinition.getClazz());
 	    oval.schemas.results.core.CriteriaType criteriaResult = evaluateCriteria(defDefinition.getCriteria());
 	    defResult.setResult(criteriaResult.getResult());
-	    defResult.setCriteria(evaluateCriteria(defDefinition.getCriteria()));
+	    defResult.setCriteria(criteriaResult);
 	    results.storeDefinitionResult(defResult);
 	}
 	return defResult;
@@ -1101,6 +1101,11 @@ public class Engine implements IEngine {
      * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-common-schema.html#OperationEnumeration
      */
     ResultEnumeration testImpl(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+	if (!item.isSetValue() || !state.isSetValue()) {
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_TEST_INCOMPARABLE, item.getValue(), state.getValue());
+	    throw new TestException(msg);
+	}
+
 	switch (state.getOperation()) {
 	  case BITWISE_AND:
 	    if (bitwiseAnd(state, item)) {
@@ -1194,11 +1199,6 @@ public class Engine implements IEngine {
      * Perform the equivalent of item.getValue().compareTo(state.getValue()).
      */
     int compareValues(EntityItemSimpleBaseType item, EntitySimpleBaseType state) throws TestException, OvalException {
-	if (!item.isSetValue() || !state.isSetValue()) {
-	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_TEST_INCOMPARABLE, item.getValue(), state.getValue());
-	    throw new TestException(msg);
-	}
-
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
