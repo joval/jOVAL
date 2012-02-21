@@ -121,7 +121,6 @@ public class Results implements IResults {
     }
 
     public void storeTestResult(TestType test) {
-	logger.trace(JOVALMsg.STATUS_TEST, test.getTestId());
 	testTable.put(test.getTestId(), test);
     }
 

@@ -182,9 +182,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    } catch (NoSuchElementException e) {
 		// skip it
 	    } catch (IllegalAccessException e) {
-		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
+		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
 	    } catch (InvocationTargetException e) {
-		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage());
+		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
 	    } catch (IllegalArgumentException e) {
 		session.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
 	    } catch (IOException e) {

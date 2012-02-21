@@ -434,6 +434,7 @@ public class Engine implements IEngine {
 
 	ObjectType obj = rc.getObject();
 	String objectId = obj.getId();
+	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
 	producer.sendNotify(MESSAGE_OBJECT, objectId);
 
 	Set s = getObjectSet(obj);
@@ -455,7 +456,7 @@ public class Engine implements IEngine {
 			// Apply filters from the object, if there are any
 			//
 			items = filterWrappedItems(getFilters(obj), items);
-    
+
 			//
 			// Add the object to the SystemCharacteristics, and associate all the items with it.
 			// DAS: TBD, add a mechanism to flag the item collection as incomplete (i.e., permission issues)
@@ -660,6 +661,7 @@ public class Engine implements IEngine {
 	oval.schemas.results.core.DefinitionType defResult = results.getDefinition(defId);
 
 	if (defResult == null) {
+	    logger.debug(JOVALMsg.STATUS_DEFINITION, defId);
 	    defResult = JOVALSystem.factories.results.createDefinitionType();
 	    defResult.setDefinitionId(defId);
 	    defResult.setVersion(defDefinition.getVersion());
@@ -719,6 +721,7 @@ public class Engine implements IEngine {
 
     private void evaluateTest(TestType testResult) throws OvalException {
 	String testId = testResult.getTestId();
+	logger.debug(JOVALMsg.STATUS_TEST, testId);
 	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	String objectId = getObjectRef(testDefinition);
 
@@ -974,13 +977,13 @@ public class Engine implements IEngine {
 	    return ResultEnumeration.TRUE;
 	} catch (NoSuchMethodException e) {
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage()));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), state.getId()));
 	} catch (IllegalAccessException e) {
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage()));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), state.getId()));
 	} catch (InvocationTargetException e) {
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage()));
+	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), state.getId()));
 	}
     }
 
@@ -1191,6 +1194,11 @@ public class Engine implements IEngine {
      * Perform the equivalent of item.getValue().compareTo(state.getValue()).
      */
     int compareValues(EntityItemSimpleBaseType item, EntitySimpleBaseType state) throws TestException, OvalException {
+	if (!item.isSetValue() || !state.isSetValue()) {
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_TEST_INCOMPARABLE, item.getValue(), state.getValue());
+	    throw new TestException(msg);
+	}
+
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
@@ -1711,7 +1719,7 @@ public class Engine implements IEngine {
 		    }
 		}
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, o.getClass().getName()));
+		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, o.getClass().getName(), objectId));
 	    }
 	}
 	return values;

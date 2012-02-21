@@ -227,11 +227,8 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public synchronized BigInteger storeItem(JAXBElement<? extends ItemType> wrappedItem) {
 	ItemType item = wrappedItem.getValue();
 	BigInteger itemId = null;
-	if (item.isSetId()) {
-	    itemId = item.getId();
-	    if (!itemTable.containsKey(itemId)) {
-		itemTable.put(itemId, wrappedItem);
-	    }
+	if (item.isSetId() && !itemTable.containsKey(item.getId())) {
+	    itemTable.put(item.getId(), wrappedItem);
 	} else {
 	    String cs = getChecksum(wrappedItem);
 	    itemId = itemChecksums.get(cs);
