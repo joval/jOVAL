@@ -11,15 +11,16 @@ jovaldi has the ability to accommodate "plugins", and therefore it adds a comman
 that is not available in ovaldi.  That option is:
   -plugin <string>  = name of the jovaldi plugin to use for the scan.  DEFAULT="default"
 
-Two plugins are distributed with jovaldi: the "default" plugin (which scans the local host) and
-the "remote" plugin (which can scan remote hosts).  Plugins are fed a configuration via another
-command-line option:
+Three plugins are distributed with jovaldi: the "default" plugin (which scans the local host),
+the "remote" plugin (which can scan remote hosts) and the "cisco" plugin (which can scan Cisco IOS
+devices using only the output supplied by the "show tech-support" command).  Plugins are fed a
+configuration via another command-line option:
   -config <string>  = name of the configuration file for the plugin.  DEFAULT="config.properties"
 
 The format of the plugin configuration file is specified in the help text of the plugin.  For
 more information, run: "jovaldi -plugin <name> -h"
 
-This release (version 5.10.1.0) supports scanning of Windows, Linux, Solaris and MacOS X host
+This release (version 5.10.1.0) supports scanning of Windows, Linux, Solaris, AIX and MacOS X host
 machines and Cisco devices running IOS.  For a complete listing of supported tests, see:
   http://joval.org/features
 
