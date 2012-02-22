@@ -527,8 +527,10 @@ public class Registry extends BaseRegistry {
 	    try {
 		IKey key = fetchKey(HKLM, WindowsSystemInfo.COMPUTERNAME_KEY);
 		IValue val = fetchValue(key, WindowsSystemInfo.COMPUTERNAME_VAL);
+	    } catch (NoSuchElementException e) {
+		log.getLogger().warn(JOVALMsg.ERROR_WINREG_HEARTBEAT, JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_KEY_MISSING, e.getMessage()));
 	    } catch (Exception e) {
-		log.getLogger().warn(JOVALMsg.ERROR_WINREG_HEARTBEAT, e.getMessage());
+		log.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
     }
