@@ -54,7 +54,8 @@ dist: dist-$(ARCH)
 dist-x86: all
 	mkdir -p $(DIST32)
 	cp -R $(BIN_DIR)/* $(DIST32)
-	cp -R $(RSRC)/docs/* $(DIST32)
+	sed 's/\$VERSION/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST32)/Readme.txt
+	cp -R $(RSRC)/docs/Remote.txt $(DIST32)/Remote.txt
 	cp -R $(RSRC)/lib $(DIST32)
 	cp -R $(RSRC)/licenses $(DIST32)
 	cp -R $(RSRC)/xml $(DIST32)
@@ -90,7 +91,8 @@ dist-x86: all
 dist-x64: all
 	mkdir -p $(DIST64)
 	cp -R $(BIN_DIR)/* $(DIST64)
-	cp -R $(RSRC)/docs/* $(DIST64)
+	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST64)/Readme.txt
+	cp -R $(RSRC)/docs/Remote.txt $(DIST64)/Remote.txt
 	cp -R $(RSRC)/lib $(DIST64)
 	cp -R $(RSRC)/licenses $(DIST64)
 	cp -R $(RSRC)/xml $(DIST64)

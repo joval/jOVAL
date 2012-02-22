@@ -20,11 +20,11 @@ configuration via another command-line option:
 The format of the plugin configuration file is specified in the help text of the plugin.  For
 more information, run: "jovaldi -plugin <name> -h"
 
-This release (version 5.10.1.0) supports scanning of Windows, Linux, Solaris, AIX and MacOS X host
-machines and Cisco devices running IOS.  For a complete listing of supported tests, see:
+This release (version [VERSION]) supports scanning of Windows, Linux, Solaris, AIX and MacOS X
+host machines and Cisco devices running IOS.  For a complete listing of supported tests, see:
   http://joval.org/features
 
 jovaldi has been written and tested on 32-bit Windows XP and 64-bit Windows 7 using the 32-bit
-and 64-bit JRE version 1.6.0_27, and 64-bit Fedora 15 Linux using the 64-bit JRE version 1.6.0_30.
+and 64-bit JRE version 1.6.0_31, and 64-bit Fedora 15 Linux using the 64-bit JRE version 1.6.0_31.
 The default plugin uses 32-bit or 64-bit DLLs on Windows.  The remote plugin is written in 100%
 pure platform-independent Java.
