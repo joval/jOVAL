@@ -12,6 +12,7 @@ ifndef JAVA_HOME
 endif
 
 ifeq (Windows, $(findstring Windows,$(OS)))
+    WINDOWS=true
     CLN=;
 else
     CLN=:
@@ -69,3 +70,5 @@ PLUGIN_LOCAL_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLU
 PLUGIN_CISCO=$(SDK)/plugin/cisco
 PLUGIN_CISCO_LIB=$(PLUGIN_CISCO)/jOVALPluginCisco.jar
 PLUGIN_CISCO_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLUGIN_CISCO)/$(LIBDIR)/*)))
+XPERT=$(COMPONENTS)/xpert
+XPERT_LIB=$(XPERT)/XPERT.jar

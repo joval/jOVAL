@@ -5,13 +5,12 @@ TOP=../..
 
 include $(TOP)/common.mk
 
-PRODUCTNAME=XPERT
 JOVALDI_LIB=$(COMPONENTS)/jovaldi/jovaldi.jar
 SCAP_LIBS=$(OVAL_LIB)$(CLN)$(SVRL)$(CLN)$(XCCDF_LIB)$(CLN)$(CPE_LIB)$
 PLUGIN=$(PLUGIN_SHARED_LIB)$(CLN)$(PLUGIN_SHARED_DEPS)$(CLN)$(PLUGIN_REMOTE_LIB)$(CLN)$(PLUGIN_REMOTE_DEPS)
 API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCAP_LIBS)$(CLN)$(PLUGIN)$(CLN)$(JOVALDI_LIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
-RUNTIMECP="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(PRODUCTNAME).jar"
+RUNTIMECP="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(XPERT_LIB)"
 
 include classes.mk
 
@@ -19,14 +18,14 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(PRODUCTNAME).jar
+all: $(XPERT_LIB)
 
-$(PRODUCTNAME).jar: classes resources
+$(XPERT_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
 	rm -rf $(BUILD)
-	rm -f $(PRODUCTNAME).jar
+	rm -f $(XPERT_LIB)
 
 classes: classdirs $(CLASS_FILES)
 

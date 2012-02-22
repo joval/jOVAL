@@ -4,6 +4,7 @@
 package org.joval.oval.di;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.FileInputStream;
@@ -72,9 +73,9 @@ public class Main implements IObserver {
     private static PropertyResourceBundle resources;
     static {
 	try {
-	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    LogManager.getLogManager().readConfiguration(cl.getResourceAsStream("jovaldi.logging.properties"));
+	    LogManager.getLogManager().readConfiguration(new ByteArrayInputStream("java.util.logging.handlers=".getBytes()));
 	    Locale locale = Locale.getDefault();
+	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	    URL url = cl.getResource("jovaldi.resources_" + locale.toString() + ".properties");
 	    if (url == null) {
 		url = cl.getResource("jovaldi.resources_" + locale.getLanguage() + ".properties");

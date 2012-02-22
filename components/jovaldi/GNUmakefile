@@ -20,6 +20,12 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
+ifdef WINDOWS
+    BINDIR=$(RSRC)/bin/win-$(ARCH)
+else
+    BINDIR=$(RSRC)/bin/unix
+endif
+
 all: $(PRODUCTNAME).jar
 
 $(PRODUCTNAME).jar: classes resources
@@ -51,15 +57,22 @@ dist-clean: clean
 dist: dist-$(ARCH)
 
 dist-x86: all
-	mkdir -p $(DIST)/x86
-	cp -R $(RSRC)/* $(DIST32)
+	mkdir -p $(DIST32)
+	cp -R $(BINDIR)/* $(DIST32)
+	cp -R $(RSRC)/docs/* $(DIST32)
+	cp -R $(RSRC)/lib $(DIST32)
+	cp -R $(RSRC)/licenses $(DIST32)
+	cp -R $(RSRC)/xml $(DIST32)
 	cp -R $(OVAL)/xsd-$(OVAL_VERSION)/*.xsd $(DIST32)/xml
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST32)/xml
 	cp $(PRODUCTNAME).jar $(DIST32)/lib
+	cp $(CPE_LIB) $(DIST32)/lib
 	cp $(OVAL_LIB) $(DIST32)/lib
+	cp $(XCCDF_LIB) $(DIST32)/lib
 	cp $(SVRL) $(DIST32)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST32)/lib
 	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST32)/lib
+	cp $(XPERT_LIB) $(DIST32)/lib
 	mkdir -p $(DIST32)/plugin/default/lib
 	cp -R plugin/default/rsrc/* $(DIST32)/plugin/default
 	cp -R $(PLUGIN_SHARED_LIB) $(DIST32)/plugin/default/lib
@@ -81,15 +94,22 @@ dist-x86: all
 
 dist-x64: all
 	mkdir -p $(DIST64)
-	cp -R $(RSRC)/* $(DIST64)
+	cp -R $(BINDIR)/* $(DIST64)
+	cp -R $(RSRC)/docs/* $(DIST64)
+	cp -R $(RSRC)/lib $(DIST64)
+	cp -R $(RSRC)/licenses $(DIST64)
+	cp -R $(RSRC)/xml $(DIST64)
 	cp -R $(OVAL)/xsd-$(OVAL_VERSION)/*.xsd $(DIST64)/xml
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST64)/xml
 	cp $(PRODUCTNAME).jar $(DIST64)/lib
+	cp $(CPE_LIB) $(DIST64)/lib
 	cp $(OVAL_LIB) $(DIST64)/lib
+	cp $(XCCDF_LIB) $(DIST64)/lib
 	cp $(SVRL) $(DIST64)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST64)/lib
 	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST64)/lib
 	mkdir -p $(DIST64)/plugin/default/lib
+	cp $(XPERT_LIB) $(DIST64)/lib
 	cp -R plugin/default/rsrc/* $(DIST64)/plugin/default
 	cp -R $(PLUGIN_SHARED_LIB) $(DIST64)/plugin/default/lib
 	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/* $(DIST64)/plugin/default/lib
