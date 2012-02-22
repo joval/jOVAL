@@ -10,6 +10,7 @@ ZIPNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_Windows
 TARNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_`uname -s`_`uname -p`
 DIST32=$(DIST)/x86
 DIST64=$(DIST)/x64
+BIN_DIR=$(RSRC)/bin/$(PLATFORM)-$(ARCH)
 
 API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(OVAL_LIB)$(CLN)$(SVRL)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
@@ -19,12 +20,6 @@ include classes.mk
 CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
-
-ifdef WINDOWS
-    BINDIR=$(RSRC)/bin/win-$(ARCH)
-else
-    BINDIR=$(RSRC)/bin/unix
-endif
 
 all: $(PRODUCTNAME).jar
 
@@ -58,7 +53,7 @@ dist: dist-$(ARCH)
 
 dist-x86: all
 	mkdir -p $(DIST32)
-	cp -R $(BINDIR)/* $(DIST32)
+	cp -R $(BIN_DIR)/* $(DIST32)
 	cp -R $(RSRC)/docs/* $(DIST32)
 	cp -R $(RSRC)/lib $(DIST32)
 	cp -R $(RSRC)/licenses $(DIST32)
@@ -94,7 +89,7 @@ dist-x86: all
 
 dist-x64: all
 	mkdir -p $(DIST64)
-	cp -R $(BINDIR)/* $(DIST64)
+	cp -R $(BIN_DIR)/* $(DIST64)
 	cp -R $(RSRC)/docs/* $(DIST64)
 	cp -R $(RSRC)/lib $(DIST64)
 	cp -R $(RSRC)/licenses $(DIST64)

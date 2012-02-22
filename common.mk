@@ -11,11 +11,17 @@ ifndef JAVA_HOME
     JAVA_HOME=~/tools/jdk160_26
 endif
 
+PLATFORM=unknown
 ifeq (Windows, $(findstring Windows,$(OS)))
-    WINDOWS=true
+    PLATFORM=win
     CLN=;
 else
+    OS=$(shell uname)
     CLN=:
+endif
+
+ifeq (Linux, $(findstring Linux,$(OS)))
+    PLATFORM=linux
 endif
 
 NULL:=

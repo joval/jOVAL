@@ -8,9 +8,5 @@ export PLUGIN=${INSTALL_DIR}/plugin
 if [ "x${JAVA_HOME}" == x ]; then
     export JAVA_HOME=${INSTALL_DIR}/jre
 fi
-if [ `uname -p` == x86_64 ]; then
-    export JMEM=-Xmx2048m
-else
-    export JMEM=-Xmx1024m
-fi
+export JMEM=-Xmx2048m
 ${JAVA_HOME}/bin/java ${JMEM} -cp ${LIB}/jovaldi.jar:${LIB}/oval-schema-5.10.1.jar:${LIB}/jOVALCore.jar:${LIB}/cal10n-api-0.7.4.jar:${LIB}/slf4j-api-1.6.2.jar:${LIB}/slf4j-ext-1.6.2.jar:${LIB}/slf4j-jdk14-1.6.2.jar:${PLUGIN}/cisco/lib/jOVALPluginShared.jar:${PLUGIN}/cisco/lib/jOVALPluginCisco.jar:${PLUGIN}/cisco/lib/tftp.jar org.joval.plugin.CiscoPlugin "$@"
