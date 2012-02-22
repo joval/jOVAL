@@ -47,11 +47,9 @@ import xccdf.schemas.core.URIidrefType;
 import xccdf.schemas.core.ValueType;
 
 import org.joval.cpe.CpeException;
-import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
-import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
@@ -220,10 +218,24 @@ public class XPERT implements Runnable, IObserver {
 	    phase = "evaluation";
 	    logger.info("The target system is applicable to the XCCDF bundle, continuing tests...");
 
+	    //
+	    // Configure the OVAL engine...
+	    //
 	    engine.setDefinitions(xccdf.getOval());
 	    Variables exports = createVariables();
 	    engine.setExternalVariables(exports);
-	    engine.setDefinitionFilter(createFilter());
+	    DefinitionFilter filter = createFilter();
+	    engine.setDefinitionFilter(filter);
+
+	    //
+	    // Write artifact files
+	    //
+	    File exportsFile = new File(ws, "oval-variables.xml");
+	    logger.info("Saving variables: " + exportsFile.getPath());
+	    exports.writeXML(exportsFile);
+	    File filterFile = new File(ws, "oval-filter.xml");
+	    logger.info("Saving evaluation-definitions: " + filterFile.getPath());
+	    filter.writeXML(filterFile);
 
 	    //
 	    // Read previously collected system characteristics data, if available.
@@ -238,6 +250,9 @@ public class XPERT implements Runnable, IObserver {
 		logger.warning(e.getMessage());
 	    }
 
+	    //
+	    // Run the OVAL engine
+	    //
 	    engine.run();
 	    IResults results = null;
 	    switch(engine.getResult()) {
@@ -251,7 +266,7 @@ public class XPERT implements Runnable, IObserver {
 	    }
 
 	    //
-	    // Create the TestResult node and write the results.
+	    // Create the Benchmark.TestResult node
 	    //
 	    ObjectFactory factory = new ObjectFactory();
 	    TestResultType testResult = factory.createTestResultType();
@@ -268,7 +283,7 @@ public class XPERT implements Runnable, IObserver {
 	    }
 
 	    //
-	    // Iterate through the rules and record the results
+	    // Iterate through the rules and record the results, save and finish
 	    //
 	    List<RuleType> rules = getRules(false);
 	    for (RuleType rule : rules) {
@@ -374,7 +389,7 @@ public class XPERT implements Runnable, IObserver {
     /**
      * Create an OVAL DefinitionFilter containing every selected rule.
      */
-    private IDefinitionFilter createFilter() {
+    private DefinitionFilter createFilter() {
 	DefinitionFilter filter = new DefinitionFilter();
 
 	//
