@@ -68,12 +68,13 @@ public class Main implements IObserver {
     private static ExecutionState state = null;
     private static String lastStatus = null;
 
-    private static Logger logger = Logger.getLogger("jovaldi");
-
+    private static Logger logger;
     private static PropertyResourceBundle resources;
     static {
 	try {
 	    LogManager.getLogManager().readConfiguration(new ByteArrayInputStream("java.util.logging.handlers=".getBytes()));
+	    logger = Logger.getLogger("jovaldi");
+
 	    Locale locale = Locale.getDefault();
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	    URL url = cl.getResource("jovaldi.resources_" + locale.toString() + ".properties");
@@ -197,25 +198,8 @@ public class Main implements IObserver {
      */
     private static void printHelp() {
 	print("");
-	try {
-	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    Locale locale = Locale.getDefault();
-	    URL url = cl.getResource("jovaldi.helptext_" + locale.toString());
-	    if (url == null) {
-		url = cl.getResource("jovaldi.helptext_" + locale.getLanguage());
-	    }
-	    if (url == null) {
-		url = cl.getResource("jovaldi.helptext");
-	    }
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream()));
-	    String line = null;
-	    while ((line = reader.readLine()) != null) {
-		System.out.println(line);
-	    }
-	    printPluginHelp();
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
+	print(getMessage("MESSAGE_HELPTEXT"));
+	printPluginHelp();
     }
 
     /**
@@ -359,8 +343,6 @@ public class Main implements IObserver {
     private Main() {
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    LogManager.getLogManager().readConfiguration(cl.getResourceAsStream("jovaldi.logging.properties"));
-
 	    Logger jSysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
 	    Handler logHandler = new FileHandler(state.logFile.toString(), false);
 	    logHandler.setFormatter(new LogfileFormatter());

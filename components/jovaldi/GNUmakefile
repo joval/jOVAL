@@ -36,8 +36,8 @@ clean:
 	rm -f $(PRODUCTNAME).jar
 
 resources:
-	rm -f $(BUILD)/org/joval/oval/di/jovaldi.*
-	cp $(SRC)/org/joval/oval/di/jovaldi.* $(BUILD)
+	rm -f $(BUILD)/.properties
+	cp $(RSRC)/*.properties $(BUILD)
 
 classes: classdirs $(CLASS_FILES)
 
