@@ -6,8 +6,10 @@ package org.joval.xccdf.engine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.List;
@@ -94,6 +96,23 @@ public class XPERT implements Runnable, IObserver {
 	}
     }
 
+    static void printHeader() {
+	PrintStream console = System.out;
+	console.println(getMessage("divider"));
+	console.println(getMessage("product.name"));
+	console.println(getMessage("description"));
+	console.println(getMessage("message.version", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION)));
+	console.println(getMessage("message.buildDate", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_BUILD_DATE)));
+	console.println(getMessage("copyright"));
+	console.println(getMessage("divider"));
+	console.println("");
+    }
+
+    static void printHelp() {
+	System.out.println(getMessage("helpText"));
+	System.out.println(new RemoteContainer().getProperty("helpText"));
+    }
+
     /**
      * Retrieve a message using its key.
      */
@@ -119,12 +138,15 @@ public class XPERT implements Runnable, IObserver {
      * Run from the command-line.
      */
     public static void main(String[] argv) {
+	printHeader();
+
 	int exitCode = 1;
 	try {
 	    if (!ws.exists()) {
 		ws.mkdir();
 	    }
 	    logger = LogFormatter.createDuplex(new File(ws, "xpert.log"), Level.INFO);
+	    logger.info("Start time: " + new Date().toString());
 
 	    File f = null;
 	    RemoteContainer container = null;
@@ -150,8 +172,7 @@ public class XPERT implements Runnable, IObserver {
 	    }
 
 	    if (f == null || container == null) {
-		System.out.println("Usage: java org.joval.xccdf.XPERT [path-to-xccdf] [-config path-to-config]");
-		System.out.println(new RemoteContainer().getProperty("helpText"));
+		printHelp();
 	    } else {
 		logger.info("Loading " + f.getPath());
 		XPERT engine = new XPERT(new XccdfBundle(f), container.getPlugin());

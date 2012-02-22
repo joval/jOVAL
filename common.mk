@@ -31,7 +31,7 @@ CPE_VERSION=2.3
 # If your system is 32-bit, set ARCH to x86
 #ARCH=x86
 ARCH=x64
-JRE_HOME=$(TOP)/../../tools/jre160_27
+JRE_HOME=$(TOP)/../../tools/jre160_31
 JRE=$(JRE_HOME)/$(ARCH)/bin/java
 JAVA=$(JAVA_HOME)/bin/java
 JAVAC=$(JAVA_HOME)/bin/javac

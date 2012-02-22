@@ -30,8 +30,8 @@ clean:
 classes: classdirs $(CLASS_FILES)
 
 resources:
-	rm -f $(BUILD)/org/joval/xccdf/engine/xpert.*
-	cp $(SRC)/org/joval/xccdf/engine/xpert.* $(BUILD)
+	rm -f $(BUILD)/*.properties
+	cp $(RSRC)/*.properties $(BUILD)
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 

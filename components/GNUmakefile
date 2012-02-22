@@ -5,8 +5,8 @@ all: _xpert
 
 rebuild:
 	@$(MAKE) --keep-going --directory=sdk install
-	@$(MAKE) --keep-going --directory=jovaldi dist
 	@$(MAKE) --keep-going --directory=xpert all
+	@$(MAKE) --keep-going --directory=jovaldi dist
 
 clean:
 	@$(MAKE) --keep-going --directory=cpe clean
@@ -17,7 +17,7 @@ clean:
 	@$(MAKE) --keep-going --directory=xccdf clean
 	@$(MAKE) --keep-going --directory=xpert clean
 
-_jovaldi: _sdk _schematron
+_jovaldi: _sdk _schematron _xpert
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
 _sdk: _oval
@@ -35,5 +35,5 @@ _cpe:
 _xccdf:
 	@$(MAKE) --keep-going --directory=xccdf all
 
-_xpert: _jovaldi _cpe _xccdf
+_xpert: _oval _cpe _xccdf
 	@$(MAKE) --keep-going --directory=xpert all

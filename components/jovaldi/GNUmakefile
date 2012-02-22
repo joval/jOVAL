@@ -36,7 +36,7 @@ clean:
 	rm -f $(PRODUCTNAME).jar
 
 resources:
-	rm -f $(BUILD)/.properties
+	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/*.properties $(BUILD)
 
 classes: classdirs $(CLASS_FILES)
