@@ -28,4 +28,3 @@ test/logs/
 test/reports/
 test/schema/docs
 test/schema/ReportSchema.jar
-test/state/

@@ -125,7 +125,7 @@ public class Main {
 		}
 	    }
 	    PolymorphicPlugin.setCredentialStore(scs);
-	    PolymorphicPlugin.setDataDirectory(new File("state"));
+	    PolymorphicPlugin.setDataDirectory(JOVALSystem.getDataDirectory());
 	    IProperty routes = config.getSection("Routes");
 	    for (String destination : routes) {
 		PolymorphicPlugin.addRoute(destination, routes.getProperty(destination));
