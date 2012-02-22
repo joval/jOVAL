@@ -30,4 +30,4 @@ CLASSES=\
 	cpe.schemas.language.PlatformBaseType	\
 	cpe.schemas.language.PlatformSpecificationType	\
 	cpe.schemas.language.PlatformType	\
-	cpe.schemas.language.TextType	\
+	cpe.schemas.language.TextType
