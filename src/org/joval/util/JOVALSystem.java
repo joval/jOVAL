@@ -192,6 +192,30 @@ public class JOVALSystem {
     }
 
     /**
+     * Return a directory suitable for storing transient application data, like state information that may persist
+     * between invocations.  This is either a directory called .jOVAL beneath the user's home directory, or on Windows,
+     * it will be a directory named jOVAL in the appropriate AppData storage location.
+     */
+    public static File getDataDirectory() {
+	File dataDir = null;
+	if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
+	    String s = System.getenv("LOCALAPPDATA");
+	    if (s == null) {
+		s = System.getenv("APPDATA");
+	    }
+	    if (s != null) {
+		File appDataDir = new File(s);
+		dataDir = new File(appDataDir, "jOVAL");
+	    }
+	}
+	if (dataDir == null) {
+	    File homeDir = new File(System.getProperty("user.home"));
+	    dataDir = new File(homeDir, ".joval");
+	}
+	return dataDir;
+    }
+
+    /**
      * Retrieve a localized String, given the key and substitution arguments.
      */
     public static String getMessage(JOVALMsg key, Object... args) {

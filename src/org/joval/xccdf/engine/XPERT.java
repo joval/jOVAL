@@ -163,6 +163,7 @@ public class XPERT implements Runnable, IObserver {
 		    try {
 			config.load(new FileInputStream(configFile));
 			container = new RemoteContainer();
+			container.setDataDirectory(JOVALSystem.getDataDirectory());
 			container.configure(config);
 		    } catch (Exception e) {
 			logger.severe(LogFormatter.toString(e));

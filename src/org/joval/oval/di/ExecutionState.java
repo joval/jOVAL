@@ -16,6 +16,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import org.joval.intf.plugin.IPlugin;
+import org.joval.util.JOVALSystem;
 
 /**
  * The ExecutionState is responsible for parsing the command-line arguments, and providing data about the user's choices
@@ -377,7 +378,7 @@ public class ExecutionState {
 				Object pluginObject = pluginClassLoader.loadClass(main).newInstance();
 				if (Class.forName(IPluginContainer.class.getName()).isInstance(pluginObject)) {
 				    container = (IPluginContainer)pluginObject;
-				    File dataDir = getDataDirectory();
+				    File dataDir = JOVALSystem.getDataDirectory();
 				    if (!dataDir.exists()) {
 					dataDir.mkdirs();
 				    }
@@ -404,24 +405,5 @@ public class ExecutionState {
 	    e.printStackTrace();
 	}
 	return false;
-    }
-
-    private File getDataDirectory() {
-	File dataDir = null;
-	if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
-	    String s = System.getenv("LOCALAPPDATA");
-	    if (s == null) {
-		s = System.getenv("APPDATA");
-	    }
-	    if (s != null) {
-		File appDataDir = new File(s);
-		dataDir = new File(appDataDir, "jOVALdi");
-	    }
-	}
-	if (dataDir == null) {
-	    File homeDir = new File(System.getProperty("user.home"));
-	    dataDir = new File(homeDir, ".jovaldi");
-	}
-	return dataDir;
     }
 }
