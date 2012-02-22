@@ -1085,7 +1085,8 @@ public class Engine implements IEngine {
 		    cd.addResult(testImpl(base, item));
 		}
 	    } catch (NoSuchElementException e) {
-		throw new TestException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), e.getMessage()));
+		String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_VARIABLE_MISSING);
+		throw new TestException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
 	    } catch (ResolveException e) {
 		throw new TestException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), e.getMessage()));
 	    }

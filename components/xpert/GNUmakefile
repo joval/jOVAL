@@ -21,7 +21,7 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 all: $(PRODUCTNAME).jar
 
-$(PRODUCTNAME).jar: classes
+$(PRODUCTNAME).jar: classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
@@ -29,6 +29,10 @@ clean:
 	rm -f $(PRODUCTNAME).jar
 
 classes: classdirs $(CLASS_FILES)
+
+resources:
+	rm -f $(BUILD)/org/joval/xccdf/engine/xpert.*
+	cp $(SRC)/org/joval/xccdf/engine/xpert.* $(BUILD)
 
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 
@@ -39,5 +43,5 @@ $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
 
 test:
-#	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/content/xccdf/u_windows_7_v1r7_stig_benchmark_20120127.zip
-	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/content/xccdf/Win7-54-1.2.0.0/Win7
+	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/content/xccdf/u_windows_7_v1r7_stig_benchmark_20120127
+#	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/content/xccdf/Win7-54-1.2.0.0/Win7

@@ -71,6 +71,7 @@ public class Variables implements IVariables {
     private OvalVariables vars;
     private JAXBContext ctx;
     private Hashtable <String, List<String>>variables;
+    private Hashtable <String, String>comments;
 
     /**
      * Create Variables from a file.
@@ -103,6 +104,10 @@ public class Variables implements IVariables {
 
     public void setValue(String id, List<String> value) {
 	variables.put(id, value);
+    }
+
+    public void setComment(String id, String comment) {
+	comments.put(id, comment);
     }
 
     public void writeXML(File f) {
@@ -177,6 +182,7 @@ public class Variables implements IVariables {
     private Variables() {
 	logger = JOVALSystem.getLogger();
 	variables = new Hashtable<String, List<String>>();
+	comments = new Hashtable<String, String>();
 	try {
 	    ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_VARIABLES));
 	} catch (JAXBException e) {
@@ -194,6 +200,10 @@ public class Variables implements IVariables {
 	    var.setId(key);
 	    for (String s : variables.get(key)) {
 		var.getValue().add(s);
+	    }
+	    String comment = comments.get(key);
+	    if (comment != null) {
+		var.setComment(comment);
 	    }
 	    vt.getVariable().add(var);
 	}

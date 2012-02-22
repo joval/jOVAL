@@ -5,9 +5,14 @@ package org.joval.xccdf.engine;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URL;
+import java.text.MessageFormat;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Locale;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.Vector;
@@ -22,15 +27,22 @@ import oval.schemas.common.GeneratorType;
 import oval.schemas.definitions.core.OvalDefinitions;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.DefinitionType;
+import oval.schemas.systemcharacteristics.core.InterfaceType;
+import oval.schemas.variables.core.VariableType;
+
 import xccdf.schemas.core.Benchmark;
 import xccdf.schemas.core.CheckContentRefType;
 import xccdf.schemas.core.CheckType;
 import xccdf.schemas.core.CheckExportType;
 import xccdf.schemas.core.GroupType;
+import xccdf.schemas.core.ObjectFactory;
+import xccdf.schemas.core.ProfileSetValueType;
+import xccdf.schemas.core.RuleResultType;
 import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.ResultEnumType;
 import xccdf.schemas.core.SelStringType;
 import xccdf.schemas.core.SelectableItemType;
+import xccdf.schemas.core.TestResultType;
 import xccdf.schemas.core.URIidrefType;
 import xccdf.schemas.core.ValueType;
 
@@ -60,14 +72,42 @@ import org.joval.xccdf.XccdfException;
  * @version %I% %G%
  */
 public class XPERT implements Runnable, IObserver {
+    public static final String OVAL_SYSTEM = "http://oval.mitre.org/XMLSchema/oval-definitions-5";
+
     private static final File ws = new File("artifacts");
     private static Logger logger;
 
+    private static PropertyResourceBundle resources;
+    static {
+	try {
+	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	    Locale locale = Locale.getDefault();
+	    URL url = cl.getResource("xpert.resources_" + locale.toString() + ".properties");
+	    if (url == null) {
+		url = cl.getResource("xpert.resources_" + locale.getLanguage() + ".properties");
+	    }
+	    if (url == null) {
+		url = cl.getResource("xpert.resources.properties");
+	    }
+	    resources = new PropertyResourceBundle(url.openStream());
+	} catch (IOException e) {
+	    e.printStackTrace();
+	    System.exit(-1);
+	}
+    }
+
+    /**
+     * Retrieve a message using its key.
+     */
+    static String getMessage(String key, Object... arguments) {
+	return MessageFormat.format(resources.getString(key), arguments);
+    }
+
     static final GeneratorType getGenerator() {
 	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
-	generator.setProductName("jOVAL XPERT");
-	generator.setProductVersion(JOVALSystem.getSystemProperty("Alpha"));
-	generator.setSchemaVersion("5.10.1");
+	generator.setProductName(getMessage("product.name"));
+	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
+	generator.setSchemaVersion(IEngine.SCHEMA_VERSION.toString());
 	try {
 	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
 	} catch (DatatypeConfigurationException e) {
@@ -110,7 +150,7 @@ public class XPERT implements Runnable, IObserver {
 		    }
 		}
 	    }
-    
+
 	    if (f == null || container == null) {
 		System.out.println("Usage: java org.joval.xccdf.XPERT [path-to-xccdf] [-config path-to-config]");
 		System.out.println(new RemoteContainer().getProperty("helpText"));
@@ -130,6 +170,7 @@ public class XPERT implements Runnable, IObserver {
     private XccdfBundle xccdf;
     private IEngine engine;
     private List<RuleType> rules = null;
+    private List<GroupType> groups = null;
     private String phase = null;
 
     /**
@@ -180,7 +221,8 @@ public class XPERT implements Runnable, IObserver {
 	    logger.info("The target system is applicable to the XCCDF bundle, continuing tests...");
 
 	    engine.setDefinitions(xccdf.getOval());
-	    engine.setExternalVariables(createVariables());
+	    Variables exports = createVariables();
+	    engine.setExternalVariables(exports);
 	    engine.setDefinitionFilter(createFilter());
 
 	    //
@@ -197,58 +239,91 @@ public class XPERT implements Runnable, IObserver {
 	    }
 
 	    engine.run();
+	    IResults results = null;
 	    switch(engine.getResult()) {
 	      case ERR:
 		logger.severe(LogFormatter.toString(engine.getError()));
 		return;
 	      case OK:
-		engine.getResults().writeXML(new File(ws, "results.xml"));
+		results = engine.getResults();
+		results.writeXML(new File(ws, "oval-results.xml"));
 		break;
 	    }
 
-	    Hashtable<String, ResultEnumeration> results = new Hashtable<String, ResultEnumeration>();
-	    for (DefinitionType def :
-		 engine.getResults().getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition()) {
-
-		results.put(def.getDefinitionId(), def.getResult());
+	    //
+	    // Create the TestResult node and write the results.
+	    //
+	    ObjectFactory factory = new ObjectFactory();
+	    TestResultType testResult = factory.createTestResultType();
+	    testResult.setTestSystem(getMessage("product.name"));
+	    testResult.getTarget().add(results.getSystemInfo().getPrimaryHostName());
+	    for (InterfaceType intf : results.getSystemInfo().getInterfaces().getInterface()) {
+		testResult.getTargetAddress().add(intf.getIpAddress());
+	    }
+	    for (VariableType var : exports.getOvalVariables().getVariables().getVariable()) {
+		ProfileSetValueType val = factory.createProfileSetValueType();
+		val.setIdref(var.getComment());
+		val.setValue(var.getValue().get(0).toString());
+		testResult.getSetValue().add(val);
 	    }
 
-	    for (RuleType rule : getRules()) {
+	    //
+	    // Iterate through the rules and record the results
+	    //
+	    List<RuleType> rules = getRules(false);
+	    for (RuleType rule : rules) {
 		String ruleId = rule.getItemId();
+
+		RuleResultType ruleResult = factory.createRuleResultType();
+		ruleResult.setIdref(ruleId);
 
 		List<CheckType> checks = rule.getCheck();
 		if (checks == null) {
-		    System.out.println("Skipping rule " + ruleId + ": no checks");
-		    continue;
-		}
-		for (CheckType check : rule.getCheck()) {
-		    for (CheckContentRefType ref : check.getCheckContentRef()) {
-			String definitionId = ref.getName();
-			if (definitionId == null) {
-			    logger.info(ruleId + ": OVAL definition UNDEFINED");
-			    continue;
-			}
-			switch (results.get(ref.getName())) {
-			  case ERROR:
-			    logger.info(ruleId + ": " + ResultEnumType.ERROR);
-			    break;
+		    logger.info("Skipping rule " + ruleId + ": no checks");
+		} else {
+		    for (CheckType check : rule.getCheck()) {
+			ruleResult.getCheck().add(check);
 
-			  case FALSE:
-			    logger.info(ruleId + ": " + ResultEnumType.FAIL);
-			    break;
+			for (CheckContentRefType ref : check.getCheckContentRef()) {
+			    String definitionId = ref.getName();
+			    if (definitionId == null) {
+				logger.info(ruleId + ": OVAL definition UNDEFINED");
+				continue;
+			    }
+			    ResultEnumType ret = ResultEnumType.NOTCHECKED;
+			    try {
+				switch (results.getDefinitionResult(ref.getName())) {
+				  case ERROR:
+				    ret = ResultEnumType.ERROR;
+				    break;
 
-			  case TRUE:
-			    logger.info(ruleId + ": " + ResultEnumType.PASS);
-			    break;
+				  case FALSE:
+				    ret = ResultEnumType.FAIL;
+				    break;
 
-			  case UNKNOWN:
-			  default:
-			    logger.info(ruleId + ": " + ResultEnumType.UNKNOWN);
-			    break;
+				  case TRUE:
+				    ret = ResultEnumType.PASS;
+				    break;
+
+				  case UNKNOWN:
+				  default:
+				    ret = ResultEnumType.UNKNOWN;
+				    break;
+				}
+			    } catch (NoSuchElementException e) {
+			    }
+			    logger.info(ruleId + ": " + ret);
+			    ruleResult.setResult(ret);
 			}
 		    }
 		}
+		testResult.getRuleResult().add(ruleResult);
 	    }
+	    xccdf.getBenchmark().getTestResult().add(testResult);
+	    File reportFile = new File(ws, "xccdf-results.xml");
+	    logger.info("Saving report: " + reportFile.getPath());
+	    xccdf.writeBenchmarkXML(reportFile);
+	    logger.info("XCCDF processing complete.");
 	} else {
 	    logger.info("The target system is not applicable to the XCCDF bundle");
 	}
@@ -283,42 +358,56 @@ public class XPERT implements Runnable, IObserver {
 	    if (filter.accept(def.getDefinitionId())) {
 		switch(def.getResult()) {
 		  case TRUE:
-		    System.out.println("Passed def " + def.getDefinitionId());
+		    logger.info("Passed def " + def.getDefinitionId());
 		    break;
 		  default:
-		    System.out.println("Bad result " + def.getResult() + " for definition " + def.getDefinitionId());
+		    logger.warning("Bad result " + def.getResult() + " for definition " + def.getDefinitionId());
 		    return false;
 		}
 	    } else {
-		System.out.println("Ignoring definition " + def.getDefinitionId());
+		logger.info("Ignoring definition " + def.getDefinitionId());
 	    }
 	}
 	return true;
     }
 
+    /**
+     * Create an OVAL DefinitionFilter containing every selected rule.
+     */
     private IDefinitionFilter createFilter() {
 	DefinitionFilter filter = new DefinitionFilter();
 
 	//
-	// Get every check from every rule, and add the names to the filter.
+	// Get every check from every selected rule, and add the names to the filter.
 	//
-	for (RuleType rule : getRules()) {
-	    for (CheckType check : rule.getCheck()) {
-		if (check.getSystem().equals("http://oval.mitre.org/XMLSchema/oval-definitions-5")) {
-		    for (CheckContentRefType ref : check.getCheckContentRef()) {
-			filter.addDefinition(ref.getName());
+	for (RuleType rule : getRules(true)) {
+	    if (rule.isSetCheck()) {
+		logger.info("Getting checks for Rule " + rule.getItemId());
+		for (CheckType check : rule.getCheck()) {
+		    if (check.isSetSystem() && check.getSystem().equals(OVAL_SYSTEM)) {
+			for (CheckContentRefType ref : check.getCheckContentRef()) {
+			    if (ref.isSetName()) {
+				logger.info("Adding check " + ref.getName());
+				filter.addDefinition(ref.getName());
+			    }
+			}
 		    }
 		}
+	    } else {
+		logger.info("No check in Rule " + rule.getItemId());
 	    }
 	}
 	return filter;
     }
 
-    private IVariables createVariables() {
+    /**
+     * Gather all the variable exports into a single OVAL variables structure.
+     */
+    private Variables createVariables() {
 	Variables variables = new Variables(getGenerator());
 
 	//
-	// Iterate through Value nodes and get the values without selectors.
+	// Iterate through all selected Value nodes and get the values without selectors.
 	//
 	Hashtable<String, String> settings = new Hashtable<String, String>();
 	for (ValueType val : xccdf.getBenchmark().getValue()) {
@@ -328,18 +417,39 @@ public class XPERT implements Runnable, IObserver {
 		}
 	    }
 	}
+	for (GroupType group : getSelectedGroups()) {
+	    if (group.isSetValue()) {
+		logger.info("Getting Values for group " + group.getItemId());
+		for (ValueType val : group.getValue()) {
+		    if (val.isSetValue()) {
+			logger.info("Getting values of Value " + val.getItemId());
+			for (SelStringType sel : val.getValue()) {
+			    if (!sel.isSetSelector()) {
+				settings.put(val.getItemId(), sel.getValue());
+			    }
+			}
+		    } else {
+			logger.info("Value " + val.getItemId() + " has no values");
+		    }
+		}
+	    } else {
+		logger.info("Group " + group.getItemId() + " has no values");
+	    }
+	}
 
 	//
-	// Get every export from every rule, and add exported values to the OVAL variables.
+	// Get every export from every selected rule, and add exported values to the OVAL variables.
+	// REMIND (DAS): are multi-valued exports possible?
 	//
-	for (RuleType rule : getRules()) {
+	for (RuleType rule : getRules(true)) {
 	    for (CheckType check : rule.getCheck()) {
-		if (check.getSystem().equals("http://oval.mitre.org/XMLSchema/oval-definitions-5")) {
+		if (check.getSystem().equals(OVAL_SYSTEM)) {
 		    for (CheckExportType export : check.getCheckExport()) {
 			String ovalVariableId = export.getExportName();
 			List<String> values = new Vector<String>();
 			values.add(settings.get(export.getValueId()));
-			variables.setValue(export.getExportName(), values);
+			variables.setValue(ovalVariableId, values);
+			variables.setComment(ovalVariableId, export.getValueId());
 		    }
 		}
 	    }
@@ -348,13 +458,44 @@ public class XPERT implements Runnable, IObserver {
     }
 
     /**
-     * Recursively get all the rules within the XCCDF document.
+     * Recursively get all selected groups within the XCCDF document.
      */
-    private List<RuleType> getRules() {
+    private List<GroupType> getSelectedGroups() {
+	if (groups == null) {
+	    groups = new Vector<GroupType>();
+	    for (SelectableItemType item : xccdf.getBenchmark().getGroupOrRule()) {
+		for (GroupType group : getSelectedGroups(item)) {
+		    groups.add(group);
+		}
+	    }
+	}
+	return groups;
+    }
+
+    /**
+     * Recursively list all selected groups within the SelectableItem.
+     */
+    private List<GroupType> getSelectedGroups(SelectableItemType item) {
+	List<GroupType> groups = new Vector<GroupType>();
+	if (item.isSelected() && item instanceof GroupType) {
+	    groups.add((GroupType)item);
+	    for (SelectableItemType child : ((GroupType)item).getGroupOrRule()) {
+		groups.addAll(getSelectedGroups(child));
+	    }
+	}
+	return groups;
+    }
+
+    /**
+     * Recursively get rules within the XCCDF document.
+     *
+     * @arg selectedOnly if true, only selected rules are returned
+     */
+    private List<RuleType> getRules(boolean selectedOnly) {
 	if (rules == null) {
 	    rules = new Vector<RuleType>();
 	    for (SelectableItemType item : xccdf.getBenchmark().getGroupOrRule()) {
-		for (RuleType rule : getRules(item)) {
+		for (RuleType rule : getRules(item, selectedOnly)) {
 		    rules.add(rule);
 		}
 	    }
@@ -363,15 +504,17 @@ public class XPERT implements Runnable, IObserver {
     }
 
     /**
-     * Recursively list all rules within the SelectableItem.
+     * Recursively list all selected rules within the SelectableItem.
      */
-    private List<RuleType> getRules(SelectableItemType item) {
+    private List<RuleType> getRules(SelectableItemType item, boolean selectedOnly) {
 	List<RuleType> rules = new Vector<RuleType>();
-	if (item instanceof RuleType) {
-	    rules.add((RuleType)item);
-	} else if (item instanceof GroupType) {
-	    for (SelectableItemType child : ((GroupType)item).getGroupOrRule()) {
-		rules.addAll(getRules(child));
+	if (!selectedOnly || item.isSelected()) {
+	    if (item instanceof RuleType) {
+		rules.add((RuleType)item);
+	    } else if (item instanceof GroupType) {
+		for (SelectableItemType child : ((GroupType)item).getGroupOrRule()) {
+		    rules.addAll(getRules(child, selectedOnly));
+		}
 	    }
 	}
 	return rules;

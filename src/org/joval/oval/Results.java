@@ -56,6 +56,7 @@ import oval.schemas.results.core.TestsType;
 import oval.schemas.results.core.TestType;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.oval.IDefinitions;
@@ -144,14 +145,6 @@ public class Results implements IResults {
 	return definitionTable.get(definitionId);
     }
 
-    public ResultEnumeration getDefinitionResult(String definitionId) {
-	DefinitionType definitionType = definitionTable.get(definitionId);
-	if (definitionType == null) {
-	    return null;
-	}
-	return definitionType.getResult();
-    }
-
     // Implement ITransformable
 
     public Source getSource() {
@@ -165,6 +158,14 @@ public class Results implements IResults {
     }
 
     // Implement IResults
+
+    public ResultEnumeration getDefinitionResult(String definitionId) throws NoSuchElementException {
+	DefinitionType definitionType = definitionTable.get(definitionId);
+	if (definitionType == null) {
+	    throw new NoSuchElementException(definitionId);
+	}
+	return definitionType.getResult();
+    }
 
     public void setDirectives(File f) throws OvalException {
 	directives = new Directives(f);
@@ -213,6 +214,10 @@ public class Results implements IResults {
 	} catch (TransformerException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	}
+    }
+
+    public SystemInfoType getSystemInfo() {
+	return getOvalResults().getResults().getSystem().get(0).getOvalSystemCharacteristics().getSystemInfo();
     }
 
     public OvalResults getOvalResults() {

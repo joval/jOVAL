@@ -5,15 +5,18 @@ package org.joval.intf.oval;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.NoSuchElementException;
 
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.results.core.DefinitionType;
 import oval.schemas.results.core.OvalResults;
+import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.xml.ITransformable;
 import org.joval.oval.OvalException;
 
 /**
- * Interface to an OVAL results structure.
+ * Interface to an OVAL results structure, representing (by convention) the results from a single system.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -28,6 +31,16 @@ public interface IResults extends ITransformable {
      * Get the OVAL results, with the system definitions in full or thin format according to the directives.
      */
     OvalResults getOvalResults();
+
+    /**
+     * Get the result of a specific definition, given its ID.
+     */
+    ResultEnumeration getDefinitionResult(String definitionId) throws NoSuchElementException;
+
+    /**
+     * Shortcut for getOvalResults().getResults()..getSystem().get(0).getOvalSystemCharacteristics().getSystemInfo()
+     */
+    SystemInfoType getSystemInfo();
 
     /**
      * Serialize the contents of this IResults to a file.
