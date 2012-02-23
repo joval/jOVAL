@@ -14,6 +14,7 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
@@ -407,11 +408,7 @@ public class Engine implements IEngine {
 	for (ObjectType obj : definitions.getObjects()) {
 	    String objectId = obj.getId();
 	    if (!sc.containsObject(objectId)) {
-		try {
-		    scanObject(new RequestContext(this, obj));
-		} catch (NoSuchElementException e) {
-		    // ignore
-		}
+		scanObject(new RequestContext(this, obj));
 	    }
 	}
 	producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
@@ -421,10 +418,12 @@ public class Engine implements IEngine {
      * Scan an object live using an adapter, including crawling down any encountered Sets.  Items are stored in the
      * system-characteristics as they are collected.
      *
-     * @throws NoSuchElementException if the object could not be scanned because of an error
+     * If for some reason (like an error) no items can be obtained, this method just returns an empty list so processing
+     * can continue.
+     *
      * @throws OvalException if processing should cease for some good reason
      */
-    private Collection<ItemType> scanObject(RequestContext rc) throws NoSuchElementException, OvalException {
+    private Collection<ItemType> scanObject(RequestContext rc) throws OvalException {
 	//
 	// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
 	//
@@ -439,10 +438,13 @@ public class Engine implements IEngine {
 
 	Set s = getObjectSet(obj);
 	if (s == null) {
-	    String err = null;
 	    IAdapter adapter = adapters.get(obj.getClass());
 	    if (adapter == null) {
-		err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
+		MessageType message = JOVALSystem.factories.common.createMessageType();
+		message.setLevel(MessageLevelEnumeration.WARNING);
+		String err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
+		message.setValue(err);
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
 	    } else {
 		try {
 		    Collection<JAXBElement<? extends ItemType>> items = adapter.getItems(rc);
@@ -477,21 +479,26 @@ public class Engine implements IEngine {
 		    }
 		    return unwrapped;
 		} catch (NotCollectableException e) {
-		    err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
+		    MessageType message = JOVALSystem.factories.common.createMessageType();
+		    message.setLevel(MessageLevelEnumeration.WARNING);
+		    String err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
+		    message.setValue(err);
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
+		} catch (Exception e) {
+		    MessageType message = JOVALSystem.factories.common.createMessageType();
+		    message.setLevel(MessageLevelEnumeration.ERROR);
+		    message.setValue(e.getMessage());
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, message);
 		}
 	    }
 
 	    //
-	    // If we've reached this point, there has been an error preventing collection of items, so flag and annotate
-	    // the object accordingly.
+	    // If this point has been reached, some kind of error has prevented collection and a message and the appropriate
+	    // flag have been associated with the object.
 	    //
-	    if (!sc.containsObject(objectId)) {
-		MessageType message = JOVALSystem.factories.common.createMessageType();
-		message.setLevel(MessageLevelEnumeration.WARNING);
-		message.setValue(err);
-		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
-	    }
-	    throw new NoSuchElementException(err);
+	    @SuppressWarnings("unchecked")
+	    Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
+	    return empty;
 	} else {
 	    Collection<ItemType> items = getSetItems(s);
 	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
@@ -532,7 +539,7 @@ public class Engine implements IEngine {
 	    StateType state = definitions.getState(filter.getValue());
 	    for (JAXBElement<? extends ItemType> item : items) {
 		try {
-		    ResultEnumeration result = compare(state, item.getValue());
+		    ResultEnumeration result = compare(state, item.getValue(), new RequestContext(this, null));
 		    switch(filter.getAction()) {
 		      case INCLUDE:
 			if (result == ResultEnumeration.TRUE) {
@@ -567,7 +574,7 @@ public class Engine implements IEngine {
 	    StateType state = definitions.getState(filter.getValue());
 	    for (ItemType item : items) {
 		try {
-		    ResultEnumeration result = compare(state, item);
+		    ResultEnumeration result = compare(state, item, new RequestContext(this, null));
 		    switch(filter.getAction()) {
 		      case INCLUDE:
 			if (result == ResultEnumeration.TRUE) {
@@ -739,13 +746,11 @@ public class Engine implements IEngine {
 	    state = definitions.getState(stateId);
 	}
 
-	for (VariableValueType var : sc.getVariablesByObjectId(objectId)) {
-	    TestedVariableType testedVariable = JOVALSystem.factories.results.createTestedVariableType();
-	    testedVariable.setVariableId(var.getVariableId());
-	    testedVariable.setValue(var.getValue());
-	    testResult.getTestedVariable().add(testedVariable);
-	}
-
+	//
+	// Create all the structures we'll need to store information about the evaluation of the test.
+	//
+	Collection<VariableValueType> variables = new HashSet<VariableValueType>();
+	RequestContext rc = new RequestContext(this, definitions.getObject(objectId), variables);
 	ExistenceData existence = new ExistenceData();
 	CheckData check = new CheckData();
 
@@ -764,7 +769,7 @@ public class Engine implements IEngine {
 		    if (state != null) {
 			ResultEnumeration checkResult = ResultEnumeration.UNKNOWN;
 			try {
-			    checkResult = compare(state, item);
+			    checkResult = compare(state, item, rc);
 			} catch (TestException e) {
 			    logger.warn(JOVALMsg.ERROR_TESTEXCEPTION, testId, e.getMessage());
 			    logger.debug(JOVALMsg.ERROR_EXCEPTION, e);
@@ -807,6 +812,17 @@ public class Engine implements IEngine {
 	  case NOT_COLLECTED:
 	    existence.addStatus(StatusEnumeration.NOT_COLLECTED);
 	    break;
+	}
+
+	//
+	// Add all the tested variables that the TestType has picked up along the way.
+	//
+	variables.addAll(sc.getVariablesByObjectId(objectId));
+	for (VariableValueType var : variables) {
+	    TestedVariableType testedVariable = JOVALSystem.factories.results.createTestedVariableType();
+	    testedVariable.setVariableId(var.getVariableId());
+	    testedVariable.setValue(var.getValue());
+	    testResult.getTestedVariable().add(testedVariable);
 	}
 
 	//
@@ -902,7 +918,7 @@ public class Engine implements IEngine {
 	return criteriaResult;
     }
 
-    private ResultEnumeration compare(StateType state, ItemType item) throws OvalException, TestException {
+    private ResultEnumeration compare(StateType state, ItemType item, RequestContext rc) throws OvalException, TestException {
 	//
 	// As the lowest level analysis operation, this is a good place to check if the engine is being destroyed.
 	//
@@ -921,16 +937,16 @@ public class Engine implements IEngine {
 			Object itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
 			ResultEnumeration result = ResultEnumeration.UNKNOWN;
 			if (itemEntityObj instanceof EntityItemSimpleBaseType || itemEntityObj == null) {
-			    result = compare(stateEntity, (EntityItemSimpleBaseType)itemEntityObj);
+			    result = compare(stateEntity, (EntityItemSimpleBaseType)itemEntityObj, rc);
 			} else if (itemEntityObj instanceof JAXBElement) {
 			    JAXBElement element = (JAXBElement)itemEntityObj;
 			    EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)element.getValue();
-			    result = compare(stateEntity, itemEntity);
+			    result = compare(stateEntity, itemEntity, rc);
 			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
 			    for (Object entityObj : (Collection)itemEntityObj) {
 			        EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)entityObj;
-				cd.addResult(compare(stateEntity, itemEntity));
+				cd.addResult(compare(stateEntity, itemEntity, rc));
 			    }
 			    result = cd.getResult(stateEntity.getEntityCheck());
 			} else {
@@ -946,12 +962,12 @@ public class Engine implements IEngine {
 			Object itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
 			ResultEnumeration result = ResultEnumeration.UNKNOWN;
 			if (itemEntityObj instanceof EntityItemRecordType) {
-			    result = compare(stateEntity, (EntityItemRecordType)itemEntityObj);
+			    result = compare(stateEntity, (EntityItemRecordType)itemEntityObj, rc);
 			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
 			    for (Object entityObj : (Collection)itemEntityObj) {
 				if (entityObj instanceof EntityItemRecordType) {
-				    cd.addResult(compare(stateEntity, (EntityItemRecordType)entityObj));
+				    cd.addResult(compare(stateEntity, (EntityItemRecordType)entityObj, rc));
 				} else {
 				    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
 									entityObj.getClass().getName(), item.getId());
@@ -993,7 +1009,7 @@ public class Engine implements IEngine {
      * See:
      * http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#EntityStateRecordType
      */
-    private ResultEnumeration compare(EntityStateRecordType stateRecord, EntityItemRecordType itemRecord)
+    private ResultEnumeration compare(EntityStateRecordType stateRecord, EntityItemRecordType itemRecord, RequestContext rc)
 	    throws OvalException, TestException {
 
 	ResultEnumeration result = ResultEnumeration.UNKNOWN;
@@ -1012,7 +1028,7 @@ public class Engine implements IEngine {
 	    if (item == null) {
 		return ResultEnumeration.FALSE;
 	    } else {
-		result = compare(state, item);
+		result = compare(state, item, rc);
 		switch(result) {
 		  case TRUE:
 		    break;
@@ -1042,7 +1058,7 @@ public class Engine implements IEngine {
      * Compare a state SimpleBaseType to an item SimpleBaseType.  If the item is null, this method returns false.  That
      * allows callers to simply check if the state is set before invoking the comparison.
      */
-    private ResultEnumeration compare(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item)
+    private ResultEnumeration compare(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item, RequestContext rc)
 		throws TestException, OvalException {
 	if (item == null) {
 	    return ResultEnumeration.NOT_APPLICABLE;
@@ -1080,7 +1096,7 @@ public class Engine implements IEngine {
 	    base.setOperation(state.getOperation());
 	    base.setMask(state.isMask());
 	    try {
-		for (String value : resolve(state.getVarRef(), new RequestContext(this, null))) {
+		for (String value : resolve(state.getVarRef(), rc)) {
 		    base.setValue(value);
 		    cd.addResult(testImpl(base, item));
 		}
@@ -1445,8 +1461,9 @@ public class Engine implements IEngine {
 	    for (Object child : concat.getObjectComponentOrVariableComponentOrLiteralComponent()) {
 		Collection<String> next = resolveInternal(child, list);
 		if (next.size() == 0) {
-//DAS -- is this right?
-		    return new Vector<String>();
+		    @SuppressWarnings("unchecked")
+		    Collection<String> empty = (Collection<String>)Collections.EMPTY_LIST;
+		    return empty;
 		} else if (values.size() == 0) {
 		    values.addAll(next);
 		} else {
@@ -1676,7 +1693,17 @@ public class Engine implements IEngine {
      * The final step in resolving an object reference variable's value is extracting the item field or record from the items
      * associated with that ObjectType, which is the function of this method.
      */
-    private List<String> extractItemData(String objectId, ObjectComponentType oc, Collection list) throws OvalException {
+    private List<String> extractItemData(String objectId, ObjectComponentType oc, Collection list)
+		throws OvalException, NoSuchElementException {
+
+	//
+	// If the ObjectComponentType contains no items, an error is supposed to be reported, hence we throw an exception
+	// complaining that the list is empty. See:
+	// http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#ObjectComponentType
+	//
+	if (list.size() == 0) {
+	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_NO_ITEMS, objectId));
+	}
 	List<String> values = new Vector<String>();
 	for (Object o : list) {
 	    if (o instanceof ItemType) {
