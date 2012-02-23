@@ -436,16 +436,16 @@ public class Engine implements IEngine {
 	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
 	producer.sendNotify(MESSAGE_OBJECT, objectId);
 
-	Set s = getObjectSet(obj);
-	if (s == null) {
-	    IAdapter adapter = adapters.get(obj.getClass());
-	    if (adapter == null) {
-		MessageType message = JOVALSystem.factories.common.createMessageType();
-		message.setLevel(MessageLevelEnumeration.WARNING);
-		String err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
-		message.setValue(err);
-		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
-	    } else {
+	IAdapter adapter = adapters.get(obj.getClass());
+	if (adapter == null) {
+	    MessageType message = JOVALSystem.factories.common.createMessageType();
+	    message.setLevel(MessageLevelEnumeration.WARNING);
+	    String err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
+	    message.setValue(err);
+	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
+	} else {
+	    Set s = getObjectSet(obj);
+	    if (s == null) {
 		try {
 		    Collection<JAXBElement<? extends ItemType>> items = adapter.getItems(rc);
 		    if (items.size() == 0) {
@@ -490,23 +490,23 @@ public class Engine implements IEngine {
 		    message.setValue(e.getMessage());
 		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, message);
 		}
+	    } else {
+		Collection<ItemType> items = getSetItems(s);
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+		for (ItemType item : items) {
+		    sc.relateItem(objectId, item.getId());
+		}
+		return items;
 	    }
-
-	    //
-	    // If this point has been reached, some kind of error has prevented collection and a message and the appropriate
-	    // flag have been associated with the object.
-	    //
-	    @SuppressWarnings("unchecked")
-	    Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
-	    return empty;
-	} else {
-	    Collection<ItemType> items = getSetItems(s);
-	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-	    for (ItemType item : items) {
-		sc.relateItem(objectId, item.getId());
-	    }
-	    return items;
 	}
+
+	//
+	// If this point has been reached, some kind of error has prevented collection and a message and the appropriate
+	// flag have been associated with the object.
+	//
+	@SuppressWarnings("unchecked")
+	Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
+	return empty;
     }
 
     /**
