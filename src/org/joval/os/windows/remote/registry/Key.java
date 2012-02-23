@@ -194,7 +194,7 @@ public class Key implements IKey {
 	Iterator <IValue>i = values();
 	while (i.hasNext()) {
 	    IValue v = i.next();
-	    if (v.getName().equals(name)) {
+	    if (v.getName().equalsIgnoreCase(name)) {
 		return v;
 	    }
 	}
