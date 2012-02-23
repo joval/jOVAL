@@ -35,6 +35,7 @@ import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
+import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -67,59 +68,71 @@ public class UserAdapter implements IAdapter {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	UserObject uObj = (UserObject)rc.getObject();
 	OperationEnumeration op = uObj.getUser().getOperation();
-	String user = (String)uObj.getUser().getValue();
-
+	Collection<String> users = new Vector<String>();
 	try {
-	    switch(op) {
-	      case EQUALS:
-		try {
-		    items.add(makeItem(directory.queryUser(user)));
-		} catch (IllegalArgumentException e) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.WARNING);
-		    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, user);
-		    session.getLogger().warn(s);
-		    msg.setValue(s);
-		    rc.addMessage(msg);
-		}
-		break;
-    
-	      case NOT_EQUAL:
-		for (IUser u : directory.queryAllUsers()) {
-		    if (!directory.getQualifiedNetbiosName(user).equals(u.getNetbiosName())) {
-			items.add(makeItem(u));
+	    if (uObj.getUser().isSetVarRef()) {
+		users = rc.resolve(uObj.getUser().getVarRef());
+	    } else {
+		users.add((String)uObj.getUser().getValue());
+	    }
+
+	    for (String user : users) {
+		switch(op) {
+		  case EQUALS:
+		    try {
+			items.add(makeItem(directory.queryUser(user)));
+		    } catch (IllegalArgumentException e) {
+			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.WARNING);
+			String s = JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, user);
+			session.getLogger().warn(s);
+			msg.setValue(s);
+			rc.addMessage(msg);
 		    }
-		}
-		break;
-    
-	      case PATTERN_MATCH:
-		try {
-		    Pattern p = Pattern.compile(user);
+		    break;
+
+		  case NOT_EQUAL:
 		    for (IUser u : directory.queryAllUsers()) {
-			Matcher m = null;
-			if (directory.isLocal(u.getNetbiosName())) {
-			    m = p.matcher(u.getName());
-			} else {
-			    m = p.matcher(u.getNetbiosName());
-			}
-			if (m.find()) {
+			if (!directory.getQualifiedNetbiosName(user).equals(u.getNetbiosName())) {
 			    items.add(makeItem(u));
 			}
 		    }
-		} catch (PatternSyntaxException e) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-		    rc.addMessage(msg);
-		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    break;
+
+		  case PATTERN_MATCH:
+		    try {
+			Pattern p = Pattern.compile(user);
+			for (IUser u : directory.queryAllUsers()) {
+			    Matcher m = null;
+			    if (directory.isLocal(u.getNetbiosName())) {
+				m = p.matcher(u.getName());
+			    } else {
+				m = p.matcher(u.getNetbiosName());
+			    }
+			    if (m.find()) {
+				items.add(makeItem(u));
+			    }
+			}
+		    } catch (PatternSyntaxException e) {
+			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.ERROR);
+			msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+			rc.addMessage(msg);
+			session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    }
+		    break;
+	
+		  default:
+		    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 		}
-		break;
-    
-	      default:
-		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	    }
 	} catch (NoSuchElementException e) {
 	    // No match.
+	} catch (ResolveException e) {
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
 	} catch (WmiException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
