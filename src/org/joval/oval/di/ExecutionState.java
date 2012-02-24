@@ -168,6 +168,8 @@ public class ExecutionState {
      * @returns true if successful, false if there is a problem with the arguments.
      */
     boolean processArguments(String[] argv) {
+	String pluginName = DEFAULT_PLUGIN;
+
 	for (int i=0; i < argv.length; i++) {
 	    if (argv[i].equals("-h")) {
 		printHelp = true;
@@ -257,7 +259,7 @@ public class ExecutionState {
 		    schematronResultsXform = new File(argv[++i]);
 		}
 	    } else if (argv[i].equals("-plugin")) {
-		loadPlugin(argv[++i]);
+		pluginName = argv[++i];
 	    } else if (argv[i].equals("-config")) {
 		pluginConfig = new Properties();
 		try {
@@ -274,8 +276,23 @@ public class ExecutionState {
 		Main.print(Main.getMessage("WARNING_ARG", argv[i]));
 	    }
 	}
-	if (container == null && inputFile == null) {
-	    loadPlugin(DEFAULT_PLUGIN);
+
+	Main.configureLogging(logFile, logLevel);
+
+	try {
+            File configDir = new File("config");
+            if (configDir.isDirectory()) {
+                File configFile = new File(configDir, "jovaldi.ini");
+                if (configFile.isFile()) {
+                    JOVALSystem.addConfiguration(configFile);
+                }
+            }
+	} catch (IOException e) {
+	    Main.logException(e);
+	}
+
+	if (inputFile == null) {
+	    loadPlugin(pluginName);
 	}
 	return validState();
     }

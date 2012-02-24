@@ -33,14 +33,14 @@ import org.joval.intf.util.IProperty;
 public abstract class AbstractBaseSession implements IBaseSession {
     protected File wsdir = null;
     protected LocLogger logger;
-    protected boolean debug = false;
+    protected boolean debug;
     protected InternalProperties internalProps;
 
     protected AbstractBaseSession() {
-	this.wsdir = wsdir;
 	logger = JOVALSystem.getLogger();
 	internalProps = new InternalProperties();
 	JOVALSystem.configureSession(this);
+	debug = internalProps.getBooleanProperty(PROP_DEBUG);
     }
 
     /**

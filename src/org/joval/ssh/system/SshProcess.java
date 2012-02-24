@@ -32,9 +32,9 @@ import org.joval.util.JOVALSystem;
 class SshProcess implements IProcess {
     private ChannelExec ce;
     private String command;
-    private boolean debug=false, interactive = false;
+    private boolean debug;
     private StreamLogger debugIn, debugErr;
-    private boolean dirty = true, running = false;
+    private boolean interactive=false, dirty = true, running = false;
     private File wsdir;
     private LocLogger logger;
     private int pid;

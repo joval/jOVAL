@@ -124,6 +124,29 @@ public class Main implements IObserver {
 	}
     }
 
+    static void configureLogging(File logfile, Level logLevel) {
+	try {
+	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	    Logger jSysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	    Handler logHandler = new FileHandler(logfile.getPath(), false);
+	    logHandler.setFormatter(new LogfileFormatter());
+	    logHandler.setLevel(logLevel);
+	    logger.setLevel(logLevel);
+	    logger.addHandler(logHandler);
+	    jSysLogger.setLevel(state.logLevel);
+	    jSysLogger.addHandler(logHandler);
+	    if (state.printLogs) {
+		Handler consoleHandler = new ConsoleHandler();
+		consoleHandler.setFormatter(new ConsoleFormatter());
+		consoleHandler.setLevel(logLevel);
+		logger.addHandler(consoleHandler);
+		jSysLogger.addHandler(consoleHandler);
+	    }
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+    }
+
     // Internal
 
     /**
@@ -341,34 +364,6 @@ public class Main implements IObserver {
     private static int ERR	= 1;
 
     private Main() {
-	try {
-	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    Logger jSysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
-	    Handler logHandler = new FileHandler(state.logFile.toString(), false);
-	    logHandler.setFormatter(new LogfileFormatter());
-	    logHandler.setLevel(state.logLevel);
-	    logger.setLevel(state.logLevel);
-	    logger.addHandler(logHandler);
-	    jSysLogger.setLevel(state.logLevel);
-	    jSysLogger.addHandler(logHandler);
-	    if (state.printLogs) {
-		Handler consoleHandler = new ConsoleHandler();
-		consoleHandler.setFormatter(new ConsoleFormatter());
-		consoleHandler.setLevel(state.logLevel);
-		logger.addHandler(consoleHandler);
-		jSysLogger.addHandler(consoleHandler);
-	    }
-
-	    File configDir = new File("config");
-	    if (configDir.isDirectory()) {
-		File configFile = new File(configDir, "jovaldi.ini");
-		if (configFile.isFile()) {
-		    JOVALSystem.addConfiguration(configFile);
-		}
-	    }
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
     }
 
     /**
@@ -541,7 +536,7 @@ public class Main implements IObserver {
 	}
     }
 
-    private class ConsoleFormatter extends Formatter {
+    private static class ConsoleFormatter extends Formatter {
 	public String format(LogRecord record) {
 	    StringBuffer line = new StringBuffer(record.getMessage());
 	    line.append(LF);
@@ -549,7 +544,7 @@ public class Main implements IObserver {
 	}
     }
 
-    private class LogfileFormatter extends Formatter {
+    private static class LogfileFormatter extends Formatter {
 	public String format(LogRecord record) {
 	    StringBuffer line = new StringBuffer(record.getMessage());
 	    line.append(LF);

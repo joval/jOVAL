@@ -120,7 +120,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
     public IProcess createProcess(String command) throws Exception {
 	if (connect()) {
 	    ChannelExec ce = session.openChannel(ChannelType.EXEC);
-	    return new SshProcess(ce, command, getDebug(), wsdir, pid++, logger);
+	    return new SshProcess(ce, command, debug, wsdir, pid++, logger);
 	} else {
 	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
 	}
@@ -217,10 +217,6 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 
     public SystemInfoType getSystemInfo() {
 	return null;
-    }
-
-    public boolean getDebug() {
-	return internalProps.getBooleanProperty(PROP_DEBUG);
     }
 
     // Implement UserInfo

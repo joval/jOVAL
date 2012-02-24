@@ -4,9 +4,12 @@
 package org.joval.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.StringTokenizer;
 import java.util.TimerTask;
 
 import org.slf4j.cal10n.LocLogger;
@@ -18,6 +21,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.StreamLogger;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -87,12 +91,22 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 
     // Private
 
+    private static final char NULL = (char)0;
+    private static final char SQ = '\'';
+    private static final char DQ = '\"';
+    private static final char ESC = '\\';
+
+    private int pid = 1;
+
     class JavaProcess implements IProcess {
 	String command;
 	Process p;
+	int pid;
+	StreamLogger debugIn, debugErr;
 
 	JavaProcess(String command) {
 	    this.command = command;
+	    this.pid = AbstractSession.this.pid++;
 	}
 
 	// Implement IProcess
@@ -104,16 +118,105 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	public void setInteractive(boolean interactive) {
 	}
 
+	/**
+	 * Complex commands may contain combinations of quotes and escapes.  Since commands run locally
+	 * are not interpreted by a shell, and since Java's parsing of a command-line String is overly
+	 * simplistic, we process the command in this method to break it down properly into its constituent
+	 * tokens.
+	 */
 	public void start() throws Exception {
-	    p = Runtime.getRuntime().exec(command, null, cwd);
+	    ArrayList<String> args = new ArrayList<String>();
+	    int ptr=0;
+	    int len = command.length();
+	    char context = NULL, last = NULL;
+	    boolean escaped = false;
+	    StringBuffer arg = new StringBuffer();
+	    while (ptr < len) {
+		char ch = command.charAt(ptr++);
+		switch(ch) {
+		  case SQ:
+		  case DQ:
+		    if (escaped) {
+			arg.append(ch);
+		    } else if (context == NULL) {
+			context = ch;
+		    } else if (context == ch) {
+			args.add(arg.toString());
+			arg = new StringBuffer();
+			context = NULL;
+		    } else {
+			arg.append(ch);
+		    }
+		    break;
+
+		  case ' ':
+		  case '\t':
+		  case '\n':
+		    if (context != NULL) {
+			arg.append(ch);
+		    } else if (arg.length() > 0) {
+			args.add(arg.toString());
+			arg = new StringBuffer();
+		    }
+		    break;
+
+		  default:
+		    arg.append(ch);
+		    break;
+		}
+
+		// determine whether the next character is escaped
+		if (ch == ESC) {
+		    if (last == ESC) {
+			escaped = !escaped;
+		    } else {
+			escaped = true;
+		    }
+		} else {
+		    escaped = false;
+		}
+		last = ch;
+	    }
+	    if (arg.length() > 0) {
+		args.add(arg.toString());
+	    }
+	    String[] argv = new String[args.size()];
+	    argv = args.toArray(argv);
+	    p = Runtime.getRuntime().exec(argv, null, cwd);
 	}
 
-	public InputStream getInputStream() {
-	    return p.getInputStream();
+	public InputStream getInputStream() throws IOException {
+	    if (debug) {
+		if (debugIn == null) {
+		    File f = null;
+		    if (wsdir == null) {
+			f = new File("out." + pid + ".log");
+		    } else {
+			f = new File(wsdir, "out." + pid + ".log");
+		    }
+		    debugIn = new StreamLogger(command, p.getInputStream(), f, logger);
+		}
+		return debugIn;
+	    } else {
+		return p.getInputStream();
+	    }
 	}
 
-	public InputStream getErrorStream() {
-	    return p.getErrorStream();
+	public InputStream getErrorStream() throws IOException {
+	    if (debug) {
+		if (debugErr == null) {
+		    File f = null;
+		    if (wsdir == null) {
+			f = new File("err." + pid + ".log");
+		    } else {
+			f = new File(wsdir, "err." + pid + ".log");
+		    }
+		    debugErr = new StreamLogger(command, p.getErrorStream(), f, logger);
+		}
+		return debugErr;
+	    } else {
+		return p.getErrorStream();
+	    }
 	}
 
 	public OutputStream getOutputStream() {

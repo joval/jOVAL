@@ -25,12 +25,17 @@ public abstract class BaseUnixSession extends AbstractSession implements IUnixSe
 
     @Override
     protected String getOverrideKey(String key) {
-	switch(flavor) {
-	  case UNKNOWN:
+	if (flavor == null) {
+	    // during initialization of the super-class
 	    return null;
+	} else {
+	    switch(flavor) {
+	      case UNKNOWN:
+		return null;
 
-	  default:
-	    return new StringBuffer(flavor.value()).append(".").append(key).toString();
+	      default:
+		return new StringBuffer(flavor.value()).append(".").append(key).toString();
+	    }
 	}
     }
 
