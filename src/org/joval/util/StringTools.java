@@ -79,7 +79,8 @@ public class StringTools {
     public static char[] toASCIICharArray(byte[] buff) throws IllegalArgumentException {
 	char[] ca = new char[buff.length];
 	for (int i=0; i < buff.length; i++) {
-	    if (buff[i] <= 0x20 && buff[i] <= 0x7E) { // printable characters only
+	    int ch = buff[i]&0xFF;
+	    if ((0x20 <= ch && ch <= 0x7E) || ch == 0x0A || ch == 0x0D) { // printable characters only
 		ca[i] = (char)buff[i];
 	    } else {
 		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_ASCII_CONVERSION, i, LittleEndian.toHexString(buff[i]));
