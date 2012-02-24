@@ -52,9 +52,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     // Implement IWindowsSession extensions
 
     public IDirectory getDirectory() {
-	if (directory == null) {
-	    directory = new Directory(this);
-	}
 	return directory;
     }
 
@@ -131,7 +128,10 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	cwd = new File(env.expand("%SystemRoot%"));
 	wmi = new WmiProvider(this);
 	if (wmi.register()) {
-	    directory = new Directory(this);
+	    if (directory == null) {
+		directory = new Directory(this);
+	    }
+	    directory.setWmiProvider(wmi);
 	    info.getSystemInfo();
 	    return true;
 	} else {

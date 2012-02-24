@@ -17,6 +17,7 @@ import org.jinterop.winreg.JIPolicyHandle;
 
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IValue;
+import org.joval.os.windows.registry.RegistryException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
@@ -338,6 +339,7 @@ public class Key implements IKey {
 								      new Integer(index), Key.this.toString()));
 		}
 	    } catch (JIException e) {
+//DAS
 		throw new NoSuchElementException(new Integer(index).toString());
 	    }
 	}
@@ -381,8 +383,12 @@ public class Key implements IKey {
 		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_ENUMVAL,
 								      new Integer(index), Key.this.toString()));
 		}
-	    } catch (IllegalArgumentException e) {
-		throw new NoSuchElementException(e.getMessage());
+	    } catch (RegistryException e) {
+		//
+		// Just skip the bad value...
+		//
+		registry.getLogger().warn(e.getMessage());
+		return next();
 	    }
 	}
 

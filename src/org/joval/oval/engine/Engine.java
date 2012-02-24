@@ -485,6 +485,10 @@ public class Engine implements IEngine {
 		    message.setValue(err);
 		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
 		} catch (Exception e) {
+		    //
+		    // Handle an uncaught, unexpected exception emanating from the adapter.
+		    //
+		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    MessageType message = JOVALSystem.factories.common.createMessageType();
 		    message.setLevel(MessageLevelEnumeration.ERROR);
 		    message.setValue(e.getMessage());

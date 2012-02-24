@@ -45,7 +45,9 @@ import org.joval.os.windows.registry.DwordValue;
 import org.joval.os.windows.registry.ExpandStringValue;
 import org.joval.os.windows.registry.LicenseData;
 import org.joval.os.windows.registry.MultiStringValue;
+import org.joval.os.windows.registry.NoneValue;
 import org.joval.os.windows.registry.QwordValue;
+import org.joval.os.windows.registry.RegistryException;
 import org.joval.os.windows.registry.StringValue;
 import org.joval.os.windows.registry.Value;
 import org.joval.os.windows.system.Environment;
@@ -294,29 +296,26 @@ public class Registry extends BaseRegistry {
 	}
     }
 
-    synchronized Value createValue(Key key, String name) throws IllegalArgumentException, NoSuchElementException {
+    synchronized Value createValue(Key key, String name) throws RegistryException {
 	Value val = null;
 
 	int len = BUFFER_LEN;
 	Object[] oa = null;
 	boolean retry = false;
-
 	do {
 	    try {
 		oa = winreg.winreg_QueryValue(key.handle, name, len);
 		retry = false;
 	    } catch (JIException e) {
 		switch(e.getErrorCode()) {
-		  case JIErrorCodes.ERROR_NO_MORE_ITEMS:
-		    throw new NoSuchElementException(e.getMessage());
-
 		  case 0x000000EA: // This code appears to mean "insufficient buffer"
 		    retry = true;
 		    len += len;
 		    break;
 
 		  default:
-		    throw new RuntimeException(e);
+		    log.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    throw new RegistryException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_VALUE, key.toString(), name));
 		}
 	    }
 	} while (retry);
@@ -370,11 +369,14 @@ public class Registry extends BaseRegistry {
 		break;
 
 	      case IJIWinReg.REG_NONE:
+		val = new NoneValue(key, name);
+		break;
+
 	      default:
-		throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_TYPE, type));
+		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_TYPE, key.toString(), name, type));
 	    }
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_QUERYVAL, new Integer(oa.length)));
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_QUERYVAL, new Integer(oa.length)));
 	}
 	log.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, val.toString());
 	return val;
@@ -528,7 +530,8 @@ public class Registry extends BaseRegistry {
 		IKey key = fetchKey(HKLM, WindowsSystemInfo.COMPUTERNAME_KEY);
 		IValue val = fetchValue(key, WindowsSystemInfo.COMPUTERNAME_VAL);
 	    } catch (NoSuchElementException e) {
-		log.getLogger().warn(JOVALMsg.ERROR_WINREG_HEARTBEAT, JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_KEY_MISSING, e.getMessage()));
+		String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_KEY_MISSING, e.getMessage());
+		log.getLogger().warn(JOVALMsg.ERROR_WINREG_HEARTBEAT, reason);
 	    } catch (Exception e) {
 		log.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }

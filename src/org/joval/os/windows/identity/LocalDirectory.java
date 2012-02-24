@@ -60,9 +60,8 @@ class LocalDirectory implements ILoggable {
     private boolean preloadedUsers = false;
     private boolean preloadedGroups = false;
 
-    LocalDirectory(String hostname, IWmiProvider wmi, LocLogger logger) {
+    LocalDirectory(String hostname, LocLogger logger) {
 	this.hostname = hostname;
-	this.wmi = wmi;
 	this.logger = logger;
 	usersByNetbiosName = new Hashtable<String, IUser>();
 	usersBySid = new Hashtable<String, IUser>();
@@ -94,6 +93,10 @@ class LocalDirectory implements ILoggable {
 	builtinGroups.add("Replicator".toUpperCase());
 	builtinGroups.add("Server Operators".toUpperCase());
 	builtinGroups.add("Users".toUpperCase());
+    }
+
+    void setWmiProvider(IWmiProvider wmi) {
+	this.wmi = wmi;
     }
 
     IUser queryUserBySid(String sid) throws NoSuchElementException, WmiException {

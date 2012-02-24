@@ -32,6 +32,7 @@ SHARED=\
 	org.joval.intf.windows.registry.IDwordValue			\
 	org.joval.intf.windows.registry.IExpandStringValue		\
 	org.joval.intf.windows.registry.IMultiStringValue		\
+	org.joval.intf.windows.registry.INoneValue			\
 	org.joval.intf.windows.registry.IQwordValue			\
 	org.joval.intf.windows.registry.IStringValue			\
 	org.joval.intf.windows.registry.IValue				\
@@ -90,6 +91,7 @@ SHARED=\
 	org.joval.os.windows.registry.ExpandStringValue			\
 	org.joval.os.windows.registry.LicenseData			\
 	org.joval.os.windows.registry.MultiStringValue			\
+	org.joval.os.windows.registry.NoneValue				\
 	org.joval.os.windows.registry.QwordValue			\
 	org.joval.os.windows.registry.StringValue			\
 	org.joval.os.windows.registry.Value				\

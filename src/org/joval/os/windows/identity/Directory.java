@@ -48,9 +48,14 @@ public class Directory implements IDirectory {
     public Directory(IWindowsSession session) {
 	this.session = session;
 	logger = session.getLogger();
-	IWmiProvider wmi = session.getWmiProvider();
-	ad = new ActiveDirectory(wmi, logger);
-	local = new LocalDirectory(session.getSystemInfo().getPrimaryHostName(), wmi, logger);
+	ad = new ActiveDirectory(logger);
+	local = new LocalDirectory(session.getSystemInfo().getPrimaryHostName(), logger);
+	setWmiProvider(session.getWmiProvider());
+    }
+
+    public void setWmiProvider(IWmiProvider wmi) {
+	ad.setWmiProvider(wmi);
+	local.setWmiProvider(wmi);
     }
 
     // Implement ILoggable
