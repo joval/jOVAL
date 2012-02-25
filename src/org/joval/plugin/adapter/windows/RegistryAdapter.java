@@ -417,12 +417,18 @@ public class RegistryAdapter implements IAdapter {
 		break;
 	      }
 
+	      case IValue.REG_NONE:
+		typeType.setValue("reg_none");
+		break;
+
 	      default:
 		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_VALUETOSTR,
 									 key.toString(), name, val.getClass().getName()));
 	    }
-	    item.getValue().addAll(values);
 	    item.setType(typeType);
+	    if (values.size() > 0) {
+		item.getValue().addAll(values);
+	    }
 	}
 
 	item.setStatus(StatusEnumeration.EXISTS);

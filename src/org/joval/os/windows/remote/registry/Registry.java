@@ -296,7 +296,7 @@ public class Registry extends BaseRegistry {
 	}
     }
 
-    synchronized Value createValue(Key key, String name) throws RegistryException {
+    synchronized Value createValue(Key key, String name) throws NoSuchElementException, RegistryException {
 	Value val = null;
 
 	int len = BUFFER_LEN;
@@ -308,7 +308,10 @@ public class Registry extends BaseRegistry {
 		retry = false;
 	    } catch (JIException e) {
 		switch(e.getErrorCode()) {
-		  case 0x000000EA: // This code appears to mean "insufficient buffer"
+		  case 0x02: // ERROR_FILE_NOT_FOUND
+		    throw new NoSuchElementException(key.getPath() + "!" + name);
+
+		  case 0xEA: // ERROR_MORE_DATA
 		    retry = true;
 		    len += len;
 		    break;

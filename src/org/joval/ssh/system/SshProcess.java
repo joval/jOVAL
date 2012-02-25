@@ -109,11 +109,8 @@ class SshProcess implements IProcess {
 	if (millis > 0) {
 	    end = System.currentTimeMillis() + millis;
 	}
-	while (!ce.isEOF() && System.currentTimeMillis() < end) {
+	while (isRunning() && System.currentTimeMillis() < end) {
 	    Thread.sleep(Math.min(end - System.currentTimeMillis(), 250));
-	}
-	if (ce.isEOF()) {
-	    cleanup();
 	}
     }
 
