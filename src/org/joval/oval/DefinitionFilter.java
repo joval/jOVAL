@@ -95,8 +95,12 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
 
     public EvaluationDefinitionIds getEvaluationDefinitionIds() {
 	EvaluationDefinitionIds ids = JOVALSystem.factories.evaluation.createEvaluationDefinitionIds();
-	for (String id : definitionIDs) {
-	    ids.getDefinition().add(id);
+	if (definitionIDs == null) {
+	    ids.unsetDefinition();
+	} else {
+	    for (String id : definitionIDs) {
+		ids.getDefinition().add(id);
+	    }
 	}
 	return ids;
     }

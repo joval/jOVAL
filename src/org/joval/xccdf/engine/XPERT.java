@@ -9,9 +9,11 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
@@ -38,7 +40,9 @@ import xccdf.schemas.core.CheckType;
 import xccdf.schemas.core.CheckExportType;
 import xccdf.schemas.core.GroupType;
 import xccdf.schemas.core.ObjectFactory;
+import xccdf.schemas.core.ProfileType;
 import xccdf.schemas.core.ProfileSetValueType;
+import xccdf.schemas.core.ProfileSelectType;
 import xccdf.schemas.core.RuleResultType;
 import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.ResultEnumType;
@@ -62,6 +66,7 @@ import org.joval.oval.di.RemoteContainer;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
+import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
 
@@ -148,35 +153,52 @@ public class XPERT implements Runnable, IObserver {
 	    logger = LogFormatter.createDuplex(new File(ws, "xpert.log"), Level.INFO);
 	    logger.info("Start time: " + new Date().toString());
 
-	    File f = null;
-	    RemoteContainer container = null;
-	    if (argv.length > 0) {
-		f = new File(argv[0]);
-		File configFile = null;
-		if (argv.length > 2 && argv[1].equals("-config")) {
-		    configFile = new File(argv[2]);
-		} else {
-		    configFile = new File("config.properties");
-		}
-		if (configFile.isFile()) {
-		    Properties config = new Properties();
-		    try {
-			config.load(new FileInputStream(configFile));
-			container = new RemoteContainer();
-			container.setDataDirectory(JOVALSystem.getDataDirectory());
-			container.configure(config);
-		    } catch (Exception e) {
-			logger.severe(LogFormatter.toString(e));
-			container = null;
-		    }
+	    String configFileName = "config.properties";
+	    String profileName = null;
+	    String xccdfBaseName = null;
+
+	    for (int i=0; i < argv.length; i++) {
+		if (argv[i].equals("-h")) {
+		    printHelp();
+		    System.exit(0);
+		} else if (i == (argv.length - 1)) { // last arg (but not -h)
+		    xccdfBaseName = argv[i];
+		} else if (argv[i].equals("-config")) {
+		    configFileName = argv[++i];
+		} else if (argv[i].equals("-profile")) {
+		    profileName = argv[++i];
 		}
 	    }
 
-	    if (f == null || container == null) {
+	    RemoteContainer container = null;
+	    File configFile = new File(configFileName);
+	    if (configFile.isFile()) {
+		Properties config = new Properties();
+		try {
+		    config.load(new FileInputStream(configFile));
+		    container = new RemoteContainer();
+		    container.setDataDirectory(JOVALSystem.getDataDirectory());
+		    container.configure(config);
+		} catch (Exception e) {
+		    logger.severe(LogFormatter.toString(e));
+		    container = null;
+		}
+	    }
+	    if (xccdfBaseName == null) {
+		logger.warning("No XCCDF file was specified");
+		printHelp();
+	    } else if (container == null) {
+		logger.warning("Problem loading the plugin -- check that the configuration is valid");
 		printHelp();
 	    } else {
-		logger.info("Loading " + f.getPath());
-		XPERT engine = new XPERT(new XccdfBundle(f), container.getPlugin());
+		logger.info("Loading " + xccdfBaseName);
+		XccdfBundle xccdf = new XccdfBundle(new File(xccdfBaseName));
+
+		//
+		// Load the selected profile
+		//
+		Profile profile = new Profile(xccdf, profileName);
+		XPERT engine = new XPERT(xccdf, profile, container.getPlugin());
 		engine.run();
 		exitCode = 0;
 	    }
@@ -189,6 +211,8 @@ public class XPERT implements Runnable, IObserver {
 
     private XccdfBundle xccdf;
     private IEngine engine;
+    private Collection<String> platforms;
+    private Profile profile;
     private List<RuleType> rules = null;
     private List<GroupType> groups = null;
     private String phase = null;
@@ -196,8 +220,9 @@ public class XPERT implements Runnable, IObserver {
     /**
      * Create an XCCDF Processing Engine and Report Tool using the specified XCCDF document bundle and jOVAL plugin.
      */
-    public XPERT(XccdfBundle xccdf, IPlugin plugin) {
+    public XPERT(XccdfBundle xccdf, Profile profile, IPlugin plugin) {
 	this.xccdf = xccdf;
+	this.profile = profile;
 	engine = JOVALSystem.createEngine(plugin);
 	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
     }
@@ -307,7 +332,7 @@ public class XPERT implements Runnable, IObserver {
 	    //
 	    // Iterate through the rules and record the results, save and finish
 	    //
-	    List<RuleType> rules = getRules(false);
+	    List<RuleType> rules = listAllRules();
 	    for (RuleType rule : rules) {
 		String ruleId = rule.getItemId();
 
@@ -379,8 +404,8 @@ public class XPERT implements Runnable, IObserver {
 	// Create a DefinitionFilter containing all the OVAL definitions corresponding to the CPE platforms.
 	//
 	DefinitionFilter filter = new DefinitionFilter();
-	for (URIidrefType platform : xccdf.getBenchmark().getPlatform()) {
-	    filter.addDefinition(xccdf.getDictionary().getOvalDefinition(platform.getIdref()));
+	for (String defId : profile.getPlatformDefinitionIds()) {
+	    filter.addDefinition(defId);
 	}
 
 	//
@@ -417,7 +442,7 @@ public class XPERT implements Runnable, IObserver {
 	//
 	// Get every check from every selected rule, and add the names to the filter.
 	//
-	for (RuleType rule : getRules(true)) {
+	for (RuleType rule : profile.getSelectedRules()) {
 	    if (rule.isSetCheck()) {
 		logger.info("Getting checks for Rule " + rule.getItemId());
 		for (CheckType check : rule.getCheck()) {
@@ -444,41 +469,11 @@ public class XPERT implements Runnable, IObserver {
 	Variables variables = new Variables(getGenerator());
 
 	//
-	// Iterate through all selected Value nodes and get the values without selectors.
-	//
-	Hashtable<String, String> settings = new Hashtable<String, String>();
-	for (ValueType val : xccdf.getBenchmark().getValue()) {
-	    for (SelStringType sel : val.getValue()) {
-		if (!sel.isSetSelector()) {
-		    settings.put(val.getItemId(), sel.getValue());
-		}
-	    }
-	}
-	for (GroupType group : getSelectedGroups()) {
-	    if (group.isSetValue()) {
-		logger.info("Getting Values for group " + group.getItemId());
-		for (ValueType val : group.getValue()) {
-		    if (val.isSetValue()) {
-			logger.info("Getting values of Value " + val.getItemId());
-			for (SelStringType sel : val.getValue()) {
-			    if (!sel.isSetSelector()) {
-				settings.put(val.getItemId(), sel.getValue());
-			    }
-			}
-		    } else {
-			logger.info("Value " + val.getItemId() + " has no values");
-		    }
-		}
-	    } else {
-		logger.info("Group " + group.getItemId() + " has no values");
-	    }
-	}
-
-	//
 	// Get every export from every selected rule, and add exported values to the OVAL variables.
 	// REMIND (DAS): are multi-valued exports possible?
 	//
-	for (RuleType rule : getRules(true)) {
+	Hashtable<String, String> settings = profile.getValues();
+	for (RuleType rule : profile.getSelectedRules()) {
 	    for (CheckType check : rule.getCheck()) {
 		if (check.getSystem().equals(OVAL_SYSTEM)) {
 		    for (CheckExportType export : check.getCheckExport()) {
@@ -495,47 +490,12 @@ public class XPERT implements Runnable, IObserver {
     }
 
     /**
-     * Recursively get all selected groups within the XCCDF document.
+     * Recursively get all rules within the XCCDF document.
      */
-    private List<GroupType> getSelectedGroups() {
-	if (groups == null) {
-	    groups = new Vector<GroupType>();
-	    for (SelectableItemType item : xccdf.getBenchmark().getGroupOrRule()) {
-		for (GroupType group : getSelectedGroups(item)) {
-		    groups.add(group);
-		}
-	    }
-	}
-	return groups;
-    }
-
-    /**
-     * Recursively list all selected groups within the SelectableItem.
-     */
-    private List<GroupType> getSelectedGroups(SelectableItemType item) {
-	List<GroupType> groups = new Vector<GroupType>();
-	if (item.isSelected() && item instanceof GroupType) {
-	    groups.add((GroupType)item);
-	    for (SelectableItemType child : ((GroupType)item).getGroupOrRule()) {
-		groups.addAll(getSelectedGroups(child));
-	    }
-	}
-	return groups;
-    }
-
-    /**
-     * Recursively get rules within the XCCDF document.
-     *
-     * @arg selectedOnly if true, only selected rules are returned
-     */
-    private List<RuleType> getRules(boolean selectedOnly) {
-	if (rules == null) {
-	    rules = new Vector<RuleType>();
-	    for (SelectableItemType item : xccdf.getBenchmark().getGroupOrRule()) {
-		for (RuleType rule : getRules(item, selectedOnly)) {
-		    rules.add(rule);
-		}
-	    }
+    private List<RuleType> listAllRules() {
+	List<RuleType> rules = new Vector<RuleType>();
+	for (SelectableItemType item : xccdf.getBenchmark().getGroupOrRule()) {
+	    rules.addAll(getRules(item));
 	}
 	return rules;
     }
@@ -543,15 +503,13 @@ public class XPERT implements Runnable, IObserver {
     /**
      * Recursively list all selected rules within the SelectableItem.
      */
-    private List<RuleType> getRules(SelectableItemType item, boolean selectedOnly) {
+    private List<RuleType> getRules(SelectableItemType item) {
 	List<RuleType> rules = new Vector<RuleType>();
-	if (!selectedOnly || item.isSelected()) {
-	    if (item instanceof RuleType) {
-		rules.add((RuleType)item);
-	    } else if (item instanceof GroupType) {
-		for (SelectableItemType child : ((GroupType)item).getGroupOrRule()) {
-		    rules.addAll(getRules(child, selectedOnly));
-		}
+	if (item instanceof RuleType) {
+	    rules.add((RuleType)item);
+	} else if (item instanceof GroupType) {
+	    for (SelectableItemType child : ((GroupType)item).getGroupOrRule()) {
+		rules.addAll(getRules(child));
 	    }
 	}
 	return rules;

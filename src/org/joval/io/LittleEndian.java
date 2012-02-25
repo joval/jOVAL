@@ -103,7 +103,7 @@ public class LittleEndian {
 
     /**
      * Read a signed 4-byte int (AKA DWORD).
-     /
+     */
     public static final int readInt(InputStream in) throws IOException {
 	byte[] buff = new byte[4];
 	StreamTool.readFully(in, buff);

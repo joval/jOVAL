@@ -92,7 +92,7 @@ public class Dictionary {
 	return list;
     }
 
-    public String getOvalDefinition(String cpeName) {
+    public String getOvalDefinitionId(String cpeName) {
 	return ovalMapping.get(cpeName);
     }
 }
