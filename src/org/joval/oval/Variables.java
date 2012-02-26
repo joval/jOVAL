@@ -102,6 +102,17 @@ public class Variables implements IVariables {
 	this.generator = generator;
     }
 
+    public void addValue(String id, String value) {
+	List<String> values = variables.get(id);
+	if (values == null) {
+	    values = new Vector<String>();
+	    variables.put(id, values);
+	}
+	if (!values.contains(value)) {
+	    values.add(value);
+	}
+    }
+
     public void setValue(String id, List<String> value) {
 	variables.put(id, value);
     }

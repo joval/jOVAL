@@ -35,20 +35,30 @@ public class Profile {
     private HashSet<String> platforms;
     private Hashtable<String, String> values = null;
 
+    /**
+     * Create an XCCDF profile. If name == null, then defaults are selected. If there is no profile with the given name,
+     * a NoSuchElementException is thrown.
+     */
     public Profile(XccdfBundle xccdf, String name) throws NoSuchElementException {
 	this.xccdf = xccdf;
-
+	this.name = name;
 	values = new Hashtable<String, String>();
 	rules = new HashSet<RuleType>();
+
+	//
+	// Set Benchmark-wide platforms
+	//
 	platforms = new HashSet<String>();
 	for (URIidrefType platform : xccdf.getBenchmark().getPlatform()) {
 	    platforms.add(xccdf.getDictionary().getOvalDefinitionId(platform.getIdref()));
 	}
 
+	//
+	// If a named profile is specified, then gather all the selections and values associated with it.
+	//
 	Hashtable<String, Boolean> selections = null;
 	Hashtable<String, String> refinements = null;
 	if (name != null) {
-	    this.name = name;
 	    ProfileType prof = null;
 	    for (ProfileType pt : xccdf.getBenchmark().getProfile()) {
 		if (name.equals(pt.getProfileId())) {
@@ -84,6 +94,9 @@ public class Profile {
 	    }
 	}
 
+	//
+	// Discover all the selected rules and values
+	//
 	HashSet<ValueType> vals = new HashSet<ValueType>();
 	vals.addAll(xccdf.getBenchmark().getValue());
 	for (SelectableItemType item : getSelected(xccdf.getBenchmark().getGroupOrRule(), selections)) {
@@ -93,6 +106,10 @@ public class Profile {
 		rules.add((RuleType)item);
 	    }
 	}
+
+	//
+	// Set all the selected values
+	//
 	for (ValueType val : vals) {
 	    for (SelStringType sel : val.getValue()) {
 		if (values.containsKey(val.getItemId())) {
@@ -108,20 +125,32 @@ public class Profile {
 	}
     }
 
+    /**
+     * Return all of the OVAL definition IDs associated with this Profile's platforms.
+     */
     public Collection<String> getPlatformDefinitionIds() {
 	return platforms;
     }
 
+    /**
+     * Return a Hashtable of all the values selected/defined by this Profile.
+     */
     public Hashtable<String, String> getValues() {
 	return values;
     }
 
+    /**
+     * Return a list of all the rules selected by this Profile.
+     */
     public Collection<RuleType> getSelectedRules() {
 	return rules;
     }
 
     // Private
 
+    /**
+     * Recursively find all the selected items, using selections gathered from a Profile (or null for defaults).
+     */
     private Collection<SelectableItemType> getSelected(List<SelectableItemType> items, Hashtable<String, Boolean> selections) {
 	Collection<SelectableItemType> results = new HashSet<SelectableItemType>();
 	for (SelectableItemType item : items) {

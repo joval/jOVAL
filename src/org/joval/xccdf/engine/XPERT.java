@@ -40,17 +40,12 @@ import xccdf.schemas.core.CheckType;
 import xccdf.schemas.core.CheckExportType;
 import xccdf.schemas.core.GroupType;
 import xccdf.schemas.core.ObjectFactory;
-import xccdf.schemas.core.ProfileType;
 import xccdf.schemas.core.ProfileSetValueType;
-import xccdf.schemas.core.ProfileSelectType;
 import xccdf.schemas.core.RuleResultType;
 import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.ResultEnumType;
-import xccdf.schemas.core.SelStringType;
 import xccdf.schemas.core.SelectableItemType;
 import xccdf.schemas.core.TestResultType;
-import xccdf.schemas.core.URIidrefType;
-import xccdf.schemas.core.ValueType;
 
 import org.joval.cpe.CpeException;
 import org.joval.intf.oval.IEngine;
@@ -81,6 +76,7 @@ public class XPERT implements Runnable, IObserver {
 
     private static final File ws = new File("artifacts");
     private static Logger logger;
+    private static boolean debug = false;
 
     private static PropertyResourceBundle resources;
     static {
@@ -167,6 +163,8 @@ public class XPERT implements Runnable, IObserver {
 		    configFileName = argv[++i];
 		} else if (argv[i].equals("-profile")) {
 		    profileName = argv[++i];
+		} else if (argv[i].equals("-debug")) {
+		    debug = true;
 		}
 	    }
 
@@ -200,6 +198,7 @@ public class XPERT implements Runnable, IObserver {
 		Profile profile = new Profile(xccdf, profileName);
 		XPERT engine = new XPERT(xccdf, profile, container.getPlugin());
 		engine.run();
+		logger.info("Finished processing XCCDF bundle");
 		exitCode = 0;
 	    }
 	} catch (Exception e) {
@@ -250,7 +249,11 @@ public class XPERT implements Runnable, IObserver {
 	    logger.info("Completed evaluating definitions");
 	    break;
 	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
-	    ((ISystemCharacteristics)arg).writeXML(new File(ws, "sc-" + phase + ".xml"));
+	    if (debug) {
+		File scFile = new File(ws, "sc-" + phase + ".xml");
+		logger.info("Saving OVAL system-characteristics: " + scFile.getPath());
+		((ISystemCharacteristics)arg).writeXML(scFile);
+	    }
 	    break;
 	}
     }
@@ -269,32 +272,30 @@ public class XPERT implements Runnable, IObserver {
 	    // Configure the OVAL engine...
 	    //
 	    engine.setDefinitions(xccdf.getOval());
-	    Variables exports = createVariables();
-	    engine.setExternalVariables(exports);
-	    DefinitionFilter filter = createFilter();
+	    Collection<RuleType> rules = profile.getSelectedRules();
+	    if (rules.size() == 0) {
+		logger.severe("No reason to evaluate!");
+		return;
+	    }
+	    logger.info("There are " + rules.size() + " rules to process for the selected profile");
+	    DefinitionFilter filter = createFilter(rules);
 	    engine.setDefinitionFilter(filter);
-
-	    //
-	    // Write artifact files
-	    //
-	    File exportsFile = new File(ws, "oval-variables.xml");
-	    logger.info("Saving variables: " + exportsFile.getPath());
-	    exports.writeXML(exportsFile);
-	    File filterFile = new File(ws, "oval-filter.xml");
-	    logger.info("Saving evaluation-definitions: " + filterFile.getPath());
-	    filter.writeXML(filterFile);
+	    Variables exports = createVariables(rules, profile.getValues());
+	    engine.setExternalVariables(exports);
 
 	    //
 	    // Read previously collected system characteristics data, if available.
 	    //
-	    try {
-		File sc = new File(ws, "sc-input.xml");
-		if(sc.isFile()) {
-		    logger.info("Loading " + sc);
-		    engine.setSystemCharacteristicsFile(sc);
+	    if (debug) {
+		try {
+		    File sc = new File(ws, "sc-input.xml");
+		    if(sc.isFile()) {
+			logger.info("Loading " + sc);
+			engine.setSystemCharacteristicsFile(sc);
+		    }
+		} catch (OvalException e) {
+		    logger.warning(e.getMessage());
 		}
-	    } catch (OvalException e) {
-		logger.warning(e.getMessage());
 	    }
 
 	    //
@@ -308,7 +309,11 @@ public class XPERT implements Runnable, IObserver {
 		return;
 	      case OK:
 		results = engine.getResults();
-		results.writeXML(new File(ws, "oval-results.xml"));
+		if (debug) {
+		    File resultsFile = new File(ws, "oval-results.xml");
+		    logger.info("Saving OVAL results: " + resultsFile.getPath());
+		    results.writeXML(resultsFile);
+		}
 		break;
 	    }
 
@@ -332,8 +337,7 @@ public class XPERT implements Runnable, IObserver {
 	    //
 	    // Iterate through the rules and record the results, save and finish
 	    //
-	    List<RuleType> rules = listAllRules();
-	    for (RuleType rule : rules) {
+	    for (RuleType rule : listAllRules()) {
 		String ruleId = rule.getItemId();
 
 		RuleResultType ruleResult = factory.createRuleResultType();
@@ -345,37 +349,36 @@ public class XPERT implements Runnable, IObserver {
 		} else {
 		    for (CheckType check : rule.getCheck()) {
 			ruleResult.getCheck().add(check);
-
 			for (CheckContentRefType ref : check.getCheckContentRef()) {
 			    String definitionId = ref.getName();
 			    if (definitionId == null) {
 				logger.info(ruleId + ": OVAL definition UNDEFINED");
-				continue;
-			    }
-			    ResultEnumType ret = ResultEnumType.NOTCHECKED;
-			    try {
-				switch (results.getDefinitionResult(ref.getName())) {
-				  case ERROR:
-				    ret = ResultEnumType.ERROR;
-				    break;
-
-				  case FALSE:
-				    ret = ResultEnumType.FAIL;
-				    break;
-
-				  case TRUE:
-				    ret = ResultEnumType.PASS;
-				    break;
-
-				  case UNKNOWN:
-				  default:
-				    ret = ResultEnumType.UNKNOWN;
-				    break;
+			    } else {
+				ResultEnumType ret = ResultEnumType.NOTCHECKED;
+				try {
+				    switch (results.getDefinitionResult(ref.getName())) {
+				      case ERROR:
+					ret = ResultEnumType.ERROR;
+					break;
+    
+				      case FALSE:
+					ret = ResultEnumType.FAIL;
+					break;
+    
+				      case TRUE:
+					ret = ResultEnumType.PASS;
+					break;
+    
+				      case UNKNOWN:
+				      default:
+					ret = ResultEnumType.UNKNOWN;
+					break;
+				    }
+				} catch (NoSuchElementException e) {
 				}
-			    } catch (NoSuchElementException e) {
+				logger.info(ruleId + ": " + ret);
+				ruleResult.setResult(ret);
 			    }
-			    logger.info(ruleId + ": " + ret);
-			    ruleResult.setResult(ret);
 			}
 		    }
 		}
@@ -436,13 +439,9 @@ public class XPERT implements Runnable, IObserver {
     /**
      * Create an OVAL DefinitionFilter containing every selected rule.
      */
-    private DefinitionFilter createFilter() {
+    private DefinitionFilter createFilter(Collection<RuleType> rules) {
 	DefinitionFilter filter = new DefinitionFilter();
-
-	//
-	// Get every check from every selected rule, and add the names to the filter.
-	//
-	for (RuleType rule : profile.getSelectedRules()) {
+	for (RuleType rule : rules) {
 	    if (rule.isSetCheck()) {
 		logger.info("Getting checks for Rule " + rule.getItemId());
 		for (CheckType check : rule.getCheck()) {
@@ -459,32 +458,35 @@ public class XPERT implements Runnable, IObserver {
 		logger.info("No check in Rule " + rule.getItemId());
 	    }
 	}
+	if (debug) {
+	    File filterFile = new File(ws, "oval-filter.xml");
+	    logger.info("Saving OVAL evaluation-definitions: " + filterFile.getPath());
+	    filter.writeXML(filterFile);
+	}
 	return filter;
     }
 
     /**
-     * Gather all the variable exports into a single OVAL variables structure.
+     * Gather all the variable exports from the rules, and create an OVAL variables structure containing their values.
      */
-    private Variables createVariables() {
+    private Variables createVariables(Collection<RuleType> rules, Hashtable<String, String> values) {
 	Variables variables = new Variables(getGenerator());
-
-	//
-	// Get every export from every selected rule, and add exported values to the OVAL variables.
-	// REMIND (DAS): are multi-valued exports possible?
-	//
-	Hashtable<String, String> settings = profile.getValues();
-	for (RuleType rule : profile.getSelectedRules()) {
+	for (RuleType rule : rules) {
 	    for (CheckType check : rule.getCheck()) {
 		if (check.getSystem().equals(OVAL_SYSTEM)) {
 		    for (CheckExportType export : check.getCheckExport()) {
 			String ovalVariableId = export.getExportName();
-			List<String> values = new Vector<String>();
-			values.add(settings.get(export.getValueId()));
-			variables.setValue(ovalVariableId, values);
-			variables.setComment(ovalVariableId, export.getValueId());
+			String valueId = export.getValueId();
+			variables.addValue(ovalVariableId, values.get(valueId));
+			variables.setComment(ovalVariableId, valueId);
 		    }
 		}
 	    }
+	}
+	if (debug) {
+	    File variablesFile = new File(ws, "oval-variables.xml");
+	    logger.info("Saving OVAL variables: " + variablesFile.getPath());
+	    variables.writeXML(variablesFile);
 	}
 	return variables;
     }
