@@ -312,8 +312,8 @@ public class ProcessAdapter implements IAdapter {
 	    //
 	    // On Linux, we can collect the loginuid for each process from the /proc filesystem
 	    //
-	    if (session.getFlavor() == IUnixSession.Flavor.LINUX) {
-		for (ProcessData process : processes) {
+	    for (ProcessData process : processes) {
+		if (session.getFlavor() == IUnixSession.Flavor.LINUX) {
 		    String pid = (String)process.pid.getValue();
 		    IFile f = session.getFilesystem().getFile("/proc/" + pid + "/loginuid");
 		    if (f.exists() && f.isFile()) {
@@ -337,8 +337,10 @@ public class ProcessAdapter implements IAdapter {
 			String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_IO_NOT_FILE);
 			session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_IO, f.getPath(), reason));
 		    }
+		} else {
+		    process.loginuid.setStatus(StatusEnumeration.NOT_COLLECTED);
 		}
-	    }
+	    } 
 	} catch (Exception e) {
 	    error = e.getMessage();
 	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -370,7 +372,6 @@ public class ProcessAdapter implements IAdapter {
 	    //
 	    sessionId = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	    loginuid = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	    loginuid.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    execShield = JOVALSystem.factories.sc.core.createEntityItemBoolType();
 	    execShield.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    posixCapability = new Vector<EntityItemCapabilityType>();
