@@ -20,6 +20,7 @@ CLASSES=\
 	org.joval.oval.DefinitionFilter					\
 	org.joval.oval.Definitions					\
 	org.joval.oval.Directives					\
+	org.joval.oval.ItemSet						\
 	org.joval.oval.NotCollectableException				\
 	org.joval.oval.OvalException					\
 	org.joval.oval.ResolveException					\
@@ -31,7 +32,6 @@ CLASSES=\
 	org.joval.oval.engine.RequestContext				\
 	org.joval.oval.engine.CheckData					\
 	org.joval.oval.engine.ExistenceData				\
-	org.joval.oval.engine.ItemSet					\
 	org.joval.oval.engine.OperatorData				\
 	org.joval.oval.xml.OvalNamespacePrefixMapper			\
 	org.joval.util.Checksum						\

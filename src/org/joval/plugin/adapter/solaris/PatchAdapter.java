@@ -29,6 +29,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.NotCollectableException;
+import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
@@ -60,7 +61,9 @@ public class PatchAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
+		throws OvalException, NotCollectableException {
+
 	if (!initialized) {
 	    scanRevisions();
 	}
@@ -136,11 +139,7 @@ public class PatchAdapter implements IAdapter {
 		throw new NotCollectableException(s);
 	    }
 	} catch (NumberFormatException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(e);
 	} catch (PatternSyntaxException e) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);

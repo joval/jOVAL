@@ -121,6 +121,7 @@ import org.joval.os.windows.Timestamp;
 import org.joval.oval.DefinitionFilter;
 import org.joval.oval.Definitions;
 import org.joval.oval.Directives;
+import org.joval.oval.ItemSet;
 import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
@@ -627,12 +628,12 @@ public class Engine implements IEngine {
 
 	switch(s.getSetOperator()) {
 	  case INTERSECTION: {
-	    ItemSet intersection = null;
+	    ItemSet<ItemType> intersection = null;
 	    for (Collection<ItemType> items : lists) {
 		if (intersection == null) {
-		    intersection = new ItemSet(items);
+		    intersection = new ItemSet<ItemType>(items);
 		} else {
-		    intersection = intersection.intersection(new ItemSet(items));
+		    intersection = intersection.intersection(new ItemSet<ItemType>(items));
 		}
 	    }
 	    return intersection.toList();
@@ -643,7 +644,7 @@ public class Engine implements IEngine {
 		Iterator<Collection<ItemType>> iter = lists.iterator();
 		Collection<ItemType> set1 = iter.next();
 		Collection<ItemType> set2 = iter.next();
-		return new ItemSet(set1).complement(new ItemSet(set2)).toList();
+		return new ItemSet<ItemType>(set1).complement(new ItemSet<ItemType>(set2)).toList();
 	    } else {
 		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SET_COMPLEMENT, new Integer(lists.size())));
 	    }
@@ -651,9 +652,9 @@ public class Engine implements IEngine {
 
 	  case UNION:
 	  default: {
-	    ItemSet union = new ItemSet();
+	    ItemSet<ItemType> union = new ItemSet<ItemType>();
 	    for (Collection<ItemType> items : lists) {
-		union = union.union(new ItemSet(items));
+		union = union.union(new ItemSet<ItemType>(items));
 	    }
 	    return union.toList();
 	  }
