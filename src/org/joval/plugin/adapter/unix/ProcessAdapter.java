@@ -3,8 +3,10 @@
 
 package org.joval.plugin.adapter.unix;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -34,6 +36,7 @@ import oval.schemas.systemcharacteristics.unix.EntityItemCapabilityType;
 import oval.schemas.systemcharacteristics.unix.Process58Item;
 import oval.schemas.systemcharacteristics.unix.ProcessItem;
 
+import org.joval.intf.io.IFile;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
@@ -55,12 +58,12 @@ import org.joval.util.SafeCLI;
 public class ProcessAdapter implements IAdapter {
     private IUnixSession session;
     private boolean initialized = false;
-    private Hashtable<String, ProcessData> processes;
+    private Collection<ProcessData> processes;
     private String error = null;
 
     public ProcessAdapter(IUnixSession session) {
 	this.session = session;
-	processes = new Hashtable<String, ProcessData>();
+	processes = new Vector<ProcessData>();
     }
 
     // Implement IAdapter
@@ -90,14 +93,15 @@ public class ProcessAdapter implements IAdapter {
 	    if (rc.getObject() instanceof ProcessObject) {
 		ProcessObject pObj = (ProcessObject)rc.getObject();
 		EntityObjectStringType command = pObj.getCommand();
-		ArrayList<String> commands = new ArrayList<String>();
+		String[] commands = null;
 		if (command.isSetVarRef()) {
-		    commands.addAll(rc.resolve(command.getVarRef()));
+		    commands = rc.resolve(command.getVarRef()).toArray(new String[0]);
 		} else {
-		    commands.add((String)command.getValue());
+		    commands = new String[1];
+		    commands[0] = (String)command.getValue();
 		}
-		for (ProcessData data : getProcesses(command.getOperation(), commands.toArray(new String[0]))) {
-		    items.add(JOVALSystem.factories.sc.unix.createProcessItem(data.getProcessItem()));
+		for (ProcessData process : getProcesses(command.getOperation(), commands)) {
+		    items.add(JOVALSystem.factories.sc.unix.createProcessItem(process.getProcessItem()));
 		}
 	    } else {
 		Process58Object pObj = (Process58Object)rc.getObject();
@@ -105,14 +109,15 @@ public class ProcessAdapter implements IAdapter {
 
 		if (pObj.isSetCommandLine()) {
 		    EntityObjectStringType commandLine = pObj.getCommandLine();
-		    ArrayList<String> commands = new ArrayList<String>();
+		    String[] commands = null;
 		    if (commandLine.isSetVarRef()) {
-			commands.addAll(rc.resolve(commandLine.getVarRef()));
+			commands = rc.resolve(commandLine.getVarRef()).toArray(new String[0]);
 		    } else {
-			commands.add((String)commandLine.getValue());
+			commands = new String[1];
+			commands[0] = (String)commandLine.getValue();
 		    }
 		    List<Process58Item> list = new Vector<Process58Item>();
-		    for (ProcessData process : getProcesses(commandLine.getOperation(), commands.toArray(new String[0]))) {
+		    for (ProcessData process : getProcesses(commandLine.getOperation(), commands)) {
 			list.add(process.getProcess58Item());
 		    }
 		    set1 = new ItemSet<Process58Item>(list);
@@ -120,36 +125,29 @@ public class ProcessAdapter implements IAdapter {
 
 		if (pObj.isSetPid()) {
 		    EntityObjectIntType pid = pObj.getPid();
-		    ArrayList<Integer> pids = new ArrayList<Integer>();
+		    Integer[] pids = null;
 		    if (pid.isSetVarRef()) {
-			for (String s : rc.resolve(pid.getVarRef())) {
-			    pids.add(new Integer(s));
+			Collection<String> values = rc.resolve(pid.getVarRef());
+			pids = new Integer[values.size()];
+			int i = 0;
+			for (String val : values) {
+			    pids[i++] = new Integer(val);
 			}
 		    } else {
-			pids.add(new Integer((String)pid.getValue()));
+			pids = new Integer[1];
+			pids[0] = new Integer((String)pid.getValue());
 		    }
 		    List<Process58Item> list = new Vector<Process58Item>();
-		    for (ProcessData process : getProcesses(pid.getOperation(), pids.toArray(new Integer[0]))) {
+		    for (ProcessData process : getProcesses(pid.getOperation(), pids)) {
 			list.add(process.getProcess58Item());
 		    }
 		    set2 = new ItemSet<Process58Item>(list);
 		}
 
-		if (set1 == null && set2 == null) {
+		if (set1 == null || set2 == null) {
 		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_PROCESS58_OBJECT, pObj.getId()));
-		} else if (set1 == null) {
-		    for (Process58Item item : set2.toList()) {
-			item.setId(null);
-			items.add(JOVALSystem.factories.sc.unix.createProcess58Item(item));
-		    }
-		} else if (set2 == null) {
-		    for (Process58Item item : set1.toList()) {
-			item.setId(null);
-			items.add(JOVALSystem.factories.sc.unix.createProcess58Item(item));
-		    }
 		} else {
-		    for (Process58Item item : set1.intersection(set2).toList()) {
-			item.setId(null);
+		    for (Process58Item item : set1.intersection(set2)) {
 			items.add(JOVALSystem.factories.sc.unix.createProcess58Item(item));
 		    }
 		}
@@ -178,42 +176,40 @@ public class ProcessAdapter implements IAdapter {
 	Collection<ProcessData> result = new Vector<ProcessData>();
 	for (String command : commands) {
 	    switch (op) {
-	      case EQUALS: {
-		ProcessData data = processes.get(command);
-		if (data != null) {
-		    result.add(data);
+	      case EQUALS:
+		for (ProcessData process : processes) {
+		    if (command.equals((String)process.command.getValue())) {
+			result.add(process);
+		    }
 		}
 		break;
-	      }
 
 	      case CASE_INSENSITIVE_EQUALS:
-		for (String key : processes.keySet()) {
-		    if (key.equalsIgnoreCase(command)) {
-			result.add(processes.get(key));
+		for (ProcessData process : processes) {
+		    if (command.equalsIgnoreCase((String)process.command.getValue())) {
+			result.add(process);
 		    }
 		}
 		break;
 
 	      case PATTERN_MATCH:
-		for (String key : processes.keySet()) {
-		    if (Pattern.compile(command).matcher(key).find()) {
-			result.add(processes.get(key));
+		for (ProcessData process : processes) {
+		    if (Pattern.compile(command).matcher((String)process.command.getValue()).find()) {
+			result.add(process);
 		    }
 		}
 		break;
 
 	      case NOT_EQUAL:
-		for (String key : processes.keySet()) {
-		    if (!command.equals(key)) {
-			result.add(processes.get(key));
+		for (ProcessData process : processes) {
+		    if (!command.equals((String)process.command.getValue())) {
+			result.add(process);
 		    }
 		}
 		break;
 
-	      default: {
-		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		throw new NotCollectableException(s);
-	      }
+	      default:
+		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	    }
 	}
 	return result;
@@ -229,34 +225,32 @@ public class ProcessAdapter implements IAdapter {
 	for (Integer pid : pids) {
 	    switch (op) {
 	      case EQUALS:
-		for (ProcessData data : processes.values()) {
-		    if (((String)data.pid.getValue()).equals(pid.toString())) {
-			result.add(data);
+		for (ProcessData process : processes) {
+		    if (((String)process.pid.getValue()).equals(pid.toString())) {
+			result.add(process);
 			break;
 		    }
 		}
 		break;
 
 	      case GREATER_THAN:
-		for (ProcessData data : processes.values()) {
-		    if (Integer.parseInt((String)data.pid.getValue()) > pid.intValue()) {
-			result.add(data);
+		for (ProcessData process : processes) {
+		    if (Integer.parseInt((String)process.pid.getValue()) > pid.intValue()) {
+			result.add(process);
 		    }
 		}
 		break;
 
 	      case LESS_THAN:
-		for (ProcessData data : processes.values()) {
-		    if (Integer.parseInt((String)data.pid.getValue()) < pid.intValue()) {
-			result.add(data);
+		for (ProcessData process : processes) {
+		    if (Integer.parseInt((String)process.pid.getValue()) < pid.intValue()) {
+			result.add(process);
 		    }
 		}
 		break;
 
-	      default: {
-		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		throw new NotCollectableException(s);
-	      }
+	      default:
+		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
 	    }
 	}
 	return result;
@@ -267,11 +261,6 @@ public class ProcessAdapter implements IAdapter {
      */
     private void scanProcesses() {
 	String args = null;
-
-//TBD (DAS):
-//  sid - sessionId
-//  loginuid = contents of /proc/[pid]/loginuid
-
 	switch(session.getFlavor()) {
 	  case MACOSX:
 	    args = "ps -A -o pid,ppid,pri,uid,ruid,tty,time,stime,command";
@@ -280,7 +269,7 @@ public class ProcessAdapter implements IAdapter {
 	  case AIX:
 	  case LINUX:
 	  case SOLARIS:
-	    args = "ps -e -o pid,ppid,pri,uid,ruid,tty,class,time,stime,args";
+	    args = "ps -e -o pid,ppid,pri,uid,ruid,tty,sid,class,time,stime,args";
 	    break;
 
 	  default:
@@ -304,9 +293,12 @@ public class ProcessAdapter implements IAdapter {
 		process.tty.setValue(tok.nextToken());
 		switch(session.getFlavor()) {
 		  case MACOSX:
+		    process.sessionId.setStatus(StatusEnumeration.NOT_COLLECTED);
 		    process.schedulingClass.setStatus(StatusEnumeration.NOT_COLLECTED);
 		    break;
 		  default:
+		    process.sessionId.setValue(tok.nextToken());
+		    process.sessionId.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		    process.schedulingClass.setValue(tok.nextToken());
 		    break;
 		}
@@ -314,7 +306,38 @@ public class ProcessAdapter implements IAdapter {
 		process.startTime.setValue(tok.nextToken());
 		String cmd = tok.nextToken("\n").trim();
 		process.command.setValue(cmd);
-		processes.put(cmd, process);
+		processes.add(process);
+	    }
+
+	    //
+	    // On Linux, we can collect the loginuid for each process from the /proc filesystem
+	    //
+	    if (session.getFlavor() == IUnixSession.Flavor.LINUX) {
+		for (ProcessData process : processes) {
+		    String pid = (String)process.pid.getValue();
+		    IFile f = session.getFilesystem().getFile("/proc/" + pid + "/loginuid");
+		    if (f.exists() && f.isFile()) {
+			BufferedReader reader = null;
+			try {
+			    reader = new BufferedReader(new InputStreamReader(f.getInputStream()));
+			    String loginuid = reader.readLine();
+			    if (loginuid != null) {
+				process.loginuid.setValue(loginuid);
+				process.loginuid.setDatatype(SimpleDatatypeEnumeration.INT.value());
+			    }
+			} finally {
+			    if (reader != null) {
+				try {
+				    reader.close();
+				} catch (IOException e) {
+				}
+			    }
+			}
+		    } else {
+			String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_IO_NOT_FILE);
+			session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_IO, f.getPath(), reason));
+		    }
+		}
 	    }
 	} catch (Exception e) {
 	    error = e.getMessage();
@@ -345,10 +368,9 @@ public class ProcessAdapter implements IAdapter {
 	    //
 	    // Process58Item additions
 	    //
+	    sessionId = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	    loginuid = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	    loginuid.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    sessionId = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	    sessionId.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    execShield = JOVALSystem.factories.sc.core.createEntityItemBoolType();
 	    execShield.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    posixCapability = new Vector<EntityItemCapabilityType>();
