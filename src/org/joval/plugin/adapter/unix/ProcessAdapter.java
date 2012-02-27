@@ -139,14 +139,17 @@ public class ProcessAdapter implements IAdapter {
 		    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_PROCESS58_OBJECT, pObj.getId()));
 		} else if (set1 == null) {
 		    for (Process58Item item : set2.toList()) {
+			item.setId(null);
 			items.add(JOVALSystem.factories.sc.unix.createProcess58Item(item));
 		    }
 		} else if (set2 == null) {
 		    for (Process58Item item : set1.toList()) {
+			item.setId(null);
 			items.add(JOVALSystem.factories.sc.unix.createProcess58Item(item));
 		    }
 		} else {
 		    for (Process58Item item : set1.intersection(set2).toList()) {
+			item.setId(null);
 			items.add(JOVALSystem.factories.sc.unix.createProcess58Item(item));
 		    }
 		}
@@ -234,6 +237,22 @@ public class ProcessAdapter implements IAdapter {
 		}
 		break;
 
+	      case GREATER_THAN:
+		for (ProcessData data : processes.values()) {
+		    if (Integer.parseInt((String)data.pid.getValue()) > pid.intValue()) {
+			result.add(data);
+		    }
+		}
+		break;
+
+	      case LESS_THAN:
+		for (ProcessData data : processes.values()) {
+		    if (Integer.parseInt((String)data.pid.getValue()) < pid.intValue()) {
+			result.add(data);
+		    }
+		}
+		break;
+
 	      default: {
 		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 		throw new NotCollectableException(s);
@@ -316,6 +335,7 @@ public class ProcessAdapter implements IAdapter {
 	    tty = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    startTime = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    execTime = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    schedulingClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
 	    ruid = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	    userid = JOVALSystem.factories.sc.core.createEntityItemIntType();
 	    priority = JOVALSystem.factories.sc.core.createEntityItemIntType();

@@ -3,13 +3,23 @@
 
 package org.joval.oval;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
+import java.security.MessageDigest;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Vector;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.namespace.QName;
 
 import oval.schemas.systemcharacteristics.core.ItemType;
+
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * A Set of ItemType objects.
@@ -19,17 +29,28 @@ import oval.schemas.systemcharacteristics.core.ItemType;
  */
 public class ItemSet <T extends ItemType> {
     private Hashtable<BigInteger, T> table;
+    private Marshaller marshaller;
 
     /**
      * Construct an empty set.
      */
     public ItemSet() {
 	table = new Hashtable<BigInteger, T>();
+	String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS);
+	try {
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
+	    marshaller = ctx.createMarshaller();
+	} catch (JAXBException e) {
+	    throw new RuntimeException(e);
+	}
     }
 
     public ItemSet(Collection<T> items) {
 	this();
 	for (T item : items) {
+	    if (!item.isSetId()) {
+		item.setId(generateId(item));
+	    }
 	    table.put(item.getId(), item);
 	}
     }
@@ -93,5 +114,35 @@ public class ItemSet <T extends ItemType> {
 
     private ItemSet(Hashtable<BigInteger, T> table) {
 	this.table = table;
+    }
+
+    private Vector<String> checksums = new Vector<String>();
+
+    private synchronized BigInteger generateId(ItemType item) {
+	String cs = getChecksum(item);
+	int i = checksums.indexOf(cs);
+	if (i == -1) {
+	    i = checksums.size();
+	    checksums.add(cs);
+	}
+	return new BigInteger(Integer.toString(i));
+    }
+
+    private String getChecksum(ItemType item) {
+	ByteArrayOutputStream out = new ByteArrayOutputStream();
+	try {
+	    marshaller.marshal(new JAXBElement(new QName("itemset"), item.getClass(), item), out);
+	    byte[] buff = out.toByteArray();
+	    MessageDigest digest = MessageDigest.getInstance("MD5");
+	    digest.update(buff, 0, buff.length);
+	    byte[] cs = digest.digest();
+	    StringBuffer sb = new StringBuffer();
+	    for (int i=0; i < cs.length; i++) {
+		sb.append(Integer.toHexString(0xFF & cs[i]));
+	    }
+	    return sb.toString();
+	} catch (Exception e) {
+	    throw new RuntimeException(e);
+	}
     }
 }
