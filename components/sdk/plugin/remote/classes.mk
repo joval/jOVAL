@@ -41,8 +41,8 @@ CLASSES=\
 	org.joval.os.windows.remote.wmi.scripting.SWbemSecurity		\
 	org.joval.os.windows.remote.wmi.win32.Win32Process		\
 	org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup	\
-	org.joval.oval.di.RemoteContainer				\
 	org.joval.plugin.RemotePlugin					\
+	org.joval.plugin.container.RemoteContainer			\
 	org.joval.protocol.netconf.NetconfSession			\
 	org.joval.ssh.identity.SshCredential				\
 	org.joval.ssh.io.SftpFile					\

@@ -10,12 +10,16 @@ import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Level;
 
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.plugin.IPluginContainer;
+import org.joval.plugin.container.ContainerFactory;
+import org.joval.plugin.container.ContainerConfigurationException;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -63,7 +67,6 @@ public class ExecutionState {
     List<String> definitionIDs;
     String specifiedChecksum;
 
-    URLClassLoader pluginClassLoader;
     IPluginContainer container;
     Properties pluginConfig = null;
 
@@ -264,7 +267,6 @@ public class ExecutionState {
 		pluginConfig = new Properties();
 		try {
 		    pluginConfig.load(new FileInputStream(new File(argv[++i])));
-		    pluginConfig.setProperty(IPluginContainer.PROP_CONFIGFILE, argv[i]);
 		} catch (IOException e) {
 		    Main.logException(e);
 		    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
@@ -292,7 +294,18 @@ public class ExecutionState {
 	}
 
 	if (inputFile == null) {
-	    loadPlugin(pluginName);
+	    try {
+		container = ContainerFactory.newInstance(new File(BASE_DIR, "plugin")).createContainer(pluginName);
+	    } catch (IllegalArgumentException e) {
+		Main.print(Main.getMessage("ERROR_PLUGIN_DIR_NOT_FOUND", e.getMessage()));
+		return false;
+	    } catch (NoSuchElementException e) {
+		Main.print(Main.getMessage("ERROR_PLUGIN_NOT_FOUND", e.getMessage()));
+		return false;
+	    } catch (ContainerConfigurationException e) {
+		Main.print(e.getMessage());
+		return false;
+	    }
 	}
 	return validState();
     }
@@ -304,7 +317,6 @@ public class ExecutionState {
 		    File config = new File(BASE_DIR, IPluginContainer.DEFAULT_FILE);
 		    if (config.exists()) {
 			pluginConfig = new Properties();
-			pluginConfig.setProperty(IPluginContainer.PROP_CONFIGFILE, config.getCanonicalPath());
 			pluginConfig.load(new FileInputStream(config));
 		    }
 		}
@@ -356,71 +368,5 @@ public class ExecutionState {
 	    args[i] = tok.nextToken();
 	}
 	return args;
-    }
-
-    private boolean loadPlugin(String name) {
-	try {
-	    File pluginRootDir = new File(BASE_DIR, "plugin");
-	    if (!pluginRootDir.isDirectory()) {
-		Main.print(Main.getMessage("ERROR_PLUGIN_DIR_NOT_FOUND", pluginRootDir));
-		return false;
-	    }
-	    for (File dir : pluginRootDir.listFiles()) {
-		Properties pluginProperties = new Properties();
-		File propsFile = new File(dir, "plugin.properties");
-		if (propsFile.exists()) {
-		    pluginProperties.load(new FileInputStream(propsFile));
-		    if (name.equals(pluginProperties.getProperty("name"))) {
-			String classpath = pluginProperties.getProperty("classpath");
-			if (classpath == null) {
-			    Main.print(Main.getMessage("ERROR_PLUGIN_CLASSPATH"));
-			    return false;
-			} else {
-			    Vector<URL> vUrl = new Vector<URL>();
-			    StringTokenizer tok = new StringTokenizer(classpath, ":");
-			    while(tok.hasMoreTokens()) {
-				String s = tok.nextToken();
-				File f = new File(dir, s);
-				if (f.exists()) {
-				    vUrl.add(f.toURI().toURL());
-				}
-			    }
-			    URL[] urls = vUrl.toArray(new URL[vUrl.size()]);
-			    pluginClassLoader = new URLClassLoader(urls, Thread.currentThread().getContextClassLoader());
-			    String main = pluginProperties.getProperty("main");
-			    if (main == null) {
-				Main.print(Main.getMessage("ERROR_PLUGIN_MAIN"));
-				return false;
-			    } else {
-				Object pluginObject = pluginClassLoader.loadClass(main).newInstance();
-				if (Class.forName(IPluginContainer.class.getName()).isInstance(pluginObject)) {
-				    container = (IPluginContainer)pluginObject;
-				    File dataDir = JOVALSystem.getDataDirectory();
-				    if (!dataDir.exists()) {
-					dataDir.mkdirs();
-				    }
-				    container.setDataDirectory(dataDir);
-				    return true;
-				} else {
-				    Main.print(Main.getMessage("ERROR_PLUGIN_IPLUGIN", main));
-				    return false;
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	    Main.print(Main.getMessage("ERROR_PLUGIN_NOT_FOUND", name));
-	    return false;
-	} catch (IllegalAccessException e) {
-	    e.printStackTrace();
-	} catch (InstantiationException e) {
-	    e.printStackTrace();
-	} catch (ClassNotFoundException e) {
-	    e.printStackTrace();
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-	return false;
     }
 }

@@ -43,6 +43,7 @@ import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IVariables;
+import org.joval.intf.plugin.IPluginContainer;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;

@@ -52,12 +52,14 @@ import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.plugin.IPluginContainer;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.DefinitionFilter;
 import org.joval.oval.OvalException;
 import org.joval.oval.Variables;
-import org.joval.oval.di.RemoteContainer;
+import org.joval.plugin.container.ContainerFactory;
+import org.joval.plugin.container.ContainerConfigurationException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
@@ -78,8 +80,13 @@ public class XPERT implements Runnable, IObserver {
     private static Logger logger;
     private static boolean debug = false;
 
+    private static File BASE_DIR = new File(".");
     private static PropertyResourceBundle resources;
     static {
+	String s = System.getProperty("xpert.baseDir");
+	if (s != null) {
+	    BASE_DIR = new File(s);
+	}
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	    Locale locale = Locale.getDefault();
@@ -97,7 +104,7 @@ public class XPERT implements Runnable, IObserver {
 	}
     }
 
-    static void printHeader() {
+    static void printHeader(IPluginContainer container) {
 	PrintStream console = System.out;
 	console.println(getMessage("divider"));
 	console.println(getMessage("product.name"));
@@ -105,13 +112,21 @@ public class XPERT implements Runnable, IObserver {
 	console.println(getMessage("message.version", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION)));
 	console.println(getMessage("message.buildDate", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_BUILD_DATE)));
 	console.println(getMessage("copyright"));
+	if (container != null) {
+	    console.println("");
+	    console.println(getMessage("message.plugin.name", container.getProperty(IPluginContainer.PROP_DESCRIPTION)));
+	    console.println(getMessage("message.plugin.version", container.getProperty(IPluginContainer.PROP_VERSION)));
+	    console.println(getMessage("message.plugin.copyright", container.getProperty(IPluginContainer.PROP_COPYRIGHT)));
+	}
 	console.println(getMessage("divider"));
 	console.println("");
     }
 
-    static void printHelp() {
+    static void printHelp(IPluginContainer container) {
 	System.out.println(getMessage("helpText"));
-	System.out.println(new RemoteContainer().getProperty("helpText"));
+	if (container != null) {
+	    System.out.println(container.getProperty(IPluginContainer.PROP_HELPTEXT));
+	}
     }
 
     /**
@@ -139,70 +154,95 @@ public class XPERT implements Runnable, IObserver {
      * Run from the command-line.
      */
     public static void main(String[] argv) {
-	printHeader();
-
 	int exitCode = 1;
+	if (!ws.exists()) {
+	    ws.mkdir();
+	}
 	try {
-	    if (!ws.exists()) {
-		ws.mkdir();
-	    }
 	    logger = LogFormatter.createDuplex(new File(ws, "xpert.log"), Level.INFO);
-	    logger.info("Start time: " + new Date().toString());
+	} catch (IOException e) {
+	    throw new RuntimeException(e);
+	}
 
-	    String configFileName = "config.properties";
-	    String profileName = null;
-	    String xccdfBaseName = null;
+	String pluginName = "default";
+	String configFileName = "config.properties";
+	String profileName = null;
+	String xccdfBaseName = null;
+	boolean printHelp = false;
 
-	    for (int i=0; i < argv.length; i++) {
-		if (argv[i].equals("-h")) {
-		    printHelp();
-		    System.exit(0);
-		} else if (i == (argv.length - 1)) { // last arg (but not -h)
-		    xccdfBaseName = argv[i];
-		} else if (argv[i].equals("-config")) {
-		    configFileName = argv[++i];
-		} else if (argv[i].equals("-profile")) {
-		    profileName = argv[++i];
-		} else if (argv[i].equals("-debug")) {
-		    debug = true;
-		}
+	for (int i=0; i < argv.length; i++) {
+	    if (argv[i].equals("-h")) {
+		printHelp = true;
+	    } else if (i == (argv.length - 1)) { // last arg (but not -h)
+		xccdfBaseName = argv[i];
+	    } else if (argv[i].equals("-config")) {
+		configFileName = argv[++i];
+	    } else if (argv[i].equals("-profile")) {
+		profileName = argv[++i];
+	    } else if (argv[i].equals("-plugin")) {
+		pluginName = argv[++i];
+	    } else if (argv[i].equals("-debug")) {
+		debug = true;
 	    }
+	}
 
-	    RemoteContainer container = null;
-	    File configFile = new File(configFileName);
-	    if (configFile.isFile()) {
-		Properties config = new Properties();
-		try {
+	IPluginContainer container = null;
+	try {
+	    container = ContainerFactory.newInstance(new File(BASE_DIR, "plugin")).createContainer(pluginName);
+	} catch (IllegalArgumentException e) {
+	    logger.severe("Not a directory: " + e.getMessage());
+	} catch (NoSuchElementException e) {
+	    logger.severe("Plugin not found: " + e.getMessage());
+	} catch (ContainerConfigurationException e) {
+	    logger.severe(LogFormatter.toString(e));
+	}
+
+	printHeader(container);
+	logger.info("Start time: " + new Date().toString());
+	if (printHelp) {
+	    printHelp(container);
+	    exitCode = 0;
+	} else if (xccdfBaseName == null) {
+	    logger.warning("No XCCDF file was specified");
+	    printHelp(container);
+	} else if (container == null) {
+	    printHelp(null);
+	} else {
+	    try {
+		//
+		// Configure the jOVAL plugin
+		//
+	        Properties config = new Properties();
+		File configFile = new File(configFileName);
+		if (configFile.isFile()) {
 		    config.load(new FileInputStream(configFile));
-		    container = new RemoteContainer();
-		    container.setDataDirectory(JOVALSystem.getDataDirectory());
-		    container.configure(config);
-		} catch (Exception e) {
-		    logger.severe(LogFormatter.toString(e));
-		    container = null;
 		}
-	    }
-	    if (xccdfBaseName == null) {
-		logger.warning("No XCCDF file was specified");
-		printHelp();
-	    } else if (container == null) {
-		logger.warning("Problem loading the plugin -- check that the configuration is valid");
-		printHelp();
-	    } else {
+		container.configure(config);
+
+		//
+		// Load the XCCDF and selected profile
+		//
 		logger.info("Loading " + xccdfBaseName);
 		XccdfBundle xccdf = new XccdfBundle(new File(xccdfBaseName));
+		Profile profile = new Profile(xccdf, profileName);
 
 		//
-		// Load the selected profile
+		// Perform the evaluation
 		//
-		Profile profile = new Profile(xccdf, profileName);
 		XPERT engine = new XPERT(xccdf, profile, container.getPlugin());
 		engine.run();
 		logger.info("Finished processing XCCDF bundle");
 		exitCode = 0;
+	    } catch (CpeException e) {
+		logger.severe(LogFormatter.toString(e));
+	    } catch (OvalException e) {
+		logger.severe(LogFormatter.toString(e));
+	    } catch (XccdfException e) {
+		logger.severe(LogFormatter.toString(e));
+	    } catch (Exception e) {
+		logger.severe("Problem configuring the plugin -- check that the configuration is valid");
+		logger.severe(LogFormatter.toString(e));
 	    }
-	} catch (Exception e) {
-	    logger.warning(LogFormatter.toString(e));
 	}
 
 	System.exit(exitCode);

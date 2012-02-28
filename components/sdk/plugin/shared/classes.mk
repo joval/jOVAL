@@ -140,6 +140,7 @@ SHARED=\
 	org.joval.plugin.adapter.windows.UserSidAdapter			\
 	org.joval.plugin.adapter.windows.Wmi57Adapter			\
 	org.joval.plugin.adapter.windows.WmiAdapter			\
+	org.joval.plugin.container.AbstractContainer			\
 	org.joval.test.AD						\
 	org.joval.test.Exec						\
 	org.joval.test.FS						\

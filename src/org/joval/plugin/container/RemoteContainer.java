@@ -1,15 +1,11 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.di;
+package org.joval.plugin.container;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.text.MessageFormat;
-import java.util.Locale;
 import java.util.Properties;
-import java.util.PropertyResourceBundle;
 
 import org.joval.identity.Credential;
 import org.joval.identity.SimpleCredentialStore;
@@ -24,48 +20,16 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class RemoteContainer implements IPluginContainer {
-    private static PropertyResourceBundle resources;
-    static {
-	try {
-	    ClassLoader cl = RemoteContainer.class.getClassLoader();
-	    Locale locale = Locale.getDefault();
-	    URL url = cl.getResource("plugin.resources_" + locale.toString() + ".properties");
-	    if (url == null) {
-		url = cl.getResource("plugin.resources_" + locale.getLanguage() + ".properties");
-	    }
-	    if (url == null) {
-		url = cl.getResource("plugin.resources.properties");
-	    }
-	    resources = new PropertyResourceBundle(url.openStream());
-	} catch (IOException e) {
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-    }
-
-    /**
-     * Retrieve a message using its key.
-     */
-    static String getMessage(String key, Object... arguments) {
-	return MessageFormat.format(resources.getString(key), arguments);
-    }
-
-    private IPlugin plugin;
-    private File dir;
-
+public class RemoteContainer extends AbstractContainer {
     public RemoteContainer() {
+	super();
     }
 
     // Implement IPluginContainer
 
-    public void setDataDirectory(File dir) {
-	this.dir = dir;
-    }
-
+    @Override
     public void configure(Properties props) throws Exception {
-	if (props == null) {
-	    throw new Exception(getMessage("err.configMissing", DEFAULT_FILE));
-	}
+	super.configure(props);
 
 	//
 	// Provision the CredentialStore with the configuration, which will validate that all the necessary
@@ -104,13 +68,5 @@ public class RemoteContainer implements IPluginContainer {
 	    RemotePlugin.setDataDirectory(dir);
 	}
 	plugin = new RemotePlugin(props.getProperty(SimpleCredentialStore.PROP_HOSTNAME));
-    }
-
-    public String getProperty(String key) {
-	return resources.getString(key);
-    }
-
-    public IPlugin getPlugin() {
-	return plugin;
     }
 }

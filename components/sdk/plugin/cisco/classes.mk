@@ -7,7 +7,7 @@ CLASSES=\
 	org.joval.os.juniper.JunosSystemInfo				\
 	org.joval.os.juniper.system.JunosSession			\
 	org.joval.os.juniper.system.SupportInformation			\
-	org.joval.oval.di.CiscoContainer				\
 	org.joval.plugin.CiscoPlugin					\
+	org.joval.plugin.container.CiscoContainer			\
 	org.joval.protocol.tftp.Handler					\
 	org.joval.protocol.tftp.TftpURLConnection
