@@ -9,4 +9,4 @@ if [ "x${JAVA_HOME}" == x ]; then
     export JAVA_HOME=${INSTALL_DIR}/jre
 fi
 export JMEM=-Xmx1024m
-${JAVA_HOME}/bin/java ${JMEM} "-Djovaldi.baseDir=${INSTALL_DIR}" -cp ${LIB}/*:${PLUGIN}/remote/lib/* org.joval.xccdf.engine.XPERT "$@"
+${JAVA_HOME}/bin/java ${JMEM} "-Dxpert.baseDir=${INSTALL_DIR}" -cp "${LIB}/*" org.joval.xccdf.engine.XPERT "$@"

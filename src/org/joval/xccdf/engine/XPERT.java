@@ -199,7 +199,6 @@ public class XPERT implements Runnable, IObserver {
 	}
 
 	printHeader(container);
-	logger.info("Start time: " + new Date().toString());
 	if (printHelp) {
 	    printHelp(container);
 	    exitCode = 0;
@@ -209,6 +208,7 @@ public class XPERT implements Runnable, IObserver {
 	} else if (container == null) {
 	    printHelp(null);
 	} else {
+	    logger.info("Start time: " + new Date().toString());
 	    try {
 		//
 		// Configure the jOVAL plugin
