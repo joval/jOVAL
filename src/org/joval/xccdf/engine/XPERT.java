@@ -41,6 +41,7 @@ import xccdf.schemas.core.CheckExportType;
 import xccdf.schemas.core.GroupType;
 import xccdf.schemas.core.ObjectFactory;
 import xccdf.schemas.core.ProfileSetValueType;
+import xccdf.schemas.core.ProfileType;
 import xccdf.schemas.core.RuleResultType;
 import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.ResultEnumType;
@@ -315,6 +316,13 @@ public class XPERT implements Runnable, IObserver {
 	    Collection<RuleType> rules = profile.getSelectedRules();
 	    if (rules.size() == 0) {
 		logger.severe("No reason to evaluate!");
+		List<ProfileType> profiles = xccdf.getBenchmark().getProfile();
+		if (profiles.size() > 0) {
+		    logger.info("Try selecting a profile:");
+		    for (ProfileType pt : profiles) {
+			logger.info("  " + pt.getProfileId());
+		    }
+		}
 		return;
 	    }
 	    logger.info("There are " + rules.size() + " rules to process for the selected profile");
