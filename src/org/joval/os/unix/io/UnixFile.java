@@ -200,7 +200,7 @@ public class UnixFile implements IUnixFile {
 	    return "socket";
 	  case '-':
 	  default:
-	    return "file";
+	    return "regular";
 	}
     }
 
