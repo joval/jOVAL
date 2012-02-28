@@ -406,9 +406,14 @@ public class XPERT implements Runnable, IObserver {
 	//
 	// Create a DefinitionFilter containing all the OVAL definitions corresponding to the CPE platforms.
 	//
+	Collection<String> definitions = profile.getPlatformDefinitionIds();
+	if (definitions.size() == 0) {
+	    logger.info("No platforms specified, skipping applicability checks...");
+	    return true;
+	}
 	DefinitionFilter filter = new DefinitionFilter();
-	for (String defId : profile.getPlatformDefinitionIds()) {
-	    filter.addDefinition(defId);
+	for (String definition : definitions) {
+	    filter.addDefinition(definition);
 	}
 
 	//
