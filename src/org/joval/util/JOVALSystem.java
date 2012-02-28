@@ -210,7 +210,7 @@ public class JOVALSystem {
 	}
 	if (dataDir == null) {
 	    File homeDir = new File(System.getProperty("user.home"));
-	    dataDir = new File(homeDir, ".joval");
+	    dataDir = new File(homeDir, ".jOVAL");
 	}
 	return dataDir;
     }

@@ -7,10 +7,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TimerTask;
+import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -121,68 +122,24 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	/**
 	 * Complex commands may contain combinations of quotes and escapes.  Since commands run locally
 	 * are not interpreted by a shell, and since Java's parsing of a command-line String is overly
-	 * simplistic, we process the command in this method to break it down properly into its constituent
-	 * tokens.
+	 * simplistic, we invoke the native shell to interpret the command string.
 	 */
 	public void start() throws Exception {
-	    ArrayList<String> args = new ArrayList<String>();
-	    int ptr=0;
-	    int len = command.length();
-	    char context = NULL, last = NULL;
-	    boolean escaped = false;
-	    StringBuffer arg = new StringBuffer();
-	    while (ptr < len) {
-		char ch = command.charAt(ptr++);
-		switch(ch) {
-		  case SQ:
-		  case DQ:
-		    if (escaped) {
-			arg.append(ch);
-		    } else if (context == NULL) {
-			context = ch;
-		    } else if (context == ch) {
-			args.add(arg.toString());
-			arg = new StringBuffer();
-			context = NULL;
-		    } else {
-			arg.append(ch);
-		    }
-		    break;
-
-		  case ' ':
-		  case '\t':
-		  case '\n':
-		    if (context != NULL) {
-			arg.append(ch);
-		    } else if (arg.length() > 0) {
-			args.add(arg.toString());
-			arg = new StringBuffer();
-		    }
-		    break;
-
-		  default:
-		    arg.append(ch);
-		    break;
-		}
-
-		// determine whether the next character is escaped
-		if (ch == ESC) {
-		    if (last == ESC) {
-			escaped = !escaped;
-		    } else {
-			escaped = true;
-		    }
-		} else {
-		    escaped = false;
-		}
-		last = ch;
+	    List<String>args = new Vector<String>();
+	    if (System.getProperty("os.name").toLowerCase().indexOf("windows") == -1) {
+		args.add("/bin/sh");
+		args.add("-c");
+		args.add(command);
+	    } else {
+		args.add("cmd");
+		args.add("/c");
+		args.add(command);
 	    }
-	    if (arg.length() > 0) {
-		args.add(arg.toString());
+	    try {
+		p = new ProcessBuilder(args).directory(cwd).start();
+	    } catch (IOException e) {
+		throw new Exception(e);
 	    }
-	    String[] argv = new String[args.size()];
-	    argv = args.toArray(argv);
-	    p = Runtime.getRuntime().exec(argv, null, cwd);
 	}
 
 	public InputStream getInputStream() throws IOException {
