@@ -80,11 +80,22 @@ public class StringTools {
 	char[] ca = new char[buff.length];
 	for (int i=0; i < buff.length; i++) {
 	    int ch = buff[i]&0xFF;
-	    if ((0x20 <= ch && ch <= 0x7E) || ch == 0x0A || ch == 0x0D) { // printable characters only
+	    switch(ch) {
+	      case 0x00:
+	      case 0x09:
+	      case 0x0A:
+	      case 0x0D:
 		ca[i] = (char)buff[i];
-	    } else {
-		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_ASCII_CONVERSION, i, LittleEndian.toHexString(buff[i]));
-		throw new IllegalArgumentException(msg);
+		break;
+
+	      default:
+		if ((0x20 <= ch && ch <= 0x7E)) {
+		    ca[i] = (char)buff[i];
+		    break;
+		} else {
+		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_ASCII_CONVERSION, i, LittleEndian.toHexString(buff[i]));
+		    throw new IllegalArgumentException(msg);
+		}
 	    }
 	}
 	return ca;
@@ -95,11 +106,11 @@ public class StringTools {
      * string inside of \Q...\E.
      */
     public static String escapeRegex(String s) {
-        Stack<String> delims = new Stack<String>();
-        for (int i=0; i < REGEX_CHARS.length; i++) {
-            delims.add(REGEX_CHARS[i]);
-        }
-        return safeEscape(delims, s);
+	Stack<String> delims = new Stack<String>();
+	for (int i=0; i < REGEX_CHARS.length; i++) {
+	    delims.add(REGEX_CHARS[i]);
+	}
+	return safeEscape(delims, s);
     }
 
     /**
@@ -147,24 +158,24 @@ public class StringTools {
     private static final String[] REGEX_CHARS = {ESCAPE, "^", ".", "$", "|", "(", ")", "[", "]", "{", "}", "*", "+", "?"};
 
     private static String safeEscape(Stack<String> delims, String s) {
-        if (delims.empty()) {
-            return s;
-        } else {
-            String delim = delims.pop();
-            Stack<String> copy = new Stack<String>();
-            copy.addAll(delims);
-            List<String> list = StringTools.toList(StringTools.tokenize(s, delim, false));
-            int len = list.size();
-            StringBuffer result = new StringBuffer();
-            for (int i=0; i < len; i++) {
-                    if (i > 0) {
-                        result.append(ESCAPE);
-                        result.append(delim);
-                    }
-                    result.append(safeEscape(copy, list.get(i)));
-            }
-            return result.toString();
-        }
+	if (delims.empty()) {
+	    return s;
+	} else {
+	    String delim = delims.pop();
+	    Stack<String> copy = new Stack<String>();
+	    copy.addAll(delims);
+	    List<String> list = StringTools.toList(StringTools.tokenize(s, delim, false));
+	    int len = list.size();
+	    StringBuffer result = new StringBuffer();
+	    for (int i=0; i < len; i++) {
+		if (i > 0) {
+		    result.append(ESCAPE);
+		    result.append(delim);
+		}
+		result.append(safeEscape(copy, list.get(i)));
+	    }
+	    return result.toString();
+	}
     }
 
     static final class StringComparator implements Comparator<String> {

@@ -95,11 +95,6 @@ public class SftpFilesystem extends UnixFilesystem {
     }
 
     @Override
-    protected String[] list(IFile f) throws UnsupportedOperationException, NoSuchElementException, IllegalStateException, IOException {
-	return super.list(f);
-    }
-
-    @Override
     protected String getPreloadPropertyKey() {
 	return PROP_PRELOAD_REMOTE;
     }

@@ -439,37 +439,75 @@ public class Engine implements IEngine {
 
 	IAdapter adapter = adapters.get(obj.getClass());
 	if (adapter == null) {
-	    MessageType message = JOVALSystem.factories.common.createMessageType();
-	    message.setLevel(MessageLevelEnumeration.WARNING);
+	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.WARNING);
 	    String err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
-	    message.setValue(err);
-	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
+	    msg.setValue(err);
+	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
 	} else {
 	    Set s = getObjectSet(obj);
 	    if (s == null) {
 		try {
 		    Collection<JAXBElement<? extends ItemType>> items = adapter.getItems(rc);
+		    if (items.size() > 0) {
+			//
+			// If items are found, then apply filters if any are specified for the object
+			//
+			items = filterWrappedItems(getFilters(obj), items);
+		    }
+
 		    if (items.size() == 0) {
+			//
+			// Mark the object as non-existent
+			//
 			MessageType msg = JOVALSystem.factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.INFO);
 			msg.setValue(JOVALSystem.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
 			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
-		    } else {
-			//
-			// Apply filters from the object, if there are any
-			//
-			items = filterWrappedItems(getFilters(obj), items);
 
 			//
-			// Add the object to the SystemCharacteristics, and associate all the items with it.
-			// DAS: TBD, add a mechanism to flag the item collection as incomplete (i.e., permission issues)
+			// Check if there were errors, and re-flag the object if there were
+			//
+			boolean flagged = false;
+			for (MessageType message: sc.getObject(objectId).getMessage()) {
+			    switch(message.getLevel()) {
+			      case ERROR:
+			      case FATAL:
+				sc.getObject(objectId).setFlag(FlagEnumeration.ERROR);
+				flagged = true;
+				break;
+			    }
+			    if (flagged) break;
+			}
+		    } else {
+			//
+			// Associate the items with the object
 			//
 			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
 			for (JAXBElement<? extends ItemType> item : items) {
 			    BigInteger itemId = sc.storeItem(item);
 			    sc.relateItem(objectId, itemId);
 			}
+
+			//
+			// If there were errors, then re-flag the object as incomplete
+			//
+			boolean flagged = false;
+			for (MessageType msg: sc.getObject(objectId).getMessage()) {
+			    switch(msg.getLevel()) {
+			      case ERROR:
+			      case FATAL:
+				sc.getObject(objectId).setFlag(FlagEnumeration.INCOMPLETE);
+				flagged = true;
+				break;
+			    }
+			    if (flagged) break;
+			}
 		    }
+
+		    //
+		    // Associate variables with the object
+		    //
 		    for (VariableValueType var : rc.getVars()) {
 			sc.storeVariable(var);
 			sc.relateVariable(objectId, var.getVariableId());
@@ -480,24 +518,30 @@ public class Engine implements IEngine {
 		    }
 		    return unwrapped;
 		} catch (NotCollectableException e) {
-		    MessageType message = JOVALSystem.factories.common.createMessageType();
-		    message.setLevel(MessageLevelEnumeration.WARNING);
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.WARNING);
 		    String err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
-		    message.setValue(err);
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, message);
+		    msg.setValue(err);
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
 		} catch (Exception e) {
 		    //
 		    // Handle an uncaught, unexpected exception emanating from the adapter.
 		    //
 		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    MessageType message = JOVALSystem.factories.common.createMessageType();
-		    message.setLevel(MessageLevelEnumeration.ERROR);
-		    message.setValue(e.getMessage());
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, message);
+		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(e.getMessage());
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, msg);
 		}
 	    } else {
+		MessageType msg = null;
 		Collection<ItemType> items = getSetItems(s);
-		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
+		if (items.size() == 0) {
+		    msg = JOVALSystem.factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.INFO);
+		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.STATUS_EMPTY_SET));
+		}
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, msg);
 		for (ItemType item : items) {
 		    sc.relateItem(objectId, item.getId());
 		}

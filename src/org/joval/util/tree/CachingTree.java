@@ -55,6 +55,26 @@ public abstract class CachingTree implements ITree {
 	return false;
     }
 
+    /**
+     * Lists the children of the INode, as determined by the contents of the cache.
+     *
+     * @throws IllegalStateException if caching is disabled
+     */
+    public final String[] list(INode n) throws UnsupportedOperationException, NoSuchElementException, IllegalStateException {
+	if (preload()) {
+	    INode node = cache.lookup(n.getPath());
+	    Collection<INode> children = node.getChildren();
+	    String[] sa = new String[children.size()];
+	    int i=0;
+	    for (INode child : children) {
+		sa[i++] = child.getName();
+	    }
+	    return sa;
+	} else {
+	    throw new IllegalStateException();
+	}
+    }
+
     // Implement ILogger
 
     public LocLogger getLogger() {

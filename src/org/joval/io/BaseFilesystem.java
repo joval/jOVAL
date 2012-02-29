@@ -53,34 +53,6 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
 	setLogger(session.getLogger());
     }
 
-    /**
-     * Lists the children of the IFile, as determined by the contents of the cache.
-     *
-     * @throws IllegalStateException if caching is disabled
-     */
-    protected String[] list(IFile f) throws UnsupportedOperationException, NoSuchElementException, IllegalStateException, IOException {
-	if (preload()) {
-	    try {
-		INode node = cache.lookup(f.getPath());
-		Collection<INode> children = node.getChildren();
-		String[] sa = new String[children.size()];
-		int i=0;
-		for (INode child : children) {
-		    sa[i++] = child.getName();
-		}
-		return sa;
-	    } catch (UnsupportedOperationException e) {
-		if (f.isDirectory()) {
-		    return new String[0];
-		} else {
-		    throw e;
-		}
-	    }
-	} else {
-	    throw new IllegalStateException();
-	}
-    }
-
     public void setAutoExpand(boolean autoExpand) {
 	this.autoExpand = autoExpand;
     }

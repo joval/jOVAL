@@ -97,14 +97,23 @@ public class UnixFile implements IUnixFile {
 	    return f.getChildren(p);
 	} else {
 	    try {
-		Collection<INode> children = new Vector<INode>();
-		String[] sa = ufs.list(this);
-		for (int i=0; i < sa.length; i++) {
-		    if (p == null || p.matcher(sa[i]).find()) {
-			children.add(getChild(sa[i]));
+		if (isLink()) {
+		    return ufs.getFile(getCanonicalPath()).getChildren();
+		} else if (isDirectory()) {
+		    Collection<INode> children = new Vector<INode>();
+		    try {
+			String[] sa = ufs.list(this);
+			for (int i=0; i < sa.length; i++) {
+			    if (p == null || p.matcher(sa[i]).find()) {
+				children.add(getChild(sa[i]));
+			    }
+			}
+		    } catch (UnsupportedOperationException e) {
 		    }
+		    return children;
+		} else {
+		    throw new UnsupportedOperationException(getPath());
 		}
-		return children;
 	    } catch (IOException e) {
 		throw new UnsupportedOperationException(e);
 	    }
@@ -257,11 +266,12 @@ public class UnixFile implements IUnixFile {
     }
 
     public String[] list() throws IOException {
-	if (ufs == null) {
-	    return f.list();
-	} else {
-	    return ufs.list(this);
+	IFile[] fa = listFiles();
+	String[] sa = new String[fa.length];
+	for (int i=0; i < sa.length; i++) {
+	    sa[i] = fa[i].getName();
 	}
+	return sa;
     }
 
     public IFile[] listFiles() throws IOException {

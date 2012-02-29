@@ -51,7 +51,7 @@ import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
 
 /**
- * A local IFilesystem implementation for Unix.
+ * A local IFilesystem implementation for Unix, which caches UnixFile data for fast performance.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -66,8 +66,8 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     protected final static String DELIM_STR		= "/";
     protected final static char   DELIM_CH		= '/';
 
+    protected Hashtable<String, UnixFile> fileCache = new Hashtable<String, UnixFile>();
     protected long S, M, L, XL;
-    protected Hashtable<String, UnixFile> files = new Hashtable<String, UnixFile>();
 
     private IUnixSession us;
     private boolean preloaded = false;
@@ -98,8 +98,8 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
      * Wrap an IFile inside an IUnixFile, if the cache contains one.
      */
     protected final IFile getUnixFile(IFile f) throws IOException {
-	if (files.containsKey(f.getPath())) {
-	    UnixFile uf = files.get(f.getPath());
+	if (fileCache.containsKey(f.getPath())) {
+	    UnixFile uf = fileCache.get(f.getPath());
 	    uf.set(this, f);
 	    return uf;
 	} else {
@@ -115,11 +115,6 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     @Override
     public IFile getFile(String path) throws IllegalArgumentException, IOException {
 	return getUnixFile(super.getFile(path));
-    }
-
-    @Override
-    protected String[] list(IFile f) throws UnsupportedOperationException, NoSuchElementException, IllegalStateException, IOException {
-	return super.list(f);
     }
 
     /**
@@ -267,7 +262,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		}
 		UnixFile uf = new UnixFile(line);
 		String path = uf.getPath();
-		files.put(path, uf);
+		fileCache.put(path, uf);
 		if (!path.equals(DELIM_STR)) { // skip the root node
 		    INode node = tree.getRoot();
 		    try {
