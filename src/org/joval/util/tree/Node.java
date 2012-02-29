@@ -4,12 +4,13 @@
 package org.joval.util.tree;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
 import org.joval.intf.util.tree.INode;
+import org.joval.util.StringTools;
 
 /**
  * A class that represents a node within a tree.
@@ -175,15 +176,15 @@ public class Node implements INode, Cloneable {
 
     INode lookup(String path) throws NoSuchElementException {
 	if (parent == null) {
-	    StringTokenizer tok = new StringTokenizer(path, tree.delimiter);
-	    if (tok.countTokens() == 0) {
+	    Iterator<String> iter = StringTools.tokenize(path, tree.delimiter, false);
+	    if (!iter.hasNext()) {
 		throw new NoSuchElementException(path);
 	    }
-	    String rootName = tok.nextToken();
+	    String rootName = iter.next();
 	    if (name.equals(rootName)) {
 		Node next = this;
-		while (tok.hasMoreTokens()) {
-		    String token = tok.nextToken();
+		while (iter.hasNext()) {
+		    String token = iter.next();
 		    next = (Node)next.getChild(token);
 		}
 		return next;

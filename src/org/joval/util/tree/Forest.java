@@ -5,6 +5,7 @@ package org.joval.util.tree;
 
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
@@ -82,5 +83,20 @@ public class Forest implements IForest {
 	    result.addAll(tree.search(p));
 	}
 	return result;
+    }
+
+    public INode lookup(String path) {
+	INode result = null;
+	for (ITree tree : getTrees()) {
+	    try {
+		if (tree.getRoot().getName().equals(path)) {
+		    return tree.getRoot();
+		} else {
+		    return tree.lookup(path);
+		}
+	    } catch (NoSuchElementException e) {
+	    }
+	}
+	throw new NoSuchElementException(path);
     }
 }

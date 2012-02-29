@@ -7,13 +7,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.util.ArrayList;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.system.IUnixSession;
@@ -29,11 +35,23 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class UnixFile implements IUnixFile {
+    public static final char NULL	= '0';
+    public static final char DIR_TYPE	= 'd';
+    public static final char FIFO_TYPE	= 'p';
+    public static final char LINK_TYPE	= 'l';
+    public static final char BLOCK_TYPE	= 'b';
+    public static final char CHAR_TYPE	= 'c';
+    public static final char SOCK_TYPE	= 's';
+    public static final char FILE_TYPE	= '-';
+
+    private UnixFilesystem ufs;
     private IFile f;
     private boolean hasExtendedAcl = false;
-    private String permissions, path;
+    private String permissions = null, path = null, canonicalPath = null;
     private int uid, gid;
-    private char unixType;
+    private long size = -1L;
+    private char unixType = NULL;
+    private Date lastModified = null;
 
     public UnixFile(IUnixSession session, IFile f) throws IOException {
 	this.f = f;
@@ -71,15 +89,38 @@ public class UnixFile implements IUnixFile {
     // Implement INode
 
     public Collection<INode> getChildren() throws NoSuchElementException, UnsupportedOperationException {
-	return f.getChildren();
+	return getChildren(null);
     }
 
     public Collection<INode> getChildren(Pattern p) throws NoSuchElementException, UnsupportedOperationException {
-	return f.getChildren(p);
+	if (ufs == null) {
+	    return f.getChildren(p);
+	} else {
+	    try {
+		Collection<INode> children = new Vector<INode>();
+		String[] sa = ufs.list(this);
+		for (int i=0; i < sa.length; i++) {
+		    if (p == null || p.matcher(sa[i]).find()) {
+			children.add(getChild(sa[i]));
+		    }
+		}
+		return children;
+	    } catch (IOException e) {
+		throw new UnsupportedOperationException(e);
+	    }
+	}
     }
 
     public INode getChild(String name) throws NoSuchElementException, UnsupportedOperationException {
-	return f.getChild(name);
+	if (ufs == null) {
+	    return f.getChild(name);
+	} else {
+	    try {
+		return ufs.getFile(getPath() + "/" + name);
+	    } catch (IOException e) {
+		throw new UnsupportedOperationException(e);
+	    }
+	}
     }
 
     public String getName() {
@@ -95,7 +136,17 @@ public class UnixFile implements IUnixFile {
     }
 
     public String getCanonicalPath() {
-	return f.getCanonicalPath();
+	if (unixType == NULL) {
+	    return f.getCanonicalPath();
+	} else {
+	    switch(unixType) {
+	      case LINK_TYPE:
+		return canonicalPath;
+
+	      default:
+		return getPath();
+	    }
+	}
     }
 
     public Type getType() {
@@ -103,21 +154,50 @@ public class UnixFile implements IUnixFile {
     }
 
     public boolean hasChildren() throws NoSuchElementException {
-	return f.hasChildren();
+	if (unixType == NULL) {
+	    return f.hasChildren();
+	} else {
+	    switch(unixType) {
+	      case DIR_TYPE:
+		try {
+		    return getChildren().size() > 0;
+		} catch (UnsupportedOperationException e) {
+		}
+		return false;
+
+	      case LINK_TYPE:
+		if (ufs == null) {
+		    return f.hasChildren();
+		} else {
+		    try {
+			return ufs.getFile(canonicalPath).hasChildren();
+		    } catch (IOException e) {
+			throw new UnsupportedOperationException(e);
+		    }
+		}
+
+	      default:
+		return false;
+	    }
+	}
     }
 
     // Implement IFile
 
     public long accessTime() throws IOException {
-	return f.accessTime();
+	return lastModified();
     }
 
     public long createTime() throws IOException {
-	return f.createTime();
+	return lastModified();
     }
 
     public boolean exists() throws IOException {
-	return f.exists();
+	if (unixType == NULL) {
+	    return f.exists();
+	} else {
+	    return true;
+	}
     }
 
     public boolean mkdir() {
@@ -137,32 +217,56 @@ public class UnixFile implements IUnixFile {
     }
 
     public boolean isDirectory() throws IOException {
-	return f.isDirectory();
+	if (unixType == NULL) {
+	    return f.isDirectory();
+	} else {
+	    return unixType == DIR_TYPE;
+	}
     }
 
     public boolean isFile() throws IOException {
-	return f.isFile();
+	if (unixType == NULL) {
+	    return f.isFile();
+	} else {
+	    return unixType == FILE_TYPE;
+	}
     }
 
     public boolean isLink() throws IOException {
-	return f.isLink();
+	if (permissions == null) {
+	    return f.isLink();
+	} else {
+	    return unixType == LINK_TYPE;
+	}
     }
 
     public long lastModified() throws IOException {
-	return f.lastModified();
+	if (lastModified == null) {
+	    return f.lastModified();
+	} else {
+	    return lastModified.getTime();
+	}
     }
 
     public long length() throws IOException {
-	return f.length();
+	if (size == -1) {
+	    return f.length();
+	} else {
+	    return size;
+	}
     }
 
     public String[] list() throws IOException {
-	return f.list();
+	if (ufs == null) {
+	    return f.list();
+	} else {
+	    return ufs.list(this);
+	}
     }
 
     public IFile[] listFiles() throws IOException {
-	ArrayList<IFile> list = new ArrayList<IFile>();
-	for (INode node : f.getChildren()) {
+	Vector<IFile> list = new Vector<IFile>();
+	for (INode node : getChildren()) {
 	    list.add((IFile)node);
 	}
 	return list.toArray(new IFile[list.size()]);
@@ -170,6 +274,7 @@ public class UnixFile implements IUnixFile {
 
     public void delete() throws IOException {
 	f.delete();
+	unixType = NULL;
     }
 
     public String getLocalName() {
@@ -184,19 +289,19 @@ public class UnixFile implements IUnixFile {
 
     public String getUnixFileType() {
 	switch(unixType) {
-	  case 'd':
+	  case DIR_TYPE:
 	    return "directory";
-	  case 'p':
+	  case FIFO_TYPE:
 	    return "fifo";
-	  case 'l':
+	  case LINK_TYPE:
 	    return "symlink";
-	  case 'b':
+	  case BLOCK_TYPE:
 	    return "block";
-	  case 'c':
+	  case CHAR_TYPE:
 	    return "character";
-	  case 's':
+	  case SOCK_TYPE:
 	    return "socket";
-	  case '-':
+	  case FILE_TYPE:
 	  default:
 	    return "regular";
 	}
@@ -264,14 +369,21 @@ public class UnixFile implements IUnixFile {
 
     // Internal
 
+    /**
+     * All files loaded from cache are assumed to exist.
+     */
     UnixFile(String line) {
 	load(line);
     }
 
-    void setFile(IFile f) {
+    void set(UnixFilesystem ufs, IFile f) {
+	this.ufs = ufs;
 	this.f = f;
     }
 
+    /**
+     * Non-existent files should never have information loaded.
+     */
     private void load(String line) {
 	unixType = line.charAt(0);
 	permissions = line.substring(1, 10);
@@ -279,16 +391,40 @@ public class UnixFile implements IUnixFile {
 	    hasExtendedAcl = true;
 	}
 	StringTokenizer tok = new StringTokenizer(line.substring(11));
+	String linkCount = tok.nextToken();
 	uid = Integer.parseInt(tok.nextToken());
 	gid = Integer.parseInt(tok.nextToken());
+	switch(unixType) {
+	  case CHAR_TYPE:
+	  case BLOCK_TYPE:
+	    tok.nextToken();
+	  default:
+ 	   break;
+	}
+	try {
+	    size = Long.parseLong(tok.nextToken());
+	} catch (NumberFormatException e) {
+	}
+
+	String dateStr = tok.nextToken("/").trim();
+	try {
+	    if (dateStr.indexOf(":") == -1) {
+		lastModified = new SimpleDateFormat("MMM dd  yyyy").parse(dateStr);
+	    } else {
+		lastModified = new SimpleDateFormat("MMM dd HH:mm").parse(dateStr);
+	    }
+	} catch (ParseException e) {
+	    e.printStackTrace();
+	}
+	
 	int begin = line.indexOf("/");
 	if (begin > 0) {
 	    int end = line.indexOf("->");
 	    if (end == -1) {
-	        end = line.length();
-	    }
-	    if (end > begin) {
+	        path = line.substring(begin).trim();
+	    } else if (end > begin) {
 	        path = line.substring(begin, end).trim();
+		canonicalPath = line.substring(end+2).trim();
 	    }
 	}
     }

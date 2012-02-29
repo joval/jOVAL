@@ -14,6 +14,7 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import org.vngx.jsch.ChannelSftp;
 import org.vngx.jsch.SftpATTRS;
@@ -210,27 +211,35 @@ class SftpFile extends BaseFile implements IUnixFile {
     }
 
     public String[] list() throws IOException {
-	if (isLink()) {
-	    try {
-		return fs.getFile(sfs.getCS().realpath(path)).list();
-	    } catch (SftpException e) {
-		throw new IOException(e);
-	    }
-	} else {
-	    try {
-		List<ChannelSftp.LsEntry> list = sfs.getCS().ls(path);
-		String[] children = new String[0];
-		ArrayList<String> al = new ArrayList<String>();
-		Iterator<ChannelSftp.LsEntry> iter = list.iterator();
-		while (iter.hasNext()) {
-		    ChannelSftp.LsEntry entry = iter.next();
-		    if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
-			al.add(entry.getFilename());
-		    }
+	try {
+	    return sfs.list(this);
+	} catch (NoSuchElementException e) {
+	    throw new IOException(e);
+	} catch (UnsupportedOperationException e) {
+	    throw new IOException(e);
+	} catch (IllegalStateException e) {
+	    if (isLink()) {
+		try {
+		    return fs.getFile(sfs.getCS().realpath(path)).list();
+		} catch (SftpException se) {
+		    throw new IOException(se);
 		}
-		return al.toArray(children);
-	    } catch (SftpException e) {
-		throw new IOException(e);
+	    } else {
+		try {
+		    List<ChannelSftp.LsEntry> list = sfs.getCS().ls(path);
+		    String[] children = new String[0];
+		    ArrayList<String> al = new ArrayList<String>();
+		    Iterator<ChannelSftp.LsEntry> iter = list.iterator();
+		    while (iter.hasNext()) {
+			ChannelSftp.LsEntry entry = iter.next();
+			if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
+			    al.add(entry.getFilename());
+			}
+		    }
+		    return al.toArray(children);
+		} catch (SftpException se) {
+		    throw new IOException(se);
+		}
 	    }
 	}
     }

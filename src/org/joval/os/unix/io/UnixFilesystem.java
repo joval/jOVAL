@@ -100,7 +100,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     protected final IFile getUnixFile(IFile f) throws IOException {
 	if (files.containsKey(f.getPath())) {
 	    UnixFile uf = files.get(f.getPath());
-	    uf.setFile(f);
+	    uf.set(this, f);
 	    return uf;
 	} else {
 	    return f;
@@ -115,6 +115,11 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     @Override
     public IFile getFile(String path) throws IllegalArgumentException, IOException {
 	return getUnixFile(super.getFile(path));
+    }
+
+    @Override
+    protected String[] list(IFile f) throws UnsupportedOperationException, NoSuchElementException, IllegalStateException, IOException {
+	return super.list(f);
     }
 
     /**

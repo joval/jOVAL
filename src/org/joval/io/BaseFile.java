@@ -86,7 +86,7 @@ public abstract class BaseFile implements IFile {
 	try {
 	    if (isDirectory()) {
 		String[] sa = list();
-		if (sa == null) {
+		if (sa == null || sa.length == 0) {
 		    return false;
 		} else {
 		    return sa.length > 0;

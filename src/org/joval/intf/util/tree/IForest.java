@@ -4,6 +4,7 @@
 package org.joval.intf.util.tree;
 
 import java.util.Collection;
+import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
 import org.joval.intf.util.ILoggable;
@@ -33,4 +34,9 @@ public interface IForest extends ILoggable {
      * Get all the ITrees in the forest whose paths match the specified Pattern.
      */
     public Collection<String> search(Pattern p);
+
+    /**
+     * Lookup a node in the forest.
+     */
+    public INode lookup(String path) throws NoSuchElementException;
 }
