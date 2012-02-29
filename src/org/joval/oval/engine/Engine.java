@@ -1262,26 +1262,30 @@ public class Engine implements IEngine {
     }
 
     /**
-     * Perform the equivalent of item.getValue().compareTo(state.getValue()).
+     * Perform the equivalent of item.getValue().compareTo(state.getValue()).  Both item and state should have already been
+     * checked to insure they have (non-null) values.
      */
     int compareValues(EntityItemSimpleBaseType item, EntitySimpleBaseType state) throws TestException, OvalException {
+	String itemStr = (String)item.getValue();
+	String stateStr = (String)state.getValue();
+
 	switch(getDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
-		return new BigInteger((String)item.getValue()).compareTo(new BigInteger((String)state.getValue()));
+		return new BigInteger(itemStr.trim()).compareTo(new BigInteger((String)state.getValue()));
 	    } catch (NumberFormatException e) {
 		throw new TestException(e);
 	    }
 
 	  case FLOAT:
 	    try {
-		return new Float((String)item.getValue()).compareTo(new Float((String)state.getValue()));
+		return new Float(itemStr.trim()).compareTo(new Float((String)state.getValue()));
 	    } catch (NumberFormatException e) {
 		throw new TestException(e);
 	    }
 
 	  case BOOLEAN:
-	    if (getBoolean((String)item.getValue()) == getBoolean((String)state.getValue())) {
+	    if (getBoolean(itemStr.trim()) == getBoolean(stateStr.trim())) {
 		return 0;
 	    } else {
 		return 1;
@@ -1296,14 +1300,14 @@ public class Engine implements IEngine {
 
 	  case EVR_STRING:
 	    try {
-		return new Evr((String)item.getValue()).compareTo(new Evr((String)state.getValue()));
+		return new Evr(itemStr.trim()).compareTo(new Evr(stateStr.trim()));
 	    } catch (IllegalArgumentException e) {
 		throw new TestException(e);
 	    }
 
 	  case BINARY:
 	  case STRING:
-	    return ((String)item.getValue()).compareTo((String)state.getValue());
+	    return (itemStr).compareTo(stateStr);
 
 	  default:
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,

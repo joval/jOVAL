@@ -424,7 +424,11 @@ public class XPERT implements Runnable, IObserver {
 				    }
 				} catch (NoSuchElementException e) {
 				}
-				logger.info(ruleId + ": " + ret);
+				if (profile.getSelectedRules().contains(rule)) {
+				    logger.info(ruleId + ": " + ret);
+				} else {
+				    logger.fine(ruleId + ": " + ret);
+				}
 				ruleResult.setResult(ret);
 			    }
 			}
