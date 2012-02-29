@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import javax.xml.bind.JAXBContext;
@@ -291,7 +292,7 @@ public class Results implements IResults {
     // Private
 
     private Collection<String> getVariableIds(Hashtable<String, TestType> tests) {
-	Collection<String> variableIds = new Vector<String>();
+	Collection<String> variableIds = new HashSet<String>();
 	for (TestType test : tests.values()) {
 	   for (TestedVariableType testedVariableType : test.getTestedVariable()) {
 		String variableId = testedVariableType.getVariableId();
@@ -304,7 +305,7 @@ public class Results implements IResults {
     }
 
     private Collection<BigInteger> getItemIds(Hashtable<String, TestType> tests) {
-	Collection<BigInteger> itemIds = new Vector<BigInteger>();
+	Collection<BigInteger> itemIds = new HashSet<BigInteger>();
 	for (TestType test : tests.values()) {
 	    for (TestedItemType testedItemType : test.getTestedItem()) {
 		BigInteger itemId = testedItemType.getItemId();
@@ -317,7 +318,7 @@ public class Results implements IResults {
     }
 
     private Collection<String> getTestIds(DefinitionType definition) {
-	Collection<String> testIds = new Vector<String>();
+	Collection<String> testIds = new HashSet<String>();
 	getTestIds(definition.getCriteria(), testIds);
 	return testIds;
     }
