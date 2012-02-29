@@ -45,6 +45,15 @@ public interface IUnixSession extends ISession {
 	public String value() {
 	    return value;
 	}
+
+	public static Flavor flavorOf(String value) {
+	    for (Flavor flavor : values()) {
+		if (flavor.value().equals(value)) {
+		    return flavor;
+		}
+	    }
+	    return UNKNOWN;
+	}
     
 	public static Flavor flavorOf(IUnixSession session) {
 	    Flavor flavor = UNKNOWN;

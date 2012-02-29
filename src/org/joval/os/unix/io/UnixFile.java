@@ -31,7 +31,7 @@ import org.joval.util.SafeCLI;
 public class UnixFile implements IUnixFile {
     private IFile f;
     private boolean hasExtendedAcl = false;
-    private String permissions;
+    private String permissions, path;
     private int uid, gid;
     private char unixType;
 
@@ -59,16 +59,10 @@ public class UnixFile implements IUnixFile {
 	      default:
 		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor()));
 	    }
-    
-	    String line = SafeCLI.exec(command, session, IUnixSession.Timeout.S);
-	    unixType = line.charAt(0);
-	    permissions = line.substring(1, 10);
-	    if (line.charAt(10) == '+') {
-		hasExtendedAcl = true;
+
+	    if (f.exists()) {
+		load(SafeCLI.exec(command, session, IUnixSession.Timeout.S));
 	    }
-	    StringTokenizer tok = new StringTokenizer(line.substring(11));
-	    uid = Integer.parseInt(tok.nextToken());
-	    gid = Integer.parseInt(tok.nextToken());
 	} catch (Exception e) {
 	    throw new IOException(e);
 	}
@@ -93,7 +87,11 @@ public class UnixFile implements IUnixFile {
     }
 
     public String getPath() {
-	return f.getPath();
+	if (f == null) {
+	    return path;
+	} else {
+	    return f.getPath();
+	}
     }
 
     public String getCanonicalPath() {
@@ -262,5 +260,36 @@ public class UnixFile implements IUnixFile {
 
     public boolean hasExtendedAcl() {
 	return hasExtendedAcl;
+    }
+
+    // Internal
+
+    UnixFile(String line) {
+	load(line);
+    }
+
+    void setFile(IFile f) {
+	this.f = f;
+    }
+
+    private void load(String line) {
+	unixType = line.charAt(0);
+	permissions = line.substring(1, 10);
+	if (line.charAt(10) == '+') {
+	    hasExtendedAcl = true;
+	}
+	StringTokenizer tok = new StringTokenizer(line.substring(11));
+	uid = Integer.parseInt(tok.nextToken());
+	gid = Integer.parseInt(tok.nextToken());
+	int begin = line.indexOf("/");
+	if (begin > 0) {
+	    int end = line.indexOf("->");
+	    if (end == -1) {
+	        end = line.length();
+	    }
+	    if (end > begin) {
+	        path = line.substring(begin, end).trim();
+	    }
+	}
     }
 }

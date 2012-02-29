@@ -116,7 +116,7 @@ public class SftpFilesystem extends UnixFilesystem {
 	    }
 	}
 	if (path.length() > 0 && path.charAt(0) == DELIM_CH) {
-	    return new SftpFile(this, path);
+	    return getUnixFile(new SftpFile(this, path));
 	} else {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
 	}

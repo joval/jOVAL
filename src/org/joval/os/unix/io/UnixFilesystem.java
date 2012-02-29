@@ -12,6 +12,7 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -30,6 +31,7 @@ import org.joval.intf.io.IReader;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
+import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IPathRedirector;
@@ -57,14 +59,17 @@ import org.joval.util.StringTools;
 public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     protected final static String LOCAL_INDEX		= "fs.index.gz";
     protected final static String INDEX_PROPS		= "fs.index.properties";
-    protected final static String INDEX_PROP_LEN	= "length";
-    protected final static String INDEX_PROP_CRC	= "crc";
+    protected final static String INDEX_PROP_USER	= "user";
+    protected final static String INDEX_PROP_FLAVOR	= "flavor";
     protected final static String INDEX_PROP_MOUNTS	= "mounts";
+    protected final static String INDEX_PROP_LEN	= "length";
     protected final static String DELIM_STR		= "/";
     protected final static char   DELIM_CH		= '/';
 
     protected long S, M, L, XL;
+    protected Hashtable<String, UnixFile> files = new Hashtable<String, UnixFile>();
 
+    private IUnixSession us;
     private boolean preloaded = false;
     private int entries, maxEntries;
     private ITreeBuilder tree;
@@ -72,13 +77,14 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     public UnixFilesystem(IBaseSession session, IEnvironment env) {
 	super(session, env, null);
 
+	us = (IUnixSession)session;
 	tree = new Tree("", DELIM_STR);
 	cache.addTree(tree);
 
-	S = session.getTimeout(IUnixSession.Timeout.S);
-	M = session.getTimeout(IUnixSession.Timeout.M);
-	L = session.getTimeout(IUnixSession.Timeout.L);
-	XL= session.getTimeout(IUnixSession.Timeout.XL);
+	S = us.getTimeout(IUnixSession.Timeout.S);
+	M = us.getTimeout(IUnixSession.Timeout.M);
+	L = us.getTimeout(IUnixSession.Timeout.L);
+	XL= us.getTimeout(IUnixSession.Timeout.XL);
     }
 
     /**
@@ -88,11 +94,33 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	return PROP_PRELOAD_LOCAL;
     }
 
+    /**
+     * Wrap an IFile inside an IUnixFile, if the cache contains one.
+     */
+    protected final IFile getUnixFile(IFile f) throws IOException {
+	if (files.containsKey(f.getPath())) {
+	    UnixFile uf = files.get(f.getPath());
+	    uf.setFile(f);
+	    return uf;
+	} else {
+	    return f;
+	}
+    }
+
     @Override
     public String getDelimiter() {
 	return DELIM_STR;
     }
 
+    @Override
+    public IFile getFile(String path) throws IllegalArgumentException, IOException {
+	return getUnixFile(super.getFile(path));
+    }
+
+    /**
+     * Efficiently scan the target host for information about its filesystems, and potentially cache that information on
+     * the local machine or the target host for future re-use.
+     */
     public boolean preload() {
 	if (!props.getBooleanProperty(getPreloadPropertyKey())) {
 	    return false;
@@ -106,8 +134,8 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
 
 	try {
-	    String command = getFindCommand((IUnixSession)session);
-	    List<String> mounts = getMounts((IUnixSession)session);
+	    String command = getFindCommand();
+	    List<String> mounts = getMounts();
 
 	    if (VAL_FILE_METHOD.equals(props.getProperty(PROP_PRELOAD_METHOD))) {
 		//
@@ -150,7 +178,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 
 		//
 		// Store properties about the remote cache file.  If there is none, then we're using the verified local
-		// cache file, so there's no data to store.
+		// cache file, so there's no new data to store.
 		//
 		if (remoteCache != null) {
 		    StringBuffer sb = new StringBuffer();
@@ -161,6 +189,8 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 			sb.append(mount);
 		    }
 		    Properties cacheProps = new Properties();
+		    cacheProps.setProperty(INDEX_PROP_USER, us.getEnvironment().getenv("LOGNAME"));
+		    cacheProps.setProperty(INDEX_PROP_FLAVOR, us.getFlavor().value());
 		    cacheProps.setProperty(INDEX_PROP_MOUNTS, sb.toString());
 		    cacheProps.setProperty(INDEX_PROP_LEN, Long.toString(remoteCache.length()));
 		    cacheProps.store(propsFile.getOutputStream(false), null);
@@ -220,6 +250,9 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 
     // Private
 
+    /**
+     * Read the cache file.
+     */
     private void addEntries(IReader reader) throws PreloadOverflowException, IOException {
 	String line = null;
 	while((line = reader.readLine()) != null) {
@@ -227,7 +260,9 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		if (entries % 20000 == 0) {
 		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, entries);
 		}
-		String path = line;
+		UnixFile uf = new UnixFile(line);
+		String path = uf.getPath();
+		files.put(path, uf);
 		if (!path.equals(DELIM_STR)) { // skip the root node
 		    INode node = tree.getRoot();
 		    try {
@@ -244,6 +279,8 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 			} while ((path = trimToken(path, DELIM_STR)) != null);
 		    }
 		}
+
+
 	    } else {
 		logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
 		throw new PreloadOverflowException();
@@ -258,24 +295,40 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
      *
      * The resulting command will follow links, but restrict results to the originating filesystem.
      */
-    private String getFindCommand(IUnixSession us) throws Exception {
+    private String getFindCommand() throws Exception {
 	StringBuffer command = new StringBuffer("find -L %MOUNT%");
+//
+// REMIND (DAS): superior commands appear below...
+//
 	switch(us.getFlavor()) {
-	  case AIX:
-	    command.append(" -xdev");
+	  case LINUX:
+//	    command.append(" -print0 -mount | xargs -0 stat --format=%A,%u,%g,%s,%W,%X,%Y,%Z,%n");
+	    command.append(" -print0 -mount | xargs -0 ls -dn");
 	    break;
 
-	  default:
-	    command.append(" -mount");
+	  case MACOSX:
+//	    command.append(" -print0 -mount | xargs -0 stat -f %p,%u,%g,%z,%B,%a,%m,%N");
+	    command.append(" -print0 -mount | xargs -0 ls -ldn");
+	    break;
+
+	  case SOLARIS:
+//	    command.append(" -mount | sed 's/./\\\\&/g' | xargs ls -ldnE");
+	    command.append(" -mount | sed 's/./\\\\&/g' | xargs ls -dn");
+	    break;
+
+	  case AIX:
+//	    command.append(" -xdev | sed 's/./\\\\&/g' | xargs ls -ndN");
+	    command.append(" -xdev | sed 's/./\\\\&/g' | xargs ls -dn");
 	    break;
 	}
+
 	return command.toString();
     }
 
     /**
      * Get a list of mount points.  The result will be filtered by the configured list of filesystem types.
      */
-    private List<String> getMounts(IUnixSession us) throws Exception {
+    private List<String> getMounts() throws Exception {
 	List<String> fsTypeFilter = new Vector<String>();
 	String filterStr = props.getProperty(PROP_PRELOAD_FSTYPE_FILTER);
 	if (filterStr != null) {
@@ -395,59 +448,53 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
      * mounts to be indexed.
      */
     private boolean isValidCache(IFile f, IProperty cacheProps, List<String> mounts) throws IOException {
-	if (f.exists()) {
+	try {
+	    test(f.exists() && f.isFile());
+
 	    //
 	    // Check the expiration date
 	    //
-	    long expires = f.lastModified() + props.getLongProperty(PROP_PRELOAD_MAXAGE);
-	    if (System.currentTimeMillis() >= expires) {
-		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_EXPIRED, f.getLocalName(), new Date(expires));
-		f.delete();
-		return false;
-	    }
+	    test(System.currentTimeMillis() < (f.lastModified() + props.getLongProperty(PROP_PRELOAD_MAXAGE)));
+
+	    //
+	    // Check the username
+	    //
+	    test(us.getEnvironment().getenv("LOGNAME").equals(cacheProps.getProperty(INDEX_PROP_USER)));
+
+	    //
+	    // Check the Unix flavor
+	    //
+	    test(us.getFlavor().value().equals(cacheProps.getProperty(INDEX_PROP_FLAVOR)));
 
 	    //
 	    // Check the length
 	    //
-	    long len = cacheProps.getLongProperty(INDEX_PROP_LEN);
-	    if (f.length() != len) {
-		logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), INDEX_PROP_LEN);
-		f.delete();
-		return false;
-	    }
+	    test(f.length() == cacheProps.getLongProperty(INDEX_PROP_LEN));
 
 	    //
 	    // Check the mounts
 	    //
 	    String s = cacheProps.getProperty(INDEX_PROP_MOUNTS);
-	    if (s == null) {
-		logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), INDEX_PROP_MOUNTS);
-		f.delete();
-		return false;
-	    } else {
-		List<String> cachedMounts = StringTools.toList(StringTools.tokenize(s, ":", true));
-		if (cachedMounts.size() != mounts.size()) {
-		    logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), INDEX_PROP_MOUNTS);
-		    f.delete();
-		    return false;
-		}
-		String[] a = new String[0];
-		a = new ArrayList<String>(cachedMounts).toArray(a);
-		Arrays.sort(a);
-		String[] b = new String[0];
-		b = new ArrayList<String>(mounts).toArray(b);
-		Arrays.sort(b);
-		for (int i=0; i < a.length; i++) {
-		    if (!a[i].equals(b[i])) {
-			logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), INDEX_PROP_MOUNTS);
-			f.delete();
-			return false;
-		    }
-		}
+	    test(s != null);
+	    List<String> cachedMounts = StringTools.toList(StringTools.tokenize(s, ":", true));
+	    test(cachedMounts.size() == mounts.size());
+	    String[] a = new String[0];
+	    a = new ArrayList<String>(cachedMounts).toArray(a);
+	    Arrays.sort(a);
+	    String[] b = new String[0];
+	    b = new ArrayList<String>(mounts).toArray(b);
+	    Arrays.sort(b);
+	    for (int i=0; i < a.length; i++) {
+		test(a[i].equals(b[i]));
 	    }
 	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_REUSE, f.getLocalName());
 	    return true;
-	} else {
+	} catch (AssertionError e) {
+	    logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), INDEX_PROP_MOUNTS);
+	    try {
+		f.delete();
+	    } catch (IOException ioe) {
+	    }
 	    return false;
 	}
     }
@@ -526,6 +573,10 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	SafeCLI.exec("mv " + tempPath + " " + destPath, session, S);
 	logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_CREATE, destPath);
 	return getFile(destPath);
+    }
+
+    private void test(boolean val) throws AssertionError {
+	if (!val) throw new AssertionError();
     }
 
     private class ErrorReader implements Runnable {
