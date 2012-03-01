@@ -9,6 +9,8 @@ import java.io.InterruptedIOException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -59,6 +61,7 @@ import org.joval.util.StringTools;
 public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     protected final static String LOCAL_INDEX		= "fs.index.gz";
     protected final static String INDEX_PROPS		= "fs.index.properties";
+    protected final static String INDEX_PROP_COMMAND	= "command";
     protected final static String INDEX_PROP_USER	= "user";
     protected final static String INDEX_PROP_FLAVOR	= "flavor";
     protected final static String INDEX_PROP_MOUNTS	= "mounts";
@@ -94,33 +97,16 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	return PROP_PRELOAD_LOCAL;
     }
 
-    /**
-     * Wrap an IFile inside an IUnixFile, if the cache contains one.
-     */
-    protected final IFile getUnixFile(IFile f) throws IOException {
-	if (fileCache.containsKey(f.getPath())) {
-	    UnixFile uf = fileCache.get(f.getPath());
-	    uf.set(this, f);
-	    return uf;
-	} else {
-	    return f;
-	}
-    }
-
     @Override
     public String getDelimiter() {
 	return DELIM_STR;
-    }
-
-    @Override
-    public IFile getFile(String path) throws IllegalArgumentException, IOException {
-	return getUnixFile(super.getFile(path));
     }
 
     /**
      * Efficiently scan the target host for information about its filesystems, and potentially cache that information on
      * the local machine or the target host for future re-use.
      */
+    @Override
     public boolean preload() {
 	if (!props.getBooleanProperty(getPreloadPropertyKey())) {
 	    return false;
@@ -165,7 +151,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		    if (propsFile.exists()) {
 			cacheProps.load(propsFile.getInputStream());
 		    }
-		    if (isValidCache(localCache, new PropertyUtil(cacheProps), mounts)) {
+		    if (isValidCache(localCache, new PropertyUtil(cacheProps), command, mounts)) {
 			InputStream in = new GZIPInputStream(localCache.getInputStream());
 			reader = PerishableReader.newInstance(in, S);
 			cleanRemoteCache = false;
@@ -189,6 +175,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 			sb.append(mount);
 		    }
 		    Properties cacheProps = new Properties();
+		    cacheProps.setProperty(INDEX_PROP_COMMAND, command);
 		    cacheProps.setProperty(INDEX_PROP_USER, us.getEnvironment().getenv("LOGNAME"));
 		    cacheProps.setProperty(INDEX_PROP_FLAVOR, us.getFlavor().value());
 		    cacheProps.setProperty(INDEX_PROP_MOUNTS, sb.toString());
@@ -248,10 +235,35 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	}
     }
 
+    @Override
+    public IFile getFile(String path) throws IllegalArgumentException, IOException {
+	if (fileCache.containsKey(path)) {
+	    return fileCache.get(path);
+	} else {
+	    return getFileImpl(path);
+	}
+    }
+
+    // Implement IUnixFilesystem
+
+    public IUnixFile getUnixFile(String path) throws IllegalArgumentException, IOException {
+	if (fileCache.containsKey(path)) {
+	    return fileCache.get(path);
+	} else {
+	    return generateUnixFile(getFileImpl(path));
+	}
+    }
+
+    // Internal
+
+    protected IFile getFileImpl(String path) throws IllegalArgumentException, IOException {
+	return super.getFile(path);
+    }
+
     // Private
 
     /**
-     * Read the cache file.
+     * Read entries from the cache file.
      */
     private void addEntries(IReader reader) throws PreloadOverflowException, IOException {
 	String line = null;
@@ -260,7 +272,8 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		if (entries % 20000 == 0) {
 		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, entries);
 		}
-		UnixFile uf = new UnixFile(line);
+		UnixFile uf = new UnixFile(this);
+		setUnixFileData(uf, line);
 		String path = uf.getPath();
 		fileCache.put(path, uf);
 		if (!path.equals(DELIM_STR)) { // skip the root node
@@ -278,9 +291,10 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 			    node = tree.makeNode(node, getToken(path, DELIM_STR));
 			} while ((path = trimToken(path, DELIM_STR)) != null);
 		    }
+		    if (uf.isLink()) {
+			uf.canonicalPath = tree.makeLink(node, uf.getCanonicalPath());
+		    }
 		}
-
-
 	    } else {
 		logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
 		throw new PreloadOverflowException();
@@ -290,39 +304,148 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     }
 
     /**
+     * Returns some variation of the ls or stat command.  The final argument (not included) should be the escaped path of
+     * the file being stat'd.
+     *
+     * REMIND (DAS): Superior alternatives TBD...
+     */
+    private String getStatCommand() {
+	switch(us.getFlavor()) {
+	  case LINUX:
+//return "stat --format=%A,%u,%g,%s,%W,%X,%Y,%Z,%n";
+	    return "ls -dn";
+
+	  case MACOSX:
+//return "stat -f %p,%u,%g,%z,%B,%a,%m,%N";
+	    return "ls -ldn";
+
+	  case SOLARIS:
+//return "ls -ldnE";
+	  case AIX:
+//?? istat ??
+//return "ls -ndN";
+	    return "ls -dn";
+
+	  default:
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, us.getFlavor()));
+	}
+    }
+
+    /**
+     * Create a UnixFile from the output line of the stat command.
+     */
+    private void setUnixFileData(UnixFile uf, String line) {
+	uf.unixType = line.charAt(0);
+	uf.permissions = line.substring(1, 10);
+	if (line.charAt(10) == '+') {
+	    uf.hasExtendedAcl = true;
+	}
+
+	StringTokenizer tok = new StringTokenizer(line.substring(11));
+	String linkCount = tok.nextToken();
+	try {
+	    uf.uid = Integer.parseInt(tok.nextToken());
+	} catch (NumberFormatException e) {
+	    uf.uid = -1;
+	    //DAS -- could be, e.g., 4294967294 (illegal "nobody" value)
+	}
+	try {
+	    uf.gid = Integer.parseInt(tok.nextToken());
+	} catch (NumberFormatException e) {
+	    uf.gid = -1;
+	    //DAS -- could be, e.g., 4294967294 (illegal "nobody" value)
+	}
+
+	switch(uf.unixType) {
+	  case UnixFile.CHAR_TYPE:
+	  case UnixFile.BLOCK_TYPE:
+	    int ptr = -1;
+	    if ((ptr = line.indexOf(",")) > 11) {
+		tok = new StringTokenizer(line.substring(ptr+1));
+	    }
+	    break;
+	}
+
+	try {
+	    uf.size = Long.parseLong(tok.nextToken());
+	} catch (NumberFormatException e) {
+	}
+
+	String dateStr = tok.nextToken("/").trim();
+	try {
+	    if (dateStr.indexOf(":") == -1) {
+		switch(us.getFlavor()) {
+		  case SOLARIS:
+		  case LINUX:
+		    uf.lastModified = new SimpleDateFormat("MMM dd  yyyy").parse(dateStr);
+		    break;
+
+		  case AIX:
+		  default:
+		    uf.lastModified = new SimpleDateFormat("MMM dd yyyy").parse(dateStr);
+		    break;
+		}
+	    } else {
+		uf.lastModified = new SimpleDateFormat("MMM dd HH:mm").parse(dateStr);
+	    }
+	} catch (ParseException e) {
+	    e.printStackTrace();
+	}
+	
+	int begin = line.indexOf(DELIM_STR);
+	if (begin > 0) {
+	    int end = line.indexOf("->");
+	    if (end == -1) {
+	        uf.path = line.substring(begin).trim();
+	    } else if (end > begin) {
+	        uf.path = line.substring(begin, end).trim();
+		uf.canonicalPath = line.substring(end+2).trim();
+	    }
+	}
+    }
+
+    /**
+     * Create a UnixFile from an IFile.
+     */
+    private UnixFile generateUnixFile(IFile f) throws IOException {
+	try {
+	    UnixFile uf = new UnixFile(this, f);
+	    if (f.exists()) {
+		String command = getStatCommand() + f.getLocalName();
+		setUnixFileData(uf, SafeCLI.exec(command, session, IUnixSession.Timeout.S));
+	    }
+	    return uf;
+	} catch (Exception e) {
+	    throw new IOException(e);
+	}
+    }
+
+    /**
      * Returns a string containing the correct find command for the Unix flavor.  The command contains the String "%MOUNT%"
      * where the actual path of the mount should be substituted.
      *
      * The resulting command will follow links, but restrict results to the originating filesystem.
      */
     private String getFindCommand() throws Exception {
-	StringBuffer command = new StringBuffer("find -L %MOUNT%");
-//
-// REMIND (DAS): superior commands appear below...
-//
+	StringBuffer command = new StringBuffer("find %MOUNT%");
 	switch(us.getFlavor()) {
 	  case LINUX:
-//	    command.append(" -print0 -mount | xargs -0 stat --format=%A,%u,%g,%s,%W,%X,%Y,%Z,%n");
-	    command.append(" -print0 -mount | xargs -0 ls -dn");
+	    command.append(" -print0 -mount | xargs -0 ");
 	    break;
 
 	  case MACOSX:
-//	    command.append(" -print0 -mount | xargs -0 stat -f %p,%u,%g,%z,%B,%a,%m,%N");
-	    command.append(" -print0 -mount | xargs -0 ls -ldn");
+	    command.append(" -print0 -mount | xargs -0 ");
 	    break;
 
 	  case SOLARIS:
-//	    command.append(" -mount | sed 's/./\\\\&/g' | xargs ls -ldnE");
-	    command.append(" -mount | sed 's/./\\\\&/g' | xargs ls -dn");
+	    command.append(" -mount | sed 's/./\\\\&/g' | xargs ");
 	    break;
 
 	  case AIX:
-//	    command.append(" -xdev | sed 's/./\\\\&/g' | xargs ls -ndN");
-	    command.append(" -xdev | sed 's/./\\\\&/g' | xargs ls -dn");
+	    command.append(" -xdev | sed 's/./\\\\&/g' | xargs ");
 	    break;
 	}
-
-	return command.toString();
+	return command.append(getStatCommand()).toString();
     }
 
     /**
@@ -447,7 +570,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
      * After the date is checked, the properties are used to validate the length of the file and the list of filesystem
      * mounts to be indexed.
      */
-    private boolean isValidCache(IFile f, IProperty cacheProps, List<String> mounts) throws IOException {
+    private boolean isValidCache(IFile f, IProperty cacheProps, String command, List<String> mounts) throws IOException {
 	try {
 	    test(f.exists() && f.isFile());
 
@@ -455,6 +578,11 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	    // Check the expiration date
 	    //
 	    test(System.currentTimeMillis() < (f.lastModified() + props.getLongProperty(PROP_PRELOAD_MAXAGE)));
+
+	    //
+	    // Check the command
+	    //
+	    test(command.equals(cacheProps.getProperty(INDEX_PROP_COMMAND)));
 
 	    //
 	    // Check the username
@@ -522,7 +650,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	}
 
 	IFile temp = getFile(destPath);
-	if (isValidCache(temp, new PropertyUtil(cacheProps), mounts)) {
+	if (isValidCache(temp, new PropertyUtil(cacheProps), command, mounts)) {
 	    return temp;
 	}
 

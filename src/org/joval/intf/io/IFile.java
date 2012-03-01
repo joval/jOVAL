@@ -52,7 +52,8 @@ public interface IFile extends INode {
     public IRandomAccess getRandomAccess(String mode) throws IllegalArgumentException, IOException;
 
     /**
-     * Does this file represent a directory?
+     * Does this file represent a directory?  Note, if this file is a link to a directory, this method is intended to
+     * return true.
      */
     public boolean isDirectory() throws IOException;
 

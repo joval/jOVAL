@@ -38,9 +38,9 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.io.IUnixFile;
+import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;
-import org.joval.os.unix.io.UnixFile;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.plugin.adapter.independent.BaseFileAdapter;
@@ -100,7 +100,7 @@ public class FileAdapter extends BaseFileAdapter {
 	if (f instanceof IUnixFile) {
 	    file = (IUnixFile)f;
 	} else {
-	    file = new UnixFile(us, f);
+	    file = ((IUnixFilesystem)us.getFilesystem()).getUnixFile(f.getLocalName());
 	}
 	session.getLogger().trace(JOVALMsg.STATUS_UNIX_FILE, file.getLocalName());
 	EntityItemIntType aTime = JOVALSystem.factories.sc.core.createEntityItemIntType();

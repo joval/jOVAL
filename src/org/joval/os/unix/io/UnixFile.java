@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.NoSuchElementException;
@@ -45,45 +43,28 @@ public class UnixFile implements IUnixFile {
     public static final char FILE_TYPE	= '-';
 
     private UnixFilesystem ufs;
-    private IFile f;
-    private boolean hasExtendedAcl = false;
-    private String permissions = null, path = null, canonicalPath = null;
-    private int uid, gid;
-    private long size = -1L;
-    private char unixType = NULL;
-    private Date lastModified = null;
+    private IFile accessor;
 
-    public UnixFile(IUnixSession session, IFile f) throws IOException {
-	this.f = f;
-	try {
-	    String command = null;
-	    switch(session.getFlavor()) {
-	      case MACOSX: {
-		command = "/bin/ls -ldn " + f.getLocalName();
-		break;
-	      }
-    
-	      case AIX:
-	      case SOLARIS: {
-		command = "/usr/bin/ls dn " + f.getLocalName();
-		break;
-	      }
-    
-	      case LINUX: {
-		command = "/bin/ls -dn " + f.getLocalName();
-		break;
-	      }
+    boolean hasExtendedAcl = false;
+    String permissions = null, path = null, canonicalPath = null;
+    int uid, gid;
+    long size = -1L;
+    char unixType = NULL;
+    Date lastModified = null;
 
-	      default:
-		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor()));
-	    }
+    /**
+     * Create a UnixFile with a live IFile accessor.
+     */
+    UnixFile(UnixFilesystem ufs, IFile accessor) {
+	this.ufs = ufs;
+	this.accessor = accessor;
+    }
 
-	    if (f.exists()) {
-		load(SafeCLI.exec(command, session, IUnixSession.Timeout.S));
-	    }
-	} catch (Exception e) {
-	    throw new IOException(e);
-	}
+    /**
+     * Create a UnixFile whose information will be populated externally from the cache.
+     */
+    UnixFile(UnixFilesystem ufs) {
+	this.ufs = ufs;
     }
 
     // Implement INode
@@ -93,60 +74,54 @@ public class UnixFile implements IUnixFile {
     }
 
     public Collection<INode> getChildren(Pattern p) throws NoSuchElementException, UnsupportedOperationException {
-	if (ufs == null) {
-	    return f.getChildren(p);
-	} else {
-	    try {
-		if (isLink()) {
-		    return ufs.getFile(getCanonicalPath()).getChildren();
-		} else if (isDirectory()) {
-		    Collection<INode> children = new Vector<INode>();
-		    try {
-			String[] sa = ufs.list(this);
-			for (int i=0; i < sa.length; i++) {
-			    if (p == null || p.matcher(sa[i]).find()) {
-				children.add(getChild(sa[i]));
-			    }
+	try {
+	    if (isLink()) {
+		return ((IFile)ufs.lookup(getCanonicalPath())).getChildren(p);
+	    } else if (isDirectory()) {
+		Collection<INode> children = new Vector<INode>();
+		try {
+		    String[] sa = ufs.list(this);
+		    for (int i=0; i < sa.length; i++) {
+			if (p == null || p.matcher(sa[i]).find()) {
+			    children.add(getChild(sa[i]));
 			}
-		    } catch (UnsupportedOperationException e) {
 		    }
-		    return children;
-		} else {
-		    throw new UnsupportedOperationException(getPath());
+		} catch (UnsupportedOperationException e) {
 		}
-	    } catch (IOException e) {
-		throw new UnsupportedOperationException(e);
+		return children;
+	    } else {
+		throw new UnsupportedOperationException(getPath());
 	    }
+	} catch (IOException e) {
+	    throw new UnsupportedOperationException(e);
 	}
     }
 
     public INode getChild(String name) throws NoSuchElementException, UnsupportedOperationException {
-	if (ufs == null) {
-	    return f.getChild(name);
-	} else {
-	    try {
-		return ufs.getFile(getPath() + "/" + name);
-	    } catch (IOException e) {
-		throw new UnsupportedOperationException(e);
-	    }
+	String prefix = getPath();
+	StringBuffer childPath = new StringBuffer(prefix);
+	if (!prefix.endsWith(UnixFilesystem.DELIM_STR)) {
+	    childPath.append(UnixFilesystem.DELIM_STR);
 	}
+	childPath.append(name);
+	return (IFile)ufs.lookup(childPath.toString());
     }
 
     public String getName() {
-	return f.getName();
+	return path.substring(path.lastIndexOf("/")+1);
     }
 
     public String getPath() {
-	if (f == null) {
-	    return path;
-	} else {
-	    return f.getPath();
-	}
+	return path;
     }
 
     public String getCanonicalPath() {
 	if (unixType == NULL) {
-	    return f.getCanonicalPath();
+	    try {
+		return getAccessor().getCanonicalPath();
+	    } catch (IOException e) {
+		return path;
+	    }
 	} else {
 	    switch(unixType) {
 	      case LINK_TYPE:
@@ -159,35 +134,36 @@ public class UnixFile implements IUnixFile {
     }
 
     public Type getType() {
-	return f.getType();
+	try {
+	    return getAccessor().getType();
+	} catch (IOException e) {
+	    return INode.Type.LEAF;
+	}
     }
 
     public boolean hasChildren() throws NoSuchElementException {
-	if (unixType == NULL) {
-	    return f.hasChildren();
-	} else {
-	    switch(unixType) {
-	      case DIR_TYPE:
-		try {
-		    return getChildren().size() > 0;
-		} catch (UnsupportedOperationException e) {
-		}
-		return false;
-
-	      case LINK_TYPE:
-		if (ufs == null) {
-		    return f.hasChildren();
-		} else {
+	try {
+	    if (unixType == NULL) {
+		return getAccessor().hasChildren();
+	    } else {
+		switch(unixType) {
+		  case DIR_TYPE:
 		    try {
-			return ufs.getFile(canonicalPath).hasChildren();
-		    } catch (IOException e) {
-			throw new UnsupportedOperationException(e);
+			return getChildren().size() > 0;
+		    } catch (UnsupportedOperationException e) {
 		    }
+		    return false;
+    
+		  case LINK_TYPE:
+		    return ufs.lookup(canonicalPath).hasChildren();
+    
+		  default:
+		    return false;
 		}
-
-	      default:
-		return false;
 	    }
+	} catch (IOException e) {
+	    ufs.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new NoSuchElementException(e.getMessage());
 	}
     }
 
@@ -203,39 +179,52 @@ public class UnixFile implements IUnixFile {
 
     public boolean exists() throws IOException {
 	if (unixType == NULL) {
-	    return f.exists();
+	    return getAccessor().exists();
 	} else {
 	    return true;
 	}
     }
 
     public boolean mkdir() {
-	return f.mkdir();
+	try {
+	    return getAccessor().mkdir();
+	} catch (IOException e) {
+	    return false;
+	}
     }
 
     public InputStream getInputStream() throws IOException {
-	return f.getInputStream();
+	return getAccessor().getInputStream();
     }
 
     public OutputStream getOutputStream(boolean append) throws IOException {
-	return f.getOutputStream(append);
+	return getAccessor().getOutputStream(append);
     }
 
     public IRandomAccess getRandomAccess(String mode) throws IllegalArgumentException, IOException {
-	return f.getRandomAccess(mode);
+	return getAccessor().getRandomAccess(mode);
     }
 
     public boolean isDirectory() throws IOException {
 	if (unixType == NULL) {
-	    return f.isDirectory();
+	    return getAccessor().isDirectory();
 	} else {
-	    return unixType == DIR_TYPE;
+	    switch(unixType) {
+	      case DIR_TYPE:
+		return true;
+
+	      case LINK_TYPE:
+		return ((IFile)ufs.lookup(getCanonicalPath())).isDirectory();
+
+	      default:
+		return false;
+	    }
 	}
     }
 
     public boolean isFile() throws IOException {
 	if (unixType == NULL) {
-	    return f.isFile();
+	    return getAccessor().isFile();
 	} else {
 	    return unixType == FILE_TYPE;
 	}
@@ -243,7 +232,7 @@ public class UnixFile implements IUnixFile {
 
     public boolean isLink() throws IOException {
 	if (permissions == null) {
-	    return f.isLink();
+	    return getAccessor().isLink();
 	} else {
 	    return unixType == LINK_TYPE;
 	}
@@ -251,7 +240,7 @@ public class UnixFile implements IUnixFile {
 
     public long lastModified() throws IOException {
 	if (lastModified == null) {
-	    return f.lastModified();
+	    return getAccessor().lastModified();
 	} else {
 	    return lastModified.getTime();
 	}
@@ -259,7 +248,7 @@ public class UnixFile implements IUnixFile {
 
     public long length() throws IOException {
 	if (size == -1) {
-	    return f.length();
+	    return getAccessor().length();
 	} else {
 	    return size;
 	}
@@ -276,23 +265,33 @@ public class UnixFile implements IUnixFile {
 
     public IFile[] listFiles() throws IOException {
 	Vector<IFile> list = new Vector<IFile>();
-	for (INode node : getChildren()) {
-	    list.add((IFile)node);
+	try {
+	    for (INode node : getChildren()) {
+		list.add((IFile)node);
+	    }
+	    return list.toArray(new IFile[list.size()]);
+	} catch (UnsupportedOperationException e) {
+	    throw new IOException(e);
+	} catch (NoSuchElementException e) {
+	    throw new IOException(e);
 	}
-	return list.toArray(new IFile[list.size()]);
     }
 
     public void delete() throws IOException {
-	f.delete();
+	getAccessor().delete();
 	unixType = NULL;
     }
 
     public String getLocalName() {
-	return f.getLocalName();
+	return path;
     }
 
     public String toString() {
-	return f.toString();
+	try {
+	    return getAccessor().toString();
+	} catch (IOException e) {
+	    return getPath();
+	}
     }
 
     // Implement IUnixFile
@@ -377,65 +376,12 @@ public class UnixFile implements IUnixFile {
 	return hasExtendedAcl;
     }
 
-    // Internal
+    // Private
 
-    /**
-     * All files loaded from cache are assumed to exist.
-     */
-    UnixFile(String line) {
-	load(line);
-    }
-
-    void set(UnixFilesystem ufs, IFile f) {
-	this.ufs = ufs;
-	this.f = f;
-    }
-
-    /**
-     * Non-existent files should never have information loaded.
-     */
-    private void load(String line) {
-	unixType = line.charAt(0);
-	permissions = line.substring(1, 10);
-	if (line.charAt(10) == '+') {
-	    hasExtendedAcl = true;
+    private IFile getAccessor() throws IOException {
+	if (accessor == null) {
+	    accessor = ufs.getFileImpl(path);
 	}
-	StringTokenizer tok = new StringTokenizer(line.substring(11));
-	String linkCount = tok.nextToken();
-	uid = Integer.parseInt(tok.nextToken());
-	gid = Integer.parseInt(tok.nextToken());
-	switch(unixType) {
-	  case CHAR_TYPE:
-	  case BLOCK_TYPE:
-	    tok.nextToken();
-	  default:
- 	   break;
-	}
-	try {
-	    size = Long.parseLong(tok.nextToken());
-	} catch (NumberFormatException e) {
-	}
-
-	String dateStr = tok.nextToken("/").trim();
-	try {
-	    if (dateStr.indexOf(":") == -1) {
-		lastModified = new SimpleDateFormat("MMM dd  yyyy").parse(dateStr);
-	    } else {
-		lastModified = new SimpleDateFormat("MMM dd HH:mm").parse(dateStr);
-	    }
-	} catch (ParseException e) {
-	    e.printStackTrace();
-	}
-	
-	int begin = line.indexOf("/");
-	if (begin > 0) {
-	    int end = line.indexOf("->");
-	    if (end == -1) {
-	        path = line.substring(begin).trim();
-	    } else if (end > begin) {
-	        path = line.substring(begin, end).trim();
-		canonicalPath = line.substring(end+2).trim();
-	    }
-	}
+	return accessor;
     }
 }

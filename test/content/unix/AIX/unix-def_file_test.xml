@@ -70,12 +70,12 @@
     </file_test>
   </tests>
   <objects>
-    <file_object id="oval:org.mitre.oval.test:obj:1036" version="1" comment="Retrieve a file_item with a path equal to '/bin'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <path>/bin</path>
+    <file_object id="oval:org.mitre.oval.test:obj:1036" version="1" comment="Retrieve a file_item with a path equal to '/usr/bin'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/usr/bin</path>
       <filename xsi:nil="true"/>
     </file_object>
-    <file_object id="oval:org.mitre.oval.test:obj:1172" version="1" comment="Retrieve file_items with a path that matches the regular expression '^b.n$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <path operation="pattern match">^/b.n$</path>
+    <file_object id="oval:org.mitre.oval.test:obj:1172" version="1" comment="Retrieve file_items with a path that matches the regular expression '^/usr/b.n$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path operation="pattern match">^/usr/b.n$</path>
       <filename xsi:nil="true"/>
     </file_object>
     <file_object id="oval:org.mitre.oval.test:obj:1315" version="1" comment="Retrieve a file_item with a path that equals '/bin' and filename that equals 'ls'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
@@ -113,11 +113,11 @@
     </file_object>
   </objects>
   <states>
-    <file_state id="oval:org.mitre.oval.test:ste:1621" version="1" comment="This state represents a file_item which has a path of '/bin'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <path>/bin</path>
+    <file_state id="oval:org.mitre.oval.test:ste:1621" version="1" comment="This state represents a file_item which has a path of '/usr/bin'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path>/usr/bin</path>
     </file_state>
-    <file_state id="oval:org.mitre.oval.test:ste:1345" version="1" comment="This state represents file_items which have a path that matches the regular expression '^/b.n$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <path operation="pattern match">^/b.n$</path>
+    <file_state id="oval:org.mitre.oval.test:ste:1345" version="1" comment="This state represents file_items which have a path that matches the regular expression '^/usr/b.n$'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <path operation="pattern match">^/usr/b.n$</path>
     </file_state>
     <file_state id="oval:org.mitre.oval.test:ste:1024" version="1" comment="This state represents a file_item which has a path equal to '/bin', a filename equal to 'ls', and a size greater than '0'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <path>/bin</path>

@@ -63,19 +63,30 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
 	return File.separator;
     }
 
+    /**
+     * The lookup method first attempts to translate the path to its canonical form, so that subclasses that cache
+     * can cache getFile results using just their canonical paths.
+     *
+     * Note that this means the returned INode's path will be canonical, so the caller must preserve the path alias if
+     * required.
+     */
     public INode lookup(String path) throws NoSuchElementException {
+	String canon = path;
 	try {
-	    IFile f = getFile(path);
+	    canon = cache.lookup(path).getCanonicalPath();
+	} catch (NoSuchElementException e) {
+	}
+	try {
+	    IFile f = getFile(canon);
 	    if (f.exists()) {
 		return f;
 	    } else {
 		throw new NoSuchElementException(path);
 	    }
 	} catch (IOException e) {
-	    logger.warn(JOVALMsg.ERROR_IO, toString(), e.getMessage());
-	    logger.debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+	    throw new NoSuchElementException(path);
 	}
-	return null;
     }
 
     // Implement IFilesystem
@@ -204,7 +215,14 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
 	}
 
 	public boolean isLink() throws IOException {
-	    return !file.getPath().equals(file.getCanonicalPath());
+	    File canon;
+	    if (file.getParent() == null) {
+		canon = file;
+	    } else {
+		File canonDir = file.getParentFile().getCanonicalFile();
+		canon = new File(canonDir, file.getName());
+	    }
+	    return !canon.getCanonicalFile().equals(canon.getAbsoluteFile());
 	}
 
 	public long lastModified() throws IOException {

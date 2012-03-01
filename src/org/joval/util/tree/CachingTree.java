@@ -64,12 +64,16 @@ public abstract class CachingTree implements ITree {
 	if (preload()) {
 	    INode node = cache.lookup(n.getPath());
 	    Collection<INode> children = node.getChildren();
-	    String[] sa = new String[children.size()];
-	    int i=0;
-	    for (INode child : children) {
-		sa[i++] = child.getName();
+	    if (children == null) {
+		return new String[0];
+	    } else {
+		String[] sa = new String[children.size()];
+		int i=0;
+		for (INode child : children) {
+		    sa[i++] = child.getName();
+		}
+		return sa;
 	    }
-	    return sa;
 	} else {
 	    throw new IllegalStateException();
 	}
@@ -92,13 +96,16 @@ public abstract class CachingTree implements ITree {
 	throw new UnsupportedOperationException();
     }
 
-    public Collection<String> search(Pattern p) {
+    public Collection<String> search(Pattern p, boolean followLinks) {
 	try {
 	    String pattern = p.pattern();
 	    if (preload()) {
 		logger.debug(JOVALMsg.STATUS_CACHESEARCH, pattern);
-		return cache.search(p);
+		return cache.search(p, followLinks);
 	    } else {
+		//
+		// DAS: treeSearch link support is TBD
+		//
 		logger.debug(JOVALMsg.STATUS_TREESEARCH, pattern);
 		return treeSearch(pattern);
 	    }

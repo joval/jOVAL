@@ -10,6 +10,8 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 
 import org.joval.intf.util.tree.INode;
+import org.joval.util.JOVALSystem;
+import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
 /**
@@ -34,30 +36,12 @@ public class Node implements INode, Cloneable {
     }
 
     public INode getChild(String name) throws NoSuchElementException, UnsupportedOperationException {
-	switch(type) {
-	  case LINK: {
-	    try {
-		Node child = (Node)((Node)lookup(linkPath).getChild(name)).clone();
-		child.linkParent = this;
-		return child;
-	    } catch (CloneNotSupportedException e) {
-		throw new RuntimeException(e);
+	for (INode node : getChildren()) {
+	    if (name.equals(node.getName())) {
+		return node;
 	    }
-	  }
-
-	  case LEAF:
-	    throw new UnsupportedOperationException(name);
-
-	  case ROOT:
-	  case BRANCH:
-	  default:
-	    for (INode node : getChildren()) {
-		if (name.equals(node.getName())) {
-		    return node;
-		}
-	    }
-	    throw new NoSuchElementException(name);
 	}
+	throw new NoSuchElementException(name);
     }
 
     public Collection<INode> getChildren() throws NoSuchElementException, UnsupportedOperationException {
@@ -67,20 +51,26 @@ public class Node implements INode, Cloneable {
 		try {
 		    children = new Vector<INode>();
 		    for (INode node : lookup(linkPath).getChildren()) {
-			Node child = (Node)((Node)node).clone();
-			child.linkParent = this;
-			children.add(child);
+			if (getCanonicalPath().equals(node.getCanonicalPath())) {
+			    tree.getLogger().error(JOVALMsg.ERROR_LINK_SELF, getCanonicalPath());
+			} else {
+			    Node child = (Node)((Node)node).clone();
+			    child.linkParent = this;
+			    children.add(child);
+			}
 		    }
 		    return children;
 		} catch (CloneNotSupportedException e) {
 		    throw new RuntimeException(e);
 		}
-	    } else {
+	    } else if (children != null) {
 		return children;
+	    } else {
+		throw new UnsupportedOperationException(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
 	    }
 
 	  case LEAF:
-	    throw new UnsupportedOperationException("getChildren");
+	    throw new UnsupportedOperationException(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
 
 	  case BRANCH:
 	    if (linkParent == null) {
@@ -161,15 +151,27 @@ public class Node implements INode, Cloneable {
 
     // Internal
 
-    Collection<String> search(Pattern p) {
+    Collection<String> search(Pattern p, boolean followLinks) {
+//System.out.println("DAS search " + getPath() + " for " + p.pattern());
 	Collection<String> result = new Vector<String>();
 	if (p.matcher(getPath()).find()) {
 	    result.add(getPath());
 	}
-	if (hasChildren()) {
-	    for (INode child : getChildren()) {
-		result.addAll(((Node)child).search(p));
+
+	try {
+	    if (searchable(followLinks)) {
+		try {
+		    if (hasChildren()) {
+			for (INode child : getChildren()) {
+			    result.addAll(((Node)child).search(p, followLinks));
+			}
+		    }
+		} catch (NoSuchElementException e) {
+		    tree.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_LINK, e.getMessage()));
+		}
 	    }
+	} catch (MaxDepthException e) {
+	    tree.getLogger().warn(JOVALMsg.ERROR_NODE_DEPTH, e.getMessage());
 	}
 	return result;
     }
@@ -185,7 +187,13 @@ public class Node implements INode, Cloneable {
 		Node next = this;
 		while (iter.hasNext()) {
 		    String token = iter.next();
-		    next = (Node)next.getChild(token);
+		    if (token.length() > 0) {
+			try {
+			    next = (Node)next.getChild(token);
+			} catch (UnsupportedOperationException e) {
+			    throw new NoSuchElementException(path);
+			}
+		    }
 		}
 		return next;
 	    } else {
@@ -210,5 +218,23 @@ public class Node implements INode, Cloneable {
 	this.name = name;
 	this.tree = tree;
 	this.type = Type.ROOT;
+    }
+
+    // Private
+
+    private static final int MAX_DEPTH = 50;
+
+    private boolean searchable(boolean followLinks) throws MaxDepthException {
+	int depth = StringTools.toList(StringTools.tokenize(getPath(), tree.delimiter)).size();
+	if (depth > MAX_DEPTH) {
+	    throw new MaxDepthException(getPath());
+	}
+	return followLinks || type != Type.LINK;
+    }
+
+    private class MaxDepthException extends Exception {
+	private MaxDepthException(String message) {
+	    super(message);
+	}
     }
 }

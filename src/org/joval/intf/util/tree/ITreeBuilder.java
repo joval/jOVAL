@@ -16,7 +16,11 @@ public interface ITreeBuilder extends ITree {
     public INode makeNode(INode parent, String name);
 
     /**
-     * Add a node to the tree, which is a link to another node.
+     * Convert the specified node into a link to the specified destination.
+     *
+     * @returns the absolute path of the link destination
+     *
+     * @throws UnsupportedOperationException if the node is a BRANCH or ROOT.
      */
-    public INode makeLink(INode parent, String name, String destinationPath);
+    public String makeLink(INode node, String destination) throws UnsupportedOperationException;
 }

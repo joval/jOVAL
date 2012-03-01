@@ -77,10 +77,10 @@ public class Forest implements IForest {
 	return trees.values();
     }
 
-    public Collection<String> search(Pattern p) {
+    public Collection<String> search(Pattern p, boolean followLinks) {
 	Collection<String> result = new Vector<String>();
 	for (ITree tree : getTrees()) {
-	    result.addAll(tree.search(p));
+	    result.addAll(tree.search(p, followLinks));
 	}
 	return result;
     }
@@ -89,11 +89,7 @@ public class Forest implements IForest {
 	INode result = null;
 	for (ITree tree : getTrees()) {
 	    try {
-		if (tree.getRoot().getName().equals(path)) {
-		    return tree.getRoot();
-		} else {
-		    return tree.lookup(path);
-		}
+		return tree.lookup(path);
 	    } catch (NoSuchElementException e) {
 	    }
 	}

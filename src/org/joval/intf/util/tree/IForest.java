@@ -33,7 +33,7 @@ public interface IForest extends ILoggable {
     /**
      * Get all the ITrees in the forest whose paths match the specified Pattern.
      */
-    public Collection<String> search(Pattern p);
+    public Collection<String> search(Pattern p, boolean followLinks);
 
     /**
      * Lookup a node in the forest.

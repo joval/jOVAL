@@ -175,8 +175,8 @@ class SftpFile extends BaseFile implements IUnixFile {
     public boolean isFile() throws IOException {
 	if (isLink()) {
 	    try {
-		return fs.getFile(sfs.getCS().realpath(path)).isFile();
-	    } catch (SftpException e) {
+		return ((IFile)fs.lookup(path)).isFile();
+	    } catch (NoSuchElementException e) {
 		throw new IOException(e);
 	    }
 	} else if (exists()) {
