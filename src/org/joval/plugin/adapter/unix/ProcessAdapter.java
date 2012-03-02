@@ -267,6 +267,9 @@ public class ProcessAdapter implements IAdapter {
 	    break;
 
 	  case AIX:
+	    args = "/usr/sysv/bin/ps -A -o pid,ppid,pri,uid,ruid,tty,sid,class,time,stime,args | cat -";
+	    break;
+
 	  case LINUX:
 	  case SOLARIS:
 	    args = "ps -e -o pid,ppid,pri,uid,ruid,tty,sid,class,time,stime,args";
@@ -278,35 +281,90 @@ public class ProcessAdapter implements IAdapter {
 	try {
 	    List<String> lines = SafeCLI.multiLine(args, session, IUnixSession.Timeout.S);
 	    for (int i=1; i < lines.size(); i++) { // skip the header at line 0
-		StringTokenizer tok = new StringTokenizer(lines.get(i));
-		ProcessData process = new ProcessData();
-		process.pid.setValue(tok.nextToken());
-		process.pid.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		process.ppid.setValue(tok.nextToken());
-		process.ppid.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		process.priority.setValue(tok.nextToken());
-		process.priority.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		process.userid.setValue(tok.nextToken());
-		process.userid.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		process.ruid.setValue(tok.nextToken());
-		process.ruid.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		process.tty.setValue(tok.nextToken());
-		switch(session.getFlavor()) {
-		  case MACOSX:
-		    process.sessionId.setStatus(StatusEnumeration.NOT_COLLECTED);
-		    process.schedulingClass.setStatus(StatusEnumeration.NOT_COLLECTED);
-		    break;
-		  default:
-		    process.sessionId.setValue(tok.nextToken());
-		    process.sessionId.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		    process.schedulingClass.setValue(tok.nextToken());
-		    break;
+		String line = lines.get(i).trim();
+		if (line.length() > 0) {
+		    StringTokenizer tok = new StringTokenizer(lines.get(i).trim());
+		    ProcessData process = new ProcessData();
+		    process.pid.setValue(tok.nextToken());
+		    process.pid.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    process.ppid.setValue(tok.nextToken());
+		    process.ppid.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    process.priority.setValue(tok.nextToken());
+		    process.priority.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    process.userid.setValue(tok.nextToken());
+		    process.userid.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    process.ruid.setValue(tok.nextToken());
+		    process.ruid.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    process.tty.setValue(tok.nextToken());
+
+		    try {
+			switch(session.getFlavor()) {
+			  case MACOSX:
+			    process.sessionId.setStatus(StatusEnumeration.NOT_COLLECTED);
+			    process.schedulingClass.setStatus(StatusEnumeration.NOT_COLLECTED);
+			    break;
+    
+			  case AIX: {
+			    process.sessionId.setValue(tok.nextToken());
+			    process.sessionId.setDatatype(SimpleDatatypeEnumeration.INT.value());
+			    String s = tok.nextToken();
+			    try {
+				Long.parseLong(s);
+				//
+				// If this is a number, then there's a missing line continuation at this point.
+				//
+				process.command.setValue("?");
+				StringBuffer pseudoLine = new StringBuffer(s);
+				pseudoLine.append(" ").append(tok.nextToken("\n"));
+				throw new LineInsertionException(pseudoLine.toString());
+			    } catch (NumberFormatException e) {
+				process.schedulingClass.setValue(s);
+			    }
+			    break;
+			  }
+    
+			  default:
+			    process.sessionId.setValue(tok.nextToken());
+			    process.sessionId.setDatatype(SimpleDatatypeEnumeration.INT.value());
+			    process.schedulingClass.setValue(tok.nextToken());
+			    break;
+			}
+			process.execTime.setValue(tok.nextToken());
+
+			String stime=null, cmd=null;
+			switch(session.getFlavor()) {
+			  case MACOSX:
+			  case LINUX:
+			    stime = tok.nextToken();
+			    cmd = tok.nextToken("\n").trim();
+			    break;
+
+			  default: {
+			    String rem = tok.nextToken("\n").trim();
+			    stime = rem.substring(0, 8); // XX:XX:XX or MMM_dd format
+			    cmd = null;
+			    if (stime.indexOf(":") == -1) {
+				stime = rem.substring(0, 7);
+				cmd = rem.substring(7).trim();
+			    } else {
+				cmd = rem.substring(8).trim();
+			    }
+			    break;
+			  }
+
+			}
+			process.startTime.setValue(stime);
+			process.command.setValue(cmd);
+		    } catch (LineInsertionException e) {
+			Vector<String> v = new Vector<String>(lines.size() + 1);
+			for (String temp : lines) {
+			    v.add(temp);
+			}
+			v.insertElementAt(e.getMessage(), i+1);
+			lines = v;
+		    }
+		    processes.add(process);
 		}
-		process.execTime.setValue(tok.nextToken());
-		process.startTime.setValue(tok.nextToken());
-		String cmd = tok.nextToken("\n").trim();
-		process.command.setValue(cmd);
-		processes.add(process);
 	    }
 
 	    //
@@ -346,6 +404,12 @@ public class ProcessAdapter implements IAdapter {
 	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	initialized = true;
+    }
+
+    class LineInsertionException extends Exception {
+	LineInsertionException(String newLine) {
+	    super(newLine);
+	}
     }
 
     class ProcessData {
