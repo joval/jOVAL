@@ -275,13 +275,6 @@ public abstract class CachingTree implements ITree {
 	    } catch (NoSuchElementException e) {
 		// the node has disappeared since being discovered
 	    }
-	    if (!nodePath.endsWith(getDelimiter())) {
-		try {
-		    accessor = lookup(nodePath + getDelimiter());
-		} catch (NoSuchElementException e) {
-		    return results; // accessor is a leaf
-		}
-	    }
 	    try {
 		if (accessor.hasChildren()) {
 		    children = accessor.getChildren();

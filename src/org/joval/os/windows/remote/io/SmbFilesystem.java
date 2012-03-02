@@ -126,22 +126,32 @@ public class SmbFilesystem extends BaseFilesystem implements IWindowsFilesystem 
 		realPath = alt;
 	    }
 	}
-	if (realPath.charAt(1) == ':') {
-	    if (isLetter(realPath.charAt(0))) {
-		StringBuffer sb = new StringBuffer("smb://").append(host).append(SMBURL_DELIM_CH);
-		sb.append(realPath.charAt(0)).append('$');
-		if (realPath.length() > 0) {
-		    sb.append(realPath.substring(2).replace(LOCAL_DELIM_CH,SMBURL_DELIM_CH));
+        if (isValidPath(realPath)) {
+	    StringBuffer sb = new StringBuffer("smb://").append(host).append(SMBURL_DELIM_CH);
+	    sb.append(realPath.charAt(0)).append('$');
+	    sb.append(realPath.substring(2).replace(LOCAL_DELIM_CH, SMBURL_DELIM_CH));
+	    logger.trace(JOVALMsg.STATUS_WINSMB_MAP, path, sb.toString());
+
+	    SmbFile smbFile = null;
+	    if (isDrive(realPath)) {
+		sb.append(SMBURL_DELIM_CH);
+		smbFile = new SmbFile(sb.toString(), auth);
+	    } else if (vol) {
+		smbFile = new VolatileSmbFile(sb.toString(), auth);
+	    } else {
+		smbFile = new SmbFile(sb.toString(), auth);
+		//
+		// For directories, it's REQUIRED that the URL conclude with a delimiter
+		//
+		try {
+		    if (smbFile.isDirectory()) {
+			smbFile = new SmbFile(sb.append(SMBURL_DELIM_CH).toString(), auth);
+		    }
+		} catch (SmbException e) {
+		    // If this happens here, just proceed and potentially run into an error later on...
 		}
-		logger.trace(JOVALMsg.STATUS_WINSMB_MAP, path, sb.toString());
-		SmbFile smbFile = null;
-		if (vol) {
-		    smbFile = new VolatileSmbFile(sb.toString(), auth);
-		} else {
-		    smbFile = new SmbFile(sb.toString(), auth);
-		}
-		return new SmbFileProxy(this, smbFile, path);
 	    }
+	    return new SmbFileProxy(this, smbFile, path);
 	}
 	throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
     }
@@ -181,5 +191,19 @@ public class SmbFilesystem extends BaseFilesystem implements IWindowsFilesystem 
 
     private NtlmPasswordAuthentication getNtlmPasswordAuthentication(IWindowsCredential cred) {
 	return new NtlmPasswordAuthentication(cred.getDomain(), cred.getUsername(), cred.getPassword());
+    }
+
+    private boolean isValidPath(String s) {
+	if (s.length() >= 2) {
+            return StringTools.isLetter(s.charAt(0)) && s.charAt(1) == ':';
+	}
+	return false;
+    }
+
+    private boolean isDrive(String s) {
+	if (s.length() == 2) {
+            return isValidPath(s);
+	}
+	return false;
     }
 }

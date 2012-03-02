@@ -59,8 +59,11 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
                 realPath = alt;
             }
         }
-        if (realPath.length() > 2 && realPath.charAt(1) == ':') {
-            if (StringTools.isLetter(realPath.charAt(0))) {
+
+        if (isValidPath(realPath)) {
+	    if (isDrive(realPath)) {
+                return new WindowsFile(new FileProxy(this, new File(realPath + getDelimiter()), path));
+	    } else {
                 return new WindowsFile(new FileProxy(this, new File(realPath), path));
             }
         }
@@ -149,5 +152,19 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
 	} else {
 	    throw new PreloadOverflowException();
 	}
+    }
+
+    private boolean isValidPath(String s) {
+	if (s.length() >= 2) {
+            return StringTools.isLetter(s.charAt(0)) && s.charAt(1) == ':';
+	}
+	return false;
+    }
+
+    private boolean isDrive(String s) {
+	if (s.length() == 2) {
+            return isValidPath(s);
+	}
+	return false;
     }
 }
