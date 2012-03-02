@@ -107,10 +107,6 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	return preloaded;
     }
 
-    /**
-     * Efficiently scan the target host for information about its filesystems, and potentially cache that information on
-     * the local machine or the target host for future re-use.
-     */
     @Override
     public boolean preload() {
 	if (!props.getBooleanProperty(getPreloadPropertyKey())) {

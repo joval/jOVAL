@@ -71,12 +71,12 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
     }
 
     @Override
-    protected boolean preloaded() {
+    public boolean preloaded() {
 	return preloaded;
     }
 
     @Override
-    protected boolean preload() {
+    public boolean preload() {
 	if (!props.getBooleanProperty(PROP_PRELOAD_LOCAL)) {
 	    return false;
 	} else if (preloaded()) {

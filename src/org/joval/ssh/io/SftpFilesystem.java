@@ -99,6 +99,9 @@ public class SftpFilesystem extends UnixFilesystem {
 	return PROP_PRELOAD_REMOTE;
     }
 
+    private int attempt = 0;
+    private int threshold = props.getIntProperty(PROP_PRELOAD_TRIGGER);
+
     @Override
     protected IFile getFileImpl(String path) throws IllegalArgumentException, IOException {
 	if (!connect()) {
@@ -114,6 +117,14 @@ public class SftpFilesystem extends UnixFilesystem {
 	    }
 	}
 	if (path.length() != 0 && path.charAt(0) == DELIM_CH) {
+	    if (!preloaded()) {
+		if (threshold >= 0 && threshold == attempt++) {
+		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_AUTOSTART, threshold);
+		    if (preload()) {
+			return getFile(path);
+		    }
+		}
+	    }
 	    return new SftpFile(this, path);
 	} else {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));

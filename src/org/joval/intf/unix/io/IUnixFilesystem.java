@@ -18,6 +18,12 @@ public interface IUnixFilesystem {
     String PROP_PRELOAD_METHOD = "fs.preload.method";
 
     /**
+     * Property governing the threshold used to automatically preload the cache.  Set to 0 to always preload the cache,
+     * -1 to never preload.  A "good" value is 100.
+     */
+    String PROP_PRELOAD_TRIGGER = "fs.preload.autoTrigger.threshold";
+
+    /**
      * Specifies a preload method wherein the output of the find command is staged in a file on the remote system.  If
      * stateful sessions are allowed, the contents of this file will be downloaded to the workspace and kept for MAXAGE.
      *

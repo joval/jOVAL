@@ -99,6 +99,12 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
 	}
     }
 
+    // Abstract (from CachingTree)
+
+    public abstract boolean preload();
+
+    public abstract boolean preloaded();
+
     // Implement IFilesystem
 
     public IFile getFile(String path) throws IllegalArgumentException, IOException {

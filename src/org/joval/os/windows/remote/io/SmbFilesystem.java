@@ -94,14 +94,20 @@ public class SmbFilesystem extends BaseFilesystem implements IWindowsFilesystem 
 	}
     }
 
-    // Implement IFilesystem
-
     /**
      * A remote SMB filesystem cannot be preloaded.  It's just too inefficient.
      */
+    @Override
     public boolean preload() {
 	return false;
     }
+
+    @Override
+    public boolean preloaded() {
+	return false;
+    }
+
+    // Implement IFilesystem
 
     @Override
     public IFile getFile(String path) throws IllegalArgumentException, IOException {

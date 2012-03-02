@@ -51,13 +51,15 @@ public abstract class CachingTree implements ITree {
 	setLogger(JOVALSystem.getLogger());
     }
 
-    protected boolean preload() {
-	return false;
-    }
+    /**
+     * Pre-load the cache.
+     */
+    public abstract boolean preload();
 
-    protected boolean preloaded() {
-	return false;
-    }
+    /**
+     * Returns whether or not the cache has been successfully preloaded.
+     */
+    public abstract boolean preloaded();
 
     /**
      * Lists the children of the INode, as determined by the contents of the cache.
@@ -79,9 +81,8 @@ public abstract class CachingTree implements ITree {
 		}
 		return sa;
 	    }
-	} else {
-	    throw new IllegalStateException();
 	}
+	throw new IllegalStateException();
     }
 
     // Implement ILogger
