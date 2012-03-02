@@ -4,8 +4,10 @@
 package org.joval.util.tree;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Stack;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
@@ -138,24 +140,22 @@ public class Node implements INode {
 
     // Internal
 
-    Collection<String> search(Pattern p, boolean followLinks) {
+    Collection<String> search(Pattern p, boolean followLinks, Stack<Node> visited) {
 	Collection<String> result = new Vector<String>();
 	if (p.matcher(getPath()).find()) {
 	    result.add(getPath());
 	}
 
 	try {
-	    if (searchable(followLinks)) {
-		try {
-		    if (hasChildren()) {
-			for (INode child : getChildren()) {
-			    result.addAll(((Node)child).search(p, followLinks));
-			}
-		    }
-		} catch (NoSuchElementException e) {
-		    tree.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_LINK, e.getMessage()));
+	    if (searchable(followLinks, visited)) {
+		visited.push(this);
+		for (INode child : getChildren()) {
+		    result.addAll(((Node)child).search(p, followLinks, visited));
 		}
+		visited.pop();
 	    }
+	} catch (NoSuchElementException e) {
+	    tree.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_LINK, e.getMessage()));
 	} catch (MaxDepthException e) {
 	    tree.getLogger().warn(JOVALMsg.ERROR_NODE_DEPTH, e.getMessage());
 	}
@@ -164,7 +164,6 @@ public class Node implements INode {
 
     INode lookup(String path) throws NoSuchElementException {
 	if (parent == null) {
-if("/usr/lib/nls/msg/de_DE.ISO8859-1/ifconfig.ib.cat".equals(path))System.out.println("WOOOOOOOHOOOOOOOOOO!!!!!");
 	    Iterator<String> iter = StringTools.tokenize(path, tree.delimiter, false);
 	    if (!iter.hasNext()) {
 		throw new NoSuchElementException(path);
@@ -211,12 +210,23 @@ if("/usr/lib/nls/msg/de_DE.ISO8859-1/ifconfig.ib.cat".equals(path))System.out.pr
 
     private static final int MAX_DEPTH = 50;
 
-    private boolean searchable(boolean followLinks) throws MaxDepthException {
-	int depth = StringTools.toList(StringTools.tokenize(getPath(), tree.delimiter)).size();
-	if (depth > MAX_DEPTH) {
-	    throw new MaxDepthException(getPath());
+    private boolean searchable(boolean followLinks, Stack<Node> visited) throws MaxDepthException, NoSuchElementException {
+	if (hasChildren() && (followLinks || type != Type.LINK)) {
+	    if (visited.size() > MAX_DEPTH) {
+		throw new MaxDepthException(getPath());
+	    }
+
+	    String canon = getCanonicalPath();
+	    for (Node n : visited) {
+		if (canon.equals(n.getCanonicalPath())) {
+		    tree.getLogger().warn(JOVALMsg.ERROR_LINK_CYCLE, getPath(), n.getPath());
+		    return false;
+		}
+	    }
+	    return true;
+	} else {
+	    return false;
 	}
-	return followLinks || type != Type.LINK;
     }
 
     private class MaxDepthException extends Exception {

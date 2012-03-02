@@ -94,7 +94,7 @@ public class Tree implements ITreeBuilder {
     }
 
     public Collection<String> search(Pattern p, boolean followLinks) {
-	return root.search(p, followLinks);
+	return root.search(p, followLinks, new Stack<Node>());
     }
 
     public INode getRoot() {
