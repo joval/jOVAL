@@ -70,6 +70,6 @@ public interface INode {
      * The types of nodes.
      */
     public enum Type {
-	ROOT, BRANCH, LEAF, LINK;
+	ROOT, BRANCH, LEAF, LINK, UNRESOLVED;
     }
 }

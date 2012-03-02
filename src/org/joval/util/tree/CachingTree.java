@@ -59,6 +59,7 @@ public abstract class CachingTree implements ITree {
      * Lists the children of the INode, as determined by the contents of the cache.
      *
      * @throws IllegalStateException if caching is disabled
+     * @throws NoSuchElementException if no such node is in the cache
      */
     public final String[] list(INode n) throws UnsupportedOperationException, NoSuchElementException, IllegalStateException {
 	if (preload()) {

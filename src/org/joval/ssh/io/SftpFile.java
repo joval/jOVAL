@@ -211,35 +211,35 @@ class SftpFile extends BaseFile implements IUnixFile {
     }
 
     public String[] list() throws IOException {
+	Exception err = null;
 	try {
 	    return sfs.list(this);
-	} catch (NoSuchElementException e) {
-	    throw new IOException(e);
 	} catch (UnsupportedOperationException e) {
 	    throw new IOException(e);
+	} catch (NoSuchElementException e) {
 	} catch (IllegalStateException e) {
-	    if (isLink()) {
-		try {
-		    return fs.getFile(sfs.getCS().realpath(path)).list();
-		} catch (SftpException se) {
-		    throw new IOException(se);
-		}
-	    } else {
-		try {
-		    List<ChannelSftp.LsEntry> list = sfs.getCS().ls(path);
-		    String[] children = new String[0];
-		    ArrayList<String> al = new ArrayList<String>();
-		    Iterator<ChannelSftp.LsEntry> iter = list.iterator();
-		    while (iter.hasNext()) {
-			ChannelSftp.LsEntry entry = iter.next();
-			if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
-			    al.add(entry.getFilename());
-			}
+	}
+	if (isLink()) {
+	    try {
+		return fs.getFile(sfs.getCS().realpath(path)).list();
+	    } catch (SftpException se) {
+		throw new IOException(se);
+	    }
+	} else {
+	    try {
+		List<ChannelSftp.LsEntry> list = sfs.getCS().ls(path);
+		String[] children = new String[0];
+		ArrayList<String> al = new ArrayList<String>();
+		Iterator<ChannelSftp.LsEntry> iter = list.iterator();
+		while (iter.hasNext()) {
+		    ChannelSftp.LsEntry entry = iter.next();
+		    if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
+			al.add(entry.getFilename());
 		    }
-		    return al.toArray(children);
-		} catch (SftpException se) {
-		    throw new IOException(se);
 		}
+		return al.toArray(children);
+	    } catch (SftpException se) {
+		throw new IOException(se);
 	    }
 	}
     }

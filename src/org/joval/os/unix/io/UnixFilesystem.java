@@ -167,18 +167,11 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		// cache file, so there's no new data to store.
 		//
 		if (remoteCache != null) {
-		    StringBuffer sb = new StringBuffer();
-		    for (String mount : mounts) {
-			if (sb.length() > 0) {
-			    sb.append(":");
-			}
-			sb.append(mount);
-		    }
 		    Properties cacheProps = new Properties();
 		    cacheProps.setProperty(INDEX_PROP_COMMAND, command);
 		    cacheProps.setProperty(INDEX_PROP_USER, us.getEnvironment().getenv("LOGNAME"));
 		    cacheProps.setProperty(INDEX_PROP_FLAVOR, us.getFlavor().value());
-		    cacheProps.setProperty(INDEX_PROP_MOUNTS, sb.toString());
+		    cacheProps.setProperty(INDEX_PROP_MOUNTS, alphabetize(mounts));
 		    cacheProps.setProperty(INDEX_PROP_LEN, Long.toString(remoteCache.length()));
 		    cacheProps.store(propsFile.getOutputStream(false), null);
 		}
@@ -256,6 +249,9 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 
     // Internal
 
+    /**
+     * Get the file from the underlying access layer, bypassing the cache.
+     */
     protected IFile getFileImpl(String path) throws IllegalArgumentException, IOException {
 	return super.getFile(path);
     }
@@ -430,22 +426,20 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	StringBuffer command = new StringBuffer("find %MOUNT%");
 	switch(us.getFlavor()) {
 	  case LINUX:
-	    command.append(" -print0 -mount | xargs -0 ");
-	    break;
+	    return command.append(" -print0 -mount | xargs -0 ").append(getStatCommand()).toString();
 
 	  case MACOSX:
-	    command.append(" -print0 -mount | xargs -0 ");
-	    break;
-
-	  case SOLARIS:
-	    command.append(" -mount | sed 's/./\\\\&/g' | xargs ");
-	    break;
+	    return command.append(" -print0 -mount | xargs -0 ").append(getStatCommand()).toString();
 
 	  case AIX:
-	    command.append(" -xdev | sed 's/./\\\\&/g' | xargs ");
-	    break;
+	    return command.append(" -xdev -exec ").append(getStatCommand()).append(" {} \\;").toString();
+
+	  case SOLARIS:
+	    return command.append(" -mount -exec ").append(getStatCommand()).append(" {} \\;").toString();
+
+	  default:
+	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, us.getFlavor()));
 	}
-	return command.append(getStatCommand()).toString();
     }
 
     /**
@@ -572,53 +566,48 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
      */
     private boolean isValidCache(IFile f, IProperty cacheProps, String command, List<String> mounts) throws IOException {
 	try {
-	    test(f.exists() && f.isFile());
+	    test(f.exists() && f.isFile(), "isFile");
 
 	    //
 	    // Check the expiration date
 	    //
-	    test(System.currentTimeMillis() < (f.lastModified() + props.getLongProperty(PROP_PRELOAD_MAXAGE)));
+	    String s = PROP_PRELOAD_MAXAGE;
+	    test(System.currentTimeMillis() < (f.lastModified() + props.getLongProperty(s)), s);
 
 	    //
 	    // Check the command
 	    //
-	    test(command.equals(cacheProps.getProperty(INDEX_PROP_COMMAND)));
+	    s = INDEX_PROP_COMMAND;
+	    test(command.equals(cacheProps.getProperty(s)), s);
 
 	    //
 	    // Check the username
 	    //
-	    test(us.getEnvironment().getenv("LOGNAME").equals(cacheProps.getProperty(INDEX_PROP_USER)));
+	    s = INDEX_PROP_USER;
+	    test(us.getEnvironment().getenv("LOGNAME").equals(cacheProps.getProperty(s)), s);
 
 	    //
 	    // Check the Unix flavor
 	    //
-	    test(us.getFlavor().value().equals(cacheProps.getProperty(INDEX_PROP_FLAVOR)));
+	    s = INDEX_PROP_FLAVOR;
+	    test(us.getFlavor().value().equals(cacheProps.getProperty(s)), s);
 
 	    //
 	    // Check the length
 	    //
-	    test(f.length() == cacheProps.getLongProperty(INDEX_PROP_LEN));
+	    s = INDEX_PROP_LEN;
+	    test(f.length() == cacheProps.getLongProperty(s), s);
 
 	    //
 	    // Check the mounts
 	    //
-	    String s = cacheProps.getProperty(INDEX_PROP_MOUNTS);
-	    test(s != null);
-	    List<String> cachedMounts = StringTools.toList(StringTools.tokenize(s, ":", true));
-	    test(cachedMounts.size() == mounts.size());
-	    String[] a = new String[0];
-	    a = new ArrayList<String>(cachedMounts).toArray(a);
-	    Arrays.sort(a);
-	    String[] b = new String[0];
-	    b = new ArrayList<String>(mounts).toArray(b);
-	    Arrays.sort(b);
-	    for (int i=0; i < a.length; i++) {
-		test(a[i].equals(b[i]));
-	    }
+	    s = INDEX_PROP_MOUNTS;
+	    test(alphabetize(mounts).equals(cacheProps.getProperty(s)), s);
+
 	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_REUSE, f.getLocalName());
 	    return true;
 	} catch (AssertionError e) {
-	    logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), INDEX_PROP_MOUNTS);
+	    logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), e.getMessage());
 	    try {
 		f.delete();
 	    } catch (IOException ioe) {
@@ -649,7 +638,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	    cacheProps.load(propsFile.getInputStream());
 	}
 
-	IFile temp = getFile(destPath);
+	IFile temp = getFileImpl(destPath);
 	if (isValidCache(temp, new PropertyUtil(cacheProps), command, mounts)) {
 	    return temp;
 	}
@@ -688,7 +677,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 			done = true;
 		    }
 		}
-		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_PROGRESS, getFile(tempPath).length());
+		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_PROGRESS, getFileImpl(tempPath).length());
 	    }
 	    if (!done) {
 		p.destroy();
@@ -703,8 +692,21 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	return getFile(destPath);
     }
 
-    private void test(boolean val) throws AssertionError {
-	if (!val) throw new AssertionError();
+    private void test(boolean val, String msg) throws AssertionError {
+	if (!val) throw new AssertionError(msg);
+    }
+
+    private String alphabetize(List<String> sc) {
+	String[] sa = sc.toArray(new String[sc.size()]);
+	Arrays.sort(sa);
+	StringBuffer sb = new StringBuffer();
+	for (String s : sa) {
+	    if (sb.length() > 0) {
+		sb.append(":");
+	    }
+	    sb.append(s);
+	}
+	return sb.toString();
     }
 
     private class ErrorReader implements Runnable {

@@ -20,7 +20,7 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Node implements INode, Cloneable {
+public class Node implements INode {
     Tree tree;
     Node parent, linkParent = null;
     String name;
@@ -48,45 +48,29 @@ public class Node implements INode, Cloneable {
 	switch(type) {
 	  case LINK:
 	    if (hasChildren() && children == null) {
-		try {
-		    children = new Vector<INode>();
-		    for (INode node : lookup(linkPath).getChildren()) {
-			if (getCanonicalPath().equals(node.getCanonicalPath())) {
-			    tree.getLogger().error(JOVALMsg.ERROR_LINK_SELF, getCanonicalPath());
-			} else {
-			    Node child = (Node)((Node)node).clone();
-			    child.linkParent = this;
-			    children.add(child);
-			}
-		    }
-		    return children;
-		} catch (CloneNotSupportedException e) {
-		    throw new RuntimeException(e);
-		}
-	    } else if (children != null) {
-		return children;
-	    } else {
-		throw new UnsupportedOperationException(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
+		copyChildren((Node)lookup(linkPath));
 	    }
+	    if (children == null) {
+		throw new UnsupportedOperationException(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
+	    } else {
+		return children;
+	    }
+
+	  case UNRESOLVED: {
+	    Node prototype = (Node)lookup(getCanonicalPath());
+	    if (prototype.hasChildren()) {
+		copyChildren(prototype);
+	    }
+	    linkPath = prototype.linkPath; // may or may not be a link
+	    type = prototype.type;
+	    return getChildren();
+	  }
 
 	  case LEAF:
 	    throw new UnsupportedOperationException(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
 
 	  case BRANCH:
-	    if (linkParent == null) {
-		return children;
-	    } else {
-		try {
-		    Collection<INode> result = new Vector<INode>();
-		    for (INode node : children) {
-			Node child = (Node)((Node)node).clone();
-			child.linkParent = this;
-		    }
-		    return result;
-		} catch (CloneNotSupportedException e) {
-		    throw new RuntimeException(e);
-		}
-	    }
+	    return children;
 
 	  case ROOT:
 	  default:
@@ -112,6 +96,9 @@ public class Node implements INode, Cloneable {
 	switch(type) {
 	  case LINK:
 	    return lookup(linkPath).hasChildren();
+
+	  case UNRESOLVED:
+	    return lookup(getCanonicalPath()).hasChildren();
 
 	  case LEAF:
 	    return false;
@@ -152,7 +139,6 @@ public class Node implements INode, Cloneable {
     // Internal
 
     Collection<String> search(Pattern p, boolean followLinks) {
-//System.out.println("DAS search " + getPath() + " for " + p.pattern());
 	Collection<String> result = new Vector<String>();
 	if (p.matcher(getPath()).find()) {
 	    result.add(getPath());
@@ -178,6 +164,7 @@ public class Node implements INode, Cloneable {
 
     INode lookup(String path) throws NoSuchElementException {
 	if (parent == null) {
+if("/usr/lib/nls/msg/de_DE.ISO8859-1/ifconfig.ib.cat".equals(path))System.out.println("WOOOOOOOHOOOOOOOOOO!!!!!");
 	    Iterator<String> iter = StringTools.tokenize(path, tree.delimiter, false);
 	    if (!iter.hasNext()) {
 		throw new NoSuchElementException(path);
@@ -235,6 +222,31 @@ public class Node implements INode, Cloneable {
     private class MaxDepthException extends Exception {
 	private MaxDepthException(String message) {
 	    super(message);
+	}
+    }
+
+    /**
+     * Copy from canonical into a link path.
+     */
+    private void copyChildren(Node target) {
+	children = new Vector<INode>();
+	for (INode inode : target.getChildren()) {
+	    Node node = (Node)inode;
+	    if (getCanonicalPath().equals(node.getCanonicalPath())) {
+		tree.getLogger().error(JOVALMsg.ERROR_LINK_SELF, getCanonicalPath());
+	    } else {
+		Node child = new Node(node.parent, node.getName());
+		child.linkParent = this;
+		switch(((Node)node).type) {
+		  case LEAF:
+		    child.type = Type.LEAF;
+		    break;
+		  default:
+		    child.type = Type.UNRESOLVED;
+		    break;
+		}
+		children.add(child);
+	    }
 	}
     }
 }

@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
@@ -44,6 +45,11 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
     protected IEnvironment env;
     protected IPathRedirector redirector;
 
+    /**
+     * A memory of paths that were not found in the cache, and which could not be found from the access layer.
+     */
+    private HashSet<String> deadLinks = new HashSet<String>();
+
     protected BaseFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector) {
 	super();
 	this.session = session;
@@ -71,6 +77,9 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
      * required.
      */
     public INode lookup(String path) throws NoSuchElementException {
+	if (deadLinks.contains(path)) {
+	    throw new NoSuchElementException(path);
+	}
 	String canon = path;
 	try {
 	    canon = cache.lookup(path).getCanonicalPath();
@@ -81,6 +90,7 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
 	    if (f.exists()) {
 		return f;
 	    } else {
+		deadLinks.add(path);
 		throw new NoSuchElementException(path);
 	    }
 	} catch (IOException e) {
