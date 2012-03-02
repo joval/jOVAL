@@ -143,10 +143,6 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
 	return getFile(path).getOutputStream(append);
     }
 
-    // Abstract
-
-    public abstract boolean preload();
-
     // Inner classes
 
     protected class PreloadOverflowException extends Exception {

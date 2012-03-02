@@ -102,6 +102,11 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	return DELIM_STR;
     }
 
+    @Override
+    public boolean preloaded() {
+	return preloaded;
+    }
+
     /**
      * Efficiently scan the target host for information about its filesystems, and potentially cache that information on
      * the local machine or the target host for future re-use.
@@ -110,7 +115,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     public boolean preload() {
 	if (!props.getBooleanProperty(getPreloadPropertyKey())) {
 	    return false;
-	} else if (preloaded) {
+	} else if (preloaded()) {
 	    return true;
 	} else if (session.getType() != IBaseSession.Type.UNIX) {
 	    return false;
@@ -692,6 +697,9 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	return getFile(destPath);
     }
 
+    /**
+     * Pretty much exactly the same as an "assert" statement.
+     */
     private void test(boolean val, String msg) throws AssertionError {
 	if (!val) throw new AssertionError(msg);
     }

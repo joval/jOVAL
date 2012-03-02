@@ -55,6 +55,10 @@ public abstract class CachingTree implements ITree {
 	return false;
     }
 
+    protected boolean preloaded() {
+	return false;
+    }
+
     /**
      * Lists the children of the INode, as determined by the contents of the cache.
      *
@@ -62,7 +66,7 @@ public abstract class CachingTree implements ITree {
      * @throws NoSuchElementException if no such node is in the cache
      */
     public final String[] list(INode n) throws UnsupportedOperationException, NoSuchElementException, IllegalStateException {
-	if (preload()) {
+	if (preloaded()) {
 	    INode node = cache.lookup(n.getPath());
 	    Collection<INode> children = node.getChildren();
 	    if (children == null) {

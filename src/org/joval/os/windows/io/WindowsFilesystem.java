@@ -41,7 +41,7 @@ import org.joval.util.StringTools;
  */
 public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesystem {
     private int entries = 0, maxEntries = 0;
-    private boolean preloaded;
+    private boolean preloaded = false;
 
     public WindowsFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector) {
 	super(session, env, redirector);
@@ -70,10 +70,16 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
         throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
     }
 
-    public boolean preload() {
+    @Override
+    protected boolean preloaded() {
+	return preloaded;
+    }
+
+    @Override
+    protected boolean preload() {
 	if (!props.getBooleanProperty(PROP_PRELOAD_LOCAL)) {
 	    return false;
-	} else if (preloaded) {
+	} else if (preloaded()) {
 	    return true;
 	}
 
