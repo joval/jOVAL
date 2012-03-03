@@ -43,8 +43,8 @@
                         <xsl:with-param name="duration" select="./@Runtime"/>
                       </xsl:call-template>
                     </td>
-                    <xsl:apply-templates/>
                   </tr>
+                  <xsl:apply-templates/>
                 </table>
               </td>
             </tr>
@@ -58,12 +58,12 @@
   <xsl:template match="//report:TestDocument">
     <tr bgcolor="#eeeeee">
       <td height="25"><b><xsl:value-of select="./@FileName"/></b></td>
-        <td colspan="2">Run time: 
-          <xsl:call-template name="printDuration">
-            <xsl:with-param name="duration" select="./@Runtime"/>
-          </xsl:call-template>
-        </td>
-      </tr>
+      <td colspan="2">Run time: 
+        <xsl:call-template name="printDuration">
+          <xsl:with-param name="duration" select="./@Runtime"/>
+        </xsl:call-template>
+      </td>
+    </tr>
     <xsl:apply-templates/>
   </xsl:template>
 
@@ -79,13 +79,13 @@
     <xsl:for-each select="report:TestResult">
       <tr>
         <td><xsl:value-of select="./@DefinitionId"/></td>
-          <xsl:choose>
-            <xsl:when test="./@Result='PASSED'">
-              <td colspan="2"><font color="#00ee00">PASSED</font></td>
-            </xsl:when>
+        <xsl:choose>
+          <xsl:when test="./@Result='PASSED'">
+            <td colspan="2"><font color="#00ee00">PASSED</font></td>
+          </xsl:when>
           <xsl:otherwise>
             <td><font color="#ee0000">FAILED</font></td>
-            <td><img src="../rsrc/xmldoc.gif" width="16" height="16"/></td>
+            <td><a href="{../@FileName}"><img src="../../rsrc/xmldoc.gif" width="16" height="16"/></a></td>
           </xsl:otherwise>
         </xsl:choose>
       </tr>
@@ -132,7 +132,6 @@
     <xsl:variable name="seconds">
       <xsl:value-of select="format-number(substring-before(substring-after(substring-after($duration, 'T'), 'M'), 'S'), '00.000')"/>
     </xsl:variable>
-
     <xsl:value-of select="concat($hours, ':', $minutes, ':', $seconds)"/>
   </xsl:template>
 </xsl:stylesheet>

@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,17 +48,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import oval.schemas.results.core.DefinitionType;
-import oval.schemas.results.core.OvalResults;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.test.automation.schema.ObjectFactory;
 import org.joval.test.automation.schema.Report;
-import org.joval.test.automation.schema.TestDocument;
-import org.joval.test.automation.schema.TestResult;
-import org.joval.test.automation.schema.TestResultEnumeration;
-import org.joval.test.automation.schema.TestResults;
-import org.joval.test.automation.schema.TestSuite;
 
 import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.oval.IEngine;
@@ -133,6 +125,7 @@ public class Main {
 
 	    ExecutorService pool = Executors.newFixedThreadPool(config.getSection("Config").getIntProperty("concurrency"));
 	    Report report = new ObjectFactory().createReport();
+	    Hashtable<String, IResults> results = new Hashtable<String, IResults>();
 
 	    long runtime = System.currentTimeMillis();
 
@@ -145,7 +138,7 @@ public class Main {
 		    } else {
 			plugin = new PolymorphicPlugin(props.getProperty("hostname"));
 		    }
-		    pool.execute(new TestExecutor(name, props, plugin, report));
+		    pool.execute(new TestExecutor(name.substring(7), props, plugin, report, results));
 		}
 	    }
 
@@ -156,7 +149,7 @@ public class Main {
 	    DatatypeFactory datatype = DatatypeFactory.newInstance();
 	    report.setRuntime(datatype.newDuration(runtime));
 	    report.setDate(datatype.newXMLGregorianCalendar(new GregorianCalendar()));
-	    writeReport(report);
+	    writeReport(report, results);
 
 	    sysHandler.close();
 	    System.exit(0);
@@ -169,16 +162,20 @@ public class Main {
 
     // Private
 
-    private static String PACKAGES;
-    static {
-	StringBuffer sb = new StringBuffer("org.joval.test.automation.schema:");
-	PACKAGES = sb.append(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS)).toString();
-    }
+    private static String PACKAGES = "org.joval.test.automation.schema";
 
-    private static void writeReport(Report report) throws Exception {
+    private static void writeReport(Report report, Hashtable<String, IResults> results) throws Exception {
 	String fbase = "report." + reportDir.list(new ReportFilter()).length;
-	File reportFile = new File(reportDir, fbase + ".xml");
-	sysLogger.info("Writing XML report " + reportFile);
+	File resultsDir = new File(reportDir, fbase);
+	resultsDir.mkdir();
+	for (String name : results.keySet()) {
+	    File resultsFile = new File(resultsDir, name);
+	    sysLogger.info("Writing XML results " + resultsFile.getPath());
+	    results.get(name).writeXML(resultsFile);
+	}
+
+	File reportFile = new File(resultsDir, "report.xml");
+	sysLogger.info("Writing XML report " + reportFile.getPath());
 
 	OutputStream out = null;
 	try {
@@ -197,7 +194,7 @@ public class Main {
 	    }
 	}
 
-        writeTransform(report, new File("report_to_html.xsl"), new File(reportDir, fbase + ".html"));
+        writeTransform(report, new File("report_to_html.xsl"), new File(resultsDir, "report.html"));
     }
 
     private static void writeTransform(Report report, File transform, File output) throws Exception {
@@ -226,7 +223,7 @@ public class Main {
 
 	public boolean accept(File dir, String name) {
 	   name = name.toLowerCase();
-	   return name.startsWith("report.") && name.endsWith(".xml");
+	   return name.startsWith("report.") && new File(dir, name).isDirectory();
 	}
     }
 }

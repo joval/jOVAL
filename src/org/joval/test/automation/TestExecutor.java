@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.logging.FileHandler;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -28,6 +29,7 @@ import org.joval.test.automation.schema.TestResults;
 import org.joval.test.automation.schema.TestSuite;
 
 import org.joval.intf.oval.IEngine;
+import org.joval.intf.oval.IResults;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
@@ -71,14 +73,16 @@ public class TestExecutor implements Runnable {
     private PolymorphicPlugin plugin;
     private Report report;
     private TestSuite suite;
+    private Hashtable<String, IResults> results;
 
-    TestExecutor(String name, IProperty props, PolymorphicPlugin plugin, Report report) {
+    TestExecutor(String name, IProperty props, PolymorphicPlugin plugin, Report report, Hashtable<String, IResults> results) {
 	this.name = name;
 	this.props = props;
 	this.plugin = plugin;
 	this.report = report;
 	suite = factory.createTestSuite();
 	suite.setName(name);
+	this.results = results;
     }
 
     TestSuite getTestSuite() {
@@ -137,9 +141,12 @@ public class TestExecutor implements Runnable {
 		    doc.setRuntime(datatype.newDuration(elapsed));
 		    switch(engine.getResult()) {
 		      case OK:
-			TestResults results = factory.createTestResults();
-			OvalResults or = engine.getResults().getOvalResults();
-			results.setOvalResults(or);
+			TestResults testResults = factory.createTestResults();
+			IResults res = engine.getResults();
+			String key = name + "-" + xml;
+			results.put(key, res);
+			testResults.setFileName(key);
+			OvalResults or = res.getOvalResults();
 			for (DefinitionType def : or.getResults().getSystem().get(0).getDefinitions().getDefinition()) {
 			    TestResult result = factory.createTestResult();
 			    String id = def.getDefinitionId();
@@ -169,9 +176,9 @@ public class TestExecutor implements Runnable {
 				result.setResult(TestResultEnumeration.FAILED);
 				break;
 			    }
-			    results.getTestResult().add(result);
+			    testResults.getTestResult().add(result);
 			}
-			doc.setTestResults(results);
+			doc.setTestResults(testResults);
 			break;
 
 		      case ERR:
