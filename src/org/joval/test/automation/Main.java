@@ -106,6 +106,9 @@ public class Main {
 	    if (!reportDir.exists()) {
 		reportDir.mkdir();
 	    }
+	    String fbase = "report." + reportDir.list(new ReportFilter()).length;
+	    File resultsDir = new File(reportDir, fbase);
+	    resultsDir.mkdir();
 
 	    SimpleCredentialStore scs = new SimpleCredentialStore();
 	    for (String name : config.listSections()) {
@@ -125,7 +128,6 @@ public class Main {
 
 	    ExecutorService pool = Executors.newFixedThreadPool(config.getSection("Config").getIntProperty("concurrency"));
 	    Report report = new ObjectFactory().createReport();
-	    Hashtable<String, IResults> results = new Hashtable<String, IResults>();
 
 	    long runtime = System.currentTimeMillis();
 
@@ -138,7 +140,7 @@ public class Main {
 		    } else {
 			plugin = new PolymorphicPlugin(props.getProperty("hostname"));
 		    }
-		    pool.execute(new TestExecutor(name.substring(7), props, plugin, report, results));
+		    pool.execute(new TestExecutor(new ReportContext(name.substring(7), report, resultsDir), props, plugin));
 		}
 	    }
 
@@ -149,7 +151,7 @@ public class Main {
 	    DatatypeFactory datatype = DatatypeFactory.newInstance();
 	    report.setRuntime(datatype.newDuration(runtime));
 	    report.setDate(datatype.newXMLGregorianCalendar(new GregorianCalendar()));
-	    writeReport(report, results);
+	    writeReport(resultsDir, report);
 
 	    sysHandler.close();
 	    System.exit(0);
@@ -160,21 +162,40 @@ public class Main {
 	System.exit(1);
     }
 
+    // Internal
+
+    static class ReportContext {
+	String name;
+	Report report;
+	File resultsDir;
+
+	ReportContext(String name, Report report, File resultsDir) {
+	    this.name = name;
+	    this.report = report;
+	    this.resultsDir = resultsDir;
+	}
+
+	String getName() {
+	    return name;
+	}
+
+	Report getReport() {
+	    return report;
+	}
+
+	void addResult(String fname, IResults result) {
+	    File resultsFile = new File(resultsDir, fname);
+	    sysLogger.info("Writing XML results " + resultsFile.getPath());
+	    result.writeXML(resultsFile);
+	}
+    }
+
     // Private
 
     private static String PACKAGES = "org.joval.test.automation.schema";
 
-    private static void writeReport(Report report, Hashtable<String, IResults> results) throws Exception {
-	String fbase = "report." + reportDir.list(new ReportFilter()).length;
-	File resultsDir = new File(reportDir, fbase);
-	resultsDir.mkdir();
-	for (String name : results.keySet()) {
-	    File resultsFile = new File(resultsDir, name);
-	    sysLogger.info("Writing XML results " + resultsFile.getPath());
-	    results.get(name).writeXML(resultsFile);
-	}
-
-	File reportFile = new File(resultsDir, "report.xml");
+    private static void writeReport(File resultsDir, Report report) throws Exception {
+	File reportFile = new File(resultsDir, "results.xml");
 	sysLogger.info("Writing XML report " + reportFile.getPath());
 
 	OutputStream out = null;

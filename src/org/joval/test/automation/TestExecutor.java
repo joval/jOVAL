@@ -68,21 +68,19 @@ public class TestExecutor implements Runnable {
 	}
     }
 
-    private IProperty props;
     private String name;
+    private IProperty props;
+    private Main.ReportContext ctx;
     private PolymorphicPlugin plugin;
-    private Report report;
     private TestSuite suite;
-    private Hashtable<String, IResults> results;
 
-    TestExecutor(String name, IProperty props, PolymorphicPlugin plugin, Report report, Hashtable<String, IResults> results) {
-	this.name = name;
+    TestExecutor(Main.ReportContext ctx, IProperty props, PolymorphicPlugin plugin) {
+	this.ctx = ctx;
+	name = ctx.getName();
 	this.props = props;
 	this.plugin = plugin;
-	this.report = report;
 	suite = factory.createTestSuite();
 	suite.setName(name);
-	this.results = results;
     }
 
     TestSuite getTestSuite() {
@@ -144,7 +142,7 @@ public class TestExecutor implements Runnable {
 			TestResults testResults = factory.createTestResults();
 			IResults res = engine.getResults();
 			String key = name + "-" + xml;
-			results.put(key, res);
+			ctx.addResult(key, res);
 			testResults.setFileName(key);
 			OvalResults or = res.getOvalResults();
 			for (DefinitionType def : or.getResults().getSystem().get(0).getDefinitions().getDefinition()) {
@@ -203,6 +201,7 @@ public class TestExecutor implements Runnable {
 		tm = System.currentTimeMillis() - tm;
 		suite.setRuntime(datatype.newDuration(tm));
 	    }
+	    Report report = ctx.getReport();
 	    synchronized(report) {
 		report.getTestSuite().add(suite);
 	    }
