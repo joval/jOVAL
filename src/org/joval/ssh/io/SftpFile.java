@@ -287,8 +287,9 @@ class SftpFile extends BaseFile implements IUnixFile {
 	try {
 	    return sfs.getCS().realpath(path);
 	} catch (SftpException e) {
-	    return path;
+	} catch (IOException e) {
 	}
+	return path;
     }
 
     // Implement IUnixFile

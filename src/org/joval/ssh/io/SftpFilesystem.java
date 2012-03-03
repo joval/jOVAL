@@ -87,6 +87,7 @@ public class SftpFilesystem extends UnixFilesystem {
 	try {
 	    if (cs != null && cs.isConnected()) {
 		cs.disconnect();
+		cs = null;
 		session.disconnect();
 	    }
 	} catch (Throwable e) {
@@ -160,7 +161,10 @@ public class SftpFilesystem extends UnixFilesystem {
 
     // Internal
 
-    ChannelSftp getCS() {
+    ChannelSftp getCS() throws IOException {
+	if (!connect()) {
+	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
+	}
 	return cs;
     }
 }
