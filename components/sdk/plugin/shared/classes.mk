@@ -125,6 +125,7 @@ SHARED=\
 	org.joval.plugin.adapter.solaris.PatchAdapter			\
 	org.joval.plugin.adapter.solaris.SmfAdapter			\
 	org.joval.plugin.adapter.unix.FileAdapter			\
+	org.joval.plugin.adapter.unix.PasswordAdapter			\
 	org.joval.plugin.adapter.unix.ProcessAdapter			\
 	org.joval.plugin.adapter.unix.RunlevelAdapter			\
 	org.joval.plugin.adapter.unix.UnameAdapter			\

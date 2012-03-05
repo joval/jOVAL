@@ -43,6 +43,7 @@ import org.joval.plugin.adapter.solaris.PackageAdapter;
 import org.joval.plugin.adapter.solaris.Patch54Adapter;
 import org.joval.plugin.adapter.solaris.PatchAdapter;
 import org.joval.plugin.adapter.solaris.SmfAdapter;
+import org.joval.plugin.adapter.unix.PasswordAdapter;
 import org.joval.plugin.adapter.unix.ProcessAdapter;
 import org.joval.plugin.adapter.unix.RunlevelAdapter;
 import org.joval.plugin.adapter.unix.UnameAdapter;
@@ -131,6 +132,7 @@ public abstract class BasePlugin implements IPlugin {
 	      case UNIX: {
 		IUnixSession unix = (IUnixSession)session;
 		adapters.add(new org.joval.plugin.adapter.unix.FileAdapter(unix));
+		adapters.add(new PasswordAdapter(unix));
 		adapters.add(new ProcessAdapter(unix));
 		adapters.add(new RunlevelAdapter(unix));
 		adapters.add(new UnameAdapter(unix));
