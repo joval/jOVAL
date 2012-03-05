@@ -160,7 +160,7 @@ public class Variables implements IVariables {
     public List<String> getValue(String id) throws NoSuchElementException {
 	List<String> values = variables.get(id);
 	if (values == null) {
-	    throw new NoSuchElementException(id);
+	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE, id));
 	} else {
 	    return values;
 	}

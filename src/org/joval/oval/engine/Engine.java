@@ -1747,27 +1747,23 @@ public class Engine implements IEngine {
      * associated with that ObjectType, which is the function of this method.
      */
     private List<String> extractItemData(String objectId, ObjectComponentType oc, Collection list)
-		throws OvalException, NoSuchElementException {
+		throws OvalException, ResolveException, NoSuchElementException {
 
-	//
-	// If the ObjectComponentType contains no items, an error is supposed to be reported, hence we throw an exception
-	// complaining that the list is empty. See:
-	// http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#ObjectComponentType
-	//
-	if (list.size() == 0) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_NO_ITEMS, objectId));
-	}
 	List<String> values = new Vector<String>();
 	for (Object o : list) {
 	    if (o instanceof ItemType) {
+		String fieldName = oc.getItemField();
 		try {
 		    ItemType item = (ItemType)o;
-		    String methodName = getAccessorMethodName(oc.getItemField());
+		    String methodName = getAccessorMethodName(fieldName);
 		    Method method = item.getClass().getMethod(methodName);
 		    o = method.invoke(item);
 		} catch (NoSuchMethodException e) {
-		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    return null;
+		    //
+		    // The specification indicates that an object_component must have an error flag in this case.
+		    //
+		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_ITEM_FIELD, fieldName, o.getClass().getName());
+		    throw new ResolveException(msg);
 		} catch (IllegalAccessException e) {
 		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    return null;
