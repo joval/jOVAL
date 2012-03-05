@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -121,9 +122,13 @@ public class Main {
 	    }
 	    PolymorphicPlugin.setCredentialStore(scs);
 	    PolymorphicPlugin.setDataDirectory(JOVALSystem.getDataDirectory());
-	    IProperty routes = config.getSection("Routes");
-	    for (String destination : routes) {
-		PolymorphicPlugin.addRoute(destination, routes.getProperty(destination));
+	    try {
+		IProperty routes = config.getSection("Routes");
+		for (String destination : routes) {
+		    PolymorphicPlugin.addRoute(destination, routes.getProperty(destination));
+		}
+	    } catch (NoSuchElementException e) {
+		sysLogger.info("No routes configured");
 	    }
 
 	    ExecutorService pool = Executors.newFixedThreadPool(config.getSection("Config").getIntProperty("concurrency"));
