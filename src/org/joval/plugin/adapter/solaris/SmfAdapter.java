@@ -21,6 +21,7 @@ import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.definitions.solaris.SmfObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.solaris.EntityItemSmfProtocolType;
 import oval.schemas.systemcharacteristics.solaris.EntityItemSmfServiceStateType;
@@ -30,7 +31,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
@@ -59,7 +60,7 @@ public class SmfAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
 	SmfObject sObj = (SmfObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
@@ -109,8 +110,8 @@ public class SmfAdapter implements IAdapter {
 	  }
 
 	  default: {
-	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, sObj.getFmri().getOperation());
-	    throw new NotCollectableException(s);
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, sObj.getFmri().getOperation());
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	  }
 	}
 	return items;

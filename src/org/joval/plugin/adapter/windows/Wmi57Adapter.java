@@ -17,7 +17,6 @@ import oval.schemas.definitions.windows.Wmi57Object;
 import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
 import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.Wmi57Item;

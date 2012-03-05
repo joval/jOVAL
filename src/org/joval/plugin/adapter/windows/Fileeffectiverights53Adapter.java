@@ -23,6 +23,7 @@ import oval.schemas.definitions.windows.Fileeffectiverights53Object;
 import oval.schemas.definitions.windows.FileEffectiveRights53Behaviors;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.FileeffectiverightsItem;
@@ -37,7 +38,7 @@ import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.io.IWindowsFile;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
@@ -79,7 +80,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
     }
 
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, NotCollectableException, OvalException {
+		throws IOException, CollectException, OvalException {
 
 	directory = ws.getDirectory();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
@@ -90,7 +91,8 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 	    if (f instanceof IWindowsFile) {
 		wf = (IWindowsFile)f;
 	    } else {
-		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName()));
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 
 	    IACE[] aces = wf.getSecurity();
@@ -150,7 +152,8 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 		break;
 
 	      default:
-		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	}
 	return items;

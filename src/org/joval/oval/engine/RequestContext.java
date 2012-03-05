@@ -5,7 +5,7 @@ package org.joval.oval.engine;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.Vector;
+import java.util.Hashtable;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.definitions.core.ObjectType;
@@ -16,22 +16,22 @@ import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 
 class RequestContext implements IRequestContext {
-    Engine engine;
-    ObjectType object;
-    Collection<VariableValueType> vars;
+    private Engine engine;
+    private ObjectType object;
+    private Hashtable<String, VariableValueType> vars;
 
     RequestContext(Engine engine, ObjectType object) {
-        this(engine, object, new Vector<VariableValueType>());
-    }
-
-    RequestContext(Engine engine, ObjectType object, Collection<VariableValueType> vars) {
 	this.engine = engine;
         this.object = object;
-        this.vars = vars;
+        this.vars = new Hashtable<String, VariableValueType>();
     }
 
     Collection<VariableValueType> getVars() {
-        return vars;
+        return vars.values();
+    }
+
+    void addVar(VariableValueType var) {
+	vars.put(var.getVariableId(), var);
     }
 
     // Implement IRequestContext

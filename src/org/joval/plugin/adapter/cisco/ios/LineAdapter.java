@@ -24,7 +24,7 @@ import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.io.PerishableReader;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -54,7 +54,7 @@ public class LineAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
 	LineObject lObj = (LineObject)rc.getObject();
@@ -65,7 +65,7 @@ public class LineAdapter implements IAdapter {
             try {
 		items.add(JOVALSystem.factories.sc.ios.createLineItem(getItem(subcommand)));
 	    } catch (IllegalStateException e) {
-		throw new NotCollectableException(e);
+		throw new CollectException(e, FlagEnumeration.NOT_COLLECTED);
 	    } catch (Exception e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -78,7 +78,8 @@ public class LineAdapter implements IAdapter {
 	    break;
 
 	  default:
-	    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 
 	return items;

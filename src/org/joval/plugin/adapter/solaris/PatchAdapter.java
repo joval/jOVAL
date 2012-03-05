@@ -22,13 +22,14 @@ import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.solaris.PatchObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.solaris.PatchItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -61,9 +62,7 @@ public class PatchAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-		throws OvalException, NotCollectableException {
-
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
 	if (!initialized) {
 	    scanRevisions();
 	}
@@ -135,8 +134,8 @@ public class PatchAdapter implements IAdapter {
 		break;
 
 	      default:
-		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getBase().getOperation());
-		throw new NotCollectableException(s);
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getBase().getOperation());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	} catch (NumberFormatException e) {
 	    throw new OvalException(e);

@@ -25,6 +25,7 @@ import oval.schemas.definitions.independent.EnvironmentvariableObject;
 import oval.schemas.definitions.independent.Environmentvariable58Object;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.independent.EnvironmentvariableItem;
 import oval.schemas.systemcharacteristics.independent.Environmentvariable58Item;
 import oval.schemas.results.core.ResultEnumeration;
@@ -38,7 +39,7 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.PerishableReader;
 import org.joval.os.unix.system.Environment;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
@@ -67,9 +68,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-	    throws OvalException, NotCollectableException {
-
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
 	Environmentvariable58Object eObj = (Environmentvariable58Object)rc.getObject();
 	if (eObj.isSetPid() && eObj.getPid().getValue() != null) {
 	    //
@@ -121,7 +120,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			    }
 			} else {
 			    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OS_VERSION, osVersion);
-			    throw new NotCollectableException(msg);
+			    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 			}
 		    } catch (Exception e) {
 			MessageType msg = JOVALSystem.factories.common.createMessageType();
@@ -205,7 +204,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 
 		  default: {
 		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, us.getFlavor());
-		    throw new NotCollectableException(msg);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		  }
 		}
 		break;
@@ -213,7 +212,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 
 	      default: {
 		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_SESSION_TYPE, session.getType());
-		throw new NotCollectableException(msg);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	      }
 	    }
 

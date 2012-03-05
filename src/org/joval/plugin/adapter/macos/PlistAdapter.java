@@ -29,6 +29,7 @@ import oval.schemas.definitions.macos.Plist510Object;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.macos.PlistItem;
@@ -38,7 +39,7 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
@@ -78,7 +79,7 @@ public class PlistAdapter extends BaseFileAdapter {
      * Parse the plist specified by the Object, and decorate the Item.
      */
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, NotCollectableException, OvalException {
+		throws IOException, CollectException, OvalException {
 
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 
@@ -218,7 +219,7 @@ public class PlistAdapter extends BaseFileAdapter {
 		    typeType.setValue("CFString");
 		} else {
 		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_PLIST_UNSUPPORTED_TYPE, value.getClass().getName());
-		    throw new NotCollectableException(msg);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
     
 		EntityItemAnySimpleType val = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
@@ -232,7 +233,7 @@ public class PlistAdapter extends BaseFileAdapter {
 	return items;
     }
 
-    private String findAppId(NSObject obj) throws NotCollectableException {
+    private String findAppId(NSObject obj) throws CollectException {
 	Collection<NSObject> values = findValues(obj, "CFBundleIdentifier");
 	if (values.size() > 0) {
 	    return getValue(values.iterator().next());
@@ -269,7 +270,7 @@ public class PlistAdapter extends BaseFileAdapter {
 	return values;
     }
 
-    private String getValue(NSObject obj) throws NotCollectableException {
+    private String getValue(NSObject obj) throws CollectException {
 	if (obj instanceof NSData) {
 	    return ((NSData)obj).getBase64EncodedData();
 	} else if (obj instanceof NSDate) {
@@ -288,6 +289,6 @@ public class PlistAdapter extends BaseFileAdapter {
 	    return ((NSString)obj).toString();
 	}
 	String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_PLIST_UNSUPPORTED_TYPE, obj.getClass().getName());
-	throw new NotCollectableException(msg);
+	throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
     }
 }

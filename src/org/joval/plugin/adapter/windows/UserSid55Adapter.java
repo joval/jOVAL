@@ -21,6 +21,7 @@ import oval.schemas.definitions.windows.UserSid55Object;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.UserSidItem;
 
@@ -30,7 +31,7 @@ import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.identity.IUser;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -53,9 +54,7 @@ public class UserSid55Adapter extends UserAdapter {
     }
 
     @Override
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-	    throws NotCollectableException, OvalException {
-
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
 	directory = session.getDirectory();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	UserSid55Object uObj = (UserSid55Object)rc.getObject();
@@ -94,7 +93,8 @@ public class UserSid55Adapter extends UserAdapter {
 		break;
     
 	      default:
-		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	} catch (NoSuchElementException e) {
 	    // No match.

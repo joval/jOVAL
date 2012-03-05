@@ -54,7 +54,7 @@ import org.joval.os.windows.pe.resource.version.VsVersionInfo;
 import org.joval.os.windows.pe.resource.version.StringFileInfo;
 import org.joval.os.windows.pe.resource.version.StringTable;
 import org.joval.os.windows.pe.resource.version.StringStructure;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.plugin.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
@@ -101,7 +101,7 @@ public class FileAdapter extends BaseFileAdapter {
     }
 
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, NotCollectableException, OvalException {
+		throws IOException, CollectException, OvalException {
 
 	wmi = ws.getWmiProvider();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
@@ -110,7 +110,8 @@ public class FileAdapter extends BaseFileAdapter {
 	    if (f instanceof IWindowsFile) {
 		wf = (IWindowsFile)f;
 	    } else {
-		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName()));
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	    setItem((FileItem)base, wf);
 	    items.add(JOVALSystem.factories.sc.windows.createFileItem((FileItem)base));

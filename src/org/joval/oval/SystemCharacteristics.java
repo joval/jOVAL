@@ -307,8 +307,12 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    variableTable.put(var.getVariableId(), vars);
 	}
 	for (VariableValueType existingType : vars) {
-	    if (((String)existingType.getValue()).equals((String)var.getValue())) {
-		return; //duplicate
+	    if (existingType.isSetValue()) {
+		if (((String)existingType.getValue()).equals((String)var.getValue())) {
+		    return; //duplicate
+		}
+	    } else if (!var.isSetValue()) {
+		return; // both null -- duplicate
 	    }
 	}
 	vars.add(var);
@@ -337,7 +341,12 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	for (VariableValueType variableValue : variables) {
 	    boolean add = true;
 	    for (VariableValueType existingVariable : filterList) {
-		if (((String)variableValue.getValue()).equals((String)existingVariable.getValue())) {
+		if (existingVariable.isSetValue()) {
+		    if (((String)existingVariable.getValue()).equals((String)variableValue.getValue())) {
+			add = false;
+			break;
+		    }
+		} else if (!variableValue.isSetValue()) {
 		    add = false;
 		    break;
 		}

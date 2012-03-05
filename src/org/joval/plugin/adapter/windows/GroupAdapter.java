@@ -21,6 +21,7 @@ import oval.schemas.definitions.windows.GroupObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.GroupItem;
 import oval.schemas.results.core.ResultEnumeration;
@@ -31,7 +32,7 @@ import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.wmi.WmiException;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -56,9 +57,7 @@ public class GroupAdapter extends UserAdapter {
     }
 
     @Override
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-	    throws NotCollectableException, OvalException {
-
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
 	directory = session.getDirectory();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	OperationEnumeration op = ((GroupObject)rc.getObject()).getGroup().getOperation();
@@ -111,7 +110,8 @@ public class GroupAdapter extends UserAdapter {
 		break;
     
 	      default:
-		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	} catch (NoSuchElementException e) {
 	    // No match.

@@ -29,7 +29,7 @@ import org.joval.intf.juniper.system.ISupportInformation;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.io.PerishableReader;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
@@ -66,9 +66,7 @@ public class GlobalAdapter implements IAdapter {
     private static final String BUILDING = "Building configuration...";
     private static final String CURRENT = "Current configuration";
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-	     throws NotCollectableException, OvalException {
-
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
 	GlobalObject gObj = (GlobalObject)rc.getObject();
 	EntityObjectStringType globalCommand = gObj.getGlobalCommand();
 	OperationEnumeration op = globalCommand.getOperation();
@@ -109,7 +107,8 @@ public class GlobalAdapter implements IAdapter {
 			break;
 
 		      default:
-			throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+			String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		    }
 
 		    if (add) {

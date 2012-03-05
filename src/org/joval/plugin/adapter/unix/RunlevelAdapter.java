@@ -20,6 +20,7 @@ import oval.schemas.definitions.unix.RunlevelObject;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.unix.RunlevelItem;
@@ -29,7 +30,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -61,7 +62,7 @@ public class RunlevelAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
 	if (!initialized) {
 	    init();
 	}
@@ -104,7 +105,8 @@ public class RunlevelAdapter implements IAdapter {
 	  }
 
 	  default:
-	    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 
 	return items;
@@ -199,7 +201,7 @@ public class RunlevelAdapter implements IAdapter {
 	return JOVALSystem.factories.sc.unix.createRunlevelItem(item);
     }
 
-    private void init() throws NotCollectableException {
+    private void init() throws CollectException {
 	try {
 	    switch(session.getFlavor()) {
 	      case AIX:
@@ -216,7 +218,7 @@ public class RunlevelAdapter implements IAdapter {
 
 	      default:
 		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, session.getFlavor());
-		throw new NotCollectableException(msg);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	} catch (IOException e) {
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

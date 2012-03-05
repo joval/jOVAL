@@ -44,7 +44,7 @@ import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.LittleEndian;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
@@ -78,9 +78,7 @@ public class RegistryAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-	    throws NotCollectableException, OvalException {
-
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
 	if (reg32 == null) {
 	    reg32 = session.getRegistry(IWindowsSession.View._32BIT);
 	    if (session.supports(IWindowsSession.View._64BIT)) {
@@ -94,7 +92,8 @@ public class RegistryAdapter implements IAdapter {
 
 	String id = rObj.getId();
 	if (rObj.getHive() == null || rObj.getHive().getValue() == null) {
-	    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, id));
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, id);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 	String hive = (String)rObj.getHive().getValue();
 
@@ -127,7 +126,7 @@ public class RegistryAdapter implements IAdapter {
      * pattern match operations), singletons (from equals operations), and searches based on RegistryBehaviors.
      */
     private Collection<String> getPathList(RegistryObject rObj, String hive, IRequestContext rc)
-		throws NotCollectableException, OvalException {
+		throws CollectException, OvalException {
 
 	Collection<String> list = pathMap.get(rObj.getId());
 	if (list != null) {
@@ -183,7 +182,8 @@ public class RegistryAdapter implements IAdapter {
 	  }
 
 	  default:
-	    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 
 	if (rObj.isSetBehaviors()) {
@@ -260,7 +260,7 @@ public class RegistryAdapter implements IAdapter {
      * Get all items corresponding to a concrete path, given the hive and RegistryObject.
      */
     private Collection<RegistryItem> getItems(RegistryObject rObj, String hive, String path, IRequestContext rc)
-		throws NoSuchElementException, NotCollectableException {
+		throws NoSuchElementException, CollectException {
 
 	boolean win32 = false;
 	if (rObj.isSetBehaviors()) {
@@ -301,7 +301,8 @@ public class RegistryAdapter implements IAdapter {
 		break;
     
 	      default:
-		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	}
 
@@ -311,7 +312,7 @@ public class RegistryAdapter implements IAdapter {
     /**
      * Get an item given a concrete hive, key path and value name.
      */
-    private RegistryItem getItem(IKey key, String name, boolean win32) throws NoSuchElementException, NotCollectableException {
+    private RegistryItem getItem(IKey key, String name, boolean win32) throws NoSuchElementException, CollectException {
 	RegistryItem item = JOVALSystem.factories.sc.windows.createRegistryItem();
 	EntityItemRegistryHiveType hiveType = JOVALSystem.factories.sc.windows.createEntityItemRegistryHiveType();
 	hiveType.setValue(key.getHive());
@@ -422,8 +423,9 @@ public class RegistryAdapter implements IAdapter {
 		break;
 
 	      default:
-		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_VALUETOSTR,
-									 key.toString(), name, val.getClass().getName()));
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_VALUETOSTR,
+						    key.toString(), name, val.getClass().getName());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	    item.setType(typeType);
 	    if (values.size() > 0) {

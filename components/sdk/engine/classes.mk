@@ -21,7 +21,7 @@ CLASSES=\
 	org.joval.oval.Definitions					\
 	org.joval.oval.Directives					\
 	org.joval.oval.ItemSet						\
-	org.joval.oval.NotCollectableException				\
+	org.joval.oval.CollectException					\
 	org.joval.oval.OvalException					\
 	org.joval.oval.ResolveException					\
 	org.joval.oval.Results						\

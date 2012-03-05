@@ -17,6 +17,7 @@ import oval.schemas.definitions.independent.EnvironmentvariableObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.independent.EnvironmentvariableItem;
 import oval.schemas.results.core.ResultEnumeration;
 
@@ -24,7 +25,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -52,16 +53,14 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-	    throws OvalException, NotCollectableException {
-
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
 	return getItems(rc, environment, null);
     }
 
     // Internal
 
     Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc, IEnvironment env, String reserved)
-		throws NotCollectableException {
+		throws CollectException {
 
 	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	EnvironmentvariableObject eObj = (EnvironmentvariableObject)rc.getObject();
@@ -110,7 +109,8 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	    break;
 
 	  default:
-	    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 	return items;
     }

@@ -118,11 +118,11 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.os.windows.Timestamp;
+import org.joval.oval.CollectException;
 import org.joval.oval.DefinitionFilter;
 import org.joval.oval.Definitions;
 import org.joval.oval.Directives;
 import org.joval.oval.ItemSet;
-import org.joval.oval.NotCollectableException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.Results;
@@ -353,19 +353,17 @@ public class Engine implements IEngine {
     Collection<String> resolve(String variableId, RequestContext rc)
 		throws NoSuchElementException, ResolveException, OvalException {
 
-	Collection<VariableValueType> vars = rc.getVars();
 	VariableType var = definitions.getVariable(variableId);
 	String varId = var.getId();
 	Collection<VariableValueType> cachedList = variableMap.get(varId);
 	if (cachedList == null) {
 	    logger.trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
-	    Collection<String> result = resolveInternal(var, vars);
-	    variableMap.put(varId, vars);
+	    Collection<String> result = resolveInternal(var, rc);
+	    variableMap.put(varId, rc.getVars());
 	    return result;
 	} else {
 	    logger.trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, varId);
 	    List<String> result = new Vector<String>();
-	    vars.addAll(cachedList);
 	    for (VariableValueType variableValueType : cachedList) {
 		if (variableValueType.getVariableId().equals(variableId)) {
 		    result.add((String)variableValueType.getValue());
@@ -463,7 +461,7 @@ public class Engine implements IEngine {
 			MessageType msg = JOVALSystem.factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.INFO);
 			msg.setValue(JOVALSystem.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
-			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, msg);
+			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, msg);
 
 			//
 			// Check if there were errors, and re-flag the object if there were
@@ -517,12 +515,12 @@ public class Engine implements IEngine {
 			unwrapped.add(item.getValue());
 		    }
 		    return unwrapped;
-		} catch (NotCollectableException e) {
+		} catch (CollectException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.WARNING);
 		    String err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
 		    msg.setValue(err);
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), e.getFlag(), msg);
 		} catch (Exception e) {
 		    //
 		    // Handle an uncaught, unexpected exception emanating from the adapter.
@@ -798,13 +796,19 @@ public class Engine implements IEngine {
 	//
 	// Create all the structures we'll need to store information about the evaluation of the test.
 	//
-	Collection<VariableValueType> variables = new HashSet<VariableValueType>();
-	RequestContext rc = new RequestContext(this, definitions.getObject(objectId), variables);
+
+
+
+	RequestContext rc = new RequestContext(this, definitions.getObject(objectId));
 	ExistenceData existence = new ExistenceData();
 	CheckData check = new CheckData();
 
 	switch(sc.getObject(objectId).getFlag()) {
 	  case COMPLETE:
+	    //
+	    // If object flag == COMPLETE but there are no items, existenceResult will default to DOES_NOT_EXIST
+	    // (which is, of course, exactly what we want to happen).
+	    //
 	  case INCOMPLETE:
 	    for (ItemType item : sc.getItemsByObjectId(objectId)) {
 		existence.addStatus(item.getStatus());
@@ -864,10 +868,9 @@ public class Engine implements IEngine {
 	}
 
 	//
-	// Add all the tested variables that the TestType has picked up along the way.
+	// Add all the tested variables that were resolved for the Object (stored in the RequestContext).
 	//
-	variables.addAll(sc.getVariablesByObjectId(objectId));
-	for (VariableValueType var : variables) {
+	for (VariableValueType var : rc.getVars()) {
 	    TestedVariableType testedVariable = JOVALSystem.factories.results.createTestedVariableType();
 	    testedVariable.setVariableId(var.getVariableId());
 	    testedVariable.setValue(var.getValue());
@@ -1145,9 +1148,15 @@ public class Engine implements IEngine {
 	    base.setOperation(state.getOperation());
 	    base.setMask(state.isMask());
 	    try {
-		for (String value : resolve(state.getVarRef(), rc)) {
-		    base.setValue(value);
-		    cd.addResult(testImpl(base, item));
+		Collection<String> values = resolve(state.getVarRef(), rc);
+		if (values.size() == 0) {
+		    String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_VARIABLE_NO_VALUES);
+		    throw new TestException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
+		} else {
+		    for (String value : resolve(state.getVarRef(), rc)) {
+			base.setValue(value);
+			cd.addResult(testImpl(base, item));
+		    }
 		}
 	    } catch (NoSuchElementException e) {
 		String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_VARIABLE_MISSING);
@@ -1413,19 +1422,25 @@ public class Engine implements IEngine {
      *
      * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#FunctionGroup
      */
-    private Collection<String> resolveInternal(Object object, Collection<VariableValueType>list)
+    private Collection<String> resolveInternal(Object object, RequestContext rc)
 		throws NoSuchElementException, ResolveException, OvalException {
 	//
 	// Why do variables point to variables?  Because sometimes they are nested.
 	//
 	if (object instanceof LocalVariable) {
 	    LocalVariable localVariable = (LocalVariable)object;
-	    Collection<String> values = resolveInternal(getComponent(localVariable), list);
-	    for (String value : values) {
+	    Collection<String> values = resolveInternal(getComponent(localVariable), rc);
+	    if (values.size() == 0) {
 		VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(localVariable.getId());
-		variableValueType.setValue(value);
-		list.add(variableValueType);
+		rc.addVar(variableValueType);
+	    } else {
+		for (String value : values) {
+		    VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
+		    variableValueType.setVariableId(localVariable.getId());
+		    variableValueType.setValue(value);
+		    rc.addVar(variableValueType);
+		}
 	    }
 	    return values;
 
@@ -1439,11 +1454,17 @@ public class Engine implements IEngine {
 		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE_SOURCE, id));
 	    } else {
 		Collection<String> values = externalVariables.getValue(id);
-		for (String value : values) {
+		if (values.size() == 0) {
 		    VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
-		    variableValueType.setVariableId(id);
-		    variableValueType.setValue(value);
-		    list.add(variableValueType);
+		    variableValueType.setVariableId(externalVariable.getId());
+		    rc.addVar(variableValueType);
+		} else {
+		    for (String value : values) {
+			VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
+			variableValueType.setVariableId(externalVariable.getId());
+			variableValueType.setValue(value);
+			rc.addVar(variableValueType);
+		    }
 		}
 		return values;
 	    }
@@ -1455,13 +1476,20 @@ public class Engine implements IEngine {
 	    ConstantVariable constantVariable = (ConstantVariable)object;
 	    String id = constantVariable.getId();
 	    Collection<String> values = new Vector<String>();
-	    for (ValueType value : constantVariable.getValue()) {
+	    List<ValueType> valueTypes = constantVariable.getValue();
+	    if (valueTypes.size() == 0) {
 		VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
-		variableValueType.setVariableId(id);
-		String s = (String)value.getValue();
-		variableValueType.setValue(s);
-		list.add(variableValueType);
-		values.add(s);
+		variableValueType.setVariableId(constantVariable.getId());
+		rc.addVar(variableValueType);
+	    } else {
+		for (ValueType value : valueTypes) {
+		    VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
+		    variableValueType.setVariableId(id);
+		    String s = (String)value.getValue();
+		    variableValueType.setValue(s);
+		    rc.addVar(variableValueType);
+		    values.add(s);
+		}
 	    }
 	    return values;
 
@@ -1491,7 +1519,11 @@ public class Engine implements IEngine {
 		//
 		ObjectType ot = definitions.getObject(objectId);
 		try {
-		    items = scanObject(new RequestContext(this, ot, list));
+		    RequestContext rc2 = new RequestContext(this, ot);
+		    items = scanObject(rc2);
+		    for (VariableValueType var : rc2.getVars()) {
+			rc.addVar(var);
+		    }
 		} catch (OvalException oe) {
 		    throw new ResolveException(oe);
 		}
@@ -1503,7 +1535,7 @@ public class Engine implements IEngine {
 	//
 	} else if (object instanceof VariableComponentType) {
 	    VariableComponentType vc = (VariableComponentType)object;
-	    return resolveInternal(definitions.getVariable(vc.getVarRef()), list);
+	    return resolveInternal(definitions.getVariable(vc.getVarRef()), rc);
 
 	//
 	// Resolve and concatenate child components.
@@ -1512,7 +1544,7 @@ public class Engine implements IEngine {
 	    Collection<String> values = new Vector<String>();
 	    ConcatFunctionType concat = (ConcatFunctionType)object;
 	    for (Object child : concat.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		Collection<String> next = resolveInternal(child, list);
+		Collection<String> next = resolveInternal(child, rc);
 		if (next.size() == 0) {
 		    @SuppressWarnings("unchecked")
 		    Collection<String> empty = (Collection<String>)Collections.EMPTY_LIST;
@@ -1536,7 +1568,7 @@ public class Engine implements IEngine {
 	//
 	} else if (object instanceof EscapeRegexFunctionType) {
 	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent((EscapeRegexFunctionType)object), list)) {
+	    for (String value : resolveInternal(getComponent((EscapeRegexFunctionType)object), rc)) {
 		values.add(StringTools.escapeRegex(value));
 	    }
 	    return values;
@@ -1547,7 +1579,7 @@ public class Engine implements IEngine {
 	} else if (object instanceof SplitFunctionType) {
 	    SplitFunctionType split = (SplitFunctionType)object;
 	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent(split), list)) {
+	    for (String value : resolveInternal(getComponent(split), rc)) {
 		values.addAll(StringTools.toList(StringTools.tokenize(value, split.getDelimiter(), false)));
 	    }
 	    return values;
@@ -1557,10 +1589,10 @@ public class Engine implements IEngine {
 	// subexpression in the given pattern.
 	//
 	} else if (object instanceof RegexCaptureFunctionType) {
-	    RegexCaptureFunctionType rc = (RegexCaptureFunctionType)object;
-	    Pattern p = Pattern.compile(rc.getPattern());
+	    RegexCaptureFunctionType regexCapture = (RegexCaptureFunctionType)object;
+	    Pattern p = Pattern.compile(regexCapture.getPattern());
 	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent(rc), list)) {
+	    for (String value : resolveInternal(getComponent(regexCapture), rc)) {
 		Matcher m = p.matcher(value);
 		if (m.groupCount() > 0) {
 		    if (m.find()) {
@@ -1584,7 +1616,7 @@ public class Engine implements IEngine {
 	    start--; // in OVAL, the index count begins at 1 instead of 0
 	    int len = st.getSubstringLength();
 	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent(st), list)) {
+	    for (String value : resolveInternal(getComponent(st), rc)) {
 		if (start > value.length()) {
 		    throw new ResolveException(JOVALSystem.getMessage(JOVALMsg.ERROR_SUBSTRING, value, new Integer(start)));
 		} else if (len < 0 || value.length() <= (start+len)) {
@@ -1602,7 +1634,7 @@ public class Engine implements IEngine {
 	    BeginFunctionType bt = (BeginFunctionType)object;
 	    String s = bt.getCharacter();
 	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent(bt), list)) {
+	    for (String value : resolveInternal(getComponent(bt), rc)) {
 		if (value.startsWith(s)) {
 		    values.add(value);
 		} else {
@@ -1618,7 +1650,7 @@ public class Engine implements IEngine {
 	    EndFunctionType et = (EndFunctionType)object;
 	    String s = et.getCharacter();
 	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent(et), list)) {
+	    for (String value : resolveInternal(getComponent(et), rc)) {
 		if (value.endsWith(s)) {
 		    values.add(value);
 		} else {
@@ -1639,10 +1671,10 @@ public class Engine implements IEngine {
 	    if (children.size() == 1) {
 		timestamp1 = new Vector<String>();
 		timestamp1.add(new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date(System.currentTimeMillis())));
-		timestamp2 = resolveInternal(children.get(0), list);
+		timestamp2 = resolveInternal(children.get(0), rc);
 	    } else if (children.size() == 2) {
-		timestamp1 = resolveInternal(children.get(0), list);
-		timestamp2 = resolveInternal(children.get(1), list);
+		timestamp1 = resolveInternal(children.get(0), rc);
+		timestamp2 = resolveInternal(children.get(1), rc);
 	    } else {
 		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_TIMEDIFFERENCE,new Integer(children.size())));
 	    }
@@ -1665,7 +1697,7 @@ public class Engine implements IEngine {
 	    ArithmeticEnumeration op = at.getArithmeticOperation();
 	    for (Object child : at.getObjectComponentOrVariableComponentOrLiteralComponent()) {
 		Collection<String> row = new Vector<String>();
-		for (String cell : resolveInternal(child, list)) {
+		for (String cell : resolveInternal(child, rc)) {
 		    row.add(cell);
 		}
 		rows.add(row);
@@ -1679,7 +1711,7 @@ public class Engine implements IEngine {
 	    CountFunctionType ct = (CountFunctionType)object;
 	    Collection<String> children = new Vector<String>();
 	    for (Object child : ct.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		children.addAll(resolveInternal(child, list));
+		children.addAll(resolveInternal(child, rc));
 	    }
 	    Collection<String> values = new Vector<String>();
 	    values.add(Integer.toString(children.size()));
@@ -1692,7 +1724,7 @@ public class Engine implements IEngine {
 	    UniqueFunctionType ut = (UniqueFunctionType)object;
 	    HashSet<String> values = new HashSet<String>();
 	    for (Object child : ut.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		values.addAll(resolveInternal(child, list));
+		values.addAll(resolveInternal(child, rc));
 	    }
 	    return values;
 

@@ -20,13 +20,14 @@ import oval.schemas.definitions.solaris.PatchBehaviors;
 import oval.schemas.definitions.solaris.Patch54Object;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.solaris.PatchItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -50,9 +51,7 @@ public class Patch54Adapter extends PatchAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-		throws OvalException, NotCollectableException {
-
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
 	if (!initialized) {
 	    scanRevisions();
 	}
@@ -61,7 +60,7 @@ public class Patch54Adapter extends PatchAdapter {
 	try {
 	    iBase = Integer.parseInt((String)pObj.getBase().getValue());
 	} catch (NumberFormatException e) {
-	    throw new NotCollectableException(e);
+	    throw new CollectException(e, FlagEnumeration.ERROR);
 	}
 
 	if (error != null) {
@@ -128,8 +127,8 @@ public class Patch54Adapter extends PatchAdapter {
 		break;
 
 	      default:
-		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getBase().getOperation());
-		throw new NotCollectableException(s);
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pObj.getBase().getOperation());
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	} catch (NumberFormatException e) {
 	    throw new OvalException(e);
@@ -146,7 +145,7 @@ public class Patch54Adapter extends PatchAdapter {
 
     // Internal
 
-    private Collection<JAXBElement<PatchItem>> getItems(Patch54Object pObj, String base) throws NotCollectableException {
+    private Collection<JAXBElement<PatchItem>> getItems(Patch54Object pObj, String base) throws CollectException {
 	PatchBehaviors behaviors = pObj.getBehaviors();
 	boolean isSupercedence = false;
 	if (behaviors != null) {
@@ -190,8 +189,9 @@ public class Patch54Adapter extends PatchAdapter {
 		    }
 		    break;
 		  default:
-		    throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
-									     pObj.getPatchVersion().getOperation()));
+		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
+							pObj.getPatchVersion().getOperation());
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
 	    }
 	}

@@ -15,7 +15,7 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALSystem;
@@ -39,9 +39,7 @@ public class UserSidAdapter extends UserSid55Adapter {
     }
 
     @Override
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-	    throws NotCollectableException, OvalException {
-
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
 	return super.getItems(new USRequestContext(rc));
     }
 

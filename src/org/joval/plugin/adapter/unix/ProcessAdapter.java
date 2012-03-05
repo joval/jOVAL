@@ -31,6 +31,7 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.unix.EntityItemCapabilityType;
 import oval.schemas.systemcharacteristics.unix.Process58Item;
@@ -41,7 +42,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.ItemSet;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
@@ -74,9 +75,7 @@ public class ProcessAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc)
-		throws OvalException, NotCollectableException {
-
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
 	if (!initialized) {
 	    scanProcesses();
 	}
@@ -171,7 +170,7 @@ public class ProcessAdapter implements IAdapter {
      * Return a collection of ProcessData objects fitting the criteria of the command StringType.
      */
     private Collection<ProcessData> getProcesses(OperationEnumeration op, String[] commands)
-		throws PatternSyntaxException, NotCollectableException {
+		throws PatternSyntaxException, CollectException {
 
 	Collection<ProcessData> result = new Vector<ProcessData>();
 	for (String command : commands) {
@@ -209,7 +208,8 @@ public class ProcessAdapter implements IAdapter {
 		break;
 
 	      default:
-		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	}
 	return result;
@@ -219,7 +219,7 @@ public class ProcessAdapter implements IAdapter {
      * Return a collection of ProcessData objects fitting the criteria of the pid IntegerType.
      */
     private Collection<ProcessData> getProcesses(OperationEnumeration op, Integer[] pids)
-		throws PatternSyntaxException, NotCollectableException {
+		throws PatternSyntaxException, CollectException {
 
 	Collection<ProcessData> result = new Vector<ProcessData>();
 	for (Integer pid : pids) {
@@ -250,7 +250,8 @@ public class ProcessAdapter implements IAdapter {
 		break;
 
 	      default:
-		throw new NotCollectableException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	}
 	return result;

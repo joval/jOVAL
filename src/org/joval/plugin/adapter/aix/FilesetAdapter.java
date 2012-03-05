@@ -28,8 +28,7 @@ import oval.schemas.systemcharacteristics.aix.FilesetItem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.oval.NotCollectableException;
-import org.joval.oval.TestException;
+import org.joval.oval.CollectException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
@@ -56,7 +55,7 @@ public class FilesetAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
 	FilesetObject fObj = (FilesetObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	switch(fObj.getFlstinst().getOperation()) {
@@ -75,8 +74,8 @@ public class FilesetAdapter implements IAdapter {
 	    break;
 
 	  default: {
-	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, fObj.getFlstinst().getOperation());
-	    throw new NotCollectableException(s);
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, fObj.getFlstinst().getOperation());
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	  }
 	}
 

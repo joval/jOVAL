@@ -26,7 +26,7 @@ import oval.schemas.systemcharacteristics.linux.RpminfoItem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.oval.NotCollectableException;
+import org.joval.oval.CollectException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -56,7 +56,7 @@ public class RpminfoAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws NotCollectableException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
 	RpminfoObject rObj = (RpminfoObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	switch(rObj.getName().getOperation()) {
@@ -103,8 +103,8 @@ public class RpminfoAdapter implements IAdapter {
 	  }
 
 	  default: {
-	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, rObj.getName().getOperation());
-	    throw new NotCollectableException(s);
+	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, rObj.getName().getOperation());
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	  }
 	}
 
