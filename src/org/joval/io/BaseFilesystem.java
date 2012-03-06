@@ -82,7 +82,9 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
 	}
 	String canon = path;
 	try {
-	    canon = cache.lookup(path).getCanonicalPath();
+	    if (!path.equals(getDelimiter())) {
+		canon = cache.lookup(path).getCanonicalPath();
+	    }
 	} catch (NoSuchElementException e) {
 	}
 	try {

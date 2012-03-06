@@ -796,13 +796,9 @@ public class Engine implements IEngine {
 	//
 	// Create all the structures we'll need to store information about the evaluation of the test.
 	//
-
-
-
 	RequestContext rc = new RequestContext(this, definitions.getObject(objectId));
 	ExistenceData existence = new ExistenceData();
 	CheckData check = new CheckData();
-
 	switch(sc.getObject(objectId).getFlag()) {
 	  case COMPLETE:
 	    //
