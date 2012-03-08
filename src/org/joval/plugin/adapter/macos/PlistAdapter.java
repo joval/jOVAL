@@ -140,7 +140,7 @@ public class PlistAdapter extends BaseFileAdapter {
 	    } catch (Exception e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PLIST_PARSE, f.getLocalName(), e.getMessage()));
+		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PLIST_PARSE, f.getPath(), e.getMessage()));
 		rc.addMessage(msg);
 		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {

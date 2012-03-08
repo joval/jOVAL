@@ -10,33 +10,33 @@ import java.util.regex.Pattern;
 import org.joval.intf.util.ILoggable;
 
 /**
- * Representation of a node on a tree.
+ * A forest is a collection of trees. A tree is a structure with a name containing a hierarchical collection of nodes.
+ * Every node in a tree has a path that begins with the name of its tree; the tree itself being the root node.
+ *
+ * No tree can contain a node whose path is identical to the name of another tree in the forest. This characteristic makes
+ * a forest searchable for all its nodes.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IForest extends ILoggable {
+public interface IForest extends ITree {
+    /**
+     * All the trees in the forest must use the same delimiter for node pathnames.
+     */
+    public String getDelimiter();
+
     /**
      * @returns the tree that was displaced, if any
+     *
+     * @throws IllegalArgumentException If the forest already contains a non-leaf node path matching the tree name.  If an
+     *					existing leaf node path matches the name, it is excised from the original tree.
+     *					Similarly, if the tree contains a node matching an existing tree name in the forest,
+     *					it is excised if a leaf node, otherwise the exception is thrown.
      */
-    public ITree addTree(ITree tree);
+    public ITree addTree(ITree tree) throws IllegalArgumentException;
 
-    public ITreeBuilder getTreeBuilder(String name);
-
+    /**
+     * Get the tree with the specified name.
+     */
     public ITree getTree(String name);
-
-    /**
-     * Get all the root ITrees in the forest.
-     */
-    public Collection<ITree> getTrees();
-
-    /**
-     * Get all the ITrees in the forest whose paths match the specified Pattern.
-     */
-    public Collection<String> search(Pattern p, boolean followLinks);
-
-    /**
-     * Lookup a node in the forest.
-     */
-    public INode lookup(String path) throws NoSuchElementException;
 }

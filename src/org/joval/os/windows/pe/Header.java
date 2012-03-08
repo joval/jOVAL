@@ -39,14 +39,14 @@ import org.joval.util.tree.TreeHash;
  */
 public class Header implements ILoggable {
     private LocLogger logger;
-    private TreeHash resources;
+    private TreeHash<Object> resources;
     private ImageDOSHeader dosHeader;
     private ImageNTHeaders ntHeader;
     private VsVersionInfo versionInfo;
     private VarFileInfo varFileInfo;
 
     public Header(IFile file, LocLogger logger) throws IllegalArgumentException, IOException {
-	resources = new TreeHash("ImageResourceDirs", "/");
+	resources = new TreeHash<Object>("ImageResourceDirs", "/");
 	this.logger = logger;
 	if (file.isFile()) {
 	    if (file.length() == 0) {
@@ -104,7 +104,9 @@ public class Header implements ILoggable {
     public void debugPrint(PrintStream out) {
         dosHeader.debugPrint(out);
         ntHeader.debugPrint(out);
-	debugPrint(0, resources.getRoot(), out);
+	for (INode node : resources.getRoot().getChildren()) {
+	    debugPrint(0, node, out);
+	}
     }
 
     // Implement ILoggable
@@ -127,7 +129,7 @@ public class Header implements ILoggable {
 	String indent = sb.toString();
 
 	switch(node.getType()) {
-	  case ROOT:
+	  case TREE:
 	  case BRANCH:
 	    out.print(indent);
 	    out.println("Dir: " + node.getName());

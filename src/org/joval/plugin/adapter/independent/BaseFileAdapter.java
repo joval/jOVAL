@@ -39,7 +39,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
-import org.joval.intf.util.tree.INode;
+import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
@@ -99,7 +99,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	for (String path : getPathList(fObj, rc, fs)) {
 	    IFile f = null;
 	    try {
-		f = (IFile)fs.lookup(path);
+		f = fs.getFile(path);
 		if (!f.exists()) {
 		    throw new NoSuchElementException(path);
 		}
@@ -167,7 +167,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			filenameType.setValue(f.getName());
 			fItem.setFilename(filenameType);
 			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			filepathType.setValue(f.getLocalName());
+			filepathType.setValue(f.getPath());
 			fItem.setFilepath(filepathType);
 		    }
 		} else {
@@ -261,30 +261,30 @@ public abstract class BaseFileAdapter implements IAdapter {
 		  case EQUALS:
 		    for (String value : filepaths) {
 			try {
-			    IFile f = (IFile)fs.lookup(value);
+			    IFile f = fs.getFile(value);
 			    if (f.exists() && f.isFile()) {
 				list.add(value);
 			    }
 			} catch (NoSuchElementException e) {
 			} catch (IOException e) {
 			    session.getLogger().warn(JOVALMsg.ERROR_IO, value, e.getMessage());
-			    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    session.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			}
 		    }
 		    break;
 
 		  case PATTERN_MATCH:
 		    for (String value : filepaths) {
-			for (String match : fs.search(Pattern.compile(value), true)) {
+			for (String match : fs.search(Pattern.compile(value), ISearchable.FOLLOW_LINKS)) {
 			    try {
-				if (((IFile)fs.lookup(match)).isFile()) {
+				if ((fs.getFile(match)).isFile()) {
 				    list.add(match);
 				}
 			    } catch (NoSuchElementException e) {
 				session.getLogger().debug(JOVALMsg.ERROR_NODE_LINK, match);
 			    } catch (IOException e) {
 				session.getLogger().warn(JOVALMsg.ERROR_IO, match, e.getMessage());
-				session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+				session.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			    }
 			}
 		    }
@@ -309,13 +309,13 @@ public abstract class BaseFileAdapter implements IAdapter {
 		  case EQUALS:
 		    for (String value : paths) {
 			try {
-			    if (((IFile)fs.lookup(value)).isDirectory()) {
+			    if ((fs.getFile(value)).isDirectory()) {
 				list.add(value);
 			    }
-			} catch (NoSuchElementException e) {
+			} catch (FileNotFoundException e) {
 			} catch (IOException e) {
 			    session.getLogger().warn(JOVALMsg.ERROR_IO, value, e.getMessage());
-			    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    session.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			}
 		    }
 		    if (fb != null) {
@@ -329,19 +329,19 @@ public abstract class BaseFileAdapter implements IAdapter {
 
 		  case PATTERN_MATCH:
 		    for (String value : paths) {
-			for (String match : fs.search(Pattern.compile(value), true)) {
+			for (String match : fs.search(Pattern.compile(value), ISearchable.FOLLOW_LINKS)) {
 			    try {
 				//
 				// Filter search results for directories
 				//
-				if (((IFile)fs.lookup(match)).isDirectory()) {
+				if ((fs.getFile(match)).isDirectory()) {
 				    list.add(match);
 				}
 			    } catch (NoSuchElementException e) {
 				session.getLogger().debug(JOVALMsg.ERROR_NODE_LINK, match);
 			    } catch (IOException e) {
 				session.getLogger().warn(JOVALMsg.ERROR_IO, match, e.getMessage());
-				session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+				session.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			    }
 			}
 		    }
@@ -368,15 +368,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    try {
 				switch(filename.getOperation()) {
 				  case PATTERN_MATCH: {
-				    IFile f = (IFile)fs.lookup(pathString);
-				    if (f.isDirectory() && f.hasChildren()) {
-					for (INode child : f.getChildren(Pattern.compile(fname))) {
-					    if (((IFile)child).isFile()) {
-						if (pathString.endsWith(fs.getDelimiter())) {
-						    files.add(pathString + child.getName());
-						} else {
-						    files.add(pathString + fs.getDelimiter() + child.getName());
-						}
+				    IFile f = fs.getFile(pathString);
+				    if (f.isDirectory()) {
+					for (IFile child : f.listFiles(Pattern.compile(fname))) {
+					    if (child.isFile()) {
+						files.add(child.getPath());
 					    }
 					}
 				    }
@@ -390,22 +386,18 @@ public abstract class BaseFileAdapter implements IAdapter {
 				    } else {
 					filepath = pathString + fs.getDelimiter() + fname;
 				    }
-				    if (((IFile)fs.lookup(filepath)).exists()) {
+				    if ((fs.getFile(filepath)).exists()) {
 					files.add(filepath);
 				    }
 				    break;
 				  }
 
 				  case NOT_EQUAL: {
-				    IFile f = (IFile)fs.lookup(pathString);
-				    if (f.isDirectory() && f.hasChildren()) {
-					for (INode child : f.getChildren(Pattern.compile(fname))) {
-					    if (((IFile)child).isFile()) {
-						if (pathString.endsWith(fs.getDelimiter())) {
-						    files.add(pathString + child.getName());
-						} else {
-						    files.add(pathString + fs.getDelimiter() + child.getName());
-						}
+				    IFile f = fs.getFile(pathString);
+				    if (f.isDirectory()) {
+					for (IFile child : f.listFiles(Pattern.compile(fname))) {
+					    if (child.isFile()) {
+						files.add(child.getPath());
 					    }
 					}
 				    }
@@ -502,7 +494,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		}
 		session.getLogger().trace(JOVALMsg.STATUS_FS_RECURSE, path);
 		try {
-		    IFile f = (IFile)fs.lookup(path);
+		    IFile f = fs.getFile(path);
 		    if (f == null) {
 			// skip permission denied (or other access error)
 		    } else if (!f.exists()) {
@@ -514,7 +506,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    } else if (f.isLink() && ancestors.contains(f.getCanonicalPath())) {
 			// Skip the loop back to an ancestor!
 			// NB: This point is only reached if symlinks are being followed
-			session.getLogger().warn(JOVALMsg.STATUS_FS_LOOP, f.getLocalName());
+			session.getLogger().warn(JOVALMsg.STATUS_FS_LOOP, f.getPath());
 		    } else if (f.isDirectory()) {
 			results.add(path);
 			ancestors.push(f.getCanonicalPath());
@@ -528,12 +520,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    }
 			} else { // recurse down
 			    Collection<String> c = new HashSet<String>();
-			    for (INode child : f.getChildren()) {
-				if (path.endsWith(fs.getDelimiter())) {
-				    c.add(path + child.getName());
-				} else {
-				    c.add(path + fs.getDelimiter() + child.getName());
-				}
+			    for (IFile child : f.listFiles()) {
+				c.add(child.getPath());
 			    }
 			    results.addAll(getDirs(c, --depth, direction, recurse, fs, cloneStack(ancestors)));
 			}

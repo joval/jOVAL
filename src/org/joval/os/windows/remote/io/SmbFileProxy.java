@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import jcifs.smb.ACE;
 import jcifs.smb.NtlmPasswordAuthentication;
@@ -35,31 +36,47 @@ import org.joval.util.JOVALSystem;
  */
 class SmbFileProxy extends BaseFile implements IWindowsFile {
     private SmbFile smbFile;
-    private String localName;
     private IACE[] aces = null;
 
-    SmbFileProxy(IFilesystem fs, SmbFile smbFile, String localName) {
-	super(fs);
+    SmbFileProxy(SmbFilesystem fs, SmbFile smbFile, String path) {
+	super(fs, path);
 	this.smbFile = smbFile;
-	if (localName.endsWith(fs.getDelimiter())) {
-	    this.localName = localName.substring(0, localName.lastIndexOf(fs.getDelimiter()));
-	} else {
-	    this.localName = localName;
-	}
     }
 
     SmbFile getSmbFile() {
 	return smbFile;
     }
 
-    // Implement INode
+    // Implement ICacheable
+
+    @Override
+    public boolean isAccessible() {
+	return true;
+    }
+
+    public boolean isLink() {
+	try {
+	    return smbFile.getDfsPath() != null;
+	} catch (SmbException e) {
+	}
+	return false;
+    }
+
+    @Override
+    public String getLinkPath() throws IllegalStateException {
+	try {
+	    return smbFile.getDfsPath();
+	} catch (SmbException e) {
+	}
+	return super.getLinkPath(); // throw exception
+    }
+
+    // Implement IFile
 
     public String getCanonicalPath() {
 	String uncCP = smbFile.getCanonicalPath();
 	return uncCP.substring(6).replaceAll("\\/","\\\\");
     }
-
-    // Implement IFile
 
     /**
      * Not really supported by this implementation.
@@ -107,10 +124,6 @@ class SmbFileProxy extends BaseFile implements IWindowsFile {
 	return smbFile.isFile();
     }
 
-    public boolean isLink() throws IOException {
-	return smbFile.getDfsPath() != null;
-    }
-
     public long lastModified() throws IOException {
 	return smbFile.lastModified();
     }
@@ -119,35 +132,8 @@ class SmbFileProxy extends BaseFile implements IWindowsFile {
 	return smbFile.length();
     }
 
-    public String[] list() throws IOException {
-	return smbFile.list();
-    }
-
-    public IFile[] listFiles() throws IOException {
-	SmbFile[] files = smbFile.listFiles();
-	IFile[] children = new IFile[files.length];
-	for (int i=0; i < files.length; i++) {
-	    StringBuffer sb = new StringBuffer(localName);
-	    sb.append(fs.getDelimiter());
-	    sb.append(getName(files[i].getName()));
-	    if (files[i].isDirectory()) {
-		sb.append(fs.getDelimiter());
-	    }
-	    children[i] = fs.getFile(sb.toString());
-	}
-	return children;
-    }
-
     public void delete() throws IOException {
 	smbFile.delete();
-    }
-
-    public String getLocalName() {
-	return localName;
-    }
-
-    public String getName() {
-	return getName(smbFile.getName());
     }
 
     public String toString() {
@@ -191,15 +177,5 @@ class SmbFileProxy extends BaseFile implements IWindowsFile {
 	    }
 	}
 	return aces;
-    }
-
-    // Private
-
-    private String getName(String name) {
-	if (name.endsWith(SmbFilesystem.SMBURL_DELIM_STR)) {
-	    return name.substring(0, name.lastIndexOf(SmbFilesystem.SMBURL_DELIM_STR));
-	} else {
-	    return name;
-	}
     }
 }

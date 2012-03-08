@@ -30,6 +30,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.intf.util.ISearchable;
 import org.joval.oval.CollectException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
@@ -228,7 +229,7 @@ public class RunlevelAdapter implements IAdapter {
 
     private void initUnixRunlevels(String baseDir) throws IOException {
 	IFilesystem fs = session.getFilesystem();
-	for (String path : fs.search(Pattern.compile(baseDir + fs.getDelimiter() + "rc.\\.d$"), true)) {
+	for (String path : fs.search(Pattern.compile(baseDir + fs.getDelimiter() + "rc.\\.d$"), ISearchable.FOLLOW_LINKS)) {
 	    IFile dir = fs.getFile(path);
 	    if (dir.isDirectory()) {
 		String rl = path.substring(path.lastIndexOf(fs.getDelimiter())+1).substring(2, 3);

@@ -149,11 +149,11 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	StringBuffer sb = new StringBuffer(tempDir).append(fs.getDelimiter()).append("rexec_");
 	sb.append(Integer.toHexString(counter++));
 
-	IFile out = fs.getFile(sb.toString() + ".out", true);
+	IFile out = fs.getFile(sb.toString() + ".out", IFile.READVOLATILE);
 	out.getOutputStream(false).close(); // create/clear tmpOutFile
 	tempFiles.add(out);
 
-	IFile err = fs.getFile(sb.toString() + ".err", true);
+	IFile err = fs.getFile(sb.toString() + ".err", IFile.READVOLATILE);
 	err.getOutputStream(false).close(); // create/clear tmpErrFile
 	tempFiles.add(err);
 

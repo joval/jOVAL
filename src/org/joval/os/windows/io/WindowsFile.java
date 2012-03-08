@@ -21,6 +21,8 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFile;
+import org.joval.io.BaseFilesystem;
+import org.joval.io.FileProxy;
 import org.joval.os.windows.identity.LocalACE;
 
 /**
@@ -30,47 +32,41 @@ import org.joval.os.windows.identity.LocalACE;
  * @version %I% %G%
  */
 public class WindowsFile implements IWindowsFile {
-    private IFile f;
+    private FileProxy f;
 
-    public WindowsFile(IFile f) {
+    public WindowsFile(FileProxy f) {
 	this.f = f;
     }
 
-    // Implement INode
-
-    public Collection<INode> getChildren() throws NoSuchElementException, UnsupportedOperationException {
-	return f.getChildren();
+    FileProxy getFile() {
+	return f;
     }
 
-    public Collection<INode> getChildren(Pattern p) throws NoSuchElementException, UnsupportedOperationException {
-	return f.getChildren(p);
+    // Implement ICacheable
+
+    public boolean isLink() {
+	return f.isLink();
     }
 
-    public INode getChild(String name) throws NoSuchElementException, UnsupportedOperationException {
-	return f.getChild(name);
+    public boolean isContainer() {
+	return f.isContainer();
     }
 
-    public String getName() {
-	return f.getName();
+    public boolean isAccessible() {
+	return f.isAccessible();
     }
 
-    public String getPath() {
-	return f.getPath();
+    public String getLinkPath() throws IllegalStateException {
+	return f.getLinkPath();
     }
+
+    public void setCachePath(String cachePath) {}
+
+    // Implement IFile
 
     public String getCanonicalPath() {
 	return f.getCanonicalPath();
     }
-
-    public Type getType() {
-	return f.getType();
-    }
-
-    public boolean hasChildren() throws NoSuchElementException {
-	return f.hasChildren();
-    }
-
-    // Implement IFile
 
     public long accessTime() throws IOException {
 	return f.accessTime();
@@ -108,10 +104,6 @@ public class WindowsFile implements IWindowsFile {
 	return f.isFile();
     }
 
-    public boolean isLink() throws IOException {
-	return f.isLink();
-    }
-
     public long lastModified() throws IOException {
 	return f.lastModified();
     }
@@ -125,19 +117,23 @@ public class WindowsFile implements IWindowsFile {
     }
 
     public IFile[] listFiles() throws IOException {
-	ArrayList<IFile> list = new ArrayList<IFile>();
-	for (INode node : f.getChildren()) {
-	    list.add((IFile)node);
-	}
-	return list.toArray(new IFile[list.size()]);
+	return f.listFiles();
+    }
+
+    public IFile[] listFiles(Pattern p) throws IOException {
+	return f.listFiles(p);
     }
 
     public void delete() throws IOException {
 	f.delete();
     }
 
-    public String getLocalName() {
-	return f.getLocalName();
+    public String getPath() {
+	return f.getPath();
+    }
+
+    public String getName() {
+	return f.getName();
     }
 
     public String toString() {
@@ -155,7 +151,7 @@ public class WindowsFile implements IWindowsFile {
 	    if (FILE_ATTRIBUTE_DIRECTORY == dirAttr) {
 		return FILE_ATTRIBUTE_DIRECTORY;
 	    } else {
-		return Kernel32Util.getFileType(getLocalName());
+		return Kernel32Util.getFileType(getPath());
 	    }
 	} catch (Win32Exception e) {
 	    throw new IOException(e);
@@ -164,7 +160,7 @@ public class WindowsFile implements IWindowsFile {
 
     public IACE[] getSecurity() throws IOException {
 	try {
-	    WinNT.ACCESS_ACEStructure[] aces = Advapi32Util.getFileSecurity(getLocalName(), false);
+	    WinNT.ACCESS_ACEStructure[] aces = Advapi32Util.getFileSecurity(getPath(), false);
 	    IACE[] result = new IACE[aces.length];
 	    for (int i=0; i < aces.length; i++) {
 		result[i] = new LocalACE(aces[i]);

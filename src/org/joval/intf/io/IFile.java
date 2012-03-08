@@ -6,8 +6,9 @@ package org.joval.intf.io;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.regex.Pattern;
 
-import org.joval.intf.util.tree.INode;
+import org.joval.intf.util.tree.ICacheable;
 
 /**
  * A platform-independent abstraction of a File.
@@ -15,7 +16,12 @@ import org.joval.intf.util.tree.INode;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IFile extends INode {
+public interface IFile extends ICacheable {
+    int NOCACHE		= 0;
+    int READVOLATILE	= 1;
+    int READONLY	= 4;
+    int READWRITE	= 6;
+
     /**
      * Get the time that the file was last accessed.
      */
@@ -63,11 +69,6 @@ public interface IFile extends INode {
     public boolean isFile() throws IOException;
 
     /**
-     * Does this file represent a link?
-     */
-    public boolean isLink() throws IOException;
-
-    /**
      * Get the time this file was last modified.
      */
     public long lastModified() throws IOException;
@@ -88,6 +89,11 @@ public interface IFile extends INode {
     public IFile[] listFiles() throws IOException;
 
     /**
+     * For a directory, lists all the child files whose names match the specified pattern.
+     */
+    public IFile[] listFiles(Pattern p) throws IOException;
+
+    /**
      * Delete the file.
      */
     public void delete() throws IOException;
@@ -95,8 +101,16 @@ public interface IFile extends INode {
     /**
      * Returns the full path as it appears to the system on which the IFile resides (not necessarily canonical).
      */
-    public String getLocalName();
+    public String getPath();
 
+    /**
+     * Returns the canonical path representation of the IFile (i.e., linkless path).
+     */
+    public String getCanonicalPath();
+
+    /**
+     * Get the name of the file.
+     */
     public String getName();
 
     /**

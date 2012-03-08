@@ -6,8 +6,6 @@ package org.joval.io;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.Collection;
@@ -22,15 +20,13 @@ import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.IProperty;
 import org.joval.intf.util.tree.INode;
-import org.joval.intf.util.tree.ITree;
-import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
-import org.joval.util.tree.CachingTree;
-import org.joval.util.tree.Tree;
+import org.joval.util.CachingHierarchy;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
+import org.joval.util.tree.Node;
 
 /**
  * The base class for IFilesystem implementations.
@@ -38,78 +34,35 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class BaseFilesystem extends CachingTree implements IFilesystem {
+public abstract class BaseFilesystem extends CachingHierarchy<IFile> implements IFilesystem {
     protected boolean autoExpand = true;
+    protected String delimiter;
     protected IProperty props;
     protected IBaseSession session;
     protected IEnvironment env;
     protected IPathRedirector redirector;
 
-    /**
-     * A memory of paths that were not found in the cache, and which could not be found from the access layer.
-     */
-    private HashSet<String> deadLinks = new HashSet<String>();
-
-    protected BaseFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector) {
-	super();
+    protected BaseFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector, String delimiter) {
+	super(session.getHostname(), delimiter);
 	this.session = session;
 	this.env = env;
 	this.redirector = redirector;
+	this.delimiter = delimiter;
 	props = session.getProperties();
 	setLogger(session.getLogger());
     }
+
+public void save(File f) {
+    super.save(f);
+}
 
     public void setAutoExpand(boolean autoExpand) {
 	this.autoExpand = autoExpand;
     }
 
-    // Implement ITree (methods abstract in CachingTree)
+    // Implement methods abstract in CachingHierarchy
 
-    public String getDelimiter() {
-	return File.separator;
-    }
-
-    /**
-     * The lookup method first attempts to translate the path to its canonical form, so that subclasses that cache
-     * can cache getFile results using just their canonical paths.
-     *
-     * Note that this means the returned INode's path will be canonical, so the caller must preserve the path alias if
-     * required.
-     */
-    public INode lookup(String path) throws NoSuchElementException {
-	if (deadLinks.contains(path)) {
-	    throw new NoSuchElementException(path);
-	}
-	String canon = path;
-	try {
-	    if (!path.equals(getDelimiter())) {
-		canon = cache.lookup(path).getCanonicalPath();
-	    }
-	} catch (NoSuchElementException e) {
-	}
-	try {
-	    IFile f = getFile(canon);
-	    if (f.exists()) {
-		return f;
-	    } else {
-		deadLinks.add(path);
-		throw new NoSuchElementException(path);
-	    }
-	} catch (IOException e) {
-	    logger.warn(JOVALMsg.ERROR_IO, path, e.getMessage());
-	    throw new NoSuchElementException(path);
-	}
-    }
-
-    // Abstract (from CachingTree)
-
-    public abstract boolean preload();
-
-    public abstract boolean preloaded();
-
-    // Implement IFilesystem
-
-    public IFile getFile(String path) throws IllegalArgumentException, IOException {
+    protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
 	if (autoExpand) {
 	    path = env.expand(path);
 	}
@@ -127,16 +80,55 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
 	}
     }
 
-    public IFile getFile(String path, boolean vol) throws IllegalArgumentException, IOException {
-	return getFile(path);
+    protected String[] listChildren(String path) throws Exception {
+	return ((FileProxy)accessResource(path)).getFile().list();
+    }
+
+    protected boolean loadCache() {
+	return false;
+    }
+
+    // Implement IFilesystem
+
+    public String getDelimiter() {
+	return delimiter;
+    }
+
+    public IFile getFile(String path) throws IOException {
+	return getFile(path, IFile.READONLY);
+    }
+
+    public IFile getFile(String path, int flags) throws IllegalArgumentException, IOException {
+	try {
+	    switch(flags) {
+	      case IFile.NOCACHE:
+	      case IFile.READWRITE:
+	      case IFile.READVOLATILE:
+		return accessResource(path);
+
+	      case IFile.READONLY:
+		return getResource(path);
+
+	      default:
+		throw new IllegalArgumentException(Integer.toString(flags));
+	    }
+	} catch (Exception e) {
+	    if (e instanceof IOException) {
+		throw (IOException)e;
+	    } else if (e instanceof IllegalArgumentException) {
+		throw (IllegalArgumentException)e;
+	    } else {
+		throw new IOException(e);
+	    }
+	}
     }
 
     public IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
-	return new RandomAccessFileProxy(new RandomAccessFile(file.getLocalName(), mode));
+	return file.getRandomAccess(mode);
     }
 
     public IRandomAccess getRandomAccess(String path, String mode) throws IllegalArgumentException, IOException {
-	return new RandomAccessFileProxy(new RandomAccessFile(path, mode));
+	return getFile(path).getRandomAccess(mode);
     }
 
     public InputStream getInputStream(String path) throws IllegalArgumentException, IOException {
@@ -156,183 +148,6 @@ public abstract class BaseFilesystem extends CachingTree implements IFilesystem 
     protected class PreloadOverflowException extends Exception {
 	public PreloadOverflowException() {
 	    super();
-	}
-    }
-
-    protected class FileProxy extends BaseFile {
-	private File file;
-	private String localName;
-
-	public FileProxy(IFilesystem fs, File file, String localName) {
-	    super(fs);
-	    this.file = file;
-	    if (localName.endsWith(fs.getDelimiter())) {
-		this.localName = localName.substring(0, localName.lastIndexOf(fs.getDelimiter()));
-	    } else {
-		this.localName = localName;
-	    }
-	}
-
-	public File getFile() {
-	    return file;
-	}
-
-	// Implement methods left abstract in BaseFile
-
-	public String getCanonicalPath() {
-	    try {
-		return file.getCanonicalPath();
-	    } catch (IOException e) {
-		return file.getPath();
-	    }
-	}
-
-	// Implement IFile
-
-	/**
-	 * Not really supported in this implementation.
-	 */
-	public long accessTime() throws IOException {
-	    return lastModified();
-	}
-
-	public long createTime() throws IOException {
-	    return file.lastModified();
-	}
-
-	public boolean exists() throws IOException {
-	    return file.exists();
-	}
-
-	public boolean mkdir() {
-	    return file.mkdir();
-	}
-
-	public InputStream getInputStream() throws IOException {
-	    return new FileInputStream(file);
-	}
-
-	public OutputStream getOutputStream(boolean append) throws IOException {
-	    return new FileOutputStream(file, append);
-	}
-
-	public IRandomAccess getRandomAccess(String mode) throws IllegalArgumentException, IOException {
-	    return new RandomAccessFileProxy(new RandomAccessFile(file, mode));
-	}
-
-	public boolean isDirectory() throws IOException {
-	    return file.isDirectory();
-	}
-
-	public boolean isFile() throws IOException {
-	    return file.isFile();
-	}
-
-	public boolean isLink() throws IOException {
-	    File canon;
-	    if (file.getParent() == null) {
-		canon = file;
-	    } else {
-		File canonDir = file.getParentFile().getCanonicalFile();
-		canon = new File(canonDir, file.getName());
-	    }
-	    return !canon.getCanonicalFile().equals(canon.getAbsoluteFile());
-	}
-
-	public long lastModified() throws IOException {
-	    return file.lastModified();
-	}
-
-	public long length() throws IOException {
-	    return file.length();
-	}
-
-	public String[] list() throws IOException {
-	    try {
-		return BaseFilesystem.this.list(this);
-	    } catch (UnsupportedOperationException e) {
-		throw new IOException(e);
-	    } catch (NoSuchElementException e) {
-		throw new IOException(e);
-	    } catch (IllegalStateException e) {
-		String[] children = file.list();
-		if (children == null) {
-		    return new String[0];
-		} else {
-		    return children;
-		}
-	    }
-	}
-
-	public IFile[] listFiles() throws IOException {
-	    String[] children = list();
-	    if (children == null) {
-		return new IFile[0];
-	    } else {
-		IFile[] files = new IFile[children.length];
-		for (int i=0; i < children.length; i++) {
-		    files[i] = fs.getFile(localName + fs.getDelimiter() + children[i]);
-		}
-		return files;
-	    }
-	}
-
-	public void delete() throws IOException {
-	    file.delete();
-	}
-
-	public String getLocalName() {
-	    return localName;
-	}
-
-	public String getName() {
-	    return file.getName();
-	}
-
-	public String toString() {
-	    return file.toString();
-	}
-    }
-
-    protected class RandomAccessFileProxy implements IRandomAccess {
-	private RandomAccessFile raf;
-
-	public RandomAccessFileProxy(RandomAccessFile raf) {
-	    this.raf = raf;
-	}
-
-	// Implement IRandomAccess
-
-	public void readFully(byte[] buff) throws IOException {
-	    raf.readFully(buff);
-	}
-
-	public void close() throws IOException {
-	    raf.close();
-	}
-
-	public void seek(long pos) throws IOException {
-	    raf.seek(pos);
-	}
-
-	public int read() throws IOException {
-	    return raf.read();
-	}
-
-	public int read(byte[] buff) throws IOException {
-	    return raf.read(buff);
-	}
-
-	public int read(byte[] buff, int offset, int len) throws IOException {
-	    return raf.read(buff, offset, len);
-	}
-
-	public long length() throws IOException {
-	    return raf.length();
-	}
-
-	public long getFilePointer() throws IOException {
-	    return raf.getFilePointer();
 	}
     }
 }

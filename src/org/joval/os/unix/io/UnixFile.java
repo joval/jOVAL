@@ -12,7 +12,6 @@ import java.util.Date;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.regex.Pattern;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -22,6 +21,7 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
+import org.joval.io.BaseFile;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
@@ -32,7 +32,7 @@ import org.joval.util.SafeCLI;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixFile implements IUnixFile {
+public class UnixFile extends BaseFile implements IUnixFile {
     public static final char NULL	= '0';
     public static final char DIR_TYPE	= 'd';
     public static final char FIFO_TYPE	= 'p';
@@ -46,7 +46,7 @@ public class UnixFile implements IUnixFile {
     private IFile accessor;
 
     boolean hasExtendedAcl = false;
-    String permissions = null, path = null, canonicalPath = null;
+    String permissions = null, canonicalPath = null, linkPath = null;
     int uid, gid;
     long size = -1L;
     char unixType = NULL;
@@ -56,115 +56,57 @@ public class UnixFile implements IUnixFile {
      * Create a UnixFile with a live IFile accessor.
      */
     UnixFile(UnixFilesystem ufs, IFile accessor) {
+	super(ufs, accessor.getPath());
 	this.ufs = ufs;
 	this.accessor = accessor;
+	accessible = true;
     }
 
     /**
      * Create a UnixFile whose information will be populated externally from the cache.
      */
     UnixFile(UnixFilesystem ufs) {
+	super(ufs, "PLACEHOLDER");
 	this.ufs = ufs;
     }
 
-    // Implement INode
-
-    public Collection<INode> getChildren() throws NoSuchElementException, UnsupportedOperationException {
-	return getChildren(null);
+    void setPath(String path) {
+	this.path = path;
     }
 
-    public Collection<INode> getChildren(Pattern p) throws NoSuchElementException, UnsupportedOperationException {
-	try {
-	    if (isLink()) {
-		return ((IFile)ufs.lookup(getCanonicalPath())).getChildren(p);
-	    } else if (isDirectory()) {
-		Collection<INode> children = new Vector<INode>();
-		try {
-		    String[] sa = ufs.list(this);
-		    for (int i=0; i < sa.length; i++) {
-			if (p == null || p.matcher(sa[i]).find()) {
-			    children.add(getChild(sa[i]));
-			}
-		    }
-		} catch (UnsupportedOperationException e) {
-		}
-		return children;
-	    } else {
-		throw new UnsupportedOperationException(getPath());
-	    }
-	} catch (IOException e) {
-	    throw new UnsupportedOperationException(e);
-	}
-    }
+    // Implement ICacheable
 
-    public INode getChild(String name) throws NoSuchElementException, UnsupportedOperationException {
-	String prefix = getPath();
-	StringBuffer childPath = new StringBuffer(prefix);
-	if (!prefix.endsWith(UnixFilesystem.DELIM_STR)) {
-	    childPath.append(UnixFilesystem.DELIM_STR);
-	}
-	childPath.append(name);
-	return (IFile)ufs.lookup(childPath.toString());
-    }
-
-    public String getName() {
-	return path.substring(path.lastIndexOf("/")+1);
-    }
-
-    public String getPath() {
-	return path;
-    }
-
-    public String getCanonicalPath() {
-	if (unixType == NULL) {
+    public boolean isLink() {
+	if (permissions == null) {
 	    try {
-		return getAccessor().getCanonicalPath();
+		return getAccessor().isLink();
 	    } catch (IOException e) {
-		return path;
 	    }
+	    return false;
 	} else {
-	    switch(unixType) {
-	      case LINK_TYPE:
-		return canonicalPath;
-
-	      default:
-		return getPath();
-	    }
+	    return unixType == LINK_TYPE;
 	}
     }
 
-    public Type getType() {
-	try {
-	    return getAccessor().getType();
-	} catch (IOException e) {
-	    return INode.Type.LEAF;
-	}
-    }
-
-    public boolean hasChildren() throws NoSuchElementException {
-	try {
-	    if (unixType == NULL) {
-		return getAccessor().hasChildren();
-	    } else {
-		switch(unixType) {
-		  case DIR_TYPE:
-		    try {
-			return getChildren().size() > 0;
-		    } catch (UnsupportedOperationException e) {
-		    }
-		    return false;
-    
-		  case LINK_TYPE:
-		    return ufs.lookup(canonicalPath).hasChildren();
-    
-		  default:
-		    return false;
+    @Override
+    public String getLinkPath() throws IllegalStateException {
+	if (isLink()) {
+	    if (linkPath == null) {
+		try {
+		    linkPath = getAccessor().getCanonicalPath();
+		} catch (IOException e) {
 		}
 	    }
-	} catch (IOException e) {
-	    ufs.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new NoSuchElementException(e.getMessage());
+	    return linkPath;
+	} else {
+	    return super.getLinkPath(); // throw exception
 	}
+    }
+
+    @Override
+    public void setCachePath(String cachePath) {
+	canonicalPath = cachePath;
+	linkPath = cachePath;
     }
 
     // Implement IFile
@@ -214,7 +156,7 @@ public class UnixFile implements IUnixFile {
 		return true;
 
 	      case LINK_TYPE:
-		return ((IFile)ufs.lookup(getCanonicalPath())).isDirectory();
+		return ufs.getFile(getCanonicalPath()).isDirectory();
 
 	      default:
 		return false;
@@ -227,14 +169,6 @@ public class UnixFile implements IUnixFile {
 	    return getAccessor().isFile();
 	} else {
 	    return unixType == FILE_TYPE;
-	}
-    }
-
-    public boolean isLink() throws IOException {
-	if (permissions == null) {
-	    return getAccessor().isLink();
-	} else {
-	    return unixType == LINK_TYPE;
 	}
     }
 
@@ -255,26 +189,7 @@ public class UnixFile implements IUnixFile {
     }
 
     public String[] list() throws IOException {
-	IFile[] fa = listFiles();
-	String[] sa = new String[fa.length];
-	for (int i=0; i < sa.length; i++) {
-	    sa[i] = fa[i].getName();
-	}
-	return sa;
-    }
-
-    public IFile[] listFiles() throws IOException {
-	Vector<IFile> list = new Vector<IFile>();
-	try {
-	    for (INode node : getChildren()) {
-		list.add((IFile)node);
-	    }
-	    return list.toArray(new IFile[list.size()]);
-	} catch (UnsupportedOperationException e) {
-	    throw new IOException(e);
-	} catch (NoSuchElementException e) {
-	    throw new IOException(e);
-	}
+	return getAccessor().list();
     }
 
     public void delete() throws IOException {
@@ -282,8 +197,22 @@ public class UnixFile implements IUnixFile {
 	unixType = NULL;
     }
 
-    public String getLocalName() {
-	return path;
+    public String getCanonicalPath() {
+	if (unixType == NULL) {
+	    try {
+		return getAccessor().getCanonicalPath();
+	    } catch (IOException e) {
+		return path;
+	    }
+	} else {
+	    switch(unixType) {
+	      case LINK_TYPE:
+		return linkPath;
+
+	      default:
+		return getPath();
+	    }
+	}
     }
 
     public String toString() {
@@ -380,7 +309,8 @@ public class UnixFile implements IUnixFile {
 
     private IFile getAccessor() throws IOException {
 	if (accessor == null) {
-	    accessor = ufs.getFileImpl(path);
+	    accessor = ufs.getFile(path, IFile.NOCACHE);
+	    accessible = true;
 	}
 	return accessor;
     }

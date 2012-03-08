@@ -19,19 +19,16 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
-import org.joval.intf.util.IProperty;
-import org.joval.intf.util.tree.INode;
-import org.joval.intf.util.tree.ITree;
-import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.io.BaseFilesystem;
-import org.joval.util.tree.CachingTree;
-import org.joval.util.tree.Tree;
+import org.joval.io.FileProxy;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
+import org.joval.util.tree.Node;
+import org.joval.util.tree.TreeHash;
 
 /**
  * The local IFilesystem implementation for Windows.
@@ -44,11 +41,11 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
     private boolean preloaded = false;
 
     public WindowsFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector) {
-	super(session, env, redirector);
+	super(session, env, redirector, File.separator);
     }
 
     @Override
-    public IFile getFile(String path) throws IllegalArgumentException, IOException {
+    protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
         if (autoExpand) {
             path = env.expand(path);
         }
@@ -62,7 +59,7 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
 
         if (isValidPath(realPath)) {
 	    if (isDrive(realPath)) {
-                return new WindowsFile(new FileProxy(this, new File(realPath + getDelimiter()), path));
+                return new WindowsFile(new FileProxy(this, new File(realPath + delimiter), path));
 	    } else {
                 return new WindowsFile(new FileProxy(this, new File(realPath), path));
             }
@@ -71,17 +68,27 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
     }
 
     @Override
-    public boolean preloaded() {
-	return preloaded;
+    protected String[] listChildren(String path) throws Exception {
+	File f = ((WindowsFile)accessResource(path)).getFile().getFile();
+	if (f.isDirectory()) {
+	    return f.list();
+	} else {
+	    return null;
+	}
     }
 
     @Override
-    public boolean preload() {
+    public boolean loadCache() {
 	if (!props.getBooleanProperty(PROP_PRELOAD_LOCAL)) {
 	    return false;
-	} else if (preloaded()) {
+	} else if (preloaded) {
 	    return true;
 	}
+
+	//
+	// Wipe out any existing cache contents.
+	//
+	reset();
 
 	entries = 0;
 	maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
@@ -100,15 +107,11 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
 		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, name, type.value());
 		} else {
 		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, name, type.value());
-		    ITreeBuilder tree = cache.getTreeBuilder(name);
-		    if (tree == null) {
-			tree = new Tree(name, getDelimiter());
-			cache.addTree(tree);
-		    }
-		    addRecursive(tree, roots[i]);
+		    addRecursive(roots[i]);
 		}
 	    }
 	    preloaded = true;
+	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_DONE, countCacheItems());
 	    return true;
 	} catch (PreloadOverflowException e) {
 	    logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
@@ -123,37 +126,29 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
 
     // Private
 
-    private void addRecursive(ITreeBuilder tree, File f) throws PreloadOverflowException, IOException {
+    private int count = 0;
+
+    private void addRecursive(File f) throws PreloadOverflowException, IOException {
+	if (++count % 20000 == 0) {
+	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, count);
+	}
 	if (entries++ < maxEntries) {
 	    String path = f.getCanonicalPath();
 	    if (!path.equals(f.getPath())) {
 		logger.warn(JOVALMsg.ERROR_PRELOAD_LINE, path); // skip links
-	    } else if (f.isFile()) {
-		INode node = tree.getRoot();
-		try {
-		    while ((path = trimToken(path, getDelimiter())) != null) {
-			node = node.getChild(getToken(path, getDelimiter()));
-		    }
-		} catch (UnsupportedOperationException e) {
-		    do {
-			node = tree.makeNode(node, getToken(path, getDelimiter()));
-		    } while ((path = trimToken(path, getDelimiter())) != null);
-		} catch (NoSuchElementException e) {
-		    do {
-			node = tree.makeNode(node, getToken(path, getDelimiter()));
-		    } while ((path = trimToken(path, getDelimiter())) != null);
-		}
-	    } else if (f.isDirectory()) {
-		File[] children = f.listFiles();
-		if (children == null) {
-		    logger.warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
-		} else {
-		    for (File child : children) {
-			addRecursive(tree, child);
-		    }
-		}
 	    } else {
-		logger.warn(JOVALMsg.ERROR_PRELOAD_LINE, path);
+		FileProxy fp = new FileProxy(this, path);
+		fp.isfile = f.isFile();
+		fp.isdir = f.isDirectory();
+		addToCache(path, new WindowsFile(fp));
+		if (f.isDirectory()) {
+		    File[] children = f.listFiles();
+		    if (children != null) {
+			for (File child : f.listFiles()) {
+			    addRecursive(child);
+			}
+		    }
+		}
 	    }
 	} else {
 	    throw new PreloadOverflowException();

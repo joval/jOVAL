@@ -10,16 +10,17 @@ import java.util.regex.Pattern;
 import org.joval.intf.util.ILoggable;
 
 /**
- * Representation of tree of nodes.
+ * Representation of tree of nodes. Nodes have pathnames, the discrete elements of which are separated by the tree's
+ * delimiter.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface ITree extends ILoggable {
+public interface ITree extends INode {
     /**
-     * Get the root node of the tree.
+     * Returns the number of non-virtual nodes in the tree (i.e., nodes beyond a link are not counted).
      */
-    public INode getRoot();
+    public int size();
 
     /**
      * Get a node from the tree.
@@ -29,13 +30,9 @@ public interface ITree extends ILoggable {
     public INode lookup(String path) throws NoSuchElementException;
 
     /**
-     * Get the delimiter of node names in a path.
-     */
-    public String getDelimiter();
-
-    /**
-     * Recursively search this node for children with paths patching the given pattern.  Note that this node may itself be
-     * included in the results.  Returns a list of paths.
+     * Recursively search this tree for children with paths patching the given pattern.  The search scope is limited
+     * to the tree.  Since a forest is also a tree, you can perform a search that follows links between trees by searching
+     * the forest.
      */
     public Collection<String> search(Pattern p, boolean followLinks);
 }

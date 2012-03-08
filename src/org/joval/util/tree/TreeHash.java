@@ -3,98 +3,98 @@
 
 package org.joval.util.tree;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Properties;
-import java.util.Vector;
+import java.util.Hashtable;
 
-import org.joval.intf.util.tree.ITreeBuilder;
+import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.INode;
 import org.joval.util.StringTools;
 
 /**
- * A class that represents a tree structure with objects at its nodes.
+ * A class that represents a forest of tree structures with objects at its nodes.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class TreeHash extends Tree {
+public class TreeHash<T> {
+    private Forest forest;
+    private Hashtable<String, T> table;
+
     public TreeHash(String name, String delimiter) {
-	super(name, delimiter);
-	root = new DataNode(this, name);
+	forest = new Forest(name, delimiter);
+	table = new Hashtable<String, T>();
+    }
+
+    public Forest getRoot() {
+	return forest;
     }
 
     /**
-     * Get a hierarchical property value.
+     * Get data from a node.
      *
      * @param path denotes path beneath the root node.
      */
-    public Object getData(String path) throws NoSuchElementException {
-	return ((DataNode)lookup(path)).getData();
+    public T getData(String path) throws NoSuchElementException {
+	return table.get(forest.lookup(path).getCanonicalPath());
     }
 
     /**
-     * Set data at a path.
+     * Put data at a node. The path should always be a canonical path. Data can be removed by passing in a null value
+     * for data.
      *
-     * @param path denotes path beneath the root node.
+     * @returns the INode where the data was stored.
      */
-    public void putData(String path, Object data) {
-	((DataNode)getCreateNode(path)).setData(data);
-    }
-
-    // Overrides
-
-    public INode makeNode(INode parent, String name) {
-	Node p = (Node)parent;
-	DataNode node = new DataNode(p, name);
-	if (p.getType() == INode.Type.LEAF) {
-	    p.type = INode.Type.BRANCH;
-	}
-	if (p.children == null) {
-	    p.children = new Vector<INode>();
-	}
-	p.children.add(node);
-	return node;
-    }
-
-    public INode makeLink(INode parent, String name, String destination) {
-	throw new UnsupportedOperationException("Links don't make sense in a TreeHash");
-    }
-
-    // Private
-
-    class DataNode extends Node {
-	private Object data;
-
-	DataNode(Node parent, String name) {
-	    super(parent, name);
-	}
-
-	DataNode(Tree tree, String name) {
-	    super(tree, name);
-	}
-
-	/**
-	 * Look at ancestor properties until a value is found.
-	 */
-	Object getData() {
-	    return data;
-	}
-
-	void setData(Object data) {
-	    this.data = data;
+    public INode putData(String path, T data) {
+	if (data == null) {
+	    if (table.containsKey(path)) {
+		table.remove(path);
+	    }
+	    try {
+		return forest.lookup(path);
+	    } catch (NoSuchElementException e) {
+		return null;
+	    }
+	} else {
+	    INode node = getCreateNode(path);
+	    table.put(path, data);
+	    return node;
 	}
     }
 
     /**
      * Get the node at the path if it exists, if not, make it and all the nodes necessary, then return it.
-     *
-     * @param path denotes a path beneath the root node.
+     * If the path cannot be found but begins with the delimiter, it is assumed that there is a "root" tree whose
+     * name is the delimiter.
      */
-    private INode getCreateNode(String path) {
-	Collection<String> tokens = StringTools.toList(StringTools.tokenize(path, delimiter));
+    public INode getCreateNode(String path) {
+	try {
+	    return forest.lookup(path);
+	} catch (NoSuchElementException e) {
+	}
+
+	//
+	// The path was not found, so get the name of the Tree (root node) for the path.
+	//
+	List<String> tokens = StringTools.toList(StringTools.tokenize(path, forest.getDelimiter(), false));
+	String rootName = tokens.get(0);
+	if (rootName.length() == 0) {
+	    //
+	    // This is the special case of the root node whose name is the delimiter
+	    //
+	    rootName = forest.getDelimiter();
+	}
+
+	Tree root = null;
+	try {
+	    root = (Tree)forest.getTree(rootName);
+	} catch (NoSuchElementException e) {
+	    root = forest.makeTree(rootName);
+	}
+
 	INode node = root;
-	for (String token : tokens) {
+	for (int i=1; i < tokens.size(); i++) {
+	    String token = tokens.get(i);
 	    boolean makeNode = false;
 	    try {
 		node = node.getChild(token);
@@ -104,7 +104,7 @@ public class TreeHash extends Tree {
 		makeNode = true;
 	    }
 	    if (makeNode) {
-		node = makeNode(node, token);
+		node = root.makeNode((Node)node, token);
 	    }
 	}
 	return node;

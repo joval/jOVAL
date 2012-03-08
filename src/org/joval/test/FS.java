@@ -21,6 +21,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
+import org.joval.intf.util.ISearchable;
 
 public class FS {
     private ISession session;
@@ -39,7 +40,7 @@ public class FS {
 	    IEnvironment env = session.getEnvironment();
 	    if (path.startsWith("search:")) {
 		path = path.substring(7);
-		Collection<String> list = fs.search(Pattern.compile(path), true);
+		Collection<String> list = fs.search(Pattern.compile(path), ISearchable.FOLLOW_LINKS);
 		System.out.println("Found " + list.size() + " matches");
 		for (String item : list) {
 		    System.out.println("Match: " + item);
@@ -67,6 +68,7 @@ public class FS {
 		    System.out.println(" Size: " + f.length());
 		    System.out.println("  md5: " + cs);
 		}
+		System.out.println("Canonical path: " + f.getCanonicalPath());
 	    }
 	} catch (PatternSyntaxException e) {
 	    e.printStackTrace();

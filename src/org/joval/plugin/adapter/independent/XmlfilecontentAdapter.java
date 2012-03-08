@@ -131,7 +131,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 	    } catch (SAXException e) {
 		MessageType msg = JOVALSystem.factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_XML_PARSE, f.getLocalName(), e.getMessage()));
+		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_XML_PARSE, f.getPath(), e.getMessage()));
 		rc.addMessage(msg);
 		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {

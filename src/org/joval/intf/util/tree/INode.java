@@ -7,20 +7,59 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
+import org.joval.intf.util.ILoggable;
+
 /**
  * Representation of a node on a tree.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface INode {
+public interface INode extends ILoggable {
     /**
-     * Get all the children of this node.
+     * Enumeration describing the different types of nodes.
+     */
+    enum Type {
+	/**
+	 * The type for an IForest.
+	 */
+	FOREST,
+	/**
+	 * The type for an ITree (i.e., a root node).
+	 */
+	TREE,
+	/**
+	 * The type for an INode that has children.
+	 */
+	BRANCH,
+	/**
+	 * The type for an INode with no children.
+	 */
+	LEAF,
+	/**
+	 * The type for an INode which is a link to another INode.
+	 */
+	LINK,
+	/**
+	 * The type for an INode that is the child of a LINK node, whose underlying type (BRANCH, LEAF, LINK) has not
+	 * yet been determined.
+	 */
+	UNRESOLVED;
+    }
+
+    /**
+     * Return the tree in which this node resides.
+     */
+    ITree getTree();
+
+    /**
+     * Get all the children of this node. This method will follow links wherever they might lead. If you want to remain
+     * inside of an ITree, then the best-practice is to ITree.lookup(child.getPath()) each child returned by this method.
      *
      * @throws UnsupportedOperationException if the node is of Type.LEAF.
      * @throws NoSuchElementException if this is a node of Type.LINK, but the destination doesn't exist.
      */
-    public Collection<INode> getChildren() throws NoSuchElementException, UnsupportedOperationException;
+    Collection<INode> getChildren() throws NoSuchElementException, UnsupportedOperationException;
 
     /**
      * Get all the children of this node whose names match the specified Pattern.
@@ -28,7 +67,7 @@ public interface INode {
      * @throws UnsupportedOperationException if the node is of Type.LEAF.
      * @throws NoSuchElementException if this is a node of Type.LINK, but the destination doesn't exist.
      */
-    public Collection<INode> getChildren(Pattern p) throws NoSuchElementException, UnsupportedOperationException;
+    Collection<INode> getChildren(Pattern p) throws NoSuchElementException, UnsupportedOperationException;
 
     /**
      * Get a child with a specific name.
@@ -36,27 +75,27 @@ public interface INode {
      * @throws UnsupportedOperationException if the node is of Type.LEAF.
      * @throws NoSuchElementException if there is no child with the specified name.
      */
-    public INode getChild(String name) throws NoSuchElementException, UnsupportedOperationException;
+    INode getChild(String name) throws NoSuchElementException, UnsupportedOperationException;
 
     /**
      * Get the name of this node.
      */
-    public String getName();
+    String getName();
 
     /**
-     * Get the path of this node, including links in the path hierarchy.
+     * Get the path traversed in the tree to reach this node.
      */
-    public String getPath();
+    String getPath();
 
     /**
-     * Get the absolute path of this node, irrespective of how it was reached using links.
+     * Get the absolute path of this node, irrespective of how it might have been reached using links.
      */
-    public String getCanonicalPath();
+    String getCanonicalPath();
 
     /**
      * Get the type of this node.
      */
-    public Type getType();
+    Type getType();
 
     /**
      * Test whether or not the node has children.  This is particularly useful for a node of Type.ROOT or Tyoe.LINK, neither
@@ -64,12 +103,5 @@ public interface INode {
      *
      * @throws NoSuchElementException if this is a node of Type.LINK, but the destination doesn't exist.
      */
-    public boolean hasChildren() throws NoSuchElementException;
-
-    /**
-     * The types of nodes.
-     */
-    public enum Type {
-	ROOT, BRANCH, LEAF, LINK, UNRESOLVED;
-    }
+    boolean hasChildren() throws NoSuchElementException;
 }

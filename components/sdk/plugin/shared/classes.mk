@@ -15,10 +15,11 @@ SHARED=\
 	org.joval.intf.unix.system.IUnixSession				\
 	org.joval.intf.util.IPathRedirector				\
 	org.joval.intf.util.IPerishable					\
+	org.joval.intf.util.ISearchable					\
+	org.joval.intf.util.tree.ICacheable				\
 	org.joval.intf.util.tree.IForest				\
 	org.joval.intf.util.tree.INode					\
 	org.joval.intf.util.tree.ITree					\
-	org.joval.intf.util.tree.ITreeBuilder				\
 	org.joval.intf.windows.identity.IACE				\
 	org.joval.intf.windows.identity.IDirectory			\
 	org.joval.intf.windows.identity.IGroup				\
@@ -44,6 +45,7 @@ SHARED=\
 	org.joval.intf.windows.wmi.IWmiProvider				\
 	org.joval.io.BaseFile						\
 	org.joval.io.BaseFilesystem					\
+	org.joval.io.FileProxy						\
 	org.joval.io.LittleEndian					\
 	org.joval.io.PerishableReader					\
 	org.joval.io.StreamTool						\
@@ -152,8 +154,8 @@ SHARED=\
 	org.joval.util.AbstractBaseSession				\
 	org.joval.util.AbstractSession					\
 	org.joval.util.SafeCLI						\
-	org.joval.util.tree.CachingTree					\
-	org.joval.util.tree.PropertyHierarchy				\
+	org.joval.util.CachingHierarchy					\
+	org.joval.util.PropertyHierarchy				\
 	org.joval.util.tree.Forest					\
 	org.joval.util.tree.Node					\
 	org.joval.util.tree.Tree					\

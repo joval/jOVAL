@@ -39,28 +39,52 @@ import org.joval.util.JOVALSystem;
 class SftpFile extends BaseFile implements IUnixFile {
     private SftpFilesystem sfs;
     private SftpATTRS attrs = null;
-    private String path, permissions;
-    boolean tested=false, doesExist;
+    private String permissions;
+    boolean tested=false;
 
     SftpFile(SftpFilesystem fs, String path) {
-	super(fs);
+	super(fs, path);
 	sfs = fs;
-	if (!path.equals(fs.getDelimiter()) && path.endsWith(fs.getDelimiter())) {
-	    path = path.substring(0, path.lastIndexOf(fs.getDelimiter()));
-	}
-	this.path = path;
     }
 
-    // Implement INode
+    // Implement ICacheable
 
-    public String getCanonicalPath() {
-	return toString();
+    public boolean isLink() {
+	try {
+	    if (exists()) {
+		return attrs.isLink();
+	    }
+	} catch (IOException e) {
+	}
+	return false;
+    }
+
+    @Override
+    public boolean isAccessible() {
+	if (tested) {
+	    return super.isAccessible();
+	} else {
+	    try {
+		return exists();
+	    } catch (IOException e) {
+	    }
+	    return false;
+	}
     }
 
     // Implement IFile
 
+    public String getCanonicalPath() {
+	try {
+	    return sfs.getCS().realpath(path);
+	} catch (SftpException e) {
+	} catch (IOException e) {
+	}
+	return path;
+    }
+
     public long accessTime() throws IOException {
-	if (exists()) {
+	if (isAccessible()) {
 	    return attrs.getAccessTime() * 1000L;
 	} else {
 	    throw new FileNotFoundException(path);
@@ -77,17 +101,21 @@ class SftpFile extends BaseFile implements IUnixFile {
     public boolean exists() throws IOException {
 	if (!tested) {
 	    try {
-		attrs = sfs.getCS().lstat(path);
+		if (isRoot()) {
+		    attrs = sfs.getCS().lstat(sfs.getDelimiter());
+		} else {
+		    attrs = sfs.getCS().lstat(path);
+		}
 		permissions = attrs.getPermissionsString();
 		if (permissions.length() != 10) {
 		    throw new IOException("\"" + permissions + "\"");
 		}
-		doesExist = true;
+		accessible = true;
 		tested = true;
 	    } catch (SftpException e) {
-		switch(getErrorCode(e)) {
+		switch(SftpFilesystem.getErrorCode(e)) {
 		  case ISftpError.NO_SUCH_FILE:
-		    doesExist = false;
+		    accessible = false;
 		    tested = true;
 		    break;
 
@@ -96,7 +124,7 @@ class SftpFile extends BaseFile implements IUnixFile {
 		}
 	    }
 	}
-	return doesExist;
+	return accessible;
     }
 
     public boolean mkdir() {
@@ -109,12 +137,12 @@ class SftpFile extends BaseFile implements IUnixFile {
 		return exists();
 	    }
 	} catch (SftpException e) {
-	    sfs.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
-	    sfs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
+	    fs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	} catch (IOException e) {
-	    sfs.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
-	    sfs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
+	    fs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }
@@ -175,22 +203,14 @@ class SftpFile extends BaseFile implements IUnixFile {
     public boolean isFile() throws IOException {
 	if (isLink()) {
 	    try {
-		return ((IFile)fs.lookup(path)).isFile();
-	    } catch (NoSuchElementException e) {
+		return fs.getFile(sfs.getCS().realpath(path)).isFile();
+	    } catch (SftpException e) {
 		throw new IOException(e);
 	    }
 	} else if (exists()) {
 	    return !isDirectory();
 	} else {
 	    return true;
-	}
-    }
-
-    public boolean isLink() throws IOException {
-	if (exists()) {
-	    return attrs.isLink();
-	} else {
-	    return false;
 	}
     }
 
@@ -210,49 +230,6 @@ class SftpFile extends BaseFile implements IUnixFile {
 	}
     }
 
-    public String[] list() throws IOException {
-	Exception err = null;
-	try {
-	    return sfs.list(this);
-	} catch (UnsupportedOperationException e) {
-	    throw new IOException(e);
-	} catch (NoSuchElementException e) {
-	} catch (IllegalStateException e) {
-	}
-	if (isLink()) {
-	    try {
-		return fs.getFile(sfs.getCS().realpath(path)).list();
-	    } catch (SftpException se) {
-		throw new IOException(se);
-	    }
-	} else {
-	    try {
-		List<ChannelSftp.LsEntry> list = sfs.getCS().ls(path);
-		String[] children = new String[0];
-		ArrayList<String> al = new ArrayList<String>();
-		Iterator<ChannelSftp.LsEntry> iter = list.iterator();
-		while (iter.hasNext()) {
-		    ChannelSftp.LsEntry entry = iter.next();
-		    if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
-			al.add(entry.getFilename());
-		    }
-		}
-		return al.toArray(children);
-	    } catch (SftpException se) {
-		throw new IOException(se);
-	    }
-	}
-    }
-
-    public IFile[] listFiles() throws IOException {
-	String[] names = list();
-	IFile[] children = new IFile[names.length];
-	for (int i=0; i < names.length; i++) {
-	    children[i] = new SftpFile(sfs, getLocalName() + fs.getDelimiter() + names[i]);
-	}
-	return children;
-    }
-
     public void delete() throws IOException {
 	if (exists()) {
 	    try {
@@ -266,30 +243,8 @@ class SftpFile extends BaseFile implements IUnixFile {
 	}
     }
 
-    public String getLocalName() {
-	if (path.endsWith(fs.getDelimiter())) {
-	    return path.substring(0, path.lastIndexOf(fs.getDelimiter()));
-	} else {
-	    return path;
-	}
-    }
-
-    public String getName() {
-	int ptr = path.lastIndexOf(fs.getDelimiter());
-	if (ptr == -1) {
-	    return path;
-	} else {
-	    return path.substring(ptr + fs.getDelimiter().length());
-	}
-    }
-
     public String toString() {
-	try {
-	    return sfs.getCS().realpath(path);
-	} catch (SftpException e) {
-	} catch (IOException e) {
-	}
-	return path;
+	return getCanonicalPath();
     }
 
     // Implement IUnixFile
@@ -436,26 +391,6 @@ class SftpFile extends BaseFile implements IUnixFile {
 	    return exAttrs != null && exAttrs.length > 0;
 	} else {
 	    throw new FileNotFoundException(path);
-	}
-    }
-
-    // Private
-
-    /**
-     * Create an SftpFile that steps into a link.
-     */
-    private SftpFile(SftpFile link) {
-	super(link.sfs);
-	sfs = link.sfs;
-	this.path = link.path + fs.getDelimiter();
-    }
-
-    private int getErrorCode(SftpException e) {
-	try {
-	    String s = e.toString();
-	    return Integer.parseInt(s.substring(0, s.indexOf(":")));
-	} catch (Exception ex) {
-	    return -1;
 	}
     }
 }

@@ -11,10 +11,10 @@ import oval.schemas.systemcharacteristics.core.InterfacesType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IReader;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.util.tree.INode;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
@@ -81,8 +81,8 @@ public class UnixSystemInfo {
 
 	      default:
 		IFilesystem fs = session.getFilesystem();
-		for (INode node : fs.getFile("/etc").getChildren(Pattern.compile("^.*-release$"))) {
-		    info.setOsName(SafeCLI.exec("cat " + node.getPath(), session, IUnixSession.Timeout.S));
+		for (IFile file : fs.getFile("/etc").listFiles(Pattern.compile("^.*-release$"))) {
+		    info.setOsName(SafeCLI.exec("cat " + file.getPath(), session, IUnixSession.Timeout.S));
 		    break;
 		}
 		if (!info.isSetOsName()) {

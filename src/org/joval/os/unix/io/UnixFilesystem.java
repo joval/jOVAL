@@ -27,8 +27,6 @@ import java.util.zip.GZIPOutputStream;
 import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.io.IReader;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
@@ -36,21 +34,20 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.io.IUnixFile;
 import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.IProperty;
 import org.joval.intf.util.tree.INode;
-import org.joval.intf.util.tree.ITreeBuilder;
-import org.joval.intf.system.IEnvironment;
 import org.joval.io.BaseFilesystem;
+import org.joval.io.FileProxy;
 import org.joval.io.PerishableReader;
 import org.joval.io.StreamLogger;
-import org.joval.util.tree.CachingTree;
 import org.joval.util.tree.Tree;
+import org.joval.util.tree.Node;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.PropertyUtil;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
+import org.joval.util.tree.TreeHash;
 
 /**
  * A local IFilesystem implementation for Unix, which caches UnixFile data for fast performance.
@@ -69,21 +66,15 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     protected final static String DELIM_STR		= "/";
     protected final static char   DELIM_CH		= '/';
 
-    protected Hashtable<String, UnixFile> fileCache = new Hashtable<String, UnixFile>();
     protected long S, M, L, XL;
+    protected boolean preloaded = false;
 
     private IUnixSession us;
-    private boolean preloaded = false;
     private int entries, maxEntries;
-    private ITreeBuilder tree;
 
     public UnixFilesystem(IBaseSession session, IEnvironment env) {
-	super(session, env, null);
-
+	super(session, env, null, DELIM_STR);
 	us = (IUnixSession)session;
-	tree = new Tree("", DELIM_STR);
-	cache.addTree(tree);
-
 	S = us.getTimeout(IUnixSession.Timeout.S);
 	M = us.getTimeout(IUnixSession.Timeout.M);
 	L = us.getTimeout(IUnixSession.Timeout.L);
@@ -98,24 +89,24 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     }
 
     @Override
-    public String getDelimiter() {
-	return DELIM_STR;
+    protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
+	return new UnixFile(this, super.accessResource(path));
     }
 
     @Override
-    public boolean preloaded() {
-	return preloaded;
-    }
-
-    @Override
-    public boolean preload() {
+    protected boolean loadCache() {
 	if (!props.getBooleanProperty(getPreloadPropertyKey())) {
 	    return false;
-	} else if (preloaded()) {
+	} else if (preloaded) {
 	    return true;
 	} else if (session.getType() != IBaseSession.Type.UNIX) {
 	    return false;
 	}
+
+	//
+	// Discard any contents from an existing cache.
+	//
+	reset();
 
 	entries = 0;
 	maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
@@ -181,7 +172,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		if (cleanRemoteCache) {
 		    remoteCache.delete();
 		    if (remoteCache.exists()) {
-			SafeCLI.exec("rm -f " + remoteCache.getLocalName(), session, IUnixSession.Timeout.S);
+			SafeCLI.exec("rm -f " + remoteCache.getPath(), session, IUnixSession.Timeout.S);
 		    }
 		}
 	    } else {
@@ -217,6 +208,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		}
 	    }
 	    preloaded = true;
+	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_DONE, countCacheItems());
 	    return true;
 	} catch (PreloadOverflowException e) {
 	    logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
@@ -227,34 +219,6 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
-    }
-
-    @Override
-    public IFile getFile(String path) throws IllegalArgumentException, IOException {
-	if (fileCache.containsKey(path)) {
-	    return fileCache.get(path);
-	} else {
-	    return getFileImpl(path);
-	}
-    }
-
-    // Implement IUnixFilesystem
-
-    public IUnixFile getUnixFile(String path) throws IllegalArgumentException, IOException {
-	if (fileCache.containsKey(path)) {
-	    return fileCache.get(path);
-	} else {
-	    return generateUnixFile(getFileImpl(path));
-	}
-    }
-
-    // Internal
-
-    /**
-     * Get the file from the underlying access layer, bypassing the cache.
-     */
-    protected IFile getFileImpl(String path) throws IllegalArgumentException, IOException {
-	return super.getFile(path);
     }
 
     // Private
@@ -272,26 +236,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		UnixFile uf = new UnixFile(this);
 		setUnixFileData(uf, line);
 		String path = uf.getPath();
-		fileCache.put(path, uf);
-		if (!path.equals(DELIM_STR)) { // skip the root node
-		    INode node = tree.getRoot();
-		    try {
-			while ((path = trimToken(path, DELIM_STR)) != null) {
-			    node = node.getChild(getToken(path, DELIM_STR));
-			}
-		    } catch (UnsupportedOperationException e) {
-			do {
-			    node = tree.makeNode(node, getToken(path, DELIM_STR));
-			} while ((path = trimToken(path, DELIM_STR)) != null);
-		    } catch (NoSuchElementException e) {
-			do {
-			    node = tree.makeNode(node, getToken(path, DELIM_STR));
-			} while ((path = trimToken(path, DELIM_STR)) != null);
-		    }
-		    if (uf.isLink()) {
-			uf.canonicalPath = tree.makeLink(node, uf.getCanonicalPath());
-		    }
-		}
+		addToCache(path, uf);
 	    } else {
 		logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
 		throw new PreloadOverflowException();
@@ -393,10 +338,10 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	if (begin > 0) {
 	    int end = line.indexOf("->");
 	    if (end == -1) {
-	        uf.path = line.substring(begin).trim();
+	        uf.setPath(line.substring(begin).trim());
 	    } else if (end > begin) {
-	        uf.path = line.substring(begin, end).trim();
-		uf.canonicalPath = line.substring(end+2).trim();
+	        uf.setPath(line.substring(begin, end).trim());
+		uf.linkPath = line.substring(end+2).trim();
 	    }
 	}
     }
@@ -408,7 +353,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	try {
 	    UnixFile uf = new UnixFile(this, f);
 	    if (f.exists()) {
-		String command = getStatCommand() + f.getLocalName();
+		String command = getStatCommand() + f.getPath();
 		setUnixFileData(uf, SafeCLI.exec(command, session, IUnixSession.Timeout.S));
 	    }
 	    return uf;
@@ -605,10 +550,10 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	    s = INDEX_PROP_MOUNTS;
 	    test(alphabetize(mounts).equals(cacheProps.getProperty(s)), s);
 
-	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_REUSE, f.getLocalName());
+	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_REUSE, f.getPath());
 	    return true;
 	} catch (AssertionError e) {
-	    logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getLocalName(), e.getMessage());
+	    logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getPath(), e.getMessage());
 	    try {
 		f.delete();
 	    } catch (IOException ioe) {
@@ -623,7 +568,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
     private static final String CACHE_PROPS = ".jOVAL.find.properties";
 
     private IFile getRemoteCacheProps() throws IOException {
-	return getFile(env.expand(CACHE_DIR + DELIM_STR + CACHE_PROPS));
+	return getFile(env.expand(CACHE_DIR + DELIM_STR + CACHE_PROPS), IFile.READWRITE);
     }
 
     /**
@@ -639,7 +584,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	    cacheProps.load(propsFile.getInputStream());
 	}
 
-	IFile temp = getFileImpl(destPath);
+	IFile temp = getFile(destPath, IFile.READVOLATILE);
 	if (isValidCache(temp, new PropertyUtil(cacheProps), command, mounts)) {
 	    return temp;
 	}
@@ -678,7 +623,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 			done = true;
 		    }
 		}
-		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_PROGRESS, getFileImpl(tempPath).length());
+		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_PROGRESS, getFile(tempPath, IFile.READVOLATILE).length());
 	    }
 	    if (!done) {
 		p.destroy();

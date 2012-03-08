@@ -172,7 +172,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    fItem.setMTime(mTimeType);
 	} else {
 	    try {
-		String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(file.getLocalName()));
+		String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(file.getPath()));
 		ISWbemObjectSet objSet = wmi.execQuery(CIMV2, wql);
 		if (objSet.getSize() == 1) {
 		    ISWbemObject ownerObj = objSet.iterator().next();
@@ -191,7 +191,7 @@ public class FileAdapter extends BaseFileAdapter {
 		    ownerType.setStatus(StatusEnumeration.ERROR);
 		}
 
-		wql = TIME_WQL.replaceAll("(?i)\\$path", escapePath(Matcher.quoteReplacement(file.getLocalName())));
+		wql = TIME_WQL.replaceAll("(?i)\\$path", escapePath(Matcher.quoteReplacement(file.getPath())));
 		objSet = wmi.execQuery(CIMV2, wql);
 		if (objSet.getSize() == 1) {
 		    ISWbemObject fileObj = objSet.iterator().next();
@@ -372,10 +372,10 @@ public class FileAdapter extends BaseFileAdapter {
 	    fItem.setDevelopmentClass(developmentClassType);
 	} catch (IllegalArgumentException e) {
 	    error = e.getMessage();
-	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getLocalName(), error);
+	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getPath(), error);
 	} catch (Exception e) {
 	    error = e.getMessage();
-	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getLocalName(), error);
+	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getPath(), error);
 	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	if (error != null) {

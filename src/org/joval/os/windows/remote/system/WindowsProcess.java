@@ -65,7 +65,7 @@ class WindowsProcess implements IProcess {
 	outTail.start();
 	errTail = new TailDashF(err);
 	errTail.start();
-	int rc = process.create(command + " >> " + out.getLocalName() + " 2>> " + err.getLocalName(), cwd, startupInfo);
+	int rc = process.create(command + " >> " + out.getPath() + " 2>> " + err.getPath(), cwd, startupInfo);
 
 	switch(rc) {
 	  case Win32Process.SUCCESSFUL_COMPLETION:

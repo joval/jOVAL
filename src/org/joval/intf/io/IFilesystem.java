@@ -8,7 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 
-import org.joval.intf.util.tree.ITree;
+import org.joval.intf.util.ISearchable;
 
 /**
  * A platform-independent abstraction of a server filesystem.
@@ -16,7 +16,9 @@ import org.joval.intf.util.tree.ITree;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IFilesystem extends ITree {
+public interface IFilesystem extends ISearchable {
+    int SEARCH_FLAG_FOLLOW_LINKS = 1;
+
     /**
      * Property governing the maximum number of paths to pre-load into the filesystem map cache.
      */
@@ -26,7 +28,7 @@ public interface IFilesystem extends ITree {
      * Property specifying a list of filesystem types that should not be preloaded by an IFilesystem implementation.
      * Delimiter is the ':' character.
      */
-    public static final String PROP_PRELOAD_FSTYPE_FILTER = "fs.preload.filter";
+    String PROP_PRELOAD_FSTYPE_FILTER = "fs.preload.filter";
 
     /**
      * Property governing the map cache pre-load behavior for local filesystems (true/false).
@@ -40,40 +42,47 @@ public interface IFilesystem extends ITree {
     /**
      * Property governing the map cacle pre-load behavior for remotely-accessed filesystems (true/false).
      */
-    public static final String PROP_PRELOAD_REMOTE = "fs.preload.remote";
+    String PROP_PRELOAD_REMOTE = "fs.preload.remote";
+
+    /**
+     * Get the path delimiter character used by this filesystem.
+     */
+    String getDelimiter();
+
+    /**
+     * Retrieve an IFile with default (IFile.READONLY) access.
+     */
+    IFile getFile(String path) throws IOException;
 
     /**
      * An interface with all the methods of java.io.File and jcifs.smb.SmbFile.
+     *
+     * @arg flags IFile.READONLY, IFile.READWRITE, IFile.READVOLATILE, IFile.NOCACHE
      */
-    public IFile getFile(String path) throws IllegalArgumentException, IOException;
-
-    /**
-     * @param vol if true, the file is volatile and its attributes should not be cached.
-     */
-    public IFile getFile(String path, boolean vol) throws IllegalArgumentException, IOException;
+    IFile getFile(String path, int flags) throws IllegalArgumentException, IOException;
 
     /**
      * Get random access to an IFile.
      */
-    public IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException;
+    IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException;
 
     /**
      * Get random access to a file given its path (such as would be passed into the getFile method).
      */
-    public IRandomAccess getRandomAccess(String path, String mode) throws IllegalArgumentException, IOException;
+    IRandomAccess getRandomAccess(String path, String mode) throws IllegalArgumentException, IOException;
 
     /**
      * Read a file.
      */
-    public InputStream getInputStream(String path) throws IllegalArgumentException, IOException;
+    InputStream getInputStream(String path) throws IllegalArgumentException, IOException;
 
     /**
      * Write to a file.
      */
-    public OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException;
+    OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException;
 
     /**
      * Optionally, append to a file.
      */
-    public OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException;
+    OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException;
 }

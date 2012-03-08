@@ -47,9 +47,4 @@ public interface IUnixFilesystem {
      * is only relevant when the preload method is VAL_FILE_METHOD.
      */
     String PROP_PRELOAD_MAXAGE = "fs.preload.maxAge";
-
-    /**
-     * Retrieve an IFile implementing the extended IUnixFile interface.
-     */
-    IUnixFile getUnixFile(String path) throws IllegalArgumentException, IOException;
 }

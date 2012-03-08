@@ -4,6 +4,8 @@
 package org.joval.util.tree;
 
 import java.util.Collection;
+import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 import java.util.Vector;
@@ -11,8 +13,8 @@ import java.util.regex.Pattern;
 
 import org.slf4j.cal10n.LocLogger;
 
-import org.joval.intf.util.tree.ITreeBuilder;
 import org.joval.intf.util.tree.INode;
+import org.joval.intf.util.tree.ITree;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
@@ -24,97 +26,177 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Tree implements ITreeBuilder {
-    String delimiter;
-    Node root;
-    LocLogger logger;
+public class Tree extends Node implements ITree {
+    private Forest forest;
+    private int nodeCount = 0;
+    private int linkCount = 0;
+    private Hashtable<String, Node> shortcuts;
 
-    public Tree(String name, String delimiter) {
-	this.delimiter = delimiter;
-	root = new Node(this, name);
-	logger = JOVALSystem.getLogger();
+    Tree(Forest forest, String name) {
+	super(name);
+	tree = this;
+	this.forest = forest;
+	this.type = Type.TREE;
+	shortcuts = new Hashtable<String, Node>();
+    }
+
+    /**
+     * Make a new node in this tree.
+     */
+    public Node makeNode(Node parent, String name) {
+	Node node = new Node(parent, name);
+	if (parent.getType() == INode.Type.LEAF) {
+	    parent.type = INode.Type.BRANCH;
+	}
+	if (parent.children == null) {
+	    parent.children = new Hashtable<String, INode>();
+	}
+	parent.children.put(name, node);
+	getLogger().trace(JOVALMsg.STATUS_TREE_MKNODE, name, node.getPath());
+	nodeCount++;
+	shortcuts.put(node.getPath(), node);
+	return node;
+    }
+
+    /**
+     * Convert a node into a link to the specified destination.
+     *
+     * @returns the absolute path of the link target (note: this may not be a canonical path).
+     */
+    public String makeLink(Node node, String destination) throws UnsupportedOperationException {
+	switch(node.type) {
+/*
+	  case BRANCH:
+	    if (node.children.size() > 0) {
+System.out.println("DAS Converting a branch with " + node.children.size() + " children into a link?");
+		node.children = null;
+	    }
+	    // fall-thru
+*/
+	  case LEAF:
+	  case LINK: // over-link?
+            node.type = INode.Type.LINK;
+            node.linkPath = resolvePath(node.parent == null ? "" : node.parent.getPath(), destination);
+	    getLogger().debug(JOVALMsg.STATUS_TREE_MKLINK, node.getPath(), destination);
+	    linkCount++;
+	    return node.linkPath;
+
+	  default:
+            String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_TREE_MKLINK, node.getPath(), destination, node.type);
+    	    throw new UnsupportedOperationException(msg);
+	}
     }
 
     // Implement ILoggable
 
+    @Override
     public LocLogger getLogger() {
-	return logger;
+	return forest.getLogger();
     }
 
+    @Override
     public void setLogger(LocLogger logger) {
-	this.logger = logger;
-    }
-
-    // Implement ITreeBuilder
-
-    public INode makeNode(INode parent, String name) {
-	Node p = (Node)parent;
-	Node node = new Node(p, name);
-	if (p.getType() == INode.Type.LEAF) {
-	    p.type = INode.Type.BRANCH;
-	}
-	if (p.children == null) {
-	    p.children = new Vector<INode>();
-	}
-	p.children.add(node);
-	logger.trace(JOVALMsg.STATUS_TREE_MKNODE, root.getName(), node.getPath());
-	return node;
-    }
-
-    public String makeLink(INode node, String destination) throws UnsupportedOperationException {
-	String err = null;
-	if (node instanceof Node) {
-	    Node n = (Node)node;
-	    switch(n.type) {
-	      case LEAF:
-	      case LINK: // over-link?
-        	n.type = INode.Type.LINK;
-        	n.linkPath = resolvePath(n.parent == null ? "" : n.parent.getPath(), destination);
-		logger.trace(JOVALMsg.STATUS_TREE_MKLINK, n.getPath(), destination);
-		return n.linkPath;
-
-	      default:
-        	err = JOVALSystem.getMessage(JOVALMsg.ERROR_TREE_MKLINK, n.getPath(), destination, n.type);
-		break;
-	    }
-        } else {
-	    err = JOVALSystem.getMessage(JOVALMsg.ERROR_TREE_NODE, node.getClass().getName());
-	}
-        throw new UnsupportedOperationException(err);
+	forest.setLogger(logger);
     }
 
     // Implement ITree
 
-    public INode lookup(String path) throws NoSuchElementException {
-	return root.lookup(path);
-    }
-
-    public String getDelimiter() {
-	return delimiter;
-    }
-
     public Collection<String> search(Pattern p, boolean followLinks) {
-	return root.search(p, followLinks, new Stack<Node>());
+	if (linkCount == 0 || !followLinks) {
+	    Collection<String> results = new Vector<String>();
+	    for (String path : shortcuts.keySet()) {
+		if (p.matcher(path).find()) {
+		    results.add(path);
+		}
+	    }
+	    return results;
+	} else {
+	    return super.search(p, followLinks, new Stack<Node>());
+	}
     }
 
-    public INode getRoot() {
-	return root;
+    public INode lookup(String path) throws NoSuchElementException {
+	if (shortcuts.containsKey(path)) {
+	    return shortcuts.get(path);
+	} else {
+	    return lookup(path, true);
+	}
+    }
+
+    public int size() {
+	return nodeCount;
+    }
+
+    // Internal
+
+    void remove(Node node) {
+	shortcuts.remove(node.getPath());
+	node.parent.children.remove(node.getName());
+    }
+
+    String getDelimiter() {
+	return forest.getDelimiter();
+    }
+
+    /**
+     * Internal implementation to look up a node.
+     *
+     * @param local set to true to remain inside this tree, set to false to expand the scope to the whole forest.
+     */
+    INode lookup(String path, boolean local) throws NoSuchElementException {
+	if (path.equals(name)) {
+	    return this;
+	} else if (path.startsWith(rootPath())) {
+	    String subpath = path.substring(rootPath().length());
+	    Iterator<String> iter = StringTools.tokenize(subpath, forest.getDelimiter(), false);
+	    if (iter.hasNext()) {
+		Node next = this;
+		while (iter.hasNext()) {
+		    String token = iter.next();
+		    if (token.length() > 0) {
+			try {
+			    next = (Node)next.getChild(token);
+			} catch (UnsupportedOperationException e) {
+			    throw new NoSuchElementException(path);
+			}
+		    }
+		}
+		return next;
+	    } else {
+		throw new NoSuchElementException(subpath);
+	    }
+	} else if (local) {
+	    throw new NoSuchElementException(path);
+	} else {
+	    return forest.lookup(path);
+	}
     }
 
     // Private
 
     /**
+     * Get the delimiter-terminated pathname of the root node.
+     */
+    private String rootPath() {
+	if (name.endsWith(forest.getDelimiter())) {
+	    return name;
+	} else {
+	    return name + forest.getDelimiter();
+	}
+    }
+
+    /**
      * Resolve an absolute path from a relative path from a base file path.
      */
     private String resolvePath(String origin, String rel) throws UnsupportedOperationException {
-	if (rel.startsWith(delimiter)) {
+	if (rel.startsWith(forest.getDelimiter())) {
 	    return rel;
 	} else {
 	    Stack<String> stack = new Stack<String>();
-	    for (String s : StringTools.toList(StringTools.tokenize(origin, delimiter))) {
+	    for (String s : StringTools.toList(StringTools.tokenize(origin, forest.getDelimiter()))) {
 		stack.push(s);
 	    }
-	    for (String next : StringTools.toList(StringTools.tokenize(rel, delimiter))) {
+	    for (String next : StringTools.toList(StringTools.tokenize(rel, forest.getDelimiter()))) {
 		if (next.equals(".")) {
 		    // stay in the same place
 		} else if (next.equals("..")) {
@@ -129,11 +211,11 @@ public class Tree implements ITreeBuilder {
 	    }
 	    StringBuffer path = new StringBuffer();
 	    while(!stack.empty()) {
-		StringBuffer elt = new StringBuffer(delimiter);
+		StringBuffer elt = new StringBuffer(forest.getDelimiter());
 		path.insert(0, elt.append(stack.pop()).toString());
 	    }
 	    if (path.length() == 0) {
-		return delimiter;
+		return forest.getDelimiter();
 	    } else {
 		return path.toString();
 	    }

@@ -366,7 +366,9 @@ public class Engine implements IEngine {
 	    List<String> result = new Vector<String>();
 	    for (VariableValueType variableValueType : cachedList) {
 		if (variableValueType.getVariableId().equals(variableId)) {
-		    result.add((String)variableValueType.getValue());
+		    if (variableValueType.isSetValue()) {
+			result.add((String)variableValueType.getValue());
+		    }
 		}
 	    }
 	    return result;
