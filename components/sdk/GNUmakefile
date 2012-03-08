@@ -30,7 +30,7 @@ javadocs:
 	org.joval.intf.oval					\
 	org.joval.intf.plugin					\
 	org.joval.intf.util					\
-	$(SRC)/org/joval/oval/NotCollectableException.java	\
+	$(SRC)/org/joval/oval/CollectException.java		\
 	$(SRC)/org/joval/oval/OvalException.java		\
 	$(SRC)/org/joval/oval/ResolveException.java		\
 	$(SRC)/org/joval/plugin/BasePlugin.java			\
