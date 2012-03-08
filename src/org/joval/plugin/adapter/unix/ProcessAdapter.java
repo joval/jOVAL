@@ -233,9 +233,25 @@ public class ProcessAdapter implements IAdapter {
 		}
 		break;
 
+	      case GREATER_THAN_OR_EQUAL:
+		for (ProcessData process : processes) {
+		    if (Integer.parseInt((String)process.pid.getValue()) >= pid.intValue()) {
+			result.add(process);
+		    }
+		}
+		break;
+
 	      case GREATER_THAN:
 		for (ProcessData process : processes) {
 		    if (Integer.parseInt((String)process.pid.getValue()) > pid.intValue()) {
+			result.add(process);
+		    }
+		}
+		break;
+
+	      case LESS_THAN_OR_EQUAL:
+		for (ProcessData process : processes) {
+		    if (Integer.parseInt((String)process.pid.getValue()) <= pid.intValue()) {
 			result.add(process);
 		    }
 		}
@@ -369,11 +385,63 @@ public class ProcessAdapter implements IAdapter {
 	    }
 
 	    //
-	    // On Linux, we can collect the loginuid for each process from the /proc filesystem
+	    // On Linux, we can gather security information about the processes as well.
+	    //
+	    Hashtable<String, String> labels = new Hashtable<String, String>();
+	    if (session.getFlavor() == IUnixSession.Flavor.LINUX) {
+	        lines = SafeCLI.multiLine("ps axZ", session, IUnixSession.Timeout.S);
+		if (lines.size() > 0) {
+		    int labelIndex = -1, pidIndex = -1;
+		    StringTokenizer tok = new StringTokenizer(lines.get(0));
+		    for (int i=0; tok.hasMoreTokens(); i++) {
+			String header = tok.nextToken();
+			if ("LABEL".equals(header)) {
+			    labelIndex = i;
+			} else if ("PID".equals(header)) {
+			    pidIndex = i;
+			}
+		    }
+
+		    if (labelIndex != -1 && pidIndex != -1) {
+			for (int i=1; i < lines.size(); i++) {
+			    String line = lines.get(i);
+			    tok = new StringTokenizer(line);
+
+			    String label=null, pid=null;
+			    for (int index=0; tok.hasMoreTokens(); index++) {
+				String token = tok.nextToken();
+				if (index == labelIndex) {
+				    label = token;
+				} else if (index == pidIndex) {
+				    pid = token;
+				}
+			    }
+
+			    if (label != null && pid != null) {
+				labels.put(pid, label);
+			    }
+			}
+		    }
+		}
+	    }
+
+	    //
+	    // On Linux, we can collect the loginuid for each process from the /proc filesystem.  So check for that,
+	    // and add the security information that was just collected at the same time.
 	    //
 	    for (ProcessData process : processes) {
 		if (session.getFlavor() == IUnixSession.Flavor.LINUX) {
 		    String pid = (String)process.pid.getValue();
+
+		    if (labels.containsKey(pid)) {
+			StringTokenizer tok = new StringTokenizer(labels.get(pid), ":");
+			while (tok.hasMoreTokens()) {
+			    EntityItemStringType labelType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			    labelType.setValue(tok.nextToken());
+			    process.selinuxDomainLabel.add(labelType);
+			}
+		    }
+
 		    IFile f = session.getFilesystem().getFile("/proc/" + pid + "/loginuid");
 		    if (f.exists() && f.isFile()) {
 			BufferedReader reader = null;
@@ -399,7 +467,7 @@ public class ProcessAdapter implements IAdapter {
 		} else {
 		    process.loginuid.setStatus(StatusEnumeration.NOT_COLLECTED);
 		}
-	    } 
+	    }
 	} catch (Exception e) {
 	    error = e.getMessage();
 	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
