@@ -97,11 +97,11 @@ class PolymorphicPlugin extends RemotePlugin {
 	    IFile root = null;
 	    switch(session.getType()) {
 	      case WINDOWS:
-		root = fs.getFile("C:\\ValidationSupportFiles\\");
+		root = fs.getFile("C:\\ValidationSupportFiles\\", IFile.READWRITE);
 		break;
     
 	      case UNIX:
-		root = fs.getFile("/tmp/ValidationSupportFiles");
+		root = fs.getFile("/tmp/ValidationSupportFiles", IFile.READWRITE);
 		break;
     
 	      default:
@@ -121,8 +121,8 @@ class PolymorphicPlugin extends RemotePlugin {
 		String name = sb.toString();
 		mkdir(root, entry);
 		if (!entry.isDirectory()) {
-		    IFile newFile = fs.getFile(name);
-		    logger.info("Installing file " + newFile.getLocalName());
+		    IFile newFile = fs.getFile(name, IFile.READWRITE);
+		    logger.info("Installing file " + newFile.getPath());
 		    byte[] buff = new byte[2048];
 		    InputStream in = zip.getInputStream(entry);
 		    OutputStream out = newFile.getOutputStream(false);
@@ -152,7 +152,7 @@ class PolymorphicPlugin extends RemotePlugin {
 
     private void mkdir(IFile dir, ZipEntry entry) throws IOException {
 	if (!dir.exists() && !dir.mkdir()) {
-	    throw new IOException("Failed to create " + dir.getLocalName());
+	    throw new IOException("Failed to create " + dir.getPath());
 	}
 
 	String subdir = null;
@@ -164,7 +164,7 @@ class PolymorphicPlugin extends RemotePlugin {
 	}
 
 	for (String subdirName : StringTools.toList(StringTools.tokenize(subdir, "/"))) {
-	    dir = fs.getFile(dir.getPath() + fs.getDelimiter() + subdirName);
+	    dir = fs.getFile(dir.getPath() + fs.getDelimiter() + subdirName, IFile.READWRITE);
 	    if (!dir.exists()) {
 		dir.mkdir();
 	    }
