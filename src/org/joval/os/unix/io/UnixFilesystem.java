@@ -4,6 +4,7 @@
 package org.joval.os.unix.io;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.IOException;
@@ -228,14 +229,9 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
     /**
      * Create a UnixFile from the output line of the stat command.
      */
-    UnixFileInfo getUnixFileInfo(String path) {
-	String command = getStatCommand() + path;
-	try {
-	    return getUnixFileInfoFromLstat(SafeCLI.exec(command, session, IUnixSession.Timeout.S));
-	} catch (Exception e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return null;
+    UnixFileInfo getUnixFileInfo(String path) throws Exception {
+	String command = new StringBuffer(getStatCommand()).append(" ").append(path).toString();
+	return getUnixFileInfoFromLstat(SafeCLI.exec(command, session, IUnixSession.Timeout.S));
     }
 
     // Private
@@ -344,8 +340,12 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 		if (entries % 20000 == 0) {
 		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, entries);
 		}
-		UnixFileInfo ufi = getUnixFileInfo(line);
-		addToCache(ufi.path, new UnixFile(this, ufi, ufi.path));
+		try {
+		    UnixFileInfo ufi = getUnixFileInfoFromLstat(line);
+		    addToCache(ufi.path, new UnixFile(this, ufi, ufi.path));
+		} catch (Exception e) {
+		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
 	    } else {
 		logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
 		throw new PreloadOverflowException();
@@ -604,9 +604,12 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    cacheProps.load(propsFile.getInputStream());
 	}
 
-	IFile temp = getFile(destPath, IFile.READVOLATILE);
-	if (isValidCache(temp, new PropertyUtil(cacheProps), command, mounts)) {
-	    return temp;
+	try {
+	    IFile temp = getFile(destPath, IFile.READVOLATILE);
+	    if (isValidCache(temp, new PropertyUtil(cacheProps), command, mounts)) {
+		return temp;
+	    }
+	} catch (FileNotFoundException e) {
 	}
 
 	logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_TEMP, tempPath);

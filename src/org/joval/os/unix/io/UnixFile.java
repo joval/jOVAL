@@ -80,7 +80,15 @@ public class UnixFile extends DefaultFile {
 	}
 
 	public FileInfo getInfo() throws IOException {
-	    return ufs.getUnixFileInfo(path);
+	    try {
+		return ufs.getUnixFileInfo(path);
+	    } catch (Exception e) {
+		if (e instanceof IOException) {
+		    throw (IOException)e;
+		} else {
+		    throw new IOException(e);
+		}
+	    }
 	}
 
 	public boolean exists() {
