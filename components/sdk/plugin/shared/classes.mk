@@ -2,6 +2,7 @@ SHARED=\
 	org.joval.intf.cisco.system.IIosSession				\
 	org.joval.intf.cisco.system.ITechSupport			\
 	org.joval.intf.io.IFile						\
+	org.joval.intf.io.IFileEx					\
 	org.joval.intf.io.IFilesystem					\
 	org.joval.intf.io.IRandomAccess					\
 	org.joval.intf.io.IReader					\
@@ -10,7 +11,7 @@ SHARED=\
 	org.joval.intf.system.IEnvironment				\
 	org.joval.intf.system.IProcess					\
 	org.joval.intf.system.ISession					\
-	org.joval.intf.unix.io.IUnixFile				\
+	org.joval.intf.unix.io.IUnixFileInfo				\
 	org.joval.intf.unix.io.IUnixFilesystem				\
 	org.joval.intf.unix.system.IUnixSession				\
 	org.joval.intf.util.IPathRedirector				\
@@ -25,7 +26,7 @@ SHARED=\
 	org.joval.intf.windows.identity.IGroup				\
 	org.joval.intf.windows.identity.IPrincipal			\
 	org.joval.intf.windows.identity.IUser				\
-	org.joval.intf.windows.io.IWindowsFile				\
+	org.joval.intf.windows.io.IWindowsFileInfo			\
 	org.joval.intf.windows.io.IWindowsFilesystem			\
 	org.joval.intf.windows.registry.IKey				\
 	org.joval.intf.windows.registry.IRegistry			\
@@ -43,15 +44,18 @@ SHARED=\
 	org.joval.intf.windows.wmi.ISWbemProperty			\
 	org.joval.intf.windows.wmi.ISWbemPropertySet			\
 	org.joval.intf.windows.wmi.IWmiProvider				\
-	org.joval.io.BaseFile						\
-	org.joval.io.BaseFilesystem					\
+	org.joval.io.fs.CacheFile					\
+	org.joval.io.fs.CacheFilesystem					\
+	org.joval.io.fs.DefaultFile					\
+	org.joval.io.fs.FileAccessor					\
+	org.joval.io.fs.FileInfo					\
 	org.joval.io.FileProxy						\
 	org.joval.io.LittleEndian					\
 	org.joval.io.PerishableReader					\
 	org.joval.io.StreamTool						\
 	org.joval.os.unix.NetworkInterface				\
 	org.joval.os.unix.UnixSystemInfo				\
-	org.joval.os.unix.io.UnixFile					\
+	org.joval.os.unix.io.UnixFileInfo				\
 	org.joval.os.unix.io.UnixFilesystem				\
 	org.joval.os.unix.system.BaseUnixSession			\
 	org.joval.os.unix.system.Environment				\
@@ -62,6 +66,7 @@ SHARED=\
 	org.joval.os.windows.identity.LocalDirectory			\
 	org.joval.os.windows.identity.Principal				\
 	org.joval.os.windows.identity.User				\
+	org.joval.os.windows.io.WindowsFileInfo				\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector		\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector		\
 	org.joval.os.windows.pe.Characteristics				\

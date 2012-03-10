@@ -35,9 +35,10 @@ import oval.schemas.systemcharacteristics.unix.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFileEx;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.unix.io.IUnixFile;
+import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;
@@ -97,16 +98,17 @@ public class FileAdapter extends BaseFileAdapter {
      * Decorate the Item with information about the file.
      */
     private void setItem(FileItem item, IFile f) throws IOException, CollectException {
-	IUnixFile file = null;
-	if (f instanceof IUnixFile) {
-	    file = (IUnixFile)f;
+	IFileEx info = f.getExtended();
+	IUnixFileInfo ufi = null;
+	if (info instanceof IUnixFileInfo) {
+	    ufi = (IUnixFileInfo)info;
 	} else {
 	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNIX_FILE, f.getClass().getName());
 	    throw new CollectException(msg, FlagEnumeration.NOT_APPLICABLE);
 	}
-	session.getLogger().trace(JOVALMsg.STATUS_UNIX_FILE, file.getPath());
+	session.getLogger().trace(JOVALMsg.STATUS_UNIX_FILE, f.getPath());
 	EntityItemIntType aTime = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	aTime.setValue(Long.toString(file.accessTime()/1000L));
+	aTime.setValue(Long.toString(f.accessTime()/1000L));
 	aTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setATime(aTime);
 
@@ -116,91 +118,91 @@ public class FileAdapter extends BaseFileAdapter {
 	item.setCTime(cTime);
 
 	EntityItemIntType mTime = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	mTime.setValue(Long.toString(file.lastModified()/1000L));
+	mTime.setValue(Long.toString(f.lastModified()/1000L));
 	mTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setMTime(mTime);
 
 	EntityItemIntType sizeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	sizeType.setValue(Long.toString(file.length()));
+	sizeType.setValue(Long.toString(f.length()));
 	sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setSize(sizeType);
 
 	EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	type.setValue(file.getUnixFileType());
+	type.setValue(ufi.getUnixFileType());
 	item.setType(type);
 
 	EntityItemIntType userId = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	userId.setValue(Integer.toString(file.getUserId()));
+	userId.setValue(Integer.toString(ufi.getUserId()));
 	userId.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setUserId(userId);
 
 	EntityItemIntType groupId = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	groupId.setValue(Integer.toString(file.getGroupId()));
+	groupId.setValue(Integer.toString(ufi.getGroupId()));
 	groupId.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setGroupId(groupId);
 
 	EntityItemBoolType uRead = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	uRead.setValue(Boolean.toString(file.uRead()));
+	uRead.setValue(Boolean.toString(ufi.uRead()));
 	uRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setUread(uRead);
 
 	EntityItemBoolType uWrite = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	uWrite.setValue(Boolean.toString(file.uWrite()));
+	uWrite.setValue(Boolean.toString(ufi.uWrite()));
 	uWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setUwrite(uWrite);
 
 	EntityItemBoolType uExec = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	uExec.setValue(Boolean.toString(file.uExec()));
+	uExec.setValue(Boolean.toString(ufi.uExec()));
 	uExec.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setUexec(uExec);
 
 	EntityItemBoolType sUid = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	sUid.setValue(Boolean.toString(file.sUid()));
+	sUid.setValue(Boolean.toString(ufi.sUid()));
 	sUid.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setSuid(sUid);
 
 	EntityItemBoolType gRead = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	gRead.setValue(Boolean.toString(file.gRead()));
+	gRead.setValue(Boolean.toString(ufi.gRead()));
 	gRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGread(gRead);
 
 	EntityItemBoolType gWrite = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	gWrite.setValue(Boolean.toString(file.gWrite()));
+	gWrite.setValue(Boolean.toString(ufi.gWrite()));
 	gWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGwrite(gWrite);
 
 	EntityItemBoolType gExec = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	gExec.setValue(Boolean.toString(file.gExec()));
+	gExec.setValue(Boolean.toString(ufi.gExec()));
 	gExec.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGexec(gExec);
 
 	EntityItemBoolType sGid = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	sGid.setValue(Boolean.toString(file.sGid()));
+	sGid.setValue(Boolean.toString(ufi.sGid()));
 	sGid.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setSgid(sGid);
 
 	EntityItemBoolType oRead = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	oRead.setValue(Boolean.toString(file.oRead()));
+	oRead.setValue(Boolean.toString(ufi.oRead()));
 	oRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setOread(oRead);
 
 	EntityItemBoolType oWrite = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	oWrite.setValue(Boolean.toString(file.oWrite()));
+	oWrite.setValue(Boolean.toString(ufi.oWrite()));
 	oWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setOwrite(oWrite);
 
 	EntityItemBoolType oExec = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	oExec.setValue(Boolean.toString(file.oExec()));
+	oExec.setValue(Boolean.toString(ufi.oExec()));
 	oExec.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setOexec(oExec);
 
 	EntityItemBoolType sticky = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	sticky.setValue(Boolean.toString(file.sticky()));
+	sticky.setValue(Boolean.toString(ufi.sticky()));
 	sticky.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setSticky(sticky);
 
 	EntityItemBoolType aclType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
-	aclType.setValue(Boolean.toString(file.hasExtendedAcl()));
+	aclType.setValue(Boolean.toString(ufi.hasExtendedAcl()));
 	aclType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setHasExtendedAcl(aclType);
     }

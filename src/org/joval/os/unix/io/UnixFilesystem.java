@@ -31,13 +31,15 @@ import org.joval.intf.io.IReader;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
-import org.joval.intf.unix.io.IUnixFile;
+import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IProperty;
 import org.joval.intf.util.tree.INode;
-import org.joval.io.BaseFilesystem;
-import org.joval.io.FileProxy;
+import org.joval.io.fs.CacheFile;
+import org.joval.io.fs.CacheFilesystem;
+import org.joval.io.fs.DefaultFile;
+import org.joval.io.fs.FileInfo;
 import org.joval.io.PerishableReader;
 import org.joval.io.StreamLogger;
 import org.joval.util.tree.Tree;
@@ -50,12 +52,12 @@ import org.joval.util.StringTools;
 import org.joval.util.tree.TreeHash;
 
 /**
- * A local IFilesystem implementation for Unix, which caches UnixFile data for fast performance.
+ * A local IFilesystem implementation for Unix.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
+public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
     protected final static String LOCAL_INDEX		= "fs.index.gz";
     protected final static String INDEX_PROPS		= "fs.index.properties";
     protected final static String INDEX_PROP_COMMAND	= "command";
@@ -90,7 +92,7 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 
     @Override
     protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
-	return new UnixFile(this, super.accessResource(path));
+	return new UnixFile(this, (CacheFile)super.accessResource(path), path);
     }
 
     @Override
@@ -136,9 +138,9 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		    // Read from the local state file, or create one while reading from the remote state file.
 		    //
 		    File local = new File(wsdir, LOCAL_INDEX);
-		    IFile localCache = new FileProxy(this, local, local.getAbsolutePath());
+		    IFile localCache = new DefaultFile(this, local, local.getAbsolutePath());
 		    File localProps = new File(wsdir, INDEX_PROPS);
-		    propsFile = new FileProxy(this, localProps, localProps.getAbsolutePath());
+		    propsFile = new DefaultFile(this, localProps, localProps.getAbsolutePath());
 		    Properties cacheProps = new Properties();
 		    if (propsFile.exists()) {
 			cacheProps.load(propsFile.getInputStream());
@@ -221,6 +223,115 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 	}
     }
 
+    // Internal
+
+    /**
+     * Create a UnixFile from the output line of the stat command.
+     */
+    UnixFileInfo getUnixFileInfo(String path) {
+	String command = getStatCommand() + path;
+	try {
+	    return getUnixFileInfoFromLstat(SafeCLI.exec(command, session, IUnixSession.Timeout.S));
+	} catch (Exception e) {
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return null;
+    }
+
+    // Private
+
+    /**
+     * Generate a UnixFileInfo based on the output of an ls command.
+     */
+    private UnixFileInfo getUnixFileInfoFromLstat(String line) {
+	char unixType = line.charAt(0);
+	String permissions = line.substring(1, 10);
+	boolean hasExtendedAcl = false;
+	if (line.charAt(10) == '+') {
+	    hasExtendedAcl = true;
+	}
+
+	StringTokenizer tok = new StringTokenizer(line.substring(11));
+	String linkCount = tok.nextToken();
+	int uid = -1;
+	try {
+	    uid = Integer.parseInt(tok.nextToken());
+	} catch (NumberFormatException e) {
+	    //DAS -- could be, e.g., 4294967294 (illegal "nobody" value)
+	}
+	int gid = -1;
+	try {
+	    gid = Integer.parseInt(tok.nextToken());
+	} catch (NumberFormatException e) {
+	    //DAS -- could be, e.g., 4294967294 (illegal "nobody" value)
+	}
+
+	FileInfo.Type type = FileInfo.Type.FILE;
+	switch(unixType) {
+	  case IUnixFileInfo.DIR_TYPE:
+	    type = FileInfo.Type.DIRECTORY;
+	    break;
+
+	  case IUnixFileInfo.LINK_TYPE:
+	    type = FileInfo.Type.LINK;
+	    break;
+
+	  case IUnixFileInfo.CHAR_TYPE:
+	  case IUnixFileInfo.BLOCK_TYPE:
+	    int ptr = -1;
+	    if ((ptr = line.indexOf(",")) > 11) {
+		tok = new StringTokenizer(line.substring(ptr+1));
+	    }
+	    break;
+	}
+
+	long length = 0;
+	try {
+	    length = Long.parseLong(tok.nextToken());
+	} catch (NumberFormatException e) {
+	}
+
+	long mtime = FileInfo.UNKNOWN_TIME;
+	String dateStr = tok.nextToken("/").trim();
+	try {
+	    if (dateStr.indexOf(":") == -1) {
+		switch(us.getFlavor()) {
+		  case SOLARIS:
+		  case LINUX:
+		    mtime = new SimpleDateFormat("MMM dd  yyyy").parse(dateStr).getTime();
+		    break;
+
+		  case AIX:
+		  default:
+		    mtime = new SimpleDateFormat("MMM dd yyyy").parse(dateStr).getTime();
+		    break;
+		}
+	    } else {
+		mtime = new SimpleDateFormat("MMM dd HH:mm").parse(dateStr).getTime();
+	    }
+	} catch (ParseException e) {
+	    e.printStackTrace();
+	}
+
+	String path = null, linkPath = null;
+	int begin = line.indexOf(DELIM_STR);
+	if (begin > 0) {
+	    int end = line.indexOf("->");
+	    if (end == -1) {
+	        path = line.substring(begin).trim();
+	    } else if (end > begin) {
+	        path = line.substring(begin, end).trim();
+		linkPath = line.substring(end+2).trim();
+	    }
+	}
+
+	return new UnixFileInfo(FileInfo.UNKNOWN_TIME, mtime, FileInfo.UNKNOWN_TIME, type, length, linkPath,
+				unixType, permissions, uid, gid, hasExtendedAcl, path);
+    }
+
+    /**
+     * Create a UnixFile from an IFile.
+     */
     // Private
 
     /**
@@ -233,10 +344,8 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 		if (entries % 20000 == 0) {
 		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, entries);
 		}
-		UnixFile uf = new UnixFile(this);
-		setUnixFileData(uf, line);
-		String path = uf.getPath();
-		addToCache(path, uf);
+		UnixFileInfo ufi = getUnixFileInfo(line);
+		addToCache(ufi.path, new UnixFile(this, ufi, ufi.path));
 	    } else {
 		logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
 		throw new PreloadOverflowException();
@@ -270,95 +379,6 @@ public class UnixFilesystem extends BaseFilesystem implements IUnixFilesystem {
 
 	  default:
 	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, us.getFlavor()));
-	}
-    }
-
-    /**
-     * Create a UnixFile from the output line of the stat command.
-     */
-    private void setUnixFileData(UnixFile uf, String line) {
-	uf.unixType = line.charAt(0);
-	uf.permissions = line.substring(1, 10);
-	if (line.charAt(10) == '+') {
-	    uf.hasExtendedAcl = true;
-	}
-
-	StringTokenizer tok = new StringTokenizer(line.substring(11));
-	String linkCount = tok.nextToken();
-	try {
-	    uf.uid = Integer.parseInt(tok.nextToken());
-	} catch (NumberFormatException e) {
-	    uf.uid = -1;
-	    //DAS -- could be, e.g., 4294967294 (illegal "nobody" value)
-	}
-	try {
-	    uf.gid = Integer.parseInt(tok.nextToken());
-	} catch (NumberFormatException e) {
-	    uf.gid = -1;
-	    //DAS -- could be, e.g., 4294967294 (illegal "nobody" value)
-	}
-
-	switch(uf.unixType) {
-	  case UnixFile.CHAR_TYPE:
-	  case UnixFile.BLOCK_TYPE:
-	    int ptr = -1;
-	    if ((ptr = line.indexOf(",")) > 11) {
-		tok = new StringTokenizer(line.substring(ptr+1));
-	    }
-	    break;
-	}
-
-	try {
-	    uf.size = Long.parseLong(tok.nextToken());
-	} catch (NumberFormatException e) {
-	}
-
-	String dateStr = tok.nextToken("/").trim();
-	try {
-	    if (dateStr.indexOf(":") == -1) {
-		switch(us.getFlavor()) {
-		  case SOLARIS:
-		  case LINUX:
-		    uf.lastModified = new SimpleDateFormat("MMM dd  yyyy").parse(dateStr);
-		    break;
-
-		  case AIX:
-		  default:
-		    uf.lastModified = new SimpleDateFormat("MMM dd yyyy").parse(dateStr);
-		    break;
-		}
-	    } else {
-		uf.lastModified = new SimpleDateFormat("MMM dd HH:mm").parse(dateStr);
-	    }
-	} catch (ParseException e) {
-	    e.printStackTrace();
-	}
-	
-	int begin = line.indexOf(DELIM_STR);
-	if (begin > 0) {
-	    int end = line.indexOf("->");
-	    if (end == -1) {
-	        uf.setPath(line.substring(begin).trim());
-	    } else if (end > begin) {
-	        uf.setPath(line.substring(begin, end).trim());
-		uf.linkPath = line.substring(end+2).trim();
-	    }
-	}
-    }
-
-    /**
-     * Create a UnixFile from an IFile.
-     */
-    private UnixFile generateUnixFile(IFile f) throws IOException {
-	try {
-	    UnixFile uf = new UnixFile(this, f);
-	    if (f.exists()) {
-		String command = getStatCommand() + f.getPath();
-		setUnixFileData(uf, SafeCLI.exec(command, session, IUnixSession.Timeout.S));
-	    }
-	    return uf;
-	} catch (Exception e) {
-	    throw new IOException(e);
 	}
     }
 

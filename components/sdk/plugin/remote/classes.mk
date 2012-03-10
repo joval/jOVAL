@@ -22,18 +22,19 @@ CLASSES=\
 	org.joval.os.juniper.system.SupportInformation			\
 	org.joval.os.unix.remote.system.Sudo				\
 	org.joval.os.unix.remote.system.UnixSession			\
+	org.joval.os.windows.constants.ICreateFlags			\
+	org.joval.os.windows.constants.IShowWindow			\
 	org.joval.os.windows.identity.WindowsCredential			\
 	org.joval.os.windows.remote.identity.SmbACE			\
-	org.joval.os.windows.remote.io.SmbFilesystem			\
+	org.joval.os.windows.remote.io.SmbAccessor			\
 	org.joval.os.windows.remote.io.SmbFileProxy			\
+	org.joval.os.windows.remote.io.SmbFilesystem			\
 	org.joval.os.windows.remote.io.SmbRandomAccessProxy		\
 	org.joval.os.windows.remote.registry.Key			\
 	org.joval.os.windows.remote.registry.Registry			\
 	org.joval.os.windows.remote.system.WindowsProcess		\
 	org.joval.os.windows.remote.system.WindowsSession		\
 	org.joval.os.windows.remote.wmi.WmiConnection			\
-	org.joval.os.windows.constants.ICreateFlags			\
-	org.joval.os.windows.constants.IShowWindow			\
 	org.joval.os.windows.remote.wmi.scripting.SWbemObject		\
 	org.joval.os.windows.remote.wmi.scripting.SWbemObjectSet	\
 	org.joval.os.windows.remote.wmi.scripting.SWbemProperty		\

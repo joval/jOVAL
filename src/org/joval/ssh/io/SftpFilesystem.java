@@ -63,7 +63,6 @@ public class SftpFilesystem extends UnixFilesystem {
 	}
     }
 
-
     private Session jschSession;
     private ChannelSftp cs;
 
@@ -142,65 +141,6 @@ public class SftpFilesystem extends UnixFilesystem {
 	} else {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
 	}
-    }
-
-    @Override
-    protected String[] listChildren(String path) throws IOException {
-	SftpFile file = (SftpFile)accessResource(path);
-	if (file.isLink()) {
-	    try {
-		return listChildren(getCS().realpath(path));
-	    } catch (SftpException se) {
-		throw new IOException(se);
-	    }
-	} else if (file.isDirectory()) {
-	    try {
-		Collection<String> list = new Vector<String>();
-		for (ChannelSftp.LsEntry entry : getCS().ls(path)) {
-		    if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
-			list.add(entry.getFilename());
-		    }
-		}
-		return list.toArray(new String[list.size()]);
-	    } catch (SftpException se) {
-		switch(getErrorCode(se)) {
-		  case ISftpError.NO_SUCH_FILE:
-		    throw new FileNotFoundException(path);
-
-		  default:
-		    throw new IOException(se);
-		}
-	    }
-	} else {
-	    return null;
-	}
-    }
-
-    // Implement IFilesystem
-
-    @Override
-    public IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
-	return file.getRandomAccess(mode);
-    }
-
-    @Override
-    public IRandomAccess getRandomAccess(String path, String mode) throws IllegalArgumentException, IOException {
-	return getFile(path).getRandomAccess(mode);
-    }
-
-    @Override
-    public InputStream getInputStream(String path) throws IllegalArgumentException, IOException {
-	return getFile(path).getInputStream();
-    }
-
-    @Override
-    public OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException {
-	return getFile(path).getOutputStream(false);
-    }
-
-    @Override
-    public OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException {
-	return getFile(path).getOutputStream(append);
     }
 
     // Internal

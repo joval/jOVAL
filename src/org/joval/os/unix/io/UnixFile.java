@@ -15,303 +15,120 @@ import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
+import org.joval.intf.io.IFileEx;
 import org.joval.intf.io.IRandomAccess;
-import org.joval.intf.unix.io.IUnixFile;
+import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
-import org.joval.io.BaseFile;
+import org.joval.io.fs.CacheFile;
+import org.joval.io.fs.DefaultFile;
+import org.joval.io.fs.FileAccessor;
+import org.joval.io.fs.FileInfo;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
-import org.joval.util.SafeCLI;
 
 /**
- * Gets extended attributes of a file on Unix.
+ * Implements an IFile with info having extended Unix attributes.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixFile extends BaseFile implements IUnixFile {
-    public static final char NULL	= '0';
-    public static final char DIR_TYPE	= 'd';
-    public static final char FIFO_TYPE	= 'p';
-    public static final char LINK_TYPE	= 'l';
-    public static final char BLOCK_TYPE	= 'b';
-    public static final char CHAR_TYPE	= 'c';
-    public static final char SOCK_TYPE	= 's';
-    public static final char FILE_TYPE	= '-';
-
+public class UnixFile extends DefaultFile {
     private UnixFilesystem ufs;
-    private IFile accessor;
-
-    boolean hasExtendedAcl = false;
-    String permissions = null, canonicalPath = null, linkPath = null;
-    int uid, gid;
-    long size = -1L;
-    char unixType = NULL;
-    Date lastModified = null;
 
     /**
-     * Create a UnixFile with a live IFile accessor.
+     * Create a UnixFile using a live accessor.
      */
-    UnixFile(UnixFilesystem ufs, IFile accessor) {
-	super(ufs, accessor.getPath());
+    UnixFile(UnixFilesystem ufs, CacheFile cf, String path) {
+	super(ufs, path);
 	this.ufs = ufs;
-	this.accessor = accessor;
-	accessible = true;
+	this.accessor = new UnixFileAccessor(cf.getAccessor());
     }
 
     /**
-     * Create a UnixFile whose information will be populated externally from the cache.
+     * Create a UnixFile using information.
      */
-    UnixFile(UnixFilesystem ufs) {
-	super(ufs, "PLACEHOLDER");
+    UnixFile(UnixFilesystem ufs, UnixFileInfo info, String path) {
+	super(ufs, path);
 	this.ufs = ufs;
-    }
-
-    void setPath(String path) {
-	this.path = path;
-    }
-
-    // Implement ICacheable
-
-    public boolean isLink() {
-	if (permissions == null) {
-	    try {
-		return getAccessor().isLink();
-	    } catch (IOException e) {
-	    }
-	    return false;
-	} else {
-	    return unixType == LINK_TYPE;
-	}
+	this.info = info;
     }
 
     @Override
-    public String getLinkPath() throws IllegalStateException {
-	if (isLink()) {
-	    if (linkPath == null) {
-		try {
-		    linkPath = getAccessor().getCanonicalPath();
-		} catch (IOException e) {
-		}
-	    }
-	    return linkPath;
-	} else {
-	    return super.getLinkPath(); // throw exception
-	}
-    }
-
-    @Override
-    public void setCachePath(String cachePath) {
-	canonicalPath = cachePath;
-	linkPath = cachePath;
-    }
-
-    // Implement IFile
-
-    public long accessTime() throws IOException {
-	return lastModified();
-    }
-
-    public long createTime() throws IOException {
-	return lastModified();
-    }
-
-    public boolean exists() throws IOException {
-	if (unixType == NULL) {
-	    return getAccessor().exists();
-	} else {
-	    return true;
-	}
-    }
-
-    public boolean mkdir() {
-	try {
-	    return getAccessor().mkdir();
-	} catch (IOException e) {
-	    return false;
-	}
-    }
-
-    public InputStream getInputStream() throws IOException {
-	return getAccessor().getInputStream();
-    }
-
-    public OutputStream getOutputStream(boolean append) throws IOException {
-	return getAccessor().getOutputStream(append);
-    }
-
-    public IRandomAccess getRandomAccess(String mode) throws IllegalArgumentException, IOException {
-	return getAccessor().getRandomAccess(mode);
-    }
-
-    public boolean isDirectory() throws IOException {
-	if (unixType == NULL) {
-	    return getAccessor().isDirectory();
-	} else {
-	    switch(unixType) {
-	      case DIR_TYPE:
-		return true;
-
-	      case LINK_TYPE:
-		return ufs.getFile(getCanonicalPath()).isDirectory();
-
-	      default:
-		return false;
-	    }
-	}
-    }
-
-    public boolean isFile() throws IOException {
-	if (unixType == NULL) {
-	    return getAccessor().isFile();
-	} else {
-	    return unixType == FILE_TYPE;
-	}
-    }
-
-    public long lastModified() throws IOException {
-	if (lastModified == null) {
-	    return getAccessor().lastModified();
-	} else {
-	    return lastModified.getTime();
-	}
-    }
-
-    public long length() throws IOException {
-	if (size == -1) {
-	    return getAccessor().length();
-	} else {
-	    return size;
-	}
-    }
-
-    public String[] list() throws IOException {
-	return getAccessor().list();
-    }
-
-    public void delete() throws IOException {
-	getAccessor().delete();
-	unixType = NULL;
-    }
-
-    public String getCanonicalPath() {
-	if (unixType == NULL) {
-	    try {
-		return getAccessor().getCanonicalPath();
-	    } catch (IOException e) {
-		return path;
-	    }
-	} else {
-	    switch(unixType) {
-	      case LINK_TYPE:
-		return linkPath;
-
-	      default:
-		return getPath();
-	    }
-	}
-    }
-
     public String toString() {
-	try {
-	    return getAccessor().toString();
-	} catch (IOException e) {
-	    return getPath();
+	return getPath();
+    }
+
+    @Override
+    public FileAccessor getAccessor() {
+	if (accessor == null) {
+	    accessor = new UnixFileAccessor(super.getAccessor());
 	}
-    }
-
-    // Implement IUnixFile
-
-    public String getUnixFileType() {
-	switch(unixType) {
-	  case DIR_TYPE:
-	    return "directory";
-	  case FIFO_TYPE:
-	    return "fifo";
-	  case LINK_TYPE:
-	    return "symlink";
-	  case BLOCK_TYPE:
-	    return "block";
-	  case CHAR_TYPE:
-	    return "character";
-	  case SOCK_TYPE:
-	    return "socket";
-	  case FILE_TYPE:
-	  default:
-	    return "regular";
-	}
-    }
-
-    public int getUserId() {
-	return uid;
-    }
-
-    public int getGroupId() {
-	return gid;
-    }
-
-    public boolean uRead() {
-	return permissions.charAt(0) == 'r';
-    }
-
-    public boolean uWrite() {
-	return permissions.charAt(1) == 'w';
-    }
-
-    public boolean uExec() {
-	return permissions.charAt(2) != '-';
-    }
-
-    public boolean sUid() {
-	return permissions.charAt(2) == 's';
-    }
-
-    public boolean gRead() {
-	return permissions.charAt(3) == 'r';
-    }
-
-    public boolean gWrite() {
-	return permissions.charAt(4) == 'w';
-    }
-
-    public boolean gExec() {
-	return permissions.charAt(5) != '-';
-    }
-
-    public boolean sGid() {
-	return permissions.charAt(5) == 's';
-    }
-
-    public boolean oRead() {
-	return permissions.charAt(6) == 'r';
-    }
-
-    public boolean oWrite() {
-	return permissions.charAt(7) == 'w';
-    }
-
-    public boolean oExec() {
-	return permissions.charAt(8) != '-';
-    }
-
-    public boolean sticky() {
-	return permissions.charAt(8) == 't';
-    }
-
-    public boolean hasExtendedAcl() {
-	return hasExtendedAcl;
+	return accessor;
     }
 
     // Private
 
-    private IFile getAccessor() throws IOException {
-	if (accessor == null) {
-	    accessor = ufs.getFile(path, IFile.NOCACHE);
-	    accessible = true;
+    /**
+     * A proxy for a FileAccessor, that leverages the UnixFilesystem to get UnixFileInformation.
+     */
+    private class UnixFileAccessor extends FileAccessor {
+	private FileAccessor internal;
+
+	UnixFileAccessor(FileAccessor internal) {
+	    this.internal = internal;
 	}
-	return accessor;
+
+	public FileInfo getInfo() throws IOException {
+	    return ufs.getUnixFileInfo(path);
+	}
+
+	public boolean exists() {
+	    return internal.exists();
+	}
+
+	public long getCtime() throws IOException {
+	    return internal.getCtime();
+	}
+
+	public long getMtime() throws IOException {
+	    return internal.getMtime();
+	}
+
+	public long getAtime() throws IOException {
+	    return internal.getAtime();
+	}
+
+	public long getLength() throws IOException {
+	    return internal.getLength();
+	}
+
+	public IRandomAccess getRandomAccess(String mode) throws IOException {
+	    return internal.getRandomAccess(mode);
+	}
+
+	public InputStream getInputStream() throws IOException {
+	    return internal.getInputStream();
+	}
+
+	public OutputStream getOutputStream(boolean append) throws IOException {
+	    return internal.getOutputStream(append);
+	}
+
+	public String getCanonicalPath() throws IOException {
+	    return internal.getCanonicalPath();
+	}
+
+	public String[] list() throws IOException {
+	    return internal.list();
+	}
+
+	public boolean mkdir() {
+	    return internal.mkdir();
+	}
+
+	public void delete() throws IOException {
+	    internal.delete();
+	}
     }
 }

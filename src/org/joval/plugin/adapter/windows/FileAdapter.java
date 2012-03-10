@@ -27,10 +27,11 @@ import oval.schemas.systemcharacteristics.windows.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFileEx;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.windows.io.IWindowsFile;
+import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
@@ -106,14 +107,15 @@ public class FileAdapter extends BaseFileAdapter {
 	wmi = ws.getWmiProvider();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (base instanceof FileItem) {
-	    IWindowsFile wf = null;
-	    if (f instanceof IWindowsFile) {
-		wf = (IWindowsFile)f;
+	    IFileEx info = f.getExtended();
+	    IWindowsFileInfo wfi;
+	    if (info instanceof IWindowsFileInfo) {
+		wfi = (IWindowsFileInfo)info;
 	    } else {
 		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName());
 		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
-	    setItem((FileItem)base, wf);
+	    setItem((FileItem)base, f, wfi);
 	    items.add(JOVALSystem.factories.sc.windows.createFileItem((FileItem)base));
 	}
 	return items;
@@ -124,26 +126,26 @@ public class FileAdapter extends BaseFileAdapter {
     /**
      * Populate the FileItem with everything except the path, filename and filepath. 
      */
-    private void setItem(FileItem fItem, IWindowsFile file) throws IOException {
+    private void setItem(FileItem fItem, IFile file, IWindowsFileInfo info) throws IOException {
 	//
 	// Get some information from the IFile
 	//
 	fItem.setStatus(StatusEnumeration.EXISTS);
 	EntityItemFileTypeType typeType = JOVALSystem.factories.sc.windows.createEntityItemFileTypeType();
-	switch(file.getWindowsFileType()) {
-	  case IWindowsFile.FILE_ATTRIBUTE_DIRECTORY:
+	switch(info.getWindowsFileType()) {
+	  case IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY:
 	    typeType.setValue("FILE_ATTRIBUTE_DIRECTORY");
 	    break;
-	  case IWindowsFile.FILE_TYPE_DISK:
+	  case IWindowsFileInfo.FILE_TYPE_DISK:
 	    typeType.setValue("FILE_TYPE_DISK");
 	    break;
-	  case IWindowsFile.FILE_TYPE_REMOTE:
+	  case IWindowsFileInfo.FILE_TYPE_REMOTE:
 	    typeType.setValue("FILE_TYPE_REMOTE");
 	    break;
-	  case IWindowsFile.FILE_TYPE_PIPE:
+	  case IWindowsFileInfo.FILE_TYPE_PIPE:
 	    typeType.setValue("FILE_TYPE_PIPE");
 	    break;
-	  case IWindowsFile.FILE_TYPE_CHAR:
+	  case IWindowsFileInfo.FILE_TYPE_CHAR:
 	    typeType.setValue("FILE_TYPE_CHAR");
 	    break;
 	  default:

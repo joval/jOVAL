@@ -22,8 +22,7 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.io.IWindowsFilesystem;
-import org.joval.io.BaseFilesystem;
-import org.joval.io.FileProxy;
+import org.joval.io.fs.CacheFilesystem;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
@@ -36,7 +35,7 @@ import org.joval.util.tree.TreeHash;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesystem {
+public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesystem {
     private int entries = 0, maxEntries = 0;
     private boolean preloaded = false;
 
@@ -59,22 +58,12 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
 
         if (isValidPath(realPath)) {
 	    if (isDrive(realPath)) {
-                return new WindowsFile(new FileProxy(this, new File(realPath + delimiter), path));
+                return new WindowsFile(this, new File(realPath + delimiter), path);
 	    } else {
-                return new WindowsFile(new FileProxy(this, new File(realPath), path));
+                return new WindowsFile(this, new File(realPath), path);
             }
         }
         throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
-    }
-
-    @Override
-    protected String[] listChildren(String path) throws Exception {
-	File f = ((WindowsFile)accessResource(path)).getFile().getFile();
-	if (f.isDirectory()) {
-	    return f.list();
-	} else {
-	    return null;
-	}
     }
 
     @Override
@@ -137,10 +126,7 @@ public class WindowsFilesystem extends BaseFilesystem implements IWindowsFilesys
 	    if (!path.equals(f.getPath())) {
 		logger.warn(JOVALMsg.ERROR_PRELOAD_LINE, path); // skip links
 	    } else {
-		FileProxy fp = new FileProxy(this, path);
-		fp.isfile = f.isFile();
-		fp.isdir = f.isDirectory();
-		addToCache(path, new WindowsFile(fp));
+		addToCache(path, new WindowsFile(this, f, path));
 		if (f.isDirectory()) {
 		    File[] children = f.listFiles();
 		    if (children != null) {

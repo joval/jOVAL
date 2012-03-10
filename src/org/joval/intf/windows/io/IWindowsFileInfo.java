@@ -6,7 +6,7 @@ package org.joval.intf.windows.io;
 import java.io.IOException;
 
 import org.joval.intf.windows.identity.IACE;
-import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFileEx;
 
 /**
  * Defines extended attributes of a file on Windows.
@@ -14,7 +14,7 @@ import org.joval.intf.io.IFile;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IWindowsFile extends IFile {
+public interface IWindowsFileInfo extends IFileEx {
     /**
      * Either the type of the specified file is unknown, or the function failed.
      */

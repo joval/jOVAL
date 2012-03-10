@@ -106,7 +106,7 @@ public interface IFile extends ICacheable {
     /**
      * Returns the canonical path representation of the IFile (i.e., linkless path).
      */
-    public String getCanonicalPath();
+    public String getCanonicalPath() throws IOException;
 
     /**
      * Get the name of the file.
@@ -114,7 +114,7 @@ public interface IFile extends ICacheable {
     public String getName();
 
     /**
-     * Returns a unique representation of the IFile. This might be a local name, a URL or a UNC pathname.
+     * Get a platform-specific extended attributes API, if any.
      */
-    public String toString();
+    public IFileEx getExtended() throws IOException;
 }

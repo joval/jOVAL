@@ -28,7 +28,7 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.intf.windows.io.IWindowsFilesystem;
-import org.joval.io.BaseFilesystem;
+import org.joval.io.fs.CacheFilesystem;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -41,7 +41,7 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SmbFilesystem extends BaseFilesystem implements IWindowsFilesystem {
+public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem {
     static final String	LOCAL_DELIM_STR		= "\\";
     static final char	LOCAL_DELIM_CH		= '\\';
     static final String	SMBURL_DELIM_STR	= "/";
@@ -65,17 +65,6 @@ public class SmbFilesystem extends BaseFilesystem implements IWindowsFilesystem 
     @Override
     protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
 	return accessResource(path, false);
-    }
-
-    @Override
-    protected String[] listChildren(String path) throws IOException {
-	SmbFileProxy sfp = accessResource(path, false);
-	SmbFile file = sfp.getSmbFile();
-	if (file.isDirectory()) {
-	    return file.list();
-	} else {
-	    return null;
-	}
     }
 
     // Implement IFilesystem
@@ -106,30 +95,6 @@ public class SmbFilesystem extends BaseFilesystem implements IWindowsFilesystem 
 		throw new IOException(e);
 	    }
 	}
-    }
-
-    @Override
-    public IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
-	if (file instanceof SmbFileProxy) {
-	    return new SmbRandomAccessProxy(new SmbRandomAccessFile(((SmbFileProxy)file).getSmbFile(), mode));
-	}
-	throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_INSTANCE, 
-								  SmbFileProxy.class.getName(), file.getClass().getName()));
-    }
-
-    @Override
-    public IRandomAccess getRandomAccess(String path, String mode) throws IllegalArgumentException, IOException {
-	return new SmbRandomAccessProxy(new SmbRandomAccessFile(((SmbFileProxy)getFile(path)).getSmbFile(), mode));
-    }
-
-    @Override
-    public InputStream getInputStream(String path) throws IllegalArgumentException, IOException {
-	return getFile(path).getInputStream();
-    }
-
-    @Override
-    public OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException {
-	return getOutputStream(path, false);
     }
 
     // Private

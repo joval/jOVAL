@@ -30,12 +30,13 @@ import oval.schemas.systemcharacteristics.windows.FileeffectiverightsItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFileEx;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IPrincipal;
-import org.joval.intf.windows.io.IWindowsFile;
+import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.CollectException;
@@ -87,15 +88,16 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 	if (base instanceof FileeffectiverightsItem) {
 	    FileeffectiverightsItem baseItem = (FileeffectiverightsItem)base;
 
-	    IWindowsFile wf = null;
-	    if (f instanceof IWindowsFile) {
-		wf = (IWindowsFile)f;
+	    IFileEx info = f.getExtended();
+	    IWindowsFileInfo wfi = null;
+	    if (info instanceof IWindowsFileInfo) {
+		wfi = (IWindowsFileInfo)info;
 	    } else {
 		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName());
 		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 
-	    IACE[] aces = wf.getSecurity();
+	    IACE[] aces = wfi.getSecurity();
 	    Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)rc.getObject();
 	    String sid = (String)fObj.getTrusteeSid().getValue();
 

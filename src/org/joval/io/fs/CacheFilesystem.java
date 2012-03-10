@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.io;
+package org.joval.io.fs;
 
 import java.io.File;
 import java.io.InputStream;
@@ -29,12 +29,16 @@ import org.joval.util.StringTools;
 import org.joval.util.tree.Node;
 
 /**
- * The base class for IFilesystem implementations.
+ * A CacheFilesystem is a CachingHierarchy that implements the IFilesystem interface.  It works with CacheFile
+ * objects.  A CacheFilesystem will automatically store information about accessed files in memory, in order to
+ * minimize traffic with the target machine.
+ *
+ * All IFilesystem implementations extend this base class.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class BaseFilesystem extends CachingHierarchy<IFile> implements IFilesystem {
+public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements IFilesystem {
     protected boolean autoExpand = true;
     protected String delimiter;
     protected IProperty props;
@@ -42,7 +46,7 @@ public abstract class BaseFilesystem extends CachingHierarchy<IFile> implements 
     protected IEnvironment env;
     protected IPathRedirector redirector;
 
-    protected BaseFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector, String delimiter) {
+    protected CacheFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector, String delimiter) {
 	super(session.getHostname(), delimiter);
 	this.session = session;
 	this.env = env;
@@ -52,15 +56,15 @@ public abstract class BaseFilesystem extends CachingHierarchy<IFile> implements 
 	setLogger(session.getLogger());
     }
 
-public void save(File f) {
-    super.save(f);
-}
-
     public void setAutoExpand(boolean autoExpand) {
 	this.autoExpand = autoExpand;
     }
 
     // Implement methods abstract in CachingHierarchy
+
+    protected boolean loadCache() {
+	return false;
+    }
 
     protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
 	if (autoExpand) {
@@ -74,29 +78,17 @@ public void save(File f) {
 	    }
 	}
 	if (realPath.length() > 0 && realPath.charAt(0) == File.separatorChar) {
-	    return new FileProxy(this, new File(realPath), path);
+	    return new DefaultFile(this, new File(realPath), path);
 	} else {
 	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
 	}
     }
 
-    protected String[] listChildren(String path) throws Exception {
-	return ((FileProxy)accessResource(path)).getFile().list();
-    }
-
-    protected boolean loadCache() {
-	return false;
+    protected final String[] listChildren(String path) throws Exception {
+	return ((CacheFile)accessResource(path)).getAccessor().list();
     }
 
     // Implement IFilesystem
-
-    public String getDelimiter() {
-	return delimiter;
-    }
-
-    public IFile getFile(String path) throws IOException {
-	return getFile(path, IFile.READONLY);
-    }
 
     public IFile getFile(String path, int flags) throws IllegalArgumentException, IOException {
 	try {
@@ -123,29 +115,37 @@ public void save(File f) {
 	}
     }
 
-    public IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
+    public final String getDelimiter() {
+	return delimiter;
+    }
+
+    public final IFile getFile(String path) throws IOException {
+	return getFile(path, IFile.READONLY);
+    }
+
+    public final IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
 	return file.getRandomAccess(mode);
     }
 
-    public IRandomAccess getRandomAccess(String path, String mode) throws IllegalArgumentException, IOException {
+    public final IRandomAccess getRandomAccess(String path, String mode) throws IllegalArgumentException, IOException {
 	return getFile(path).getRandomAccess(mode);
     }
 
-    public InputStream getInputStream(String path) throws IllegalArgumentException, IOException {
+    public final InputStream getInputStream(String path) throws IllegalArgumentException, IOException {
 	return getFile(path).getInputStream();
     }
 
-    public OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException {
+    public final OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException {
 	return getFile(path).getOutputStream(false);
     }
 
-    public OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException {
+    public final OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException {
 	return getFile(path).getOutputStream(append);
     }
 
     // Inner classes
 
-    protected class PreloadOverflowException extends Exception {
+    protected final class PreloadOverflowException extends Exception {
 	public PreloadOverflowException() {
 	    super();
 	}
