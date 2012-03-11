@@ -60,12 +60,12 @@ class SftpFile extends CacheFile {
 	    if (attrs != null) {
 		return true;
 	    }
+	    String lsPath = path;
+	    if (isRoot()) {
+		lsPath = sfs.getDelimiter();
+	    }
 	    try {
-		if (isRoot()) {
-		    attrs = sfs.getCS().lstat(sfs.getDelimiter());
-		} else {
-		    attrs = sfs.getCS().lstat(path);
-		}
+		attrs = sfs.getCS().lstat(lsPath);
 		permissions = attrs.getPermissionsString();
 		if (permissions.length() != 10) {
 		    throw new IOException("\"" + permissions + "\"");
@@ -74,7 +74,7 @@ class SftpFile extends CacheFile {
 	    } catch (SftpException e) {
 		switch(SftpFilesystem.getErrorCode(e)) {
 		  case ISftpError.INVALID_FILENAME:
-		    fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "invalid filename");
+		    fs.getLogger().warn(JOVALMsg.ERROR_IO, lsPath, "invalid filename");
 		    return false;
 
 		  case ISftpError.NO_SUCH_PATH:
@@ -82,26 +82,30 @@ class SftpFile extends CacheFile {
 		    return false;
 
 		  default:
-		    fs.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+		    fs.getLogger().warn(JOVALMsg.ERROR_IO, lsPath, e.getMessage());
 		    fs.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    break;
 		}
 	    } catch (IOException e) {
-		fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "exists");
+		fs.getLogger().warn(JOVALMsg.ERROR_IO, lsPath, "exists");
 		fs.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    return false;
 	}
 
 	public FileInfo getInfo() throws IOException {
+	    String lsPath = path;
+	    if (isRoot()) {
+		lsPath = sfs.getDelimiter();
+	    }
 	    if (exists()) {
 		try {
-		    return new SftpFileInfo(attrs, permissions, path, sfs.getCS());
+		    return new SftpFileInfo(attrs, permissions, lsPath, sfs.getCS());
 		} catch (SftpException e) {
 		    throw new IOException(e);
 		}
 	    } else {
-		throw new FileNotFoundException(path);
+		throw new FileNotFoundException(lsPath);
 	    }
 	}
 
@@ -235,18 +239,22 @@ class SftpFile extends CacheFile {
 	    if (isLink()) {
 		return fs.getFile(getCanonicalPath()).list();
 	    } else if (isDirectory()) {
+		String lsPath = path;
+		if (isRoot()) {
+		    lsPath = sfs.getDelimiter();
+		}
 		try {
 		    Collection<String> list = new Vector<String>();
-		    for (ChannelSftp.LsEntry entry : sfs.getCS().ls(path)) {
+		    for (ChannelSftp.LsEntry entry : sfs.getCS().ls(lsPath)) {
 			if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
-		    	list.add(entry.getFilename());
+			    list.add(entry.getFilename());
 			}
 		    }
 		    return list.toArray(new String[list.size()]);
 		} catch (SftpException se) {
 		    switch(SftpFilesystem.getErrorCode(se)) {
 		      case ISftpError.NO_SUCH_FILE:
-			throw new FileNotFoundException(path);
+			throw new FileNotFoundException(lsPath);
     
 		      default:
 			throw new IOException(se);
