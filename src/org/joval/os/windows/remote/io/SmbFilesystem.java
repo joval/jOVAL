@@ -3,6 +3,7 @@
 
 package org.joval.os.windows.remote.io;
 
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -72,16 +73,24 @@ public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem
     @Override
     public IFile getFile(String path, int flags) throws IllegalArgumentException, IOException {
 	try {
+	    IFile f = null;
 	    switch(flags) {
 	      case IFile.NOCACHE:
 	      case IFile.READWRITE:
 		return accessResource(path, false);
 
 	      case IFile.READVOLATILE:
-		return accessResource(path, true);
-
+		f = accessResource(path, true);
+		// fall-thru
 	      case IFile.READONLY:
-		return getResource(path);
+		if (f == null) {
+		    f = getResource(path);
+		}
+		if (f.exists()) {
+		    return f;
+		} else {
+		    throw new FileNotFoundException(path);
+		}
 
 	      default:
 		throw new IllegalArgumentException(Integer.toString(flags));

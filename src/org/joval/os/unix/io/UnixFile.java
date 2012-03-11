@@ -39,7 +39,7 @@ public class UnixFile extends DefaultFile {
     /**
      * Create a UnixFile using a live accessor.
      */
-    UnixFile(UnixFilesystem ufs, CacheFile cf, String path) {
+    UnixFile(UnixFilesystem ufs, CacheFile cf, String path) throws IOException {
 	super(ufs, path);
 	this.ufs = ufs;
 	this.accessor = new UnixFileAccessor(cf.getAccessor());

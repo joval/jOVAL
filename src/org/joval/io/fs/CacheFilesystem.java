@@ -4,6 +4,7 @@
 package org.joval.io.fs;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -90,6 +91,10 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 
     // Implement IFilesystem
 
+    public final IFile getFile(String path) throws IOException {
+	return getFile(path, IFile.READONLY);
+    }
+
     public IFile getFile(String path, int flags) throws IllegalArgumentException, IOException {
 	try {
 	    switch(flags) {
@@ -99,7 +104,12 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 		return accessResource(path);
 
 	      case IFile.READONLY:
-		return getResource(path);
+		IFile f = getResource(path);
+		if (f.exists()) {
+		    return f;
+		} else {
+		    throw new FileNotFoundException(path);
+		}
 
 	      default:
 		throw new IllegalArgumentException(Integer.toString(flags));
@@ -117,10 +127,6 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 
     public final String getDelimiter() {
 	return delimiter;
-    }
-
-    public final IFile getFile(String path) throws IOException {
-	return getFile(path, IFile.READONLY);
     }
 
     public final IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {

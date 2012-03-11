@@ -33,11 +33,6 @@ public interface IFile extends ICacheable {
     public long createTime() throws IOException;
 
     /**
-     * Does the file exist?
-     */
-    public boolean exists() throws IOException;
-
-    /**
      * Create a directory at this IFile's path.
      */
     public boolean mkdir();

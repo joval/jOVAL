@@ -37,7 +37,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-class SmbAccessor extends FileAccessor {
+class SmbAccessor extends FileAccessor implements IWindowsFileInfo {
     private IFilesystem fs;
     private SmbFile smbFile;
 
@@ -120,41 +120,11 @@ class SmbAccessor extends FileAccessor {
 
     public FileInfo getInfo() throws IOException {
 	FileInfo.Type type = FileInfo.Type.FILE;
-	int windowsType = IWindowsFileInfo.FILE_TYPE_UNKNOWN;
 	if (isDirectory()) {
-	    windowsType = IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY;
 	    type = FileInfo.Type.DIRECTORY;
-	} else {
-	    switch(smbFile.getType()) {
-	      case SmbFile.TYPE_FILESYSTEM:
-		windowsType = IWindowsFileInfo.FILE_TYPE_DISK;
-		break;
-    
-	      case SmbFile.TYPE_WORKGROUP:
-	      case SmbFile.TYPE_SERVER:
-	      case SmbFile.TYPE_SHARE:
-		windowsType = IWindowsFileInfo.FILE_TYPE_REMOTE;
-		break;
-    
-	      case SmbFile.TYPE_NAMED_PIPE:
-		windowsType = IWindowsFileInfo.FILE_TYPE_PIPE;
-		break;
-    
-	      case SmbFile.TYPE_PRINTER:
-	      case SmbFile.TYPE_COMM:
-		windowsType = IWindowsFileInfo.FILE_TYPE_CHAR;
-		break;
-	    }
 	}
 	FileInfo fi = new FileInfo(this, type);
-
-	ACE[] aa = smbFile.getSecurity();
-	IACE[] acl = new IACE[aa.length];
-	for (int i=0; i < aa.length; i++) {
-	    acl[i] = new SmbACE(aa[i]);
-	}
-
-	return new WindowsFileInfo(fi.ctime, fi.mtime, fi.atime, fi.type, fi.length, windowsType, acl);
+	return new WindowsFileInfo(fi.ctime, fi.mtime, fi.atime, fi.type, fi.length, this);
     }
 
     public String[] list() throws IOException {
@@ -163,5 +133,42 @@ class SmbAccessor extends FileAccessor {
 	} else {
 	    return null;
 	}
+    }
+
+    // Implement IWindowsFileInfo
+
+    public int getWindowsFileType() throws IOException {
+	if (isDirectory()) {
+	    return IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY;
+	} else {
+	    switch(smbFile.getType()) {
+	      case SmbFile.TYPE_FILESYSTEM:
+		return IWindowsFileInfo.FILE_TYPE_DISK;
+    
+	      case SmbFile.TYPE_WORKGROUP:
+	      case SmbFile.TYPE_SERVER:
+	      case SmbFile.TYPE_SHARE:
+		return IWindowsFileInfo.FILE_TYPE_REMOTE;
+    
+	      case SmbFile.TYPE_NAMED_PIPE:
+		return IWindowsFileInfo.FILE_TYPE_PIPE;
+    
+	      case SmbFile.TYPE_PRINTER:
+	      case SmbFile.TYPE_COMM:
+		return IWindowsFileInfo.FILE_TYPE_CHAR;
+
+	      default:
+		return IWindowsFileInfo.FILE_TYPE_UNKNOWN;
+	    }
+	}
+    }
+
+    public IACE[] getSecurity() throws IOException {
+	ACE[] aa = smbFile.getSecurity();
+	IACE[] acl = new IACE[aa.length];
+	for (int i=0; i < aa.length; i++) {
+	    acl[i] = new SmbACE(aa[i]);
+	}
+	return acl;
     }
 }

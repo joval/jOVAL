@@ -116,6 +116,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 	// If the access layer previously failed to retrieve the item, re-throw the original exception.
 	//
 	if (irretrievable.containsKey(path)) {
+	    logger.warn(JOVALMsg.ERROR_CACHE_IRRETRIEVABLE, path);
 	    throw new Exception(irretrievable.get(path));
 	}
 
@@ -124,7 +125,9 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 	//
 	try {
 	    T item = accessResource(path);
-	    Node node = addToCache(path, item);
+	    if (item.exists()) {
+		addToCache(path, item);
+	    }
 	    return item;
 	} catch (Exception e) {
 	    irretrievable.put(path, e);

@@ -1,6 +1,7 @@
 package org.joval.intf.util.tree;
 
 public interface ICacheable {
+    boolean exists();
     boolean isContainer();
     boolean isLink();
 

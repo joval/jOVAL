@@ -56,7 +56,7 @@ public class WindowsFile extends DefaultFile {
 
     // Internal
 
-    class WindowsAccessor extends DefaultAccessor {
+    class WindowsAccessor extends DefaultAccessor implements IWindowsFileInfo {
 	WindowsAccessor(File file) {
 	    super(file);
 	}
@@ -64,23 +64,32 @@ public class WindowsFile extends DefaultFile {
 	@Override
 	public FileInfo getInfo() throws IOException {
 	    FileInfo fi = super.getInfo();
+	    return new WindowsFileInfo(fi.ctime, fi.mtime, fi.atime, fi.type, fi.length, this);
+	}
 
+	// Implement IWindowsFileInfo
+
+	public int getWindowsFileType() throws IOException {
 	    try {
-		int windowsType = IWindowsFileInfo.FILE_TYPE_UNKNOWN;
 		int dirAttr = IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY & Kernel32Util.getFileAttributes(path);
 		if (IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY == dirAttr) {
-		    windowsType = IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY;
+		    return IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY;
 		} else {
-		    windowsType = Kernel32Util.getFileType(getPath());
+		    return Kernel32Util.getFileType(getPath());
 		}
+	    } catch (Win32Exception e) {
+		throw new IOException(e);
+	    }
+	}
 
+	public IACE[] getSecurity() throws IOException {
+	    try {
 		WinNT.ACCESS_ACEStructure[] aces = Advapi32Util.getFileSecurity(getPath(), false);
 		IACE[] acl = new IACE[aces.length];
 		for (int i=0; i < aces.length; i++) {
 		    acl[i] = new LocalACE(aces[i]);
 		}
-
-		return new WindowsFileInfo(fi.ctime, fi.mtime, fi.atime, fi.type, fi.length, windowsType, acl);
+		return acl;
 	    } catch (Win32Exception e) {
 		throw new IOException(e);
 	    }

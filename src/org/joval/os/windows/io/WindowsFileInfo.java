@@ -16,29 +16,26 @@ import org.joval.io.fs.FileInfo;
  * @version %I% %G%
  */
 public class WindowsFileInfo extends FileInfo implements IWindowsFileInfo {
-    private int windowsType;
-    private IACE[] acl;
+    private IWindowsFileInfo provider;
 
     /**
      * Create a WindowsFile with a live IFile accessor.
      */
-    public WindowsFileInfo (long ctime, long mtime, long atime, Type type, long length, int windowsType, IACE[] acl) {
+    public WindowsFileInfo(long ctime, long mtime, long atime, Type type, long length, IWindowsFileInfo provider) {
 	super(ctime, mtime, atime, type, length);
-	this.windowsType = windowsType;
-	this.acl = acl;
+	this.provider = provider;
     }
 
     // Implement IWindowsFileInfo
-
 
     /**
      * Returns one of the FILE_TYPE_ constants.
      */
     public int getWindowsFileType() throws IOException {
-	return windowsType;
+	return provider.getWindowsFileType();
     }
 
     public IACE[] getSecurity() throws IOException {
-	return acl;
+	return provider.getSecurity();
     }
 }

@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Stack;
 import java.util.Vector;
 import java.util.regex.Pattern;
@@ -100,9 +99,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    IFile f = null;
 	    try {
 		f = fs.getFile(path);
-		if (!f.exists()) {
-		    throw new NoSuchElementException(path);
-		}
 		String dirPath = null;
 		//
 		// DAS: if DH says don't follow links, then add a test for isLink.
@@ -184,7 +180,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    break;
 		}
 		items.addAll(getItems(fItem.it, f, rc));
-	    } catch (NoSuchElementException e) {
+	    } catch (FileNotFoundException e) {
 		// skip it
 	    } catch (IllegalAccessException e) {
 		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
@@ -261,11 +257,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 		  case EQUALS:
 		    for (String value : filepaths) {
 			try {
-			    IFile f = fs.getFile(value);
-			    if (f.exists() && f.isFile()) {
+			    if (fs.getFile(value).isFile()) {
 				list.add(value);
 			    }
-			} catch (NoSuchElementException e) {
+			} catch (FileNotFoundException e) {
 			} catch (IOException e) {
 			    session.getLogger().warn(JOVALMsg.ERROR_IO, value, e.getMessage());
 			    session.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -280,7 +275,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 				if ((fs.getFile(match)).isFile()) {
 				    list.add(match);
 				}
-			    } catch (NoSuchElementException e) {
+			    } catch (FileNotFoundException e) {
 				session.getLogger().debug(JOVALMsg.ERROR_NODE_LINK, match);
 			    } catch (IOException e) {
 				session.getLogger().warn(JOVALMsg.ERROR_IO, match, e.getMessage());
@@ -337,7 +332,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 				if ((fs.getFile(match)).isDirectory()) {
 				    list.add(match);
 				}
-			    } catch (NoSuchElementException e) {
+			    } catch (FileNotFoundException e) {
 				session.getLogger().debug(JOVALMsg.ERROR_NODE_LINK, match);
 			    } catch (IOException e) {
 				session.getLogger().warn(JOVALMsg.ERROR_IO, match, e.getMessage());
@@ -386,7 +381,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 				    } else {
 					filepath = pathString + fs.getDelimiter() + fname;
 				    }
-				    if ((fs.getFile(filepath)).exists()) {
+				    if (fs.getFile(filepath).exists()) {
 					files.add(filepath);
 				    }
 				    break;
@@ -408,7 +403,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 				    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
 										   filename.getOperation()));
 				}
-			    } catch (NoSuchElementException e) {
+			    } catch (FileNotFoundException e) {
 			    } catch (IllegalArgumentException e) {
 				session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			    } catch (IOException e) {
@@ -521,15 +516,15 @@ public abstract class BaseFileAdapter implements IAdapter {
 			} else { // recurse down
 			    Collection<String> c = new HashSet<String>();
 			    for (IFile child : f.listFiles()) {
-				c.add(child.getPath());
+				if (child.isDirectory()) {
+				    c.add(child.getPath());
+				}
 			    }
 			    results.addAll(getDirs(c, --depth, direction, recurse, fs, cloneStack(ancestors)));
 			}
 		    }
 		} catch (UnsupportedOperationException e) {	
 		    // ignore -- not a directory
-		} catch (NoSuchElementException e) {
-		    // dir path doesn't exist.
 		} catch (FileNotFoundException e) {
 		    // link is not a link to a directory
 		} catch (IOException e) {

@@ -3,6 +3,7 @@ CLASSES=\
 	org.joval.os.unix.io.UnixFile					\
 	org.joval.os.unix.system.UnixSession				\
 	org.joval.os.windows.identity.LocalACE				\
+	org.joval.os.windows.io.WindowsFile				\
 	org.joval.os.windows.io.WindowsFilesystem			\
 	org.joval.os.windows.registry.Key				\
 	org.joval.os.windows.registry.Registry				\

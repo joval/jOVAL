@@ -251,6 +251,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
      */
     UnixFileInfo getUnixFileInfo(String path) throws Exception {
 	String command = new StringBuffer(driver.getStatCommand()).append(" ").append(path).toString();
+System.out.println("DAS: getUnixFileInfo");
 	return driver.nextFileInfo(SafeCLI.multiLine(command, session, IUnixSession.Timeout.S).iterator());
     }
 

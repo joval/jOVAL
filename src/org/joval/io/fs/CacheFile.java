@@ -57,6 +57,23 @@ public abstract class CacheFile implements IFile {
 
     // Implement ICacheable
 
+    public final boolean exists() {
+	if (info == null) {
+	    if (getAccessor().exists()) {
+		try {
+		    info = accessor.getInfo();
+		    return true;
+		} catch (IOException e) {
+		    return false;
+		}
+	    } else {
+		return false;
+	    }
+	} else {
+	    return true;
+	}
+    }
+
     public final boolean isLink() {
 	if (exists()) {
 	    return info.type == FileInfo.Type.LINK;
@@ -93,23 +110,6 @@ public abstract class CacheFile implements IFile {
     }
 
     // Implement IFile
-
-    public final boolean exists() {
-	if (info == null) {
-	    if (getAccessor().exists()) {
-		try {
-		    info = accessor.getInfo();
-		    return true;
-		} catch (IOException e) {
-		    return false;
-		}
-	    } else {
-		return false;
-	    }
-	} else {
-	    return true;
-	}
-    }
 
     public final long accessTime() throws IOException {
 	if (exists()) {

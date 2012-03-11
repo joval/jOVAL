@@ -73,10 +73,6 @@ class SftpFile extends CacheFile {
 		return true;
 	    } catch (SftpException e) {
 		switch(SftpFilesystem.getErrorCode(e)) {
-		  case ISftpError.PERMISSION_DENIED:
-		    fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "permission denied");
-		    return false;
-
 		  case ISftpError.INVALID_FILENAME:
 		    fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "invalid filename");
 		    return false;
