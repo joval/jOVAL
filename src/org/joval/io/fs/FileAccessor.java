@@ -10,7 +10,8 @@ import java.io.OutputStream;
 import org.joval.intf.io.IRandomAccess;
 
 /**
- * File access layer implementation base class.
+ * File access layer implementation base class. Every CacheFile is backed by a FileAccessor, which is responsible for
+ * interacting directly with a file.
  *
  * @author David A. Solin
  * @version %I% %G%

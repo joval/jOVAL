@@ -31,7 +31,7 @@ import org.joval.io.fs.FileInfo;
  * @version %I% %G%
  */
 class SftpFileInfo extends UnixFileInfo {
-    SftpFileInfo(SftpATTRS attrs, String permissions, String path, String realpath) throws IOException {
+    SftpFileInfo(SftpATTRS attrs, String permissions, String path, ChannelSftp cs) throws SftpException {
 	atime = attrs.getAccessTime() * 1000L;
 	ctime = FileInfo.UNKNOWN_TIME;
 	mtime = attrs.getModifiedTime() * 1000L;
@@ -44,6 +44,7 @@ class SftpFileInfo extends UnixFileInfo {
 	    break;
 	  case LINK_TYPE:
 	    type = FileInfo.Type.LINK;
+	    canonicalPath = cs.realpath(path);
 	    break;
 	}
 
@@ -58,6 +59,5 @@ class SftpFileInfo extends UnixFileInfo {
 	hasExtendedAcl = exAttrs != null && exAttrs.length > 0;
 
 	this.path = path;
-	this.canonicalPath = realpath;
     }
 }

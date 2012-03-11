@@ -22,7 +22,8 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
- * An IFile base class that works with a CacheFilesystem.  Subclasses need only implement the getAccessor method.
+ * An IFile base class that works with a CacheFilesystem. Subclasses need only implement the getAccessor method, and
+ * extend/implement a FileAccessor class.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -65,7 +66,7 @@ public abstract class CacheFile implements IFile {
     }
 
     public final boolean isAccessible() {
-	return accessor == null;
+	return accessor != null;
     }
 
     public final boolean isContainer() {
@@ -201,7 +202,7 @@ public abstract class CacheFile implements IFile {
      */
     public final String[] list() throws IOException {
 	try {
-	    INode node = fs.peekInsideCache(getPath());
+	    INode node = fs.peek(getPath());
 	    if (node.hasChildren()) {
 		Collection<INode> children = node.getChildren();
 		String[] sa = new String[children.size()];

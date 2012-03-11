@@ -47,6 +47,7 @@ CLASSES=\
 	org.joval.protocol.netconf.NetconfSession			\
 	org.joval.ssh.identity.SshCredential				\
 	org.joval.ssh.io.SftpFile					\
+	org.joval.ssh.io.SftpFileInfo					\
 	org.joval.ssh.io.SftpFilesystem					\
 	org.joval.ssh.system.SshProcess					\
 	org.joval.ssh.system.SshSession					\

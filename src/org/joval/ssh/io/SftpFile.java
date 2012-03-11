@@ -17,6 +17,7 @@ import org.vngx.jsch.exception.SftpException;
 
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.ssh.ISftpError;
+import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.io.fs.CacheFile;
 import org.joval.io.fs.FileAccessor;
 import org.joval.io.fs.FileInfo;
@@ -69,14 +70,24 @@ class SftpFile extends CacheFile {
 		if (permissions.length() != 10) {
 		    throw new IOException("\"" + permissions + "\"");
 		}
+		return true;
 	    } catch (SftpException e) {
 		switch(SftpFilesystem.getErrorCode(e)) {
+		  case ISftpError.PERMISSION_DENIED:
+		    fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "permission denied");
+		    return false;
+
+		  case ISftpError.INVALID_FILENAME:
+		    fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "invalid filename");
+		    return false;
+
+		  case ISftpError.NO_SUCH_PATH:
 		  case ISftpError.NO_SUCH_FILE:
 		    return false;
 
 		  default:
-		    fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "exists");
-		    fs.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    fs.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+		    fs.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    break;
 		}
 	    } catch (IOException e) {
@@ -89,7 +100,7 @@ class SftpFile extends CacheFile {
 	public FileInfo getInfo() throws IOException {
 	    if (exists()) {
 		try {
-		    return new SftpFileInfo(attrs, permissions, path, sfs.getCS().realpath(path));
+		    return new SftpFileInfo(attrs, permissions, path, sfs.getCS());
 		} catch (SftpException e) {
 		    throw new IOException(e);
 		}

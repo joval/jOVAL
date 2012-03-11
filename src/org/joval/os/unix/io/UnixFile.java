@@ -92,7 +92,11 @@ public class UnixFile extends DefaultFile {
 	}
 
 	public boolean exists() {
-	    return internal.exists();
+	    if (info == null) {
+		return internal.exists();
+	    } else {
+		return true;
+	    }
 	}
 
 	public long getCtime() throws IOException {
@@ -136,6 +140,7 @@ public class UnixFile extends DefaultFile {
 	}
 
 	public void delete() throws IOException {
+	    info = null;
 	    internal.delete();
 	}
     }

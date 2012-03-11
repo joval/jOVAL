@@ -65,7 +65,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
     /**
      * Reset the cache to a pristine state.
      */
-    protected final void reset() {
+    public final void reset() {
 	cache = new TreeHash<T>(name, DELIM);
 	irretrievable = new Hashtable<String, Exception>();
 	setLogger(logger);
@@ -74,8 +74,24 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
     /**
      * Return the number of items stored in the cache.
      */
-    protected int countCacheItems() {
+    public int cacheSize() {
 	return cache.getRoot().size();
+    }
+
+    /**
+     * This method exists for the purpose of getting an INode view from inside the cache, which may only be partially
+     * constructed. Use this method to:
+     *
+     * 1) Determine what tree the resource resides in.
+     * 2) Traverse links, and get the canonical path of a node that has been reached through a link.
+     *
+     * @throws NoSuchElementException if there is no data in the cache at the specified path
+     */
+    public INode peek(String path) throws NoSuchElementException {
+	if (cache.getData(path) == null) {
+	    throw new NoSuchElementException(path);
+	}
+	return (Node)cache.getRoot().lookup(path);
     }
 
     /**
@@ -114,22 +130,6 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 	    irretrievable.put(path, e);
 	    throw e;
 	}
-    }
-
-    /**
-     * This method exists for the purpose of getting an INode view from inside the cache, which may only be partially
-     * constructed. Use this method to:
-     *
-     * 1) Determine what tree the resource resides in.
-     * 2) Traverse links, and get the canonical path of a node that has been reached through a link.
-     *
-     * @throws NoSuchElementException if there is no data in the cache at the specified path
-     */
-    public Node peekInsideCache(String path) throws NoSuchElementException {
-	if (cache.getData(path) == null) {
-	    throw new NoSuchElementException(path);
-	}
-	return (Node)cache.getRoot().lookup(path);
     }
 
     /**

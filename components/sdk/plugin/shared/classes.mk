@@ -55,8 +55,13 @@ SHARED=\
 	org.joval.io.StreamTool						\
 	org.joval.os.unix.NetworkInterface				\
 	org.joval.os.unix.UnixSystemInfo				\
+	org.joval.os.unix.io.IUnixFilesystemDriver			\
 	org.joval.os.unix.io.UnixFileInfo				\
 	org.joval.os.unix.io.UnixFilesystem				\
+	org.joval.os.unix.io.driver.AIXDriver				\
+	org.joval.os.unix.io.driver.MacOSXDriver			\
+	org.joval.os.unix.io.driver.LinuxDriver				\
+	org.joval.os.unix.io.driver.SolarisDriver			\
 	org.joval.os.unix.system.BaseUnixSession			\
 	org.joval.os.unix.system.Environment				\
 	org.joval.os.windows.WindowsSystemInfo				\

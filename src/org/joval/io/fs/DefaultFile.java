@@ -17,7 +17,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 
 /**
- * A CacheFile that works with local file objects.
+ * A CacheFile that works with Java File objects, on the local machine.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -33,7 +33,10 @@ public class DefaultFile extends CacheFile {
     public DefaultFile(CacheFilesystem fs, File file, String path) throws IOException {
 	super(fs, path);
 	accessor = new DefaultAccessor(file);
-	info = accessor.getInfo();
+	try {
+	    info = accessor.getInfo();
+	} catch (FileNotFoundException e) {
+	}
     }
 
     /**

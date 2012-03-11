@@ -100,7 +100,7 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
 		}
 	    }
 	    preloaded = true;
-	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_DONE, countCacheItems());
+	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_DONE, cacheSize());
 	    return true;
 	} catch (PreloadOverflowException e) {
 	    logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);

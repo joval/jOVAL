@@ -40,7 +40,6 @@ import org.joval.util.JOVALSystem;
 class SmbAccessor extends FileAccessor {
     private IFilesystem fs;
     private SmbFile smbFile;
-    private IACE[] aces = null;
 
     SmbAccessor(IFilesystem fs, SmbFile smbFile) {
 	this.fs = fs;
@@ -149,9 +148,8 @@ class SmbAccessor extends FileAccessor {
 	}
 	FileInfo fi = new FileInfo(this, type);
 
-	IACE[] acl = null;
 	ACE[] aa = smbFile.getSecurity();
-	aces = new IACE[aa.length];
+	IACE[] acl = new IACE[aa.length];
 	for (int i=0; i < aa.length; i++) {
 	    acl[i] = new SmbACE(aa[i]);
 	}

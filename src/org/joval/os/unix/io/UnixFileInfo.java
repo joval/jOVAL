@@ -24,8 +24,8 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
     /**
      * Create a UnixFile with a live IFile accessor.
      */
-    UnixFileInfo (long ctime, long mtime, long atime, Type type, long length, String linkTarget,
-		  char unixType, String permissions, int uid, int gid, boolean hasExtendedAcl, String path) {
+    public UnixFileInfo (long ctime, long mtime, long atime, Type type, long length, String linkTarget,
+			 char unixType, String permissions, int uid, int gid, boolean hasExtendedAcl, String path) {
 
 	super(ctime, mtime, atime, type, length, linkTarget);
 	this.unixType = unixType;

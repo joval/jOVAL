@@ -17,8 +17,9 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**
- * Features common to all IFiles, primarily including the methods centered around listing of child files, which
- * leverages the cache, and failing that, the access methods defined in the class extending CacheFilesystem.
+ * A FileInfo object contains information about a file. It can be constructed from a FileAccessor, or directly from
+ * data gathered through other means (i.e., cached data).  Subclasses are used to store platform-specific file
+ * information.
  *
  * @author David A. Solin
  * @version %I% %G%
