@@ -4,6 +4,9 @@
 package org.joval.intf.windows.io;
 
 public interface IWindowsFilesystem {
+    String DELIM_STR = "\\";
+    char DELIM_CH = '\\';
+
     /**
      * An enumeration of types, corresponding to the low-level DRIVE_ values.
      */

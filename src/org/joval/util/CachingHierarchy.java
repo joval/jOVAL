@@ -142,7 +142,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 	Node node = (Node)cache.putData(path, item);
         try {
             if (item.isLink()) {
-                item.setCachePath(((Tree)node.getTree()).makeLink(node, item.getLinkPath()));
+                ((Tree)node.getTree()).makeLink(node, item.getLinkPath());
             } else if (item.isContainer()) {
                 node.setBranch();
 		if (item.isAccessible()) {

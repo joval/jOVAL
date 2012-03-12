@@ -4,6 +4,7 @@
 package org.joval.os.unix.io;
 
 import org.joval.intf.unix.io.IUnixFileInfo;
+import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.io.fs.FileInfo;
 
 /**
@@ -34,6 +35,10 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	this.gid = gid;
 	this.hasExtendedAcl = hasExtendedAcl;
 	this.path = path;
+
+	if (linkTarget != null) {
+	    this.canonicalPath = FileInfo.resolvePath(path, IUnixFilesystem.DELIM_STR, linkTarget);
+	}
     }
 
     // Implement IUnixFileInfo

@@ -41,7 +41,6 @@ import org.joval.util.tree.Node;
  */
 public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements IFilesystem {
     protected boolean autoExpand = true;
-    protected String delimiter;
     protected IProperty props;
     protected IBaseSession session;
     protected IEnvironment env;
@@ -52,7 +51,6 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 	this.session = session;
 	this.env = env;
 	this.redirector = redirector;
-	this.delimiter = delimiter;
 	props = session.getProperties();
 	setLogger(session.getLogger());
     }
@@ -131,10 +129,6 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 		throw new IOException(e);
 	    }
 	}
-    }
-
-    public final String getDelimiter() {
-	return delimiter;
     }
 
     public final IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {

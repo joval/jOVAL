@@ -12,6 +12,9 @@ import java.io.IOException;
  * @version %I% %G%
  */
 public interface IUnixFilesystem {
+    String DELIM_STR = "/";
+    char DELIM_CH = '/';
+
     /**
      * Property governing the method used when preloading the cache.  Valid methods are FILE_METHOD and STREAM_METHOD.
      */

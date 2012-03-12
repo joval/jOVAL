@@ -244,6 +244,10 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	}
     }
 
+    public String getDelimiter() {
+	return DELIM_STR;
+    }
+
     // Internal
 
     /**

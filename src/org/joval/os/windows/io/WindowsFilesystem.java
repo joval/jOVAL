@@ -58,7 +58,7 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
 
         if (isValidPath(realPath)) {
 	    if (isDrive(realPath)) {
-                return new WindowsFile(this, new File(realPath + delimiter), path);
+                return new WindowsFile(this, new File(realPath + DELIM_STR), path);
 	    } else {
                 return new WindowsFile(this, new File(realPath), path);
             }
@@ -111,6 +111,11 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
+    }
+
+    @Override
+    public String getDelimiter() {
+	return DELIM_STR;
     }
 
     // Private

@@ -61,18 +61,16 @@ public class Tree extends Node implements ITree {
 
     /**
      * Convert a node into a link to the specified destination.
-     *
-     * @returns the absolute path of the link target (note: this may not be a canonical path).
      */
-    public String makeLink(Node node, String destination) throws UnsupportedOperationException {
+    public void makeLink(Node node, String destination) throws UnsupportedOperationException {
 	switch(node.type) {
 	  case LEAF:
 	  case LINK: // over-link?
             node.type = INode.Type.LINK;
-            node.linkPath = resolvePath(node.parent == null ? "" : node.parent.getPath(), destination);
+            node.linkPath = destination;
 	    getLogger().debug(JOVALMsg.STATUS_TREE_MKLINK, node.getPath(), destination);
 	    linkCount++;
-	    return node.linkPath;
+	    break;
 
 	  default:
             String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_TREE_MKLINK, node.getPath(), destination, node.type);
@@ -175,43 +173,6 @@ public class Tree extends Node implements ITree {
 	    return name;
 	} else {
 	    return name + forest.getDelimiter();
-	}
-    }
-
-    /**
-     * Resolve an absolute path from a relative path from a base file path.
-     */
-    private String resolvePath(String origin, String rel) throws UnsupportedOperationException {
-	if (rel.startsWith(forest.getDelimiter())) {
-	    return rel;
-	} else {
-	    Stack<String> stack = new Stack<String>();
-	    for (String s : StringTools.toList(StringTools.tokenize(origin, forest.getDelimiter()))) {
-		stack.push(s);
-	    }
-	    for (String next : StringTools.toList(StringTools.tokenize(rel, forest.getDelimiter()))) {
-		if (next.equals(".")) {
-		    // stay in the same place
-		} else if (next.equals("..")) {
-		    if (stack.empty()) {
-			// links above root stay at root
-		    } else {
-			stack.pop();
-		    }
-		} else {
-		    stack.push(next);
-		}
-	    }
-	    StringBuffer path = new StringBuffer();
-	    while(!stack.empty()) {
-		StringBuffer elt = new StringBuffer(forest.getDelimiter());
-		path.insert(0, elt.append(stack.pop()).toString());
-	    }
-	    if (path.length() == 0) {
-		return forest.getDelimiter();
-	    } else {
-		return path.toString();
-	    }
 	}
     }
 }
