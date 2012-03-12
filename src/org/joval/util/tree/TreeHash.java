@@ -92,21 +92,25 @@ public class TreeHash<T> {
 	    root = forest.makeTree(rootName);
 	}
 
-	INode node = root;
-	for (int i=1; i < tokens.size(); i++) {
-	    String token = tokens.get(i);
-	    boolean makeNode = false;
-	    try {
-		node = node.getChild(token);
-	    } catch (UnsupportedOperationException e) {
-		makeNode = true;
-	    } catch (NoSuchElementException e) {
-		makeNode = true;
+	if (rootName.equals(path)) {
+	    return root;
+	} else {
+	    INode node = root;
+	    for (int i=1; i < tokens.size(); i++) {
+		String token = tokens.get(i);
+		boolean makeNode = false;
+		try {
+		    node = node.getChild(token);
+		} catch (UnsupportedOperationException e) {
+		    makeNode = true;
+		} catch (NoSuchElementException e) {
+		    makeNode = true;
+		}
+		if (makeNode) {
+		    node = root.makeNode((Node)node, token);
+		}
 	    }
-	    if (makeNode) {
-		node = root.makeNode((Node)node, token);
-	    }
+	    return node;
 	}
-	return node;
     }
 }

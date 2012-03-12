@@ -68,8 +68,8 @@ class SmbAccessor extends FileAccessor implements IWindowsFileInfo {
 	try {
 	    return smbFile.exists();
 	} catch (IOException e) {
-	    fs.getLogger().warn(JOVALMsg.ERROR_IO, toString());
-	    fs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    fs.getLogger().warn(JOVALMsg.ERROR_IO, toString(), e.getMessage());
+	    fs.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return false;
     }

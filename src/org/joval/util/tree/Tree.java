@@ -38,6 +38,7 @@ public class Tree extends Node implements ITree {
 	this.forest = forest;
 	this.type = Type.TREE;
 	shortcuts = new Hashtable<String, Node>();
+	shortcuts.put(name, this);
     }
 
     /**
