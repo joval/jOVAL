@@ -43,8 +43,6 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem {
-    static final String	LOCAL_DELIM_STR		= "\\";
-    static final char	LOCAL_DELIM_CH		= '\\';
     static final String	SMBURL_DELIM_STR	= "/";
     static final char	SMBURL_DELIM_CH		= '/';
 
@@ -58,7 +56,7 @@ public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem
      *	    automatically set to false.
      */
     public SmbFilesystem(IBaseSession session, IWindowsCredential cred, IEnvironment env, IPathRedirector fsr) {
-	super(session, env, fsr, LOCAL_DELIM_STR);
+	super(session, env, fsr, DELIM_STR);
 	host = session.getHostname();
 	auth = getNtlmPasswordAuthentication(cred);
     }
@@ -78,7 +76,7 @@ public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem
 	if (isValidPath(realPath)) {
 	    StringBuffer sb = new StringBuffer("smb://").append(host).append(SMBURL_DELIM_CH);
 	    sb.append(realPath.charAt(0)).append('$');
-	    sb.append(realPath.substring(2).replace(LOCAL_DELIM_CH, SMBURL_DELIM_CH));
+	    sb.append(realPath.substring(2).replace(DELIM_CH, SMBURL_DELIM_CH));
 	    logger.trace(JOVALMsg.STATUS_WINSMB_MAP, path, sb.toString());
 
 	    SmbFile smbFile = null;
@@ -103,6 +101,10 @@ public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem
 	    return new SmbFileProxy(this, smbFile, path);
 	}
 	throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
+    }
+
+    public String getDelimiter() {
+	return DELIM_STR;
     }
 
     /**
