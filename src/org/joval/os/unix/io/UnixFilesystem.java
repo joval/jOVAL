@@ -250,8 +250,12 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
      * Create a UnixFile from the output line of the stat command.
      */
     UnixFileInfo getUnixFileInfo(String path) throws Exception {
-	String command = new StringBuffer(driver.getStatCommand()).append(" ").append(path).toString();
-	return driver.nextFileInfo(SafeCLI.multiLine(command, session, IUnixSession.Timeout.S).iterator());
+	if (driver == null) {
+	    return null;
+	} else {
+	    String command = new StringBuffer(driver.getStatCommand()).append(" ").append(path).toString();
+	    return driver.nextFileInfo(SafeCLI.multiLine(command, session, IUnixSession.Timeout.S).iterator());
+	}
     }
 
     // Private

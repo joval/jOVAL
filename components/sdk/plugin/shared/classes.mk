@@ -49,7 +49,6 @@ SHARED=\
 	org.joval.io.fs.DefaultFile					\
 	org.joval.io.fs.FileAccessor					\
 	org.joval.io.fs.FileInfo					\
-	org.joval.io.FileProxy						\
 	org.joval.io.LittleEndian					\
 	org.joval.io.PerishableReader					\
 	org.joval.io.StreamTool						\

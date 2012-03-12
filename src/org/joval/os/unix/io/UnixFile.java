@@ -81,7 +81,11 @@ public class UnixFile extends DefaultFile {
 
 	public FileInfo getInfo() throws IOException {
 	    try {
-		return ufs.getUnixFileInfo(getPath());
+		info = ufs.getUnixFileInfo(getPath());
+		if (info == null) {
+		    info = internal.getInfo();
+		}
+		return info;
 	    } catch (Exception e) {
 		if (e instanceof IOException) {
 		    throw (IOException)e;
