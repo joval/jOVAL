@@ -63,10 +63,14 @@ public class Node implements INode {
     }
 
     public INode getChild(String name) throws NoSuchElementException, UnsupportedOperationException {
-	if (children != null && children.containsKey(name)) {
-	    return children.get(name);
+	if (children == null) {
+	    getChildren();
 	}
-	throw new NoSuchElementException(name);
+	if (children.containsKey(name)) {
+	    return children.get(name);
+	} else {
+	    throw new NoSuchElementException(name);
+	}
     }
 
     public Collection<INode> getChildren() throws NoSuchElementException, UnsupportedOperationException {

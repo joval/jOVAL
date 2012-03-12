@@ -65,12 +65,9 @@ public abstract class BaseFileAdapter implements IAdapter {
 
     // Implement IAdapter
 
-boolean special=false;
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
 	ObjectType obj = rc.getObject();
 	String id = obj.getId();
-if("oval:org.mitre.oval.test:obj:1305".equals(id))special=true;
-else special=false;
 
 	//
 	// Get the appropriate IFilesystem
@@ -319,12 +316,6 @@ else special=false;
 			// patterns.
 			//
 			list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs, null);
-if(special){
-System.out.println("\nDAS getDirs for ID=" + id);
-for(String s:list){
-System.out.println("  " + s);
-}
-}
 		    }
 		    break;
 
@@ -384,7 +375,6 @@ System.out.println("  " + s);
 				    IFile f = fs.getFile(pathString).getChild(fname);
 				    if (f.exists()) {
 					files.add(f.getPath());
-if(special)System.out.println("Adding child of " + pathString + ": " + f.getPath());
 				    }
 				    break;
 				  }

@@ -65,14 +65,6 @@ public class Tree extends Node implements ITree {
      */
     public String makeLink(Node node, String destination) throws UnsupportedOperationException {
 	switch(node.type) {
-/*
-	  case BRANCH:
-	    if (node.children.size() > 0) {
-System.out.println("DAS Converting a branch with " + node.children.size() + " children into a link?");
-		node.children = null;
-	    }
-	    // fall-thru
-*/
 	  case LEAF:
 	  case LINK: // over-link?
             node.type = INode.Type.LINK;
