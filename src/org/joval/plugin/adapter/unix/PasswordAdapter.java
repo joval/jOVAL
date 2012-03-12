@@ -178,7 +178,7 @@ public class PasswordAdapter implements IAdapter {
 		    EntityItemIntType lastLogin = JOVALSystem.factories.sc.core.createEntityItemIntType();
 		    lastLogin.setStatus(StatusEnumeration.NOT_COLLECTED);
 		    lastLogin.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		    item.setGroupId(lastLogin);
+		    item.setLastLogin(lastLogin);
 
 		    passwordMap.put(usernameString, item);
 		} else {
