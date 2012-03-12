@@ -50,7 +50,7 @@ public class DefaultFile extends CacheFile {
     @Override
     public String toString() {
 	if (accessor == null) {
-	    return path;
+	    return getPath();
 	} else {
 	    return accessor.toString();
 	}
@@ -60,7 +60,7 @@ public class DefaultFile extends CacheFile {
 
     public FileAccessor getAccessor() {
 	if (accessor == null) {
-	    accessor = new DefaultAccessor(new File(path));
+	    accessor = new DefaultAccessor(new File(getPath()));
 	}
 	return accessor;
     }
@@ -115,7 +115,7 @@ public class DefaultFile extends CacheFile {
 
 		return new FileInfo(ctime, mtime, atime, type, length);
 	    } else {
-		throw new FileNotFoundException(path);
+		throw new FileNotFoundException(getPath());
 	    }
 	}
 

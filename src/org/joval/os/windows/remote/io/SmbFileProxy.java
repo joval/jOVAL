@@ -46,7 +46,7 @@ class SmbFileProxy extends CacheFile {
 
     public String toString() {
 	if (accessor == null) {
-	    return path;
+	    return getPath();
 	} else {
 	    return accessor.toString();
 	}

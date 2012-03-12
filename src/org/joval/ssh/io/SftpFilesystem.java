@@ -115,7 +115,7 @@ public class SftpFilesystem extends UnixFilesystem {
     private int threshold = props.getIntProperty(PROP_PRELOAD_TRIGGER);
 
     @Override
-    protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
+    protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
 	if (!connect()) {
 	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
 	}

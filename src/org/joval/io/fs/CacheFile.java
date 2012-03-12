@@ -28,9 +28,10 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class CacheFile implements IFile {
+public abstract class CacheFile implements IFile, Cloneable {
+    private String path;
+
     protected CacheFilesystem fs;
-    protected String path;
     protected FileAccessor accessor;
     protected FileInfo info;
 
@@ -102,7 +103,7 @@ public abstract class CacheFile implements IFile {
 		return null;
 	    }
 	}
-	throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_CACHE_NOT_LINK, path));
+	throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_CACHE_NOT_LINK, getPath()));
     }
 
     public final void setCachePath(String cachePath) {
@@ -115,7 +116,7 @@ public abstract class CacheFile implements IFile {
 	if (exists()) {
 	    return info.atime;
 	} else {
-	    throw new FileNotFoundException(path);
+	    throw new FileNotFoundException(getPath());
 	}
     }
 
@@ -123,7 +124,7 @@ public abstract class CacheFile implements IFile {
 	if (exists()) {
 	    return info.ctime;
 	} else {
-	    throw new FileNotFoundException(path);
+	    throw new FileNotFoundException(getPath());
 	}
     }
 
@@ -135,7 +136,7 @@ public abstract class CacheFile implements IFile {
 	if (exists()) {
 	    return getAccessor().getInputStream();
 	} else {
-	    throw new FileNotFoundException(path);
+	    throw new FileNotFoundException(getPath());
 	}
     }
 
@@ -160,7 +161,7 @@ public abstract class CacheFile implements IFile {
 		return false;
 	    }
 	} else {
-	    throw new FileNotFoundException(path);
+	    throw new FileNotFoundException(getPath());
 	}
     }
 
@@ -177,7 +178,7 @@ public abstract class CacheFile implements IFile {
 		return true;
 	    }
 	} else {
-	    throw new FileNotFoundException(path);
+	    throw new FileNotFoundException(getPath());
 	}
     }
 
@@ -185,7 +186,7 @@ public abstract class CacheFile implements IFile {
 	if (exists()) {
 	    return info.mtime;
 	} else {
-	    throw new FileNotFoundException(path);
+	    throw new FileNotFoundException(getPath());
 	}
     }
 
@@ -193,7 +194,7 @@ public abstract class CacheFile implements IFile {
 	if (exists()) {
 	    return info.length;
 	} else {
-	    throw new FileNotFoundException(path);
+	    throw new FileNotFoundException(getPath());
 	}
     }
 
@@ -215,11 +216,7 @@ public abstract class CacheFile implements IFile {
 	} catch (NoSuchElementException e) {
 	}
 	try {
-	    if (isRoot()) {
-		return fs.listChildren(fs.getDelimiter());
-	    } else {
-		return fs.listChildren(path);
-	    }
+	    return fs.listChildren(getPath());
 	} catch (Exception e) {
 	    if (e instanceof IOException) {
 		throw (IOException)e;
@@ -241,14 +238,25 @@ public abstract class CacheFile implements IFile {
 	Vector<IFile> files = new Vector<IFile>();
 	for (int i=0; i < children.length; i++) {
 	    if (p == null || p.matcher(children[i]).find()) {
-		StringBuffer sb = new StringBuffer(path);
-		if (!path.endsWith(fs.getDelimiter())) {
-		    sb.append(fs.getDelimiter());
-		}
-		files.add(fs.getFile(sb.append(children[i]).toString()));
+		files.add(fs.getFile(path + fs.getDelimiter() + children[i]));
 	    }
 	}
 	return files.toArray(new IFile[files.size()]);
+    }
+
+    public final IFile getChild(String name) throws IOException {
+	if (name.equals(".")) {
+	    return this;
+	} else if (name.equals("..")) {
+	    return fs.getFile(getParent());
+	} else {
+	    for (IFile child : listFiles()) {
+		if (name.equals(child.getName())) {
+		    return child;
+		}
+	    }
+	    throw new FileNotFoundException(path + fs.getDelimiter() + name);
+	}
     }
 
     public final void delete() throws IOException {
@@ -256,23 +264,34 @@ public abstract class CacheFile implements IFile {
     }
 
     public final String getPath() {
-	return path;
+	if (isRoot()) {
+	    return fs.getDelimiter();
+	} else {
+	    return path;
+	}
     }
 
     public final String getCanonicalPath() throws IOException {
 	if (exists()) {
 	    return info.canonicalPath;
 	} else {
-	    throw new FileNotFoundException(path);
+	    throw new FileNotFoundException(getPath());
 	}
     }
 
     public final String getName() {
-	int ptr = path.lastIndexOf(fs.getDelimiter());
-	if (ptr == -1) {
-	    return path;
+	if (isRoot()) {
+	    return getPath();
 	} else {
-	    return path.substring(ptr + fs.getDelimiter().length());
+	    return path.substring(path.lastIndexOf(fs.getDelimiter()) + fs.getDelimiter().length());
+	}
+    }
+
+    public final String getParent() {
+	if (isRoot()) {
+	    return getPath();
+	} else {
+	    return path.substring(0, path.lastIndexOf(fs.getDelimiter()));
 	}
     }
 
@@ -280,7 +299,7 @@ public abstract class CacheFile implements IFile {
 	if (exists()) {
 	    return info;
 	} else {
-	    throw new FileNotFoundException(path);
+	    throw new FileNotFoundException(getPath());
 	}
     }
 }

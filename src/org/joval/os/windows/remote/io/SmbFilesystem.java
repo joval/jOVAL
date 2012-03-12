@@ -64,57 +64,7 @@ public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem
     }
 
     @Override
-    protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
-	return accessResource(path, false);
-    }
-
-    // Implement IFilesystem
-
-    @Override
-    public IFile getFile(String path, int flags) throws IllegalArgumentException, IOException {
-	try {
-	    IFile f = null;
-	    switch(flags) {
-	      case IFile.NOCACHE:
-	      case IFile.READWRITE:
-		return accessResource(path, false);
-
-	      case IFile.READVOLATILE:
-		f = accessResource(path, true);
-		// fall-thru
-	      case IFile.READONLY:
-		if (f == null) {
-		    f = getResource(path);
-		}
-		if (f.exists()) {
-		    return f;
-		} else {
-		    throw new FileNotFoundException(path);
-		}
-
-	      default:
-		throw new IllegalArgumentException(Integer.toString(flags));
-	    }
-	} catch (Exception e) {
-	    if (e instanceof IOException) {
-		throw (IOException)e;
-	    } else if (e instanceof IllegalArgumentException) {
-		throw (IllegalArgumentException)e;
-	    } else {
-		throw new IOException(e);
-	    }
-	}
-    }
-
-    // Private
-
-    /**
-     * Return an SmbFile on the remote machine using a local filesystem path, e.g., "C:\Windows\System32\notepad.exe", or
-     * more interestingly, if autoExpand is true, "%SystemRoot%\System32\notepad.exe".
-     *
-     * This method is responsible for implementing 64-bit file redirection.
-     */
-    private SmbFileProxy accessResource(String path, boolean vol) throws IllegalArgumentException, IOException {
+    protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
 	if (autoExpand) {
 	    path = env.expand(path);
 	}
@@ -135,7 +85,7 @@ public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem
 	    if (isDrive(realPath)) {
 		sb.append(SMBURL_DELIM_CH);
 		smbFile = new SmbFile(sb.toString(), auth);
-	    } else if (vol) {
+	    } else if (flags == IFile.READVOLATILE) {
 		smbFile = new VolatileSmbFile(sb.toString(), auth);
 	    } else {
 		smbFile = new SmbFile(sb.toString(), auth);

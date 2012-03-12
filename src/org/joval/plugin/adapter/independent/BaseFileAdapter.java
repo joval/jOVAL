@@ -65,9 +65,12 @@ public abstract class BaseFileAdapter implements IAdapter {
 
     // Implement IAdapter
 
+boolean special=false;
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
 	ObjectType obj = rc.getObject();
 	String id = obj.getId();
+if("oval:org.mitre.oval.test:obj:1305".equals(id))special=true;
+else special=false;
 
 	//
 	// Get the appropriate IFilesystem
@@ -107,10 +110,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 		if (isDirectory) {
 		    dirPath = path;
 		} else {
-		    dirPath = path.substring(0, path.lastIndexOf(fs.getDelimiter()));
-		    if (dirPath.length() == 0) {
-			dirPath = fs.getDelimiter();
-		    }
+		    dirPath = f.getParent();
 		}
 		ReflectedFileItem fItem = new ReflectedFileItem();
 		if (fObj.isSetFilepath()) {
@@ -319,6 +319,12 @@ public abstract class BaseFileAdapter implements IAdapter {
 			// patterns.
 			//
 			list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs, null);
+if(special){
+System.out.println("\nDAS getDirs for ID=" + id);
+for(String s:list){
+System.out.println("  " + s);
+}
+}
 		    }
 		    break;
 
@@ -375,14 +381,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 				  }
  
 				  case EQUALS: {
-				    String filepath = null;
-				    if (pathString.endsWith(fs.getDelimiter())) {
-					filepath = pathString + fname;
-				    } else {
-					filepath = pathString + fs.getDelimiter() + fname;
-				    }
-				    if (fs.getFile(filepath).exists()) {
-					files.add(filepath);
+				    IFile f = fs.getFile(pathString).getChild(fname);
+				    if (f.exists()) {
+					files.add(f.getPath());
+if(special)System.out.println("Adding child of " + pathString + ": " + f.getPath());
 				    }
 				    break;
 				  }
@@ -506,11 +508,10 @@ public abstract class BaseFileAdapter implements IAdapter {
 			results.add(path);
 			ancestors.push(f.getCanonicalPath());
 			if ("up".equals(direction)) {
-			    int ptr = 0;
-			    ptr = path.lastIndexOf(fs.getDelimiter());
-			    if (ptr > 0) {
+			    String parent = f.getParent();
+			    if (!parent.equals(f.getPath())) { // root case
 				Collection<String> c = new HashSet<String>();
-				c.add(path.substring(0, ptr));
+				c.add(parent);
 				results.addAll(getDirs(c, --depth, direction, recurse, fs, cloneStack(ancestors)));
 			    }
 			} else { // recurse down

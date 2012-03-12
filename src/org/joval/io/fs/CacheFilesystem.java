@@ -67,7 +67,7 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 	return false;
     }
 
-    protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
+    protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
 	if (autoExpand) {
 	    path = env.expand(path);
 	}
@@ -85,28 +85,36 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 	}
     }
 
+    protected final int getDefaultFlags() {
+	return IFile.READONLY;
+    }
+
     protected final String[] listChildren(String path) throws Exception {
-	return ((CacheFile)accessResource(path)).getAccessor().list();
+	return ((CacheFile)accessResource(path, getDefaultFlags())).getAccessor().list();
     }
 
     // Implement IFilesystem
 
     public final IFile getFile(String path) throws IOException {
-	return getFile(path, IFile.READONLY);
+	return getFile(path, getDefaultFlags());
     }
 
-    public IFile getFile(String path, int flags) throws IllegalArgumentException, IOException {
+    public final IFile getFile(String path, int flags) throws IllegalArgumentException, IOException {
 	try {
 	    switch(flags) {
 	      case IFile.NOCACHE:
 	      case IFile.READWRITE:
 	      case IFile.READVOLATILE:
-		return accessResource(path);
+		return accessResource(path, flags);
 
 	      case IFile.READONLY:
 		IFile f = getResource(path);
 		if (f.exists()) {
-		    return f;
+		    if (f.getPath().equals(path)) {
+			return f;
+		    } else {
+			return new AliasFile((CacheFile)f, path);
+		    }
 		} else {
 		    throw new FileNotFoundException(path);
 		}
@@ -154,6 +162,22 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
     protected final class PreloadOverflowException extends Exception {
 	public PreloadOverflowException() {
 	    super();
+	}
+    }
+
+    // Private
+
+    private class AliasFile extends CacheFile {
+	private CacheFile base;
+
+	AliasFile(CacheFile base, String aliasPath) {
+	    super(base.fs, aliasPath);
+	    this.base = base;
+	    info = base.info;
+	}
+
+	public FileAccessor getAccessor() {
+	    return base.getAccessor();
 	}
     }
 }

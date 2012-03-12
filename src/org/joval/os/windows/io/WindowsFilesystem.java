@@ -44,7 +44,7 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
     }
 
     @Override
-    protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
+    protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
         if (autoExpand) {
             path = env.expand(path);
         }

@@ -124,7 +124,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 	// The item is not in the cache, and no previous attempt was made to access it, so attempt to retrieve it.
 	//
 	try {
-	    T item = accessResource(path);
+	    T item = accessResource(path, getDefaultFlags());
 	    if (item.exists()) {
 		addToCache(path, item);
 	    }
@@ -165,13 +165,18 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
     // Subclasses must implement the following methods
 
     /**
+     * Return the default flags used for internal accessResource calls.
+     */
+    protected abstract int getDefaultFlags();
+
+    /**
      * Get a resource directly from an underlying access layer implementation.  Subclasses should make NO ATTEMPT to cache
      * the result of this call.  If it is desirable to cache a result, then use the getResource method, which calls this
      * method internally.
      *
      * @throws NoSuchElementException if there is no resource at path
      */
-    protected abstract T accessResource(String path) throws Exception;
+    protected abstract T accessResource(String path, int flags) throws Exception;
 
     /**
      * Return a list of Strings naming the resources available beneath the specified path.

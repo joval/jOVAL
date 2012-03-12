@@ -71,7 +71,7 @@ public class WindowsFile extends DefaultFile {
 
 	public int getWindowsFileType() throws IOException {
 	    try {
-		int dirAttr = IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY & Kernel32Util.getFileAttributes(path);
+		int dirAttr = IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY & Kernel32Util.getFileAttributes(getPath());
 		if (IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY == dirAttr) {
 		    return IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY;
 		} else {

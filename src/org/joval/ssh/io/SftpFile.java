@@ -60,12 +60,8 @@ class SftpFile extends CacheFile {
 	    if (attrs != null) {
 		return true;
 	    }
-	    String lsPath = path;
-	    if (isRoot()) {
-		lsPath = sfs.getDelimiter();
-	    }
 	    try {
-		attrs = sfs.getCS().lstat(lsPath);
+		attrs = sfs.getCS().lstat(getPath());
 		permissions = attrs.getPermissionsString();
 		if (permissions.length() != 10) {
 		    throw new IOException("\"" + permissions + "\"");
@@ -74,7 +70,7 @@ class SftpFile extends CacheFile {
 	    } catch (SftpException e) {
 		switch(SftpFilesystem.getErrorCode(e)) {
 		  case ISftpError.INVALID_FILENAME:
-		    fs.getLogger().warn(JOVALMsg.ERROR_IO, lsPath, "invalid filename");
+		    fs.getLogger().warn(JOVALMsg.ERROR_IO, getPath(), "invalid filename");
 		    return false;
 
 		  case ISftpError.NO_SUCH_PATH:
@@ -82,30 +78,26 @@ class SftpFile extends CacheFile {
 		    return false;
 
 		  default:
-		    fs.getLogger().warn(JOVALMsg.ERROR_IO, lsPath, e.getMessage());
+		    fs.getLogger().warn(JOVALMsg.ERROR_IO, getPath(), e.getMessage());
 		    fs.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    break;
 		}
 	    } catch (IOException e) {
-		fs.getLogger().warn(JOVALMsg.ERROR_IO, lsPath, "exists");
+		fs.getLogger().warn(JOVALMsg.ERROR_IO, getPath(), "exists");
 		fs.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    return false;
 	}
 
 	public FileInfo getInfo() throws IOException {
-	    String lsPath = path;
-	    if (isRoot()) {
-		lsPath = sfs.getDelimiter();
-	    }
 	    if (exists()) {
 		try {
-		    return new SftpFileInfo(attrs, permissions, lsPath, sfs.getCS());
+		    return new SftpFileInfo(attrs, permissions, getPath(), sfs.getCS());
 		} catch (SftpException e) {
 		    throw new IOException(e);
 		}
 	    } else {
-		throw new FileNotFoundException(lsPath);
+		throw new FileNotFoundException(getPath());
 	    }
 	}
 
@@ -113,7 +105,7 @@ class SftpFile extends CacheFile {
 	    if (exists()) {
 		return FileInfo.UNKNOWN_TIME;
 	    } else {
-		throw new FileNotFoundException(path);
+		throw new FileNotFoundException(getPath());
 	    }
 	}
 
@@ -121,7 +113,7 @@ class SftpFile extends CacheFile {
 	    if (exists()) {
 		return attrs.getModifiedTime() * 1000L;
 	    } else {
-		throw new FileNotFoundException(path);
+		throw new FileNotFoundException(getPath());
 	    }
 	}
 
@@ -129,7 +121,7 @@ class SftpFile extends CacheFile {
 	    if (exists()) {
 		return attrs.getAccessTime() * 1000L;
 	    } else {
-		throw new FileNotFoundException(path);
+		throw new FileNotFoundException(getPath());
 	    }
 	}
 
@@ -138,15 +130,15 @@ class SftpFile extends CacheFile {
 		if (exists()) {
 		    return false;
 		} else {
-		    sfs.getCS().mkdir(path + fs.getDelimiter());
+		    sfs.getCS().mkdir(getPath());
 		    return exists();
 		}
 	    } catch (SftpException e) {
-		fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
+		fs.getLogger().warn(JOVALMsg.ERROR_IO, getPath(), "mkdir");
 		fs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    } catch (IOException e) {
-		fs.getLogger().warn(JOVALMsg.ERROR_IO, path, "mkdir");
+		fs.getLogger().warn(JOVALMsg.ERROR_IO, getPath(), "mkdir");
 		fs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    }
@@ -155,12 +147,12 @@ class SftpFile extends CacheFile {
 	public InputStream getInputStream() throws IOException {
 	    if (exists()) {
 		try {
-		    return sfs.getCS().get(path);
+		    return sfs.getCS().get(getPath());
 		} catch (SftpException e) {
 		    throw new IOException(e);
 		}
 	    } else {
-		throw new FileNotFoundException(path);
+		throw new FileNotFoundException(getPath());
 	    }
 	}
 
@@ -168,15 +160,16 @@ class SftpFile extends CacheFile {
 	    if (isLink()) {
 		return fs.getFile(getCanonicalPath()).getOutputStream(append);
 	    } else if (exists() && isDirectory()) {
-		String s = JOVALSystem.getMessage(JOVALMsg.ERROR_IO, path, JOVALSystem.getMessage(JOVALMsg.ERROR_IO_NOT_FILE));
-		throw new IOException(s);
+		String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_IO_NOT_FILE);
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_IO, getPath(), reason);
+		throw new IOException(msg);
 	    } else {
 		int mode = ChannelSftp.OVERWRITE;
 		if (append) {
 		    mode = ChannelSftp.APPEND;
 		}
 		try {
-		    return sfs.getCS().put(path, mode);
+		    return sfs.getCS().put(getPath(), mode);
 		} catch (SftpException e) {
 		    throw new IOException(e);
 		}
@@ -193,7 +186,7 @@ class SftpFile extends CacheFile {
 	    } else if (exists()) {
 		return attrs.isDir();
 	    } else {
-		throw new FileNotFoundException(path);
+		throw new FileNotFoundException(getPath());
 	    }
 	}
 
@@ -211,25 +204,25 @@ class SftpFile extends CacheFile {
 	    if (exists()) {
 		return attrs.getSize();
 	    } else {
-		throw new FileNotFoundException(path);
+		throw new FileNotFoundException(getPath());
 	    }
 	}
 
 	public void delete() throws IOException {
 	    if (exists()) {
 		try {
-		    sfs.getCS().rm(path);
+		    sfs.getCS().rm(getPath());
 		} catch (SftpException e) {
 		    throw new IOException(e);
 		}
 	    } else {
-		throw new FileNotFoundException(path);
+		throw new FileNotFoundException(getPath());
 	    }
 	}
 
 	public String getCanonicalPath() throws IOException {
 	    try {
-		return sfs.getCS().realpath(path);
+		return sfs.getCS().realpath(getPath());
 	    } catch (SftpException e) {
 		throw new IOException(e);
 	    }
@@ -239,13 +232,9 @@ class SftpFile extends CacheFile {
 	    if (isLink()) {
 		return fs.getFile(getCanonicalPath()).list();
 	    } else if (isDirectory()) {
-		String lsPath = path;
-		if (isRoot()) {
-		    lsPath = sfs.getDelimiter();
-		}
 		try {
 		    Collection<String> list = new Vector<String>();
-		    for (ChannelSftp.LsEntry entry : sfs.getCS().ls(lsPath)) {
+		    for (ChannelSftp.LsEntry entry : sfs.getCS().ls(getPath())) {
 			if (!".".equals(entry.getFilename()) && !"..".equals(entry.getFilename())) {
 			    list.add(entry.getFilename());
 			}
@@ -254,7 +243,7 @@ class SftpFile extends CacheFile {
 		} catch (SftpException se) {
 		    switch(SftpFilesystem.getErrorCode(se)) {
 		      case ISftpError.NO_SUCH_FILE:
-			throw new FileNotFoundException(lsPath);
+			throw new FileNotFoundException(getPath());
     
 		      default:
 			throw new IOException(se);

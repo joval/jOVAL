@@ -79,14 +79,19 @@ public interface IFile extends ICacheable {
     public String[] list() throws IOException;
 
     /**
-     * For a directory, lists all the child files.
+     * For a directory, lists all the child files (READONLY mode).
      */
     public IFile[] listFiles() throws IOException;
 
     /**
-     * For a directory, lists all the child files whose names match the specified pattern.
+     * For a directory, lists all the child files (READONLY mode) whose names match the specified pattern.
      */
     public IFile[] listFiles(Pattern p) throws IOException;
+
+    /**
+     * For a directory, retrieves a READONLY IFile for the child file with the specified name.
+     */
+    public IFile getChild(String name) throws IOException;
 
     /**
      * Delete the file.
@@ -107,6 +112,11 @@ public interface IFile extends ICacheable {
      * Get the name of the file.
      */
     public String getName();
+
+    /**
+     * Get the name of this file's parent directory.  If this is the root directory, its name is returned.
+     */
+    public String getParent();
 
     /**
      * Get a platform-specific extended attributes API, if any.

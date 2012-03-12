@@ -98,8 +98,8 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
     }
 
     @Override
-    protected IFile accessResource(String path) throws IllegalArgumentException, IOException {
-	return new UnixFile(this, (CacheFile)super.accessResource(path), path);
+    protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
+	return new UnixFile(this, (CacheFile)super.accessResource(path, flags), path);
     }
 
     @Override
