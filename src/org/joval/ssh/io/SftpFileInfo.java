@@ -21,8 +21,9 @@ import org.vngx.jsch.SftpATTRS;
 import org.vngx.jsch.exception.JSchException;
 import org.vngx.jsch.exception.SftpException;
 
-import org.joval.os.unix.io.UnixFileInfo;
+import org.joval.intf.io.IFile;
 import org.joval.io.fs.FileInfo;
+import org.joval.os.unix.io.UnixFileInfo;
 
 /**
  * UnixFileInfo based on an SftpFile.
@@ -33,7 +34,7 @@ import org.joval.io.fs.FileInfo;
 class SftpFileInfo extends UnixFileInfo {
     SftpFileInfo(SftpATTRS attrs, String permissions, String path, ChannelSftp cs) throws SftpException {
 	atime = attrs.getAccessTime() * 1000L;
-	ctime = FileInfo.UNKNOWN_TIME;
+	ctime = IFile.UNKNOWN_TIME;
 	mtime = attrs.getModifiedTime() * 1000L;
 
 	type = FileInfo.Type.FILE;

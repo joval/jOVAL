@@ -61,7 +61,7 @@ class SmbAccessor extends FileAccessor implements IWindowsFileInfo {
     }
 
     public long getAtime() throws IOException {
-	return FileInfo.UNKNOWN_TIME;
+	return IFile.UNKNOWN_TIME;
     }
 
     public boolean exists() {

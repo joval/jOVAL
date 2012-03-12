@@ -120,7 +120,7 @@ public class DefaultFile extends CacheFile {
 	}
 
 	public long getCtime() throws IOException {
-	    return FileInfo.UNKNOWN_TIME;
+	    return IFile.UNKNOWN_TIME;
 	}
 
 	public long getMtime() throws IOException {
@@ -128,7 +128,7 @@ public class DefaultFile extends CacheFile {
 	}
 
 	public long getAtime() throws IOException {
-	    return FileInfo.UNKNOWN_TIME;
+	    return IFile.UNKNOWN_TIME;
 	}
 
 	public long getLength() throws IOException {

@@ -108,18 +108,33 @@ public class FileAdapter extends BaseFileAdapter {
 	}
 	session.getLogger().trace(JOVALMsg.STATUS_UNIX_FILE, f.getPath());
 	EntityItemIntType aTime = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	aTime.setValue(Long.toString(f.accessTime()/1000L));
 	aTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	long at = f.accessTime();
+	if (at == IFile.UNKNOWN_TIME) {
+	    aTime.setStatus(StatusEnumeration.NOT_COLLECTED);
+	} else {
+	    aTime.setValue(Long.toString(at/1000L));
+	}
 	item.setATime(aTime);
 
 	EntityItemIntType cTime = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	cTime.setStatus(StatusEnumeration.NOT_COLLECTED);
 	cTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	long ct = f.createTime();
+	if (ct == IFile.UNKNOWN_TIME) {
+	    cTime.setStatus(StatusEnumeration.NOT_COLLECTED);
+	} else {
+	    cTime.setValue(Long.toString(ct/1000L));
+	}
 	item.setCTime(cTime);
 
 	EntityItemIntType mTime = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	mTime.setValue(Long.toString(f.lastModified()/1000L));
 	mTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	long lm = f.lastModified();
+	if (lm == IFile.UNKNOWN_TIME) {
+	    mTime.setStatus(StatusEnumeration.NOT_COLLECTED);
+	} else {
+	    mTime.setValue(Long.toString(lm/1000L));
+	}
 	item.setMTime(mTime);
 
 	EntityItemIntType sizeType = JOVALSystem.factories.sc.core.createEntityItemIntType();

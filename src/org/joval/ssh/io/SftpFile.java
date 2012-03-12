@@ -15,6 +15,7 @@ import org.vngx.jsch.ChannelSftp;
 import org.vngx.jsch.SftpATTRS;
 import org.vngx.jsch.exception.SftpException;
 
+import org.joval.intf.io.IFile;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.ssh.ISftpError;
 import org.joval.intf.unix.io.IUnixFileInfo;
@@ -103,7 +104,7 @@ class SftpFile extends CacheFile {
 
 	public long getCtime() throws IOException {
 	    if (exists()) {
-		return FileInfo.UNKNOWN_TIME;
+		return IFile.UNKNOWN_TIME;
 	    } else {
 		throw new FileNotFoundException(getPath());
 	    }

@@ -166,11 +166,29 @@ public class FileAdapter extends BaseFileAdapter {
 	mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	if (wmi == null) {
 	    ownerType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+
+	    long at = file.accessTime();
+	    if (at == IFile.UNKNOWN_TIME) {
+		aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	    } else {
+		aTimeType.setValue(Timestamp.toWindowsTimestamp(at));
+	    }
 	    fItem.setATime(aTimeType);
-	    cTimeType.setValue(Timestamp.toWindowsTimestamp(file.createTime()));
+
+	    long ct = file.createTime();
+	    if (ct == IFile.UNKNOWN_TIME) {
+		cTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	    } else {
+		cTimeType.setValue(Timestamp.toWindowsTimestamp(ct));
+	    }
 	    fItem.setCTime(cTimeType);
-	    mTimeType.setValue(Timestamp.toWindowsTimestamp(file.lastModified()));
+
+	    long lm = file.lastModified();
+	    if (lm == IFile.UNKNOWN_TIME) {
+		mTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	    } else {
+		mTimeType.setValue(Timestamp.toWindowsTimestamp(lm));
+	    }
 	    fItem.setMTime(mTimeType);
 	} else {
 	    try {

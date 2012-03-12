@@ -22,6 +22,8 @@ public interface IFile extends ICacheable {
     int READONLY	= 4;
     int READWRITE	= 6;
 
+    long UNKNOWN_TIME = -1L;
+
     /**
      * Get the time that the file was last accessed.
      */

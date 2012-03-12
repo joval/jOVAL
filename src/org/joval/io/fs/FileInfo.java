@@ -27,8 +27,6 @@ import org.joval.util.JOVALSystem;
 public class FileInfo implements IFileEx {
     public enum Type {FILE, DIRECTORY, LINK;}
 
-    public static final long UNKNOWN_TIME = -1L;
-
     public long ctime, mtime, atime, length;
     public Type type;
     public String canonicalPath;

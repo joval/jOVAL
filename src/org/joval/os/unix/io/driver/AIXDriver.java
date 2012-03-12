@@ -149,7 +149,7 @@ public class AIXDriver implements IUnixFilesystemDriver {
 	} catch (NumberFormatException e) {
 	}
 
-	long mtime = FileInfo.UNKNOWN_TIME;
+	long mtime = IFile.UNKNOWN_TIME;
 	String dateStr = tok.nextToken("/").trim();
 	try {
 	    if (dateStr.indexOf(":") == -1) {
@@ -173,7 +173,7 @@ public class AIXDriver implements IUnixFilesystemDriver {
 	    }
 	}
 
-	return new UnixFileInfo(FileInfo.UNKNOWN_TIME, mtime, FileInfo.UNKNOWN_TIME, type, length, linkPath,
+	return new UnixFileInfo(IFile.UNKNOWN_TIME, mtime, IFile.UNKNOWN_TIME, type, length, linkPath,
 				unixType, permissions, uid, gid, hasExtendedAcl, path);
     }
 }
