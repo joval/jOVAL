@@ -81,8 +81,7 @@ public class LinuxDriver implements IUnixFilesystemDriver {
     }
 
     public String getStatCommand() {
-//return "stat --format=%A,%u,%g,%s,%W,%X,%Y,%Z,%n";
-	return "ls -dn";
+	return "ls -dn --time-style=full-iso";
     }
 
     public UnixFileInfo nextFileInfo(Iterator<String> lines) {
@@ -143,11 +142,8 @@ public class LinuxDriver implements IUnixFilesystemDriver {
 	long mtime = IFile.UNKNOWN_TIME;
 	String dateStr = tok.nextToken("/").trim();
 	try {
-	    if (dateStr.indexOf(":") == -1) {
-		mtime = new SimpleDateFormat("MMM dd  yyyy").parse(dateStr).getTime();
-	    } else {
-		mtime = new SimpleDateFormat("MMM dd HH:mm").parse(dateStr).getTime();
-	    }
+	    String parsable = new StringBuffer(dateStr.substring(0, 23)).append(dateStr.substring(29)).toString();
+	    mtime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS Z").parse(parsable).getTime();
 	} catch (ParseException e) {
 	    e.printStackTrace();
 	}

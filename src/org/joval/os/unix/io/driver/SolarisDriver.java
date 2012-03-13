@@ -75,12 +75,11 @@ public class SolarisDriver implements IUnixFilesystemDriver {
     }
 
     public String getFindCommand() {
-	return "find %MOUNT%  -mount -exec " + getStatCommand() + " {} \\;";
+	return "find %MOUNT% -mount -exec " + getStatCommand() + " {} \\;";
     }
 
     public String getStatCommand() {
-//return "ls -ldnE";
-	return "ls -dn";
+	return "ls -dnE";
     }
 
     public UnixFileInfo nextFileInfo(Iterator<String> lines) {
@@ -141,11 +140,8 @@ public class SolarisDriver implements IUnixFilesystemDriver {
 	long mtime = IFile.UNKNOWN_TIME;
 	String dateStr = tok.nextToken("/").trim();
 	try {
-	    if (dateStr.indexOf(":") == -1) {
-		mtime = new SimpleDateFormat("MMM dd  yyyy").parse(dateStr).getTime();
-	    } else {
-		mtime = new SimpleDateFormat("MMM dd HH:mm").parse(dateStr).getTime();
-	    }
+	    String parsable = new StringBuffer(dateStr.substring(0, 23)).append(dateStr.substring(29)).toString();
+	    mtime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS Z").parse(parsable).getTime();
 	} catch (ParseException e) {
 	    e.printStackTrace();
 	}

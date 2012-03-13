@@ -87,8 +87,7 @@ public class MacOSXDriver implements IUnixFilesystemDriver {
     }
 
     public String getStatCommand() {
-//return "stat -f %p,%u,%g,%z,%B,%a,%m,%N";
-	return "ls -ldn";
+	return "ls -ldnT";
     }
 
     public UnixFileInfo nextFileInfo(Iterator<String> lines) {
@@ -149,11 +148,7 @@ public class MacOSXDriver implements IUnixFilesystemDriver {
 	long mtime = IFile.UNKNOWN_TIME;
 	String dateStr = tok.nextToken("/").trim();
 	try {
-	    if (dateStr.indexOf(":") == -1) {
-		mtime = new SimpleDateFormat("MMM dd yyyy").parse(dateStr).getTime();
-	    } else {
-		mtime = new SimpleDateFormat("MMM dd HH:mm").parse(dateStr).getTime();
-	    }
+	    mtime = new SimpleDateFormat("MMM dd HH:mm:ss yyyy").parse(dateStr).getTime();
 	} catch (ParseException e) {
 	    e.printStackTrace();
 	}

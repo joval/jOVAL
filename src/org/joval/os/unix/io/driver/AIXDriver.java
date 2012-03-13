@@ -90,7 +90,6 @@ public class AIXDriver implements IUnixFilesystemDriver {
     }
 
     public String getStatCommand() {
-//?? istat ??
 	return "ls -dn";
     }
 
