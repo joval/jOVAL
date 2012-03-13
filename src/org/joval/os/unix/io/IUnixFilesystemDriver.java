@@ -4,7 +4,8 @@
 package org.joval.os.unix.io;
 
 import java.util.Iterator;
-import java.util.List;
+import java.util.Collection;
+import java.util.regex.Pattern;
 
 /**
  * An interface describing the platform-specific requirements for a UnixFilesystem driver.
@@ -14,9 +15,12 @@ import java.util.List;
  */
 public interface IUnixFilesystemDriver {
     /**
-     * Get a list of mount points.  The result will be filtered by the configured list of filesystem types.
+     * Get a list of mount points.
+     *
+     * @arg typeFilter A regex pattern indicating the /types/ of filesystems to /exclude/ from the result.  Use null for
+     *                 an unfiltered list of mount points.
      */
-    public List<String> listMounts(long timeout) throws Exception;
+    public Collection<String> getMounts(Pattern typeFilter) throws Exception;
 
     /**
      * Returns a string containing the correct find command for the Unix flavor.  The command contains the String "%MOUNT%"

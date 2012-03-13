@@ -4,6 +4,7 @@
 package org.joval.plugin.adapter.unix;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -442,27 +443,31 @@ public class ProcessAdapter implements IAdapter {
 			}
 		    }
 
-		    IFile f = session.getFilesystem().getFile("/proc/" + pid + "/loginuid");
-		    if (f.exists() && f.isFile()) {
-			BufferedReader reader = null;
-			try {
-			    reader = new BufferedReader(new InputStreamReader(f.getInputStream()));
-			    String loginuid = reader.readLine();
-			    if (loginuid != null) {
-				process.loginuid.setValue(loginuid);
-				process.loginuid.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			    }
-			} finally {
-			    if (reader != null) {
-				try {
-				    reader.close();
-				} catch (IOException e) {
+		    String luidPath = "/proc/" + pid + "/loginuid";
+		    try {
+			IFile f = session.getFilesystem().getFile(luidPath);
+			if (f.exists() && f.isFile()) {
+			    BufferedReader reader = null;
+			    try {
+				reader = new BufferedReader(new InputStreamReader(f.getInputStream()));
+				String loginuid = reader.readLine();
+				if (loginuid != null) {
+				    process.loginuid.setValue(loginuid);
+				    process.loginuid.setDatatype(SimpleDatatypeEnumeration.INT.value());
+				}
+			    } finally {
+				if (reader != null) {
+				    try {
+					reader.close();
+				    } catch (IOException e) {
+				    }
 				}
 			    }
 			}
-		    } else {
+		    } catch (FileNotFoundException e) {
 			String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_IO_NOT_FILE);
-			session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_IO, f.getPath(), reason));
+			session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_IO, luidPath, reason));
+			process.loginuid.setStatus(StatusEnumeration.NOT_COLLECTED);
 		    }
 		} else {
 		    process.loginuid.setStatus(StatusEnumeration.NOT_COLLECTED);

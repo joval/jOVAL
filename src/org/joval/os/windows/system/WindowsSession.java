@@ -16,6 +16,7 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.identity.IDirectory;
+import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
@@ -40,7 +41,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     private WmiProvider wmi;
     private boolean is64bit = false;
     private Registry reg32, reg;
-    private IFilesystem fs32;
+    private IWindowsFilesystem fs32;
     private WindowsSystemInfo info = null;
     private Directory directory = null;
 
@@ -73,12 +74,12 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	}
     }
 
-    public IFilesystem getFilesystem(View view) {
+    public IWindowsFilesystem getFilesystem(View view) {
 	switch(view) {
 	  case _32BIT:
 	    return fs32;
 	}
-	return fs;
+	return (IWindowsFilesystem)fs;
     }
 
     public IWmiProvider getWmiProvider() {
@@ -123,7 +124,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	} else {
 	    logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
 	    reg32 = reg;
-	    fs32 = fs;
+	    fs32 = (IWindowsFilesystem)fs;
 	}
 	cwd = new File(env.expand("%SystemRoot%"));
 	wmi = new WmiProvider(this);

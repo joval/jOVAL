@@ -77,7 +77,8 @@
       <command_line operation="pattern match">^audi.d$</command_line>
     </process58_state>
     <process58_state id="oval:org.mitre.oval.test:ste:390" version="1" comment="process58_items whose command contains the word 'init'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <command_line operation="pattern match">init</command_line>
+      <command_line operation="pattern match"></command_line>
+      <pid datatype="int">1</pid>
     </process58_state>
     <process58_state id="oval:org.mitre.oval.test:ste:30" version="1" comment="process58_items with pid less than 10." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <pid datatype="int" operation="less than">10</pid>

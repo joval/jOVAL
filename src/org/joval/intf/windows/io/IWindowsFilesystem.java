@@ -3,7 +3,9 @@
 
 package org.joval.intf.windows.io;
 
-public interface IWindowsFilesystem {
+import org.joval.intf.io.IFilesystem;
+
+public interface IWindowsFilesystem extends IFilesystem {
     String DELIM_STR = "\\";
     char DELIM_CH = '\\';
 

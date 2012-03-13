@@ -5,13 +5,15 @@ package org.joval.intf.unix.io;
 
 import java.io.IOException;
 
+import org.joval.intf.io.IFilesystem;
+
 /**
  * Defines extended attributes of a filesystem on Unix.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IUnixFilesystem {
+public interface IUnixFilesystem extends IFilesystem {
     String DELIM_STR = "/";
     char DELIM_CH = '/';
 

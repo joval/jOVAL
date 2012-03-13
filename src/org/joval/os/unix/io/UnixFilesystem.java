@@ -12,17 +12,16 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -143,8 +142,14 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
 
 	try {
+	    Collection<String> mounts = null;
+	    String fsTypeFilter = props.getProperty(PROP_PRELOAD_FSTYPE_FILTER);
+	    if (fsTypeFilter == null) {
+		mounts = driver.getMounts(null);
+	    } else {
+		mounts = driver.getMounts(Pattern.compile(fsTypeFilter));
+	    }
 	    String command = driver.getFindCommand();
-	    List<String> mounts = driver.listMounts(S);
 
 	    if (VAL_FILE_METHOD.equals(props.getProperty(PROP_PRELOAD_METHOD))) {
 		//
@@ -295,7 +300,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
      * After the date is checked, the properties are used to validate the length of the file and the list of filesystem
      * mounts to be indexed.
      */
-    private boolean isValidCache(IFile f, IProperty cacheProps, String command, List<String> mounts) throws IOException {
+    private boolean isValidCache(IFile f, IProperty cacheProps, String command, Collection<String> mounts) throws IOException {
 	try {
 	    test(f.exists() && f.isFile(), "isFile");
 
@@ -359,7 +364,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
     /**
      * Return a valid cache file on the remote machine, if available, or create a new one and return it.
      */
-    private IFile getRemoteCache(String command, List<String> mounts) throws Exception {
+    private IFile getRemoteCache(String command, Collection<String> mounts) throws Exception {
 	String tempPath = env.expand(CACHE_DIR + DELIM_STR + CACHE_TEMP);
 	String destPath = env.expand(CACHE_DIR + DELIM_STR + CACHE_FILE);
 
@@ -378,13 +383,15 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	}
 
 	logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_TEMP, tempPath);
-	for (int i=0; i < mounts.size(); i++) {
-	    StringBuffer sb = new StringBuffer(command.replace("%MOUNT%", mounts.get(i)));
+	boolean first = true;
+	for (String mount : mounts) {
+	    StringBuffer sb = new StringBuffer(command.replace("%MOUNT%", mount));
 	    sb.append(" | gzip ");
-	    if (i > 0) {
-		sb.append(">> "); // append
-	    } else {
+	    if (first) {
 		sb.append("> ");  // over-write
+		first = false;
+	    } else {
+		sb.append(">> "); // append
 	    }
 	    sb.append(env.expand(tempPath)).toString();
 
@@ -403,8 +410,8 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    // Log a status update every 15 seconds while we wait, but wait for no more than an hour.
 	    //
 	    boolean done = false;
-	    for (int j=0; !done && j < 240; j++) {
-		for (int k=0; !done && k < 15; k++) {
+	    for (int i=0; !done && i < 240; i++) {
+		for (int j=0; !done && j < 15; j++) {
 		    if (p.isRunning()) {
 			Thread.sleep(1000);
 		    } else {
@@ -433,7 +440,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	if (!val) throw new AssertionError(msg);
     }
 
-    private String alphabetize(List<String> sc) {
+    private String alphabetize(Collection<String> sc) {
 	String[] sa = sc.toArray(new String[sc.size()]);
 	Arrays.sort(sa);
 	StringBuffer sb = new StringBuffer();

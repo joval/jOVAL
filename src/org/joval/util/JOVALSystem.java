@@ -465,7 +465,13 @@ public class JOVALSystem {
 	    visited.add(clazz);
 	    String section = clazz.getName();
 	    for (String key : config.getSection(section)) {
-		prop.setProperty(key, config.getProperty(section, key));
+		//
+		// Since configuration happens from the bottom-up, make sure not to override any
+		// properties that have already been set.
+		//
+		if (prop.getProperty(key) == null) {
+		    prop.setProperty(key, config.getProperty(section, key));
+		}
 	    }
 	} catch (NoSuchElementException e) {
 	}

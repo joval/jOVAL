@@ -29,6 +29,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IWindowsCredential;
+import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
@@ -60,7 +61,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private IWindowsCredential cred;
     private WmiConnection conn;
     private Registry reg, reg32;
-    private IFilesystem fs32;
+    private IWindowsFilesystem fs32;
     private Vector<IFile> tempFiles;
     private boolean is64bit = false;
     private WindowsSystemInfo info = null;
@@ -98,12 +99,12 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	}
     }
 
-    public IFilesystem getFilesystem(View view) {
+    public IWindowsFilesystem getFilesystem(View view) {
 	switch(view) {
 	  case _32BIT:
 	    return fs32;
 	}
-	return fs;
+	return (IWindowsFilesystem)fs;
     }
 
     public IWmiProvider getWmiProvider() {
@@ -146,7 +147,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 
     @Override
     public IProcess createProcess(String command) throws Exception {
-	StringBuffer sb = new StringBuffer(tempDir).append(fs.getDelimiter()).append("rexec_");
+	StringBuffer sb = new StringBuffer(tempDir).append(IWindowsFilesystem.DELIM_STR).append("rexec_");
 	sb.append(Integer.toHexString(counter++));
 
 	IFile out = fs.getFile(sb.toString() + ".out", IFile.READVOLATILE);
@@ -184,7 +185,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		    fs32 = new SmbFilesystem(this, cred, env, new WOW3264FilesystemRedirector(env));
 		} else {
 		    reg32 = reg;
-		    fs32 = fs;
+		    fs32 = (IWindowsFilesystem)fs;
 		}
 		try {
 		    tempDir = getTempDir();

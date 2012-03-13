@@ -5,10 +5,11 @@ package org.joval.os.unix.io.driver;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.regex.Pattern;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -16,8 +17,8 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IReader;
 import org.joval.intf.unix.io.IUnixFileInfo;
+import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.util.IProperty;
 import org.joval.io.fs.FileInfo;
 import org.joval.io.PerishableReader;
 import org.joval.os.unix.io.IUnixFilesystemDriver;
@@ -35,27 +36,19 @@ import org.joval.util.StringTools;
  */
 public class AIXDriver implements IUnixFilesystemDriver {
     private IUnixSession us;
-    private IProperty props;
     private LocLogger logger;
 
     public AIXDriver(IUnixSession us) {
 	this.us = us;
-	props = us.getProperties();
 	logger = us.getLogger();
     }
 
     // Implement IUnixFilesystemDriver
 
-    public List<String> listMounts(long timeout) throws Exception {
-	List<String> fsTypeFilter = new Vector<String>();
-	String filterStr = props.getProperty(IFilesystem.PROP_PRELOAD_FSTYPE_FILTER);
-	if (filterStr != null) {
-	    fsTypeFilter = StringTools.toList(StringTools.tokenize(filterStr, ":", true));
-	}
-
-	List<String> mounts = new Vector<String>();
+    public Collection<String> getMounts(Pattern typeFilter) throws Exception {
+	Collection<String> mounts = new Vector<String>();
 	int lineNum = 0;
-	for (String line : SafeCLI.multiLine("mount", us, timeout)) {
+	for (String line : SafeCLI.multiLine("mount", us, IUnixSession.Timeout.S)) {
 	    if (lineNum++ > 1) { // skip the first two lines
 		int mpToken = 1;
 		switch(line.charAt(0)) {
@@ -74,9 +67,9 @@ public class AIXDriver implements IUnixFilesystemDriver {
 		}
 		fsType = tok.nextToken();
 
-		if (fsTypeFilter.contains(fsType)) {
+		if (typeFilter != null && typeFilter.matcher(fsType).find()) {
 		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, mountPoint, fsType);
-		} else if (mountPoint.startsWith(us.getFilesystem().getDelimiter())) {
+		} else if (mountPoint.startsWith(IUnixFilesystem.DELIM_STR)) {
 		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, mountPoint, fsType);
 		    mounts.add(mountPoint);
 		}
