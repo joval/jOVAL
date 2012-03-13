@@ -103,6 +103,13 @@ public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem
 	throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
     }
 
+    /**
+     * Not implemented.
+     */
+    public boolean isLocalPath(String path) {
+	throw new UnsupportedOperationException("isLocalPath");
+    }
+
     public String getDelimiter() {
 	return DELIM_STR;
     }

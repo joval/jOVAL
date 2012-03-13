@@ -261,13 +261,13 @@ public class JOVALSystem {
     public static void configureSession(IBaseSession session) {
 	List<Class> visited = new Vector<Class>();
 	for (Class clazz : session.getClass().getInterfaces()) {
-	    configureInterface(clazz, session.getProperties(), visited);
+	    configureInterface(clazz, session.getProperties(), visited, session.getClass().getName());
 	}
 	Class clazz = session.getClass().getSuperclass();
 	while(clazz != null) {
 	    for (Class intf : clazz.getInterfaces()) {
 		if (!visited.contains(intf)) {
-		    configureInterface(intf, session.getProperties(), visited);
+		    configureInterface(intf, session.getProperties(), visited, session.getClass().getName());
 		}
 	    }
 	    clazz = clazz.getSuperclass();
@@ -448,18 +448,9 @@ public class JOVALSystem {
     /**
      * Recursively configure the class.
      */
-    private static void configureInterface(Class clazz, IProperty prop, List<Class> visited) {
+    private static void configureInterface(Class clazz, IProperty prop, List<Class> visited, String sessionClassname) {
 	//
-	// First, configure all super-interfaces
-	//
-	for (Class intf : clazz.getInterfaces()) {
-	    if (!visited.contains(intf)) {
-		configureInterface(intf, prop, visited);
-	    }
-	}
-
-	//
-	// Next, configure all properties from this interface
+	// First, configure all properties from this interface
 	//
 	try {
 	    visited.add(clazz);
@@ -470,10 +461,22 @@ public class JOVALSystem {
 		// properties that have already been set.
 		//
 		if (prop.getProperty(key) == null) {
+		    String value = config.getProperty(section, key);
+		    sysLogger.debug(JOVALMsg.STATUS_CONFIG_SESSION, sessionClassname, key, value, clazz.getName());
 		    prop.setProperty(key, config.getProperty(section, key));
 		}
 	    }
 	} catch (NoSuchElementException e) {
 	}
+
+	//
+	// Then, configure all super-interfaces
+	//
+	for (Class intf : clazz.getInterfaces()) {
+	    if (!visited.contains(intf)) {
+		configureInterface(intf, prop, visited, sessionClassname);
+	    }
+	}
+
     }
 }

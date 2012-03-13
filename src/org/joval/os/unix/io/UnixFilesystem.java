@@ -141,7 +141,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
 	try {
 	    Collection<String> mounts = null;
-	    String fsTypeFilter = props.getProperty(PROP_PRELOAD_FSTYPE_FILTER);
+	    String fsTypeFilter = props.getProperty(PROP_MOUNT_FSTYPE_FILTER);
 	    if (fsTypeFilter == null) {
 		mounts = driver.getMounts(null);
 	    } else {
@@ -252,6 +252,20 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	} catch (Exception e) {
 	    logger.warn(JOVALMsg.ERROR_PRELOAD);
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    return false;
+	}
+    }
+
+    /**
+     * This is really just an ersatz local test -- it merely checks whether the path is in the cache -- but it's
+     * close enough for the purpose of avoiding performance-intensive probing of remote filesystems.
+     */
+    public boolean isLocalPath(String path) {
+	loadCache();
+	try {
+	    peek(path);
+	    return true;
+	} catch (NoSuchElementException e) {
 	    return false;
 	}
     }

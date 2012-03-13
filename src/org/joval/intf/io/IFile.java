@@ -25,6 +25,12 @@ public interface IFile extends ICacheable {
     long UNKNOWN_TIME = -1L;
 
     /**
+     * Get the name of the filesystem on which this file resides.  On Unix, this is a mount point.  On Windows this is
+     * a drive or share.
+     */
+    public String getFSName() throws IOException;
+
+    /**
      * Get the time that the file was last accessed.
      */
     public long accessTime() throws IOException;

@@ -28,7 +28,7 @@ public interface IFilesystem extends ISearchable {
      * Property specifying a list of filesystem types that should not be preloaded by an IFilesystem implementation.
      * Delimiter is the ':' character.
      */
-    String PROP_PRELOAD_FSTYPE_FILTER = "fs.preload.filter";
+    String PROP_MOUNT_FSTYPE_FILTER = "fs.localMount.filter";
 
     /**
      * Property governing the map cache pre-load behavior for local filesystems (true/false).
@@ -43,6 +43,11 @@ public interface IFilesystem extends ISearchable {
      * Property governing the map cacle pre-load behavior for remotely-accessed filesystems (true/false).
      */
     String PROP_PRELOAD_REMOTE = "fs.preload.remote";
+
+    /**
+     * Return whether or not the path points to a file on the local machine.
+     */
+    boolean isLocalPath(String path);
 
     /**
      * Get the path delimiter character used by this filesystem.

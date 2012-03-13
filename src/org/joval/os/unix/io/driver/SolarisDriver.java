@@ -61,9 +61,9 @@ public class SolarisDriver implements IUnixFilesystemDriver {
 		String mountPoint = tok.nextToken();
 		String fsType = tok.nextToken();
 		if (typeFilter != null && typeFilter.matcher(fsType).find()) {
-		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, mountPoint, fsType);
+		    logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mountPoint, fsType);
 		} else if (mountPoint.startsWith(IUnixFilesystem.DELIM_STR)) {
-		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, mountPoint, fsType);
+		    logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, mountPoint, fsType);
 		    mounts.add(mountPoint);
 		}
 	    }

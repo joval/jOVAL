@@ -108,6 +108,14 @@ public abstract class CacheFile implements IFile, Cloneable {
 
     // Implement IFile
 
+    public final String getFSName() throws IOException {
+	try {
+	    return fs.peek(path).getTree().getName();
+	} catch (NoSuchElementException e) {
+	    throw new FileNotFoundException(getPath());
+	}
+    }
+
     public final long accessTime() throws IOException {
 	if (exists()) {
 	    return info.atime;

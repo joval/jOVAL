@@ -315,7 +315,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			// Recursive search File Behaviors always only apply exclusively to well-defined paths, never
 			// patterns.
 			//
-			list = getDirs(list, fb.getDepth(), fb.getRecurseDirection(), fb.getRecurse(), fs, null);
+			list = getDirs(list, fb.getDepth(), fb, fs, null);
 		    }
 		    break;
 
@@ -469,9 +469,10 @@ public abstract class BaseFileAdapter implements IAdapter {
     /**
      * Finds directories recursively based on FileBahaviors.
      */
-    private Collection<String> getDirs(Collection<String> list, int depth, String direction, String recurse,
+    private Collection<String> getDirs(Collection<String> list, int depth, ReflectedFileBehaviors behaviors,
 				       IFilesystem fs, Stack<String> ancestors) {
-	if ("none".equals(direction) || depth == 0) {
+
+	if ("none".equals(behaviors.getRecurseDirection()) || depth == 0) {
 	    return list;
 	} else {
 	    Collection<String> results = new HashSet<String>();
@@ -481,6 +482,8 @@ public abstract class BaseFileAdapter implements IAdapter {
 		}
 		session.getLogger().trace(JOVALMsg.STATUS_FS_RECURSE, path);
 		try {
+		    String recurse = behaviors.getRecurse();
+		    String recurseFs = behaviors.getRecurseFileSystem();
 		    IFile f = fs.getFile(path);
 		    if (f == null) {
 			// skip permission denied (or other access error)
@@ -497,21 +500,23 @@ public abstract class BaseFileAdapter implements IAdapter {
 		    } else if (f.isDirectory()) {
 			results.add(path);
 			ancestors.push(f.getCanonicalPath());
-			if ("up".equals(direction)) {
+			if ("up".equals(behaviors.getRecurseDirection())) {
 			    String parent = f.getParent();
-			    if (!parent.equals(f.getPath())) { // root case
+			    if (parent.equals(f.getPath())) {
+				// reached root
+			    } else if (checkRecurse(recurseFs, f, fs.getFile(parent))) {
 				Collection<String> c = new HashSet<String>();
 				c.add(parent);
-				results.addAll(getDirs(c, --depth, direction, recurse, fs, cloneStack(ancestors)));
+				results.addAll(getDirs(c, --depth, behaviors, fs, cloneStack(ancestors)));
 			    }
 			} else { // recurse down
 			    Collection<String> c = new HashSet<String>();
 			    for (IFile child : f.listFiles()) {
-				if (child.isDirectory()) {
+				if (checkRecurse(recurseFs, f, child)) {
 				    c.add(child.getPath());
 				}
 			    }
-			    results.addAll(getDirs(c, --depth, direction, recurse, fs, cloneStack(ancestors)));
+			    results.addAll(getDirs(c, --depth, behaviors, fs, cloneStack(ancestors)));
 			}
 		    }
 		} catch (UnsupportedOperationException e) {	
@@ -525,6 +530,32 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    }
 	    return results;
 	}
+    }
+
+    private boolean warnedRecurse = false;
+
+    private boolean checkRecurse(String recurseFs, IFile origin, IFile destination) throws IOException {
+	if (!destination.isDirectory()) {
+	    return false;
+	} else if ("defined".equals(recurseFs)) {
+	    if (!origin.getFSName().equals(destination.getFSName())) {
+		session.getLogger().info(JOVALMsg.STATUS_FS_SKIP, destination.getPath(), recurseFs);
+		return false;
+	    }
+	} else if ("local".equals(recurseFs)) {
+	    try {
+		if (!session.getFilesystem().isLocalPath(destination.getPath())) {
+		    session.getLogger().info(JOVALMsg.STATUS_FS_SKIP, destination.getPath(), recurseFs);
+		    return false;
+		}
+	    } catch (UnsupportedOperationException e) {
+		if (!warnedRecurse) {
+		    session.getLogger().error(JOVALMsg.ERROR_UNSUPPORTED_BEHAVIOR, recurseFs);
+		    warnedRecurse = true;
+		}
+	    }
+	}
+	return true;
     }
 
     private String getPath(String path, IFile f) {
@@ -711,9 +742,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 
 		Method getRecurseFileSystem = obj.getClass().getMethod("getRecurseFileSystem");
 		recurseFS = (String)getRecurseFileSystem.invoke(obj);
-		if (!"all".equals(recurseFS)) {
-		    session.getLogger().error(JOVALMsg.ERROR_UNSUPPORTED_BEHAVIOR, recurseFS);
-		}
 	    }
 	    if ("none".equals(recurseDirection)) {
 		maxDepth = BigInteger.ZERO;

@@ -72,9 +72,9 @@ public class MacOSXDriver implements IUnixFilesystemDriver {
 	    }
 	    if (fsType != null) {
 	        if (typeFilter != null && typeFilter.matcher(fsType).find()) {
-		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_SKIP, path, fsType);
+		    logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, path, fsType);
 	        } else if (path.startsWith(IUnixFilesystem.DELIM_STR)) {
-		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_MOUNT, path, fsType);
+		    logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, path, fsType);
 		    mounts.add(path);
 		}
 	    }
