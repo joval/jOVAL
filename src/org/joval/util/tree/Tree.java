@@ -139,24 +139,30 @@ public class Tree extends Node implements ITree {
 	    return this;
 	} else if (path.startsWith(rootPath())) {
 	    String subpath = path.substring(rootPath().length());
-	    Iterator<String> iter = StringTools.tokenize(subpath, forest.getDelimiter(), false);
+	    Iterator<String> iter = StringTools.tokenize(subpath, forest.getDelimiter());
 	    if (iter.hasNext()) {
-		Node next = this;
-		while (iter.hasNext()) {
-		    String token = iter.next();
-		    if (token.length() > 0) {
-			try {
-			    next = (Node)next.getChild(token);
-			} catch (UnsupportedOperationException e) {
-			    throw new NoSuchElementException(path);
+		try {
+		    Node next = this;
+		    while (iter.hasNext()) {
+			String token = iter.next();
+			if (token.length() > 0) {
+			    try {
+				next = (Node)next.getChild(token);
+			    } catch (UnsupportedOperationException e) {
+				throw new NoSuchElementException(path);
+			    }
 			}
 		    }
+		    return next;
+		} catch (NoSuchElementException e) {
+		    // get a chance for non-local lookup
 		}
-		return next;
 	    } else {
+		// should be impossible to reach this point.
 		throw new NoSuchElementException(subpath);
 	    }
-	} else if (local) {
+	}
+	if (local) {
 	    throw new NoSuchElementException(path);
 	} else {
 	    return forest.lookup(path);

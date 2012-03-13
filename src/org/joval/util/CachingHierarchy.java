@@ -74,7 +74,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
     /**
      * Return the number of items stored in the cache.
      */
-    public int cacheSize() {
+    public final int cacheSize() {
 	return cache.getRoot().size();
     }
 
@@ -87,7 +87,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
      *
      * @throws NoSuchElementException if there is no data in the cache at the specified path
      */
-    public INode peek(String path) throws NoSuchElementException {
+    public final INode peek(String path) throws NoSuchElementException {
 	if (cache.getData(path) == null) {
 	    throw new NoSuchElementException(path);
 	}
@@ -138,7 +138,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
     /**
      * Deposit an item into the cache.
      */
-    protected Node addToCache(String path, T item) {
+    protected final Node addToCache(String path, T item) {
 	Node node = (Node)cache.putData(path, item);
         try {
             if (item.isLink()) {
@@ -160,6 +160,13 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
             logger.debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
         }
 	return node;
+    }
+
+    /**
+     * Add a structural tree to the hierarchy.
+     */
+    protected final ITree addRoot(String name) {
+	return cache.getRoot().makeTree(name);
     }
 
     // Subclasses must implement the following methods

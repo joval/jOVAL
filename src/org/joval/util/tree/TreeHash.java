@@ -6,9 +6,11 @@ package org.joval.util.tree;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Hashtable;
+import java.util.Vector;
 
 import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.INode;
+import org.joval.intf.util.tree.ITree;
 import org.joval.util.StringTools;
 
 /**
@@ -18,10 +20,12 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class TreeHash<T> {
+    private String delim;
     private Forest forest;
     private Hashtable<String, T> table;
 
     public TreeHash(String name, String delimiter) {
+	delim = delimiter;
 	forest = new Forest(name, delimiter);
 	table = new Hashtable<String, T>();
     }
@@ -74,15 +78,49 @@ public class TreeHash<T> {
 	}
 
 	//
-	// The path was not found, so get the name of the Tree (root node) for the path.
+	// The path was not found, so compare it to the names of existing trees in the forest. If any of the tree names
+	// match the beginning of the path, then the root name is name of the tree with the longest matching name.
 	//
-	List<String> tokens = StringTools.toList(StringTools.tokenize(path, forest.getDelimiter(), false));
-	String rootName = tokens.get(0);
-	if (rootName.length() == 0) {
-	    //
-	    // This is the special case of the root node whose name is the delimiter
-	    //
-	    rootName = forest.getDelimiter();
+	// If no existing trees match, then the root name is the token up to the first delimiter, or the delimiter itself.
+	//
+	int matchLen = 0;
+	String rootName = null;
+	for (ITree tree : forest) {
+	    if (tree.getName().equals(path)) {
+		return tree;
+	    } else {
+		String prefix = null;
+		if (tree.getName().endsWith(delim)) {
+		    prefix = tree.getName();
+		} else {
+		    prefix = tree.getName() + delim;
+		}
+		if (path.startsWith(prefix)) {
+		    if (prefix.length() > matchLen) {
+			rootName = tree.getName();
+			matchLen = prefix.length();
+		    }
+		}
+	    }
+	}
+	List<String> tokens = null;
+	if (rootName == null) {
+	    int ptr = path.indexOf(delim);
+	    if (ptr > 0) {
+		rootName = path.substring(0, ptr);
+		tokens = StringTools.toList(StringTools.tokenize(path.substring(ptr), delim));
+	    } else if (ptr == 0) {
+		//
+		// This is the special case of the root node whose name is the delimiter
+		//
+		rootName = delim;
+		tokens = StringTools.toList(StringTools.tokenize(path.substring(delim.length()), delim));
+	    } else {
+		rootName = path;
+		tokens = new Vector<String>();
+	    }
+	} else {
+	    tokens = StringTools.toList(StringTools.tokenize(path.substring(matchLen), delim));
 	}
 
 	Tree root = null;
@@ -96,8 +134,7 @@ public class TreeHash<T> {
 	    return root;
 	} else {
 	    INode node = root;
-	    for (int i=1; i < tokens.size(); i++) {
-		String token = tokens.get(i);
+	    for (String token : tokens) {
 		boolean makeNode = false;
 		try {
 		    node = node.getChild(token);

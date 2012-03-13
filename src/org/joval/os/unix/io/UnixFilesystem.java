@@ -134,13 +134,11 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	}
 
 	//
-	// Discard any contents from an existing cache.
+	// Start from a clean cache.
 	//
 	reset();
-
 	entries = 0;
 	maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
-
 	try {
 	    Collection<String> mounts = null;
 	    String fsTypeFilter = props.getProperty(PROP_PRELOAD_FSTYPE_FILTER);
@@ -149,6 +147,10 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    } else {
 		mounts = driver.getMounts(Pattern.compile(fsTypeFilter));
 	    }
+	    for (String mount : mounts) {
+		addRoot(mount);
+	    }
+
 	    String command = driver.getFindCommand();
 
 	    if (VAL_FILE_METHOD.equals(props.getProperty(PROP_PRELOAD_METHOD))) {

@@ -140,14 +140,14 @@ public class Node implements INode {
     }
 
     public String getPath() {
-	if (parent == null) {
-	    if (name.endsWith(tree.getDelimiter())) {
-		path = name.substring(0, name.lastIndexOf(tree.getDelimiter()));
-	    } else {
-		path = name;
-	    }
-	} else if (path == null) {
-	    if (linkParent == null) {
+	if (path == null) {
+	    if (parent == null) {
+		if (name.endsWith(tree.getDelimiter())) {
+		    path = name.substring(0, name.lastIndexOf(tree.getDelimiter()));
+		} else {
+		    path = name;
+		}
+	    } else if (linkParent == null) {
 		path = new StringBuffer(parent.getPath()).append(tree.getDelimiter()).append(name).toString();
 	    } else {
 		path = new StringBuffer(linkParent.getPath()).append(tree.getDelimiter()).append(name).toString();

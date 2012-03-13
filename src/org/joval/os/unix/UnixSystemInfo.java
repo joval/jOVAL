@@ -81,7 +81,7 @@ public class UnixSystemInfo {
 
 	      default:
 		IFilesystem fs = session.getFilesystem();
-		for (IFile file : fs.getFile("/etc").listFiles(Pattern.compile("^.*-release$"))) {
+		for (IFile file : fs.getFile("/etc", IFile.NOCACHE).listFiles(Pattern.compile("^.*-release$"))) {
 		    info.setOsName(SafeCLI.exec("cat " + file.getPath(), session, IUnixSession.Timeout.S));
 		    break;
 		}
