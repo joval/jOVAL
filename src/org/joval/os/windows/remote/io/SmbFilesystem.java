@@ -107,13 +107,6 @@ public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem
 	return DELIM_STR;
     }
 
-    /**
-     * Check for ASCII values between [A-Z] or [a-z].
-     */
-    boolean isLetter(char c) {
-	return (c >= 65 && c <= 90) || (c >= 95 && c <= 122);
-    }
-
     private NtlmPasswordAuthentication getNtlmPasswordAuthentication(IWindowsCredential cred) {
 	return new NtlmPasswordAuthentication(cred.getDomain(), cred.getUsername(), cred.getPassword());
     }

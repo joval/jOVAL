@@ -106,10 +106,6 @@ public abstract class CacheFile implements IFile, Cloneable {
 	throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_CACHE_NOT_LINK, getPath()));
     }
 
-    public final void setCachePath(String cachePath) {
-	info.canonicalPath = cachePath;
-    }
-
     // Implement IFile
 
     public final long accessTime() throws IOException {
@@ -268,14 +264,6 @@ public abstract class CacheFile implements IFile, Cloneable {
 	    return fs.getDelimiter();
 	} else {
 	    return path;
-	}
-    }
-
-    public final String getCanonicalPath() throws IOException {
-	if (exists()) {
-	    return info.canonicalPath;
-	} else {
-	    throw new FileNotFoundException(getPath());
 	}
     }
 

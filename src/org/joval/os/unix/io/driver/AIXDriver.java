@@ -173,7 +173,7 @@ public class AIXDriver implements IUnixFilesystemDriver {
 	    }
 	}
 
-	return new UnixFileInfo(IFile.UNKNOWN_TIME, mtime, IFile.UNKNOWN_TIME, type, length, linkPath,
-				unixType, permissions, uid, gid, hasExtendedAcl, path);
+	return new UnixFileInfo(IFile.UNKNOWN_TIME, mtime, IFile.UNKNOWN_TIME, type, length, path, linkPath,
+				unixType, permissions, uid, gid, hasExtendedAcl);
     }
 }

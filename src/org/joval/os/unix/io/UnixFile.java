@@ -62,9 +62,23 @@ public class UnixFile extends DefaultFile {
     @Override
     public FileAccessor getAccessor() {
 	if (accessor == null) {
-	    accessor = new UnixFileAccessor(super.getAccessor());
+	    try {
+		CacheFile cf = (CacheFile)ufs.accessResource(getPath(), ufs.getDefaultFlags());
+		accessor = new UnixFileAccessor(cf.getAccessor());
+	    } catch (IOException e) {
+		throw new RuntimeException(e);
+	    }
 	}
 	return accessor;
+    }
+
+    @Override
+    public String getCanonicalPath() throws IOException {
+	if (info == null) {
+	    return getAccessor().getCanonicalPath();
+	} else {
+	    return ((UnixFileInfo)info).canonicalPath;
+	}
     }
 
     // Private

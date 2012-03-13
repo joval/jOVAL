@@ -98,6 +98,11 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
     }
 
     @Override
+    protected int getDefaultFlags() {
+	return super.getDefaultFlags();
+    }
+
+    @Override
     protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
 	return new UnixFile(this, (CacheFile)super.accessResource(path, flags), path);
     }

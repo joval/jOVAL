@@ -3,9 +3,12 @@
 
 package org.joval.os.unix.io;
 
+import java.util.Stack;
+
 import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.io.fs.FileInfo;
+import org.joval.util.StringTools;
 
 /**
  * Implements extended attributes of a file on Unix.
@@ -19,26 +22,29 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
     protected int uid, gid;
     protected char unixType = FILE_TYPE;
     protected String path;
+    protected String canonicalPath;
 
+    /**
+     * Create an empty UnixFileInfo.
+     */
     protected UnixFileInfo(){}
 
     /**
      * Create a UnixFile with a live IFile accessor.
      */
-    public UnixFileInfo (long ctime, long mtime, long atime, Type type, long length, String linkTarget,
-			 char unixType, String permissions, int uid, int gid, boolean hasExtendedAcl, String path) {
+    public UnixFileInfo(long ctime, long mtime, long atime, Type type, long length, String path, String linkTarget,
+			char unixType, String permissions, int uid, int gid, boolean hasExtendedAcl) {
 
-	super(ctime, mtime, atime, type, length, linkTarget);
+	super(ctime, mtime, atime, type, length);
+
+	this.path = path;
+	this.canonicalPath = resolvePath(linkTarget);
+
 	this.unixType = unixType;
 	this.permissions = permissions;
 	this.uid = uid;
 	this.gid = gid;
 	this.hasExtendedAcl = hasExtendedAcl;
-	this.path = path;
-
-	if (linkTarget != null) {
-	    this.canonicalPath = FileInfo.resolvePath(path, IUnixFilesystem.DELIM_STR, linkTarget);
-	}
     }
 
     // Implement IUnixFileInfo
@@ -121,5 +127,53 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 
     public boolean hasExtendedAcl() {
 	return hasExtendedAcl;
+    }
+
+    // Private
+
+    /**
+     * Resolve an absolute path from a relative path from a base file path.
+     *
+     * @arg target the link target, which might be a path relative to the origin.
+     *
+     * @returns an absolute path to the target
+     */
+    private String resolvePath(String target) throws UnsupportedOperationException {
+	if (target == null) {
+	    return null;
+	} else if (target.startsWith(IUnixFilesystem.DELIM_STR)) {
+	    return target;
+	} else {
+	    Stack<String> stack = new Stack<String>();
+	    for (String s : StringTools.toList(StringTools.tokenize(path, IUnixFilesystem.DELIM_STR))) {
+		stack.push(s);
+	    }
+	    if (!stack.empty()) {
+		stack.pop();
+	    }
+	    for (String next : StringTools.toList(StringTools.tokenize(target, IUnixFilesystem.DELIM_STR))) {
+		if (next.equals(".")) {
+		    // stay in the same place
+		} else if (next.equals("..")) {
+		    if (stack.empty()) {
+			// links above root stay at root
+		    } else {
+			stack.pop();
+		    }
+		} else {
+		    stack.push(next);
+		}
+	    }
+	    StringBuffer sb = new StringBuffer();
+	    while(!stack.empty()) {
+		StringBuffer elt = new StringBuffer(IUnixFilesystem.DELIM_STR);
+		sb.insert(0, elt.append(stack.pop()).toString());
+	    }
+	    if (sb.length() == 0) {
+		return IUnixFilesystem.DELIM_STR;
+	    } else {
+		return sb.toString();
+	    }
+	}
     }
 }

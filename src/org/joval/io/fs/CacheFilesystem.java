@@ -83,7 +83,7 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 	}
     }
 
-    protected final int getDefaultFlags() {
+    protected int getDefaultFlags() {
 	return IFile.READONLY;
     }
 
@@ -111,6 +111,10 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 		    if (f.getPath().equals(path)) {
 			return f;
 		    } else {
+			//
+			// Resources are cached according to canonical path, so an alias wrapper is used to provide
+			// the expected pathname if it is different.
+			//
 			return new AliasFile((CacheFile)f, path);
 		    }
 		} else {
@@ -172,6 +176,13 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 
 	public FileAccessor getAccessor() {
 	    return base.getAccessor();
+	}
+
+	public String getCanonicalPath() {
+	    //
+	    // The path of the base CacheFile should be canonical, since it was returned from the cache.
+	    //
+	    return base.getPath();
 	}
     }
 }

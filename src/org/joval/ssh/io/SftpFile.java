@@ -46,6 +46,10 @@ class SftpFile extends CacheFile {
 	return accessor;
     }
 
+    public String getCanonicalPath() throws IOException {
+	return getAccessor().getCanonicalPath();
+    }
+
     // Private
 
     private class SftpAccessor extends FileAccessor {

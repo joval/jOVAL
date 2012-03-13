@@ -55,4 +55,8 @@ class SmbFileProxy extends CacheFile {
     public FileAccessor getAccessor() {
 	return accessor;
     }
+
+    public String getCanonicalPath() throws IOException {
+	return accessor.getCanonicalPath();
+    }
 }

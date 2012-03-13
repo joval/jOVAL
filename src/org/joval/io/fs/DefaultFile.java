@@ -65,6 +65,10 @@ public class DefaultFile extends CacheFile {
 	return accessor;
     }
 
+    public String getCanonicalPath() throws IOException {
+	return getAccessor().getCanonicalPath();
+    }
+
     // Internal
 
     protected class DefaultAccessor extends FileAccessor {
