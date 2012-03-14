@@ -97,10 +97,10 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		Collection<Pattern> patterns = new Vector<Pattern>();
 		if (tfcObj.getPattern().isSetVarRef()) {
 		    for (String value : rc.resolve(tfcObj.getPattern().getVarRef())) {
-			patterns.add(Pattern.compile(value, flags));
+			patterns.add(Pattern.compile(StringTools.regexPerl2Java(value), flags));
 		    }
 		} else {
-		    patterns.add(Pattern.compile((String)tfcObj.getPattern().getValue(), flags));
+		    patterns.add(Pattern.compile(StringTools.regexPerl2Java((String)tfcObj.getPattern().getValue()), flags));
 		}
 
 		//

@@ -537,6 +537,8 @@ public abstract class BaseFileAdapter implements IAdapter {
     private boolean checkRecurse(String recurseFs, IFile origin, IFile destination) throws IOException {
 	if (!destination.isDirectory()) {
 	    return false;
+	} else if (!origin.isLink() && !destination.isLink()) {
+	    return true;
 	} else if ("defined".equals(recurseFs)) {
 	    if (!origin.getFSName().equals(destination.getFSName())) {
 		session.getLogger().info(JOVALMsg.STATUS_FS_SKIP, destination.getPath(), recurseFs);

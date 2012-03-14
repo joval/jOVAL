@@ -152,6 +152,26 @@ public class StringTools {
 	return false;
     }
 
+    /**
+     * Perform a very basic substitution of POSIX character classes to Java character classes...
+     */
+    public static String regexPerl2Java(String perlExpression) {
+	String javaExpression = perlExpression;
+	javaExpression = javaExpression.replace("[:digit:]", "\\p{Digit}");
+	javaExpression = javaExpression.replace("[:alnum:]", "\\p{Alnum}");
+	javaExpression = javaExpression.replace("[:alpha:]", "\\p{Alpha}");
+	javaExpression = javaExpression.replace("[:blank:]", "\\p{Blank}");
+	javaExpression = javaExpression.replace("[:xdigit:]","\\p{XDigit}");
+	javaExpression = javaExpression.replace("[:punct:]", "\\p{Punct}");
+	javaExpression = javaExpression.replace("[:print:]", "\\p{Print}");
+	javaExpression = javaExpression.replace("[:space:]", "\\p{Space}");
+	javaExpression = javaExpression.replace("[:graph:]", "\\p{Graph}");
+	javaExpression = javaExpression.replace("[:upper:]", "\\p{Upper}");
+	javaExpression = javaExpression.replace("[:lower:]", "\\p{Lower}");
+	javaExpression = javaExpression.replace("[:cntrl:]", "\\p{Cntrl}");
+	return javaExpression;
+    }
+
     // Private
 
     private static final String ESCAPE = "\\";

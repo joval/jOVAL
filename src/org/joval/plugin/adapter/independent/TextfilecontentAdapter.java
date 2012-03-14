@@ -101,7 +101,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		OperationEnumeration op = tfcObj.getLine().getOperation();
 		switch (op) {
 		  case PATTERN_MATCH: {
-		    Pattern p = Pattern.compile((String)tfcObj.getLine().getValue());
+		    Pattern p = Pattern.compile(StringTools.regexPerl2Java((String)tfcObj.getLine().getValue()));
 		    for (JAXBElement<TextfilecontentItem>item : getItems(p, baseItem, s)) {
 			EntityItemStringType lineType = JOVALSystem.factories.sc.core.createEntityItemStringType();
 			lineType.setValue(tfcObj.getLine().getValue());
