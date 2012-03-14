@@ -21,7 +21,7 @@ import org.joval.util.JOVALSystem;
 public class FileInfo implements IFileEx {
     public enum Type {FILE, DIRECTORY, LINK;}
 
-    private long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, length=-1L;
+    protected long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, length=-1L;
     protected Type type = null;
 
     public FileInfo() {}

@@ -7,4 +7,5 @@ CLASSES=\
 	org.joval.xccdf.Profile						\
 	org.joval.xccdf.XccdfBundle					\
 	org.joval.xccdf.XccdfException					\
-	org.joval.xccdf.engine.XPERT
+	org.joval.xccdf.engine.XPERT					\
+	org.joval.xccdf.handler.OVALHandler

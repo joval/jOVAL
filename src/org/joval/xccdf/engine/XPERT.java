@@ -67,6 +67,7 @@ import org.joval.util.LogFormatter;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
+import org.joval.xccdf.handler.OVALHandler;
 
 /**
  * XCCDF Processing Engine and Reporting Tool (XPERT) main class.
@@ -75,7 +76,8 @@ import org.joval.xccdf.XccdfException;
  * @version %I% %G%
  */
 public class XPERT implements Runnable, IObserver {
-    public static final String OVAL_SYSTEM = "http://oval.mitre.org/XMLSchema/oval-definitions-5";
+    public static final String OVAL_SYSTEM	= "http://oval.mitre.org/XMLSchema/oval-definitions-5";
+    public static final String SCE_SYSTEM	= "http://open-scap.org/page/SCE";
 
     private static final File ws = new File("artifacts");
     private static Logger logger;
@@ -103,6 +105,23 @@ public class XPERT implements Runnable, IObserver {
 	    e.printStackTrace();
 	    System.exit(-1);
 	}
+    }
+
+    /**
+     * Get the OVAL generator_type for the XPERT engine.
+     */
+    public static final GeneratorType getGenerator() {
+	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
+	generator.setProductName(getMessage("product.name"));
+	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
+	generator.setSchemaVersion(IEngine.SCHEMA_VERSION.toString());
+	try {
+	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+	} catch (DatatypeConfigurationException e) {
+	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TIMESTAMP);
+	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return generator;
     }
 
     static void printHeader(IPluginContainer container) {
@@ -135,20 +154,6 @@ public class XPERT implements Runnable, IObserver {
      */
     static String getMessage(String key, Object... arguments) {
 	return MessageFormat.format(resources.getString(key), arguments);
-    }
-
-    static final GeneratorType getGenerator() {
-	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
-	generator.setProductName(getMessage("product.name"));
-	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
-	generator.setSchemaVersion(IEngine.SCHEMA_VERSION.toString());
-	try {
-	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-	} catch (DatatypeConfigurationException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TIMESTAMP);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return generator;
     }
 
     /**
@@ -267,69 +272,22 @@ public class XPERT implements Runnable, IObserver {
 	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
     }
 
-    // Implement IObserver
-
-    public void notify(IProducer sender, int msg, Object arg) {
-	switch(msg) {
-	  case IEngine.MESSAGE_OBJECT_PHASE_START:
-	    logger.info("Beginning scan");
-	    break;
-	  case IEngine.MESSAGE_OBJECT:
-	    logger.info("Scanning object " + (String)arg);
-	    break;
-	  case IEngine.MESSAGE_OBJECT_PHASE_END:
-	    logger.info("Scan complete");
-	    break;
-	  case IEngine.MESSAGE_DEFINITION_PHASE_START:
-	    logger.info("Evaluating definitions");
-	    break;
-	  case IEngine.MESSAGE_DEFINITION:
-	    logger.info("Evaluating " + (String)arg);
-	    break;
-	  case IEngine.MESSAGE_DEFINITION_PHASE_END:
-	    logger.info("Completed evaluating definitions");
-	    break;
-	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
-	    if (debug) {
-		File scFile = new File(ws, "sc-" + phase + ".xml");
-		logger.info("Saving OVAL system-characteristics: " + scFile.getPath());
-		((ISystemCharacteristics)arg).writeXML(scFile);
-	    }
-	    break;
-	}
-    }
-
     // Implement Runnable
 
     /**
      * Process the XCCDF document bundle.
      */
     public void run() {
-	if (isApplicable()) {
+	if (hasSelection() && isApplicable()) {
 	    phase = "evaluation";
-	    logger.info("The target system is applicable to the XCCDF bundle, continuing tests...");
+	    OVALHandler ovalHandler = new OVALHandler(xccdf, profile);
 
 	    //
 	    // Configure the OVAL engine...
 	    //
 	    engine.setDefinitions(xccdf.getOval());
-	    Collection<RuleType> rules = profile.getSelectedRules();
-	    if (rules.size() == 0) {
-		logger.severe("No reason to evaluate!");
-		List<ProfileType> profiles = xccdf.getBenchmark().getProfile();
-		if (profiles.size() > 0) {
-		    logger.info("Try selecting a profile:");
-		    for (ProfileType pt : profiles) {
-			logger.info("  " + pt.getProfileId());
-		    }
-		}
-		return;
-	    }
-	    logger.info("There are " + rules.size() + " rules to process for the selected profile");
-	    DefinitionFilter filter = createFilter(rules);
-	    engine.setDefinitionFilter(filter);
-	    Variables exports = createVariables(rules, profile.getValues());
-	    engine.setExternalVariables(exports);
+	    engine.setDefinitionFilter(ovalHandler.getDefinitionFilter());
+	    engine.setExternalVariables(ovalHandler.getVariables());
 
 	    //
 	    // Read previously collected system characteristics data, if available.
@@ -371,82 +329,95 @@ public class XPERT implements Runnable, IObserver {
 	    ObjectFactory factory = new ObjectFactory();
 	    TestResultType testResult = factory.createTestResultType();
 	    testResult.setTestSystem(getMessage("product.name"));
-	    testResult.getTarget().add(results.getSystemInfo().getPrimaryHostName());
-	    for (InterfaceType intf : results.getSystemInfo().getInterfaces().getInterface()) {
-		testResult.getTargetAddress().add(intf.getIpAddress());
-	    }
-	    for (VariableType var : exports.getOvalVariables().getVariables().getVariable()) {
-		ProfileSetValueType val = factory.createProfileSetValueType();
-		val.setIdref(var.getComment());
-		val.setValue(var.getValue().get(0).toString());
-		testResult.getSetValue().add(val);
+
+	    ovalHandler.integrateResults(results, testResult);
+
+	    Hashtable<String, RuleResultType> resultIndex = new Hashtable<String, RuleResultType>();
+	    for (RuleResultType rrt : testResult.getRuleResult()) {
+		resultIndex.put(rrt.getIdref(), rrt);
 	    }
 
-	    //
-	    // Iterate through the rules and record the results, save and finish
-	    //
 	    for (RuleType rule : listAllRules()) {
 		String ruleId = rule.getItemId();
-
-		RuleResultType ruleResult = factory.createRuleResultType();
-		ruleResult.setIdref(ruleId);
-
-		List<CheckType> checks = rule.getCheck();
-		if (checks == null) {
-		    logger.info("Skipping rule " + ruleId + ": no checks");
+		if (resultIndex.containsKey(ruleId)) {
+		    logger.info(ruleId + ": " + resultIndex.get(ruleId).getResult());
 		} else {
-		    for (CheckType check : rule.getCheck()) {
-			ruleResult.getCheck().add(check);
-			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    String definitionId = ref.getName();
-			    if (definitionId == null) {
-				logger.info(ruleId + ": OVAL definition UNDEFINED");
-			    } else {
-				ResultEnumType ret = ResultEnumType.NOTCHECKED;
-				try {
-				    switch (results.getDefinitionResult(ref.getName())) {
-				      case ERROR:
-					ret = ResultEnumType.ERROR;
-					break;
-    
-				      case FALSE:
-					ret = ResultEnumType.FAIL;
-					break;
-    
-				      case TRUE:
-					ret = ResultEnumType.PASS;
-					break;
-    
-				      case UNKNOWN:
-				      default:
-					ret = ResultEnumType.UNKNOWN;
-					break;
-				    }
-				} catch (NoSuchElementException e) {
-				}
-				if (profile.getSelectedRules().contains(rule)) {
-				    logger.info(ruleId + ": " + ret);
-				} else {
-				    logger.fine(ruleId + ": " + ret);
-				}
-				ruleResult.setResult(ret);
-			    }
+		    //
+		    // Add the unchecked result, just for fun.
+		    //
+		    RuleResultType rrt = factory.createRuleResultType();
+		    rrt.setResult(ResultEnumType.NOTCHECKED);
+		    if (rule.isSetCheck()) {
+			for (CheckType check : rule.getCheck()) {
+			    rrt.getCheck().add(check);
 			}
 		    }
+		    testResult.getRuleResult().add(rrt);
 		}
-		testResult.getRuleResult().add(ruleResult);
 	    }
+
 	    xccdf.getBenchmark().getTestResult().add(testResult);
 	    File reportFile = new File(ws, "xccdf-results.xml");
 	    logger.info("Saving report: " + reportFile.getPath());
 	    xccdf.writeBenchmarkXML(reportFile);
-	    logger.info("XCCDF processing complete.");
-	} else {
-	    logger.info("The target system is not applicable to the XCCDF bundle");
+	}
+	logger.info("XCCDF processing complete.");
+    }
+
+    // Implement IObserver
+
+    public void notify(IProducer sender, int msg, Object arg) {
+	switch(msg) {
+	  case IEngine.MESSAGE_OBJECT_PHASE_START:
+	    logger.info("Beginning scan");
+	    break;
+	  case IEngine.MESSAGE_OBJECT:
+	    logger.info("Scanning object " + (String)arg);
+	    break;
+	  case IEngine.MESSAGE_OBJECT_PHASE_END:
+	    logger.info("Scan complete");
+	    break;
+	  case IEngine.MESSAGE_DEFINITION_PHASE_START:
+	    logger.info("Evaluating definitions");
+	    break;
+	  case IEngine.MESSAGE_DEFINITION:
+	    logger.info("Evaluating " + (String)arg);
+	    break;
+	  case IEngine.MESSAGE_DEFINITION_PHASE_END:
+	    logger.info("Completed evaluating definitions");
+	    break;
+	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
+	    if (debug) {
+		File scFile = new File(ws, "sc-" + phase + ".xml");
+		logger.info("Saving OVAL system-characteristics: " + scFile.getPath());
+		((ISystemCharacteristics)arg).writeXML(scFile);
+	    }
+	    break;
 	}
     }
 
     // Private
+
+    /**
+     * Check whether or not the Profile has any selected rules.
+     */
+    private boolean hasSelection() {
+	Collection<RuleType> rules = profile.getSelectedRules();
+	if (rules.size() == 0) {
+	    logger.severe("No reason to evaluate!");
+	    List<ProfileType> profiles = xccdf.getBenchmark().getProfile();
+	    if (profiles.size() > 0) {
+		logger.info("Try selecting a profile:");
+		for (ProfileType pt : profiles) {
+		    logger.info("  " + pt.getProfileId());
+		}
+	    }
+	    return false;
+	} else {
+	    logger.info("There are " + rules.size() + " rules to process for the selected profile");
+	    return true;
+	}
+    }
 
     /**
      * Test whether the XCCDF bundle's applicability rules are satisfied.
@@ -475,8 +446,7 @@ public class XPERT implements Runnable, IObserver {
 	engine.setDefinitions(xccdf.getCpeOval());
 	engine.run();
 	for (DefinitionType def :
-	     engine.getResults().getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition()) {
-
+	    engine.getResults().getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition()) {
 	    if (filter.accept(def.getDefinitionId())) {
 		switch(def.getResult()) {
 		  case TRUE:
@@ -484,12 +454,14 @@ public class XPERT implements Runnable, IObserver {
 		    break;
 		  default:
 		    logger.warning("Bad result " + def.getResult() + " for definition " + def.getDefinitionId());
+		    logger.info("The target system is not applicable to the XCCDF bundle");
 		    return false;
 		}
 	    } else {
 		logger.info("Ignoring definition " + def.getDefinitionId());
 	    }
 	}
+	logger.info("The target system is applicable to the XCCDF bundle");
 	return true;
     }
 
