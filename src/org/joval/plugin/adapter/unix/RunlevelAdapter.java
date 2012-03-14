@@ -32,6 +32,8 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.ISearchable;
 import org.joval.oval.CollectException;
+import org.joval.oval.OvalException;
+import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -63,83 +65,41 @@ public class RunlevelAdapter implements IAdapter {
 	return objectClasses;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
 	if (!initialized) {
 	    init();
 	}
-	RunlevelObject rObj = (RunlevelObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	OperationEnumeration op = rObj.getRunlevel().getOperation();
-	switch(op) {
-	  case EQUALS: {
-	    Hashtable runlevel = runlevels.get((String)rObj.getRunlevel().getValue());
-	    if (runlevel != null) {
-		items.addAll(getItems(rc, ((String)rObj.getRunlevel().getValue())));
-	    }
-	    break;
-	  }
 
-	  case PATTERN_MATCH:
+	RunlevelObject rObj = (RunlevelObject)rc.getObject();
+	Collection<String> runlevelVals = new Vector<String>();
+	if (rObj.getRunlevel().isSetVarRef()) {
 	    try {
-		Pattern p = Pattern.compile((String)rObj.getRunlevel().getValue());
-		for (String rl : runlevels.keySet()) {
-		    if (p.matcher(rl).find()) {
-			items.addAll(getItems(rc, rl));
-		    }
-		}
-	    } catch (PatternSyntaxException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		runlevelVals.addAll(rc.resolve(rObj.getRunlevel().getVarRef()));
+	    } catch (ResolveException e) {
+		throw new OvalException(e);
 	    }
-	    break;
-
-	  case NOT_EQUAL: {
-	    for (String rl : runlevels.keySet()) {
-		if (!rl.equals((String)rObj.getRunlevel().getValue())) {
-		    items.addAll(getItems(rc, rl));
-		}
-	    }
-	    break;
-	  }
-
-	  default:
-	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	} else {
+	    runlevelVals.add((String)rObj.getRunlevel().getValue());
 	}
 
-	return items;
-    }
-
-    // Private
-
-    /**
-     * Get all the items matching the serviceName/operation, given the specified runlevel.
-     */
-    private Collection<JAXBElement<RunlevelItem>> getItems(IRequestContext rc, String rl) {
-	RunlevelObject rObj = (RunlevelObject)rc.getObject();
-	Collection<JAXBElement<RunlevelItem>> items = new Vector<JAXBElement<RunlevelItem>>();
-	Hashtable<String, StartStop> runlevel = runlevels.get(rl);
-	if (runlevel != null) {
-	    OperationEnumeration op = rObj.getServiceName().getOperation();
+	OperationEnumeration op = rObj.getRunlevel().getOperation();
+	for (String runlevel : runlevelVals) {
 	    switch(op) {
 	      case EQUALS: {
-		StartStop actions = runlevel.get(rObj.getServiceName().getValue());
-		if(actions != null) {
-		    items.add(makeItem(rl, (String)rObj.getServiceName().getValue(), actions));
+		Hashtable table = runlevels.get(runlevel);
+		if (table != null) {
+		    items.addAll(getItems(rc, runlevel));
 		}
 		break;
 	      }
 
-	      case PATTERN_MATCH: {
+	      case PATTERN_MATCH:
 		try {
-		    Pattern p = Pattern.compile((String)rObj.getServiceName().getValue());
-		    for (String serviceName : runlevel.keySet()) {
-			if(p.matcher(serviceName).find()) {
-			    StartStop actions = runlevel.get(serviceName);
-			    items.add(makeItem(rl, serviceName, actions));
+		    Pattern p = Pattern.compile(runlevel);
+		    for (String rl : runlevels.keySet()) {
+			if (p.matcher(rl).find()) {
+			    items.addAll(getItems(rc, rl));
 			}
 		    }
 		} catch (PatternSyntaxException e) {
@@ -150,16 +110,86 @@ public class RunlevelAdapter implements IAdapter {
 		    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 		break;
-	      }
 
 	      case NOT_EQUAL: {
-		for (String serviceName : runlevel.keySet()) {
-		    if (!serviceName.equals((String)rObj.getServiceName().getValue())) {
-			items.add(makeItem(rl, serviceName, runlevel.get(serviceName)));
+		for (String rl : runlevels.keySet()) {
+		    if (!rl.equals(runlevel)) {
+			items.addAll(getItems(rc, rl));
 		    }
 		}
 		break;
 	      }
+
+	      default:
+		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
+	}
+
+	return items;
+    }
+
+    // Private
+
+    /**
+     * Get all the items matching the serviceName/operation, given the specified runlevel.
+     */
+    private Collection<JAXBElement<RunlevelItem>> getItems(IRequestContext rc, String rl)
+		throws CollectException, OvalException {
+
+	Collection<JAXBElement<RunlevelItem>> items = new Vector<JAXBElement<RunlevelItem>>();
+
+	RunlevelObject rObj = (RunlevelObject)rc.getObject();
+	Collection<String> serviceNames = new Vector<String>();
+	if (rObj.getServiceName().isSetVarRef()) {
+	    try {
+		serviceNames.addAll(rc.resolve(rObj.getServiceName().getVarRef()));
+	    } catch (ResolveException e) {
+		throw new OvalException(e);
+	    }
+	} else {
+	    serviceNames.add((String)rObj.getServiceName().getValue());
+	}
+	Hashtable<String, StartStop> runlevel = runlevels.get(rl);
+	if (runlevel != null) {
+	    OperationEnumeration op = rObj.getServiceName().getOperation();
+	    for (String serviceName : serviceNames) {
+		switch(op) {
+		  case EQUALS:
+		    if(runlevel.containsKey(serviceName)) {
+			items.add(makeItem(rl, serviceName, runlevel.get(serviceName)));
+		    }
+		    break;
+
+		  case PATTERN_MATCH:
+		    try {
+			Pattern p = Pattern.compile(serviceName);
+			for (String sn : runlevel.keySet()) {
+			    if(p.matcher(sn).find()) {
+				items.add(makeItem(rl, sn, runlevel.get(sn)));
+			    }
+			}
+		    } catch (PatternSyntaxException e) {
+			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.ERROR);
+			msg.setValue(JOVALSystem.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+			rc.addMessage(msg);
+			session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    }
+		    break;
+
+		  case NOT_EQUAL:
+		    for (String sn : runlevel.keySet()) {
+			if (!sn.equals(serviceName)) {
+			    items.add(makeItem(rl, sn, runlevel.get(sn)));
+			}
+		    }
+		    break;
+
+		  default:
+		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		}
 	    }
 	}
 	return items;
@@ -202,6 +232,9 @@ public class RunlevelAdapter implements IAdapter {
 	return JOVALSystem.factories.sc.unix.createRunlevelItem(item);
     }
 
+    /**
+     * Collect all runlevel information from the machine.
+     */
     private void init() throws CollectException {
 	try {
 	    switch(session.getFlavor()) {
@@ -227,12 +260,14 @@ public class RunlevelAdapter implements IAdapter {
 	initialized = true;
     }
 
+    /**
+     * Collect runlevel information from the specified base directory containing the rc.X.d directories.
+     */
     private void initUnixRunlevels(String baseDir) throws IOException {
-	IFilesystem fs = session.getFilesystem();
-	for (String path : fs.search(Pattern.compile(baseDir + fs.getDelimiter() + "rc.\\.d$"), ISearchable.FOLLOW_LINKS)) {
-	    IFile dir = fs.getFile(path);
+	IFile base = session.getFilesystem().getFile(baseDir);
+	for (IFile dir : base.listFiles(Pattern.compile("rc[\\p{Alnum}]\\.d"))) {
 	    if (dir.isDirectory()) {
-		String rl = path.substring(path.lastIndexOf(fs.getDelimiter())+1).substring(2, 3);
+		String rl = dir.getName().substring(2, 3);
 		Hashtable<String, StartStop> runlevel = runlevels.get(rl);
 		if (runlevel == null) {
 		    runlevel = new Hashtable<String, StartStop>();
@@ -283,8 +318,12 @@ public class RunlevelAdapter implements IAdapter {
 	}
     }
 
+    /**
+     * On Linux, in addition to collecting information from the rc directories, we can also use the chkconfig command.
+     */
     private void initLinuxRunlevels() {
 	try {
+	    initUnixRunlevels("/etc/rc.d");
 	    for (String line : SafeCLI.multiLine("/sbin/chkconfig --list", session, IUnixSession.Timeout.M)) {
 		StringTokenizer tok = new StringTokenizer(line);
 		if (tok.countTokens() == 8) {
