@@ -149,8 +149,8 @@ public class PasswordAdapter implements IAdapter {
 		    item.setUsername(username);
 
 		    EntityItemStringType password = JOVALSystem.factories.sc.core.createEntityItemStringType();
-		    i++; // x
-		    password.setStatus(StatusEnumeration.NOT_COLLECTED);
+		    String passwordString = tokens.get(i++); // x
+		    password.setValue(passwordString);
 		    item.setPassword(password);
 
 		    EntityItemIntType userId = JOVALSystem.factories.sc.core.createEntityItemIntType();

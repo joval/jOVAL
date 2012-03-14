@@ -158,9 +158,12 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	    int sCount = m.groupCount();
 	    if (sCount > 0) {
 		for (int sNum=1; sNum <= sCount; sNum++) {
-		    EntityItemAnySimpleType sType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
-		    sType.setValue(m.group(sNum));
-		    item.getSubexpression().add(sType);
+		    String group = m.group(sNum);
+		    if (group != null) {
+			EntityItemAnySimpleType sType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+			sType.setValue(group);
+			item.getSubexpression().add(sType);
+		    }
 		}
 	    }
 
