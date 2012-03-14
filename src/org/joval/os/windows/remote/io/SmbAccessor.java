@@ -119,12 +119,7 @@ class SmbAccessor extends FileAccessor implements IWindowsFileInfo {
     }
 
     public FileInfo getInfo() throws IOException {
-	FileInfo.Type type = FileInfo.Type.FILE;
-	if (isDirectory()) {
-	    type = FileInfo.Type.DIRECTORY;
-	}
-	FileInfo fi = new FileInfo(this, type);
-	return new WindowsFileInfo(fi.ctime, fi.mtime, fi.atime, fi.type, fi.length, this);
+	return new SmbFileInfo(this, isDirectory() ? FileInfo.Type.DIRECTORY : FileInfo.Type.FILE);
     }
 
     public String[] list() throws IOException {

@@ -266,6 +266,7 @@ public class Main implements IObserver {
 	    break;
 	  case IEngine.MESSAGE_OBJECT:
 	    printStatus(getMessage("MESSAGE_OBJECT", (String)arg));
+	    logger.log(Level.INFO, getMessage("MESSAGE_OBJECT_LOG", (String)arg).trim());
 	    break;
 	  case IEngine.MESSAGE_OBJECT_PHASE_END:
 	    printStatus(getMessage("MESSAGE_OBJECTS_DONE"), true);

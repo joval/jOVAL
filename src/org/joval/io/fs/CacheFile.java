@@ -79,7 +79,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 
     public final boolean isLink() {
 	if (exists()) {
-	    return info.type == FileInfo.Type.LINK;
+	    return info.getType() == FileInfo.Type.LINK;
 	} else {
 	    return false;
 	}
@@ -120,7 +120,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 
     public final long accessTime() throws IOException {
 	if (exists()) {
-	    return info.atime;
+	    return info.getAtime();
 	} else {
 	    throw new FileNotFoundException(getPath());
 	}
@@ -128,7 +128,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 
     public final long createTime() throws IOException {
 	if (exists()) {
-	    return info.ctime;
+	    return info.getCtime();
 	} else {
 	    throw new FileNotFoundException(getPath());
 	}
@@ -156,7 +156,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 
     public final boolean isDirectory() throws IOException {
 	if (exists()) {
-	    switch(info.type) {
+	    switch(info.getType()) {
 	      case DIRECTORY:
 		return true;
 
@@ -173,7 +173,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 
     public final boolean isFile() throws IOException {
 	if (exists()) {
-	    switch(info.type) {
+	    switch(info.getType()) {
 	      case DIRECTORY:
 		return false;
 
@@ -190,7 +190,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 
     public final long lastModified() throws IOException {
 	if (exists()) {
-	    return info.mtime;
+	    return info.getMtime();
 	} else {
 	    throw new FileNotFoundException(getPath());
 	}
@@ -198,7 +198,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 
     public final long length() throws IOException {
 	if (exists()) {
-	    return info.length;
+	    return info.getLength();
 	} else {
 	    throw new FileNotFoundException(getPath());
 	}

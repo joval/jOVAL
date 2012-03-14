@@ -27,6 +27,7 @@ CLASSES=\
 	org.joval.os.windows.identity.WindowsCredential			\
 	org.joval.os.windows.remote.identity.SmbACE			\
 	org.joval.os.windows.remote.io.SmbAccessor			\
+	org.joval.os.windows.remote.io.SmbFileInfo			\
 	org.joval.os.windows.remote.io.SmbFileProxy			\
 	org.joval.os.windows.remote.io.SmbFilesystem			\
 	org.joval.os.windows.remote.io.SmbRandomAccessProxy		\

@@ -5,6 +5,7 @@ package org.joval.io.fs;
 
 import java.io.IOException;
 
+import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFileEx;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -20,8 +21,8 @@ import org.joval.util.JOVALSystem;
 public class FileInfo implements IFileEx {
     public enum Type {FILE, DIRECTORY, LINK;}
 
-    public long ctime, mtime, atime, length;
-    public Type type;
+    private long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, length=-1L;
+    protected Type type = null;
 
     public FileInfo() {}
 
@@ -39,5 +40,25 @@ public class FileInfo implements IFileEx {
 	this.atime = atime;
 	this.type = type;
 	this.length = length;
+    }
+
+    public long getCtime() {
+	return ctime;
+    }
+
+    public long getMtime() {
+	return mtime;
+    }
+
+    public long getAtime() {
+	return atime;
+    }
+
+    public long getLength() {
+	return length;
+    }
+
+    public Type getType() {
+	return type;
     }
 }
