@@ -30,6 +30,7 @@ import org.joval.util.JOVALSystem;
  */
 public abstract class CacheFile implements IFile, Cloneable {
     private String path;
+    private String delim;
 
     protected CacheFilesystem fs;
     protected FileAccessor accessor;
@@ -37,8 +38,9 @@ public abstract class CacheFile implements IFile, Cloneable {
 
     protected CacheFile(CacheFilesystem fs, String path) {
 	this.fs = fs;
-	if (path.endsWith(fs.getDelimiter())) {
-	    this.path = path.substring(0, path.lastIndexOf(fs.getDelimiter()));
+	delim = fs.getDelimiter();
+	if (path.endsWith(delim)) {
+	    this.path = path.substring(0, path.lastIndexOf(delim));
 	} else {
 	    this.path = path;
 	}
@@ -209,13 +211,32 @@ public abstract class CacheFile implements IFile, Cloneable {
 	try {
 	    INode node = fs.peek(getPath());
 	    if (node.hasChildren()) {
-		Collection<INode> children = node.getChildren();
-		String[] sa = new String[children.size()];
-		int i=0;
-		for (INode child : children) {
-		    sa[i++] = child.getName();
+		Collection<String> children = new Vector<String>();
+		for (INode child : node.getChildren()) {
+		    children.add(child.getName());
 		}
-		return sa;
+
+		//
+		// Get siblings from other trees
+		// REMIND (DAS): Is this the right place, or should there be some kind of hard-link type in the Forest?
+		//
+		for (String root : fs.getRoots()) {
+		    String sibling = null;
+		    int ptr = root.lastIndexOf(delim);
+		    if (isRoot() && root.lastIndexOf(delim) == 0) {
+			sibling = root.substring(delim.length());
+		    } else if (ptr > 0) {
+			String prefix = root.substring(0, ptr);
+			if (getPath().equals(prefix)) {
+			    sibling = root.substring(ptr + delim.length());
+			}
+		    }
+		    if (sibling != null && sibling.length() > 0) {
+			children.add(sibling);
+		    }
+		}
+
+		return children.toArray(new String[children.size()]);
 	    }
 	} catch (NoSuchElementException e) {
 	}
@@ -242,7 +263,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 	Vector<IFile> files = new Vector<IFile>();
 	for (int i=0; i < children.length; i++) {
 	    if (p == null || p.matcher(children[i]).find()) {
-		files.add(fs.getFile(path + fs.getDelimiter() + children[i]));
+		files.add(fs.getFile(path + delim + children[i]));
 	    }
 	}
 	return files.toArray(new IFile[files.size()]);
@@ -259,7 +280,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 		    return child;
 		}
 	    }
-	    throw new FileNotFoundException(path + fs.getDelimiter() + name);
+	    throw new FileNotFoundException(path + delim + name);
 	}
     }
 
@@ -269,7 +290,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 
     public final String getPath() {
 	if (isRoot()) {
-	    return fs.getDelimiter();
+	    return delim;
 	} else {
 	    return path;
 	}
@@ -279,7 +300,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 	if (isRoot()) {
 	    return getPath();
 	} else {
-	    return path.substring(path.lastIndexOf(fs.getDelimiter()) + fs.getDelimiter().length());
+	    return path.substring(path.lastIndexOf(delim) + delim.length());
 	}
     }
 
@@ -287,7 +308,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 	if (isRoot()) {
 	    return getPath();
 	} else {
-	    return path.substring(0, path.lastIndexOf(fs.getDelimiter()));
+	    return path.substring(0, path.lastIndexOf(delim));
 	}
     }
 

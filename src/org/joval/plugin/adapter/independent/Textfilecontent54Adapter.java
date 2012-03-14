@@ -6,6 +6,7 @@ package org.joval.plugin.adapter.independent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -66,7 +67,7 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
 		throws IOException, CollectException, OvalException {
 
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<JAXBElement<? extends ItemType>> items = new HashSet<JAXBElement<? extends ItemType>>();
 
 	TextfilecontentItem baseItem = null;
 	if (base instanceof TextfilecontentItem) {
@@ -80,6 +81,9 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 	if (baseItem != null && tfcObj != null) {
 	    InputStream in = null;
 	    try {
+		//
+		// Construct all the necessary patterns
+		//
 		int flags = 0;
 		if (tfcObj.isSetBehaviors()) {
 		    if (tfcObj.getBehaviors().isMultiline()) {
@@ -104,7 +108,7 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		}
 
 		//
-		// Read the whole file into a buffer and search for the pattern
+		// Read the whole file into a buffer to search for the pattern
 		//
 		byte[] buff = new byte[256];
 		int len = 0;
@@ -115,17 +119,102 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		}
 		String s = sb.toString();
 
+		Collection<JAXBElement<? extends ItemType>> allItems = new Vector<JAXBElement<? extends ItemType>>();
 		OperationEnumeration op = tfcObj.getPattern().getOperation();
 		switch(op) {
 		  case PATTERN_MATCH:
 		    for (Pattern p : patterns) {
-			items.addAll(getItems(p, baseItem, s));
+			allItems.addAll(getItems(p, baseItem, s));
 		    }
 		    break;
 
 		  default:
 		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		}
+
+		//
+		// Filter by instance numbers
+		//
+		Collection<String> instances = new Vector<String>();
+		if (tfcObj.getInstance().isSetVarRef()) {
+		    for (String value : rc.resolve(tfcObj.getInstance().getVarRef())) {
+			instances.add(((String)value).trim());
+		    }
+		} else {
+		    instances.add((String)tfcObj.getInstance().getValue());
+		}
+		for (String instanceNum : instances) {
+		    op = tfcObj.getInstance().getOperation();
+		    switch(op) {
+		      case EQUALS:
+			for (JAXBElement<? extends ItemType> elt : allItems) {
+			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
+			    if (((String)item.getInstance().getValue()).equals(instanceNum)) {
+				items.add(elt);
+			    }
+			}
+			break;
+
+		      case LESS_THAN:
+			for (JAXBElement<? extends ItemType> elt : allItems) {
+			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
+			    int inum = Integer.parseInt((String)item.getInstance().getValue());
+			    int comp = Integer.parseInt(instanceNum);
+			    if (inum < comp) {
+				items.add(elt);
+			    }
+			}
+			break;
+
+		      case LESS_THAN_OR_EQUAL:
+			for (JAXBElement<? extends ItemType> elt : allItems) {
+			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
+			    int inum = Integer.parseInt((String)item.getInstance().getValue());
+			    int comp = Integer.parseInt(instanceNum);
+			    if (inum <= comp) {
+				items.add(elt);
+			    }
+			}
+			break;
+
+		      case GREATER_THAN:
+			for (JAXBElement<? extends ItemType> elt : allItems) {
+			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
+			    int inum = Integer.parseInt((String)item.getInstance().getValue());
+			    int comp = Integer.parseInt(instanceNum);
+			    if (inum > comp) {
+				items.add(elt);
+			    }
+			}
+			break;
+
+		      case GREATER_THAN_OR_EQUAL:
+			for (JAXBElement<? extends ItemType> elt : allItems) {
+			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
+			    int inum = Integer.parseInt((String)item.getInstance().getValue());
+			    int comp = Integer.parseInt(instanceNum);
+			    if (inum >= comp) {
+				items.add(elt);
+			    }
+			}
+			break;
+
+		      case PATTERN_MATCH: {
+			Pattern p = Pattern.compile(instanceNum);
+			for (JAXBElement<? extends ItemType> elt : allItems) {
+			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
+			    if (p.matcher((String)item.getInstance().getValue()).find()) {
+				items.add(elt);
+			    }
+			}
+			break;
+		      }
+
+		      default:
+			String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    }
 		}
 	    } catch (PatternSyntaxException e) {
 		session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());

@@ -79,6 +79,17 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
     }
 
     /**
+     * Get the names of all the trees in the cache.
+     */
+    public final Collection<String> getRoots() {
+	Collection<String> roots = new Vector<String>();
+	for (ITree tree : cache.getRoot()) {
+	    roots.add(tree.getName());
+	}
+	return roots;
+    }
+
+    /**
      * This method exists for the purpose of getting an INode view from inside the cache, which may only be partially
      * constructed. Use this method to:
      *

@@ -536,7 +536,6 @@ public class Engine implements IEngine {
 	    } else {
 		MessageType msg = null;
 		Collection<ItemType> items = getSetItems(s, rc);
-if(special)logger.info("DAS scanObject " + objectId + " got back " + items.size() + " items");
 		if (items.size() == 0) {
 		    msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
@@ -645,7 +644,6 @@ if(special)logger.info("DAS scanObject " + objectId + " got back " + items.size(
 		    logger.trace(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
-if(special)logger.info("DAS: filter " + filter.getValue() + " left " + filteredItems.size() + " items");
 	}
 	return filteredItems;
     }
@@ -664,15 +662,11 @@ if(special)logger.info("DAS: filter " + filter.getValue() + " left " + filteredI
 	    }
 	} else {
 	    for (String objectId : s.getObjectReference()) {
-special="oval:org.open-scap.f14:obj:20046".equals(objectId);
-if(special)logger.info("DAS getting object items " + objectId);
 		Collection<ItemType> items = null;
 		try {
 		    items = sc.getItemsByObjectId(objectId);
-if(special)logger.info("DAS Got " + items.size() + " items");
 		} catch (NoSuchElementException e) {
 		    items = scanObject(new RequestContext(this, definitions.getObject(objectId)));
-if(special)logger.info("DAS Scanned " + items.size() + " items");
 		}
 		lists.add(filterItems(s.getFilter(), items, rc));
 	    }
@@ -706,23 +700,18 @@ if(special)logger.info("DAS Scanned " + items.size() + " items");
 	  default: {
 	    ItemSet<ItemType> union = new ItemSet<ItemType>();
 	    for (Collection<ItemType> items : lists) {
-if(special)logger.info("DAS UNION");
 		union = union.union(new ItemSet<ItemType>(items));
 	    }
-if(special)logger.info("DAS UNION SIZE=" + union.toList().size());
 	    return union.toList();
 	  }
 	}
     }
 
-boolean special=false;
     /**
      * Evaluate the DefinitionType.
      */
     private oval.schemas.results.core.DefinitionType evaluateDefinition(DefinitionType defDefinition) throws OvalException {
 	String defId = defDefinition.getId();
-special="oval:org.open-scap.f14:def:20046".equals(defId);
-if(special)logger.info("DAS: evaluating special definition: " + defId);
 	if (defId == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITION_NOID));
 	}
@@ -790,7 +779,6 @@ if(special)logger.info("DAS: evaluating special definition: " + defId);
 
     private void evaluateTest(TestType testResult) throws OvalException {
 	String testId = testResult.getTestId();
-if(special)logger.info("DAS evaluate test " + testId);
 	logger.debug(JOVALMsg.STATUS_TEST, testId);
 	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	String objectId = getObjectRef(testDefinition);
@@ -1302,7 +1290,6 @@ if(special)logger.info("DAS evaluate test " + testId);
 	    if (getBoolean(itemStr.trim()) == getBoolean(stateStr.trim())) {
 		return 0;
 	    } else {
-if(special)logger.info("DAS compare " + itemStr + " and " + stateStr + " == false");
 		return 1;
 	    }
 
