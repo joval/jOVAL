@@ -48,7 +48,7 @@ public class TftpURLConnection extends URLConnection implements Runnable, ILogga
     private PipedInputStream in;
     private PipedOutputStream out;
 
-    public TftpURLConnection(URL url) {
+    TftpURLConnection(URL url) {
 	super(url);
 	client = new TFTPClient();
 	logger = JOVALSystem.getLogger();

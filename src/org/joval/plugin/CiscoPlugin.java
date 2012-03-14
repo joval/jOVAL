@@ -56,7 +56,7 @@ import org.joval.plugin.adapter.cisco.ios.VersionAdapter;
 import org.joval.plugin.adapter.cisco.ios.Version55Adapter;
 import org.joval.plugin.adapter.independent.FamilyAdapter;
 import org.joval.plugin.adapter.independent.VariableAdapter;
-import org.joval.protocol.tftp.TftpURLConnection;
+import org.joval.protocol.tftp.TftpURLStreamHandler;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -152,18 +152,17 @@ public class CiscoPlugin implements IPlugin {
      * Convert a string representing a regular URL, TFTP URL, or file path to a URL.
      */
     public static URL toURL(String str) throws MalformedURLException, SecurityException {
+	if (str.startsWith("tftp:")) {
+	    return new URL(null, str, new TftpURLStreamHandler());
+	}
+
 	MalformedURLException ex = null;
 	try {
 	    return new URL(str);
 	} catch (MalformedURLException e) {
 	    ex = e;
 	}
-	try {
-	    return new URL(null, str, new CiscoURLStreamHandler());
-	} catch (MalformedURLException e) {
-	} catch (SecurityException e) {
-	    throw e;
-	}
+
 	File f = new File(str);
 	if (f.isFile()) {
 	    return f.toURI().toURL();
@@ -220,23 +219,6 @@ public class CiscoPlugin implements IPlugin {
 	      default:
 		System.out.println("Unexpected message: " + msg);
 		break;
-	    }
-	}
-    }
-
-    static class CiscoURLStreamHandler extends URLStreamHandler {
-	CiscoURLStreamHandler() {
-	}
-    
-	public URLConnection openConnection(URL u) throws IOException {
-	    if ("tftp".equals(u.getProtocol())) {
-		return new TftpURLConnection(u);
-	    } else {
-		File f = new File(u.toString());
-		if (f.isFile()) {
-		    return f.toURI().toURL().openConnection();
-		}
-		throw new MalformedURLException(JOVALSystem.getMessage(JOVALMsg.ERROR_PROTOCOL, u.getProtocol()));
 	    }
 	}
     }

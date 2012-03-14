@@ -33,6 +33,7 @@ JOVAL_VERSION=5.10.1.1_Dev
 OVAL_VERSION=5.10.1
 XCCDF_VERSION=1.1
 CPE_VERSION=2.3
+SCE_VERSION=1.0
 
 # If your system is 32-bit, set ARCH to x86
 #ARCH=x86
@@ -78,3 +79,5 @@ PLUGIN_CISCO_LIB=$(PLUGIN_CISCO)/jOVALPluginCisco.jar
 PLUGIN_CISCO_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLUGIN_CISCO)/$(LIBDIR)/*)))
 XPERT=$(COMPONENTS)/xpert
 XPERT_LIB=$(XPERT)/XPERT.jar
+SCE=$(COMPONENTS)/sce
+SCE_LIB=$(SCE)/sce-schema-$(SCE_VERSION).jar

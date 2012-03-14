@@ -9,5 +9,5 @@ CLASSES=\
 	org.joval.os.juniper.system.SupportInformation			\
 	org.joval.plugin.CiscoPlugin					\
 	org.joval.plugin.container.CiscoContainer			\
-	org.joval.protocol.tftp.Handler					\
-	org.joval.protocol.tftp.TftpURLConnection
+	org.joval.protocol.tftp.TftpURLConnection			\
+	org.joval.protocol.tftp.TftpURLStreamHandler

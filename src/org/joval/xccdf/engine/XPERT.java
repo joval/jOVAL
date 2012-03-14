@@ -68,6 +68,7 @@ import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
 import org.joval.xccdf.handler.OVALHandler;
+import org.joval.xccdf.handler.SCEHandler;
 
 /**
  * XCCDF Processing Engine and Reporting Tool (XPERT) main class.

@@ -9,6 +9,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Enumeration;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
@@ -33,6 +35,7 @@ import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.util.ILoggable;
 import org.joval.oval.Definitions;
 import org.joval.oval.OvalException;
+import org.joval.protocol.zip.ZipURLStreamHandler;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.xccdf.XccdfException;
@@ -77,11 +80,13 @@ public class XccdfBundle implements ILoggable {
     private Benchmark benchmark;
     private Dictionary dictionary;
     private IDefinitions cpeOval, oval;
+    private File base;
 
     /**
      * Create a Directives based on the contents of a directives file.
      */
     public XccdfBundle(File f) throws CpeException, OvalException, XccdfException {
+	base = f;
 	logger = JOVALSystem.getLogger();
 	if (f.isDirectory()) {
 	    File[] files = f.listFiles();
@@ -132,6 +137,27 @@ public class XccdfBundle implements ILoggable {
 	}
 	if (oval == null) {
 	    throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, XCCDF_OVAL));
+	}
+    }
+
+    /**
+     * Given an HREF (which may be relative or absolute), return a URL to the resource.
+     */
+    public URL getURL(String href) throws MalformedURLException, SecurityException {
+	try {
+	    return new URL(href);
+	} catch (MalformedURLException e) {
+	    if (base.isDirectory()) {
+		return new URL(base.toURI().toURL(), href);
+	    } else if (base.isFile() && base.getName().endsWith(".zip")) {
+		StringBuffer spec = new StringBuffer("zip:");
+		spec.append(base.toURI().toURL().toString());
+		spec.append("!/");
+		spec.append(href);
+		return new URL(null, spec.toString(), new ZipURLStreamHandler());
+	    } else {
+		throw e;
+	    }
 	}
     }
 

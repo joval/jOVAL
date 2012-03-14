@@ -3,9 +3,12 @@
 
 package org.joval.xccdf.handler;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collection;
 import java.util.Hashtable;
-import java.util.NoSuchElementException;
+import java.util.List;
+import java.util.Vector;
 
 import oval.schemas.common.GeneratorType;
 import oval.schemas.definitions.core.OvalDefinitions;
@@ -26,51 +29,60 @@ import xccdf.schemas.core.ResultEnumType;
 import xccdf.schemas.core.SelectableItemType;
 import xccdf.schemas.core.TestResultType;
 
-import org.joval.intf.oval.IResults;
-import org.joval.oval.DefinitionFilter;
-import org.joval.oval.Variables;
+import org.joval.sce.SCEScript;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
 import org.joval.xccdf.engine.XPERT;
-import org.joval.xccdf.engine.RuleResult;
 
 /**
- * XCCDF helper class for OVAL processing.
+ * XCCDF helper class for SCE processing.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class OVALHandler {
-    public static final String NAMESPACE = "http://oval.mitre.org/XMLSchema/oval-definitions-5";
+public class SCEHandler {
+    public static final String NAMESPACE = "http://open-scap.org/page/SCE";
 
     private XccdfBundle xccdf;
     private Profile profile;
-    private DefinitionFilter filter;
-    private Variables variables;
+    private List<SCEScript> scripts;
 
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
      */
-    public OVALHandler(XccdfBundle xccdf, Profile profile) {
+    public SCEHandler(XccdfBundle xccdf, Profile profile) {
 	this.xccdf = xccdf;
 	this.profile = profile;
     }
 
     /**
-     * Create an OVAL DefinitionFilter containing every selected rule in the profile with an OVAL check.
+     * Create a list of SCE scripts that should be executed based on the profile.
      */
-    public DefinitionFilter getDefinitionFilter() {
-	if (filter == null) {
-	    filter = new DefinitionFilter();
+    public List<SCEScript> getScripts() {
+	if (scripts == null) {
+	    scripts = new Vector<SCEScript>();
+	    Hashtable<String, String> values = profile.getValues();
 	    Collection<RuleType> rules = profile.getSelectedRules();
 	    for (RuleType rule : rules) {
 		if (rule.isSetCheck()) {
 		    for (CheckType check : rule.getCheck()) {
 			if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
 			    for (CheckContentRefType ref : check.getCheckContentRef()) {
-				if (ref.isSetName()) {
-				    filter.addDefinition(ref.getName());
+				if (ref.isSetHref()) {
+				    try {
+					SCEScript script = new SCEScript(xccdf.getURL(ref.getHref()));
+					for (CheckExportType export : check.getCheckExport()) {
+					    String name = export.getExportName();
+					    String valueId = export.getValueId();
+					    script.setenv(name, values.get(valueId));
+					}
+					scripts.add(script);
+				    } catch (MalformedURLException e) {
+					xccdf.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+				    }
 				}
 			    }
 			}
@@ -78,38 +90,12 @@ public class OVALHandler {
 		}
 	    }
 	}
-	return filter;
-    }
-
-    /**
-     * Gather all the variable exports for OVAL checks from the selected rules in the profile, and create an OVAL
-     * variables structure containing their values.
-     */
-    public Variables getVariables() {
-	if (variables == null) {
-	    variables = new Variables(XPERT.getGenerator());
-	    Collection<RuleType> rules = profile.getSelectedRules();
-	    Hashtable<String, String> values = profile.getValues();
-	    for (RuleType rule : rules) {
-		for (CheckType check : rule.getCheck()) {
-		    if (check.getSystem().equals(NAMESPACE)) {
-			for (CheckExportType export : check.getCheckExport()) {
-			    String ovalVariableId = export.getExportName();
-			    String valueId = export.getValueId();
-			    variables.addValue(ovalVariableId, values.get(valueId));
-			    variables.setComment(ovalVariableId, valueId);
-			}
-		    }
-		}
-	    }
-	}
-	return variables;
+	return scripts;
     }
 
     /**
      * Integrate the OVAL results with the XCCDF results, assuming the OVAL results contain information pertaining to
      * the selected rules in the profile.
-     */
     public void integrateResults(IResults ovalResult, TestResultType xccdfResult) {
 	ObjectFactory factory = new ObjectFactory();
 	xccdfResult.getTarget().add(ovalResult.getSystemInfo().getPrimaryHostName());
@@ -170,4 +156,5 @@ public class OVALHandler {
 	    }
 	}
     }
+     */
 }
