@@ -36,7 +36,9 @@ public class Node implements INode {
     Hashtable<String, INode> children;
 
     public void setBranch() {
-	type = Type.BRANCH;
+	if (type != Type.TREE) {
+	    type = Type.BRANCH;
+	}
 	if (children == null) {
 	    children = new Hashtable<String, INode>();
 	}

@@ -535,7 +535,8 @@ public class Engine implements IEngine {
 		}
 	    } else {
 		MessageType msg = null;
-		Collection<ItemType> items = getSetItems(s);
+		Collection<ItemType> items = getSetItems(s, rc);
+if(special)logger.info("DAS scanObject " + objectId + " got back " + items.size() + " items");
 		if (items.size() == 0) {
 		    msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
@@ -614,7 +615,9 @@ public class Engine implements IEngine {
     /**
      * Given Collections of items and filters, returns the appropriately filtered collection.
      */
-    private Collection<ItemType> filterItems(List<Filter> filters, Collection<ItemType> items) throws OvalException {
+    private Collection<ItemType> filterItems(List<Filter> filters, Collection<ItemType> items, RequestContext rc)
+		throws OvalException {
+
 	if (filters.size() == 0) {
 	    return items;
 	}
@@ -623,7 +626,7 @@ public class Engine implements IEngine {
 	    StateType state = definitions.getState(filter.getValue());
 	    for (ItemType item : items) {
 		try {
-		    ResultEnumeration result = compare(state, item, new RequestContext(this, null));
+		    ResultEnumeration result = compare(state, item, rc);
 		    switch(filter.getAction()) {
 		      case INCLUDE:
 			if (result == ResultEnumeration.TRUE) {
@@ -642,6 +645,7 @@ public class Engine implements IEngine {
 		    logger.trace(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
+if(special)logger.info("DAS: filter " + filter.getValue() + " left " + filteredItems.size() + " items");
 	}
 	return filteredItems;
     }
@@ -649,24 +653,28 @@ public class Engine implements IEngine {
     /**
      * Get a list of items belonging to a Set.
      */
-    private Collection<ItemType> getSetItems(Set s) throws NoSuchElementException, OvalException {
+    private Collection<ItemType> getSetItems(Set s, RequestContext rc) throws NoSuchElementException, OvalException {
 	//
 	// First, retrieve the filtered list of items in the Set, recursively.
 	//
 	Collection<Collection<ItemType>> lists = new Vector<Collection<ItemType>>();
 	if (s.isSetSet()) {
 	    for (Set set : s.getSet()) {
-		lists.add(getSetItems(set));
+		lists.add(getSetItems(set, rc));
 	    }
 	} else {
 	    for (String objectId : s.getObjectReference()) {
+special="oval:org.open-scap.f14:obj:20046".equals(objectId);
+if(special)logger.info("DAS getting object items " + objectId);
 		Collection<ItemType> items = null;
 		try {
 		    items = sc.getItemsByObjectId(objectId);
+if(special)logger.info("DAS Got " + items.size() + " items");
 		} catch (NoSuchElementException e) {
 		    items = scanObject(new RequestContext(this, definitions.getObject(objectId)));
+if(special)logger.info("DAS Scanned " + items.size() + " items");
 		}
-		lists.add(filterItems(s.getFilter(), items));
+		lists.add(filterItems(s.getFilter(), items, rc));
 	    }
 	}
 
@@ -698,18 +706,23 @@ public class Engine implements IEngine {
 	  default: {
 	    ItemSet<ItemType> union = new ItemSet<ItemType>();
 	    for (Collection<ItemType> items : lists) {
+if(special)logger.info("DAS UNION");
 		union = union.union(new ItemSet<ItemType>(items));
 	    }
+if(special)logger.info("DAS UNION SIZE=" + union.toList().size());
 	    return union.toList();
 	  }
 	}
     }
 
+boolean special=false;
     /**
      * Evaluate the DefinitionType.
      */
     private oval.schemas.results.core.DefinitionType evaluateDefinition(DefinitionType defDefinition) throws OvalException {
 	String defId = defDefinition.getId();
+special="oval:org.open-scap.f14:def:20046".equals(defId);
+if(special)logger.info("DAS: evaluating special definition: " + defId);
 	if (defId == null) {
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITION_NOID));
 	}
@@ -777,6 +790,7 @@ public class Engine implements IEngine {
 
     private void evaluateTest(TestType testResult) throws OvalException {
 	String testId = testResult.getTestId();
+if(special)logger.info("DAS evaluate test " + testId);
 	logger.debug(JOVALMsg.STATUS_TEST, testId);
 	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	String objectId = getObjectRef(testDefinition);
@@ -977,6 +991,7 @@ public class Engine implements IEngine {
 	}
 
 	try {
+	    OperatorData result = new OperatorData();
 	    for (String methodName : getMethodNames(state.getClass())) {
 		if (methodName.startsWith("get") && !stateBaseMethodNames.contains(methodName)) {
 		    Object stateEntityObj = state.getClass().getMethod(methodName).invoke(state);
@@ -985,34 +1000,29 @@ public class Engine implements IEngine {
 		    } else if (stateEntityObj instanceof EntityStateSimpleBaseType) {
 			EntityStateSimpleBaseType stateEntity = (EntityStateSimpleBaseType)stateEntityObj;
 			Object itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
-			ResultEnumeration result = ResultEnumeration.UNKNOWN;
 			if (itemEntityObj instanceof EntityItemSimpleBaseType || itemEntityObj == null) {
-			    result = compare(stateEntity, (EntityItemSimpleBaseType)itemEntityObj, rc);
+			    result.addResult(compare(stateEntity, (EntityItemSimpleBaseType)itemEntityObj, rc));
 			} else if (itemEntityObj instanceof JAXBElement) {
 			    JAXBElement element = (JAXBElement)itemEntityObj;
 			    EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)element.getValue();
-			    result = compare(stateEntity, itemEntity, rc);
+			    result.addResult(compare(stateEntity, itemEntity, rc));
 			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
 			    for (Object entityObj : (Collection)itemEntityObj) {
 			        EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)entityObj;
 				cd.addResult(compare(stateEntity, itemEntity, rc));
 			    }
-			    result = cd.getResult(stateEntity.getEntityCheck());
+			    result.addResult(cd.getResult(stateEntity.getEntityCheck()));
 			} else {
 			    String message = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
 								    itemEntityObj.getClass().getName(), item.getId());
 	    		    throw new OvalException(message);
 			}
-			if (result != ResultEnumeration.TRUE) {
-			    return result;
-			}
 		    } else if (stateEntityObj instanceof EntityStateRecordType) {
 			EntityStateRecordType stateEntity = (EntityStateRecordType)stateEntityObj;
 			Object itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
-			ResultEnumeration result = ResultEnumeration.UNKNOWN;
 			if (itemEntityObj instanceof EntityItemRecordType) {
-			    result = compare(stateEntity, (EntityItemRecordType)itemEntityObj, rc);
+			    result.addResult(compare(stateEntity, (EntityItemRecordType)itemEntityObj, rc));
 			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
 			    for (Object entityObj : (Collection)itemEntityObj) {
@@ -1024,14 +1034,11 @@ public class Engine implements IEngine {
 				    throw new OvalException(msg);
 				}
 			    }
-			    result = cd.getResult(stateEntity.getEntityCheck());
+			    result.addResult(cd.getResult(stateEntity.getEntityCheck()));
 			} else {
 			    String message = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
 								    itemEntityObj.getClass().getName(), item.getId());
 	    		    throw new OvalException(message);
-			}
-			if (result != ResultEnumeration.TRUE) {
-			    return result;
 			}
 		    } else {
 			String message = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
@@ -1040,7 +1047,7 @@ public class Engine implements IEngine {
 		    }
 		}
 	    }
-	    return ResultEnumeration.TRUE;
+	    return result.getResult(state.getOperator());
 	} catch (NoSuchMethodException e) {
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), state.getId()));
@@ -1295,6 +1302,7 @@ public class Engine implements IEngine {
 	    if (getBoolean(itemStr.trim()) == getBoolean(stateStr.trim())) {
 		return 0;
 	    } else {
+if(special)logger.info("DAS compare " + itemStr + " and " + stateStr + " == false");
 		return 1;
 	    }
 
