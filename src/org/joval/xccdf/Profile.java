@@ -3,11 +3,16 @@
 
 package org.joval.xccdf;
 
+import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+
+import cpe.schemas.dictionary.CheckType;
+import cpe.schemas.dictionary.ItemType;
+import cpe.schemas.dictionary.ListType;
 
 import xccdf.schemas.core.GroupType;
 import xccdf.schemas.core.ProfileType;
@@ -21,6 +26,7 @@ import xccdf.schemas.core.URIidrefType;
 import xccdf.schemas.core.ValueType;
 
 import org.joval.xccdf.XccdfBundle;
+import org.joval.xccdf.handler.OVALHandler;
 
 /**
  * Convenience class for an XCCDF Profile, which is like a view on an XCCDF Benchmark.
@@ -48,9 +54,8 @@ public class Profile {
 	//
 	// Set Benchmark-wide platforms
 	//
-	platforms = new HashSet<String>();
 	for (URIidrefType platform : xccdf.getBenchmark().getPlatform()) {
-	    platforms.add(xccdf.getDictionary().getOvalDefinitionId(platform.getIdref()));
+	    addPlatform(platform.getIdref());
 	}
 
 	//
@@ -70,7 +75,7 @@ public class Profile {
 		throw new NoSuchElementException(name);
 	    } else {
 		for (URIidrefType platform : prof.getPlatform()) {
-		    platforms.add(xccdf.getDictionary().getOvalDefinitionId(platform.getIdref()));
+		    addPlatform(platform.getIdref());
 		}
 
 		selections = new Hashtable<String, Boolean>();
@@ -169,5 +174,27 @@ public class Profile {
 	    }
 	}
 	return results;
+    }
+
+    /**
+     * Given a CPE platform name, add the corresponding OVAL definition IDs to the platforms list.
+     */
+    private void addPlatform(String cpeName) {
+	if (platforms == null) {
+	    platforms = new HashSet<String>();
+	}
+	ItemType cpeItem = xccdf.getDictionary().getItem(cpeName);
+	if (cpeItem != null && cpeItem.isSetCheck()) {
+	    for (CheckType check : cpeItem.getCheck()) {
+		if (OVALHandler.NAMESPACE.equals(check.getSystem()) && check.isSetHref()) {
+		    try {
+			if (xccdf.getURL(check.getHref()).toString().equals(xccdf.getCpeOvalURL().toString())) {
+			    platforms.add(check.getValue());
+			}
+		    } catch (MalformedURLException e) {
+		    }
+		}
+	    }
+	}
     }
 }

@@ -81,6 +81,7 @@ public class XccdfBundle implements ILoggable {
     private Dictionary dictionary;
     private IDefinitions cpeOval, oval;
     private File base;
+    private URL cpeOvalURL=null, ovalURL=null;
 
     /**
      * Create a Directives based on the contents of a directives file.
@@ -89,7 +90,7 @@ public class XccdfBundle implements ILoggable {
 	base = f;
 	logger = JOVALSystem.getLogger();
 	try {
-	    URL benchmarkURL=null, dictionaryURL=null, cpeOvalURL=null, ovalURL=null;
+	    URL benchmarkURL=null, dictionaryURL=null;
 	    if (f.isDirectory()) {
 		File[] files = f.listFiles();
 		for (File file : files) {
@@ -170,6 +171,14 @@ public class XccdfBundle implements ILoggable {
 		throw e;
 	    }
 	}
+    }
+
+    public URL getCpeOvalURL() {
+	return cpeOvalURL;
+    }
+
+    public URL getOvalURL() {
+	return ovalURL;
     }
 
     public Dictionary getDictionary() {

@@ -60,7 +60,7 @@ public class Dictionary {
     }
 
     private ListType list;
-    private Hashtable<String, String> ovalMapping;
+    private Hashtable<String, ItemType> ovalMapping;
 
     /**
      * Create a Directives based on the contents of a directives file.
@@ -78,13 +78,9 @@ public class Dictionary {
      */
     public Dictionary(ListType list) {
 	this.list = list;
-	ovalMapping = new Hashtable<String, String>();
+	ovalMapping = new Hashtable<String, ItemType>();
 	for (ItemType item : list.getCpeItem()) {
-	    for (CheckType check : item.getCheck()) {
-		if (check.getSystem().equals("http://oval.mitre.org/XMLSchema/oval-definitions-5")) {
-		    ovalMapping.put(item.getName(), check.getValue());
-		}
-	    }
+	    ovalMapping.put(item.getName(), item);
 	}
     }
 
@@ -92,7 +88,7 @@ public class Dictionary {
 	return list;
     }
 
-    public String getOvalDefinitionId(String cpeName) {
+    public ItemType getItem(String cpeName) {
 	return ovalMapping.get(cpeName);
     }
 }

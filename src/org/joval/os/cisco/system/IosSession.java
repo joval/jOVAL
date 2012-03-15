@@ -128,7 +128,7 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     /**
      * IOS seems to require a session reconnect after every command session disconnect.
      */
-    public IProcess createProcess(String command) throws Exception {
+    public IProcess createProcess(String command, String[] env) throws Exception {
 	if (ssh == null) {
 	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_OFFLINE));
 	} else {
