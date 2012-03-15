@@ -285,6 +285,7 @@ public abstract class CacheFile implements IFile, Cloneable {
     }
 
     public final void delete() throws IOException {
+	info = null;
 	getAccessor().delete();
     }
 

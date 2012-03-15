@@ -29,6 +29,7 @@ import org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup;
  */
 class WindowsProcess implements IProcess {
     private SWbemServices services;
+    private Win32ProcessStartup startupInfo;
     private Win32Process process;
     private int pid = 0;
     private String command, cwd;
@@ -37,12 +38,14 @@ class WindowsProcess implements IProcess {
     private boolean running = false;
     private int exitCode = 0;
 
-    WindowsProcess(SWbemServices services, String command, String cwd, IFile out, IFile err) throws JIException {
+    WindowsProcess(SWbemServices services, String command, String[] env, String cwd, IFile out, IFile err) throws JIException {
 	this.services = services;
 	this.command = command;
 	this.cwd = cwd;
 	this.out = out;
 	this.err = err;
+	startupInfo = new Win32ProcessStartup(services);
+	startupInfo.setEnvironmentVariables(env);
     }
 
     // Implement IProcess
@@ -51,21 +54,24 @@ class WindowsProcess implements IProcess {
 	return command;
     }
 
+    // REMIND (DAS): implement this...
     public void setInteractive(boolean interactive) {
-	// DAS: implement this
+/*
+	SWbemSecurity security = new SWbemSecurity(services);
+	security.setImpersonationLevel(SWbemSecurity.ImpersonationLevel_IMPERSONATION);
+*/
     }
 
     public void start() throws Exception {
-	SWbemSecurity security = new SWbemSecurity(services);
-	security.setImpersonationLevel(SWbemSecurity.ImpersonationLevel_IMPERSONATION);
-	Win32ProcessStartup startupInfo = new Win32ProcessStartup(services);
 	process = new Win32Process(services);
-
 	outTail = new TailDashF(out);
 	outTail.start();
 	errTail = new TailDashF(err);
 	errTail.start();
-	int rc = process.create(command + " >> " + out.getPath() + " 2>> " + err.getPath(), cwd, startupInfo);
+	StringBuffer sb = new StringBuffer("cmd /c ").append(command);
+	sb.append(" >> ").append(out.getPath());
+	sb.append(" 2>> ").append(err.getPath());
+	int rc = process.create(sb.toString(), cwd, startupInfo);
 
 	switch(rc) {
 	  case Win32Process.SUCCESSFUL_COMPLETION:

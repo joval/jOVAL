@@ -92,6 +92,13 @@ public interface IBaseSession extends ILoggable {
     IProcess createProcess(String command) throws Exception;
 
     /**
+     * Create a process on the machine, with the specified environment variables.
+     *
+     * @arg env Environment variables, each of the form "VARIABLE=VALUE".
+     */
+    IProcess createProcess(String command, String[] env) throws Exception;
+
+    /**
      * Get a directory in which state information can be safely stored.  Returns null if this is a stateless session.
      */
     File getWorkspace();

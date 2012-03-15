@@ -146,7 +146,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     }
 
     @Override
-    public IProcess createProcess(String command) throws Exception {
+    public IProcess createProcess(String command, String[] env) throws Exception {
 	StringBuffer sb = new StringBuffer(tempDir).append(IWindowsFilesystem.DELIM_STR).append("rexec_");
 	sb.append(Integer.toHexString(counter++));
 
@@ -158,8 +158,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	err.getOutputStream(false).close(); // create/clear tmpErrFile
 	tempFiles.add(err);
 
-	WindowsProcess p = new WindowsProcess(conn.getServices(host, IWmiProvider.CIMv2), command, cwd, out, err);
-	return p;
+	return new WindowsProcess(conn.getServices(host, IWmiProvider.CIMv2), command, env, cwd, out, err);
     }
 
     public String getHostname() {

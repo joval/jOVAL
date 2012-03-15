@@ -119,6 +119,10 @@ public abstract class AbstractBaseSession implements IBaseSession {
 	return wsdir;
     }
 
+    public IProcess createProcess(String command) throws Exception {
+	return createProcess(command, null);
+    }
+
     // All the abstract methods, for reference
 
     public abstract boolean connect();
@@ -131,7 +135,7 @@ public abstract class AbstractBaseSession implements IBaseSession {
 
     public abstract SystemInfoType getSystemInfo();
 
-    public abstract IProcess createProcess(String command) throws Exception;
+    public abstract IProcess createProcess(String command, String[] env) throws Exception;
 
     // Private
 

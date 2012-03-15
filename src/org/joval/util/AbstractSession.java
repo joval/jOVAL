@@ -74,8 +74,8 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
      * Here, we provide an implementation for local ISessions.
      */
     @Override
-    public IProcess createProcess(String command) throws Exception {
-	return new JavaProcess(command);
+    public IProcess createProcess(String command, String[] env) throws Exception {
+	return new JavaProcess(command, env);
     }
 
     // All the abstract methods, for reference
@@ -101,12 +101,14 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 
     class JavaProcess implements IProcess {
 	String command;
+	String[] env;
 	Process p;
 	int pid;
 	StreamLogger debugIn, debugErr;
 
-	JavaProcess(String command) {
+	JavaProcess(String command, String[] env) {
 	    this.command = command;
+	    this.env = env;
 	    this.pid = AbstractSession.this.pid++;
 	}
 
@@ -136,7 +138,16 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 		args.add(command);
 	    }
 	    try {
-		p = new ProcessBuilder(args).directory(cwd).start();
+		ProcessBuilder pb = new ProcessBuilder(args);
+		if (env != null) {
+		    for (String s : env) {
+			int ptr = s.indexOf("=");
+			if (ptr > 0) {
+			    pb.environment().put(s.substring(0, ptr), s.substring(ptr+1));
+			}
+		    }
+		}
+		p = pb.directory(cwd).start();
 	    } catch (IOException e) {
 		throw new Exception(e);
 	    }

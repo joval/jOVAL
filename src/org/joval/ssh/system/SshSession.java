@@ -117,10 +117,10 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
     // Implement IBaseSession
 
     @Override
-    public IProcess createProcess(String command) throws Exception {
+    public IProcess createProcess(String command, String[] env) throws Exception {
 	if (connect()) {
 	    ChannelExec ce = session.openChannel(ChannelType.EXEC);
-	    return new SshProcess(ce, command, debug, wsdir, pid++, logger);
+	    return new SshProcess(ce, command, env, debug, wsdir, pid++, logger);
 	} else {
 	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
 	}

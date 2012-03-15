@@ -6,21 +6,63 @@ package org.joval.xccdf.engine;
 import xccdf.schemas.core.ResultEnumType;
 
 /**
- * DAS: How should the results from multiple CheckContentRefTypes really be combined?
+ * DAS: This is just my unofficial guess at how to roll-up multiple results.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class RuleResult {
-    private ResultEnumType result = ResultEnumType.NOTCHECKED;
+    private int err=0, fail=0, inf=0, na=0, nc=0, ns=0, pass=0, unk=0;
 
     public RuleResult() {}
 
     public void add(ResultEnumType result) {
-	this.result = result;
+	switch(result) {
+	  case ERROR:
+	    err++;
+	    break;
+	  case FAIL:
+	    fail++;
+	    break;
+	  case INFORMATIONAL:
+	    inf++;
+	    break;
+	  case NOTAPPLICABLE:
+	    na++;
+	    break;
+	  case NOTCHECKED:
+	    nc++;
+	    break;
+	  case NOTSELECTED:
+	    ns++;
+	    break;
+	  case PASS:
+	    pass++;
+	    break;
+	  case UNKNOWN:
+	    unk++;
+	    break;
+	}
     }
 
     public ResultEnumType getResult() {
-	return result;
+	if	  (pass > 0  && fail == 0 && err == 0 && inf >= 0 && na >= 0 && nc == 0 && ns >= 0 && unk == 0) {
+	    return ResultEnumType.PASS;
+	} else if (pass >= 0 && fail > 0  && err >= 0 && inf >= 0 && na >= 0 && nc >= 0 && ns >= 0 && unk >= 0) {
+	    return ResultEnumType.FAIL;
+	} else if (pass >= 0 && fail == 0 && err > 0  && inf >= 0 && na >= 0 && nc >= 0 && ns >= 0 && unk >= 0) {
+	    return ResultEnumType.ERROR;
+	} else if (pass >= 0 && fail == 0 && err == 0 && inf > 0  && na >= 0 && nc == 0 && ns >= 0 && unk == 0) {
+	    return ResultEnumType.INFORMATIONAL;
+	} else if (pass == 0 && fail == 0 && err == 0 && inf == 0 && na > 0  && nc == 0 && ns >= 0 && unk == 0) {
+	    return ResultEnumType.NOTAPPLICABLE;
+	} else if (pass == 0 && fail == 0 && err == 0 && inf == 0 && na == 0 && nc > 0  && ns >= 0 && unk == 0) {
+	    return ResultEnumType.NOTCHECKED;
+	} else if (pass == 0 && fail == 0 && err == 0 && inf == 0 && na == 0 && nc == 0 && ns > 0  && unk == 0) {
+	    return ResultEnumType.NOTSELECTED;
+	} else if (pass == 0 && fail == 0 && err == 0 && inf == 0 && na == 0 && nc == 0 && ns == 0 && unk >= 0) {
+	    return ResultEnumType.UNKNOWN;
+	}
+	return ResultEnumType.UNKNOWN;
     }
 }

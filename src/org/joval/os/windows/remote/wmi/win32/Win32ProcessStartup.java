@@ -3,8 +3,8 @@
 
 package org.joval.os.windows.remote.wmi.win32;
 
-import java.util.Map;
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Vector;
 
 import org.jinterop.dcom.common.JIException;
 import org.jinterop.dcom.core.IJIComObject;
@@ -58,17 +58,21 @@ public class Win32ProcessStartup {
     }
 
     /**
-     * Set up an environment conforming to the specified Properties.
+     * Set up an environment.
      */
-    public void setEnvironment(Map<String, String> env) throws JIException {
-	JIString[] array = new JIString[env.size() * 2];
-	Iterator<String> keys = env.keySet().iterator();
-	for(int i=0; keys.hasNext();) {
-	    String key = keys.next();
-	    array[i++] = new JIString(key);
-	    array[i++] = new JIString(env.get(key));
+    public void setEnvironmentVariables(String[] env) throws JIException {
+	if (env != null) {
+	    Collection<JIString> strings = new Vector<JIString>();
+	    for (String s : env) {
+		int ptr = s.indexOf("=");
+		if (ptr > 0) {
+		    strings.add(new JIString(s.substring(0,ptr)));
+		    strings.add(new JIString(s.substring(ptr+1)));
+		}
+	    }
+	    JIString[] array = strings.toArray(new JIString[strings.size()]);
+	    dispatch.put("EnvironmentVariables", new JIVariant(new JIArray(array)));
 	}
-	dispatch.put("EnvironmentVariables", new JIVariant(new JIArray(array)));
     }
 
     /**
@@ -87,7 +91,7 @@ public class Win32ProcessStartup {
     }
 
     public JIVariant getVariant() {
-return JIVariant.OPTIONAL_PARAM();
 //	return new JIVariant(comObject);
+return JIVariant.OPTIONAL_PARAM();
     }
 }

@@ -38,10 +38,12 @@ class SshProcess implements IProcess {
     private File wsdir;
     private LocLogger logger;
     private int pid;
+    private String[] env;
 
-    SshProcess(ChannelExec ce, String command, boolean debug, File wsdir, int pid, LocLogger logger) {
+    SshProcess(ChannelExec ce, String command, String[] env, boolean debug, File wsdir, int pid, LocLogger logger) {
 	this.ce = ce;
 	this.command = command;
+	this.env = env;
 	this.debug = debug;
 	this.wsdir = wsdir;
 	this.pid = pid;
@@ -62,6 +64,14 @@ class SshProcess implements IProcess {
 	logger.debug(JOVALMsg.STATUS_PROCESS_START, command);
 	ce.setPty(interactive);
 	ce.setCommand(command);
+	if (env != null) {
+	    for (String s : env) {
+		int ptr = s.indexOf("=");
+		if (ptr > 0) {
+		    ce.setEnv(s.substring(0, ptr), s.substring(ptr+1));
+		}
+	    }
+	}
 	ce.connect();
 	running = true;
     }

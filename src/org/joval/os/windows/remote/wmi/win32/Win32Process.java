@@ -44,12 +44,15 @@ public class Win32Process {
 	return pid;
     }
 
+    /**
+     * REMIND (DAS): Currently hard-wired via the Win32ProcessStartup class to ignore the startupInfo.
+     */
     public int create(String command, String cwd, Win32ProcessStartup startupInfo) throws JIException {
 	Object[] params = new Object[]	{
 					    new JIString(command),
 					    new JIString(cwd),
-					    startupInfo.getVariant(), //DAS: works if set to JIVariant.OPTIONAL_PARAM()
-					    new JIVariant(0, true)		// out param
+					    startupInfo.getVariant(),
+					    new JIVariant(0, true)	// out param
 					};
 	JIVariant[] results = dispatch.callMethodA("Create", params);
 	int status = results[0].getObjectAsInt();

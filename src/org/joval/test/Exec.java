@@ -18,7 +18,8 @@ public class Exec {
 
     public void test(String command) {
 	try {
-	    IProcess p = session.createProcess(command);
+	    String[] env = {"DAS=jOVAL"};
+	    IProcess p = session.createProcess(command, env);
 	    p.start();
 
 	    InputStream in = p.getInputStream();
