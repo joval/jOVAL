@@ -64,7 +64,7 @@ public class WindowsFile extends DefaultFile {
 	@Override
 	public FileInfo getInfo() throws IOException {
 	    FileInfo fi = super.getInfo();
-	    return new WindowsFileInfo(fi.ctime, fi.mtime, fi.atime, fi.type, fi.length, this);
+	    return new WindowsFileInfo(fi.getCtime(), fi.getMtime(), fi.getAtime(), fi.getType(), fi.getLength(), this);
 	}
 
 	// Implement IWindowsFileInfo

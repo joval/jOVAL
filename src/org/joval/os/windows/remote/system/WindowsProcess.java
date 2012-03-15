@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.jinterop.dcom.common.JIException;
 import org.jinterop.dcom.impls.automation.JIExcepInfo;
 
@@ -16,10 +18,13 @@ import com.h9labs.jwbem.SWbemObjectSet;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.system.IProcess;
+import org.joval.intf.util.ILoggable;
 import org.joval.io.TailDashF;
 import org.joval.os.windows.remote.wmi.scripting.SWbemSecurity;
 import org.joval.os.windows.remote.wmi.win32.Win32Process;
 import org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * Remote Windows implementation of an IProcess.
@@ -27,7 +32,7 @@ import org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup;
  * @author David A. Solin
  * @version %I% %G%
  */
-class WindowsProcess implements IProcess {
+class WindowsProcess implements IProcess, ILoggable {
     private SWbemServices services;
     private Win32ProcessStartup startupInfo;
     private Win32Process process;
@@ -37,6 +42,7 @@ class WindowsProcess implements IProcess {
     private TailDashF outTail, errTail;
     private boolean running = false;
     private int exitCode = 0;
+    private LocLogger logger;
 
     WindowsProcess(SWbemServices services, String command, String[] env, String cwd, IFile out, IFile err) throws JIException {
 	this.services = services;
@@ -46,6 +52,17 @@ class WindowsProcess implements IProcess {
 	this.err = err;
 	startupInfo = new Win32ProcessStartup(services);
 	startupInfo.setEnvironmentVariables(env);
+	logger = JOVALSystem.getLogger();
+    }
+
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
     }
 
     // Implement IProcess
@@ -131,7 +148,7 @@ class WindowsProcess implements IProcess {
 	    process.terminate(1);
 	    running = false;
 	} catch (JIException e) {
-	    e.printStackTrace();
+	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -157,6 +174,9 @@ class WindowsProcess implements IProcess {
 		if (p.isRunning()) {
 		    p.destroy();
 		}
+	    } catch (InterruptedException e) {
+	    }
+	    try {
 		synchronized(p.err) {
 		    if (p.errTail != null) {
 			if (p.errTail.isAlive()) {
@@ -165,6 +185,10 @@ class WindowsProcess implements IProcess {
 			p.err.delete();
 		    }
 		}
+	    } catch (IOException e) {
+		logger.warn(JOVALMsg.ERROR_IO, p.err.getPath(), e.getMessage());
+	    }
+	    try {
 		synchronized(p.out) {
 		    if (p.outTail != null) {
 			if (p.outTail.isAlive()) {
@@ -174,8 +198,7 @@ class WindowsProcess implements IProcess {
 		    }
 		}
 	    } catch (IOException e) {
-		e.printStackTrace();
-	    } catch (InterruptedException e) {
+		logger.warn(JOVALMsg.ERROR_IO, p.out.getPath(), e.getMessage());
 	    }
 	}
     }

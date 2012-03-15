@@ -158,7 +158,9 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	err.getOutputStream(false).close(); // create/clear tmpErrFile
 	tempFiles.add(err);
 
-	return new WindowsProcess(conn.getServices(host, IWmiProvider.CIMv2), command, env, cwd, out, err);
+	WindowsProcess wp = new WindowsProcess(conn.getServices(host, IWmiProvider.CIMv2), command, env, cwd, out, err);
+	wp.setLogger(logger);
+	return wp;
     }
 
     public String getHostname() {
