@@ -48,6 +48,7 @@ public class Profile {
     public Profile(XccdfBundle xccdf, String name) throws NoSuchElementException {
 	this.xccdf = xccdf;
 	this.name = name;
+	platforms = new HashSet<String>();
 	values = new Hashtable<String, String>();
 	rules = new HashSet<RuleType>();
 
@@ -180,18 +181,12 @@ public class Profile {
      * Given a CPE platform name, add the corresponding OVAL definition IDs to the platforms list.
      */
     private void addPlatform(String cpeName) {
-	if (platforms == null) {
-	    platforms = new HashSet<String>();
-	}
 	ItemType cpeItem = xccdf.getDictionary().getItem(cpeName);
 	if (cpeItem != null && cpeItem.isSetCheck()) {
 	    for (CheckType check : cpeItem.getCheck()) {
 		if (OVALHandler.NAMESPACE.equals(check.getSystem()) && check.isSetHref()) {
-		    try {
-			if (xccdf.getURL(check.getHref()).toString().equals(xccdf.getCpeOvalURL().toString())) {
-			    platforms.add(check.getValue());
-			}
-		    } catch (MalformedURLException e) {
+		    if (check.getHref().equals(xccdf.getCpeOvalHref())) {
+			platforms.add(check.getValue());
 		    }
 		}
 	    }

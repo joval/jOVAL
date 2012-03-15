@@ -3,6 +3,8 @@
 
 package org.joval.intf.system;
 
+import java.io.IOException;
+
 import org.joval.intf.io.IFilesystem;
 
 /**
@@ -13,6 +15,11 @@ import org.joval.intf.io.IFilesystem;
  */
 public interface ISession extends IBaseSession {
     public void setWorkingDir(String path);
+
+    /**
+     * Get the path to the "temp" directory.
+     */
+    public String getTempDir() throws IOException;
 
     public IFilesystem getFilesystem();
 

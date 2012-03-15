@@ -46,6 +46,7 @@ public class UnixSession extends BaseUnixSession implements ILocked {
     private Credential rootCred = null;
     private boolean computedMotdLines = false;
     private int motdLines = 0;
+    private String tmpDir = null;
 
     public UnixSession(SshSession ssh) {
 	super();
@@ -119,17 +120,27 @@ public class UnixSession extends BaseUnixSession implements ILocked {
     }
 
     @Override
-    public IProcess createProcess(String command) throws Exception {
+    public IProcess createProcess(String command, String[] env) throws Exception {
 	if (rootCred == null || flavor == Flavor.UNKNOWN) {
-	    return ssh.createProcess(command);
+	    return ssh.createProcess(command, env);
 	} else {
-	    return new Sudo(this, rootCred, command);
+	    return new Sudo(this, rootCred, command, env);
 	}
     }
+
+    // Implement ISession
 
     @Override
     public void setWorkingDir(String path) {
 	// no-op
+    }
+
+    @Override
+    public String getTempDir() throws IOException {
+	if (tmpDir == null) {
+	    tmpDir = fs.getFile("/tmp").getCanonicalPath();
+	}
+	return tmpDir;
     }
 
     // Internal

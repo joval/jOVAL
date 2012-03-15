@@ -62,6 +62,10 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	cwd = new File(path);
     }
 
+    public String getTempDir() throws IOException {
+	return System.getProperty("java.io.tmpdir");
+    }
+
     public IEnvironment getEnvironment() {
 	return env;
     }

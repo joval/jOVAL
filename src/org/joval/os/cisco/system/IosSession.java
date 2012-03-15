@@ -133,7 +133,7 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_OFFLINE));
 	} else {
 //	    disconnect();
-	    return ssh.createProcess(command);
+	    return ssh.createProcess(command, env);
 	}
     }
 

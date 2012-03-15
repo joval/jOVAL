@@ -222,7 +222,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 		    ErrorReader er = null;
 		    IReader reader = null;
 		    try {
-			p = session.createProcess(command.replace("%MOUNT%", mount));
+			p = session.createProcess(command.replace("%MOUNT%", mount), null);
 			logger.info(JOVALMsg.STATUS_PROCESS_START, p.getCommand());
 			p.start();
 			reader = PerishableReader.newInstance(p.getInputStream(), S);
@@ -411,7 +411,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    }
 	    sb.append(env.expand(tempPath)).toString();
 
-	    IProcess p = session.createProcess(sb.toString());
+	    IProcess p = session.createProcess(sb.toString(), null);
 	    logger.info(JOVALMsg.STATUS_PROCESS_START, p.getCommand());
 	    p.start();
 	    InputStream in = p.getInputStream();

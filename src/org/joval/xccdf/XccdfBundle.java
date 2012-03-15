@@ -11,7 +11,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Vector;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -52,10 +55,6 @@ public class XccdfBundle implements ILoggable {
     public static final String XCCDF_BENCHMARK	= "xccdf.xml";
     public static final String XCCDF_OVAL	= "oval.xml";
 
-    public static final Benchmark getBenchmark(File f) throws XccdfException {
-	return getBenchmark(new StreamSource(f));
-    }
-
     public static final Benchmark getBenchmark(InputStream in) throws XccdfException {
 	return getBenchmark(new StreamSource(in));
     }
@@ -81,7 +80,7 @@ public class XccdfBundle implements ILoggable {
     private Dictionary dictionary;
     private IDefinitions cpeOval, oval;
     private File base;
-    private URL cpeOvalURL=null, ovalURL=null;
+    private String cpeOvalHref=null, ovalHref=null;
 
     /**
      * Create a Directives based on the contents of a directives file.
@@ -90,62 +89,58 @@ public class XccdfBundle implements ILoggable {
 	base = f;
 	logger = JOVALSystem.getLogger();
 	try {
-	    URL benchmarkURL=null, dictionaryURL=null;
+	    List<String> fnames = null;
 	    if (f.isDirectory()) {
-		File[] files = f.listFiles();
-		for (File file : files) {
-		    if (file.getName().toLowerCase().endsWith(XCCDF_BENCHMARK)) {
-			benchmarkURL = getURL(file.getName());
-		    } else if (file.getName().toLowerCase().endsWith(CPE_DICTIONARY)) {
-			dictionaryURL = getURL(file.getName());
-		    } else if (file.getName().toLowerCase().endsWith(CPE_OVAL)) {
-			cpeOvalURL = getURL(file.getName());
-		    } else if (file.getName().toLowerCase().endsWith(XCCDF_OVAL)) { // NB: after cpe-oval.xml
-			ovalURL = getURL(file.getName());
-		    }
-		}
-	    } else if (f.isFile()) {
-		if (f.getName().toLowerCase().endsWith(".zip")) {
-		    ZipFile zip = new ZipFile(f);
-		    for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
-			ZipEntry entry = entries.nextElement();
-			if (!entry.isDirectory()) {
-			    if (entry.getName().toLowerCase().endsWith(XCCDF_BENCHMARK)) {
-				benchmarkURL = getURL(entry.getName());
-			    } else if (entry.getName().toLowerCase().endsWith(CPE_DICTIONARY)) {
-				dictionaryURL = getURL(entry.getName());
-			    } else if (entry.getName().toLowerCase().endsWith(CPE_OVAL)) {
-				cpeOvalURL = getURL(entry.getName());
-			    } else if (entry.getName().toLowerCase().endsWith(XCCDF_OVAL)) { // NB: after cpe-oval.xml
-				ovalURL = getURL(entry.getName());
-			    }
-			}
+		fnames = Arrays.asList(f.list());
+	    } else if (f.isFile() && f.getName().toLowerCase().endsWith(".zip")) {
+		List<String> list = new Vector<String>();
+		ZipFile zip = new ZipFile(f);
+		for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
+		    ZipEntry entry = entries.nextElement();
+		    if (!entry.isDirectory()) {
+			list.add(entry.getName());
 		    }
 		}
 	    }
-	    if (benchmarkURL == null) {
+
+	    String benchmarkHref=null, dictionaryHref=null;
+	    if (fnames != null) {
+		for (String fname : fnames) {
+		    if (fname.toLowerCase().endsWith(XCCDF_BENCHMARK)) {
+			benchmarkHref = fname;
+		    } else if (fname.toLowerCase().endsWith(CPE_DICTIONARY)) {
+			dictionaryHref = fname;
+		    } else if (fname.toLowerCase().endsWith(CPE_OVAL)) {
+			cpeOvalHref = fname;
+		    } else if (fname.toLowerCase().endsWith(XCCDF_OVAL)) { // NB: after cpe-oval.xml
+			ovalHref = fname;
+		    }
+		}
+	    }
+
+	    if (benchmarkHref == null) {
 		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, XCCDF_BENCHMARK));
 	    } else {
-		logger.info(JOVALMsg.STATUS_XCCDF_BENCHMARK, benchmarkURL);
-		benchmark = getBenchmark(benchmarkURL.openStream());
+		logger.info(JOVALMsg.STATUS_XCCDF_BENCHMARK, benchmarkHref);
+		benchmark = getBenchmark(getURL(benchmarkHref).openStream());
 	    }
-	    if (dictionaryURL == null) {
+	    if (dictionaryHref == null) {
 		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, CPE_DICTIONARY));
 	    } else {
-		logger.info(JOVALMsg.STATUS_XCCDF_DICTIONARY, dictionaryURL);
-		dictionary = new Dictionary(dictionaryURL.openStream());
+		logger.info(JOVALMsg.STATUS_XCCDF_DICTIONARY, dictionaryHref);
+		dictionary = new Dictionary(getURL(dictionaryHref).openStream());
 	    }
-	    if (cpeOvalURL == null) {
+	    if (cpeOvalHref == null) {
 		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, CPE_OVAL));
 	    } else {
-		logger.info(JOVALMsg.STATUS_XCCDF_PLATFORM, cpeOvalURL);
-		cpeOval = new Definitions(cpeOvalURL.openStream());
+		logger.info(JOVALMsg.STATUS_XCCDF_PLATFORM, cpeOvalHref);
+		cpeOval = new Definitions(getURL(cpeOvalHref).openStream());
 	    }
-	    if (ovalURL == null) {
+	    if (ovalHref == null) {
 		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, XCCDF_OVAL));
 	    } else {
-		logger.info(JOVALMsg.STATUS_XCCDF_OVAL, ovalURL);
-		oval = new Definitions(ovalURL.openStream());
+		logger.info(JOVALMsg.STATUS_XCCDF_OVAL, ovalHref);
+		oval = new Definitions(getURL(ovalHref).openStream());
 	    }
 	} catch (IOException e) {
 	    throw new XccdfException(e);
@@ -173,12 +168,12 @@ public class XccdfBundle implements ILoggable {
 	}
     }
 
-    public URL getCpeOvalURL() {
-	return cpeOvalURL;
+    public String getCpeOvalHref() {
+	return cpeOvalHref;
     }
 
-    public URL getOvalURL() {
-	return ovalURL;
+    public String getOvalHref() {
+	return ovalHref;
     }
 
     public Dictionary getDictionary() {

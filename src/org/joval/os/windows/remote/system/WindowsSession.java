@@ -248,9 +248,8 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	return info.getSystemInfo();
     }
 
-    // Private
-
-    private String getTempDir() throws IOException {
+    @Override
+    public String getTempDir() throws IOException {
 	Iterator<String> iter = getTempDirCandidates().iterator();
 	while(iter.hasNext()) {
 	    String path = iter.next();
@@ -260,6 +259,8 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	}
 	throw new IOException("Unable to find a temp directory");
     }
+
+    // Private
 
     private List<String> getTempDirCandidates() {
 	List<String> list = new Vector<String>();
@@ -274,8 +275,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private boolean testDir(String path) {
 	if (path != null) {
 	    try {
-		IFile f = fs.getFile(path);
-		return f.isDirectory();
+		return fs.getFile(path).isDirectory();
 	    } catch (Exception e) {
 	    }
 	}

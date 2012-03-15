@@ -119,10 +119,6 @@ public abstract class AbstractBaseSession implements IBaseSession {
 	return wsdir;
     }
 
-    public IProcess createProcess(String command) throws Exception {
-	return createProcess(command, null);
-    }
-
     // All the abstract methods, for reference
 
     public abstract boolean connect();

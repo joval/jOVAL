@@ -89,11 +89,11 @@ public class JunosSession extends IosSession implements IJunosSession {
     }
 
     @Override
-    public IProcess createProcess(String command) throws Exception {
+    public IProcess createProcess(String command, String[] env) throws Exception {
 	if (ssh == null) {
 	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_JUNOS_OFFLINE));
 	} else {
-	    return ssh.createProcess(command);
+	    return ssh.createProcess(command, env);
 	}
     }
 

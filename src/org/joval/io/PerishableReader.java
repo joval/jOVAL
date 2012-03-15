@@ -59,6 +59,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     private long timeout;
     private TimerTask task;
     private LocLogger logger;
+    private StackTraceElement[] trace;
 
     // Implement ILoggable
 
@@ -231,6 +232,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     }
 
     private PerishableReader(InputStream in, long timeout) {
+	trace = Thread.currentThread().getStackTrace();
 	logger = JOVALSystem.getLogger();
 	this.in = in;
 	setTimeout(timeout);
@@ -257,6 +259,21 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	    } else if (!closed && t.isAlive()) {
 		t.interrupt();
 		PerishableReader.this.expired = true;
+
+		//
+		// These can be a pain to debug, so we log the stack trace documenting the history of this reader.
+		//
+		StringBuffer sb = new StringBuffer("\n");
+		for (int i=0; i < trace.length; i++) {
+		    if (i > 0) {
+			sb.append("    at ");
+		    }
+		    sb.append(trace[i].getClassName()).append(".").append(trace[i].getMethodName());
+		    if (i > 0) {
+			sb.append(" ").append(trace[i].getFileName()).append(", line: ").append(trace[i].getLineNumber());
+		    }
+		}
+		logger.warn(JOVALMsg.WARNING_PERISHABLEIO_INTERRUPT, sb.toString());
 	    }
 	    JOVALSystem.getTimer().purge();
 	}

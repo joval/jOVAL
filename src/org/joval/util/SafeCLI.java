@@ -29,14 +29,32 @@ public class SafeCLI {
      * Run a command and get the first line of output.
      */
     public static final String exec(String cmd, IBaseSession session, IBaseSession.Timeout to) throws Exception {
-	return exec(cmd, session, session.getTimeout(to));
+	return exec(cmd, null, session, session.getTimeout(to));
+    }
+
+    /**
+     * Run a command and get the first line of output, using the specified environment.
+     */
+    public static final String exec(String cmd, String[] env, IBaseSession session, IBaseSession.Timeout to) throws Exception {
+	return exec(cmd, env, session, session.getTimeout(to));
     }
 
     /**
      * Run a command and get the first line of output.
      */
     public static final String exec(String cmd, IBaseSession session, long readTimeout) throws Exception {
-	List<String> output = multiLine(cmd, session, readTimeout);
+	List<String> output = multiLine(cmd, null, session, readTimeout);
+	if (output != null && output.size() > 0) {
+	    return output.get(0);
+	}
+	return null;
+    }
+
+    /**
+     * Run a command and get the first line of output, using the specified environment.
+     */
+    public static final String exec(String cmd, String[] env, IBaseSession session, long readTimeout) throws Exception {
+	List<String> output = multiLine(cmd, env, session, readTimeout);
 	if (output != null && output.size() > 0) {
 	    return output.get(0);
 	}
@@ -47,55 +65,90 @@ public class SafeCLI {
      * Run a command and get the resulting lines of output.
      */
     public static final List<String> multiLine(String cmd, IBaseSession session, IBaseSession.Timeout to) throws Exception {
-	return new SafeCLI(cmd, session, session.getTimeout(to)).output();
+	return multiLine(cmd, null, session, session.getTimeout(to));
+    }
+
+    /**
+     * Run a command and get the resulting lines of output, using the specified environment.
+     */
+    public static final List<String> multiLine(String cmd, String[] env, IBaseSession session, IBaseSession.Timeout to)
+		throws Exception {
+
+	return multiLine(cmd, env, session, session.getTimeout(to));
     }
 
     /**
      * Run a command and get the resulting lines of output.
      */
     public static final List<String> multiLine(String cmd, IBaseSession session, long readTimeout) throws Exception {
-	return new SafeCLI(cmd, session, readTimeout).output();
+	return multiLine(cmd, null, session, readTimeout);
+    }
+
+    /**
+     * Run a command and get the resulting lines of output, using the specified environment.
+     */
+    public static final List<String> multiLine(String cmd, String[] env, IBaseSession session, long readTimeout)
+		throws Exception {
+
+	return execData(cmd, env, session, readTimeout).getStdout();
+    }
+
+    /**
+     * Run a command and get the resulting ExecData, using the specified environment.
+     */
+    public static final ExecData execData(String cmd, String[] env, IBaseSession session, long readTimeout)
+		throws Exception {
+
+	return new SafeCLI(cmd, env, session, readTimeout).result();
     }
 
     // Private
 
     private String cmd;
+    private String[] env;
     private IBaseSession session;
-    private List<String> output;
+    private ExecData result;
     private long readTimeout;
     private int execRetries = 0;
 
-    private SafeCLI(String cmd, IBaseSession session, long readTimeout) throws Exception {
+    private SafeCLI(String cmd, String[] env, IBaseSession session, long readTimeout) throws Exception {
 	this.cmd = cmd;
+	this.env = env;
 	this.session = session;
 	this.readTimeout = readTimeout;
 	execRetries = session.getProperties().getIntProperty(IBaseSession.PROP_EXEC_RETRIES);
     }
 
-    private List<String> output() throws Exception {
-	if (output == null) {
+    private ExecData result() throws Exception {
+	if (result == null) {
 	    exec();
 	}
-	return output;
+	return result;
     }
 
     public void exec() throws Exception {
 	boolean success = false;
+	result = new ExecData();
 
 	for (int attempt=0; !success; attempt++) {
 	    IProcess p = null;
 	    IReader in = null;
 	    try {
-		p = session.createProcess(cmd);
+		p = session.createProcess(cmd, env);
 		p.start();
 		in = PerishableReader.newInstance(p.getInputStream(), readTimeout);
 		in.setLogger(session.getLogger());
-		output = new Vector<String>();
+		result.stdout = new Vector<String>();
 		String line = null;
 		while((line = in.readLine()) != null) {
-		    output.add(line);
+		    result.stdout.add(line);
 		}
-		success = true;
+		try {
+		    p.waitFor(session.getTimeout(IBaseSession.Timeout.L));
+		    result.exitCode = p.exitValue();
+		    success = true;
+		} catch (InterruptedException e) {
+		}
 	    } catch (IOException e) {
 		if (e instanceof InterruptedIOException || e instanceof EOFException) {
 		    if (attempt > execRetries) {
@@ -104,6 +157,7 @@ public class SafeCLI {
 		    } else {
 			// the process has hung up, so kill it
 			p.destroy();
+			p = null;
 			session.getLogger().info(JOVALMsg.STATUS_PROCESS_RETRY, cmd);
 		    }
 		} else {
@@ -124,12 +178,29 @@ public class SafeCLI {
 			}
 		    } catch (IOException e) {
 		    }
-		    try {
-			p.waitFor(0);
-		    } catch (InterruptedException e) {
+		    if (p.isRunning()) {
+			p.destroy();
 		    }
 		}
 	    }
+	}
+    }
+
+    public class ExecData {
+	int exitCode;
+	List<String> stdout;
+
+	ExecData() {
+	    exitCode = -1;
+	    stdout = null;
+	}
+
+	public int getExitCode() {
+	    return exitCode;
+	}
+
+	public List<String> getStdout() {
+	    return stdout;
 	}
     }
 }

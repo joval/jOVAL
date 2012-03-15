@@ -87,11 +87,6 @@ public interface IBaseSession extends ILoggable {
     IProperty getProperties();
 
     /**
-     * Create a process on the machine.
-     */
-    IProcess createProcess(String command) throws Exception;
-
-    /**
      * Create a process on the machine, with the specified environment variables.
      *
      * @arg env Environment variables, each of the form "VARIABLE=VALUE".
