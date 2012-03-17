@@ -12,12 +12,15 @@ import java.io.PipedOutputStream;
 
 import org.slf4j.cal10n.LocLogger;
 
+import org.vngx.jsch.Channel;
 import org.vngx.jsch.ChannelExec;
+import org.vngx.jsch.ChannelShell;
 import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.exception.JSchException;
 
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.PerishableReader;
 import org.joval.io.StreamLogger;
 import org.joval.io.StreamTool;
 import org.joval.util.JOVALMsg;
@@ -30,18 +33,22 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 class SshProcess implements IProcess {
-    private ChannelExec ce;
+    private Channel channel;
     private String command;
-    private boolean debug;
+    private boolean debug, shell;
     private StreamLogger debugIn, debugErr;
+    private InputStream in = null;
+    private OutputStream out = null;
     private boolean interactive=false, dirty = true, running = false;
     private File wsdir;
     private LocLogger logger;
     private int pid;
     private String[] env;
+    private int exitValue = -1;
 
-    SshProcess(ChannelExec ce, String command, String[] env, boolean debug, File wsdir, int pid, LocLogger logger) {
-	this.ce = ce;
+    SshProcess(Channel channel, String command, String[] env, boolean debug, File wsdir, int pid, LocLogger logger) {
+	this.channel = channel;
+	shell = channel.getType() == ChannelType.SHELL;
 	this.command = command;
 	this.env = env;
 	this.debug = debug;
@@ -50,7 +57,7 @@ class SshProcess implements IProcess {
 	this.logger = logger;
     }
 
-    // Implement IProcess
+    // Implement IProchannel
 
     public String getCommand() {
 	return command;
@@ -60,23 +67,62 @@ class SshProcess implements IProcess {
 	this.interactive = interactive;
     }
 
+    static final int CR = '\r';
+
     public void start() throws Exception {
 	logger.debug(JOVALMsg.STATUS_PROCESS_START, command);
-	ce.setPty(interactive);
-	ce.setCommand(command);
-	if (env != null) {
-	    for (String s : env) {
-		int ptr = s.indexOf("=");
-		if (ptr > 0) {
-		    ce.setEnv(s.substring(0, ptr), s.substring(ptr+1));
+
+	switch(channel.getType()) {
+	  case SHELL: {
+	    ChannelShell shell = (ChannelShell)channel;
+	    shell.setPty(true);
+	    byte[] mode = {0x35, 0x00, 0x00, 0x00, 0x00, 0x00}; // echo off
+	    shell.setTerminalMode(mode);
+	    channel.connect();
+	    getOutputStream();
+	    PerishableReader reader = PerishableReader.newInstance(getInputStream(), 10000L);
+	    determinePrompt(reader); // garbage
+	    out.write("/bin/sh\r".getBytes());
+	    out.flush();
+	    String prompt = determinePrompt(reader);
+	    if (env != null) {
+		for (String var : env) {
+		    out.write(new StringBuffer("export ").append(var).toString().getBytes());
+		    out.write(CR);
+		    out.flush();
+		    reader.readUntil(prompt); // ignore
 		}
 	    }
+	    reader.defuse();
+	    in = new MarkerTerminatedInputStream(channel.getInputStream(), prompt);
+	    if (debug) {
+		debugIn.setInputStream(in);
+	    }
+	    out.write(command.getBytes());
+	    out.write(CR);
+	    out.flush();
+	    running = true;
+	    break;
+	  }
+
+	  case EXEC: {
+	    ChannelExec ce = (ChannelExec)channel;
+	    ce.setPty(interactive);
+	    ce.setCommand(command);
+	    channel.connect();
+	    running = true;
+	    break;
+	  }
+
+	  default:
+	    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_CHANNEL, channel.getType()));
 	}
-	ce.connect();
-	running = true;
     }
 
     public InputStream getInputStream() throws IOException {
+	if (in == null) {
+	    in = channel.getInputStream();
+	}
 	if (debug) {
 	    if (debugIn == null) {
 		File f = null;
@@ -85,11 +131,11 @@ class SshProcess implements IProcess {
 		} else {
 		    f = new File(wsdir, "out." + pid + ".log");
 		}
-		debugIn = new StreamLogger(command, ce.getInputStream(), f, logger);
+		debugIn = new StreamLogger(command, in, f, logger);
 	    }
 	    return debugIn;
 	} else {
-	    return ce.getInputStream();
+	    return in;
 	}
     }
 
@@ -102,16 +148,19 @@ class SshProcess implements IProcess {
 		} else {
 		    f = new File(wsdir, "err." + pid + ".log");
 		}
-		debugErr = new StreamLogger(command, ce.getErrStream(), f, logger);
+		debugErr = new StreamLogger(command, channel.getExtInputStream(), f, logger);
 	    }
 	    return debugErr;
 	} else {
-	    return ce.getErrStream();
+	    return channel.getExtInputStream();
 	}
     }
 
     public OutputStream getOutputStream() throws IOException {
-	return ce.getOutputStream();
+	if (out == null) {
+	    out = channel.getOutputStream();
+	}
+	return out;
     }
 
     public void waitFor(long millis) throws InterruptedException {
@@ -125,16 +174,23 @@ class SshProcess implements IProcess {
     }
 
     public int exitValue() throws IllegalThreadStateException {
-	return ce.getExitStatus();
+	if (isRunning()) {
+	    throw new IllegalThreadStateException(command);
+	}
+	if (shell) {
+	    return exitValue;
+	} else {
+	    return channel.getExitStatus();
+	}
     }
 
     public synchronized void destroy() {
 	logger.warn(JOVALMsg.ERROR_PROCESS_KILL, command);
 	try {
-	    if (ce.isConnected()) {
-		ce.sendSignal("KILL");
-		ce.getInputStream().close();
-		ce.getErrStream().close();
+	    if (channel.isConnected()) {
+		channel.sendSignal("KILL");
+		channel.getInputStream().close();
+		channel.getExtInputStream().close();
 	    }
 	} catch (Exception e) {
 	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -147,8 +203,8 @@ class SshProcess implements IProcess {
 	if (!running) {
 	    return false;
 	} else {
-	    if (ce != null && ce.isConnected()) {
-		if (ce.isEOF()) {
+	    if (channel != null && channel.isConnected()) {
+		if (channel.isEOF()) {
 		    cleanup();
 		    return false;
 		} else {
@@ -188,15 +244,118 @@ class SshProcess implements IProcess {
 		} catch (IOException e) {
 		}
 	    }
+	} else {
+	    if (in != null) {
+		try {
+		    in.close();
+		} catch (IOException e) {
+		}
+	    }
+	    if (out != null) {
+		try {
+		    out.close();
+		} catch (IOException e) {
+		}
+	    }
 	}
-	if (ce.isConnected()) {
-	    if (!ce.isEOF()) {
+	if (channel.isConnected()) {
+	    if (!channel.isEOF()) {
 		logger.debug(JOVALMsg.ERROR_PROCESS_DESTROY, command);
 	    }
-	    ce.disconnect();
+	    channel.disconnect();
 	}
 	logger.trace(JOVALMsg.STATUS_PROCESS_END, command);
 	dirty = false;
 	running = false;
+    }
+
+    private String determinePrompt(InputStream in) throws IOException {
+	int ch = -1;
+	boolean trigger = false;
+	StringBuffer sb = new StringBuffer();
+	while ((ch = in.read()) != -1) {
+	    switch(ch) {
+	      case '>':
+	      case '$':
+	      case '#':
+		sb.append((char)ch);
+		trigger = true;
+		break;
+
+	      case ' ':
+		sb.append((char)ch);
+		if (trigger) {
+		    return sb.toString();
+		}
+		break;
+
+	      default:
+		sb.append((char)ch);
+		trigger = false;
+		break;
+	    }
+	}
+	return null;
+    }
+
+    class MarkerTerminatedInputStream extends PerishableReader {
+	String marker;
+	byte[] markerBytes;
+
+	MarkerTerminatedInputStream(InputStream in, String marker) {
+	    super(in, 10000L);
+	    this.marker = marker;
+	    markerBytes = marker.getBytes();
+	}
+
+	@Override
+	public int read() throws IOException {
+	    if (isEOF) {
+		return -1;
+	    }
+	    if (buffer.hasNext()) {
+		reset();
+		return buffer.next();
+	    }
+	    int ch = in.read();
+	    reset();
+	    if (ch == -1) {
+		isEOF = true;
+	    } else {
+		if (buffer.hasCapacity()) {
+		    buffer.add((byte)(ch & 0xFF));
+		} else {
+		    buffer.clear(); // buffer overflow
+		}
+		if (ch == (int)markerBytes[0]) {
+		    setCheckpoint(markerBytes.length);
+		    for (int i=1; i < markerBytes.length; i++) {
+			byte b = (byte)(in.read() & 0xFF);
+			buffer.add(b);
+			reset();
+			if (b != markerBytes[i]) {
+			    restoreCheckpoint();
+			    return ch;
+			}
+		    }
+		    try {
+			out.write("echo $?".getBytes());
+			out.write(CR);
+			out.flush();
+			PerishableReader pr = PerishableReader.newInstance(in, 0);
+			exitValue = Integer.parseInt(pr.readUntil(marker).trim());
+			pr.close();
+			close();
+			running = false;
+			channel.disconnect();
+		    } catch (Exception e) {
+e.printStackTrace();
+		    }
+		    isEOF = true;
+		    ch = -1;
+		}
+	    }
+	    return ch;
+	}
     }
 }

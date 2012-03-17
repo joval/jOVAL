@@ -12,6 +12,7 @@ import org.slf4j.cal10n.LocLogger;
 
 import org.vngx.jsch.JSch;
 import org.vngx.jsch.ChannelExec;
+import org.vngx.jsch.ChannelShell;
 import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.Session;
 import org.vngx.jsch.UIKeyboardInteractive;
@@ -119,8 +120,16 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
     @Override
     public IProcess createProcess(String command, String[] env) throws Exception {
 	if (connect()) {
-	    ChannelExec ce = session.openChannel(ChannelType.EXEC);
-	    return new SshProcess(ce, command, env, debug, wsdir, pid++, logger);
+	    if (env == null) {
+		ChannelExec ce = session.openChannel(ChannelType.EXEC);
+		return new SshProcess(ce, command, null, debug, wsdir, pid++, logger);
+	    } else {
+		//
+		// Since SSH is very strict about setting environment variables, we use a shell.
+		//
+		ChannelShell cs = session.openChannel(ChannelType.SHELL);
+		return new SshProcess(cs, command, env, debug, wsdir, pid++, logger);
+	    }
 	} else {
 	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
 	}

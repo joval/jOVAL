@@ -52,6 +52,14 @@ public class StreamLogger extends InputStream {
 	this.logger = logger;
     }
 
+    public void setInputStream(InputStream in) {
+	this.in = in;
+    }
+
+    public InputStream getInputStream() {
+	return in;
+    }
+
     public int read() throws IOException {
 	int ch = in.read();
 	if (ch != -1) {

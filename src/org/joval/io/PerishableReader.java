@@ -3,7 +3,6 @@
 
 package org.joval.io;
 
-import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -13,6 +12,7 @@ import java.io.PrintStream;
 import java.util.ConcurrentModificationException;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TimerTask;
 import java.util.Vector;
@@ -53,9 +53,10 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	return reader;
     }
 
-    private InputStream in;
-    private BufferedReader reader;
-    private boolean isEOF, closed, expired;
+    protected InputStream in;
+    protected boolean isEOF;
+    protected Buffer buffer;
+    private boolean closed, expired;
     private long timeout;
     private TimerTask task;
     private LocLogger logger;
@@ -77,7 +78,6 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	if (!closed)  {
 	    defuse();
 	    in.close();
-	    reader.close();
 	    closed = true;
 	}
     }
@@ -91,14 +91,37 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     }
 
     public String readLine() throws IOException {
-	String line = reader.readLine();
-	if (line == null) {
+	String result = null;
+	StringBuffer line = new StringBuffer();
+	int ch = 0;
+	while(result == null && (ch = read()) != -1) {
+	    switch(ch) {
+	      case '\n':
+		result = line.toString();
+		break;
+
+	      case '\r':
+		setCheckpoint(1);
+		if (read() != '\n') {
+		    restoreCheckpoint();
+		}
+		result = line.toString();
+		break;
+
+	      default:
+		line.append((char)(ch & 0xFF));
+		break;
+	    }
+	}
+
+	if (result == null) {
 	    defuse();
 	    isEOF = true;
-	} else {
-	    reset();
+	    if (line.length() > 0) {
+		result = line.toString();
+	    }
 	}
-	return line;
+	return result;
     }
 
     public void readFully(byte[] buff) throws IOException {
@@ -108,7 +131,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     public void readFully(byte[] buff, int offset, int len) throws IOException {
 	int end = offset + len;
 	for (int i=offset; i < end; i++) {
-	    int ch = reader.read();
+	    int ch = read();
 	    if (ch == -1) {
 		defuse();
 		isEOF = true;
@@ -117,7 +140,6 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 		buff[i] = (byte)(ch & 0xFF);
 	    }
 	}
-	reset();
     }
 
     public String readUntil(String delim) throws IOException {
@@ -145,14 +167,13 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 		return readLine();
 	    }
 	} while(!found);
-
 	return sb.toString();
     }
 
     public byte[] readUntil(int delim) throws IOException {
 	int ch=0, len=0;
 	byte[] buff = new byte[512];
-	while((ch = reader.read()) != -1 && ch != delim) {
+	while((ch = read()) != -1 && ch != delim) {
 	    if (len == buff.length) {
 		byte[] old = buff;
 		buff = new byte[old.length + 512];
@@ -161,7 +182,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 		}
 		old = null;
 	    }
-	    buff[len++] = (byte)ch;
+	    buff[len++] = (byte)(ch & 0xFF);
 	}
 	if (ch == -1 && len == 0) {
 	    defuse();
@@ -172,13 +193,39 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	    for (int i=0; i < len; i++) {
 		result[i] = buff[i];
 	    }
-	    reset();
 	    return result;
 	}
     }
 
+    public int read(byte[] buff, int offset, int len) throws IOException {
+	int bytesRead = 0;
+	while (buffer.hasNext() && offset < buff.length) {
+	    buff[offset++] = buffer.next();
+	    bytesRead++;
+	}
+	bytesRead += in.read(buff, offset, len);
+	int end = offset + bytesRead;
+	for (int i=offset; buffer.hasCapacity() && i < end; i++) {
+	    buffer.add((byte)(i & 0xFF));
+	}
+	reset();
+	return bytesRead;
+    }
+
     public int read() throws IOException {
-	int i = reader.read();
+	int i = -1;
+	if (isEOF) {
+	    throw new EOFException("PerishableReader");
+	} else if (buffer.hasNext()) {
+	    i = (int)buffer.next();
+	} else {
+	    i = in.read();
+	    if (buffer.hasCapacity()) {
+		buffer.add((byte)(i & 0xFF));
+	    } else {
+		buffer.clear(); // buffer overflow
+	    }
+	}
 	if (i == -1) {
 	    defuse();
 	    isEOF = true;
@@ -189,12 +236,11 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     }
 
     public void setCheckpoint(int readAheadLimit) throws IOException {
-	reader.mark(readAheadLimit);
+	buffer.init(readAheadLimit);
     }
 
     public void restoreCheckpoint() throws IOException {
-	reader.reset();
-	reset();
+	buffer.reset();
     }
 
     // Implement IPerishable
@@ -218,12 +264,10 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	JOVALSystem.getTimer().schedule(task, timeout);
     }
 
-    // Private
-
     /**
      * Kill the scheduled interrupt task and purge it from the timer.
      */
-    private void defuse() {
+    public void defuse() {
 	if (task != null) {
 	    task.cancel();
 	    task = null;
@@ -231,15 +275,17 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	JOVALSystem.getTimer().purge();
     }
 
-    private PerishableReader(InputStream in, long timeout) {
+    // Private
+
+    protected PerishableReader(InputStream in, long timeout) {
 	trace = Thread.currentThread().getStackTrace();
 	logger = JOVALSystem.getLogger();
 	this.in = in;
 	setTimeout(timeout);
-	reader = new BufferedReader(new InputStreamReader(in));
 	isEOF = false;
 	closed = false;
 	expired = false;
+	buffer = new Buffer(0);
 	reset();
     }
 
@@ -263,8 +309,9 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 		//
 		// These can be a pain to debug, so we log the stack trace documenting the history of this reader.
 		//
-		StringBuffer sb = new StringBuffer("\n");
+		StringBuffer sb = new StringBuffer();
 		for (int i=0; i < trace.length; i++) {
+		    sb.append("\n");
 		    if (i > 0) {
 			sb.append("    at ");
 		    }
@@ -276,6 +323,53 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 		logger.warn(JOVALMsg.WARNING_PERISHABLEIO_INTERRUPT, sb.toString());
 	    }
 	    JOVALSystem.getTimer().purge();
+	}
+    }
+
+    protected class Buffer {
+	byte[] buff = null;
+	int pos = 0;
+	int len = 0;
+
+	Buffer(int size) {
+	    init(size);
+	}
+
+	void init(int size) {
+	    buff = new byte[size];
+	    len = 0;
+	    pos = 0;
+	}
+
+	public void clear() {
+	    buff = null;
+	}
+
+	public void reset() {
+	    pos = 0;
+	}
+
+	public boolean hasNext() {
+	    return buff != null && pos < len;
+	}
+
+	public byte next() throws NoSuchElementException {
+	    if (hasNext()) {
+		return buff[pos++];
+	    } else {
+		throw new NoSuchElementException();
+	    }
+	}
+
+	public boolean hasCapacity() {
+	    return buff != null && len < buff.length;
+	}
+
+	public void add(byte b) {
+	    if (hasCapacity()) {
+		buff[len++] = b;
+		pos = len;
+	    }
 	}
     }
 }

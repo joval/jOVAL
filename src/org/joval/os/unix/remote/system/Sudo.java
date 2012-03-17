@@ -42,13 +42,17 @@ class Sudo implements IProcess {
     private String innerCommand;
     private PerishableReader in=null, err=null;
     private OutputStream out=null;
+    private boolean shell = false;
+    private long timeout;
 
-    Sudo(UnixSession us, ICredential cred, String cmd) throws Exception {
+    Sudo(UnixSession us, ICredential cred, String cmd, String[] env) throws Exception {
 	this.us = us;
 	ssh = us.ssh;
 	this.cred = cred;
 	innerCommand = cmd;
-	p = ssh.createProcess(getSuString(cmd));
+	shell = env != null;
+	p = ssh.createProcess(getSuString(cmd), env);
+	timeout = us.getProperties().getLongProperty(IUnixSession.PROP_SUDO_READ_TIMEOUT);
     }
 
     // Implement IProcess
@@ -91,8 +95,7 @@ class Sudo implements IProcess {
 
     public InputStream getInputStream() throws IOException {
 	if (in == null) {
-	    long readTimeout = us.getProperties().getLongProperty(IUnixSession.PROP_SUDO_READ_TIMEOUT);
-	    in = (PerishableReader)PerishableReader.newInstance(p.getInputStream(), readTimeout);
+	    in = (PerishableReader)PerishableReader.newInstance(p.getInputStream(), timeout);
 	    in.setLogger(us.getLogger());
 	}
 	return in;
@@ -100,8 +103,7 @@ class Sudo implements IProcess {
 
     public InputStream getErrorStream() throws IOException {
 	if (err == null) {
-	    long readTimeout = us.getProperties().getLongProperty(IUnixSession.PROP_SUDO_READ_TIMEOUT);
-	    err = (PerishableReader)PerishableReader.newInstance(p.getErrorStream(), readTimeout);
+	    err = (PerishableReader)PerishableReader.newInstance(p.getErrorStream(), timeout);
 	    err.setLogger(us.getLogger());
 	}
 	return err;
@@ -137,12 +139,14 @@ class Sudo implements IProcess {
      */
     private void loginLinux() throws Exception {
 	p.start();
-	getErrorStream();
-	byte[] buff = new byte[10]; //Password:_
-	err.readFully(buff);
+	if (shell) {
+	    ((PerishableReader)getInputStream()).readFully(new byte[10]); // Password:_
+	} else {
+	    ((PerishableReader)getErrorStream()).readFully(new byte[10]); // Password:_
+	}
 	getOutputStream();
 	out.write(cred.getPassword().getBytes());
-	out.write(LF);
+	out.write(shell ? CR : LF);
 	out.flush();
     }
 
@@ -156,13 +160,18 @@ class Sudo implements IProcess {
 	setInteractive(true);
 	p.start();
 	getInputStream();
-	in.setCheckpoint(1);
-	if ('?' == in.read()) {
-	    getOutputStream();
-	    out.write(us.getSessionCredential().getPassword().getBytes());
-	    out.write(LF);
-	    out.flush();
-	} else {
+	in.setCheckpoint(1024);
+	boolean success = false;
+	for (int i=0; i < 1024; i++) {
+	    if ('?' == in.read()) {
+		getOutputStream();
+		out.write(us.getSessionCredential().getPassword().getBytes());
+		out.write(LF);
+		out.flush();
+		success = true;
+	    }
+	}
+	if (!success) {
 	    in.restoreCheckpoint();
 	}
     }
@@ -222,6 +231,14 @@ class Sudo implements IProcess {
 	switch(us.getFlavor()) {
 	  case MACOSX:
 	    sb.append("sudo -p ? ").append(command);
+	    break;
+
+	  case LINUX:
+	    sb.append("su - ");
+	    sb.append(cred.getUsername());
+	    sb.append(" -m -c \"");
+	    sb.append(command.replace("\"", "\\\""));
+	    sb.append("\"");
 	    break;
 
 	  default:
