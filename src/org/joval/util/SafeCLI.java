@@ -144,7 +144,7 @@ public class SafeCLI {
 		    result.stdout.add(line);
 		}
 		try {
-		    p.waitFor(session.getTimeout(IBaseSession.Timeout.L));
+		    p.waitFor(session.getTimeout(IBaseSession.Timeout.M));
 		    result.exitCode = p.exitValue();
 		    success = true;
 		} catch (InterruptedException e) {

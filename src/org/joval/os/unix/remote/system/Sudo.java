@@ -160,10 +160,11 @@ class Sudo implements IProcess {
 	setInteractive(true);
 	p.start();
 	getInputStream();
-	in.setCheckpoint(1024);
+	in.setCheckpoint(512);
 	boolean success = false;
-	for (int i=0; i < 1024; i++) {
-	    if ('?' == in.read()) {
+	for (int i=0; i < 512 && !success; i++) {
+	    int ch = in.read();
+	    if ('?' == ch) {
 		getOutputStream();
 		out.write(us.getSessionCredential().getPassword().getBytes());
 		out.write(LF);
@@ -213,13 +214,16 @@ class Sudo implements IProcess {
 	} else if (line1.indexOf("Sorry") == -1) {
 	    //
 	    // Skip past the message of the day
+	    // NOTE -- by omitting the "-" (login) argument from the su command, we need no longer skip the MOTD.
 	    //
+/*
 	    int linesToSkip = us.getMotdLines();
 	    for (int i=0; i < linesToSkip; i++) {
 		if (in.readLine() == null) {
 		    throw new EOFException(null);
 		}
 	    }
+*/
 	} else {
 	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_AUTHENTICATION_FAILED, cred.getUsername());
 	    throw new LoginException(msg);
@@ -230,11 +234,11 @@ class Sudo implements IProcess {
 	StringBuffer sb = new StringBuffer();
 	switch(us.getFlavor()) {
 	  case MACOSX:
-	    sb.append("sudo -p ? ").append(command);
+	    sb.append("sudo -E -p ? ").append(command);
 	    break;
 
 	  case LINUX:
-	    sb.append("su - ");
+	    sb.append("su ");
 	    sb.append(cred.getUsername());
 	    sb.append(" -m -c \"");
 	    sb.append(command.replace("\"", "\\\""));
@@ -242,7 +246,7 @@ class Sudo implements IProcess {
 	    break;
 
 	  default:
-	    sb.append("su - ");
+	    sb.append("su ");
 	    sb.append(cred.getUsername());
 	    sb.append(" -c \"");
 	    sb.append(command.replace("\"", "\\\""));

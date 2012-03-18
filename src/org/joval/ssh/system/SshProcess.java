@@ -87,10 +87,14 @@ class SshProcess implements IProcess {
 	    String prompt = determinePrompt(reader);
 	    if (env != null) {
 		for (String var : env) {
-		    out.write(new StringBuffer("export ").append(var).toString().getBytes());
-		    out.write(CR);
-		    out.flush();
-		    reader.readUntil(prompt); // ignore
+		    int ptr = var.indexOf("=");
+		    if (ptr > 0) {
+			StringBuffer setenv = new StringBuffer(var).append("; export ").append(var.substring(0,ptr));
+			out.write(setenv.toString().getBytes());
+			out.write(CR);
+			out.flush();
+			reader.readUntil(prompt); // ignore
+		    }
 		}
 	    }
 	    reader.defuse();
@@ -349,7 +353,7 @@ class SshProcess implements IProcess {
 			running = false;
 			channel.disconnect();
 		    } catch (Exception e) {
-e.printStackTrace();
+			logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
 		    isEOF = true;
 		    ch = -1;
