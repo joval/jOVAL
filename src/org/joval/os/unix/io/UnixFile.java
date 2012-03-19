@@ -24,8 +24,6 @@ import org.joval.io.fs.CacheFile;
 import org.joval.io.fs.DefaultFile;
 import org.joval.io.fs.FileAccessor;
 import org.joval.io.fs.FileInfo;
-import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Implements an IFile with info having extended Unix attributes.

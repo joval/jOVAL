@@ -7,7 +7,7 @@ import org.joval.intf.system.IBaseSession;
 
 public interface ISshSession extends IBaseSession {
     /**
-     * Property indicating whether to log messages from JSch to the JOVALSystem logger (true/false).
+     * Property indicating whether to log messages from JSch to the JOVALMsg logger (true/false).
      */
     String PROP_ATTACH_LOG = "attach.log";
 

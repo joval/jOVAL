@@ -35,9 +35,10 @@ public abstract class AbstractBaseSession implements IBaseSession {
     protected LocLogger logger;
     protected boolean debug;
     protected InternalProperties internalProps;
+    protected boolean connected = false;
 
     protected AbstractBaseSession() {
-	logger = JOVALSystem.getLogger();
+	logger = JOVALMsg.getLogger();
 	internalProps = new InternalProperties();
 	JOVALSystem.configureSession(this);
 	debug = internalProps.getBooleanProperty(PROP_DEBUG);
@@ -117,6 +118,10 @@ public abstract class AbstractBaseSession implements IBaseSession {
 
     public File getWorkspace() {
 	return wsdir;
+    }
+
+    public boolean isConnected() {
+	return connected;
     }
 
     // All the abstract methods, for reference

@@ -19,7 +19,6 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.ISession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -41,7 +40,9 @@ public class SCEScript {
 
     private static final String ENV_VALUE_PREFIX	= "XCCDF_VALUE_";
     private static final String ENV_TYPE_PREFIX		= "XCCDF_TYPE_";
+    private static final String ENV_OPERATOR_PREFIX	= "XCCDF_OPERATOR_";
 
+    private String ruleId;
     private URL source;
     private ISession session;
     private Properties environment;
@@ -53,29 +54,27 @@ public class SCEScript {
     /**
      * Create a new SCE script specifying the URL of its source.
      */
-    public SCEScript(URL source, ISession session) {
+    public SCEScript(String ruleId, URL source, ISession session) {
+	this.ruleId = ruleId;
 	this.source = source;
 	this.session = session;
 	runtime = null;
 	environment = new Properties();
-	environment.setProperty("XCCDF_RESULT_PASS", Integer.toString(XCCDF_RESULT_PASS));
-	environment.setProperty("XCCDF_RESULT_FAIL", Integer.toString(XCCDF_RESULT_FAIL));
-	environment.setProperty("XCCDF_RESULT_ERROR", Integer.toString(XCCDF_RESULT_ERROR));
-	environment.setProperty("XCCDF_RESULT_UNKNOWN", Integer.toString(XCCDF_RESULT_UNKNOWN));
-	environment.setProperty("XCCDF_RESULT_NOT_APPLICABLE", Integer.toString(XCCDF_RESULT_NOT_APPLICABLE));
-	environment.setProperty("XCCDF_RESULT_NOT_CHECKED", Integer.toString(XCCDF_RESULT_NOT_CHECKED));
-	environment.setProperty("XCCDF_RESULT_NOT_SELECTED", Integer.toString(XCCDF_RESULT_NOT_SELECTED));
-	environment.setProperty("XCCDF_RESULT_INFORMATIONAL", Integer.toString(XCCDF_RESULT_INFORMATIONAL));
-	environment.setProperty("XCCDF_RESULT_FIXED", Integer.toString(XCCDF_RESULT_FIXED));
+	setenv("XCCDF_RESULT_PASS", Integer.toString(XCCDF_RESULT_PASS));
+	setenv("XCCDF_RESULT_FAIL", Integer.toString(XCCDF_RESULT_FAIL));
+	setenv("XCCDF_RESULT_ERROR", Integer.toString(XCCDF_RESULT_ERROR));
+	setenv("XCCDF_RESULT_UNKNOWN", Integer.toString(XCCDF_RESULT_UNKNOWN));
+	setenv("XCCDF_RESULT_NOT_APPLICABLE", Integer.toString(XCCDF_RESULT_NOT_APPLICABLE));
+	setenv("XCCDF_RESULT_NOT_CHECKED", Integer.toString(XCCDF_RESULT_NOT_CHECKED));
+	setenv("XCCDF_RESULT_NOT_SELECTED", Integer.toString(XCCDF_RESULT_NOT_SELECTED));
+	setenv("XCCDF_RESULT_INFORMATIONAL", Integer.toString(XCCDF_RESULT_INFORMATIONAL));
+	setenv("XCCDF_RESULT_FIXED", Integer.toString(XCCDF_RESULT_FIXED));
     }
 
     /**
      * Set a variable for SCE script execution. Use a null value to unset a variable.
      */
     public void setenv(String name, String value) {
-	if (name.startsWith(ENV_VALUE_PREFIX)) {
-	    name = ENV_VALUE_PREFIX + name;
-	}
 	if (value == null) {
 	    environment.remove(name);
 	} else {
@@ -92,7 +91,7 @@ public class SCEScript {
      */
     public boolean exec() throws IllegalStateException {
 	if (runtime != null) {
-	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_SCE_RAN, source.getFile(), session.getHostname(), runtime);
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_RAN, source.getFile(), session.getHostname(), runtime);
 	    throw new IllegalStateException(msg);
 	}
 
@@ -123,7 +122,8 @@ public class SCEScript {
 		env[i++] = var + "=" + environment.getProperty(var);
 	    }
 	    runtime = new Date();
-	    SafeCLI.ExecData data = SafeCLI.execData(script.getPath(), env, session, session.getTimeout(ISession.Timeout.M));
+	    long to = session.getTimeout(ISession.Timeout.M);
+	    SafeCLI.ExecData data = SafeCLI.execData("/bin/sh "+script.getPath(), env, session, to);
 	    if (data != null) {
 		exitCode = data.getExitCode();
 		switch(exitCode) {
@@ -157,12 +157,17 @@ public class SCEScript {
 		    break;
 		}
 		stdout = data.getStdout();
+System.out.println("------------------------");
+for(String line : stdout) {
+  System.out.println(line);
+}
+System.out.println("Exit Code: " + exitCode);
 		return true;
 	    }
 	} catch (IOException e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_IO, script, e.getMessage());
 	} catch (Exception e) {
-	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    if (in != null) {
 		try {
@@ -193,7 +198,7 @@ public class SCEScript {
      */
     public List<String> getStdout() throws IllegalStateException {
 	if (runtime == null) {
-	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, source.getFile(), session.getHostname());
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, source.getFile(), session.getHostname());
 	    throw new IllegalStateException(msg);
 	} else {
 	    return stdout;
@@ -202,10 +207,14 @@ public class SCEScript {
 
     public ResultEnumType getResult() throws IllegalStateException {
 	if (runtime == null) {
-	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, source.getFile(), session.getHostname());
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, source.getFile(), session.getHostname());
 	    throw new IllegalStateException(msg);
 	} else {
 	    return result;
 	}
+    }
+
+    public String getRuleId() {
+	return ruleId;
     }
 }

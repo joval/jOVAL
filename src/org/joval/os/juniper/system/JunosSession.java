@@ -22,7 +22,6 @@ import org.joval.os.juniper.JunosSystemInfo;
 import org.joval.protocol.netconf.NetconfSession;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A simple session implementation for Juniper JunOS devices, which is really very similar to an IOS session.
@@ -79,7 +78,7 @@ public class JunosSession extends IosSession implements IJunosSession {
 		    initialized = true;
 		    return true;
 		} catch (Exception e) {
-		    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 		return false;
 	    }
@@ -91,7 +90,7 @@ public class JunosSession extends IosSession implements IJunosSession {
     @Override
     public IProcess createProcess(String command, String[] env) throws Exception {
 	if (ssh == null) {
-	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_JUNOS_OFFLINE));
+	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_JUNOS_OFFLINE));
 	} else {
 	    return ssh.createProcess(command, env);
 	}

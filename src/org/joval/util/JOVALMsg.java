@@ -2,9 +2,14 @@
 
 package org.joval.util;
 
-import ch.qos.cal10n.LocaleData;
-import ch.qos.cal10n.Locale;
 import ch.qos.cal10n.BaseName;
+import ch.qos.cal10n.IMessageConveyor;
+import ch.qos.cal10n.Locale;
+import ch.qos.cal10n.LocaleData;
+import ch.qos.cal10n.MessageConveyor;
+import ch.qos.cal10n.MessageConveyorException;
+import org.slf4j.cal10n.LocLogger;
+import org.slf4j.cal10n.LocLoggerFactory;
 
 /**
  * Uses cal10n to define localized messages for jOVAL.
@@ -148,11 +153,10 @@ public enum JOVALMsg {
     ERROR_ADAPTER_MISSING,
     ERROR_ADAPTER_COLLECTION,
     ERROR_MISSING_COMPONENT,
-    ERROR_NULL_PLUGIN,
-    ERROR_CONTAINER_CLASSPATH,
-    ERROR_CONTAINER_CLASSPATH_ELT,
-    ERROR_CONTAINER_MAIN,
-    ERROR_CONTAINER_INTERFACE,
+    ERROR_PLUGIN_CLASSPATH,
+    ERROR_PLUGIN_CLASSPATH_ELT,
+    ERROR_PLUGIN_MAIN,
+    ERROR_PLUGIN_INTERFACE,
     ERROR_OBJECT_ITEM_FIELD,
     ERROR_REF_DEFINITION,
     ERROR_REF_ITEM,
@@ -191,11 +195,11 @@ public enum JOVALMsg {
     ERROR_OPERATION_DATATYPE,
     ERROR_VERSION_CLASS,
     ERROR_VERSION_STR,
-    ERROR_PLUGIN_ARCH,
-    ERROR_PLUGIN_HOSTNAME,
-    ERROR_PLUGIN_OSVERSION,
-    ERROR_PLUGIN_OSNAME,
-    ERROR_PLUGIN_INTERFACE,
+    ERROR_SYSINFO_ARCH,
+    ERROR_SYSINFO_HOSTNAME,
+    ERROR_SYSINFO_OSVERSION,
+    ERROR_SYSINFO_OSNAME,
+    ERROR_SYSINFO_INTERFACE,
     ERROR_WINENV_NONSTR,
     ERROR_WINENV_SYSENV,
     ERROR_WINENV_SYSROOT,
@@ -310,4 +314,47 @@ public enum JOVALMsg {
     ERROR_ASCII_CONVERSION,
     ERROR_PASSWD_LINE,
     ERROR_EXCEPTION;
+
+    private static IMessageConveyor mc;
+    private static LocLoggerFactory loggerFactory;
+    private static LocLogger sysLogger;
+
+    static {
+	mc = new MessageConveyor(java.util.Locale.getDefault());
+	try {
+	    //
+	    // Get a message to test whether localized messages are available for the default Locale
+	    //
+	    getMessage(JOVALMsg.ERROR_EXCEPTION);
+	} catch (MessageConveyorException e) {
+	    //
+	    // The test failed, so set the message Locale to English
+	    //
+	    mc = new MessageConveyor(java.util.Locale.ENGLISH);
+	}
+	loggerFactory = new LocLoggerFactory(mc);
+	sysLogger = loggerFactory.getLocLogger(JOVALMsg.class);
+    }
+
+    /**
+     * Retrieve the default localized system logger used by the jOVAL library.
+     */
+    public static LocLogger getLogger() {
+	return sysLogger;
+    }
+
+    /**
+     * Retrieve/create a localized jOVAL logger with a particular name.  This is useful for passing to an IPlugin, if you
+     * want all of the plugin's log messages routed to a specific logger.
+     */
+    public static LocLogger getLogger(String name) {
+	return loggerFactory.getLocLogger(name);
+    }
+
+    /**
+     * Retrieve a localized String, given the key and substitution arguments.
+     */
+    public static String getMessage(JOVALMsg key, Object... args) {
+	return mc.getMessage(key, args);
+    }
 }

@@ -1,57 +1,10 @@
 SHARED=\
-	org.joval.intf.cisco.system.IIosSession				\
-	org.joval.intf.cisco.system.ITechSupport			\
-	org.joval.intf.io.IFile						\
-	org.joval.intf.io.IFileEx					\
-	org.joval.intf.io.IFilesystem					\
-	org.joval.intf.io.IRandomAccess					\
-	org.joval.intf.io.IReader					\
-	org.joval.intf.juniper.system.IJunosSession			\
-	org.joval.intf.juniper.system.ISupportInformation		\
-	org.joval.intf.system.IEnvironment				\
-	org.joval.intf.system.IProcess					\
-	org.joval.intf.system.ISession					\
-	org.joval.intf.unix.io.IUnixFileInfo				\
-	org.joval.intf.unix.io.IUnixFilesystem				\
-	org.joval.intf.unix.system.IUnixSession				\
-	org.joval.intf.util.IPathRedirector				\
-	org.joval.intf.util.IPerishable					\
-	org.joval.intf.util.ISearchable					\
-	org.joval.intf.util.tree.ICacheable				\
-	org.joval.intf.util.tree.IForest				\
-	org.joval.intf.util.tree.INode					\
-	org.joval.intf.util.tree.ITree					\
-	org.joval.intf.windows.identity.IACE				\
-	org.joval.intf.windows.identity.IDirectory			\
-	org.joval.intf.windows.identity.IGroup				\
-	org.joval.intf.windows.identity.IPrincipal			\
-	org.joval.intf.windows.identity.IUser				\
-	org.joval.intf.windows.io.IWindowsFileInfo			\
-	org.joval.intf.windows.io.IWindowsFilesystem			\
-	org.joval.intf.windows.registry.IKey				\
-	org.joval.intf.windows.registry.IRegistry			\
-	org.joval.intf.windows.registry.IBinaryValue			\
-	org.joval.intf.windows.registry.IDwordValue			\
-	org.joval.intf.windows.registry.IExpandStringValue		\
-	org.joval.intf.windows.registry.IMultiStringValue		\
-	org.joval.intf.windows.registry.INoneValue			\
-	org.joval.intf.windows.registry.IQwordValue			\
-	org.joval.intf.windows.registry.IStringValue			\
-	org.joval.intf.windows.registry.IValue				\
-	org.joval.intf.windows.system.IWindowsSession			\
-	org.joval.intf.windows.wmi.ISWbemObject				\
-	org.joval.intf.windows.wmi.ISWbemObjectSet			\
-	org.joval.intf.windows.wmi.ISWbemProperty			\
-	org.joval.intf.windows.wmi.ISWbemPropertySet			\
-	org.joval.intf.windows.wmi.IWmiProvider				\
 	org.joval.io.fs.CacheFile					\
 	org.joval.io.fs.CacheFilesystem					\
 	org.joval.io.fs.DefaultFile					\
 	org.joval.io.fs.FileAccessor					\
 	org.joval.io.fs.FileInfo					\
-	org.joval.io.LittleEndian					\
-	org.joval.io.PerishableReader					\
-	org.joval.io.StreamTool						\
+	org.joval.io.StreamLogger					\
 	org.joval.os.unix.NetworkInterface				\
 	org.joval.os.unix.UnixSystemInfo				\
 	org.joval.os.unix.io.IUnixFilesystemDriver			\
@@ -73,29 +26,6 @@ SHARED=\
 	org.joval.os.windows.io.WindowsFileInfo				\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector		\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector		\
-	org.joval.os.windows.pe.Characteristics				\
-	org.joval.os.windows.pe.DLLCharacteristics			\
-	org.joval.os.windows.pe.Header					\
-	org.joval.os.windows.pe.ImageDOSHeader				\
-	org.joval.os.windows.pe.ImageFileHeader				\
-	org.joval.os.windows.pe.ImageNTHeaders				\
-	org.joval.os.windows.pe.ImageDataDirectory			\
-	org.joval.os.windows.pe.ImageOptionalHeader			\
-	org.joval.os.windows.pe.ImageOptionalHeader32			\
-	org.joval.os.windows.pe.ImageOptionalHeader64			\
-	org.joval.os.windows.pe.ImageSectionHeader			\
-	org.joval.os.windows.pe.LanguageConstants			\
-	org.joval.os.windows.pe.resource.ImageResourceDataEntry		\
-	org.joval.os.windows.pe.resource.ImageResourceDirectory		\
-	org.joval.os.windows.pe.resource.ImageResourceDirectoryEntry	\
-	org.joval.os.windows.pe.resource.Types				\
-	org.joval.os.windows.pe.resource.version.StringFileInfo		\
-	org.joval.os.windows.pe.resource.version.StringStructure	\
-	org.joval.os.windows.pe.resource.version.StringTable		\
-	org.joval.os.windows.pe.resource.version.Var			\
-	org.joval.os.windows.pe.resource.version.VarFileInfo		\
-	org.joval.os.windows.pe.resource.version.VsFixedFileInfo	\
-	org.joval.os.windows.pe.resource.version.VsVersionInfo		\
 	org.joval.os.windows.registry.BaseRegistry			\
 	org.joval.os.windows.registry.BinaryValue			\
 	org.joval.os.windows.registry.DwordValue			\
@@ -108,51 +38,7 @@ SHARED=\
 	org.joval.os.windows.registry.Value				\
 	org.joval.os.windows.registry.WOW3264RegistryRedirector		\
 	org.joval.os.windows.system.Environment				\
-	org.joval.os.windows.wmi.WmiException				\
 	org.joval.plugin.BasePlugin					\
-	org.joval.plugin.adapter.aix.FilesetAdapter			\
-	org.joval.plugin.adapter.aix.FixAdapter				\
-	org.joval.plugin.adapter.aix.OslevelAdapter			\
-	org.joval.plugin.adapter.cisco.ios.GlobalAdapter		\
-	org.joval.plugin.adapter.cisco.ios.InterfaceAdapter		\
-	org.joval.plugin.adapter.cisco.ios.LineAdapter			\
-	org.joval.plugin.adapter.cisco.ios.SnmpAdapter			\
-	org.joval.plugin.adapter.cisco.ios.TclshAdapter			\
-	org.joval.plugin.adapter.cisco.ios.Version55Adapter		\
-	org.joval.plugin.adapter.cisco.ios.VersionAdapter		\
-	org.joval.plugin.adapter.independent.BaseFileAdapter		\
-	org.joval.plugin.adapter.independent.Environmentvariable58Adapter	\
-	org.joval.plugin.adapter.independent.EnvironmentvariableAdapter	\
-	org.joval.plugin.adapter.independent.FamilyAdapter		\
-	org.joval.plugin.adapter.independent.TextfilecontentAdapter	\
-	org.joval.plugin.adapter.independent.Textfilecontent54Adapter	\
-	org.joval.plugin.adapter.independent.VariableAdapter		\
-	org.joval.plugin.adapter.independent.XmlfilecontentAdapter	\
-	org.joval.plugin.adapter.linux.RpminfoAdapter			\
-	org.joval.plugin.adapter.macos.PlistAdapter			\
-	org.joval.plugin.adapter.solaris.IsainfoAdapter			\
-	org.joval.plugin.adapter.solaris.PackageAdapter			\
-	org.joval.plugin.adapter.solaris.Patch54Adapter			\
-	org.joval.plugin.adapter.solaris.PatchAdapter			\
-	org.joval.plugin.adapter.solaris.SmfAdapter			\
-	org.joval.plugin.adapter.unix.FileAdapter			\
-	org.joval.plugin.adapter.unix.PasswordAdapter			\
-	org.joval.plugin.adapter.unix.ProcessAdapter			\
-	org.joval.plugin.adapter.unix.RunlevelAdapter			\
-	org.joval.plugin.adapter.unix.UnameAdapter			\
-	org.joval.plugin.adapter.windows.FileAdapter			\
-	org.joval.plugin.adapter.windows.Fileeffectiverights53Adapter	\
-	org.joval.plugin.adapter.windows.GroupAdapter			\
-	org.joval.plugin.adapter.windows.GroupSidAdapter		\
-	org.joval.plugin.adapter.windows.RegistryAdapter		\
-	org.joval.plugin.adapter.windows.SidAdapter			\
-	org.joval.plugin.adapter.windows.SidSidAdapter			\
-	org.joval.plugin.adapter.windows.UserAdapter			\
-	org.joval.plugin.adapter.windows.UserSid55Adapter		\
-	org.joval.plugin.adapter.windows.UserSidAdapter			\
-	org.joval.plugin.adapter.windows.Wmi57Adapter			\
-	org.joval.plugin.adapter.windows.WmiAdapter			\
-	org.joval.plugin.container.AbstractContainer			\
 	org.joval.test.AD						\
 	org.joval.test.Exec						\
 	org.joval.test.FS						\
@@ -162,10 +48,4 @@ SHARED=\
 	org.joval.util.Base64						\
 	org.joval.util.AbstractBaseSession				\
 	org.joval.util.AbstractSession					\
-	org.joval.util.SafeCLI						\
-	org.joval.util.CachingHierarchy					\
-	org.joval.util.PropertyHierarchy				\
-	org.joval.util.tree.Forest					\
-	org.joval.util.tree.Node					\
-	org.joval.util.tree.Tree					\
-	org.joval.util.tree.TreeHash
+	org.joval.util.CachingHierarchy

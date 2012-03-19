@@ -24,7 +24,6 @@ import org.joval.io.PerishableReader;
 import org.joval.io.StreamLogger;
 import org.joval.io.StreamTool;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A representation of a process.
@@ -119,7 +118,7 @@ class SshProcess implements IProcess {
 	  }
 
 	  default:
-	    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_CHANNEL, channel.getType()));
+	    throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_SSH_CHANNEL, channel.getType()));
 	}
     }
 
@@ -197,7 +196,7 @@ class SshProcess implements IProcess {
 		channel.getExtInputStream().close();
 	    }
 	} catch (Exception e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    cleanup();
 	}
@@ -353,7 +352,7 @@ class SshProcess implements IProcess {
 			running = false;
 			channel.disconnect();
 		    } catch (Exception e) {
-			logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
 		    isEOF = true;
 		    ch = -1;

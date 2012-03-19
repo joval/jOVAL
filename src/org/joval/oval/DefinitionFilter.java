@@ -26,8 +26,8 @@ import oval.schemas.evaluation.id.EvaluationDefinitionIds;
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
-import org.joval.util.JOVALSystem;
 import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * Representation of a Definition Filter, which is constructed using either a list of definition IDs or an XML file that is
@@ -55,7 +55,7 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
 		EvaluationDefinitionIds edi = (EvaluationDefinitionIds)rootObj;
 		return edi.getDefinition();
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITION_FILTER_BAD_SOURCE, src.getSystemId()));
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DEFINITION_FILTER_BAD_SOURCE, src.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);
@@ -63,7 +63,7 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
     }
 
     private HashSet<String> definitionIDs;
-    private LocLogger logger = JOVALSystem.getLogger();
+    private LocLogger logger = JOVALMsg.getLogger();
 
     /**
      * Create a DefinitionFilter based on the contents of an evaluation-id schema-compliant file.
@@ -105,6 +105,14 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
 	return ids;
     }
 
+    public int size() {
+	if (definitionIDs == null) {
+	    return 0;
+	} else {
+	    return definitionIDs.size();
+	}
+    }
+
     /**
      * Add a definition to the filter.
      */
@@ -126,13 +134,13 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
             marshaller.marshal(getEvaluationDefinitionIds(), out);
         } catch (JAXBException e) {
             logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-            logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+            logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
         } catch (FactoryConfigurationError e) {
             logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-            logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+            logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
         } catch (FileNotFoundException e) {
             logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-            logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+            logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
         } finally {
             if (out != null) {
                 try {

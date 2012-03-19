@@ -19,7 +19,6 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.tree.INode;
 import org.joval.util.CachingHierarchy;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * An IFile base class that works with a CacheFilesystem. Subclasses need only implement the getAccessor method, and
@@ -105,7 +104,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 		return null;
 	    }
 	}
-	throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_CACHE_NOT_LINK, getPath()));
+	throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_CACHE_NOT_LINK, getPath()));
     }
 
     // Implement IFile
@@ -258,7 +257,7 @@ public abstract class CacheFile implements IFile, Cloneable {
     public final IFile[] listFiles(Pattern p) throws IOException {
 	String[] children = list();
 	if (children == null) {
-	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_IO_DIR_LISTING));
+	    throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_IO_DIR_LISTING));
 	}
 	Vector<IFile> files = new Vector<IFile>();
 	for (int i=0; i < children.length; i++) {

@@ -9,7 +9,6 @@ import org.joval.intf.io.IReader;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -67,7 +66,7 @@ public interface IUnixSession extends ISession {
 		}
 	    } catch (Exception e) {
 		session.getLogger().warn(JOVALMsg.ERROR_UNIX_FLAVOR);
-		session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    return flavor;
 	}

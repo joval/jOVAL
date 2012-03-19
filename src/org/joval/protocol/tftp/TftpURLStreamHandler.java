@@ -12,7 +12,6 @@ import java.net.URLStreamHandler;
 import org.apache.commons.net.tftp.TFTP;
 
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Stream handler class for TFTP URLs.
@@ -29,7 +28,7 @@ public class TftpURLStreamHandler extends URLStreamHandler {
 	if ("tftp".equals(url.getProtocol())) {
 	    return new TftpURLConnection(url);
 	} else {
-	    throw new MalformedURLException(JOVALSystem.getMessage(JOVALMsg.ERROR_PROTOCOL, url.getProtocol()));
+	    throw new MalformedURLException(JOVALMsg.getMessage(JOVALMsg.ERROR_PROTOCOL, url.getProtocol()));
 	}
     }
 

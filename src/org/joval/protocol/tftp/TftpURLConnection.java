@@ -24,7 +24,6 @@ import org.apache.commons.net.tftp.TFTPClient;
 import org.joval.intf.util.ILoggable;
 import org.joval.io.StreamTool;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * URLConnection subclass implementing RFC783 (TFTP protocol). Only supports read requests.
@@ -51,7 +50,7 @@ public class TftpURLConnection extends URLConnection implements Runnable, ILogga
     TftpURLConnection(URL url) {
 	super(url);
 	client = new TFTPClient();
-	logger = JOVALSystem.getLogger();
+	logger = JOVALMsg.getLogger();
     }
 
     // URLConnection overrides
@@ -89,12 +88,12 @@ public class TftpURLConnection extends URLConnection implements Runnable, ILogga
 		logger.warn(JOVALMsg.ERROR_TFTP, url.getPath());
 	    }
 	} catch (IOException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    try {
 		out.close();
 	    } catch (IOException e) {
-		logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    connected = false;
 	}

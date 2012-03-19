@@ -16,7 +16,6 @@ import org.slf4j.cal10n.LocLogger;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITree;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
 /**
@@ -73,7 +72,7 @@ public class Tree extends Node implements ITree {
 	    break;
 
 	  default:
-            String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_TREE_MKLINK, node.getPath(), destination, node.type);
+            String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TREE_MKLINK, node.getPath(), destination, node.type);
     	    throw new UnsupportedOperationException(msg);
 	}
     }

@@ -71,7 +71,7 @@ import org.joval.util.LogFormatter;
  * @author David A. Solin
  */
 public class Main {
-    private static final Logger sysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
+    private static final Logger sysLogger = Logger.getLogger(JOVALMsg.getLogger().getName());
     private static final File reportDir = new File("reports");
     private static final String LOCAL = "Suite: Local";
 

@@ -32,14 +32,20 @@ public class UnixSession extends BaseUnixSession {
     }
 
     public boolean connect() {
-	env = new Environment(this);
-	fs = new UnixFilesystem(this, env);
+	if (env == null) {
+	    env = new Environment(this);
+	}
+	if (fs == null) {
+	    fs = new UnixFilesystem(this, env);
+	}
 	cwd = new File(".");
 	flavor = Flavor.flavorOf(this);
 	info.getSystemInfo();
+	connected = true;
 	return true;
     }
 
     public void disconnect() {
+	connected = false;
     }
 }

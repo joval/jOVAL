@@ -7,8 +7,6 @@ import java.io.IOException;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFileEx;
-import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A FileInfo object contains information about a file. It can be constructed from a FileAccessor, or directly from

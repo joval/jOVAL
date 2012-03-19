@@ -8,7 +8,6 @@ import java.util.Vector;
 import java.util.NoSuchElementException;
 
 import org.joval.intf.cisco.system.ITechSupport;
-import org.joval.util.JOVALSystem;
 
 /**
  * Tool for creating Network Interface information from an ISession attached to an IOS device.

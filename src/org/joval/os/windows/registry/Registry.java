@@ -26,7 +26,6 @@ import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.os.windows.system.Environment;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
 /**
@@ -53,7 +52,7 @@ public class Registry extends BaseRegistry {
 		license = new LicenseData(this);
 		loadingEnv = false;
 	    } catch (Exception e) {
-		log.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		log.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
     }
@@ -71,11 +70,11 @@ public class Registry extends BaseRegistry {
 	} else if (HKCR.equals(name)) {
 	    hive = getHKCR();
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, name));
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, name));
 	}
 
 	if (hive == null) {
-	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE, name));
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE, name));
 	}
 	return hive;
     }
@@ -153,7 +152,7 @@ public class Registry extends BaseRegistry {
 		val = new StringValue(key, name, value);
 	    }
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_TYPE, data.getClass().getName()));
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_TYPE, data.getClass().getName()));
 	}
 	log.getLogger().trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, val.toString());
 	return val;

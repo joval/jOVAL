@@ -29,7 +29,6 @@ import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.wmi.WmiProvider;
 import org.joval.util.AbstractSession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Windows implementation of ISession for local machines, using JNA and JACOB.
@@ -109,31 +108,44 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     }
 
     public boolean connect() {
-	reg = new Registry(null, this);
-	env = reg.getEnvironment();
-	fs = new WindowsFilesystem(this, env, null);
+	if (reg == null) {
+	    reg = new Registry(null, this);
+	}
+	if (env == null) {
+	    env = reg.getEnvironment();
+	}
+	if (fs == null) {
+	    fs = new WindowsFilesystem(this, env, null);
+	}
 	is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 	if (is64bit) {
 	    if (!"64".equals(System.getProperty("sun.arch.data.model"))) {
-		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINDOWS_BITNESS_INCOMPATIBLE));
+		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINDOWS_BITNESS_INCOMPATIBLE));
 	    }
 	    logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "64");
 	    WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
-	    reg32 = new Registry(new WOW3264RegistryRedirector(flavor), this);
-	    fs32 = new WindowsFilesystem(this, env, new WOW3264FilesystemRedirector(env));
+	    if (reg32 == null) {
+		reg32 = new Registry(new WOW3264RegistryRedirector(flavor), this);
+	    }
+	    if (fs32 == null) {
+		fs32 = new WindowsFilesystem(this, env, new WOW3264FilesystemRedirector(env));
+	    }
 	} else {
 	    logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
 	    reg32 = reg;
 	    fs32 = (IWindowsFilesystem)fs;
 	}
 	cwd = new File(env.expand("%SystemRoot%"));
-	wmi = new WmiProvider(this);
+	if (wmi == null) {
+	    wmi = new WmiProvider(this);
+	}
 	if (wmi.register()) {
 	    if (directory == null) {
 		directory = new Directory(this);
 	    }
 	    directory.setWmiProvider(wmi);
 	    info.getSystemInfo();
+	    connected = true;
 	    return true;
 	} else {
 	    return false;
@@ -142,6 +154,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 
     public void disconnect() {
 	wmi.deregister();
+	connected = false;
     }
 
     public Type getType() {

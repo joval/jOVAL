@@ -19,7 +19,6 @@ import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.os.windows.registry.RegistryException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Representation of a Windows registry key.  This object can be used to browse child keys and values.
@@ -65,7 +64,7 @@ public class Key implements IKey {
 		return true;
 	    } catch (JIException e) {
 		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_KEYCLOSE, toString());
-		registry.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		registry.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    }
 	}
@@ -299,7 +298,7 @@ public class Key implements IKey {
      */
     private void checkOpen() throws IllegalStateException {
 	if (!open) {
-	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.STATUS_WINREG_KEYCLOSED, toString()));
+	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.STATUS_WINREG_KEYCLOSED, toString()));
 	}
     }
 
@@ -335,8 +334,8 @@ public class Key implements IKey {
 		    JIPolicyHandle hSubkey = registry.wrOpenKey(handle, subkey, IJIWinReg.KEY_READ);
 		    return new Key(Key.this, subkey, hSubkey);
 		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_ENUMKEY,
-								      new Integer(index), Key.this.toString()));
+		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_ENUMKEY,
+								   new Integer(index), Key.this.toString()));
 		}
 	    } catch (JIException e) {
 //DAS
@@ -380,8 +379,8 @@ public class Key implements IKey {
 		    String name = (String)oa[0];
 		    return registry.createValue(Key.this, name);
 		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_ENUMVAL,
-								      new Integer(index), Key.this.toString()));
+		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_ENUMVAL,
+								   new Integer(index), Key.this.toString()));
 		}
 	    } catch (RegistryException e) {
 		//

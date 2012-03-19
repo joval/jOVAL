@@ -5,7 +5,7 @@ package org.joval.xml;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Vector;
 import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
@@ -29,15 +29,14 @@ public class SchemaValidator {
      * specified base directory.
      */
     public SchemaValidator(File baseDir, String[] fnames) throws SAXException, IOException {
-	ArrayList<Source> list = new ArrayList<Source>();
+	Vector<Source> list = new Vector<Source>();
 	for (int i=0; i < fnames.length; i++) {
 	    File schemaFile = new File(baseDir, fnames[i]);
 	    if (schemaFile.exists()) {
 		list.add(new StreamSource(schemaFile));
 	    }
 	}
-	Source[] sources = new Source[0];
-	sources = list.toArray(sources);
+	Source[] sources = list.toArray(new Source[list.size()]);
 	Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(list.toArray(sources));
 	validator = schema.newValidator();
     }

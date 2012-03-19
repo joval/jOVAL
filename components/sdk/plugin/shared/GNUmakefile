@@ -5,8 +5,8 @@ TOP=../../../..
 
 include $(TOP)/common.mk
 
-API=$(JOVAL_CORE)/jOVALCore.jar$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(OVAL_LIB)
-CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
+API=$(OVAL_LIB)$(CLN)$(COMMON_LIB)$(CLN)$(COMMON_DEPS)$(CLN)$(JOVAL_CORE_LIB)
+CLASSPATH="$(CLASSLIB)$(CLN)$(API)$(CLN)$(SRC)"
 
 include classes.mk
 
@@ -16,16 +16,12 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 all: $(PLUGIN_SHARED_LIB)
 
-$(PLUGIN_SHARED_LIB): classes resources
+$(PLUGIN_SHARED_LIB): classes
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
 	rm -rf $(BUILD)
 	rm -f $(PLUGIN_SHARED_LIB)
-
-resources:
-	rm -f $(BUILD)/*.properties
-	cp $(RSRC)/*.properties $(BUILD)
 
 classes: classdirs $(CLASS_FILES)
 

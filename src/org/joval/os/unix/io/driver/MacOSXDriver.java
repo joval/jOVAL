@@ -25,7 +25,6 @@ import org.joval.io.PerishableReader;
 import org.joval.os.unix.io.IUnixFilesystemDriver;
 import org.joval.os.unix.io.UnixFileInfo;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
 

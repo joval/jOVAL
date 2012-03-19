@@ -30,7 +30,6 @@ import org.joval.intf.net.INetconf;
 import org.joval.io.PerishableReader;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Basic implementation of RFC 4741, to fetch router configurations.
@@ -56,7 +55,7 @@ public class NetconfSession implements INetconf {
 	try {
 	    builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 	} catch (ParserConfigurationException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 

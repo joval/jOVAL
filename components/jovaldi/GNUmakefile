@@ -12,7 +12,7 @@ DIST32=$(DIST)/x86
 DIST64=$(DIST)/x64
 BIN_DIR=$(RSRC)/bin/$(PLATFORM)-$(ARCH)
 
-API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(OVAL_LIB)$(CLN)$(SVRL)
+API=$(COMMON_LIB)$(CLN)$(COMMON_DEPS)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(OVAL_LIB)$(CLN)$(SVRL)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
 
 include classes.mk
@@ -62,23 +62,23 @@ dist-x86: all
 	cp -R $(OVAL)/xsd-$(OVAL_VERSION)/*.xsd $(DIST32)/xml
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST32)/xml
 	cp $(PRODUCTNAME).jar $(DIST32)/lib
+	cp $(COMMON_LIB) $(DIST32)/lib
+	cp $(COMMON)/$(LIBDIR)/*.jar $(DIST32)/lib
+	cp $(ADAPTERS_LIB) $(DIST32)/lib
 	cp $(CPE_LIB) $(DIST32)/lib
 	cp $(OVAL_LIB) $(DIST32)/lib
 	cp $(XCCDF_LIB) $(DIST32)/lib
 	cp $(SVRL) $(DIST32)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST32)/lib
-	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST32)/lib
 	cp $(XPERT_LIB) $(DIST32)/lib
 	mkdir -p $(DIST32)/plugin/default/lib
 	cp -R plugin/default/rsrc/* $(DIST32)/plugin/default
 	cp -R $(PLUGIN_SHARED_LIB) $(DIST32)/plugin/default/lib
-	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/* $(DIST32)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST32)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST32)/plugin/default/lib
 	mkdir -p $(DIST)/x86/plugin/remote/lib
 	cp -R plugin/remote/rsrc/* $(DIST32)/plugin/remote
 	cp -R $(PLUGIN_SHARED_LIB) $(DIST32)/plugin/remote/lib
-	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/*.jar $(DIST32)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE_LIB) $(DIST32)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST32)/plugin/remote/lib
 	mkdir -p $(DIST)/x86/plugin/cisco/lib
@@ -99,23 +99,23 @@ dist-x64: all
 	cp -R $(OVAL)/xsd-$(OVAL_VERSION)/*.xsd $(DIST64)/xml
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST64)/xml
 	cp $(PRODUCTNAME).jar $(DIST64)/lib
+	cp $(COMMON_LIB) $(DIST64)/lib
+	cp $(COMMON)/$(LIBDIR)/*.jar $(DIST64)/lib
+	cp $(ADAPTERS_LIB) $(DIST64)/lib
 	cp $(CPE_LIB) $(DIST64)/lib
 	cp $(OVAL_LIB) $(DIST64)/lib
 	cp $(XCCDF_LIB) $(DIST64)/lib
 	cp $(SVRL) $(DIST64)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST64)/lib
-	cp -R $(JOVAL_CORE)/$(LIBDIR)/* $(DIST64)/lib
 	mkdir -p $(DIST64)/plugin/default/lib
 	cp $(XPERT_LIB) $(DIST64)/lib
 	cp -R plugin/default/rsrc/* $(DIST64)/plugin/default
 	cp -R $(PLUGIN_SHARED_LIB) $(DIST64)/plugin/default/lib
-	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/* $(DIST64)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST64)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST64)/plugin/default/lib
 	mkdir -p $(DIST)/x64/plugin/remote/lib
 	cp -R plugin/remote/rsrc/* $(DIST64)/plugin/remote
 	cp -R $(PLUGIN_SHARED_LIB) $(DIST64)/plugin/remote/lib
-	cp -R $(PLUGIN_SHARED)/$(LIBDIR)/*.jar $(DIST64)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE_LIB) $(DIST64)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST64)/plugin/remote/lib
 	mkdir -p $(DIST)/x64/plugin/cisco/lib

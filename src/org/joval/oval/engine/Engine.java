@@ -3,7 +3,10 @@
 
 package org.joval.oval.engine;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -111,10 +114,11 @@ import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
+import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.os.windows.Timestamp;
@@ -141,6 +145,39 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class Engine implements IEngine {
+    private static final String ADAPTERS_RESOURCE = "adapters.txt";
+
+    /**
+     * Get a list of all the IAdapters that are bundled with the engine.
+     */
+    private static Collection<IAdapter> getAdapters() {
+	Collection<IAdapter> adapters = new HashSet<IAdapter>();
+        try {
+            ClassLoader cl = Thread.currentThread().getContextClassLoader();
+            InputStream rsc = cl.getResourceAsStream(ADAPTERS_RESOURCE);
+            if (rsc == null) {
+                JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, ADAPTERS_RESOURCE));
+            } else {
+		BufferedReader reader = new BufferedReader(new InputStreamReader(rsc));
+		String line = null;
+		while ((line = reader.readLine()) != null) {
+		    try {
+			Object obj = Class.forName(line).newInstance();
+			if (obj instanceof IAdapter) {
+			    adapters.add((IAdapter)obj);
+			}
+		    } catch (InstantiationException e) {
+		    } catch (IllegalAccessException e) {
+		    } catch (ClassNotFoundException e) {
+		    }
+		}
+            }
+        } catch (IOException e) {
+            JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+        }
+	return adapters;
+    }
+
     private enum State {
 	CONFIGURE,
 	RUNNING,
@@ -151,8 +188,8 @@ public class Engine implements IEngine {
     private Hashtable <String, Collection<VariableValueType>>variableMap; // A cache of nested VariableValueTypes
     private IVariables externalVariables = null;
     private IDefinitions definitions = null;
-    private IPlugin plugin = null;
-    private SystemCharacteristics sc = null;
+    private IBaseSession session = null;
+    private ISystemCharacteristics sc = null;
     private IDefinitionFilter filter = null;
     private Hashtable<Class, IAdapter> adapters = null;
     private Exception error;
@@ -163,14 +200,14 @@ public class Engine implements IEngine {
     private LocLogger logger;
 
     /**
-     * Create an engine for evaluating OVAL definitions using a plugin.
+     * Create an engine for evaluating OVAL definitions using a session.
      */
-    public Engine(IPlugin plugin) {
-	if (plugin == null) {
-	    logger = JOVALSystem.getLogger();
+    public Engine(IBaseSession session) {
+	if (session == null) {
+	    logger = JOVALMsg.getLogger();
 	} else {
-	    logger = plugin.getLogger();
-	    this.plugin = plugin;
+	    logger = session.getLogger();
+	    this.session = session;
 	}
 	producer = new Producer();
 	filter = new DefinitionFilter();
@@ -186,7 +223,7 @@ public class Engine implements IEngine {
     public void setDefinitions(IDefinitions definitions) throws IllegalThreadStateException {
 	switch(state) {
 	  case RUNNING:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 
 	  case COMPLETE_OK:
 	  case COMPLETE_ERR:
@@ -210,18 +247,18 @@ public class Engine implements IEngine {
 	    break;
 
 	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
 
-    public void setSystemCharacteristicsFile(File f) throws IllegalThreadStateException, OvalException {
+    public void setSystemCharacteristics(ISystemCharacteristics sc) throws IllegalThreadStateException, OvalException {
 	switch(state) {
 	  case CONFIGURE:
-	    sc = new SystemCharacteristics(f);
+	    this.sc = sc;
 	    break;
 
 	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
 
@@ -232,7 +269,7 @@ public class Engine implements IEngine {
 	    break;
 
 	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
 
@@ -251,7 +288,7 @@ public class Engine implements IEngine {
 	  case CONFIGURE:
 	  case RUNNING:
 	  default:
-	    throw new IllegalThreadStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
+	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
 
@@ -274,30 +311,41 @@ public class Engine implements IEngine {
     // Implement Runnable
 
     /**
-     * Do what one might do with an Engine if one were to do it in its own Thread.
+     * Scan all the objects in the OVAL definitions, or use the existing SystemCharacteristics. Then, evaluate all the
+     * definitions.  This mirrors the way that ovaldi processes OVAL definitions.
+     *
+     * Note: if the session is connected before running, it will remain connected after the run has completed.  If it
+     * is not connected, the engine will connect, then disconnect after scanning.
      */
     public void run() {
 	state = State.RUNNING;
 	try {
 	    if (sc == null) {
-		if (plugin == null) {
-		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_NULL_PLUGIN));
+		boolean doDisconnect = false;
+		if (session == null) {
+		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_NONE));
+		} else if (!session.isConnected()) {
+		    doDisconnect = session.connect();
 		}
-		try {
-		    plugin.connect();
-		    if (adapters == null) {
-			loadAdapters();
+		if (session.isConnected()) {
+		    try {
+			if (adapters == null) {
+			    loadAdapters();
+			}
+			scan();
+		    } finally {
+			if (doDisconnect) {
+			    session.disconnect();
+			}
 		    }
-		    scan();
-		} finally {
-		    if (plugin != null) {
-			plugin.disconnect();
-		    }
+		} else {
+		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 		}
 		producer.sendNotify(MESSAGE_SYSTEMCHARACTERISTICS, sc);
 	    }
 
 	    results = new Results(getGenerator(), definitions, sc);
+	    results.setLogger(logger);
 	    producer.sendNotify(MESSAGE_DEFINITION_PHASE_START, null);
 
 	    //
@@ -329,21 +377,7 @@ public class Engine implements IEngine {
 
     // Internal
 
-    static final GeneratorType getGenerator() {
-	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
-	generator.setProductName(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_PRODUCT));
-	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
-	generator.setSchemaVersion(SCHEMA_VERSION.toString());
-	try {
-	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-	} catch (DatatypeConfigurationException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TIMESTAMP);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return generator;
-    }
-
-    SystemCharacteristics getSystemCharacteristics() {
+    ISystemCharacteristics getSystemCharacteristics() {
 	return sc;
     }
 
@@ -377,14 +411,28 @@ public class Engine implements IEngine {
 
     // Private
 
+    private static final GeneratorType getGenerator() {
+	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
+	generator.setProductName(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_PRODUCT));
+	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
+	generator.setSchemaVersion(SCHEMA_VERSION.toString());
+	try {
+	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
+	} catch (DatatypeConfigurationException e) {
+	    JOVALMsg.getLogger().warn(JOVALMsg.ERROR_TIMESTAMP);
+	    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return generator;
+    }
+
     private void loadAdapters() {
-	Collection<IAdapter> coll = plugin.getAdapters();
+	Collection<IAdapter> coll = getAdapters();
 	if (coll == null) {
 	    adapters = null;
 	} else {
 	    adapters = new Hashtable<Class, IAdapter>();
 	    for (IAdapter adapter : coll) {
-		for (Class clazz : adapter.getObjectClasses()) {
+		for (Class clazz : adapter.init(session)) {
 		    adapters.put(clazz, adapter);
 		}
 	    }
@@ -399,12 +447,12 @@ public class Engine implements IEngine {
     }
 
     /**
-     * Scan SystemCharactericts using the plugin.
+     * Scan SystemCharactericts using the session.
      */
     private void scan() throws OvalException {
 	producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
-	sc = new SystemCharacteristics(getGenerator(), plugin.getSystemInfo());
-	sc.setLogger(logger);
+	sc = new SystemCharacteristics(getGenerator(), session.getSystemInfo());
+	((SystemCharacteristics)sc).setLogger(logger);
 
 	for (ObjectType obj : definitions.getObjects()) {
 	    String objectId = obj.getId();
@@ -429,7 +477,7 @@ public class Engine implements IEngine {
 	// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
 	//
 	if (abort) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
 	}
 
 	ObjectType obj = rc.getObject();
@@ -441,7 +489,7 @@ public class Engine implements IEngine {
 	if (adapter == null) {
 	    MessageType msg = JOVALSystem.factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.WARNING);
-	    String err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
+	    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
 	    msg.setValue(err);
 	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
 	} else {
@@ -462,7 +510,7 @@ public class Engine implements IEngine {
 			//
 			MessageType msg = JOVALSystem.factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.INFO);
-			msg.setValue(JOVALSystem.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
+			msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
 			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, msg);
 
 			//
@@ -520,14 +568,14 @@ public class Engine implements IEngine {
 		} catch (CollectException e) {
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.WARNING);
-		    String err = JOVALSystem.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
+		    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
 		    msg.setValue(err);
 		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), e.getFlag(), msg);
 		} catch (Exception e) {
 		    //
 		    // Handle an uncaught, unexpected exception emanating from the adapter.
 		    //
-		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    MessageType msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(e.getMessage());
@@ -539,7 +587,7 @@ public class Engine implements IEngine {
 		if (items.size() == 0) {
 		    msg = JOVALSystem.factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALSystem.getMessage(JOVALMsg.STATUS_EMPTY_SET));
+		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_SET));
 		}
 		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, msg);
 		for (ItemType item : items) {
@@ -603,8 +651,8 @@ public class Engine implements IEngine {
 			break;
 		    }
 		} catch (TestException e) {
-		    logger.debug(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
-		    logger.trace(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.debug(JOVALMsg.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
+		    logger.trace(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
@@ -640,8 +688,8 @@ public class Engine implements IEngine {
 			break;
 		    }
 		} catch (TestException e) {
-		    logger.debug(JOVALSystem.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
-		    logger.trace(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.debug(JOVALMsg.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
+		    logger.trace(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
@@ -692,7 +740,7 @@ public class Engine implements IEngine {
 		Collection<ItemType> set2 = iter.next();
 		return new ItemSet<ItemType>(set1).complement(new ItemSet<ItemType>(set2)).toList();
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SET_COMPLEMENT, new Integer(lists.size())));
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_SET_COMPLEMENT, new Integer(lists.size())));
 	    }
 	  }
 
@@ -713,7 +761,7 @@ public class Engine implements IEngine {
     private oval.schemas.results.core.DefinitionType evaluateDefinition(DefinitionType defDefinition) throws OvalException {
 	String defId = defDefinition.getId();
 	if (defId == null) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITION_NOID));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DEFINITION_NOID));
 	}
 	oval.schemas.results.core.DefinitionType defResult = results.getDefinition(defId);
 
@@ -952,7 +1000,7 @@ public class Engine implements IEngine {
 		operator.addResult(edtResult.getResult());
 		resultObject = edtResult;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_COMPONENT, child.getClass().getName()));
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_COMPONENT, child.getClass().getName()));
 	    }
 	    criteriaResult.getCriteriaOrCriterionOrExtendDefinition().add(resultObject);
 	}
@@ -975,7 +1023,7 @@ public class Engine implements IEngine {
 	// As the lowest level analysis operation, this is a good place to check if the engine is being destroyed.
 	//
 	if (abort) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
 	}
 
 	try {
@@ -1002,8 +1050,8 @@ public class Engine implements IEngine {
 			    }
 			    result.addResult(cd.getResult(stateEntity.getEntityCheck()));
 			} else {
-			    String message = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
-								    itemEntityObj.getClass().getName(), item.getId());
+			    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+								 itemEntityObj.getClass().getName(), item.getId());
 	    		    throw new OvalException(message);
 			}
 		    } else if (stateEntityObj instanceof EntityStateRecordType) {
@@ -1017,34 +1065,34 @@ public class Engine implements IEngine {
 				if (entityObj instanceof EntityItemRecordType) {
 				    cd.addResult(compare(stateEntity, (EntityItemRecordType)entityObj, rc));
 				} else {
-				    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
-									entityObj.getClass().getName(), item.getId());
+				    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+								     entityObj.getClass().getName(), item.getId());
 				    throw new OvalException(msg);
 				}
 			    }
 			    result.addResult(cd.getResult(stateEntity.getEntityCheck()));
 			} else {
-			    String message = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
-								    itemEntityObj.getClass().getName(), item.getId());
+			    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+								 itemEntityObj.getClass().getName(), item.getId());
 	    		    throw new OvalException(message);
 			}
 		    } else {
-			String message = JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
-								item.getClass().getName(), item.getId());
+			String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+							     item.getClass().getName(), item.getId());
 	    		throw new OvalException(message);
 		    }
 		}
 	    }
 	    return result.getResult(state.getOperator());
 	} catch (NoSuchMethodException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), state.getId()));
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), state.getId()));
 	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), state.getId()));
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), state.getId()));
 	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), state.getId()));
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), state.getId()));
 	}
     }
 
@@ -1127,7 +1175,7 @@ public class Engine implements IEngine {
 	SimpleDatatypeEnumeration itemDT =  getDatatype(item.getDatatype());
 	if (itemDT != stateDT) {
 	    if (itemDT != SimpleDatatypeEnumeration.STRING && stateDT != SimpleDatatypeEnumeration.STRING) {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DATATYPE_MISMATCH, stateDT, itemDT));
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATATYPE_MISMATCH, stateDT, itemDT));
 	    }
 	}
 
@@ -1143,8 +1191,8 @@ public class Engine implements IEngine {
 	    try {
 		Collection<String> values = resolve(state.getVarRef(), rc);
 		if (values.size() == 0) {
-		    String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_VARIABLE_NO_VALUES);
-		    throw new TestException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
+		    String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_NO_VALUES);
+		    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
 		} else {
 		    for (String value : resolve(state.getVarRef(), rc)) {
 			base.setValue(value);
@@ -1152,10 +1200,10 @@ public class Engine implements IEngine {
 		    }
 		}
 	    } catch (NoSuchElementException e) {
-		String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_VARIABLE_MISSING);
-		throw new TestException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
+		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_MISSING);
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
 	    } catch (ResolveException e) {
-		throw new TestException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), e.getMessage()));
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), e.getMessage()));
 	    }
 	    return cd.getResult(state.getVarCheck());
 	} else {
@@ -1170,7 +1218,7 @@ public class Engine implements IEngine {
      */
     ResultEnumeration testImpl(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
 	if (!item.isSetValue() || !state.isSetValue()) {
-	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_TEST_INCOMPARABLE, item.getValue(), state.getValue());
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TEST_INCOMPARABLE, item.getValue(), state.getValue());
 	    throw new TestException(msg);
 	}
 
@@ -1259,7 +1307,7 @@ public class Engine implements IEngine {
 	    }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, state.getOperation()));
+	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, state.getOperation()));
 	}
     }
 
@@ -1281,7 +1329,7 @@ public class Engine implements IEngine {
 
 	  case FLOAT:
 	    try {
-		return new Float(itemStr.trim()).compareTo(new Float((String)state.getValue()));
+		return getFloat(stateStr).compareTo(getFloat(itemStr));
 	    } catch (NumberFormatException e) {
 		throw new TestException(e);
 	    }
@@ -1300,6 +1348,7 @@ public class Engine implements IEngine {
 		throw new TestException(e);
 	    }
 
+	  case FILESET_REVISION:
 	  case EVR_STRING:
 	    try {
 		return new Evr(itemStr.trim()).compareTo(new Evr(stateStr.trim()));
@@ -1307,13 +1356,19 @@ public class Engine implements IEngine {
 		throw new TestException(e);
 	    }
 
+	  case IPV_4_ADDRESS:
+	  case IPV_6_ADDRESS:
+	    //
+	    // DAS: IP address comparisons are TBD, for now just treat them as strings
+	    //
+	  case IOS_VERSION:
 	  case BINARY:
 	  case STRING:
 	    return (itemStr).compareTo(stateStr);
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							   state.getDatatype(), OperationEnumeration.EQUALS));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
+							state.getDatatype(), OperationEnumeration.EQUALS));
 	}
     }
 
@@ -1323,8 +1378,8 @@ public class Engine implements IEngine {
 	    return ((String)state.getValue()).equalsIgnoreCase((String)item.getValue());
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							   state.getDatatype(), OperationEnumeration.CASE_INSENSITIVE_EQUALS));
+	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
+							state.getDatatype(), OperationEnumeration.CASE_INSENSITIVE_EQUALS));
 	}
     }
 
@@ -1340,8 +1395,8 @@ public class Engine implements IEngine {
 	    }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							   state.getDatatype(), OperationEnumeration.BITWISE_AND));
+	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
+							state.getDatatype(), OperationEnumeration.BITWISE_AND));
 	}
     }
 
@@ -1357,8 +1412,8 @@ public class Engine implements IEngine {
 	    }
 
 	  default:
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							   state.getDatatype(), OperationEnumeration.BITWISE_OR));
+	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
+							state.getDatatype(), OperationEnumeration.BITWISE_OR));
 	}
     }
 
@@ -1389,7 +1444,20 @@ public class Engine implements IEngine {
 	} else if ("version".equals(s)) {
 	    return SimpleDatatypeEnumeration.VERSION;
 	} else {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_DATATYPE, s));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_DATATYPE, s));
+	}
+    }
+
+    Float getFloat(String s) throws NumberFormatException {
+	s = s.trim();
+	if (s.equals("NaN")) {
+	    return new Float(Float.NaN);
+	} else if (s.equals("INF")) {
+	    return new Float(Float.POSITIVE_INFINITY);
+	} else if (s.equals("-INF")) {
+	    return new Float(Float.NEGATIVE_INFINITY);
+	} else {
+	    return new Float(s);
 	}
     }
 
@@ -1444,7 +1512,7 @@ public class Engine implements IEngine {
 	    ExternalVariable externalVariable = (ExternalVariable)object;
 	    String id = externalVariable.getId();
 	    if (externalVariables == null) {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE_SOURCE, id));
+		throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE_SOURCE, id));
 	    } else {
 		Collection<String> values = externalVariables.getValue(id);
 		if (values.size() == 0) {
@@ -1511,14 +1579,10 @@ public class Engine implements IEngine {
 		// If the object has not yet been scanned, then it must be retrieved live from the adapter.
 		//
 		ObjectType ot = definitions.getObject(objectId);
-		try {
-		    RequestContext rc2 = new RequestContext(this, ot);
-		    items = scanObject(rc2);
-		    for (VariableValueType var : rc2.getVars()) {
-			rc.addVar(var);
-		    }
-		} catch (OvalException oe) {
-		    throw new ResolveException(oe);
+		RequestContext rc2 = new RequestContext(this, ot);
+		items = scanObject(rc2);
+		for (VariableValueType var : rc2.getVars()) {
+		    rc.addVar(var);
 		}
 	    }
 	    return extractItemData(objectId, oc, items);
@@ -1605,15 +1669,25 @@ public class Engine implements IEngine {
 	} else if (object instanceof SubstringFunctionType) {
 	    SubstringFunctionType st = (SubstringFunctionType)object;
 	    int start = st.getSubstringStart();
-	    start = Math.max(1, start);
-	    start--; // in OVAL, the index count begins at 1 instead of 0
+	    start = Math.max(1, start); // a start index < 1 means start at 1
+	    start--;			// OVAL counter begins at 1 instead of 0
 	    int len = st.getSubstringLength();
 	    Collection<String> values = new Vector<String>();
 	    for (String value : resolveInternal(getComponent(st), rc)) {
+		//
+		// If the substring_start attribute has value greater than the length of the original string
+		// an error should be reported.
+		//
 		if (start > value.length()) {
-		    throw new ResolveException(JOVALSystem.getMessage(JOVALMsg.ERROR_SUBSTRING, value, new Integer(start)));
+		    throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_SUBSTRING, value, new Integer(start)));
+
+		//
+		// A substring_length value greater than the actual length of the string, or a negative value,
+		// means to include all of the characters after the starting character.
+		//
 		} else if (len < 0 || value.length() <= (start+len)) {
 		    values.add(value.substring(start));
+
 		} else {
 		    values.add(value.substring(start, start+len));
 		}
@@ -1669,7 +1743,8 @@ public class Engine implements IEngine {
 		timestamp1 = resolveInternal(children.get(0), rc);
 		timestamp2 = resolveInternal(children.get(1), rc);
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_BAD_TIMEDIFFERENCE,new Integer(children.size())));
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_TIMEDIFFERENCE,new Integer(children.size()));
+		throw new ResolveException(msg);
 	    }
 	    for (String time1 : timestamp1) {
 		long tm1 = getTime(time1, tt.getFormat1());
@@ -1722,7 +1797,7 @@ public class Engine implements IEngine {
 	    return values;
 
 	} else {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, object.getClass().getName()));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, object.getClass().getName()));
 	}
     }
 
@@ -1787,13 +1862,13 @@ public class Engine implements IEngine {
 		    //
 		    // The specification indicates that an object_component must have an error flag in this case.
 		    //
-		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_RESOLVE_ITEM_FIELD, fieldName, o.getClass().getName());
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_ITEM_FIELD, fieldName, o.getClass().getName());
 		    throw new ResolveException(msg);
 		} catch (IllegalAccessException e) {
-		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    return null;
 		} catch (InvocationTargetException e) {
-		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    return null;
 		}
 	    }
@@ -1821,7 +1896,7 @@ public class Engine implements IEngine {
 		    }
 		}
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REFLECTION, o.getClass().getName(), objectId));
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, o.getClass().getName(), objectId));
 	    }
 	}
 	return values;
@@ -1912,7 +1987,7 @@ public class Engine implements IEngine {
 	    return obj;
 	}
 
-	throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, unknown.getClass().getName()));
+	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, unknown.getClass().getName()));
     }
 
     /**
@@ -1927,9 +2002,9 @@ public class Engine implements IEngine {
 	} catch (NoSuchMethodException e) {
 	    // Object doesn't implement the method; no big deal.
 	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return result;
     }
@@ -1948,14 +2023,14 @@ public class Engine implements IEngine {
 		}
 	    }
 	} catch (NoSuchMethodException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
-	throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_TEST_NOOBJREF, test.getId()));
+	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_TEST_NOOBJREF, test.getId()));
     }
 
     private String getStateRef(oval.schemas.definitions.core.TestType test) {
@@ -1968,11 +2043,11 @@ public class Engine implements IEngine {
 		return ((StateRefType)o).getStateRef();
 	    }
 	} catch (NoSuchMethodException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return null;
     }
@@ -1988,9 +2063,9 @@ public class Engine implements IEngine {
 	} catch (NoSuchMethodException e) {
 	    // Object doesn't support Sets; no big deal.
 	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return objectSet;
     }
@@ -1998,7 +2073,7 @@ public class Engine implements IEngine {
     /**
      * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#DateTimeFormatEnumeration
      */
-    long getTime(String s, DateTimeFormatEnumeration format) throws OvalException {
+    long getTime(String s, DateTimeFormatEnumeration format) throws ResolveException {
 	try {
 	    String sdf = null;
 
@@ -2126,11 +2201,11 @@ public class Engine implements IEngine {
 		return date.getTime();
 	    }
 	} catch (Exception e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_TIME_PARSE, s, format));
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_TIME_PARSE, s, format));
 	}
 
-	throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_ILLEGAL_TIME, format, s));
+	throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_ILLEGAL_TIME, format, s));
     }
 
     /**

@@ -23,8 +23,6 @@ import org.jinterop.dcom.impls.automation.IJIDispatch;
 
 import com.h9labs.jwbem.SWbemServices;
 
-import org.joval.util.JOVALSystem;
-
 /**
  * @author David A. Solin
  * @version %I% %G%

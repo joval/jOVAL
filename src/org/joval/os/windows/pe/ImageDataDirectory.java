@@ -12,7 +12,6 @@ import java.nio.charset.UnsupportedCharsetException;
 
 import org.joval.io.StreamTool;
 import org.joval.io.LittleEndian;
-import org.joval.util.JOVALSystem;
 
 /**
  * See http://msdn.microsoft.com/en-us/library/ms680341%28VS.85%29.aspx

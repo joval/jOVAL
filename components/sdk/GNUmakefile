@@ -6,17 +6,22 @@ TOP=../..
 include $(TOP)/common.mk
 
 SOURCEPATH="$(OVAL)/gen-src$(CLN)$(SRC)"
-CLASSPATH="$(CLASSLIB)$(CLN)$(PLUGIN_SHARED_DEPS)$(CLN)$(PLUGIN_REMOTE_DEPS)$(CLN)$(PLUGIN_LOCAL_DEPS)$(CLN)$(PLUGIN_CISCO_DEPS)$(CLN)$(JOVAL_CORE_DEPS)"
+API=$(PLUGIN_REMOTE_DEPS)$(CLN)$(PLUGIN_LOCAL_DEPS)$(CLN)$(PLUGIN_CISCO_DEPS)$(CLN)$(COMMON)$(CLN)$(COMMON_DEPS)
+CLASSPATH="$(CLASSLIB)$(CLN)$(API)"
 
 all:
+	@$(MAKE) --keep-going --directory=common all
 	@$(MAKE) --keep-going --directory=engine all
+	@$(MAKE) --keep-going --directory=adapters all
 	@$(MAKE) --keep-going --directory=plugin/shared all
 	@$(MAKE) --keep-going --directory=plugin/local all
 	@$(MAKE) --keep-going --directory=plugin/remote all
 	@$(MAKE) --keep-going --directory=plugin/cisco all
 
 clean:
+	@$(MAKE) --keep-going --directory=common clean
 	@$(MAKE) --keep-going --directory=engine clean
+	@$(MAKE) --keep-going --directory=adapters clean
 	@$(MAKE) --keep-going --directory=plugin/shared clean
 	@$(MAKE) --keep-going --directory=plugin/local clean
 	@$(MAKE) --keep-going --directory=plugin/remote clean
@@ -48,7 +53,9 @@ install: all
 	mkdir -p $(DIST)
 	cp -r $(RSRC)/* $(DIST)
 	cp $(OVAL_LIB) $(DIST)
-	cp $(JOVAL_CORE_LIB) $(DIST)
+	$(JAR) cvf $(DIST)/jOVALCore.jar -C $(COMMON)/$(BUILD)/ .
+	$(JAR) uvf $(DIST)/jOVALCore.jar -C $(JOVAL_CORE)/$(BUILD)/ .
+	$(JAR) uvf $(DIST)/jOVALCore.jar -C $(ADAPTERS)/$(BUILD)/ .
 	$(JAR) cvf $(DIST)/jOVALRemote.jar -C $(PLUGIN_SHARED)/$(BUILD)/ .
 	$(JAR) uvf $(DIST)/jOVALRemote.jar -C $(PLUGIN_REMOTE)/$(BUILD)/ .
 

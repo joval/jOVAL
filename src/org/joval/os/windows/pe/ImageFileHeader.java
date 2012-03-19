@@ -13,7 +13,6 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.io.LittleEndian;
 import org.joval.io.StreamTool;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * See http://msdn.microsoft.com/en-us/library/ms680313%28v=vs.85%29.aspx
@@ -63,7 +62,7 @@ public class ImageFileHeader {
 
     private void loadFromBuffer() {
 	if (buff.length != BUFFER_SIZE) {
-	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_BUFFERLEN, buff.length);
+	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_WINPE_BUFFERLEN, buff.length);
 	    throw new IllegalArgumentException(s);
 	}
 

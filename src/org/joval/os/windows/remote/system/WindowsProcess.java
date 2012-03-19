@@ -24,7 +24,6 @@ import org.joval.os.windows.remote.wmi.scripting.SWbemSecurity;
 import org.joval.os.windows.remote.wmi.win32.Win32Process;
 import org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Remote Windows implementation of an IProcess.
@@ -52,7 +51,7 @@ class WindowsProcess implements IProcess, ILoggable {
 	this.err = err;
 	startupInfo = new Win32ProcessStartup(services);
 	startupInfo.setEnvironmentVariables(env);
-	logger = JOVALSystem.getLogger();
+	logger = JOVALMsg.getLogger();
     }
 
     // Implement ILoggable
@@ -148,7 +147,7 @@ class WindowsProcess implements IProcess, ILoggable {
 	    process.terminate(1);
 	    running = false;
 	} catch (JIException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 

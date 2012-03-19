@@ -5,7 +5,7 @@ TOP=../../..
 
 include $(TOP)/common.mk
 
-API=$(OVAL_LIB)
+API=$(OVAL_LIB)$(CLN)$(COMMON_LIB)$(CLN)$(COMMON_DEPS)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
 
 include classes.mk
@@ -24,8 +24,6 @@ clean:
 	rm -f $(JOVAL_CORE_LIB)
 
 resources:
-	rm -f $(BUILD)/*.properties
-	cp $(RSRC)/*.properties $(BUILD)
 	rm -f $(BUILD)/*.ini
 	cp $(RSRC)/*.ini $(BUILD)
 	echo -e "version=$(JOVAL_VERSION)\r\n" >> $(BUILD)/defaults.ini

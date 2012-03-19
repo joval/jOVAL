@@ -14,7 +14,6 @@ import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.io.IFile;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Provides a facade for an InputStream while logging its contents to a file.
@@ -29,7 +28,7 @@ public class StreamLogger extends InputStream {
     private boolean closed = false;
 
     public StreamLogger(InputStream in, File outLog) throws IOException {
-	this(null, in, outLog, JOVALSystem.getLogger());
+	this(null, in, outLog, JOVALMsg.getLogger());
     }
 
     public StreamLogger(String comment, InputStream in, File outLog, LocLogger logger) throws IOException {

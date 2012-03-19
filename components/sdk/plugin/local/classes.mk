@@ -15,5 +15,4 @@ CLASSES=\
 	org.joval.os.windows.wmi.scripting.SWbemProperty		\
 	org.joval.os.windows.wmi.scripting.SWbemPropertySet		\
 	org.joval.plugin.LocalPlugin					\
-	org.joval.plugin.container.DefaultContainer			\
 	org.joval.test.Default

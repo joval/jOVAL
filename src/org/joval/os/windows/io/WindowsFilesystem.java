@@ -26,7 +26,6 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.io.fs.CacheFilesystem;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.tree.Node;
 import org.joval.util.tree.TreeHash;
@@ -55,7 +54,7 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
 		}
 	    } catch (Exception e) {
 		logger.warn(JOVALMsg.ERROR_MOUNT);
-		logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
     }
@@ -78,7 +77,7 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
 	} else if (isDrive(realPath)) {
             return new WindowsFile(this, new File(realPath + DELIM_STR), path);
         }
-        throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
+        throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
     }
 
     @Override
@@ -110,7 +109,7 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
 	    return true;
 	} catch (Exception e) {
 	    logger.warn(JOVALMsg.ERROR_PRELOAD);
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }

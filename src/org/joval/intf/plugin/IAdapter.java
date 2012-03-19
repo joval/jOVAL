@@ -6,8 +6,10 @@ package org.joval.intf.plugin;
 import java.util.Collection;
 import javax.xml.bind.JAXBElement;
 
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.systemcharacteristics.core.ItemType;
 
+import org.joval.intf.system.IBaseSession;
 import org.joval.oval.CollectException;
 import org.joval.oval.OvalException;
 
@@ -20,9 +22,12 @@ import org.joval.oval.OvalException;
  */
 public interface IAdapter {
     /**
-     * Identify the classes of a subclass of ObjectType for which this adapter knows how to retrieve item data.
+     * The adapter is initialized by being provided with an active (connected) session object. Implementors should assume
+     * that this method will only be called once for any instance of the adapter.
+     *
+     * @return The object classes for which this adapter knows how to retrieve item data, for the supplied session.
      */
-    public Class[] getObjectClasses();
+    public Collection<Class> init(IBaseSession session);
 
     /**
      * Retrieve items associated with the given object by scanning the machine.  The ItemTypes returned must be wrapped in a
@@ -41,6 +46,5 @@ public interface IAdapter {
      * @throws OvalException if there has been an error which should stop all processing, such as propagation of an 
      *                       OvalException that has been thrown by a call to IRequestContext.resolve.
      */
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext irc)
-	throws OvalException, CollectException;
+    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext irc) throws OvalException, CollectException;
 }

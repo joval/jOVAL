@@ -87,7 +87,7 @@ public class LogFormatter extends Formatter {
 	consoleHandler.setFormatter(new LogFormatter(Type.CONSOLE));
 	consoleHandler.setLevel(level);
 
-	Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	Logger logger = Logger.getLogger(JOVALMsg.getLogger().getName());
 	logger.setLevel(level);
 	logger.addHandler(logfileHandler);
 	logger.addHandler(consoleHandler);

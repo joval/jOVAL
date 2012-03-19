@@ -11,8 +11,6 @@ import java.util.Stack;
 import java.util.Vector;
 import java.util.NoSuchElementException;
 
-import org.joval.io.LittleEndian;
-
 /**
  * Apparently there are still a few things that haven't yet been packed into java.lang.String!
  *
@@ -93,7 +91,7 @@ public class StringTools {
 		    ca[i] = (char)buff[i];
 		    break;
 		} else {
-		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_ASCII_CONVERSION, i, LittleEndian.toHexString(buff[i]));
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_ASCII_CONVERSION, i, Byte.toString(buff[i]));
 		    throw new IllegalArgumentException(msg);
 		}
 	    }

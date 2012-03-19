@@ -23,7 +23,6 @@ import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.os.windows.system.Environment;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
 /**
@@ -66,14 +65,14 @@ public abstract class BaseRegistry implements IRegistry {
      */
     public IEnvironment getEnvironment() throws IllegalStateException {
 	if (env == null) {
-	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_STATE));
+	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_STATE));
 	}
 	return env;
     }
 
     public ILicenseData getLicenseData() throws IllegalStateException {
 	if (license == null) {
-	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_STATE));
+	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_STATE));
 	}
 	return license;
     }
@@ -127,7 +126,7 @@ public abstract class BaseRegistry implements IRegistry {
 		}
 	    }
 	} catch (PatternSyntaxException e) {
-	    log.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    log.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new NoSuchElementException(cacheKey);
 	}
 	searchMap.put(cacheKey, list);

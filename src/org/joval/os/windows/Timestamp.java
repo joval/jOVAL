@@ -7,8 +7,6 @@ import java.math.BigInteger;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
-import org.joval.util.JOVALSystem;
-
 /**
  * A utility for dealing with Windows timestamps.
  *

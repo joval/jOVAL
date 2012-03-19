@@ -27,7 +27,6 @@ import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.remote.wmi.scripting.SWbemObjectSet;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A thin wrapper class around the JWbem packages that maintains one SWbemServices per namespace associated with

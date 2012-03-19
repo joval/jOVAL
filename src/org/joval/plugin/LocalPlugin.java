@@ -9,7 +9,6 @@ import java.util.Properties;
 import org.joval.discovery.Local;
 import org.joval.intf.system.ISession;
 import org.joval.oval.OvalException;
-import org.joval.util.JOVALSystem;
 
 /**
  * Implementation of an IPlugin for scanning the local host.
@@ -18,10 +17,12 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class LocalPlugin extends BasePlugin {
-    /**
-     * Create a default plugin.
-     */
     public LocalPlugin() {
+	super();
 	session = Local.createSession();
+    }
+
+    @Override
+    public void configure(Properties props) throws Exception {
     }
 }

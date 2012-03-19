@@ -11,7 +11,6 @@ import java.util.Date;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.io.LittleEndian;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * IMAGE_NT_HEADERS structure.
@@ -78,7 +77,7 @@ public class ImageNTHeaders {
 
     public ImageSectionHeader getImageSectionHeader(int i) {
 	if (i < 0 || i > sections.length) {
-	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_ILLEGALSECTION, sections.length, i);
+	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_WINPE_ILLEGALSECTION, sections.length, i);
 	    throw new IllegalArgumentException(s);
 	}
 	return sections[i];

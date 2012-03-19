@@ -20,7 +20,6 @@ import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
 /**
@@ -41,6 +40,7 @@ class ActiveDirectory implements ILoggable {
     private static final String GROUP_WQL_CN_CONDITION = "DS_cn=\"$cn\"";
     private static final String SID_CONDITION = "DS_objectSid=\"$sid\"";
 
+    private Directory parent;
     private IWmiProvider wmi;
     private LocLogger logger;
     private Hashtable<String, User> usersByUpn;
@@ -50,8 +50,9 @@ class ActiveDirectory implements ILoggable {
     private Hashtable<String, String> domains;
     private boolean initialized = false;
 
-    ActiveDirectory(LocLogger logger) {
-	this.logger = logger;
+    ActiveDirectory(Directory parent) {
+	this.parent = parent;
+	this.logger = parent.getLogger();
 	domains = new Hashtable<String, String>();
 	usersByUpn = new Hashtable<String, User>();
 	usersBySid = new Hashtable<String, User>();
@@ -78,7 +79,7 @@ class ActiveDirectory implements ILoggable {
 		String dn = props.getItem("DS_distinguishedName").getValueAsString();
 		String netbiosName = toNetbiosName(dn);
 		String domain = getDomain(netbiosName);
-		String name = Directory.getName(netbiosName);
+		String name = parent.getName(netbiosName);
 		Collection<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
 		int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
 		boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
@@ -102,7 +103,7 @@ class ActiveDirectory implements ILoggable {
 		throw new NoSuchElementException(netbiosName);
 	    } else {
 		ISWbemPropertySet props = os.iterator().next().getProperties();
-		String name = Directory.getName(netbiosName);
+		String name = parent.getName(netbiosName);
 		String domain = getDomain(netbiosName);
 		String sid = Principal.toSid(props.getItem("DS_objectSid").getValueAsString());
 		Collection<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
@@ -157,7 +158,7 @@ class ActiveDirectory implements ILoggable {
 	    if (isMember(netbiosName)) {
 		String domain = getDomain(netbiosName);
 		String dc = toDCString(domains.get(domain.toUpperCase()));
-		String cn = Directory.getName(netbiosName);
+		String cn = parent.getName(netbiosName);
 
 		StringBuffer wql = new StringBuffer(GROUP_WQL);
 		wql.append(" WHERE ");
@@ -190,7 +191,7 @@ class ActiveDirectory implements ILoggable {
 		    throw new NoSuchElementException(netbiosName);
 		}
 	    } else {
-		throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, netbiosName));
+		throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, netbiosName));
 	    }
 	}
 	return group;
@@ -223,7 +224,7 @@ class ActiveDirectory implements ILoggable {
 	    return true;
 	} catch (NoSuchElementException e) {
 	} catch (WmiException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return false;
     }
@@ -263,7 +264,7 @@ class ActiveDirectory implements ILoggable {
 	    initialized = true;
 	} catch (WmiException e) {
 	    logger.warn(JOVALMsg.ERROR_AD_INIT);
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -274,11 +275,11 @@ class ActiveDirectory implements ILoggable {
 	String domain = getDomain(netbiosName);
 	if (isMember(netbiosName)) {
 	    String dns = domains.get(domain.toUpperCase());
-	    String upn = new StringBuffer(Directory.getName(netbiosName)).append("@").append(dns).toString();
+	    String upn = new StringBuffer(parent.getName(netbiosName)).append("@").append(dns).toString();
 	    logger.trace(JOVALMsg.STATUS_UPN_CONVERT, netbiosName, upn);
 	    return upn;
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, netbiosName));
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, netbiosName));
 	}
     }
 
@@ -315,7 +316,7 @@ class ActiveDirectory implements ILoggable {
     private String getDomain(String s) throws IllegalArgumentException {
 	int ptr = s.indexOf("\\");
 	if (ptr == -1) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_AD_DOMAIN_REQUIRED, s));
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_AD_DOMAIN_REQUIRED, s));
 	} else {
 	    return s.substring(0, ptr);
 	}
@@ -339,7 +340,7 @@ class ActiveDirectory implements ILoggable {
 	}
 	String domain = toDomain(dns.toString());
 	if (domain == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.STATUS_NAME_DOMAIN_ERR, dn));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.STATUS_NAME_DOMAIN_ERR, dn));
 	}
 	String name = domain + "\\" + groupName;
 	logger.trace(JOVALMsg.STATUS_NAME_DOMAIN_OK, dn, name);
@@ -355,7 +356,7 @@ class ActiveDirectory implements ILoggable {
 	    try {
 		groups.add(toNetbiosName(sa[i]));
 	    } catch (NoSuchElementException e) {
-		logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return groups;

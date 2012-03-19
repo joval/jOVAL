@@ -11,7 +11,6 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.io.LittleEndian;
 import org.joval.io.StreamTool;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Reads the first 64-bytes of a Portable Executable (PE) format-file, which is the MS-DOS header.
@@ -107,13 +106,13 @@ public class ImageDOSHeader {
 
     private void loadFromBuffer() {
 	if (buff.length != BUFFER_SIZE) {
-	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_BUFFERLEN, buff.length);
+	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_WINPE_BUFFERLEN, buff.length);
 	    throw new IllegalArgumentException(s);
 	}
 
 	e_magic		= LittleEndian.getUShort(buff, 0);
 	if (e_magic != 0x5A4D) { // MZ
-	    String s = JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_MAGIC, Integer.toHexString(e_magic));
+	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_WINPE_MAGIC, Integer.toHexString(e_magic));
 	    throw new IllegalArgumentException(s);
 	}
 	e_cblp		= LittleEndian.getUShort(buff, 2);

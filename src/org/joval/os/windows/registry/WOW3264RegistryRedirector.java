@@ -14,7 +14,6 @@ import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.PropertyHierarchy;
 import org.joval.util.StringTools;
 
@@ -46,7 +45,7 @@ public class WOW3264RegistryRedirector implements IPathRedirector {
 		try {
 		    p = Pattern.compile(s);
 		} catch (PatternSyntaxException e) {
-		    JOVALSystem.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}

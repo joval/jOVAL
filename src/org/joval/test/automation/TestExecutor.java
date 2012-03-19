@@ -44,7 +44,7 @@ import org.joval.util.LogFormatter;
  * @author David A. Solin
  */
 public class TestExecutor implements Runnable {
-    private static final Logger sysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
+    private static final Logger sysLogger = Logger.getLogger(JOVALMsg.getLogger().getName());
     private static final ObjectFactory factory = new ObjectFactory();
     private static final File contentDir = new File("content");
 
@@ -93,7 +93,7 @@ public class TestExecutor implements Runnable {
 	long tm = 0;
 	Handler handler = null;
 	try {
-	    plugin.setLogger(JOVALSystem.getLogger(name));
+	    plugin.setLogger(JOVALMsg.getLogger(name));
 	    handler = new FileHandler("logs/target-" + plugin.getHostname() + ".log", false);
 	    handler.setFormatter(new LogFormatter(LogFormatter.Type.FILE));
 	    Level level = LogFormatter.toLevel(props.getProperty("logging.level"));

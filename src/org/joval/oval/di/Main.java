@@ -43,11 +43,14 @@ import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IVariables;
-import org.joval.intf.plugin.IPluginContainer;
+import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
+import org.joval.oval.DefinitionFilter;
 import org.joval.oval.OvalException;
+import org.joval.oval.SystemCharacteristics;
 import org.joval.util.Checksum;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 import org.joval.xml.SchemaValidator;
@@ -128,7 +131,7 @@ public class Main implements IObserver {
     static void configureLogging(File logfile, Level logLevel) {
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    Logger jSysLogger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	    Logger jSysLogger = Logger.getLogger(JOVALMsg.getLogger().getName());
 	    Handler logHandler = new FileHandler(logfile.getPath(), false);
 	    logHandler.setFormatter(new LogfileFormatter());
 	    logHandler.setLevel(logLevel);
@@ -230,8 +233,8 @@ public class Main implements IObserver {
      * Print the plugin's help text to the console.
      */
     private static void printPluginHelp() {
-	if (state.container != null) {
-	    System.out.println(state.container.getProperty(IPluginContainer.PROP_HELPTEXT));
+	if (state.plugin != null) {
+	    System.out.println(state.plugin.getProperty(IPlugin.PROP_HELPTEXT));
 	}
     }
 
@@ -245,11 +248,11 @@ public class Main implements IObserver {
 	print(getMessage("MESSAGE_VERSION", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION)));
 	print(getMessage("MESSAGE_BUILD_DATE", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_BUILD_DATE)));
 	print(getMessage("MESSAGE_COPYRIGHT"));
-	if (state.container != null) {
+	if (state.plugin != null) {
 	    print("");
-	    print(getMessage("MESSAGE_PLUGIN_NAME", state.container.getProperty(IPluginContainer.PROP_DESCRIPTION)));
-	    print(getMessage("MESSAGE_PLUGIN_VERSION", state.container.getProperty(IPluginContainer.PROP_VERSION)));
-	    print(getMessage("MESSAGE_PLUGIN_COPYRIGHT", state.container.getProperty(IPluginContainer.PROP_COPYRIGHT)));
+	    print(getMessage("MESSAGE_PLUGIN_NAME", state.plugin.getProperty(IPlugin.PROP_DESCRIPTION)));
+	    print(getMessage("MESSAGE_PLUGIN_VERSION", state.plugin.getProperty(IPlugin.PROP_VERSION)));
+	    print(getMessage("MESSAGE_PLUGIN_COPYRIGHT", state.plugin.getProperty(IPlugin.PROP_COPYRIGHT)));
 	}
 	print(getMessage("MESSAGE_DIVIDER"));
 	print("");
@@ -288,7 +291,7 @@ public class Main implements IObserver {
 		try {
 		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.dataFile.toString()));
 		    if (!validateSchema(state.dataFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
-			state.getPlugin().disconnect();
+			state.plugin.getSession().disconnect();
 			System.exit(ERR);
 		    }
 		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.dataFile.toString()));
@@ -309,7 +312,7 @@ public class Main implements IObserver {
 			    }
 			}
 		    }
-		    state.getPlugin().disconnect();
+		    state.plugin.getSession().disconnect();
 		    System.exit(ERR);
 		} catch (Exception e) {
 		    logger.log(Level.WARNING, e.getMessage(), e);
@@ -427,28 +430,43 @@ public class Main implements IObserver {
 		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
 	    }
 
-	    IEngine engine = JOVALSystem.createEngine(state.getPlugin());
-	    engine.setDefinitions(defs);
+	    DefinitionFilter filter = null;
+	    SystemCharacteristics sc = null;
+	    IVariables variables = null;
+
 	    if (state.inputFile == null) {
 		print(getMessage("MESSAGE_CREATING_SYSTEMCHARACTERISTICS"));
 	    } else {
 		print(" ** parsing " + state.inputFile.toString() + " for analysis.");
 		print(getMessage("MESSAGE_VALIDATING_XML"));
 		if (validateSchema(state.inputFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
-		    engine.setSystemCharacteristicsFile(state.inputFile);
+		    sc = new SystemCharacteristics(state.inputFile);
 		} else {
 		    return ERR;
 		}
 	    }
 	    if (state.variablesFile.exists() && state.variablesFile.isFile()) {
-		engine.setExternalVariables(JOVALSystem.createVariables(state.variablesFile));
+		variables = JOVALSystem.createVariables(state.variablesFile);
 	    }
 	    if (state.inputDefsFile != null) {
 		print(getMessage("MESSAGE_READING_INPUTDEFINITIONS", state.inputDefsFile));
-		engine.setDefinitionFilter(JOVALSystem.createDefinitionFilter(state.inputDefsFile));
+		filter = new DefinitionFilter(state.inputDefsFile);
 	    } else if (state.definitionIDs != null) {
 		print(getMessage("MESSAGE_PARSING_INPUTDEFINITIONS"));
-		engine.setDefinitionFilter(JOVALSystem.createAcceptFilter(state.definitionIDs));
+		filter = new DefinitionFilter(state.definitionIDs);
+	    }
+
+	    IEngine engine = JOVALSystem.createEngine(state.plugin.getSession());
+	    engine.setDefinitions(defs);
+
+	    if (filter != null) {
+		engine.setDefinitionFilter(filter);
+	    }
+	    if (sc != null) {
+		engine.setSystemCharacteristics(sc);
+	    }
+	    if (variables != null) {
+		engine.setExternalVariables(variables);
 	    }
 	    engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	    engine.run();

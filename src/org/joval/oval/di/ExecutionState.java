@@ -17,9 +17,8 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.plugin.IPluginContainer;
-import org.joval.plugin.container.ContainerFactory;
-import org.joval.plugin.container.ContainerConfigurationException;
+import org.joval.plugin.PluginFactory;
+import org.joval.plugin.PluginConfigurationException;
 import org.joval.util.JOVALSystem;
 
 /**
@@ -67,7 +66,7 @@ public class ExecutionState {
     List<String> definitionIDs;
     String specifiedChecksum;
 
-    IPluginContainer container;
+    IPlugin plugin;
     Properties pluginConfig = null;
 
     File dataFile;
@@ -157,14 +156,6 @@ public class ExecutionState {
 	}
     }
 
-    IPlugin getPlugin() {
-	IPlugin plugin = null;
-	if (container != null) {
-	    plugin = container.getPlugin();
-	}
-	return plugin;
-    }
-
     /**
      * Process the command-line arguments.
      *
@@ -228,7 +219,7 @@ public class ExecutionState {
 		}
 	    } else if (argv[i].equals("-i")) {
 		inputFile = new File(argv[++i]);
-		container = null;
+		plugin = null;
 	    } else if (argv[i].equals("-d")) {
 		dataFile = new File(argv[++i]);
 	    } else if (argv[i].equals("-g")) {
@@ -295,14 +286,14 @@ public class ExecutionState {
 
 	if (inputFile == null) {
 	    try {
-		container = ContainerFactory.newInstance(new File(BASE_DIR, "plugin")).createContainer(pluginName);
+		plugin = PluginFactory.newInstance(new File(BASE_DIR, "plugin")).createPlugin(pluginName);
 	    } catch (IllegalArgumentException e) {
 		Main.print(Main.getMessage("ERROR_PLUGIN_DIR_NOT_FOUND", e.getMessage()));
 		return false;
 	    } catch (NoSuchElementException e) {
 		Main.print(Main.getMessage("ERROR_PLUGIN_NOT_FOUND", e.getMessage()));
 		return false;
-	    } catch (ContainerConfigurationException e) {
+	    } catch (PluginConfigurationException e) {
 		Main.print(e.getMessage());
 		return false;
 	    }
@@ -312,15 +303,15 @@ public class ExecutionState {
 
     boolean processPluginArguments() {
 	try {
-	    if (container != null) {
+	    if (plugin != null) {
 		if (pluginConfig == null) {
-		    File config = new File(BASE_DIR, IPluginContainer.DEFAULT_FILE);
+		    File config = new File(BASE_DIR, IPlugin.DEFAULT_FILE);
 		    if (config.exists()) {
 			pluginConfig = new Properties();
 			pluginConfig.load(new FileInputStream(config));
 		    }
 		}
-		container.configure(pluginConfig);
+		plugin.configure(pluginConfig);
 	    }
 	    return true;
 	} catch (Exception e) {
@@ -348,7 +339,7 @@ public class ExecutionState {
 		Main.print(Main.getMessage("ERROR_INPUTFILE", inputFile));
 		return false;
 	    }
-	} else if (container == null) {
+	} else if (plugin == null) {
 	    Main.print(Main.getMessage("ERROR_PLUGIN"));
 	    return false;
 	}

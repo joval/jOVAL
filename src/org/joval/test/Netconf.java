@@ -23,7 +23,7 @@ import org.vngx.jsch.JSch;
 import org.joval.identity.SimpleCredentialStore;
 import org.joval.protocol.netconf.NetconfSession;
 import org.joval.ssh.system.SshSession;
-import org.joval.util.JOVALSystem;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JSchLogger;
 
 public class Netconf {
@@ -39,7 +39,7 @@ public class Netconf {
 		System.exit(1);
 	    }
 
-	    Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	    Logger logger = Logger.getLogger(JOVALMsg.getLogger().getName());
 	    if ("true".equals(props.getProperty("joval.verbose"))) {
 		logger.setUseParentHandlers(false);
 		logger.setLevel(Level.FINEST);
@@ -51,7 +51,7 @@ public class Netconf {
 		logger.setLevel(Level.WARNING);
 	    }
 	    if ("true".equals(props.getProperty("jsch.verbose"))) {
-		JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
+		JSch.setLogger(new JSchLogger(JOVALMsg.getLogger()));
 	    }
 
 	    SimpleCredentialStore scs = new SimpleCredentialStore();

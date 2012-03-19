@@ -11,7 +11,6 @@ import java.net.URLConnection;
 import java.net.URLStreamHandler;
 
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * URLConnection subclass for generic ZIP files.  Only supports read requests.
@@ -27,7 +26,7 @@ public class ZipURLStreamHandler extends URLStreamHandler {
         if ("zip".equals(u.getProtocol())) {
             return new ZipURLConnection(u);
         } else {
-            throw new MalformedURLException(JOVALSystem.getMessage(JOVALMsg.ERROR_PROTOCOL, u.getProtocol()));
+            throw new MalformedURLException(JOVALMsg.getMessage(JOVALMsg.ERROR_PROTOCOL, u.getProtocol()));
         }
     }
 }

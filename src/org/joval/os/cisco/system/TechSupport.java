@@ -19,7 +19,6 @@ import org.slf4j.cal10n.LocLogger;
 import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -38,7 +37,7 @@ public class TechSupport implements ITechSupport {
      * Load tech-support information from a stream source.
      */
     public TechSupport(InputStream in) throws IOException {
-	logger = JOVALSystem.getLogger();
+	logger = JOVALMsg.getLogger();
 	BufferedReader br = null;
 	try {
 	    br = new BufferedReader(new InputStreamReader(in));
@@ -53,7 +52,7 @@ public class TechSupport implements ITechSupport {
 		try {
 		    br.close();
 		} catch (IOException e) {
-		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION, e));
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION, e));
 		}
 	    }
 	}

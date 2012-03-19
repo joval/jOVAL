@@ -25,7 +25,6 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.util.CachingHierarchy;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.tree.Node;
 
@@ -79,7 +78,7 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 	if (realPath.length() > 0 && realPath.charAt(0) == File.separatorChar) {
 	    return new DefaultFile(this, new File(realPath), path);
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
 	}
     }
 

@@ -19,7 +19,6 @@ import com.sun.jna.platform.win32.WinReg;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Representation of a Windows registry key.  This object can be used to browse child keys and values.
@@ -84,7 +83,7 @@ public class Key implements IKey {
 	} else if (rootKey == WinReg.HKEY_CLASSES_ROOT) {
 	    return Registry.HKCU;
 	} else {
-	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, rootKey));
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, rootKey));
 	}
     }
 
@@ -130,7 +129,7 @@ public class Key implements IKey {
 		break;
 	      }
 	      default:
-		registry.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		registry.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		break;
 	    }
 	    return false;
@@ -241,7 +240,7 @@ public class Key implements IKey {
 	} else if (Registry.HKCR.equals(name)) {
 	    rootKey = WinReg.HKEY_CLASSES_ROOT;
 	} else {
-	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, name));
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, name));
 	}
     }
 

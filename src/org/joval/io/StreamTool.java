@@ -16,7 +16,6 @@ import java.util.Vector;
 import org.joval.intf.io.IReader;
 import org.joval.intf.util.IPerishable;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Some stream utilities.
@@ -37,7 +36,11 @@ public class StreamTool {
 	    for (int j=0; j < 16; j++) {
 		if (ptr < buff.length) {
 		    if (j > 0) System.out.print(" ");
-		    out.print(LittleEndian.toHexString(buff[ptr++]));
+		    String iHex = Integer.toHexString((int)buff[ptr++]);
+		    if (iHex.length() == 0) {
+			out.print("0");
+		    }
+		    out.print(iHex);
 		} else {
 		    break;
 		}
@@ -53,7 +56,7 @@ public class StreamTool {
 	for (int i=0; i < buff.length; i++) {
 	    int ch = in.read();
 	    if (ch == -1) {
-	        throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_EOS));
+	        throw new EOFException(JOVALMsg.getMessage(JOVALMsg.ERROR_EOS));
 	    } else {
 	        buff[i] = (byte)(ch & 0xFF);
 	    }

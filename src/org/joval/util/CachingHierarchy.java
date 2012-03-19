@@ -25,8 +25,6 @@ import org.joval.intf.util.ISearchable;
 import org.joval.intf.util.tree.ICacheable;
 import org.joval.intf.util.tree.ITree;
 import org.joval.intf.util.tree.INode;
-import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.tree.Forest;
 import org.joval.util.tree.Node;
@@ -58,7 +56,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 	this.name = name;
 	ESCAPED_DELIM = Matcher.quoteReplacement(delimiter);
 	DELIM = delimiter;
-	logger = JOVALSystem.getLogger();
+	logger = JOVALMsg.getLogger();
 	reset();
     }
 
@@ -168,7 +166,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 		}
             }
         } catch (Exception e) {
-            logger.debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+            logger.debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
         }
 	return node;
     }
@@ -243,7 +241,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 	    }
 	} catch (PatternSyntaxException e) {
 	    getLogger().warn(JOVALMsg.ERROR_PATTERN, p.pattern());
-	    getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (IllegalArgumentException e) {
 	    getLogger().warn(JOVALMsg.ERROR_TREESEARCH, p.pattern());
 	}
@@ -323,7 +321,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 		throw new IllegalArgumentException(path);
 	    }
 	} catch (Exception e) {
-	    getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return result;
     }
@@ -343,7 +341,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
      */
     private Collection<String> treeSearch(String parent, String path) throws Exception {
 	if (path == null || path.length() < 1) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_TREESEARCH_PATH));
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_TREESEARCH_PATH));
 	}
 	logger.trace(JOVALMsg.STATUS_FS_SEARCH, parent == null ? "[root]" : parent, path);
 

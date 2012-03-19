@@ -27,6 +27,7 @@ import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.system.SshSession;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.JSchLogger;
 
@@ -43,7 +44,7 @@ public class Remote {
 		System.exit(1);
 	    }
 
-	    Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	    Logger logger = Logger.getLogger(JOVALMsg.getLogger().getName());
 	    if ("true".equals(props.getProperty("joval.verbose"))) {
 		logger.setUseParentHandlers(false);
 		logger.setLevel(Level.FINEST);
@@ -61,7 +62,7 @@ public class Remote {
 		JISystem.getLogger().setLevel(Level.WARNING);
 	    }
 	    if ("true".equals(props.getProperty("jsch.verbose"))) {
-		JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
+		JSch.setLogger(new JSchLogger(JOVALMsg.getLogger()));
 	    }
 
 	    SessionFactory factory = new SessionFactory(JOVALSystem.getDataDirectory());

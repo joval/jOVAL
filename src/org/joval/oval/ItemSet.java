@@ -18,7 +18,6 @@ import javax.xml.namespace.QName;
 
 import oval.schemas.systemcharacteristics.core.ItemType;
 
-import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**

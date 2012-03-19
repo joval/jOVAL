@@ -11,9 +11,6 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
-
 /**
  * Simple utility for computing checksums.
  *
@@ -32,8 +29,8 @@ public class Checksum {
 		    in.close();
 		}
 	    } catch (IOException e) {
-		JOVALSystem.getLogger().warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
-		JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		JOVALMsg.getLogger().warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
+		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
     }

@@ -70,6 +70,11 @@ public interface IBaseSession extends ILoggable {
     boolean isDebug();
 
     /**
+     * Returns whether or not the session is connected.
+     */
+    boolean isConnected();
+
+    /**
      * Connect the session.
      */
     boolean connect();

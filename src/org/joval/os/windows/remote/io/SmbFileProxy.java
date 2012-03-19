@@ -3,31 +3,12 @@
 
 package org.joval.os.windows.remote.io;
 
-import java.io.InputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.regex.Pattern;
 
-import jcifs.smb.ACE;
-import jcifs.smb.NtlmPasswordAuthentication;
-import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
-import jcifs.smb.SmbFileInputStream;
-import jcifs.smb.SmbFileOutputStream;
-import jcifs.smb.SmbRandomAccessFile;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IRandomAccess;
-import org.joval.intf.windows.identity.IACE;
 import org.joval.io.fs.CacheFile;
 import org.joval.io.fs.FileAccessor;
-import org.joval.io.fs.FileInfo;
-import org.joval.os.windows.remote.identity.SmbACE;
-import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * An IFile wrapper for an SmbFile.
@@ -36,9 +17,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 class SmbFileProxy extends CacheFile {
-    private SmbFile smbFile;
-    private IACE[] aces = null;
-
     SmbFileProxy(SmbFilesystem fs, SmbFile smbFile, String path) {
 	super(fs, path);
 	accessor = new SmbAccessor(fs, smbFile);

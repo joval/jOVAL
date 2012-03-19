@@ -49,10 +49,10 @@ public class Dictionary {
 		if (root.getValue() instanceof ListType) {
 		    return (ListType)root.getValue();
 		} else {
-		    throw new CpeException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_SOURCE, source.getSystemId()));
+		    throw new CpeException(JOVALMsg.getMessage(JOVALMsg.ERROR_CPE_BAD_SOURCE, source.getSystemId()));
 		}
 	    } else {
-		throw new CpeException(JOVALSystem.getMessage(JOVALMsg.ERROR_CPE_BAD_SOURCE, source.getSystemId()));
+		throw new CpeException(JOVALMsg.getMessage(JOVALMsg.ERROR_CPE_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new CpeException(e);

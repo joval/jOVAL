@@ -19,8 +19,8 @@ import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IExpandStringValue;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.util.AbstractEnvironment;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A representation of the Windows SYSTEM environment, retrieved from the registry.
@@ -28,7 +28,7 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Environment implements IEnvironment {
+public class Environment extends AbstractEnvironment {
     static final String PROGRAMFILES		= "PROGRAMFILES";
     static final String PROGRAMFILESX86		= "PROGRAMFILES(X86)";
     static final String COMMONPROGRAMFILES	= "COMMONPROGRAMFILES";
@@ -44,9 +44,8 @@ public class Environment implements IEnvironment {
     static final String[] USER_ENV	= {IRegistry.HKCU, "Environment"};
     static final String[] VOLATILE_ENV	= {IRegistry.HKCU, "Volatile Environment"};
 
-    private Properties props;
-
     public Environment(IRegistry registry) {
+	super();
 	LocLogger logger = registry.getLogger();
 	props = new Properties();
 	Vector <String>toExpand = new Vector <String>();
@@ -60,7 +59,7 @@ public class Environment implements IEnvironment {
 		props.setProperty(SYSTEMROOT, sysRoot);
 		props.setProperty(WINDIR, sysRoot);
 	    } else {
-		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_SYSROOT));
+		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_SYSROOT));
 	    }
 
 	    env = registry.fetchKey(SYSTEM_ENV[0], SYSTEM_ENV[1]);
@@ -83,14 +82,14 @@ public class Environment implements IEnvironment {
 		String programFiles = ((IStringValue)programFilesValue).getData();
 		props.setProperty(PROGRAMFILES, programFiles);
 	    } else {
-		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILES));
+		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILES));
 	    }
 	    IValue commonFilesValue = common.getValue("CommonFilesDir");
 	    if (commonFilesValue.getType() == IValue.REG_SZ) {
 		String commonFiles = ((IStringValue)commonFilesValue).getData();
 		props.setProperty(COMMONPROGRAMFILES, commonFiles);
 	    } else {
-		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILES));
+		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILES));
 	    }
 
 	    if (props.getProperty(IWindowsSession.ENV_ARCH).indexOf("64") != -1) {
@@ -99,21 +98,21 @@ public class Environment implements IEnvironment {
 		    String programFilesX86 = ((IStringValue)programFilesX86Value).getData();
 		    props.setProperty(PROGRAMFILESX86, programFilesX86);
 		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
+		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
 		}
 		IValue commonFilesX86Value = common.getValue("CommonFilesDir (x86)");
 		if (commonFilesX86Value.getType() == IValue.REG_SZ) {
 		    String commonFilesX86 = ((IStringValue)commonFilesX86Value).getData();
 		    props.setProperty(COMMONPROGRAMFILESX86, commonFilesX86);
 		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
+		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
 		}
 		IValue commonFilesW6432Value = common.getValue("CommonW6432Dir");
 		if (commonFilesW6432Value.getType() == IValue.REG_SZ) {
 		    String commonFilesW6432 = ((IStringValue)commonFilesW6432Value).getData();
 		    props.setProperty(COMMONPROGRAMW6432, commonFilesW6432);
 		} else {
-		    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
+		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
 		}
 	    }
 	} catch (NoSuchElementException e) {
@@ -195,36 +194,5 @@ public class Environment implements IEnvironment {
 	    String name = list.nextElement();
 	    props.setProperty(name, expand(props.getProperty(name)));
 	}
-    }
-
-    // Implement IEnvironment
-
-    public String expand(String data) {
-	if (data.indexOf('%') < 0) {
-	    return data;
-	}
-	String originalData = data;
-	Iterator <String>names = props.stringPropertyNames().iterator();
-	while (names.hasNext()) {
-	    String name = names.next();
-	    String pattern = new StringBuffer("(?i)%").append(name).append('%').toString();
-	    data = data.replaceAll(pattern, Matcher.quoteReplacement(props.getProperty(name)));
-	}
-	if (data.equals(originalData)) {
-	    return data; // Some unexpandable pattern exists in there
-	} else {
-	    return expand(data); // Recurse, in case a variable includes another
-	}
-    }
-
-    /**
-     * Get an environment variable!
-     */
-    public String getenv(String var) {
-	return props.getProperty(var.toUpperCase());
-    }
-
-    public Iterator<String> iterator() {
-	return props.stringPropertyNames().iterator();
     }
 }

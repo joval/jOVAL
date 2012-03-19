@@ -23,7 +23,6 @@ import org.joval.io.fs.CacheFile;
 import org.joval.io.fs.FileAccessor;
 import org.joval.io.fs.FileInfo;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * An IFile wrapper for an SFTP channel.
@@ -84,12 +83,12 @@ class SftpFile extends CacheFile {
 
 		  default:
 		    fs.getLogger().warn(JOVALMsg.ERROR_IO, getPath(), e.getMessage());
-		    fs.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    fs.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    break;
 		}
 	    } catch (IOException e) {
 		fs.getLogger().warn(JOVALMsg.ERROR_IO, getPath(), "exists");
-		fs.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		fs.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    return false;
 	}
@@ -140,11 +139,11 @@ class SftpFile extends CacheFile {
 		}
 	    } catch (SftpException e) {
 		fs.getLogger().warn(JOVALMsg.ERROR_IO, getPath(), "mkdir");
-		fs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		fs.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    } catch (IOException e) {
 		fs.getLogger().warn(JOVALMsg.ERROR_IO, getPath(), "mkdir");
-		fs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		fs.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    }
 	}
@@ -165,8 +164,8 @@ class SftpFile extends CacheFile {
 	    if (isLink()) {
 		return fs.getFile(getCanonicalPath()).getOutputStream(append);
 	    } else if (exists() && isDirectory()) {
-		String reason = JOVALSystem.getMessage(JOVALMsg.ERROR_IO_NOT_FILE);
-		String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_IO, getPath(), reason);
+		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_IO_NOT_FILE);
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_IO, getPath(), reason);
 		throw new IOException(msg);
 	    } else {
 		int mode = ChannelSftp.OVERWRITE;

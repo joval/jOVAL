@@ -3,41 +3,95 @@
 
 package org.joval.intf.plugin;
 
-import java.net.ConnectException;
-import java.util.Collection;
+import java.io.File;
+import java.io.IOException;
+import java.util.Properties;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.util.ILoggable;
-import org.joval.oval.OvalException;
+import org.joval.intf.system.IBaseSession;
 
 /**
- * The interface for defining a plugin for an IEngine.  The plugin is a container for IAdapters and it also produces the
- * SystemInfoType information.
+ * Defines an interface for a plugin, which is a utility class that manages an IBaseSession, and configuration data that
+ * is needed by that session.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IPlugin extends ILoggable {
+public interface IPlugin {
     /**
-     * Connect the plugin to whatever it's going to be used to scan.
-     *
-     * @throws ConnectException if the plugin failed to establish the connection.
+     * The default filename for a plugin configuration.
      */
-    public void connect() throws ConnectException;
+    String DEFAULT_FILE		= "config.properties";
 
     /**
-     * Release any underlying resources.
+     * An enumeration containing property keys that are used by the ContainerFactory.
      */
-    public void disconnect();
+    enum FactoryProperty {
+	NAME("name"),
+	CLASSPATH("classpath"),
+	MAIN("main"),
+	FILENAME("plugin.properties");
+
+	String value;
+
+	public String value() {
+	    return value;
+	}
+
+	FactoryProperty(String value) {
+	    this.value = value;
+	}
+    }
 
     /**
-     * List the IAdapters provided by this host.
+     * Property specifying the name of the container.
      */
-    public Collection<IAdapter> getAdapters();
+    String PROP_NAME		= "name";
 
     /**
-     * Collect SystemInfoType information from the host.
+     * Property specifying the classpath of the container.
      */
-    public SystemInfoType getSystemInfo();
+    String PROP_CLASSPATH	= "classpath";
+
+    /**
+     * Property specifying the main class of the container.
+     */
+    String PROP_MAIN		= "main";
+
+    String PROP_DESCRIPTION	= "description";
+    String PROP_VERSION		= "version";
+    String PROP_COPYRIGHT	= "copyright";
+    String PROP_HELPTEXT	= "helpText";
+
+    /**
+     * Get a property from the container, e.g., PROP_*.
+     */
+    public String getProperty(String key);
+
+    /**
+     * Retrieve a localized message from the container.
+     */
+    public String getMessage(String key, Object... arguments);
+
+    /**
+     * If applicable, set the directory where the IPlugin can persist state information.  This must be set
+     * prior to the configure method, or it will not be applied.
+     */
+    void setDataDirectory(File dir) throws IOException;
+
+    /**
+     * Configure the IPlugin using the specified Properties.
+     */
+    void configure(Properties props) throws Exception;
+
+    /**
+     * Get SystemInfoType information.
+     */
+    SystemInfoType getSystemInfo();
+
+    /**
+     * Get the session object. This call may take some time if it involves a discovery process.
+     */
+    IBaseSession getSession();
 }

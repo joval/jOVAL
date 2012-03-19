@@ -29,7 +29,6 @@ import org.joval.io.fs.FileInfo;
 import org.joval.os.windows.io.WindowsFileInfo;
 import org.joval.os.windows.remote.identity.SmbACE;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * An IFile wrapper for an SmbFile.
@@ -69,7 +68,7 @@ class SmbAccessor extends FileAccessor implements IWindowsFileInfo {
 	    return smbFile.exists();
 	} catch (IOException e) {
 	    fs.getLogger().warn(JOVALMsg.ERROR_IO, toString(), e.getMessage());
-	    fs.getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    fs.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return false;
     }
@@ -80,7 +79,7 @@ class SmbAccessor extends FileAccessor implements IWindowsFileInfo {
 	    return true;
 	} catch (SmbException e) {
 	    fs.getLogger().warn(JOVALMsg.ERROR_IO, toString());
-	    fs.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    fs.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }

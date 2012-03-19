@@ -6,6 +6,7 @@ package org.joval.intf.oval;
 import java.io.File;
 import java.util.Collection;
 
+import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.OvalException;
@@ -134,7 +135,7 @@ public interface IEngine extends Runnable {
      * @throws IllegalThreadStateException if the engine has already started.
      * @throws OvalException if there was an exception parsing the file.
      */
-    public void setSystemCharacteristicsFile(File f) throws IllegalThreadStateException, OvalException;
+    public void setSystemCharacteristics(ISystemCharacteristics sc) throws IllegalThreadStateException, OvalException;
 
     /**
      * Get an IProducer associated with the IEngine.  This IProducer can be observed for MESSAGE_ notifications while the

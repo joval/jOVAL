@@ -23,7 +23,6 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamLogger;
-import org.joval.util.JOVALSystem;
 
 /**
  * Base class for the local and remote Windows and Unix ISession implementations.

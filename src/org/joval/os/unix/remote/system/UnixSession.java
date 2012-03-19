@@ -28,7 +28,6 @@ import org.joval.ssh.io.SftpFilesystem;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.AbstractSession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A representation of Unix session.
@@ -104,6 +103,7 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 		flavor = Flavor.flavorOf(this);
 	    }
 	    info.getSystemInfo();
+	    connected = true;
 	    return true;
 	} else {
 	    return false;
@@ -117,6 +117,7 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 	if (ssh != null) {
 	    ssh.disconnect();
 	}
+	connected = false;
     }
 
     @Override

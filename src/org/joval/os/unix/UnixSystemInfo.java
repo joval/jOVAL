@@ -48,8 +48,8 @@ public class UnixSystemInfo {
 	try {
 	    info.setPrimaryHostName(SafeCLI.exec("hostname", session, IUnixSession.Timeout.S));
 	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_HOSTNAME);
-	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_HOSTNAME);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	//
@@ -66,8 +66,8 @@ public class UnixSystemInfo {
 		break;
 	    }
 	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSVERSION);
-	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_OSVERSION);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	//
@@ -91,8 +91,8 @@ public class UnixSystemInfo {
 		break;
 	    }
 	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_OSNAME);
-	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_OSNAME);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	//
@@ -101,8 +101,8 @@ public class UnixSystemInfo {
 	try {
 	    info.setArchitecture(SafeCLI.exec("uname -p", session, IUnixSession.Timeout.S));
 	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_ARCH);
-	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_ARCH);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	//
@@ -128,8 +128,8 @@ public class UnixSystemInfo {
 	    }
 	    info.setInterfaces(interfacesType);
 	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_PLUGIN_INTERFACE);
-	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_INTERFACE);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return info;
     }

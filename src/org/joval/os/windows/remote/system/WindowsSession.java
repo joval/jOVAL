@@ -42,7 +42,6 @@ import org.joval.os.windows.remote.registry.Registry;
 import org.joval.os.windows.remote.wmi.WmiConnection;
 import org.joval.util.AbstractSession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * @author David A. Solin
@@ -171,10 +170,16 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	if (cred == null) {
 	    return false;
 	} else {
-	    reg = new Registry(host, cred, null, this);
+	    if (reg == null) {
+		reg = new Registry(host, cred, null, this);
+	    }
 	    if (reg.connect()) {
-		env = reg.getEnvironment();
-		fs = new SmbFilesystem(this, cred, env, null);
+		if (env == null) {
+		    env = reg.getEnvironment();
+		}
+		if (fs == null) {
+		    fs = new SmbFilesystem(this, cred, env, null);
+		}
 		is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 		if (is64bit) {
 		    WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
@@ -183,7 +188,9 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 			reg.disconnect();
 			return false;
 		    }
-		    fs32 = new SmbFilesystem(this, cred, env, new WOW3264FilesystemRedirector(env));
+		    if (fs32 == null) {
+			fs32 = new SmbFilesystem(this, cred, env, new WOW3264FilesystemRedirector(env));
+		    }
 		} else {
 		    reg32 = reg;
 		    fs32 = (IWindowsFilesystem)fs;
@@ -194,13 +201,16 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		    return false;
 		}
 		cwd = env.expand("%SystemRoot%");
-		conn = new WmiConnection(host, cred, this);
+		if (conn == null) {
+		    conn = new WmiConnection(host, cred, this);
+		}
 		if (conn.connect()) {
 		    if (directory == null) {
 			directory = new Directory(this);
 		    }
 		    directory.setWmiProvider(conn);
 		    info.getSystemInfo();
+		    connected = true;
 		    return true;
 		} else {
 		    reg.disconnect();
@@ -236,6 +246,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	if (conn != null) {
 	    conn.disconnect();
 	}
+	connected = false;
     }
 
     public Type getType() {

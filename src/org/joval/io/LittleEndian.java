@@ -13,7 +13,6 @@ import java.nio.charset.UnsupportedCharsetException;
 import org.joval.intf.io.IRandomAccess;
 
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Utility class for reading/getting Little-Endian byte-ordered numbers from byte buffers and streams.
@@ -207,11 +206,11 @@ public class LittleEndian {
 	while (true) {
 	    byte b1 = (byte)ra.read();
 	    if (b1 == -1) {
-		throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_EOF));
+		throw new EOFException(JOVALMsg.getMessage(JOVALMsg.ERROR_EOF));
 	    }
 	    byte b2 = (byte)ra.read();
 	    if (b1 == -1) {
-		throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_EOF));
+		throw new EOFException(JOVALMsg.getMessage(JOVALMsg.ERROR_EOF));
 	    }
 
 	    if (b1 == 0 && b2 == 0) {

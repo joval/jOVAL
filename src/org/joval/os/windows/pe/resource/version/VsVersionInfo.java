@@ -14,7 +14,6 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.io.LittleEndian;
 import org.joval.io.StreamTool;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * VsVersionInfo data structure.
@@ -87,7 +86,7 @@ padding2 = LittleEndian.read32BitAlignPadding(ra);
 	    } else if (VarFileInfo.KEY.equals(childKey)) {
 		vfi = new VarFileInfo(childLength, childValueLength, childType, childBuff, fileOffset);
 	    } else {
-		throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_WINPE_VSVKEY, childKey));
+		throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINPE_VSVKEY, childKey));
 	    }
 	}
 

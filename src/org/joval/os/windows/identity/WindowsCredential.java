@@ -5,7 +5,6 @@ package org.joval.os.windows.identity;
 import org.joval.identity.Credential;
 import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A representation of a Windows domain credential.
@@ -37,7 +36,7 @@ public class WindowsCredential extends Credential implements IWindowsCredential 
     public WindowsCredential(String domain, String username, String password) {
 	super(username, password);
 	this.domain = domain;
-	JOVALSystem.getLogger().trace(JOVALMsg.STATUS_WINCRED_CREATE, getDomainUser());
+	JOVALMsg.getLogger().trace(JOVALMsg.STATUS_WINCRED_CREATE, getDomainUser());
     }
 
     // Implement IWindowsCredential

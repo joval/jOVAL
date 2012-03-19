@@ -6,8 +6,6 @@ package org.joval.util;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 
-import org.joval.util.JOVALSystem;
-
 /**
  * A representation of a "version", which is a '.'-delimited series of integers.
  *
@@ -35,7 +33,7 @@ public class Version implements Comparable<Version> {
 	} else if (object instanceof BigDecimal) {
 	    build(((BigDecimal)object).toPlainString());
 	} else {
-	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_VERSION_CLASS, object.getClass().getName());
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_VERSION_CLASS, object.getClass().getName());
 	    throw new IllegalArgumentException(msg);
 	}
     }
@@ -121,7 +119,7 @@ public class Version implements Comparable<Version> {
 		    list.add(sb.toString());
 		    sb = new StringBuffer();
 		} else {
-		    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_VERSION_STR, str));
+		    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_VERSION_STR, str));
 		}
 		break;
 	    }
@@ -131,7 +129,7 @@ public class Version implements Comparable<Version> {
 	}
 
 	if (list.size() == 0) {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_VERSION_STR, str));
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_VERSION_STR, str));
 	}
 	String[] sa = list.toArray(new String[list.size()]);
 	parts = new int[sa.length];

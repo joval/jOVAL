@@ -6,8 +6,6 @@ package org.joval.os.windows.registry;
 import org.joval.intf.windows.registry.IQwordValue;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.io.LittleEndian;
-import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Representation of a Windows registry QWORD value.

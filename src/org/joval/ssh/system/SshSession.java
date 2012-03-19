@@ -39,7 +39,6 @@ import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IProperty;
 import org.joval.util.AbstractBaseSession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.JSchLogger;
 import org.joval.util.PropertyUtil;
 import org.joval.util.SafeCLI;
@@ -56,7 +55,6 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
     private SshSession gateway;
     private int gatewayPort = 0;
     private Session session;
-    private boolean connected = false;
     private int pid = 0; // internal process ID
 
     public SshSession(String hostname) {
@@ -82,7 +80,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 	super.handlePropertyChange(key, value);
 	if (PROP_ATTACH_LOG.equals(key)) {
 	    if (internalProps.getBooleanProperty(key)) {
-		JSch.setLogger(new JSchLogger(JOVALSystem.getLogger()));
+		JSch.setLogger(new JSchLogger(JOVALMsg.getLogger()));
 	    } else {
 		JSch.setLogger(null);
 	    }
@@ -108,7 +106,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 			IdentityManager.getManager().addIdentity(id, sshc.getPassphrase().getBytes());
  		    }
 		} catch (JSchException e) {
-		    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
 	}
@@ -131,12 +129,17 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 		return new SshProcess(cs, command, env, debug, wsdir, pid++, logger);
 	    }
 	} else {
-	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
 	}
     }
 
     public String getHostname() {
 	return hostname;
+    }
+
+    @Override
+    public boolean isConnected() {
+	return session.isConnected();
     }
 
     public boolean connect() {
@@ -151,7 +154,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 		connectInternal();
 		return true;
 	    } catch (JSchException e) {
-		logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	if (session.isConnected()) {
@@ -172,7 +175,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 		}
 	    }
 	    if (lastError != null) {
-		logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), lastError);
+		logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), lastError);
 	    }
 	    return false;
 	}
@@ -218,7 +221,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 		    }
 		}
 	    } catch (Exception e) {
-		logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return Type.SSH;

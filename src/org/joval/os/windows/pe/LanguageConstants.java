@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * See http://msdn.microsoft.com/en-us/library/dd318693%28v=vs.85%29.aspx
@@ -24,8 +23,8 @@ public class LanguageConstants {
 	try {
 	    locales.load(cl.getResourceAsStream("windows.locales.properties"));
 	} catch (Throwable e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_WINPE_LOCALERESOURCE);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    JOVALMsg.getLogger().warn(JOVALMsg.ERROR_WINPE_LOCALERESOURCE);
+	    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 

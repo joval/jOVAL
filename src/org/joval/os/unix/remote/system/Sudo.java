@@ -19,7 +19,6 @@ import org.joval.intf.util.IPerishable;
 import org.joval.io.PerishableReader;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A tool for running processes as a specific user.  This does not typically actually involve using the sudo command, as
@@ -67,7 +66,7 @@ class Sudo implements IProcess {
 
     public void start() throws Exception {
 	if (cred.getPassword() == null) {
-	    throw new CredentialException(JOVALSystem.getMessage(JOVALMsg.ERROR_MISSING_PASSWORD, cred.getUsername()));
+	    throw new CredentialException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_PASSWORD, cred.getUsername()));
 	}
 
 	switch(us.getFlavor()) {
@@ -225,7 +224,7 @@ class Sudo implements IProcess {
 	    }
 */
 	} else {
-	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_AUTHENTICATION_FAILED, cred.getUsername());
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_AUTHENTICATION_FAILED, cred.getUsername());
 	    throw new LoginException(msg);
 	}
     }

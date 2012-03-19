@@ -28,7 +28,6 @@ import org.joval.os.windows.pe.resource.version.VarFileInfo;
 import org.joval.os.windows.pe.resource.version.VsFixedFileInfo;
 import org.joval.os.windows.pe.resource.version.VsVersionInfo;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.tree.TreeHash;
 
 /**
@@ -76,7 +75,7 @@ public class Header implements ILoggable {
 		        ra.close();
 		    } catch (IOException e) {
 			logger.warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, file.getPath());
-			logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
 		}
 	    }

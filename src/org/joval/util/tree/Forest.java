@@ -16,7 +16,6 @@ import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.ITree;
 import org.joval.intf.util.tree.INode;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Generic implementation of a forest.
@@ -33,7 +32,7 @@ public class Forest implements IForest, Iterable<ITree> {
 	this.name = name;
 	this.delimiter = delimiter;
 	trees = new Hashtable<String, ITree>();
-	logger = JOVALSystem.getLogger();
+	logger = JOVALMsg.getLogger();
     }
 
     public Tree makeTree(String name) {
@@ -147,7 +146,7 @@ public class Forest implements IForest, Iterable<ITree> {
 		    ((Tree)node.getTree()).remove(node);
 		    break;
 		  default:
-		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_TREE_ADD, tree.getName(), node.getType(), t.getName());
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TREE_ADD, tree.getName(), node.getType(), t.getName());
 		    throw new IllegalArgumentException(msg);
 		}
 	    } catch (NoSuchElementException e) {
@@ -167,7 +166,7 @@ public class Forest implements IForest, Iterable<ITree> {
 		    ((Tree)node.getTree()).remove(node);
 		    break;
 		  default:
-		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_TREE_ADD, tree.getName(), node.getType(), t.getName());
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TREE_ADD, tree.getName(), node.getType(), t.getName());
 		    throw new IllegalArgumentException(msg);
 		}
 	    } catch (NoSuchElementException e) {

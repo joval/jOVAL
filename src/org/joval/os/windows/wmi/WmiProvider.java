@@ -17,7 +17,6 @@ import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.os.windows.wmi.scripting.SWbemObjectSet;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A simple class for performing WMI queries.
@@ -63,7 +62,7 @@ public class WmiProvider implements IWmiProvider {
 	    }
 	    return true;
 	} catch (UnsatisfiedLinkError e) {
-	    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }

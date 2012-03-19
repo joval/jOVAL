@@ -74,14 +74,14 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    if (rootObj instanceof OvalSystemCharacteristics) {
 		return (OvalSystemCharacteristics)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_SC_BAD_SOURCE, src.getSystemId()));
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_SC_BAD_SOURCE, src.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);
 	}
     }
 
-    private LocLogger logger = JOVALSystem.getLogger();
+    private LocLogger logger = JOVALMsg.getLogger();
     private OvalSystemCharacteristics osc;
     private GeneratorType generator;
     private SystemInfoType systemInfo;
@@ -117,9 +117,9 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    csMarshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(csMarshaller, OvalNamespacePrefixMapper.URI.SC);
 	} catch (JAXBException e) {
-	    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {
-	    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -161,6 +161,30 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    }
 	}
     }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    // Implement ITransformable
+
+    public Source getSource() {
+	Source src = null;
+	try {
+	    src = new JAXBSource(ctx, getOvalSystemCharacteristics());
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return src;
+    }
+
+    // Implement ISystemCharacteristics
 
     /**
      * Test whether an ObjectType with the specified ID is present.
@@ -279,11 +303,11 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public void relateItem(String objectId, BigInteger itemId) throws NoSuchElementException {
 	JAXBElement<? extends ItemType> item = itemTable.get(itemId);
 	if (item == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_ITEM, itemId.toString()));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_ITEM, itemId.toString()));
 	}
 	ObjectType obj = objectTable.get(objectId);
 	if (obj == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, objectId));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, objectId));
 	}
 
 	Hashtable<BigInteger, JAXBElement<? extends ItemType>> objectItems = objectItemTable.get(objectId);
@@ -324,11 +348,11 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public void relateVariable(String objectId, String variableId) throws NoSuchElementException {
 	List<VariableValueType> variables = variableTable.get(variableId);
 	if (variables == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_VARIABLE, variableId));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_VARIABLE, variableId));
 	}
 	ObjectType obj = objectTable.get(objectId);
 	if (obj == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, objectId));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, objectId));
 	}
 
 	List<VariableValueType> objectVariableValues = obj.getVariableValue();
@@ -360,7 +384,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public List<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
 	ObjectType obj = objectTable.get(id);
 	if (obj == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
 	return obj.getVariableValue();
     }
@@ -371,7 +395,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public ObjectType getObject(String id) throws NoSuchElementException {
 	ObjectType obj = objectTable.get(id);
 	if (obj == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
 	return obj;
     }
@@ -382,7 +406,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public List<ItemType> getItemsByObjectId(String id) throws NoSuchElementException {
 	ObjectType obj = objectTable.get(id);
 	if (obj == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
 	List <ItemType>items = new Vector<ItemType>();
 	if (obj.isSetReference()) {
@@ -392,30 +416,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	}
 	return items;
     }
-
-    // Implement ILoggable
-
-    public LocLogger getLogger() {
-	return logger;
-    }
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
-    }
-
-    // Implement ITransformable
-
-    public Source getSource() {
-	Source src = null;
-	try {
-	    src = new JAXBSource(ctx, getOvalSystemCharacteristics());
-	} catch (JAXBException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return src;
-    }
-
-    // Implement ISystemCharacteristics
 
     public OvalSystemCharacteristics getOvalSystemCharacteristics() {
 	if (osc == null) {
@@ -433,13 +433,13 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    marshaller.marshal(getOvalSystemCharacteristics(), out);
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FileNotFoundException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    if (out != null) {
 		try {
@@ -489,9 +489,9 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (JAXBException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
         }
 	return null;
     }

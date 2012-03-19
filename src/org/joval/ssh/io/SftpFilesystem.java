@@ -35,7 +35,6 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.io.PerishableReader;
 import org.joval.os.unix.io.UnixFilesystem;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
 
@@ -89,7 +88,7 @@ public class SftpFilesystem extends UnixFilesystem {
 		return false;
 	    }
 	} catch (JSchException e) {
-	    session.getLogger().error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }
@@ -102,7 +101,7 @@ public class SftpFilesystem extends UnixFilesystem {
 		session.disconnect();
 	    }
 	} catch (Throwable e) {
-	    session.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -117,7 +116,7 @@ public class SftpFilesystem extends UnixFilesystem {
     @Override
     protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
 	if (!connect()) {
-	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
+	    throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
 	}
 	if (env != null && autoExpand) {
 	    path = env.expand(path);
@@ -139,7 +138,7 @@ public class SftpFilesystem extends UnixFilesystem {
 	    }
 	    return new SftpFile(this, path);
 	} else {
-	    throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
 	}
     }
 
@@ -147,7 +146,7 @@ public class SftpFilesystem extends UnixFilesystem {
 
     ChannelSftp getCS() throws IOException {
 	if (!connect()) {
-	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
+	    throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
 	}
 	return cs;
     }

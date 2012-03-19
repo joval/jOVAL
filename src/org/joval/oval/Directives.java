@@ -49,7 +49,7 @@ public class Directives {
 	    if (rootObj instanceof OvalDirectives) {
 		return (OvalDirectives)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DIRECTIVES_BAD_SOURCE, source.getSystemId()));
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DIRECTIVES_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);

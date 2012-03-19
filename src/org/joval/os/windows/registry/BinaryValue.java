@@ -6,8 +6,6 @@ package org.joval.os.windows.registry;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IBinaryValue;
 import org.joval.util.Base64;
-import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Representation of a Windows registry binary value.

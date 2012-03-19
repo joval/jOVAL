@@ -8,7 +8,7 @@ import java.io.IOException;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.ISession;
 import org.joval.os.windows.pe.Header;
-import org.joval.util.JOVALSystem;
+import org.joval.util.JOVALMsg;
 
 public class PE {
     ISession session;
@@ -21,7 +21,7 @@ public class PE {
 	System.out.println("Scanning " + path);
 	IFilesystem fs = session.getFilesystem();
 	try {
-	    Header header = new Header(fs.getFile(path), JOVALSystem.getLogger());
+	    Header header = new Header(fs.getFile(path), JOVALMsg.getLogger());
 	    header.debugPrint(System.out);
 	} catch (Exception e) {
 	    e.printStackTrace();

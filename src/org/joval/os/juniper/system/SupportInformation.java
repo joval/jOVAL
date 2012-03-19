@@ -21,7 +21,6 @@ import org.joval.intf.juniper.system.ISupportInformation;
 import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.os.cisco.system.TechSupport;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**

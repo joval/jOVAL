@@ -8,17 +8,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.Vector;
 
-import ch.qos.cal10n.IMessageConveyor;
-import ch.qos.cal10n.MessageConveyor;
-import ch.qos.cal10n.MessageConveyorException;
 import org.slf4j.cal10n.LocLogger;
-import org.slf4j.cal10n.LocLoggerFactory;
 
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
@@ -125,28 +120,11 @@ public class JOVALSystem {
     private static final String SVRL_RESOURCE	= "svrl.properties";
 
     private static Timer timer;
-    private static IMessageConveyor mc;
-    private static LocLoggerFactory loggerFactory;
-    private static LocLogger sysLogger;
     private static Properties schemaProps;
     private static IniFile config;
 
     static {
 	timer = new Timer("jOVAL system timer", true);
-	mc = new MessageConveyor(Locale.getDefault());
-	try {
-	    //
-	    // Get a message to test whether localized messages are available for the default Locale
-	    //
-	    getMessage(JOVALMsg.ERROR_EXCEPTION);
-	} catch (MessageConveyorException e) {
-	    //
-	    // The test failed, so set the message Locale to English
-	    //
-	    mc = new MessageConveyor(Locale.ENGLISH);
-	}
-	loggerFactory = new LocLoggerFactory(mc);
-	sysLogger = loggerFactory.getLocLogger(JOVALSystem.class);
 	config = new IniFile();
 	schemaProps = new Properties();
 	try {
@@ -154,40 +132,40 @@ public class JOVALSystem {
 
 	    InputStream rsc = cl.getResourceAsStream(CONFIG_RESOURCE);
 	    if (rsc == null) {
-		sysLogger.warn(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, CONFIG_RESOURCE));
+		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, CONFIG_RESOURCE));
 	    } else {
 		config.load(rsc);
 	    }
 
 	    rsc = cl.getResourceAsStream(OVAL_RESOURCE);
 	    if (rsc == null) {
-		sysLogger.warn(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, OVAL_RESOURCE));
+		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, OVAL_RESOURCE));
 	    } else {
 		schemaProps.load(rsc);
 	    }
 
 	    rsc = cl.getResourceAsStream(CPE_RESOURCE);
 	    if (rsc == null) {
-		sysLogger.debug(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, CPE_RESOURCE));
+		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, CPE_RESOURCE));
 	    } else {
 		schemaProps.load(rsc);
 	    }
 
 	    rsc = cl.getResourceAsStream(XCCDF_RESOURCE);
 	    if (rsc == null) {
-		sysLogger.debug(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, XCCDF_RESOURCE));
+		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, XCCDF_RESOURCE));
 	    } else {
 		schemaProps.load(rsc);
 	    }
 
 	    rsc = cl.getResourceAsStream(SVRL_RESOURCE);
 	    if (rsc == null) {
-		sysLogger.debug(getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, SVRL_RESOURCE));
+		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, SVRL_RESOURCE));
 	    } else {
 		schemaProps.load(rsc);
 	    }
 	} catch (IOException e) {
-	    sysLogger.error(getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -216,32 +194,10 @@ public class JOVALSystem {
     }
 
     /**
-     * Retrieve a localized String, given the key and substitution arguments.
-     */
-    public static String getMessage(JOVALMsg key, Object... args) {
-	return mc.getMessage(key, args);
-    }
-
-    /**
      * Retrieve the daemon Timer used for scheduled jOVAL tasks.
      */
     public static Timer getTimer() {
 	return timer;
-    }
-
-    /**
-     * Retrieve the default localized system logger used by the jOVAL library.
-     */
-    public static LocLogger getLogger() {
-	return sysLogger;
-    }
-
-    /**
-     * Retrieve/create a localized jOVAL logger with a particular name.  This is useful for passing to an IPlugin, if you
-     * want all of the plugin's log messages routed to a specific logger.
-     */
-    public static LocLogger getLogger(String name) {
-	return loggerFactory.getLocLogger(name);
     }
 
     /**
@@ -251,7 +207,7 @@ public class JOVALSystem {
      * this method to override the defaults, make sure to do so prior to the creation of any session objects.
      */
     public static void addConfiguration(File f) throws IOException {
-	sysLogger.info(JOVALMsg.STATUS_CONFIG_OVERLAY, f.getPath());
+	JOVALMsg.getLogger().info(JOVALMsg.STATUS_CONFIG_OVERLAY, f.getPath());
 	config.load(f);
     }
 
@@ -296,6 +252,10 @@ public class JOVALSystem {
 	return schemaProps.getProperty(name);
     }
 
+    public static final IEngine createEngine(IBaseSession session) {
+	return new Engine(session);
+    }
+
     /**
      * Create an IDefinitionFilter based on the supplied File, which should conform to the evaluation-ids schema.
      *
@@ -324,14 +284,6 @@ public class JOVALSystem {
      */
     public static final IDefinitions createDefinitions(File f) throws OvalException {
 	return new Definitions(f);
-    }
-
-    /**
-     * Create an engine for evaluating OVAL definitions using a plugin.  A null plugin value can be specified if an
-     * ISystemCharacteristics (or a system-characteristics.xml file) is set before running.
-     */
-    public static final IEngine createEngine(IPlugin plugin) {
-	return new Engine(plugin);
     }
 
     //
@@ -462,7 +414,7 @@ public class JOVALSystem {
 		//
 		if (prop.getProperty(key) == null) {
 		    String value = config.getProperty(section, key);
-		    sysLogger.debug(JOVALMsg.STATUS_CONFIG_SESSION, sessionClassname, key, value, clazz.getName());
+		    JOVALMsg.getLogger().debug(JOVALMsg.STATUS_CONFIG_SESSION, sessionClassname, key, value, clazz.getName());
 		    prop.setProperty(key, config.getProperty(section, key));
 		}
 	    }

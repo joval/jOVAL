@@ -59,7 +59,7 @@ public class Variables implements IVariables {
 	    if (rootObj instanceof OvalVariables) {
 		return (OvalVariables)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_VARIABLES_BAD_SOURCE, source.getSystemId()));
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLES_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);
@@ -130,13 +130,13 @@ public class Variables implements IVariables {
 	    marshaller.marshal(getOvalVariables(), out);
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FileNotFoundException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    if (out != null) {
 		try {
@@ -160,7 +160,7 @@ public class Variables implements IVariables {
     public List<String> getValue(String id) throws NoSuchElementException {
 	List<String> values = variables.get(id);
 	if (values == null) {
-	    throw new NoSuchElementException(JOVALSystem.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE, id));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE, id));
 	} else {
 	    return values;
 	}
@@ -173,7 +173,7 @@ public class Variables implements IVariables {
 	try {
 	    src = new JAXBSource(ctx, getOvalVariables());
 	} catch (JAXBException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return src;
     }
@@ -191,13 +191,13 @@ public class Variables implements IVariables {
     // Private
 
     private Variables() {
-	logger = JOVALSystem.getLogger();
+	logger = JOVALMsg.getLogger();
 	variables = new Hashtable<String, List<String>>();
 	comments = new Hashtable<String, String>();
 	try {
 	    ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_VARIABLES));
 	} catch (JAXBException e) {
-	    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 

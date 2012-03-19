@@ -16,7 +16,6 @@ import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.util.tree.ITree;
-import org.joval.util.JOVALSystem;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -82,7 +81,7 @@ public class Node implements INode {
 		copyChildren((Node)lookup(linkPath));
 	    }
 	    if (children == null) {
-		throw new UnsupportedOperationException(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
+		throw new UnsupportedOperationException(JOVALMsg.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
 	    } else {
 		return children.values();
 	    }
@@ -98,7 +97,7 @@ public class Node implements INode {
 	  }
 
 	  case LEAF:
-	    throw new UnsupportedOperationException(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
+	    throw new UnsupportedOperationException(JOVALMsg.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
 
 	  case BRANCH:
 	    return children.values();
@@ -210,7 +209,7 @@ public class Node implements INode {
 		visited.pop();
 	    }
 	} catch (NoSuchElementException e) {
-	    getLogger().debug(JOVALSystem.getMessage(JOVALMsg.ERROR_NODE_LINK, e.getMessage()));
+	    getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_NODE_LINK, e.getMessage()));
 	} catch (MaxDepthException e) {
 	    getLogger().warn(JOVALMsg.ERROR_NODE_DEPTH, e.getMessage());
 	}

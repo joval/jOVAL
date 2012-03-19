@@ -19,7 +19,6 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Implementation of IDirectory.
@@ -28,18 +27,6 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class Directory implements IDirectory {
-    /**
-     * Get the Name portion of a Domain\\Name String.  If there is no domain portion, returns the original String.
-     */
-    public static String getName(String s) {
-	int ptr = s.indexOf("\\");
-	if (ptr == -1) {
-	    return s;
-	} else {
-	    return s.substring(ptr+1);
-	}
-    }
-
     private IWindowsSession session;
     private LocLogger logger;
     private ActiveDirectory ad;
@@ -48,8 +35,8 @@ public class Directory implements IDirectory {
     public Directory(IWindowsSession session) {
 	this.session = session;
 	logger = session.getLogger();
-	ad = new ActiveDirectory(logger);
-	local = new LocalDirectory(session.getSystemInfo().getPrimaryHostName(), logger);
+	ad = new ActiveDirectory(this);
+	local = new LocalDirectory(session.getSystemInfo().getPrimaryHostName(), this);
 	setWmiProvider(session.getWmiProvider());
     }
 
@@ -71,6 +58,15 @@ public class Directory implements IDirectory {
     }
 
     // Implement IDirectory
+
+    public String getName(String s) {
+	int ptr = s.indexOf("\\");
+	if (ptr == -1) {
+	    return s;
+	} else {
+	    return s.substring(ptr+1);
+	}
+    }
 
     public IUser queryUserBySid(String sid) throws NoSuchElementException, WmiException {
 	try {
@@ -213,18 +209,18 @@ public class Directory implements IDirectory {
 			try {
 			    getAllPrincipalsInternal(queryUser(netbiosName), resolve, principals);
 			} catch (IllegalArgumentException e) {
-			    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			} catch (NoSuchElementException e) {
-			    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			}
 		    }
 		    for (String netbiosName : g.getMemberGroupNetbiosNames()) {
 			try {
 			    getAllPrincipalsInternal(queryGroup(netbiosName), resolve, principals);
 			} catch (IllegalArgumentException e) {
-			    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			} catch (NoSuchElementException e) {
-			    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			}
 		    }
 		}

@@ -18,7 +18,6 @@ import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.os.windows.wmi.WmiException;
 
 /**
@@ -138,7 +137,7 @@ public class SWbemProperty implements ISWbemProperty {
 	    JIUnsignedByte ub = (JIUnsignedByte)obj;
 	    return LittleEndian.toHexString(ub.getValue().byteValue());
 	} else {
-	    throw new WmiException(JOVALSystem.getMessage(JOVALMsg.ERROR_WMI_STR_CONVERSION, obj));
+	    throw new WmiException(JOVALMsg.getMessage(JOVALMsg.ERROR_WMI_STR_CONVERSION, obj));
 	}
     }
 }

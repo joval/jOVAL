@@ -23,7 +23,6 @@ import org.joval.intf.util.IProducer;
 import org.joval.intf.util.IProperty;
 import org.joval.plugin.RemotePlugin;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
 /**
@@ -58,11 +57,11 @@ class PolymorphicPlugin extends RemotePlugin {
 	if (IBaseSession.LOCALHOST.equals(hostname)) {
 	    logger.info(JOVALMsg.STATUS_PLUGIN_CONNECT);
 	    if (session == null) {
-		throw new ConnectException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_NONE));
+		throw new ConnectException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_NONE));
 	    } else {
 		session.setLogger(logger);
 		if (!session.connect()) {
-		    throw new ConnectException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
+		    throw new ConnectException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 		}
 	    }
 	} else {

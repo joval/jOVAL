@@ -50,7 +50,6 @@ import org.joval.os.unix.io.driver.SolarisDriver;
 import org.joval.util.tree.Tree;
 import org.joval.util.tree.Node;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.PropertyUtil;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
@@ -130,7 +129,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    driver = new SolarisDriver(us);
 	    break;
 	  default:
-	    throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, us.getFlavor()));
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, us.getFlavor()));
 	}
 
 	//
@@ -251,7 +250,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    return true;
 	} catch (Exception e) {
 	    logger.warn(JOVALMsg.ERROR_PRELOAD);
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    return false;
 	}
     }
@@ -549,7 +548,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    } catch (InterruptedIOException e) {
 		// ignore
 	    } catch (IOException e) {
-		logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
 		try {
 		    err.close();

@@ -10,7 +10,6 @@ CLASSES=\
 	org.joval.intf.ssh.identity.ISshCredential			\
 	org.joval.intf.ssh.system.ISshSession				\
 	org.joval.intf.windows.identity.IWindowsCredential		\
-	org.joval.io.StreamLogger					\
 	org.joval.io.TailDashF						\
 	org.joval.os.cisco.IosNetworkInterface				\
 	org.joval.os.cisco.IosSystemInfo				\
@@ -44,7 +43,6 @@ CLASSES=\
 	org.joval.os.windows.remote.wmi.win32.Win32Process		\
 	org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup	\
 	org.joval.plugin.RemotePlugin					\
-	org.joval.plugin.container.RemoteContainer			\
 	org.joval.protocol.netconf.NetconfSession			\
 	org.joval.ssh.identity.SshCredential				\
 	org.joval.ssh.io.SftpFile					\

@@ -32,7 +32,6 @@ import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.io.fs.CacheFilesystem;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
 /**
@@ -100,7 +99,7 @@ public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem
 	    }
 	    return new SmbFileProxy(this, smbFile, path);
 	}
-	throw new IllegalArgumentException(JOVALSystem.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
+	throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, path));
     }
 
     /**

@@ -66,7 +66,7 @@ public class Definitions implements IDefinitions, ILoggable {
 	    if (rootObj instanceof OvalDefinitions) {
 		return (OvalDefinitions)rootObj;
 	    } else {
-		throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_DEFINITIONS_BAD_SOURCE, source.getSystemId()));
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DEFINITIONS_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);
@@ -94,7 +94,7 @@ public class Definitions implements IDefinitions, ILoggable {
 
     public Definitions(OvalDefinitions defs) {
 	this.defs = defs;
-	this.logger = JOVALSystem.getLogger();
+	this.logger = JOVALMsg.getLogger();
 
 	objects = new Hashtable <String, ObjectType>();
 	if (defs.getObjects() != null) {
@@ -150,7 +150,7 @@ public class Definitions implements IDefinitions, ILoggable {
 	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DEFINITIONS);
 	    src = new JAXBSource(JAXBContext.newInstance(packages), getOvalDefinitions());
 	} catch (JAXBException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return src;
     }
@@ -168,7 +168,7 @@ public class Definitions implements IDefinitions, ILoggable {
 	} else if (type.isInstance(object)) {
 	    return type.cast(object);
 	} else {
-	    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_INSTANCE, type.getName(), object.getClass().getName());
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_INSTANCE, type.getName(), object.getClass().getName());
 	    throw new OvalException(msg);
 	}
     }
@@ -180,7 +180,7 @@ public class Definitions implements IDefinitions, ILoggable {
     public StateType getState(String id) throws OvalException {
 	StateType state = states.get(id);
 	if (state == null) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_STATE, id));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_STATE, id));
 	}
 	return state;
     }
@@ -188,7 +188,7 @@ public class Definitions implements IDefinitions, ILoggable {
     public TestType getTest(String id) throws OvalException {
 	TestType test = tests.get(id);
 	if (test == null) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_TEST, id));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_TEST, id));
 	}
 	return test;
     }
@@ -196,7 +196,7 @@ public class Definitions implements IDefinitions, ILoggable {
     public ObjectType getObject(String id) throws OvalException {
 	ObjectType object = objects.get(id);
 	if (object == null) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
 	return object;
     }
@@ -204,7 +204,7 @@ public class Definitions implements IDefinitions, ILoggable {
     public VariableType getVariable(String id) throws OvalException {
 	VariableType variable = variables.get(id);
 	if (variable == null) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_VARIABLE, id));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_VARIABLE, id));
 	} else {
 	    return variable;
 	}
@@ -213,7 +213,7 @@ public class Definitions implements IDefinitions, ILoggable {
     public DefinitionType getDefinition(String id) throws OvalException {
 	DefinitionType definition = definitions.get(id);
 	if (definition == null) {
-	    throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
 	}
 	return definition;
     }

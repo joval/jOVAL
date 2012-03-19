@@ -4,7 +4,10 @@
 package org.joval.oval;
 
 /**
- * An exception class for variable resolution, used to propagate messages upstream to the object.
+ * An exception class for variable resolution, used to propagate messages upstream to the object so that an error
+ * can be logged. Examples of cases where a ResolveException can be thrown include:
+ * (1) A var_ref indicates a field that is not defined in a referenced item
+ * (2) A substring component contains an out-of-bounds index
  *
  * @author David A. Solin
  * @version %I% %G%

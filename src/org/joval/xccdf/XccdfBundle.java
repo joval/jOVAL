@@ -68,7 +68,7 @@ public class XccdfBundle implements ILoggable {
 	    if (rootObj instanceof Benchmark) {
 		return (Benchmark)rootObj;
 	    } else {
-		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_BAD_SOURCE, src.getSystemId()));
+		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BAD_SOURCE, src.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new XccdfException(e);
@@ -87,7 +87,7 @@ public class XccdfBundle implements ILoggable {
      */
     public XccdfBundle(File f) throws CpeException, OvalException, XccdfException {
 	base = f;
-	logger = JOVALSystem.getLogger();
+	logger = JOVALMsg.getLogger();
 	try {
 	    List<String> fnames = null;
 	    if (f.isDirectory()) {
@@ -119,25 +119,25 @@ public class XccdfBundle implements ILoggable {
 	    }
 
 	    if (benchmarkHref == null) {
-		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, XCCDF_BENCHMARK));
+		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, XCCDF_BENCHMARK));
 	    } else {
 		logger.info(JOVALMsg.STATUS_XCCDF_BENCHMARK, benchmarkHref);
 		benchmark = getBenchmark(getURL(benchmarkHref).openStream());
 	    }
 	    if (dictionaryHref == null) {
-		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, CPE_DICTIONARY));
+		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, CPE_DICTIONARY));
 	    } else {
 		logger.info(JOVALMsg.STATUS_XCCDF_DICTIONARY, dictionaryHref);
 		dictionary = new Dictionary(getURL(dictionaryHref).openStream());
 	    }
 	    if (cpeOvalHref == null) {
-		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, CPE_OVAL));
+		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, CPE_OVAL));
 	    } else {
 		logger.info(JOVALMsg.STATUS_XCCDF_PLATFORM, cpeOvalHref);
 		cpeOval = new Definitions(getURL(cpeOvalHref).openStream());
 	    }
 	    if (ovalHref == null) {
-		throw new XccdfException(JOVALSystem.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, XCCDF_OVAL));
+		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, XCCDF_OVAL));
 	    } else {
 		logger.info(JOVALMsg.STATUS_XCCDF_OVAL, ovalHref);
 		oval = new Definitions(getURL(ovalHref).openStream());
@@ -203,13 +203,13 @@ public class XccdfBundle implements ILoggable {
 	    marshaller.marshal(getBenchmark(), out);
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FileNotFoundException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    if (out != null) {
 		try {

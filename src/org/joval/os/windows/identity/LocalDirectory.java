@@ -22,7 +22,6 @@ import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * The LocalDirectory class provides a mechanism to query the local User/Group directory for a Windows machine.  It is
@@ -55,14 +54,16 @@ class LocalDirectory implements ILoggable {
     private Collection<String> builtinGroups;
 
     private String hostname;
+    private Directory parent;
     private IWmiProvider wmi;
     private LocLogger logger;
     private boolean preloadedUsers = false;
     private boolean preloadedGroups = false;
 
-    LocalDirectory(String hostname, LocLogger logger) {
+    LocalDirectory(String hostname, Directory parent) {
 	this.hostname = hostname;
-	this.logger = logger;
+	this.parent = parent;
+	this.logger = parent.getLogger();
 	usersByNetbiosName = new Hashtable<String, IUser>();
 	usersBySid = new Hashtable<String, IUser>();
 	groupsByNetbiosName = new Hashtable<String, IGroup>();
@@ -131,7 +132,7 @@ class LocalDirectory implements ILoggable {
      */
     IUser queryUser(String netbiosName) throws NoSuchElementException, WmiException {
 	String domain = getDomain(netbiosName);
-	String name = Directory.getName(netbiosName);
+	String name = parent.getName(netbiosName);
 	netbiosName = domain + "\\" + name; // in case no domain was specified in the original netbiosName
 
 	IUser user = usersByNetbiosName.get(netbiosName.toUpperCase());
@@ -211,7 +212,7 @@ class LocalDirectory implements ILoggable {
      */
     IGroup queryGroup(String netbiosName) throws NoSuchElementException, WmiException {
 	String domain = getDomain(netbiosName);
-	String name = Directory.getName(netbiosName);
+	String name = parent.getName(netbiosName);
 	netbiosName = domain + "\\" + name; // in case no domain was specified in the original netbiosName
 
 	IGroup group = groupsByNetbiosName.get(netbiosName.toUpperCase());
@@ -302,7 +303,7 @@ class LocalDirectory implements ILoggable {
      */
     boolean isBuiltinUser(String netbiosName) {
 	if (isMember(netbiosName)) {
-	    return builtinUsers.contains(Directory.getName(netbiosName).toUpperCase());
+	    return builtinUsers.contains(parent.getName(netbiosName).toUpperCase());
 	}
 	return false;
     }
@@ -312,7 +313,7 @@ class LocalDirectory implements ILoggable {
      */
     boolean isBuiltinGroup(String netbiosName) {
 	if (isMember(netbiosName)) {
-	    return builtinGroups.contains(Directory.getName(netbiosName).toUpperCase());
+	    return builtinGroups.contains(parent.getName(netbiosName).toUpperCase());
 	}
 	return false;
     }
@@ -331,7 +332,7 @@ class LocalDirectory implements ILoggable {
 	    return true;
 	} catch (NoSuchElementException e) {
 	} catch (WmiException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return false;
     }
@@ -344,7 +345,7 @@ class LocalDirectory implements ILoggable {
 	if (domain == null) {
 	    domain = hostname.toUpperCase();
 	}
-	return domain + "\\" + Directory.getName(netbiosName);
+	return domain + "\\" + parent.getName(netbiosName);
     }
 
     // Implement ILoggable

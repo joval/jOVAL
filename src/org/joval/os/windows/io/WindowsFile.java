@@ -28,7 +28,6 @@ import org.joval.io.fs.FileAccessor;
 import org.joval.io.fs.FileInfo;
 import org.joval.os.windows.identity.LocalACE;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Defines extended attributes of a file on Windows.
@@ -44,7 +43,7 @@ public class WindowsFile extends DefaultFile {
 	    try {
 		info = accessor.getInfo();
 	    } catch (IOException e) {
-		fs.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		fs.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
     }

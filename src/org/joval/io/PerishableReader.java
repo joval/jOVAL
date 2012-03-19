@@ -83,11 +83,11 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     }
 
     public boolean checkClosed() {
-	return closed;
+	return buffer.hasNext() || closed;
     }
 
     public boolean checkEOF() {
-	return isEOF;
+	return buffer.hasNext() || isEOF;
     }
 
     public String readLine() throws IOException {
@@ -113,7 +113,6 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 		break;
 	    }
 	}
-
 	if (result == null) {
 	    defuse();
 	    isEOF = true;
@@ -135,7 +134,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	    if (ch == -1) {
 		defuse();
 		isEOF = true;
-		throw new EOFException(JOVALSystem.getMessage(JOVALMsg.ERROR_EOS));
+		throw new EOFException(JOVALMsg.getMessage(JOVALMsg.ERROR_EOS));
 	    } else {
 		buff[i] = (byte)(ch & 0xFF);
 	    }
@@ -214,11 +213,9 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 
     public int read() throws IOException {
 	int i = -1;
-	if (isEOF) {
-	    throw new EOFException("PerishableReader");
-	} else if (buffer.hasNext()) {
+	if (buffer.hasNext()) {
 	    i = (int)buffer.next();
-	} else {
+	} else if (!isEOF) {
 	    i = in.read();
 	    if (buffer.hasCapacity()) {
 		buffer.add((byte)(i & 0xFF));
@@ -279,7 +276,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 
     protected PerishableReader(InputStream in, long timeout) {
 	trace = Thread.currentThread().getStackTrace();
-	logger = JOVALSystem.getLogger();
+	logger = JOVALMsg.getLogger();
 	this.in = in;
 	setTimeout(timeout);
 	isEOF = false;
@@ -330,23 +327,41 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	byte[] buff = null;
 	int pos = 0;
 	int len = 0;
+	int resetPos = 0;
 
 	Buffer(int size) {
 	    init(size);
 	}
 
 	void init(int size) {
-	    buff = new byte[size];
-	    len = 0;
-	    pos = 0;
+	    //
+	    // If the stream is already reading from inside the buffer, then don't lose the buffered data.
+	    //
+	    if (hasNext()) {
+		resetPos = pos;
+		if (pos + size > len) {
+		    byte[] temp = buff;
+		    buff = new byte[size + pos];
+		    System.arraycopy(temp, pos, buff, 0, len - pos);
+		}
+	    } else {
+		buff = new byte[size];
+		len = 0;
+		pos = 0;
+		resetPos = 0;
+	    }
 	}
 
-	public void clear() {
-	    buff = null;
+	public void clear() throws IllegalStateException {
+	    if (hasNext()) {
+		throw new IllegalStateException(Integer.toString(len - pos));
+	    } else {
+		buff = null;
+	    }
 	}
 
 	public void reset() {
-	    pos = 0;
+	    pos = resetPos;
 	}
 
 	public boolean hasNext() {

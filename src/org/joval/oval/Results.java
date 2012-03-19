@@ -61,7 +61,9 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.oval.IDefinitions;
+import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IResults;
+import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 import org.joval.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALMsg;
@@ -76,12 +78,12 @@ import org.joval.util.JOVALSystem;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Results implements IResults {
+public class Results implements IResults, ILoggable {
     private Hashtable<String, DefinitionType> definitionTable;
     private Hashtable<String, TestType> testTable;
     private IDefinitions definitions;
     private GeneratorType generator;
-    private SystemCharacteristics sc;
+    private ISystemCharacteristics sc;
     private Directives directives;
     private OvalResults or;
     private LocLogger logger;
@@ -96,7 +98,7 @@ public class Results implements IResults {
 	    if (rootObj instanceof OvalResults) {
 		return (OvalResults)rootObj;
 	    } else {
-	        throw new OvalException(JOVALSystem.getMessage(JOVALMsg.ERROR_RESULTS_BAD_SOURCE, f));
+	        throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESULTS_BAD_SOURCE, f));
 	    }
 	} catch (JAXBException e) {
 	    throw new OvalException(e);
@@ -106,11 +108,11 @@ public class Results implements IResults {
     /**
      * Create a Results based on the specified Definitions and SystemCharacteristics.
      */
-    public Results(GeneratorType generator, IDefinitions definitions, SystemCharacteristics sc) {
+    public Results(GeneratorType generator, IDefinitions definitions, ISystemCharacteristics sc) {
 	this.generator = generator;
 	this.definitions = definitions;
 	this.sc = sc;
-	logger = sc.getLogger();
+	logger = JOVALMsg.getLogger();
 	definitionTable = new Hashtable<String, DefinitionType>();
 	testTable = new Hashtable<String, TestType>();
 	directives = new Directives();
@@ -118,7 +120,7 @@ public class Results implements IResults {
 	try {
 	    ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS));
 	} catch (JAXBException e) {
-	    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
@@ -146,6 +148,16 @@ public class Results implements IResults {
 	return definitionTable.get(definitionId);
     }
 
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
     // Implement ITransformable
 
     public Source getSource() {
@@ -153,7 +165,7 @@ public class Results implements IResults {
 	try {
 	    src = new JAXBSource(ctx, getOvalResults());
 	} catch (JAXBException e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return src;
     }

@@ -5,8 +5,6 @@ package org.joval.os.windows.registry;
 
 import org.joval.intf.windows.registry.IExpandStringValue;
 import org.joval.intf.windows.registry.IKey;
-import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Representation of a Windows registry expand-string value.

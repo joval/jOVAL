@@ -87,7 +87,7 @@ public class Validator {
 		JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.SVRL_PROP_PACKAGES));
 		Object rootObj = ctx.createUnmarshaller().unmarshal(root);
 		if (rootObj instanceof SchematronOutput) {
-		    String msg = JOVALSystem.getMessage(JOVALMsg.ERROR_SCHEMATRON_VALIDATION);
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCHEMATRON_VALIDATION);
 		    ValidationException error = new ValidationException(msg);
 		    SchematronOutput output = (SchematronOutput)rootObj;
 		    for (Object child : output.getActivePatternAndFiredRuleAndFailedAssert()) {

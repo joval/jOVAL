@@ -22,6 +22,11 @@ import org.joval.os.windows.wmi.WmiException;
  */
 public interface IDirectory extends ILoggable {
     /**
+     * Get the Name portion of a Domain\\Name String.  If there is no domain portion, returns the original String.
+     */
+    public String getName(String s);
+
+    /**
      * Returns the user corresponding to the specified SID.
      */
     public IUser queryUserBySid(String sid) throws NoSuchElementException, WmiException;

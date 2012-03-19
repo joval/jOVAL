@@ -16,7 +16,6 @@ import org.joval.intf.util.IProperty;
 import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.PropertyUtil;
 
 /**
@@ -104,7 +103,7 @@ public class SimpleCredentialStore implements ICredentialStore {
 		} else if (username != null && password != null) {
 		    cred = new Credential(username, password);
 		} else {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_SESSION_CREDENTIAL_PASSWORD, username);
+		    JOVALMsg.getLogger().warn(JOVALMsg.ERROR_SESSION_CREDENTIAL_PASSWORD, username);
 		}
 		break;
 	    }

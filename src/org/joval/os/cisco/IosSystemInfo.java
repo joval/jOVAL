@@ -11,7 +11,6 @@ import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.cisco.system.ITechSupport;
-import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 
 /**

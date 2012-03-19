@@ -22,7 +22,6 @@ import org.joval.protocol.netconf.NetconfSession;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.AbstractBaseSession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * A simple session implementation for Cisco IOS devices, which is really just an SSH session.
@@ -97,9 +96,20 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 	}
     }
 
+    @Override
+    public boolean isConnected() {
+	if (ssh != null) {
+	    return ssh.isConnected();
+	} else if (techSupport != null) {
+	    return connected; // offline mode
+	} else {
+	    return false;
+	}
+    }
+
     public boolean connect() {
 	if (ssh == null) {
-	    return false;
+	    return (connected = techSupport != null);
 	} else if (ssh.connect()) {
 	    if (initialized) {
 		return true;
@@ -112,7 +122,7 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 		} catch (NoSuchElementException e) {
 		    logger.warn(JOVALMsg.ERROR_IOS_TECH_SHOW, e.getMessage());
 		} catch (Exception e) {
-		    logger.error(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 		return false;
 	    }
@@ -122,7 +132,10 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     }
 
     public void disconnect() {
-	ssh.disconnect();
+	if (ssh != null) {
+	    ssh.disconnect();
+	}
+	connected = false;
     }
 
     /**
@@ -130,7 +143,7 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
      */
     public IProcess createProcess(String command, String[] env) throws Exception {
 	if (ssh == null) {
-	    throw new IllegalStateException(JOVALSystem.getMessage(JOVALMsg.ERROR_IOS_OFFLINE));
+	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_OFFLINE));
 	} else {
 //	    disconnect();
 	    return ssh.createProcess(command, env);

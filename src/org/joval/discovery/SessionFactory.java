@@ -29,7 +29,6 @@ import org.joval.os.unix.remote.system.UnixSession;
 import org.joval.os.windows.remote.system.WindowsSession;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Use this class to grab an ISession for a host.
@@ -51,7 +50,7 @@ public class SessionFactory implements ILoggable {
      */
     public SessionFactory() {
 	routes = new Hashtable<String, String>();
-	logger = JOVALSystem.getLogger();
+	logger = JOVALMsg.getLogger();
     }
 
     public SessionFactory(File wsDir) throws IOException {
@@ -65,7 +64,7 @@ public class SessionFactory implements ILoggable {
 	    wsDir.mkdirs();
 	}
 	if (!wsDir.isDirectory()) {
-	    throw new IOException(JOVALSystem.getMessage(JOVALMsg.ERROR_DIRECTORY, wsDir.getPath()));
+	    throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_DIRECTORY, wsDir.getPath()));
 	}
     }
 
@@ -82,7 +81,7 @@ public class SessionFactory implements ILoggable {
      */
     public IBaseSession createSession(String hostname) throws UnknownHostException, ConnectException {
 	if (hostname == null) {
-	    throw new ConnectException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TARGET));
+	    throw new ConnectException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_TARGET));
 	}
 
 	File dir = getHostWorkspace(hostname);
@@ -147,13 +146,13 @@ public class SessionFactory implements ILoggable {
 		break;
 
 	      default:
-		throw new RuntimeException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_TYPE, type));
+		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_TYPE, type));
 	    }
 	    session.setLogger(logger);
 	    setCredential(session);
 	    return session;
 	} catch (Exception e) {
-	    logger.warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new ConnectException(e.getMessage());
 	}
     }
@@ -193,17 +192,17 @@ public class SessionFactory implements ILoggable {
     private void setCredential(IBaseSession session) throws Exception {
 	if (session instanceof ILocked) {
 	    if (cs == null) {
-		throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL_STORE, session.getHostname()));
+		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL_STORE, session.getHostname()));
 	    } else {
 		ICredential cred = cs.getCredential(session);
 		if (cred == null) {
-		    throw new LoginException(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL));
+		    throw new LoginException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CREDENTIAL));
 		} else if (((ILocked)session).unlock(cred)) {
-		    JOVALSystem.getLogger().debug(JOVALMsg.STATUS_CREDENTIAL_SET, session.getHostname());
+		    JOVALMsg.getLogger().debug(JOVALMsg.STATUS_CREDENTIAL_SET, session.getHostname());
 		} else {
 		    String baseName = session.getClass().getName();
 		    String credName = cred.getClass().getName();
-		    throw new Exception(JOVALSystem.getMessage(JOVALMsg.ERROR_SESSION_LOCK, credName, baseName));
+		    throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_LOCK, credName, baseName));
 		}
 	    }
 	}
@@ -261,7 +260,7 @@ public class SessionFactory implements ILoggable {
 		try {
 		    props.load(new FileInputStream(hostProps));
 		} catch (IOException e) {
-		    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_IO, hostProps, e.getMessage());
+		    JOVALMsg.getLogger().warn(JOVALMsg.ERROR_IO, hostProps, e.getMessage());
 		}
 	    }
 	}

@@ -16,7 +16,6 @@ import org.joval.intf.windows.registry.ILicenseData.IStringEntry;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.io.LittleEndian;
-import org.joval.util.JOVALSystem;
 
 /**
  * A class that can interpret a License registry key.

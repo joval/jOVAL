@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.net.ConnectException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Collection;
@@ -53,14 +54,17 @@ import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.plugin.IPluginContainer;
+import org.joval.intf.system.IBaseSession;
+import org.joval.intf.system.ISession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.DefinitionFilter;
 import org.joval.oval.OvalException;
+import org.joval.oval.SystemCharacteristics;
 import org.joval.oval.Variables;
-import org.joval.plugin.container.ContainerFactory;
-import org.joval.plugin.container.ContainerConfigurationException;
+import org.joval.plugin.PluginFactory;
+import org.joval.plugin.PluginConfigurationException;
+import org.joval.sce.SCEScript;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
@@ -119,13 +123,13 @@ public class XPERT implements Runnable, IObserver {
 	try {
 	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
 	} catch (DatatypeConfigurationException e) {
-	    JOVALSystem.getLogger().warn(JOVALMsg.ERROR_TIMESTAMP);
-	    JOVALSystem.getLogger().warn(JOVALSystem.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    JOVALMsg.getLogger().warn(JOVALMsg.ERROR_TIMESTAMP);
+	    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return generator;
     }
 
-    static void printHeader(IPluginContainer container) {
+    static void printHeader(IPlugin plugin) {
 	PrintStream console = System.out;
 	console.println(getMessage("divider"));
 	console.println(getMessage("product.name"));
@@ -133,20 +137,20 @@ public class XPERT implements Runnable, IObserver {
 	console.println(getMessage("message.version", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION)));
 	console.println(getMessage("message.buildDate", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_BUILD_DATE)));
 	console.println(getMessage("copyright"));
-	if (container != null) {
+	if (plugin != null) {
 	    console.println("");
-	    console.println(getMessage("message.plugin.name", container.getProperty(IPluginContainer.PROP_DESCRIPTION)));
-	    console.println(getMessage("message.plugin.version", container.getProperty(IPluginContainer.PROP_VERSION)));
-	    console.println(getMessage("message.plugin.copyright", container.getProperty(IPluginContainer.PROP_COPYRIGHT)));
+	    console.println(getMessage("message.plugin.name", plugin.getProperty(IPlugin.PROP_DESCRIPTION)));
+	    console.println(getMessage("message.plugin.version", plugin.getProperty(IPlugin.PROP_VERSION)));
+	    console.println(getMessage("message.plugin.copyright", plugin.getProperty(IPlugin.PROP_COPYRIGHT)));
 	}
 	console.println(getMessage("divider"));
 	console.println("");
     }
 
-    static void printHelp(IPluginContainer container) {
+    static void printHelp(IPlugin plugin) {
 	System.out.println(getMessage("helpText"));
-	if (container != null) {
-	    System.out.println(container.getProperty(IPluginContainer.PROP_HELPTEXT));
+	if (plugin != null) {
+	    System.out.println(plugin.getProperty(IPlugin.PROP_HELPTEXT));
 	}
     }
 
@@ -193,25 +197,25 @@ public class XPERT implements Runnable, IObserver {
 	    }
 	}
 
-	IPluginContainer container = null;
+	IPlugin plugin = null;
 	try {
-	    container = ContainerFactory.newInstance(new File(BASE_DIR, "plugin")).createContainer(pluginName);
+	    plugin = PluginFactory.newInstance(new File(BASE_DIR, "plugin")).createPlugin(pluginName);
 	} catch (IllegalArgumentException e) {
 	    logger.severe("Not a directory: " + e.getMessage());
 	} catch (NoSuchElementException e) {
 	    logger.severe("Plugin not found: " + e.getMessage());
-	} catch (ContainerConfigurationException e) {
+	} catch (PluginConfigurationException e) {
 	    logger.severe(LogFormatter.toString(e));
 	}
 
-	printHeader(container);
+	printHeader(plugin);
 	if (printHelp) {
-	    printHelp(container);
+	    printHelp(plugin);
 	    exitCode = 0;
 	} else if (xccdfBaseName == null) {
 	    logger.warning("No XCCDF file was specified");
-	    printHelp(container);
-	} else if (container == null) {
+	    printHelp(plugin);
+	} else if (plugin == null) {
 	    printHelp(null);
 	} else {
 	    logger.info("Start time: " + new Date().toString());
@@ -224,7 +228,7 @@ public class XPERT implements Runnable, IObserver {
 		if (configFile.isFile()) {
 		    config.load(new FileInputStream(configFile));
 		}
-		container.configure(config);
+		plugin.configure(config);
 
 		//
 		// Load the XCCDF and selected profile
@@ -236,7 +240,7 @@ public class XPERT implements Runnable, IObserver {
 		//
 		// Perform the evaluation
 		//
-		XPERT engine = new XPERT(xccdf, profile, container.getPlugin());
+		XPERT engine = new XPERT(xccdf, profile, plugin.getSession());
 		engine.run();
 		logger.info("Finished processing XCCDF bundle");
 		exitCode = 0;
@@ -256,7 +260,7 @@ public class XPERT implements Runnable, IObserver {
     }
 
     private XccdfBundle xccdf;
-    private IEngine engine;
+    private IBaseSession session;
     private Collection<String> platforms;
     private Profile profile;
     private List<RuleType> rules = null;
@@ -264,13 +268,12 @@ public class XPERT implements Runnable, IObserver {
     private String phase = null;
 
     /**
-     * Create an XCCDF Processing Engine and Report Tool using the specified XCCDF document bundle and jOVAL plugin.
+     * Create an XCCDF Processing Engine and Report Tool using the specified XCCDF document bundle and jOVAL session.
      */
-    public XPERT(XccdfBundle xccdf, Profile profile, IPlugin plugin) {
+    public XPERT(XccdfBundle xccdf, Profile profile, IBaseSession session) {
 	this.xccdf = xccdf;
 	this.profile = profile;
-	engine = JOVALSystem.createEngine(plugin);
-	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
+	this.session = session;
     }
 
     // Implement Runnable
@@ -286,42 +289,70 @@ public class XPERT implements Runnable, IObserver {
 	    //
 	    // Configure the OVAL engine...
 	    //
-	    engine.setDefinitions(xccdf.getOval());
-	    engine.setDefinitionFilter(ovalHandler.getDefinitionFilter());
-	    engine.setExternalVariables(ovalHandler.getVariables());
+	    IResults ovalResults = null;
+	    DefinitionFilter filter = ovalHandler.getDefinitionFilter();
+	    if (filter.size() > 0) {
+		IEngine engine = JOVALSystem.createEngine(session);
+		engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
+		engine.setDefinitions(xccdf.getOval());
+		engine.setDefinitionFilter(ovalHandler.getDefinitionFilter());
+		engine.setExternalVariables(ovalHandler.getVariables());
 
-	    //
-	    // Read previously collected system characteristics data, if available.
-	    //
-	    if (debug) {
-		try {
-		    File sc = new File(ws, "sc-input.xml");
-		    if(sc.isFile()) {
-			logger.info("Loading " + sc);
-			engine.setSystemCharacteristicsFile(sc);
+		//
+		// Read previously collected system characteristics data, if available.
+		//
+		if (debug) {
+		    try {
+			File sc = new File(ws, "sc-input.xml");
+			if(sc.isFile()) {
+			    logger.info("Loading " + sc);
+			    engine.setSystemCharacteristics(new SystemCharacteristics(sc));
+			}
+		    } catch (OvalException e) {
+			logger.warning(e.getMessage());
 		    }
-		} catch (OvalException e) {
-		    logger.warning(e.getMessage());
 		}
+
+		//
+		// Run the OVAL engine
+		//
+		logger.info("Evaluating OVAL rules");
+		engine.run();
+		switch(engine.getResult()) {
+		  case ERR:
+		    logger.severe(LogFormatter.toString(engine.getError()));
+		    return;
+		  case OK:
+		    ovalResults = engine.getResults();
+		    if (debug) {
+			File resultsFile = new File(ws, "oval-results.xml");
+			logger.info("Saving OVAL results: " + resultsFile.getPath());
+			ovalResults.writeXML(resultsFile);
+		    }
+		    break;
+		}
+		engine.getNotificationProducer().removeObserver(this);
+	    } else {
+		logger.info("No OVAL definitions to evaluate");
 	    }
 
 	    //
-	    // Run the OVAL engine
+	    // Evaluate SCE-based rules
 	    //
-	    engine.run();
-	    IResults results = null;
-	    switch(engine.getResult()) {
-	      case ERR:
-		logger.severe(LogFormatter.toString(engine.getError()));
-		return;
-	      case OK:
-		results = engine.getResults();
-		if (debug) {
-		    File resultsFile = new File(ws, "oval-results.xml");
-		    logger.info("Saving OVAL results: " + resultsFile.getPath());
-		    results.writeXML(resultsFile);
+	    logger.info("Evaluating SCE rules");
+	    Hashtable<String, ResultEnumType> sceResults = new Hashtable<String, ResultEnumType>();
+	    if (session instanceof ISession) {
+		ISession s = (ISession)session;
+		if (s.connect()) {
+		    SCEHandler sceHandler = new SCEHandler(xccdf, profile, s);
+		    for (SCEScript script : sceHandler.getScripts()) {
+			logger.info("Running SCE script for rule " + script.getRuleId());
+			if (script.exec()) {
+			    sceResults.put(script.getRuleId(), script.getResult());
+			}
+		    } 
+		    s.disconnect();
 		}
-		break;
 	    }
 
 	    //
@@ -331,7 +362,10 @@ public class XPERT implements Runnable, IObserver {
 	    TestResultType testResult = factory.createTestResultType();
 	    testResult.setTestSystem(getMessage("product.name"));
 
-	    ovalHandler.integrateResults(results, testResult);
+	    if (ovalResults != null) {
+		ovalHandler.integrateResults(ovalResults, testResult);
+	    }
+	    // DAS remind: need an equivalent to integrate SCE results
 
 	    Hashtable<String, RuleResultType> resultIndex = new Hashtable<String, RuleResultType>();
 	    for (RuleResultType rrt : testResult.getRuleResult()) {
@@ -342,6 +376,8 @@ public class XPERT implements Runnable, IObserver {
 		String ruleId = rule.getItemId();
 		if (resultIndex.containsKey(ruleId)) {
 		    logger.info(ruleId + ": " + resultIndex.get(ruleId).getResult());
+		} else if (sceResults.containsKey(ruleId)) {
+		    logger.info(ruleId + ": " + sceResults.get(ruleId));
 		} else {
 		    //
 		    // Add the unchecked result, just for fun.
@@ -443,6 +479,8 @@ public class XPERT implements Runnable, IObserver {
 	//
 	// Evaluate the platform definitions.
 	//
+	IEngine engine = JOVALSystem.createEngine(session);
+	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	engine.setDefinitionFilter(filter);
 	engine.setDefinitions(xccdf.getCpeOval());
 	engine.run();
@@ -462,63 +500,9 @@ public class XPERT implements Runnable, IObserver {
 		logger.info("Ignoring definition " + def.getDefinitionId());
 	    }
 	}
+	engine.getNotificationProducer().removeObserver(this);
 	logger.info("The target system is applicable to the XCCDF bundle");
 	return true;
-    }
-
-    /**
-     * Create an OVAL DefinitionFilter containing every selected rule.
-     */
-    private DefinitionFilter createFilter(Collection<RuleType> rules) {
-	DefinitionFilter filter = new DefinitionFilter();
-	for (RuleType rule : rules) {
-	    if (rule.isSetCheck()) {
-		logger.info("Getting checks for Rule " + rule.getItemId());
-		for (CheckType check : rule.getCheck()) {
-		    if (check.isSetSystem() && check.getSystem().equals(OVAL_SYSTEM)) {
-			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    if (ref.isSetName()) {
-				logger.info("Adding check " + ref.getName());
-				filter.addDefinition(ref.getName());
-			    }
-			}
-		    }
-		}
-	    } else {
-		logger.info("No check in Rule " + rule.getItemId());
-	    }
-	}
-	if (debug) {
-	    File filterFile = new File(ws, "oval-filter.xml");
-	    logger.info("Saving OVAL evaluation-definitions: " + filterFile.getPath());
-	    filter.writeXML(filterFile);
-	}
-	return filter;
-    }
-
-    /**
-     * Gather all the variable exports from the rules, and create an OVAL variables structure containing their values.
-     */
-    private Variables createVariables(Collection<RuleType> rules, Hashtable<String, String> values) {
-	Variables variables = new Variables(getGenerator());
-	for (RuleType rule : rules) {
-	    for (CheckType check : rule.getCheck()) {
-		if (check.getSystem().equals(OVAL_SYSTEM)) {
-		    for (CheckExportType export : check.getCheckExport()) {
-			String ovalVariableId = export.getExportName();
-			String valueId = export.getValueId();
-			variables.addValue(ovalVariableId, values.get(valueId));
-			variables.setComment(ovalVariableId, valueId);
-		    }
-		}
-	    }
-	}
-	if (debug) {
-	    File variablesFile = new File(ws, "oval-variables.xml");
-	    logger.info("Saving OVAL variables: " + variablesFile.getPath());
-	    variables.writeXML(variablesFile);
-	}
-	return variables;
     }
 
     /**

@@ -40,6 +40,7 @@ import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.os.cisco.system.IosSession;
@@ -47,15 +48,6 @@ import org.joval.os.cisco.system.TechSupport;
 import org.joval.os.juniper.system.JunosSession;
 import org.joval.os.juniper.system.SupportInformation;
 import org.joval.oval.OvalException;
-import org.joval.plugin.adapter.cisco.ios.GlobalAdapter;
-import org.joval.plugin.adapter.cisco.ios.InterfaceAdapter;
-import org.joval.plugin.adapter.cisco.ios.LineAdapter;
-import org.joval.plugin.adapter.cisco.ios.SnmpAdapter;
-import org.joval.plugin.adapter.cisco.ios.TclshAdapter;
-import org.joval.plugin.adapter.cisco.ios.VersionAdapter;
-import org.joval.plugin.adapter.cisco.ios.Version55Adapter;
-import org.joval.plugin.adapter.independent.FamilyAdapter;
-import org.joval.plugin.adapter.independent.VariableAdapter;
 import org.joval.protocol.tftp.TftpURLStreamHandler;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -66,7 +58,7 @@ import org.joval.util.JOVALSystem;
  *
  * @author David A. Solin
  */
-public class CiscoPlugin implements IPlugin {
+public class CiscoPlugin extends RemotePlugin {
     /**
      * The Cisco utility accepts two command-line arguments.  The first is the path to an XML file containing OVAL
      * definitions, and the second is a URL to information returned from the command "show tech-support" run on a Cisco
@@ -95,7 +87,7 @@ public class CiscoPlugin implements IPlugin {
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	    LogManager.getLogManager().readConfiguration(cl.getResourceAsStream("disco.logging.properties"));
-	    Logger logger = Logger.getLogger(JOVALSystem.getLogger().getName());
+	    Logger logger = Logger.getLogger(JOVALMsg.getLogger().getName());
 	    Handler logHandler = new FileHandler("disco.log", false);
 	    logHandler.setFormatter(new SimpleFormatter());
 	    logHandler.setLevel(Level.INFO);
@@ -122,7 +114,7 @@ public class CiscoPlugin implements IPlugin {
 	    }
 
 	    CiscoPlugin plugin = new CiscoPlugin(tech);
-	    IEngine engine = JOVALSystem.createEngine(plugin);
+	    IEngine engine = JOVALSystem.createEngine(plugin.getSession());
 	    engine.setDefinitionsFile(new File(argv[0]));
 	    engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	    engine.run();
@@ -179,9 +171,9 @@ public class CiscoPlugin implements IPlugin {
 	System.out.println("");
 	System.out.println("Arguments:");
 	System.out.println("  [defs]  = Required argument specifying the path to an XML file containing");
-        System.out.println("            OVAL definitions.");
+	System.out.println("            OVAL definitions.");
 	System.out.println("  [input] = Optional argument specifying the URL or path to a file containing");
-	System.out.println("            the contents of the IOS command \"show tech-support\".  If not,");
+	System.out.println("            the contents of the IOS command \"show tech-support\".  If not");
 	System.out.println("            specified, data is read from the standard input.");
     }
 
@@ -223,60 +215,38 @@ public class CiscoPlugin implements IPlugin {
 	}
     }
 
-    private LocLogger logger;
-    private IosSession session;
-    private Collection<IAdapter> adapters;
-
-    public CiscoPlugin(ITechSupport techSupport) {
-	logger = JOVALSystem.getLogger();
-	adapters = new Vector<IAdapter>();
-
-	if (techSupport instanceof ISupportInformation) {
-	    session = new JunosSession(techSupport);
-	    adapters.add(new FamilyAdapter(session));
-	    adapters.add(new VariableAdapter());
-	    adapters.add(new GlobalAdapter(session));
-	    adapters.add(new LineAdapter(session));
-	} else {
-	    session = new IosSession(techSupport);
-	    adapters.add(new FamilyAdapter(session));
-	    adapters.add(new VariableAdapter());
-	    adapters.add(new GlobalAdapter(session));
-	    adapters.add(new InterfaceAdapter(session));
-	    adapters.add(new LineAdapter(session));
-	    adapters.add(new SnmpAdapter(session));
-	    adapters.add(new VersionAdapter(session));
-	    adapters.add(new Version55Adapter(session));
-	}
-    }
-
-    // Implement ILoggable
-
-    public LocLogger getLogger() {
-	return logger;
-    }
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
-	if (session != null) {
-	    session.setLogger(logger);
-	}
-    }
-
     // Implement IPlugin
 
-    public Collection<IAdapter> getAdapters() {
-	return adapters;
+    @Override
+    public void configure(Properties props) throws Exception {
+	super.configure(props);
+
+	String str = props.getProperty("tech.url");
+	if (str == null) {
+	    throw new Exception(getMessage("err.configPropMissing", "tech.url"));
+	}
+	URL url = CiscoPlugin.toURL(props.getProperty("tech.url"));
+	ByteArrayOutputStream out = new ByteArrayOutputStream();
+	InputStream in = url.openStream();
+	byte[] buff = new byte[1024];
+	int len = 0;
+	while((len = in.read(buff)) > 0) {
+	    out.write(buff, 0, len);
+	}
+
+	ITechSupport tech = new TechSupport(new ByteArrayInputStream(out.toByteArray()));
+	if (tech.getHeadings().size() == 0) {
+	    tech = new SupportInformation(new ByteArrayInputStream(out.toByteArray()));
+	}
+
+	session = new IosSession(tech);
     }
 
-    public void connect() throws ConnectException {
-    }
+    // Private
 
-    public void disconnect() {
-    }
-
-    public SystemInfoType getSystemInfo() {
-	return session.getSystemInfo();
+    private CiscoPlugin(ITechSupport tech) {
+	super();
+	session = new IosSession(tech);
     }
 }
 
