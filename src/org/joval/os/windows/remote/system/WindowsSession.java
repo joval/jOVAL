@@ -217,11 +217,11 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		    conn = new WmiConnection(host, cred, this);
 		}
 		if (conn.connect()) {
+		    connected = true;
 		    if (directory == null) {
 			directory = new Directory(this);
 		    }
 		    directory.setWmiProvider(conn);
-		    connected = true;
 		    return true;
 		} else {
 		    reg.disconnect();

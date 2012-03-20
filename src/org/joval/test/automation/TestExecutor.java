@@ -24,7 +24,7 @@ import javax.xml.datatype.Duration;
 
 import oval.schemas.results.core.DefinitionType;
 import oval.schemas.results.core.OvalResults;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
+import oval.schemas.results.core.SystemType;
 
 import org.joval.test.automation.schema.ObjectFactory;
 import org.joval.test.automation.schema.Report;
@@ -48,6 +48,8 @@ import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.intf.util.IProperty;
 import org.joval.oval.OvalException;
+import org.joval.oval.Variables;
+import org.joval.oval.engine.Engine;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
@@ -138,15 +140,12 @@ public class TestExecutor implements Runnable {
 		    testDir = new File(testDir, ((IUnixSession)session).getFlavor().value());
 		}
 		if (testDir.exists()) {
-		    SystemInfoType info = session.getSystemInfo();
-		    suite.setOS(info.getOsName());
-
 		    sysLogger.info(name + " - Base directory for tests: " + testDir.getCanonicalPath());
 		    if (session instanceof ISession) {
 			installSupportFiles((ISession)session, testDir);
 		    }
 
-		    IEngine engine = JOVALSystem.createEngine(session);
+		    IEngine engine = new Engine(session);
 		    engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 
 		    for (String xml : testDir.list(new XMLFilter())) {
@@ -160,7 +159,7 @@ public class TestExecutor implements Runnable {
 			// Set the external variables file for the external variables test!
 			//
 			if ("oval-def_external_variable.xml".equals(xml)) {
-			    IVariables variables = JOVALSystem.createVariables(new File(testDir, "_external-variables.xml"));
+			    IVariables variables = new Variables(new File(testDir, "_external-variables.xml"));
 			    engine.setExternalVariables(variables);
 			}
 
@@ -175,8 +174,9 @@ public class TestExecutor implements Runnable {
 			    String key = name + "-" + xml;
 			    ctx.addResult(key, res);
 			    testResults.setFileName(key);
-			    OvalResults or = res.getOvalResults();
-			    for (DefinitionType def : or.getResults().getSystem().get(0).getDefinitions().getDefinition()) {
+			    SystemType system = res.getOvalResults().getResults().getSystem().get(0);
+			    suite.setOS(system.getOvalSystemCharacteristics().getSystemInfo().getOsName());
+			    for (DefinitionType def : system.getDefinitions().getDefinition()) {
 				TestResult result = factory.createTestResult();
 				String id = def.getDefinitionId();
 				result.setDefinitionId(id);
