@@ -27,9 +27,9 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.io.PerishableReader;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -56,10 +56,10 @@ public class SnmpAdapter implements IAdapter {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	try {
 	    for (SnmpItem item : getItems()) {
-		items.add(JOVALSystem.factories.sc.ios.createSnmpItem(item));
+		items.add(Factories.sc.ios.createSnmpItem(item));
 	    }
 	} catch (NoSuchElementException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ITechSupport.GLOBAL));
 	    rc.addMessage(msg);
@@ -81,12 +81,12 @@ public class SnmpAdapter implements IAdapter {
 		String number = null;
 		int numTokens = tok.countTokens();
 		if (numTokens >= 3) {
-		    SnmpItem item = JOVALSystem.factories.sc.ios.createSnmpItem();
+		    SnmpItem item = Factories.sc.ios.createSnmpItem();
 
 		    tok.nextToken(); // "snmp-server"
 		    tok.nextToken(); // "community"
 
-		    EntityItemStringType communityName = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    EntityItemStringType communityName = Factories.sc.core.createEntityItemStringType();
 		    communityName.setValue(tok.nextToken());
 		    item.setCommunityName(communityName);
 
@@ -115,7 +115,7 @@ public class SnmpAdapter implements IAdapter {
 			    // http://www.cisco.com/en/US/docs/ios/12_1/configfun/command/reference/frd3001.html#wp1022436
 			    //
 			    if (0 < i && i < 100) {
-				EntityItemStringType accessList = JOVALSystem.factories.sc.core.createEntityItemStringType();
+				EntityItemStringType accessList = Factories.sc.core.createEntityItemStringType();
 				accessList.setValue(temp);
 				item.setAccessList(accessList);
 			    }

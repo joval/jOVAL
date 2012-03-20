@@ -33,11 +33,11 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.ISearchable;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 import org.joval.util.Version;
 
@@ -103,7 +103,7 @@ public class RunlevelAdapter implements IAdapter {
 			}
 		    }
 		} catch (PatternSyntaxException e) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
@@ -170,7 +170,7 @@ public class RunlevelAdapter implements IAdapter {
 			    }
 			}
 		    } catch (PatternSyntaxException e) {
-			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			MessageType msg = Factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.ERROR);
 			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 			rc.addMessage(msg);
@@ -199,17 +199,17 @@ public class RunlevelAdapter implements IAdapter {
      * Make a RunlevelItem with the specified characteristics.
      */
     private JAXBElement<RunlevelItem> makeItem(String runlevel, String serviceName, StartStop actions) {
-	RunlevelItem item = JOVALSystem.factories.sc.unix.createRunlevelItem();
+	RunlevelItem item = Factories.sc.unix.createRunlevelItem();
 
-	EntityItemStringType runlevelType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType runlevelType = Factories.sc.core.createEntityItemStringType();
 	runlevelType.setValue(runlevel);
 	item.setRunlevel(runlevelType);
 
-	EntityItemStringType serviceNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType serviceNameType = Factories.sc.core.createEntityItemStringType();
 	serviceNameType.setValue(serviceName);
 	item.setServiceName(serviceNameType);
 
-	EntityItemBoolType startType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	EntityItemBoolType startType = Factories.sc.core.createEntityItemBoolType();
 	startType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	if (actions.start) {
 	    startType.setValue("true");
@@ -218,7 +218,7 @@ public class RunlevelAdapter implements IAdapter {
 	}
 	item.setStart(startType);
 
-	EntityItemBoolType kill = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	EntityItemBoolType kill = Factories.sc.core.createEntityItemBoolType();
 	kill.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	if (actions.stop) {
 	    kill.setValue("true");
@@ -229,7 +229,7 @@ public class RunlevelAdapter implements IAdapter {
 
 	item.setStatus(StatusEnumeration.EXISTS);
 
-	return JOVALSystem.factories.sc.unix.createRunlevelItem(item);
+	return Factories.sc.unix.createRunlevelItem(item);
     }
 
     /**

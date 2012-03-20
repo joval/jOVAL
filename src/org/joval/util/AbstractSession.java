@@ -15,8 +15,6 @@ import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
@@ -90,8 +88,6 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
     public abstract String getHostname();
 
     public abstract Type getType();
-
-    public abstract SystemInfoType getSystemInfo();
 
     // Private
 

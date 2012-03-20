@@ -7,8 +7,6 @@ import java.util.NoSuchElementException;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.identity.ICredential;
@@ -17,7 +15,6 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.net.INetconf;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
-import org.joval.os.cisco.IosSystemInfo;
 import org.joval.protocol.netconf.NetconfSession;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.AbstractBaseSession;
@@ -33,8 +30,6 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     protected SshSession ssh;
     protected ITechSupport techSupport;
     protected boolean initialized;
-
-    private IosSystemInfo info;
 
     /**
      * Create an IOS session with a live SSH connection to a router.
@@ -116,7 +111,6 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 	    } else {
 		try {
 		    techSupport = new TechSupport(this);
-		    info = new IosSystemInfo(techSupport);
 		    initialized = true;
 		    return true;
 		} catch (NoSuchElementException e) {
@@ -152,12 +146,5 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 
     public Type getType() {
 	return Type.CISCO_IOS;
-    }
-
-    public SystemInfoType getSystemInfo() {
-	if (info == null) {
-	    info = new IosSystemInfo(techSupport);
-	}
-	return info.getSystemInfo();
     }
 }

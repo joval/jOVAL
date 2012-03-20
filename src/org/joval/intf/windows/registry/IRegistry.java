@@ -17,6 +17,9 @@ import org.joval.intf.util.ILoggable;
  * @version %I% %G%
  */
 public interface IRegistry extends ILoggable {
+    String COMPUTERNAME_KEY = "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
+    String COMPUTERNAME_VAL = "ComputerName";
+
     String HKLM		= "HKEY_LOCAL_MACHINE";
     String HKU		= "HKEY_USERS";
     String HKCU		= "HKEY_CURRENT_USER";

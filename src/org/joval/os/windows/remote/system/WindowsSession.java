@@ -17,8 +17,6 @@ import org.jinterop.dcom.common.JISystem;
 import com.h9labs.jwbem.SWbemLocator;
 import com.h9labs.jwbem.SWbemServices;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFile;
@@ -30,10 +28,12 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.intf.windows.io.IWindowsFilesystem;
+import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
+import org.joval.intf.windows.registry.IStringValue;
+import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.WindowsSystemInfo;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
@@ -63,7 +63,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private IWindowsFilesystem fs32;
     private Vector<IFile> tempFiles;
     private boolean is64bit = false;
-    private WindowsSystemInfo info = null;
     private Directory directory = null;
 
     public WindowsSession(String host, File wsdir) {
@@ -71,7 +70,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	this.wsdir = wsdir;
 	this.host = host;
 	tempFiles = new Vector<IFile>();
-	info = new WindowsSystemInfo(this);
     }
 
     // Implement IWindowsSession extensions
@@ -163,6 +161,20 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     }
 
     public String getHostname() {
+	if (isConnected()) {
+	    try {
+		IKey key = reg.fetchKey(IRegistry.HKLM, IRegistry.COMPUTERNAME_KEY);
+		IValue val = key.getValue(IRegistry.COMPUTERNAME_VAL);
+		if (val.getType() == IValue.REG_SZ) {
+		    return ((IStringValue)val).getData();
+		} else {
+		    logger.warn(JOVALMsg.ERROR_SYSINFO_HOSTNAME);
+		}
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.ERROR_SYSINFO_HOSTNAME);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	}
 	return host;
     }
 
@@ -209,7 +221,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 			directory = new Directory(this);
 		    }
 		    directory.setWmiProvider(conn);
-		    info.getSystemInfo();
 		    connected = true;
 		    return true;
 		} else {
@@ -254,10 +265,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     }
 
     // Implement ISession
-
-    public SystemInfoType getSystemInfo() {
-	return info.getSystemInfo();
-    }
 
     @Override
     public String getTempDir() throws IOException {

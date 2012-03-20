@@ -25,8 +25,6 @@ import org.vngx.jsch.userauth.IdentityManager;
 import org.vngx.jsch.userauth.IdentityFile;
 import org.vngx.jsch.util.SocketFactory;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
@@ -225,10 +223,6 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 	    }
 	}
 	return Type.SSH;
-    }
-
-    public SystemInfoType getSystemInfo() {
-	return null;
     }
 
     // Implement UserInfo

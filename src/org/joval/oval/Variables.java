@@ -35,7 +35,7 @@ import org.joval.intf.util.ILoggable;
 import org.joval.intf.oval.IVariables;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * Index to an OvalVariables object, for fast look-up of variable definitions.
@@ -53,7 +53,7 @@ public class Variables implements IVariables {
 
     public static final OvalVariables getOvalVariables(Source source) throws OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_VARIABLES));
+	    JAXBContext ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_VARIABLES));
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof OvalVariables) {
@@ -195,19 +195,19 @@ public class Variables implements IVariables {
 	variables = new Hashtable<String, List<String>>();
 	comments = new Hashtable<String, String>();
 	try {
-	    ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_VARIABLES));
+	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_VARIABLES));
 	} catch (JAXBException e) {
 	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
     private OvalVariables createOvalVariables() {
-	OvalVariables vars = JOVALSystem.factories.variables.createOvalVariables();
+	OvalVariables vars = Factories.variables.createOvalVariables();
 	vars.setGenerator(generator);
 
-	VariablesType vt = JOVALSystem.factories.variables.createVariablesType();
+	VariablesType vt = Factories.variables.createVariablesType();
 	for (String key : variables.keySet()) {
-	    VariableType var = JOVALSystem.factories.variables.createVariableType();
+	    VariableType var = Factories.variables.createVariableType();
 	    var.setId(key);
 	    for (String s : variables.get(key)) {
 		var.getValue().add(s);

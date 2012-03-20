@@ -35,10 +35,10 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Evaluates User OVAL tests.
@@ -80,7 +80,7 @@ public class UserAdapter implements IAdapter {
 		    try {
 			items.add(makeItem(directory.queryUser(user)));
 		    } catch (IllegalArgumentException e) {
-			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			MessageType msg = Factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.WARNING);
 			String s = JOVALMsg.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, user);
 			session.getLogger().warn(s);
@@ -112,7 +112,7 @@ public class UserAdapter implements IAdapter {
 			    }
 			}
 		    } catch (PatternSyntaxException e) {
-			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			MessageType msg = Factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.ERROR);
 			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 			rc.addMessage(msg);
@@ -128,12 +128,12 @@ public class UserAdapter implements IAdapter {
 	} catch (NoSuchElementException e) {
 	    // No match.
 	} catch (ResolveException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
 	} catch (WmiException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
 	    rc.addMessage(msg);
@@ -144,26 +144,26 @@ public class UserAdapter implements IAdapter {
     // Private
 
     private JAXBElement<? extends ItemType> makeItem(IUser user) {
-	UserItem item = JOVALSystem.factories.sc.windows.createUserItem();
-	EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	UserItem item = Factories.sc.windows.createUserItem();
+	EntityItemStringType userType = Factories.sc.core.createEntityItemStringType();
 	if (directory.isBuiltinUser(user.getNetbiosName())) {
 	    userType.setValue(user.getName());
 	} else {
 	    userType.setValue(user.getNetbiosName());
 	}
 	item.setUser(userType);
-	EntityItemBoolType enabledType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	EntityItemBoolType enabledType = Factories.sc.core.createEntityItemBoolType();
 	enabledType.setValue(user.isEnabled() ? "true" : "false");
 	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setEnabled(enabledType);
 	Collection<String> groupNetbiosNames = user.getGroupNetbiosNames();
 	if (groupNetbiosNames.size() == 0) {
-	    EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType groupType = Factories.sc.core.createEntityItemStringType();
 	    groupType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    item.getGroup().add(groupType);
 	} else {
 	    for (String groupName : groupNetbiosNames) {
-		EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType groupType = Factories.sc.core.createEntityItemStringType();
 		if (directory.isBuiltinGroup(groupName)) {
 		    groupType.setValue(directory.getName(groupName));
 		} else {
@@ -172,6 +172,6 @@ public class UserAdapter implements IAdapter {
 		item.getGroup().add(groupType);
 	    }
 	}
-	return JOVALSystem.factories.sc.windows.createUserItem(item);
+	return Factories.sc.windows.createUserItem(item);
     }
 }

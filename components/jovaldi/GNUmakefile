@@ -73,17 +73,14 @@ dist-x86: all
 	cp $(XPERT_LIB) $(DIST32)/lib
 	mkdir -p $(DIST32)/plugin/default/lib
 	cp -R plugin/default/rsrc/* $(DIST32)/plugin/default
-	cp -R $(PLUGIN_SHARED_LIB) $(DIST32)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST32)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST32)/plugin/default/lib
 	mkdir -p $(DIST)/x86/plugin/remote/lib
 	cp -R plugin/remote/rsrc/* $(DIST32)/plugin/remote
-	cp -R $(PLUGIN_SHARED_LIB) $(DIST32)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE_LIB) $(DIST32)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST32)/plugin/remote/lib
 	mkdir -p $(DIST)/x86/plugin/cisco/lib
 	cp -R plugin/cisco/rsrc/* $(DIST32)/plugin/cisco
-	cp -R $(PLUGIN_SHARED_LIB) $(DIST32)/plugin/cisco/lib
 	cp -R $(PLUGIN_CISCO_LIB) $(DIST32)/plugin/cisco/lib
 	cp -R $(PLUGIN_CISCO)/$(LIBDIR)/*.jar $(DIST32)/plugin/cisco/lib
 	cp -R $(JRE_HOME)/x86 $(DIST32)/jre
@@ -110,17 +107,14 @@ dist-x64: all
 	mkdir -p $(DIST64)/plugin/default/lib
 	cp $(XPERT_LIB) $(DIST64)/lib
 	cp -R plugin/default/rsrc/* $(DIST64)/plugin/default
-	cp -R $(PLUGIN_SHARED_LIB) $(DIST64)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST64)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST64)/plugin/default/lib
 	mkdir -p $(DIST)/x64/plugin/remote/lib
 	cp -R plugin/remote/rsrc/* $(DIST64)/plugin/remote
-	cp -R $(PLUGIN_SHARED_LIB) $(DIST64)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE_LIB) $(DIST64)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST64)/plugin/remote/lib
 	mkdir -p $(DIST)/x64/plugin/cisco/lib
 	cp -R plugin/cisco/rsrc/* $(DIST64)/plugin/cisco
-	cp -R $(PLUGIN_SHARED_LIB) $(DIST64)/plugin/cisco/lib
 	cp -R $(PLUGIN_CISCO_LIB) $(DIST64)/plugin/cisco/lib
 	cp -R $(PLUGIN_CISCO)/$(LIBDIR)/*.jar $(DIST64)/plugin/cisco/lib
 	cp -R $(JRE_HOME)/x64 $(DIST64)/jre

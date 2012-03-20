@@ -26,9 +26,9 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.io.PerishableReader;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.PropertyUtil;
 import org.joval.util.SafeCLI;
 
@@ -63,11 +63,11 @@ public class LineAdapter implements IAdapter {
 	switch(op) {
 	  case EQUALS:
             try {
-		items.add(JOVALSystem.factories.sc.ios.createLineItem(getItem(subcommand)));
+		items.add(Factories.sc.ios.createLineItem(getItem(subcommand)));
 	    } catch (IllegalStateException e) {
 		throw new CollectException(e, FlagEnumeration.NOT_COLLECTED);
 	    } catch (Exception e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		String s = JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_SHOW, subcommand, e.getMessage());
 		msg.setValue(s);
@@ -107,12 +107,12 @@ public class LineAdapter implements IAdapter {
 	    sb.append(line);
 	}
 
-	LineItem item = JOVALSystem.factories.sc.ios.createLineItem();
-	EntityItemStringType showSubcommand = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	LineItem item = Factories.sc.ios.createLineItem();
+	EntityItemStringType showSubcommand = Factories.sc.core.createEntityItemStringType();
 	showSubcommand.setValue(subcommand);
 	item.setShowSubcommand(showSubcommand);
 	if (sb.length() > 0) {
-	    EntityItemStringType configLine = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType configLine = Factories.sc.core.createEntityItemStringType();
 	    configLine.setValue(sb.toString());
 	    item.setConfigLine(configLine);
 	}

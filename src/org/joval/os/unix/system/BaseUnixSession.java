@@ -3,10 +3,7 @@
 
 package org.joval.os.unix.system;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.os.unix.UnixSystemInfo;
 import org.joval.util.AbstractSession;
 
 /**
@@ -17,7 +14,6 @@ import org.joval.util.AbstractSession;
  */
 public abstract class BaseUnixSession extends AbstractSession implements IUnixSession {
     protected Flavor flavor = Flavor.UNKNOWN;
-    protected UnixSystemInfo info = null;
 
     protected BaseUnixSession() {
 	super();
@@ -49,12 +45,6 @@ public abstract class BaseUnixSession extends AbstractSession implements IUnixSe
 
     public Type getType() {
 	return Type.UNIX;
-    }
-
-    // Implement ISession
-
-    public SystemInfoType getSystemInfo() {
-	return info.getSystemInfo();
     }
 
     // Abstract

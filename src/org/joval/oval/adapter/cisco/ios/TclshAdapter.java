@@ -26,8 +26,8 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.io.PerishableReader;
+import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -55,9 +55,9 @@ public class TclshAdapter implements IAdapter {
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	try {
-	    items.add(JOVALSystem.factories.sc.ios.createTclshItem(getItem()));
+	    items.add(Factories.sc.ios.createTclshItem(getItem()));
 	} catch (Exception e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
@@ -78,8 +78,8 @@ public class TclshAdapter implements IAdapter {
 	    }
 	}
 
-	TclshItem item = JOVALSystem.factories.sc.ios.createTclshItem();
-	EntityItemBoolType available = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	TclshItem item = Factories.sc.ios.createTclshItem();
+	EntityItemBoolType available = Factories.sc.core.createEntityItemBoolType();
 	if (result) {
 	    available.setValue("true");
 	} else {

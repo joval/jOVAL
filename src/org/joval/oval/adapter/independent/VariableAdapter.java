@@ -20,10 +20,10 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Evaluates VariableTest OVAL tests.
@@ -46,19 +46,19 @@ public class VariableAdapter implements IAdapter {
 	try {
 	    Collection<String> values = rc.resolve((String)vObj.getVarRef().getValue());
 	    if (values.size() > 0) {
-		VariableItem item = JOVALSystem.factories.sc.independent.createVariableItem();
-		EntityItemVariableRefType ref = JOVALSystem.factories.sc.independent.createEntityItemVariableRefType();
+		VariableItem item = Factories.sc.independent.createVariableItem();
+		EntityItemVariableRefType ref = Factories.sc.independent.createEntityItemVariableRefType();
 		ref.setValue(vObj.getVarRef().getValue());
 		item.setVarRef(ref);
 		for (String value : values) {
-		    EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 		    valueType.setValue(value);
 		    item.getValue().add(valueType);
 		}
-		items.add(JOVALSystem.factories.sc.independent.createVariableItem(item));
+		items.add(Factories.sc.independent.createVariableItem(item));
 	    }
 	} catch (ResolveException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, (String)vObj.getVarRef().getValue(), e.getMessage());
 	    msg.setValue(s);

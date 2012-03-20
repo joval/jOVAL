@@ -27,7 +27,7 @@ import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * Representation of a Definition Filter, which is constructed using either a list of definition IDs or an XML file that is
@@ -47,7 +47,7 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
 
     public static final Collection<String> getEvaluationDefinitionIds(Source src) throws OvalException {
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_EVALUATION_ID);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_EVALUATION_ID);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(src);
@@ -94,7 +94,7 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
     }
 
     public EvaluationDefinitionIds getEvaluationDefinitionIds() {
-	EvaluationDefinitionIds ids = JOVALSystem.factories.evaluation.createEvaluationDefinitionIds();
+	EvaluationDefinitionIds ids = Factories.evaluation.createEvaluationDefinitionIds();
 	if (definitionIDs == null) {
 	    ids.unsetDefinition();
 	} else {
@@ -126,7 +126,7 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
     public void writeXML(File f) {
         OutputStream out = null;
         try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_EVALUATION_ID);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_EVALUATION_ID);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
             Marshaller marshaller = ctx.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);

@@ -5,7 +5,6 @@ package org.joval.test;
 
 import java.io.InputStream;
 
-import org.joval.identity.Credential;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IProcess;
 

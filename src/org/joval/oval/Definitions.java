@@ -40,7 +40,7 @@ import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * Index to an OvalDefinitions object, for fast look-up of definitions, tests, variables, objects and states.
@@ -59,7 +59,7 @@ public class Definitions implements IDefinitions, ILoggable {
 
     public static final OvalDefinitions getOvalDefinitions(Source source) throws OvalException {
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DEFINITIONS);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_DEFINITIONS);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
@@ -147,7 +147,7 @@ public class Definitions implements IDefinitions, ILoggable {
     public Source getSource() {
 	Source src = null;
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DEFINITIONS);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_DEFINITIONS);
 	    src = new JAXBSource(JAXBContext.newInstance(packages), getOvalDefinitions());
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

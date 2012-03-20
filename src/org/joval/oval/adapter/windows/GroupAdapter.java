@@ -34,9 +34,9 @@ import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Evaluates Group OVAL tests.
@@ -70,7 +70,7 @@ public class GroupAdapter extends UserAdapter {
 		try {
 		    items.add(makeItem(directory.queryGroup(group)));
 		} catch (IllegalArgumentException e) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.WARNING);
 		    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, group);
 		    session.getLogger().warn(s);
@@ -102,7 +102,7 @@ public class GroupAdapter extends UserAdapter {
 			}
 		    }
 		} catch (PatternSyntaxException e) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
@@ -117,7 +117,7 @@ public class GroupAdapter extends UserAdapter {
 	} catch (NoSuchElementException e) {
 	    // No match.
 	} catch (WmiException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
 	    rc.addMessage(msg);
@@ -128,8 +128,8 @@ public class GroupAdapter extends UserAdapter {
     // Private
 
     private JAXBElement<? extends ItemType> makeItem(IGroup group) {
-	GroupItem item = JOVALSystem.factories.sc.windows.createGroupItem();
-	EntityItemStringType groupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	GroupItem item = Factories.sc.windows.createGroupItem();
+	EntityItemStringType groupType = Factories.sc.core.createEntityItemStringType();
 	if (directory.isBuiltinGroup(group.getNetbiosName())) {
 	    groupType.setValue(group.getName());
 	} else {
@@ -138,12 +138,12 @@ public class GroupAdapter extends UserAdapter {
 	item.setGroup(groupType);
 	Collection<String> userNetbiosNames = group.getMemberUserNetbiosNames();
 	if (userNetbiosNames.size() == 0) {
-	    EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType userType = Factories.sc.core.createEntityItemStringType();
 	    userType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    item.getUser().add(userType);
 	} else {
 	    for (String userNetbiosName : userNetbiosNames) {
-		EntityItemStringType userType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType userType = Factories.sc.core.createEntityItemStringType();
 		if (directory.isBuiltinUser(userNetbiosName)) {
 		    userType.setValue(directory.getName(userNetbiosName));
 		} else {
@@ -154,12 +154,12 @@ public class GroupAdapter extends UserAdapter {
 	}
 	Collection<String> groupNetbiosNames = group.getMemberGroupNetbiosNames();
 	if (groupNetbiosNames.size() == 0) {
-	    EntityItemStringType subgroupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType subgroupType = Factories.sc.core.createEntityItemStringType();
 	    subgroupType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    item.getSubgroup().add(subgroupType);
 	} else {
 	    for (String groupNetbiosName : groupNetbiosNames) {
-		EntityItemStringType subgroupType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType subgroupType = Factories.sc.core.createEntityItemStringType();
 		if (directory.isBuiltinGroup(groupNetbiosName)) {
 		    subgroupType.setValue(directory.getName(groupNetbiosName));
 		} else {
@@ -168,6 +168,6 @@ public class GroupAdapter extends UserAdapter {
 		item.getSubgroup().add(subgroupType);
 	    }
 	}
-	return JOVALSystem.factories.sc.windows.createGroupItem(item);
+	return Factories.sc.windows.createGroupItem(item);
     }
 }

@@ -58,10 +58,10 @@ import org.joval.os.windows.pe.resource.version.StringFileInfo;
 import org.joval.os.windows.pe.resource.version.StringTable;
 import org.joval.os.windows.pe.resource.version.StringStructure;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.Version;
 
@@ -101,11 +101,11 @@ public class FileAdapter extends BaseFileAdapter {
     // Protected
 
     protected Object convertFilename(EntityItemStringType filename) {
-	return JOVALSystem.factories.sc.windows.createFileItemFilename(filename);
+	return Factories.sc.windows.createFileItemFilename(filename);
     }
 
     protected ItemType createFileItem() {
-	return JOVALSystem.factories.sc.windows.createFileItem();
+	return Factories.sc.windows.createFileItem();
     }
 
     protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
@@ -123,7 +123,7 @@ public class FileAdapter extends BaseFileAdapter {
 		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	    setItem((FileItem)base, f, wfi);
-	    items.add(JOVALSystem.factories.sc.windows.createFileItem((FileItem)base));
+	    items.add(Factories.sc.windows.createFileItem((FileItem)base));
 	}
 	return items;
     }
@@ -138,7 +138,7 @@ public class FileAdapter extends BaseFileAdapter {
 	// Get some information from the IFile
 	//
 	fItem.setStatus(StatusEnumeration.EXISTS);
-	EntityItemFileTypeType typeType = JOVALSystem.factories.sc.windows.createEntityItemFileTypeType();
+	EntityItemFileTypeType typeType = Factories.sc.windows.createEntityItemFileTypeType();
 	switch(info.getWindowsFileType()) {
 	  case IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY:
 	    typeType.setValue("FILE_ATTRIBUTE_DIRECTORY");
@@ -164,12 +164,12 @@ public class FileAdapter extends BaseFileAdapter {
 	//
 	// If possible, use WMI to retrieve owner, aTime, cTime and mTime values
 	//
-	EntityItemStringType ownerType = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	EntityItemIntType aTimeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	EntityItemStringType ownerType = Factories.sc.core.createEntityItemStringType();
+	EntityItemIntType aTimeType = Factories.sc.core.createEntityItemIntType();
 	aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	EntityItemIntType cTimeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	EntityItemIntType cTimeType = Factories.sc.core.createEntityItemIntType();
 	cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	EntityItemIntType mTimeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	EntityItemIntType mTimeType = Factories.sc.core.createEntityItemIntType();
 	mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	if (wmi == null) {
 	    ownerType.setStatus(StatusEnumeration.NOT_COLLECTED);
@@ -211,7 +211,7 @@ public class FileAdapter extends BaseFileAdapter {
 		    String ownerAccount = new StringBuffer(domain).append("\\").append(username).toString();
 		    ownerType.setValue(ownerAccount);
 		} else {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_OWNER, objSet.getSize()));
 		    fItem.getMessage().add(msg);
@@ -234,7 +234,7 @@ public class FileAdapter extends BaseFileAdapter {
 		    fItem.setMTime(mTimeType);
 		}
 	    } catch (Exception e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(e.getMessage());
 		fItem.getMessage().add(msg);
@@ -247,7 +247,7 @@ public class FileAdapter extends BaseFileAdapter {
 	// If possible, read the PE header information
 	//
 	if (file.isFile()) {
-	    EntityItemIntType sizeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	    EntityItemIntType sizeType = Factories.sc.core.createEntityItemIntType();
 	    sizeType.setValue(new Long(file.length()).toString());
 	    sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    fItem.setSize(sizeType);
@@ -256,12 +256,12 @@ public class FileAdapter extends BaseFileAdapter {
 	    } else {
 		session.getLogger().info(JOVALMsg.STATUS_EMPTY_FILE, file.toString());
 
-		EntityItemVersionType versionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
+		EntityItemVersionType versionType = Factories.sc.core.createEntityItemVersionType();
 		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 		versionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		fItem.setFileVersion(versionType);
 
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_PE_EMPTY));
 		fItem.getMessage().add(msg);
@@ -281,7 +281,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    //
 	    // Get the MS Checksum from the NT headers
 	    //
-	    EntityItemStringType msChecksumType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType msChecksumType = Factories.sc.core.createEntityItemStringType();
 	    msChecksumType.setValue(new Integer(header.getNTHeader().getImageOptionalHeader().getChecksum()).toString());
 	    fItem.setMsChecksum(msChecksumType);
 
@@ -298,11 +298,11 @@ public class FileAdapter extends BaseFileAdapter {
 	    //
 	    // Get the language from the key
 	    //
-	    EntityItemStringType languageType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType languageType = Factories.sc.core.createEntityItemStringType();
 	    String locale = LanguageConstants.getLocaleString(key);
 	    if (locale == null) {
 		languageType.setStatus(StatusEnumeration.ERROR);
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_LANGUAGE, key));
 		fItem.getMessage().add(msg);
@@ -314,7 +314,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    //
 	    // Get the file version from the VsFixedFileInfo structure
 	    //
-	    EntityItemVersionType versionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
+	    EntityItemVersionType versionType = Factories.sc.core.createEntityItemVersionType();
 	    if (value == null) {
 		versionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
@@ -341,7 +341,7 @@ public class FileAdapter extends BaseFileAdapter {
 		fileVersion	= stringTable.get("FileVersion");
 	    }
 
-	    EntityItemStringType companyType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType companyType = Factories.sc.core.createEntityItemStringType();
 	    if (companyName == null) {
 		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
@@ -349,7 +349,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	    fItem.setCompany(companyType);
 
-	    EntityItemStringType internalNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType internalNameType = Factories.sc.core.createEntityItemStringType();
 	    if (internalName == null) {
 		internalNameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
@@ -357,7 +357,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	    fItem.setInternalName(internalNameType);
 
-	    EntityItemStringType productNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType productNameType = Factories.sc.core.createEntityItemStringType();
 	    if (productName == null) {
 		productNameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
@@ -365,7 +365,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	    fItem.setProductName(productNameType);
 
-	    EntityItemStringType originalFilenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType originalFilenameType = Factories.sc.core.createEntityItemStringType();
 	    if (originalFilename == null) {
 		originalFilenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
@@ -373,7 +373,7 @@ public class FileAdapter extends BaseFileAdapter {
 	    }
 	    fItem.setOriginalFilename(originalFilenameType);
 
-	    EntityItemVersionType productVersionType = JOVALSystem.factories.sc.core.createEntityItemVersionType();
+	    EntityItemVersionType productVersionType = Factories.sc.core.createEntityItemVersionType();
 	    if (productVersion == null) {
 		productVersionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
@@ -382,14 +382,14 @@ public class FileAdapter extends BaseFileAdapter {
 	    productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	    fItem.setProductVersion(productVersionType);
 
-	    EntityItemStringType developmentClassType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType developmentClassType = Factories.sc.core.createEntityItemStringType();
 	    if (fileVersion == null) {
 		developmentClassType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    } else {
 		try {
 		    developmentClassType.setValue(getDevelopmentClass(fileVersion));
 		} catch (IllegalArgumentException e) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_DEVCLASS, e.getMessage()));
 		    fItem.getMessage().add(msg);
@@ -414,7 +414,7 @@ public class FileAdapter extends BaseFileAdapter {
 		}
 	    }
 	    if (!reported) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(error);
 		fItem.getMessage().add(msg);

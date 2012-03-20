@@ -59,9 +59,11 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.DefinitionFilter;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.SystemCharacteristics;
 import org.joval.oval.Variables;
+import org.joval.oval.engine.Engine;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.sce.SCEScript;
@@ -116,7 +118,7 @@ public class XPERT implements Runnable, IObserver {
      * Get the OVAL generator_type for the XPERT engine.
      */
     public static final GeneratorType getGenerator() {
-	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
+	GeneratorType generator = Factories.common.createGeneratorType();
 	generator.setProductName(getMessage("product.name"));
 	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
 	generator.setSchemaVersion(IEngine.SCHEMA_VERSION.toString());
@@ -292,7 +294,7 @@ public class XPERT implements Runnable, IObserver {
 	    IResults ovalResults = null;
 	    DefinitionFilter filter = ovalHandler.getDefinitionFilter();
 	    if (filter.size() > 0) {
-		IEngine engine = JOVALSystem.createEngine(session);
+		IEngine engine = new Engine(session);
 		engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 		engine.setDefinitions(xccdf.getOval());
 		engine.setDefinitionFilter(ovalHandler.getDefinitionFilter());
@@ -479,7 +481,7 @@ public class XPERT implements Runnable, IObserver {
 	//
 	// Evaluate the platform definitions.
 	//
-	IEngine engine = JOVALSystem.createEngine(session);
+	IEngine engine = new Engine(session);
 	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	engine.setDefinitionFilter(filter);
 	engine.setDefinitions(xccdf.getCpeOval());

@@ -31,9 +31,9 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -71,7 +71,7 @@ public class PatchAdapter implements IAdapter {
 	PatchObject pObj = (PatchObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	if (error != null) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(error);
 	    rc.addMessage(msg);
@@ -141,7 +141,7 @@ public class PatchAdapter implements IAdapter {
 	} catch (NumberFormatException e) {
 	    throw new OvalException(e);
 	} catch (PatternSyntaxException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 	    rc.addMessage(msg);
@@ -158,16 +158,16 @@ public class PatchAdapter implements IAdapter {
 	Collection<RevisionEntry> entries = revisions.get(base);
 	if (entries != null) {
 	    for (RevisionEntry entry : entries) {
-		PatchItem item = JOVALSystem.factories.sc.solaris.createPatchItem();
-		EntityItemIntType baseType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+		PatchItem item = Factories.sc.solaris.createPatchItem();
+		EntityItemIntType baseType = Factories.sc.core.createEntityItemIntType();
 		baseType.setValue(entry.patch.getBaseString());
 		baseType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		item.setBase(baseType);
-		EntityItemIntType versionType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+		EntityItemIntType versionType = Factories.sc.core.createEntityItemIntType();
 		versionType.setValue(entry.patch.getVersionString());
 		versionType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		item.setPatchVersion(versionType);
-		items.add(JOVALSystem.factories.sc.solaris.createPatchItem(item));
+		items.add(Factories.sc.solaris.createPatchItem(item));
 	    }
 	}
 	return items;

@@ -10,8 +10,6 @@ import java.io.IOException;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.identity.Credential;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
@@ -20,7 +18,6 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.PerishableReader;
-import org.joval.os.unix.UnixSystemInfo;
 import org.joval.os.unix.system.BaseUnixSession;
 import org.joval.os.unix.system.Environment;
 import org.joval.ssh.identity.SshCredential;
@@ -50,7 +47,6 @@ public class UnixSession extends BaseUnixSession implements ILocked {
     public UnixSession(SshSession ssh) {
 	super();
 	wsdir = ssh.getWorkspace();
-	info = new UnixSystemInfo(this);
 	this.ssh = ssh;
 	if (isDebug()) {
 	    ssh.getProperties().setProperty(PROP_DEBUG, "true");
@@ -102,7 +98,6 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 	    if (flavor == Flavor.UNKNOWN) {
 		flavor = Flavor.flavorOf(this);
 	    }
-	    info.getSystemInfo();
 	    connected = true;
 	    return true;
 	} else {

@@ -7,8 +7,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.intf.system.IBaseSession;
 
 /**
@@ -84,11 +82,6 @@ public interface IPlugin {
      * Configure the IPlugin using the specified Properties.
      */
     void configure(Properties props) throws Exception;
-
-    /**
-     * Get SystemInfoType information.
-     */
-    SystemInfoType getSystemInfo();
 
     /**
      * Get the session object. This call may take some time if it involves a discovery process.

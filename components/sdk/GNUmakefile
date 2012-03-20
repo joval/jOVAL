@@ -13,7 +13,6 @@ all:
 	@$(MAKE) --keep-going --directory=common all
 	@$(MAKE) --keep-going --directory=engine all
 	@$(MAKE) --keep-going --directory=adapters all
-	@$(MAKE) --keep-going --directory=plugin/shared all
 	@$(MAKE) --keep-going --directory=plugin/local all
 	@$(MAKE) --keep-going --directory=plugin/remote all
 	@$(MAKE) --keep-going --directory=plugin/cisco all
@@ -22,7 +21,6 @@ clean:
 	@$(MAKE) --keep-going --directory=common clean
 	@$(MAKE) --keep-going --directory=engine clean
 	@$(MAKE) --keep-going --directory=adapters clean
-	@$(MAKE) --keep-going --directory=plugin/shared clean
 	@$(MAKE) --keep-going --directory=plugin/local clean
 	@$(MAKE) --keep-going --directory=plugin/remote clean
 	@$(MAKE) --keep-going --directory=plugin/cisco clean
@@ -52,12 +50,12 @@ dist-clean: clean
 install: all
 	mkdir -p $(DIST)
 	cp -r $(RSRC)/* $(DIST)
+	cp sample/TrivialScanner.java $(DIST)
 	cp $(OVAL_LIB) $(DIST)
-	$(JAR) cvf $(DIST)/jOVALCore.jar -C $(COMMON)/$(BUILD)/ .
-	$(JAR) uvf $(DIST)/jOVALCore.jar -C $(JOVAL_CORE)/$(BUILD)/ .
-	$(JAR) uvf $(DIST)/jOVALCore.jar -C $(ADAPTERS)/$(BUILD)/ .
-	$(JAR) cvf $(DIST)/jOVALRemote.jar -C $(PLUGIN_SHARED)/$(BUILD)/ .
-	$(JAR) uvf $(DIST)/jOVALRemote.jar -C $(PLUGIN_REMOTE)/$(BUILD)/ .
+	$(JAR) cvf $(DIST)/jOVAL-SDK.jar -C $(COMMON)/$(BUILD)/ .
+	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(PLUGIN_REMOTE)/$(BUILD)/ .
+	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(JOVAL_CORE)/$(BUILD)/ .
+	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(ADAPTERS)/$(BUILD)/ .
 
 dist: install javadocs
 	cp -r docs $(DIST)

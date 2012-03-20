@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.windows;
+package org.joval.oval.sysinfo;
 
 import java.util.Iterator;
 import java.util.List;
@@ -27,21 +27,17 @@ import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
+import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
- * Tool for creating a SystemInfoType from an IRegistry and an IWmiProvider.  This will cause the IRegistry and IWmiProvider
- * to be connected and disconnected.  Hence, after fetching the SystemInfoType, it is safe to get the IEnvironment from the
- * IRegistry.
+ * Tool for creating a SystemInfoType from an IRegistry and an IWmiProvider.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WindowsSystemInfo {
+class WindowsSystemInfo {
     public static final String ARCHITECTURE	= "PROCESSOR_ARCHITECTURE";
-    public static final String COMPUTERNAME_KEY	= "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
-    public static final String COMPUTERNAME_VAL	= "ComputerName";
 
     static final String CURRENTVERSION_KEY	= "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
     static final String CURRENTVERSION_VAL	= "CurrentVersion";
@@ -52,24 +48,12 @@ public class WindowsSystemInfo {
     static final String IP_ADDR_FIELD		= "IPAddress";
     static final String DESCRIPTION_FIELD	= "Description";
 
-    private IWindowsSession session;
-    private SystemInfoType info;
-
-    /**
-     * Create a plugin for scanning or test evaluation.
-     */
-    public WindowsSystemInfo(IWindowsSession session) {
-	this.session = session;
-    }
-
-    public SystemInfoType getSystemInfo() {
-	if (info != null) {
-	    return info;
-	}
-
+    public static SystemInfoType getSystemInfo(IWindowsSession session) {
 	IRegistry registry = session.getRegistry(IWindowsSession.View._64BIT);
 	IWmiProvider wmi = session.getWmiProvider();
-	info = JOVALSystem.factories.sc.core.createSystemInfoType();
+	SystemInfoType info = Factories.sc.core.createSystemInfoType();
+	info.setPrimaryHostName(session.getHostname());
+
 	try {
 	    IEnvironment environment = registry.getEnvironment();
 	    info.setArchitecture(environment.getenv(ARCHITECTURE));
@@ -79,21 +63,10 @@ public class WindowsSystemInfo {
 	}
 
 	try {
-	    IKey cn = registry.fetchKey(IRegistry.HKLM, COMPUTERNAME_KEY);
-	    IValue cnVal = cn.getValue(COMPUTERNAME_VAL);
-	    if (cnVal.getType() == IValue.REG_SZ) {
-		info.setPrimaryHostName(((IStringValue)cnVal).getData());
-	    }
-	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_HOSTNAME);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-
-	try {
-	    IKey cv = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
-	    IValue cvVal = cv.getValue(CURRENTVERSION_VAL);
-	    if (cvVal.getType() == IValue.REG_SZ) {
-		info.setOsVersion(((IStringValue)cvVal).getData());
+	    IKey key = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
+	    IValue val = key.getValue(CURRENTVERSION_VAL);
+	    if (val.getType() == IValue.REG_SZ) {
+		info.setOsVersion(((IStringValue)val).getData());
 	    }
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_OSVERSION);
@@ -101,10 +74,10 @@ public class WindowsSystemInfo {
 	}
 
 	try {
-	    IKey cv = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
-	    IValue pnVal = cv.getValue(PRODUCTNAME_VAL);
-	    if (pnVal.getType() == IValue.REG_SZ) {
-		info.setOsName(((IStringValue)pnVal).getData());
+	    IKey key = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
+	    IValue val = key.getValue(PRODUCTNAME_VAL);
+	    if (val.getType() == IValue.REG_SZ) {
+		info.setOsName(((IStringValue)val).getData());
 	    }
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_OSNAME);
@@ -112,7 +85,7 @@ public class WindowsSystemInfo {
 	}
 
 	try {
-	    InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
+	    InterfacesType interfacesType = Factories.sc.core.createInterfacesType();
 	    ISWbemObjectSet result = wmi.execQuery(IWmiProvider.CIMv2, ADAPTER_WQL);
 	    Iterator <ISWbemObject>iter = result.iterator();
 	    while (iter.hasNext()) {
@@ -122,7 +95,7 @@ public class WindowsSystemInfo {
 		    String[] ipAddresses = row.getItem(IP_ADDR_FIELD).getValueAsArray();
 		    if (ipAddresses != null && ipAddresses.length > 0) {
 			for (int i=0; i < 2 && i < ipAddresses.length; i++) {
-			    InterfaceType interfaceType = JOVALSystem.factories.sc.core.createInterfaceType();
+			    InterfaceType interfaceType = Factories.sc.core.createInterfaceType();
 			    interfaceType.setMacAddress(macAddress);
 			    String description = row.getItem(DESCRIPTION_FIELD).getValueAsString();
 			    if (description != null) {
@@ -139,7 +112,6 @@ public class WindowsSystemInfo {
 	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_INTERFACE);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-
 	return info;
     }
 }

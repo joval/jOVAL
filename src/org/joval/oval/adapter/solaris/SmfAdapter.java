@@ -33,8 +33,8 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
 
@@ -69,10 +69,10 @@ public class SmfAdapter implements IAdapter {
 	    try {
 		SmfItem item = getItem((String)sObj.getFmri().getValue());
 		if (item != null) {
-		    items.add(JOVALSystem.factories.sc.solaris.createSmfItem(item));
+		    items.add(Factories.sc.solaris.createSmfItem(item));
 		}
 	    } catch (Exception e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
 		rc.addMessage(msg);
@@ -84,7 +84,7 @@ public class SmfAdapter implements IAdapter {
 	    loadFullServiceMap();
 	    for (String fmri : serviceMap.keySet()) {
 		if (!fmri.equals((String)sObj.getFmri().getValue())) {
-		    items.add(JOVALSystem.factories.sc.solaris.createSmfItem(serviceMap.get(fmri)));
+		    items.add(Factories.sc.solaris.createSmfItem(serviceMap.get(fmri)));
 		}
 	    }
 	    break;
@@ -96,11 +96,11 @@ public class SmfAdapter implements IAdapter {
 		Pattern p = Pattern.compile((String)sObj.getFmri().getValue());
 		for (String fmri : serviceMap.keySet()) {
 		    if (p.matcher(fmri).find()) {
-			items.add(JOVALSystem.factories.sc.solaris.createSmfItem(serviceMap.get(fmri)));
+			items.add(Factories.sc.solaris.createSmfItem(serviceMap.get(fmri)));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
@@ -172,7 +172,7 @@ public class SmfAdapter implements IAdapter {
 	}
 
 	session.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
-	item = JOVALSystem.factories.sc.solaris.createSmfItem();
+	item = Factories.sc.solaris.createSmfItem();
 	boolean found = false;
 	for (String line : SafeCLI.multiLine("/usr/bin/svcs -l " + fmri, session, IUnixSession.Timeout.S)) {
 	    line = line.trim();
@@ -181,7 +181,7 @@ public class SmfAdapter implements IAdapter {
 	    } else if (line.startsWith(FMRI)) {
 		found = true;
 
-		EntityItemStringType fmriType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType fmriType = Factories.sc.core.createEntityItemStringType();
 		String fullFmri = getFullFmri(line.substring(FMRI.length()).trim());
 		fmriType.setValue(fullFmri);
 		item.setFmri(fmriType);
@@ -190,12 +190,12 @@ public class SmfAdapter implements IAdapter {
 		// Name is based on the FMRI.  See:
 		// http://making-security-measurable.1364806.n2.nabble.com/Solaris-10-SMF-test-request-UNCLASSIFIED-tt23753.html#a23757
 		//
-		EntityItemStringType nameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
 		nameType.setValue(getName(fullFmri));
 		item.setServiceName(nameType);
 	    } else if (line.startsWith(STATE_TIME)) { // NB: this condition MUST appear before STATE
 	    } else if (line.startsWith(STATE)) {
-		EntityItemSmfServiceStateType type = JOVALSystem.factories.sc.solaris.createEntityItemSmfServiceStateType();
+		EntityItemSmfServiceStateType type = Factories.sc.solaris.createEntityItemSmfServiceStateType();
 		type.setValue(line.substring(STATE.length()).trim().toUpperCase());
 		item.setServiceState(type);
 	    }
@@ -216,7 +216,7 @@ public class SmfAdapter implements IAdapter {
 		    List<String> list = StringTools.toList(StringTools.tokenize(suspects, " "));
 		    if (list.size() > 0) {
 			String user = list.get(list.size() - 1);
-			EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
 			type.setValue(user);
 			item.setExecAsUser(type);
 		    }
@@ -235,7 +235,7 @@ public class SmfAdapter implements IAdapter {
 			String protocol = line.trim().substring(6);
 			if (protocol.startsWith("\"") && protocol.endsWith("\"")) {
 			    protocol = protocol.substring(1, protocol.length() - 1);
-			    EntityItemSmfProtocolType type = JOVALSystem.factories.sc.solaris.createEntityItemSmfProtocolType();
+			    EntityItemSmfProtocolType type = Factories.sc.solaris.createEntityItemSmfProtocolType();
 			    type.setValue(protocol);
 			    item.setProtocol(type);
 			}
@@ -243,7 +243,7 @@ public class SmfAdapter implements IAdapter {
 		}
 	    }
 	} else {
-	    EntityItemStringType fmriType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType fmriType = Factories.sc.core.createEntityItemStringType();
 	    fmriType.setValue(fmri);
 	    item.setFmri(fmriType);
 	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
@@ -262,7 +262,7 @@ public class SmfAdapter implements IAdapter {
 	    String astring = tok.nextToken();
 	    if (astring.equals("astring") && tok.hasMoreTokens()) {
 		String executable = tok.nextToken();
-		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
 		type.setValue(executable);
 		item.setServerExecutable(type);
 	    }
@@ -274,7 +274,7 @@ public class SmfAdapter implements IAdapter {
 		arguments.append(tok.nextToken());
 	    }
 	    if (arguments.length() > 0) {
-		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
 		type.setValue(arguments.toString());
 		item.setServerArguements(type);
 	    }

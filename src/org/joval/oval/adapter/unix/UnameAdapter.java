@@ -25,9 +25,9 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -55,7 +55,7 @@ public class UnameAdapter implements IAdapter {
 	try {
 	    items.add(getItem());
 	} catch (Exception e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
@@ -67,31 +67,31 @@ public class UnameAdapter implements IAdapter {
     // Internal
 
     private JAXBElement<UnameItem> getItem() throws Exception {
-	UnameItem item = JOVALSystem.factories.sc.unix.createUnameItem();
-	EntityItemStringType machineClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	UnameItem item = Factories.sc.unix.createUnameItem();
+	EntityItemStringType machineClass = Factories.sc.core.createEntityItemStringType();
 	machineClass.setValue(SafeCLI.exec("uname -m", session, IUnixSession.Timeout.S));
 	item.setMachineClass(machineClass);
 
-	EntityItemStringType nodeName = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType nodeName = Factories.sc.core.createEntityItemStringType();
 	nodeName.setValue(SafeCLI.exec("uname -n", session, IUnixSession.Timeout.S));
 	item.setNodeName(nodeName);
 
-	EntityItemStringType osName = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType osName = Factories.sc.core.createEntityItemStringType();
 	osName.setValue(SafeCLI.exec("uname -s", session, IUnixSession.Timeout.S));
 	item.setOsName(osName);
 
-	EntityItemStringType osRelease = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType osRelease = Factories.sc.core.createEntityItemStringType();
 	osRelease.setValue(SafeCLI.exec("uname -r", session, IUnixSession.Timeout.S));
 	item.setOsRelease(osRelease);
 
-	EntityItemStringType osVersion = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType osVersion = Factories.sc.core.createEntityItemStringType();
 	osVersion.setValue(SafeCLI.exec("uname -v", session, IUnixSession.Timeout.S));
 	item.setOsVersion(osVersion);
 
-	EntityItemStringType processorType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType processorType = Factories.sc.core.createEntityItemStringType();
 	processorType.setValue(SafeCLI.exec("uname -p", session, IUnixSession.Timeout.S));
 	item.setProcessorType(processorType);
 
-	return JOVALSystem.factories.sc.unix.createUnameItem(item);
+	return Factories.sc.unix.createUnameItem(item);
     }
 }

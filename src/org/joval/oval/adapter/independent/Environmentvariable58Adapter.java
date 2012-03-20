@@ -40,11 +40,11 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.PerishableReader;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.AbstractEnvironment;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -75,10 +75,10 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 	    List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	    for (JAXBElement<? extends ItemType> elt : super.getItems(new EVRequestContext(rc))) {
 		EnvironmentvariableItem item = (EnvironmentvariableItem)elt.getValue();
-		Environmentvariable58Item newItem = JOVALSystem.factories.sc.independent.createEnvironmentvariable58Item();
+		Environmentvariable58Item newItem = Factories.sc.independent.createEnvironmentvariable58Item();
 		newItem.setName(item.getName());
 		newItem.setValue(item.getValue());
-		items.add(JOVALSystem.factories.sc.independent.createEnvironmentvariable58Item(newItem));
+		items.add(Factories.sc.independent.createEnvironmentvariable58Item(newItem));
 	    }
 	    return items;
 	} else {
@@ -99,7 +99,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 		  case SOLARIS: {
 		    try {
 			BigDecimal VER_5_9 = new BigDecimal("5.9");
-			BigDecimal osVersion = new BigDecimal(session.getSystemInfo().getOsVersion());
+			BigDecimal osVersion = new BigDecimal(SafeCLI.exec("uname -r", session, IUnixSession.Timeout.S));
 			if (osVersion.compareTo(VER_5_9) >= 0) {
 			    IFile proc = session.getFilesystem().getFile("/proc/" + pid);
 			    if (proc.exists() && proc.isDirectory()) {
@@ -121,7 +121,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 			}
 		    } catch (Exception e) {
-			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			MessageType msg = Factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.ERROR);
 			msg.setValue(e.getMessage());
 			rc.addMessage(msg);
@@ -151,7 +151,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			    }
 			}
 		    } catch (IOException e) {
-			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			MessageType msg = Factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.ERROR);
 			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IO, path, e.getMessage()));
 			rc.addMessage(msg);
@@ -192,7 +192,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 			    }
 			}
 		    } catch (Exception e) {
-			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			MessageType msg = Factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.ERROR);
 			msg.setValue(e.getMessage());
 			rc.addMessage(msg);
@@ -227,15 +227,15 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
     @Override
     JAXBElement<? extends ItemType> makeItem(String name, String value, String pid) {
 	EnvironmentvariableItem evi = (EnvironmentvariableItem)super.makeItem(name, value, pid).getValue();
-	Environmentvariable58Item item = JOVALSystem.factories.sc.independent.createEnvironmentvariable58Item();
+	Environmentvariable58Item item = Factories.sc.independent.createEnvironmentvariable58Item();
 	item.setName(evi.getName());
 	item.setValue(evi.getValue());
 
-	EntityItemIntType pidType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	EntityItemIntType pidType = Factories.sc.core.createEntityItemIntType();
 	pidType.setValue(pid);
 	item.setPid(pidType);
 
-	return JOVALSystem.factories.sc.independent.createEnvironmentvariable58Item(item);
+	return Factories.sc.independent.createEnvironmentvariable58Item(item);
     }
 
     // Private
@@ -246,7 +246,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 
         EVRequestContext(IRequestContext base) {
             Environmentvariable58Object evo = (Environmentvariable58Object)base.getObject();
-            object = JOVALSystem.factories.definitions.independent.createEnvironmentvariableObject();
+            object = Factories.definitions.independent.createEnvironmentvariableObject();
             object.setName(evo.getName());
         }
 

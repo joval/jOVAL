@@ -5,9 +5,9 @@ TOP=../../..
 
 include $(TOP)/common.mk
 
-ENGINE=$(SDK)/$(DIST)/oval-schema-$(OVAL_VERSION).jar$(CLN)$(SDK)/$(DIST)/jOVALCore.jar$(CLN)$(COMMON_DEPS)
-PLUGIN=$(PLUGIN_REMOTE_DEPS)$(CLN)$(SDK)/$(DIST)/jOVALRemote.jar
-CLASSPATH="$(CLASSLIB)$(CLN)$(ENGINE)$(CLN)$(PLUGIN)$(CLN)$(LIB)$(CLN)."
+SDK_JAR=$(SDK)/$(DIST)/jOVAL-SDK.jar
+API=$(OVAL_LIB)$(CLN)$(COMMON_DEPS)$(CLN)$(PLUGIN_REMOTE_DEPS)
+CLASSPATH="$(CLASSLIB)$(CLN)$(SDK_JAR)$(CLN)$(API)$(CLN)$(LIB)$(CLN)."
 
 CLASSES=TrivialScanner
 CLASS_FILES:=$(foreach class, $(CLASSES), $(subst .,/,$(class)).class)

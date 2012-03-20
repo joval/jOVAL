@@ -31,10 +31,10 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
 
@@ -70,7 +70,7 @@ public class PasswordAdapter implements IAdapter {
 	}
 
 	if (error != null) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(error);
 	    rc.addMessage(msg);
@@ -92,14 +92,14 @@ public class PasswordAdapter implements IAdapter {
 		switch(op) {
 		  case EQUALS:
 		    if (passwordMap.containsKey(username)) {
-			items.add(JOVALSystem.factories.sc.unix.createPasswordItem(passwordMap.get(username)));
+			items.add(Factories.sc.unix.createPasswordItem(passwordMap.get(username)));
 		    }
 		    break;
 
 		  case NOT_EQUAL:
 		    for (String s : passwordMap.keySet()) {
 			if (!s.equals(username)) {
-			    items.add(JOVALSystem.factories.sc.unix.createPasswordItem(passwordMap.get(s)));
+			    items.add(Factories.sc.unix.createPasswordItem(passwordMap.get(s)));
 			}
 		    }
 		    break;
@@ -108,7 +108,7 @@ public class PasswordAdapter implements IAdapter {
 		    Pattern p = Pattern.compile(username);
 		    for (String s : passwordMap.keySet()) {
 			if (p.matcher(s).find()) {
-			    items.add(JOVALSystem.factories.sc.unix.createPasswordItem(passwordMap.get(s)));
+			    items.add(Factories.sc.unix.createPasswordItem(passwordMap.get(s)));
 			}
 		    }
 		    break;
@@ -122,7 +122,7 @@ public class PasswordAdapter implements IAdapter {
 	} catch (ResolveException e) {
 	    throw new OvalException(e);
 	} catch (PatternSyntaxException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 	    rc.addMessage(msg);
@@ -142,40 +142,40 @@ public class PasswordAdapter implements IAdapter {
 		List<String> tokens = StringTools.toList(StringTools.tokenize(line, ":", false));
 		if (tokens.size() == 7) {
 		    int i=0;
-		    PasswordItem item = JOVALSystem.factories.sc.unix.createPasswordItem();
-		    EntityItemStringType username = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    PasswordItem item = Factories.sc.unix.createPasswordItem();
+		    EntityItemStringType username = Factories.sc.core.createEntityItemStringType();
 		    String usernameString = tokens.get(i++);
 		    username.setValue(usernameString);
 		    item.setUsername(username);
 
-		    EntityItemStringType password = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    EntityItemStringType password = Factories.sc.core.createEntityItemStringType();
 		    String passwordString = tokens.get(i++); // x
 		    password.setValue(passwordString);
 		    item.setPassword(password);
 
-		    EntityItemIntType userId = JOVALSystem.factories.sc.core.createEntityItemIntType();
+		    EntityItemIntType userId = Factories.sc.core.createEntityItemIntType();
 		    userId.setValue(tokens.get(i++));
 		    userId.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		    item.setUserId(userId);
 
-		    EntityItemIntType groupId = JOVALSystem.factories.sc.core.createEntityItemIntType();
+		    EntityItemIntType groupId = Factories.sc.core.createEntityItemIntType();
 		    groupId.setValue(tokens.get(i++));
 		    groupId.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		    item.setGroupId(groupId);
 
-		    EntityItemStringType gcos = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    EntityItemStringType gcos = Factories.sc.core.createEntityItemStringType();
 		    gcos.setValue(tokens.get(i++));
 		    item.setGcos(gcos);
 
-		    EntityItemStringType homeDir = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    EntityItemStringType homeDir = Factories.sc.core.createEntityItemStringType();
 		    homeDir.setValue(tokens.get(i++));
 		    item.setHomeDir(homeDir);
 
-		    EntityItemStringType loginShell = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    EntityItemStringType loginShell = Factories.sc.core.createEntityItemStringType();
 		    loginShell.setValue(tokens.get(i++));
 		    item.setLoginShell(loginShell);
 
-		    EntityItemIntType lastLogin = JOVALSystem.factories.sc.core.createEntityItemIntType();
+		    EntityItemIntType lastLogin = Factories.sc.core.createEntityItemIntType();
 		    lastLogin.setStatus(StatusEnumeration.NOT_COLLECTED);
 		    lastLogin.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		    item.setLastLogin(lastLogin);

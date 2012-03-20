@@ -27,9 +27,9 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Evaluates Environmentvariable OVAL tests.
@@ -100,7 +100,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
@@ -116,13 +116,13 @@ public class EnvironmentvariableAdapter implements IAdapter {
     }
 
     JAXBElement<? extends ItemType> makeItem(String name, String value, String reserved) {
-	EnvironmentvariableItem item = JOVALSystem.factories.sc.independent.createEnvironmentvariableItem();
-	EntityItemStringType nameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EnvironmentvariableItem item = Factories.sc.independent.createEnvironmentvariableItem();
+	EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
 	nameType.setValue(name);
 	item.setName(nameType);
-	EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+	EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 	valueType.setValue(value);
 	item.setValue(valueType);
-	return JOVALSystem.factories.sc.independent.createEnvironmentvariableItem(item);
+	return Factories.sc.independent.createEnvironmentvariableItem(item);
     }
 }

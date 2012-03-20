@@ -22,8 +22,8 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -51,7 +51,7 @@ public class IsainfoAdapter implements IAdapter {
 	try {
 	    items.add(getItem());
 	} catch (Exception e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
@@ -63,20 +63,20 @@ public class IsainfoAdapter implements IAdapter {
     // Internal
 
     private JAXBElement<IsainfoItem> getItem() throws Exception {
-	IsainfoItem item = JOVALSystem.factories.sc.solaris.createIsainfoItem();
-	EntityItemStringType kernelIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	IsainfoItem item = Factories.sc.solaris.createIsainfoItem();
+	EntityItemStringType kernelIsa = Factories.sc.core.createEntityItemStringType();
 	kernelIsa.setValue(SafeCLI.exec("isainfo -k", session, IUnixSession.Timeout.S));
 	item.setKernelIsa(kernelIsa);
 
-	EntityItemStringType applicationIsa = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType applicationIsa = Factories.sc.core.createEntityItemStringType();
 	applicationIsa.setValue(SafeCLI.exec("isainfo -n", session, IUnixSession.Timeout.S));
 	item.setApplicationIsa(applicationIsa);
 
-	EntityItemIntType bits = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	EntityItemIntType bits = Factories.sc.core.createEntityItemIntType();
 	bits.setValue(SafeCLI.exec("isainfo -b", session, IUnixSession.Timeout.S));
 	bits.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setBits(bits);
 
-	return JOVALSystem.factories.sc.solaris.createIsainfoItem(item);
+	return Factories.sc.solaris.createIsainfoItem(item);
     }
 }

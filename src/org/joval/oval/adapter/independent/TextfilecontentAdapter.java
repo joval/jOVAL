@@ -31,9 +31,9 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
 /**
@@ -63,7 +63,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
     }
 
     protected ItemType createFileItem() {
-	return JOVALSystem.factories.sc.independent.createTextfilecontentItem();
+	return Factories.sc.independent.createTextfilecontentItem();
     }
 
     /**
@@ -103,7 +103,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		  case PATTERN_MATCH: {
 		    Pattern p = Pattern.compile(StringTools.regexPerl2Java((String)tfcObj.getLine().getValue()));
 		    for (JAXBElement<TextfilecontentItem>item : getItems(p, baseItem, s)) {
-			EntityItemStringType lineType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType lineType = Factories.sc.core.createEntityItemStringType();
 			lineType.setValue(tfcObj.getLine().getValue());
 			item.getValue().setLine(lineType);
 			items.add(item);
@@ -119,7 +119,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
 		throw new IOException(e);
 	    } catch (IllegalArgumentException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
 		rc.addMessage(msg);
@@ -144,15 +144,15 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	    item.setPath(baseItem.getPath());
 	    item.setFilename(baseItem.getFilename());
 
-	    EntityItemStringType patternType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType patternType = Factories.sc.core.createEntityItemStringType();
 	    patternType.setValue(p.toString());
 	    item.setPattern(patternType);
-	    EntityItemIntType instanceType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	    EntityItemIntType instanceType = Factories.sc.core.createEntityItemIntType();
 	    instanceType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    instanceType.setValue(Integer.toString(instanceNum));
 	    item.setInstance(instanceType);
 
-	    EntityItemAnySimpleType textType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+	    EntityItemAnySimpleType textType = Factories.sc.core.createEntityItemAnySimpleType();
 	    textType.setValue(m.group());
 	    item.setText(textType);
 	    int sCount = m.groupCount();
@@ -160,14 +160,14 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		for (int sNum=1; sNum <= sCount; sNum++) {
 		    String group = m.group(sNum);
 		    if (group != null) {
-			EntityItemAnySimpleType sType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+			EntityItemAnySimpleType sType = Factories.sc.core.createEntityItemAnySimpleType();
 			sType.setValue(group);
 			item.getSubexpression().add(sType);
 		    }
 		}
 	    }
 
-	    items.add(JOVALSystem.factories.sc.independent.createTextfilecontentItem(item));
+	    items.add(Factories.sc.independent.createTextfilecontentItem(item));
 	}
 	return items;
     }

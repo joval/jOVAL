@@ -40,8 +40,8 @@ import org.joval.oval.Definitions;
 import org.joval.oval.OvalException;
 import org.joval.protocol.zip.ZipURLStreamHandler;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.xccdf.XccdfException;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * Representation of an XCCDF document.
@@ -61,7 +61,7 @@ public class XccdfBundle implements ILoggable {
 
     public static final Benchmark getBenchmark(Source src) throws XccdfException {
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.XCCDF_PROP_PACKAGES);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.XCCDF);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(src);
@@ -195,7 +195,7 @@ public class XccdfBundle implements ILoggable {
     public void writeBenchmarkXML(File f) {
 	OutputStream out = null;
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.XCCDF_PROP_PACKAGES);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.XCCDF);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Marshaller marshaller = ctx.createMarshaller();
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);

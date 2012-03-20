@@ -30,8 +30,8 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
 
@@ -62,10 +62,10 @@ public class FilesetAdapter implements IAdapter {
 	  case EQUALS:
 	    try {
 		for (FilesetItem item : getItems((String)fObj.getFlstinst().getValue())) {
-		    items.add(JOVALSystem.factories.sc.aix.createFilesetItem(item));
+		    items.add(Factories.sc.aix.createFilesetItem(item));
 		}
 	    } catch (Exception e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
 		rc.addMessage(msg);
@@ -92,22 +92,22 @@ public class FilesetAdapter implements IAdapter {
 	    if (!line.startsWith("#")) {
 		List<String> info = StringTools.toList(StringTools.tokenize(line, ":"));
 		if (info.get(0).equals("/etc/objrepos")) {
-		    FilesetItem item = JOVALSystem.factories.sc.aix.createFilesetItem();
+		    FilesetItem item = Factories.sc.aix.createFilesetItem();
 
-		    EntityItemStringType flstinst = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    EntityItemStringType flstinst = Factories.sc.core.createEntityItemStringType();
 		    flstinst.setValue(info.get(1));
 		    item.setFlstinst(flstinst);
 
-		    EntityItemVersionType level = JOVALSystem.factories.sc.core.createEntityItemVersionType();
+		    EntityItemVersionType level = Factories.sc.core.createEntityItemVersionType();
 		    level.setValue(info.get(2));
 		    level.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 		    item.setLevel(level);
 
-		    EntityItemFilesetStateType state = JOVALSystem.factories.sc.aix.createEntityItemFilesetStateType();
+		    EntityItemFilesetStateType state = Factories.sc.aix.createEntityItemFilesetStateType();
 		    state.setValue(info.get(4));
 		    item.setState(state);
 
-		    EntityItemStringType description = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    EntityItemStringType description = Factories.sc.core.createEntityItemStringType();
 		    description.setValue(info.get(6));
 		    item.setDescription(description);
 

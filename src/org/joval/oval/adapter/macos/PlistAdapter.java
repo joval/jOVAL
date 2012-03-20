@@ -42,10 +42,10 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Retrieves items for Plist objects. See the following URL for more information (as the specification is quite vague):
@@ -78,7 +78,7 @@ public class PlistAdapter extends BaseFileAdapter {
     }
 
     protected ItemType createFileItem() {
-	return JOVALSystem.factories.sc.macos.createPlistItem();
+	return Factories.sc.macos.createPlistItem();
     }
 
     /**
@@ -94,7 +94,7 @@ public class PlistAdapter extends BaseFileAdapter {
 	ObjectType obj = rc.getObject();
 	Plist510Object pObj = null;
 	if (obj instanceof PlistObject) {
-	    pObj = JOVALSystem.factories.definitions.macos.createPlist510Object();
+	    pObj = Factories.definitions.macos.createPlist510Object();
 	    PlistObject pObjIn = (PlistObject)obj;
 	    if (pObjIn.isSetAppId()) {
 		pObj.setAppId(pObjIn.getAppId());
@@ -141,10 +141,10 @@ public class PlistAdapter extends BaseFileAdapter {
 
 		for (PlistItem item : getItems(appId, key, instance, nso)) {
 		    item.setFilepath(baseItem.getFilepath());
-		    items.add(JOVALSystem.factories.sc.macos.createPlistItem(item));
+		    items.add(Factories.sc.macos.createPlistItem(item));
 		}
 	    } catch (Exception e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_PARSE, f.getPath(), e.getMessage()));
 		rc.addMessage(msg);
@@ -177,29 +177,29 @@ public class PlistAdapter extends BaseFileAdapter {
 		    continue;
 		}
 	    }
-	    EntityItemIntType instanceType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	    EntityItemIntType instanceType = Factories.sc.core.createEntityItemIntType();
 	    instanceType.setValue(Integer.toString(inst));
 	    instanceType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    item.setInstance(instanceType);
 
 	    if (appId != null) {
-		EntityItemStringType appIdType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType appIdType = Factories.sc.core.createEntityItemStringType();
 		appIdType.setValue(appId);
 		item.setAppId(appIdType);
 	    }
 
 	    if (key != null) {
-		EntityItemStringType keyType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
 		keyType.setValue(key);
-		item.setKey(JOVALSystem.factories.sc.macos.createPlistItemKey(keyType));
+		item.setKey(Factories.sc.macos.createPlistItemKey(keyType));
 	    }
 
-	    EntityItemPlistTypeType typeType = JOVALSystem.factories.sc.macos.createEntityItemPlistTypeType();
+	    EntityItemPlistTypeType typeType = Factories.sc.macos.createEntityItemPlistTypeType();
 	    if (value instanceof NSArray) {
 		typeType.setValue("CFArray");
 		NSObject[] array = ((NSArray)value).getArray();
 		for (int i=0; i < array.length; i++) {
-		    EntityItemAnySimpleType val = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		    EntityItemAnySimpleType val = Factories.sc.core.createEntityItemAnySimpleType();
 		    val.setValue(getValue(array[i]));
 		    item.getValue().add(val);
 		}
@@ -228,7 +228,7 @@ public class PlistAdapter extends BaseFileAdapter {
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
     
-		EntityItemAnySimpleType val = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType val = Factories.sc.core.createEntityItemAnySimpleType();
 		val.setValue(getValue(value));
 		item.getValue().add(val);
 	    }

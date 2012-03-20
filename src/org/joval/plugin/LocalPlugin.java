@@ -8,7 +8,6 @@ import java.util.Properties;
 
 import org.joval.discovery.Local;
 import org.joval.intf.system.ISession;
-import org.joval.oval.OvalException;
 
 /**
  * Implementation of an IPlugin for scanning the local host.

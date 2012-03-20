@@ -5,12 +5,9 @@ package org.joval.os.unix.system;
 
 import java.io.File;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.os.unix.io.UnixFilesystem;
-import org.joval.os.unix.UnixSystemInfo;
 import org.joval.util.AbstractSession;
 
 /**
@@ -22,7 +19,6 @@ import org.joval.util.AbstractSession;
 public class UnixSession extends BaseUnixSession {
     public UnixSession() {
 	super();
-	info = new UnixSystemInfo(this);
     }
 
     // Implement IBaseSession
@@ -40,7 +36,6 @@ public class UnixSession extends BaseUnixSession {
 	}
 	cwd = new File(".");
 	flavor = Flavor.flavorOf(this);
-	info.getSystemInfo();
 	connected = true;
 	return true;
     }

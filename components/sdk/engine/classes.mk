@@ -18,6 +18,7 @@ CLASSES=\
 	org.joval.oval.DefinitionFilter			\
 	org.joval.oval.Definitions			\
 	org.joval.oval.Directives			\
+	org.joval.oval.Factories			\
 	org.joval.oval.ItemSet				\
 	org.joval.oval.OvalException			\
 	org.joval.oval.ResolveException			\
@@ -30,5 +31,12 @@ CLASSES=\
 	org.joval.oval.engine.ExistenceData		\
 	org.joval.oval.engine.OperatorData		\
 	org.joval.oval.engine.RequestContext		\
-	org.joval.oval.xml.OvalNamespacePrefixMapper	\
-	org.joval.util.JOVALSystem
+	org.joval.oval.sysinfo.IosNetworkInterface	\
+	org.joval.oval.sysinfo.IosSystemInfo		\
+	org.joval.oval.sysinfo.JunosNetworkInterface	\
+	org.joval.oval.sysinfo.JunosSystemInfo		\
+	org.joval.oval.sysinfo.SysinfoFactory		\
+	org.joval.oval.sysinfo.UnixNetworkInterface	\
+	org.joval.oval.sysinfo.UnixSystemInfo		\
+	org.joval.oval.sysinfo.WindowsSystemInfo	\
+	org.joval.oval.xml.OvalNamespacePrefixMapper

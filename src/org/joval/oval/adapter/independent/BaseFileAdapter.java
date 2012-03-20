@@ -41,10 +41,10 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.Version;
 
 /**
@@ -117,11 +117,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 			//
 			continue;
 		    } else {
-			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
 			filepathType.setValue(path);
-			EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
 			pathType.setValue(getPath(path, f));
-			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
 			filenameType.setValue(f.getName());
 			fItem.setFilepath(filepathType);
 			fItem.setPath(pathType);
@@ -134,11 +134,11 @@ public abstract class BaseFileAdapter implements IAdapter {
 			//
 			continue;
 		    } else {
-			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
 			filepathType.setValue(path);
-			EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
 			pathType.setValue(getPath(path, f));
-			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
 			filenameType.setValue(f.getName());
 			fItem.setFilepath(filepathType);
 			fItem.setPath(pathType);
@@ -152,14 +152,14 @@ public abstract class BaseFileAdapter implements IAdapter {
 			continue;
 		    }
 
-		    EntityItemStringType pathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
 		    pathType.setValue(dirPath);
 		    fItem.setPath(pathType);
 		    if (!isDirectory) {
-			EntityItemStringType filenameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
 			filenameType.setValue(f.getName());
 			fItem.setFilename(filenameType);
-			EntityItemStringType filepathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
 			filepathType.setValue(f.getPath());
 			fItem.setFilepath(filepathType);
 		    }
@@ -186,7 +186,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    } catch (IllegalArgumentException e) {
 		session.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
 	    } catch (IOException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		if (f == null) {
 		    msg.setValue(e.getMessage());
@@ -399,7 +399,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 			    } catch (IllegalArgumentException e) {
 				session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			    } catch (IOException e) {
-				MessageType msg = JOVALSystem.factories.common.createMessageType();
+				MessageType msg = Factories.common.createMessageType();
 				msg.setLevel(MessageLevelEnumeration.ERROR);
 				msg.setValue(e.getMessage());
 				rc.addMessage(msg);
@@ -418,7 +418,7 @@ public abstract class BaseFileAdapter implements IAdapter {
 	} catch (PatternSyntaxException e) {
        	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (ResolveException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);

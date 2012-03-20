@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.unix;
+package org.joval.oval.sysinfo;
 
 import java.util.Collection;
 import java.util.List;
@@ -14,9 +14,10 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IReader;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -25,26 +26,12 @@ import org.joval.util.SafeCLI;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixSystemInfo {
-    private IUnixSession session;
-    private SystemInfoType info;
-
-    /**
-     * Create a plugin for scanning or test evaluation.
-     */
-    public UnixSystemInfo(IUnixSession session) {
-	this.session = session;
-    }
-
-    public SystemInfoType getSystemInfo() {
-	if (info != null) {
-	    return info;
-	}
-
+class UnixSystemInfo {
+    static SystemInfoType getSystemInfo(IUnixSession session) {
 	//
 	// Hostname
 	//
-	info = JOVALSystem.factories.sc.core.createSystemInfoType();
+	SystemInfoType info = Factories.sc.core.createSystemInfoType();
 	try {
 	    info.setPrimaryHostName(SafeCLI.exec("hostname", session, IUnixSession.Timeout.S));
 	} catch (Exception e) {
@@ -109,10 +96,10 @@ public class UnixSystemInfo {
 	// Network Interfaces
 	//
 	try {
-	    InterfacesType interfacesType = JOVALSystem.factories.sc.core.createInterfacesType();
-	    List<NetworkInterface> interfaces = NetworkInterface.getInterfaces(session);
-	    for (NetworkInterface intf : interfaces) {
-		InterfaceType interfaceType = JOVALSystem.factories.sc.core.createInterfaceType();
+	    InterfacesType interfacesType = Factories.sc.core.createInterfacesType();
+	    List<UnixNetworkInterface> interfaces = UnixNetworkInterface.getInterfaces(session);
+	    for (UnixNetworkInterface intf : interfaces) {
+		InterfaceType interfaceType = Factories.sc.core.createInterfaceType();
 		interfaceType.setMacAddress(intf.getMacAddress());
 		interfaceType.setInterfaceName(intf.getDescription());
 

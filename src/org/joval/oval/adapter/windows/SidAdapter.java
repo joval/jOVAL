@@ -31,9 +31,9 @@ import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Collects items for the sid_sid_object.
@@ -88,7 +88,7 @@ public class SidAdapter extends UserAdapter {
 			}
 		    }
 		} catch (PatternSyntaxException e) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
@@ -103,7 +103,7 @@ public class SidAdapter extends UserAdapter {
 	} catch (NoSuchElementException e) {
 	    // No match.
 	} catch (WmiException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
 	    rc.addMessage(msg);
@@ -114,8 +114,8 @@ public class SidAdapter extends UserAdapter {
     // Private
 
     private JAXBElement<? extends ItemType> makeItem(IPrincipal principal) {
-	SidItem item = JOVALSystem.factories.sc.windows.createSidItem();
-	EntityItemStringType trusteeSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	SidItem item = Factories.sc.windows.createSidItem();
+	EntityItemStringType trusteeSidType = Factories.sc.core.createEntityItemStringType();
 	trusteeSidType.setValue(principal.getSid());
 	trusteeSidType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	item.setTrusteeSid(trusteeSidType);
@@ -133,7 +133,7 @@ public class SidAdapter extends UserAdapter {
  	    }
 	    break;
 	}
-	EntityItemStringType trusteeNameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType trusteeNameType = Factories.sc.core.createEntityItemStringType();
 	if (builtin) {
 	    trusteeNameType.setValue(principal.getName());
 	} else {
@@ -142,11 +142,11 @@ public class SidAdapter extends UserAdapter {
 	trusteeNameType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	item.setTrusteeName(trusteeNameType);
 
-	EntityItemStringType trusteeDomainType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType trusteeDomainType = Factories.sc.core.createEntityItemStringType();
 	trusteeDomainType.setValue(principal.getDomain());
 	trusteeDomainType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	item.setTrusteeDomain(trusteeDomainType);
 
-	return JOVALSystem.factories.sc.windows.createSidItem(item);
+	return Factories.sc.windows.createSidItem(item);
     }
 }

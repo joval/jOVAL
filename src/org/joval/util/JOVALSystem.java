@@ -15,83 +15,17 @@ import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
 
-import org.joval.intf.oval.IDefinitionFilter;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.IEngine;
-import org.joval.intf.oval.IVariables;
-import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.system.IBaseSession;
-import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IProperty;
-import org.joval.oval.DefinitionFilter;
-import org.joval.oval.Definitions;
-import org.joval.oval.OvalException;
-import org.joval.oval.Variables;
-import org.joval.oval.engine.Engine;
 
 /**
- * This class is used to retrieve JOVAL-wide resources, like SLF4J-based logging, cal10n-based messages and jOVAL and OVAL data
- * model properties and object factories.
- *
- * It is also the primary entry-point into the jOVAL SDK, and can be used to create and configure an Engine, and set properties
- * that affect the behavior of the product.
+ * This class is used to retrieve JOVAL-wide resources, like jOVAL properties and the jOVAL event system timer.
+ * It is also used to configure properties that affect the behavior of sessions.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class JOVALSystem {
-    /**
-     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
-     * definitions schema.
-     */
-    public static final String OVAL_PROP_DEFINITIONS = "oval.definitions.packages";
-
-    /**
-     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
-     * results schema.
-     */
-    public static final String OVAL_PROP_RESULTS = "oval.results.packages";
-
-    /**
-     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
-     * system characteristics schema.
-     */
-    public static final String OVAL_PROP_SYSTEMCHARACTERISTICS = "oval.systemcharacteristics.packages";
-
-    /**
-     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
-     * variables schema.
-     */
-    public static final String OVAL_PROP_VARIABLES = "oval.variables.packages";
-
-    /**
-     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
-     * evaluation-id schema.
-     */
-    public static final String OVAL_PROP_EVALUATION_ID = "oval.evaluation-id.packages";
-
-    /**
-     * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
-     * directives schema.
-     */
-    public static final String OVAL_PROP_DIRECTIVES = "oval.directives.packages";
-
-    /**
-     * Property indicating the package names for classes in the XCCDF (eXtensible Configuration Checklist Description Format)
-     * schema.
-     */
-    public static final String XCCDF_PROP_PACKAGES = "xccdf.packages";
-
-    /**
-     * Property indicating the package names for classes in the CPE (Common Platform Enumeration) schema.
-     */
-    public static final String CPE_PROP_PACKAGES = "cpe.packages";
-
-    /**
-     * Property indicating the package names for classes in the SVRL (Schematron Validation Report Language) schema.
-     */
-    public static final String SVRL_PROP_PACKAGES = "svrl.packages";
-
     /**
      * Property indicating the product name.
      */
@@ -107,26 +41,15 @@ public class JOVALSystem {
      */
     public static final String SYSTEM_PROP_BUILD_DATE = "build.date";
 
-    /**
-     * A data structure providing easy access to the OVAL schema object factories.
-     */
-    public static final Factories factories = new Factories();
-
     private static final String SYSTEM_SECTION	= JOVALSystem.class.getName();
     private static final String CONFIG_RESOURCE	= "defaults.ini";
-    private static final String OVAL_RESOURCE	= "oval.properties";
-    private static final String CPE_RESOURCE	= "cpe.properties";
-    private static final String XCCDF_RESOURCE	= "xccdf.properties";
-    private static final String SVRL_RESOURCE	= "svrl.properties";
 
     private static Timer timer;
-    private static Properties schemaProps;
     private static IniFile config;
 
     static {
 	timer = new Timer("jOVAL system timer", true);
 	config = new IniFile();
-	schemaProps = new Properties();
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
@@ -136,37 +59,16 @@ public class JOVALSystem {
 	    } else {
 		config.load(rsc);
 	    }
-
-	    rsc = cl.getResourceAsStream(OVAL_RESOURCE);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, OVAL_RESOURCE));
-	    } else {
-		schemaProps.load(rsc);
-	    }
-
-	    rsc = cl.getResourceAsStream(CPE_RESOURCE);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, CPE_RESOURCE));
-	    } else {
-		schemaProps.load(rsc);
-	    }
-
-	    rsc = cl.getResourceAsStream(XCCDF_RESOURCE);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, XCCDF_RESOURCE));
-	    } else {
-		schemaProps.load(rsc);
-	    }
-
-	    rsc = cl.getResourceAsStream(SVRL_RESOURCE);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, SVRL_RESOURCE));
-	    } else {
-		schemaProps.load(rsc);
-	    }
 	} catch (IOException e) {
 	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
+    }
+
+    /**
+     * Retrieve the daemon Timer used for scheduled jOVAL tasks.
+     */
+    public static Timer getTimer() {
+	return timer;
     }
 
     /**
@@ -191,13 +93,6 @@ public class JOVALSystem {
 	    dataDir = new File(homeDir, ".jOVAL");
 	}
 	return dataDir;
-    }
-
-    /**
-     * Retrieve the daemon Timer used for scheduled jOVAL tasks.
-     */
-    public static Timer getTimer() {
-	return timer;
     }
 
     /**
@@ -241,158 +136,6 @@ public class JOVALSystem {
 	} catch (NoSuchElementException e) {
 	}
 	return null;
-    }
-
-    /**
-     * Retrieve an OVAL schema property.
-     *
-     * @param name specify one of the OVAL_PROP_*, CPE_PROP_* or XCCDF_PROP_* keys
-     */
-    public static String getSchemaProperty(String name) {
-	return schemaProps.getProperty(name);
-    }
-
-    public static final IEngine createEngine(IBaseSession session) {
-	return new Engine(session);
-    }
-
-    /**
-     * Create an IDefinitionFilter based on the supplied File, which should conform to the evaluation-ids schema.
-     *
-     * @throws OvalException if there was an error, such as the file not conforming to the schema.
-     */
-    public static final IDefinitionFilter createDefinitionFilter(File f) throws OvalException {
-	return new DefinitionFilter(f);
-    }
-
-    /**
-     * Create an IDefinitionFilter that will accept only IDs in the supplied collection.
-     */
-    public static final IDefinitionFilter createAcceptFilter(Collection<String> ids) {
-	return new DefinitionFilter(ids);
-    }
-
-    /**
-     * Create an IVariables based on the supplied File, which should conform to the OVAL variables schema.
-     */
-    public static final IVariables createVariables(File f) throws OvalException {
-	return new Variables(f);
-    }
-
-    /**
-     * Create an IDefinitions index for an XML file containing OVAL definitions.
-     */
-    public static final IDefinitions createDefinitions(File f) throws OvalException {
-	return new Definitions(f);
-    }
-
-    //
-    // Simplify access to all the OVAL Object Factories
-    //
-
-    /**
-     * A data structure containing fields and structures for accessing all the OVAL object factories.
-     */
-    public static class Factories {
-	public oval.schemas.common.ObjectFactory common;
-	public oval.schemas.directives.core.ObjectFactory directives;
-	public oval.schemas.evaluation.id.ObjectFactory evaluation;
-	public oval.schemas.results.core.ObjectFactory results;
-	public oval.schemas.variables.core.ObjectFactory variables;
-	public DefinitionFactories definitions;
-	public SystemCharacteristicsFactories sc;
-
-	Factories() {
-	    common = new oval.schemas.common.ObjectFactory();
-	    definitions = new DefinitionFactories();
-	    directives = new oval.schemas.directives.core.ObjectFactory();
-	    evaluation = new oval.schemas.evaluation.id.ObjectFactory();
-	    results = new oval.schemas.results.core.ObjectFactory();
-	    sc = new SystemCharacteristicsFactories();
-	    variables = new oval.schemas.variables.core.ObjectFactory();
-	}
-    }
-
-    /**
-     * A data structure containing fields for all the OVAL definition object factories.
-     */
-    public static class DefinitionFactories {
-	public oval.schemas.definitions.aix.ObjectFactory aix;
-	public oval.schemas.definitions.apache.ObjectFactory apache;
-	public oval.schemas.definitions.catos.ObjectFactory catos;
-	public oval.schemas.definitions.core.ObjectFactory core;
-	public oval.schemas.definitions.esx.ObjectFactory esx;
-	public oval.schemas.definitions.freebsd.ObjectFactory freebsd;
-	public oval.schemas.definitions.hpux.ObjectFactory hpux;
-	public oval.schemas.definitions.independent.ObjectFactory independent;
-	public oval.schemas.definitions.ios.ObjectFactory ios;
-	public oval.schemas.definitions.linux.ObjectFactory linux;
-	public oval.schemas.definitions.macos.ObjectFactory macos;
-	public oval.schemas.definitions.pixos.ObjectFactory pixos;
-	public oval.schemas.definitions.sharepoint.ObjectFactory sharepoint;
-	public oval.schemas.definitions.solaris.ObjectFactory solaris;
-	public oval.schemas.definitions.unix.ObjectFactory unix;
-	public oval.schemas.definitions.windows.ObjectFactory windows;
-
-	private DefinitionFactories() {
-	    aix = new oval.schemas.definitions.aix.ObjectFactory();
-	    apache = new oval.schemas.definitions.apache.ObjectFactory();
-	    catos = new oval.schemas.definitions.catos.ObjectFactory();
-	    core = new oval.schemas.definitions.core.ObjectFactory();
-	    esx = new oval.schemas.definitions.esx.ObjectFactory();
-	    freebsd = new oval.schemas.definitions.freebsd.ObjectFactory();
-	    hpux = new oval.schemas.definitions.hpux.ObjectFactory();
-	    independent = new oval.schemas.definitions.independent.ObjectFactory();
-	    ios = new oval.schemas.definitions.ios.ObjectFactory();
-	    linux = new oval.schemas.definitions.linux.ObjectFactory();
-	    macos = new oval.schemas.definitions.macos.ObjectFactory();
-	    pixos = new oval.schemas.definitions.pixos.ObjectFactory();
-	    sharepoint = new oval.schemas.definitions.sharepoint.ObjectFactory();
-	    solaris = new oval.schemas.definitions.solaris.ObjectFactory();
-	    unix = new oval.schemas.definitions.unix.ObjectFactory();
-	    windows = new oval.schemas.definitions.windows.ObjectFactory();
-	}
-    }
-
-    /**
-     * A data structure containing fields for all the OVAL system characteristics object factories.
-     */
-    public static class SystemCharacteristicsFactories {
-	public oval.schemas.systemcharacteristics.aix.ObjectFactory aix;
-	public oval.schemas.systemcharacteristics.apache.ObjectFactory apache;
-	public oval.schemas.systemcharacteristics.catos.ObjectFactory catos;
-	public oval.schemas.systemcharacteristics.core.ObjectFactory core;
-	public oval.schemas.systemcharacteristics.esx.ObjectFactory esx;
-	public oval.schemas.systemcharacteristics.freebsd.ObjectFactory freebsd;
-	public oval.schemas.systemcharacteristics.hpux.ObjectFactory hpux;
-	public oval.schemas.systemcharacteristics.independent.ObjectFactory independent;
-	public oval.schemas.systemcharacteristics.ios.ObjectFactory ios;
-	public oval.schemas.systemcharacteristics.linux.ObjectFactory linux;
-	public oval.schemas.systemcharacteristics.macos.ObjectFactory macos;
-	public oval.schemas.systemcharacteristics.pixos.ObjectFactory pixos;
-	public oval.schemas.systemcharacteristics.sharepoint.ObjectFactory sharepoint;
-	public oval.schemas.systemcharacteristics.solaris.ObjectFactory solaris;
-	public oval.schemas.systemcharacteristics.unix.ObjectFactory unix;
-	public oval.schemas.systemcharacteristics.windows.ObjectFactory windows;
-
-	private SystemCharacteristicsFactories() {
-	    aix = new oval.schemas.systemcharacteristics.aix.ObjectFactory();
-	    apache = new oval.schemas.systemcharacteristics.apache.ObjectFactory();
-	    catos = new oval.schemas.systemcharacteristics.catos.ObjectFactory();
-	    core = new oval.schemas.systemcharacteristics.core.ObjectFactory();
-	    esx = new oval.schemas.systemcharacteristics.esx.ObjectFactory();
-	    freebsd = new oval.schemas.systemcharacteristics.freebsd.ObjectFactory();
-	    hpux = new oval.schemas.systemcharacteristics.hpux.ObjectFactory();
-	    independent = new oval.schemas.systemcharacteristics.independent.ObjectFactory();
-	    ios = new oval.schemas.systemcharacteristics.ios.ObjectFactory();
-	    linux = new oval.schemas.systemcharacteristics.linux.ObjectFactory();
-	    macos = new oval.schemas.systemcharacteristics.macos.ObjectFactory();
-	    pixos = new oval.schemas.systemcharacteristics.pixos.ObjectFactory();
-	    sharepoint = new oval.schemas.systemcharacteristics.sharepoint.ObjectFactory();
-	    solaris = new oval.schemas.systemcharacteristics.solaris.ObjectFactory();
-	    unix = new oval.schemas.systemcharacteristics.unix.ObjectFactory();
-	    windows = new oval.schemas.systemcharacteristics.windows.ObjectFactory();
-	}
     }
 
     // Private

@@ -24,7 +24,7 @@ import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * Representation of OvalDirectives, which specify to the engine how much detail should be put in the results XML.
@@ -42,7 +42,7 @@ public class Directives {
 
     public static final OvalDirectives getOvalDirectives(Source source) throws OvalException {
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_DIRECTIVES);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_DIRECTIVES);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
@@ -76,10 +76,10 @@ public class Directives {
      * Create a Directives with default behavior (full reporting for everything).
      */
     public Directives() {
-	directives = JOVALSystem.factories.directives.createOvalDirectives();
-	DefaultDirectivesType ddt = JOVALSystem.factories.results.createDefaultDirectivesType();
+	directives = Factories.directives.createOvalDirectives();
+	DefaultDirectivesType ddt = Factories.results.createDefaultDirectivesType();
 	ddt.setIncludeSourceDefinitions(true);
-	DirectiveType dt = JOVALSystem.factories.results.createDirectiveType();
+	DirectiveType dt = Factories.results.createDirectiveType();
 	dt.setReported(true);
 	dt.setContent(ContentEnumeration.FULL);
 	ddt.setDefinitionError(dt);

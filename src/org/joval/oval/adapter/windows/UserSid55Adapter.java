@@ -33,9 +33,9 @@ import org.joval.intf.windows.identity.IUser;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Collects items for the user_sid55_object.
@@ -87,7 +87,7 @@ public class UserSid55Adapter extends UserAdapter {
 			}
 		    }
 		} catch (PatternSyntaxException e) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
@@ -102,7 +102,7 @@ public class UserSid55Adapter extends UserAdapter {
 	} catch (NoSuchElementException e) {
 	    // No match.
 	} catch (WmiException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
 	    rc.addMessage(msg);
@@ -113,18 +113,18 @@ public class UserSid55Adapter extends UserAdapter {
     // Private
 
     private JAXBElement<? extends ItemType> makeItem(IUser user) {
-	UserSidItem item = JOVALSystem.factories.sc.windows.createUserSidItem();
-	EntityItemStringType userSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	UserSidItem item = Factories.sc.windows.createUserSidItem();
+	EntityItemStringType userSidType = Factories.sc.core.createEntityItemStringType();
 	userSidType.setValue(user.getSid());
 	item.setUserSid(userSidType);
-	EntityItemBoolType enabledType = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	EntityItemBoolType enabledType = Factories.sc.core.createEntityItemBoolType();
 	enabledType.setValue(user.isEnabled() ? "true" : "false");
 	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setEnabled(enabledType);
 	for (String groupNetbiosName : user.getGroupNetbiosNames()) {
 	    try {
 		IGroup group = directory.queryGroup(groupNetbiosName);
-		EntityItemStringType groupSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType groupSidType = Factories.sc.core.createEntityItemStringType();
 		groupSidType.setValue(group.getSid());
 		item.getGroupSid().add(groupSidType);
 	    } catch (IllegalArgumentException e) {
@@ -133,10 +133,10 @@ public class UserSid55Adapter extends UserAdapter {
 	    }
 	}
 	if (item.getGroupSid().size() == 0) {
-	    EntityItemStringType groupSidType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType groupSidType = Factories.sc.core.createEntityItemStringType();
 	    groupSidType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    item.getGroupSid().add(groupSidType);
 	}
-	return JOVALSystem.factories.sc.windows.createUserSidItem(item);
+	return Factories.sc.windows.createUserSidItem(item);
     }
 }

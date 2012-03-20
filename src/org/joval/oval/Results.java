@@ -67,7 +67,7 @@ import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 import org.joval.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * The purpose of this class is to mirror the apparent relational storage structure used by Ovaldi to generate the system-
@@ -91,7 +91,7 @@ public class Results implements IResults, ILoggable {
 
     public static final OvalResults getOvalResults(File f) throws OvalException {
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_RESULTS);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(f);
@@ -118,7 +118,7 @@ public class Results implements IResults, ILoggable {
 	directives = new Directives();
 	or = null;
 	try {
-	    ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_RESULTS));
+	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_RESULTS));
 	} catch (JAXBException e) {
 	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
@@ -237,7 +237,7 @@ public class Results implements IResults, ILoggable {
 	if (or != null) {
 	    return or;
 	}
-	or = JOVALSystem.factories.results.createOvalResults();
+	or = Factories.results.createOvalResults();
 	or.setGenerator(generator);
 	OvalDirectives od = directives.getOvalDirectives();
 	or.setDirectives(od.getDirectives());
@@ -245,13 +245,13 @@ public class Results implements IResults, ILoggable {
 	if (directives.includeSource()) {
 	    or.setOvalDefinitions(definitions.getOvalDefinitions());
 	}
-	SystemType systemType = JOVALSystem.factories.results.createSystemType();
+	SystemType systemType = Factories.results.createSystemType();
 
 	//
 	// Add definitions (using the Directives-filtered method) and simultaneously track reportable tests.
 	//
 	Hashtable<String, TestType> reportableTests = new Hashtable<String, TestType>();
-	DefinitionsType definitionsType = JOVALSystem.factories.results.createDefinitionsType();
+	DefinitionsType definitionsType = Factories.results.createDefinitionsType();
 	Collection<DefinitionType> defs = new Vector<DefinitionType>();
 	for (DefinitionType definition : definitionTable.values()) {
 	    DirectiveType directive = directives.getDirective(definition);
@@ -261,7 +261,7 @@ public class Results implements IResults, ILoggable {
 		    defs.add(definition);
 		    break;
 		  case THIN: {
-		    DefinitionType thinDefinition = JOVALSystem.factories.results.createDefinitionType();
+		    DefinitionType thinDefinition = Factories.results.createDefinitionType();
 		    thinDefinition.setDefinitionId(definition.getDefinitionId());
 		    thinDefinition.setClazz(definition.getClazz());
 		    thinDefinition.setResult(definition.getResult());
@@ -284,7 +284,7 @@ public class Results implements IResults, ILoggable {
 	//
 	// Add only those tests for which there are fully-reportable definitions.
 	//
-	TestsType testsType = JOVALSystem.factories.results.createTestsType();
+	TestsType testsType = Factories.results.createTestsType();
 	testsType.getTest().addAll(reportableTests.values());
 	systemType.setTests(testsType);
 
@@ -295,7 +295,7 @@ public class Results implements IResults, ILoggable {
 	Collection<BigInteger> reportableItems = getItemIds(reportableTests);
 	systemType.setOvalSystemCharacteristics(sc.getOvalSystemCharacteristics(reportableVariables, reportableItems));
 
-	ResultsType resultsType = JOVALSystem.factories.results.createResultsType();
+	ResultsType resultsType = Factories.results.createResultsType();
 	resultsType.getSystem().add(systemType);
 	or.setResults(resultsType);
 	return or;

@@ -16,8 +16,9 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.util.JOVALSystem;
+import org.joval.oval.sysinfo.SysinfoFactory;
 
 /**
  * Evaluates FamilyTest OVAL tests.
@@ -39,7 +40,7 @@ public class FamilyAdapter implements IAdapter {
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	items.add(JOVALSystem.factories.sc.independent.createFamilyItem(getItem()));
+	items.add(Factories.sc.independent.createFamilyItem(getItem()));
 	return items;
     }
 
@@ -49,9 +50,9 @@ public class FamilyAdapter implements IAdapter {
 
     private FamilyItem getItem() {
 	if (fItem == null) {
-	    fItem = JOVALSystem.factories.sc.independent.createFamilyItem();
-	    EntityItemFamilyType familyType = JOVALSystem.factories.sc.independent.createEntityItemFamilyType();
-	    familyType.setValue(session.getFamily().value());
+	    fItem = Factories.sc.independent.createFamilyItem();
+	    EntityItemFamilyType familyType = Factories.sc.independent.createEntityItemFamilyType();
+	    familyType.setValue(SysinfoFactory.getFamily(session).value());
 	    fItem.setFamily(familyType);
 	}
 	return fItem;

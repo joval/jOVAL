@@ -30,8 +30,8 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 import org.joval.util.Version;
 
@@ -63,9 +63,9 @@ public class PackageAdapter implements IAdapter {
 	switch(pObj.getPkginst().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(JOVALSystem.factories.sc.solaris.createPackageItem(getItem((String)pObj.getPkginst().getValue())));
+		items.add(Factories.sc.solaris.createPackageItem(getItem((String)pObj.getPkginst().getValue())));
 	    } catch (Exception e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
 		rc.addMessage(msg);
@@ -79,11 +79,11 @@ public class PackageAdapter implements IAdapter {
 		Pattern p = Pattern.compile((String)pObj.getPkginst().getValue());
 		for (String pkginst : packageMap.keySet()) {
 		    if (p.matcher(pkginst).find()) {
-			items.add(JOVALSystem.factories.sc.solaris.createPackageItem(packageMap.get(pkginst)));
+			items.add(Factories.sc.solaris.createPackageItem(packageMap.get(pkginst)));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		rc.addMessage(msg);
@@ -96,7 +96,7 @@ public class PackageAdapter implements IAdapter {
 	    String pkginst = (String)pObj.getPkginst().getValue();
 	    for (String key : packageMap.keySet()) {
 		if (!pkginst.equals(key)) {
-		    items.add(JOVALSystem.factories.sc.solaris.createPackageItem(packageMap.get(key)));
+		    items.add(Factories.sc.solaris.createPackageItem(packageMap.get(key)));
 		}
 	    }
 	    break;
@@ -174,7 +174,7 @@ public class PackageAdapter implements IAdapter {
 	}
 
 	session.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
-	item = JOVALSystem.factories.sc.solaris.createPackageItem();
+	item = Factories.sc.solaris.createPackageItem();
 	boolean isInstalled = false;
 	for (String line : SafeCLI.multiLine("/usr/bin/pkginfo -l " + pkginst, session, IUnixSession.Timeout.S)) {
 	    line = line.trim();
@@ -182,27 +182,27 @@ public class PackageAdapter implements IAdapter {
 		break;
 	    } else if (line.startsWith(PKGINST)) {
 		isInstalled = true;
-		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
 		type.setValue(line.substring(PKGINST.length()).trim());
 		item.setPkginst(type);
 	    } else if (line.startsWith(NAME)) {
-		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
 		type.setValue(line.substring(NAME.length()).trim());
 		item.setName(type);
 	    } else if (line.startsWith(DESC)) {
-		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
 		type.setValue(line.substring(DESC.length()).trim());
 		item.setDescription(type);
 	    } else if (line.startsWith(CATEGORY)) {
-		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
 		type.setValue(line.substring(CATEGORY.length()).trim());
 		item.setCategory(type);
 	    } else if (line.startsWith(VENDOR)) {
-		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
 		type.setValue(line.substring(VENDOR.length()).trim());
 		item.setVendor(type);
 	    } else if (line.startsWith(VERSION)) {
-		EntityItemStringType type = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
 		type.setValue(line.substring(VERSION.length()).trim());
 		item.setPackageVersion(type);
 	    }
@@ -211,7 +211,7 @@ public class PackageAdapter implements IAdapter {
 	if (isInstalled) {
 	    item.setStatus(StatusEnumeration.EXISTS);
 	} else {
-	    EntityItemStringType pkginstType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType pkginstType = Factories.sc.core.createEntityItemStringType();
 	    pkginstType.setValue(pkginst);
 	    item.setPkginst(pkginstType);
 	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);

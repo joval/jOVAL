@@ -14,9 +14,9 @@ import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.plugin.IRequestContext;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
-import org.joval.util.JOVALSystem;
 
 class RequestContext implements IRequestContext {
     private Engine engine;
@@ -33,7 +33,7 @@ class RequestContext implements IRequestContext {
 	Collection<VariableValueType> result = new Vector<VariableValueType>();
 	for (String id : vars.keySet()) {
 	    for (String value : vars.get(id)) {
-		VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
+		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(id);
 		variableValueType.setValue(value);
 		result.add(variableValueType);

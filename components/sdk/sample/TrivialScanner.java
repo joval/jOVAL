@@ -15,6 +15,7 @@ import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
+import org.joval.oval.engine.Engine;
 import org.joval.oval.OvalException;
 import org.joval.plugin.RemotePlugin;
 import org.joval.util.JOVALMsg;
@@ -45,7 +46,7 @@ public class TrivialScanner {
 	    Properties props = new Properties();
 	    props.load(new FileInputStream(new File(argv[1])));
 	    plugin.configure(props);
-	    IEngine engine = JOVALSystem.createEngine(plugin.getSession());
+	    IEngine engine = new Engine(plugin.getSession());
 	    engine.setDefinitionsFile(new File(argv[0]));
 	    engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	    engine.run();

@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.unix;
+package org.joval.oval.sysinfo;
 
 import java.io.InputStream;
 import java.util.List;
@@ -17,9 +17,9 @@ import org.joval.util.SafeCLI;
  * @author David A. Solin
  * @version %I% %G%
  */
-class NetworkInterface {
-    static List<NetworkInterface> getInterfaces(IUnixSession session) throws Exception {
-	Vector<NetworkInterface> interfaces = new Vector<NetworkInterface>();
+class UnixNetworkInterface {
+    static List<UnixNetworkInterface> getInterfaces(IUnixSession session) throws Exception {
+	Vector<UnixNetworkInterface> interfaces = new Vector<UnixNetworkInterface>();
 	Vector<String> lines = new Vector<String>();
 	List<String> rawOutput = null;
 	switch(session.getFlavor()) {
@@ -119,14 +119,14 @@ class NetworkInterface {
 
     private String mac, ip4, ip6, description;
 
-    private NetworkInterface(String mac, String ip4, String ip6, String description) {
+    private UnixNetworkInterface(String mac, String ip4, String ip6, String description) {
 	this.mac = mac;
 	this.ip4 = ip4;
 	this.ip6 = ip6;
 	this.description = description;
     }
 
-    private static NetworkInterface createDarwinInterface(Vector<String> lines) {
+    private static UnixNetworkInterface createDarwinInterface(Vector<String> lines) {
 	String mac="", ip4=null, ip6=null, description="";
 	String firstLine = lines.get(0);
 	description = firstLine.substring(0, firstLine.indexOf(":"));
@@ -149,10 +149,10 @@ class NetworkInterface {
 		mac = tok.nextToken();
 	    }
 	}
-	return new NetworkInterface(mac, ip4, ip6, description);
+	return new UnixNetworkInterface(mac, ip4, ip6, description);
     }
 
-    private static NetworkInterface createUnixInterface(Vector<String> lines) {
+    private static UnixNetworkInterface createUnixInterface(Vector<String> lines) {
 	String mac="", ip4=null, ip6=null, description="";
 	String firstLine = lines.get(0);
 	description = firstLine.substring(0, firstLine.indexOf(":"));
@@ -169,10 +169,10 @@ class NetworkInterface {
 		mac = tok.nextToken();
 	    }
 	}
-	return new NetworkInterface(mac, ip4, ip6, description);
+	return new UnixNetworkInterface(mac, ip4, ip6, description);
     }
 
-    private static NetworkInterface createLinuxInterface(Vector<String> lines) {
+    private static UnixNetworkInterface createLinuxInterface(Vector<String> lines) {
 	String mac="", ip4=null, ip6=null, description="";
 	StringTokenizer tok = new StringTokenizer(lines.get(0));
 	description = tok.nextToken();
@@ -195,6 +195,6 @@ class NetworkInterface {
 		ip6 = tok.nextToken();
 	    }
 	}
-	return new NetworkInterface(mac, ip4, ip6, description);
+	return new UnixNetworkInterface(mac, ip4, ip6, description);
     }
 }

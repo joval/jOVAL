@@ -45,11 +45,11 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.ItemSet;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -83,7 +83,7 @@ public class ProcessAdapter implements IAdapter {
 	}
 
 	if (error != null) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(error);
 	    rc.addMessage(msg);
@@ -102,7 +102,7 @@ public class ProcessAdapter implements IAdapter {
 		    commands[0] = (String)command.getValue();
 		}
 		for (ProcessData process : getProcesses(command.getOperation(), commands)) {
-		    items.add(JOVALSystem.factories.sc.unix.createProcessItem(process.getProcessItem()));
+		    items.add(Factories.sc.unix.createProcessItem(process.getProcessItem()));
 		}
 	    } else {
 		Process58Object pObj = (Process58Object)rc.getObject();
@@ -149,7 +149,7 @@ public class ProcessAdapter implements IAdapter {
 		    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_PROCESS58_OBJECT, pObj.getId()));
 		} else {
 		    for (Process58Item item : set1.intersection(set2)) {
-			items.add(JOVALSystem.factories.sc.unix.createProcess58Item(item));
+			items.add(Factories.sc.unix.createProcess58Item(item));
 		    }
 		}
 	    }
@@ -158,7 +158,7 @@ public class ProcessAdapter implements IAdapter {
 	} catch (NumberFormatException e) {
 	    throw new OvalException(e);
 	} catch (PatternSyntaxException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.WARNING);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 	    rc.addMessage(msg);
@@ -438,7 +438,7 @@ public class ProcessAdapter implements IAdapter {
 		    if (labels.containsKey(pid)) {
 			StringTokenizer tok = new StringTokenizer(labels.get(pid), ":");
 			while (tok.hasMoreTokens()) {
-			    EntityItemStringType labelType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			    EntityItemStringType labelType = Factories.sc.core.createEntityItemStringType();
 			    labelType.setValue(tok.nextToken());
 			    process.selinuxDomainLabel.add(labelType);
 			}
@@ -495,30 +495,30 @@ public class ProcessAdapter implements IAdapter {
 	List<EntityItemStringType> selinuxDomainLabel;
 
 	ProcessData() {
-	    command = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    tty = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    startTime = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    execTime = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    schedulingClass = JOVALSystem.factories.sc.core.createEntityItemStringType();
-	    ruid = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	    userid = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	    priority = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	    ppid = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	    pid = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	    command = Factories.sc.core.createEntityItemStringType();
+	    tty = Factories.sc.core.createEntityItemStringType();
+	    startTime = Factories.sc.core.createEntityItemStringType();
+	    execTime = Factories.sc.core.createEntityItemStringType();
+	    schedulingClass = Factories.sc.core.createEntityItemStringType();
+	    ruid = Factories.sc.core.createEntityItemIntType();
+	    userid = Factories.sc.core.createEntityItemIntType();
+	    priority = Factories.sc.core.createEntityItemIntType();
+	    ppid = Factories.sc.core.createEntityItemIntType();
+	    pid = Factories.sc.core.createEntityItemIntType();
 
 	    //
 	    // Process58Item additions
 	    //
-	    sessionId = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	    loginuid = JOVALSystem.factories.sc.core.createEntityItemIntType();
-	    execShield = JOVALSystem.factories.sc.core.createEntityItemBoolType();
+	    sessionId = Factories.sc.core.createEntityItemIntType();
+	    loginuid = Factories.sc.core.createEntityItemIntType();
+	    execShield = Factories.sc.core.createEntityItemBoolType();
 	    execShield.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    posixCapability = new Vector<EntityItemCapabilityType>();
 	    selinuxDomainLabel = new Vector<EntityItemStringType>();
 	}
 
 	ProcessItem getProcessItem() {
-	    ProcessItem process = JOVALSystem.factories.sc.unix.createProcessItem();
+	    ProcessItem process = Factories.sc.unix.createProcessItem();
 	    process.setPid(pid);
 	    process.setPpid(ppid);
 	    process.setPriority(priority);
@@ -532,7 +532,7 @@ public class ProcessAdapter implements IAdapter {
 	}
 
 	Process58Item getProcess58Item() {
-	    Process58Item process = JOVALSystem.factories.sc.unix.createProcess58Item();
+	    Process58Item process = Factories.sc.unix.createProcess58Item();
 	    process.setPid(pid);
 	    process.setPpid(ppid);
 	    process.setPriority(priority);

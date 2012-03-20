@@ -37,9 +37,9 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 
 /**
@@ -78,7 +78,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
     }
 
     protected ItemType createFileItem() {
-	return JOVALSystem.factories.sc.independent.createXmlfilecontentItem();
+	return Factories.sc.independent.createXmlfilecontentItem();
     }
 
     /**
@@ -103,7 +103,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 	    item.setPath(baseItem.getPath());
 	    item.setFilename(baseItem.getFilename());
 	    item.setFilepath(baseItem.getFilepath());
-	    EntityItemStringType xpathType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType xpathType = Factories.sc.core.createEntityItemStringType();
 	    String expression = (String)xObj.getXpath().getValue();
 	    xpathType.setValue(expression);
 	    item.setXpath(xpathType);
@@ -116,20 +116,20 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 		Document doc = builder.parse(in);
 
 		for (String value : typesafeEval(expr, doc)) {
-		    EntityItemAnySimpleType valueOf = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
 		    valueOf.setValue(value);
 		    item.getValueOf().add(valueOf);
 		}
 
-		items.add(JOVALSystem.factories.sc.independent.createXmlfilecontentItem(item));
+		items.add(Factories.sc.independent.createXmlfilecontentItem(item));
 	    } catch (XPathExpressionException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_XPATH, expression, e.getMessage()));
 		rc.addMessage(msg);
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } catch (SAXException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_PARSE, f.getPath(), e.getMessage()));
 		rc.addMessage(msg);

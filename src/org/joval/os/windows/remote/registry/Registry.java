@@ -38,7 +38,6 @@ import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
-import org.joval.os.windows.WindowsSystemInfo;
 import org.joval.os.windows.registry.BaseRegistry;
 import org.joval.os.windows.registry.BinaryValue;
 import org.joval.os.windows.registry.DwordValue;
@@ -530,8 +529,8 @@ public class Registry extends BaseRegistry {
 
 	public void run() {
 	    try {
-		IKey key = fetchKey(HKLM, WindowsSystemInfo.COMPUTERNAME_KEY);
-		IValue val = fetchValue(key, WindowsSystemInfo.COMPUTERNAME_VAL);
+		IKey key = fetchKey(HKLM, COMPUTERNAME_KEY);
+		IValue val = fetchValue(key, COMPUTERNAME_VAL);
 	    } catch (NoSuchElementException e) {
 		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_KEY_MISSING, e.getMessage());
 		log.getLogger().warn(JOVALMsg.ERROR_WINREG_HEARTBEAT, reason);

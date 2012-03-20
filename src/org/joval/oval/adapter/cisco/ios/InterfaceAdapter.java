@@ -27,9 +27,9 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.io.PerishableReader;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -56,10 +56,10 @@ public class InterfaceAdapter implements IAdapter {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
 	try {
 	    for (InterfaceItem item : getItems()) {
-		items.add(JOVALSystem.factories.sc.ios.createInterfaceItem(item));
+		items.add(Factories.sc.ios.createInterfaceItem(item));
 	    }
 	} catch (NoSuchElementException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ITechSupport.GLOBAL));
 	    rc.addMessage(msg);
@@ -79,9 +79,9 @@ public class InterfaceAdapter implements IAdapter {
 		if (item != null) {
 		    items.add(item);
 		}
-		item = JOVALSystem.factories.sc.ios.createInterfaceItem();
+		item = Factories.sc.ios.createInterfaceItem();
 
-		EntityItemStringType name = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType name = Factories.sc.core.createEntityItemStringType();
 		name.setValue(line.substring(10).trim());
 		item.setName(name);
 	    } else if (item != null) {
@@ -90,20 +90,19 @@ public class InterfaceAdapter implements IAdapter {
 		    if (command.startsWith("!")) {
 			// skip comment
 		    } else if (line.startsWith("ip directed-broadcast")) {
-			EntityItemStringType idbc = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType idbc = Factories.sc.core.createEntityItemStringType();
 			idbc.setValue(command);
 			item.setIpDirectedBroadcastCommand(idbc);
 		    } else if (line.startsWith("no ip directed-broadcast")) {
-			EntityItemStringType nidbc = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType nidbc = Factories.sc.core.createEntityItemStringType();
 			nidbc.setValue(command);
 			item.setNoIpDirectedBroadcastCommand(nidbc);
 		    } else if (line.indexOf("proxy-arp") != -1) {
-			EntityItemStringType pac = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType pac = Factories.sc.core.createEntityItemStringType();
 			pac.setValue(command);
 			item.setProxyArpCommand(pac);
 		    } else if (line.indexOf("shutdown") != -1) {
-			EntityItemStringType sc = JOVALSystem.factories.sc.core.createEntityItemStringType();
-			sc.setValue(command);
+			EntityItemStringType sc = Factories.sc.core.createEntityItemStringType(); sc.setValue(command);
 			item.setShutdownCommand(sc);
 		    }
 		} else {

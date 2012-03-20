@@ -49,7 +49,7 @@ import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 import org.joval.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * The purpose of this class is to mirror the apparent relational storage structure used by Ovaldi to generate the system-
@@ -67,7 +67,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 
     public static final OvalSystemCharacteristics getOvalSystemCharacteristics(Source src) throws OvalException {
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(src);
@@ -112,7 +112,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	variableTable = new Hashtable<String, List<VariableValueType>>();
 	itemChecksums = new Hashtable<String, BigInteger>();
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS);
 	    ctx = JAXBContext.newInstance(packages);
 	    csMarshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(csMarshaller, OvalNamespacePrefixMapper.URI.SC);
@@ -198,7 +198,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
      * and objects.
      */
     public OvalSystemCharacteristics getOvalSystemCharacteristics(Collection<String> vars, Collection<BigInteger> itemIds) {
-	OvalSystemCharacteristics filteredSc = JOVALSystem.factories.sc.core.createOvalSystemCharacteristics();
+	OvalSystemCharacteristics filteredSc = Factories.sc.core.createOvalSystemCharacteristics();
 	if (osc == null) {
 	    osc = getOvalSystemCharacteristics();
 	}
@@ -208,7 +208,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	//
 	// Add only objects whose items and variables are all specified.
 	//
-	CollectedObjectsType collectedObjects = JOVALSystem.factories.sc.core.createCollectedObjectsType();
+	CollectedObjectsType collectedObjects = Factories.sc.core.createCollectedObjectsType();
 	for (ObjectType obj : objectTable.values()) {
 	    boolean add = true;
 	    for (ReferenceType ref : obj.getReference()) {
@@ -236,7 +236,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	//
 	// Add only items in the list.
 	//
-	SystemDataType systemData = JOVALSystem.factories.sc.core.createSystemDataType();
+	SystemDataType systemData = Factories.sc.core.createSystemDataType();
 	for (BigInteger itemId : itemIds) {
 	    systemData.getItem().add(itemTable.get(itemId));
 	}
@@ -273,7 +273,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	ObjectType obj = objectTable.get(objectId);
 	boolean created = false;
 	if (obj == null) {
-	    obj = JOVALSystem.factories.sc.core.createObjectType();
+	    obj = Factories.sc.core.createObjectType();
 	    obj.setId(objectId);
 	    objectTable.put(objectId, obj);
 	    created = true;
@@ -317,7 +317,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	}
 	if (!objectItems.containsKey(itemId)) {
 	    objectItems.put(itemId, item);
-	    ReferenceType ref = JOVALSystem.factories.sc.core.createReferenceType();
+	    ReferenceType ref = Factories.sc.core.createReferenceType();
 	    ref.setItemRef(itemId);
 	    obj.getReference().add(ref);
 	}
@@ -454,18 +454,18 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     // Private
 
     private OvalSystemCharacteristics createOvalSystemCharacteristics() {
-	OvalSystemCharacteristics sc = JOVALSystem.factories.sc.core.createOvalSystemCharacteristics();
+	OvalSystemCharacteristics sc = Factories.sc.core.createOvalSystemCharacteristics();
 	sc.setGenerator(generator);
 	sc.setSystemInfo(systemInfo);
 
-	CollectedObjectsType collectedObjects = JOVALSystem.factories.sc.core.createCollectedObjectsType();
+	CollectedObjectsType collectedObjects = Factories.sc.core.createCollectedObjectsType();
 	List <ObjectType>objects = collectedObjects.getObject();
 	for (ObjectType obj : objectTable.values()) {
 	    objects.add(obj);
 	}
 	sc.setCollectedObjects(collectedObjects);
 
-	SystemDataType systemData = JOVALSystem.factories.sc.core.createSystemDataType();
+	SystemDataType systemData = Factories.sc.core.createSystemDataType();
 	List <JAXBElement<? extends ItemType>>items = systemData.getItem();
 	for (JAXBElement<? extends ItemType> itemType : itemTable.values()) {
 	    items.add(itemType);

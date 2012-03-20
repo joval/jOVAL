@@ -47,8 +47,11 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.oval.DefinitionFilter;
+import org.joval.oval.Definitions;
 import org.joval.oval.OvalException;
 import org.joval.oval.SystemCharacteristics;
+import org.joval.oval.Variables;
+import org.joval.oval.engine.Engine;
 import org.joval.util.Checksum;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -390,7 +393,7 @@ public class Main implements IObserver {
 	    }
 
 	    print(getMessage("MESSAGE_PARSING_FILE", state.defsFile.toString()));
-	    IDefinitions defs = JOVALSystem.createDefinitions(state.defsFile);
+	    IDefinitions defs = new Definitions(state.defsFile);
 
 	    print(getMessage("MESSAGE_VALIDATING_XML"));
 	    if (!validateSchema(state.defsFile, DEFINITIONS_SCHEMAS)) {
@@ -446,7 +449,7 @@ public class Main implements IObserver {
 		}
 	    }
 	    if (state.variablesFile.exists() && state.variablesFile.isFile()) {
-		variables = JOVALSystem.createVariables(state.variablesFile);
+		variables = new Variables(state.variablesFile);
 	    }
 	    if (state.inputDefsFile != null) {
 		print(getMessage("MESSAGE_READING_INPUTDEFINITIONS", state.inputDefsFile));
@@ -456,7 +459,7 @@ public class Main implements IObserver {
 		filter = new DefinitionFilter(state.definitionIDs);
 	    }
 
-	    IEngine engine = JOVALSystem.createEngine(state.plugin.getSession());
+	    IEngine engine = new Engine(state.plugin.getSession());
 	    engine.setDefinitions(defs);
 
 	    if (filter != null) {

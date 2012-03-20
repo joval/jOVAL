@@ -7,8 +7,6 @@ import java.util.NoSuchElementException;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.juniper.system.IJunosSession;
 import org.joval.intf.identity.ICredential;
@@ -18,7 +16,6 @@ import org.joval.intf.net.INetconf;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.os.cisco.system.IosSession;
-import org.joval.os.juniper.JunosSystemInfo;
 import org.joval.protocol.netconf.NetconfSession;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
@@ -30,8 +27,6 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class JunosSession extends IosSession implements IJunosSession {
-    private JunosSystemInfo info;
-
     /**
      * Create an IOS session with a live SSH connection to a router.
      */
@@ -74,7 +69,6 @@ public class JunosSession extends IosSession implements IJunosSession {
 	    } else {
 		try {
 		    techSupport = new SupportInformation(this);
-		    info = new JunosSystemInfo(techSupport);
 		    initialized = true;
 		    return true;
 		} catch (Exception e) {
@@ -99,13 +93,5 @@ public class JunosSession extends IosSession implements IJunosSession {
     @Override
     public Type getType() {
 	return Type.JUNIPER_JUNOS;
-    }
-
-    @Override
-    public SystemInfoType getSystemInfo() {
-	if (info == null) {
-	    info = new JunosSystemInfo(techSupport);
-	}
-	return info.getSystemInfo();
     }
 }

@@ -10,6 +10,8 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
+import oval.schemas.common.MessageType;
+import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.aix.OslevelObject;
@@ -24,9 +26,9 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.PerishableReader;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -51,16 +53,23 @@ public class OslevelAdapter implements IAdapter {
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	items.add(JOVALSystem.factories.sc.aix.createOslevelItem(getItem()));
+	try {
+	    items.add(Factories.sc.aix.createOslevelItem(getItem()));
+	} catch (Exception e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
+	}
 	return items;
     }
 
     // Private
 
-    private OslevelItem getItem() {
-	OslevelItem item = JOVALSystem.factories.sc.aix.createOslevelItem();
-	EntityItemVersionType maintenanceLevel = JOVALSystem.factories.sc.core.createEntityItemVersionType();
-	maintenanceLevel.setValue(session.getSystemInfo().getOsVersion());
+    private OslevelItem getItem() throws Exception {
+	OslevelItem item = Factories.sc.aix.createOslevelItem();
+	EntityItemVersionType maintenanceLevel = Factories.sc.core.createEntityItemVersionType();
+	maintenanceLevel.setValue(SafeCLI.exec("uname -r", session, IUnixSession.Timeout.S));
 	maintenanceLevel.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 	item.setMaintenanceLevel(maintenanceLevel);
 	return item;

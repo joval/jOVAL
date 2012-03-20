@@ -19,7 +19,7 @@ import cpe.schemas.dictionary.ListType;
 
 import org.joval.cpe.CpeException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * Representation of a CPE dictionary document.
@@ -38,7 +38,7 @@ public class Dictionary {
 
     public static final ListType getCpeList(Source source) throws CpeException {
 	try {
-	    String packages = JOVALSystem.getSchemaProperty(JOVALSystem.CPE_PROP_PACKAGES);
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.CPE);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);

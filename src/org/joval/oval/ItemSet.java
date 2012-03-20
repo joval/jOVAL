@@ -18,7 +18,7 @@ import javax.xml.namespace.QName;
 
 import oval.schemas.systemcharacteristics.core.ItemType;
 
-import org.joval.util.JOVALSystem;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * A Set of ItemType objects.
@@ -35,7 +35,7 @@ public class ItemSet<T extends ItemType> implements Iterable<T> {
      */
     public ItemSet() {
 	table = new Hashtable<String, T>();
-	String packages = JOVALSystem.getSchemaProperty(JOVALSystem.OVAL_PROP_SYSTEMCHARACTERISTICS);
+	String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS);
 	try {
 	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    marshaller = ctx.createMarshaller();

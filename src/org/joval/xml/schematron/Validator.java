@@ -21,8 +21,8 @@ import org.iso.svrl.SchematronOutput;
 import org.iso.svrl.SuccessfulReport;
 import org.iso.svrl.FailedAssert;
 
-import org.joval.util.JOVALSystem;
 import org.joval.util.JOVALMsg;
+import org.joval.xml.SchemaRegistry;
 
 /**
  * A utility class for performing schematron validation.
@@ -84,7 +84,7 @@ public class Validator {
 	    transformer.transform(source, result);
 	    Node root = result.getNode();
 	    if (root.getNodeType() == Node.DOCUMENT_NODE) {
-		JAXBContext ctx = JAXBContext.newInstance(JOVALSystem.getSchemaProperty(JOVALSystem.SVRL_PROP_PACKAGES));
+		JAXBContext ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.SVRL));
 		Object rootObj = ctx.createUnmarshaller().unmarshal(root);
 		if (rootObj instanceof SchematronOutput) {
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCHEMATRON_VALIDATION);

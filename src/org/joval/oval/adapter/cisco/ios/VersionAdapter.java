@@ -8,10 +8,11 @@ import java.util.Vector;
 
 import oval.schemas.definitions.ios.VersionObject;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.ios.VersionItem;
 
 import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.system.IBaseSession;
-import org.joval.util.JOVALSystem;
+import org.joval.oval.Factories;
 
 /**
  * Provides Cisco IOS VersionItem OVAL items.
@@ -26,21 +27,20 @@ public class VersionAdapter extends Version55Adapter {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IIosSession) {
 	    this.session = (IIosSession)session;
-	    initialized = false;
 	    classes.add(VersionObject.class);
 	}
 	return classes;
     }
 
     @Override
-    protected void init() {
-	super.init();
+    protected VersionItem getItem() throws Exception {
+	VersionItem item = super.getItem();
 
 	StringBuffer sb = new StringBuffer();
 	sb.append((String)item.getMajorVersion().getValue());
 	sb.append(".");
 	sb.append((String)item.getMinorVersion().getValue());
-	EntityItemStringType trainNumber = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType trainNumber = Factories.sc.core.createEntityItemStringType();
 	trainNumber.setValue(sb.toString());
 	item.setTrainNumber(trainNumber);
 
@@ -48,8 +48,10 @@ public class VersionAdapter extends Version55Adapter {
 	sb.append((String)item.getTrainIdentifier().getValue());
 	sb.append(")");
 	sb.append((String)item.getRebuild().getValue());
-	EntityItemStringType majorRelease = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType majorRelease = Factories.sc.core.createEntityItemStringType();
 	majorRelease.setValue(sb.toString());
 	item.setMajorRelease(majorRelease);
+
+	return item;
     }
 }

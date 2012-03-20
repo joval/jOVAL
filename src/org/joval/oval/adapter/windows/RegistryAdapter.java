@@ -47,11 +47,11 @@ import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.LittleEndian;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Evaluates RegistryTest OVAL tests.
@@ -100,7 +100,7 @@ public class RegistryAdapter implements IAdapter {
 	if (rObj.getKey().getValue() == null) {
 	    try {
 		for (RegistryItem item : getItems(rObj, hive, null, rc)) {
-		    items.add(JOVALSystem.factories.sc.windows.createRegistryItem(item));
+		    items.add(Factories.sc.windows.createRegistryItem(item));
 		}
 	    } catch (NoSuchElementException e) {
 		// No match.
@@ -109,7 +109,7 @@ public class RegistryAdapter implements IAdapter {
 	    for (String path : getPathList(rObj, hive, rc)) {
 		try {
 		    for (RegistryItem item : getItems(rObj, hive, path, rc)) {
-			items.add(JOVALSystem.factories.sc.windows.createRegistryItem(item));
+			items.add(Factories.sc.windows.createRegistryItem(item));
 		    }
 		} catch (NoSuchElementException e) {
 		    // No match.
@@ -147,7 +147,7 @@ public class RegistryAdapter implements IAdapter {
 	    } catch (NoSuchElementException e) {
 		session.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), rObj.getId());
 	    } catch (ResolveException e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		String s = JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR,
 						  rObj.getKey().getValue().getVarRef(), e.getMessage());
@@ -292,7 +292,7 @@ public class RegistryAdapter implements IAdapter {
 			items.add(getItem(key, valueNames[i], win32));
 		    }
 		} catch (PatternSyntaxException e) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 		    rc.addMessage(msg);
@@ -313,18 +313,18 @@ public class RegistryAdapter implements IAdapter {
      * Get an item given a concrete hive, key path and value name.
      */
     private RegistryItem getItem(IKey key, String name, boolean win32) throws NoSuchElementException, CollectException {
-	RegistryItem item = JOVALSystem.factories.sc.windows.createRegistryItem();
-	EntityItemRegistryHiveType hiveType = JOVALSystem.factories.sc.windows.createEntityItemRegistryHiveType();
+	RegistryItem item = Factories.sc.windows.createRegistryItem();
+	EntityItemRegistryHiveType hiveType = Factories.sc.windows.createEntityItemRegistryHiveType();
 	hiveType.setValue(key.getHive());
 	item.setHive(hiveType);
 
 	// REMIND (DAS): lastWriteTime implementation is TBD
-	EntityItemIntType lastWriteTimeType = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	EntityItemIntType lastWriteTimeType = Factories.sc.core.createEntityItemIntType();
 	lastWriteTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
 	lastWriteTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	item.setLastWriteTime(lastWriteTimeType);
 
-	EntityItemWindowsViewType viewType = JOVALSystem.factories.sc.windows.createEntityItemWindowsViewType();
+	EntityItemWindowsViewType viewType = Factories.sc.windows.createEntityItemWindowsViewType();
 	if (session.supports(IWindowsSession.View._64BIT)) {
 	    if (win32) {
 		viewType.setValue("32_bit");
@@ -340,24 +340,24 @@ public class RegistryAdapter implements IAdapter {
 	    return item;
 	}
 
-	EntityItemStringType keyType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
 	keyType.setValue(key.getPath());
-	item.setKey(JOVALSystem.factories.sc.windows.createRegistryItemKey(keyType));
+	item.setKey(Factories.sc.windows.createRegistryItemKey(keyType));
 
 	if (name != null) {
-	    EntityItemStringType nameType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	    EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
 	    nameType.setValue(name);
-	    item.setName(JOVALSystem.factories.sc.windows.createRegistryItemName(nameType));
+	    item.setName(Factories.sc.windows.createRegistryItemName(nameType));
 	}
 
 	if (name != null && !"".equals(name)) {
 	    IValue val = (win32 ? reg32 : reg).fetchValue(key, name);
 
 	    Collection<EntityItemAnySimpleType> values = new Vector<EntityItemAnySimpleType>();
-	    EntityItemRegistryTypeType typeType = JOVALSystem.factories.sc.windows.createEntityItemRegistryTypeType();
+	    EntityItemRegistryTypeType typeType = Factories.sc.windows.createEntityItemRegistryTypeType();
 	    switch (val.getType()) {
 	      case IValue.REG_SZ: {
-		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue(((IStringValue)val).getData());
 		valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		values.add(valueType);
@@ -366,7 +366,7 @@ public class RegistryAdapter implements IAdapter {
 	      }
 
 	      case IValue.REG_EXPAND_SZ: {
-		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue(((IExpandStringValue)val).getExpandedData());
 		valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		values.add(valueType);
@@ -375,7 +375,7 @@ public class RegistryAdapter implements IAdapter {
 	      }
 
 	      case IValue.REG_DWORD: {
-		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue(Integer.toString(((IDwordValue)val).getData()));
 		valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		values.add(valueType);
@@ -384,7 +384,7 @@ public class RegistryAdapter implements IAdapter {
 	      }
 
 	      case IValue.REG_QWORD: {
-		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setValue(Long.toString(((IQwordValue)val).getData()));
 		valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		values.add(valueType);
@@ -393,7 +393,7 @@ public class RegistryAdapter implements IAdapter {
 	      }
 
 	      case IValue.REG_BINARY: {
-		EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 		byte[] data = ((IBinaryValue)val).getData();
 		StringBuffer sb = new StringBuffer();
 		for (int i=0; i < data.length; i++) {
@@ -409,7 +409,7 @@ public class RegistryAdapter implements IAdapter {
 	      case IValue.REG_MULTI_SZ: {
 		String[] sVals = ((IMultiStringValue)val).getData();
 		for (int i=0; i < sVals.length; i++) {
-		    EntityItemAnySimpleType valueType = JOVALSystem.factories.sc.core.createEntityItemAnySimpleType();
+		    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 		    valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		    valueType.setValue(sVals[i]);
 		    values.add(valueType);

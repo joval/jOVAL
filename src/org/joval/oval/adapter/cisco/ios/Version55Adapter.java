@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.Vector;
 import javax.xml.bind.JAXBElement;
 
+import oval.schemas.common.MessageType;
+import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.ios.Version55Object;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
@@ -24,12 +26,13 @@ import oval.schemas.systemcharacteristics.core.EntityItemIOSVersionType;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.cisco.system.IIosSession;
+import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
-import org.joval.util.JOVALSystem;
 
 /**
  * Provides Cisco IOS Version55Item OVAL items.
@@ -41,7 +44,6 @@ public class Version55Adapter implements IAdapter {
     static final String OPEN_PEREN = "(";
     static final String CLOSE_PEREN = ")";
 
-    protected boolean initialized;
     protected IIosSession session;
     protected VersionItem item;
 
@@ -51,31 +53,56 @@ public class Version55Adapter implements IAdapter {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IIosSession) {
 	    this.session = (IIosSession)session;
-	    initialized = false;
 	    classes.add(Version55Object.class);
 	}
 	return classes;
     }
 
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	if (!initialized) {
-	    init();
-	}
-
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	items.add(JOVALSystem.factories.sc.ios.createVersionItem(item));
+	try {
+	   items.add(Factories.sc.ios.createVersionItem(getItem()));
+	} catch (Exception e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
+	}
 	return items;
     }
 
     // Internal
 
-    protected void init() {
-	item = JOVALSystem.factories.sc.ios.createVersionItem();
+    protected VersionItem getItem() throws Exception {
+	if (item == null) {
+	    item = makeItem();
+	}
+	return item;
+    }
+
+    // Private
+
+    private VersionItem makeItem() throws Exception {
+	VersionItem item = Factories.sc.ios.createVersionItem();
+	String version = null;
+	for (String line : session.getTechSupport().getData("show version")) {
+	    if (line.startsWith("Cisco IOS")) {
+		int ptr = line.indexOf("Version ");
+		if (ptr != -1) {
+		    int begin = ptr + 8;
+		    int end = line.indexOf(",", begin+1);
+		    if (end == -1) {
+			version = line.substring(begin);
+		    } else {
+			version = line.substring(begin, end);
+		    }
+		}
+	    }
+	}
 	int begin = 0;
-	String version = session.getSystemInfo().getOsVersion();
 	int end = version.indexOf(".");
 	if (end != -1) {
-	    EntityItemIntType majorVersion = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	    EntityItemIntType majorVersion = Factories.sc.core.createEntityItemIntType();
 	    majorVersion.setValue(version.substring(begin, end));
 	    majorVersion.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    item.setMajorVersion(majorVersion);
@@ -84,7 +111,7 @@ public class Version55Adapter implements IAdapter {
 	begin = end + 1;
 	end = version.indexOf(OPEN_PEREN);
 	if (begin > 0 && end > begin) {
-	    EntityItemIntType minorVersion = JOVALSystem.factories.sc.core.createEntityItemIntType();
+	    EntityItemIntType minorVersion = Factories.sc.core.createEntityItemIntType();
 	    minorVersion.setValue(version.substring(begin, end));
 	    minorVersion.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    item.setMinorVersion(minorVersion);
@@ -103,14 +130,14 @@ public class Version55Adapter implements IAdapter {
 		}
 	    }
 	    if (sb.length() > 0) {
-		EntityItemIntType release = JOVALSystem.factories.sc.core.createEntityItemIntType();
+		EntityItemIntType release = Factories.sc.core.createEntityItemIntType();
 		release.setValue(sb.toString());
 		release.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		item.setRelease(release);
 
 		begin += sb.length();
 		if (begin < end) {
-		    EntityItemStringType mainlineRebuild = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    EntityItemStringType mainlineRebuild = Factories.sc.core.createEntityItemStringType();
 		    mainlineRebuild.setValue(version.substring(begin, end));
 		    item.setMainlineRebuild(mainlineRebuild);
 		}
@@ -130,7 +157,7 @@ public class Version55Adapter implements IAdapter {
 		}
 	    }
 	    if (sb.length() > 0) {
-		EntityItemStringType trainIdentifier = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType trainIdentifier = Factories.sc.core.createEntityItemStringType();
 		trainIdentifier.setValue(sb.toString());
 		item.setTrainIdentifier(trainIdentifier);
 
@@ -146,7 +173,7 @@ public class Version55Adapter implements IAdapter {
 			}
 		    }
 		    if (sb.length() > 0) {
-			EntityItemIntType rebuild = JOVALSystem.factories.sc.core.createEntityItemIntType();
+			EntityItemIntType rebuild = Factories.sc.core.createEntityItemIntType();
 			rebuild.setValue(sb.toString());
 			rebuild.setDatatype(SimpleDatatypeEnumeration.INT.value());
 			item.setRebuild(rebuild);
@@ -154,7 +181,7 @@ public class Version55Adapter implements IAdapter {
 
 		    begin += sb.length();
 		    if (begin < end) {
-			EntityItemStringType subrebuild = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			EntityItemStringType subrebuild = Factories.sc.core.createEntityItemStringType();
 			subrebuild.setValue(version.substring(begin, end));
 			item.setSubrebuild(subrebuild);
 		    }
@@ -162,12 +189,11 @@ public class Version55Adapter implements IAdapter {
 	    }
 	}
 
-	EntityItemIOSVersionType versionString = JOVALSystem.factories.sc.core.createEntityItemIOSVersionType();
+	EntityItemIOSVersionType versionString = Factories.sc.core.createEntityItemIOSVersionType();
 	versionString.setValue(version);
 	versionString.setDatatype(SimpleDatatypeEnumeration.IOS_VERSION.value());
 	item.setVersionString(versionString);
-
-	initialized = true;
+	return item;
     }
 
     // Private

@@ -32,9 +32,9 @@ import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 
 /**
  * Evaluates WmiTest OVAL tests.
@@ -60,7 +60,7 @@ public class Wmi57Adapter implements IAdapter {
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	wmi = session.getWmiProvider();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
-	items.add(JOVALSystem.factories.sc.windows.createWmi57Item(getItem((Wmi57Object)rc.getObject())));
+	items.add(Factories.sc.windows.createWmi57Item(getItem((Wmi57Object)rc.getObject())));
 	return items;
     }
 
@@ -68,28 +68,28 @@ public class Wmi57Adapter implements IAdapter {
 
     private Wmi57Item getItem(Wmi57Object wObj) {
 	String id = wObj.getId();
-	Wmi57Item item = JOVALSystem.factories.sc.windows.createWmi57Item();
+	Wmi57Item item = Factories.sc.windows.createWmi57Item();
 	String ns = wObj.getNamespace().getValue().toString();
-	EntityItemStringType namespaceType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType namespaceType = Factories.sc.core.createEntityItemStringType();
 	namespaceType.setValue(ns);
 	item.setNamespace(namespaceType);
 	String wql = wObj.getWql().getValue().toString();
-	EntityItemStringType wqlType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType wqlType = Factories.sc.core.createEntityItemStringType();
 	wqlType.setValue(wql);
 	item.setWql(wqlType);
 	try {
 	    ISWbemObjectSet objSet = wmi.execQuery(ns, wql);
 	    int size = objSet.getSize();
 	    if (size == 0) {
-		EntityItemRecordType record = JOVALSystem.factories.sc.core.createEntityItemRecordType();
+		EntityItemRecordType record = Factories.sc.core.createEntityItemRecordType();
 		record.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		item.getResult().add(record);
 	    } else {
 		for (ISWbemObject swbObj : objSet) {
-		    EntityItemRecordType record = JOVALSystem.factories.sc.core.createEntityItemRecordType();
+		    EntityItemRecordType record = Factories.sc.core.createEntityItemRecordType();
 		    record.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
 		    for (ISWbemProperty prop : swbObj.getProperties()) {
-			EntityItemFieldType field = JOVALSystem.factories.sc.core.createEntityItemFieldType();
+			EntityItemFieldType field = Factories.sc.core.createEntityItemFieldType();
 			field.setName(prop.getName().toLowerCase()); // upper-case chars are not allowed per the OVAL spec.
 			field.setValue(prop.getValueAsString());
 			record.getField().add(field);
@@ -100,7 +100,7 @@ public class Wmi57Adapter implements IAdapter {
 	} catch (Exception e) {
 	    item.setStatus(StatusEnumeration.ERROR);
 	    item.unsetResult();
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.INFO);
 	    msg.setValue(e.getMessage());
 	    item.getMessage().add(msg);

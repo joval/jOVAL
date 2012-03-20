@@ -8,9 +8,6 @@ import java.util.Iterator;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.common.FamilyEnumeration;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
@@ -95,27 +92,6 @@ public abstract class AbstractBaseSession implements IBaseSession {
 	return internalProps.getBooleanProperty(PROP_DEBUG);
     }
 
-    public FamilyEnumeration getFamily() {
-	switch(getType()) {
-	  case WINDOWS:
-	    return FamilyEnumeration.WINDOWS;
-
-	  case UNIX:
-	    switch(((IUnixSession)this).getFlavor()) {
-	      case MACOSX:
-		return FamilyEnumeration.MACOS;
-	      default:
-		return FamilyEnumeration.UNIX;
-	    }
-
-	  case CISCO_IOS:
-	    return FamilyEnumeration.IOS;
-
-	  default:
-	    return FamilyEnumeration.UNDEFINED;
-	}
-    }
-
     public File getWorkspace() {
 	return wsdir;
     }
@@ -133,8 +109,6 @@ public abstract class AbstractBaseSession implements IBaseSession {
     public abstract String getHostname();
 
     public abstract Type getType();
-
-    public abstract SystemInfoType getSystemInfo();
 
     public abstract IProcess createProcess(String command, String[] env) throws Exception;
 

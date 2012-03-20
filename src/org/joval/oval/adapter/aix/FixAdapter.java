@@ -29,9 +29,9 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
 
@@ -61,9 +61,9 @@ public class FixAdapter implements IAdapter {
 	switch(fObj.getAparNumber().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(JOVALSystem.factories.sc.aix.createFixItem(getItem((String)fObj.getAparNumber().getValue())));
+		items.add(Factories.sc.aix.createFixItem(getItem((String)fObj.getAparNumber().getValue())));
 	    } catch (Exception e) {
-		MessageType msg = JOVALSystem.factories.common.createMessageType();
+		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
 		rc.addMessage(msg);
@@ -89,9 +89,9 @@ public class FixAdapter implements IAdapter {
 	String symptomLine = new StringBuffer(apar).append(" Symptom Text:").toString();
 	String divider = "----------------------------";
 
-	FixItem item = JOVALSystem.factories.sc.aix.createFixItem();
+	FixItem item = Factories.sc.aix.createFixItem();
 
-	EntityItemStringType aparNumber = JOVALSystem.factories.sc.core.createEntityItemStringType();
+	EntityItemStringType aparNumber = Factories.sc.core.createEntityItemStringType();
 	aparNumber.setValue(apar);
 	item.setAparNumber(aparNumber);
 
@@ -102,7 +102,7 @@ public class FixAdapter implements IAdapter {
 	while(iter.hasNext()) {
 	    line = iter.next();
 	    if (line.startsWith(abstractLine)) {
-		EntityItemStringType _abstract = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		EntityItemStringType _abstract = Factories.sc.core.createEntityItemStringType();
 		_abstract.setValue(line.substring(abstractLine.length()).trim());
 		item.setAbstract(_abstract);
 	    } else if (line.startsWith(symptomLine)) {
@@ -119,7 +119,7 @@ public class FixAdapter implements IAdapter {
 		    }
 		}
 		if (sb.length() > 0) {
-		    EntityItemStringType symptom = JOVALSystem.factories.sc.core.createEntityItemStringType();
+		    EntityItemStringType symptom = Factories.sc.core.createEntityItemStringType();
 		    symptom.setValue(sb.toString());
 		    item.setSymptom(symptom);
 		}
@@ -147,7 +147,7 @@ public class FixAdapter implements IAdapter {
 
 	    if (status != null) {
 		EntityItemFixInstallationStatusType installationStatus =
-		    JOVALSystem.factories.sc.aix.createEntityItemFixInstallationStatusType();
+		    Factories.sc.aix.createEntityItemFixInstallationStatusType();
 		installationStatus.setValue(status);
 		item.setInstallationStatus(installationStatus);
 	    }

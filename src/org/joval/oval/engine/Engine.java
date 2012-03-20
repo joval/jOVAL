@@ -126,12 +126,14 @@ import org.joval.oval.CollectException;
 import org.joval.oval.DefinitionFilter;
 import org.joval.oval.Definitions;
 import org.joval.oval.Directives;
+import org.joval.oval.Factories;
 import org.joval.oval.ItemSet;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.oval.Results;
 import org.joval.oval.SystemCharacteristics;
 import org.joval.oval.TestException;
+import org.joval.oval.sysinfo.SysinfoFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
@@ -414,7 +416,7 @@ public class Engine implements IEngine {
     // Private
 
     private static final GeneratorType getGenerator() {
-	GeneratorType generator = JOVALSystem.factories.common.createGeneratorType();
+	GeneratorType generator = Factories.common.createGeneratorType();
 	generator.setProductName(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_PRODUCT));
 	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
 	generator.setSchemaVersion(SCHEMA_VERSION.toString());
@@ -453,7 +455,7 @@ public class Engine implements IEngine {
      */
     private void scan() throws OvalException {
 	producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
-	sc = new SystemCharacteristics(getGenerator(), session.getSystemInfo());
+	sc = new SystemCharacteristics(getGenerator(), SysinfoFactory.createSystemInfo(session));
 	((SystemCharacteristics)sc).setLogger(logger);
 
 	for (ObjectType obj : definitions.getObjects()) {
@@ -489,7 +491,7 @@ public class Engine implements IEngine {
 
 	IAdapter adapter = adapters.get(obj.getClass());
 	if (adapter == null) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.WARNING);
 	    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
 	    msg.setValue(err);
@@ -510,7 +512,7 @@ public class Engine implements IEngine {
 			//
 			// Mark the object as non-existent
 			//
-			MessageType msg = JOVALSystem.factories.common.createMessageType();
+			MessageType msg = Factories.common.createMessageType();
 			msg.setLevel(MessageLevelEnumeration.INFO);
 			msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
 			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, msg);
@@ -568,7 +570,7 @@ public class Engine implements IEngine {
 		    }
 		    return unwrapped;
 		} catch (CollectException e) {
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.WARNING);
 		    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
 		    msg.setValue(err);
@@ -578,7 +580,7 @@ public class Engine implements IEngine {
 		    // Handle an uncaught, unexpected exception emanating from the adapter.
 		    //
 		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    MessageType msg = JOVALSystem.factories.common.createMessageType();
+		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(e.getMessage());
 		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, msg);
@@ -587,7 +589,7 @@ public class Engine implements IEngine {
 		MessageType msg = null;
 		Collection<ItemType> items = getSetItems(s, rc);
 		if (items.size() == 0) {
-		    msg = JOVALSystem.factories.common.createMessageType();
+		    msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_SET));
 		}
@@ -770,7 +772,7 @@ public class Engine implements IEngine {
 	if (defResult == null) {
 	    logger.debug(JOVALMsg.STATUS_DEFINITION, defId);
 	    producer.sendNotify(MESSAGE_DEFINITION, defId);
-	    defResult = JOVALSystem.factories.results.createDefinitionType();
+	    defResult = Factories.results.createDefinitionType();
 	    defResult.setDefinitionId(defId);
 	    defResult.setVersion(defDefinition.getVersion());
 	    defResult.setClazz(defDefinition.getClazz());
@@ -787,7 +789,7 @@ public class Engine implements IEngine {
 	TestType testResult = results.getTest(testId);
 	if (testResult == null) {
 	    oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
-	    testResult = JOVALSystem.factories.results.createTestType();
+	    testResult = Factories.results.createTestType();
 	    testResult.setTestId(testDefinition.getId());
 	    testResult.setCheck(testDefinition.getCheck());
 	    testResult.setCheckExistence(testDefinition.getCheckExistence());
@@ -806,7 +808,7 @@ public class Engine implements IEngine {
 	    results.storeTestResult(testResult);
 	}
 
-	oval.schemas.results.core.CriterionType criterionResult = JOVALSystem.factories.results.createCriterionType();
+	oval.schemas.results.core.CriterionType criterionResult = Factories.results.createCriterionType();
 	criterionResult.setTestRef(testId);
 	if (criterionDefinition.isSetNegate() && criterionDefinition.isNegate()) {
 	    criterionResult.setNegate(true);
@@ -863,7 +865,7 @@ public class Engine implements IEngine {
 	    for (ItemType item : sc.getItemsByObjectId(objectId)) {
 		existence.addStatus(item.getStatus());
 
-		TestedItemType testedItem = JOVALSystem.factories.results.createTestedItemType();
+		TestedItemType testedItem = Factories.results.createTestedItemType();
 		testedItem.setItemId(item.getId());
 		testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
 
@@ -877,7 +879,7 @@ public class Engine implements IEngine {
 			    logger.warn(JOVALMsg.ERROR_TESTEXCEPTION, testId, e.getMessage());
 			    logger.debug(JOVALMsg.ERROR_EXCEPTION, e);
 
-			    MessageType message = JOVALSystem.factories.common.createMessageType();
+			    MessageType message = Factories.common.createMessageType();
 			    message.setLevel(MessageLevelEnumeration.ERROR);
 			    message.setValue(e.getMessage());
 			    testedItem.getMessage().add(message);
@@ -921,7 +923,7 @@ public class Engine implements IEngine {
 	// Add all the tested variables that were resolved for the Object (stored in the RequestContext).
 	//
 	for (VariableValueType var : rc.getVars()) {
-	    TestedVariableType testedVariable = JOVALSystem.factories.results.createTestedVariableType();
+	    TestedVariableType testedVariable = Factories.results.createTestedVariableType();
 	    testedVariable.setVariableId(var.getVariableId());
 	    testedVariable.setValue(var.getValue());
 	    testResult.getTestedVariable().add(testedVariable);
@@ -960,7 +962,7 @@ public class Engine implements IEngine {
     }
 
     private oval.schemas.results.core.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition) throws OvalException {
-	oval.schemas.results.core.CriteriaType criteriaResult = JOVALSystem.factories.results.createCriteriaType();
+	oval.schemas.results.core.CriteriaType criteriaResult = Factories.results.createCriteriaType();
 	criteriaResult.setOperator(criteriaDefinition.getOperator());
 
 	OperatorData operator = new OperatorData();
@@ -982,7 +984,7 @@ public class Engine implements IEngine {
 		DefinitionType defDefinition = definitions.getDefinition(defId);
 		oval.schemas.results.core.DefinitionType defResult = evaluateDefinition(defDefinition);
 		oval.schemas.results.core.ExtendDefinitionType edtResult;
-		edtResult = JOVALSystem.factories.results.createExtendDefinitionType();
+		edtResult = Factories.results.createExtendDefinitionType();
 		edtResult.setDefinitionRef(defId);
 		edtResult.setVersion(defDefinition.getVersion());
 		if (edtDefinition.isSetNegate() && edtDefinition.isNegate()) {
@@ -1186,7 +1188,7 @@ public class Engine implements IEngine {
 	//
 	if (state.isSetVarRef()) {
 	    CheckData cd = new CheckData();
-	    EntitySimpleBaseType base = JOVALSystem.factories.definitions.core.createEntityObjectAnySimpleType();
+	    EntitySimpleBaseType base = Factories.definitions.core.createEntityObjectAnySimpleType();
 	    base.setDatatype(state.getDatatype());
 	    base.setOperation(state.getOperation());
 	    base.setMask(state.isMask());
@@ -1494,12 +1496,12 @@ public class Engine implements IEngine {
 	    LocalVariable localVariable = (LocalVariable)object;
 	    Collection<String> values = resolveInternal(getComponent(localVariable), rc);
 	    if (values.size() == 0) {
-		VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
+		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(localVariable.getId());
 		rc.addVar(variableValueType);
 	    } else {
 		for (String value : values) {
-		    VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
+		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		    variableValueType.setVariableId(localVariable.getId());
 		    variableValueType.setValue(value);
 		    rc.addVar(variableValueType);
@@ -1518,12 +1520,12 @@ public class Engine implements IEngine {
 	    } else {
 		Collection<String> values = externalVariables.getValue(id);
 		if (values.size() == 0) {
-		    VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
+		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		    variableValueType.setVariableId(externalVariable.getId());
 		    rc.addVar(variableValueType);
 		} else {
 		    for (String value : values) {
-			VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
+			VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 			variableValueType.setVariableId(externalVariable.getId());
 			variableValueType.setValue(value);
 			rc.addVar(variableValueType);
@@ -1541,12 +1543,12 @@ public class Engine implements IEngine {
 	    Collection<String> values = new Vector<String>();
 	    List<ValueType> valueTypes = constantVariable.getValue();
 	    if (valueTypes.size() == 0) {
-		VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
+		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(constantVariable.getId());
 		rc.addVar(variableValueType);
 	    } else {
 		for (ValueType value : valueTypes) {
-		    VariableValueType variableValueType = JOVALSystem.factories.sc.core.createVariableValueType();
+		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		    variableValueType.setVariableId(id);
 		    String s = (String)value.getValue();
 		    variableValueType.setValue(s);

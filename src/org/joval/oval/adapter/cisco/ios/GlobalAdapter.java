@@ -31,10 +31,10 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.io.PerishableReader;
 import org.joval.oval.CollectException;
+import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -84,7 +84,7 @@ public class GlobalAdapter implements IAdapter {
 	} catch (ResolveException e) {
 	    throw new OvalException(e);
 	} catch (NoSuchElementException e) {
-	    MessageType msg = JOVALSystem.factories.common.createMessageType();
+	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, showConfig));
 	    rc.addMessage(msg);
@@ -112,8 +112,8 @@ public class GlobalAdapter implements IAdapter {
 		    }
 
 		    if (add) {
-			GlobalItem item = JOVALSystem.factories.sc.ios.createGlobalItem();
-			EntityItemStringType globalCommandType = JOVALSystem.factories.sc.core.createEntityItemStringType();
+			GlobalItem item = Factories.sc.ios.createGlobalItem();
+			EntityItemStringType globalCommandType = Factories.sc.core.createEntityItemStringType();
 			globalCommandType.setValue(line);
 			item.setGlobalCommand(globalCommandType);
 			items.add(item);
@@ -124,7 +124,7 @@ public class GlobalAdapter implements IAdapter {
 
 	Collection<JAXBElement<? extends ItemType>> wrappedItems = new Vector<JAXBElement<? extends ItemType>>();
 	for (GlobalItem item : items) {
-	    wrappedItems.add(JOVALSystem.factories.sc.ios.createGlobalItem(item));
+	    wrappedItems.add(Factories.sc.ios.createGlobalItem(item));
 	}
 	return wrappedItems;
     }

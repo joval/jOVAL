@@ -14,8 +14,6 @@ import java.util.PropertyResourceBundle;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.system.IBaseSession;
 import org.joval.util.JOVALMsg;
@@ -92,10 +90,6 @@ public abstract class BasePlugin implements IPlugin {
 	if (props == null) {
 	    throw new Exception(getMessage("err.configMissing", DEFAULT_FILE));
 	}
-    }
-
-    public SystemInfoType getSystemInfo() {
-	return session.getSystemInfo();
     }
 
     public IBaseSession getSession() {
