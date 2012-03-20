@@ -52,6 +52,7 @@ import javax.xml.transform.stream.StreamSource;
 import org.joval.test.automation.schema.ObjectFactory;
 import org.joval.test.automation.schema.Report;
 
+import org.joval.discovery.SessionFactory;
 import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
@@ -61,6 +62,7 @@ import org.joval.intf.util.IProducer;
 import org.joval.intf.util.IProperty;
 import org.joval.oval.OvalException;
 import org.joval.util.IniFile;
+import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.StringTools;
 import org.joval.util.LogFormatter;
@@ -73,7 +75,6 @@ import org.joval.util.LogFormatter;
 public class Main {
     private static final Logger sysLogger = Logger.getLogger(JOVALMsg.getLogger().getName());
     private static final File reportDir = new File("reports");
-    private static final String LOCAL = "Suite: Local";
 
     public static void main(String[] argv) {
 	if (argv.length != 1) {
@@ -111,6 +112,7 @@ public class Main {
 	    File resultsDir = new File(reportDir, fbase);
 	    resultsDir.mkdir();
 
+	    SessionFactory factory = new SessionFactory();
 	    SimpleCredentialStore scs = new SimpleCredentialStore();
 	    for (String name : config.listSections()) {
 		if (name.startsWith("Credential:")) {
@@ -120,12 +122,12 @@ public class Main {
 		    scs.add(props);
 		}
 	    }
-	    PolymorphicPlugin.setCredentialStore(scs);
-	    PolymorphicPlugin.setDataDirectory(JOVALSystem.getDataDirectory());
+	    factory.setCredentialStore(scs);
+	    factory.setDataDirectory(JOVALSystem.getDataDirectory());
 	    try {
 		IProperty routes = config.getSection("Routes");
 		for (String destination : routes) {
-		    PolymorphicPlugin.addRoute(destination, routes.getProperty(destination));
+		    factory.addRoute(destination, routes.getProperty(destination));
 		}
 	    } catch (NoSuchElementException e) {
 		sysLogger.info("No routes configured");
@@ -139,13 +141,7 @@ public class Main {
 	    for (String name : config.listSections()) {
 		if (name.startsWith("Suite: ")) {
 		    IProperty props = config.getSection(name);
-		    PolymorphicPlugin plugin;
-		    if (LOCAL.equals(name)) {
-			plugin = new PolymorphicPlugin();
-		    } else {
-			plugin = new PolymorphicPlugin(props.getProperty("hostname"));
-		    }
-		    pool.execute(new TestExecutor(new ReportContext(name.substring(7), report, resultsDir), props, plugin));
+		    pool.execute(new TestExecutor(new ReportContext(name.substring(7), report, resultsDir), props, factory));
 		}
 	    }
 

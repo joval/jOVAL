@@ -65,7 +65,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((ISession)session);
-	    this.session = (IWindowsSession)session;
+	    this.ws = (IWindowsSession)session;
 	    classes.add(Fileeffectiverights53Object.class);
 	}
 	return classes;

@@ -1,8 +1,8 @@
-; Copyright (C) 2012 jOVAL.org.  All rights reserved.
-; This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
-;
-; This file enumerates all the IAdapter implementations, one per line.
-;
+# Copyright (C) 2012 jOVAL.org.  All rights reserved.
+# This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+#
+# This file enumerates all the IAdapter implementations, one per line.
+#
 org.joval.oval.adapter.cisco.ios.GlobalAdapter
 org.joval.oval.adapter.cisco.ios.InterfaceAdapter
 org.joval.oval.adapter.cisco.ios.LineAdapter
@@ -13,8 +13,8 @@ org.joval.oval.adapter.cisco.ios.VersionAdapter
 org.joval.oval.adapter.aix.FilesetAdapter
 org.joval.oval.adapter.aix.FixAdapter
 org.joval.oval.adapter.aix.OslevelAdapter
-org.joval.oval.adapter.independent.FamilyAdapter;
-org.joval.oval.adapter.independent.VariableAdapter;
+org.joval.oval.adapter.independent.FamilyAdapter
+org.joval.oval.adapter.independent.VariableAdapter
 org.joval.oval.adapter.independent.Environmentvariable58Adapter
 org.joval.oval.adapter.independent.EnvironmentvariableAdapter
 org.joval.oval.adapter.independent.Textfilecontent54Adapter

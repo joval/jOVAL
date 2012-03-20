@@ -161,14 +161,16 @@ public class Engine implements IEngine {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(rsc));
 		String line = null;
 		while ((line = reader.readLine()) != null) {
-		    try {
-			Object obj = Class.forName(line).newInstance();
-			if (obj instanceof IAdapter) {
-			    adapters.add((IAdapter)obj);
+		    if (!line.startsWith("#")) {
+			try {
+			    Object obj = Class.forName(line).newInstance();
+			    if (obj instanceof IAdapter) {
+				adapters.add((IAdapter)obj);
+			    }
+			} catch (InstantiationException e) {
+			} catch (IllegalAccessException e) {
+			} catch (ClassNotFoundException e) {
 			}
-		    } catch (InstantiationException e) {
-		    } catch (IllegalAccessException e) {
-		    } catch (ClassNotFoundException e) {
 		    }
 		}
             }
@@ -1329,7 +1331,7 @@ public class Engine implements IEngine {
 
 	  case FLOAT:
 	    try {
-		return getFloat(stateStr).compareTo(getFloat(itemStr));
+		return getFloat(itemStr).compareTo(getFloat(stateStr));
 	    } catch (NumberFormatException e) {
 		throw new TestException(e);
 	    }

@@ -25,9 +25,9 @@ clean:
 
 resources:
 	rm -f $(BUILD)/*.txt
-	cp $(RSRC)/*.txt $(BUILD)
+	cp $(RSRC)/adapters.txt $(BUILD)
 	rm -f $(BUILD)/*.properties
-	cp $(RSRC)/*.properties $(BUILD)
+	cp $(RSRC)/windows.locales.properties $(BUILD)
 
 classes: classdirs $(CLASS_FILES)
 
