@@ -3,9 +3,12 @@
 
 package org.joval.xccdf.handler;
 
+import java.net.MalformedURLException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
+import java.util.Vector;
 
 import oval.schemas.common.GeneratorType;
 import oval.schemas.definitions.core.OvalDefinitions;
@@ -28,8 +31,10 @@ import xccdf.schemas.core.SelectableItemType;
 import xccdf.schemas.core.TestResultType;
 
 import org.joval.intf.oval.IDefinitionFilter;
+import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.IVariables;
+import org.joval.intf.system.IBaseSession;
 import org.joval.oval.OvalFactory;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfBundle;
@@ -48,29 +53,77 @@ public class OVALHandler {
 
     private XccdfBundle xccdf;
     private Profile profile;
-    private IDefinitionFilter filter;
+    private ObjectFactory factory;
     private IVariables variables;
+    private Hashtable<String, IEngine> engines;
 
     /**
-     * Create an OVAL handler utility for the given XCCDF and Profile.
+     * Create an OVAL handler utility for the given XCCDF and Profile. An OVAL engine will be created for every
+     * discrete OVAL href referenced by a profile-selected check in the XCCDF document.
      */
-    public OVALHandler(XccdfBundle xccdf, Profile profile) {
+    public OVALHandler(XccdfBundle xccdf, Profile profile, IBaseSession session) throws Exception {
 	this.xccdf = xccdf;
 	this.profile = profile;
+	factory = new ObjectFactory();
+	engines = new Hashtable<String, IEngine>();
+	for (RuleType rule : profile.getSelectedRules()) {
+	    if (rule.isSetCheck()) {
+		for (CheckType check : rule.getCheck()) {
+		    if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
+			for (CheckContentRefType ref : check.getCheckContentRef()) {
+			    if (ref.isSetHref()) {
+				String href = ref.getHref();
+				if (!engines.containsKey(href)) {
+				    session.getLogger().info("Creating engine for href " + href);
+				    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
+				    engine.setDefinitions(OvalFactory.createDefinitions(xccdf.getURL(href)));
+				    engine.setExternalVariables(getVariables());
+				    engine.setDefinitionFilter(getDefinitionFilter(href));
+				    engines.put(href, engine);
+				}
+			    }
+			}
+		    }
+		}
+	    }
+	}
     }
 
     /**
-     * Create an OVAL DefinitionFilter containing every selected rule in the profile with an OVAL check.
+     * Get all the engines, to observe and run them.
      */
-    public IDefinitionFilter getDefinitionFilter() {
-	if (filter == null) {
-	    filter = OvalFactory.createDefinitionFilter();
-	    Collection<RuleType> rules = profile.getSelectedRules();
-	    for (RuleType rule : rules) {
-		if (rule.isSetCheck()) {
-		    for (CheckType check : rule.getCheck()) {
-			if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
-			    for (CheckContentRefType ref : check.getCheckContentRef()) {
+    public Collection<IEngine> getEngines() {
+	return engines.values();
+    }
+
+    /**
+     * Integrate all the OVAL results with the XCCDF results.
+     */
+    public void integrateResults(TestResultType xccdfResult) {
+	for (VariableType var : getVariables().getOvalVariables().getVariables().getVariable()) {
+	    ProfileSetValueType val = factory.createProfileSetValueType();
+	    val.setIdref(var.getComment());
+	    val.setValue(var.getValue().get(0).toString());
+	    xccdfResult.getSetValue().add(val);
+	}
+	for (String href : engines.keySet()) {
+	    integrateResults(href, engines.get(href).getResults(), xccdfResult);
+	}
+    }
+
+    // Private
+
+    /**
+     * Get all the definition IDs for a given Href based on the checks selected in the profile.
+     */
+    private IDefinitionFilter getDefinitionFilter(String href) {
+	IDefinitionFilter filter = OvalFactory.createDefinitionFilter();
+	for (RuleType rule : profile.getSelectedRules()) {
+	    if (rule.isSetCheck()) {
+		for (CheckType check : rule.getCheck()) {
+		    if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
+			for (CheckContentRefType ref : check.getCheckContentRef()) {
+			    if (ref.isSetHref() && ref.getHref().equals(href)) {
 				if (ref.isSetName()) {
 				    filter.addDefinition(ref.getName());
 				}
@@ -87,7 +140,7 @@ public class OVALHandler {
      * Gather all the variable exports for OVAL checks from the selected rules in the profile, and create an OVAL
      * variables structure containing their values.
      */
-    public IVariables getVariables() {
+    private IVariables getVariables() {
 	if (variables == null) {
 	    variables = OvalFactory.createVariables();
 	    Collection<RuleType> rules = profile.getSelectedRules();
@@ -112,18 +165,13 @@ public class OVALHandler {
      * Integrate the OVAL results with the XCCDF results, assuming the OVAL results contain information pertaining to
      * the selected rules in the profile.
      */
-    public void integrateResults(IResults ovalResult, TestResultType xccdfResult) {
-	ObjectFactory factory = new ObjectFactory();
+    private void integrateResults(String href, IResults ovalResult, TestResultType xccdfResult) {
 	SystemInfoType info = ovalResult.getSystemCharacteristics().getSystemInfo();
 	xccdfResult.getTarget().add(info.getPrimaryHostName());
 	for (InterfaceType intf : info.getInterfaces().getInterface()) {
-	    xccdfResult.getTargetAddress().add(intf.getIpAddress());
-	}
-	for (VariableType var : getVariables().getOvalVariables().getVariables().getVariable()) {
-	    ProfileSetValueType val = factory.createProfileSetValueType();
-	    val.setIdref(var.getComment());
-	    val.setValue(var.getValue().get(0).toString());
-	    xccdfResult.getSetValue().add(val);
+	    if (!xccdfResult.getTargetAddress().contains(intf.getIpAddress())) {
+		xccdfResult.getTargetAddress().add(intf.getIpAddress());
+	    }
 	}
 
 	//
@@ -137,40 +185,44 @@ public class OVALHandler {
 		for (CheckType check : rule.getCheck()) {
 		    if (NAMESPACE.equals(check.getSystem())) {
 			ruleResult.getCheck().add(check);
-
 			RuleResult result = new RuleResult();
 			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    if (ref.isSetName()) {
-				try {
-				    switch (ovalResult.getDefinitionResult(ref.getName())) {
-				      case ERROR:
-					result.add(ResultEnumType.ERROR);
-					break;
-    
-				      case FALSE:
-					result.add(ResultEnumType.FAIL);
-					break;
-    
-				      case TRUE:
-					result.add(ResultEnumType.PASS);
-					break;
-    
-				      case UNKNOWN:
-				      default:
-					result.add(ResultEnumType.UNKNOWN);
-					break;
+			    if (ref.isSetHref() && ref.getHref().equals(href)) {
+				if (ref.isSetName()) {
+				    addResult(result, ovalResult.getDefinitionResult(ref.getName()));
+				} else {
+				    for (DefinitionType def : ovalResult.getDefinitionResults()) {
+					addResult(result, def.getResult());
 				    }
-				} catch (NoSuchElementException e) {
-				    result.add(ResultEnumType.NOTCHECKED);
 				}
-				ruleResult.setResult(result.getResult());
 			    }
 			}
+			ruleResult.setResult(result.getResult());
 			xccdfResult.getRuleResult().add(ruleResult);
-			break;
 		    }
 		}
 	    }
+	}
+    }
+
+    private void addResult(RuleResult rr, ResultEnumeration re) {
+	switch (re) {
+	  case ERROR:
+	    rr.add(ResultEnumType.ERROR);
+	    break;
+    
+	  case FALSE:
+	    rr.add(ResultEnumType.FAIL);
+	    break;
+  
+	  case TRUE:
+	    rr.add(ResultEnumType.PASS);
+	    break;
+ 
+	  case UNKNOWN:
+	  default:
+	    rr.add(ResultEnumType.UNKNOWN);
+	    break;
 	}
     }
 }

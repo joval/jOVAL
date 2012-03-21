@@ -36,8 +36,8 @@ import org.joval.cpe.CpeException;
 import org.joval.cpe.Dictionary;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.util.ILoggable;
-import org.joval.oval.Definitions;
 import org.joval.oval.OvalException;
+import org.joval.oval.OvalFactory;
 import org.joval.protocol.zip.ZipURLStreamHandler;
 import org.joval.util.JOVALMsg;
 import org.joval.xccdf.XccdfException;
@@ -53,7 +53,6 @@ public class XccdfBundle implements ILoggable {
     public static final String CPE_DICTIONARY	= "cpe-dictionary.xml";
     public static final String CPE_OVAL		= "cpe-oval.xml";
     public static final String XCCDF_BENCHMARK	= "xccdf.xml";
-    public static final String XCCDF_OVAL	= "oval.xml";
 
     public static final Benchmark getBenchmark(InputStream in) throws XccdfException {
 	return getBenchmark(new StreamSource(in));
@@ -77,10 +76,10 @@ public class XccdfBundle implements ILoggable {
 
     private LocLogger logger;
     private Benchmark benchmark;
-    private Dictionary dictionary;
-    private IDefinitions cpeOval, oval;
+    private Dictionary cpeDictionary;
+    private IDefinitions cpeOval;
     private File base;
-    private String cpeOvalHref=null, ovalHref=null;
+    private String cpeOvalHref=null;
 
     /**
      * Create a Directives based on the contents of a directives file.
@@ -112,8 +111,6 @@ public class XccdfBundle implements ILoggable {
 			dictionaryHref = fname;
 		    } else if (fname.toLowerCase().endsWith(CPE_OVAL)) {
 			cpeOvalHref = fname;
-		    } else if (fname.toLowerCase().endsWith(XCCDF_OVAL)) { // NB: after cpe-oval.xml
-			ovalHref = fname;
 		    }
 		}
 	    }
@@ -125,22 +122,16 @@ public class XccdfBundle implements ILoggable {
 		benchmark = getBenchmark(getURL(benchmarkHref).openStream());
 	    }
 	    if (dictionaryHref == null) {
-		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, CPE_DICTIONARY));
+		logger.info(JOVALMsg.WARNING_XCCDF_DICTIONARY);
 	    } else {
 		logger.info(JOVALMsg.STATUS_XCCDF_DICTIONARY, dictionaryHref);
-		dictionary = new Dictionary(getURL(dictionaryHref).openStream());
+		cpeDictionary = new Dictionary(getURL(dictionaryHref).openStream());
 	    }
 	    if (cpeOvalHref == null) {
-		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, CPE_OVAL));
+		logger.info(JOVALMsg.WARNING_XCCDF_PLATFORM);
 	    } else {
 		logger.info(JOVALMsg.STATUS_XCCDF_PLATFORM, cpeOvalHref);
-		cpeOval = new Definitions(getURL(cpeOvalHref).openStream());
-	    }
-	    if (ovalHref == null) {
-		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, XCCDF_OVAL));
-	    } else {
-		logger.info(JOVALMsg.STATUS_XCCDF_OVAL, ovalHref);
-		oval = new Definitions(getURL(ovalHref).openStream());
+		cpeOval = OvalFactory.createDefinitions(getURL(cpeOvalHref));
 	    }
 	} catch (IOException e) {
 	    throw new XccdfException(e);
@@ -168,16 +159,12 @@ public class XccdfBundle implements ILoggable {
 	}
     }
 
+    public Dictionary getDictionary() {
+	return cpeDictionary;
+    }
+
     public String getCpeOvalHref() {
 	return cpeOvalHref;
-    }
-
-    public String getOvalHref() {
-	return ovalHref;
-    }
-
-    public Dictionary getDictionary() {
-	return dictionary;
     }
 
     public IDefinitions getCpeOval() {
@@ -186,10 +173,6 @@ public class XccdfBundle implements ILoggable {
 
     public Benchmark getBenchmark() {
 	return benchmark;
-    }
-
-    public IDefinitions getOval() {
-	return oval;
     }
 
     public void writeBenchmarkXML(File f) {

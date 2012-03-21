@@ -33,6 +33,11 @@ public interface IResults extends ITransformable {
     OvalResults getOvalResults();
 
     /**
+     * Shortcut to getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition()
+     */
+    Collection<DefinitionType> getDefinitionResults();
+
+    /**
      * Get the result of a specific definition, given its ID.
      */
     ResultEnumeration getDefinitionResult(String definitionId) throws NoSuchElementException;

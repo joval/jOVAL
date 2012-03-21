@@ -46,7 +46,7 @@ import xccdf.schemas.core.SelectableItemType;
 import xccdf.schemas.core.TestResultType;
 
 import org.joval.cpe.CpeException;
-import org.joval.intf.oval.IDefinitionFilter;
+import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
@@ -263,56 +263,27 @@ public class XPERT implements Runnable, IObserver {
     public void run() {
 	if (hasSelection() && isApplicable()) {
 	    phase = "evaluation";
-	    OVALHandler ovalHandler = new OVALHandler(xccdf, profile);
+	    OVALHandler ovalHandler = null;
+	    try {
+		ovalHandler = new OVALHandler(xccdf, profile, session);
+	    } catch (Exception e) {
+		logger.severe(LogFormatter.toString(e));
+		return;
+	    }
 
 	    //
-	    // Configure the OVAL engine...
+	    // Run the engines
 	    //
-	    IResults ovalResults = null;
-	    IDefinitionFilter filter = ovalHandler.getDefinitionFilter();
-	    if (filter.size() > 0) {
-		IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
+	    for (IEngine engine : ovalHandler.getEngines()) {
 		engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
-		engine.setDefinitions(xccdf.getOval());
-		engine.setDefinitionFilter(ovalHandler.getDefinitionFilter());
-		engine.setExternalVariables(ovalHandler.getVariables());
-
-		//
-		// Read previously collected system characteristics data, if available.
-		//
-		if (debug) {
-		    try {
-			File sc = new File(ws, "sc-input.xml");
-			if(sc.isFile()) {
-			    logger.info("Loading " + sc);
-			    engine.setSystemCharacteristics(OvalFactory.createSystemCharacteristics(sc));
-			}
-		    } catch (OvalException e) {
-			logger.warning(e.getMessage());
-		    }
-		}
-
-		//
-		// Run the OVAL engine
-		//
 		logger.info("Evaluating OVAL rules");
 		engine.run();
 		switch(engine.getResult()) {
 		  case ERR:
 		    logger.severe(LogFormatter.toString(engine.getError()));
 		    return;
-		  case OK:
-		    ovalResults = engine.getResults();
-		    if (debug) {
-			File resultsFile = new File(ws, "oval-results.xml");
-			logger.info("Saving OVAL results: " + resultsFile.getPath());
-			ovalResults.writeXML(resultsFile);
-		    }
-		    break;
 		}
 		engine.getNotificationProducer().removeObserver(this);
-	    } else {
-		logger.info("No OVAL definitions to evaluate");
 	    }
 
 	    //
@@ -340,10 +311,7 @@ public class XPERT implements Runnable, IObserver {
 	    ObjectFactory factory = new ObjectFactory();
 	    TestResultType testResult = factory.createTestResultType();
 	    testResult.setTestSystem(getMessage("product.name"));
-
-	    if (ovalResults != null) {
-		ovalHandler.integrateResults(ovalResults, testResult);
-	    }
+	    ovalHandler.integrateResults(testResult);
 	    // DAS remind: need an equivalent to integrate SCE results
 
 	    Hashtable<String, RuleResultType> resultIndex = new Hashtable<String, RuleResultType>();
@@ -442,46 +410,43 @@ public class XPERT implements Runnable, IObserver {
 	phase = "discovery";
 	logger.info("Determining system applicability...");
 
-	//
-	// Create a DefinitionFilter containing all the OVAL definitions corresponding to the CPE platforms.
-	//
 	Collection<String> definitions = profile.getPlatformDefinitionIds();
 	if (definitions.size() == 0) {
 	    logger.info("No platforms specified, skipping applicability checks...");
 	    return true;
 	}
-	IDefinitionFilter filter = OvalFactory.createDefinitionFilter();
-	for (String definition : definitions) {
-	    filter.addDefinition(definition);
+	IDefinitions cpeOval = xccdf.getCpeOval();
+	if (cpeOval == null) {
+	    logger.severe("Cannot perform applicability checks: CPE OVAL definitions were not found in the XCCDF bundle!");
+	    return false;
 	}
-
-	//
-	// Evaluate the platform definitions.
-	//
 	IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
 	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
-	engine.setDefinitionFilter(filter);
 	engine.setDefinitions(xccdf.getCpeOval());
-	engine.run();
-	for (DefinitionType def :
-	    engine.getResults().getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition()) {
-	    if (filter.accept(def.getDefinitionId())) {
-		switch(def.getResult()) {
+	try {
+	    session.connect();
+	    for (String definition : definitions) {
+		ResultEnumeration result = engine.evaluateDefinition(definition);
+		switch(result) {
 		  case TRUE:
-		    logger.info("Passed def " + def.getDefinitionId());
+		    logger.info("Passed def " + definition);
 		    break;
+
 		  default:
-		    logger.warning("Bad result " + def.getResult() + " for definition " + def.getDefinitionId());
+		    logger.warning("Bad result " + result + " for definition " + definition);
 		    logger.info("The target system is not applicable to the XCCDF bundle");
 		    return false;
 		}
-	    } else {
-		logger.info("Ignoring definition " + def.getDefinitionId());
 	    }
+	    logger.info("The target system is applicable to the XCCDF bundle");
+	    return true;
+	} catch (Exception e) {
+	    logger.severe(LogFormatter.toString(e));
+	    return false;
+	} finally {
+	    session.disconnect();
+	    engine.getNotificationProducer().removeObserver(this);
 	}
-	engine.getNotificationProducer().removeObserver(this);
-	logger.info("The target system is applicable to the XCCDF bundle");
-	return true;
     }
 
     /**

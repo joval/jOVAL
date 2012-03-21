@@ -138,10 +138,6 @@ public class Results implements IResults, ILoggable {
 	definitionTable.put(definition.getDefinitionId(), definition);
     }
 
-    public DefinitionType getDefinition(String definitionId) {
-	return definitionTable.get(definitionId);
-    }
-
     // Implement ILoggable
 
     public void setLogger(LocLogger logger) {
@@ -176,6 +172,14 @@ public class Results implements IResults, ILoggable {
 
     public void setDirectives(File f) throws OvalException {
 	directives = new Directives(f);
+    }
+
+    public Collection<DefinitionType> getDefinitionResults() {
+	return getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition();
+    }
+
+    public DefinitionType getDefinition(String definitionId) {
+	return definitionTable.get(definitionId);
     }
 
     /**

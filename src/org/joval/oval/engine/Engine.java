@@ -310,6 +310,9 @@ public class Engine implements IEngine {
 		throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_DEFINITIONS_NONE));
 	    }
 	    state = State.RUNNING;
+	    if (adapters == null) {
+		loadAdapters();
+	    }
 	    if (sc == null) {
 		SystemCharacteristics sc = new SystemCharacteristics(SysinfoFactory.createSystemInfo(session));
 		sc.setLogger(logger);
