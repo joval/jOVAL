@@ -43,7 +43,6 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.Version;
 
@@ -417,11 +416,6 @@ public abstract class BaseFileAdapter implements IAdapter {
 	    }
 	} catch (PatternSyntaxException e) {
        	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (ResolveException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    rc.addMessage(msg);
 	}
 	pathMap.put(id, list);
 	return list;
@@ -437,7 +431,7 @@ public abstract class BaseFileAdapter implements IAdapter {
     /**
      * Get the path of the plist file based on the app_id.
      */
-    private Collection<String> getPlistPaths(IRequestContext rc) throws OvalException, ResolveException {
+    private Collection<String> getPlistPaths(IRequestContext rc) throws OvalException {
 	ObjectType obj = rc.getObject();
 	EntityObjectStringType appIdType = null;
 	if (obj instanceof PlistObject) {

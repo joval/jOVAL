@@ -129,7 +129,6 @@ import org.joval.oval.Directives;
 import org.joval.oval.Factories;
 import org.joval.oval.ItemSet;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.oval.Results;
 import org.joval.oval.SystemCharacteristics;
 import org.joval.oval.TestException;
@@ -630,7 +629,7 @@ public class Engine implements IEngine {
      * Given Collections of wrapped items and filters, returns the appropriately filtered collection of wrapped items.
      */
     private Collection<JAXBElement<? extends ItemType>> filterWrappedItems(List<Filter> filters,
-		       Collection<JAXBElement<? extends ItemType>> items) throws OvalException {
+		       Collection<JAXBElement<? extends ItemType>> items) throws NoSuchElementException, OvalException {
 
 	if (filters.size() == 0) {
 	    return items;
@@ -667,7 +666,7 @@ public class Engine implements IEngine {
      * Given Collections of items and filters, returns the appropriately filtered collection.
      */
     private Collection<ItemType> filterItems(List<Filter> filters, Collection<ItemType> items, RequestContext rc)
-		throws OvalException {
+		throws NoSuchElementException, OvalException {
 
 	if (filters.size() == 0) {
 	    return items;
@@ -762,29 +761,38 @@ public class Engine implements IEngine {
     /**
      * Evaluate the DefinitionType.
      */
-    private oval.schemas.results.core.DefinitionType evaluateDefinition(DefinitionType defDefinition) throws OvalException {
-	String defId = defDefinition.getId();
-	if (defId == null) {
+    private oval.schemas.results.core.DefinitionType evaluateDefinition(DefinitionType definition) throws OvalException {
+	String id = definition.getId();
+	if (id == null) {
 	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DEFINITION_NOID));
 	}
-	oval.schemas.results.core.DefinitionType defResult = results.getDefinition(defId);
-
-	if (defResult == null) {
-	    logger.debug(JOVALMsg.STATUS_DEFINITION, defId);
-	    producer.sendNotify(MESSAGE_DEFINITION, defId);
-	    defResult = Factories.results.createDefinitionType();
-	    defResult.setDefinitionId(defId);
-	    defResult.setVersion(defDefinition.getVersion());
-	    defResult.setClazz(defDefinition.getClazz());
-	    oval.schemas.results.core.CriteriaType criteriaResult = evaluateCriteria(defDefinition.getCriteria());
-	    defResult.setResult(criteriaResult.getResult());
-	    defResult.setCriteria(criteriaResult);
-	    results.storeDefinitionResult(defResult);
+	oval.schemas.results.core.DefinitionType result = results.getDefinition(id);
+	if (result == null) {
+	    result = Factories.results.createDefinitionType();
+	    logger.debug(JOVALMsg.STATUS_DEFINITION, id);
+	    producer.sendNotify(MESSAGE_DEFINITION, id);
+	    result.setDefinitionId(id);
+	    result.setVersion(definition.getVersion());
+	    result.setClazz(definition.getClazz());
+	    try {
+		oval.schemas.results.core.CriteriaType criteriaResult = evaluateCriteria(definition.getCriteria());
+		result.setResult(criteriaResult.getResult());
+		result.setCriteria(criteriaResult);
+	    } catch (NoSuchElementException e) {
+		result.setResult(ResultEnumeration.ERROR);
+		MessageType message = Factories.common.createMessageType();
+		message.setLevel(MessageLevelEnumeration.ERROR);
+		message.setValue(e.getMessage());
+		result.getMessage().add(message);
+	    }
+	    results.storeDefinitionResult(result);
 	}
-	return defResult;
+	return result;
     }
 
-    private oval.schemas.results.core.CriterionType evaluateCriterion(CriterionType criterionDefinition) throws OvalException {
+    private oval.schemas.results.core.CriterionType evaluateCriterion(CriterionType criterionDefinition)
+		throws NoSuchElementException, OvalException {
+
 	String testId = criterionDefinition.getTestRef();
 	TestType testResult = results.getTest(testId);
 	if (testResult == null) {
@@ -829,7 +837,7 @@ public class Engine implements IEngine {
 	return criterionResult;
     }
 
-    private void evaluateTest(TestType testResult) throws OvalException {
+    private void evaluateTest(TestType testResult) throws NoSuchElementException, OvalException {
 	String testId = testResult.getTestId();
 	logger.debug(JOVALMsg.STATUS_TEST, testId);
 	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
@@ -961,10 +969,11 @@ public class Engine implements IEngine {
 	}
     }
 
-    private oval.schemas.results.core.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition) throws OvalException {
+    private oval.schemas.results.core.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition)
+		throws NoSuchElementException, OvalException {
+
 	oval.schemas.results.core.CriteriaType criteriaResult = Factories.results.createCriteriaType();
 	criteriaResult.setOperator(criteriaDefinition.getOperator());
-
 	OperatorData operator = new OperatorData();
 	for (Object child : criteriaDefinition.getCriteriaOrCriterionOrExtendDefinition()) {
 	    Object resultObject = null;

@@ -35,7 +35,6 @@ import org.joval.intf.util.ISearchable;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
@@ -74,11 +73,7 @@ public class RunlevelAdapter implements IAdapter {
 	RunlevelObject rObj = (RunlevelObject)rc.getObject();
 	Collection<String> runlevelVals = new Vector<String>();
 	if (rObj.getRunlevel().isSetVarRef()) {
-	    try {
-		runlevelVals.addAll(rc.resolve(rObj.getRunlevel().getVarRef()));
-	    } catch (ResolveException e) {
-		throw new OvalException(e);
-	    }
+	    runlevelVals.addAll(rc.resolve(rObj.getRunlevel().getVarRef()));
 	} else {
 	    runlevelVals.add((String)rObj.getRunlevel().getValue());
 	}
@@ -142,11 +137,7 @@ public class RunlevelAdapter implements IAdapter {
 	RunlevelObject rObj = (RunlevelObject)rc.getObject();
 	Collection<String> serviceNames = new Vector<String>();
 	if (rObj.getServiceName().isSetVarRef()) {
-	    try {
-		serviceNames.addAll(rc.resolve(rObj.getServiceName().getVarRef()));
-	    } catch (ResolveException e) {
-		throw new OvalException(e);
-	    }
+	    serviceNames.addAll(rc.resolve(rObj.getServiceName().getVarRef()));
 	} else {
 	    serviceNames.add((String)rObj.getServiceName().getValue());
 	}

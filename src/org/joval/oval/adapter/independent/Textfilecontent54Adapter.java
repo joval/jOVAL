@@ -34,7 +34,6 @@ import org.joval.intf.system.ISession;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -219,12 +218,6 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 	    } catch (PatternSyntaxException e) {
 		session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
 		throw new IOException(e);
-	    } catch (ResolveException e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		String s = JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, tfcObj.getPattern().getVarRef(), e.getMessage());
-		msg.setValue(s);
-		rc.addMessage(msg);
 	    } catch (IllegalArgumentException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);

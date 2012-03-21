@@ -4,19 +4,21 @@
 package org.joval.oval.engine;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.Vector;
 
 import oval.schemas.common.MessageType;
+import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
+import org.joval.util.JOVALMsg;
 
 class RequestContext implements IRequestContext {
     private Engine engine;
@@ -64,7 +66,22 @@ class RequestContext implements IRequestContext {
         engine.getSystemCharacteristics().setObject(object.getId(), null, null, null, msg);
     }
 
-    public Collection<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException {
-        return engine.resolve(variableId, this);
+    public Collection<String> resolve(String variableId) throws OvalException {
+	try {
+            return engine.resolve(variableId, this);
+	} catch (NoSuchElementException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    addMessage(msg);
+	} catch (ResolveException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    addMessage(msg);
+	}
+	@SuppressWarnings("unchecked")
+	Collection<String> empty = (Collection<String>)Collections.EMPTY_LIST;
+	return empty;
     }
 }

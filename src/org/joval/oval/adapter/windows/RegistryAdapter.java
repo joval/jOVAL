@@ -49,7 +49,6 @@ import org.joval.io.LittleEndian;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 
@@ -146,13 +145,6 @@ public class RegistryAdapter implements IAdapter {
 		list.addAll(rc.resolve(variableId));
 	    } catch (NoSuchElementException e) {
 		session.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), rObj.getId());
-	    } catch (ResolveException e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		String s = JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR,
-						  rObj.getKey().getValue().getVarRef(), e.getMessage());
-		msg.setValue(s);
-		rc.addMessage(msg);
 	    }
 	} else {
 	    list.add((String)rObj.getKey().getValue().getValue());

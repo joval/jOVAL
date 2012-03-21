@@ -20,7 +20,6 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 
 /**
  * Provides items for UserSid OVAL objects.  This implementation leverages data model annotations that correct the problem
@@ -68,7 +67,7 @@ public class UserSidAdapter extends UserSid55Adapter {
 	    base.addMessage(msg);
 	}
 
-	public Collection<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException {
+	public Collection<String> resolve(String variableId) throws NoSuchElementException, OvalException {
 	    return base.resolve(variableId);
 	}
     }

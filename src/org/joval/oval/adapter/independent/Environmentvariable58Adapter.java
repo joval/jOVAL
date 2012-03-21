@@ -42,7 +42,6 @@ import org.joval.io.PerishableReader;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.util.AbstractEnvironment;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
@@ -259,7 +258,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
             base.addMessage(msg);
         }
 
-        public Collection<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException {
+        public Collection<String> resolve(String variableId) throws NoSuchElementException, OvalException {
             return base.resolve(variableId);
         }
     }

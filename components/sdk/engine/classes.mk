@@ -21,7 +21,6 @@ CLASSES=\
 	org.joval.oval.Factories			\
 	org.joval.oval.ItemSet				\
 	org.joval.oval.OvalException			\
-	org.joval.oval.ResolveException			\
 	org.joval.oval.Results				\
 	org.joval.oval.SystemCharacteristics		\
 	org.joval.oval.TestException			\
@@ -31,6 +30,7 @@ CLASSES=\
 	org.joval.oval.engine.ExistenceData		\
 	org.joval.oval.engine.OperatorData		\
 	org.joval.oval.engine.RequestContext		\
+	org.joval.oval.engine.ResolveException		\
 	org.joval.oval.sysinfo.IosNetworkInterface	\
 	org.joval.oval.sysinfo.IosSystemInfo		\
 	org.joval.oval.sysinfo.JunosNetworkInterface	\

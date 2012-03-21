@@ -37,7 +37,6 @@ import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -127,11 +126,6 @@ public class UserAdapter implements IAdapter {
 	    }
 	} catch (NoSuchElementException e) {
 	    // No match.
-	} catch (ResolveException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    rc.addMessage(msg);
 	} catch (WmiException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);

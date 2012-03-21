@@ -5,6 +5,7 @@ package org.joval.intf.oval;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 import oval.schemas.definitions.core.DefinitionType;
 import oval.schemas.definitions.core.ObjectType;
@@ -14,7 +15,6 @@ import oval.schemas.definitions.core.TestType;
 import oval.schemas.definitions.core.VariableType;
 
 import org.joval.intf.xml.ITransformable;
-import org.joval.oval.OvalException;
 
 /**
  * Interface defining an index to an OvalDefinitions object, facilitating fast look-up of definitions, tests, variables,
@@ -32,44 +32,44 @@ public interface IDefinitions extends ITransformable {
     /**
      * Retrieve the OVAL state with the specified ID.
      *
-     * @throws OvalException if no state with the given ID is found
+     * @throws NoSuchElementException if no state with the given ID is found
      */
-    StateType getState(String id) throws OvalException;
+    StateType getState(String id) throws NoSuchElementException;
 
     /**
      * Retrieve the OVAL test with the specified ID.
      *
-     * @throws OvalException if no test with the given ID is found
+     * @throws NoSuchElementException if no test with the given ID is found
      */
-    TestType getTest(String id) throws OvalException;
+    TestType getTest(String id) throws NoSuchElementException;
 
     /**
      * Retrieve the Object with the specified ID.
      *
-     * @throws OvalException if no object with the given ID is found
+     * @throws NoSuchElementException if no object with the given ID is found
      */
-    ObjectType getObject(String id) throws OvalException;
+    ObjectType getObject(String id) throws NoSuchElementException;
 
     /**
      * Retrieve the OVAL object with the specified ID, corresponding to the specified type.
      *
-     * @throws OvalException if the type does not match, or if no object with the given ID is found.
+     * @throws NoSuchElementException if the type does not match, or if no object with the given ID is found.
      */
-    <T extends ObjectType> T getObject(String id, Class<T> type) throws OvalException;
+    <T extends ObjectType> T getObject(String id, Class<T> type) throws NoSuchElementException;
 
     /**
      * Retrieve the OVAL variable with the specified ID.
      *
-     * @throws OvalException if no variable with the given ID is found
+     * @throws NoSuchElementException if no variable with the given ID is found
      */
-    VariableType getVariable(String id) throws OvalException;
+    VariableType getVariable(String id) throws NoSuchElementException;
 
     /**
      * Retrieve the OVAL definition with the specified ID.
      *
-     * @throws OvalException if no definition with the given ID is found
+     * @throws NoSuchElementException if no definition with the given ID is found
      */
-    DefinitionType getDefinition(String id) throws OvalException;
+    DefinitionType getDefinition(String id) throws NoSuchElementException;
 
     /**
      * Get a collection of all the objects.

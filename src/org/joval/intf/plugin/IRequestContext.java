@@ -10,7 +10,6 @@ import oval.schemas.common.MessageType;
 import oval.schemas.definitions.core.ObjectType;
 
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 
 /**
  * The interface for the argument supplied to an adapter getItems request, specifying the ObjectType for which the request is
@@ -34,5 +33,5 @@ public interface IRequestContext {
     /**
      * Resolve a variable.
      */
-    public Collection<String> resolve(String variableId) throws NoSuchElementException, ResolveException, OvalException;
+    public Collection<String> resolve(String variableId) throws NoSuchElementException, OvalException;
 }

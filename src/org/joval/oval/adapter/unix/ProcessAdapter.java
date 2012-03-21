@@ -47,7 +47,6 @@ import org.joval.oval.ItemSet;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
@@ -153,8 +152,6 @@ public class ProcessAdapter implements IAdapter {
 		    }
 		}
 	    }
-	} catch (ResolveException e) {
-	    throw new OvalException(e);
 	} catch (NumberFormatException e) {
 	    throw new OvalException(e);
 	} catch (PatternSyntaxException e) {

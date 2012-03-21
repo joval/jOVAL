@@ -161,15 +161,15 @@ public class Definitions implements IDefinitions, ILoggable {
 	return defs;
     }
 
-    public <T extends ObjectType> T getObject(String id, Class<T> type) throws OvalException {
+    public <T extends ObjectType> T getObject(String id, Class<T> type) throws NoSuchElementException {
 	ObjectType object = objects.get(id);
 	if (object == null) {
-	    throw new OvalException("Unresolved object reference ID=" + id);
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
 	} else if (type.isInstance(object)) {
 	    return type.cast(object);
 	} else {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_INSTANCE, type.getName(), object.getClass().getName());
-	    throw new OvalException(msg);
+	    throw new NoSuchElementException(msg);
 	}
     }
 
@@ -177,43 +177,43 @@ public class Definitions implements IDefinitions, ILoggable {
 	return objects.values();
     }
 
-    public StateType getState(String id) throws OvalException {
+    public StateType getState(String id) throws NoSuchElementException {
 	StateType state = states.get(id);
 	if (state == null) {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_STATE, id));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_STATE, id));
 	}
 	return state;
     }
 
-    public TestType getTest(String id) throws OvalException {
+    public TestType getTest(String id) throws NoSuchElementException {
 	TestType test = tests.get(id);
 	if (test == null) {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_TEST, id));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_TEST, id));
 	}
 	return test;
     }
 
-    public ObjectType getObject(String id) throws OvalException {
+    public ObjectType getObject(String id) throws NoSuchElementException {
 	ObjectType object = objects.get(id);
 	if (object == null) {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
 	return object;
     }
 
-    public VariableType getVariable(String id) throws OvalException {
+    public VariableType getVariable(String id) throws NoSuchElementException {
 	VariableType variable = variables.get(id);
 	if (variable == null) {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_VARIABLE, id));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_VARIABLE, id));
 	} else {
 	    return variable;
 	}
     }
 
-    public DefinitionType getDefinition(String id) throws OvalException {
+    public DefinitionType getDefinition(String id) throws NoSuchElementException {
 	DefinitionType definition = definitions.get(id);
 	if (definition == null) {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
+	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_DEFINITION, id));
 	}
 	return definition;
     }

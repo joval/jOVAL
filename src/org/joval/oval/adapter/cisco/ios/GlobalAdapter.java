@@ -33,7 +33,6 @@ import org.joval.io.PerishableReader;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 
@@ -81,8 +80,6 @@ public class GlobalAdapter implements IAdapter {
 	    } else {
 		commands.add((String)globalCommand.getValue());
 	    }
-	} catch (ResolveException e) {
-	    throw new OvalException(e);
 	} catch (NoSuchElementException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);

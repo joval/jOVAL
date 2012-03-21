@@ -33,7 +33,6 @@ import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
@@ -119,8 +118,6 @@ public class PasswordAdapter implements IAdapter {
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
 	    }
-	} catch (ResolveException e) {
-	    throw new OvalException(e);
 	} catch (PatternSyntaxException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);

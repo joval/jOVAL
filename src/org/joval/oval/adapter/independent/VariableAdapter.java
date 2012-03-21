@@ -22,7 +22,6 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.ResolveException;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -43,26 +42,18 @@ public class VariableAdapter implements IAdapter {
     public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
 	VariableObject vObj = (VariableObject)rc.getObject();
 	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	try {
-	    Collection<String> values = rc.resolve((String)vObj.getVarRef().getValue());
-	    if (values.size() > 0) {
-		VariableItem item = Factories.sc.independent.createVariableItem();
-		EntityItemVariableRefType ref = Factories.sc.independent.createEntityItemVariableRefType();
-		ref.setValue(vObj.getVarRef().getValue());
-		item.setVarRef(ref);
-		for (String value : values) {
-		    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-		    valueType.setValue(value);
-		    item.getValue().add(valueType);
-		}
-		items.add(Factories.sc.independent.createVariableItem(item));
+	Collection<String> values = rc.resolve((String)vObj.getVarRef().getValue());
+	if (values.size() > 0) {
+	    VariableItem item = Factories.sc.independent.createVariableItem();
+	    EntityItemVariableRefType ref = Factories.sc.independent.createEntityItemVariableRefType();
+	    ref.setValue(vObj.getVarRef().getValue());
+	    item.setVarRef(ref);
+	    for (String value : values) {
+		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+		valueType.setValue(value);
+		item.getValue().add(valueType);
 	    }
-	} catch (ResolveException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, (String)vObj.getVarRef().getValue(), e.getMessage());
-	    msg.setValue(s);
-	    rc.addMessage(msg);
+	    items.add(Factories.sc.independent.createVariableItem(item));
 	}
 	return items;
     }
