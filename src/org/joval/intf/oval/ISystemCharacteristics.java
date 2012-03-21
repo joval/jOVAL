@@ -15,6 +15,7 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.ObjectType;
 import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.xml.ITransformable;
@@ -76,4 +77,6 @@ public interface ISystemCharacteristics extends ITransformable {
     public ObjectType getObject(String id) throws NoSuchElementException;
 
     public List<ItemType> getItemsByObjectId(String id) throws NoSuchElementException;
+
+    public SystemInfoType getSystemInfo();
 }

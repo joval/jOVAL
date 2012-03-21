@@ -12,7 +12,6 @@ import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.List;
@@ -23,9 +22,6 @@ import java.util.PropertyResourceBundle;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.datatype.DatatypeConfigurationException;
 
 import cpe.schemas.dictionary.ListType;
 import oval.schemas.common.GeneratorType;
@@ -50,6 +46,7 @@ import xccdf.schemas.core.SelectableItemType;
 import xccdf.schemas.core.TestResultType;
 
 import org.joval.cpe.CpeException;
+import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
@@ -58,12 +55,9 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
-import org.joval.oval.DefinitionFilter;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.SystemCharacteristics;
-import org.joval.oval.Variables;
-import org.joval.oval.engine.Engine;
+import org.joval.oval.OvalFactory;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.sce.SCEScript;
@@ -112,23 +106,6 @@ public class XPERT implements Runnable, IObserver {
 	    e.printStackTrace();
 	    System.exit(-1);
 	}
-    }
-
-    /**
-     * Get the OVAL generator_type for the XPERT engine.
-     */
-    public static final GeneratorType getGenerator() {
-	GeneratorType generator = Factories.common.createGeneratorType();
-	generator.setProductName(getMessage("product.name"));
-	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
-	generator.setSchemaVersion(IEngine.SCHEMA_VERSION.toString());
-	try {
-	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-	} catch (DatatypeConfigurationException e) {
-	    JOVALMsg.getLogger().warn(JOVALMsg.ERROR_TIMESTAMP);
-	    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return generator;
     }
 
     static void printHeader(IPlugin plugin) {
@@ -292,9 +269,9 @@ public class XPERT implements Runnable, IObserver {
 	    // Configure the OVAL engine...
 	    //
 	    IResults ovalResults = null;
-	    DefinitionFilter filter = ovalHandler.getDefinitionFilter();
+	    IDefinitionFilter filter = ovalHandler.getDefinitionFilter();
 	    if (filter.size() > 0) {
-		IEngine engine = new Engine(session);
+		IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
 		engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 		engine.setDefinitions(xccdf.getOval());
 		engine.setDefinitionFilter(ovalHandler.getDefinitionFilter());
@@ -308,7 +285,7 @@ public class XPERT implements Runnable, IObserver {
 			File sc = new File(ws, "sc-input.xml");
 			if(sc.isFile()) {
 			    logger.info("Loading " + sc);
-			    engine.setSystemCharacteristics(new SystemCharacteristics(sc));
+			    engine.setSystemCharacteristics(OvalFactory.createSystemCharacteristics(sc));
 			}
 		    } catch (OvalException e) {
 			logger.warning(e.getMessage());
@@ -473,7 +450,7 @@ public class XPERT implements Runnable, IObserver {
 	    logger.info("No platforms specified, skipping applicability checks...");
 	    return true;
 	}
-	DefinitionFilter filter = new DefinitionFilter();
+	IDefinitionFilter filter = OvalFactory.createDefinitionFilter();
 	for (String definition : definitions) {
 	    filter.addDefinition(definition);
 	}
@@ -481,7 +458,7 @@ public class XPERT implements Runnable, IObserver {
 	//
 	// Evaluate the platform definitions.
 	//
-	IEngine engine = new Engine(session);
+	IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
 	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	engine.setDefinitionFilter(filter);
 	engine.setDefinitions(xccdf.getCpeOval());

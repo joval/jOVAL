@@ -3,6 +3,7 @@
 
 package org.joval.intf.oval;
 
+import java.io.File;
 import java.util.List;
 
 import oval.schemas.variables.core.OvalVariables;
@@ -33,4 +34,12 @@ public interface IVariables extends ITransformable {
      * Get the values of the variable, specified by its ID.
      */
     List<String> getValue(String id);
+
+    void setValue(String id, List<String> values);
+
+    void addValue(String id, String value);
+
+    void setComment(String id, String comment);
+
+    void writeXML(File f);
 }

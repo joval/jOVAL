@@ -38,6 +38,7 @@ import oval.schemas.definitions.core.OvalDefinitions;
 import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
 import oval.schemas.results.core.DefinitionType;
 
+import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
@@ -46,12 +47,8 @@ import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
-import org.joval.oval.DefinitionFilter;
-import org.joval.oval.Definitions;
 import org.joval.oval.OvalException;
-import org.joval.oval.SystemCharacteristics;
-import org.joval.oval.Variables;
-import org.joval.oval.engine.Engine;
+import org.joval.oval.OvalFactory;
 import org.joval.util.Checksum;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -393,7 +390,7 @@ public class Main implements IObserver {
 	    }
 
 	    print(getMessage("MESSAGE_PARSING_FILE", state.defsFile.toString()));
-	    IDefinitions defs = new Definitions(state.defsFile);
+	    IDefinitions defs = OvalFactory.createDefinitions(state.defsFile);
 
 	    print(getMessage("MESSAGE_VALIDATING_XML"));
 	    if (!validateSchema(state.defsFile, DEFINITIONS_SCHEMAS)) {
@@ -433,8 +430,8 @@ public class Main implements IObserver {
 		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
 	    }
 
-	    DefinitionFilter filter = null;
-	    SystemCharacteristics sc = null;
+	    IDefinitionFilter filter = null;
+	    ISystemCharacteristics sc = null;
 	    IVariables variables = null;
 
 	    if (state.inputFile == null) {
@@ -443,23 +440,23 @@ public class Main implements IObserver {
 		print(" ** parsing " + state.inputFile.toString() + " for analysis.");
 		print(getMessage("MESSAGE_VALIDATING_XML"));
 		if (validateSchema(state.inputFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
-		    sc = new SystemCharacteristics(state.inputFile);
+		    sc = OvalFactory.createSystemCharacteristics(state.inputFile);
 		} else {
 		    return ERR;
 		}
 	    }
 	    if (state.variablesFile.exists() && state.variablesFile.isFile()) {
-		variables = new Variables(state.variablesFile);
+		variables = OvalFactory.createVariables(state.variablesFile);
 	    }
 	    if (state.inputDefsFile != null) {
 		print(getMessage("MESSAGE_READING_INPUTDEFINITIONS", state.inputDefsFile));
-		filter = new DefinitionFilter(state.inputDefsFile);
+		filter = OvalFactory.createDefinitionFilter(state.inputDefsFile);
 	    } else if (state.definitionIDs != null) {
 		print(getMessage("MESSAGE_PARSING_INPUTDEFINITIONS"));
-		filter = new DefinitionFilter(state.definitionIDs);
+		filter = OvalFactory.createDefinitionFilter(state.definitionIDs);
 	    }
 
-	    IEngine engine = new Engine(state.plugin.getSession());
+	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.EXHAUSTIVE, state.plugin.getSession());
 	    engine.setDefinitions(defs);
 
 	    if (filter != null) {

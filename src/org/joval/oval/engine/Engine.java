@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -37,9 +36,6 @@ import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
-import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -107,6 +103,7 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemDataType;
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.variables.core.OvalVariables;
 
@@ -129,6 +126,7 @@ import org.joval.oval.Directives;
 import org.joval.oval.Factories;
 import org.joval.oval.ItemSet;
 import org.joval.oval.OvalException;
+import org.joval.oval.OvalFactory;
 import org.joval.oval.Results;
 import org.joval.oval.SystemCharacteristics;
 import org.joval.oval.TestException;
@@ -194,6 +192,7 @@ public class Engine implements IEngine {
     private IBaseSession session = null;
     private ISystemCharacteristics sc = null;
     private IDefinitionFilter filter = null;
+    private IEngine.Mode mode;
     private Hashtable<Class, IAdapter> adapters = null;
     private Exception error;
     private Results results;
@@ -205,23 +204,20 @@ public class Engine implements IEngine {
     /**
      * Create an engine for evaluating OVAL definitions using a session.
      */
-    public Engine(IBaseSession session) {
+    protected Engine(IEngine.Mode mode, IBaseSession session) {
 	if (session == null) {
 	    logger = JOVALMsg.getLogger();
 	} else {
 	    logger = session.getLogger();
 	    this.session = session;
 	}
+	this.mode = mode;
 	producer = new Producer();
 	filter = new DefinitionFilter();
 	reset();
     }
 
     // Implement IEngine
-
-    public void setDefinitionsFile(File f) throws IllegalThreadStateException, OvalException {
-	setDefinitions(new Definitions(f));
-    }
 
     public void setDefinitions(IDefinitions definitions) throws IllegalThreadStateException {
 	switch(state) {
@@ -239,10 +235,6 @@ public class Engine implements IEngine {
 	}
     }
 
-    public void setDefinitionFilterFile(File f) throws IllegalThreadStateException, OvalException {
-	setDefinitionFilter(new DefinitionFilter(f));
-    }
-
     public void setDefinitionFilter(IDefinitionFilter filter) throws IllegalThreadStateException {
 	switch(state) {
 	  case CONFIGURE:
@@ -257,6 +249,7 @@ public class Engine implements IEngine {
     public void setSystemCharacteristics(ISystemCharacteristics sc) throws IllegalThreadStateException, OvalException {
 	switch(state) {
 	  case CONFIGURE:
+	    mode = Mode.EXHAUSTIVE;
 	    this.sc = sc;
 	    break;
 
@@ -311,43 +304,99 @@ public class Engine implements IEngine {
 	}
     }
 
+    public ResultEnumeration evaluateDefinition(String id) throws IllegalStateException, NoSuchElementException, OvalException {
+	try {
+	    if (definitions == null) {
+		throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_DEFINITIONS_NONE));
+	    }
+	    state = State.RUNNING;
+	    if (sc == null) {
+		SystemCharacteristics sc = new SystemCharacteristics(SysinfoFactory.createSystemInfo(session));
+		sc.setLogger(logger);
+		this.sc = sc;
+	    }
+	    if (results == null) {
+		results = new Results(definitions, sc);
+		results.setLogger(logger);
+	    }
+	    return evaluateDefinition(definitions.getDefinition(id)).getResult();
+	} finally {
+	    state = State.COMPLETE_OK;
+	}
+    }
+
     // Implement Runnable
 
     /**
-     * Scan all the objects in the OVAL definitions, or use the existing SystemCharacteristics. Then, evaluate all the
-     * definitions.  This mirrors the way that ovaldi processes OVAL definitions.
+     * The engine runs differently depending on the mode that was used to initialize it:
+     *
+     * DIRECTED & LAZY:
+     *   The Engine will iterate through the [filtered] definitions and probe objects as they are encountered.
+     *
+     * EXHAUSTIVE:
+     *   First the Engine probes all the objects in the OVAL definitions, or it uses the supplied ISystemCharacteristics.
+     *   Then, all the definitions are evaluated.  This mirrors the way that ovaldi processes OVAL definitions.
      *
      * Note: if the session is connected before running, it will remain connected after the run has completed.  If it
-     * is not connected, the engine will connect, then disconnect after scanning.
+     * was not connected before running, the engine will temporarily connect, then disconnect when finished.
      */
     public void run() {
 	state = State.RUNNING;
+
+	boolean doDisconnect = false;
 	try {
-	    if (sc == null) {
-		boolean doDisconnect = false;
-		if (session == null) {
-		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_NONE));
-		} else if (!session.isConnected()) {
-		    doDisconnect = session.connect();
-		}
-		if (session.isConnected()) {
-		    try {
-			if (adapters == null) {
-			    loadAdapters();
-			}
-			scan();
-		    } finally {
-			if (doDisconnect) {
-			    session.disconnect();
+	    //
+	    // Connect and initialize adapters if necessary
+	    //
+	    boolean scanRequired = sc == null;
+	    if (scanRequired) {
+		if (!session.isConnected()) {
+	    	    if (session == null) {
+			throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_NONE));
+		    } else {
+			if (session.connect()) {
+			    doDisconnect = true;
+			} else {
+			    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 			}
 		    }
-		} else {
-		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 		}
-		producer.sendNotify(MESSAGE_SYSTEMCHARACTERISTICS, sc);
+		if (adapters == null) {
+		    loadAdapters();
+		}
+		SystemCharacteristics sc = new SystemCharacteristics(SysinfoFactory.createSystemInfo(session));
+		sc.setLogger(logger);
+		this.sc = sc;
 	    }
 
-	    results = new Results(getGenerator(), definitions, sc);
+	    switch(mode) {
+	      case EXHAUSTIVE:
+		//
+		// Perform an exhaustive scan of all objects, and disconnect if permitted
+		//
+		if (scanRequired) {
+		    producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
+		    for (ObjectType obj : definitions.getObjects()) {
+		        String objectId = obj.getId();
+		        if (!sc.containsObject(objectId)) {
+		            scanObject(new RequestContext(this, obj));
+		        }
+		    }
+		    producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
+		    if (doDisconnect) {
+			session.disconnect();
+			doDisconnect = false;
+		    }
+		    producer.sendNotify(MESSAGE_SYSTEMCHARACTERISTICS, sc);
+		}
+		break;
+
+	      default:
+		producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
+		break;
+	    }
+
+	    results = new Results(definitions, sc);
 	    results.setLogger(logger);
 	    producer.sendNotify(MESSAGE_DEFINITION_PHASE_START, null);
 
@@ -370,11 +419,22 @@ public class Engine implements IEngine {
 		evaluateDefinition(definition);
 	    }
 
+	    switch(mode) {
+	      case DIRECTED:
+		producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
+		producer.sendNotify(MESSAGE_SYSTEMCHARACTERISTICS, sc);
+		break;
+	    }
+
 	    producer.sendNotify(MESSAGE_DEFINITION_PHASE_END, null);
 	    state = State.COMPLETE_OK;
 	} catch (Exception e) {
 	    error = e;
 	    state = State.COMPLETE_ERR;
+	} finally {
+	    if (doDisconnect) {
+		session.disconnect();
+	    }
 	}
     }
 
@@ -414,20 +474,6 @@ public class Engine implements IEngine {
 
     // Private
 
-    private static final GeneratorType getGenerator() {
-	GeneratorType generator = Factories.common.createGeneratorType();
-	generator.setProductName(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_PRODUCT));
-	generator.setProductVersion(JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION));
-	generator.setSchemaVersion(SCHEMA_VERSION.toString());
-	try {
-	    generator.setTimestamp(DatatypeFactory.newInstance().newXMLGregorianCalendar(new GregorianCalendar()));
-	} catch (DatatypeConfigurationException e) {
-	    JOVALMsg.getLogger().warn(JOVALMsg.ERROR_TIMESTAMP);
-	    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return generator;
-    }
-
     private void loadAdapters() {
 	Collection<IAdapter> coll = getAdapters();
 	if (coll == null) {
@@ -447,23 +493,6 @@ public class Engine implements IEngine {
 	state = State.CONFIGURE;
 	variableMap = new Hashtable<String, Collection<VariableValueType>>();
 	error = null;
-    }
-
-    /**
-     * Scan SystemCharactericts using the session.
-     */
-    private void scan() throws OvalException {
-	producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
-	sc = new SystemCharacteristics(getGenerator(), SysinfoFactory.createSystemInfo(session));
-	((SystemCharacteristics)sc).setLogger(logger);
-
-	for (ObjectType obj : definitions.getObjects()) {
-	    String objectId = obj.getId();
-	    if (!sc.containsObject(objectId)) {
-		scanObject(new RequestContext(this, obj));
-	    }
-	}
-	producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
     }
 
     /**
@@ -843,12 +872,20 @@ public class Engine implements IEngine {
 	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	String objectId = getObjectRef(testDefinition);
 
-	//
-	// If the object is not found in the SystemCharacteristics, then the test cannot be evaluated.
-	//
 	if (!sc.containsObject(objectId)) {
-	    testResult.setResult(ResultEnumeration.NOT_EVALUATED);
-	    return;
+	    switch(mode) {
+	      //
+	      // In EXHAUSTIVE mode all the objects have already been scanned, so, if the object is not found in the
+	      // SystemCharacteristics, the test cannot be evaluated.
+	      //
+	      case EXHAUSTIVE:
+		testResult.setResult(ResultEnumeration.NOT_EVALUATED);
+		return;
+
+	      default:
+		scanObject(new RequestContext(this, definitions.getObject(objectId)));
+		break;
+	    }
 	}
 
 	String stateId = getStateRef(testDefinition);

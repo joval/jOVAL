@@ -35,7 +35,6 @@ javadocs:
 	org.joval.intf.util					\
 	$(SRC)/org/joval/oval/CollectException.java		\
 	$(SRC)/org/joval/oval/OvalException.java		\
-	$(SRC)/org/joval/oval/ResolveException.java		\
 	$(SRC)/org/joval/plugin/BasePlugin.java			\
 	$(SRC)/org/joval/plugin/RemotePlugin.java		\
 	$(SRC)/org/joval/intf/system/IBaseSession.java		\

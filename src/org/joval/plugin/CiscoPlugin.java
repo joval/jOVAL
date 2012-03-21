@@ -45,8 +45,8 @@ import org.joval.os.cisco.system.IosSession;
 import org.joval.os.cisco.system.TechSupport;
 import org.joval.os.juniper.system.JunosSession;
 import org.joval.os.juniper.system.SupportInformation;
-import org.joval.oval.engine.Engine;
 import org.joval.oval.OvalException;
+import org.joval.oval.OvalFactory;
 import org.joval.protocol.tftp.TftpURLStreamHandler;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
@@ -113,8 +113,8 @@ public class CiscoPlugin extends BasePlugin {
 	    }
 
 	    CiscoPlugin plugin = new CiscoPlugin(tech);
-	    IEngine engine = new Engine(plugin.getSession());
-	    engine.setDefinitionsFile(new File(argv[0]));
+	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.EXHAUSTIVE, plugin.getSession());
+	    engine.setDefinitions(OvalFactory.createDefinitions(new File(argv[0])));
 	    engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	    engine.run();
 	    switch(engine.getResult()) {

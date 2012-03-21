@@ -105,22 +105,14 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
 	return ids;
     }
 
+    // Implement IDefinitionFilter
+
     public int size() {
 	if (definitionIDs == null) {
 	    return 0;
 	} else {
 	    return definitionIDs.size();
 	}
-    }
-
-    /**
-     * Add a definition to the filter.
-     */
-    public void addDefinition(String id) {
-	if (definitionIDs == null) {
-	    definitionIDs = new HashSet<String>();
-	}
-	definitionIDs.add(id);
     }
 
     public void writeXML(File f) {
@@ -152,7 +144,12 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
         }
     }
 
-    // Implement IDefinitionFilter
+    public void addDefinition(String id) {
+	if (definitionIDs == null) {
+	    definitionIDs = new HashSet<String>();
+	}
+	definitionIDs.add(id);
+    }
 
     public boolean accept(String id) {
 	if (definitionIDs == null) {

@@ -3,8 +3,10 @@
 
 package org.joval.intf.oval;
 
-import java.io.File;
 import java.util.Collection;
+import java.util.NoSuchElementException;
+
+import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
@@ -74,7 +76,21 @@ public interface IEngine extends Runnable {
      */
     int MESSAGE_DEFINITION_PHASE_END		= 170;
 
-    public enum Result {
+    enum Mode {
+	/**
+	 * Signifies an exhaustive mode, wherein all the objects defined in the IDefinitions are probed, regardless of
+	 * whether or not they are required by the definitions that will be evaluated.
+	 */
+	EXHAUSTIVE,
+
+	/**
+	 * Signifies a mode in which the engine will probe all the objects that are referenced by the IDefinitions that
+	 * are to be evaluated.
+	 */
+	DIRECTED;
+    }
+
+    enum Result {
 	/**
 	 * Specifies a nominal result
 	 */
@@ -89,78 +105,72 @@ public interface IEngine extends Runnable {
     /**
      * Stop the engine's processing and close all open resources.  This will leave the engine in an error state.
      */
-    public void destroy();
+    void destroy();
 
     /**
      * Set the source from which to read external variable definitions.
      *
      * @throws OvalException if there was an exception parsing the file.
      */
-    public void setExternalVariables(IVariables variables) throws IllegalThreadStateException;
-
-    /**
-     * Set the file from which to read the OVAL definitions.
-     *
-     * @throws IllegalThreadStateException if the engine has already started.
-     * @throws OvalException if there was an exception parsing the file.
-     */
-    public void setDefinitionsFile(File f) throws IllegalThreadStateException, OvalException;
+    void setExternalVariables(IVariables variables) throws IllegalThreadStateException;
 
     /**
      * Set the IDefinitions that the engine will process.
      *
      * @throws IllegalThreadStateException if the engine has already started.
      */
-    public void setDefinitions(IDefinitions definitions) throws IllegalThreadStateException;
-
-    /**
-     * Set a list of definition IDs to evaluate during the run phase.
-     *
-     * @throws IllegalThreadStateException if the engine has already started.
-     * @throws OvalException if there was an exception parsing the file.
-     */
-    public void setDefinitionFilterFile(File f) throws IllegalThreadStateException, OvalException;
+    void setDefinitions(IDefinitions definitions) throws IllegalThreadStateException;
 
     /**
      * Set a list of definition IDs to evaluate during the run phase.
      *
      * @throws IllegalThreadStateException if the engine has already started.
      */
-    public void setDefinitionFilter(IDefinitionFilter filter) throws IllegalThreadStateException;
+    void setDefinitionFilter(IDefinitionFilter filter) throws IllegalThreadStateException;
 
     /**
-     * Set the file containing SystemCharacteristics data that will be used as input to the definition evaluation phase.
-     * Specifying a pre-existing System Characteristics file will cause the engine to skip the object data collection phase.
+     * Set some previously-collected SystemCharacteristics data that will be used as input to the definition evaluation phase.
+     * Specifying a pre-existing System Characteristics file will cause the engine to skip any data collection.
      *
      * @throws IllegalThreadStateException if the engine has already started.
      * @throws OvalException if there was an exception parsing the file.
      */
-    public void setSystemCharacteristics(ISystemCharacteristics sc) throws IllegalThreadStateException, OvalException;
+    void setSystemCharacteristics(ISystemCharacteristics sc) throws IllegalThreadStateException, OvalException;
 
     /**
      * Get an IProducer associated with the IEngine.  This IProducer can be observed for MESSAGE_ notifications while the
      * engine is running.
      */
-    public IProducer getNotificationProducer();
+    IProducer getNotificationProducer();
 
     /**
      * Returns Result.OK or Result.ERR
      *
      * @throws IllegalThreadStateException if the engine hasn't run, or is running.
      */
-    public Result getResult() throws IllegalThreadStateException;
+    Result getResult() throws IllegalThreadStateException;
 
     /**
      * Return the scan IResults (valid if getResult returned Result.OK).  Only valid after the run() method has finished.
      *
      * @throws IllegalThreadStateException if the engine hasn't run, or is running.
      */
-    public IResults getResults() throws IllegalThreadStateException;
+    IResults getResults() throws IllegalThreadStateException;
 
     /**
      * Return the error (valid if getResult returned Result.ERR).  Only valid after the run() method has finished.
      *
      * @throws IllegalThreadStateException if the engine hasn't run, or is running.
      */
-    public Exception getError() throws IllegalThreadStateException;
+    Exception getError() throws IllegalThreadStateException;
+
+    /**
+     * Instead of running the engine to evaluate definitions in bulk, it is possible to evaluate individual definitions
+     * singly using this method.  The engine state will always be set to Result.COMPLETE_OK after calling this method.
+     * Calling getResults will return the accumulated OVAL results to that point in time.
+     *
+     * @throws IllegalStateException if definitions have not been set
+     * @throws NoSuchElementException if the ID is not found in the OVAL definitions
+     */
+    ResultEnumeration evaluateDefinition(String id) throws IllegalStateException, NoSuchElementException, OvalException;
 }

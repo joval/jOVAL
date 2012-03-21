@@ -21,6 +21,7 @@ CLASSES=\
 	org.joval.oval.Factories			\
 	org.joval.oval.ItemSet				\
 	org.joval.oval.OvalException			\
+	org.joval.oval.OvalFactory			\
 	org.joval.oval.Results				\
 	org.joval.oval.SystemCharacteristics		\
 	org.joval.oval.TestException			\

@@ -12,6 +12,7 @@ import oval.schemas.definitions.core.OvalDefinitions;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.DefinitionType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.variables.core.VariableType;
 
 import xccdf.schemas.core.CheckContentRefType;
@@ -26,9 +27,10 @@ import xccdf.schemas.core.ResultEnumType;
 import xccdf.schemas.core.SelectableItemType;
 import xccdf.schemas.core.TestResultType;
 
+import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IResults;
-import org.joval.oval.DefinitionFilter;
-import org.joval.oval.Variables;
+import org.joval.intf.oval.IVariables;
+import org.joval.oval.OvalFactory;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
@@ -46,8 +48,8 @@ public class OVALHandler {
 
     private XccdfBundle xccdf;
     private Profile profile;
-    private DefinitionFilter filter;
-    private Variables variables;
+    private IDefinitionFilter filter;
+    private IVariables variables;
 
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
@@ -60,9 +62,9 @@ public class OVALHandler {
     /**
      * Create an OVAL DefinitionFilter containing every selected rule in the profile with an OVAL check.
      */
-    public DefinitionFilter getDefinitionFilter() {
+    public IDefinitionFilter getDefinitionFilter() {
 	if (filter == null) {
-	    filter = new DefinitionFilter();
+	    filter = OvalFactory.createDefinitionFilter();
 	    Collection<RuleType> rules = profile.getSelectedRules();
 	    for (RuleType rule : rules) {
 		if (rule.isSetCheck()) {
@@ -85,9 +87,9 @@ public class OVALHandler {
      * Gather all the variable exports for OVAL checks from the selected rules in the profile, and create an OVAL
      * variables structure containing their values.
      */
-    public Variables getVariables() {
+    public IVariables getVariables() {
 	if (variables == null) {
-	    variables = new Variables(XPERT.getGenerator());
+	    variables = OvalFactory.createVariables();
 	    Collection<RuleType> rules = profile.getSelectedRules();
 	    Hashtable<String, String> values = profile.getValues();
 	    for (RuleType rule : rules) {
@@ -112,8 +114,9 @@ public class OVALHandler {
      */
     public void integrateResults(IResults ovalResult, TestResultType xccdfResult) {
 	ObjectFactory factory = new ObjectFactory();
-	xccdfResult.getTarget().add(ovalResult.getSystemInfo().getPrimaryHostName());
-	for (InterfaceType intf : ovalResult.getSystemInfo().getInterfaces().getInterface()) {
+	SystemInfoType info = ovalResult.getSystemCharacteristics().getSystemInfo();
+	xccdfResult.getTarget().add(info.getPrimaryHostName());
+	for (InterfaceType intf : info.getInterfaces().getInterface()) {
 	    xccdfResult.getTargetAddress().add(intf.getIpAddress());
 	}
 	for (VariableType var : getVariables().getOvalVariables().getVariables().getVariable()) {

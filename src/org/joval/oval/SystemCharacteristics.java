@@ -31,7 +31,6 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.common.GeneratorType;
 import oval.schemas.common.MessageType;
 import oval.schemas.systemcharacteristics.core.CollectedObjectsType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
@@ -82,8 +81,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     private LocLogger logger = JOVALMsg.getLogger();
-    private OvalSystemCharacteristics osc;
-    private GeneratorType generator;
     private SystemInfoType systemInfo;
     private Hashtable<String, ObjectType> objectTable;
     private Hashtable<String, Hashtable<BigInteger, JAXBElement<? extends ItemType>>> objectItemTable;
@@ -103,8 +100,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     /**
      * Create an empty SystemCharacteristics for scanning.
      */
-    public SystemCharacteristics(GeneratorType generator, SystemInfoType systemInfo) {
-	this.generator = generator;
+    public SystemCharacteristics(SystemInfoType systemInfo) {
 	this.systemInfo = systemInfo;
 	objectTable = new Hashtable<String, ObjectType>();
 	objectItemTable = new Hashtable<String, Hashtable<BigInteger, JAXBElement<? extends ItemType>>>();
@@ -127,7 +123,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
      * Create a SystemCharacteristics from an OvalSystemCharacteristics (i.e., from a parsed File).
      */
     public SystemCharacteristics(OvalSystemCharacteristics osc) {
-	this.osc = osc;
+	systemInfo = osc.getSystemInfo();
 
 	itemTable = new Hashtable<BigInteger, JAXBElement<? extends ItemType>>();
 	for (JAXBElement<? extends ItemType> item : osc.getSystemData().getItem()) {
@@ -199,9 +195,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
      */
     public OvalSystemCharacteristics getOvalSystemCharacteristics(Collection<String> vars, Collection<BigInteger> itemIds) {
 	OvalSystemCharacteristics filteredSc = Factories.sc.core.createOvalSystemCharacteristics();
-	if (osc == null) {
-	    osc = getOvalSystemCharacteristics();
-	}
+	OvalSystemCharacteristics osc = getOvalSystemCharacteristics();
 	filteredSc.setGenerator(osc.getGenerator());
 	filteredSc.setSystemInfo(osc.getSystemInfo());
 
@@ -417,13 +411,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	return items;
     }
 
-    public OvalSystemCharacteristics getOvalSystemCharacteristics() {
-	if (osc == null) {
-	    osc = createOvalSystemCharacteristics();
-	}
-	return osc;
-    }
-
     public void writeXML(File f) {
 	OutputStream out = null;
 	try {
@@ -451,11 +438,9 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	}
     }
 
-    // Private
-
-    private OvalSystemCharacteristics createOvalSystemCharacteristics() {
+    public OvalSystemCharacteristics getOvalSystemCharacteristics() {
 	OvalSystemCharacteristics sc = Factories.sc.core.createOvalSystemCharacteristics();
-	sc.setGenerator(generator);
+	sc.setGenerator(OvalFactory.getGenerator());
 	sc.setSystemInfo(systemInfo);
 
 	CollectedObjectsType collectedObjects = Factories.sc.core.createCollectedObjectsType();
@@ -474,6 +459,12 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 
 	return sc;
     }
+
+    public SystemInfoType getSystemInfo() {
+	return systemInfo;
+    }
+
+    // Private
 
     private String getChecksum(JAXBElement elt) {
 	ByteArrayOutputStream out = new ByteArrayOutputStream();

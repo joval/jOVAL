@@ -38,9 +38,9 @@ public interface IResults extends ITransformable {
     ResultEnumeration getDefinitionResult(String definitionId) throws NoSuchElementException;
 
     /**
-     * Shortcut for getOvalResults().getResults()..getSystem().get(0).getOvalSystemCharacteristics().getSystemInfo()
+     * Get the ISystemCharacteristics used to construct the result.
      */
-    SystemInfoType getSystemInfo();
+    ISystemCharacteristics getSystemCharacteristics();
 
     /**
      * Serialize the contents of this IResults to a file.

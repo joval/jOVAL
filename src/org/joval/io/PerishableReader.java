@@ -317,7 +317,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 			sb.append(" ").append(trace[i].getFileName()).append(", line: ").append(trace[i].getLineNumber());
 		    }
 		}
-		logger.warn(JOVALMsg.WARNING_PERISHABLEIO_INTERRUPT, sb.toString());
+		logger.debug(JOVALMsg.WARNING_PERISHABLEIO_INTERRUPT, sb.toString());
 	    }
 	    JOVALSystem.getTimer().purge();
 	}

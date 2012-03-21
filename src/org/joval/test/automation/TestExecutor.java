@@ -48,8 +48,7 @@ import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.intf.util.IProperty;
 import org.joval.oval.OvalException;
-import org.joval.oval.Variables;
-import org.joval.oval.engine.Engine;
+import org.joval.oval.OvalFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
@@ -145,13 +144,13 @@ public class TestExecutor implements Runnable {
 			installSupportFiles((ISession)session, testDir);
 		    }
 
-		    IEngine engine = new Engine(session);
+		    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
 		    engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 
 		    for (String xml : testDir.list(new XMLFilter())) {
 			sysLogger.info(name + " - Processing " + xml);
 			File definitions = new File(testDir, xml);
-			engine.setDefinitionsFile(definitions);
+			engine.setDefinitions(OvalFactory.createDefinitions(definitions));
 			TestDocument doc = factory.createTestDocument();
 			doc.setFileName(xml);
 
@@ -159,7 +158,7 @@ public class TestExecutor implements Runnable {
 			// Set the external variables file for the external variables test!
 			//
 			if ("oval-def_external_variable.xml".equals(xml)) {
-			    IVariables variables = new Variables(new File(testDir, "_external-variables.xml"));
+			    IVariables variables = OvalFactory.createVariables(new File(testDir, "_external-variables.xml"));
 			    engine.setExternalVariables(variables);
 			}
 

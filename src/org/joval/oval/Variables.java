@@ -26,7 +26,6 @@ import org.w3c.dom.Node;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.common.GeneratorType;
 import oval.schemas.variables.core.OvalVariables;
 import oval.schemas.variables.core.VariablesType;
 import oval.schemas.variables.core.VariableType;
@@ -67,8 +66,6 @@ public class Variables implements IVariables {
     }
 
     private LocLogger logger;
-    private GeneratorType generator;
-    private OvalVariables vars;
     private JAXBContext ctx;
     private Hashtable <String, List<String>>variables;
     private Hashtable <String, String>comments;
@@ -76,16 +73,15 @@ public class Variables implements IVariables {
     /**
      * Create Variables from a file.
      */
-    public Variables(File f) throws OvalException {
+    Variables(File f) throws OvalException {
 	this(getOvalVariables(f));
     }
 
     /**
      * Create Variables from parsed OvalVariables.
      */
-    public Variables(OvalVariables vars) throws OvalException {
+    Variables(OvalVariables vars) throws OvalException {
 	this();
-	this.vars = vars;
 	List <VariableType> varList = vars.getVariables().getVariable();
 	int len = varList.size();
 	for (int i=0; i < len; i++) {
@@ -97,10 +93,18 @@ public class Variables implements IVariables {
     /**
      * Create empty Variables.
      */
-    public Variables(GeneratorType generator) {
-	this();
-	this.generator = generator;
+    Variables() {
+	logger = JOVALMsg.getLogger();
+	variables = new Hashtable<String, List<String>>();
+	comments = new Hashtable<String, String>();
+	try {
+	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_VARIABLES));
+	} catch (JAXBException e) {
+	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
     }
+
+    // Implement IVariables
 
     public void addValue(String id, String value) {
 	List<String> values = variables.get(id);
@@ -113,12 +117,12 @@ public class Variables implements IVariables {
 	}
     }
 
-    public void setValue(String id, List<String> value) {
-	variables.put(id, value);
-    }
-
     public void setComment(String id, String comment) {
 	comments.put(id, comment);
+    }
+
+    public void setValue(String id, List<String> value) {
+	variables.put(id, value);
     }
 
     public void writeXML(File f) {
@@ -149,13 +153,26 @@ public class Variables implements IVariables {
     }
 
     public OvalVariables getOvalVariables() {
-	if (vars == null) {
-	    vars = createOvalVariables();
+	OvalVariables vars = Factories.variables.createOvalVariables();
+	vars.setGenerator(OvalFactory.getGenerator());
+
+	VariablesType vt = Factories.variables.createVariablesType();
+	for (String key : variables.keySet()) {
+	    VariableType var = Factories.variables.createVariableType();
+	    var.setId(key);
+	    for (String s : variables.get(key)) {
+		var.getValue().add(s);
+	    }
+	    String comment = comments.get(key);
+	    if (comment != null) {
+		var.setComment(comment);
+	    }
+	    vt.getVariable().add(var);
 	}
+
+	vars.setVariables(vt);
 	return vars;
     }
-
-    // Implement IVariables
 
     public List<String> getValue(String id) throws NoSuchElementException {
 	List<String> values = variables.get(id);
@@ -189,39 +206,6 @@ public class Variables implements IVariables {
     }
 
     // Private
-
-    private Variables() {
-	logger = JOVALMsg.getLogger();
-	variables = new Hashtable<String, List<String>>();
-	comments = new Hashtable<String, String>();
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_VARIABLES));
-	} catch (JAXBException e) {
-	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-    }
-
-    private OvalVariables createOvalVariables() {
-	OvalVariables vars = Factories.variables.createOvalVariables();
-	vars.setGenerator(generator);
-
-	VariablesType vt = Factories.variables.createVariablesType();
-	for (String key : variables.keySet()) {
-	    VariableType var = Factories.variables.createVariableType();
-	    var.setId(key);
-	    for (String s : variables.get(key)) {
-		var.getValue().add(s);
-	    }
-	    String comment = comments.get(key);
-	    if (comment != null) {
-		var.setComment(comment);
-	    }
-	    vt.getVariable().add(var);
-	}
-
-	vars.setVariables(vt);
-	return vars;
-    }
 
     /**
      * Reads String (i.e., Text) data from the VariableType as a Node.

@@ -35,7 +35,6 @@ import javax.xml.transform.stream.StreamSource;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.common.GeneratorType;
 import oval.schemas.common.MessageType;
 import oval.schemas.directives.core.OvalDirectives;
 import oval.schemas.definitions.core.OvalDefinitions;
@@ -57,7 +56,6 @@ import oval.schemas.results.core.TestsType;
 import oval.schemas.results.core.TestType;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.oval.IDefinitions;
@@ -82,10 +80,8 @@ public class Results implements IResults, ILoggable {
     private Hashtable<String, DefinitionType> definitionTable;
     private Hashtable<String, TestType> testTable;
     private IDefinitions definitions;
-    private GeneratorType generator;
     private ISystemCharacteristics sc;
     private Directives directives;
-    private OvalResults or;
     private LocLogger logger;
     private JAXBContext ctx;
 
@@ -108,15 +104,13 @@ public class Results implements IResults, ILoggable {
     /**
      * Create a Results based on the specified Definitions and SystemCharacteristics.
      */
-    public Results(GeneratorType generator, IDefinitions definitions, ISystemCharacteristics sc) {
-	this.generator = generator;
+    public Results(IDefinitions definitions, ISystemCharacteristics sc) {
 	this.definitions = definitions;
 	this.sc = sc;
 	logger = JOVALMsg.getLogger();
 	definitionTable = new Hashtable<String, DefinitionType>();
 	testTable = new Hashtable<String, TestType>();
 	directives = new Directives();
-	or = null;
 	try {
 	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_RESULTS));
 	} catch (JAXBException e) {
@@ -182,7 +176,6 @@ public class Results implements IResults, ILoggable {
 
     public void setDirectives(File f) throws OvalException {
 	directives = new Directives(f);
-	or = null; // reset results if they have been previously computed.
     }
 
     /**
@@ -229,16 +222,13 @@ public class Results implements IResults, ILoggable {
 	}
     }
 
-    public SystemInfoType getSystemInfo() {
-	return getOvalResults().getResults().getSystem().get(0).getOvalSystemCharacteristics().getSystemInfo();
+    public ISystemCharacteristics getSystemCharacteristics() {
+	return sc;
     }
 
     public OvalResults getOvalResults() {
-	if (or != null) {
-	    return or;
-	}
-	or = Factories.results.createOvalResults();
-	or.setGenerator(generator);
+	OvalResults or = Factories.results.createOvalResults();
+	or.setGenerator(OvalFactory.getGenerator());
 	OvalDirectives od = directives.getOvalDirectives();
 	or.setDirectives(od.getDirectives());
 	or.getClassDirectives().addAll(od.getClassDirectives());
