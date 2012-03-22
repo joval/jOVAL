@@ -7,68 +7,26 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.ConnectException;
 import java.net.URL;
 import java.text.MessageFormat;
-import java.util.Collection;
 import java.util.Date;
-import java.util.Hashtable;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import cpe.schemas.dictionary.ListType;
-import oval.schemas.common.GeneratorType;
-import oval.schemas.definitions.core.OvalDefinitions;
-import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.DefinitionType;
-import oval.schemas.systemcharacteristics.core.InterfaceType;
-import oval.schemas.variables.core.VariableType;
-
-import xccdf.schemas.core.Benchmark;
-import xccdf.schemas.core.CheckContentRefType;
-import xccdf.schemas.core.CheckType;
-import xccdf.schemas.core.CheckExportType;
-import xccdf.schemas.core.GroupType;
-import xccdf.schemas.core.ObjectFactory;
-import xccdf.schemas.core.ProfileSetValueType;
-import xccdf.schemas.core.ProfileType;
-import xccdf.schemas.core.RuleResultType;
-import xccdf.schemas.core.RuleType;
-import xccdf.schemas.core.ResultEnumType;
-import xccdf.schemas.core.SelectableItemType;
-import xccdf.schemas.core.TestResultType;
-
 import org.joval.cpe.CpeException;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.IEngine;
-import org.joval.intf.oval.IResults;
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
-import org.joval.intf.util.IObserver;
-import org.joval.intf.util.IProducer;
-import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.OvalFactory;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
-import org.joval.sce.SCEScript;
-import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
-import org.joval.xccdf.handler.OVALHandler;
-import org.joval.xccdf.handler.SCEHandler;
 
 /**
  * XCCDF Processing Engine and Reporting Tool (XPERT) main class.
@@ -76,14 +34,7 @@ import org.joval.xccdf.handler.SCEHandler;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class XPERT implements Runnable, IObserver {
-    public static final String OVAL_SYSTEM	= "http://oval.mitre.org/XMLSchema/oval-definitions-5";
-    public static final String SCE_SYSTEM	= "http://open-scap.org/page/SCE";
-
-    private static final File ws = new File("artifacts");
-    private static Logger logger;
-    private static boolean debug = false;
-
+public class XPERT {
     private static File BASE_DIR = new File(".");
     private static PropertyResourceBundle resources;
     static {
@@ -107,6 +58,9 @@ public class XPERT implements Runnable, IObserver {
 	    System.exit(-1);
 	}
     }
+
+    static Logger logger;
+    static final File ws = new File("artifacts");
 
     static void printHeader(IPlugin plugin) {
 	PrintStream console = System.out;
@@ -159,6 +113,7 @@ public class XPERT implements Runnable, IObserver {
 	String profileName = null;
 	String xccdfBaseName = null;
 	boolean printHelp = false;
+	boolean debug = false;
 
 	for (int i=0; i < argv.length; i++) {
 	    if (argv[i].equals("-h")) {
@@ -202,13 +157,18 @@ public class XPERT implements Runnable, IObserver {
 		//
 		// Configure the jOVAL plugin
 		//
-	        Properties config = new Properties();
+		Properties config = new Properties();
 		File configFile = new File(configFileName);
 		if (configFile.isFile()) {
 		    config.load(new FileInputStream(configFile));
 		}
 		plugin.configure(config);
+	    } catch (Exception e) {
+		logger.severe("Problem configuring the plugin -- check that the configuration is valid");
+		System.exit(1);
+	    }
 
+	    try {
 		//
 		// Load the XCCDF and selected profile
 		//
@@ -219,7 +179,7 @@ public class XPERT implements Runnable, IObserver {
 		//
 		// Perform the evaluation
 		//
-		XPERT engine = new XPERT(xccdf, profile, plugin.getSession());
+		Engine engine = new Engine(xccdf, profile, plugin.getSession(), debug);
 		engine.run();
 		logger.info("Finished processing XCCDF bundle");
 		exitCode = 0;
@@ -230,248 +190,10 @@ public class XPERT implements Runnable, IObserver {
 	    } catch (XccdfException e) {
 		logger.severe(LogFormatter.toString(e));
 	    } catch (Exception e) {
-		logger.severe("Problem configuring the plugin -- check that the configuration is valid");
 		logger.severe(LogFormatter.toString(e));
 	    }
 	}
 
 	System.exit(exitCode);
-    }
-
-    private XccdfBundle xccdf;
-    private IBaseSession session;
-    private Collection<String> platforms;
-    private Profile profile;
-    private List<RuleType> rules = null;
-    private List<GroupType> groups = null;
-    private String phase = null;
-
-    /**
-     * Create an XCCDF Processing Engine and Report Tool using the specified XCCDF document bundle and jOVAL session.
-     */
-    public XPERT(XccdfBundle xccdf, Profile profile, IBaseSession session) {
-	this.xccdf = xccdf;
-	this.profile = profile;
-	this.session = session;
-    }
-
-    // Implement Runnable
-
-    /**
-     * Process the XCCDF document bundle.
-     */
-    public void run() {
-	if (hasSelection() && isApplicable()) {
-	    phase = "evaluation";
-	    OVALHandler ovalHandler = null;
-	    try {
-		ovalHandler = new OVALHandler(xccdf, profile, session);
-	    } catch (Exception e) {
-		logger.severe(LogFormatter.toString(e));
-		return;
-	    }
-
-	    //
-	    // Run the engines
-	    //
-	    for (IEngine engine : ovalHandler.getEngines()) {
-		engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
-		logger.info("Evaluating OVAL rules");
-		engine.run();
-		switch(engine.getResult()) {
-		  case ERR:
-		    logger.severe(LogFormatter.toString(engine.getError()));
-		    return;
-		}
-		engine.getNotificationProducer().removeObserver(this);
-	    }
-
-	    //
-	    // Evaluate SCE-based rules
-	    //
-	    logger.info("Evaluating SCE rules");
-	    Hashtable<String, ResultEnumType> sceResults = new Hashtable<String, ResultEnumType>();
-	    if (session instanceof ISession) {
-		ISession s = (ISession)session;
-		if (s.connect()) {
-		    SCEHandler sceHandler = new SCEHandler(xccdf, profile, s);
-		    for (SCEScript script : sceHandler.getScripts()) {
-			logger.info("Running SCE script for rule " + script.getRuleId());
-			if (script.exec()) {
-			    sceResults.put(script.getRuleId(), script.getResult());
-			}
-		    } 
-		    s.disconnect();
-		}
-	    }
-
-	    //
-	    // Create the Benchmark.TestResult node
-	    //
-	    ObjectFactory factory = new ObjectFactory();
-	    TestResultType testResult = factory.createTestResultType();
-	    testResult.setTestSystem(getMessage("product.name"));
-	    ovalHandler.integrateResults(testResult);
-	    // DAS remind: need an equivalent to integrate SCE results
-
-	    Hashtable<String, RuleResultType> resultIndex = new Hashtable<String, RuleResultType>();
-	    for (RuleResultType rrt : testResult.getRuleResult()) {
-		resultIndex.put(rrt.getIdref(), rrt);
-	    }
-
-	    for (RuleType rule : listAllRules()) {
-		String ruleId = rule.getItemId();
-		if (resultIndex.containsKey(ruleId)) {
-		    logger.info(ruleId + ": " + resultIndex.get(ruleId).getResult());
-		} else if (sceResults.containsKey(ruleId)) {
-		    logger.info(ruleId + ": " + sceResults.get(ruleId));
-		} else {
-		    //
-		    // Add the unchecked result, just for fun.
-		    //
-		    RuleResultType rrt = factory.createRuleResultType();
-		    rrt.setResult(ResultEnumType.NOTCHECKED);
-		    if (rule.isSetCheck()) {
-			for (CheckType check : rule.getCheck()) {
-			    rrt.getCheck().add(check);
-			}
-		    }
-		    testResult.getRuleResult().add(rrt);
-		}
-	    }
-
-	    xccdf.getBenchmark().getTestResult().add(testResult);
-	    File reportFile = new File(ws, "xccdf-results.xml");
-	    logger.info("Saving report: " + reportFile.getPath());
-	    xccdf.writeBenchmarkXML(reportFile);
-	}
-	logger.info("XCCDF processing complete.");
-    }
-
-    // Implement IObserver
-
-    public void notify(IProducer sender, int msg, Object arg) {
-	switch(msg) {
-	  case IEngine.MESSAGE_OBJECT_PHASE_START:
-	    logger.info("Beginning scan");
-	    break;
-	  case IEngine.MESSAGE_OBJECT:
-	    logger.info("Scanning object " + (String)arg);
-	    break;
-	  case IEngine.MESSAGE_OBJECT_PHASE_END:
-	    logger.info("Scan complete");
-	    break;
-	  case IEngine.MESSAGE_DEFINITION_PHASE_START:
-	    logger.info("Evaluating definitions");
-	    break;
-	  case IEngine.MESSAGE_DEFINITION:
-	    logger.info("Evaluating " + (String)arg);
-	    break;
-	  case IEngine.MESSAGE_DEFINITION_PHASE_END:
-	    logger.info("Completed evaluating definitions");
-	    break;
-	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
-	    if (debug) {
-		File scFile = new File(ws, "sc-" + phase + ".xml");
-		logger.info("Saving OVAL system-characteristics: " + scFile.getPath());
-		((ISystemCharacteristics)arg).writeXML(scFile);
-	    }
-	    break;
-	}
-    }
-
-    // Private
-
-    /**
-     * Check whether or not the Profile has any selected rules.
-     */
-    private boolean hasSelection() {
-	Collection<RuleType> rules = profile.getSelectedRules();
-	if (rules.size() == 0) {
-	    logger.severe("No reason to evaluate!");
-	    List<ProfileType> profiles = xccdf.getBenchmark().getProfile();
-	    if (profiles.size() > 0) {
-		logger.info("Try selecting a profile:");
-		for (ProfileType pt : profiles) {
-		    logger.info("  " + pt.getProfileId());
-		}
-	    }
-	    return false;
-	} else {
-	    logger.info("There are " + rules.size() + " rules to process for the selected profile");
-	    return true;
-	}
-    }
-
-    /**
-     * Test whether the XCCDF bundle's applicability rules are satisfied.
-     */
-    private boolean isApplicable() {
-	phase = "discovery";
-	logger.info("Determining system applicability...");
-
-	Collection<String> definitions = profile.getPlatformDefinitionIds();
-	if (definitions.size() == 0) {
-	    logger.info("No platforms specified, skipping applicability checks...");
-	    return true;
-	}
-	IDefinitions cpeOval = xccdf.getCpeOval();
-	if (cpeOval == null) {
-	    logger.severe("Cannot perform applicability checks: CPE OVAL definitions were not found in the XCCDF bundle!");
-	    return false;
-	}
-	IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
-	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
-	engine.setDefinitions(xccdf.getCpeOval());
-	try {
-	    session.connect();
-	    for (String definition : definitions) {
-		ResultEnumeration result = engine.evaluateDefinition(definition);
-		switch(result) {
-		  case TRUE:
-		    logger.info("Passed def " + definition);
-		    break;
-
-		  default:
-		    logger.warning("Bad result " + result + " for definition " + definition);
-		    logger.info("The target system is not applicable to the XCCDF bundle");
-		    return false;
-		}
-	    }
-	    logger.info("The target system is applicable to the XCCDF bundle");
-	    return true;
-	} catch (Exception e) {
-	    logger.severe(LogFormatter.toString(e));
-	    return false;
-	} finally {
-	    session.disconnect();
-	    engine.getNotificationProducer().removeObserver(this);
-	}
-    }
-
-    /**
-     * Recursively get all rules within the XCCDF document.
-     */
-    private List<RuleType> listAllRules() {
-	List<RuleType> rules = new Vector<RuleType>();
-	for (SelectableItemType item : xccdf.getBenchmark().getGroupOrRule()) {
-	    rules.addAll(getRules(item));
-	}
-	return rules;
-    }
-
-    /**
-     * Recursively list all selected rules within the SelectableItem.
-     */
-    private List<RuleType> getRules(SelectableItemType item) {
-	List<RuleType> rules = new Vector<RuleType>();
-	if (item instanceof RuleType) {
-	    rules.add((RuleType)item);
-	} else if (item instanceof GroupType) {
-	    for (SelectableItemType child : ((GroupType)item).getGroupOrRule()) {
-		rules.addAll(getRules(child));
-	    }
-	}
-	return rules;
     }
 }
