@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,10 +27,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
-import java.util.SimpleTimeZone;
 import java.util.Stack;
 import java.util.StringTokenizer;
-import java.util.TimeZone;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
@@ -55,7 +54,6 @@ import oval.schemas.definitions.core.ConstantVariable;
 import oval.schemas.definitions.core.CountFunctionType;
 import oval.schemas.definitions.core.CriteriaType;
 import oval.schemas.definitions.core.CriterionType;
-import oval.schemas.definitions.core.DateTimeFormatEnumeration;
 import oval.schemas.definitions.core.DefinitionType;
 import oval.schemas.definitions.core.DefinitionsType;
 import oval.schemas.definitions.core.EndFunctionType;
@@ -118,7 +116,6 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
-import org.joval.os.windows.Timestamp;
 import org.joval.oval.CollectException;
 import org.joval.oval.DefinitionFilter;
 import org.joval.oval.Definitions;
@@ -1359,6 +1356,20 @@ public class Engine implements IEngine {
 		return ResultEnumeration.FALSE;
 	    }
 
+	  case SUBSET_OF:
+	    if (subsetOf(item, state)) {
+		return ResultEnumeration.TRUE;
+	    } else {
+		return ResultEnumeration.FALSE;
+	    }
+
+	  case SUPERSET_OF:
+	    if (subsetOf(item, state)) {
+		return ResultEnumeration.FALSE;
+	    } else {
+		return ResultEnumeration.TRUE;
+	    }
+
 	  default:
 	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, state.getOperation()));
 	}
@@ -1396,7 +1407,7 @@ public class Engine implements IEngine {
 
 	  case VERSION:
 	    try {
-		return new Version(item.getValue()).compareTo(new Version(state.getValue()));
+		return new Version(itemStr.trim()).compareTo(new Version(stateStr.trim()));
 	    } catch (IllegalArgumentException e) {
 		throw new TestException(e);
 	    }
@@ -1404,20 +1415,23 @@ public class Engine implements IEngine {
 	  case FILESET_REVISION:
 	  case EVR_STRING:
 	    try {
-		return new Evr(itemStr.trim()).compareTo(new Evr(stateStr.trim()));
+		return new EvrString(itemStr.trim()).compareTo(new EvrString(stateStr.trim()));
 	    } catch (IllegalArgumentException e) {
 		throw new TestException(e);
 	    }
 
-	  case IPV_4_ADDRESS:
-	  case IPV_6_ADDRESS:
-	    //
-	    // DAS: IP address comparisons are TBD, for now just treat them as strings
-	    //
 	  case IOS_VERSION:
 	  case BINARY:
 	  case STRING:
 	    return (itemStr).compareTo(stateStr);
+
+	  case IPV_4_ADDRESS:
+	  case IPV_6_ADDRESS:
+	    try {
+		return new IpAddress(itemStr.trim()).compareTo(new IpAddress(stateStr.trim()));
+	    } catch (IllegalArgumentException e) {
+		throw new TestException(e);
+	    }
 
 	  default:
 	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
@@ -1467,6 +1481,24 @@ public class Engine implements IEngine {
 	  default:
 	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
 							state.getDatatype(), OperationEnumeration.BITWISE_OR));
+	}
+    }
+
+    boolean subsetOf(EntityItemSimpleBaseType item, EntitySimpleBaseType state) throws TestException, OvalException {
+	switch(getDatatype(state.getDatatype())) {
+	  case IPV_4_ADDRESS:
+	  case IPV_6_ADDRESS:
+	    try {
+		IpAddress sIp = new IpAddress((String)state.getValue());
+		IpAddress iIp = new IpAddress((String)item.getValue());
+		return iIp.contains(sIp);
+	    } catch (IllegalArgumentException e) {
+		throw new TestException(e);
+	    }
+
+	  default:
+	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
+							state.getDatatype(), OperationEnumeration.SUBSET_OF));
 	}
     }
 
@@ -1796,15 +1828,21 @@ public class Engine implements IEngine {
 		timestamp1 = resolveInternal(children.get(0), rc);
 		timestamp2 = resolveInternal(children.get(1), rc);
 	    } else {
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_TIMEDIFFERENCE,new Integer(children.size()));
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_TIMEDIFFERENCE, Integer.toString(children.size()));
 		throw new ResolveException(msg);
 	    }
 	    for (String time1 : timestamp1) {
-		long tm1 = getTime(time1, tt.getFormat1());
-		for (String time2 : timestamp2) {
-		    long tm2 = getTime(time2, tt.getFormat2());
-		    long diff = (tm1 - tm2)/1000L; // convert diff to seconds
-		    values.add(Long.toString(diff));
+		try {
+		    long tm1 = DateTime.getTime(time1, tt.getFormat1());
+		    for (String time2 : timestamp2) {
+			long tm2 = DateTime.getTime(time2, tt.getFormat2());
+			long diff = (tm1 - tm2)/1000L; // convert diff to seconds
+			values.add(Long.toString(diff));
+		    }
+		} catch (IllegalArgumentException e) {
+		    throw new ResolveException(e.getMessage());
+		} catch (ParseException e) {
+		    throw new ResolveException(e.getMessage());
 		}
 	    }
 	    return values;
@@ -2121,237 +2159,6 @@ public class Engine implements IEngine {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return objectSet;
-    }
-
-    /**
-     * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#DateTimeFormatEnumeration
-     */
-    long getTime(String s, DateTimeFormatEnumeration format) throws ResolveException {
-	try {
-	    String sdf = null;
-
-	    switch(format) {
-	      case SECONDS_SINCE_EPOCH:
-		return Long.parseLong(s) * 1000L;
-    
-	      case WIN_FILETIME:
-		return Timestamp.getTime(new BigInteger(s, 16));
-
-	      case DAY_MONTH_YEAR:
-		switch(s.length()) {
-		  case 8:
-		  case 9:
-		  case 10:
-		    if (s.charAt(1) == '/' || s.charAt(2) == '/') {
-			sdf = "dd/MM/yyyy";
-		    } else {
-			sdf = "dd-MM-yyyy";
-		    }
-		    break;
-    
-		  case 18:
-		  case 19:
-		  case 20:
-		    if (s.charAt(1) == '/' || s.charAt(2) == '/') {
-			sdf = "dd/MM/yyyy HH:mm:ss";
-		    } else {
-			sdf = "dd-MM-yyyy HH:mm:ss";
-		    }
-		    break;
-
-		  default:
-		    break;
-		}
-		break;
-    
-	      case MONTH_DAY_YEAR:
-		switch(s.length()) {
-		  case 8:
-		  case 9:
-		  case 10:
-		    if (s.charAt(1) == '/' || s.charAt(2) == '/') {
-			sdf = "MM/dd/yyyy";
-		    } else {
-			sdf = "MM-dd-yyyy";
-		    }
-		    break;
-    
-		  case 11:
-		  case 12:
-		    sdf = "MMM, dd yyyy";
-		    break;
-
-		  case 17:
-		  case 18:
-		  case 19:
-		  case 20:
-		  case 21:
-		    if (s.charAt(1) == '/' || s.charAt(2) == '/') {
-			sdf = "MM/dd/yyyy HH:mm:ss";
-			break;
-		    } else if (s.charAt(1) == '-' || s.charAt(2) == '-') {
-			sdf = "MM-dd-yyyy HH:mm:ss";
-			break;
-		    } else if (s.charAt(3) == ',') {
-			sdf = "MMM, dd yyyy HH:mm:ss";
-			break;
-		    }
-		    // fall-through
-    
-		  default:
-		    if (s.indexOf(":") == -1) {
-			sdf = "MMMMM, dd yyyy";
-		    } else {
-			if (s.indexOf(",") == -1) {
-			    sdf = "MMMMM dd yyyy HH:mm:ss";
-			} else {
-			    sdf = "MMMMM, dd yyyy HH:mm:ss";
-			}
-		    }
-		    break;
-		}
-		break;
-    
-	      case YEAR_MONTH_DAY: {
-		switch(s.length()) {
-		  case 8:
-		  case 9:
-		  case 10:
-		    if (s.charAt(4) == '/') {
-			sdf = "yyyy/MM/dd";
-		    } else if (s.charAt(4) == '-') {
-			sdf = "yyyy-MM-dd";
-		    } else {
-			sdf = "yyyyMMdd";
-		    }
-		    break;
-
-		  case 15:
-		    sdf = "yyyyMMdd'T'HHmmss";
-		    break;
-    
-		  case 19:
-		    if (s.charAt(4) == '/') {
-			sdf = "yyyy/MM/dd HH:mm:ss";
-		    } else {
-			sdf = "yyyy-MM-dd HH:mm:ss";
-		    }
-		    break;
-    
-		  default:
-		    break;
-		}
-		break;
-	      }
-	    }
-
-	    if (sdf != null) {
-		SimpleDateFormat df = new SimpleDateFormat(sdf);
-		df.setTimeZone(TimeZone.getTimeZone("GMT"));
-		Date date = df.parse(s);
-		df.applyPattern("dd MMM yyyy HH:mm:ss z");
-		logger.debug(JOVALMsg.STATUS_DATECONVERSION, s, format, df.format(date), date.getTime());
-		return date.getTime();
-	    }
-	} catch (Exception e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_TIME_PARSE, s, format));
-	}
-
-	throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_ILLEGAL_TIME, format, s));
-    }
-
-    /**
-     * This class is a more or less exact reimplementation of the algorithm used by librpm's rpmvercmp(char* a, char* b)
-     * function, as dictated by the OVAL specification. See:
-     * http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#EntityStateEVRStringType
-     */
-    class Evr {
-	String evr;
-
-	Evr(String evr) {
-	    this.evr = evr;
-	}
-
-	/**
-	 * Based on rpmvercmp.c
-	 */
-	int compareTo(Evr other) {
-	    //
-	    // Easy string comparison to check for equivalence
-	    //
-	    if (evr.equals(other.evr)) {
-		return 0;
-	    }
-
-	    byte[] b1 = evr.getBytes();
-	    byte[] b2 = other.evr.getBytes();
-	    int i1 = 0, i2 = 0;
-	    boolean isNum = false;
-
-	    //
-	    // Loop through each version segment of the EVRs and compare them
-	    //
-	    while (i1 < b1.length && i2 < b2.length) {
-		while (i1 < b1.length && !isAlphanumeric(b1[i1])) i1++;
-		while (i2 < b2.length && !isAlphanumeric(b2[i2])) i2++;
-
-		//
-		// If we ran into the end of either, we're done.
-		//
-		if (i1 == b1.length || i2 == b2.length) break;
-
-		//
-		// Grab the first completely alphanumeric segment and compare them
-		//
-		int start1 = i1, start2 = i2;
-		if (isNumeric(b1[i1])) {
-		    while (i1 < b1.length && isNumeric(b1[i1])) i1++;
-		    while (i2 < b2.length && isNumeric(b2[i2])) i2++;
-		    isNum = true;
-		} else {
-		    while (i1 < b1.length && isAlpha(b1[i1])) i1++;
-		    while (i2 < b2.length && isAlpha(b2[i2])) i2++;
-		    isNum = false;
-		}
-
-		if (i1 == start1) return -1; // arbitrary; shouldn't happen
-
-		if (i2 == start2) return (isNum ? 1 : -1);
-
-		if (isNum) {
-		    int int1 = Integer.parseInt(new String(b1).substring(start1, i1));
-		    int int2 = Integer.parseInt(new String(b2).substring(start2, i2));
-
-		    if (int1 > int2) return 1;
-		    if (int2 > int1) return -1;
-		}
-
-		int rc = new String(b1).substring(start1, i1).compareTo(new String(b2).substring(start2, i2));
-		if (rc != 0) {
-		    return (rc < 1 ? -1 : 1);
-		}
-	    }
-
-	    // Take care of the case where all segments compare identically, but only the separator chars differed
-	    if (i1 == b1.length && i2 == b2.length) return 0;
-
-	    // Whichever version still has characters left over wins
-	    if (i1 < b1.length) return 1;
-	    return -1;
-	}
-
-	boolean isAlphanumeric(byte b) {
-	    return isAlpha(b) || isNumeric(b);
-	}
-
-	boolean isAlpha(byte b) {
-	    return StringTools.isLetter(b);
-	}
-
-	boolean isNumeric(byte b) {
-	    return '0' <= b && b <= '9';
-	}
     }
 
     class StateFieldBridge extends EntityStateSimpleBaseType {

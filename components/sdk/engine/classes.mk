@@ -27,8 +27,11 @@ CLASSES=\
 	org.joval.oval.TestException			\
 	org.joval.oval.Variables			\
 	org.joval.oval.engine.CheckData			\
+	org.joval.oval.engine.DateTime			\
 	org.joval.oval.engine.Engine			\
+	org.joval.oval.engine.EvrString			\
 	org.joval.oval.engine.ExistenceData		\
+	org.joval.oval.engine.IpAddress			\
 	org.joval.oval.engine.OperatorData		\
 	org.joval.oval.engine.RequestContext		\
 	org.joval.oval.engine.ResolveException		\
