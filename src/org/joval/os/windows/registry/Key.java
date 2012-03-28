@@ -129,6 +129,7 @@ public class Key implements IKey {
 		break;
 	      }
 	      default:
+		registry.getLogger().debug(JOVALMsg.ERROR_WINREG_SUBKEY_MISSING, getHive(), getPath(), name);
 		registry.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		break;
 	    }

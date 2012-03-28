@@ -43,6 +43,17 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     private IWindowsFilesystem fs32;
     private Directory directory = null;
 
+    //
+    // Load the JACOB DLL
+    //
+    static {
+	if ("32".equals(System.getProperty("sun.arch.data.model"))) {
+	    System.loadLibrary("jacob-1.15-M4-x86");
+	} else {
+	    System.loadLibrary("jacob-1.15-M4-x64");
+	}
+    }
+
     public WindowsSession() {
 	super();
     }

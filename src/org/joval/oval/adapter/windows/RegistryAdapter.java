@@ -91,11 +91,9 @@ public class RegistryAdapter implements IAdapter {
 
 	String id = rObj.getId();
 	if (rObj.getHive() == null || rObj.getHive().getValue() == null) {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, id);
-	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, id));
 	}
 	String hive = (String)rObj.getHive().getValue();
-
 	if (rObj.getKey().getValue() == null) {
 	    try {
 		for (RegistryItem item : getItems(rObj, hive, null, rc)) {
@@ -214,8 +212,13 @@ public class RegistryAdapter implements IAdapter {
 	    Collection<String> results = new Vector<String>();
 	    for (String path : list) {
 		try {
-		    IKey key = (win32 ? reg32 : reg).fetchKey(hive, path);
-		    results.add(path);
+		    IKey key = null;
+		    if (path.length() > 0) {
+			key = (win32 ? reg32 : reg).fetchKey(hive, path);
+			results.add(path);
+		    } else {
+			key = (win32 ? reg32 : reg).fetchKey(hive);
+		    }
 		    if ("up".equals(direction)) {
 			int ptr = 0;
 			if (path.endsWith(IRegistry.DELIM_STR)) {
@@ -232,8 +235,8 @@ public class RegistryAdapter implements IAdapter {
 			if (children != null) {
 			    Vector<String> v = new Vector<String>();
 			    for (int i=0; i < children.length; i++) {
-				if (path.endsWith(IRegistry.DELIM_STR)) {
-				    v.add(path + children[i]);
+				if (path.length() == 0) {
+				    v.add(children[i]);
 				} else {
 				    v.add(path + IRegistry.DELIM_STR + children[i]);
 				}

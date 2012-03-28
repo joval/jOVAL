@@ -144,7 +144,6 @@ class IpAddress implements Comparable<IpAddress> {
     boolean contains(IpAddress other) {
 	for (int i=0; i < 16; i++) {
 	    if (addr[i] != (other.addr[i] & mask[i])) {
-System.out.println("DAS addr[" + i + "] = " + Short.toString(addr[i]) + " mask=" + Short.toString(mask[i]));
 		return false;
 	    }
 	}

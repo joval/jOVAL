@@ -1413,6 +1413,7 @@ public class Engine implements IEngine {
 	    }
 
 	  case FILESET_REVISION:
+	  case IOS_VERSION:
 	  case EVR_STRING:
 	    try {
 		return new EvrString(itemStr.trim()).compareTo(new EvrString(stateStr.trim()));
@@ -1420,7 +1421,6 @@ public class Engine implements IEngine {
 		throw new TestException(e);
 	    }
 
-	  case IOS_VERSION:
 	  case BINARY:
 	  case STRING:
 	    return (itemStr).compareTo(stateStr);

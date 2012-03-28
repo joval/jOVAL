@@ -25,8 +25,6 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class WmiProvider implements IWmiProvider {
-    private static boolean libLoaded = false;
-
     private ActiveXComponent locator;
     private Hashtable <String, Dispatch>map;
     private LocLogger logger;
@@ -48,14 +46,6 @@ public class WmiProvider implements IWmiProvider {
 
     public boolean register() {
 	try {
-	    if (!libLoaded) {
-		if ("32".equals(System.getProperty("sun.arch.data.model"))) {
-		    System.loadLibrary("jacob-1.15-M4-x86");
-		} else {
-		    System.loadLibrary("jacob-1.15-M4-x64");
-		}
-	        libLoaded = true;
-	    }
 	    if (locator == null) {
 		logger.info(JOVALMsg.STATUS_WMI_CONNECT);
 		locator = new ActiveXComponent("WbemScripting.SWbemLocator");
