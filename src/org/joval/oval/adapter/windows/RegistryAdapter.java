@@ -94,23 +94,13 @@ public class RegistryAdapter implements IAdapter {
 	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, id));
 	}
 	String hive = (String)rObj.getHive().getValue();
-	if (rObj.getKey().getValue() == null) {
+	for (String path : getPathList(rObj, hive, rc)) {
 	    try {
-		for (RegistryItem item : getItems(rObj, hive, null, rc)) {
+		for (RegistryItem item : getItems(rObj, hive, path, rc)) {
 		    items.add(Factories.sc.windows.createRegistryItem(item));
 		}
 	    } catch (NoSuchElementException e) {
 		// No match.
-	    }
-	} else {
-	    for (String path : getPathList(rObj, hive, rc)) {
-		try {
-		    for (RegistryItem item : getItems(rObj, hive, path, rc)) {
-			items.add(Factories.sc.windows.createRegistryItem(item));
-		    }
-		} catch (NoSuchElementException e) {
-		    // No match.
-		}
 	    }
 	}
 	return items;
@@ -126,7 +116,9 @@ public class RegistryAdapter implements IAdapter {
 		throws CollectException, OvalException {
 
 	Collection<String> list = pathMap.get(rObj.getId());
-	if (list != null) {
+	if (list == null) {
+	    list = new Vector<String>();
+	} else {
 	    return list;
 	}
 
@@ -136,44 +128,47 @@ public class RegistryAdapter implements IAdapter {
 	    win32 = "32_bit".equals(behaviors.getWindowsView());
 	}
 
-	list = new Vector<String>();
-	if (rObj.getKey().getValue().isSetVarRef()) {
-	    try {
-		String variableId = rObj.getKey().getValue().getVarRef();
-		list.addAll(rc.resolve(variableId));
-	    } catch (NoSuchElementException e) {
-		session.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), rObj.getId());
-	    }
-	} else {
-	    list.add((String)rObj.getKey().getValue().getValue());
-	}
-
 	boolean patternMatch = false;
-	OperationEnumeration op = rObj.getKey().getValue().getOperation();
-	switch(op) {
-	  case EQUALS:
-	    break;
-
-	  case PATTERN_MATCH: {
-	    patternMatch = true;
-	    Collection<String> newList = new Vector<String>();
-	    for (String value : list) {
+	if (rObj.getKey().getValue() == null) {
+	    list.add(""); // special case
+	} else {
+	    if (rObj.getKey().getValue().isSetVarRef()) {
 		try {
-		    for (IKey key : (win32 ? reg32 : reg).search(hive, value)) {
-			if (!newList.contains(key.getPath())) {
-			    newList.add(key.getPath());
-			}
-		    }
+		    String variableId = rObj.getKey().getValue().getVarRef();
+		    list.addAll(rc.resolve(variableId));
 		} catch (NoSuchElementException e) {
+		    session.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), rObj.getId());
 		}
+	    } else {
+		list.add((String)rObj.getKey().getValue().getValue());
 	    }
-	    list = newList;
-	    break;
-	  }
 
-	  default:
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    OperationEnumeration op = rObj.getKey().getValue().getOperation();
+	    switch(op) {
+	      case EQUALS:
+		break;
+
+	      case PATTERN_MATCH: {
+		patternMatch = true;
+		Collection<String> newList = new Vector<String>();
+		for (String value : list) {
+		    try {
+			for (IKey key : (win32 ? reg32 : reg).search(hive, value)) {
+			    if (!newList.contains(key.getPath())) {
+				newList.add(key.getPath());
+			    }
+			}
+		    } catch (NoSuchElementException e) {
+		    }
+		}
+		list = newList;
+		break;
+	      }
+
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
 	}
 
 	if (rObj.isSetBehaviors()) {
