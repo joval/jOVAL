@@ -56,6 +56,10 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.systemcharacteristics.esx"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the status property -->
+    <jxb:bindings node="xs:element[@name='patch_item']//xs:element[@name='status']">
+        <jxb:property name="patch_status" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="evaluation-ids.xsd" node="/xs:schema">
     <jxb:schemaBindings>
@@ -159,6 +163,22 @@
         <jxb:property name="rpm_version" />
     </jxb:bindings>
     <!-- avoid overloading the version property -->
+    <jxb:bindings node="xs:element[@name='rpmverifyfile_object']//xs:element[@name='version']">
+        <jxb:property name="rpm_version" />
+    </jxb:bindings>
+    <!-- avoid overloading the version property -->
+    <jxb:bindings node="xs:element[@name='rpmverifyfile_state']//xs:element[@name='version']">
+        <jxb:property name="rpm_version" />
+    </jxb:bindings>
+    <!-- avoid overloading the version property -->
+    <jxb:bindings node="xs:element[@name='rpmverifypackage_object']//xs:element[@name='version']">
+        <jxb:property name="rpm_version" />
+    </jxb:bindings>
+    <!-- avoid overloading the version property -->
+    <jxb:bindings node="xs:element[@name='rpmverifypackage_state']//xs:element[@name='version']">
+        <jxb:property name="rpm_version" />
+    </jxb:bindings>
+    <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='slackwarepkginfo_state']//xs:element[@name='version']">
         <jxb:property name="slackwarepkginfo_version" />
     </jxb:bindings>
@@ -173,6 +193,14 @@
     </jxb:bindings>
     <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='rpminfo_item']//xs:element[@name='version']">
+        <jxb:property name="rpm_version" />
+    </jxb:bindings>
+    <!-- avoid overloading the version property -->
+    <jxb:bindings node="xs:element[@name='rpmverifyfile_item']//xs:element[@name='version']">
+        <jxb:property name="rpm_version" />
+    </jxb:bindings>
+    <!-- avoid overloading the version property -->
+    <jxb:bindings node="xs:element[@name='rpmverifypackage_item']//xs:element[@name='version']">
         <jxb:property name="rpm_version" />
     </jxb:bindings>
     <!-- avoid overloading the version property -->
@@ -234,11 +262,23 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.definitions.sharepoint"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the id property -->
+    <jxb:bindings node="xs:element[@name='infopolicycoll_object']//xs:element[@name='id']">
+        <jxb:property name="infopolicycoll_id" />
+    </jxb:bindings>
+    <!-- avoid overloading the id property -->
+    <jxb:bindings node="xs:element[@name='infopolicycoll_state']//xs:element[@name='id']">
+        <jxb:property name="infopolicycoll_id" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="sharepoint-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.systemcharacteristics.sharepoint"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the id property -->
+    <jxb:bindings node="xs:element[@name='infopolicycoll_item']//xs:element[@name='id']">
+        <jxb:property name="infopolicycoll_id" />
+    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="solaris-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
@@ -284,6 +324,18 @@
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.definitions.windows"/>
     </jxb:schemaBindings>
+    <!-- avoid overloading the version property -->
+    <jxb:bindings node="xs:element[@name='file_state']//xs:element[@name='version']">
+        <jxb:property name="file_version" />
+    </jxb:bindings>
+    <!-- avoid overloading the id property -->
+    <jxb:bindings node="xs:element[@name='metabase_object']//xs:element[@name='id']">
+        <jxb:property name="metabase_id" />
+    </jxb:bindings>
+    <!-- avoid overloading the id property -->
+    <jxb:bindings node="xs:element[@name='metabase_state']//xs:element[@name='id']">
+        <jxb:property name="metabase_id" />
+    </jxb:bindings>
     <jxb:bindings node="xs:element[@name='user_sid_object']//xs:element[@name='user']">
         <!-- pseudo-implement user_sid55_object, to match the user_sid_item parameter names -->
         <jxb:property name="user_sid" />
@@ -296,10 +348,6 @@
         <!-- pseudo-implement user_sid55_state, to match the user_sid_item parameter names -->
         <jxb:property name="group_sid" />
     </jxb:bindings>
-    <!-- avoid overloading the version property -->
-    <jxb:bindings node="xs:element[@name='file_state']//xs:element[@name='version']">
-        <jxb:property name="file_version" />
-    </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="windows-system-characteristics-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
@@ -308,6 +356,10 @@
     <!-- avoid overloading the version property -->
     <jxb:bindings node="xs:element[@name='file_item']//xs:element[@name='version']">
         <jxb:property name="file_version" />
+    </jxb:bindings>
+    <!-- avoid overloading the id property -->
+    <jxb:bindings node="xs:element[@name='metabase_item']//xs:element[@name='id']">
+        <jxb:property name="metabase_id" />
     </jxb:bindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="xmldsig-core-schema.xsd" node="/xs:schema">
