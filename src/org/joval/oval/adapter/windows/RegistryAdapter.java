@@ -50,7 +50,6 @@ import org.joval.io.LittleEndian;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 
 /**

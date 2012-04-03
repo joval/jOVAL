@@ -32,7 +32,6 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
 
 /**
  * Provides Cisco IOS Version55Item OVAL items.

@@ -6,7 +6,6 @@ CLASSES=\
 	org.joval.intf.oval.IEngine			\
 	org.joval.intf.oval.IResults			\
 	org.joval.intf.oval.ISystemCharacteristics	\
-	org.joval.intf.oval.ITyped			\
 	org.joval.intf.oval.IVariables			\
 	org.joval.intf.plugin.IAdapter			\
 	org.joval.intf.plugin.IPlugin			\
@@ -25,8 +24,6 @@ CLASSES=\
 	org.joval.oval.OvalFactory			\
 	org.joval.oval.Results				\
 	org.joval.oval.SystemCharacteristics		\
-	org.joval.oval.TestException			\
-	org.joval.oval.TypedData			\
 	org.joval.oval.Variables			\
 	org.joval.oval.engine.CheckData			\
 	org.joval.oval.engine.DateTime			\
@@ -37,6 +34,8 @@ CLASSES=\
 	org.joval.oval.engine.OperatorData		\
 	org.joval.oval.engine.RequestContext		\
 	org.joval.oval.engine.ResolveException		\
+	org.joval.oval.engine.TestException		\
+	org.joval.oval.engine.TypedData			\
 	org.joval.oval.sysinfo.IosNetworkInterface	\
 	org.joval.oval.sysinfo.IosSystemInfo		\
 	org.joval.oval.sysinfo.JunosNetworkInterface	\

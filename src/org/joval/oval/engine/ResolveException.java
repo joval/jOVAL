@@ -13,11 +13,11 @@ package org.joval.oval.engine;
  * @version %I% %G%
  */
 class ResolveException extends Exception {
-    public ResolveException(String message) {
+    ResolveException(String message) {
 	super(message);
     }
 
-    public ResolveException(Exception e) {
+    ResolveException(Exception e) {
 	super(e);
     }
 }

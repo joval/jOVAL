@@ -30,7 +30,6 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
-import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;

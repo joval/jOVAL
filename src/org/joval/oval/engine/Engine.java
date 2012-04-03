@@ -131,8 +131,6 @@ import org.joval.oval.OvalException;
 import org.joval.oval.OvalFactory;
 import org.joval.oval.Results;
 import org.joval.oval.SystemCharacteristics;
-import org.joval.oval.TestException;
-import org.joval.oval.TypedData;
 import org.joval.oval.sysinfo.SysinfoFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;

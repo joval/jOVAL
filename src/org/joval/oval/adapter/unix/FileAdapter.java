@@ -42,7 +42,6 @@ import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
-import org.joval.oval.TestException;
 import org.joval.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
 

@@ -35,7 +35,6 @@ import org.joval.intf.util.ISearchable;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.oval.TestException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 import org.joval.util.Version;

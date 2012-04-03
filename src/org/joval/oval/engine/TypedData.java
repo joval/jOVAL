@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval;
+package org.joval.oval.engine;
 
 import java.math.BigInteger;
 import java.math.BigDecimal;
@@ -24,6 +24,7 @@ import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
 
+import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -32,14 +33,14 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class TypedData {
-    public enum Type {
+class TypedData {
+    enum Type {
 	SIMPLE, COMPLEX;
     }
 
-    public static final TypedData EMPTY_STRING = new TypedData("");
+    static final TypedData EMPTY_STRING = new TypedData("");
 
-    public static SimpleDatatypeEnumeration getSimpleDatatype(String datatype) throws IllegalArgumentException {
+    static SimpleDatatypeEnumeration getSimpleDatatype(String datatype) throws IllegalArgumentException {
 	for (SimpleDatatypeEnumeration type : SimpleDatatypeEnumeration.values()) {
 	    if (type.value().equals(datatype)) {
 		return type;
@@ -48,7 +49,7 @@ public class TypedData {
 	throw new IllegalArgumentException(datatype);
     }
 
-    public static ComplexDatatypeEnumeration getComplexDatatype(String datatype) throws IllegalArgumentException {
+    static ComplexDatatypeEnumeration getComplexDatatype(String datatype) throws IllegalArgumentException {
 	for (ComplexDatatypeEnumeration type : ComplexDatatypeEnumeration.values()) {
 	    if (type.value().equals(datatype)) {
 		return type;
@@ -60,11 +61,11 @@ public class TypedData {
     private Type type;
     private Object value;
 
-    public TypedData(SimpleDatatypeEnumeration type, String value) {
+    TypedData(SimpleDatatypeEnumeration type, String value) {
 	init(type, value);
     }
 
-    public TypedData(EntityItemFieldType field) throws IllegalArgumentException {
+    TypedData(EntityItemFieldType field) throws IllegalArgumentException {
 	switch(field.getStatus()) {
 	  case EXISTS:
 	    init(field.getDatatype(), (String)field.getValue());
@@ -75,11 +76,11 @@ public class TypedData {
 	}
     }
 
-    public TypedData(LiteralComponentType literal) {
+    TypedData(LiteralComponentType literal) {
 	init(literal.getDatatype(), (String)literal.getValue());
     }
 
-    public TypedData(EntityItemSimpleBaseType data) throws IllegalArgumentException {
+    TypedData(EntityItemSimpleBaseType data) throws IllegalArgumentException {
 	switch(data.getStatus()) {
 	  case EXISTS:
 	    init(data.getDatatype(), (String)data.getValue());
@@ -90,31 +91,31 @@ public class TypedData {
 	}
     }
 
-    public TypedData(String value) {
+    TypedData(String value) {
 	init(SimpleDatatypeEnumeration.STRING, value);
     }
 
-    public TypedData(long value) {
+    TypedData(long value) {
 	init(SimpleDatatypeEnumeration.INT, Long.toString(value));
     }
 
-    public TypedData(int value) {
+    TypedData(int value) {
 	init(SimpleDatatypeEnumeration.INT, Integer.toString(value));
     }
 
-    public TypedData(BigDecimal value) {
+    TypedData(BigDecimal value) {
 	init(SimpleDatatypeEnumeration.INT, value.toString());
     }
 
-    public TypedData(BigInteger value) {
+    TypedData(BigInteger value) {
 	init(SimpleDatatypeEnumeration.INT, value.toString());
     }
 
-    public TypedData(String datatype, String value) {
+    TypedData(String datatype, String value) {
 	init(datatype, value);
     }
 
-    public TypedData(EntityItemComplexBaseType data) {
+    TypedData(EntityItemComplexBaseType data) {
 	type = Type.COMPLEX;
 	value = data;
     }
@@ -152,40 +153,40 @@ public class TypedData {
 	}
     }
 
-    public Type getType() {
+    Type getType() {
 	return type;
     }
 
-    public Object getValue() {
+    Object getValue() {
 	return value;
     }
 
-    public ComplexDatatypeEnumeration getComplexType() throws UnsupportedOperationException {
+    ComplexDatatypeEnumeration getComplexType() throws UnsupportedOperationException {
 	if (type == Type.SIMPLE) {
 	    throw new UnsupportedOperationException("getComplexType");
 	}
 	return getComplexDatatype(((EntityItemComplexBaseType)value).getDatatype());
     }
 
-    public SimpleDatatypeEnumeration getSimpleType() throws UnsupportedOperationException {
+    SimpleDatatypeEnumeration getSimpleType() throws UnsupportedOperationException {
 	if (type == Type.COMPLEX) {
 	    throw new UnsupportedOperationException("getSimpleType");
 	}
 	return getSimpleDatatype(((EntityItemSimpleBaseType)value).getDatatype());
     }
 
-    public String getString() throws UnsupportedOperationException {
+    String getString() throws UnsupportedOperationException {
 	if (type == Type.COMPLEX) {
 	    throw new UnsupportedOperationException("getSimpleType");
 	}
 	return (String)((EntityItemSimpleBaseType)value).getValue();
     }
 
-    public int getInt() throws UnsupportedOperationException {
+    int getInt() throws UnsupportedOperationException {
 	return Integer.parseInt(getString());
     }
 
-    public byte[] getBytes() throws UnsupportedOperationException {
+    byte[] getBytes() throws UnsupportedOperationException {
 	return getString().getBytes();
     }
 
