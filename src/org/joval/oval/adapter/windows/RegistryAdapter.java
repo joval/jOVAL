@@ -7,15 +7,16 @@ import java.math.BigInteger;
 import java.util.Hashtable;
 import java.util.Collection;
 import java.util.NoSuchElementException;
+import java.util.HashSet;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.windows.RegistryBehaviors;
 import oval.schemas.definitions.windows.RegistryObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
@@ -61,7 +62,6 @@ import org.joval.util.JOVALMsg;
 public class RegistryAdapter implements IAdapter {
     private IWindowsSession session;
     private Hashtable<String, BigInteger> itemIds;
-    private Hashtable<String, Collection<String>> pathMap;
     private IRegistry reg32, reg;
 
     // Implement IAdapter
@@ -71,13 +71,12 @@ public class RegistryAdapter implements IAdapter {
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    itemIds = new Hashtable<String, BigInteger>();
-	    pathMap = new Hashtable<String, Collection<String>>();
 	    classes.add(RegistryObject.class);
 	}
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
+    public Collection<RegistryItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
 	if (reg32 == null) {
 	    reg32 = session.getRegistry(IWindowsSession.View._32BIT);
 	    if (session.supports(IWindowsSession.View._64BIT)) {
@@ -86,8 +85,8 @@ public class RegistryAdapter implements IAdapter {
 		reg = reg32;
 	    }
 	}
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	RegistryObject rObj = (RegistryObject)rc.getObject();
+	Collection<RegistryItem> items = new Vector<RegistryItem>();
+	RegistryObject rObj = (RegistryObject)obj;
 
 	String id = rObj.getId();
 	if (rObj.getHive() == null || rObj.getHive().getValue() == null) {
@@ -96,9 +95,7 @@ public class RegistryAdapter implements IAdapter {
 	String hive = (String)rObj.getHive().getValue();
 	for (String path : getPathList(rObj, hive, rc)) {
 	    try {
-		for (RegistryItem item : getItems(rObj, hive, path, rc)) {
-		    items.add(Factories.sc.windows.createRegistryItem(item));
-		}
+		items.addAll(getItems(rObj, hive, path, rc));
 	    } catch (NoSuchElementException e) {
 		// No match.
 	    }
@@ -115,53 +112,34 @@ public class RegistryAdapter implements IAdapter {
     private Collection<String> getPathList(RegistryObject rObj, String hive, IRequestContext rc)
 		throws CollectException, OvalException {
 
-	Collection<String> list = pathMap.get(rObj.getId());
-	if (list == null) {
-	    list = new Vector<String>();
-	} else {
-	    return list;
-	}
-
 	boolean win32 = false;
 	if (rObj.isSetBehaviors()) {
 	    RegistryBehaviors behaviors = rObj.getBehaviors();
 	    win32 = "32_bit".equals(behaviors.getWindowsView());
 	}
 
+	Collection<String> list = new HashSet<String>();
 	boolean patternMatch = false;
 	if (rObj.getKey().getValue() == null) {
 	    list.add(""); // special case
 	} else {
-	    if (rObj.getKey().getValue().isSetVarRef()) {
-		try {
-		    String variableId = rObj.getKey().getValue().getVarRef();
-		    list.addAll(rc.resolve(variableId));
-		} catch (NoSuchElementException e) {
-		    session.getLogger().trace(JOVALMsg.STATUS_NOT_FOUND, e.getMessage(), rObj.getId());
-		}
-	    } else {
-		list.add((String)rObj.getKey().getValue().getValue());
-	    }
-
+	    String keypath = (String)rObj.getKey().getValue().getValue();
 	    OperationEnumeration op = rObj.getKey().getValue().getOperation();
 	    switch(op) {
 	      case EQUALS:
+		list.add(keypath);
 		break;
 
 	      case PATTERN_MATCH: {
 		patternMatch = true;
-		Collection<String> newList = new Vector<String>();
-		for (String value : list) {
-		    try {
-			for (IKey key : (win32 ? reg32 : reg).search(hive, value)) {
-			    if (!newList.contains(key.getPath())) {
-				newList.add(key.getPath());
-			    }
+		try {
+		    for (IKey key : (win32 ? reg32 : reg).search(hive, keypath)) {
+			if (!list.contains(key.getPath())) {
+			    list.add(key.getPath());
 			}
-		    } catch (NoSuchElementException e) {
 		    }
+		} catch (NoSuchElementException e) {
 		}
-		list = newList;
 		break;
 	      }
 
@@ -180,7 +158,8 @@ public class RegistryAdapter implements IAdapter {
 	    //
 	    Collection<String> newList = new Vector<String>();
 	    for (String value : list) {
-		if (((String)rObj.getKey().getValue().getValue()).indexOf(".*") != -1) {
+		String keypath = (String)rObj.getKey().getValue().getValue();
+		if (keypath.indexOf(".*") != -1 || keypath.indexOf(".+") != -1) {
 		    Collection<String> l = new Vector<String>();
 		    l.add(value);
 		    newList.addAll(getPaths(hive, l, -1, "down", win32));
@@ -193,7 +172,6 @@ public class RegistryAdapter implements IAdapter {
 	    }
 	}
 
-	pathMap.put(rObj.getId(), list);
 	return list;
     }
 

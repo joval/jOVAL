@@ -10,7 +10,6 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -58,12 +57,11 @@ public class GroupAdapter extends UserAdapter {
     }
 
     @Override
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
+    public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
 	directory = session.getDirectory();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	OperationEnumeration op = ((GroupObject)rc.getObject()).getGroup().getOperation();
-	String group = (String)((GroupObject)rc.getObject()).getGroup().getValue();
-
+	Collection<GroupItem> items = new Vector<GroupItem>();
+	OperationEnumeration op = ((GroupObject)obj).getGroup().getOperation();
+	String group = (String)((GroupObject)obj).getGroup().getValue();
 	try {
 	    switch(op) {
 	      case EQUALS:
@@ -127,7 +125,7 @@ public class GroupAdapter extends UserAdapter {
 
     // Private
 
-    private JAXBElement<? extends ItemType> makeItem(IGroup group) {
+    private GroupItem makeItem(IGroup group) {
 	GroupItem item = Factories.sc.windows.createGroupItem();
 	EntityItemStringType groupType = Factories.sc.core.createEntityItemStringType();
 	if (directory.isBuiltinGroup(group.getNetbiosName())) {
@@ -168,6 +166,6 @@ public class GroupAdapter extends UserAdapter {
 		item.getSubgroup().add(subgroupType);
 	    }
 	}
-	return Factories.sc.windows.createGroupItem(item);
+	return item;
     }
 }

@@ -10,12 +10,12 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.unix.RunlevelObject;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
@@ -64,61 +64,52 @@ public class RunlevelAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
+    public Collection<RunlevelItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
 	if (!initialized) {
 	    init();
 	}
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-
-	RunlevelObject rObj = (RunlevelObject)rc.getObject();
-	Collection<String> runlevelVals = new Vector<String>();
-	if (rObj.getRunlevel().isSetVarRef()) {
-	    runlevelVals.addAll(rc.resolve(rObj.getRunlevel().getVarRef()));
-	} else {
-	    runlevelVals.add((String)rObj.getRunlevel().getValue());
-	}
-
+	Collection<RunlevelItem> items = new Vector<RunlevelItem>();
+	RunlevelObject rObj = (RunlevelObject)obj;
+	String runlevel = (String)rObj.getRunlevel().getValue();
 	OperationEnumeration op = rObj.getRunlevel().getOperation();
-	for (String runlevel : runlevelVals) {
-	    switch(op) {
-	      case EQUALS: {
-		Hashtable table = runlevels.get(runlevel);
-		if (table != null) {
-		    items.addAll(getItems(rc, runlevel));
-		}
-		break;
-	      }
-
-	      case PATTERN_MATCH:
-		try {
-		    Pattern p = Pattern.compile(runlevel);
-		    for (String rl : runlevels.keySet()) {
-			if (p.matcher(rl).find()) {
-			    items.addAll(getItems(rc, rl));
-			}
-		    }
-		} catch (PatternSyntaxException e) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-		    rc.addMessage(msg);
-		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		}
-		break;
-
-	      case NOT_EQUAL: {
-		for (String rl : runlevels.keySet()) {
-		    if (!rl.equals(runlevel)) {
-			items.addAll(getItems(rc, rl));
-		    }
-		}
-		break;
-	      }
-
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	switch(op) {
+	  case EQUALS: {
+	    Hashtable table = runlevels.get(runlevel);
+	    if (table != null) {
+		items.addAll(getItems(rObj, rc, runlevel));
 	    }
+	    break;
+	  }
+
+	  case PATTERN_MATCH:
+	    try {
+		Pattern p = Pattern.compile(runlevel);
+		for (String rl : runlevels.keySet()) {
+		    if (p.matcher(rl).find()) {
+			items.addAll(getItems(rObj, rc, rl));
+		    }
+		}
+	    } catch (PatternSyntaxException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+		rc.addMessage(msg);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	    break;
+
+	  case NOT_EQUAL: {
+	    for (String rl : runlevels.keySet()) {
+		if (!rl.equals(runlevel)) {
+		    items.addAll(getItems(rObj, rc, rl));
+		}
+	    }
+	    break;
+	  }
+
+	  default:
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 
 	return items;
@@ -129,67 +120,58 @@ public class RunlevelAdapter implements IAdapter {
     /**
      * Get all the items matching the serviceName/operation, given the specified runlevel.
      */
-    private Collection<JAXBElement<RunlevelItem>> getItems(IRequestContext rc, String rl)
+    private Collection<RunlevelItem> getItems(RunlevelObject rObj, IRequestContext rc, String rl)
 		throws CollectException, OvalException {
 
-	Collection<JAXBElement<RunlevelItem>> items = new Vector<JAXBElement<RunlevelItem>>();
+	Collection<RunlevelItem> items = new Vector<RunlevelItem>();
+	String serviceName = (String)rObj.getServiceName().getValue();
+	if (runlevels.containsKey(rl)) {
+	    Hashtable<String, StartStop> runlevel = runlevels.get(rl);
+            OperationEnumeration op = rObj.getServiceName().getOperation();
+            switch(op) {
+              case EQUALS:
+                if(runlevel.containsKey(serviceName)) {
+                    items.add(makeItem(rl, serviceName, runlevel.get(serviceName)));
+                }
+                break;
 
-	RunlevelObject rObj = (RunlevelObject)rc.getObject();
-	Collection<String> serviceNames = new Vector<String>();
-	if (rObj.getServiceName().isSetVarRef()) {
-	    serviceNames.addAll(rc.resolve(rObj.getServiceName().getVarRef()));
-	} else {
-	    serviceNames.add((String)rObj.getServiceName().getValue());
-	}
-	Hashtable<String, StartStop> runlevel = runlevels.get(rl);
-	if (runlevel != null) {
-	    OperationEnumeration op = rObj.getServiceName().getOperation();
-	    for (String serviceName : serviceNames) {
-		switch(op) {
-		  case EQUALS:
-		    if(runlevel.containsKey(serviceName)) {
-			items.add(makeItem(rl, serviceName, runlevel.get(serviceName)));
-		    }
-		    break;
+              case PATTERN_MATCH:
+                try {
+                    Pattern p = Pattern.compile(serviceName);
+                    for (String sn : runlevel.keySet()) {
+                        if(p.matcher(sn).find()) {
+                            items.add(makeItem(rl, sn, runlevel.get(sn)));
+                        }
+                    }
+                } catch (PatternSyntaxException e) {
+                    MessageType msg = Factories.common.createMessageType();
+                    msg.setLevel(MessageLevelEnumeration.ERROR);
+                    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+                    rc.addMessage(msg);
+                    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+                }
+                break;
 
-		  case PATTERN_MATCH:
-		    try {
-			Pattern p = Pattern.compile(serviceName);
-			for (String sn : runlevel.keySet()) {
-			    if(p.matcher(sn).find()) {
-				items.add(makeItem(rl, sn, runlevel.get(sn)));
-			    }
-			}
-		    } catch (PatternSyntaxException e) {
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.ERROR);
-			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-			rc.addMessage(msg);
-			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    }
-		    break;
+              case NOT_EQUAL:
+                for (String sn : runlevel.keySet()) {
+                    if (!sn.equals(serviceName)) {
+                        items.add(makeItem(rl, sn, runlevel.get(sn)));
+                    }
+                }
+                break;
 
-		  case NOT_EQUAL:
-		    for (String sn : runlevel.keySet()) {
-			if (!sn.equals(serviceName)) {
-			    items.add(makeItem(rl, sn, runlevel.get(sn)));
-			}
-		    }
-		    break;
-
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-		}
-	    }
-	}
+              default:
+                String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+                throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+            }
+        }
 	return items;
     }
 
     /**
      * Make a RunlevelItem with the specified characteristics.
      */
-    private JAXBElement<RunlevelItem> makeItem(String runlevel, String serviceName, StartStop actions) {
+    private RunlevelItem makeItem(String runlevel, String serviceName, StartStop actions) {
 	RunlevelItem item = Factories.sc.unix.createRunlevelItem();
 
 	EntityItemStringType runlevelType = Factories.sc.core.createEntityItemStringType();
@@ -219,8 +201,7 @@ public class RunlevelAdapter implements IAdapter {
 	item.setKill(kill);
 
 	item.setStatus(StatusEnumeration.EXISTS);
-
-	return Factories.sc.unix.createRunlevelItem(item);
+	return item;
     }
 
     /**

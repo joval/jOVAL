@@ -14,10 +14,10 @@ import java.util.Vector;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.solaris.SmfObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -60,16 +60,16 @@ public class SmfAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
-	SmfObject sObj = (SmfObject)rc.getObject();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<SmfItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
+	SmfObject sObj = (SmfObject)obj;
+	Collection<SmfItem> items = new Vector<SmfItem>();
 
 	switch(sObj.getFmri().getOperation()) {
 	  case EQUALS:
 	    try {
 		SmfItem item = getItem((String)sObj.getFmri().getValue());
 		if (item != null) {
-		    items.add(Factories.sc.solaris.createSmfItem(item));
+		    items.add(item);
 		}
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
@@ -84,7 +84,7 @@ public class SmfAdapter implements IAdapter {
 	    loadFullServiceMap();
 	    for (String fmri : serviceMap.keySet()) {
 		if (!fmri.equals((String)sObj.getFmri().getValue())) {
-		    items.add(Factories.sc.solaris.createSmfItem(serviceMap.get(fmri)));
+		    items.add(serviceMap.get(fmri));
 		}
 	    }
 	    break;
@@ -96,7 +96,7 @@ public class SmfAdapter implements IAdapter {
 		Pattern p = Pattern.compile((String)sObj.getFmri().getValue());
 		for (String fmri : serviceMap.keySet()) {
 		    if (p.matcher(fmri).find()) {
-			items.add(Factories.sc.solaris.createSmfItem(serviceMap.get(fmri)));
+			items.add(serviceMap.get(fmri));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {

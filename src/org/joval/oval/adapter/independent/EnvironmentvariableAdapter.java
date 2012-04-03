@@ -8,16 +8,16 @@ import java.util.List;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.independent.EnvironmentvariableObject;
-import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
+import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.independent.EnvironmentvariableItem;
 import oval.schemas.results.core.ResultEnumeration;
 
@@ -53,31 +53,31 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
-	return getItems(rc, environment, null);
+    public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws OvalException, CollectException {
+	return getItems(obj, rc, environment, null);
     }
 
     // Internal
 
-    Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc, IEnvironment env, String reserved)
+    Collection<EnvironmentvariableItem> getItems(ObjectType obj, IRequestContext rc, IEnvironment env, String reserved)
 		throws CollectException {
 
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	EnvironmentvariableObject eObj = (EnvironmentvariableObject)rc.getObject();
+	List<EnvironmentvariableItem> items = new Vector<EnvironmentvariableItem>();
+	EnvironmentvariableObject eObj = (EnvironmentvariableObject)obj;
 	String name = (String)eObj.getName().getValue();
 
 	OperationEnumeration op = eObj.getName().getOperation();
 	switch(op) {
 	  case EQUALS:
 	    if (env.getenv(name) != null) {
-		items.add(makeItem(name, env.getenv(name), reserved));
+		items.add((EnvironmentvariableItem)makeItem(name, env.getenv(name), reserved));
 	    }
 	    break;
 
 	  case CASE_INSENSITIVE_EQUALS:
 	    for (String varName : env) {
 		if (varName.equalsIgnoreCase(name)) {
-		    items.add(makeItem(varName, env.getenv(varName), reserved));
+		    items.add((EnvironmentvariableItem)makeItem(varName, env.getenv(varName), reserved));
 		    break;
 		}
 	    }
@@ -86,7 +86,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	  case NOT_EQUAL:
 	    for (String varName : env) {
 		if (!name.equals(varName)) {
-		    items.add(makeItem(name, env.getenv(varName), reserved));
+		    items.add((EnvironmentvariableItem)makeItem(name, env.getenv(varName), reserved));
 		}
 	    }
 	    break;
@@ -96,7 +96,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 		Pattern p = Pattern.compile(name);
 		for (String varName : env) {
 		    if (p.matcher(varName).find()) {
-			items.add(makeItem(varName, env.getenv(varName), reserved));
+			items.add((EnvironmentvariableItem)makeItem(varName, env.getenv(varName), reserved));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
@@ -115,7 +115,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	return items;
     }
 
-    JAXBElement<? extends ItemType> makeItem(String name, String value, String reserved) {
+    ItemType makeItem(String name, String value, String reserved) {
 	EnvironmentvariableItem item = Factories.sc.independent.createEnvironmentvariableItem();
 	EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
 	nameType.setValue(name);
@@ -123,6 +123,6 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 	valueType.setValue(value);
 	item.setValue(valueType);
-	return Factories.sc.independent.createEnvironmentvariableItem(item);
+	return item;
     }
 }

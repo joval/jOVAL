@@ -7,12 +7,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.ios.TclshObject;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -37,8 +37,10 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class TclshAdapter implements IAdapter {
-    IIosSession session;
-    long readTimeout;
+    private static final String ERROR = "Line has invalid autocommand \"tclsh\"";
+
+    private IIosSession session;
+    private long readTimeout;
 
     // Implement IAdapter
 
@@ -52,10 +54,25 @@ public class TclshAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<TclshItem> getItems(ObjectType obj, IRequestContext rc) {
+	Collection<TclshItem> items = new Vector<TclshItem>();
 	try {
-	    items.add(Factories.sc.ios.createTclshItem(getItem()));
+	    boolean result = true;
+	    for (String line : SafeCLI.multiLine("tclsh", session, readTimeout)) {
+		if (ERROR.equalsIgnoreCase(line)) {
+		    result = false;
+		}
+	    }
+	    TclshItem item = Factories.sc.ios.createTclshItem();
+	    EntityItemBoolType available = Factories.sc.core.createEntityItemBoolType();
+	    if (result) {
+		available.setValue("true");
+	    } else {
+		available.setValue("false");
+	    }
+	    available.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+	    item.setAvailable(available);
+	    items.add(item);
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -64,29 +81,5 @@ public class TclshAdapter implements IAdapter {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
-    }
-
-    // Private
-
-    private static final String ERROR = "Line has invalid autocommand \"tclsh\"";
-
-    private TclshItem getItem() throws Exception {
-	boolean result = true;
-	for (String line : SafeCLI.multiLine("tclsh", session, readTimeout)) {
-	    if (ERROR.equalsIgnoreCase(line)) {
-		result = false;
-	    }
-	}
-
-	TclshItem item = Factories.sc.ios.createTclshItem();
-	EntityItemBoolType available = Factories.sc.core.createEntityItemBoolType();
-	if (result) {
-	    available.setValue("true");
-	} else {
-	    available.setValue("false");
-	}
-	available.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-	item.setAvailable(available);
-	return item;
     }
 }

@@ -11,12 +11,12 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.independent.Textfilecontent54Object;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
@@ -33,7 +33,6 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
-import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -63,18 +62,18 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
      * Parse the file as specified by the Object, and decorate the Item.
      */
     @Override
-    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException, OvalException {
+    protected Collection<TextfilecontentItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
+		throws IOException, CollectException {
 
-	Collection<JAXBElement<? extends ItemType>> items = new HashSet<JAXBElement<? extends ItemType>>();
+	Collection<TextfilecontentItem> items = new HashSet<TextfilecontentItem>();
 
 	TextfilecontentItem baseItem = null;
 	if (base instanceof TextfilecontentItem) {
 	    baseItem = (TextfilecontentItem)base;
 	}
 	Textfilecontent54Object tfcObj = null;
-	if (rc.getObject() instanceof Textfilecontent54Object) {
-	    tfcObj = (Textfilecontent54Object)rc.getObject();
+	if (obj instanceof Textfilecontent54Object) {
+	    tfcObj = (Textfilecontent54Object)obj;
 	}
 
 	if (baseItem != null && tfcObj != null) {
@@ -97,14 +96,7 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		} else {
 		    flags = Pattern.MULTILINE;
 		}
-		Collection<Pattern> patterns = new Vector<Pattern>();
-		if (tfcObj.getPattern().isSetVarRef()) {
-		    for (String value : rc.resolve(tfcObj.getPattern().getVarRef())) {
-			patterns.add(Pattern.compile(StringTools.regexPerl2Java(value), flags));
-		    }
-		} else {
-		    patterns.add(Pattern.compile(StringTools.regexPerl2Java((String)tfcObj.getPattern().getValue()), flags));
-		}
+		Pattern pattern = Pattern.compile(StringTools.regexPerl2Java((String)tfcObj.getPattern().getValue()), flags);
 
 		//
 		// Read the whole file into a buffer to search for the pattern
@@ -118,13 +110,11 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		}
 		String s = sb.toString();
 
-		Collection<JAXBElement<? extends ItemType>> allItems = new Vector<JAXBElement<? extends ItemType>>();
+		Collection<TextfilecontentItem> allItems = new Vector<TextfilecontentItem>();
 		OperationEnumeration op = tfcObj.getPattern().getOperation();
 		switch(op) {
 		  case PATTERN_MATCH:
-		    for (Pattern p : patterns) {
-			allItems.addAll(getItems(p, baseItem, s));
-		    }
+		    allItems.addAll(getItems(pattern, baseItem, s));
 		    break;
 
 		  default:
@@ -135,85 +125,70 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		//
 		// Filter by instance numbers
 		//
-		Collection<String> instances = new Vector<String>();
-		if (tfcObj.getInstance().isSetVarRef()) {
-		    for (String value : rc.resolve(tfcObj.getInstance().getVarRef())) {
-			instances.add(((String)value).trim());
+		String instanceNum = (String)tfcObj.getInstance().getValue();
+		op = tfcObj.getInstance().getOperation();
+		switch(op) {
+		  case EQUALS:
+		    for (TextfilecontentItem item : allItems) {
+			if (((String)item.getInstance().getValue()).equals(instanceNum)) {
+			    items.add(item);
+			}
 		    }
-		} else {
-		    instances.add((String)tfcObj.getInstance().getValue());
-		}
-		for (String instanceNum : instances) {
-		    op = tfcObj.getInstance().getOperation();
-		    switch(op) {
-		      case EQUALS:
-			for (JAXBElement<? extends ItemType> elt : allItems) {
-			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
-			    if (((String)item.getInstance().getValue()).equals(instanceNum)) {
-				items.add(elt);
-			    }
-			}
-			break;
+		    break;
 
-		      case LESS_THAN:
-			for (JAXBElement<? extends ItemType> elt : allItems) {
-			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
-			    int inum = Integer.parseInt((String)item.getInstance().getValue());
-			    int comp = Integer.parseInt(instanceNum);
-			    if (inum < comp) {
-				items.add(elt);
-			    }
+		  case LESS_THAN:
+		    for (TextfilecontentItem item : allItems) {
+			int inum = Integer.parseInt((String)item.getInstance().getValue());
+			int comp = Integer.parseInt(instanceNum);
+			if (inum < comp) {
+			    items.add(item);
 			}
-			break;
-
-		      case LESS_THAN_OR_EQUAL:
-			for (JAXBElement<? extends ItemType> elt : allItems) {
-			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
-			    int inum = Integer.parseInt((String)item.getInstance().getValue());
-			    int comp = Integer.parseInt(instanceNum);
-			    if (inum <= comp) {
-				items.add(elt);
-			    }
-			}
-			break;
-
-		      case GREATER_THAN:
-			for (JAXBElement<? extends ItemType> elt : allItems) {
-			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
-			    int inum = Integer.parseInt((String)item.getInstance().getValue());
-			    int comp = Integer.parseInt(instanceNum);
-			    if (inum > comp) {
-				items.add(elt);
-			    }
-			}
-			break;
-
-		      case GREATER_THAN_OR_EQUAL:
-			for (JAXBElement<? extends ItemType> elt : allItems) {
-			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
-			    int inum = Integer.parseInt((String)item.getInstance().getValue());
-			    int comp = Integer.parseInt(instanceNum);
-			    if (inum >= comp) {
-				items.add(elt);
-			    }
-			}
-			break;
-
-		      case PATTERN_MATCH: {
-			Pattern p = Pattern.compile(instanceNum);
-			for (JAXBElement<? extends ItemType> elt : allItems) {
-			    TextfilecontentItem item = (TextfilecontentItem)elt.getValue();
-			    if (p.matcher((String)item.getInstance().getValue()).find()) {
-				items.add(elt);
-			    }
-			}
-			break;
-		      }
-
-		      default:
-			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		    }
+		    break;
+
+		  case LESS_THAN_OR_EQUAL:
+		    for (TextfilecontentItem item : allItems) {
+			int inum = Integer.parseInt((String)item.getInstance().getValue());
+			int comp = Integer.parseInt(instanceNum);
+			if (inum <= comp) {
+			    items.add(item);
+			}
+		    }
+		    break;
+
+		  case GREATER_THAN:
+		    for (TextfilecontentItem item : allItems) {
+			int inum = Integer.parseInt((String)item.getInstance().getValue());
+			int comp = Integer.parseInt(instanceNum);
+			if (inum > comp) {
+			    items.add(item);
+			}
+		    }
+		    break;
+
+		  case GREATER_THAN_OR_EQUAL:
+		    for (TextfilecontentItem item : allItems) {
+			int inum = Integer.parseInt((String)item.getInstance().getValue());
+			int comp = Integer.parseInt(instanceNum);
+			if (inum >= comp) {
+			    items.add(item);
+			}
+		    }
+		    break;
+
+		  case PATTERN_MATCH: {
+		    Pattern p = Pattern.compile(instanceNum);
+		    for (TextfilecontentItem item : allItems) {
+			if (p.matcher((String)item.getInstance().getValue()).find()) {
+			    items.add(item);
+			}
+		    }
+		    break;
+		  }
+
+		  default:
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
 	    } catch (PatternSyntaxException e) {
 		session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());

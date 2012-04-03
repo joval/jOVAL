@@ -6,11 +6,11 @@ package org.joval.oval.adapter.solaris;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.solaris.IsainfoObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
@@ -34,6 +34,7 @@ import org.joval.util.SafeCLI;
  */
 public class IsainfoAdapter implements IAdapter {
     private IUnixSession session;
+    private IsainfoItem item = null;
 
     // Implement IAdapter
 
@@ -46,10 +47,25 @@ public class IsainfoAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<IsainfoItem> getItems(ObjectType obj, IRequestContext rc) {
+	Collection<IsainfoItem> items = new Vector<IsainfoItem>();
 	try {
-	    items.add(getItem());
+	    if (item == null) {
+		item = Factories.sc.solaris.createIsainfoItem();
+		EntityItemStringType kernelIsa = Factories.sc.core.createEntityItemStringType();
+		kernelIsa.setValue(SafeCLI.exec("isainfo -k", session, IUnixSession.Timeout.S));
+		item.setKernelIsa(kernelIsa);
+
+		EntityItemStringType applicationIsa = Factories.sc.core.createEntityItemStringType();
+		applicationIsa.setValue(SafeCLI.exec("isainfo -n", session, IUnixSession.Timeout.S));
+		item.setApplicationIsa(applicationIsa);
+
+		EntityItemIntType bits = Factories.sc.core.createEntityItemIntType();
+		bits.setValue(SafeCLI.exec("isainfo -b", session, IUnixSession.Timeout.S));
+		bits.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		item.setBits(bits);
+	    }
+	    items.add(item);
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -58,25 +74,5 @@ public class IsainfoAdapter implements IAdapter {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
-    }
-
-    // Internal
-
-    private JAXBElement<IsainfoItem> getItem() throws Exception {
-	IsainfoItem item = Factories.sc.solaris.createIsainfoItem();
-	EntityItemStringType kernelIsa = Factories.sc.core.createEntityItemStringType();
-	kernelIsa.setValue(SafeCLI.exec("isainfo -k", session, IUnixSession.Timeout.S));
-	item.setKernelIsa(kernelIsa);
-
-	EntityItemStringType applicationIsa = Factories.sc.core.createEntityItemStringType();
-	applicationIsa.setValue(SafeCLI.exec("isainfo -n", session, IUnixSession.Timeout.S));
-	item.setApplicationIsa(applicationIsa);
-
-	EntityItemIntType bits = Factories.sc.core.createEntityItemIntType();
-	bits.setValue(SafeCLI.exec("isainfo -b", session, IUnixSession.Timeout.S));
-	bits.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	item.setBits(bits);
-
-	return Factories.sc.solaris.createIsainfoItem(item);
     }
 }

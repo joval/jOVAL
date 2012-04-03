@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.ios.InterfaceObject;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -52,11 +52,50 @@ public class InterfaceAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<InterfaceItem> getItems(ObjectType obj, IRequestContext rc) {
+	Collection<InterfaceItem> items = new Vector<InterfaceItem>();
 	try {
-	    for (InterfaceItem item : getItems()) {
-		items.add(Factories.sc.ios.createInterfaceItem(item));
+	    List<String> lines = session.getTechSupport().getData(ITechSupport.GLOBAL);
+	    InterfaceItem item = null;
+	    for (String line : lines) {
+		if (line.toLowerCase().startsWith("interface ")) {
+		    if (item != null) {
+			items.add(item);
+		    }
+		    item = Factories.sc.ios.createInterfaceItem();
+    
+		    EntityItemStringType name = Factories.sc.core.createEntityItemStringType();
+		    name.setValue(line.substring(10).trim());
+		    item.setName(name);
+		} else if (item != null) {
+		    if (line.startsWith(" ")) {
+			String command = line.substring(1);
+			if (command.startsWith("!")) {
+			    // skip comment
+			} else if (line.startsWith("ip directed-broadcast")) {
+			    EntityItemStringType idbc = Factories.sc.core.createEntityItemStringType();
+			    idbc.setValue(command);
+			    item.setIpDirectedBroadcastCommand(idbc);
+			} else if (line.startsWith("no ip directed-broadcast")) {
+			    EntityItemStringType nidbc = Factories.sc.core.createEntityItemStringType();
+			    nidbc.setValue(command);
+			    item.setNoIpDirectedBroadcastCommand(nidbc);
+			} else if (line.indexOf("proxy-arp") != -1) {
+			    EntityItemStringType pac = Factories.sc.core.createEntityItemStringType();
+			    pac.setValue(command);
+			    item.setProxyArpCommand(pac);
+			} else if (line.indexOf("shutdown") != -1) {
+			    EntityItemStringType sc = Factories.sc.core.createEntityItemStringType(); sc.setValue(command);
+			    item.setShutdownCommand(sc);
+			}
+		    } else {
+			items.add(item);
+			item = null;
+		    }
+		}
+	    }
+	    if (item != null) {
+		items.add(item);
 	    }
 	} catch (NoSuchElementException e) {
 	    MessageType msg = Factories.common.createMessageType();
@@ -64,55 +103,6 @@ public class InterfaceAdapter implements IAdapter {
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ITechSupport.GLOBAL));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return items;
-    }
-
-    // Private
-
-    private Collection<InterfaceItem> getItems() throws NoSuchElementException {
-	List<String> lines = session.getTechSupport().getData(ITechSupport.GLOBAL);
-	InterfaceItem item = null;
-	Collection<InterfaceItem> items = new Vector<InterfaceItem>();
-	for (String line : lines) {
-	    if (line.toLowerCase().startsWith("interface ")) {
-		if (item != null) {
-		    items.add(item);
-		}
-		item = Factories.sc.ios.createInterfaceItem();
-
-		EntityItemStringType name = Factories.sc.core.createEntityItemStringType();
-		name.setValue(line.substring(10).trim());
-		item.setName(name);
-	    } else if (item != null) {
-		if (line.startsWith(" ")) {
-		    String command = line.substring(1);
-		    if (command.startsWith("!")) {
-			// skip comment
-		    } else if (line.startsWith("ip directed-broadcast")) {
-			EntityItemStringType idbc = Factories.sc.core.createEntityItemStringType();
-			idbc.setValue(command);
-			item.setIpDirectedBroadcastCommand(idbc);
-		    } else if (line.startsWith("no ip directed-broadcast")) {
-			EntityItemStringType nidbc = Factories.sc.core.createEntityItemStringType();
-			nidbc.setValue(command);
-			item.setNoIpDirectedBroadcastCommand(nidbc);
-		    } else if (line.indexOf("proxy-arp") != -1) {
-			EntityItemStringType pac = Factories.sc.core.createEntityItemStringType();
-			pac.setValue(command);
-			item.setProxyArpCommand(pac);
-		    } else if (line.indexOf("shutdown") != -1) {
-			EntityItemStringType sc = Factories.sc.core.createEntityItemStringType(); sc.setValue(command);
-			item.setShutdownCommand(sc);
-		    }
-		} else {
-		    items.add(item);
-		    item = null;
-		}
-	    }
-	}
-	if (item != null) {
-	    items.add(item);
 	}
 	return items;
     }

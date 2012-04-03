@@ -6,6 +6,7 @@ CLASSES=\
 	org.joval.intf.oval.IEngine			\
 	org.joval.intf.oval.IResults			\
 	org.joval.intf.oval.ISystemCharacteristics	\
+	org.joval.intf.oval.ITyped			\
 	org.joval.intf.oval.IVariables			\
 	org.joval.intf.plugin.IAdapter			\
 	org.joval.intf.plugin.IPlugin			\
@@ -25,6 +26,7 @@ CLASSES=\
 	org.joval.oval.Results				\
 	org.joval.oval.SystemCharacteristics		\
 	org.joval.oval.TestException			\
+	org.joval.oval.TypedData			\
 	org.joval.oval.Variables			\
 	org.joval.oval.engine.CheckData			\
 	org.joval.oval.engine.DateTime			\

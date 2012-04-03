@@ -10,11 +10,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
 import java.util.regex.Matcher;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.windows.FileObject;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -59,19 +59,18 @@ import org.joval.os.windows.pe.resource.version.StringTable;
 import org.joval.os.windows.pe.resource.version.StringStructure;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
-import org.joval.oval.OvalException;
 import org.joval.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 import org.joval.util.Version;
 
 /**
- * Evaluates FileTest OVAL tests.
+ * Collects Windows FileItems.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class FileAdapter extends BaseFileAdapter {
+public class FileAdapter extends BaseFileAdapter<FileItem> {
     private static final String CIMV2		= "root\\cimv2";
     private static final String OWNER_WQL	= "ASSOCIATORS OF {Win32_LogicalFileSecuritySetting='$path'} " +
 						  "WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
@@ -100,19 +99,18 @@ public class FileAdapter extends BaseFileAdapter {
 
     // Protected
 
-    protected Object convertFilename(EntityItemStringType filename) {
-	return Factories.sc.windows.createFileItemFilename(filename);
+    protected Class getItemClass() {
+	return FileItem.class;
     }
 
-    protected ItemType createFileItem() {
-	return Factories.sc.windows.createFileItem();
-    }
-
-    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException, OvalException {
-
+    protected Collection<FileItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
+		throws IOException, CollectException {
+	//
+	// Always grab a fresh WMI provider in case there's been a reconnection since initialization.
+	//
 	wmi = ws.getWmiProvider();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+
+	Collection<FileItem> items = new Vector<FileItem>();
 	if (base instanceof FileItem) {
 	    IFileEx info = f.getExtended();
 	    IWindowsFileInfo wfi;
@@ -122,8 +120,10 @@ public class FileAdapter extends BaseFileAdapter {
 		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName());
 		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
-	    setItem((FileItem)base, f, wfi);
-	    items.add(Factories.sc.windows.createFileItem((FileItem)base));
+	    items.add(setItem((FileItem)base, f, wfi));
+	} else {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
+	    throw new CollectException(msg, FlagEnumeration.ERROR);
 	}
 	return items;
     }
@@ -133,7 +133,7 @@ public class FileAdapter extends BaseFileAdapter {
     /**
      * Populate the FileItem with everything except the path, filename and filepath. 
      */
-    private void setItem(FileItem fItem, IFile file, IWindowsFileInfo info) throws IOException {
+    private FileItem setItem(FileItem fItem, IFile file, IWindowsFileInfo info) throws IOException {
 	//
 	// Get some information from the IFile
 	//
@@ -267,6 +267,8 @@ public class FileAdapter extends BaseFileAdapter {
 		fItem.getMessage().add(msg);
 	    }
 	}
+
+	return fItem;
     }
 
     /**

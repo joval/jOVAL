@@ -11,7 +11,6 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -55,10 +54,10 @@ public class SidAdapter extends UserAdapter {
     }
 
     @Override
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
+    public Collection<SidItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
 	directory = session.getDirectory();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	SidObject sObj = (SidObject)rc.getObject();
+	Collection<SidItem> items = new Vector<SidItem>();
+	SidObject sObj = (SidObject)obj;
 	OperationEnumeration op = sObj.getTrusteeName().getOperation();
 
 	try {
@@ -113,7 +112,7 @@ public class SidAdapter extends UserAdapter {
 
     // Private
 
-    private JAXBElement<? extends ItemType> makeItem(IPrincipal principal) {
+    private SidItem makeItem(IPrincipal principal) {
 	SidItem item = Factories.sc.windows.createSidItem();
 	EntityItemStringType trusteeSidType = Factories.sc.core.createEntityItemStringType();
 	trusteeSidType.setValue(principal.getSid());
@@ -146,7 +145,6 @@ public class SidAdapter extends UserAdapter {
 	trusteeDomainType.setValue(principal.getDomain());
 	trusteeDomainType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	item.setTrusteeDomain(trusteeDomainType);
-
-	return Factories.sc.windows.createSidItem(item);
+	return item;
     }
 }

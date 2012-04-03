@@ -6,6 +6,7 @@ package org.joval.oval.adapter.cisco.ios;
 import java.util.Collection;
 import java.util.Vector;
 
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.ios.VersionObject;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.ios.VersionItem;

@@ -10,12 +10,12 @@ import java.util.Collection;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
+import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.StateType;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.solaris.PatchBehaviors;
 import oval.schemas.definitions.solaris.Patch54Object;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -51,11 +51,11 @@ public class Patch54Adapter extends PatchAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
+    public Collection<PatchItem> getItems(ObjectType obj, IRequestContext rc) throws OvalException, CollectException {
 	if (!initialized) {
 	    scanRevisions();
 	}
-	Patch54Object pObj = (Patch54Object)rc.getObject();
+	Patch54Object pObj = (Patch54Object)obj;
 	int iBase = 0;
 	try {
 	    iBase = Integer.parseInt((String)pObj.getBase().getValue());
@@ -70,7 +70,7 @@ public class Patch54Adapter extends PatchAdapter {
 	    rc.addMessage(msg);
 	}
 
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<PatchItem> items = new Vector<PatchItem>();
 	try {
 	    switch(pObj.getBase().getOperation()) {
 	      case EQUALS:
@@ -145,7 +145,7 @@ public class Patch54Adapter extends PatchAdapter {
 
     // Internal
 
-    private Collection<JAXBElement<PatchItem>> getItems(Patch54Object pObj, String base) throws CollectException {
+    private Collection<PatchItem> getItems(Patch54Object pObj, String base) throws CollectException {
 	PatchBehaviors behaviors = pObj.getBehaviors();
 	boolean isSupercedence = false;
 	if (behaviors != null) {
@@ -157,7 +157,8 @@ public class Patch54Adapter extends PatchAdapter {
 	Collection<RevisionEntry> entries = revisions.get(base);
 	if (entries != null) {
 	    for (RevisionEntry entry : entries) {
-		switch(pObj.getPatchVersion().getOperation()) {
+		OperationEnumeration op = pObj.getPatchVersion().getOperation();
+		switch(op) {
 		  case EQUALS:
 		    if (entry.patch.version == version) {
 			matches.add(entry);
@@ -189,8 +190,7 @@ public class Patch54Adapter extends PatchAdapter {
 		    }
 		    break;
 		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION,
-							pObj.getPatchVersion().getOperation());
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
 	    }
@@ -222,11 +222,10 @@ public class Patch54Adapter extends PatchAdapter {
 	    }
 	}
 
-	Vector<JAXBElement<PatchItem>> items = new Vector<JAXBElement<PatchItem>>();
-	for (PatchEntry patch : patches) {
-	    items.add(Factories.sc.solaris.createPatchItem(makeItem(patch)));
+	Vector<PatchItem> items = new Vector<PatchItem>();
+	for (PatchEntry entry : patches) {
+	    items.add(makeItem(entry));
 	}
-
 	return items;
     }
 

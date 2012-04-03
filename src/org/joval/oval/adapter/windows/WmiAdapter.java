@@ -9,10 +9,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.windows.WmiObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -56,10 +56,10 @@ public class WmiAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<WmiItem> getItems(ObjectType obj, IRequestContext rc) throws OvalException {
 	wmi = session.getWmiProvider();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
-	items.add(Factories.sc.windows.createWmiItem(getItem((WmiObject)rc.getObject())));
+	Collection<WmiItem> items = new Vector<WmiItem>();
+	items.add(getItem((WmiObject)obj));
 	return items;
     }
 

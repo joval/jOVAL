@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.ios.GlobalObject;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -65,21 +65,15 @@ public class GlobalAdapter implements IAdapter {
     private static final String BUILDING = "Building configuration...";
     private static final String CURRENT = "Current configuration";
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
-	GlobalObject gObj = (GlobalObject)rc.getObject();
+    public Collection<GlobalItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
+	GlobalObject gObj = (GlobalObject)obj;
 	EntityObjectStringType globalCommand = gObj.getGlobalCommand();
 	OperationEnumeration op = globalCommand.getOperation();
 
 	List<String> lines = null;
-	Collection<String> commands = new Vector<String>();
+	String command = (String)globalCommand.getValue();
 	try {
 	    lines = session.getTechSupport().getData(showConfig);
-
-	    if (globalCommand.isSetVarRef()) {
-		commands.addAll(rc.resolve(globalCommand.getVarRef()));
-	    } else {
-		commands.add((String)globalCommand.getValue());
-	    }
 	} catch (NoSuchElementException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -89,41 +83,34 @@ public class GlobalAdapter implements IAdapter {
 	}
 
 	Collection<GlobalItem> items = new Vector<GlobalItem>();
-	for (String command : commands) {
-	    for (String line : lines) {
-		if (isGlobalCommand(line)) {
-		    boolean add = false;
+	for (String line : lines) {
+	    if (isGlobalCommand(line)) {
+		boolean add = false;
 
-		    switch(op) {
-		      case EQUALS:
-			add = line.equals(command);
-			break;
+		switch(op) {
+		  case EQUALS:
+		    add = line.equals(command);
+		    break;
 
-		      case PATTERN_MATCH:
-			add = Pattern.matches(command, line);
-			break;
+		  case PATTERN_MATCH:
+		    add = Pattern.matches(command, line);
+		    break;
 
-		      default:
-			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-		    }
+		  default:
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		}
 
-		    if (add) {
-			GlobalItem item = Factories.sc.ios.createGlobalItem();
-			EntityItemStringType globalCommandType = Factories.sc.core.createEntityItemStringType();
-			globalCommandType.setValue(line);
-			item.setGlobalCommand(globalCommandType);
-			items.add(item);
-		    }
+		if (add) {
+		    GlobalItem item = Factories.sc.ios.createGlobalItem();
+		    EntityItemStringType globalCommandType = Factories.sc.core.createEntityItemStringType();
+		    globalCommandType.setValue(line);
+		    item.setGlobalCommand(globalCommandType);
+		    items.add(item);
 		}
 	    }
 	}
-
-	Collection<JAXBElement<? extends ItemType>> wrappedItems = new Vector<JAXBElement<? extends ItemType>>();
-	for (GlobalItem item : items) {
-	    wrappedItems.add(Factories.sc.ios.createGlobalItem(item));
-	}
-	return wrappedItems;
+	return items;
     }
 
     private boolean isGlobalCommand(String line) {

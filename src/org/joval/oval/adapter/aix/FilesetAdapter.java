@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.aix.FilesetObject;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.systemcharacteristics.aix.EntityItemFilesetStateType;
@@ -55,14 +55,40 @@ public class FilesetAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
-	FilesetObject fObj = (FilesetObject)rc.getObject();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<FilesetItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
+	FilesetObject fObj = (FilesetObject)obj;
+	Collection<FilesetItem> items = new Vector<FilesetItem>();
 	switch(fObj.getFlstinst().getOperation()) {
 	  case EQUALS:
 	    try {
-		for (FilesetItem item : getItems((String)fObj.getFlstinst().getValue())) {
-		    items.add(Factories.sc.aix.createFilesetItem(item));
+		String fileset = (String)fObj.getFlstinst().getValue();
+		session.getLogger().trace(JOVALMsg.STATUS_AIX_FILESET, fileset);
+		for (String line : SafeCLI.multiLine("lslpp -lac " + fileset, session, IUnixSession.Timeout.M)) {
+		    if (!line.startsWith("#")) {
+			List<String> info = StringTools.toList(StringTools.tokenize(line, ":"));
+			if (info.get(0).equals("/etc/objrepos")) {
+			    FilesetItem item = Factories.sc.aix.createFilesetItem();
+
+			    EntityItemStringType flstinst = Factories.sc.core.createEntityItemStringType();
+			    flstinst.setValue(info.get(1));
+			    item.setFlstinst(flstinst);
+
+			    EntityItemVersionType level = Factories.sc.core.createEntityItemVersionType();
+			    level.setValue(info.get(2));
+			    level.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+			    item.setLevel(level);
+
+			    EntityItemFilesetStateType state = Factories.sc.aix.createEntityItemFilesetStateType();
+			    state.setValue(info.get(4));
+			    item.setState(state);
+
+			    EntityItemStringType description = Factories.sc.core.createEntityItemStringType();
+			    description.setValue(info.get(6));
+			    item.setDescription(description);
+
+			    items.add(item);
+			}
+		    }
 		}
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
@@ -77,43 +103,6 @@ public class FilesetAdapter implements IAdapter {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, fObj.getFlstinst().getOperation());
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	  }
-	}
-
-	return items;
-    }
-
-    // Private
-
-    private Collection<FilesetItem> getItems(String fileset) throws Exception {
-	session.getLogger().trace(JOVALMsg.STATUS_AIX_FILESET, fileset);
-	Collection<FilesetItem> items = new Vector<FilesetItem>();
-
-	for (String line : SafeCLI.multiLine("lslpp -lac " + fileset, session, IUnixSession.Timeout.M)) {
-	    if (!line.startsWith("#")) {
-		List<String> info = StringTools.toList(StringTools.tokenize(line, ":"));
-		if (info.get(0).equals("/etc/objrepos")) {
-		    FilesetItem item = Factories.sc.aix.createFilesetItem();
-
-		    EntityItemStringType flstinst = Factories.sc.core.createEntityItemStringType();
-		    flstinst.setValue(info.get(1));
-		    item.setFlstinst(flstinst);
-
-		    EntityItemVersionType level = Factories.sc.core.createEntityItemVersionType();
-		    level.setValue(info.get(2));
-		    level.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-		    item.setLevel(level);
-
-		    EntityItemFilesetStateType state = Factories.sc.aix.createEntityItemFilesetStateType();
-		    state.setValue(info.get(4));
-		    item.setState(state);
-
-		    EntityItemStringType description = Factories.sc.core.createEntityItemStringType();
-		    description.setValue(info.get(6));
-		    item.setDescription(description);
-
-		    items.add(item);
-		}
-	    }
 	}
 
 	return items;

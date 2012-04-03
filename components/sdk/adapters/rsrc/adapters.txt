@@ -14,7 +14,6 @@ org.joval.oval.adapter.aix.FilesetAdapter
 org.joval.oval.adapter.aix.FixAdapter
 org.joval.oval.adapter.aix.OslevelAdapter
 org.joval.oval.adapter.independent.FamilyAdapter
-org.joval.oval.adapter.independent.VariableAdapter
 org.joval.oval.adapter.independent.Environmentvariable58Adapter
 org.joval.oval.adapter.independent.EnvironmentvariableAdapter
 org.joval.oval.adapter.independent.Textfilecontent54Adapter

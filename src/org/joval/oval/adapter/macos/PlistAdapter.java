@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Stack;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSData;
@@ -43,7 +42,6 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
-import org.joval.oval.OvalException;
 import org.joval.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
 
@@ -54,7 +52,7 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class PlistAdapter extends BaseFileAdapter {
+public class PlistAdapter extends BaseFileAdapter<PlistItem> {
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
@@ -73,25 +71,24 @@ public class PlistAdapter extends BaseFileAdapter {
 
     // Protected
 
-    protected Object convertFilename(EntityItemStringType filename) {
-	return filename;
-    }
-
-    protected ItemType createFileItem() {
-	return Factories.sc.macos.createPlistItem();
+    protected Class getItemClass() {
+	return PlistItem.class;
     }
 
     /**
      * Parse the plist specified by the Object, and decorate the Item.
      */
-    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException, OvalException {
+    protected Collection<PlistItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
+		throws IOException, CollectException {
 
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-
-	PlistItem baseItem = (PlistItem)base;
-
-	ObjectType obj = rc.getObject();
+	Collection<PlistItem> items = new Vector<PlistItem>();
+	PlistItem baseItem = null;
+	if (base instanceof PlistItem) {
+	    baseItem = (PlistItem)base;
+	} else {
+	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
+	    throw new CollectException(message, FlagEnumeration.ERROR);
+	}
 	Plist510Object pObj = null;
 	if (obj instanceof PlistObject) {
 	    pObj = Factories.definitions.macos.createPlist510Object();
@@ -105,7 +102,8 @@ public class PlistAdapter extends BaseFileAdapter {
 	} else if (obj instanceof Plist510Object) {
 	    pObj = (Plist510Object)obj;
 	} else {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName()));
+	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName());
+	    throw new CollectException(message, FlagEnumeration.ERROR);
 	}
 
 	if (baseItem != null && pObj != null && f.isFile()) {
@@ -134,14 +132,14 @@ public class PlistAdapter extends BaseFileAdapter {
 			try {
 			    instance = new Integer(s);
 			} catch (NumberFormatException e) {
-			    throw new OvalException(e);
+			    throw new CollectException(e, FlagEnumeration.ERROR);
 			}
 		    }
 		}
 
 		for (PlistItem item : getItems(appId, key, instance, nso)) {
 		    item.setFilepath(baseItem.getFilepath());
-		    items.add(Factories.sc.macos.createPlistItem(item));
+		    items.add(item);
 		}
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
@@ -169,7 +167,7 @@ public class PlistAdapter extends BaseFileAdapter {
 
 	int inst = 0;
 	for (NSObject value : findValues(obj, key)) {
-	    PlistItem item = (PlistItem)createFileItem();
+	    PlistItem item = Factories.sc.macos.createPlistItem();
 	    inst++; // start instance counting at 1
 
 	    if (instance != null) {

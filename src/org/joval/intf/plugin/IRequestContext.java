@@ -3,35 +3,18 @@
 
 package org.joval.intf.plugin;
 
-import java.util.Collection;
-import java.util.NoSuchElementException;
-
 import oval.schemas.common.MessageType;
-import oval.schemas.definitions.core.ObjectType;
-
-import org.joval.oval.OvalException;
 
 /**
- * The interface for the argument supplied to an adapter getItems request, specifying the ObjectType for which the request is
- * being made, a means of resolving variable values referenced within the object, and a facility for adding messages related
- * to the request.
+ * The interface for the argument supplied to an adapter getItems request, which provides a facility for adding messages
+ * related to the request.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public interface IRequestContext {
     /**
-     * Get the ObjectType definition for the request.
-     */
-    public ObjectType getObject();
-
-    /**
      * Associate a message (like an error) with the request object.
      */
     public void addMessage(MessageType msg);
-
-    /**
-     * Resolve a variable.
-     */
-    public Collection<String> resolve(String variableId) throws NoSuchElementException, OvalException;
 }

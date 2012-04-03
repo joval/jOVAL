@@ -11,11 +11,11 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.ios.Version55Object;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -58,10 +58,10 @@ public class Version55Adapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<VersionItem> getItems(ObjectType obj, IRequestContext rc) throws OvalException {
+	Collection<VersionItem> items = new Vector<VersionItem>();
 	try {
-	   items.add(Factories.sc.ios.createVersionItem(getItem()));
+	   items.add(getItem());
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);

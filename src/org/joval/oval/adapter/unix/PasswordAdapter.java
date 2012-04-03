@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -63,7 +62,7 @@ public class PasswordAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
+    public Collection<PasswordItem> getItems(ObjectType obj, IRequestContext rc) throws OvalException, CollectException {
 	if (!initialized) {
 	    loadPasswords();
 	}
@@ -75,48 +74,40 @@ public class PasswordAdapter implements IAdapter {
 	    rc.addMessage(msg);
 	}
 
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	PasswordObject pObj = (PasswordObject)rc.getObject();
+	Collection<PasswordItem> items = new Vector<PasswordItem>();
+	PasswordObject pObj = (PasswordObject)obj;
 	EntityObjectStringType usernameType = pObj.getUsername();
 	try {
-	    List<String> usernames = new Vector<String>();
-	    if (usernameType.isSetVarRef()) {
-		usernames.addAll(rc.resolve(usernameType.getVarRef()));
-	    } else {
-		usernames.add((String)usernameType.getValue());
-	    }
-
-	    for (String username : usernames) {
-		OperationEnumeration op = usernameType.getOperation();
-		switch(op) {
-		  case EQUALS:
-		    if (passwordMap.containsKey(username)) {
-			items.add(Factories.sc.unix.createPasswordItem(passwordMap.get(username)));
-		    }
-		    break;
-
-		  case NOT_EQUAL:
-		    for (String s : passwordMap.keySet()) {
-			if (!s.equals(username)) {
-			    items.add(Factories.sc.unix.createPasswordItem(passwordMap.get(s)));
-			}
-		    }
-		    break;
-
-		  case PATTERN_MATCH: {
-		    Pattern p = Pattern.compile(username);
-		    for (String s : passwordMap.keySet()) {
-			if (p.matcher(s).find()) {
-			    items.add(Factories.sc.unix.createPasswordItem(passwordMap.get(s)));
-			}
-		    }
-		    break;
-		  }
-
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    String username = (String)usernameType.getValue();
+	    OperationEnumeration op = usernameType.getOperation();
+	    switch(op) {
+	      case EQUALS:
+		if (passwordMap.containsKey(username)) {
+		    items.add(passwordMap.get(username));
 		}
+		break;
+
+	      case NOT_EQUAL:
+		for (String s : passwordMap.keySet()) {
+		    if (!s.equals(username)) {
+			items.add(passwordMap.get(s));
+		    }
+		}
+		break;
+
+	      case PATTERN_MATCH: {
+		Pattern p = Pattern.compile(username);
+		for (String s : passwordMap.keySet()) {
+		    if (p.matcher(s).find()) {
+			items.add(passwordMap.get(s));
+		    }
+		}
+		break;
+	      }
+
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	} catch (PatternSyntaxException e) {
 	    MessageType msg = Factories.common.createMessageType();

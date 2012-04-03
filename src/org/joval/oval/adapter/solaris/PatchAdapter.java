@@ -12,7 +12,6 @@ import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -63,13 +62,13 @@ public class PatchAdapter implements IAdapter {
     }
 
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
+    public Collection<PatchItem> getItems(ObjectType obj, IRequestContext rc) throws OvalException, CollectException {
 	if (!initialized) {
 	    scanRevisions();
 	}
 
-	PatchObject pObj = (PatchObject)rc.getObject();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	PatchObject pObj = (PatchObject)obj;
+	Collection<PatchItem> items = new Vector<PatchItem>();
 	if (error != null) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -153,8 +152,8 @@ public class PatchAdapter implements IAdapter {
 
     // Internal
 
-    private Collection<JAXBElement<PatchItem>> getItems(String base) {
-	Collection<JAXBElement<PatchItem>> items = new Vector<JAXBElement<PatchItem>>();
+    private Collection<PatchItem> getItems(String base) {
+	Collection<PatchItem> items = new Vector<PatchItem>();
 	Collection<RevisionEntry> entries = revisions.get(base);
 	if (entries != null) {
 	    for (RevisionEntry entry : entries) {
@@ -167,7 +166,7 @@ public class PatchAdapter implements IAdapter {
 		versionType.setValue(entry.patch.getVersionString());
 		versionType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		item.setPatchVersion(versionType);
-		items.add(Factories.sc.solaris.createPatchItem(item));
+		items.add(item);
 	    }
 	}
 	return items;

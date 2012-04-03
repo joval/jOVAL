@@ -8,11 +8,11 @@ import java.util.Iterator;
 import java.util.Collection;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.ComplexDatatypeEnumeration;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.windows.Wmi57Object;
 import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
 import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
@@ -57,27 +57,28 @@ public class Wmi57Adapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
+    public Collection<Wmi57Item> getItems(ObjectType obj, IRequestContext rc) throws OvalException {
+	//
+	// Grab a fresh WMI provider in case there has been a reconnect since init.
+	//
 	wmi = session.getWmiProvider();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement <? extends ItemType>>();
-	items.add(Factories.sc.windows.createWmi57Item(getItem((Wmi57Object)rc.getObject())));
-	return items;
-    }
-
-    // Private
-
-    private Wmi57Item getItem(Wmi57Object wObj) {
+	Wmi57Object wObj = (Wmi57Object)obj;
 	String id = wObj.getId();
+
+	String ns = (String)wObj.getNamespace().getValue();
+	String wql = (String)wObj.getWql().getValue();
+
+	Collection<Wmi57Item> items = new Vector<Wmi57Item>();
 	Wmi57Item item = Factories.sc.windows.createWmi57Item();
-	String ns = wObj.getNamespace().getValue().toString();
-	EntityItemStringType namespaceType = Factories.sc.core.createEntityItemStringType();
-	namespaceType.setValue(ns);
-	item.setNamespace(namespaceType);
-	String wql = wObj.getWql().getValue().toString();
-	EntityItemStringType wqlType = Factories.sc.core.createEntityItemStringType();
-	wqlType.setValue(wql);
-	item.setWql(wqlType);
 	try {
+	    EntityItemStringType namespaceType = Factories.sc.core.createEntityItemStringType();
+	    namespaceType.setValue(ns);
+	    item.setNamespace(namespaceType);
+
+	    EntityItemStringType wqlType = Factories.sc.core.createEntityItemStringType();
+	    wqlType.setValue(wql);
+	    item.setWql(wqlType);
+
 	    ISWbemObjectSet objSet = wmi.execQuery(ns, wql);
 	    int size = objSet.getSize();
 	    if (size == 0) {
@@ -113,6 +114,7 @@ public class Wmi57Adapter implements IAdapter {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
-	return item;
+	items.add(item);
+	return items;
     }
 }

@@ -57,6 +57,7 @@ import oval.schemas.definitions.core.CriterionType;
 import oval.schemas.definitions.core.DefinitionType;
 import oval.schemas.definitions.core.DefinitionsType;
 import oval.schemas.definitions.core.EndFunctionType;
+import oval.schemas.definitions.core.EntityComplexBaseType;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.EntitySimpleBaseType;
 import oval.schemas.definitions.core.EntityStateFieldType;
@@ -90,10 +91,12 @@ import oval.schemas.definitions.core.VariableType;
 import oval.schemas.definitions.core.VariablesType;
 import oval.schemas.definitions.independent.EntityObjectVariableRefType;
 import oval.schemas.definitions.independent.UnknownTest;
+import oval.schemas.definitions.independent.VariableObject;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.TestedItemType;
 import oval.schemas.results.core.TestedVariableType;
 import oval.schemas.results.core.TestType;
+import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
 import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
 import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
@@ -103,6 +106,8 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemDataType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
+import oval.schemas.systemcharacteristics.independent.EntityItemVariableRefType;
+import oval.schemas.systemcharacteristics.independent.VariableItem;
 import oval.schemas.variables.core.OvalVariables;
 
 import org.joval.intf.oval.IDefinitionFilter;
@@ -127,6 +132,7 @@ import org.joval.oval.OvalFactory;
 import org.joval.oval.Results;
 import org.joval.oval.SystemCharacteristics;
 import org.joval.oval.TestException;
+import org.joval.oval.TypedData;
 import org.joval.oval.sysinfo.SysinfoFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -135,12 +141,12 @@ import org.joval.util.StringTools;
 import org.joval.util.Version;
 
 /**
- * Engine that evaluates OVAL tests on remote hosts.
+ * Engine that evaluates OVAL tests using an IBaseSession.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Engine implements IEngine {
+public class Engine implements IEngine, IAdapter {
     private static final String ADAPTERS_RESOURCE = "adapters.txt";
 
     /**
@@ -148,12 +154,12 @@ public class Engine implements IEngine {
      */
     private static Collection<IAdapter> getAdapters() {
 	Collection<IAdapter> adapters = new HashSet<IAdapter>();
-        try {
-            ClassLoader cl = Thread.currentThread().getContextClassLoader();
-            InputStream rsc = cl.getResourceAsStream(ADAPTERS_RESOURCE);
-            if (rsc == null) {
-                JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, ADAPTERS_RESOURCE));
-            } else {
+	try {
+	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	    InputStream rsc = cl.getResourceAsStream(ADAPTERS_RESOURCE);
+	    if (rsc == null) {
+		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, ADAPTERS_RESOURCE));
+	    } else {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(rsc));
 		String line = null;
 		while ((line = reader.readLine()) != null) {
@@ -169,10 +175,10 @@ public class Engine implements IEngine {
 			}
 		    }
 		}
-            }
-        } catch (IOException e) {
-            JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-        }
+	    }
+	} catch (IOException e) {
+	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
 	return adapters;
     }
 
@@ -183,7 +189,7 @@ public class Engine implements IEngine {
 	COMPLETE_ERR;
     }
 
-    private Hashtable <String, Collection<VariableValueType>>variableMap; // A cache of nested VariableValueTypes
+    private Hashtable <String, Collection<TypedData>>variableMap;
     private IVariables externalVariables = null;
     private IDefinitions definitions = null;
     private IBaseSession session = null;
@@ -212,6 +218,38 @@ public class Engine implements IEngine {
 	producer = new Producer();
 	filter = new DefinitionFilter();
 	reset();
+    }
+
+    // Implement IAdapter
+
+    public Collection<Class> init(IBaseSession session) {
+	Collection<Class> classes = new Vector<Class>();
+	classes.add(VariableObject.class);
+	return classes;
+    }
+
+    public Collection<VariableItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
+	VariableObject vObj = (VariableObject)obj;
+	Collection<VariableItem> items = new Vector<VariableItem>();
+	try {
+	    Collection<TypedData> values = resolve((String)vObj.getVarRef().getValue(), (RequestContext)rc);
+	    if (values.size() > 0) {
+		VariableItem item = Factories.sc.independent.createVariableItem();
+		EntityItemVariableRefType ref = Factories.sc.independent.createEntityItemVariableRefType();
+		ref.setValue(vObj.getVarRef().getValue());
+		item.setVarRef(ref);
+		for (TypedData value : values) {
+		    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+		    valueType.setValue(value.getString());
+		    valueType.setDatatype(value.getSimpleType().value());
+		    item.getValue().add(valueType);
+		}
+		items.add(item);
+	    }
+	} catch (ResolveException e) {
+	    throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
+	}
+	return items;
     }
 
     // Implement IEngine
@@ -377,10 +415,9 @@ public class Engine implements IEngine {
 		if (scanRequired) {
 		    producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
 		    for (ObjectType obj : definitions.getObjects()) {
-		        String objectId = obj.getId();
-		        if (!sc.containsObject(objectId)) {
-		            scanObject(new RequestContext(this, obj));
-		        }
+			if (!sc.containsObject(obj.getId())) {
+			    scanObject(new RequestContext(this, definitions.getObject(obj.getId())));
+			}
 		    }
 		    producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
 		    if (doDisconnect) {
@@ -447,38 +484,28 @@ public class Engine implements IEngine {
     /**
      * Return the value of the Variable with the specified ID, and also add any chained variables to the provided list.
      */
-    Collection<String> resolve(String variableId, RequestContext rc)
+    Collection<TypedData> resolve(String variableId, RequestContext rc)
 		throws NoSuchElementException, ResolveException, OvalException {
 
 	VariableType var = definitions.getVariable(variableId);
 	String varId = var.getId();
-	Collection<VariableValueType> cachedList = variableMap.get(varId);
-	if (cachedList == null) {
+	Collection<TypedData> result = variableMap.get(varId);
+	if (result == null) {
 	    logger.trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
-	    Collection<String> result = resolveInternal(var, rc);
-	    variableMap.put(varId, rc.getVars());
-	    return result;
+	    result = resolveInternal(var, rc);
+	    variableMap.put(varId, result);
 	} else {
 	    logger.trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, varId);
-	    List<String> result = new Vector<String>();
-	    for (VariableValueType variableValueType : cachedList) {
-		if (variableValueType.getVariableId().equals(variableId)) {
-		    if (variableValueType.isSetValue()) {
-			result.add((String)variableValueType.getValue());
-		    }
-		}
-	    }
-	    return result;
 	}
+	return result;
     }
 
     // Private
 
     private void loadAdapters() {
+	adapters = new Hashtable<Class, IAdapter>();
 	Collection<IAdapter> coll = getAdapters();
-	if (coll == null) {
-	    adapters = null;
-	} else {
+	if (coll != null) {
 	    adapters = new Hashtable<Class, IAdapter>();
 	    for (IAdapter adapter : coll) {
 		for (Class clazz : adapter.init(session)) {
@@ -486,12 +513,13 @@ public class Engine implements IEngine {
 		}
 	    }
 	}
+	adapters.put(VariableObject.class, this);
     }
 
     private void reset() {
 	sc = null;
 	state = State.CONFIGURE;
-	variableMap = new Hashtable<String, Collection<VariableValueType>>();
+	variableMap = new Hashtable<String, Collection<TypedData>>();
 	error = null;
     }
 
@@ -505,137 +533,269 @@ public class Engine implements IEngine {
      * @throws OvalException if processing should cease for some good reason
      */
     private Collection<ItemType> scanObject(RequestContext rc) throws OvalException {
-	//
-	// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
-	//
-	if (abort) {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
-	}
-
-	ObjectType obj = rc.getObject();
-	String objectId = obj.getId();
+	ObjectType masterObj = rc.getObject();
+	String objectId = masterObj.getId();
 	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
 	producer.sendNotify(MESSAGE_OBJECT, objectId);
-
-	IAdapter adapter = adapters.get(obj.getClass());
-	if (adapter == null) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.WARNING);
-	    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
-	    msg.setValue(err);
-	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
-	} else {
-	    Set s = getObjectSet(obj);
+	Collection<ItemType> items = new Vector<ItemType>();
+	if (adapters.containsKey(masterObj.getClass())) {
+	    Set s = getObjectSet(masterObj);
 	    if (s == null) {
+		List<MessageType> messages = new Vector<MessageType>();
+		FlagData flag = new FlagData();
 		try {
-		    Collection<JAXBElement<? extends ItemType>> items = adapter.getItems(rc);
-		    if (items.size() > 0) {
+		    for (ObjectType obj : resolveObjects(rc)) {
 			//
-			// If items are found, then apply filters if any are specified for the object
+			// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
 			//
-			items = filterWrappedItems(getFilters(obj), items);
-		    }
-
-		    if (items.size() == 0) {
-			//
-			// Mark the object as non-existent
-			//
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.INFO);
-			msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
-			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, msg);
-
-			//
-			// Check if there were errors, and re-flag the object if there were
-			//
-			boolean flagged = false;
-			for (MessageType message: sc.getObject(objectId).getMessage()) {
-			    switch(message.getLevel()) {
-			      case ERROR:
-			      case FATAL:
-				sc.getObject(objectId).setFlag(FlagEnumeration.ERROR);
-				flagged = true;
-				break;
-			    }
-			    if (flagged) break;
-			}
-		    } else {
-			//
-			// Associate the items with the object
-			//
-			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, null);
-			for (JAXBElement<? extends ItemType> item : items) {
-			    BigInteger itemId = sc.storeItem(item);
-			    sc.relateItem(objectId, itemId);
+			if (abort) {
+			    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
 			}
 
-			//
-			// If there were errors, then re-flag the object as incomplete
-			//
-			boolean flagged = false;
-			for (MessageType msg: sc.getObject(objectId).getMessage()) {
-			    switch(msg.getLevel()) {
-			      case ERROR:
-			      case FATAL:
-				sc.getObject(objectId).setFlag(FlagEnumeration.INCOMPLETE);
-				flagged = true;
-				break;
-			    }
-			    if (flagged) break;
+			try {
+			    IAdapter adapter = adapters.get(obj.getClass());
+			    @SuppressWarnings("unchecked")
+			    Collection<ItemType> retrieved = (Collection<ItemType>)adapter.getItems(obj, rc);
+			    flag.add(FlagEnumeration.COMPLETE);
+			    items.addAll(filterItems(getFilters(masterObj), retrieved, rc));
+			} catch (CollectException e) {
+			    MessageType msg = Factories.common.createMessageType();
+			    msg.setLevel(MessageLevelEnumeration.WARNING);
+			    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
+			    msg.setValue(err);
+			    messages.add(msg);
+			    flag.add(e.getFlag());
+			} catch (Exception e) {
+			    //
+			    // Handle an uncaught, unexpected exception emanating from the adapter.
+			    //
+			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    MessageType msg = Factories.common.createMessageType();
+			    msg.setLevel(MessageLevelEnumeration.ERROR);
+			    msg.setValue(e.getMessage());
+			    messages.add(msg);
+			    flag.add(FlagEnumeration.ERROR);
 			}
 		    }
 
-		    //
-		    // Associate variables with the object
-		    //
+		    messages.addAll(rc.getMessages());
+		    sc.setObject(objectId, null, null, null, null);
 		    for (VariableValueType var : rc.getVars()) {
 			sc.storeVariable(var);
 			sc.relateVariable(objectId, var.getVariableId());
 		    }
-		    Collection<ItemType> unwrapped = new Vector<ItemType>();
-		    for (JAXBElement<? extends ItemType> item : items) {
-			unwrapped.add(item.getValue());
+		    if (items.size() == 0) {
+			MessageType msg = Factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.INFO);
+			msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
+			messages.add(msg);
 		    }
-		    return unwrapped;
-		} catch (CollectException e) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.WARNING);
-		    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
-		    msg.setValue(err);
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), e.getFlag(), msg);
-		} catch (Exception e) {
-		    //
-		    // Handle an uncaught, unexpected exception emanating from the adapter.
-		    //
-		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		} catch (ResolveException e) {
 		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(e.getMessage());
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.ERROR, msg);
+		    messages.add(msg);
+		    flag.add(FlagEnumeration.ERROR);
 		}
+		for (MessageType msg : messages) {
+		    sc.setObject(objectId, null, null, null, msg);
+		    switch(msg.getLevel()) {
+		      case FATAL:
+		      case ERROR:
+			flag.add(FlagEnumeration.INCOMPLETE);
+			break;
+		    }
+		}
+		sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), flag.getFlag(), null);
 	    } else {
+		items = getSetItems(s, rc);
 		MessageType msg = null;
-		Collection<ItemType> items = getSetItems(s, rc);
 		if (items.size() == 0) {
 		    msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_SET));
 		}
-		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.COMPLETE, msg);
-		for (ItemType item : items) {
-		    sc.relateItem(objectId, item.getId());
-		}
-		return items;
+		sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), FlagEnumeration.COMPLETE, msg);
 	    }
+	} else {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.WARNING);
+	    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, masterObj.getClass().getName());
+	    msg.setValue(err);
+	    sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
 	}
+	for (ItemType item : items) {
+	    sc.relateItem(objectId, sc.storeItem(item));
+	}
+	return items;
+    }
 
-	//
-	// If this point has been reached, some kind of error has prevented collection and a message and the appropriate
-	// flag have been associated with the object.
-	//
-	@SuppressWarnings("unchecked")
-	Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
-	return empty;
+    /**
+     * Convert an ObectType whose EntityObjectSimpleBaseType members may contain var_refs into a list of ObjectTypes
+     * containing only resolved entities (i.e., isSetVarRef() == false).
+     */
+    private Collection<ObjectType> resolveObjects(RequestContext rc) throws OvalException, ResolveException {
+	ObjectType obj = rc.getObject();
+	List<ObjectType>objects = new Vector<ObjectType>();
+	try {
+	    //
+	    // First, create lists of entities within the object
+	    //
+	    Hashtable<String, List<Object>> lists = new Hashtable<String, List<Object>>();
+	    int numPermutations = 1;
+	    for (String methodName : getMethodNames(obj.getClass())) {
+		if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
+		    Object entity = obj.getClass().getMethod(methodName).invoke(obj);
+		    if (entity == null) {
+			// continue
+		    } else {
+			List<Object> list = resolveUnknownEntity(methodName, entity, rc);
+			if (list.size() > 0) {
+			    numPermutations = numPermutations * list.size();
+			    lists.put(methodName, list);
+			}
+		    }
+		}
+	    }
+	    //
+	    // Create a permutation list of objects using the entity lists
+	    //
+	    Class<?> objClass = obj.getClass();
+	    String pkgName = objClass.getPackage().getName();
+	    Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
+	    Object factory = factoryClass.newInstance();
+	    String unqualClassName = objClass.getName().substring(pkgName.length() + 1);
+	    Method createObj = factoryClass.getMethod("create" + unqualClassName);
+	    for (int i=0; i < numPermutations; i++) {
+		ObjectType ot = (ObjectType)createObj.invoke(factory);
+		ot.setId(obj.getId());
+		Object behaviors = safeInvokeMethod(obj, "getBehaviors");
+		if (behaviors != null) {
+		    Method setBehaviors = objClass.getMethod("setBehaviors", behaviors.getClass());
+		    setBehaviors.invoke(ot, behaviors);
+		}
+		objects.add(ot);
+	    }
+	    for (String getter : lists.keySet()) {
+		List<Object> list = lists.get(getter);
+		int divisor = list.size();
+		int groupSize = objects.size() / divisor;
+		int index = 0;
+		String setter = new StringBuffer("s").append(getter.substring(1)).toString();
+		Class entityClass = list.get(0).getClass();
+		@SuppressWarnings("unchecked")
+		Method setObj = objClass.getMethod(setter, entityClass);
+		for (Object entity : list) {
+		    for (int i=0; i < groupSize; i++) {
+			setObj.invoke(objects.get(index++), entity);
+		    }
+		}
+	    }
+	    return objects;
+	} catch (ClassNotFoundException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
+	} catch (InstantiationException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
+	} catch (NoSuchMethodException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
+	} catch (IllegalAccessException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
+	} catch (InvocationTargetException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
+	}
+    }
+
+    /**
+     * Take an entity that may be a var_ref, and return a list of all resulting concrete entities (i.e., isSetValue == true).
+     * The result may be a JAXBElement list, or EntitySimpleBaseType list or an EntityComplexBaseType list.
+     */
+    private List<Object> resolveUnknownEntity(String methodName, Object entity, RequestContext rc)
+		throws OvalException, ResolveException, InstantiationException, ClassNotFoundException,
+		NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+
+	List<Object> result = new Vector<Object>();
+	if (entity instanceof JAXBElement) {
+	    String pkgName = rc.getObject().getClass().getPackage().getName();
+	    Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
+	    Object factory = factoryClass.newInstance();
+	    String unqualClassName = rc.getObject().getClass().getName().substring(pkgName.length() + 1);
+	    String entityName = methodName.substring(3);
+	    if (((JAXBElement)entity).getValue() == null) {
+		result.add(entity);
+	    } else {
+		Class targetClass = ((JAXBElement)entity).getValue().getClass();
+		Method method = factoryClass.getMethod("create" + unqualClassName + entityName, targetClass);
+		for (Object resolved : resolveUnknownEntity(methodName, ((JAXBElement)entity).getValue(), rc)) {
+		    result.add(method.invoke(factory, resolved));
+		}
+	    }
+	} else if (entity instanceof EntitySimpleBaseType) {
+	    EntitySimpleBaseType simple = (EntitySimpleBaseType)entity;
+	    if (simple.isSetVarRef()) {
+		Class objClass = entity.getClass();
+		String pkgName = objClass.getPackage().getName();
+		Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
+		Object factory = factoryClass.newInstance();
+		String unqualClassName = objClass.getName().substring(pkgName.length() + 1);
+		Method method = factoryClass.getMethod("create" + unqualClassName);
+		for (TypedData type : resolve(simple.getVarRef(), rc)) {
+		    if (type.getType() == TypedData.Type.SIMPLE) {
+			EntitySimpleBaseType instance = (EntitySimpleBaseType)method.invoke(factory);
+			instance.setDatatype(type.getSimpleType().value());
+			instance.setValue(type.getString());
+			instance.setOperation(simple.getOperation());
+			result.add(instance);
+		    }
+		}
+	    } else {
+		result.add(entity);
+	    }
+/*
+// NEED TO FINISH IMPLEMENTING
+	} else if (entity instanceof EntityComplexBaseType) {
+	    //
+	    // DAS: this is a bit of a cluster-fuck, as each field can have its own var_ref...
+	    //
+	    EntityComplexBaseType complex = (EntityComplexBaseType)entity;
+	    if (complex.isSetVarRef()) {
+		Class objClass = entity.getClass();
+		String pkgName = objClass.getPackage().getName();
+		String unqualClassName = objClass.getName().substring(pkgName + 1);
+		Method method = factory.getMethod("create" + unqualClassName, objClass);
+		for (TypedData type : resolve(simple.getVarRef(), rc)) {
+		    if (type.getType() == TypedData.Type.COMPLEX) {
+			EntityComplexBaseType instance = (EntityComplexBaseType)method.invoke(factory);
+			instance.setDatatype(type.getComplexDatatype().value());
+			if (instance instanceof EntityObjectRecordType && type.getValue() instanceof EntityItemRecordType) {
+			    for (EntityItemFieldType field : ((EntityItemRecordType)type.getValue()).getField()) {
+				EntityObjectFieldType recordField = new EntityObjectFieldType();
+				recordField.setName(field.getName());
+				recordField.setDatatype(field.getDatatype());
+				recordField.setValue(field.getValue());
+				recordField.setOperation(field.getValue());
+
+
+				((EntityObjectRecordType)instance).getField().add(field.getValue());
+			    }
+			}
+			result.add(instance);
+		    }
+		}
+	    } else {
+		result.add(entity);
+	    }
+*/
+	} else {
+	    String id = rc.getObject().getId();
+	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY, entity.getClass().getName(), id);
+	    throw new OvalException(message);
+	}
+	return result;
     }
 
     /**
@@ -652,43 +812,6 @@ public class Engine implements IEngine {
 	    }
 	}
 	return filters;
-    }
-
-    /**
-     * Given Collections of wrapped items and filters, returns the appropriately filtered collection of wrapped items.
-     */
-    private Collection<JAXBElement<? extends ItemType>> filterWrappedItems(List<Filter> filters,
-		       Collection<JAXBElement<? extends ItemType>> items) throws NoSuchElementException, OvalException {
-
-	if (filters.size() == 0) {
-	    return items;
-	}
-	Collection<JAXBElement<? extends ItemType>> filteredItems = new HashSet<JAXBElement<? extends ItemType>>();
-	for (Filter filter : filters) {
-	    StateType state = definitions.getState(filter.getValue());
-	    for (JAXBElement<? extends ItemType> item : items) {
-		try {
-		    ResultEnumeration result = compare(state, item.getValue(), new RequestContext(this, null));
-		    switch(filter.getAction()) {
-		      case INCLUDE:
-			if (result == ResultEnumeration.TRUE) {
-			    filteredItems.add(item);
-			}
-			break;
-
-		      case EXCLUDE:
-			if (result != ResultEnumeration.TRUE) {
-			    filteredItems.add(item);
-			}
-			break;
-		    }
-		} catch (TestException e) {
-		    logger.debug(JOVALMsg.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
-		    logger.trace(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		}
-	    }
-	}
-	return filteredItems;
     }
 
     /**
@@ -746,7 +869,9 @@ public class Engine implements IEngine {
 		try {
 		    items = sc.getItemsByObjectId(objectId);
 		} catch (NoSuchElementException e) {
-		    items = scanObject(new RequestContext(this, definitions.getObject(objectId)));
+		    rc.pushObject(definitions.getObject(objectId));
+		    items = scanObject(rc);
+		    rc.popObject();
 		}
 		lists.add(filterItems(s.getFilter(), items, rc));
 	    }
@@ -965,7 +1090,7 @@ public class Engine implements IEngine {
 	}
 
 	//
-	// Add all the tested variables that were resolved for the Object (stored in the RequestContext).
+	// Add all the tested variables that were resolved for the object and state (stored in the RequestContext).
 	//
 	for (VariableValueType var : rc.getVars()) {
 	    TestedVariableType testedVariable = Factories.results.createTestedVariableType();
@@ -975,7 +1100,7 @@ public class Engine implements IEngine {
 	}
 
 	//
-	// Note that the NONE_EXIST check is deprecated as of 5.3, and will be eliminated in 6.0.
+	// DAS: Note that the NONE_EXIST check is deprecated as of 5.3, and will be eliminated in 6.0.
 	// Per D. Haynes, in this case, any state and/or check should be ignored.
 	//
 	if (testDefinition.getCheck() == CheckEnumeration.NONE_EXIST) {
@@ -1095,7 +1220,7 @@ public class Engine implements IEngine {
 			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
 			    for (Object entityObj : (Collection)itemEntityObj) {
-			        EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)entityObj;
+				EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)entityObj;
 				cd.addResult(compare(stateEntity, itemEntity, rc));
 			    }
 			    result.addResult(cd.getResult(stateEntity.getEntityCheck()));
@@ -1185,6 +1310,12 @@ public class Engine implements IEngine {
 	return result;
     }
 
+    private static List<String> objectBaseMethodNames = getMethodNames(ObjectType.class);
+    static {
+	objectBaseMethodNames.add("getBehaviors");
+	objectBaseMethodNames.add("getFilter");
+	objectBaseMethodNames.add("getSet");
+    }
     private static List<String> stateBaseMethodNames = getMethodNames(StateType.class);
     private static List<String> itemBaseMethodNames = getMethodNames(ItemType.class);
 
@@ -1239,14 +1370,22 @@ public class Engine implements IEngine {
 	    base.setOperation(state.getOperation());
 	    base.setMask(state.isMask());
 	    try {
-		Collection<String> values = resolve(state.getVarRef(), rc);
+		Collection<TypedData> values = resolve(state.getVarRef(), rc);
 		if (values.size() == 0) {
 		    String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_NO_VALUES);
 		    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
 		} else {
-		    for (String value : resolve(state.getVarRef(), rc)) {
-			base.setValue(value);
-			cd.addResult(testImpl(base, item));
+		    //
+		    // DAS: Expand type-casting logic
+		    //
+		    for (TypedData value : values) {
+			switch(TypedData.getSimpleDatatype(state.getDatatype())) {
+			  case STRING:
+			  default:
+			    base.setValue(value.getString());
+			    cd.addResult(testImpl(base, item));
+			    break;
+			}
 		    }
 		}
 	    } catch (NoSuchElementException e) {
@@ -1262,7 +1401,7 @@ public class Engine implements IEngine {
     }
 
     /**
-     * Perform the the OVAL test by comparing the state and item.  Relies on the state to carry any datatype information.
+     * Perform the the OVAL test by comparing the state and item.
      *
      * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-common-schema.html#OperationEnumeration
      */
@@ -1568,24 +1707,26 @@ public class Engine implements IEngine {
      *
      * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#FunctionGroup
      */
-    private Collection<String> resolveInternal(Object object, RequestContext rc)
+    private Collection<TypedData> resolveInternal(Object object, RequestContext rc)
 		throws NoSuchElementException, ResolveException, OvalException {
 	//
 	// Why do variables point to variables?  Because sometimes they are nested.
 	//
 	if (object instanceof LocalVariable) {
 	    LocalVariable localVariable = (LocalVariable)object;
-	    Collection<String> values = resolveInternal(getComponent(localVariable), rc);
+	    Collection<TypedData> values = resolveInternal(getComponent(localVariable), rc);
 	    if (values.size() == 0) {
 		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(localVariable.getId());
 		rc.addVar(variableValueType);
 	    } else {
-		for (String value : values) {
-		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
-		    variableValueType.setVariableId(localVariable.getId());
-		    variableValueType.setValue(value);
-		    rc.addVar(variableValueType);
+		for (TypedData value : values) {
+		    if (TypedData.Type.SIMPLE == value.getType()) {
+			VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
+			variableValueType.setVariableId(localVariable.getId());
+			variableValueType.setValue(value.getString());
+			rc.addVar(variableValueType);
+		    }
 		}
 	    }
 	    return values;
@@ -1599,17 +1740,22 @@ public class Engine implements IEngine {
 	    if (externalVariables == null) {
 		throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE_SOURCE, id));
 	    } else {
-		Collection<String> values = externalVariables.getValue(id);
+		Collection<TypedData> values = new Vector<TypedData>();
+		for (IVariables.Typed t : externalVariables.getValue(id)) {
+		    values.add(new TypedData(t.getDatatype(), t.getValue()));
+		}
 		if (values.size() == 0) {
 		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		    variableValueType.setVariableId(externalVariable.getId());
 		    rc.addVar(variableValueType);
 		} else {
-		    for (String value : values) {
-			VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
-			variableValueType.setVariableId(externalVariable.getId());
-			variableValueType.setValue(value);
-			rc.addVar(variableValueType);
+		    for (TypedData value : values) {
+			if (TypedData.Type.SIMPLE == value.getType()) {
+			    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
+			    variableValueType.setVariableId(externalVariable.getId());
+			    variableValueType.setValue(value);
+			    rc.addVar(variableValueType);
+			}
 		    }
 		}
 		return values;
@@ -1621,7 +1767,7 @@ public class Engine implements IEngine {
 	} else if (object instanceof ConstantVariable) {
 	    ConstantVariable constantVariable = (ConstantVariable)object;
 	    String id = constantVariable.getId();
-	    Collection<String> values = new Vector<String>();
+	    Collection<TypedData> values = new Vector<TypedData>();
 	    List<ValueType> valueTypes = constantVariable.getValue();
 	    if (valueTypes.size() == 0) {
 		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
@@ -1634,7 +1780,7 @@ public class Engine implements IEngine {
 		    String s = (String)value.getValue();
 		    variableValueType.setValue(s);
 		    rc.addVar(variableValueType);
-		    values.add(s);
+		    values.add(new TypedData(s));
 		}
 	    }
 	    return values;
@@ -1643,8 +1789,9 @@ public class Engine implements IEngine {
 	// Add a static (literal) value.
 	//
 	} else if (object instanceof LiteralComponentType) {
-	    Collection<String> values = new Vector<String>();
-	    values.add((String)((LiteralComponentType)object).getValue());
+	    LiteralComponentType literal = (LiteralComponentType)object;
+	    Collection<TypedData> values = new Vector<TypedData>();
+	    values.add(new TypedData(literal));
 	    return values;
 
 	//
@@ -1663,12 +1810,9 @@ public class Engine implements IEngine {
 		//
 		// If the object has not yet been scanned, then it must be retrieved live from the adapter.
 		//
-		ObjectType ot = definitions.getObject(objectId);
-		RequestContext rc2 = new RequestContext(this, ot);
-		items = scanObject(rc2);
-		for (VariableValueType var : rc2.getVars()) {
-		    rc.addVar(var);
-		}
+		rc.pushObject(definitions.getObject(objectId));
+		items = scanObject(rc);
+		rc.popObject();
 	    }
 	    return extractItemData(objectId, oc, items);
 
@@ -1676,28 +1820,27 @@ public class Engine implements IEngine {
 	// Resolve and return.
 	//
 	} else if (object instanceof VariableComponentType) {
-	    VariableComponentType vc = (VariableComponentType)object;
-	    return resolveInternal(definitions.getVariable(vc.getVarRef()), rc);
+	    return resolveInternal(definitions.getVariable(((VariableComponentType)object).getVarRef()), rc);
 
 	//
 	// Resolve and concatenate child components.
 	//
 	} else if (object instanceof ConcatFunctionType) {
-	    Collection<String> values = new Vector<String>();
+	    Collection<TypedData> values = new Vector<TypedData>();
 	    ConcatFunctionType concat = (ConcatFunctionType)object;
 	    for (Object child : concat.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		Collection<String> next = resolveInternal(child, rc);
+		Collection<TypedData> next = resolveInternal(child, rc);
 		if (next.size() == 0) {
 		    @SuppressWarnings("unchecked")
-		    Collection<String> empty = (Collection<String>)Collections.EMPTY_LIST;
+		    Collection<TypedData> empty = (Collection<TypedData>)Collections.EMPTY_LIST;
 		    return empty;
 		} else if (values.size() == 0) {
 		    values.addAll(next);
 		} else {
-		    Collection<String> newValues = new Vector<String>();
-		    for (String base : values) {
-			for (String val : next) {
-			    newValues.add(base + val);
+		    Collection<TypedData> newValues = new Vector<TypedData>();
+		    for (TypedData base : values) {
+			for (TypedData val : next) {
+			    newValues.add(new TypedData(base.getString() + val.getString()));
 			}
 		    }
 		    values = newValues;
@@ -1709,9 +1852,9 @@ public class Engine implements IEngine {
 	// Escape anything that could be pattern-matched.
 	//
 	} else if (object instanceof EscapeRegexFunctionType) {
-	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent((EscapeRegexFunctionType)object), rc)) {
-		values.add(StringTools.escapeRegex(value));
+	    Collection<TypedData> values = new Vector<TypedData>();
+	    for (TypedData value : resolveInternal(getComponent((EscapeRegexFunctionType)object), rc)) {
+		values.add(new TypedData(StringTools.escapeRegex(value.getString())));
 	    }
 	    return values;
 
@@ -1720,9 +1863,11 @@ public class Engine implements IEngine {
 	//
 	} else if (object instanceof SplitFunctionType) {
 	    SplitFunctionType split = (SplitFunctionType)object;
-	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent(split), rc)) {
-		values.addAll(StringTools.toList(StringTools.tokenize(value, split.getDelimiter(), false)));
+	    Collection<TypedData> values = new Vector<TypedData>();
+	    for (TypedData value : resolveInternal(getComponent(split), rc)) {
+		for (String s : StringTools.toList(StringTools.tokenize(value.getString(), split.getDelimiter(), false))) {
+		    values.add(new TypedData(s));
+		}
 	    }
 	    return values;
 
@@ -1733,17 +1878,17 @@ public class Engine implements IEngine {
 	} else if (object instanceof RegexCaptureFunctionType) {
 	    RegexCaptureFunctionType regexCapture = (RegexCaptureFunctionType)object;
 	    Pattern p = Pattern.compile(regexCapture.getPattern());
-	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent(regexCapture), rc)) {
-		Matcher m = p.matcher(value);
+	    Collection<TypedData> values = new Vector<TypedData>();
+	    for (TypedData value : resolveInternal(getComponent(regexCapture), rc)) {
+		Matcher m = p.matcher(value.getString());
 		if (m.groupCount() > 0) {
 		    if (m.find()) {
-			values.add(m.group(1));
+			values.add(new TypedData(m.group(1)));
 		    } else {
-			values.add("");
+			values.add(TypedData.EMPTY_STRING);
 		    }
 		} else {
-		    values.add("");
+		    values.add(TypedData.EMPTY_STRING);
 		}
 	    }
 	    return values;
@@ -1757,24 +1902,26 @@ public class Engine implements IEngine {
 	    start = Math.max(1, start); // a start index < 1 means start at 1
 	    start--;			// OVAL counter begins at 1 instead of 0
 	    int len = st.getSubstringLength();
-	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent(st), rc)) {
+	    Collection<TypedData> values = new Vector<TypedData>();
+	    for (TypedData value : resolveInternal(getComponent(st), rc)) {
+		String str = value.getString();
+
 		//
 		// If the substring_start attribute has value greater than the length of the original string
 		// an error should be reported.
 		//
-		if (start > value.length()) {
-		    throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_SUBSTRING, value, new Integer(start)));
+		if (start > str.length()) {
+		    throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_SUBSTRING, str, new Integer(start)));
 
 		//
 		// A substring_length value greater than the actual length of the string, or a negative value,
 		// means to include all of the characters after the starting character.
 		//
-		} else if (len < 0 || value.length() <= (start+len)) {
-		    values.add(value.substring(start));
+		} else if (len < 0 || str.length() <= (start+len)) {
+		    values.add(new TypedData(str.substring(start)));
 
 		} else {
-		    values.add(value.substring(start, start+len));
+		    values.add(new TypedData(str.substring(start, start+len)));
 		}
 	    }
 	    return values;
@@ -1785,12 +1932,13 @@ public class Engine implements IEngine {
 	} else if (object instanceof BeginFunctionType) {
 	    BeginFunctionType bt = (BeginFunctionType)object;
 	    String s = bt.getCharacter();
-	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent(bt), rc)) {
-		if (value.startsWith(s)) {
+	    Collection<TypedData> values = new Vector<TypedData>();
+	    for (TypedData value : resolveInternal(getComponent(bt), rc)) {
+		String str = value.getString();
+		if (str.startsWith(s)) {
 		    values.add(value);
 		} else {
-		    values.add(s + value);
+		    values.add(new TypedData(s + str));
 		}
 	    }
 	    return values;
@@ -1801,12 +1949,13 @@ public class Engine implements IEngine {
 	} else if (object instanceof EndFunctionType) {
 	    EndFunctionType et = (EndFunctionType)object;
 	    String s = et.getCharacter();
-	    Collection<String> values = new Vector<String>();
-	    for (String value : resolveInternal(getComponent(et), rc)) {
-		if (value.endsWith(s)) {
+	    Collection<TypedData> values = new Vector<TypedData>();
+	    for (TypedData value : resolveInternal(getComponent(et), rc)) {
+		String str = value.getString();
+		if (str.endsWith(s)) {
 		    values.add(value);
 		} else {
-		    values.add(value + s);
+		    values.add(new TypedData(str + s));
 		}
 	    }
 	    return values;
@@ -1816,28 +1965,28 @@ public class Engine implements IEngine {
 	//
 	} else if (object instanceof TimeDifferenceFunctionType) {
 	    TimeDifferenceFunctionType tt = (TimeDifferenceFunctionType)object;
-	    Collection<String> values = new Vector<String>();
+	    Collection<TypedData> values = new Vector<TypedData>();
 	    List<Object> children = tt.getObjectComponentOrVariableComponentOrLiteralComponent();
-	    Collection<String> timestamp1;
-	    Collection<String> timestamp2;
+	    Collection<TypedData> ts1;
+	    Collection<TypedData> ts2;
 	    if (children.size() == 1) {
-		timestamp1 = new Vector<String>();
-		timestamp1.add(new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date(System.currentTimeMillis())));
-		timestamp2 = resolveInternal(children.get(0), rc);
+		ts1 = new Vector<TypedData>();
+		ts1.add(new TypedData(new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date(System.currentTimeMillis()))));
+		ts2 = resolveInternal(children.get(0), rc);
 	    } else if (children.size() == 2) {
-		timestamp1 = resolveInternal(children.get(0), rc);
-		timestamp2 = resolveInternal(children.get(1), rc);
+		ts1 = resolveInternal(children.get(0), rc);
+		ts2 = resolveInternal(children.get(1), rc);
 	    } else {
 		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_TIMEDIFFERENCE, Integer.toString(children.size()));
 		throw new ResolveException(msg);
 	    }
-	    for (String time1 : timestamp1) {
+	    for (TypedData time1 : ts1) {
 		try {
-		    long tm1 = DateTime.getTime(time1, tt.getFormat1());
-		    for (String time2 : timestamp2) {
-			long tm2 = DateTime.getTime(time2, tt.getFormat2());
+		    long tm1 = DateTime.getTime(time1.getString(), tt.getFormat1());
+		    for (TypedData time2 : ts2) {
+			long tm2 = DateTime.getTime(time2.getString(), tt.getFormat2());
 			long diff = (tm1 - tm2)/1000L; // convert diff to seconds
-			values.add(Long.toString(diff));
+			values.add(new TypedData(diff));
 		    }
 		} catch (IllegalArgumentException e) {
 		    throw new ResolveException(e.getMessage());
@@ -1852,11 +2001,11 @@ public class Engine implements IEngine {
 	//
 	} else if (object instanceof ArithmeticFunctionType) {
 	    ArithmeticFunctionType at = (ArithmeticFunctionType)object;
-	    Stack<Collection<String>> rows = new Stack<Collection<String>>();
+	    Stack<Collection<TypedData>> rows = new Stack<Collection<TypedData>>();
 	    ArithmeticEnumeration op = at.getArithmeticOperation();
 	    for (Object child : at.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		Collection<String> row = new Vector<String>();
-		for (String cell : resolveInternal(child, rc)) {
+		Collection<TypedData> row = new Vector<TypedData>();
+		for (TypedData cell : resolveInternal(child, rc)) {
 		    row.add(cell);
 		}
 		rows.add(row);
@@ -1868,12 +2017,12 @@ public class Engine implements IEngine {
 	//
 	} else if (object instanceof CountFunctionType) {
 	    CountFunctionType ct = (CountFunctionType)object;
-	    Collection<String> children = new Vector<String>();
+	    Collection<TypedData> children = new Vector<TypedData>();
 	    for (Object child : ct.getObjectComponentOrVariableComponentOrLiteralComponent()) {
 		children.addAll(resolveInternal(child, rc));
 	    }
-	    Collection<String> values = new Vector<String>();
-	    values.add(Integer.toString(children.size()));
+	    Collection<TypedData> values = new Vector<TypedData>();
+	    values.add(new TypedData(children.size()));
 	    return values;
 
 	//
@@ -1881,7 +2030,7 @@ public class Engine implements IEngine {
 	//
 	} else if (object instanceof UniqueFunctionType) {
 	    UniqueFunctionType ut = (UniqueFunctionType)object;
-	    HashSet<String> values = new HashSet<String>();
+	    HashSet<TypedData> values = new HashSet<TypedData>();
 	    for (Object child : ut.getObjectComponentOrVariableComponentOrLiteralComponent()) {
 		values.addAll(resolveInternal(child, rc));
 	    }
@@ -1895,35 +2044,38 @@ public class Engine implements IEngine {
     /**
      * Perform the Arithmetic operation on permutations of the Stack, and return the resulting permutations.
      */
-    private List<String> computeProduct(ArithmeticEnumeration op, Stack<Collection<String>> rows) {
-	List<String> results = new Vector<String>();
+    private List<TypedData> computeProduct(ArithmeticEnumeration op, Stack<Collection<TypedData>> rows) {
+	List<TypedData> results = new Vector<TypedData>();
 	if (rows.empty()) {
 	    switch(op) {
 		case ADD:
-		  results.add("0");
+		  results.add(new TypedData(0));
 		  break;
 		case MULTIPLY:
-		  results.add("1");
+		  results.add(new TypedData(1));
 		  break;
 	    }
 	} else {
-	    for (String value : rows.pop()) {
-		Stack<Collection<String>> copy = new Stack<Collection<String>>();
+	    for (TypedData type : rows.pop()) {
+		String value = type.getString();
+		Stack<Collection<TypedData>> copy = new Stack<Collection<TypedData>>();
 		copy.addAll(rows);
-		for (String otherValue : computeProduct(op, copy)) {
+		for (TypedData otherType : computeProduct(op, copy)) {
+		    String otherValue = otherType.getString();
 		    switch(op) {
 		      case ADD:
 			if (value.indexOf(".") == -1 && otherValue.indexOf(".") == -1) {
-			    results.add(new BigInteger(value).add(new BigInteger(otherValue)).toString());
+			    results.add(new TypedData(new BigInteger(value).add(new BigInteger(otherValue))));
 			} else {
-			    results.add(new BigDecimal(value).add(new BigDecimal(otherValue)).toString());
+			    results.add(new TypedData(new BigDecimal(value).add(new BigDecimal(otherValue))));
 			}
 			break;
+
 		      case MULTIPLY:
 			if (value.indexOf(".") == -1 && otherValue.indexOf(".") == -1) {
-			    results.add(new BigInteger(value).multiply(new BigInteger(otherValue)).toString());
+			    results.add(new TypedData(new BigInteger(value).multiply(new BigInteger(otherValue))));
 			} else {
-			    results.add(new BigDecimal(value).multiply(new BigDecimal(otherValue)).toString());
+			    results.add(new TypedData(new BigDecimal(value).multiply(new BigDecimal(otherValue))));
 			}
 			break;
 		    }
@@ -1937,10 +2089,10 @@ public class Engine implements IEngine {
      * The final step in resolving an object reference variable's value is extracting the item field or record from the items
      * associated with that ObjectType, which is the function of this method.
      */
-    private List<String> extractItemData(String objectId, ObjectComponentType oc, Collection list)
+    private List<TypedData> extractItemData(String objectId, ObjectComponentType oc, Collection list)
 		throws OvalException, ResolveException, NoSuchElementException {
 
-	List<String> values = new Vector<String>();
+	List<TypedData> values = new Vector<TypedData>();
 	for (Object o : list) {
 	    if (o instanceof ItemType) {
 		String fieldName = oc.getItemField();
@@ -1968,23 +2120,31 @@ public class Engine implements IEngine {
 		o = ((JAXBElement)o).getValue();
 	    }
 	    if (o instanceof EntityItemSimpleBaseType) {
-		EntityItemSimpleBaseType entity = (EntityItemSimpleBaseType)o;
-		String value = (String)entity.getValue();
-		if (value != null) {
-		    values.add((String)entity.getValue());
+		try {
+		    values.add(new TypedData((EntityItemSimpleBaseType)o));
+		} catch (IllegalArgumentException e) {
+		    throw new ResolveException(e);
 		}
 	    } else if (o instanceof List) {
+		// DAS: does this ever happen??
 		return extractItemData(objectId, null, (List)o);
 	    } else if (o instanceof EntityItemRecordType) {
 		EntityItemRecordType record = (EntityItemRecordType)o;
-		String fieldName = oc.getRecordField();
-		for (EntityItemFieldType field : record.getField()) {
-		    if (field.getName().equals(fieldName)) {
-			String value = (String)field.getValue();
-			if (value != null) {
-			    values.add(value);
+		if (oc.isSetRecordField()) {
+		    String fieldName = oc.getRecordField();
+		    for (EntityItemFieldType field : record.getField()) {
+			try {
+			    values.add(new TypedData(field));
+			} catch (IllegalArgumentException e) {
+			    throw new ResolveException(e);
 			}
 		    }
+		} else {
+		    //
+		    // In this case, the variable points directly to the record without specifying a field. This only
+		    // makes sense in the context of a CountFunctionType, in which case a null value is safe.
+		    //
+		    values.add(new TypedData(record));
 		}
 	    } else {
 		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, o.getClass().getName(), objectId));
@@ -2083,6 +2243,7 @@ public class Engine implements IEngine {
 
     /**
      * Safely invoke a method that takes no arguments and returns an Object.
+     *
      * @returns null if the method is not implemented, if there was an error, or if the method returned null.
      */
     private Object safeInvokeMethod(Object obj, String name) {

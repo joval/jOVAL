@@ -11,7 +11,6 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -57,10 +56,10 @@ public class SidSidAdapter extends UserAdapter {
     }
 
     @Override
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
+    public Collection<SidSidItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
 	directory = session.getDirectory();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	SidSidObject sObj = (SidSidObject)rc.getObject();
+	Collection<SidSidItem> items = new Vector<SidSidItem>();
+	SidSidObject sObj = (SidSidObject)obj;
 	OperationEnumeration op = sObj.getTrusteeSid().getOperation();
 	String sid = (String)sObj.getTrusteeSid().getValue();
 	SidSidBehaviors behaviors = sObj.getBehaviors();
@@ -113,10 +112,10 @@ public class SidSidAdapter extends UserAdapter {
 
     // Private
 
-    private List<JAXBElement<? extends ItemType>> makeItems(IPrincipal principal, SidSidBehaviors behaviors)
+    private List<SidSidItem> makeItems(IPrincipal principal, SidSidBehaviors behaviors)
 		throws WmiException {
 
-	List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	List<SidSidItem> items = new Vector<SidSidItem>();
 	boolean includeGroups = true;
 	boolean resolveGroups = false;
 	if (behaviors != null) {
@@ -129,7 +128,7 @@ public class SidSidAdapter extends UserAdapter {
 	return items;
     }
 
-    private JAXBElement<? extends ItemType> makeItem(IPrincipal principal) {
+    private SidSidItem makeItem(IPrincipal principal) {
 	SidSidItem item = Factories.sc.windows.createSidSidItem();
 	EntityItemStringType trusteeSidType = Factories.sc.core.createEntityItemStringType();
 	trusteeSidType.setValue(principal.getSid());
@@ -162,7 +161,6 @@ public class SidSidAdapter extends UserAdapter {
 	trusteeDomainType.setValue(principal.getDomain());
 	trusteeDomainType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	item.setTrusteeDomain(trusteeDomainType);
-
-	return Factories.sc.windows.createSidSidItem(item);
+	return item;
     }
 }

@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Stack;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -24,6 +23,7 @@ import org.xml.sax.SAXException;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.independent.XmlfilecontentObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -38,7 +38,6 @@ import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.oval.Factories;
-import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -50,7 +49,7 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class XmlfilecontentAdapter extends BaseFileAdapter {
+public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
     private DocumentBuilder builder;
 
     // Implement IAdapter
@@ -73,33 +72,27 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 
     // Protected
 
-    protected Object convertFilename(EntityItemStringType filename) {
-	return filename;
-    }
-
-    protected ItemType createFileItem() {
-	return Factories.sc.independent.createXmlfilecontentItem();
+    protected Class getItemClass() {
+	return XmlfilecontentItem.class;
     }
 
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, OvalException {
+    protected Collection<XmlfilecontentItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
+		throws IOException {
 
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-
+	Collection<XmlfilecontentItem> items = new Vector<XmlfilecontentItem>();
+	XmlfilecontentObject xObj = null;
+	if (obj instanceof XmlfilecontentObject) {
+	    xObj = (XmlfilecontentObject)obj;
+	}
 	XmlfilecontentItem baseItem = null;
 	if (base instanceof XmlfilecontentItem) {
 	    baseItem = (XmlfilecontentItem)base;
 	}
-	XmlfilecontentObject xObj = null;
-	if (rc.getObject() instanceof XmlfilecontentObject) {
-	    xObj = (XmlfilecontentObject)rc.getObject();
-	}
-
 	if (baseItem != null && xObj != null && f.isFile()) {
-	    XmlfilecontentItem item = (XmlfilecontentItem)createFileItem();
+	    XmlfilecontentItem item = Factories.sc.independent.createXmlfilecontentItem();
 	    item.setPath(baseItem.getPath());
 	    item.setFilename(baseItem.getFilename());
 	    item.setFilepath(baseItem.getFilepath());
@@ -121,7 +114,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter {
 		    item.getValueOf().add(valueOf);
 		}
 
-		items.add(Factories.sc.independent.createXmlfilecontentItem(item));
+		items.add(item);
 	    } catch (XPathExpressionException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);

@@ -5,8 +5,8 @@ package org.joval.oval.adapter.independent;
 
 import java.util.Collection;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.independent.FamilyObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.independent.EntityItemFamilyType;
@@ -28,6 +28,7 @@ import org.joval.oval.sysinfo.SysinfoFactory;
  */
 public class FamilyAdapter implements IAdapter {
     private IBaseSession session;
+    private FamilyItem fItem = null;
 
     // Implement IAdapter
 
@@ -38,23 +39,15 @@ public class FamilyAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	items.add(Factories.sc.independent.createFamilyItem(getItem()));
-	return items;
-    }
-
-    // Private
-
-    FamilyItem fItem = null;
-
-    private FamilyItem getItem() {
+    public Collection<FamilyItem> getItems(ObjectType obj, IRequestContext rc) {
+	Collection<FamilyItem> items = new Vector<FamilyItem>();
 	if (fItem == null) {
 	    fItem = Factories.sc.independent.createFamilyItem();
 	    EntityItemFamilyType familyType = Factories.sc.independent.createEntityItemFamilyType();
 	    familyType.setValue(SysinfoFactory.getFamily(session).value());
 	    fItem.setFamily(familyType);
 	}
-	return fItem;
+	items.add(fItem);
+	return items;
     }
 }

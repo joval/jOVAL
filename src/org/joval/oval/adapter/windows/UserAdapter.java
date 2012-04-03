@@ -10,7 +10,6 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -60,69 +59,62 @@ public class UserAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
+    public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
 	directory = session.getDirectory();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	UserObject uObj = (UserObject)rc.getObject();
+	Collection<UserItem> items = new Vector<UserItem>();
+	UserObject uObj = (UserObject)obj;
 	OperationEnumeration op = uObj.getUser().getOperation();
 	Collection<String> users = new Vector<String>();
 	try {
-	    if (uObj.getUser().isSetVarRef()) {
-		users = rc.resolve(uObj.getUser().getVarRef());
-	    } else {
-		users.add((String)uObj.getUser().getValue());
-	    }
+	    String user = (String)uObj.getUser().getValue();
+	    switch(op) {
+	      case EQUALS:
+		try {
+		    items.add(makeItem(directory.queryUser(user)));
+		} catch (IllegalArgumentException e) {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.WARNING);
+		    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, user);
+		    session.getLogger().warn(s);
+		    msg.setValue(s);
+		    rc.addMessage(msg);
+		}
+		break;
 
-	    for (String user : users) {
-		switch(op) {
-		  case EQUALS:
-		    try {
-			items.add(makeItem(directory.queryUser(user)));
-		    } catch (IllegalArgumentException e) {
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.WARNING);
-			String s = JOVALMsg.getMessage(JOVALMsg.ERROR_AD_DOMAIN_UNKNOWN, user);
-			session.getLogger().warn(s);
-			msg.setValue(s);
-			rc.addMessage(msg);
+	      case NOT_EQUAL:
+		for (IUser u : directory.queryAllUsers()) {
+		    if (!directory.getQualifiedNetbiosName(user).equals(u.getNetbiosName())) {
+			items.add(makeItem(u));
 		    }
-		    break;
+		}
+		break;
 
-		  case NOT_EQUAL:
+	      case PATTERN_MATCH:
+		try {
+		    Pattern p = Pattern.compile(user);
 		    for (IUser u : directory.queryAllUsers()) {
-			if (!directory.getQualifiedNetbiosName(user).equals(u.getNetbiosName())) {
+			Matcher m = null;
+			if (directory.isLocal(u.getNetbiosName())) {
+			    m = p.matcher(u.getName());
+			} else {
+			    m = p.matcher(u.getNetbiosName());
+			}
+			if (m.find()) {
 			    items.add(makeItem(u));
 			}
 		    }
-		    break;
-
-		  case PATTERN_MATCH:
-		    try {
-			Pattern p = Pattern.compile(user);
-			for (IUser u : directory.queryAllUsers()) {
-			    Matcher m = null;
-			    if (directory.isLocal(u.getNetbiosName())) {
-				m = p.matcher(u.getName());
-			    } else {
-				m = p.matcher(u.getNetbiosName());
-			    }
-			    if (m.find()) {
-				items.add(makeItem(u));
-			    }
-			}
-		    } catch (PatternSyntaxException e) {
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.ERROR);
-			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-			rc.addMessage(msg);
-			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    }
-		    break;
-	
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		} catch (PatternSyntaxException e) {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+		    rc.addMessage(msg);
+		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
+		break;
+    
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	} catch (NoSuchElementException e) {
 	    // No match.
@@ -137,7 +129,7 @@ public class UserAdapter implements IAdapter {
 
     // Private
 
-    private JAXBElement<? extends ItemType> makeItem(IUser user) {
+    private UserItem makeItem(IUser user) {
 	UserItem item = Factories.sc.windows.createUserItem();
 	EntityItemStringType userType = Factories.sc.core.createEntityItemStringType();
 	if (directory.isBuiltinUser(user.getNetbiosName())) {
@@ -166,6 +158,6 @@ public class UserAdapter implements IAdapter {
 		item.getGroup().add(groupType);
 	    }
 	}
-	return Factories.sc.windows.createUserItem(item);
+	return item;
     }
 }

@@ -4,7 +4,6 @@
 package org.joval.intf.plugin;
 
 import java.util.Collection;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -30,15 +29,17 @@ public interface IAdapter {
     public Collection<Class> init(IBaseSession session);
 
     /**
-     * Retrieve items associated with the given object by scanning the machine.  The ItemTypes returned must be wrapped in a
-     * JAXBElement so that they can be marshalled into an OvalSystemCharacteristics.  If no corresponding items are found,
+     * Retrieve items associated with the given object by scanning the machine.  If no corresponding items are found,
      * this method should return an empty list, and the Engine will add a message indicating that no items were found.
      *
-     * The IRequestContext contains the object for which items should be retrieved.  Many object types allow for the
-     * application of filters, however, it is not necessary for the IAdapter to implement the filtering functionality because
-     * the engine will enforce them itself.
+     * @param obj Contains the object for which items should be retrieved.  Many object types allow for the application
+     *            of filters, however, it is not necessary for the IAdapter to implement the filtering functionality because
+     *            the engine will enforce them itself.  Additionally, any variable references will be computed by the engine
+     *            itself, so the IAdapter does not have to worry about them either.  As a side-effect of variable resolution,
+     *            an IAdapter may be called numerous times with different ObjectTypes, all having the same object ID.  An
+     *            adapter should therefore make no effort to cache data keying on the object ID.
      *
-     * @see IRequestContext
+     * @param rc  @see IRequestContext
      *
      * @throws CollectException if items cannot be collected for the request for some reason, such as an unsupported
      *                       platform for the adapter, or an unsupported operation on the object.  The OVAL object will
@@ -46,5 +47,5 @@ public interface IAdapter {
      * @throws OvalException if there has been an error which should stop all processing, such as propagation of an 
      *                       OvalException that has been thrown by a call to IRequestContext.resolve.
      */
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext irc) throws OvalException, CollectException;
+    public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws OvalException, CollectException;
 }

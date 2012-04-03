@@ -38,7 +38,6 @@ CLASSES=\
 	org.joval.oval.adapter.independent.FamilyAdapter		\
 	org.joval.oval.adapter.independent.Textfilecontent54Adapter	\
 	org.joval.oval.adapter.independent.TextfilecontentAdapter	\
-	org.joval.oval.adapter.independent.VariableAdapter		\
 	org.joval.oval.adapter.independent.XmlfilecontentAdapter	\
 	org.joval.oval.adapter.linux.RpminfoAdapter			\
 	org.joval.oval.adapter.macos.PlistAdapter			\

@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.aix.FixObject;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.systemcharacteristics.aix.EntityItemFixInstallationStatusType;
@@ -55,13 +55,13 @@ public class FixAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
-	FixObject fObj = (FixObject)rc.getObject();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<FixItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
+	FixObject fObj = (FixObject)obj;
+	Collection<FixItem> items = new Vector<FixItem>();
 	switch(fObj.getAparNumber().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(Factories.sc.aix.createFixItem(getItem((String)fObj.getAparNumber().getValue())));
+		items.add(getItem((String)fObj.getAparNumber().getValue()));
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);

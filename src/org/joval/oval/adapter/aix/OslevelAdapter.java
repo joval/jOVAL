@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.aix.OslevelObject;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -51,10 +51,15 @@ public class OslevelAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<OslevelItem> getItems(ObjectType obj, IRequestContext rc) {
+	Collection<OslevelItem> items = new Vector<OslevelItem>();
 	try {
-	    items.add(Factories.sc.aix.createOslevelItem(getItem()));
+	    OslevelItem item = Factories.sc.aix.createOslevelItem();
+	    EntityItemVersionType maintenanceLevel = Factories.sc.core.createEntityItemVersionType();
+	    maintenanceLevel.setValue(SafeCLI.exec("uname -r", session, IUnixSession.Timeout.S));
+	    maintenanceLevel.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+	    item.setMaintenanceLevel(maintenanceLevel);
+	    items.add(item);
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -62,16 +67,5 @@ public class OslevelAdapter implements IAdapter {
 	    rc.addMessage(msg);
 	}
 	return items;
-    }
-
-    // Private
-
-    private OslevelItem getItem() throws Exception {
-	OslevelItem item = Factories.sc.aix.createOslevelItem();
-	EntityItemVersionType maintenanceLevel = Factories.sc.core.createEntityItemVersionType();
-	maintenanceLevel.setValue(SafeCLI.exec("uname -r", session, IUnixSession.Timeout.S));
-	maintenanceLevel.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-	item.setMaintenanceLevel(maintenanceLevel);
-	return item;
     }
 }

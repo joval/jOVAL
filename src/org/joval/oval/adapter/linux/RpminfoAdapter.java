@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.linux.RpminfoObject;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -61,13 +61,13 @@ public class RpminfoAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
-	RpminfoObject rObj = (RpminfoObject)rc.getObject();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<RpminfoItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
+	RpminfoObject rObj = (RpminfoObject)obj;
+	Collection<RpminfoItem> items = new Vector<RpminfoItem>();
 	switch(rObj.getName().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(Factories.sc.linux.createRpminfoItem(getItem((String)rObj.getName().getValue())));
+		items.add(getItem((String)rObj.getName().getValue()));
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -84,7 +84,7 @@ public class RpminfoAdapter implements IAdapter {
 		Pattern p = Pattern.compile((String)rObj.getName().getValue());
 		for (String packageName : packageMap.keySet()) {
 		    if (p.matcher(packageName).find()) {
-			items.add(Factories.sc.linux.createRpminfoItem(packageMap.get(packageName)));
+			items.add(packageMap.get(packageName));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
@@ -101,7 +101,7 @@ public class RpminfoAdapter implements IAdapter {
 	    String name = (String)rObj.getName().getValue();
 	    for (String packageName : packageMap.keySet()) {
 		if (!packageName.equals(name)) {
-		    items.add(Factories.sc.linux.createRpminfoItem(packageMap.get(packageName)));
+		    items.add(packageMap.get(packageName));
 		}
 	    }
 	    break;

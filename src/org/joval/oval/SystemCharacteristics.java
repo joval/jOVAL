@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -239,25 +240,21 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     /**
-     * Store the ItemType in the itemTable and return the ID used to store it.  The plugin should retain this ID in case the
-     * item is shared by multiple objects.
+     * Store the ItemType in the itemTable and return the ID used to store it.
      */
-    public synchronized BigInteger storeItem(JAXBElement<? extends ItemType> wrappedItem) {
-	ItemType item = wrappedItem.getValue();
-	BigInteger itemId = null;
-	if (item.isSetId() && !itemTable.containsKey(item.getId())) {
-	    itemTable.put(item.getId(), wrappedItem);
-	} else {
-	    String cs = getChecksum(wrappedItem);
-	    itemId = itemChecksums.get(cs);
-	    if (itemId == null) {
-		itemId = new BigInteger(new Integer(itemTable.size()).toString());
-		itemTable.put(itemId, wrappedItem);
-		itemChecksums.put(cs, itemId);
-	    }
-	    item.setId(itemId);
+    public BigInteger storeItem(ItemType item) throws OvalException {
+	try {
+	    String packageName = item.getClass().getPackage().getName();
+	    String unqualClassName = item.getClass().getName().substring(packageName.length()+1);
+	    Class<?> factoryClass = Class.forName(packageName + ".ObjectFactory");
+	    Object factory = factoryClass.newInstance();
+	    Method wrapper = factoryClass.getMethod("create" + unqualClassName, item.getClass());
+	    @SuppressWarnings("unchecked")
+	    JAXBElement<ItemType> wrappedItem = (JAXBElement<ItemType>)wrapper.invoke(factory, item);
+	    return storeItem(wrappedItem);
+	} catch (Exception e) {
+	    throw new OvalException(e);
 	}
-	return itemId;
     }
 
     /**
@@ -485,5 +482,23 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
         }
 	return null;
+    }
+
+    private synchronized BigInteger storeItem(JAXBElement<? extends ItemType> wrappedItem) {
+	ItemType item = wrappedItem.getValue();
+	BigInteger itemId = null;
+	if (item.isSetId() && !itemTable.containsKey(item.getId())) {
+	    itemTable.put(item.getId(), wrappedItem);
+	} else {
+	    String cs = getChecksum(wrappedItem);
+	    itemId = itemChecksums.get(cs);
+	    if (itemId == null) {
+		itemId = new BigInteger(new Integer(itemTable.size()).toString());
+		itemTable.put(itemId, wrappedItem);
+		itemChecksums.put(cs, itemId);
+	    }
+	    item.setId(itemId);
+	}
+	return itemId;
     }
 }

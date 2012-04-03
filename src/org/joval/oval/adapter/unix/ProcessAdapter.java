@@ -17,7 +17,6 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -76,7 +75,7 @@ public class ProcessAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
+    public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws OvalException, CollectException {
 	if (!initialized) {
 	    scanProcesses();
 	}
@@ -88,57 +87,40 @@ public class ProcessAdapter implements IAdapter {
 	    rc.addMessage(msg);
 	}
 
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	try {
-	    if (rc.getObject() instanceof ProcessObject) {
-		ProcessObject pObj = (ProcessObject)rc.getObject();
-		EntityObjectStringType command = pObj.getCommand();
-		String[] commands = null;
-		if (command.isSetVarRef()) {
-		    commands = rc.resolve(command.getVarRef()).toArray(new String[0]);
-		} else {
-		    commands = new String[1];
-		    commands[0] = (String)command.getValue();
+	if (obj instanceof ProcessObject) {
+	    Collection<ProcessItem> items = new Vector<ProcessItem>();
+	    try {
+		ProcessObject pObj = (ProcessObject)obj;
+		String command = (String)pObj.getCommand().getValue();
+		for (ProcessData process : getProcesses(pObj.getCommand().getOperation(), command)) {
+		    items.add(process.getProcessItem());
 		}
-		for (ProcessData process : getProcesses(command.getOperation(), commands)) {
-		    items.add(Factories.sc.unix.createProcessItem(process.getProcessItem()));
-		}
-	    } else {
-		Process58Object pObj = (Process58Object)rc.getObject();
+	    } catch (PatternSyntaxException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.WARNING);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+		rc.addMessage(msg);
+	    }
+	    return items;
+	} else {
+	    Collection<Process58Item> items = new Vector<Process58Item>();
+	    try {
+		Process58Object pObj = (Process58Object)obj;
 		ItemSet<Process58Item> set1 = null, set2 = null;
 
 		if (pObj.isSetCommandLine()) {
-		    EntityObjectStringType commandLine = pObj.getCommandLine();
-		    String[] commands = null;
-		    if (commandLine.isSetVarRef()) {
-			commands = rc.resolve(commandLine.getVarRef()).toArray(new String[0]);
-		    } else {
-			commands = new String[1];
-			commands[0] = (String)commandLine.getValue();
-		    }
+		    String commandLine = (String)pObj.getCommandLine().getValue();
 		    List<Process58Item> list = new Vector<Process58Item>();
-		    for (ProcessData process : getProcesses(commandLine.getOperation(), commands)) {
+		    for (ProcessData process : getProcesses(pObj.getCommandLine().getOperation(), commandLine)) {
 			list.add(process.getProcess58Item());
 		    }
 		    set1 = new ItemSet<Process58Item>(list);
 		}
 
 		if (pObj.isSetPid()) {
-		    EntityObjectIntType pid = pObj.getPid();
-		    Integer[] pids = null;
-		    if (pid.isSetVarRef()) {
-			Collection<String> values = rc.resolve(pid.getVarRef());
-			pids = new Integer[values.size()];
-			int i = 0;
-			for (String val : values) {
-			    pids[i++] = new Integer(val);
-			}
-		    } else {
-			pids = new Integer[1];
-			pids[0] = new Integer((String)pid.getValue());
-		    }
+		    Integer pid = new Integer((String)pObj.getPid().getValue());
 		    List<Process58Item> list = new Vector<Process58Item>();
-		    for (ProcessData process : getProcesses(pid.getOperation(), pids)) {
+		    for (ProcessData process : getProcesses(pObj.getPid().getOperation(), pid)) {
 			list.add(process.getProcess58Item());
 		    }
 		    set2 = new ItemSet<Process58Item>(list);
@@ -148,19 +130,19 @@ public class ProcessAdapter implements IAdapter {
 		    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_PROCESS58_OBJECT, pObj.getId()));
 		} else {
 		    for (Process58Item item : set1.intersection(set2)) {
-			items.add(Factories.sc.unix.createProcess58Item(item));
+			items.add(item);
 		    }
 		}
+	    } catch (NumberFormatException e) {
+		throw new OvalException(e);
+	    } catch (PatternSyntaxException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.WARNING);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+		rc.addMessage(msg);
 	    }
-	} catch (NumberFormatException e) {
-	    throw new OvalException(e);
-	} catch (PatternSyntaxException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.WARNING);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-	    rc.addMessage(msg);
+	    return items;
 	}
-	return items;
     }
 
     // Private
@@ -168,48 +150,46 @@ public class ProcessAdapter implements IAdapter {
     /**
      * Return a collection of ProcessData objects fitting the criteria of the command StringType.
      */
-    private Collection<ProcessData> getProcesses(OperationEnumeration op, String[] commands)
+    private Collection<ProcessData> getProcesses(OperationEnumeration op, String command)
 		throws PatternSyntaxException, CollectException {
 
 	Collection<ProcessData> result = new Vector<ProcessData>();
-	for (String command : commands) {
-	    switch (op) {
-	      case EQUALS:
-		for (ProcessData process : processes) {
-		    if (command.equals((String)process.command.getValue())) {
-			result.add(process);
-		    }
+	switch (op) {
+	  case EQUALS:
+	    for (ProcessData process : processes) {
+		if (command.equals((String)process.command.getValue())) {
+		    result.add(process);
 		}
-		break;
-
-	      case CASE_INSENSITIVE_EQUALS:
-		for (ProcessData process : processes) {
-		    if (command.equalsIgnoreCase((String)process.command.getValue())) {
-			result.add(process);
-		    }
-		}
-		break;
-
-	      case PATTERN_MATCH:
-		for (ProcessData process : processes) {
-		    if (Pattern.compile(command).matcher((String)process.command.getValue()).find()) {
-			result.add(process);
-		    }
-		}
-		break;
-
-	      case NOT_EQUAL:
-		for (ProcessData process : processes) {
-		    if (!command.equals((String)process.command.getValue())) {
-			result.add(process);
-		    }
-		}
-		break;
-
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
+	    break;
+
+	  case CASE_INSENSITIVE_EQUALS:
+	    for (ProcessData process : processes) {
+		if (command.equalsIgnoreCase((String)process.command.getValue())) {
+		    result.add(process);
+		}
+	    }
+	    break;
+
+	  case PATTERN_MATCH:
+	    for (ProcessData process : processes) {
+		if (Pattern.compile(command).matcher((String)process.command.getValue()).find()) {
+		    result.add(process);
+		}
+	    }
+	    break;
+
+	  case NOT_EQUAL:
+	    for (ProcessData process : processes) {
+		if (!command.equals((String)process.command.getValue())) {
+		    result.add(process);
+		}
+	    }
+	    break;
+
+	  default:
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 	return result;
     }
@@ -217,57 +197,55 @@ public class ProcessAdapter implements IAdapter {
     /**
      * Return a collection of ProcessData objects fitting the criteria of the pid IntegerType.
      */
-    private Collection<ProcessData> getProcesses(OperationEnumeration op, Integer[] pids)
+    private Collection<ProcessData> getProcesses(OperationEnumeration op, Integer pid)
 		throws PatternSyntaxException, CollectException {
 
 	Collection<ProcessData> result = new Vector<ProcessData>();
-	for (Integer pid : pids) {
-	    switch (op) {
-	      case EQUALS:
-		for (ProcessData process : processes) {
-		    if (((String)process.pid.getValue()).equals(pid.toString())) {
-			result.add(process);
-			break;
-		    }
+	switch (op) {
+	  case EQUALS:
+	    for (ProcessData process : processes) {
+		if (((String)process.pid.getValue()).equals(pid.toString())) {
+		    result.add(process);
+		    break;
 		}
-		break;
-
-	      case GREATER_THAN_OR_EQUAL:
-		for (ProcessData process : processes) {
-		    if (Integer.parseInt((String)process.pid.getValue()) >= pid.intValue()) {
-			result.add(process);
-		    }
-		}
-		break;
-
-	      case GREATER_THAN:
-		for (ProcessData process : processes) {
-		    if (Integer.parseInt((String)process.pid.getValue()) > pid.intValue()) {
-			result.add(process);
-		    }
-		}
-		break;
-
-	      case LESS_THAN_OR_EQUAL:
-		for (ProcessData process : processes) {
-		    if (Integer.parseInt((String)process.pid.getValue()) <= pid.intValue()) {
-			result.add(process);
-		    }
-		}
-		break;
-
-	      case LESS_THAN:
-		for (ProcessData process : processes) {
-		    if (Integer.parseInt((String)process.pid.getValue()) < pid.intValue()) {
-			result.add(process);
-		    }
-		}
-		break;
-
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
+	    break;
+
+	  case GREATER_THAN_OR_EQUAL:
+	    for (ProcessData process : processes) {
+		if (Integer.parseInt((String)process.pid.getValue()) >= pid.intValue()) {
+		    result.add(process);
+		}
+	    }
+	    break;
+
+	  case GREATER_THAN:
+	    for (ProcessData process : processes) {
+		if (Integer.parseInt((String)process.pid.getValue()) > pid.intValue()) {
+		    result.add(process);
+		}
+	    }
+	    break;
+
+	  case LESS_THAN_OR_EQUAL:
+	    for (ProcessData process : processes) {
+		if (Integer.parseInt((String)process.pid.getValue()) <= pid.intValue()) {
+		    result.add(process);
+		}
+	    }
+	    break;
+
+	  case LESS_THAN:
+	    for (ProcessData process : processes) {
+		if (Integer.parseInt((String)process.pid.getValue()) < pid.intValue()) {
+		    result.add(process);
+		}
+	    }
+	    break;
+
+	  default:
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 	return result;
     }

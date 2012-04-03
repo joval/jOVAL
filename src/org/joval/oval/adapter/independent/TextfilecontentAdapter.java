@@ -10,12 +10,12 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.independent.TextfilecontentObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
@@ -32,7 +32,6 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
-import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -44,7 +43,7 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class TextfilecontentAdapter extends BaseFileAdapter {
+public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem> {
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
@@ -58,29 +57,25 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 
     // Protected
 
-    protected Object convertFilename(EntityItemStringType filename) {
-	return filename;
-    }
-
-    protected ItemType createFileItem() {
-	return Factories.sc.independent.createTextfilecontentItem();
+    protected Class getItemClass() {
+	return TextfilecontentItem.class;
     }
 
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException, OvalException {
+    protected Collection<TextfilecontentItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
+		throws IOException, CollectException {
 
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<TextfilecontentItem> items = new Vector<TextfilecontentItem>();
 
 	TextfilecontentItem baseItem = null;
 	if (base instanceof TextfilecontentItem) {
 	    baseItem = (TextfilecontentItem)base;
 	}
 	TextfilecontentObject tfcObj = null;
-	if (rc.getObject() instanceof TextfilecontentObject) {
-	    tfcObj = (TextfilecontentObject)rc.getObject();
+	if (obj instanceof TextfilecontentObject) {
+	    tfcObj = (TextfilecontentObject)obj;
 	}
 
 	if (baseItem != null && tfcObj != null) {
@@ -102,10 +97,10 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		switch (op) {
 		  case PATTERN_MATCH: {
 		    Pattern p = Pattern.compile(StringTools.regexPerl2Java((String)tfcObj.getLine().getValue()));
-		    for (JAXBElement<TextfilecontentItem>item : getItems(p, baseItem, s)) {
+		    for (TextfilecontentItem item : getItems(p, baseItem, s)) {
 			EntityItemStringType lineType = Factories.sc.core.createEntityItemStringType();
 			lineType.setValue(tfcObj.getLine().getValue());
-			item.getValue().setLine(lineType);
+			item.setLine(lineType);
 			items.add(item);
 		    }
 		    break;
@@ -136,11 +131,11 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 	return items;
     }
 
-    protected Collection<JAXBElement<TextfilecontentItem>> getItems(Pattern p, TextfilecontentItem baseItem, String s) {
+    protected Collection<TextfilecontentItem> getItems(Pattern p, TextfilecontentItem baseItem, String s) {
 	Matcher m = p.matcher(s);
-	Collection<JAXBElement<TextfilecontentItem>> items = new Vector<JAXBElement<TextfilecontentItem>>();
+	Collection<TextfilecontentItem> items = new Vector<TextfilecontentItem>();
 	for (int instanceNum=1; m.find(); instanceNum++) {
-	    TextfilecontentItem item = (TextfilecontentItem)createFileItem();
+	    TextfilecontentItem item = Factories.sc.independent.createTextfilecontentItem();
 	    item.setPath(baseItem.getPath());
 	    item.setFilename(baseItem.getFilename());
 
@@ -167,7 +162,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter {
 		}
 	    }
 
-	    items.add(Factories.sc.independent.createTextfilecontentItem(item));
+	    items.add(item);
 	}
 	return items;
     }

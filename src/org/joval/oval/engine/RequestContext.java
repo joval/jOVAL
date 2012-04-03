@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Hashtable;
 import java.util.HashSet;
+import java.util.Stack;
 import java.util.Vector;
 
 import oval.schemas.common.MessageType;
@@ -22,13 +23,16 @@ import org.joval.util.JOVALMsg;
 
 class RequestContext implements IRequestContext {
     private Engine engine;
-    private ObjectType object;
+    private Stack<ObjectType> objects;
     private Hashtable<String, HashSet<String>> vars;
+    private Collection<MessageType> messages;
 
     RequestContext(Engine engine, ObjectType object) {
 	this.engine = engine;
-        this.object = object;
+        this.objects = new Stack<ObjectType>();
+	objects.push(object);
         this.vars = new Hashtable<String, HashSet<String>>();
+	this.messages = new Vector<MessageType>();
     }
 
     Collection<VariableValueType> getVars() {
@@ -44,6 +48,10 @@ class RequestContext implements IRequestContext {
         return result;
     }
 
+    Collection<MessageType> getMessages() {
+	return messages;
+    }
+
     void addVar(VariableValueType var) {
 	String id = var.getVariableId();
 	String value = (String)var.getValue();
@@ -56,32 +64,21 @@ class RequestContext implements IRequestContext {
 	}
     }
 
+    ObjectType getObject() {
+        return objects.peek();
+    }
+
+    void pushObject(ObjectType obj) {
+	objects.push(obj);
+    }
+
+    ObjectType popObject() {
+	return objects.pop();
+    }
+
     // Implement IRequestContext
 
-    public ObjectType getObject() {
-        return object;
-    }
-
     public void addMessage(MessageType msg) {
-        engine.getSystemCharacteristics().setObject(object.getId(), null, null, null, msg);
-    }
-
-    public Collection<String> resolve(String variableId) throws OvalException {
-	try {
-            return engine.resolve(variableId, this);
-	} catch (NoSuchElementException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    addMessage(msg);
-	} catch (ResolveException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    addMessage(msg);
-	}
-	@SuppressWarnings("unchecked")
-	Collection<String> empty = (Collection<String>)Collections.EMPTY_LIST;
-	return empty;
+	messages.add(msg);
     }
 }

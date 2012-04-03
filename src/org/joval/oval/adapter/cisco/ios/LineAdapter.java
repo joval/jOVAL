@@ -7,12 +7,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.ios.LineObject;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -54,16 +54,16 @@ public class LineAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<LineItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
+	Collection<LineItem> items = new Vector<LineItem>();
 
-	LineObject lObj = (LineObject)rc.getObject();
+	LineObject lObj = (LineObject)obj;
 	String subcommand = (String)lObj.getShowSubcommand().getValue();
 	OperationEnumeration op = lObj.getShowSubcommand().getOperation();
 	switch(op) {
 	  case EQUALS:
             try {
-		items.add(Factories.sc.ios.createLineItem(getItem(subcommand)));
+		items.add(getItem(subcommand));
 	    } catch (IllegalStateException e) {
 		throw new CollectException(e, FlagEnumeration.NOT_COLLECTED);
 	    } catch (Exception e) {

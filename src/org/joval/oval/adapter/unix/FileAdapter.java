@@ -17,14 +17,10 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.StateType;
 import oval.schemas.definitions.unix.FileObject;
-import oval.schemas.definitions.unix.FileState;
-import oval.schemas.definitions.unix.FileTest;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -46,7 +42,6 @@ import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamTool;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
-import org.joval.oval.OvalException;
 import org.joval.oval.TestException;
 import org.joval.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
@@ -57,7 +52,7 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class FileAdapter extends BaseFileAdapter {
+public class FileAdapter extends BaseFileAdapter<FileItem> {
     private IUnixSession us;
 
     // Implement IAdapter
@@ -74,21 +69,16 @@ public class FileAdapter extends BaseFileAdapter {
 
     // Protected
 
-    protected Object convertFilename(EntityItemStringType filename) {
-	return Factories.sc.unix.createFileItemFilename(filename);
+    protected Class getItemClass() {
+	return FileItem.class;
     }
 
-    protected ItemType createFileItem() {
-	return Factories.sc.unix.createFileItem();
-    }
+    protected Collection<FileItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
+		throws CollectException, IOException {
 
-    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws CollectException, IOException, OvalException {
-
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+	Collection<FileItem> items = new Vector<FileItem>();
 	if (base instanceof FileItem) {
-	    setItem((FileItem)base, f);
-	    items.add(Factories.sc.unix.createFileItem((FileItem)base));
+	    items.add(setItem((FileItem)base, f));
 	}
 	return items;
     }
@@ -98,7 +88,7 @@ public class FileAdapter extends BaseFileAdapter {
     /**
      * Decorate the Item with information about the file.
      */
-    private void setItem(FileItem item, IFile f) throws IOException, CollectException {
+    private FileItem setItem(FileItem item, IFile f) throws IOException, CollectException {
 	IFileEx info = f.getExtended();
 	IUnixFileInfo ufi = null;
 	if (info instanceof IUnixFileInfo) {
@@ -221,5 +211,7 @@ public class FileAdapter extends BaseFileAdapter {
 	aclType.setValue(Boolean.toString(ufi.hasExtendedAcl()));
 	aclType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setHasExtendedAcl(aclType);
+
+	return item;
     }
 }

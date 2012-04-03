@@ -13,12 +13,12 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.windows.Fileeffectiverights53Object;
 import oval.schemas.definitions.windows.FileEffectiveRights53Behaviors;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
@@ -43,7 +43,6 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
-import org.joval.oval.OvalException;
 import org.joval.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
@@ -55,7 +54,7 @@ import org.joval.util.Version;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Fileeffectiverights53Adapter extends BaseFileAdapter {
+public class Fileeffectiverights53Adapter extends BaseFileAdapter<FileeffectiverightsItem> {
     private IWindowsSession ws;
     private IDirectory directory;
 
@@ -73,91 +72,99 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 
     // Protected
 
-    protected Object convertFilename(EntityItemStringType filename) {
-	return Factories.sc.windows.createFileeffectiverightsItemFilename(filename);
+    protected Class getItemClass() {
+	return FileeffectiverightsItem.class;
     }
 
-    protected ItemType createFileItem() {
-	return Factories.sc.windows.createFileeffectiverightsItem();
-    }
-
-    protected Collection<JAXBElement<? extends ItemType>> getItems(ItemType base, IFile f, IRequestContext rc)
-		throws IOException, CollectException, OvalException {
-
+    protected Collection<FileeffectiverightsItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
+		throws IOException, CollectException {
+	//
+	// Grab a fresh directory in case there's been a reconnect since initialization.
+	//
 	directory = ws.getDirectory();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+
+	Collection<FileeffectiverightsItem> items = new Vector<FileeffectiverightsItem>();
+	Fileeffectiverights53Object fObj = null;
+	if (obj instanceof Fileeffectiverights53Object) {
+	    fObj = (Fileeffectiverights53Object)obj;
+	} else {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
+	    throw new CollectException(msg, FlagEnumeration.ERROR);
+	}
+	FileeffectiverightsItem baseItem = null;
 	if (base instanceof FileeffectiverightsItem) {
-	    FileeffectiverightsItem baseItem = (FileeffectiverightsItem)base;
+	    baseItem = (FileeffectiverightsItem)base;
+	} else {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
+	    throw new CollectException(msg, FlagEnumeration.ERROR);
+	}
 
-	    IFileEx info = f.getExtended();
-	    IWindowsFileInfo wfi = null;
-	    if (info instanceof IWindowsFileInfo) {
-		wfi = (IWindowsFileInfo)info;
-	    } else {
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName());
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	IFileEx info = f.getExtended();
+	IWindowsFileInfo wfi = null;
+	if (info instanceof IWindowsFileInfo) {
+	    wfi = (IWindowsFileInfo)info;
+	} else {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName());
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	}
+	IACE[] aces = wfi.getSecurity();
+	String sid = (String)fObj.getTrusteeSid().getValue();
+
+	OperationEnumeration op = fObj.getTrusteeSid().getOperation();
+	switch(op) {
+	  case PATTERN_MATCH:
+	    try {
+		Pattern p = Pattern.compile(sid);
+		for (int i=0; i < aces.length; i++) {
+		    IACE ace = aces[i];
+		    if (p.matcher(ace.getSid()).find()) {
+			IPrincipal principal = directory.queryPrincipalBySid(ace.getSid());
+			items.add(makeItem(baseItem, principal, ace));
+		    }
+		}
+	    } catch (PatternSyntaxException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+		rc.addMessage(msg);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    } catch (WmiException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
+		rc.addMessage(msg);
 	    }
+	    break;
 
-	    IACE[] aces = wfi.getSecurity();
-	    Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)rc.getObject();
-	    String sid = (String)fObj.getTrusteeSid().getValue();
-
-	    OperationEnumeration op = fObj.getTrusteeSid().getOperation();
-	    switch(op) {
-	      case PATTERN_MATCH:
-		try {
-		    Pattern p = Pattern.compile(sid);
+	  case EQUALS:
+	  case NOT_EQUAL:
+	    try {
+		Collection<IPrincipal> principals = getPrincipals(directory.queryPrincipalBySid(sid), fObj.getBehaviors());
+		for (IPrincipal principal : principals) {
 		    for (int i=0; i < aces.length; i++) {
-			IACE ace = aces[i];
-			if (p.matcher(ace.getSid()).find()) {
-			    IPrincipal principal = directory.queryPrincipalBySid(ace.getSid());
-			    items.add(makeItem(baseItem, principal, ace));
+			if (op == OperationEnumeration.EQUALS && directory.isApplicable(principal, aces[i])) {
+			    items.add(makeItem(baseItem, principal, aces[i]));
+			} else if (op == OperationEnumeration.NOT_EQUAL && !directory.isApplicable(principal, aces[i])) {
+			    items.add(makeItem(baseItem, principal, aces[i]));
 			}
 		    }
-		} catch (PatternSyntaxException e) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-		    rc.addMessage(msg);
-		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		} catch (WmiException e) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
-		    rc.addMessage(msg);
 		}
-		break;
-
-	      case EQUALS:
-	      case NOT_EQUAL:
-		try {
-		    Collection<IPrincipal> principals = getPrincipals(directory.queryPrincipalBySid(sid), fObj.getBehaviors());
-		    for (IPrincipal principal : principals) {
-			for (int i=0; i < aces.length; i++) {
-			    if (op == OperationEnumeration.EQUALS && directory.isApplicable(principal, aces[i])) {
-				items.add(makeItem(baseItem, principal, aces[i]));
-			    } else if (op == OperationEnumeration.NOT_EQUAL && !directory.isApplicable(principal, aces[i])) {
-				items.add(makeItem(baseItem, principal, aces[i]));
-			    }
-			}
-		    }
-		} catch (NoSuchElementException e) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINDIR_NOPRINCIPAL, sid));
-		    rc.addMessage(msg);
-		} catch (WmiException e) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
-		    rc.addMessage(msg);
-		}
-		break;
-
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    } catch (NoSuchElementException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINDIR_NOPRINCIPAL, sid));
+		rc.addMessage(msg);
+	    } catch (WmiException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
+		rc.addMessage(msg);
 	    }
+	    break;
+
+	  default:
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 	return items;
     }
@@ -182,9 +189,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
     /**
      * Create a new wrapped FileeffectiverightsItem based on the base FileeffectiverightsItem, IPrincipal and IACE.
      */
-    private JAXBElement<FileeffectiverightsItem> makeItem(FileeffectiverightsItem base, IPrincipal p, IACE ace)
-		throws IOException {
-
+    private FileeffectiverightsItem makeItem(FileeffectiverightsItem base, IPrincipal p, IACE ace) throws IOException {
 	FileeffectiverightsItem item = Factories.sc.windows.createFileeffectiverightsItem();
 	item.setPath(base.getPath());
 	item.setFilename(base.getFilename());
@@ -319,7 +324,6 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter {
 	EntityItemStringType trusteeSid = Factories.sc.core.createEntityItemStringType();
 	trusteeSid.setValue(p.getSid());
 	item.setTrusteeSid(trusteeSid);
-
-	return Factories.sc.windows.createFileeffectiverightsItem(item);
+	return item;
     }
 }

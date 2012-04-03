@@ -9,7 +9,6 @@ import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -38,6 +37,7 @@ import org.joval.util.SafeCLI;
  */
 public class UnameAdapter implements IAdapter {
     private IUnixSession session;
+    private UnameItem item;
 
     // Implement IAdapter
 
@@ -50,10 +50,36 @@ public class UnameAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException {
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<UnameItem> getItems(ObjectType obj, IRequestContext rc) throws OvalException {
+	Collection<UnameItem> items = new Vector<UnameItem>();
 	try {
-	    items.add(getItem());
+	    if (item == null) {
+		item = Factories.sc.unix.createUnameItem();
+		EntityItemStringType machineClass = Factories.sc.core.createEntityItemStringType();
+		machineClass.setValue(SafeCLI.exec("uname -m", session, IUnixSession.Timeout.S));
+		item.setMachineClass(machineClass);
+
+		EntityItemStringType nodeName = Factories.sc.core.createEntityItemStringType();
+		nodeName.setValue(SafeCLI.exec("uname -n", session, IUnixSession.Timeout.S));
+		item.setNodeName(nodeName);
+
+		EntityItemStringType osName = Factories.sc.core.createEntityItemStringType();
+		osName.setValue(SafeCLI.exec("uname -s", session, IUnixSession.Timeout.S));
+		item.setOsName(osName);
+
+		EntityItemStringType osRelease = Factories.sc.core.createEntityItemStringType();
+		osRelease.setValue(SafeCLI.exec("uname -r", session, IUnixSession.Timeout.S));
+		item.setOsRelease(osRelease);
+
+		EntityItemStringType osVersion = Factories.sc.core.createEntityItemStringType();
+		osVersion.setValue(SafeCLI.exec("uname -v", session, IUnixSession.Timeout.S));
+		item.setOsVersion(osVersion);
+
+		EntityItemStringType processorType = Factories.sc.core.createEntityItemStringType();
+		processorType.setValue(SafeCLI.exec("uname -p", session, IUnixSession.Timeout.S));
+		item.setProcessorType(processorType);
+	    }
+	    items.add(item);
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -62,36 +88,5 @@ public class UnameAdapter implements IAdapter {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
-    }
-
-    // Internal
-
-    private JAXBElement<UnameItem> getItem() throws Exception {
-	UnameItem item = Factories.sc.unix.createUnameItem();
-	EntityItemStringType machineClass = Factories.sc.core.createEntityItemStringType();
-	machineClass.setValue(SafeCLI.exec("uname -m", session, IUnixSession.Timeout.S));
-	item.setMachineClass(machineClass);
-
-	EntityItemStringType nodeName = Factories.sc.core.createEntityItemStringType();
-	nodeName.setValue(SafeCLI.exec("uname -n", session, IUnixSession.Timeout.S));
-	item.setNodeName(nodeName);
-
-	EntityItemStringType osName = Factories.sc.core.createEntityItemStringType();
-	osName.setValue(SafeCLI.exec("uname -s", session, IUnixSession.Timeout.S));
-	item.setOsName(osName);
-
-	EntityItemStringType osRelease = Factories.sc.core.createEntityItemStringType();
-	osRelease.setValue(SafeCLI.exec("uname -r", session, IUnixSession.Timeout.S));
-	item.setOsRelease(osRelease);
-
-	EntityItemStringType osVersion = Factories.sc.core.createEntityItemStringType();
-	osVersion.setValue(SafeCLI.exec("uname -v", session, IUnixSession.Timeout.S));
-	item.setOsVersion(osVersion);
-
-	EntityItemStringType processorType = Factories.sc.core.createEntityItemStringType();
-	processorType.setValue(SafeCLI.exec("uname -p", session, IUnixSession.Timeout.S));
-	item.setProcessorType(processorType);
-
-	return Factories.sc.unix.createUnameItem(item);
     }
 }

@@ -10,7 +10,6 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -57,10 +56,10 @@ public class UserSid55Adapter extends UserAdapter {
     }
 
     @Override
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException, OvalException {
+    public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
 	directory = session.getDirectory();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	UserSid55Object uObj = (UserSid55Object)rc.getObject();
+	Collection<UserSidItem> items = new Vector<UserSidItem>();
+	UserSid55Object uObj = (UserSid55Object)obj;
 	String sid = (String)uObj.getUserSid().getValue();
 	OperationEnumeration op = uObj.getUserSid().getOperation();
 
@@ -112,7 +111,7 @@ public class UserSid55Adapter extends UserAdapter {
 
     // Private
 
-    private JAXBElement<? extends ItemType> makeItem(IUser user) {
+    private UserSidItem makeItem(IUser user) {
 	UserSidItem item = Factories.sc.windows.createUserSidItem();
 	EntityItemStringType userSidType = Factories.sc.core.createEntityItemStringType();
 	userSidType.setValue(user.getSid());
@@ -137,6 +136,6 @@ public class UserSid55Adapter extends UserAdapter {
 	    groupSidType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    item.getGroupSid().add(groupSidType);
 	}
-	return Factories.sc.windows.createUserSidItem(item);
+	return item;
     }
 }

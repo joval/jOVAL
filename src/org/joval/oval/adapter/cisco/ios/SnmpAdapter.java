@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.ios.SnmpObject;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
@@ -52,11 +52,62 @@ public class SnmpAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) {
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<SnmpItem> getItems(ObjectType obj, IRequestContext rc) {
+	Collection<SnmpItem> items = new Vector<SnmpItem>();
 	try {
-	    for (SnmpItem item : getItems()) {
-		items.add(Factories.sc.ios.createSnmpItem(item));
+	    for (String line : session.getTechSupport().getData(ITechSupport.GLOBAL)) {
+		if (line.toLowerCase().startsWith("snmp-server community ")) {
+		    StringTokenizer tok = new StringTokenizer(line);
+		    String name = null;
+		    String number = null;
+		    int numTokens = tok.countTokens();
+		    if (numTokens >= 3) {
+			SnmpItem item = Factories.sc.ios.createSnmpItem();
+
+			tok.nextToken(); // "snmp-server"
+			tok.nextToken(); // "community"
+
+			EntityItemStringType communityName = Factories.sc.core.createEntityItemStringType();
+			communityName.setValue(tok.nextToken());
+			item.setCommunityName(communityName);
+
+			if (numTokens > 3) {
+			    String access = null;
+			    String temp = tok.nextToken();
+			    if (temp.equals("view")) {
+				String viewName = tok.nextToken();
+				temp = null;
+			    }
+			    //
+			    // Get the final argument from the command
+			    //
+			    while(tok.hasMoreTokens()) {
+				temp = tok.nextToken();
+			    }
+			    if (temp != null) {
+				int i = 0;
+				try {
+				    i = Integer.parseInt(temp);
+				} catch (NumberFormatException e) {
+				    // not a valid access list
+				}
+				//
+				// Valid values are between 1 and 99, inclusive.  See:
+				// http://www.cisco.com/en/US/docs/ios/12_1/configfun/command/reference/frd3001.html#wp1022436
+				//
+				if (0 < i && i < 100) {
+				    EntityItemStringType accessList = Factories.sc.core.createEntityItemStringType();
+				    accessList.setValue(temp);
+				    item.setAccessList(accessList);
+				}
+			    }
+			}
+
+			items.add(item);
+		    } else {
+			session.getLogger().warn(JOVALMsg.ERROR_IOS_SNMP, line);
+		    }
+		}
 	    }
 	} catch (NoSuchElementException e) {
 	    MessageType msg = Factories.common.createMessageType();
@@ -64,69 +115,6 @@ public class SnmpAdapter implements IAdapter {
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ITechSupport.GLOBAL));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return items;
-    }
-
-    // Private
-
-    private Collection<SnmpItem> getItems() throws NoSuchElementException {
-	List<String> lines = session.getTechSupport().getData(ITechSupport.GLOBAL);
-
-	Collection<SnmpItem> items = new Vector<SnmpItem>();
-	for (String line : lines) {
-	    if (line.toLowerCase().startsWith("snmp-server community ")) {
-		StringTokenizer tok = new StringTokenizer(line);
-		String name = null;
-		String number = null;
-		int numTokens = tok.countTokens();
-		if (numTokens >= 3) {
-		    SnmpItem item = Factories.sc.ios.createSnmpItem();
-
-		    tok.nextToken(); // "snmp-server"
-		    tok.nextToken(); // "community"
-
-		    EntityItemStringType communityName = Factories.sc.core.createEntityItemStringType();
-		    communityName.setValue(tok.nextToken());
-		    item.setCommunityName(communityName);
-
-		    if (numTokens > 3) {
-			String access = null;
-			String temp = tok.nextToken();
-			if (temp.equals("view")) {
-			    String viewName = tok.nextToken();
-			    temp = null;
-			}
-			//
-			// Get the final argument from the command
-			//
-			while(tok.hasMoreTokens()) {
-			    temp = tok.nextToken();
-			}
-			if (temp != null) {
-			    int i = 0;
-			    try {
-				i = Integer.parseInt(temp);
-			    } catch (NumberFormatException e) {
-				// not a valid access list
-			    }
-			    //
-			    // Valid values are between 1 and 99, inclusive.  See:
-			    // http://www.cisco.com/en/US/docs/ios/12_1/configfun/command/reference/frd3001.html#wp1022436
-			    //
-			    if (0 < i && i < 100) {
-				EntityItemStringType accessList = Factories.sc.core.createEntityItemStringType();
-				accessList.setValue(temp);
-				item.setAccessList(accessList);
-			    }
-			}
-		    }
-
-		    items.add(item);
-		} else {
-		    session.getLogger().warn(JOVALMsg.ERROR_IOS_SNMP, line);
-		}
-	    }
 	}
 	return items;
     }

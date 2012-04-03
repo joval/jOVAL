@@ -12,10 +12,10 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
+import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.solaris.PackageObject;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -57,13 +57,13 @@ public class PackageAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws CollectException {
-	PackageObject pObj = (PackageObject)rc.getObject();
-	Collection<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
+    public Collection<PackageItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
+	PackageObject pObj = (PackageObject)obj;
+	Collection<PackageItem> items = new Vector<PackageItem>();
 	switch(pObj.getPkginst().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(Factories.sc.solaris.createPackageItem(getItem((String)pObj.getPkginst().getValue())));
+		items.add(getItem((String)pObj.getPkginst().getValue()));
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -79,7 +79,7 @@ public class PackageAdapter implements IAdapter {
 		Pattern p = Pattern.compile((String)pObj.getPkginst().getValue());
 		for (String pkginst : packageMap.keySet()) {
 		    if (p.matcher(pkginst).find()) {
-			items.add(Factories.sc.solaris.createPackageItem(packageMap.get(pkginst)));
+			items.add(packageMap.get(pkginst));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
@@ -96,7 +96,7 @@ public class PackageAdapter implements IAdapter {
 	    String pkginst = (String)pObj.getPkginst().getValue();
 	    for (String key : packageMap.keySet()) {
 		if (!pkginst.equals(key)) {
-		    items.add(Factories.sc.solaris.createPackageItem(packageMap.get(key)));
+		    items.add(packageMap.get(key));
 		}
 	    }
 	    break;

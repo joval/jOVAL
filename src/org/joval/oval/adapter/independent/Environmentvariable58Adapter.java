@@ -15,7 +15,6 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -65,19 +64,21 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 	return classes;
     }
 
-    public Collection<JAXBElement<? extends ItemType>> getItems(IRequestContext rc) throws OvalException, CollectException {
-	Environmentvariable58Object eObj = (Environmentvariable58Object)rc.getObject();
+    public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws OvalException, CollectException {
+	Environmentvariable58Object eObj = (Environmentvariable58Object)obj;
 	if (eObj.isSetPid() && eObj.getPid().getValue() != null) {
 	    //
 	    // In the absence of a pid, just leverage the legacy adapter.
 	    //
-	    List<JAXBElement<? extends ItemType>> items = new Vector<JAXBElement<? extends ItemType>>();
-	    for (JAXBElement<? extends ItemType> elt : super.getItems(new EVRequestContext(rc))) {
-		EnvironmentvariableItem item = (EnvironmentvariableItem)elt.getValue();
+	    List<Environmentvariable58Item> items = new Vector<Environmentvariable58Item>();
+            EnvironmentvariableObject evo = Factories.definitions.independent.createEnvironmentvariableObject();
+            evo.setName(eObj.getName());
+	    for (ItemType it : super.getItems(evo, rc)) {
+		EnvironmentvariableItem item = (EnvironmentvariableItem)it;
 		Environmentvariable58Item newItem = Factories.sc.independent.createEnvironmentvariable58Item();
 		newItem.setName(item.getName());
 		newItem.setValue(item.getValue());
-		items.add(Factories.sc.independent.createEnvironmentvariable58Item(newItem));
+		items.add(newItem);
 	    }
 	    return items;
 	} else {
@@ -214,9 +215,9 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 	    }
 
 	    if (processEnv == null) {
-		return new Vector<JAXBElement<? extends ItemType>>();
+		return new Vector<Environmentvariable58Item>();
 	    } else {
-		return getItems(rc, new PropertyEnvironment(processEnv), pid);
+		return getItems(obj, rc, new PropertyEnvironment(processEnv), pid);
 	    }
 	}
     }
@@ -224,8 +225,8 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
     // Internal
 
     @Override
-    JAXBElement<? extends ItemType> makeItem(String name, String value, String pid) {
-	EnvironmentvariableItem evi = (EnvironmentvariableItem)super.makeItem(name, value, pid).getValue();
+    ItemType makeItem(String name, String value, String pid) {
+	EnvironmentvariableItem evi = (EnvironmentvariableItem)super.makeItem(name, value, pid);
 	Environmentvariable58Item item = Factories.sc.independent.createEnvironmentvariable58Item();
 	item.setName(evi.getName());
 	item.setValue(evi.getValue());
@@ -233,35 +234,10 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 	EntityItemIntType pidType = Factories.sc.core.createEntityItemIntType();
 	pidType.setValue(pid);
 	item.setPid(pidType);
-
-	return Factories.sc.independent.createEnvironmentvariable58Item(item);
+	return item;
     }
 
     // Private
-
-    class EVRequestContext implements IRequestContext {
-        IRequestContext base;
-        EnvironmentvariableObject object;
-
-        EVRequestContext(IRequestContext base) {
-            Environmentvariable58Object evo = (Environmentvariable58Object)base.getObject();
-            object = Factories.definitions.independent.createEnvironmentvariableObject();
-            object.setName(evo.getName());
-        }
-
-        // Implement IRequestContext
-        public ObjectType getObject() {
-            return object;
-        }
-
-        public void addMessage(MessageType msg) {
-            base.addMessage(msg);
-        }
-
-        public Collection<String> resolve(String variableId) throws NoSuchElementException, OvalException {
-            return base.resolve(variableId);
-        }
-    }
 
     class PropertyEnvironment extends AbstractEnvironment {
 	public PropertyEnvironment(Properties props) {
