@@ -165,73 +165,16 @@ public class ExecutionState {
 	String pluginName = DEFAULT_PLUGIN;
 
 	for (int i=0; i < argv.length; i++) {
-	    if (argv[i].equals("-h")) {
+	    if (validateChecksum && i == (argv.length - 1)) {
+		specifiedChecksum = argv[i];
+	    } else if (argv[i].equals("-h")) {
 		printHelp = true;
-		break;
-	    } else if (argv[i].equals("-o")) {
-		defsFile = new File(argv[++i]);
 	    } else if (argv[i].equals("-z")) {
 		computeChecksum = true;
-	    } else if (argv[i].equals("-l")) {
-		try {
-		    switch(Integer.parseInt(argv[++i])) {
-		      case 1:
-			logLevel = Level.FINEST;
-			break;
-		      case 2:
-			logLevel = Level.INFO;
-			break;
-		      case 3:
-			logLevel = Level.WARNING;
-			break;
-		      case 4:
-			logLevel = Level.SEVERE;
-			break;
-		      default:
-			Main.print(Main.getMessage("ERROR_INVALID_LOG_LEVEL", argv[i]));
-			return false;
-		    }
-		} catch (NumberFormatException e) {
-		    Main.print(Main.getMessage("ERROR_INVALID_LOG_LEVEL", e.getMessage()));
-		    return false;
-		}
 	    } else if (argv[i].equals("-p")) {
 		printLogs = true;
-	    } else if (argv[i].equals("-y")) {
-		logFile = new File(argv[++i]);
-	    } else if (argv[i].equals("-v")) {
-		variablesFile = new File(argv[++i]);
-	    } else if (argv[i].equals("-e")) {
-		definitionIDs = new Vector<String>();
-		StringTokenizer tok = new StringTokenizer(argv[++i], ",");
-		while(tok.hasMoreTokens()) {
-		    definitionIDs.add(tok.nextToken());
-		}
-	    } else if (argv[i].equals("-f")) {
-		inputDefsFile = new File(argv[++i]);
-	    } else if (argv[i].equals("-a")) {
-		File temp = new File(argv[++i]);
-		if (temp.isDirectory()) {
-		    xmlDir = temp;
-		} else {
-		    Main.print(Main.getMessage("ERROR_INVALID_SCHEMADIR", temp.toString()));
-		    return false;
-		}
-	    } else if (argv[i].equals("-i")) {
-		inputFile = new File(argv[++i]);
-		plugin = null;
-	    } else if (argv[i].equals("-d")) {
-		dataFile = new File(argv[++i]);
-	    } else if (argv[i].equals("-g")) {
-		directivesFile = new File(argv[++i]);
-	    } else if (argv[i].equals("-r")) {
-		resultsXML = new File(argv[++i]);
 	    } else if (argv[i].equals("-s")) {
 		applyTransform = false;
-	    } else if (argv[i].equals("-t")) {
-		xmlTransform = new File(argv[++i]);
-	    } else if (argv[i].equals("-x")) {
-		resultsTransform = new File(argv[++i]);
 	    } else if (argv[i].equals("-m")) {
 		validateChecksum = false;
 	    } else if (argv[i].equals("-c")) {
@@ -252,21 +195,84 @@ public class ExecutionState {
 		if (next < argv.length && !argv[next].startsWith("-")) {
 		    schematronResultsXform = new File(argv[++i]);
 		}
-	    } else if (argv[i].equals("-plugin")) {
-		pluginName = argv[++i];
-	    } else if (argv[i].equals("-config")) {
-		pluginConfig = new Properties();
-		try {
-		    pluginConfig.load(new FileInputStream(new File(argv[++i])));
-		} catch (IOException e) {
-		    Main.logException(e);
-		    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
-		    return false;
+	    } else if ((argv.length - 1) > i) {
+    		//
+    		// All the remaining arguments require a subsequent arg
+    		//
+		if (argv[i].equals("-o")) {
+		    defsFile = new File(argv[++i]);
+		} else if (argv[i].equals("-l")) {
+		    try {
+			switch(Integer.parseInt(argv[++i])) {
+			  case 1:
+			    logLevel = Level.FINEST;
+			    break;
+			  case 2:
+			    logLevel = Level.INFO;
+			    break;
+			  case 3:
+			    logLevel = Level.WARNING;
+			    break;
+			  case 4:
+			    logLevel = Level.SEVERE;
+			    break;
+			  default:
+			    Main.print(Main.getMessage("ERROR_INVALID_LOG_LEVEL", argv[i]));
+			    return false;
+			}
+		    } catch (NumberFormatException e) {
+			Main.print(Main.getMessage("ERROR_INVALID_LOG_LEVEL", e.getMessage()));
+			return false;
+		    }
+		} else if (argv[i].equals("-y")) {
+		    logFile = new File(argv[++i]);
+		} else if (argv[i].equals("-v")) {
+		    variablesFile = new File(argv[++i]);
+		} else if (argv[i].equals("-e")) {
+		    definitionIDs = new Vector<String>();
+		    StringTokenizer tok = new StringTokenizer(argv[++i], ",");
+		    while(tok.hasMoreTokens()) {
+			definitionIDs.add(tok.nextToken());
+		    }
+		} else if (argv[i].equals("-f")) {
+		    inputDefsFile = new File(argv[++i]);
+		} else if (argv[i].equals("-a")) {
+		    File temp = new File(argv[++i]);
+		    if (temp.isDirectory()) {
+			xmlDir = temp;
+		    } else {
+			Main.print(Main.getMessage("ERROR_INVALID_SCHEMADIR", temp.toString()));
+			return false;
+		    }
+		} else if (argv[i].equals("-i")) {
+		    inputFile = new File(argv[++i]);
+		    plugin = null;
+		} else if (argv[i].equals("-d")) {
+		    dataFile = new File(argv[++i]);
+		} else if (argv[i].equals("-g")) {
+		    directivesFile = new File(argv[++i]);
+		} else if (argv[i].equals("-r")) {
+		    resultsXML = new File(argv[++i]);
+		} else if (argv[i].equals("-t")) {
+		    xmlTransform = new File(argv[++i]);
+		} else if (argv[i].equals("-x")) {
+		    resultsTransform = new File(argv[++i]);
+		} else if (argv[i].equals("-plugin")) {
+		    pluginName = argv[++i];
+		} else if (argv[i].equals("-config")) {
+		    pluginConfig = new Properties();
+		    try {
+			pluginConfig.load(new FileInputStream(new File(argv[++i])));
+		    } catch (IOException e) {
+			Main.logException(e);
+			Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage()));
+			return false;
+		    }
+		} else {
+		    Main.print(Main.getMessage("WARNING_ARG", argv[i]));
 		}
-	    } else if (i == (argv.length - 1)) {
-		specifiedChecksum = argv[i];
 	    } else {
-		Main.print(Main.getMessage("WARNING_ARG", argv[i]));
+	 	Main.print(Main.getMessage("WARNING_ARG", argv[i]));
 	    }
 	}
 
