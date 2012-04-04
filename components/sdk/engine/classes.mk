@@ -12,6 +12,7 @@ CLASSES=\
 	org.joval.intf.plugin.IRequestContext		\
 	org.joval.intf.system.IBaseSession		\
 	org.joval.intf.system.IProcess			\
+	org.joval.intf.net.ICIDR			\
 	org.joval.intf.xml.ITransformable		\
 	org.joval.os.windows.Timestamp			\
 	org.joval.oval.CollectException			\
@@ -44,4 +45,17 @@ CLASSES=\
 	org.joval.oval.sysinfo.UnixNetworkInterface	\
 	org.joval.oval.sysinfo.UnixSystemInfo		\
 	org.joval.oval.sysinfo.WindowsSystemInfo	\
+	org.joval.oval.types.BinaryType			\
+	org.joval.oval.types.BooleanType		\
+	org.joval.oval.types.EvrStringType		\
+	org.joval.oval.types.FilesetRevisionType	\
+	org.joval.oval.types.FloatType			\
+	org.joval.oval.types.IntType			\
+	org.joval.oval.types.IosVersionType		\
+	org.joval.oval.types.Ip4AddressType		\
+	org.joval.oval.types.Ip6AddressType		\
+	org.joval.oval.types.IType			\
+	org.joval.oval.types.RecordType			\
+	org.joval.oval.types.StringType			\
+	org.joval.oval.types.VersionType		\
 	org.joval.oval.xml.OvalNamespacePrefixMapper

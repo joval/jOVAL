@@ -542,6 +542,9 @@ public class Engine implements IEngine, IAdapter {
 		List<MessageType> messages = new Vector<MessageType>();
 		FlagData flag = new FlagData();
 		try {
+		    //
+		    // DAS: implement var_check?
+		    //
 		    for (ObjectType obj : resolveObjects(rc)) {
 			//
 			// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
@@ -637,7 +640,7 @@ public class Engine implements IEngine, IAdapter {
 	List<ObjectType>objects = new Vector<ObjectType>();
 	try {
 	    //
-	    // First, create lists of entities within the object
+	    // First, create lists of entities within the object indexed by getter-function name
 	    //
 	    Hashtable<String, List<Object>> lists = new Hashtable<String, List<Object>>();
 	    int numPermutations = 1;
@@ -1348,17 +1351,6 @@ public class Engine implements IEngine, IAdapter {
 	}
 
 	//
-	// Check datatype compatibility; anything can be compared with a string.
-	//
-	SimpleDatatypeEnumeration stateDT = getDatatype(state.getDatatype());
-	SimpleDatatypeEnumeration itemDT =  getDatatype(item.getDatatype());
-	if (itemDT != stateDT) {
-	    if (itemDT != SimpleDatatypeEnumeration.STRING && stateDT != SimpleDatatypeEnumeration.STRING) {
-		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATATYPE_MISMATCH, stateDT, itemDT));
-	    }
-	}
-
-	//
 	// Handle the variable_ref case
 	//
 	if (state.isSetVarRef()) {
@@ -1373,17 +1365,10 @@ public class Engine implements IEngine, IAdapter {
 		    String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_NO_VALUES);
 		    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
 		} else {
-		    //
-		    // DAS: Expand type-casting logic
-		    //
 		    for (TypedData value : values) {
-			switch(TypedData.getSimpleDatatype(state.getDatatype())) {
-			  case STRING:
-			  default:
-			    base.setValue(value.getString());
-			    cd.addResult(testImpl(base, item));
-			    break;
-			}
+			value = TypedData.cast(value, TypedData.getSimpleDatatype(state.getDatatype()));
+			base.setValue(value.getValue().toString());
+			cd.addResult(testImpl(base, item));
 		    }
 		}
 	    } catch (NoSuchElementException e) {
@@ -1408,6 +1393,11 @@ public class Engine implements IEngine, IAdapter {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TEST_INCOMPARABLE, item.getValue(), state.getValue());
 	    throw new TestException(msg);
 	}
+
+	//
+	// Let the state dictate the datatype
+	//
+	item = TypedData.cast(item, TypedData.getSimpleDatatype(state.getDatatype()));
 
 	switch (state.getOperation()) {
 	  case BITWISE_AND:
@@ -1520,7 +1510,7 @@ public class Engine implements IEngine, IAdapter {
 	String itemStr = (String)item.getValue();
 	String stateStr = (String)state.getValue();
 
-	switch(getDatatype(state.getDatatype())) {
+	switch(TypedData.getSimpleDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
 		return new BigInteger(itemStr.trim()).compareTo(new BigInteger((String)state.getValue()));
@@ -1577,7 +1567,7 @@ public class Engine implements IEngine, IAdapter {
     }
 
     boolean equalsIgnoreCase(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
-	switch(getDatatype(state.getDatatype())) {
+	switch(TypedData.getSimpleDatatype(state.getDatatype())) {
 	  case STRING:
 	    return ((String)state.getValue()).equalsIgnoreCase((String)item.getValue());
 
@@ -1588,7 +1578,7 @@ public class Engine implements IEngine, IAdapter {
     }
 
     boolean bitwiseAnd(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
-	switch(getDatatype(state.getDatatype())) {
+	switch(TypedData.getSimpleDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
 		int sInt = Integer.parseInt((String)state.getValue());
@@ -1605,7 +1595,7 @@ public class Engine implements IEngine, IAdapter {
     }
 
     boolean bitwiseOr(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
-	switch(getDatatype(state.getDatatype())) {
+	switch(TypedData.getSimpleDatatype(state.getDatatype())) {
 	  case INT:
 	    try {
 		int sInt = Integer.parseInt((String)state.getValue());
@@ -1622,7 +1612,7 @@ public class Engine implements IEngine, IAdapter {
     }
 
     boolean subsetOf(EntityItemSimpleBaseType item, EntitySimpleBaseType state) throws TestException, OvalException {
-	switch(getDatatype(state.getDatatype())) {
+	switch(TypedData.getSimpleDatatype(state.getDatatype())) {
 	  case IPV_4_ADDRESS:
 	  case IPV_6_ADDRESS:
 	    try {
@@ -1636,37 +1626,6 @@ public class Engine implements IEngine, IAdapter {
 	  default:
 	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
 							state.getDatatype(), OperationEnumeration.SUBSET_OF));
-	}
-    }
-
-    /**
-     * Convert the datatype String into a SimpleDatatypeEnumeration for use in switches.
-     */
-    SimpleDatatypeEnumeration getDatatype(String s) throws OvalException {
-	if ("binary".equals(s)) {
-	    return SimpleDatatypeEnumeration.BINARY;
-	} else if ("boolean".equals(s)) {
-	    return SimpleDatatypeEnumeration.BOOLEAN;
-	} else if ("evr_string".equals(s)) {
-	    return SimpleDatatypeEnumeration.EVR_STRING;
-	} else if ("fileset_revision".equals(s)) {
-	    return SimpleDatatypeEnumeration.FILESET_REVISION;
-	} else if ("float".equals(s)) {
-	    return SimpleDatatypeEnumeration.FLOAT;
-	} else if ("int".equals(s)) {
-	    return SimpleDatatypeEnumeration.INT;
-	} else if ("ios_version".equals(s)) {
-	    return SimpleDatatypeEnumeration.IOS_VERSION;
-	} else if ("ipv4_address".equals(s)) {
-	    return SimpleDatatypeEnumeration.IPV_4_ADDRESS;
-	} else if ("ipv6_address".equals(s)) {
-	    return SimpleDatatypeEnumeration.IPV_6_ADDRESS;
-	} else if ("string".equals(s)) {
-	    return SimpleDatatypeEnumeration.STRING;
-	} else if ("version".equals(s)) {
-	    return SimpleDatatypeEnumeration.VERSION;
-	} else {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_DATATYPE, s));
 	}
     }
 
@@ -1751,7 +1710,7 @@ public class Engine implements IEngine, IAdapter {
 			if (TypedData.Type.SIMPLE == value.getType()) {
 			    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 			    variableValueType.setVariableId(externalVariable.getId());
-			    variableValueType.setValue(value);
+			    variableValueType.setValue(value.getString());
 			    rc.addVar(variableValueType);
 			}
 		    }

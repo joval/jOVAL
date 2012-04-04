@@ -9,21 +9,28 @@ import java.math.BigDecimal;
 import oval.schemas.common.ComplexDatatypeEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 
+import oval.schemas.definitions.core.EntityStateFieldType;
+import oval.schemas.definitions.core.EntityStateRecordType;
+import oval.schemas.definitions.core.EntityStateSimpleBaseType;
 import oval.schemas.definitions.core.LiteralComponentType;
-import oval.schemas.systemcharacteristics.core.EntityItemBinaryType;
-import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
-import oval.schemas.systemcharacteristics.core.EntityItemComplexBaseType;
-import oval.schemas.systemcharacteristics.core.EntityItemEVRStringType;
+import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
-import oval.schemas.systemcharacteristics.core.EntityItemFilesetRevisionType;
-import oval.schemas.systemcharacteristics.core.EntityItemFloatType;
-import oval.schemas.systemcharacteristics.core.EntityItemIntType;
-import oval.schemas.systemcharacteristics.core.EntityItemIOSVersionType;
-import oval.schemas.systemcharacteristics.core.EntityItemIPAddressType;
+import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
 import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
 
+import org.joval.oval.types.BinaryType;
+import org.joval.oval.types.BooleanType;
+import org.joval.oval.types.EvrStringType;
+import org.joval.oval.types.FilesetRevisionType;
+import org.joval.oval.types.FloatType;
+import org.joval.oval.types.IntType;
+import org.joval.oval.types.IosVersionType;
+import org.joval.oval.types.Ip4AddressType;
+import org.joval.oval.types.Ip6AddressType;
+import org.joval.oval.types.IType;
+import org.joval.oval.types.RecordType;
+import org.joval.oval.types.StringType;
+import org.joval.oval.types.VersionType;
 import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
 
@@ -40,29 +47,83 @@ class TypedData {
 
     static final TypedData EMPTY_STRING = new TypedData("");
 
+    /**
+     * Utility method to obtain a SimpleDatatypeEnumeration from a String.
+     */
     static SimpleDatatypeEnumeration getSimpleDatatype(String datatype) throws IllegalArgumentException {
 	for (SimpleDatatypeEnumeration type : SimpleDatatypeEnumeration.values()) {
 	    if (type.value().equals(datatype)) {
 		return type;
 	    }
 	}
-	throw new IllegalArgumentException(datatype);
+	throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_DATATYPE, datatype));
     }
 
+    /**
+     * Utility method to obtain a ComplexDatatypeEnumeration from a String.
+     */
     static ComplexDatatypeEnumeration getComplexDatatype(String datatype) throws IllegalArgumentException {
 	for (ComplexDatatypeEnumeration type : ComplexDatatypeEnumeration.values()) {
 	    if (type.value().equals(datatype)) {
 		return type;
 	    }
 	}
-	throw new IllegalArgumentException(datatype);
+	throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_DATATYPE, datatype));
     }
 
-    private Type type;
-    private Object value;
+    /**
+     * Perform item type conversion.
+     *
+     * @throws IllegalArgumentException if there is a problem with the base item
+     * @throws UnsupportedOperationException if the base item is incompatible with the target type
+     */
+    static EntityItemSimpleBaseType cast(EntityItemSimpleBaseType base, SimpleDatatypeEnumeration type)
+		 throws IllegalArgumentException {
+
+	TypedData converted = new TypedData(type, (String)base.getValue());
+	EntityItemAnySimpleType result = Factories.sc.core.createEntityItemAnySimpleType();
+	result.setDatatype(type.value());
+	result.setValue(converted.value.toString());
+	return result;
+    }
+
+    /**
+     * Attempt to convert to a new datatype. If the datatype is identical, the original argument is returned.
+     *
+     * @throws IllegalArgumentException if an attempt is made to cast a COMPLEX type, or if the cast cannot be performed.
+     */
+    static TypedData cast(TypedData base, SimpleDatatypeEnumeration type) throws IllegalArgumentException {
+	if (base.getType() == Type.COMPLEX) {
+	    throw new IllegalArgumentException(Type.COMPLEX.toString());
+	}
+	if (type == base.value.getType()) {
+	    return base;
+	} else {
+	    return new TypedData(type, base.value.toString());
+	}
+    }
+
+    // Constructors
+
+    TypedData(IType type) {
+	init(type.getType(), type.toString());
+    }
 
     TypedData(SimpleDatatypeEnumeration type, String value) {
 	init(type, value);
+    }
+
+    TypedData(String datatype, String value) {
+	init(datatype, value);
+    }
+
+    TypedData(EntityItemRecordType data) throws IllegalArgumentException {
+	type = Type.COMPLEX;
+	RecordType record = new RecordType();
+	for (EntityItemFieldType field : data.getField()) {
+	    record.addField(field.getName(), new TypedData(field).getValue());
+	}
+	value = record;
     }
 
     TypedData(EntityItemFieldType field) throws IllegalArgumentException {
@@ -74,6 +135,19 @@ class TypedData {
 	  default:
 	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPED_STATUS, field.getStatus()));
 	}
+    }
+
+    TypedData(EntityStateRecordType data) {
+	type = Type.COMPLEX;
+	RecordType record = new RecordType();
+	for (EntityStateFieldType field : data.getField()) {
+	    record.addField(field.getName(), new TypedData(field).getValue());
+	}
+	value = record;
+    }
+
+    TypedData(EntityStateFieldType field) {
+	init(field.getDatatype(), (String)field.getValue());
     }
 
     TypedData(LiteralComponentType literal) {
@@ -91,6 +165,10 @@ class TypedData {
 	}
     }
 
+    TypedData(EntityStateSimpleBaseType data) {
+	init(data.getDatatype(), (String)data.getValue());
+    }
+
     TypedData(String value) {
 	init(SimpleDatatypeEnumeration.STRING, value);
     }
@@ -104,20 +182,11 @@ class TypedData {
     }
 
     TypedData(BigDecimal value) {
-	init(SimpleDatatypeEnumeration.INT, value.toString());
+	init(SimpleDatatypeEnumeration.FLOAT, value.toString());
     }
 
     TypedData(BigInteger value) {
 	init(SimpleDatatypeEnumeration.INT, value.toString());
-    }
-
-    TypedData(String datatype, String value) {
-	init(datatype, value);
-    }
-
-    TypedData(EntityItemComplexBaseType data) {
-	type = Type.COMPLEX;
-	value = data;
     }
 
     @Override
@@ -126,14 +195,21 @@ class TypedData {
 	    TypedData other = (TypedData)obj;
 	    if (other.type == type) {
 		if (type == Type.SIMPLE) {
-		    EntityItemSimpleBaseType data = (EntityItemSimpleBaseType)value;
-		    EntityItemSimpleBaseType otherData = (EntityItemSimpleBaseType)other.value;
-		    return data.getDatatype().equals(otherData.getDatatype()) &&
-			   ((String)data.getValue()).equals((String)otherData.getValue());
+		    if (value.getClass().getName().equals(other.value.getClass().getName())) {
+			@SuppressWarnings("unchecked")
+			IType<Object> t1 = (IType<Object>)value;
+			@SuppressWarnings("unchecked")
+			IType<Object> t2 = (IType<Object>)other.value;
+			return t1.compareTo(t2) == 0;
+		    } else {
+			return false;
+		    }
 		} else {
-		    EntityItemComplexBaseType data = (EntityItemComplexBaseType)value;
-		    EntityItemComplexBaseType otherData = (EntityItemComplexBaseType)other.value;
-		    return data.equals(otherData);
+		    if (value instanceof RecordType && other.value instanceof RecordType) {
+			return 0 == ((RecordType)value).compareTo((RecordType)other.value);
+		    } else {
+			return false;
+		    }
 		}
 	    } else {
 		return false;
@@ -146,8 +222,7 @@ class TypedData {
     @Override
     public int hashCode() {
 	if (type == Type.SIMPLE) {
-	    EntityItemSimpleBaseType data = (EntityItemSimpleBaseType)value;
-	    return new StringBuffer(data.getDatatype()).append(".").append((String)data.getValue()).toString().hashCode();
+	    return new StringBuffer(value.getType().value()).append(".").append(value.toString()).toString().hashCode();
 	} else {
 	    return super.hashCode();
 	}
@@ -157,118 +232,100 @@ class TypedData {
 	return type;
     }
 
-    Object getValue() {
-	return value;
+    SimpleDatatypeEnumeration getSimpleType() throws UnsupportedOperationException {
+	if (type == Type.COMPLEX) {
+	    throw new UnsupportedOperationException("getSimpleType");
+	}
+	return getSimpleDatatype(value.getType().value());
     }
 
     ComplexDatatypeEnumeration getComplexType() throws UnsupportedOperationException {
 	if (type == Type.SIMPLE) {
 	    throw new UnsupportedOperationException("getComplexType");
 	}
-	return getComplexDatatype(((EntityItemComplexBaseType)value).getDatatype());
+	return ComplexDatatypeEnumeration.RECORD;
     }
 
-    SimpleDatatypeEnumeration getSimpleType() throws UnsupportedOperationException {
-	if (type == Type.COMPLEX) {
-	    throw new UnsupportedOperationException("getSimpleType");
-	}
-	return getSimpleDatatype(((EntityItemSimpleBaseType)value).getDatatype());
+    IType getValue() {
+	return value;
     }
 
     String getString() throws UnsupportedOperationException {
 	if (type == Type.COMPLEX) {
 	    throw new UnsupportedOperationException("getSimpleType");
 	}
-	return (String)((EntityItemSimpleBaseType)value).getValue();
+	return value.toString();
     }
 
-    int getInt() throws UnsupportedOperationException {
-	return Integer.parseInt(getString());
-    }
+    int getInt() throws UnsupportedOperationException, IllegalArgumentException {
+	if (type == Type.COMPLEX) {
+	    throw new UnsupportedOperationException("getSimpleType");
+	}
+	switch(getSimpleDatatype(value.getType().value())) {
+	  case INT:
+	    return ((IntType)value).getData().intValue();
 
-    byte[] getBytes() throws UnsupportedOperationException {
-	return getString().getBytes();
+	  default:
+	    return ((IntType)cast(this, SimpleDatatypeEnumeration.INT).value).getData().intValue();
+	}
     }
 
     // Private
 
-    private void init(String datatype, String value) {
+    private Type type;		// SIMPLE or COMPLEX
+    private IType value;	// Raw value data
+
+    private void init(String datatype, String value) throws IllegalArgumentException {
 	init(getSimpleDatatype(datatype), value);
     }
 
-    private void init(SimpleDatatypeEnumeration type, String value) {
+    private void init(SimpleDatatypeEnumeration type, String value) throws IllegalArgumentException {
 	this.type = Type.SIMPLE;
+
 	switch(type) {
 	  case BINARY:
-	    EntityItemBinaryType binary = Factories.sc.core.createEntityItemBinaryType();
-	    binary.setDatatype(type.value());
-	    binary.setValue(value);
-	    this.value = binary;
+	    this.value = new BinaryType(value);
 	    break;
 
 	  case BOOLEAN:
-	    EntityItemBoolType bool = Factories.sc.core.createEntityItemBoolType();
-	    bool.setDatatype(type.value());
-	    bool.setValue(value);
-	    this.value = bool;
+	    this.value = new BooleanType(value);
 	    break;
 
 	  case EVR_STRING:
-	    EntityItemEVRStringType evr = Factories.sc.core.createEntityItemEVRStringType();
-	    evr.setDatatype(type.value());
-	    evr.setValue(value);
-	    this.value = evr;
+	    this.value = new EvrStringType(value);
 	    break;
 
 	  case FILESET_REVISION:
-	    EntityItemFilesetRevisionType fileset = Factories.sc.core.createEntityItemFilesetRevisionType();
-	    fileset.setDatatype(type.value());
-	    fileset.setValue(value);
-	    this.value = fileset;
+	    this.value = new FilesetRevisionType(value);
 	    break;
 
 	  case FLOAT:
-	    EntityItemFloatType flt = Factories.sc.core.createEntityItemFloatType();
-	    flt.setDatatype(type.value());
-	    flt.setValue(value);
-	    this.value = flt;
+	    this.value = new FloatType(value);
 	    break;
 
 	  case INT:
-	    EntityItemIntType integer = Factories.sc.core.createEntityItemIntType();
-	    integer.setDatatype(type.value());
-	    integer.setValue(value);
-	    this.value = integer;
+	    this.value = new IntType(value);
 	    break;
 
 	  case IOS_VERSION:
-	    EntityItemIOSVersionType ios = Factories.sc.core.createEntityItemIOSVersionType();
-	    ios.setDatatype(type.value());
-	    ios.setValue(value);
-	    this.value = ios;
+	    this.value = new IosVersionType(value);
 	    break;
 
 	  case IPV_4_ADDRESS:
+	    this.value = new Ip4AddressType(value);
+	    break;
+
 	  case IPV_6_ADDRESS:
-	    EntityItemIPAddressType address = Factories.sc.core.createEntityItemIPAddressType();
-	    address.setDatatype(type.value());
-	    address.setValue(value);
-	    this.value = address;
+	    this.value = new Ip6AddressType(value);
 	    break;
 
 	  case VERSION:
-	    EntityItemVersionType version = Factories.sc.core.createEntityItemVersionType();
-	    version.setDatatype(type.value());
-	    version.setValue(value);
-	    this.value = version;
+	    this.value = new VersionType(value);
 	    break;
 
 	  case STRING:
 	  default:
-	    EntityItemStringType str = Factories.sc.core.createEntityItemStringType();
-	    str.setDatatype(type.value());
-	    str.setValue(value);
-	    this.value = str;
+	    this.value = new StringType(value);
 	    break;
 	}
     }
