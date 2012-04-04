@@ -6,6 +6,7 @@ CLASSES=\
 	org.joval.intf.oval.IEngine			\
 	org.joval.intf.oval.IResults			\
 	org.joval.intf.oval.ISystemCharacteristics	\
+	org.joval.intf.oval.IType			\
 	org.joval.intf.oval.IVariables			\
 	org.joval.intf.plugin.IAdapter			\
 	org.joval.intf.plugin.IPlugin			\
@@ -54,7 +55,6 @@ CLASSES=\
 	org.joval.oval.types.IosVersionType		\
 	org.joval.oval.types.Ip4AddressType		\
 	org.joval.oval.types.Ip6AddressType		\
-	org.joval.oval.types.IType			\
 	org.joval.oval.types.RecordType			\
 	org.joval.oval.types.StringType			\
 	org.joval.oval.types.TypeFactory		\
