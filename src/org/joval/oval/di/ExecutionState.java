@@ -167,7 +167,7 @@ public class ExecutionState {
 	for (int i=0; i < argv.length; i++) {
 	    if (argv[i].equals("-h")) {
 		printHelp = true;
-		return true;
+		break;
 	    } else if (argv[i].equals("-o")) {
 		defsFile = new File(argv[++i]);
 	    } else if (argv[i].equals("-z")) {
@@ -270,21 +270,22 @@ public class ExecutionState {
 	    }
 	}
 
-	Main.configureLogging(logFile, logLevel);
-
-	try {
-            File configDir = new File("config");
-            if (configDir.isDirectory()) {
-                File configFile = new File(configDir, "jovaldi.ini");
-                if (configFile.isFile()) {
-                    JOVALSystem.addConfiguration(configFile);
-                }
-            }
-	} catch (IOException e) {
-	    Main.logException(e);
+	if (!printHelp) {
+	    Main.configureLogging(logFile, logLevel);
+	    try {
+		File configDir = new File("config");
+		if (configDir.isDirectory()) {
+		    File configFile = new File(configDir, "jovaldi.ini");
+		    if (configFile.isFile()) {
+			JOVALSystem.addConfiguration(configFile);
+		    }
+		}
+	    } catch (IOException e) {
+		Main.logException(e);
+	    }
 	}
 
-	if (inputFile == null) {
+	if (printHelp || inputFile == null) {
 	    try {
 		plugin = PluginFactory.newInstance(new File(BASE_DIR, "plugin")).createPlugin(pluginName);
 	    } catch (IllegalArgumentException e) {
@@ -298,6 +299,7 @@ public class ExecutionState {
 		return false;
 	    }
 	}
+
 	return validState();
     }
 
@@ -324,6 +326,9 @@ public class ExecutionState {
     // Private
 
     private boolean validState() {
+	if (printHelp) {
+	    return true;
+	}
 	if (!defsFile.exists()) {
 	    Main.print(Main.getMessage("ERROR_NOSUCHFILE", defsFile.toString()));
 	    return false;
