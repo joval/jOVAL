@@ -3,7 +3,7 @@
 
 package org.joval.oval.types;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
+import org.joval.intf.oval.IType;
 
 /**
  * String type.
@@ -11,7 +11,9 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class StringType implements IType<StringType> {
+public class StringType extends AbstractType {
+    public final static StringType EMPTY = new StringType("");
+
     private String data;
 
     public StringType(String data) {
@@ -22,19 +24,25 @@ public class StringType implements IType<StringType> {
 	return data;
     }
 
-    public String toString() {
-	return data;
-    }
-
     // Implement ITyped
 
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.STRING;
+    public Type getType() {
+	return Type.STRING;
+    }
+
+    public String getString() {
+	return data;
     }
 
     // Implement Comparable
 
-    public int compareTo(StringType other) {
+    public int compareTo(IType t) {
+	StringType other = null;
+	try {
+	    other = (StringType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
 	return data.compareTo(other.data);
     }
 }

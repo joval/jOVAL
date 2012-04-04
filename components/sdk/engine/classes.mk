@@ -36,7 +36,6 @@ CLASSES=\
 	org.joval.oval.engine.RequestContext		\
 	org.joval.oval.engine.ResolveException		\
 	org.joval.oval.engine.TestException		\
-	org.joval.oval.engine.TypedData			\
 	org.joval.oval.sysinfo.IosNetworkInterface	\
 	org.joval.oval.sysinfo.IosSystemInfo		\
 	org.joval.oval.sysinfo.JunosNetworkInterface	\
@@ -45,6 +44,7 @@ CLASSES=\
 	org.joval.oval.sysinfo.UnixNetworkInterface	\
 	org.joval.oval.sysinfo.UnixSystemInfo		\
 	org.joval.oval.sysinfo.WindowsSystemInfo	\
+	org.joval.oval.types.AbstractType		\
 	org.joval.oval.types.BinaryType			\
 	org.joval.oval.types.BooleanType		\
 	org.joval.oval.types.EvrStringType		\
@@ -57,5 +57,6 @@ CLASSES=\
 	org.joval.oval.types.IType			\
 	org.joval.oval.types.RecordType			\
 	org.joval.oval.types.StringType			\
+	org.joval.oval.types.TypeFactory		\
 	org.joval.oval.types.VersionType		\
 	org.joval.oval.xml.OvalNamespacePrefixMapper

@@ -3,7 +3,7 @@
 
 package org.joval.oval.types;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
+import org.joval.intf.oval.IType;
 
 /**
  * Float type.
@@ -11,7 +11,7 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class FloatType implements IType<FloatType> {
+public class FloatType extends AbstractType {
     Float data;
 
     public FloatType(String data) throws NumberFormatException {
@@ -31,7 +31,17 @@ public class FloatType implements IType<FloatType> {
 	this.data = data;
     }
 
-    public String toString() {
+    public Float getData() {
+	return data;
+    }
+
+    // Implement IType
+
+    public Type getType() {
+	return Type.FLOAT;
+    }
+
+    public String getString() {
 	if (data.equals(Float.POSITIVE_INFINITY)) {
 	    return "INF";
 	} else if (data.equals(Float.NEGATIVE_INFINITY)) {
@@ -43,19 +53,15 @@ public class FloatType implements IType<FloatType> {
 	}
     }
 
-    public Float getData() {
-	return data;
-    }
-
-    // Implement IType
-
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.FLOAT;
-    }
-
     // Implement Comparable
 
-    public int compareTo(FloatType other) {
+    public int compareTo(IType t) {
+	FloatType other = null;
+	try {
+	    other = (FloatType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
 	return data.compareTo(other.data);
     }
 }

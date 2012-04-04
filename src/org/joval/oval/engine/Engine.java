@@ -115,6 +115,7 @@ import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
+import org.joval.intf.oval.IType;
 import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
@@ -132,6 +133,12 @@ import org.joval.oval.OvalFactory;
 import org.joval.oval.Results;
 import org.joval.oval.SystemCharacteristics;
 import org.joval.oval.sysinfo.SysinfoFactory;
+import org.joval.oval.types.IntType;
+import org.joval.oval.types.Ip4AddressType;
+import org.joval.oval.types.Ip6AddressType;
+import org.joval.oval.types.RecordType;
+import org.joval.oval.types.StringType;
+import org.joval.oval.types.TypeFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
@@ -187,7 +194,7 @@ public class Engine implements IEngine, IAdapter {
 	COMPLETE_ERR;
     }
 
-    private Hashtable <String, Collection<TypedData>>variableMap;
+    private Hashtable <String, Collection<IType>>variableMap;
     private IVariables externalVariables = null;
     private IDefinitions definitions = null;
     private IBaseSession session = null;
@@ -230,20 +237,23 @@ public class Engine implements IEngine, IAdapter {
 	VariableObject vObj = (VariableObject)obj;
 	Collection<VariableItem> items = new Vector<VariableItem>();
 	try {
-	    Collection<TypedData> values = resolve((String)vObj.getVarRef().getValue(), (RequestContext)rc);
+	    Collection<IType> values = resolveVariable((String)vObj.getVarRef().getValue(), (RequestContext)rc);
 	    if (values.size() > 0) {
 		VariableItem item = Factories.sc.independent.createVariableItem();
 		EntityItemVariableRefType ref = Factories.sc.independent.createEntityItemVariableRefType();
 		ref.setValue(vObj.getVarRef().getValue());
 		item.setVarRef(ref);
-		for (TypedData value : values) {
+		for (IType value : values) {
 		    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 		    valueType.setValue(value.getString());
-		    valueType.setDatatype(value.getSimpleType().value());
+		    valueType.setDatatype(value.getType().getSimple().value());
 		    item.getValue().add(valueType);
 		}
 		items.add(item);
 	    }
+	} catch (UnsupportedOperationException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
 	} catch (ResolveException e) {
 	    throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
 	}
@@ -479,25 +489,6 @@ public class Engine implements IEngine, IAdapter {
 	return sc;
     }
 
-    /**
-     * Return the value of the Variable with the specified ID, and also add any chained variables to the provided list.
-     */
-    Collection<TypedData> resolve(String variableId, RequestContext rc)
-		throws NoSuchElementException, ResolveException, OvalException {
-
-	VariableType var = definitions.getVariable(variableId);
-	String varId = var.getId();
-	Collection<TypedData> result = variableMap.get(varId);
-	if (result == null) {
-	    logger.trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
-	    result = resolveInternal(var, rc);
-	    variableMap.put(varId, result);
-	} else {
-	    logger.trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, varId);
-	}
-	return result;
-    }
-
     // Private
 
     private void loadAdapters() {
@@ -517,7 +508,7 @@ public class Engine implements IEngine, IAdapter {
     private void reset() {
 	sc = null;
 	state = State.CONFIGURE;
-	variableMap = new Hashtable<String, Collection<TypedData>>();
+	variableMap = new Hashtable<String, Collection<IType>>();
 	error = null;
     }
 
@@ -545,7 +536,7 @@ public class Engine implements IEngine, IAdapter {
 		    //
 		    // DAS: implement var_check?
 		    //
-		    for (ObjectType obj : resolveObjects(rc)) {
+		    for (ObjectType obj : resolveObject(rc)) {
 			//
 			// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
 			//
@@ -558,7 +549,7 @@ public class Engine implements IEngine, IAdapter {
 			    @SuppressWarnings("unchecked")
 			    Collection<ItemType> retrieved = (Collection<ItemType>)adapter.getItems(obj, rc);
 			    flag.add(FlagEnumeration.COMPLETE);
-			    items.addAll(filterItems(getFilters(masterObj), retrieved, rc));
+			    items.addAll(filterItems(getObjectFilters(masterObj), retrieved, rc));
 			} catch (CollectException e) {
 			    MessageType msg = Factories.common.createMessageType();
 			    msg.setLevel(MessageLevelEnumeration.WARNING);
@@ -635,7 +626,7 @@ public class Engine implements IEngine, IAdapter {
      * Convert an ObectType whose EntityObjectSimpleBaseType members may contain var_refs into a list of ObjectTypes
      * containing only resolved entities (i.e., isSetVarRef() == false).
      */
-    private Collection<ObjectType> resolveObjects(RequestContext rc) throws OvalException, ResolveException {
+    private Collection<ObjectType> resolveObject(RequestContext rc) throws OvalException, ResolveException {
 	ObjectType obj = rc.getObject();
 	List<ObjectType>objects = new Vector<ObjectType>();
 	try {
@@ -744,13 +735,18 @@ public class Engine implements IEngine, IAdapter {
 		Object factory = factoryClass.newInstance();
 		String unqualClassName = objClass.getName().substring(pkgName.length() + 1);
 		Method method = factoryClass.getMethod("create" + unqualClassName);
-		for (TypedData type : resolve(simple.getVarRef(), rc)) {
-		    if (type.getType() == TypedData.Type.SIMPLE) {
+		for (IType type : resolveVariable(simple.getVarRef(), rc)) {
+		    try {
 			EntitySimpleBaseType instance = (EntitySimpleBaseType)method.invoke(factory);
-			instance.setDatatype(type.getSimpleType().value());
+			instance.setDatatype(type.getType().getSimple().value());
 			instance.setValue(type.getString());
 			instance.setOperation(simple.getOperation());
 			result.add(instance);
+		    } catch (UnsupportedOperationException e) {
+			MessageType message = Factories.common.createMessageType();
+			message.setLevel(MessageLevelEnumeration.ERROR);
+			message.setValue(e.getMessage());
+			rc.addMessage(message);
 		    }
 		}
 	    } else {
@@ -768,8 +764,9 @@ public class Engine implements IEngine, IAdapter {
 		String pkgName = objClass.getPackage().getName();
 		String unqualClassName = objClass.getName().substring(pkgName + 1);
 		Method method = factory.getMethod("create" + unqualClassName, objClass);
-		for (TypedData type : resolve(simple.getVarRef(), rc)) {
-		    if (type.getType() == TypedData.Type.COMPLEX) {
+		for (IType type : resolveVariable(simple.getVarRef(), rc)) {
+		    switch(type.getType()) {
+		      case RECORD:
 			EntityComplexBaseType instance = (EntityComplexBaseType)method.invoke(factory);
 			instance.setDatatype(type.getComplexDatatype().value());
 			if (instance instanceof EntityObjectRecordType && type.getValue() instanceof EntityItemRecordType) {
@@ -785,6 +782,14 @@ public class Engine implements IEngine, IAdapter {
 			    }
 			}
 			result.add(instance);
+			break;
+
+		      default:
+			MessageType message = Factories.common.createMessageType();
+			message.setLevel(MessageLevelEnumeration.ERROR);
+			message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, type.getType(), IType.Type.RECORD);
+			rc.addMessage(message);
+			break;
 		    }
 		}
 	    } else {
@@ -797,22 +802,6 @@ public class Engine implements IEngine, IAdapter {
 	    throw new OvalException(message);
 	}
 	return result;
-    }
-
-    /**
-     * If getFilter() were a method of ObjectType (instead of only some of its subclasses), this is what it would return.
-     */
-    private List<Filter> getFilters(ObjectType obj) {
-	List<Filter> filters = new Vector<Filter>();
-	Object oFilters = safeInvokeMethod(obj, "getFilter");
-	if (oFilters != null && oFilters instanceof List) {
-	    for (Object oFilter : (List)oFilters) {
-		if (oFilter instanceof Filter) {
-		    filters.add((Filter)oFilter);
-		}
-	    }
-	}
-	return filters;
     }
 
     /**
@@ -1195,13 +1184,6 @@ public class Engine implements IEngine, IAdapter {
     }
 
     private ResultEnumeration compare(StateType state, ItemType item, RequestContext rc) throws OvalException, TestException {
-	//
-	// As the lowest level analysis operation, this is a good place to check if the engine is being destroyed.
-	//
-	if (abort) {
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
-	}
-
 	try {
 	    OperatorData result = new OperatorData();
 	    for (String methodName : getMethodNames(state.getClass())) {
@@ -1311,30 +1293,13 @@ public class Engine implements IEngine, IAdapter {
 	return result;
     }
 
-    private static List<String> objectBaseMethodNames = getMethodNames(ObjectType.class);
-    static {
-	objectBaseMethodNames.add("getBehaviors");
-	objectBaseMethodNames.add("getFilter");
-	objectBaseMethodNames.add("getSet");
-    }
-    private static List<String> stateBaseMethodNames = getMethodNames(StateType.class);
-    private static List<String> itemBaseMethodNames = getMethodNames(ItemType.class);
-
-    private static List<String> getMethodNames(Class clazz) {
-	List<String> names = new Vector<String>();
-	Method[] methods = clazz.getMethods();
-	for (int i=0; i < methods.length; i++) {
-	    names.add(methods[i].getName());
-	}
-	return names;
-    }
-
     /**
      * Compare a state SimpleBaseType to an item SimpleBaseType.  If the item is null, this method returns false.  That
      * allows callers to simply check if the state is set before invoking the comparison.
      */
     private ResultEnumeration compare(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item, RequestContext rc)
 		throws TestException, OvalException {
+
 	if (item == null) {
 	    return ResultEnumeration.NOT_APPLICABLE;
 	} else {
@@ -1360,17 +1325,19 @@ public class Engine implements IEngine, IAdapter {
 	    base.setOperation(state.getOperation());
 	    base.setMask(state.isMask());
 	    try {
-		Collection<TypedData> values = resolve(state.getVarRef(), rc);
+		Collection<IType> values = resolveVariable(state.getVarRef(), rc);
 		if (values.size() == 0) {
 		    String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_NO_VALUES);
 		    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
 		} else {
-		    for (TypedData value : values) {
-			value = TypedData.cast(value, TypedData.getSimpleDatatype(state.getDatatype()));
-			base.setValue(value.getValue().toString());
+		    for (IType value : values) {
+			value = value.cast(TypeFactory.getSimpleDatatype(state.getDatatype()));
+			base.setValue(value.getString());
 			cd.addResult(testImpl(base, item));
 		    }
 		}
+	    } catch (UnsupportedOperationException e) {
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), e.getMessage()));
 	    } catch (NoSuchElementException e) {
 		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_MISSING);
 		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
@@ -1388,7 +1355,15 @@ public class Engine implements IEngine, IAdapter {
      *
      * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-common-schema.html#OperationEnumeration
      */
-    ResultEnumeration testImpl(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
+    private ResultEnumeration testImpl(EntitySimpleBaseType state, EntityItemSimpleBaseType item)
+		throws TestException, OvalException {
+	//
+	// This is a good place to check if the engine is being destroyed
+	//
+	if (abort) {
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	}
+
 	if (!item.isSetValue() || !state.isSetValue()) {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TEST_INCOMPARABLE, item.getValue(), state.getValue());
 	    throw new TestException(msg);
@@ -1397,293 +1372,232 @@ public class Engine implements IEngine, IAdapter {
 	//
 	// Let the state dictate the datatype
 	//
-	item = TypedData.cast(item, TypedData.getSimpleDatatype(state.getDatatype()));
+	IType stateValue = TypeFactory.createType(state);
+	IType itemValue = TypeFactory.createType(item).cast(stateValue.getType());
 
-	switch (state.getOperation()) {
-	  case BITWISE_AND:
-	    if (bitwiseAnd(state, item)) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	//
+	// Validate the operation by datatype, then execute it. See section 5.3.6.3.1 of the specification:
+	// http://oval.mitre.org/language/version5.10.1/OVAL_Language_Specification_01-20-2012.pdf
+	//
+	OperationEnumeration op = state.getOperation();
+	switch(stateValue.getType()) {
+	  case BINARY:
+	  case BOOLEAN:
+	  case RECORD:
+	    return trivialComparison(stateValue, itemValue, op);
 
-	  case BITWISE_OR:
-	    if (bitwiseOr(state, item)) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
+	  case EVR_STRING:
+	  case FLOAT:
+	  case FILESET_REVISION:
+	  case IOS_VERSION:
+	  case VERSION:
+	    return basicComparison(stateValue, itemValue, op);
 
-	  case CASE_INSENSITIVE_EQUALS:
-	    if (equalsIgnoreCase(state, item)) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-
-	  case CASE_INSENSITIVE_NOT_EQUAL:
-	    if (equalsIgnoreCase(state, item)) {
-		return ResultEnumeration.FALSE;
-	    } else {
-		return ResultEnumeration.TRUE;
-	    }
-
-	  case PATTERN_MATCH: // Always treat as Strings
-	    try {
-		if (item.getValue() == null) {
-		    return ResultEnumeration.FALSE;
-		} else if (Pattern.compile((String)state.getValue()).matcher((String)item.getValue()).find()) {
+	  case INT: {
+	    int sInt = ((IntType)stateValue).getData().intValue();
+	    int iInt = ((IntType)itemValue).getData().intValue();
+	    switch(op) {
+	      case BITWISE_AND:
+		if (sInt == (iInt & sInt)) {
 		    return ResultEnumeration.TRUE;
 		} else {
 		    return ResultEnumeration.FALSE;
 		}
-	    } catch (PatternSyntaxException e) {
-		throw new TestException(e);
+	      case BITWISE_OR:
+		if (sInt == (iInt | sInt)) {
+		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
+		}
+	      default:
+		return basicComparison(stateValue, itemValue, op);
 	    }
+	  }
 
-	  case EQUALS:
-	    if (compareValues(item, state) == 0) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
+	  case IPV_4_ADDRESS: {
+	    Ip4AddressType sIp = (Ip4AddressType)stateValue;
+	    Ip4AddressType iIp = (Ip4AddressType)itemValue;
+	    switch(op) {
+	      case SUBSET_OF:
+		if (iIp.contains(sIp)) {
+		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
+		}
+	      case SUPERSET_OF:
+		if (iIp.contains(sIp)) {
+		    return ResultEnumeration.FALSE;
+		} else {
+		    return ResultEnumeration.TRUE;
+		}
+	      default:
+		return basicComparison(stateValue, itemValue, op);
 	    }
+	  }
 
-	  case NOT_EQUAL:
-	    if (compareValues(item, state) != 0) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
+	  case IPV_6_ADDRESS: {
+	    Ip6AddressType sIp = (Ip6AddressType)stateValue;
+	    Ip6AddressType iIp = (Ip6AddressType)itemValue;
+	    switch(op) {
+	      case SUBSET_OF:
+		if (iIp.contains(sIp)) {
+		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
+		}
+	      case SUPERSET_OF:
+		if (iIp.contains(sIp)) {
+		    return ResultEnumeration.FALSE;
+		} else {
+		    return ResultEnumeration.TRUE;
+		}
+	      default:
+		return basicComparison(stateValue, itemValue, op);
 	    }
+	  }
 
-	  case GREATER_THAN_OR_EQUAL:
-	    if (compareValues(item, state) >= 0) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
+	  case STRING: {
+	    String sStr = ((StringType)stateValue).getData();
+	    String iStr = ((StringType)itemValue).getData();
+	    switch(op) {
+	      case CASE_INSENSITIVE_EQUALS:
+		if (iStr.equalsIgnoreCase(sStr)) {
+		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
+		}
+	      case CASE_INSENSITIVE_NOT_EQUAL:
+		if (iStr.equalsIgnoreCase(sStr)) {
+		    return ResultEnumeration.FALSE;
+		} else {
+		    return ResultEnumeration.TRUE;
+		}
+	      case PATTERN_MATCH:
+		try {
+		    if (Pattern.compile(sStr).matcher(iStr).find()) {
+			return ResultEnumeration.TRUE;
+		    } else {
+			return ResultEnumeration.FALSE;
+		    }
+		} catch (PatternSyntaxException e) {
+		    throw new TestException(e);
+		}
+	      default:
+		return trivialComparison(stateValue, itemValue, op);
 	    }
-
-	  case GREATER_THAN:
-	    if (compareValues(item, state) > 0) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-
-	  case LESS_THAN_OR_EQUAL:
-	    if (compareValues(item, state) <= 0) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-
-	  case LESS_THAN:
-	    if (compareValues(item, state) < 0) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-
-	  case SUBSET_OF:
-	    if (subsetOf(item, state)) {
-		return ResultEnumeration.TRUE;
-	    } else {
-		return ResultEnumeration.FALSE;
-	    }
-
-	  case SUPERSET_OF:
-	    if (subsetOf(item, state)) {
-		return ResultEnumeration.FALSE;
-	    } else {
-		return ResultEnumeration.TRUE;
-	    }
-
-	  default:
-	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, state.getOperation()));
+	  }
 	}
+	throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
     }
 
     /**
-     * Perform the equivalent of item.getValue().compareTo(state.getValue()).  Both item and state should have already been
-     * checked to insure they have (non-null) values.
+     * =, !=, or throws a TestException
      */
-    int compareValues(EntityItemSimpleBaseType item, EntitySimpleBaseType state) throws TestException, OvalException {
-	String itemStr = (String)item.getValue();
-	String stateStr = (String)state.getValue();
-
-	switch(TypedData.getSimpleDatatype(state.getDatatype())) {
-	  case INT:
-	    try {
-		return new BigInteger(itemStr.trim()).compareTo(new BigInteger((String)state.getValue()));
-	    } catch (NumberFormatException e) {
-		throw new TestException(e);
-	    }
-
-	  case FLOAT:
-	    try {
-		return getFloat(itemStr).compareTo(getFloat(stateStr));
-	    } catch (NumberFormatException e) {
-		throw new TestException(e);
-	    }
-
-	  case BOOLEAN:
-	    if (getBoolean(itemStr.trim()) == getBoolean(stateStr.trim())) {
-		return 0;
+    private ResultEnumeration trivialComparison(IType state, IType item, OperationEnumeration op) throws TestException {
+	switch(op) {
+	  case EQUALS:
+	    if (item.equals(state)) {
+	        return ResultEnumeration.TRUE;
 	    } else {
-		return 1;
+	        return ResultEnumeration.FALSE;
 	    }
-
-	  case VERSION:
-	    try {
-		return new Version(itemStr.trim()).compareTo(new Version(stateStr.trim()));
-	    } catch (IllegalArgumentException e) {
-		throw new TestException(e);
+	  case NOT_EQUAL:
+	    if (item.equals(state)) {
+	        return ResultEnumeration.FALSE;
+	    } else {
+	        return ResultEnumeration.TRUE;
 	    }
+	}
+	throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op));
+    }
 
-	  case FILESET_REVISION:
-	  case IOS_VERSION:
-	  case EVR_STRING:
-	    try {
-		return new EvrString(itemStr.trim()).compareTo(new EvrString(stateStr.trim()));
-	    } catch (IllegalArgumentException e) {
-		throw new TestException(e);
+    /**
+     * =, !=, <, <=, >, >=, or throws a TestException
+     */
+    private ResultEnumeration basicComparison(IType state, IType item, OperationEnumeration op) throws TestException {
+	switch(op) {
+	  case GREATER_THAN:
+	    if (item.compareTo(state) > 0) {
+	        return ResultEnumeration.TRUE;
+	    } else {
+	        return ResultEnumeration.FALSE;
 	    }
-
-	  case BINARY:
-	  case STRING:
-	    return (itemStr).compareTo(stateStr);
-
-	  case IPV_4_ADDRESS:
-	  case IPV_6_ADDRESS:
-	    try {
-		return new IpAddress(itemStr.trim()).compareTo(new IpAddress(stateStr.trim()));
-	    } catch (IllegalArgumentException e) {
-		throw new TestException(e);
+	  case GREATER_THAN_OR_EQUAL:
+	    if (item.compareTo(state) >= 0) {
+	        return ResultEnumeration.TRUE;
+	    } else {
+	        return ResultEnumeration.FALSE;
 	    }
-
+	  case LESS_THAN:
+	    if (item.compareTo(state) < 0) {
+	        return ResultEnumeration.TRUE;
+	    } else {
+	        return ResultEnumeration.FALSE;
+	    }
+	  case LESS_THAN_OR_EQUAL:
+	    if (item.compareTo(state) <= 0) {
+	        return ResultEnumeration.TRUE;
+	    } else {
+	        return ResultEnumeration.FALSE;
+	    }
 	  default:
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							state.getDatatype(), OperationEnumeration.EQUALS));
-	}
-    }
-
-    boolean equalsIgnoreCase(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
-	switch(TypedData.getSimpleDatatype(state.getDatatype())) {
-	  case STRING:
-	    return ((String)state.getValue()).equalsIgnoreCase((String)item.getValue());
-
-	  default:
-	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							state.getDatatype(), OperationEnumeration.CASE_INSENSITIVE_EQUALS));
-	}
-    }
-
-    boolean bitwiseAnd(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
-	switch(TypedData.getSimpleDatatype(state.getDatatype())) {
-	  case INT:
-	    try {
-		int sInt = Integer.parseInt((String)state.getValue());
-		int iInt = Integer.parseInt((String)item.getValue());
-		return sInt == (sInt & iInt);
-	    } catch (NumberFormatException e) {
-		throw new TestException(e);
-	    }
-
-	  default:
-	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							state.getDatatype(), OperationEnumeration.BITWISE_AND));
-	}
-    }
-
-    boolean bitwiseOr(EntitySimpleBaseType state, EntityItemSimpleBaseType item) throws TestException, OvalException {
-	switch(TypedData.getSimpleDatatype(state.getDatatype())) {
-	  case INT:
-	    try {
-		int sInt = Integer.parseInt((String)state.getValue());
-		int iInt = Integer.parseInt((String)item.getValue());
-		return sInt == (sInt | iInt);
-	    } catch (NumberFormatException e) {
-		throw new TestException(e);
-	    }
-
-	  default:
-	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							state.getDatatype(), OperationEnumeration.BITWISE_OR));
-	}
-    }
-
-    boolean subsetOf(EntityItemSimpleBaseType item, EntitySimpleBaseType state) throws TestException, OvalException {
-	switch(TypedData.getSimpleDatatype(state.getDatatype())) {
-	  case IPV_4_ADDRESS:
-	  case IPV_6_ADDRESS:
-	    try {
-		IpAddress sIp = new IpAddress((String)state.getValue());
-		IpAddress iIp = new IpAddress((String)item.getValue());
-		return iIp.contains(sIp);
-	    } catch (IllegalArgumentException e) {
-		throw new TestException(e);
-	    }
-
-	  default:
-	    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_OPERATION_DATATYPE,
-							state.getDatatype(), OperationEnumeration.SUBSET_OF));
-	}
-    }
-
-    Float getFloat(String s) throws NumberFormatException {
-	s = s.trim();
-	if (s.equals("NaN")) {
-	    return new Float(Float.NaN);
-	} else if (s.equals("INF")) {
-	    return new Float(Float.POSITIVE_INFINITY);
-	} else if (s.equals("-INF")) {
-	    return new Float(Float.NEGATIVE_INFINITY);
-	} else {
-	    return new Float(s);
-	}
-    }
-
-    boolean getBoolean(String s) {
-	if (s == null) {
-	    return false;
-	} else if (s.equalsIgnoreCase("true")) {
-	    return true;
-	} else if (s.equals("0")) {
-	    return false;
-	} else if (s.equalsIgnoreCase("false")) {
-	    return false;
-	} else if (s.length() == 0) {
-	    return false;
-	} else {
-	    return true;
+	    return trivialComparison(state, item, op);
 	}
     }
 
     /**
-     * Resolve the component.  If the component is a variable, resolve it and append it to the list, appending its value to
-     * the value that is ultimately returned.
+     * Return the value of the Variable with the specified ID, and also add any chained variables to the provided list.
+     */
+    private Collection<IType> resolveVariable(String variableId, RequestContext rc)
+		throws NoSuchElementException, ResolveException, OvalException {
+
+	VariableType var = definitions.getVariable(variableId);
+	String varId = var.getId();
+	Collection<IType> result = variableMap.get(varId);
+	if (result == null) {
+	    logger.trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
+	    try {
+		result = resolveComponent(var, rc);
+	    } catch (UnsupportedOperationException e) {
+		throw new ResolveException(e);
+	    }
+	    variableMap.put(varId, result);
+	} else {
+	    logger.trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, varId);
+	}
+	return result;
+    }
+
+    /**
+     * Recursively resolve a component. Since there is no base class for component types, this method accepts an Object.
      *
      * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#FunctionGroup
      */
-    private Collection<TypedData> resolveInternal(Object object, RequestContext rc)
-		throws NoSuchElementException, ResolveException, OvalException {
+    private Collection<IType> resolveComponent(Object object, RequestContext rc)
+		throws NoSuchElementException, UnsupportedOperationException, ResolveException, OvalException {
+	//
+	// This is a good place to check if the engine is being destroyed
+	//
+	if (abort) {
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	}
+
 	//
 	// Why do variables point to variables?  Because sometimes they are nested.
 	//
 	if (object instanceof LocalVariable) {
 	    LocalVariable localVariable = (LocalVariable)object;
-	    Collection<TypedData> values = resolveInternal(getComponent(localVariable), rc);
+	    Collection<IType> values = resolveComponent(getComponent(localVariable), rc);
 	    if (values.size() == 0) {
 		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		variableValueType.setVariableId(localVariable.getId());
 		rc.addVar(variableValueType);
 	    } else {
-		for (TypedData value : values) {
-		    if (TypedData.Type.SIMPLE == value.getType()) {
-			VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
-			variableValueType.setVariableId(localVariable.getId());
-			variableValueType.setValue(value.getString());
-			rc.addVar(variableValueType);
-		    }
+		for (IType value : values) {
+		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
+		    variableValueType.setVariableId(localVariable.getId());
+		    variableValueType.setValue(value.getString());
+		    rc.addVar(variableValueType);
 		}
 	    }
 	    return values;
@@ -1697,22 +1611,20 @@ public class Engine implements IEngine, IAdapter {
 	    if (externalVariables == null) {
 		throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE_SOURCE, id));
 	    } else {
-		Collection<TypedData> values = new Vector<TypedData>();
-		for (IVariables.Typed t : externalVariables.getValue(id)) {
-		    values.add(new TypedData(t.getDatatype(), t.getValue()));
+		Collection<IType> values = new Vector<IType>();
+		for (IType value : externalVariables.getValue(id)) {
+		    values.add(value);
 		}
 		if (values.size() == 0) {
 		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
 		    variableValueType.setVariableId(externalVariable.getId());
 		    rc.addVar(variableValueType);
 		} else {
-		    for (TypedData value : values) {
-			if (TypedData.Type.SIMPLE == value.getType()) {
-			    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
-			    variableValueType.setVariableId(externalVariable.getId());
-			    variableValueType.setValue(value.getString());
-			    rc.addVar(variableValueType);
-			}
+		    for (IType value : values) {
+			VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
+			variableValueType.setVariableId(externalVariable.getId());
+			variableValueType.setValue(value.getString());
+			rc.addVar(variableValueType);
 		    }
 		}
 		return values;
@@ -1724,7 +1636,7 @@ public class Engine implements IEngine, IAdapter {
 	} else if (object instanceof ConstantVariable) {
 	    ConstantVariable constantVariable = (ConstantVariable)object;
 	    String id = constantVariable.getId();
-	    Collection<TypedData> values = new Vector<TypedData>();
+	    Collection<IType> values = new Vector<IType>();
 	    List<ValueType> valueTypes = constantVariable.getValue();
 	    if (valueTypes.size() == 0) {
 		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
@@ -1737,7 +1649,7 @@ public class Engine implements IEngine, IAdapter {
 		    String s = (String)value.getValue();
 		    variableValueType.setValue(s);
 		    rc.addVar(variableValueType);
-		    values.add(new TypedData(s));
+		    values.add(TypeFactory.createType(IType.Type.STRING, s));
 		}
 	    }
 	    return values;
@@ -1747,8 +1659,8 @@ public class Engine implements IEngine, IAdapter {
 	//
 	} else if (object instanceof LiteralComponentType) {
 	    LiteralComponentType literal = (LiteralComponentType)object;
-	    Collection<TypedData> values = new Vector<TypedData>();
-	    values.add(new TypedData(literal));
+	    Collection<IType> values = new Vector<IType>();
+	    values.add(TypeFactory.createType(literal.getDatatype(), (String)literal.getValue()));
 	    return values;
 
 	//
@@ -1777,27 +1689,27 @@ public class Engine implements IEngine, IAdapter {
 	// Resolve and return.
 	//
 	} else if (object instanceof VariableComponentType) {
-	    return resolveInternal(definitions.getVariable(((VariableComponentType)object).getVarRef()), rc);
+	    return resolveComponent(definitions.getVariable(((VariableComponentType)object).getVarRef()), rc);
 
 	//
 	// Resolve and concatenate child components.
 	//
 	} else if (object instanceof ConcatFunctionType) {
-	    Collection<TypedData> values = new Vector<TypedData>();
+	    Collection<IType> values = new Vector<IType>();
 	    ConcatFunctionType concat = (ConcatFunctionType)object;
 	    for (Object child : concat.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		Collection<TypedData> next = resolveInternal(child, rc);
+		Collection<IType> next = resolveComponent(child, rc);
 		if (next.size() == 0) {
 		    @SuppressWarnings("unchecked")
-		    Collection<TypedData> empty = (Collection<TypedData>)Collections.EMPTY_LIST;
+		    Collection<IType> empty = (Collection<IType>)Collections.EMPTY_LIST;
 		    return empty;
 		} else if (values.size() == 0) {
 		    values.addAll(next);
 		} else {
-		    Collection<TypedData> newValues = new Vector<TypedData>();
-		    for (TypedData base : values) {
-			for (TypedData val : next) {
-			    newValues.add(new TypedData(base.getString() + val.getString()));
+		    Collection<IType> newValues = new Vector<IType>();
+		    for (IType base : values) {
+			for (IType val : next) {
+			    newValues.add(TypeFactory.createType(IType.Type.STRING, base.getString() + val.getString()));
 			}
 		    }
 		    values = newValues;
@@ -1809,9 +1721,9 @@ public class Engine implements IEngine, IAdapter {
 	// Escape anything that could be pattern-matched.
 	//
 	} else if (object instanceof EscapeRegexFunctionType) {
-	    Collection<TypedData> values = new Vector<TypedData>();
-	    for (TypedData value : resolveInternal(getComponent((EscapeRegexFunctionType)object), rc)) {
-		values.add(new TypedData(StringTools.escapeRegex(value.getString())));
+	    Collection<IType> values = new Vector<IType>();
+	    for (IType value : resolveComponent(getComponent((EscapeRegexFunctionType)object), rc)) {
+		values.add(TypeFactory.createType(IType.Type.STRING, StringTools.escapeRegex(value.getString())));
 	    }
 	    return values;
 
@@ -1820,10 +1732,10 @@ public class Engine implements IEngine, IAdapter {
 	//
 	} else if (object instanceof SplitFunctionType) {
 	    SplitFunctionType split = (SplitFunctionType)object;
-	    Collection<TypedData> values = new Vector<TypedData>();
-	    for (TypedData value : resolveInternal(getComponent(split), rc)) {
+	    Collection<IType> values = new Vector<IType>();
+	    for (IType value : resolveComponent(getComponent(split), rc)) {
 		for (String s : StringTools.toList(StringTools.tokenize(value.getString(), split.getDelimiter(), false))) {
-		    values.add(new TypedData(s));
+		    values.add(TypeFactory.createType(IType.Type.STRING, s));
 		}
 	    }
 	    return values;
@@ -1835,17 +1747,17 @@ public class Engine implements IEngine, IAdapter {
 	} else if (object instanceof RegexCaptureFunctionType) {
 	    RegexCaptureFunctionType regexCapture = (RegexCaptureFunctionType)object;
 	    Pattern p = Pattern.compile(regexCapture.getPattern());
-	    Collection<TypedData> values = new Vector<TypedData>();
-	    for (TypedData value : resolveInternal(getComponent(regexCapture), rc)) {
+	    Collection<IType> values = new Vector<IType>();
+	    for (IType value : resolveComponent(getComponent(regexCapture), rc)) {
 		Matcher m = p.matcher(value.getString());
 		if (m.groupCount() > 0) {
 		    if (m.find()) {
-			values.add(new TypedData(m.group(1)));
+			values.add(TypeFactory.createType(IType.Type.STRING, m.group(1)));
 		    } else {
-			values.add(TypedData.EMPTY_STRING);
+			values.add(StringType.EMPTY);
 		    }
 		} else {
-		    values.add(TypedData.EMPTY_STRING);
+		    values.add(StringType.EMPTY);
 		}
 	    }
 	    return values;
@@ -1859,8 +1771,8 @@ public class Engine implements IEngine, IAdapter {
 	    start = Math.max(1, start); // a start index < 1 means start at 1
 	    start--;			// OVAL counter begins at 1 instead of 0
 	    int len = st.getSubstringLength();
-	    Collection<TypedData> values = new Vector<TypedData>();
-	    for (TypedData value : resolveInternal(getComponent(st), rc)) {
+	    Collection<IType> values = new Vector<IType>();
+	    for (IType value : resolveComponent(getComponent(st), rc)) {
 		String str = value.getString();
 
 		//
@@ -1875,10 +1787,10 @@ public class Engine implements IEngine, IAdapter {
 		// means to include all of the characters after the starting character.
 		//
 		} else if (len < 0 || str.length() <= (start+len)) {
-		    values.add(new TypedData(str.substring(start)));
+		    values.add(TypeFactory.createType(IType.Type.STRING, str.substring(start)));
 
 		} else {
-		    values.add(new TypedData(str.substring(start, start+len)));
+		    values.add(TypeFactory.createType(IType.Type.STRING, str.substring(start, start+len)));
 		}
 	    }
 	    return values;
@@ -1889,13 +1801,13 @@ public class Engine implements IEngine, IAdapter {
 	} else if (object instanceof BeginFunctionType) {
 	    BeginFunctionType bt = (BeginFunctionType)object;
 	    String s = bt.getCharacter();
-	    Collection<TypedData> values = new Vector<TypedData>();
-	    for (TypedData value : resolveInternal(getComponent(bt), rc)) {
+	    Collection<IType> values = new Vector<IType>();
+	    for (IType value : resolveComponent(getComponent(bt), rc)) {
 		String str = value.getString();
 		if (str.startsWith(s)) {
 		    values.add(value);
 		} else {
-		    values.add(new TypedData(s + str));
+		    values.add(TypeFactory.createType(IType.Type.STRING, s + str));
 		}
 	    }
 	    return values;
@@ -1906,13 +1818,13 @@ public class Engine implements IEngine, IAdapter {
 	} else if (object instanceof EndFunctionType) {
 	    EndFunctionType et = (EndFunctionType)object;
 	    String s = et.getCharacter();
-	    Collection<TypedData> values = new Vector<TypedData>();
-	    for (TypedData value : resolveInternal(getComponent(et), rc)) {
+	    Collection<IType> values = new Vector<IType>();
+	    for (IType value : resolveComponent(getComponent(et), rc)) {
 		String str = value.getString();
 		if (str.endsWith(s)) {
 		    values.add(value);
 		} else {
-		    values.add(new TypedData(str + s));
+		    values.add(TypeFactory.createType(IType.Type.STRING, str + s));
 		}
 	    }
 	    return values;
@@ -1922,28 +1834,29 @@ public class Engine implements IEngine, IAdapter {
 	//
 	} else if (object instanceof TimeDifferenceFunctionType) {
 	    TimeDifferenceFunctionType tt = (TimeDifferenceFunctionType)object;
-	    Collection<TypedData> values = new Vector<TypedData>();
+	    Collection<IType> values = new Vector<IType>();
 	    List<Object> children = tt.getObjectComponentOrVariableComponentOrLiteralComponent();
-	    Collection<TypedData> ts1;
-	    Collection<TypedData> ts2;
+	    Collection<IType> ts1;
+	    Collection<IType> ts2;
 	    if (children.size() == 1) {
-		ts1 = new Vector<TypedData>();
-		ts1.add(new TypedData(new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date(System.currentTimeMillis()))));
-		ts2 = resolveInternal(children.get(0), rc);
+		ts1 = new Vector<IType>();
+		String val = new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date(System.currentTimeMillis()));
+		ts1.add(TypeFactory.createType(IType.Type.STRING, val));
+		ts2 = resolveComponent(children.get(0), rc);
 	    } else if (children.size() == 2) {
-		ts1 = resolveInternal(children.get(0), rc);
-		ts2 = resolveInternal(children.get(1), rc);
+		ts1 = resolveComponent(children.get(0), rc);
+		ts2 = resolveComponent(children.get(1), rc);
 	    } else {
 		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_TIMEDIFFERENCE, Integer.toString(children.size()));
 		throw new ResolveException(msg);
 	    }
-	    for (TypedData time1 : ts1) {
+	    for (IType time1 : ts1) {
 		try {
 		    long tm1 = DateTime.getTime(time1.getString(), tt.getFormat1());
-		    for (TypedData time2 : ts2) {
+		    for (IType time2 : ts2) {
 			long tm2 = DateTime.getTime(time2.getString(), tt.getFormat2());
 			long diff = (tm1 - tm2)/1000L; // convert diff to seconds
-			values.add(new TypedData(diff));
+			values.add(TypeFactory.createType(IType.Type.INT, Long.toString(diff)));
 		    }
 		} catch (IllegalArgumentException e) {
 		    throw new ResolveException(e.getMessage());
@@ -1958,11 +1871,11 @@ public class Engine implements IEngine, IAdapter {
 	//
 	} else if (object instanceof ArithmeticFunctionType) {
 	    ArithmeticFunctionType at = (ArithmeticFunctionType)object;
-	    Stack<Collection<TypedData>> rows = new Stack<Collection<TypedData>>();
+	    Stack<Collection<IType>> rows = new Stack<Collection<IType>>();
 	    ArithmeticEnumeration op = at.getArithmeticOperation();
 	    for (Object child : at.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		Collection<TypedData> row = new Vector<TypedData>();
-		for (TypedData cell : resolveInternal(child, rc)) {
+		Collection<IType> row = new Vector<IType>();
+		for (IType cell : resolveComponent(child, rc)) {
 		    row.add(cell);
 		}
 		rows.add(row);
@@ -1974,12 +1887,12 @@ public class Engine implements IEngine, IAdapter {
 	//
 	} else if (object instanceof CountFunctionType) {
 	    CountFunctionType ct = (CountFunctionType)object;
-	    Collection<TypedData> children = new Vector<TypedData>();
+	    Collection<IType> children = new Vector<IType>();
 	    for (Object child : ct.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		children.addAll(resolveInternal(child, rc));
+		children.addAll(resolveComponent(child, rc));
 	    }
-	    Collection<TypedData> values = new Vector<TypedData>();
-	    values.add(new TypedData(children.size()));
+	    Collection<IType> values = new Vector<IType>();
+	    values.add(TypeFactory.createType(IType.Type.INT, Integer.toString(children.size())));
 	    return values;
 
 	//
@@ -1987,9 +1900,9 @@ public class Engine implements IEngine, IAdapter {
 	//
 	} else if (object instanceof UniqueFunctionType) {
 	    UniqueFunctionType ut = (UniqueFunctionType)object;
-	    HashSet<TypedData> values = new HashSet<TypedData>();
+	    HashSet<IType> values = new HashSet<IType>();
 	    for (Object child : ut.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		values.addAll(resolveInternal(child, rc));
+		values.addAll(resolveComponent(child, rc));
 	    }
 	    return values;
 
@@ -2001,38 +1914,42 @@ public class Engine implements IEngine, IAdapter {
     /**
      * Perform the Arithmetic operation on permutations of the Stack, and return the resulting permutations.
      */
-    private List<TypedData> computeProduct(ArithmeticEnumeration op, Stack<Collection<TypedData>> rows) {
-	List<TypedData> results = new Vector<TypedData>();
+    private List<IType> computeProduct(ArithmeticEnumeration op, Stack<Collection<IType>> rows) {
+	List<IType> results = new Vector<IType>();
 	if (rows.empty()) {
 	    switch(op) {
 		case ADD:
-		  results.add(new TypedData(0));
+		  results.add(TypeFactory.createType(IType.Type.INT, "0"));
 		  break;
 		case MULTIPLY:
-		  results.add(new TypedData(1));
+		  results.add(TypeFactory.createType(IType.Type.INT, "1"));
 		  break;
 	    }
 	} else {
-	    for (TypedData type : rows.pop()) {
+	    for (IType type : rows.pop()) {
 		String value = type.getString();
-		Stack<Collection<TypedData>> copy = new Stack<Collection<TypedData>>();
+		Stack<Collection<IType>> copy = new Stack<Collection<IType>>();
 		copy.addAll(rows);
-		for (TypedData otherType : computeProduct(op, copy)) {
+		for (IType otherType : computeProduct(op, copy)) {
 		    String otherValue = otherType.getString();
 		    switch(op) {
 		      case ADD:
 			if (value.indexOf(".") == -1 && otherValue.indexOf(".") == -1) {
-			    results.add(new TypedData(new BigInteger(value).add(new BigInteger(otherValue))));
+			    String sum =  new BigInteger(value).add(new BigInteger(otherValue)).toString();
+			    results.add(TypeFactory.createType(IType.Type.INT, sum));
 			} else {
-			    results.add(new TypedData(new BigDecimal(value).add(new BigDecimal(otherValue))));
+			    String sum = new BigDecimal(value).add(new BigDecimal(otherValue)).toString();
+			    results.add(TypeFactory.createType(IType.Type.FLOAT, sum));
 			}
 			break;
 
 		      case MULTIPLY:
 			if (value.indexOf(".") == -1 && otherValue.indexOf(".") == -1) {
-			    results.add(new TypedData(new BigInteger(value).multiply(new BigInteger(otherValue))));
+			    String product = new BigInteger(value).multiply(new BigInteger(otherValue)).toString();
+			    results.add(TypeFactory.createType(IType.Type.INT, product));
 			} else {
-			    results.add(new TypedData(new BigDecimal(value).multiply(new BigDecimal(otherValue))));
+			    String product = new BigDecimal(value).multiply(new BigDecimal(otherValue)).toString();
+			    results.add(TypeFactory.createType(IType.Type.FLOAT, product));
 			}
 			break;
 		    }
@@ -2046,10 +1963,10 @@ public class Engine implements IEngine, IAdapter {
      * The final step in resolving an object reference variable's value is extracting the item field or record from the items
      * associated with that ObjectType, which is the function of this method.
      */
-    private List<TypedData> extractItemData(String objectId, ObjectComponentType oc, Collection list)
+    private List<IType> extractItemData(String objectId, ObjectComponentType oc, Collection list)
 		throws OvalException, ResolveException, NoSuchElementException {
 
-	List<TypedData> values = new Vector<TypedData>();
+	List<IType> values = new Vector<IType>();
 	for (Object o : list) {
 	    if (o instanceof ItemType) {
 		String fieldName = oc.getItemField();
@@ -2078,7 +1995,9 @@ public class Engine implements IEngine, IAdapter {
 	    }
 	    if (o instanceof EntityItemSimpleBaseType) {
 		try {
-		    values.add(new TypedData((EntityItemSimpleBaseType)o));
+		    EntityItemSimpleBaseType base = (EntityItemSimpleBaseType)o;
+		    SimpleDatatypeEnumeration type = TypeFactory.getSimpleDatatype(base.getDatatype());
+		    values.add(TypeFactory.createType(type, (String)base.getValue()));
 		} catch (IllegalArgumentException e) {
 		    throw new ResolveException(e);
 		}
@@ -2090,18 +2009,27 @@ public class Engine implements IEngine, IAdapter {
 		if (oc.isSetRecordField()) {
 		    String fieldName = oc.getRecordField();
 		    for (EntityItemFieldType field : record.getField()) {
-			try {
-			    values.add(new TypedData(field));
-			} catch (IllegalArgumentException e) {
-			    throw new ResolveException(e);
+			switch(field.getStatus()) {
+			  case EXISTS:
+			    try {
+		    		SimpleDatatypeEnumeration type = TypeFactory.getSimpleDatatype(field.getDatatype());
+				values.add(TypeFactory.createType(type, (String)field.getValue()));
+			    } catch (IllegalArgumentException e) {
+				throw new ResolveException(e);
+			    }
+			    break;
+
+			  default:
+			    logger.warn(JOVALMsg.WARNING_FIELD_STATUS, field.getName(), field.getStatus(), objectId);
+			    break;
 			}
 		    }
 		} else {
-		    //
-		    // In this case, the variable points directly to the record without specifying a field. This only
-		    // makes sense in the context of a CountFunctionType, in which case a null value is safe.
-		    //
-		    values.add(new TypedData(record));
+		    try {
+			values.add(new RecordType(record));
+		    } catch (IllegalArgumentException e) {
+			throw new ResolveException(e);
+		    }
 		}
 	    } else {
 		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, o.getClass().getName(), objectId));
@@ -2111,27 +2039,8 @@ public class Engine implements IEngine, IAdapter {
     }
 
     /**
-     * Given the name of an XML node, guess the name of the accessor field that JAXB would generate.
-     * For example, field_name -> getFieldName.
-     */
-    private String getAccessorMethodName(String fieldName) {
-	StringTokenizer tok = new StringTokenizer(fieldName, "_");
-	StringBuffer sb = new StringBuffer("get");
-	while(tok.hasMoreTokens()) {
-	    try {
-		byte[] ba = tok.nextToken().toLowerCase().getBytes("US-ASCII");
-		if (97 <= ba[0] && ba[0] <= 122) {
-		    ba[0] -= 32; // Capitalize the first letter.
-		}
-		sb.append(new String(ba, Charset.forName("US-ASCII")));
-	    } catch (UnsupportedEncodingException e) {
-	    }
-	}
-	return sb.toString();
-    }
-
-    /**
-     * Use reflection to get the child component.
+     * Use reflection to get the child component of a function type.  Since there is no base class for all the OVAL function
+     * types, this method accepts any Object.
      */
     private Object getComponent(Object unknown) throws OvalException {
 	Object obj = safeInvokeMethod(unknown, "getArithmetic");
@@ -2198,6 +2107,47 @@ public class Engine implements IEngine, IAdapter {
 	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, unknown.getClass().getName()));
     }
 
+    private static List<String> objectBaseMethodNames = getMethodNames(ObjectType.class);
+    static {
+	objectBaseMethodNames.add("getBehaviors");
+	objectBaseMethodNames.add("getFilter");
+	objectBaseMethodNames.add("getSet");
+    }
+    private static List<String> stateBaseMethodNames = getMethodNames(StateType.class);
+    private static List<String> itemBaseMethodNames = getMethodNames(ItemType.class);
+
+    /**
+     * Use introspection to list the names of all the methods of the specified Class.
+     */
+    private static List<String> getMethodNames(Class clazz) {
+	List<String> names = new Vector<String>();
+	Method[] methods = clazz.getMethods();
+	for (int i=0; i < methods.length; i++) {
+	    names.add(methods[i].getName());
+	}
+	return names;
+    }
+
+    /**
+     * Given the name of an XML node, guess the name of the accessor field that JAXB would generate.
+     * For example, field_name -> getFieldName.
+     */
+    private String getAccessorMethodName(String fieldName) {
+	StringTokenizer tok = new StringTokenizer(fieldName, "_");
+	StringBuffer sb = new StringBuffer("get");
+	while(tok.hasMoreTokens()) {
+	    try {
+		byte[] ba = tok.nextToken().toLowerCase().getBytes("US-ASCII");
+		if (97 <= ba[0] && ba[0] <= 122) {
+		    ba[0] -= 32; // Capitalize the first letter.
+		}
+		sb.append(new String(ba, Charset.forName("US-ASCII")));
+	    } catch (UnsupportedEncodingException e) {
+	    }
+	}
+	return sb.toString();
+    }
+
     /**
      * Safely invoke a method that takes no arguments and returns an Object.
      *
@@ -2242,6 +2192,9 @@ public class Engine implements IEngine, IAdapter {
 	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_TEST_NOOBJREF, test.getId()));
     }
 
+    /**
+     * Get the state ID to which a test refers, or return null if there is none.
+     */
     private String getStateRef(oval.schemas.definitions.core.TestType test) {
 	try {
 	    Method getObject = test.getClass().getMethod("getState");
@@ -2261,6 +2214,25 @@ public class Engine implements IEngine, IAdapter {
 	return null;
     }
 
+    /**
+     * If getFilter() were a method of ObjectType (instead of only some of its subclasses), this is what it would return.
+     */
+    private List<Filter> getObjectFilters(ObjectType obj) {
+	List<Filter> filters = new Vector<Filter>();
+	Object oFilters = safeInvokeMethod(obj, "getFilter");
+	if (oFilters != null && oFilters instanceof List) {
+	    for (Object oFilter : (List)oFilters) {
+		if (oFilter instanceof Filter) {
+		    filters.add((Filter)oFilter);
+		}
+	    }
+	}
+	return filters;
+    }
+
+    /**
+     * If getSet() were a method of ObjectType (instead of only some of its subclasses), this is what it would return.
+     */
     private Set getObjectSet(ObjectType obj) {
 	Set objectSet = null;
 	try {
@@ -2279,7 +2251,10 @@ public class Engine implements IEngine, IAdapter {
 	return objectSet;
     }
 
-    class StateFieldBridge extends EntityStateSimpleBaseType {
+    /**
+     * An EntityStateSimpleBaseType wrapper for an EntityStateFieldType.
+     */
+    private class StateFieldBridge extends EntityStateSimpleBaseType {
 	StateFieldBridge(EntityStateFieldType field) {
 	    datatype = field.getDatatype();
 	    mask = field.isMask();
@@ -2291,7 +2266,10 @@ public class Engine implements IEngine, IAdapter {
 	}
     }
 
-    class ItemFieldBridge extends EntityItemSimpleBaseType {
+    /**
+     * An EntityItemSimpleBaseType wrapper for an EntityItemFieldType.
+     */
+    private class ItemFieldBridge extends EntityItemSimpleBaseType {
 	ItemFieldBridge(EntityItemFieldType field) {
 	    datatype = field.getDatatype();
 	    mask = field.isMask();

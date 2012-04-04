@@ -31,9 +31,11 @@ import oval.schemas.variables.core.OvalVariables;
 import oval.schemas.variables.core.VariablesType;
 import oval.schemas.variables.core.VariableType;
 
+import org.joval.intf.oval.IType;
 import org.joval.intf.oval.IVariables;
 import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
+import org.joval.oval.types.TypeFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
@@ -68,7 +70,7 @@ public class Variables implements IVariables {
 
     private LocLogger logger;
     private JAXBContext ctx;
-    private Hashtable <String, List<Typed>>variables;
+    private Hashtable <String, List<IType>>variables;
     private Hashtable <String, String>comments;
 
     /**
@@ -96,7 +98,7 @@ public class Variables implements IVariables {
      */
     Variables() {
 	logger = JOVALMsg.getLogger();
-	variables = new Hashtable<String, List<Typed>>();
+	variables = new Hashtable<String, List<IType>>();
 	comments = new Hashtable<String, String>();
 	try {
 	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_VARIABLES));
@@ -112,12 +114,12 @@ public class Variables implements IVariables {
     }
 
     public void addValue(String id, SimpleDatatypeEnumeration type, String value) {
-	List<Typed> values = variables.get(id);
+	List<IType> values = variables.get(id);
 	if (values == null) {
-	    values = new Vector<Typed>();
+	    values = new Vector<IType>();
 	    variables.put(id, values);
 	}
-	Typed t = new Typed(type, value);
+	IType t = TypeFactory.createType(type, value);
 	if (!values.contains(t)) {
 	    values.add(t);
 	}
@@ -132,9 +134,9 @@ public class Variables implements IVariables {
     }
 
     public void setValue(String id, SimpleDatatypeEnumeration type, List<String> value) {
-	List<Typed> list = new Vector<Typed>();
+	List<IType> list = new Vector<IType>();
 	for (String s : value) {
-	    list.add(new Typed(type, s));
+	    list.add(TypeFactory.createType(type, s));
 	}
 	variables.put(id, list);
     }
@@ -174,8 +176,8 @@ public class Variables implements IVariables {
 	for (String key : variables.keySet()) {
 	    VariableType var = Factories.variables.createVariableType();
 	    var.setId(key);
-	    for (Typed t : variables.get(key)) {
-		var.getValue().add(t.getValue());
+	    for (IType t : variables.get(key)) {
+		var.getValue().add(t.getString());
 	    }
 	    String comment = comments.get(key);
 	    if (comment != null) {
@@ -188,8 +190,8 @@ public class Variables implements IVariables {
 	return vars;
     }
 
-    public List<Typed> getValue(String id) throws NoSuchElementException {
-	List<Typed> values = variables.get(id);
+    public List<IType> getValue(String id) throws NoSuchElementException {
+	List<IType> values = variables.get(id);
 	if (values == null) {
 	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE, id));
 	} else {
@@ -224,8 +226,8 @@ public class Variables implements IVariables {
     /**
      * Reads String (i.e., Text) data from the VariableType as a Node.
      */
-    private List<Typed> extractValue(VariableType var) throws OvalException {
-	List<Typed> list = new Vector<Typed>();
+    private List<IType> extractValue(VariableType var) throws OvalException {
+	List<IType> list = new Vector<IType>();
 	for (Object obj : var.getValue()) {
 	    String value = null;
 	    if (obj instanceof Node) {
@@ -236,7 +238,7 @@ public class Variables implements IVariables {
 	    } else {
 		value = obj.toString();
 	    }
-	    list.add(new Typed(var.getDatatype(), value));
+	    list.add(TypeFactory.createType(var.getDatatype(), value));
 	}
 	return list;
     }

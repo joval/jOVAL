@@ -5,9 +5,8 @@ package org.joval.oval.types;
 
 import java.util.StringTokenizer;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
-
 import org.joval.intf.net.ICIDR;
+import org.joval.intf.oval.IType;
 
 /**
  * A utility class for dealing with individual addresses or CIDR ranges for IPv6.
@@ -15,7 +14,7 @@ import org.joval.intf.net.ICIDR;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Ip6AddressType implements IType<Ip6AddressType>, ICIDR<Ip6AddressType> {
+public class Ip6AddressType extends AbstractType implements ICIDR<Ip6AddressType> {
     private short[] addr = new short[16];
     private short[] mask = new short[16];
     private int maskVal;
@@ -96,7 +95,13 @@ public class Ip6AddressType implements IType<Ip6AddressType>, ICIDR<Ip6AddressTy
 	return toString();
     }
 
-    public String toString() {
+    // Implement IType
+
+    public Type getType() {
+	return Type.IPV_6_ADDRESS;
+    }
+
+    public String getString() {
 	StringBuffer sb = new StringBuffer();
 	for (int i=0, j=0; i < 16; j++) {
 	    if (i > 0) {
@@ -110,15 +115,15 @@ public class Ip6AddressType implements IType<Ip6AddressType>, ICIDR<Ip6AddressTy
 	return sb.append("/").append(Integer.toString(maskVal)).toString();
     }
 
-    // Implement IType
-
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.IPV_6_ADDRESS;
-    }
-
     // Implement Comparable
 
-    public int compareTo(Ip6AddressType other) {
+    public int compareTo(IType t) {
+	Ip6AddressType other = null;
+	try {
+	    other = (Ip6AddressType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
 	for (int i=0; i < 16; i++) {
 	    if (addr[i] == other.addr[i]) {
 		continue;

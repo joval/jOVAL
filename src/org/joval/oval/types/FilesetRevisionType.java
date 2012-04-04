@@ -3,7 +3,7 @@
 
 package org.joval.oval.types;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
+import org.joval.intf.oval.IType;
 
 /**
  * Fileset revision type implementation.
@@ -11,15 +11,11 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class FilesetRevisionType implements IType<FilesetRevisionType> {
+public class FilesetRevisionType extends AbstractType {
     private String data;
 
     public FilesetRevisionType(String data) {
 	this.data = data;
-    }
-
-    public String toString() {
-	return data;
     }
 
     public String getData() {
@@ -28,13 +24,23 @@ public class FilesetRevisionType implements IType<FilesetRevisionType> {
 
     // Implement IType
 
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.FILESET_REVISION;
+    public Type getType() {
+	return Type.FILESET_REVISION;
+    }
+
+    public String getString() {
+	return data;
     }
 
     // Implement Comparable
 
-    public int compareTo(FilesetRevisionType other) {
+    public int compareTo(IType t) {
+	FilesetRevisionType other = null;
+	try {
+	    other = (FilesetRevisionType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
 	return new EvrStringType(data).compareTo(new EvrStringType(other.data));
     }
 }

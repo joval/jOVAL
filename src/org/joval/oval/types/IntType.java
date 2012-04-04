@@ -5,7 +5,7 @@ package org.joval.oval.types;
 
 import java.math.BigInteger;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
+import org.joval.intf.oval.IType;
 
 /**
  * Int type.
@@ -13,8 +13,8 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class IntType implements IType<IntType> {
-    BigInteger data;
+public class IntType extends AbstractType {
+    private BigInteger data;
 
     public IntType(String data) throws NumberFormatException {
 	this(new BigInteger(data));
@@ -28,19 +28,25 @@ public class IntType implements IType<IntType> {
 	return data;
     }
 
-    public String toString() {
-	return data.toString();
-    }
-
     // Implement IType
 
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.INT;
+    public Type getType() {
+	return Type.INT;
+    }
+
+    public String getString() {
+	return data.toString();
     }
 
     // Implement Comparable
 
-    public int compareTo(IntType other) {
+    public int compareTo(IType t) {
+	IntType other = null;
+	try {
+	    other = (IntType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
 	return data.compareTo(other.data);
     }
 }

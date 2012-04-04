@@ -3,10 +3,13 @@
 
 package org.joval.oval.types;
 
+import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
+import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
+
 import java.util.HashSet;
 import java.util.Hashtable;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
+import org.joval.intf.oval.IType;
 
 /**
  * Complex type.
@@ -14,30 +17,47 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class RecordType implements IType<RecordType> {
-    private Hashtable<String, IType<?>> data;
+public class RecordType extends AbstractType {
+    private Hashtable<String, IType> data;
+
+    public RecordType(EntityItemRecordType record) throws IllegalArgumentException {
+	this();
+	for (EntityItemFieldType field : record.getField()) {
+	    data.put(field.getName(), TypeFactory.createType(field));
+	}
+    }
 
     public RecordType() {
-	data = new Hashtable<String, IType<?>>();
+	data = new Hashtable<String, IType>();
     }
 
     public IType getField(String name) {
 	return data.get(name);
     }
 
-    public void addField(String name, IType<?> field) {
+    public void addField(String name, IType field) {
 	data.put(name, field);
     }
 
     // Implement ITyped
 
-    public SimpleDatatypeEnumeration getType() {
-	return null; // this is a complex type!
+    public Type getType() {
+	return Type.RECORD;
+    }
+
+    public String getString() throws UnsupportedOperationException {
+	throw new UnsupportedOperationException("getString()");
     }
 
     // Implement Comparable
 
-    public int compareTo(RecordType other) {
+    public int compareTo(IType t) {
+	RecordType other = null;
+	if (t instanceof RecordType) {
+	    other = (RecordType)t;
+	} else {
+	    throw new IllegalArgumentException(t.getClass().getName());
+	}
 	HashSet<String> keys = new HashSet<String>();
 	for (String key : data.keySet()) {
 	    keys.add(key);
@@ -46,10 +66,8 @@ public class RecordType implements IType<RecordType> {
 	    keys.add(key);
 	}
 	for (String key : keys) {
-	    @SuppressWarnings("unchecked")
-	    IType<Object> t1 = (IType<Object>)data.get(key);
-	    @SuppressWarnings("unchecked")
-	    IType<Object> t2 = (IType<Object>)other.data.get(key);
+	    IType t1 = data.get(key);
+	    IType t2 = other.data.get(key);
 	    if (t1 != null && t2 != null) {
 		if (t1.getClass().getName().equals(t2.getClass().getName())) {
 		    switch(t1.compareTo(t2)) {

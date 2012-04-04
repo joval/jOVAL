@@ -3,7 +3,7 @@
 
 package org.joval.oval.types;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
+import org.joval.intf.oval.IType;
 
 import org.joval.util.StringTools;
 
@@ -15,15 +15,11 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class EvrStringType implements IType<EvrStringType> {
+public class EvrStringType extends AbstractType {
     private String data;
 
     public EvrStringType(String data) {
 	this.data = data;
-    }
-
-    public String toString() {
-	return data;
     }
 
     public String getData() {
@@ -32,8 +28,12 @@ public class EvrStringType implements IType<EvrStringType> {
 
     // Implement IType
 
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.EVR_STRING;
+    public Type getType() {
+	return Type.EVR_STRING;
+    }
+
+    public String getString() {
+	return data;
     }
 
     // Implement Comparable
@@ -42,7 +42,14 @@ public class EvrStringType implements IType<EvrStringType> {
      * This is a more or less exact reimplementation of the algorithm used by librpm's rpmvercmp(char* a, char* b)
      * function, as dictated by the OVAL specification.  Based on rpmvercmp.c.
      */
-    public int compareTo(EvrStringType other) {
+    public int compareTo(IType t) {
+	EvrStringType other = null;
+	try {
+	    other = (EvrStringType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
+
 	//
 	// Easy string comparison to check for equivalence
 	//

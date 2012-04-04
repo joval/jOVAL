@@ -3,9 +3,9 @@
 
 package org.joval.oval.types;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
-
+import org.joval.intf.oval.IType;
 import org.joval.io.LittleEndian;
+import org.joval.util.JOVALMsg;
 
 /**
  * Binary type.
@@ -13,13 +13,18 @@ import org.joval.io.LittleEndian;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class BinaryType implements IType<BinaryType> {
+public class BinaryType extends AbstractType {
     byte[] data;
 
-    public BinaryType(String data) throws NumberFormatException {
-	this.data = new byte[data.length()];
-	for (int i=0; i < this.data.length; i++) {
-	    this.data[i] = Byte.parseByte(Character.toString(data.charAt(i)), 16);
+    public BinaryType(String data) throws IllegalArgumentException {
+	if (data.length() % 2 == 1) {
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_BINARY_LENGTH, data, data.length()));
+	}
+	int len = data.length() / 2;
+	this.data = new byte[len];
+	for (int i=0; i < len; i++) {
+	    int ptr = i*2;
+	    this.data[i] = (byte)(Integer.parseInt(data.substring(ptr, ptr+2), 16) & 0xFF);
 	}
     }
 
@@ -31,7 +36,13 @@ public class BinaryType implements IType<BinaryType> {
 	return data;
     }
 
-    public String toString() {
+    // Implement IType
+
+    public Type getType() {
+	return Type.BINARY;
+    }
+
+    public String getString() {
 	StringBuffer sb = new StringBuffer();
 	for (int i=0; i < data.length; i++) {
 	    sb.append(LittleEndian.toHexString(data[i]));
@@ -39,15 +50,15 @@ public class BinaryType implements IType<BinaryType> {
 	return sb.toString().toLowerCase();
     }
 
-    // Implement IType
-
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.BINARY;
-    }
-
     // Implement Comparable
 
-    public int compareTo(BinaryType other) {
+    public int compareTo(IType t) {
+	BinaryType other = null;
+	try {
+	    other = (BinaryType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
 	if (data.length > other.data.length) {
 	    return 1;
 	} else if (data.length < other.data.length) {

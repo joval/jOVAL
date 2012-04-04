@@ -3,7 +3,7 @@
 
 package org.joval.oval.types;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
+import org.joval.intf.oval.IType;
 
 /**
  * IOS version type.
@@ -11,7 +11,7 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class IosVersionType implements IType<IosVersionType> {
+public class IosVersionType extends AbstractType {
     String data;
 
     public IosVersionType(String data) {
@@ -22,19 +22,25 @@ public class IosVersionType implements IType<IosVersionType> {
 	return data;
     }
 
-    public String toString() {
-	return data;
-    }
-
     // Implement IType
 
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.IOS_VERSION;
+    public Type getType() {
+	return Type.IOS_VERSION;
+    }
+
+    public String getString() {
+	return data;
     }
 
     // Implement Comparable
 
-    public int compareTo(IosVersionType other) {
+    public int compareTo(IType t) {
+	IosVersionType other = null;
+	try {
+	    other = (IosVersionType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
 	return new EvrStringType(data).compareTo(new EvrStringType(other.data));
     }
 }

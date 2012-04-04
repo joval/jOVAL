@@ -3,8 +3,7 @@
 
 package org.joval.oval.types;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
-
+import org.joval.intf.oval.IType;
 import org.joval.util.Version;
 
 /**
@@ -13,7 +12,7 @@ import org.joval.util.Version;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class VersionType implements IType<VersionType> {
+public class VersionType extends AbstractType {
     private Version data;
 
     public VersionType(String data) throws IllegalArgumentException {
@@ -28,19 +27,25 @@ public class VersionType implements IType<VersionType> {
 	return data;
     }
 
-    public String toString() {
-	return data.toString();
-    }
-
     // Implement IType
 
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.VERSION;
+    public Type getType() {
+	return Type.VERSION;
+    }
+
+    public String getString() {
+	return data.toString();
     }
 
     // Implement Comparable
 
-    public int compareTo(VersionType other) {
+    public int compareTo(IType t) {
+	VersionType other = null;
+	try {
+	    other = (VersionType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
 	return data.compareTo(other.data);
     }
 }

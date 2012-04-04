@@ -5,9 +5,8 @@ package org.joval.oval.types;
 
 import java.util.StringTokenizer;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
-
 import org.joval.intf.net.ICIDR;
+import org.joval.intf.oval.IType;
 
 /**
  * A utility class for dealing with individual addresses or CIDR ranges for IPv4.
@@ -15,7 +14,7 @@ import org.joval.intf.net.ICIDR;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Ip4AddressType implements IType<Ip4AddressType>, ICIDR<Ip4AddressType> {
+public class Ip4AddressType extends AbstractType implements ICIDR<Ip4AddressType> {
     private short[] addr = new short[4];
     private short[] mask = new short[4];
     private int maskVal;
@@ -66,7 +65,13 @@ public class Ip4AddressType implements IType<Ip4AddressType>, ICIDR<Ip4AddressTy
 	return toString();
     }
 
-    public String toString() {
+    // Implement IType
+
+    public Type getType() {
+	return Type.IPV_4_ADDRESS; 
+    }
+
+    public String getString() {
 	StringBuffer sb = new StringBuffer();
 	for (int i=0; i < 4; i++) {
 	    if (i > 0) {
@@ -77,15 +82,15 @@ public class Ip4AddressType implements IType<Ip4AddressType>, ICIDR<Ip4AddressTy
 	return sb.append("/").append(Integer.toString(maskVal)).toString();
     }
 
-    // Implement IType
-
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.IPV_4_ADDRESS; 
-    }
-
     // Implement Comparable
 
-    public int compareTo(Ip4AddressType other) {
+    public int compareTo(IType t) {
+	Ip4AddressType other = null;
+	try {
+	    other = (Ip4AddressType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
 	for (int i=0; i < 4; i++) {
 	    if (addr[i] == other.addr[i]) {
 		continue;

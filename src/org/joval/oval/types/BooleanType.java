@@ -3,7 +3,7 @@
 
 package org.joval.oval.types;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
+import org.joval.intf.oval.IType;
 
 /**
  * Binary type.
@@ -11,8 +11,8 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class BooleanType implements IType<BooleanType> {
-    boolean data;
+public class BooleanType extends AbstractType {
+    private boolean data;
 
     public BooleanType(String data) {
 	if (data == null) {
@@ -38,19 +38,25 @@ public class BooleanType implements IType<BooleanType> {
 	return data;
     }
 
-    public String toString() {
+    // Implement IType
+
+    public String getString() {
 	return data ? "1" : "0";
     }
 
-    // Implement IType
-
-    public SimpleDatatypeEnumeration getType() {
-	return SimpleDatatypeEnumeration.BOOLEAN;
+    public Type getType() {
+	return Type.BOOLEAN;
     }
 
     // Implement Comparable
 
-    public int compareTo(BooleanType other) {
+    public int compareTo(IType t) {
+	BooleanType other = null;
+	try {
+	    other = (BooleanType)t.cast(getType());
+	} catch (UnsupportedOperationException e) {
+	    throw new IllegalArgumentException(e);
+	}
 	if (data == other.data) {
 	    return 0;
 	} else if (data) {
