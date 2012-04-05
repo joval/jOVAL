@@ -52,4 +52,11 @@ public interface IUnixFilesystem extends IFilesystem {
      * is only relevant when the preload method is VAL_FILE_METHOD.
      */
     String PROP_PRELOAD_MAXAGE = "fs.preload.maxAge";
+
+    /**
+     * Returns the platform-specific driver for this filesystem.
+     *
+     * @see org.joval.intf.unix.io.IUnixFilesystemDriver
+     */
+    IUnixFilesystemDriver getDriver();
 }

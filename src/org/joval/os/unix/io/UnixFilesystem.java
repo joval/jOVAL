@@ -34,6 +34,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.io.IUnixFilesystem;
+import org.joval.intf.unix.io.IUnixFilesystemDriver;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IProperty;
 import org.joval.intf.util.tree.INode;
@@ -116,23 +117,6 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    return false;
 	}
 
-	switch(us.getFlavor()) {
-	  case AIX:
-	    driver = new AIXDriver(us);
-	    break;
-	  case MACOSX:
-	    driver = new MacOSXDriver(us);
-	    break;
-	  case LINUX:
-	    driver = new LinuxDriver(us);
-	    break;
-	  case SOLARIS:
-	    driver = new SolarisDriver(us);
-	    break;
-	  default:
-	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, us.getFlavor()));
-	}
-
 	//
 	// Start from a clean cache.
 	//
@@ -143,15 +127,15 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    Collection<String> mounts = null;
 	    String fsTypeFilter = props.getProperty(PROP_MOUNT_FSTYPE_FILTER);
 	    if (fsTypeFilter == null) {
-		mounts = driver.getMounts(null);
+		mounts = getDriver().getMounts(null);
 	    } else {
-		mounts = driver.getMounts(Pattern.compile(fsTypeFilter));
+		mounts = getDriver().getMounts(Pattern.compile(fsTypeFilter));
 	    }
 	    for (String mount : mounts) {
 		addRoot(mount);
 	    }
 
-	    String command = driver.getFindCommand();
+	    String command = getDriver().getFindCommand();
 
 	    if (VAL_FILE_METHOD.equals(props.getProperty(PROP_PRELOAD_METHOD))) {
 		//
@@ -274,18 +258,38 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	return DELIM_STR;
     }
 
+    // Implement IUnixFilesystem
+
+    public IUnixFilesystemDriver getDriver() {
+	if (driver == null) {
+	    switch(us.getFlavor()) {
+	      case AIX:
+		driver = new AIXDriver(us);
+		break;
+	      case MACOSX:
+		driver = new MacOSXDriver(us);
+		break;
+	      case LINUX:
+		driver = new LinuxDriver(us);
+		break;
+	      case SOLARIS:
+		driver = new SolarisDriver(us);
+		break;
+	      default:
+		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, us.getFlavor()));
+	    }
+	}
+	return driver;
+    }
+
     // Internal
 
     /**
      * Create a UnixFile from the output line of the stat command.
      */
     UnixFileInfo getUnixFileInfo(String path) throws Exception {
-	if (driver == null) {
-	    return null;
-	} else {
-	    String command = new StringBuffer(driver.getStatCommand()).append(" ").append(path).toString();
-	    return driver.nextFileInfo(SafeCLI.multiLine(command, session, IUnixSession.Timeout.S).iterator());
-	}
+	String command = new StringBuffer(getDriver().getStatCommand()).append(" ").append(path).toString();
+	return (UnixFileInfo)getDriver().nextFileInfo(SafeCLI.multiLine(command, session, IUnixSession.Timeout.S).iterator());
     }
 
     // Private
@@ -296,7 +300,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
     private void addEntries(IReader reader) throws PreloadOverflowException, IOException {
 	UnixFileInfo ufi = null;
 	ReaderIterator iter = new ReaderIterator(reader);
-	while((ufi = driver.nextFileInfo(iter)) != null) {
+	while((ufi = (UnixFileInfo)getDriver().nextFileInfo(iter)) != null) {
 	    if (entries++ < maxEntries) {
 		if (entries % 20000 == 0) {
 		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, entries);

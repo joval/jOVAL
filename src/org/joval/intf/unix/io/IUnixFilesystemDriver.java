@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.unix.io;
+package org.joval.intf.unix.io;
 
 import java.util.Iterator;
 import java.util.Collection;
@@ -41,5 +41,5 @@ public interface IUnixFilesystemDriver {
      * representing one or more stat commands, but this method is expected to retrieve only the very next FileInfo.
      * If there are no more lines, this method should return null.
      */
-    public UnixFileInfo nextFileInfo(Iterator<String> lines);
+    public IUnixFileInfo nextFileInfo(Iterator<String> lines);
 }
