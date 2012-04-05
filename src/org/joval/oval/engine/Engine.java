@@ -1071,7 +1071,7 @@ public class Engine implements IEngine, IAdapter {
 	RequestContext rc = new RequestContext(this, definitions.getObject(objectId));
 	ExistenceData existence = new ExistenceData();
 	CheckData check = new CheckData();
-	switch(sc.getObject(objectId).getFlag()) {
+	switch(sc.getObjectFlag(objectId)) {
 	  case COMPLETE:
 	    //
 	    // If object flag == COMPLETE but there are no items, existenceResult will default to DOES_NOT_EXIST

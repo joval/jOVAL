@@ -30,12 +30,12 @@ public interface IResults extends ITransformable {
     /**
      * Get the OVAL results, with the system definitions in full or thin format according to the directives.
      */
-    OvalResults getOvalResults();
+    OvalResults getOvalResults() throws OvalException;
 
     /**
      * Shortcut to getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition()
      */
-    Collection<DefinitionType> getDefinitionResults();
+    Collection<DefinitionType> getDefinitionResults() throws OvalException;
 
     /**
      * Get the result of a specific definition, given its ID.

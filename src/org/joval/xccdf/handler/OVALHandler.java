@@ -35,6 +35,7 @@ import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.IVariables;
 import org.joval.intf.system.IBaseSession;
+import org.joval.oval.OvalException;
 import org.joval.oval.OvalFactory;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfBundle;
@@ -99,7 +100,7 @@ public class OVALHandler {
     /**
      * Integrate all the OVAL results with the XCCDF results.
      */
-    public void integrateResults(TestResultType xccdfResult) {
+    public void integrateResults(TestResultType xccdfResult) throws OvalException {
 	for (VariableType var : getVariables().getOvalVariables().getVariables().getVariable()) {
 	    ProfileSetValueType val = factory.createProfileSetValueType();
 	    val.setIdref(var.getComment());
@@ -165,7 +166,7 @@ public class OVALHandler {
      * Integrate the OVAL results with the XCCDF results, assuming the OVAL results contain information pertaining to
      * the selected rules in the profile.
      */
-    private void integrateResults(String href, IResults ovalResult, TestResultType xccdfResult) {
+    private void integrateResults(String href, IResults ovalResult, TestResultType xccdfResult) throws OvalException {
 	SystemInfoType info = ovalResult.getSystemCharacteristics().getSystemInfo();
 	xccdfResult.getTarget().add(info.getPrimaryHostName());
 	for (InterfaceType intf : info.getInterfaces().getInterface()) {

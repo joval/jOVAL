@@ -91,7 +91,7 @@ public interface IBaseSession extends ILoggable {
     /**
      * Create a process on the machine, with the specified environment variables.
      *
-     * @arg env Environment variables, each of the form "VARIABLE=VALUE".
+     * @param env Environment variables, each of the form "VARIABLE=VALUE".
      */
     IProcess createProcess(String command, String[] env) throws Exception;
 

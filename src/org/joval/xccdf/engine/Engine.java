@@ -154,7 +154,11 @@ public class Engine implements Runnable, IObserver {
 	    ObjectFactory factory = new ObjectFactory();
 	    TestResultType testResult = factory.createTestResultType();
 	    testResult.setTestSystem(XPERT.getMessage("product.name"));
-	    ovalHandler.integrateResults(testResult);
+	    try {
+		ovalHandler.integrateResults(testResult);
+	    } catch (OvalException e) {
+		logger.severe(LogFormatter.toString(e));
+	    }
 	    // DAS remind: need an equivalent to integrate SCE results
 
 	    Hashtable<String, RuleResultType> resultIndex = new Hashtable<String, RuleResultType>();

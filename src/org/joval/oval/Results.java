@@ -156,6 +156,8 @@ public class Results implements IResults, ILoggable {
 	    src = new JAXBSource(ctx, getOvalResults());
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (OvalException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return src;
     }
@@ -174,7 +176,7 @@ public class Results implements IResults, ILoggable {
 	directives = new Directives(f);
     }
 
-    public Collection<DefinitionType> getDefinitionResults() {
+    public Collection<DefinitionType> getDefinitionResults() throws OvalException {
 	return getOvalResults().getResults().getSystem().get(0).getDefinitions().getDefinition();
     }
 
@@ -197,6 +199,8 @@ public class Results implements IResults, ILoggable {
 	} catch (FactoryConfigurationError e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	} catch (FileNotFoundException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
+	} catch (OvalException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	} finally {
 	    if (out != null) {
@@ -230,7 +234,7 @@ public class Results implements IResults, ILoggable {
 	return sc;
     }
 
-    public OvalResults getOvalResults() {
+    public OvalResults getOvalResults() throws OvalException {
 	OvalResults or = Factories.results.createOvalResults();
 	or.setGenerator(OvalFactory.getGenerator());
 	OvalDirectives od = directives.getOvalDirectives();

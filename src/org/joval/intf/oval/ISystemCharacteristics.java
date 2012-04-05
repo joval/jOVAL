@@ -27,31 +27,26 @@ import org.joval.oval.OvalException;
  * @version %I% %G%
  */
 public interface ISystemCharacteristics extends ITransformable {
+    SystemInfoType getSystemInfo();
+
     /**
      * Return a raw OVAL system characteristics object containing the underlying data.
      */
-    OvalSystemCharacteristics getOvalSystemCharacteristics();
-
-    /**
-     * Serialize the OVAL system characteristics to the specified file.
-     */
-    void writeXML(File f);
-
-    /**
-     * Test whether an ObjectType with the specified ID is present.
-     */
-    boolean containsObject(String objectId);
+    OvalSystemCharacteristics getOvalSystemCharacteristics() throws OvalException;
 
     /**
      * Return a filtered OvalSystemCharacteristics, containing only objects and items pertaining to the specified variables
      * and objects.
      */
-    OvalSystemCharacteristics getOvalSystemCharacteristics(Collection<String> vars, Collection<BigInteger> itemIds);
+    OvalSystemCharacteristics getOvalSystemCharacteristics(Collection<String> vars, Collection<BigInteger> itemIds)
+	throws OvalException;
 
     /**
      * Store the ItemType in the itemTable and return the ID used to store it.
      */
     BigInteger storeItem(ItemType item) throws OvalException;
+
+    void storeVariable(VariableValueType var);
 
     /**
      * Add some information about an object to the store, without relating it to a variable or an item.  The last-set flag
@@ -65,18 +60,24 @@ public interface ISystemCharacteristics extends ITransformable {
      */
     void relateItem(String objectId, BigInteger itemId) throws NoSuchElementException;
 
-    void storeVariable(VariableValueType var);
-
     /**
      * Add a variable reference to an ObjectType.  Both must already exist.
      */
     void relateVariable(String objectId, String variableId) throws NoSuchElementException;
 
-    List<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException;
+    /**
+     * Test whether an ObjectType with the specified ID is present.
+     */
+    boolean containsObject(String objectId);
 
-    ObjectType getObject(String id) throws NoSuchElementException;
+    FlagEnumeration getObjectFlag(String id) throws NoSuchElementException;
+
+    List<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException;
 
     List<ItemType> getItemsByObjectId(String id) throws NoSuchElementException;
 
-    SystemInfoType getSystemInfo();
+    /**
+     * Serialize the OVAL system characteristics to the specified file.
+     */
+    void writeXML(File f);
 }
