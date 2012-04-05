@@ -629,7 +629,7 @@ public class Engine implements IEngine, IAdapter {
 	    //
 	    Hashtable<String, List<Object>> lists = new Hashtable<String, List<Object>>();
 	    int numPermutations = 1;
-	    for (Method method : getMethods(obj.getClass())) {
+	    for (Method method : getMethods(obj.getClass()).values()) {
 		String methodName = method.getName();
 		if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
 		    Object entity = method.invoke(obj);
@@ -1181,7 +1181,7 @@ public class Engine implements IEngine, IAdapter {
     private ResultEnumeration compare(StateType state, ItemType item, RequestContext rc) throws OvalException, TestException {
 	try {
 	    OperatorData result = new OperatorData();
-	    for (Method method : getMethods(state.getClass())) {
+	    for (Method method : getMethods(state.getClass()).values()) {
 		String methodName = method.getName();
 		if (methodName.startsWith("get") && !stateBaseMethodNames.contains(methodName)) {
 		    Object stateEntityObj = method.invoke(state);
@@ -1189,7 +1189,7 @@ public class Engine implements IEngine, IAdapter {
 			// continue
 		    } else if (stateEntityObj instanceof EntityStateSimpleBaseType) {
 			EntityStateSimpleBaseType stateEntity = (EntityStateSimpleBaseType)stateEntityObj;
-			Object itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
+			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
 			if (itemEntityObj instanceof EntityItemSimpleBaseType || itemEntityObj == null) {
 			    result.addResult(compare(stateEntity, (EntityItemSimpleBaseType)itemEntityObj, rc));
 			} else if (itemEntityObj instanceof JAXBElement) {
@@ -1210,7 +1210,7 @@ public class Engine implements IEngine, IAdapter {
 			}
 		    } else if (stateEntityObj instanceof EntityStateRecordType) {
 			EntityStateRecordType stateEntity = (EntityStateRecordType)stateEntityObj;
-			Object itemEntityObj = item.getClass().getMethod(methodName).invoke(item);
+			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
 			if (itemEntityObj instanceof EntityItemRecordType) {
 			    result.addResult(compare(stateEntity, (EntityItemRecordType)itemEntityObj, rc));
 			} else if (itemEntityObj instanceof Collection) {
@@ -2103,23 +2103,23 @@ public class Engine implements IEngine, IAdapter {
 	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, unknown.getClass().getName()));
     }
 
-    private static Hashtable<Class, List<Method>> methodRegistry;
-    private static List<String> objectBaseMethodNames;
+    private static Hashtable<Class, Hashtable<String, Method>> methodRegistry;
+    private static HashSet<String> objectBaseMethodNames;
     static {
-        methodRegistry = new Hashtable<Class, List<Method>>();
-        objectBaseMethodNames = getNames(getMethods(ObjectType.class));
+        methodRegistry = new Hashtable<Class, Hashtable<String, Method>>();
+        objectBaseMethodNames = getNames(getMethods(ObjectType.class).values());
 	objectBaseMethodNames.add("getBehaviors");
 	objectBaseMethodNames.add("getFilter");
 	objectBaseMethodNames.add("getSet");
     }
-    private static List<String> stateBaseMethodNames = getNames(getMethods(StateType.class));
-    private static List<String> itemBaseMethodNames = getNames(getMethods(ItemType.class));
+    private static HashSet<String> stateBaseMethodNames = getNames(getMethods(StateType.class).values());
+    private static HashSet<String> itemBaseMethodNames = getNames(getMethods(ItemType.class).values());
 
     /**
-     * Use introspection to list the names of all the methods of the specified Class.
+     * List the unique names of all the no-argument methods. This is not necessarily a fast method.
      */
-    private static List<String> getNames(List<Method> methods) {
-	List<String> names = new Vector<String>();
+    private static HashSet<String> getNames(Collection<Method> methods) {
+	HashSet<String> names = new HashSet<String>();
 	for (Method m : methods) {
 	    names.add(m.getName());
 	}
@@ -2127,19 +2127,31 @@ public class Engine implements IEngine, IAdapter {
     }
 
     /**
-     * Use introspection to list the names of all the methods of the specified Class.
+     * Use introspection to list all the no-argument methods of the specified Class, organized by name.
      */
-    private static List<Method> getMethods(Class clazz) {
-	List<Method> methods = methodRegistry.get(clazz);
+    private static Hashtable<String, Method> getMethods(Class clazz) {
+	Hashtable<String, Method> methods = methodRegistry.get(clazz);
 	if (methods == null) {
-	    methods = new Vector<Method>();
+	    methods = new Hashtable<String, Method>();
 	    methodRegistry.put(clazz, methods);
 	    Method[] m = clazz.getMethods();
 	    for (int i=0; i < m.length; i++) {
-		methods.add(m[i]);
+		methods.put(m[i].getName(), m[i]);
 	    }
 	}
 	return methods;
+    }
+
+    /**
+     * Use introspection to get the no-argument method of the specified Class, with the specified name.
+     */
+    private static Method getMethod(Class clazz, String name) throws NoSuchMethodException {
+	Hashtable<String, Method> methods = getMethods(clazz);
+	if (methods.containsKey(name)) {
+	    return methods.get(name);
+	} else {
+	    throw new NoSuchMethodException(clazz.getName() + "." + name + "()");
+	}
     }
 
     /**
