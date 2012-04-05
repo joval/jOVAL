@@ -483,12 +483,6 @@ public class Engine implements IEngine, IAdapter {
 	}
     }
 
-    // Internal
-
-    ISystemCharacteristics getSystemCharacteristics() {
-	return sc;
-    }
-
     // Private
 
     private void loadAdapters() {
@@ -934,6 +928,68 @@ public class Engine implements IEngine, IAdapter {
 	return result;
     }
 
+    private oval.schemas.results.core.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition)
+		throws NoSuchElementException, OvalException {
+
+	oval.schemas.results.core.CriteriaType criteriaResult = Factories.results.createCriteriaType();
+	criteriaResult.setOperator(criteriaDefinition.getOperator());
+	OperatorData operator = new OperatorData();
+	for (Object child : criteriaDefinition.getCriteriaOrCriterionOrExtendDefinition()) {
+	    Object resultObject = null;
+	    if (child instanceof CriteriaType) {
+		CriteriaType ctDefinition = (CriteriaType)child;
+		oval.schemas.results.core.CriteriaType ctResult = evaluateCriteria(ctDefinition);
+		operator.addResult(ctResult.getResult());
+		resultObject = ctResult;
+	    } else if (child instanceof CriterionType) {
+		CriterionType ctDefinition = (CriterionType)child;
+		oval.schemas.results.core.CriterionType ctResult = evaluateCriterion(ctDefinition);
+		operator.addResult(ctResult.getResult());
+		resultObject = ctResult;
+	    } else if (child instanceof ExtendDefinitionType) {
+		ExtendDefinitionType edtDefinition = (ExtendDefinitionType)child;
+		String defId = edtDefinition.getDefinitionRef();
+		DefinitionType defDefinition = definitions.getDefinition(defId);
+		oval.schemas.results.core.DefinitionType defResult = evaluateDefinition(defDefinition);
+		oval.schemas.results.core.ExtendDefinitionType edtResult;
+		edtResult = Factories.results.createExtendDefinitionType();
+		edtResult.setDefinitionRef(defId);
+		edtResult.setVersion(defDefinition.getVersion());
+		if (edtDefinition.isSetNegate() && edtDefinition.isNegate()) {
+		    edtResult.setNegate(true);
+		    edtResult.setResult(defResult.getResult()); // Overridden for true and false, below
+		    switch(defResult.getResult()) {
+		      case TRUE:
+			edtResult.setResult(ResultEnumeration.FALSE);
+			break;
+		      case FALSE:
+			edtResult.setResult(ResultEnumeration.TRUE);
+			break;
+		    }
+		} else {
+		    edtResult.setResult(defResult.getResult());
+		}
+		operator.addResult(edtResult.getResult());
+		resultObject = edtResult;
+	    } else {
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_COMPONENT, child.getClass().getName()));
+	    }
+	    criteriaResult.getCriteriaOrCriterionOrExtendDefinition().add(resultObject);
+	}
+
+	ResultEnumeration result = operator.getResult(criteriaDefinition.getOperator());
+	if (criteriaDefinition.isSetNegate() && criteriaDefinition.isNegate()) {
+	    criteriaResult.setNegate(true);
+	    if (result == ResultEnumeration.TRUE) {
+		result = ResultEnumeration.FALSE;
+	    } else if (result == ResultEnumeration.FALSE) {
+		result = ResultEnumeration.TRUE;
+	    }
+	}
+	criteriaResult.setResult(result);
+	return criteriaResult;
+    }
+
     private oval.schemas.results.core.CriterionType evaluateCriterion(CriterionType criterionDefinition)
 		throws NoSuchElementException, OvalException {
 
@@ -1119,68 +1175,6 @@ public class Engine implements IEngine, IAdapter {
 		break;
 	    }
 	}
-    }
-
-    private oval.schemas.results.core.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition)
-		throws NoSuchElementException, OvalException {
-
-	oval.schemas.results.core.CriteriaType criteriaResult = Factories.results.createCriteriaType();
-	criteriaResult.setOperator(criteriaDefinition.getOperator());
-	OperatorData operator = new OperatorData();
-	for (Object child : criteriaDefinition.getCriteriaOrCriterionOrExtendDefinition()) {
-	    Object resultObject = null;
-	    if (child instanceof CriteriaType) {
-		CriteriaType ctDefinition = (CriteriaType)child;
-		oval.schemas.results.core.CriteriaType ctResult = evaluateCriteria(ctDefinition);
-		operator.addResult(ctResult.getResult());
-		resultObject = ctResult;
-	    } else if (child instanceof CriterionType) {
-		CriterionType ctDefinition = (CriterionType)child;
-		oval.schemas.results.core.CriterionType ctResult = evaluateCriterion(ctDefinition);
-		operator.addResult(ctResult.getResult());
-		resultObject = ctResult;
-	    } else if (child instanceof ExtendDefinitionType) {
-		ExtendDefinitionType edtDefinition = (ExtendDefinitionType)child;
-		String defId = edtDefinition.getDefinitionRef();
-		DefinitionType defDefinition = definitions.getDefinition(defId);
-		oval.schemas.results.core.DefinitionType defResult = evaluateDefinition(defDefinition);
-		oval.schemas.results.core.ExtendDefinitionType edtResult;
-		edtResult = Factories.results.createExtendDefinitionType();
-		edtResult.setDefinitionRef(defId);
-		edtResult.setVersion(defDefinition.getVersion());
-		if (edtDefinition.isSetNegate() && edtDefinition.isNegate()) {
-		    edtResult.setNegate(true);
-		    edtResult.setResult(defResult.getResult()); // Overridden for true and false, below
-		    switch(defResult.getResult()) {
-		      case TRUE:
-			edtResult.setResult(ResultEnumeration.FALSE);
-			break;
-		      case FALSE:
-			edtResult.setResult(ResultEnumeration.TRUE);
-			break;
-		    }
-		} else {
-		    edtResult.setResult(defResult.getResult());
-		}
-		operator.addResult(edtResult.getResult());
-		resultObject = edtResult;
-	    } else {
-		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_COMPONENT, child.getClass().getName()));
-	    }
-	    criteriaResult.getCriteriaOrCriterionOrExtendDefinition().add(resultObject);
-	}
-
-	ResultEnumeration result = operator.getResult(criteriaDefinition.getOperator());
-	if (criteriaDefinition.isSetNegate() && criteriaDefinition.isNegate()) {
-	    criteriaResult.setNegate(true);
-	    if (result == ResultEnumeration.TRUE) {
-		result = ResultEnumeration.FALSE;
-	    } else if (result == ResultEnumeration.FALSE) {
-		result = ResultEnumeration.TRUE;
-	    }
-	}
-	criteriaResult.setResult(result);
-	return criteriaResult;
     }
 
     private ResultEnumeration compare(StateType state, ItemType item, RequestContext rc) throws OvalException, TestException {
