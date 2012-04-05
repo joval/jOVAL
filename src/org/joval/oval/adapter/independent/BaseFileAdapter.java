@@ -389,7 +389,10 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    } else if (isPlistObject(fObj.obj)) {
 		list.add(getPlistPath(fObj.obj));
 	    } else {
-		throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, id), FlagEnumeration.ERROR);
+		//
+		// This has probably happened because one or more variables resolves to nothing.
+		//
+		session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, id));
 	    }
 	} catch (PatternSyntaxException e) {
        	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

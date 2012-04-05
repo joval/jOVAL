@@ -119,7 +119,7 @@ public class RegistryAdapter implements IAdapter {
 
 	Collection<String> list = new HashSet<String>();
 	boolean patternMatch = false;
-	if (rObj.getKey().getValue() == null) {
+	if (rObj.getKey() == null || rObj.getKey().getValue() == null) {
 	    list.add(""); // special case
 	} else {
 	    String keypath = (String)rObj.getKey().getValue().getValue();
