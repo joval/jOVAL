@@ -629,9 +629,10 @@ public class Engine implements IEngine, IAdapter {
 	    //
 	    Hashtable<String, List<Object>> lists = new Hashtable<String, List<Object>>();
 	    int numPermutations = 1;
-	    for (String methodName : getMethodNames(obj.getClass())) {
+	    for (Method method : getMethods(obj.getClass())) {
+		String methodName = method.getName();
 		if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
-		    Object entity = obj.getClass().getMethod(methodName).invoke(obj);
+		    Object entity = method.invoke(obj);
 		    if (entity == null) {
 			// continue
 		    } else {
@@ -1180,9 +1181,10 @@ public class Engine implements IEngine, IAdapter {
     private ResultEnumeration compare(StateType state, ItemType item, RequestContext rc) throws OvalException, TestException {
 	try {
 	    OperatorData result = new OperatorData();
-	    for (String methodName : getMethodNames(state.getClass())) {
+	    for (Method method : getMethods(state.getClass())) {
+		String methodName = method.getName();
 		if (methodName.startsWith("get") && !stateBaseMethodNames.contains(methodName)) {
-		    Object stateEntityObj = state.getClass().getMethod(methodName).invoke(state);
+		    Object stateEntityObj = method.invoke(state);
 		    if (stateEntityObj == null) {
 			// continue
 		    } else if (stateEntityObj instanceof EntityStateSimpleBaseType) {
@@ -2101,25 +2103,43 @@ public class Engine implements IEngine, IAdapter {
 	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_COMPONENT, unknown.getClass().getName()));
     }
 
-    private static List<String> objectBaseMethodNames = getMethodNames(ObjectType.class);
+    private static Hashtable<Class, List<Method>> methodRegistry;
+    private static List<String> objectBaseMethodNames;
     static {
+        methodRegistry = new Hashtable<Class, List<Method>>();
+        objectBaseMethodNames = getNames(getMethods(ObjectType.class));
 	objectBaseMethodNames.add("getBehaviors");
 	objectBaseMethodNames.add("getFilter");
 	objectBaseMethodNames.add("getSet");
     }
-    private static List<String> stateBaseMethodNames = getMethodNames(StateType.class);
-    private static List<String> itemBaseMethodNames = getMethodNames(ItemType.class);
+    private static List<String> stateBaseMethodNames = getNames(getMethods(StateType.class));
+    private static List<String> itemBaseMethodNames = getNames(getMethods(ItemType.class));
 
     /**
      * Use introspection to list the names of all the methods of the specified Class.
      */
-    private static List<String> getMethodNames(Class clazz) {
+    private static List<String> getNames(List<Method> methods) {
 	List<String> names = new Vector<String>();
-	Method[] methods = clazz.getMethods();
-	for (int i=0; i < methods.length; i++) {
-	    names.add(methods[i].getName());
+	for (Method m : methods) {
+	    names.add(m.getName());
 	}
 	return names;
+    }
+
+    /**
+     * Use introspection to list the names of all the methods of the specified Class.
+     */
+    private static List<Method> getMethods(Class clazz) {
+	List<Method> methods = methodRegistry.get(clazz);
+	if (methods == null) {
+	    methods = new Vector<Method>();
+	    methodRegistry.put(clazz, methods);
+	    Method[] m = clazz.getMethods();
+	    for (int i=0; i < m.length; i++) {
+		methods.add(m[i]);
+	    }
+	}
+	return methods;
     }
 
     /**
