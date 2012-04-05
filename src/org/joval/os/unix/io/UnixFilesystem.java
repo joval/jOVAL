@@ -41,6 +41,7 @@ import org.joval.io.fs.CacheFile;
 import org.joval.io.fs.CacheFilesystem;
 import org.joval.io.fs.DefaultFile;
 import org.joval.io.fs.FileInfo;
+import org.joval.io.BufferedReader;
 import org.joval.io.PerishableReader;
 import org.joval.io.StreamLogger;
 import org.joval.os.unix.io.driver.AIXDriver;
@@ -167,7 +168,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 		    cleanRemoteCache = false;
 		    remoteCache = getRemoteCache(command, mounts);
 		    propsFile = getRemoteCacheProps();
-		    reader = PerishableReader.newInstance(new GZIPInputStream(remoteCache.getInputStream()), S);
+		    reader = new BufferedReader(new GZIPInputStream(remoteCache.getInputStream()));
 		} else {
 		    //
 		    // Read from the local state file, or create one while reading from the remote state file.
@@ -182,12 +183,12 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 		    }
 		    if (isValidCache(localCache, new PropertyUtil(cacheProps), command, mounts)) {
 			InputStream in = new GZIPInputStream(localCache.getInputStream());
-			reader = PerishableReader.newInstance(in, S);
+			reader = new BufferedReader(in);
 			cleanRemoteCache = false;
 		    } else {
 			remoteCache = getRemoteCache(command, mounts);
 			InputStream tee = new StreamLogger(null, remoteCache.getInputStream(), localCache, logger);
-			reader = PerishableReader.newInstance(new GZIPInputStream(tee), S);
+			reader = new BufferedReader(new GZIPInputStream(tee));
 		    }
 		}
 
