@@ -6,6 +6,7 @@ package org.joval.oval.types;
 import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
 import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 
@@ -29,6 +30,10 @@ public class RecordType extends AbstractType {
 
     public RecordType() {
 	data = new Hashtable<String, IType>();
+    }
+
+    public Collection<String> fields() {
+	return data.keySet();
     }
 
     public IType getField(String name) {
