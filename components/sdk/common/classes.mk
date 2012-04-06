@@ -16,6 +16,7 @@ CLASSES=\
 	org.joval.intf.system.ISession				\
 	org.joval.intf.unix.io.IUnixFileInfo			\
 	org.joval.intf.unix.io.IUnixFilesystem			\
+	org.joval.intf.unix.io.IUnixFilesystemDriver		\
 	org.joval.intf.unix.system.IUnixSession			\
 	org.joval.intf.util.ILoggable				\
 	org.joval.intf.util.IObserver				\

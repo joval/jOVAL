@@ -1,8 +1,8 @@
 CLASSES=\
 	org.joval.cpe.CpeException					\
 	org.joval.cpe.Dictionary					\
-	org.joval.plugin.container.ContainerConfigurationException	\
-	org.joval.plugin.container.ContainerFactory			\
+	org.joval.plugin.PluginConfigurationException			\
+	org.joval.plugin.PluginFactory					\
 	org.joval.protocol.zip.ZipURLConnection				\
 	org.joval.protocol.zip.ZipURLStreamHandler			\
 	org.joval.sce.SCEScript						\

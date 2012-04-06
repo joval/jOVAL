@@ -8,7 +8,7 @@ ifeq (cygwin, $(findstring cygwin,$(SHELL)))
 endif
 
 ifndef JAVA_HOME
-    JAVA_HOME=~/tools/jdk160_26
+    JAVA_HOME=~/tools/jdk160_31
 endif
 
 PLATFORM=unknown

@@ -27,7 +27,7 @@ clean:
 
 javadocs:
 	mkdir -p $(DOCS)
-	$(JAVA_HOME)/bin/javadoc -quiet -J-Xmx512m -d $(DOCS) -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -subpackages \
+	$(JAVA_HOME)/bin/javadoc -quiet -J-Xmx512m -XDignore.symbol.file=true -d $(DOCS) -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -subpackages \
 	oval:org.w3c            				\
 	org.joval.intf.identity					\
 	org.joval.intf.oval					\
