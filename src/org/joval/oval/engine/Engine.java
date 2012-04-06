@@ -39,6 +39,7 @@ import javax.xml.bind.JAXBElement;
 import org.slf4j.cal10n.LocLogger;
 
 import oval.schemas.common.CheckEnumeration;
+import oval.schemas.common.ComplexDatatypeEnumeration;
 import oval.schemas.common.ExistenceEnumeration;
 import oval.schemas.common.GeneratorType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -57,7 +58,8 @@ import oval.schemas.definitions.core.CriterionType;
 import oval.schemas.definitions.core.DefinitionType;
 import oval.schemas.definitions.core.DefinitionsType;
 import oval.schemas.definitions.core.EndFunctionType;
-import oval.schemas.definitions.core.EntityComplexBaseType;
+import oval.schemas.definitions.core.EntityObjectFieldType;
+import oval.schemas.definitions.core.EntityObjectRecordType;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.EntitySimpleBaseType;
 import oval.schemas.definitions.core.EntityStateFieldType;
@@ -699,13 +701,16 @@ public class Engine implements IEngine, IAdapter {
 
     /**
      * Take an entity that may be a var_ref, and return a list of all resulting concrete entities (i.e., isSetValue == true).
-     * The result may be a JAXBElement list, or EntitySimpleBaseType list or an EntityComplexBaseType list.
+     * The result may be a JAXBElement list, or EntitySimpleBaseType list or an EntityObjectRecordType list.
      */
     private List<Object> resolveUnknownEntity(String methodName, Object entity, RequestContext rc)
 		throws OvalException, ResolveException, InstantiationException, ClassNotFoundException,
 		NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 
 	List<Object> result = new Vector<Object>();
+	//
+	// JAXBElement-wrapped entities are unwrapped, resolved, and re-wrapped using introspection.
+	//
 	if (entity instanceof JAXBElement) {
 	    String pkgName = rc.getObject().getClass().getPackage().getName();
 	    Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
@@ -721,80 +726,147 @@ public class Engine implements IEngine, IAdapter {
 		    result.add(method.invoke(factory, resolved));
 		}
 	    }
+	//
+	// All the simple types are handled here using introspection.
+	//
 	} else if (entity instanceof EntitySimpleBaseType) {
 	    EntitySimpleBaseType simple = (EntitySimpleBaseType)entity;
 	    if (simple.isSetVarRef()) {
-		Class objClass = entity.getClass();
-		String pkgName = objClass.getPackage().getName();
-		Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
-		Object factory = factoryClass.newInstance();
-		String unqualClassName = objClass.getName().substring(pkgName.length() + 1);
-		Method method = factoryClass.getMethod("create" + unqualClassName);
-		for (IType type : resolveVariable(simple.getVarRef(), rc)) {
-		    try {
+		try {
+		    IType.Type t = TypeFactory.convertType(TypeFactory.getSimpleDatatype(simple.getDatatype()));
+		    Class objClass = entity.getClass();
+		    String pkgName = objClass.getPackage().getName();
+		    Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
+		    Object factory = factoryClass.newInstance();
+		    String unqualClassName = objClass.getName().substring(pkgName.length() + 1);
+		    Method method = factoryClass.getMethod("create" + unqualClassName);
+		    for (IType type : resolveVariable(simple.getVarRef(), rc)) {
 			EntitySimpleBaseType instance = (EntitySimpleBaseType)method.invoke(factory);
-			instance.setDatatype(type.getType().getSimple().value());
-			instance.setValue(type.getString());
+			instance.setDatatype(simple.getDatatype());
+			instance.setValue(type.cast(t).getString());
 			instance.setOperation(simple.getOperation());
 			result.add(instance);
-		    } catch (UnsupportedOperationException e) {
-			MessageType message = Factories.common.createMessageType();
-			message.setLevel(MessageLevelEnumeration.ERROR);
-			message.setValue(e.getMessage());
-			rc.addMessage(message);
 		    }
+		} catch (UnsupportedOperationException e) {
+		    MessageType message = Factories.common.createMessageType();
+		    message.setLevel(MessageLevelEnumeration.ERROR);
+		    message.setValue(e.getMessage());
+		    rc.addMessage(message);
 		}
 	    } else {
 		result.add(entity);
 	    }
-/*
-// NEED TO FINISH IMPLEMENTING
-	} else if (entity instanceof EntityComplexBaseType) {
-	    //
-	    // DAS: this is a bit of a cluster-fuck, as each field can have its own var_ref...
-	    //
-	    EntityComplexBaseType complex = (EntityComplexBaseType)entity;
-	    if (complex.isSetVarRef()) {
-		Class objClass = entity.getClass();
-		String pkgName = objClass.getPackage().getName();
-		String unqualClassName = objClass.getName().substring(pkgName + 1);
-		Method method = factory.getMethod("create" + unqualClassName, objClass);
-		for (IType type : resolveVariable(simple.getVarRef(), rc)) {
+	//
+	// In the future, it may be necessary to support additional complex types, but right now the only complex type
+	// is the RECORD.
+	//
+	} else if (entity instanceof EntityObjectRecordType) {
+	    EntityObjectRecordType record = (EntityObjectRecordType)entity;
+	    if (record.isSetVarRef()) {
+		for (IType type : resolveVariable(record.getVarRef(), rc)) {
 		    switch(type.getType()) {
-		      case RECORD:
-			EntityComplexBaseType instance = (EntityComplexBaseType)method.invoke(factory);
-			instance.setDatatype(type.getComplexDatatype().value());
-			if (instance instanceof EntityObjectRecordType && type.getValue() instanceof EntityItemRecordType) {
-			    for (EntityItemFieldType field : ((EntityItemRecordType)type.getValue()).getField()) {
-				EntityObjectFieldType recordField = new EntityObjectFieldType();
-				recordField.setName(field.getName());
-				recordField.setDatatype(field.getDatatype());
-				recordField.setValue(field.getValue());
-				recordField.setOperation(field.getValue());
-
-
-				((EntityObjectRecordType)instance).getField().add(field.getValue());
+		      case RECORD: {
+			EntityObjectRecordType instance = Factories.definitions.core.createEntityObjectRecordType();
+			instance.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
+			RecordType rt = (RecordType)type;
+			for (String fieldName : rt.fields()) {
+			    IType fieldType = rt.getField(fieldName);
+			    try {
+				EntityObjectFieldType fieldEntity = Factories.definitions.core.createEntityObjectFieldType();
+				fieldEntity.setName(fieldName);
+				fieldEntity.setDatatype(type.getType().getSimple().value());
+				fieldEntity.setValue(type.getString());
+				//
+				// A resolved entity field cannot have any check information, so use the default ALL.
+				//
+				fieldEntity.setEntityCheck(CheckEnumeration.ALL);
+				instance.getField().add(fieldEntity);
+			    } catch (UnsupportedOperationException e) {
+				MessageType message = Factories.common.createMessageType();
+				message.setLevel(MessageLevelEnumeration.ERROR);
+				message.setValue(e.getMessage());
+				rc.addMessage(message);
 			    }
 			}
 			result.add(instance);
 			break;
+		      }
 
 		      default:
 			MessageType message = Factories.common.createMessageType();
 			message.setLevel(MessageLevelEnumeration.ERROR);
-			message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, type.getType(), IType.Type.RECORD);
+			String s = JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, type.getType(), IType.Type.RECORD);
+			message.setValue(s);
 			rc.addMessage(message);
 			break;
 		    }
 		}
 	    } else {
-		result.add(entity);
+		//
+		// Resolve any var_refs in the fields, and return a permutation list of the resulting record types.
+		//
+		int numPermutations = 1;
+		List<List<EntityObjectFieldType>> lists = new Vector<List<EntityObjectFieldType>>();
+		for (EntityObjectFieldType field : record.getField()) {
+		    List<EntityObjectFieldType> resolved = resolveField(field, rc);
+		    if (resolved.size() > 0) {
+			numPermutations = numPermutations * resolved.size();
+			lists.add(resolved);
+		    }
+		}
+		List<EntityObjectRecordType> records = new Vector<EntityObjectRecordType>();
+		for (int i=0; i < numPermutations; i++) {
+		    EntityObjectRecordType base = Factories.definitions.core.createEntityObjectRecordType();
+		    base.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
+		    base.setMask(record.isMask());
+		    base.setOperation(record.getOperation());
+		}
+		for (List<EntityObjectFieldType> list : lists) {
+		    int divisor = list.size();
+		    int groupSize = records.size() / divisor;
+		    int index = 0;
+		    for (int i=0; i < list.size(); i++) {
+			for (int j=0; j < groupSize; j++) {
+			    records.get(index++).getField().add(list.get(i));
+			}
+		    }
+		}
+		result.addAll(records);
 	    }
-*/
 	} else {
 	    String id = rc.getObject().getId();
 	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY, entity.getClass().getName(), id);
 	    throw new OvalException(message);
+	}
+	return result;
+    }
+
+    /**
+     * Take a field that may contain a var_ref, and return the resolved list of fields (i.e., isSetVarRef() == false).
+     */
+    private List<EntityObjectFieldType> resolveField(EntityObjectFieldType field, RequestContext rc)
+		throws ResolveException, OvalException {
+
+	List<EntityObjectFieldType> result = new Vector<EntityObjectFieldType>();
+	if (field.isSetVarRef()) {
+	    try {
+		IType.Type t = TypeFactory.convertType(TypeFactory.getSimpleDatatype(field.getDatatype()));
+		for (IType type : resolveVariable(field.getVarRef(), rc)) {
+		    EntityObjectFieldType fieldEntity = Factories.definitions.core.createEntityObjectFieldType();
+		    fieldEntity.setName(field.getName());
+		    fieldEntity.setDatatype(field.getDatatype());
+		    fieldEntity.setValue(type.cast(t).getString());
+		    fieldEntity.setEntityCheck(field.getEntityCheck());
+		    result.add(fieldEntity);
+		}
+	    } catch (UnsupportedOperationException e) {
+		MessageType message = Factories.common.createMessageType();
+		message.setLevel(MessageLevelEnumeration.ERROR);
+		message.setValue(e.getMessage());
+		rc.addMessage(message);
+	    }
+	} else {
+	    result.add(field);
 	}
 	return result;
     }
