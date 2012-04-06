@@ -117,7 +117,7 @@ dist-x64: all
 	cp -R plugin/cisco/rsrc/* $(DIST64)/plugin/cisco
 	cp -R $(PLUGIN_CISCO_LIB) $(DIST64)/plugin/cisco/lib
 	cp -R $(PLUGIN_CISCO)/$(LIBDIR)/*.jar $(DIST64)/plugin/cisco/lib
-#	cp -R $(JRE_HOME)/x64 $(DIST64)/jre
+	cp -R $(JRE_HOME)/x64 $(DIST64)/jre
 
 release-win32: dist-x86
 	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x86.zip -C $(DIST32) .
