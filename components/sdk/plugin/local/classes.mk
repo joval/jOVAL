@@ -4,7 +4,6 @@ CLASSES=\
 	org.joval.os.unix.io.driver.LinuxDriver			\
 	org.joval.os.unix.io.driver.MacOSXDriver		\
 	org.joval.os.unix.io.driver.SolarisDriver		\
-	org.joval.os.unix.io.IUnixFilesystemDriver		\
 	org.joval.os.unix.io.UnixFile				\
 	org.joval.os.unix.io.UnixFileInfo			\
 	org.joval.os.unix.io.UnixFilesystem			\
