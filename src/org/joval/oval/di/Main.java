@@ -295,7 +295,7 @@ public class Main implements IObserver {
 			System.exit(ERR);
 		    }
 		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.dataFile.toString()));
-		    OvalSystemCharacteristics osc = sc.getOvalSystemCharacteristics();
+		    OvalSystemCharacteristics osc = sc.getOvalSystemCharacteristics(false);
 		    new Validator(state.getSCSchematron()).validate(sc.getSource());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
 		} catch (ValidationException e) {

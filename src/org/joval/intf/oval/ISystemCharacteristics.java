@@ -31,15 +31,10 @@ public interface ISystemCharacteristics extends ITransformable {
 
     /**
      * Return a raw OVAL system characteristics object containing the underlying data.
+     *
+     * @param mask Set to true to apply mask attributes from the EntityAttributeGroup to the result.
      */
-    OvalSystemCharacteristics getOvalSystemCharacteristics() throws OvalException;
-
-    /**
-     * Return a filtered OvalSystemCharacteristics, containing only objects and items pertaining to the specified variables
-     * and objects.
-     */
-    OvalSystemCharacteristics getOvalSystemCharacteristics(Collection<String> vars, Collection<BigInteger> itemIds)
-	throws OvalException;
+    OvalSystemCharacteristics getOvalSystemCharacteristics(boolean mask) throws OvalException;
 
     /**
      * Store the ItemType in the itemTable and return the ID used to store it.

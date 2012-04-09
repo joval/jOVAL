@@ -287,11 +287,9 @@ public class Results implements IResults, ILoggable {
 	systemType.setTests(testsType);
 
 	//
-	// Add OvalSystemCharacteristics filtered by reportable Variable and Object IDs.
+	// Add OvalSystemCharacteristics (applying the mask attributes)
 	//
-	Collection<String> reportableVariables = getVariableIds(reportableTests);
-	Collection<BigInteger> reportableItems = getItemIds(reportableTests);
-	systemType.setOvalSystemCharacteristics(sc.getOvalSystemCharacteristics(reportableVariables, reportableItems));
+	systemType.setOvalSystemCharacteristics(sc.getOvalSystemCharacteristics(true));
 
 	ResultsType resultsType = Factories.results.createResultsType();
 	resultsType.getSystem().add(systemType);
@@ -300,32 +298,6 @@ public class Results implements IResults, ILoggable {
     }
 
     // Private
-
-    private Collection<String> getVariableIds(Hashtable<String, TestType> tests) {
-	Collection<String> variableIds = new HashSet<String>();
-	for (TestType test : tests.values()) {
-	   for (TestedVariableType testedVariableType : test.getTestedVariable()) {
-		String variableId = testedVariableType.getVariableId();
-		if (!variableIds.contains(variableId)) {
-		    variableIds.add(variableId);
-		}
-	    }
-	}
-	return variableIds;
-    }
-
-    private Collection<BigInteger> getItemIds(Hashtable<String, TestType> tests) {
-	Collection<BigInteger> itemIds = new HashSet<BigInteger>();
-	for (TestType test : tests.values()) {
-	    for (TestedItemType testedItemType : test.getTestedItem()) {
-		BigInteger itemId = testedItemType.getItemId();
-		if (!itemIds.contains(itemId)) {
-		    itemIds.add(itemId);
-		}
-	    }
-	}
-	return itemIds;
-    }
 
     private Collection<String> getTestIds(DefinitionType definition) {
 	Collection<String> testIds = new HashSet<String>();

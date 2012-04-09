@@ -426,7 +426,7 @@ public class Engine implements IEngine, IAdapter {
 		    producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
 		    for (ObjectType obj : definitions.getObjects()) {
 			if (!sc.containsObject(obj.getId())) {
-			    scanObject(new RequestContext(this, definitions.getObject(obj.getId())));
+			    scanObject(new RequestContext(definitions.getObject(obj.getId())));
 			}
 		    }
 		    producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
@@ -529,9 +529,7 @@ public class Engine implements IEngine, IAdapter {
 		List<MessageType> messages = new Vector<MessageType>();
 		FlagData flag = new FlagData();
 		try {
-		    //
-		    // DAS: implement var_check?
-		    //
+		    Collection<ItemType> collectedItems = new Vector<ItemType>();
 		    for (ObjectType obj : resolveObject(rc)) {
 			//
 			// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
@@ -545,7 +543,7 @@ public class Engine implements IEngine, IAdapter {
 			    @SuppressWarnings("unchecked")
 			    Collection<ItemType> retrieved = (Collection<ItemType>)adapter.getItems(obj, rc);
 			    flag.add(FlagEnumeration.COMPLETE);
-			    items.addAll(filterItems(getObjectFilters(masterObj), retrieved, rc));
+			    collectedItems.addAll(filterItems(getObjectFilters(masterObj), retrieved, rc));
 			} catch (CollectException e) {
 			    MessageType msg = Factories.common.createMessageType();
 			    msg.setLevel(MessageLevelEnumeration.WARNING);
@@ -558,6 +556,25 @@ public class Engine implements IEngine, IAdapter {
 			    // Handle an uncaught, unexpected exception emanating from the adapter.
 			    //
 			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    MessageType msg = Factories.common.createMessageType();
+			    msg.setLevel(MessageLevelEnumeration.ERROR);
+			    msg.setValue(e.getMessage());
+			    messages.add(msg);
+			    flag.add(FlagEnumeration.ERROR);
+			}
+		    }
+
+		    //
+		    // Implement the ObjectType var_check by filtering the collected items against the master object.
+		    //
+		    for (ItemType item : collectedItems) {
+			try {
+			    switch(varCheck(masterObj, item, rc)) {
+			      case TRUE:
+				items.add(item);
+				break;
+			    }
+			} catch (TestException e) {
 			    MessageType msg = Factories.common.createMessageType();
 			    msg.setLevel(MessageLevelEnumeration.ERROR);
 			    msg.setValue(e.getMessage());
@@ -872,6 +889,43 @@ public class Engine implements IEngine, IAdapter {
     }
 
     /**
+     * If getSet() were a method of ObjectType (instead of only some of its subclasses), this is what it would return.
+     */
+    private Set getObjectSet(ObjectType obj) {
+	Set objectSet = null;
+	try {
+	    Method isSetSet = obj.getClass().getMethod("isSetSet");
+	    if (((Boolean)isSetSet.invoke(obj)).booleanValue()) {
+		Method getSet = obj.getClass().getMethod("getSet");
+		objectSet = (Set)getSet.invoke(obj);
+	    }
+	} catch (NoSuchMethodException e) {
+	    // Object doesn't support Sets; no big deal.
+	} catch (IllegalAccessException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (InvocationTargetException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return objectSet;
+    }
+
+    /**
+     * If getFilter() were a method of ObjectType (instead of only some of its subclasses), this is what it would return.
+     */
+    private List<Filter> getObjectFilters(ObjectType obj) {
+	List<Filter> filters = new Vector<Filter>();
+	Object oFilters = safeInvokeMethod(obj, "getFilter");
+	if (oFilters != null && oFilters instanceof List) {
+	    for (Object oFilter : (List)oFilters) {
+		if (oFilter instanceof Filter) {
+		    filters.add((Filter)oFilter);
+		}
+	    }
+	}
+	return filters;
+    }
+
+    /**
      * Given Collections of items and filters, returns the appropriately filtered collection.
      */
     private Collection<ItemType> filterItems(List<Filter> filters, Collection<ItemType> items, RequestContext rc)
@@ -970,7 +1024,131 @@ public class Engine implements IEngine, IAdapter {
     }
 
     /**
-     * Evaluate the DefinitionType.
+     * Compare an object to an item, for the purpose of determing compliance with any var_check attributes on the object's
+     * entities.  This is similar to comparing a state with an item, as is done during test evaluation, except the object
+     * lacks an entityCheck, and comparisons are only invoked when there is a var_ref.
+     */
+    private ResultEnumeration varCheck(ObjectType obj, ItemType item, RequestContext rc) throws OvalException, TestException {
+	try {
+	    OperatorData result = new OperatorData();
+	    int entityCount = 0;
+	    for (Method method : getMethods(obj.getClass()).values()) {
+		String methodName = method.getName();
+		if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
+		    entityCount++;
+		    Object objEntityObj = method.invoke(obj);
+		    if (objEntityObj instanceof JAXBElement) {
+			objEntityObj = ((JAXBElement)objEntityObj).getValue();
+		    }
+		    if (objEntityObj == null) {
+			// continue
+		    } else if (objEntityObj instanceof EntitySimpleBaseType) {
+			EntitySimpleBaseType objEntity = (EntitySimpleBaseType)objEntityObj;
+			if (objEntity.isSetVarRef()) {
+			    Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			    if (itemEntityObj instanceof EntityItemSimpleBaseType || itemEntityObj == null) {
+				result.addResult(compare(objEntity, (EntityItemSimpleBaseType)itemEntityObj, rc));
+			    } else if (itemEntityObj instanceof JAXBElement) {
+				JAXBElement element = (JAXBElement)itemEntityObj;
+				EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)element.getValue();
+				result.addResult(compare(objEntity, itemEntity, rc));
+			    } else if (itemEntityObj instanceof Collection) {
+				CheckData cd = new CheckData();
+				for (Object entityObj : (Collection)itemEntityObj) {
+				    EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)entityObj;
+				    cd.addResult(compare(objEntity, itemEntity, rc));
+				}
+				result.addResult(cd.getResult(CheckEnumeration.ALL));
+			    } else {
+				String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+								     itemEntityObj.getClass().getName(), item.getId());
+				throw new OvalException(message);
+			    }
+			} else {
+			    result.addResult(ResultEnumeration.TRUE);
+			}
+		    } else if (objEntityObj instanceof EntityObjectRecordType) {
+			EntityObjectRecordType objEntity = (EntityObjectRecordType)objEntityObj;
+			if (objEntity.isSetVarRef()) {
+			    Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			    if (itemEntityObj instanceof EntityItemRecordType) {
+				result.addResult(compare(objEntity, (EntityItemRecordType)itemEntityObj, rc));
+			    } else if (itemEntityObj instanceof Collection) {
+				CheckData cd = new CheckData();
+				for (Object entityObj : (Collection)itemEntityObj) {
+				    if (entityObj instanceof EntityItemRecordType) {
+					cd.addResult(compare(objEntity, (EntityItemRecordType)entityObj, rc));
+				    } else {
+					String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+									 entityObj.getClass().getName(), item.getId());
+					throw new OvalException(msg);
+				    }
+				}
+				result.addResult(cd.getResult(CheckEnumeration.ALL));
+			    } else {
+				String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+								     itemEntityObj.getClass().getName(), item.getId());
+				throw new OvalException(message);
+			    }
+			} else {
+			    result.addResult(ResultEnumeration.TRUE);
+			}
+		    } else {
+			String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+							     objEntityObj.getClass().getName(), obj.getId());
+	    		throw new OvalException(message);
+		    }
+		}
+	    }
+	    if (entityCount == 0) {
+		//
+		// Entity-free objects, like FamilyObject, are not filtered.
+		//
+		return ResultEnumeration.TRUE;
+	    } else {
+		return result.getResult(OperatorEnumeration.AND);
+	    }
+	} catch (NoSuchMethodException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
+	} catch (IllegalAccessException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
+	} catch (InvocationTargetException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
+	}
+    }
+
+    /**
+     * Compare an object record and item record.  All fields must match for a TRUE result.
+     */
+    private ResultEnumeration compare(EntityObjectRecordType objectRecord, EntityItemRecordType itemRecord, RequestContext rc)
+	    throws OvalException, TestException {
+
+	Hashtable<String, EntityObjectFieldType> objectFields = new Hashtable<String, EntityObjectFieldType>();
+	for (EntityObjectFieldType objectField : objectRecord.getField()) {
+	    objectFields.put(objectField.getName(), objectField);
+	}
+	Hashtable<String, EntityItemFieldType> itemFields = new Hashtable<String, EntityItemFieldType>();
+	for (EntityItemFieldType itemField : itemRecord.getField()) {
+	    itemFields.put(itemField.getName(), itemField);
+	}
+	CheckData cd = new CheckData();
+	for (String fieldName : objectFields.keySet()) {
+	    if (itemFields.containsKey(fieldName)) {
+		EntitySimpleBaseType object = new ObjectFieldBridge(objectFields.get(fieldName));
+		EntityItemSimpleBaseType item = new ItemFieldBridge(itemFields.get(fieldName));
+		cd.addResult(compare(object, item, rc));
+	    } else {
+		cd.addResult(ResultEnumeration.FALSE);
+	    }
+	}
+	return cd.getResult(CheckEnumeration.ALL);
+    }
+
+    /**
+     * Evaluate a DefinitionType.
      */
     private oval.schemas.results.core.DefinitionType evaluateDefinition(DefinitionType definition) throws OvalException {
 	String id = definition.getId();
@@ -1115,6 +1293,7 @@ public class Engine implements IEngine, IAdapter {
 	logger.debug(JOVALMsg.STATUS_TEST, testId);
 	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	String objectId = getObjectRef(testDefinition);
+	List<String> stateIds = getStateRef(testDefinition);
 
 	if (!sc.containsObject(objectId)) {
 	    switch(mode) {
@@ -1127,21 +1306,15 @@ public class Engine implements IEngine, IAdapter {
 		return;
 
 	      default:
-		scanObject(new RequestContext(this, definitions.getObject(objectId)));
+		scanObject(new RequestContext(definitions.getObject(objectId)));
 		break;
 	    }
-	}
-
-	String stateId = getStateRef(testDefinition);
-	StateType state = null;
-	if (stateId != null) {
-	    state = definitions.getState(stateId);
 	}
 
 	//
 	// Create all the structures we'll need to store information about the evaluation of the test.
 	//
-	RequestContext rc = new RequestContext(this, definitions.getObject(objectId));
+	RequestContext rc = new RequestContext(definitions.getObject(objectId));
 	ExistenceData existence = new ExistenceData();
 	CheckData check = new CheckData();
 	switch(sc.getObjectFlag(objectId)) {
@@ -1160,22 +1333,25 @@ public class Engine implements IEngine, IAdapter {
 
 		switch(item.getStatus()) {
 		  case EXISTS:
-		    if (state != null) {
-			ResultEnumeration checkResult = ResultEnumeration.UNKNOWN;
-			try {
-			    checkResult = compare(state, item, rc);
-			} catch (TestException e) {
-			    logger.warn(JOVALMsg.ERROR_TESTEXCEPTION, testId, e.getMessage());
-			    logger.debug(JOVALMsg.ERROR_EXCEPTION, e);
+		    if (stateIds.size() > 0) {
+			OperatorData result = new OperatorData();
+			for (String stateId : stateIds) {
+			    StateType state = definitions.getState(stateId);
+			    try {
+				result.addResult(compare(state, item, rc));
+			    } catch (TestException e) {
+				logger.warn(JOVALMsg.ERROR_TESTEXCEPTION, testId, e.getMessage());
+				logger.debug(JOVALMsg.ERROR_EXCEPTION, e);
 
-			    MessageType message = Factories.common.createMessageType();
-			    message.setLevel(MessageLevelEnumeration.ERROR);
-			    message.setValue(e.getMessage());
-			    testedItem.getMessage().add(message);
-			    checkResult = ResultEnumeration.ERROR;
+				MessageType message = Factories.common.createMessageType();
+				message.setLevel(MessageLevelEnumeration.ERROR);
+				message.setValue(e.getMessage());
+				testedItem.getMessage().add(message);
+				result.addResult(ResultEnumeration.ERROR);
+			    }
 			}
-			testedItem.setResult(checkResult);
-			check.addResult(checkResult);
+			testedItem.setResult(result.getResult(testDefinition.getStateOperator()));
+			check.addResult(testedItem.getResult());
 		    }
 		    break;
 
@@ -1230,7 +1406,7 @@ public class Engine implements IEngine, IAdapter {
 	// If there are no items matching the object, or if there is no state for the test, then the result of the test is
 	// simply the result of the existence check.
 	//
-	} else if (sc.getItemsByObjectId(objectId).size() == 0 || stateId == null) {
+	} else if (sc.getItemsByObjectId(objectId).size() == 0 || stateIds.size() == 0) {
 	    testResult.setResult(existence.getResult(testDefinition.getCheckExistence()));
 
 	//
@@ -1250,6 +1426,58 @@ public class Engine implements IEngine, IAdapter {
 	}
     }
 
+    /**
+     * If getObject() were a method of TestType (instead of only some of its subclasses), this is what it would return.
+     */
+    private String getObjectRef(oval.schemas.definitions.core.TestType test) throws OvalException {
+	try {
+	    Method getObject = test.getClass().getMethod("getObject");
+	    ObjectRefType objectRef = (ObjectRefType)getObject.invoke(test);
+	    if (objectRef != null) {
+		String ref = objectRef.getObjectRef();
+		if (ref != null) {
+		    return objectRef.getObjectRef();
+		}
+	    }
+	} catch (NoSuchMethodException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (IllegalAccessException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (InvocationTargetException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+
+	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_TEST_NOOBJREF, test.getId()));
+    }
+
+    /**
+     * If getState() were a method of TestType (instead of only some of its subclasses), this is what it would return.
+     */
+    private List<String> getStateRef(oval.schemas.definitions.core.TestType test) {
+	List<String> refs = new Vector<String>();
+	try {
+	    Method getObject = test.getClass().getMethod("getState");
+	    Object o = getObject.invoke(test);
+	    if (o instanceof List && ((List)o).size() > 0) {
+		for (Object stateRefObj : (List)o) {
+		    refs.add(((StateRefType)stateRefObj).getStateRef());
+		}
+	    } else if (o instanceof StateRefType) {
+		refs.add(((StateRefType)o).getStateRef());
+	    }
+	} catch (NoSuchMethodException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (IllegalAccessException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (InvocationTargetException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return refs;
+    }
+
+    /**
+     * Determine whether or not the specified item matches the specified state.
+     */
     private ResultEnumeration compare(StateType state, ItemType item, RequestContext rc) throws OvalException, TestException {
 	try {
 	    OperatorData result = new OperatorData();
@@ -1304,7 +1532,7 @@ public class Engine implements IEngine, IAdapter {
 			}
 		    } else {
 			String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
-							     item.getClass().getName(), item.getId());
+							     stateEntityObj.getClass().getName(), state.getId());
 	    		throw new OvalException(message);
 		    }
 		}
@@ -1323,49 +1551,36 @@ public class Engine implements IEngine, IAdapter {
     }
 
     /**
-     * Compare a state and item record.  All fields must match for a TRUE result.
-     *
-     * See:
-     * http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#EntityStateRecordType
+     * Compare a state and item record.
      */
     private ResultEnumeration compare(EntityStateRecordType stateRecord, EntityItemRecordType itemRecord, RequestContext rc)
 	    throws OvalException, TestException {
 
-	ResultEnumeration result = ResultEnumeration.UNKNOWN;
-
+	Hashtable<String, EntityStateFieldType> stateFields = new Hashtable<String, EntityStateFieldType>();
 	for (EntityStateFieldType stateField : stateRecord.getField()) {
-	    EntityStateSimpleBaseType state = null;
-	    EntityItemSimpleBaseType item = null;
-
-	    for (EntityItemFieldType itemField : itemRecord.getField()) {
-		if (itemField.getName().equals(stateField.getName())) {
-		    state = new StateFieldBridge(stateField);
-		    item = new ItemFieldBridge(itemField);
-		    break;
-		}
-	    }
-	    if (item == null) {
-		return ResultEnumeration.FALSE;
+	    stateFields.put(stateField.getName(), stateField);
+	}
+	Hashtable<String, EntityItemFieldType> itemFields = new Hashtable<String, EntityItemFieldType>();
+	for (EntityItemFieldType itemField : itemRecord.getField()) {
+	    itemFields.put(itemField.getName(), itemField);
+	}
+	CheckData cd = new CheckData();
+	for (String fieldName : stateFields.keySet()) {
+	    if (itemFields.containsKey(fieldName)) {
+		EntityStateSimpleBaseType state = new StateFieldBridge(stateFields.get(fieldName));
+		EntityItemSimpleBaseType item = new ItemFieldBridge(itemFields.get(fieldName));
+		cd.addResult(compare(state, item, rc));
 	    } else {
-		result = compare(state, item, rc);
-		switch(result) {
-		  case TRUE:
-		    break;
-
-		  default:
-		    return result;
-		}
+		cd.addResult(ResultEnumeration.FALSE);
 	    }
 	}
-
-	return result;
+	return cd.getResult(stateRecord.getEntityCheck());
     }
 
     /**
-     * Compare a state SimpleBaseType to an item SimpleBaseType.  If the item is null, this method returns false.  That
-     * allows callers to simply check if the state is set before invoking the comparison.
+     * Compare a state or object SimpleBaseType to an item SimpleBaseType.  If the item is null, this method returns false.
      */
-    private ResultEnumeration compare(EntityStateSimpleBaseType state, EntityItemSimpleBaseType item, RequestContext rc)
+    private ResultEnumeration compare(EntitySimpleBaseType base, EntityItemSimpleBaseType item, RequestContext rc)
 		throws TestException, OvalException {
 
 	if (item == null) {
@@ -1386,44 +1601,42 @@ public class Engine implements IEngine, IAdapter {
 	//
 	// Handle the variable_ref case
 	//
-	if (state.isSetVarRef()) {
+	if (base.isSetVarRef()) {
 	    CheckData cd = new CheckData();
-	    EntitySimpleBaseType base = Factories.definitions.core.createEntityObjectAnySimpleType();
-	    base.setDatatype(state.getDatatype());
-	    base.setOperation(state.getOperation());
-	    base.setMask(state.isMask());
+	    EntitySimpleBaseType varInstance = Factories.definitions.core.createEntityObjectAnySimpleType();
+	    varInstance.setDatatype(base.getDatatype());
+	    varInstance.setOperation(base.getOperation());
+	    varInstance.setMask(base.isMask());
 	    try {
-		Collection<IType> values = resolveVariable(state.getVarRef(), rc);
+		Collection<IType> values = resolveVariable(base.getVarRef(), rc);
 		if (values.size() == 0) {
 		    String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_NO_VALUES);
-		    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
+		    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, base.getVarRef(), reason));
 		} else {
 		    for (IType value : values) {
-			value = value.cast(TypeFactory.getSimpleDatatype(state.getDatatype()));
-			base.setValue(value.getString());
-			cd.addResult(testImpl(base, item));
+			value = value.cast(TypeFactory.getSimpleDatatype(base.getDatatype()));
+			varInstance.setValue(value.getString());
+			cd.addResult(testImpl(varInstance, item));
 		    }
 		}
 	    } catch (UnsupportedOperationException e) {
-		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), e.getMessage()));
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, base.getVarRef(), e.getMessage()));
 	    } catch (NoSuchElementException e) {
 		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_MISSING);
-		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), reason));
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, base.getVarRef(), reason));
 	    } catch (ResolveException e) {
-		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, state.getVarRef(), e.getMessage()));
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, base.getVarRef(), e.getMessage()));
 	    }
-	    return cd.getResult(state.getVarCheck());
+	    return cd.getResult(base.getVarCheck());
 	} else {
-	    return testImpl(state, item);
+	    return testImpl(base, item);
 	}
     }
 
     /**
-     * Perform the the OVAL test by comparing the state and item.
-     *
-     * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-common-schema.html#OperationEnumeration
+     * Perform the the OVAL test by comparing the state/object (AKA base) and item.
      */
-    private ResultEnumeration testImpl(EntitySimpleBaseType state, EntityItemSimpleBaseType item)
+    private ResultEnumeration testImpl(EntitySimpleBaseType base, EntityItemSimpleBaseType item)
 		throws TestException, OvalException {
 	//
 	// This is a good place to check if the engine is being destroyed
@@ -1432,37 +1645,37 @@ public class Engine implements IEngine, IAdapter {
 	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
 	}
 
-	if (!item.isSetValue() || !state.isSetValue()) {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TEST_INCOMPARABLE, item.getValue(), state.getValue());
+	if (!item.isSetValue() || !base.isSetValue()) {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TEST_INCOMPARABLE, item.getValue(), base.getValue());
 	    throw new TestException(msg);
 	}
 
 	//
-	// Let the state dictate the datatype
+	// Let the base dictate the datatype
 	//
-	IType stateValue = TypeFactory.createType(state);
-	IType itemValue = TypeFactory.createType(item).cast(stateValue.getType());
+	IType baseValue = TypeFactory.createType(base);
+	IType itemValue = TypeFactory.createType(item).cast(baseValue.getType());
 
 	//
 	// Validate the operation by datatype, then execute it. See section 5.3.6.3.1 of the specification:
 	// http://oval.mitre.org/language/version5.10.1/OVAL_Language_Specification_01-20-2012.pdf
 	//
-	OperationEnumeration op = state.getOperation();
-	switch(stateValue.getType()) {
+	OperationEnumeration op = base.getOperation();
+	switch(baseValue.getType()) {
 	  case BINARY:
 	  case BOOLEAN:
 	  case RECORD:
-	    return trivialComparison(stateValue, itemValue, op);
+	    return trivialComparison(baseValue, itemValue, op);
 
 	  case EVR_STRING:
 	  case FLOAT:
 	  case FILESET_REVISION:
 	  case IOS_VERSION:
 	  case VERSION:
-	    return basicComparison(stateValue, itemValue, op);
+	    return basicComparison(baseValue, itemValue, op);
 
 	  case INT: {
-	    int sInt = ((IntType)stateValue).getData().intValue();
+	    int sInt = ((IntType)baseValue).getData().intValue();
 	    int iInt = ((IntType)itemValue).getData().intValue();
 	    switch(op) {
 	      case BITWISE_AND:
@@ -1478,12 +1691,12 @@ public class Engine implements IEngine, IAdapter {
 		    return ResultEnumeration.FALSE;
 		}
 	      default:
-		return basicComparison(stateValue, itemValue, op);
+		return basicComparison(baseValue, itemValue, op);
 	    }
 	  }
 
 	  case IPV_4_ADDRESS: {
-	    Ip4AddressType sIp = (Ip4AddressType)stateValue;
+	    Ip4AddressType sIp = (Ip4AddressType)baseValue;
 	    Ip4AddressType iIp = (Ip4AddressType)itemValue;
 	    switch(op) {
 	      case SUBSET_OF:
@@ -1499,12 +1712,12 @@ public class Engine implements IEngine, IAdapter {
 		    return ResultEnumeration.TRUE;
 		}
 	      default:
-		return basicComparison(stateValue, itemValue, op);
+		return basicComparison(baseValue, itemValue, op);
 	    }
 	  }
 
 	  case IPV_6_ADDRESS: {
-	    Ip6AddressType sIp = (Ip6AddressType)stateValue;
+	    Ip6AddressType sIp = (Ip6AddressType)baseValue;
 	    Ip6AddressType iIp = (Ip6AddressType)itemValue;
 	    switch(op) {
 	      case SUBSET_OF:
@@ -1520,12 +1733,12 @@ public class Engine implements IEngine, IAdapter {
 		    return ResultEnumeration.TRUE;
 		}
 	      default:
-		return basicComparison(stateValue, itemValue, op);
+		return basicComparison(baseValue, itemValue, op);
 	    }
 	  }
 
 	  case STRING: {
-	    String sStr = ((StringType)stateValue).getData();
+	    String sStr = ((StringType)baseValue).getData();
 	    String iStr = ((StringType)itemValue).getData();
 	    switch(op) {
 	      case CASE_INSENSITIVE_EQUALS:
@@ -1551,7 +1764,7 @@ public class Engine implements IEngine, IAdapter {
 		    throw new TestException(e);
 		}
 	      default:
-		return trivialComparison(stateValue, itemValue, op);
+		return trivialComparison(baseValue, itemValue, op);
 	    }
 	  }
 	}
@@ -1561,16 +1774,16 @@ public class Engine implements IEngine, IAdapter {
     /**
      * =, !=, or throws a TestException
      */
-    private ResultEnumeration trivialComparison(IType state, IType item, OperationEnumeration op) throws TestException {
+    private ResultEnumeration trivialComparison(IType base, IType item, OperationEnumeration op) throws TestException {
 	switch(op) {
 	  case EQUALS:
-	    if (item.equals(state)) {
+	    if (item.equals(base)) {
 	        return ResultEnumeration.TRUE;
 	    } else {
 	        return ResultEnumeration.FALSE;
 	    }
 	  case NOT_EQUAL:
-	    if (item.equals(state)) {
+	    if (item.equals(base)) {
 	        return ResultEnumeration.FALSE;
 	    } else {
 	        return ResultEnumeration.TRUE;
@@ -1582,34 +1795,34 @@ public class Engine implements IEngine, IAdapter {
     /**
      * =, !=, <, <=, >, >=, or throws a TestException
      */
-    private ResultEnumeration basicComparison(IType state, IType item, OperationEnumeration op) throws TestException {
+    private ResultEnumeration basicComparison(IType base, IType item, OperationEnumeration op) throws TestException {
 	switch(op) {
 	  case GREATER_THAN:
-	    if (item.compareTo(state) > 0) {
+	    if (item.compareTo(base) > 0) {
 	        return ResultEnumeration.TRUE;
 	    } else {
 	        return ResultEnumeration.FALSE;
 	    }
 	  case GREATER_THAN_OR_EQUAL:
-	    if (item.compareTo(state) >= 0) {
+	    if (item.compareTo(base) >= 0) {
 	        return ResultEnumeration.TRUE;
 	    } else {
 	        return ResultEnumeration.FALSE;
 	    }
 	  case LESS_THAN:
-	    if (item.compareTo(state) < 0) {
+	    if (item.compareTo(base) < 0) {
 	        return ResultEnumeration.TRUE;
 	    } else {
 	        return ResultEnumeration.FALSE;
 	    }
 	  case LESS_THAN_OR_EQUAL:
-	    if (item.compareTo(state) <= 0) {
+	    if (item.compareTo(base) <= 0) {
 	        return ResultEnumeration.TRUE;
 	    } else {
 	        return ResultEnumeration.FALSE;
 	    }
 	  default:
-	    return trivialComparison(state, item, op);
+	    return trivialComparison(base, item, op);
 	}
     }
 
@@ -2070,8 +2283,7 @@ public class Engine implements IEngine, IAdapter {
 		    throw new ResolveException(e);
 		}
 	    } else if (o instanceof List) {
-		// DAS: does this ever happen??
-		return extractItemData(objectId, null, (List)o);
+		values.addAll(extractItemData(objectId, null, (List)o));
 	    } else if (o instanceof EntityItemRecordType) {
 		EntityItemRecordType record = (EntityItemRecordType)o;
 		if (oc.isSetRecordField()) {
@@ -2267,86 +2479,17 @@ public class Engine implements IEngine, IAdapter {
     }
 
     /**
-     * Get the object ID to which a test refers, or throw an exception if there is none.
+     * An EntityObjectSimpleBaseType wrapper for an EntityStateFieldType.
      */
-    private String getObjectRef(oval.schemas.definitions.core.TestType test) throws OvalException {
-	try {
-	    Method getObject = test.getClass().getMethod("getObject");
-	    ObjectRefType objectRef = (ObjectRefType)getObject.invoke(test);
-	    if (objectRef != null) {
-		String ref = objectRef.getObjectRef();
-		if (ref != null) {
-		    return objectRef.getObjectRef();
-		}
-	    }
-	} catch (NoSuchMethodException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+    private class ObjectFieldBridge extends EntitySimpleBaseType {
+	ObjectFieldBridge(EntityObjectFieldType field) {
+	    datatype = field.getDatatype();
+	    mask = field.isMask();
+	    operation = field.getOperation();
+	    value = field.getValue();
+	    varCheck = field.getVarCheck();
+	    varRef = field.getVarRef();
 	}
-
-	throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_TEST_NOOBJREF, test.getId()));
-    }
-
-    /**
-     * Get the state ID to which a test refers, or return null if there is none.
-     */
-    private String getStateRef(oval.schemas.definitions.core.TestType test) {
-	try {
-	    Method getObject = test.getClass().getMethod("getState");
-	    Object o = getObject.invoke(test);
-	    if (o instanceof List && ((List)o).size() > 0) {
-		return ((StateRefType)((List)o).get(0)).getStateRef();
-	    } else if (o instanceof StateRefType) {
-		return ((StateRefType)o).getStateRef();
-	    }
-	} catch (NoSuchMethodException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return null;
-    }
-
-    /**
-     * If getFilter() were a method of ObjectType (instead of only some of its subclasses), this is what it would return.
-     */
-    private List<Filter> getObjectFilters(ObjectType obj) {
-	List<Filter> filters = new Vector<Filter>();
-	Object oFilters = safeInvokeMethod(obj, "getFilter");
-	if (oFilters != null && oFilters instanceof List) {
-	    for (Object oFilter : (List)oFilters) {
-		if (oFilter instanceof Filter) {
-		    filters.add((Filter)oFilter);
-		}
-	    }
-	}
-	return filters;
-    }
-
-    /**
-     * If getSet() were a method of ObjectType (instead of only some of its subclasses), this is what it would return.
-     */
-    private Set getObjectSet(ObjectType obj) {
-	Set objectSet = null;
-	try {
-	    Method isSetSet = obj.getClass().getMethod("isSetSet");
-	    if (((Boolean)isSetSet.invoke(obj)).booleanValue()) {
-		Method getSet = obj.getClass().getMethod("getSet");
-		objectSet = (Set)getSet.invoke(obj);
-	    }
-	} catch (NoSuchMethodException e) {
-	    // Object doesn't support Sets; no big deal.
-	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return objectSet;
     }
 
     /**

@@ -175,7 +175,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public Source getSource() {
 	Source src = null;
 	try {
-	    src = new JAXBSource(ctx, getOvalSystemCharacteristics());
+	    src = new JAXBSource(ctx, getOvalSystemCharacteristics(false));
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (OvalException e) {
@@ -190,7 +190,10 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	return systemInfo;
     }
 
-    public OvalSystemCharacteristics getOvalSystemCharacteristics() throws OvalException {
+    //
+    // DAS mask support is TBD
+    //
+    public OvalSystemCharacteristics getOvalSystemCharacteristics(boolean mask) throws OvalException {
 	OvalSystemCharacteristics sc = Factories.sc.core.createOvalSystemCharacteristics();
 	sc.setGenerator(OvalFactory.getGenerator());
 	sc.setSystemInfo(systemInfo);
@@ -208,71 +211,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	sc.setSystemData(items);
 
 	return sc;
-    }
-
-    public OvalSystemCharacteristics getOvalSystemCharacteristics(Collection<String> varIds, Collection<BigInteger> itemIds)
-		throws OvalException {
-	//
-	// Use HashSets for better performance
-	//
-	if (!(varIds instanceof HashSet)) {
-	    HashSet<String> temp = new HashSet<String>();
-	    temp.addAll(varIds);
-	    varIds = temp;
-	}
-	if (!(itemIds instanceof HashSet)) {
-	    HashSet<BigInteger> temp = new HashSet<BigInteger>();
-	    temp.addAll(itemIds);
-	    itemIds = temp;
-	}
-
-	OvalSystemCharacteristics filteredSc = Factories.sc.core.createOvalSystemCharacteristics();
-	filteredSc.setGenerator(OvalFactory.getGenerator());
-	filteredSc.setSystemInfo(systemInfo);
-
-	//
-	// Add only objects whose items and variables are all specified.
-	//
-	CollectedObjectsType collectedObjects = Factories.sc.core.createCollectedObjectsType();
-	for (String objectId : objectTable.keySet()) {
-	    boolean add = true;
-
-	    if (objectItemTable.containsKey(objectId)) {
-		for (BigInteger itemId : objectItemTable.get(objectId)) {
-		    if (!itemIds.contains(itemId)) {
-			logger.trace(JOVALMsg.STATUS_SC_FILTER_ITEM, itemId, objectId);
-			add = false;
-			break;
-		    }
-		}
-	    }
-
-	    if (add) {
-		if (objectVariableTable.containsKey(objectId)) {
-		    for (String variableId : objectVariableTable.get(objectId)) {
-			if (!varIds.contains(variableId)) {
-			    logger.trace(JOVALMsg.STATUS_SC_FILTER_VARIABLE, variableId, objectId);
-			    add = false;
-			    break;
-			}
-		    }
-		}
-		if (add) {
-		    collectedObjects.getObject().add(makeObject(objectId));
-		}
-	    }
-	}
-	filteredSc.setCollectedObjects(collectedObjects);
-
-	//
-	// Add only items in the list.
-	//
-	SystemDataType systemData = Factories.sc.core.createSystemDataType();
-	for (BigInteger itemId : itemIds) {
-	    systemData.getItem().add(wrapItem(itemTable.get(itemId)));
-	}
-	filteredSc.setSystemData(systemData);
-	return filteredSc;
     }
 
     public synchronized BigInteger storeItem(ItemType item) throws OvalException {
@@ -411,7 +349,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    Marshaller marshaller = ctx.createMarshaller();
 	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
 	    out = new FileOutputStream(f);
-	    marshaller.marshal(getOvalSystemCharacteristics(), out);
+	    marshaller.marshal(getOvalSystemCharacteristics(false), out);
 	} catch (JAXBException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

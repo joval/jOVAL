@@ -22,20 +22,60 @@ import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 
 class RequestContext implements IRequestContext {
-    private Engine engine;
-    private Stack<ObjectType> objects;
-    private Hashtable<String, HashSet<String>> vars;
-    private Collection<MessageType> messages;
+    private Stack<Level> levels;
 
-    RequestContext(Engine engine, ObjectType object) {
-	this.engine = engine;
-        this.objects = new Stack<ObjectType>();
-	objects.push(object);
-        this.vars = new Hashtable<String, HashSet<String>>();
-	this.messages = new Vector<MessageType>();
+    RequestContext(ObjectType object) {
+        levels = new Stack<Level>();
+	levels.push(new Level(object));
     }
 
     Collection<VariableValueType> getVars() {
+	return getVars(levels.peek().vars);
+    }
+
+    Collection<MessageType> getMessages() {
+	return levels.peek().messages;
+    }
+
+    void addVar(VariableValueType var) {
+	String id = var.getVariableId();
+	String value = (String)var.getValue();
+	Hashtable<String, HashSet<String>> vars = levels.peek().vars;
+	if (vars.containsKey(id)) {
+	    vars.get(id).add(value);
+	} else {
+	    HashSet<String> vals = new HashSet<String>();
+	    vals.add(value);
+	    vars.put(id, vals);
+	}
+    }
+
+    ObjectType getObject() {
+        return levels.peek().object;
+    }
+
+    void pushObject(ObjectType obj) {
+	levels.push(new Level(obj));
+    }
+
+    ObjectType popObject() {
+	Level level = levels.pop();
+	for (VariableValueType var : getVars(level.vars)) {
+	    addVar(var);
+	}
+	levels.peek().messages.addAll(level.messages);
+	return level.object;
+    }
+
+    // Implement IRequestContext
+
+    public void addMessage(MessageType msg) {
+	levels.peek().messages.add(msg);
+    }
+
+    // Private
+
+    private Collection<VariableValueType> getVars(Hashtable<String, HashSet<String>> vars) {
 	Collection<VariableValueType> result = new Vector<VariableValueType>();
 	for (String id : vars.keySet()) {
 	    for (String value : vars.get(id)) {
@@ -48,37 +88,15 @@ class RequestContext implements IRequestContext {
         return result;
     }
 
-    Collection<MessageType> getMessages() {
-	return messages;
-    }
+    private class Level {
+	ObjectType object;
+	Hashtable<String, HashSet<String>> vars;
+	Collection<MessageType> messages;
 
-    void addVar(VariableValueType var) {
-	String id = var.getVariableId();
-	String value = (String)var.getValue();
-	if (vars.containsKey(id)) {
-	    vars.get(id).add(value);
-	} else {
-	    HashSet<String> vals = new HashSet<String>();
-	    vals.add(value);
-	    vars.put(id, vals);
+	Level(ObjectType object) {
+	    this.object = object;
+            this.vars = new Hashtable<String, HashSet<String>>();
+	    this.messages = new Vector<MessageType>();
 	}
-    }
-
-    ObjectType getObject() {
-        return objects.peek();
-    }
-
-    void pushObject(ObjectType obj) {
-	objects.push(obj);
-    }
-
-    ObjectType popObject() {
-	return objects.pop();
-    }
-
-    // Implement IRequestContext
-
-    public void addMessage(MessageType msg) {
-	messages.add(msg);
     }
 }
