@@ -250,7 +250,6 @@ class SftpFile extends CacheFile {
 			throw new FileNotFoundException(getPath());
     
 		      default:
-System.out.println("DAS unable to list: " + getPath());
 			throw new IOException(se);
 		    }
 		}
