@@ -93,8 +93,12 @@ public class OVALHandler {
     /**
      * Get all the engines, to observe and run them.
      */
-    public Collection<IEngine> getEngines() {
-	return engines.values();
+    public Collection<String> getHrefs() {
+	return engines.keySet();
+    }
+
+    public IEngine getEngine(String href) {
+	return engines.get(href);
     }
 
     /**

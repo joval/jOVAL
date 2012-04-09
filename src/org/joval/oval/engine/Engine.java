@@ -564,6 +564,16 @@ public class Engine implements IEngine, IAdapter {
 			}
 		    }
 
+/*
+
+DAS: The following is commented out because it doesn't always apply properly.  In cases where the object entity supplies
+     data that is used in a non-trivial way by the adapter to create items, it will fail.  Examples include the pattern
+     in a TextfilecontentObject, a registry or file object with recursive behaviors, etc.
+
+     The only way this will work is if the adapter can be supplied all the resolved values at the same time.  But then we're
+     back to having the adapter resolve variables itself, which multiplies the amount of work that must be done to write an
+     adapter...
+
 		    //
 		    // Implement the ObjectType var_check by filtering the collected items against the master object.
 		    //
@@ -582,6 +592,7 @@ public class Engine implements IEngine, IAdapter {
 			    flag.add(FlagEnumeration.ERROR);
 			}
 		    }
+*/
 
 		    messages.addAll(rc.getMessages());
 		    sc.setObject(objectId, null, null, null, null);

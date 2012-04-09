@@ -117,11 +117,19 @@ public class Engine implements Runnable, IObserver {
 	    //
 	    // Run the OVAL engines
 	    //
-	    for (IEngine engine : ovalHandler.getEngines()) {
+	    for (String href : ovalHandler.getHrefs()) {
+		IEngine engine = ovalHandler.getEngine(href);
 		engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 		logger.info("Evaluating OVAL rules");
 		engine.run();
 		switch(engine.getResult()) {
+		  case OK:
+		    if (debug) {
+			File resultFile = new File(XPERT.ws, "oval-res_" + encode(href) + ".xml");
+			logger.info("Saving OVAL results: " + resultFile.getPath());
+			engine.getResults().writeXML(resultFile);
+		    }
+		    break;
 		  case ERR:
 		    logger.severe(LogFormatter.toString(engine.getError()));
 		    return;
@@ -218,11 +226,7 @@ public class Engine implements Runnable, IObserver {
 	    logger.info("Completed evaluating definitions");
 	    break;
 	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
-	    if (debug) {
-		File scFile = new File(XPERT.ws, "sc-" + phase + ".xml");
-		logger.info("Saving OVAL system-characteristics: " + scFile.getPath());
-		((ISystemCharacteristics)arg).writeXML(scFile);
-	    }
+	    // no-op
 	    break;
 	}
     }
@@ -320,5 +324,9 @@ public class Engine implements Runnable, IObserver {
 	    }
 	}
 	return rules;
+    }
+
+    private String encode(String s) {
+	return s.replace(System.getProperty("file.separator"), "~");
     }
 }
