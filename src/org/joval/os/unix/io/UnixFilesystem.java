@@ -153,7 +153,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 		    cleanRemoteCache = false;
 		    remoteCache = getRemoteCache(command, mounts);
 		    propsFile = getRemoteCacheProps();
-		    reader = PerishableReader.newInstance(new GZIPInputStream(remoteCache.getInputStream()), S);
+		    reader = new BufferedReader(new GZIPInputStream(remoteCache.getInputStream()));
 		} else {
 		    //
 		    // Read from the local state file, or create one while reading from the remote state file.
