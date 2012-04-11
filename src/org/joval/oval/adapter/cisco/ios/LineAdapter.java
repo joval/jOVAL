@@ -39,8 +39,8 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class LineAdapter implements IAdapter {
-    IIosSession session;
-    long readTimeout = 0;
+    private IIosSession session;
+    private long readTimeout = 0;
 
     // Implement IAdapter
 

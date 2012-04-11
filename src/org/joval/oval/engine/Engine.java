@@ -593,6 +593,7 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 			}
 		    }
 */
+		    // DAS: in lieu of the above logic, simply add all the collected items...
 		    items.addAll(collectedItems);
 
 		    messages.addAll(rc.getMessages());

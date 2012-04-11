@@ -35,14 +35,14 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 
 /**
- * Provides Cisco IOS Global OVAL items.
+ * Provides Juniper JUNOS Global OVAL items, by converting the hierarchical configuration into set commands.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class GlobalAdapter implements IAdapter {
-    IJunosSession session;
-    long readTimeout = 0;
+    private IJunosSession session;
+    private long readTimeout = 0;
 
     // Implement IAdapter
 

@@ -285,16 +285,16 @@ public class Main implements IObserver {
 	    break;
 	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS: {
 	    ISystemCharacteristics sc = (ISystemCharacteristics)arg;
-	    print(getMessage("MESSAGE_SAVING_SYSTEMCHARACTERISTICS", state.dataFile.toString()));
+	    print(getMessage("MESSAGE_SAVING_SYSTEMCHARACTERISTICS", state.getPath(state.dataFile)));
 	    sc.writeXML(state.dataFile);
 	    if (state.schematronSC) {
 		try {
-		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.dataFile.toString()));
-		    if (!validateSchema(state.dataFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
+		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.getPath(state.dataFile)));
+		    if (!validateSchema(state.dataFile, SystemCharacteristicsSchemaFilter.list())) {
 			state.plugin.getSession().disconnect();
 			System.exit(ERR);
 		    }
-		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.dataFile.toString()));
+		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.getPath(state.dataFile)));
 		    OvalSystemCharacteristics osc = sc.getOvalSystemCharacteristics(false);
 		    new Validator(state.getSCSchematron()).validate(sc.getSource());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
@@ -327,46 +327,6 @@ public class Main implements IObserver {
 
     // Private
 
-    static String[] DEFINITIONS_SCHEMAS			= {"aix-definitions-schema.xsd",
-							   "apache-definitions-schema.xsd",
-							   "catos-definitions-schema.xsd",
-							   "esx-definitions-schema.xsd",
-							   "freebsd-definitions-schema.xsd",
-							   "hpux-definitions-schema.xsd",
-							   "independent-definitions-schema.xsd",
-							   "ios-definitions-schema.xsd",
-							   "junos-definitions-schema.xsd",
-							   "linux-definitions-schema.xsd",
-							   "macos-definitions-schema.xsd",
-							   "oval-common-schema.xsd",
-							   "oval-definitions-schema.xsd",
-							   "pixos-definitions-schema.xsd",
-							   "sharepoint-definitions-schema.xsd",
-							   "solaris-definitions-schema.xsd",
-							   "unix-definitions-schema.xsd",
-							   "windows-definitions-schema.xsd",
-							   "xmldsig-core-schema.xsd"};
-
-    static String[] SYSTEMCHARACTERISTICS_SCHEMAS	= {"aix-system-characteristics-schema.xsd",
-							   "apache-system-characteristics-schema.xsd",
-							   "catos-system-characteristics-schema.xsd",
-							   "esx-system-characteristics-schema.xsd",
-							   "freebsd-system-characteristics-schema.xsd",
-							   "hpux-system-characteristics-schema.xsd",
-							   "independent-system-characteristics-schema.xsd",
-							   "ios-system-characteristics-schema.xsd",
-							   "junos-system-characteristics-schema.xsd",
-							   "linux-system-characteristics-schema.xsd",
-							   "macos-system-characteristics-schema.xsd",
-							   "oval-common-schema.xsd",
-							   "oval-system-characteristics-schema.xsd",
-							   "pixos-system-characteristics-schema.xsd",
-							   "sharepoint-system-characteristics-schema.xsd",
-							   "solaris-system-characteristics-schema.xsd",
-							   "unix-system-characteristics-schema.xsd",
-							   "windows-system-characteristics-schema.xsd",
-							   "xmldsig-core-schema.xsd"};
-
     private static int OK	= 0;
     private static int ERR	= 1;
 
@@ -383,19 +343,19 @@ public class Main implements IObserver {
 		print(Checksum.getMD5Checksum(state.defsFile));
 		return OK;
 	    } else if (state.validateChecksum) {
-		print(" ** verifying the MD5 hash of '" + state.defsFile.toString() + "' file");
+		print(" ** verifying the MD5 hash of '" + state.getPath(state.defsFile) + "' file");
 		String checksum = Checksum.getMD5Checksum(state.defsFile);
 		if (!state.specifiedChecksum.equals(checksum)) {
-		    print(getMessage("ERROR_CHECKSUM_MISMATCH", state.defsFile.toString()));
+		    print(getMessage("ERROR_CHECKSUM_MISMATCH", state.getPath(state.defsFile)));
 		    return ERR;
 		}
 	    }
 
-	    print(getMessage("MESSAGE_PARSING_FILE", state.defsFile.toString()));
+	    print(getMessage("MESSAGE_PARSING_FILE", state.getPath(state.defsFile)));
 	    IDefinitions defs = OvalFactory.createDefinitions(state.defsFile);
 
 	    print(getMessage("MESSAGE_VALIDATING_XML"));
-	    if (!validateSchema(state.defsFile, DEFINITIONS_SCHEMAS)) {
+	    if (!validateSchema(state.defsFile, DefinitionsSchemaFilter.list())) {
 		return ERR;
 	    }
 
@@ -408,7 +368,7 @@ public class Main implements IObserver {
 	    }
 
 	    if (state.schematronDefs) {
-		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.defsFile.toString()));
+		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.getPath(state.defsFile)));
 		try {
 		    new Validator(state.getDefsSchematron()).validate(defs.getSource());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
@@ -439,9 +399,9 @@ public class Main implements IObserver {
 	    if (state.inputFile == null) {
 		print(getMessage("MESSAGE_CREATING_SYSTEMCHARACTERISTICS"));
 	    } else {
-		print(" ** parsing " + state.inputFile.toString() + " for analysis.");
+		print(" ** parsing " + state.getPath(state.inputFile) + " for analysis.");
 		print(getMessage("MESSAGE_VALIDATING_XML"));
-		if (validateSchema(state.inputFile, SYSTEMCHARACTERISTICS_SCHEMAS)) {
+		if (validateSchema(state.inputFile, SystemCharacteristicsSchemaFilter.list())) {
 		    sc = OvalFactory.createSystemCharacteristics(state.inputFile);
 		} else {
 		    return ERR;
@@ -497,12 +457,16 @@ public class Main implements IObserver {
 	    print("");
 	    print(getMessage("MESSAGE_DEFINITIONS_EVALUATED"));
 	    print("");
-	    print(getMessage("MESSAGE_SAVING_RESULTS", state.resultsXML.toString()));
+	    print(getMessage("MESSAGE_SAVING_RESULTS", state.getPath(state.resultsXML)));
 	    results.writeXML(state.resultsXML);
 	    if (state.schematronResults) {
-		print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.resultsXML.toString()));
 		try {
-		    new Validator(state.getResultsSchematron()).validate(defs.getSource());
+		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.getPath(state.resultsXML)));
+		    if (!validateSchema(state.dataFile, SystemCharacteristicsSchemaFilter.list())) {
+			return ERR;
+		    }
+		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.getPath(state.resultsXML)));
+		    new Validator(state.getResultsSchematron()).validate(results.getSource());
 		    print(getMessage("MESSAGE_SCHEMATRON_SUCCESS"));
 		} catch (ValidationException e) {
 		    List<String> errors = e.getErrors();
@@ -524,7 +488,7 @@ public class Main implements IObserver {
 		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
 	    }
 	    if (state.applyTransform) {
-		print(getMessage("MESSAGE_RUNNING_TRANSFORM", state.getXMLTransform().toString()));
+		print(getMessage("MESSAGE_RUNNING_TRANSFORM", state.getPath(state.getXMLTransform())));
 		results.writeTransform(state.getXMLTransform(), state.resultsTransform);
 	    } else {
 		print(getMessage("MESSAGE_SKIPPING_TRANSFORM"));
@@ -548,8 +512,8 @@ public class Main implements IObserver {
 	}
     }
 
-    private boolean validateSchema(File f, String[] fnames) throws SAXException, IOException {
-	SchemaValidator validator = new SchemaValidator(state.xmlDir, fnames);
+    private boolean validateSchema(File f, File[] schemas) throws SAXException, IOException {
+	SchemaValidator validator = new SchemaValidator(schemas);
 	if (validator.validate(f)) {
 	    return true;
 	} else {
@@ -588,6 +552,35 @@ public class Main implements IObserver {
 		}
 	    }
 	    return line.toString();
+	}
+    }
+
+
+    static final String SIGNATURE_SCHEMA = "xmldsig-core-schema.xsd";
+    static final String DEFINITION_SCHEMA = "-definitions-schema.xsd";
+    static final String SYSTEMCHARACTERISTICS_SCHEMA = "-system-characteristics-schema.xsd";
+
+    private static class DefinitionsSchemaFilter implements FilenameFilter {
+	static File[] list() {
+	    return state.xmlDir.listFiles(new DefinitionsSchemaFilter());
+	}
+
+	DefinitionsSchemaFilter() {}
+
+	public boolean accept(File dir, String fname) {
+	    return fname.equals(SIGNATURE_SCHEMA) || fname.endsWith(DEFINITION_SCHEMA);
+	}
+    }
+
+    private static class SystemCharacteristicsSchemaFilter implements FilenameFilter {
+	static File[] list() {
+	    return state.xmlDir.listFiles(new SystemCharacteristicsSchemaFilter());
+	}
+
+	SystemCharacteristicsSchemaFilter() {}
+
+	public boolean accept(File dir, String fname) {
+	    return fname.equals(SIGNATURE_SCHEMA) || fname.endsWith(SYSTEMCHARACTERISTICS_SCHEMA);
 	}
     }
 }

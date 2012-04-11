@@ -5,7 +5,6 @@ package org.joval.xml;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Vector;
 import javax.xml.XMLConstants;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
@@ -28,16 +27,12 @@ public class SchemaValidator {
      * Create a SchemaValidator that will validate XML structures against the specified list of XSD schema files in the
      * specified base directory.
      */
-    public SchemaValidator(File baseDir, String[] fnames) throws SAXException, IOException {
-	Vector<Source> list = new Vector<Source>();
-	for (int i=0; i < fnames.length; i++) {
-	    File schemaFile = new File(baseDir, fnames[i]);
-	    if (schemaFile.exists()) {
-		list.add(new StreamSource(schemaFile));
-	    }
+    public SchemaValidator(File[] schemaFiles) throws SAXException, IOException {
+	Source[] sources = new Source[schemaFiles.length];
+	for (int i=0; i < schemaFiles.length; i++) {
+	    sources[i] = new StreamSource(schemaFiles[i]);
 	}
-	Source[] sources = list.toArray(new Source[list.size()]);
-	Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(list.toArray(sources));
+	Schema schema = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI).newSchema(sources);
 	validator = schema.newValidator();
     }
 

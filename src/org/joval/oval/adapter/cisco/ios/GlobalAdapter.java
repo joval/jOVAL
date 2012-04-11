@@ -41,7 +41,7 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class GlobalAdapter implements IAdapter {
-    IIosSession session;
+    private IIosSession session;
 
     // Implement IAdapter
 

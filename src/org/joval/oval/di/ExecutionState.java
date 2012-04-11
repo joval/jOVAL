@@ -43,6 +43,7 @@ public class ExecutionState {
     static final String DEFAULT_RESULTS_SCHEMATRON	= "oval-results-schematron.xsl";
     static final String DEFAULT_PLUGIN			= "default";
 
+    static File CWD = new File(".");
     static File BASE_DIR = new File(".");
     static{
 	String s = System.getProperty("jovaldi.baseDir");
@@ -96,12 +97,12 @@ public class ExecutionState {
 	inputFile = null;
 	definitionIDs = null;
 	specifiedChecksum = null;
-	defsFile = new File(BASE_DIR, DEFAULT_DEFINITIONS);
+	defsFile = new File(CWD, DEFAULT_DEFINITIONS);
 	inputDefsFile = null;
-	directivesFile = new File(BASE_DIR, DEFAULT_DIRECTIVES);
-	variablesFile = new File(BASE_DIR, DEFAULT_VARIABLES);
-	logFile = new File(BASE_DIR, DEFAULT_LOGFILE);
-	xmlDir = new File(BASE_DIR, DEFAULT_XMLDIR);
+	directivesFile = new File(CWD, DEFAULT_DIRECTIVES);
+	variablesFile = new File(CWD, DEFAULT_VARIABLES);
+	logFile = new File(CWD, DEFAULT_LOGFILE);
+	xmlDir = new File(CWD, DEFAULT_XMLDIR);
 	xmlTransform = null;
 	schematronDefsXform = null;
 	logLevel = Level.INFO;
@@ -109,9 +110,9 @@ public class ExecutionState {
 	//
 	// Outputs
 	//
-	dataFile = new File(BASE_DIR, DEFAULT_DATA);
-	resultsXML = new File(BASE_DIR, DEFAULT_RESULTS_XML);
-	resultsTransform = new File(BASE_DIR, DEFAULT_RESULTS_XFORM);
+	dataFile = new File(CWD, DEFAULT_DATA);
+	resultsXML = new File(CWD, DEFAULT_RESULTS_XML);
+	resultsTransform = new File(CWD, DEFAULT_RESULTS_XFORM);
 
 	//
 	// Behaviors
@@ -153,6 +154,19 @@ public class ExecutionState {
 	    return new File(xmlDir, DEFAULT_RESULTS_SCHEMATRON);
 	} else {
 	    return schematronResultsXform;
+	}
+    }
+
+    String getPath(File f) {
+	String path = f.getAbsolutePath();
+	String base = CWD.getAbsolutePath();
+	if (!base.endsWith(File.separator)) {
+	    base = base + File.separator;
+	}
+	if (path.startsWith(base)) {
+	    return path.substring(base.length());
+	} else {
+	    return path;
 	}
     }
 
@@ -313,7 +327,7 @@ public class ExecutionState {
 	try {
 	    if (plugin != null) {
 		if (pluginConfig == null) {
-		    File config = new File(BASE_DIR, IPlugin.DEFAULT_FILE);
+		    File config = new File(CWD, IPlugin.DEFAULT_FILE);
 		    if (config.exists()) {
 			pluginConfig = new Properties();
 			pluginConfig.load(new FileInputStream(config));
