@@ -7,8 +7,8 @@ import java.util.NoSuchElementException;
 
 import org.slf4j.cal10n.LocLogger;
 
-import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.juniper.system.IJunosSession;
+import org.joval.intf.juniper.system.ISupportInformation;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFilesystem;
@@ -18,6 +18,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.os.cisco.system.IosSession;
 import org.joval.protocol.netconf.NetconfSession;
 import org.joval.ssh.system.SshSession;
+import org.joval.util.AbstractBaseSession;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -26,31 +27,58 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class JunosSession extends IosSession implements IJunosSession {
+public class JunosSession extends AbstractBaseSession implements ILocked, IJunosSession {
+    private SshSession ssh;
+    private ISupportInformation supportInfo;
+    private boolean initialized;
+
     /**
      * Create an IOS session with a live SSH connection to a router.
      */
     public JunosSession(SshSession ssh) {
-	super(ssh);
+	super();
+	this.ssh = ssh;
+	initialized = false;
     }
 
-    public JunosSession(ITechSupport techSupport) {
-	super(techSupport);
+    public JunosSession(ISupportInformation supportInfo) {
+	super();
+	this.supportInfo = supportInfo;
     }
 
-    // Overrides
+    // Implement IJunosSession
 
-    @Override
+    public ISupportInformation getSupportInformation() {
+	return supportInfo;
+    }
+
     public INetconf getNetconf() {
-	return new NetconfSession(ssh, internalProps.getLongProperty(IJunosSession.PROP_READ_TIMEOUT));
+	return new NetconfSession(ssh, internalProps.getLongProperty(PROP_READ_TIMEOUT));
     }
 
+    // Implement ILocked
+
+    public boolean unlock(ICredential cred) {
+	return ssh.unlock(cred);
+    }
+
+    // Implement ILogger
+
     @Override
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
+	if (ssh != null) {
+	    ssh.setLogger(logger);
+	}
+    }
+
+    // Implement IBaseSession
+
     public String getHostname() {
 	if (ssh != null) {
 	    return ssh.getHostname();
 	} else {
-	    for (String line : techSupport.getData("show version detail")) {
+	    for (String line : supportInfo.getData("show version detail")) {
 		if (line.startsWith("Hostname: ")) {
 		    return line.substring(10).trim();
 		}
@@ -60,15 +88,25 @@ public class JunosSession extends IosSession implements IJunosSession {
     }
 
     @Override
+    public boolean isConnected() {
+	if (ssh != null) {
+	    return ssh.isConnected();
+	} else if (supportInfo != null) {
+	    return connected; // offline mode
+	} else {
+	    return false;
+	}
+    }
+
     public boolean connect() {
 	if (ssh == null) {
-	    return false;
+	    return (connected = supportInfo != null);
 	} else if (ssh.connect()) {
 	    if (initialized) {
 		return true;
 	    } else {
 		try {
-		    techSupport = new SupportInformation(this);
+		    supportInfo = new SupportInformation(this);
 		    initialized = true;
 		    return true;
 		} catch (Exception e) {
@@ -81,7 +119,13 @@ public class JunosSession extends IosSession implements IJunosSession {
 	}
     }
 
-    @Override
+    public void disconnect() {
+	if (ssh != null) {
+	    ssh.disconnect();
+	}
+	connected = false;
+    }
+
     public IProcess createProcess(String command, String[] env) throws Exception {
 	if (ssh == null) {
 	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_JUNOS_OFFLINE));
@@ -90,7 +134,6 @@ public class JunosSession extends IosSession implements IJunosSession {
 	}
     }
 
-    @Override
     public Type getType() {
 	return Type.JUNIPER_JUNOS;
     }

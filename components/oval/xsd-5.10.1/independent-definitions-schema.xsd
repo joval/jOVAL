@@ -770,6 +770,7 @@
          <xsd:restriction base="oval-def:EntityStateStringType">
             <xsd:enumeration value="catos"/>
             <xsd:enumeration value="ios"/>
+            <xsd:enumeration value="junos"/>
             <xsd:enumeration value="macos"/>
             <xsd:enumeration value="pixos"/>
             <xsd:enumeration value="undefined"/>

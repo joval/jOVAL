@@ -1,7 +1,7 @@
-// Copyright (C) 2011 jOVAL.org.  All rights reserved.
+// Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.oval.adapter.cisco.ios;
+package org.joval.oval.adapter.junos;
 
 import java.util.Collection;
 import java.util.List;
@@ -15,15 +15,15 @@ import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.ios.GlobalObject;
+import oval.schemas.definitions.junos.GlobalObject;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.ios.GlobalItem;
+import oval.schemas.systemcharacteristics.junos.GlobalItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.cisco.system.IIosSession;
-import org.joval.intf.cisco.system.ITechSupport;
+import org.joval.intf.juniper.system.IJunosSession;
+import org.joval.intf.juniper.system.ISupportInformation;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
@@ -41,44 +41,49 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class GlobalAdapter implements IAdapter {
-    IIosSession session;
+    IJunosSession session;
+    long readTimeout = 0;
 
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
 	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IIosSession) {
-	    this.session = (IIosSession)session;
+	if (session instanceof IJunosSession) {
+	    readTimeout = session.getProperties().getLongProperty(IJunosSession.PROP_READ_TIMEOUT);
+	    this.session = (IJunosSession)session;
 	    classes.add(GlobalObject.class);
 	}
 	return classes;
     }
-
-    private static final String BUILDING = "Building configuration...";
-    private static final String CURRENT = "Current configuration";
 
     public Collection<GlobalItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
 	GlobalObject gObj = (GlobalObject)obj;
 	EntityObjectStringType globalCommand = gObj.getGlobalCommand();
 	OperationEnumeration op = globalCommand.getOperation();
 
-	List<String> lines = null;
-	String command = (String)globalCommand.getValue();
-	try {
-	    lines = session.getTechSupport().getData(ITechSupport.GLOBAL);
-	} catch (NoSuchElementException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ITechSupport.GLOBAL));
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-
 	Collection<GlobalItem> items = new Vector<GlobalItem>();
-	for (String line : lines) {
-	    if (isGlobalCommand(line)) {
+	try {
+	    String command = (String)globalCommand.getValue();
+	    List<String> lines = null;
+	    try {
+		lines = session.getSupportInformation().getData(ISupportInformation.GLOBAL);
+	    } catch (NoSuchElementException e) {
+		try {
+		    lines = SafeCLI.multiLine(ISupportInformation.GLOBAL, session, readTimeout);
+		} catch (Exception e2) {
+		    for (String heading : session.getSupportInformation().getHeadings()) {
+			if (heading.startsWith(ISupportInformation.GLOBAL)) {
+			    lines = session.getSupportInformation().getData(heading);
+			}
+		    }
+		    if (lines == null) {
+			throw e;
+		    }
+		}
+	    }
+	    for (String line : lines) {
 		boolean add = false;
-
+    
 		switch(op) {
 		  case EQUALS:
 		    add = line.equals(command);
@@ -92,24 +97,22 @@ public class GlobalAdapter implements IAdapter {
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
-
+    
 		if (add) {
-		    GlobalItem item = Factories.sc.ios.createGlobalItem();
+		    GlobalItem item = Factories.sc.junos.createGlobalItem();
 		    EntityItemStringType globalCommandType = Factories.sc.core.createEntityItemStringType();
 		    globalCommandType.setValue(line);
 		    item.setGlobalCommand(globalCommandType);
 		    items.add(item);
 		}
 	    }
+	} catch (NoSuchElementException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ISupportInformation.GLOBAL));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
-    }
-
-    private boolean isGlobalCommand(String line) {
-	return line.length() > 0 &&		// not an empty line
-	       !line.startsWith(BUILDING) &&	// not a remark
-	       !line.startsWith(CURRENT) &&	// not a remark
-	       !line.startsWith("!") &&		// not a comment
-	       !line.startsWith(" ");		// global context command
     }
 }

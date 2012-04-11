@@ -106,13 +106,16 @@ public class CiscoPlugin extends BasePlugin {
 		out.write(buff, 0, len);
 	    }
 
+	    IPlugin plugin = null;
 	    ITechSupport tech = null;
 	    tech = new TechSupport(new ByteArrayInputStream(out.toByteArray()));
 	    if (tech.getHeadings().size() == 0) {
-		tech = new SupportInformation(new ByteArrayInputStream(out.toByteArray()));
+		ISupportInformation info = new SupportInformation(new ByteArrayInputStream(out.toByteArray()));
+		plugin = new CiscoPlugin(info);
+	    } else {
+		plugin = new CiscoPlugin(tech);
 	    }
 
-	    CiscoPlugin plugin = new CiscoPlugin(tech);
 	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.EXHAUSTIVE, plugin.getSession());
 	    engine.setDefinitions(OvalFactory.createDefinitions(new File(argv[0])));
 	    engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
@@ -216,6 +219,10 @@ public class CiscoPlugin extends BasePlugin {
 
     // Implement IPlugin
 
+    public CiscoPlugin() {
+	super();
+    }
+
     @Override
     public void configure(Properties props) throws Exception {
 	super.configure(props);
@@ -235,10 +242,10 @@ public class CiscoPlugin extends BasePlugin {
 
 	ITechSupport tech = new TechSupport(new ByteArrayInputStream(out.toByteArray()));
 	if (tech.getHeadings().size() == 0) {
-	    tech = new SupportInformation(new ByteArrayInputStream(out.toByteArray()));
+	    session = new JunosSession(new SupportInformation(new ByteArrayInputStream(out.toByteArray())));
+	} else {
+	    session = new IosSession(tech);
 	}
-
-	session = new IosSession(tech);
     }
 
     // Private
@@ -246,6 +253,11 @@ public class CiscoPlugin extends BasePlugin {
     private CiscoPlugin(ITechSupport tech) {
 	super();
 	session = new IosSession(tech);
+    }
+
+    private CiscoPlugin(ISupportInformation info) {
+	super();
+	session = new JunosSession(info);
     }
 }
 

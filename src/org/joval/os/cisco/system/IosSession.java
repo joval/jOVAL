@@ -27,9 +27,9 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class IosSession extends AbstractBaseSession implements ILocked, IIosSession {
-    protected SshSession ssh;
-    protected ITechSupport techSupport;
-    protected boolean initialized;
+    private SshSession ssh;
+    private ITechSupport techSupport;
+    private boolean initialized;
 
     /**
      * Create an IOS session with a live SSH connection to a router.

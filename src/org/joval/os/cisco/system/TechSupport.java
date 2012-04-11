@@ -28,10 +28,8 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class TechSupport implements ITechSupport {
-    protected Hashtable<String, List<String>> data = new Hashtable<String, List<String>>();
-    protected LocLogger logger;
-
-    protected TechSupport() {}
+    private Hashtable<String, List<String>> data = new Hashtable<String, List<String>>();
+    private LocLogger logger;
 
     /**
      * Load tech-support information from a stream source.
@@ -92,7 +90,7 @@ public class TechSupport implements ITechSupport {
 	}
     }
 
-    // Internal
+    // Private
 
     /**
      * Populate the structure from a sequential list of lines.
@@ -120,8 +118,6 @@ public class TechSupport implements ITechSupport {
 	    }
 	}
     }
-
-    // Private
 
     private static final int DASHLEN = DASHES.length();
 

@@ -216,6 +216,11 @@ CLASSES=\
 	oval.schemas.systemcharacteristics.ios.VersionItem	\
 	oval.schemas.systemcharacteristics.ios.SnmpItem	\
 	oval.schemas.systemcharacteristics.ios.TclshItem	\
+	oval.schemas.systemcharacteristics.junos.GlobalItem	\
+	oval.schemas.systemcharacteristics.junos.LineItem	\
+	oval.schemas.systemcharacteristics.junos.ObjectFactory	\
+	oval.schemas.systemcharacteristics.junos.package-info	\
+	oval.schemas.systemcharacteristics.junos.VersionItem	\
 	oval.schemas.systemcharacteristics.solaris.SmfItem	\
 	oval.schemas.systemcharacteristics.solaris.ObjectFactory	\
 	oval.schemas.systemcharacteristics.solaris.IsainfoItem	\
@@ -230,6 +235,7 @@ CLASSES=\
 	oval.schemas.systemcharacteristics.freebsd.ObjectFactory	\
 	oval.schemas.systemcharacteristics.freebsd.package-info	\
 	oval.schemas.systemcharacteristics.freebsd.PortinfoItem	\
+	oval.schemas.systemcharacteristics.windows.LicenseItem	\
 	oval.schemas.systemcharacteristics.windows.FileeffectiverightsItem	\
 	oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType	\
 	oval.schemas.systemcharacteristics.windows.AuditeventpolicyItem	\
@@ -720,6 +726,17 @@ CLASSES=\
 	oval.schemas.definitions.ios.SnmpState	\
 	oval.schemas.definitions.ios.SnmpObject	\
 	oval.schemas.definitions.ios.VersionTest	\
+	oval.schemas.definitions.junos.GlobalObject	\
+	oval.schemas.definitions.junos.GlobalState	\
+	oval.schemas.definitions.junos.GlobalTest	\
+	oval.schemas.definitions.junos.LineObject	\
+	oval.schemas.definitions.junos.LineState	\
+	oval.schemas.definitions.junos.LineTest	\
+	oval.schemas.definitions.junos.ObjectFactory	\
+	oval.schemas.definitions.junos.package-info	\
+	oval.schemas.definitions.junos.VersionObject	\
+	oval.schemas.definitions.junos.VersionState	\
+	oval.schemas.definitions.junos.VersionTest	\
 	oval.schemas.definitions.solaris.PackageState	\
 	oval.schemas.definitions.solaris.PackagecheckState	\
 	oval.schemas.definitions.solaris.PackagecheckObject	\
@@ -752,6 +769,9 @@ CLASSES=\
 	oval.schemas.definitions.freebsd.PortinfoObject	\
 	oval.schemas.definitions.freebsd.package-info	\
 	oval.schemas.definitions.freebsd.PortinfoState	\
+	oval.schemas.definitions.windows.LicenseTest	\
+	oval.schemas.definitions.windows.LicenseObject	\
+	oval.schemas.definitions.windows.LicenseState	\
 	oval.schemas.definitions.windows.AuditeventpolicyState	\
 	oval.schemas.definitions.windows.ServiceeffectiverightsState	\
 	oval.schemas.definitions.windows.Wmi57Object	\
@@ -948,4 +968,4 @@ CLASSES=\
 	org.w3c.xml.signature.ManifestType	\
 	org.w3c.xml.signature.RSAKeyValueType	\
 	org.w3c.xml.signature.ObjectType	\
-	org.w3c.xml.signature.KeyValueType	\
+	org.w3c.xml.signature.KeyValueType

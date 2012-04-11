@@ -18,8 +18,6 @@ import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.juniper.system.IJunosSession;
 import org.joval.intf.juniper.system.ISupportInformation;
-import org.joval.intf.cisco.system.ITechSupport;
-import org.joval.os.cisco.system.TechSupport;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 
@@ -30,12 +28,33 @@ import org.joval.util.SafeCLI;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SupportInformation extends TechSupport implements ISupportInformation {
+public class SupportInformation implements ISupportInformation {
+    private Hashtable<String, List<String>> data = new Hashtable<String, List<String>>();
+    private LocLogger logger;
+
     /**
      * Load support information from a stream source.
      */
     public SupportInformation(InputStream in) throws IOException {
-	super(in);
+	logger = JOVALMsg.getLogger();
+	BufferedReader br = null;
+	try {
+	    br = new BufferedReader(new InputStreamReader(in));
+	    List<String> lines = new Vector<String>();
+	    String line = null;
+	    while ((line = br.readLine()) != null) {
+		lines.add(line);
+	    }
+	    load(lines);
+	} finally {
+	    if (br != null) {
+		try {
+		    br.close();
+		} catch (IOException e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION, e));
+		}
+	    }
+	}
     }
 
     /**
@@ -44,10 +63,35 @@ public class SupportInformation extends TechSupport implements ISupportInformati
     public SupportInformation(IJunosSession session) throws Exception {
 	logger = session.getLogger();
 	long readTimeout = session.getProperties().getLongProperty(IJunosSession.PROP_READ_TIMEOUT);
-	load(SafeCLI.multiLine("request support information", session, readTimeout));
+	load(SafeCLI.multiLine("show tech-support", session, readTimeout));
     }
 
-    // Internal
+    // Implement ISupportInformation
+
+    public Collection<String> getShowSubcommands() {
+	HashSet<String> subcommands = new HashSet<String>();
+	for (String heading : getHeadings()) {
+	    if (heading.toLowerCase().startsWith("show")) {
+		subcommands.add(heading);
+	    }
+	}
+	return subcommands;
+    }
+
+    public Collection<String> getHeadings() {
+	return data.keySet();
+    }
+
+    public List<String> getData(String heading) throws NoSuchElementException {
+	List<String> list = data.get(heading);
+	if (list == null) {
+	    throw new NoSuchElementException(heading);
+	} else {
+	    return list;
+	}
+    }
+
+    // Private
 
     private String prompt = null;
 
@@ -89,8 +133,6 @@ public class SupportInformation extends TechSupport implements ISupportInformati
 	    }
 	}
     }
-
-    // Private
 
     private boolean isHeading(String line) {
 	return line.startsWith(prompt);

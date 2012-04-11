@@ -58,6 +58,7 @@ public class Factories {
 	public oval.schemas.definitions.hpux.ObjectFactory hpux;
 	public oval.schemas.definitions.independent.ObjectFactory independent;
 	public oval.schemas.definitions.ios.ObjectFactory ios;
+	public oval.schemas.definitions.junos.ObjectFactory junos;
 	public oval.schemas.definitions.linux.ObjectFactory linux;
 	public oval.schemas.definitions.macos.ObjectFactory macos;
 	public oval.schemas.definitions.pixos.ObjectFactory pixos;
@@ -76,6 +77,7 @@ public class Factories {
 	    hpux = new oval.schemas.definitions.hpux.ObjectFactory();
 	    independent = new oval.schemas.definitions.independent.ObjectFactory();
 	    ios = new oval.schemas.definitions.ios.ObjectFactory();
+	    junos = new oval.schemas.definitions.junos.ObjectFactory();
 	    linux = new oval.schemas.definitions.linux.ObjectFactory();
 	    macos = new oval.schemas.definitions.macos.ObjectFactory();
 	    pixos = new oval.schemas.definitions.pixos.ObjectFactory();
@@ -99,6 +101,7 @@ public class Factories {
 	public oval.schemas.systemcharacteristics.hpux.ObjectFactory hpux;
 	public oval.schemas.systemcharacteristics.independent.ObjectFactory independent;
 	public oval.schemas.systemcharacteristics.ios.ObjectFactory ios;
+	public oval.schemas.systemcharacteristics.junos.ObjectFactory junos;
 	public oval.schemas.systemcharacteristics.linux.ObjectFactory linux;
 	public oval.schemas.systemcharacteristics.macos.ObjectFactory macos;
 	public oval.schemas.systemcharacteristics.pixos.ObjectFactory pixos;
@@ -117,6 +120,7 @@ public class Factories {
 	    hpux = new oval.schemas.systemcharacteristics.hpux.ObjectFactory();
 	    independent = new oval.schemas.systemcharacteristics.independent.ObjectFactory();
 	    ios = new oval.schemas.systemcharacteristics.ios.ObjectFactory();
+	    junos = new oval.schemas.systemcharacteristics.junos.ObjectFactory();
 	    linux = new oval.schemas.systemcharacteristics.linux.ObjectFactory();
 	    macos = new oval.schemas.systemcharacteristics.macos.ObjectFactory();
 	    pixos = new oval.schemas.systemcharacteristics.pixos.ObjectFactory();

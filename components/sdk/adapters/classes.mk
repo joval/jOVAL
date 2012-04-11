@@ -39,6 +39,9 @@ CLASSES=\
 	org.joval.oval.adapter.independent.Textfilecontent54Adapter	\
 	org.joval.oval.adapter.independent.TextfilecontentAdapter	\
 	org.joval.oval.adapter.independent.XmlfilecontentAdapter	\
+	org.joval.oval.adapter.junos.GlobalAdapter			\
+	org.joval.oval.adapter.junos.LineAdapter			\
+	org.joval.oval.adapter.junos.VersionAdapter			\
 	org.joval.oval.adapter.linux.RpminfoAdapter			\
 	org.joval.oval.adapter.macos.PlistAdapter			\
 	org.joval.oval.adapter.solaris.IsainfoAdapter			\

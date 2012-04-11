@@ -40,6 +40,9 @@ public class SysinfoFactory {
 	  case CISCO_IOS:
 	    return FamilyEnumeration.IOS;
 
+	  case JUNIPER_JUNOS:
+	    return FamilyEnumeration.JUNOS;
+
 	  default:
 	    return FamilyEnumeration.UNDEFINED;
 	}

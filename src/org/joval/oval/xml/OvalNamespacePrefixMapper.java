@@ -100,6 +100,7 @@ public class OvalNamespacePrefixMapper extends NamespacePrefixMapper {
 	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#independent", "ind-sc");
 	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows", "windows-sc");
 	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#ios", "ios-sc");
+	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#junos", "junos-sc");
 	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux", "linux-sc");
 	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#unix", "unix-sc");
 	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#solaris", "solaris-sc");
@@ -116,6 +117,7 @@ public class OvalNamespacePrefixMapper extends NamespacePrefixMapper {
 	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#independent", "ind-def");
 	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#windows", "ind-def");
 	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#ios", "ios-def");
+	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#junos", "junos-def");
 	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#linux", "ind-def");
 	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#unix", "ind-def");
 	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris", "ind-def");

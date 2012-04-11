@@ -8,7 +8,7 @@ import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.NoSuchElementException;
 
-import org.joval.intf.cisco.system.ITechSupport;
+import org.joval.intf.juniper.system.ISupportInformation;
 
 /**
  * Tool for creating Network Interface information from an ISession attached to a JunOS device.
@@ -17,11 +17,11 @@ import org.joval.intf.cisco.system.ITechSupport;
  * @version %I% %G%
  */
 class JunosNetworkInterface {
-    static List<JunosNetworkInterface> getInterfaces(ITechSupport techSupport) throws NoSuchElementException {
+    static List<JunosNetworkInterface> getInterfaces(ISupportInformation supportInfo) throws NoSuchElementException {
 	Vector<JunosNetworkInterface> interfaces = new Vector<JunosNetworkInterface>();
 	Vector<String> lines = new Vector<String>();
 	String mac = null;
-	for (String line : techSupport.getData("show interfaces extensive")) {
+	for (String line : supportInfo.getData("show interfaces extensive")) {
 	    line = line.trim();
 	    if (line.startsWith("Physical interface")) {
 		mac = null;
@@ -90,7 +90,6 @@ class JunosNetworkInterface {
 	tok.nextToken();
 	tok.nextToken();
 	description = tok.nextToken();
-System.out.println("DAS new interface " + description + ", mac=" +mac);
 	if (lines.size() > 1) {
 	    for (int i=1; i < lines.size(); i++) {
 		String line = lines.get(i).trim();

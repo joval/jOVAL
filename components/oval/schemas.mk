@@ -16,6 +16,8 @@ SCHEMAS=	\
 	independent-system-characteristics-schema.xsd	\
 	ios-definitions-schema.xsd			\
 	ios-system-characteristics-schema.xsd		\
+	junos-definitions-schema.xsd			\
+	junos-system-characteristics-schema.xsd		\
 	linux-definitions-schema.xsd			\
 	linux-system-characteristics-schema.xsd		\
 	macos-definitions-schema.xsd			\
