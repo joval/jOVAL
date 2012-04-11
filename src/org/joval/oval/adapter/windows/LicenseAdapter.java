@@ -3,10 +3,8 @@
 
 package org.joval.oval.adapter.windows;
 
-import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Collection;
 import java.util.Vector;
 import java.util.regex.Pattern;
@@ -24,7 +22,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.windows.EntityItemRegistryTypeType;
 import oval.schemas.systemcharacteristics.windows.LicenseItem;
-import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
@@ -32,10 +29,10 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.registry.ILicenseData;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.io.LittleEndian;
 import org.joval.oval.Factories;
 import org.joval.oval.CollectException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Provides access to Windows License data.
@@ -122,28 +119,39 @@ public class LicenseAdapter implements IAdapter {
 	LicenseItem item = Factories.sc.windows.createLicenseItem();
 
 	EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
-	nameType.setValue(item.getName());
+	nameType.setValue(entry.getName());
 	nameType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	item.setName(Factories.sc.windows.createLicenseItemName(nameType));
 
 	EntityItemRegistryTypeType registryType = Factories.sc.windows.createEntityItemRegistryTypeType();
 	EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-	valueType.setValue(entry.toString());
 	switch(entry.getType()) {
-	  case ILicenseData.IEntry.TYPE_BINARY:
+	  case ILicenseData.IEntry.TYPE_BINARY: {
 	    valueType.setDatatype(SimpleDatatypeEnumeration.BINARY.value());
+	    byte[] data = ((ILicenseData.IBinaryEntry)entry).getData();
+	    StringBuffer sb = new StringBuffer();
+	    for (int i=0; i < data.length; i++) {
+		sb.append(LittleEndian.toHexString(data[i]));
+	    }
+	    valueType.setValue(sb.toString());
 	    registryType.setValue("reg_binary");
 	    break;
-	  case ILicenseData.IEntry.TYPE_DWORD:
+	  }
+	  case ILicenseData.IEntry.TYPE_DWORD: {
 	    valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	    valueType.setValue(Integer.toString(((ILicenseData.IDwordEntry)entry).getData()));
 	    registryType.setValue("reg_dword");
 	    break;
-	  case ILicenseData.IEntry.TYPE_SZ:
+	  }
+	  case ILicenseData.IEntry.TYPE_SZ: {
 	    valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+	    valueType.setValue(((ILicenseData.IStringEntry)entry).getData());
 	    registryType.setValue("reg_sz");
 	    break;
+	  }
 	}
 	item.setType(registryType);
+	item.setValue(valueType);
 
 	return item;
     }
