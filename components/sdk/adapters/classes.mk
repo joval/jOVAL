@@ -58,6 +58,7 @@ CLASSES=\
 	org.joval.oval.adapter.windows.Fileeffectiverights53Adapter	\
 	org.joval.oval.adapter.windows.GroupAdapter			\
 	org.joval.oval.adapter.windows.GroupSidAdapter			\
+	org.joval.oval.adapter.windows.LicenseAdapter			\
 	org.joval.oval.adapter.windows.RegistryAdapter			\
 	org.joval.oval.adapter.windows.SidAdapter			\
 	org.joval.oval.adapter.windows.SidSidAdapter			\
