@@ -68,18 +68,7 @@ public class GlobalAdapter implements IAdapter {
 	    try {
 		lines = session.getSupportInformation().getData(ISupportInformation.GLOBAL);
 	    } catch (NoSuchElementException e) {
-		try {
-		    lines = SafeCLI.multiLine(ISupportInformation.GLOBAL, session, readTimeout);
-		} catch (Exception e2) {
-		    for (String heading : session.getSupportInformation().getHeadings()) {
-			if (heading.startsWith(ISupportInformation.GLOBAL)) {
-			    lines = session.getSupportInformation().getData(heading);
-			}
-		    }
-		    if (lines == null) {
-			throw e;
-		    }
-		}
+		lines = SafeCLI.multiLine(ISupportInformation.GLOBAL, session, readTimeout);
 	    }
 	    for (String line : lines) {
 		boolean add = false;
@@ -106,10 +95,10 @@ public class GlobalAdapter implements IAdapter {
 		    items.add(item);
 		}
 	    }
-	} catch (NoSuchElementException e) {
+	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ISupportInformation.GLOBAL));
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_JUNOS_SHOW, ISupportInformation.GLOBAL));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}

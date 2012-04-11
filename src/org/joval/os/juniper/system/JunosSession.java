@@ -44,11 +44,20 @@ public class JunosSession extends AbstractBaseSession implements ILocked, IJunos
     public JunosSession(ISupportInformation supportInfo) {
 	super();
 	this.supportInfo = supportInfo;
+	initialized = true;
     }
 
     // Implement IJunosSession
 
     public ISupportInformation getSupportInformation() {
+	if (!initialized) {
+	    try {
+		supportInfo = new SupportInformation(this);
+		initialized = true;
+	    } catch (Exception e) {
+		logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	}
 	return supportInfo;
     }
 
@@ -100,22 +109,9 @@ public class JunosSession extends AbstractBaseSession implements ILocked, IJunos
 
     public boolean connect() {
 	if (ssh == null) {
-	    return (connected = supportInfo != null);
-	} else if (ssh.connect()) {
-	    if (initialized) {
-		return true;
-	    } else {
-		try {
-		    supportInfo = new SupportInformation(this);
-		    initialized = true;
-		    return true;
-		} catch (Exception e) {
-		    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		}
-		return false;
-	    }
+	    return (connected = initialized);
 	} else {
-	    return false;
+	    return ssh.connect();
 	}
     }
 

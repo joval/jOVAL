@@ -46,6 +46,7 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     public IosSession(ITechSupport techSupport) {
 	super();
 	this.techSupport = techSupport;
+	initialized = true;
     }
 
     protected void handlePropertyChange(String key, String value) {}
@@ -57,6 +58,14 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     }
 
     public ITechSupport getTechSupport() {
+	if (!initialized) {
+	    try {
+		techSupport = new TechSupport(this);
+		initialized = true;
+	    } catch (Exception e) {
+		logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	}
 	return techSupport;
     }
 
@@ -104,24 +113,9 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 
     public boolean connect() {
 	if (ssh == null) {
-	    return (connected = techSupport != null);
-	} else if (ssh.connect()) {
-	    if (initialized) {
-		return true;
-	    } else {
-		try {
-		    techSupport = new TechSupport(this);
-		    initialized = true;
-		    return true;
-		} catch (NoSuchElementException e) {
-		    logger.warn(JOVALMsg.ERROR_IOS_TECH_SHOW, e.getMessage());
-		} catch (Exception e) {
-		    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		}
-		return false;
-	    }
+	    return (connected = initialized);
 	} else {
-	    return false;
+	    return ssh.connect();
 	}
     }
 

@@ -14,7 +14,7 @@ import java.util.NoSuchElementException;
  * @version %I% %G%
  */
 public interface ISupportInformation {
-    String GLOBAL = "show configuration";
+    String GLOBAL = "show configuration | display set";
 
     /**
      * A list of subcommands for which information is available.

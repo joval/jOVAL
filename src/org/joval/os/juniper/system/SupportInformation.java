@@ -63,7 +63,7 @@ public class SupportInformation implements ISupportInformation {
     public SupportInformation(IJunosSession session) throws Exception {
 	logger = session.getLogger();
 	long readTimeout = session.getProperties().getLongProperty(IJunosSession.PROP_READ_TIMEOUT);
-	load(SafeCLI.multiLine("show tech-support", session, readTimeout));
+	load(SafeCLI.multiLine("request support information", session, readTimeout));
     }
 
     // Implement ISupportInformation
