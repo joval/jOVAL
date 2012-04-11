@@ -185,6 +185,17 @@ public class LittleEndian {
 			len += 2;
 		    }
 		}
+	    } else {
+		//
+		// Strip any trailing NULLs before constructing the string
+		//
+		for (int i=offset+len; i > (offset + 2); ) {
+		    byte b2 = buff[--i];
+		    byte b1 = buff[--i];
+		    if (b1 == 0 && b2 == 0) {
+			len -= 2;
+		    }
+		}
 	    }
 	    return new String(buff, offset, len, Charset.forName("UTF-16LE"));
 	} catch (UnsupportedCharsetException e) {
