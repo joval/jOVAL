@@ -593,6 +593,7 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 			}
 		    }
 */
+		    items.addAll(collectedItems);
 
 		    messages.addAll(rc.getMessages());
 		    sc.setObject(objectId, null, null, null, null);
