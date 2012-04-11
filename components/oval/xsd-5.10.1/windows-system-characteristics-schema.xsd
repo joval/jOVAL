@@ -901,6 +901,28 @@
          </xsd:complexContent>
       </xsd:complexType>
    </xsd:element>
+
+<!-- addition by jOVAL -->
+
+   <xsd:element name="license_item" substitutionGroup="oval-sc:item">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-sc:ItemType">
+               <xsd:sequence>
+                  <xsd:element name="name" type="oval-sc:EntityItemStringType" minOccurs="0" maxOccurs="1"
+                               nillable="true"/>
+                  <xsd:element name="type" type="win-sc:EntityItemRegistryTypeType" minOccurs="0"
+                               maxOccurs="1"/>
+                  <xsd:element name="value" type="oval-sc:EntityItemAnySimpleType" minOccurs="0"
+                               maxOccurs="1"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+
+<!-- end jOVAL addition -->
+
    <xsd:element name="regkeyauditedpermissions_item" substitutionGroup="oval-sc:item">
       <xsd:complexType>
          <xsd:complexContent>

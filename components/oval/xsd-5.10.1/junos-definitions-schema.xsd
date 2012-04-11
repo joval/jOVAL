@@ -115,7 +115,7 @@
                   <xsd:choice>
                      <xsd:element ref="oval-def:set"/>
                      <xsd:sequence>
-                        <xsd:element name="component" type="oval-def:EntityObjectStringType"/>
+                        <xsd:element name="component" type="oval-def:EntityObjectStringType" minOccurs="0" maxOccurs="1"/>
                         <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
                      </xsd:sequence>
                   </xsd:choice>

@@ -1596,6 +1596,54 @@
          </xsd:complexContent>
       </xsd:complexType>
    </xsd:element>
+
+<!-- jOVAL addition follows -->
+
+   <xsd:element name="license_test" substitutionGroup="oval-def:test">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:TestType">
+               <xsd:sequence>
+                  <xsd:element name="object" type="oval-def:ObjectRefType"/>
+                  <xsd:element name="state" type="oval-def:StateRefType" minOccurs="0" maxOccurs="unbounded"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="license_object" substitutionGroup="oval-def:object">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:ObjectType">
+               <xsd:sequence>
+                  <xsd:choice>
+                     <xsd:element ref="oval-def:set"/>
+                     <xsd:sequence>
+                        <xsd:element name="name" type="oval-def:EntityObjectStringType" nillable="true"/>
+                        <xsd:element ref="oval-def:filter" minOccurs="0" maxOccurs="unbounded"/>
+                     </xsd:sequence>
+                  </xsd:choice>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+   <xsd:element name="license_state" substitutionGroup="oval-def:state">
+      <xsd:complexType>
+         <xsd:complexContent>
+            <xsd:extension base="oval-def:StateType">
+               <xsd:sequence>
+                  <xsd:element name="name" type="oval-def:EntityStateStringType" minOccurs="0"/>
+                  <xsd:element name="type" type="win-def:EntityStateRegistryTypeType" minOccurs="0"/>
+                  <xsd:element name="value" type="oval-def:EntityStateAnySimpleType" minOccurs="0"/>
+               </xsd:sequence>
+            </xsd:extension>
+         </xsd:complexContent>
+      </xsd:complexType>
+   </xsd:element>
+
+<!-- end jOVAL addition -->
+
    <xsd:complexType name="RegistryBehaviors">
       <xsd:attribute name="max_depth" use="optional" default="-1">
          <xsd:simpleType>
