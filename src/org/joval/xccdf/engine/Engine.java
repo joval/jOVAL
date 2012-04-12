@@ -147,10 +147,9 @@ public class Engine implements Runnable, IObserver {
 		if (s.connect()) {
 		    sceHandler = new SCEHandler(xccdf, profile, s);
 		    for (SCEScript script : sceHandler.getScripts()) {
-			if (script.exec()) {
-			    logger.info("Ran SCE script " + script.getSource());
-			} else {
-			    logger.info("Failed to run SCE script " + script.getSource());
+			logger.info("Running SCE script: " + getFile(script.getSource()));
+			if (!script.exec()) {
+			    logger.warning("SCE script execution failed!");
 			}
 		    } 
 		    s.disconnect();
@@ -329,5 +328,15 @@ public class Engine implements Runnable, IObserver {
 
     private String encode(String s) {
 	return s.replace(System.getProperty("file.separator"), "~");
+    }
+
+    private String getFile(URL url) {
+	String s = url.toString();
+	int ptr = s.lastIndexOf("/");
+	if (ptr == -1) {
+	    return s;
+	} else {
+	    return s.substring(ptr+1);
+	}
     }
 }

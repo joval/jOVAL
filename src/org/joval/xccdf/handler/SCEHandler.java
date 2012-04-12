@@ -75,7 +75,7 @@ public class SCEHandler {
 					for (CheckExportType export : check.getCheckExport()) {
 					    String name = export.getExportName();
 					    String valueId = export.getValueId();
-					    sce.setenv(name, values.get(valueId));
+					    sce.setExport(name, values.get(valueId));
 					}
 					if (!scriptTable.containsKey(ruleId)) {
 					    scriptTable.put(ruleId, new Hashtable<String, SCEScript>());

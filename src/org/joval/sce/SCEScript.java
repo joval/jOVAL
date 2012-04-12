@@ -70,14 +70,10 @@ public class SCEScript {
     }
 
     /**
-     * Set a variable for SCE script execution. Use a null value to unset a variable.
+     * Set a variable export for SCE script execution. Use a null value to unset a variable.
      */
-    public void setenv(String name, String value) {
-	if (value == null) {
-	    environment.remove(name);
-	} else {
-	    environment.setProperty(name, value);
-	}
+    public void setExport(String name, String value) {
+	setenv(new StringBuffer("XCCDF_VALUE_").append(name).toString(), value);
     }
 
     /**
@@ -210,4 +206,15 @@ public class SCEScript {
 	    return result;
 	}
     }
+
+    // Private
+
+    private void setenv(String name, String value) {
+	if (value == null) {
+	    environment.remove(name);
+	} else {
+	    environment.setProperty(name, value);
+	}
+    }
+
 }
