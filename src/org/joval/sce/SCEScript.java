@@ -42,7 +42,6 @@ public class SCEScript {
     private static final String ENV_TYPE_PREFIX		= "XCCDF_TYPE_";
     private static final String ENV_OPERATOR_PREFIX	= "XCCDF_OPERATOR_";
 
-    private String ruleId;
     private URL source;
     private ISession session;
     private Properties environment;
@@ -54,8 +53,7 @@ public class SCEScript {
     /**
      * Create a new SCE script specifying the URL of its source.
      */
-    public SCEScript(String ruleId, URL source, ISession session) {
-	this.ruleId = ruleId;
+    public SCEScript(URL source, ISession session) {
 	this.source = source;
 	this.session = session;
 	runtime = null;
@@ -186,6 +184,10 @@ public class SCEScript {
 	return false;
     }
 
+    public URL getSource() {
+	return source;
+    }
+
     /**
      * Obtain a list of lines of output from the script execution.
      *
@@ -207,9 +209,5 @@ public class SCEScript {
 	} else {
 	    return result;
 	}
-    }
-
-    public String getRuleId() {
-	return ruleId;
     }
 }

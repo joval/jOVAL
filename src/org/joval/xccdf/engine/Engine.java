@@ -106,6 +106,10 @@ public class Engine implements Runnable, IObserver {
     public void run() {
 	if (hasSelection() && isApplicable()) {
 	    phase = "evaluation";
+
+	    //
+	    // Run the OVAL engines
+	    //
 	    OVALHandler ovalHandler = null;
 	    try {
 		ovalHandler = new OVALHandler(xccdf, profile, session);
@@ -113,10 +117,6 @@ public class Engine implements Runnable, IObserver {
 		logger.severe(LogFormatter.toString(e));
 		return;
 	    }
-
-	    //
-	    // Run the OVAL engines
-	    //
 	    for (String href : ovalHandler.getHrefs()) {
 		IEngine engine = ovalHandler.getEngine(href);
 		engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
@@ -138,18 +138,19 @@ public class Engine implements Runnable, IObserver {
 	    }
 
 	    //
-	    // Evaluate SCE-based rules
+	    // Run the SCE scripts
 	    //
+	    SCEHandler sceHandler = null;
 	    logger.info("Evaluating SCE rules");
-	    Hashtable<String, ResultEnumType> sceResults = new Hashtable<String, ResultEnumType>();
 	    if (session instanceof ISession) {
 		ISession s = (ISession)session;
 		if (s.connect()) {
-		    SCEHandler sceHandler = new SCEHandler(xccdf, profile, s);
+		    sceHandler = new SCEHandler(xccdf, profile, s);
 		    for (SCEScript script : sceHandler.getScripts()) {
-			logger.info("Running SCE script for rule " + script.getRuleId());
 			if (script.exec()) {
-			    sceResults.put(script.getRuleId(), script.getResult());
+			    logger.info("Ran SCE script " + script.getSource());
+			} else {
+			    logger.info("Failed to run SCE script " + script.getSource());
 			}
 		    } 
 		    s.disconnect();
@@ -167,7 +168,9 @@ public class Engine implements Runnable, IObserver {
 	    } catch (OvalException e) {
 		logger.severe(LogFormatter.toString(e));
 	    }
-	    // DAS remind: need an equivalent to integrate SCE results
+	    if (sceHandler != null) {
+		sceHandler.integrateResults(testResult);
+	    }
 
 	    Hashtable<String, RuleResultType> resultIndex = new Hashtable<String, RuleResultType>();
 	    for (RuleResultType rrt : testResult.getRuleResult()) {
@@ -178,8 +181,6 @@ public class Engine implements Runnable, IObserver {
 		String ruleId = rule.getItemId();
 		if (resultIndex.containsKey(ruleId)) {
 		    logger.info(ruleId + ": " + resultIndex.get(ruleId).getResult());
-		} else if (sceResults.containsKey(ruleId)) {
-		    logger.info(ruleId + ": " + sceResults.get(ruleId));
 		} else {
 		    //
 		    // Add the unchecked result, just for fun.
