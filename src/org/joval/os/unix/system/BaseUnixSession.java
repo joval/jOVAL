@@ -3,6 +3,9 @@
 
 package org.joval.os.unix.system;
 
+import javax.security.auth.login.CredentialException;
+
+import org.joval.intf.unix.system.IPrivilegeEscalationDriver;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.util.AbstractSession;
 
@@ -14,6 +17,7 @@ import org.joval.util.AbstractSession;
  */
 public abstract class BaseUnixSession extends AbstractSession implements IUnixSession {
     protected Flavor flavor = Flavor.UNKNOWN;
+    protected IPrivilegeEscalationDriver driver = null;
 
     protected BaseUnixSession() {
 	super();
@@ -54,4 +58,10 @@ public abstract class BaseUnixSession extends AbstractSession implements IUnixSe
     public abstract boolean connect();
 
     public abstract void disconnect();
+
+    // Implement IUnixSession
+
+    public IPrivilegeEscalationDriver getDriver() throws CredentialException {
+	return driver;
+    }
 }

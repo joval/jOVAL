@@ -24,6 +24,11 @@ CLASSES=\
 	org.joval.os.unix.io.UnixFilesystem				\
 	org.joval.os.unix.remote.system.Sudo				\
 	org.joval.os.unix.remote.system.UnixSession			\
+	org.joval.os.unix.remote.system.driver.AbstractDriver		\
+	org.joval.os.unix.remote.system.driver.AIXDriver		\
+	org.joval.os.unix.remote.system.driver.LinuxDriver		\
+	org.joval.os.unix.remote.system.driver.MacOSXDriver		\
+	org.joval.os.unix.remote.system.driver.SolarisDriver		\
 	org.joval.os.unix.system.BaseUnixSession			\
 	org.joval.os.unix.system.Environment				\
 	org.joval.os.windows.constants.ICreateFlags			\

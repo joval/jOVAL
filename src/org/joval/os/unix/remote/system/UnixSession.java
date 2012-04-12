@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import javax.security.auth.login.CredentialException;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -16,8 +17,13 @@ import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFile;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
+import org.joval.intf.unix.system.IPrivilegeEscalationDriver;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.PerishableReader;
+import org.joval.os.unix.remote.system.driver.AIXDriver;
+import org.joval.os.unix.remote.system.driver.LinuxDriver;
+import org.joval.os.unix.remote.system.driver.MacOSXDriver;
+import org.joval.os.unix.remote.system.driver.SolarisDriver;
 import org.joval.os.unix.system.BaseUnixSession;
 import org.joval.os.unix.system.Environment;
 import org.joval.ssh.identity.SshCredential;
@@ -120,7 +126,7 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 	if (rootCred == null || flavor == Flavor.UNKNOWN) {
 	    return ssh.createProcess(command, env);
 	} else {
-	    return new Sudo(this, rootCred, command, env);
+	    return new Sudo(this, command, env);
 	}
     }
 
@@ -137,6 +143,32 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 	    tmpDir = fs.getFile("/tmp").getCanonicalPath();
 	}
 	return tmpDir;
+    }
+
+    // Implement IUnixSession
+
+    @Override
+    public IPrivilegeEscalationDriver getDriver() throws CredentialException {
+	if (driver == null) {
+	    switch(getFlavor()) {
+	      case AIX:
+		driver = new AIXDriver(rootCred);
+		break;
+	      case MACOSX:
+		driver = new MacOSXDriver(cred);
+		break;
+	      case LINUX:
+		driver = new LinuxDriver(rootCred);
+		break;
+	      case SOLARIS:
+		driver = new SolarisDriver(rootCred);
+		break;
+	      default:
+		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_UNIX_FLAVOR, getFlavor()));
+	    }
+	    driver.setLogger(logger);
+	}
+	return driver;
     }
 
     // Internal
