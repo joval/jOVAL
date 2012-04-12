@@ -154,7 +154,12 @@ public class SolarisDriver implements IUnixFilesystemDriver {
 	    }
 	}
 
-	return new UnixFileInfo(IFile.UNKNOWN_TIME, mtime, IFile.UNKNOWN_TIME, type, length, path, linkPath,
-				unixType, permissions, uid, gid, hasExtendedAcl);
+	if (type == FileInfo.Type.LINK && linkPath == null) {
+	    logger.warn(JOVALMsg.ERROR_LINK_NOWHERE, path);
+	    return nextFileInfo(lines);
+	} else {
+	    return new UnixFileInfo(IFile.UNKNOWN_TIME, mtime, IFile.UNKNOWN_TIME, type, length, path, linkPath,
+				    unixType, permissions, uid, gid, hasExtendedAcl);
+	}
     }
 }
