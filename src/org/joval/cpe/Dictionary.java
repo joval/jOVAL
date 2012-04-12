@@ -77,11 +77,18 @@ public class Dictionary {
      * Create a Directives from unmarshalled XML.
      */
     public Dictionary(ListType list) {
+	this();
 	this.list = list;
-	ovalMapping = new Hashtable<String, ItemType>();
 	for (ItemType item : list.getCpeItem()) {
 	    ovalMapping.put(item.getName(), item);
 	}
+    }
+
+    /**
+     * Create an empty Dictionary.
+     */
+    public Dictionary() {
+	ovalMapping = new Hashtable<String, ItemType>();
     }
 
     public ListType getCpeList() {

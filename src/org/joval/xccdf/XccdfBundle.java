@@ -160,6 +160,9 @@ public class XccdfBundle implements ILoggable {
     }
 
     public Dictionary getDictionary() {
+	if (cpeDictionary == null) {
+	    cpeDictionary = new Dictionary();
+	}
 	return cpeDictionary;
     }
 

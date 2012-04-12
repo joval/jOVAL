@@ -157,11 +157,6 @@ public class SCEScript {
 		    break;
 		}
 		stdout = data.getStdout();
-System.out.println("------------------------");
-for(String line : stdout) {
-  System.out.println(line);
-}
-System.out.println("Exit Code: " + exitCode);
 		return true;
 	    }
 	} catch (IOException e) {
