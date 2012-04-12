@@ -16,18 +16,12 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 all: $(JOVAL_CORE_LIB)
 
-$(JOVAL_CORE_LIB): classes resources
+$(JOVAL_CORE_LIB): classes
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
 	rm -rf $(BUILD)
 	rm -f $(JOVAL_CORE_LIB)
-
-resources:
-	rm -f $(BUILD)/*.ini
-	cp $(RSRC)/*.ini $(BUILD)
-	echo -e "version=$(JOVAL_VERSION)\r\n" >> $(BUILD)/defaults.ini
-	echo "build.date=`date`" >> $(BUILD)/defaults.ini
 
 classes: classdirs $(CLASS_FILES)
 

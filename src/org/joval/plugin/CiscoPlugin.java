@@ -85,7 +85,7 @@ public class CiscoPlugin extends BasePlugin {
 
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    LogManager.getLogManager().readConfiguration(cl.getResourceAsStream("disco.logging.properties"));
+	    LogManager.getLogManager().readConfiguration(new ByteArrayInputStream("java.util.logging.handlers=".getBytes()));
 	    Logger logger = Logger.getLogger(JOVALMsg.getLogger().getName());
 	    Handler logHandler = new FileHandler("disco.log", false);
 	    logHandler.setFormatter(new SimpleFormatter());
