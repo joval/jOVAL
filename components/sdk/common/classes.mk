@@ -49,6 +49,7 @@ CLASSES=\
 	org.joval.intf.windows.registry.IStringValue		\
 	org.joval.intf.windows.registry.IValue			\
 	org.joval.intf.windows.system.IWindowsSession		\
+	org.joval.intf.windows.wmi.ISWbemEventSource		\
 	org.joval.intf.windows.wmi.ISWbemObject			\
 	org.joval.intf.windows.wmi.ISWbemObjectSet		\
 	org.joval.intf.windows.wmi.ISWbemProperty		\

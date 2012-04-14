@@ -27,7 +27,8 @@ public class Exec {
 	    while((len = in.read(buff)) > 0) {
 		System.out.write(buff, 0, len);
 	    }
-	    System.out.println("");
+	    p.waitFor(0);
+	    System.out.println("exit code: " + p.exitValue());
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}

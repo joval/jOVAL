@@ -12,6 +12,7 @@ import com.jacob.com.Dispatch;
 import com.jacob.com.Variant;
 
 import org.joval.intf.util.ILoggable;
+import org.joval.intf.windows.wmi.ISWbemEventSource;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
@@ -75,5 +76,9 @@ public class WmiProvider implements IWmiProvider {
 	    map.put(ns, services);
 	}
 	return new SWbemObjectSet(Dispatch.call(services, "ExecQuery", wql).toDispatch());
+    }
+
+    public ISWbemEventSource execNotificationQuery(String ns, String wql) throws WmiException {
+	throw new WmiException("unsupported");
     }
 }

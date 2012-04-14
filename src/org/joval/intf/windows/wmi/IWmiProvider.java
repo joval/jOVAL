@@ -19,4 +19,6 @@ public interface IWmiProvider extends ILoggable {
      * Execute a WQL query on the given namespace.
      */
     public ISWbemObjectSet execQuery(String ns, String wql) throws WmiException;
+
+    public ISWbemEventSource execNotificationQuery(String ns, String wql) throws WmiException;
 }

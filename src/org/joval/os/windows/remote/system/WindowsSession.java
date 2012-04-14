@@ -58,12 +58,13 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private String host;
     private String tempDir, cwd;
     private IWindowsCredential cred;
-    private WmiConnection conn;
     private Registry reg, reg32;
     private IWindowsFilesystem fs32;
     private Vector<IFile> tempFiles;
     private boolean is64bit = false;
     private Directory directory = null;
+
+    WmiConnection conn;
 
     public WindowsSession(String host, File wsdir) {
 	super();
@@ -155,7 +156,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	err.getOutputStream(false).close(); // create/clear tmpErrFile
 	tempFiles.add(err);
 
-	WindowsProcess wp = new WindowsProcess(conn.getServices(host, IWmiProvider.CIMv2), command, env, cwd, out, err);
+	WindowsProcess wp = new WindowsProcess(this, command, env, cwd, out, err);
 	wp.setLogger(logger);
 	return wp;
     }

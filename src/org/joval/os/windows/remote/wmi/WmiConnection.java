@@ -13,7 +13,11 @@ import org.slf4j.cal10n.LocLogger;
 import org.jinterop.dcom.common.IJIAuthInfo;
 import org.jinterop.dcom.common.JIDefaultAuthInfoImpl;
 import org.jinterop.dcom.common.JIException;
+import org.jinterop.dcom.core.IJIComObject;
 import org.jinterop.dcom.core.JISession;
+import org.jinterop.dcom.core.JIString;
+import org.jinterop.dcom.core.JIVariant;
+import org.jinterop.dcom.impls.JIObjectFactory;
 import org.jinterop.dcom.impls.automation.IJIDispatch;
 
 import com.h9labs.jwbem.SWbemLocator;
@@ -21,10 +25,12 @@ import com.h9labs.jwbem.SWbemServices;
 
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.identity.IWindowsCredential;
+import org.joval.intf.windows.wmi.ISWbemEventSource;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.remote.wmi.scripting.SWbemObjectSet;
+import org.joval.os.windows.remote.wmi.scripting.SWbemEventSource;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.util.JOVALMsg;
 
@@ -96,6 +102,25 @@ public class WmiConnection implements IWmiProvider {
 	try {
 	    logger.debug(JOVALMsg.STATUS_WMI_QUERY, host, ns, wql);
 	    return new SWbemObjectSet(getServices(host, ns).execQuery(wql));
+	} catch (UnknownHostException e) {
+	    throw new WmiException(e);
+	} catch (JIException e) {
+	    throw new WmiException(e);
+	}
+    }
+
+    public ISWbemEventSource execNotificationQuery(String ns, String wql) throws WmiException {
+	Object[] inParams = new Object[4];
+	inParams[0] = new JIString(wql);
+	inParams[1] = JIVariant.OPTIONAL_PARAM();
+	inParams[2] = JIVariant.OPTIONAL_PARAM();
+	inParams[3] = JIVariant.OPTIONAL_PARAM();
+	try {
+	    SWbemServices services = getServices(host, ns);
+	    JIVariant[] results = services.getObjectDispatcher().callMethodA("ExecNotificationQuery", inParams);
+	    IJIComObject co = results[0].getObjectAsComObject();
+	    IJIDispatch dispatch = (IJIDispatch)JIObjectFactory.narrowObject(co);
+	    return new SWbemEventSource(dispatch, services);
 	} catch (UnknownHostException e) {
 	    throw new WmiException(e);
 	} catch (JIException e) {

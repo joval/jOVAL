@@ -19,10 +19,16 @@ import com.h9labs.jwbem.SWbemObjectSet;
 import org.joval.intf.io.IFile;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.util.ILoggable;
+import org.joval.intf.windows.wmi.ISWbemEventSource;
+import org.joval.intf.windows.wmi.ISWbemObject;
+import org.joval.intf.windows.wmi.ISWbemProperty;
+import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.io.TailDashF;
+import org.joval.os.windows.remote.wmi.WmiConnection;
 import org.joval.os.windows.remote.wmi.scripting.SWbemSecurity;
 import org.joval.os.windows.remote.wmi.win32.Win32Process;
 import org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup;
+import org.joval.os.windows.wmi.WmiException;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -32,6 +38,7 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 class WindowsProcess implements IProcess, ILoggable {
+    private IWmiProvider wmi;
     private SWbemServices services;
     private Win32ProcessStartup startupInfo;
     private Win32Process process;
@@ -42,9 +49,13 @@ class WindowsProcess implements IProcess, ILoggable {
     private boolean running = false;
     private int exitCode = 0;
     private LocLogger logger;
+    private Monitor monitor;
 
-    WindowsProcess(SWbemServices services, String command, String[] env, String cwd, IFile out, IFile err) throws JIException {
-	this.services = services;
+    WindowsProcess(WindowsSession ws, String command, String[] env, String cwd, IFile out, IFile err)
+		throws JIException, UnknownHostException {
+
+	wmi = ws.conn;
+	services = ws.conn.getServices(ws.getHostname(), IWmiProvider.CIMv2);
 	this.command = command;
 	this.cwd = cwd;
 	this.out = out;
@@ -93,7 +104,8 @@ class WindowsProcess implements IProcess, ILoggable {
 	  case Win32Process.SUCCESSFUL_COMPLETION:
 	    pid = process.getProcessId();
 	    running = true;
-	    new Monitor(this).start();
+	    monitor = new Monitor();
+	    monitor.start();
 	    break;
 
 	  default:
@@ -132,14 +144,10 @@ class WindowsProcess implements IProcess, ILoggable {
     }
 
     public boolean isRunning() {
-	if (running) {
-	    String wql = "Select ProcessId from Win32_Process where ProcessId=" + pid;
-	    SWbemObjectSet set = services.execQuery(wql);
-	    if (set.getSize() == 0) {
-		running = false;
-	    }
+	if (monitor != null) {
+	    return monitor.isAlive();
 	}
-	return running;
+	return false;
     }
 
     public void destroy() {
@@ -157,47 +165,60 @@ class WindowsProcess implements IProcess, ILoggable {
      * The Monitor class waits for the process to finish for up to an hour, then it cleans up any open tails.
      */
     class Monitor implements Runnable {
-	private WindowsProcess p;
+	private Thread t;
 
-	Monitor(WindowsProcess p) {
-	    this.p = p;
+	Monitor() {
+	    t = new Thread(this);
 	}
 
 	void start() {
-	    new Thread(this).start();
+	    t.start();
+	}
+
+	boolean isAlive() {
+	    return t.isAlive();
 	}
 
 	public void run() {
 	    try {
-		p.waitFor(3600000); // 1 hour
-		if (p.isRunning()) {
-		    p.destroy();
+		String wql = "select * from Win32_ProcessStopTrace where ProcessId=" + pid;
+		ISWbemEventSource source = wmi.execNotificationQuery(IWmiProvider.CIMv2, wql);
+		ISWbemObject event = source.nextEvent();
+		ISWbemProperty exitStatus = event.getProperties().getItem("ExitStatus");
+		if (exitStatus != null) {
+		    exitCode = exitStatus.getValueAsInteger();
 		}
-	    } catch (InterruptedException e) {
+	    } catch (WmiException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		String wql = "Select ProcessId from Win32_Process where ProcessId=" + pid;
+		SWbemObjectSet set = services.execQuery(wql);
+		if (set.getSize() > 0) {
+		    destroy();
+		}
 	    }
 	    try {
-		synchronized(p.err) {
-		    if (p.errTail != null) {
-			if (p.errTail.isAlive()) {
-			    p.errTail.interrupt();
+		synchronized(err) {
+		    if (errTail != null) {
+			if (errTail.isAlive()) {
+			    errTail.interrupt();
 			}
-			p.err.delete();
+			err.delete();
 		    }
 		}
 	    } catch (IOException e) {
-		logger.warn(JOVALMsg.ERROR_IO, p.err.getPath(), e.getMessage());
+		logger.warn(JOVALMsg.ERROR_IO, err.getPath(), e.getMessage());
 	    }
 	    try {
-		synchronized(p.out) {
-		    if (p.outTail != null) {
-			if (p.outTail.isAlive()) {
-			    p.outTail.interrupt();
+		synchronized(out) {
+		    if (outTail != null) {
+			if (outTail.isAlive()) {
+			    outTail.interrupt();
 			}
-			p.out.delete();
+			out.delete();
 		    }
 		}
 	    } catch (IOException e) {
-		logger.warn(JOVALMsg.ERROR_IO, p.out.getPath(), e.getMessage());
+		logger.warn(JOVALMsg.ERROR_IO, out.getPath(), e.getMessage());
 	    }
 	}
     }
