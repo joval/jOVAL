@@ -21,17 +21,21 @@ public class TailDashF implements Runnable {
     private IFile file;
     private PipedInputStream in;
     private Thread thread;
+    private long pollingInterval;
 
     public TailDashF(IFile file) {
-	this.file = file;
-	in = new PipedInputStream();
-	thread = new Thread(this, "tail -f " + file.toString());
+	this(file, null, 100L);
     }
 
     public TailDashF(IFile file, ThreadGroup group) {
+	this(file, group, 100L);
+    }
+
+    public TailDashF(IFile file, ThreadGroup group, long pollingInterval) {
 	this.file = file;
 	in = new PipedInputStream();
 	thread = new Thread(group, this, "tail -f " + file.toString());
+	this.pollingInterval = pollingInterval;
     }
 
     public InputStream getInputStream() {
@@ -83,7 +87,7 @@ public class TailDashF implements Runnable {
 		}
 		ra.close();
 		ra = null;
-		Thread.sleep(100);
+		Thread.sleep(pollingInterval);
 	    }
 	} catch (IOException e) {
 	} catch (InterruptedException e) {
