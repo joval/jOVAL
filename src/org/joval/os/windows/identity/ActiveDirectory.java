@@ -34,11 +34,12 @@ class ActiveDirectory implements ILoggable {
     private static final String DOMAIN_WQL = "SELECT Name, DomainName, DnsForestName FROM Win32_NTDomain";
 
     private static final String AD_NAMESPACE = "root\\directory\\ldap";
-    private static final String USER_WQL = "SELECT DS_userPrincipalName, DS_distinguishedName, DS_memberOf, DS_userAccountControl, DS_objectSid FROM DS_User";
-    private static final String USER_WQL_UPN_CONDITION = "DS_userPrincipalName=\"$upn\"";
+    private static final String USER_WQL = "SELECT DS_userPrincipalName, DS_distinguishedName, DS_memberOf, " +
+					   "DS_userAccountControl, DS_objectSid FROM DS_User";
+    private static final String USER_WQL_UPN_CONDITION = "DS_userPrincipalName='$upn'";
     private static final String GROUP_WQL = "SELECT DS_member, DS_distinguishedName, DS_objectSid FROM DS_Group";
-    private static final String GROUP_WQL_CN_CONDITION = "DS_cn=\"$cn\"";
-    private static final String SID_CONDITION = "DS_objectSid=\"$sid\"";
+    private static final String GROUP_WQL_CN_CONDITION = "DS_cn='$cn'";
+    private static final String SID_CONDITION = "DS_objectSid='$sid'";
 
     private Directory parent;
     private IWmiProvider wmi;
@@ -71,7 +72,7 @@ class ActiveDirectory implements ILoggable {
 	    wql.append(" WHERE ");
 	    wql.append(SID_CONDITION.replaceAll("(?i)\\$sid", Matcher.quoteReplacement(sid)));
 	    ISWbemObjectSet os = wmi.execQuery(AD_NAMESPACE, wql.toString());
-	    if (os.getSize() == 0) {
+	    if (os == null || os.getSize() == 0) {
 		throw new NoSuchElementException(sid);
 	    } else {
 		ISWbemPropertySet props = os.iterator().next().getProperties();
@@ -99,7 +100,7 @@ class ActiveDirectory implements ILoggable {
 	    wql.append(" WHERE ");
 	    wql.append(USER_WQL_UPN_CONDITION.replaceAll("(?i)\\$upn", Matcher.quoteReplacement(upn)));
 	    ISWbemObjectSet os = wmi.execQuery(AD_NAMESPACE, wql.toString());
-	    if (os.getSize() == 0) {
+	    if (os == null || os.getSize() == 0) {
 		throw new NoSuchElementException(netbiosName);
 	    } else {
 		ISWbemPropertySet props = os.iterator().next().getProperties();
@@ -124,7 +125,7 @@ class ActiveDirectory implements ILoggable {
 	    wql.append(" WHERE ");
 	    wql.append(SID_CONDITION.replaceAll("(?i)\\$sid", Matcher.quoteReplacement(sid)));
 	    ISWbemObjectSet rows = wmi.execQuery(AD_NAMESPACE, wql.toString());
-	    if (rows.getSize() == 0) {
+	    if (rows == null || rows.getSize() == 0) {
 		throw new NoSuchElementException(sid);
 	    } else {
 		ISWbemPropertySet columns = rows.iterator().next().getProperties();
@@ -163,28 +164,33 @@ class ActiveDirectory implements ILoggable {
 		StringBuffer wql = new StringBuffer(GROUP_WQL);
 		wql.append(" WHERE ");
 		wql.append(GROUP_WQL_CN_CONDITION.replaceAll("(?i)\\$cn", Matcher.quoteReplacement(cn)));
-		for (ISWbemObject row : wmi.execQuery(AD_NAMESPACE, wql.toString())) {
-		    ISWbemPropertySet columns = row.getProperties();
-		    String dn = columns.getItem("DS_distinguishedName").getValueAsString();
-		    if (dn.endsWith(dc)) {
-			Collection<String> userNetbiosNames = new Vector<String>();
-			Collection<String> groupNetbiosNames = new Vector<String>();
-			String[] members = columns.getItem("DS_member").getValueAsArray();
-			for (int i=0; i < members.length; i++) {
-			    if (members[i].indexOf(",OU=Distribution Groups") != -1) {
-				groupNetbiosNames.add(toNetbiosName(members[i]));
-			    } else if (members[i].indexOf(",OU=Domain Users") != -1) {
-				userNetbiosNames.add(toNetbiosName(members[i]));
-			    } else {
-				logger.warn(JOVALMsg.ERROR_AD_BAD_OU, members[i]);
+		ISWbemObjectSet rows = wmi.execQuery(AD_NAMESPACE, wql.toString());
+		if (rows == null || rows.getSize() == 0) {
+		    throw new NoSuchElementException(netbiosName);
+		} else {
+		    for (ISWbemObject row : rows) {
+			ISWbemPropertySet columns = row.getProperties();
+			String dn = columns.getItem("DS_distinguishedName").getValueAsString();
+			if (dn.endsWith(dc)) {
+			    Collection<String> userNetbiosNames = new Vector<String>();
+			    Collection<String> groupNetbiosNames = new Vector<String>();
+			    String[] members = columns.getItem("DS_member").getValueAsArray();
+			    for (int i=0; i < members.length; i++) {
+				if (members[i].indexOf(",OU=Distribution Groups") != -1) {
+				    groupNetbiosNames.add(toNetbiosName(members[i]));
+				} else if (members[i].indexOf(",OU=Domain Users") != -1) {
+				    userNetbiosNames.add(toNetbiosName(members[i]));
+				} else {
+				    logger.warn(JOVALMsg.ERROR_AD_BAD_OU, members[i]);
+				}
 			    }
+			    String sid = Principal.toSid(columns.getItem("DS_objectSid").getValueAsString());
+			    group = new Group(domain, cn, sid, userNetbiosNames, groupNetbiosNames);
+			    groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
+			    groupsBySid.put(sid, group);
+			} else {
+			    logger.trace(JOVALMsg.STATUS_AD_GROUP_SKIP, dn, dc);
 			}
-			String sid = Principal.toSid(columns.getItem("DS_objectSid").getValueAsString());
-			group = new Group(domain, cn, sid, userNetbiosNames, groupNetbiosNames);
-			groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
-			groupsBySid.put(sid, group);
-		    } else {
-			logger.trace(JOVALMsg.STATUS_AD_GROUP_SKIP, dn, dc);
 		    }
 		}
 		if (group == null) {

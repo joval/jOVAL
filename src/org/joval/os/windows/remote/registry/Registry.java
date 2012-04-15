@@ -289,6 +289,9 @@ public class Registry extends BaseRegistry {
 	      case JIErrorCodes.ERROR_NO_MORE_ITEMS:
 		throw new NoSuchElementException(e.getMessage());
 
+	      case 0x3FA: // ERROR_KEY_DELETED:
+		throw new NoSuchElementException("Key was marked for deletion");
+
 	      default:
 		throw new RuntimeException(e);
 	    }
@@ -310,6 +313,7 @@ public class Registry extends BaseRegistry {
 		  case 0x02: // ERROR_FILE_NOT_FOUND
 		    throw new NoSuchElementException(key.getPath() + "!" + name);
 
+		  case 0x08: // ERROR_NOT_ENOUGH_MEMORY
 		  case 0xEA: // ERROR_MORE_DATA
 		    retry = true;
 		    len += len;

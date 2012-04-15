@@ -40,8 +40,8 @@ class LocalDirectory implements ILoggable {
     static final String SID_CONDITION		= "SID='$sid'";
 
     static final String USER_GROUP_WQL		= "ASSOCIATORS OF {$conditions} WHERE resultClass=Win32_Group";
-    static final String USER_DOMAIN_CONDITION	= "Win32_UserAccount.Domain=\"$domain\"";
-    static final String USER_NAME_CONDITION	= "Name=\"$username\"";
+    static final String USER_DOMAIN_CONDITION	= "Win32_UserAccount.Domain='$domain'";
+    static final String USER_NAME_CONDITION	= "Name='$username'";
 
     static final String GROUP_USER_WQL		= "SELECT * FROM Win32_GroupUser WHERE GroupComponent=\"$conditions\"";
     static final String GROUP_DOMAIN_CONDITION	= "Win32_Group.Domain='$domain'";
