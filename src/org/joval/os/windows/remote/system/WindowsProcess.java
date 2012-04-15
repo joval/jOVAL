@@ -60,7 +60,7 @@ class WindowsProcess implements IProcess, ILoggable {
 	this.cwd = cwd;
 	this.out = out;
 	this.err = err;
-	startupInfo = new Win32ProcessStartup(services);
+	startupInfo = new Win32ProcessStartup(ws.getEnvironment(), services);
 	startupInfo.setEnvironmentVariables(env);
 	logger = JOVALMsg.getLogger();
     }
@@ -110,10 +110,10 @@ class WindowsProcess implements IProcess, ILoggable {
 
 	  default:
 	    JIExcepInfo error = process.getError();
-	    System.out.println("Error code: " + Integer.toHexString(error.getErrorCode()));
-	    System.out.println("Description: " + error.getExcepDesc());
-	    System.out.println("Source: " + error.getExcepSource());
-	    break;
+	    String code = Integer.toHexString(error.getErrorCode());
+	    String description = error.getExcepDesc();
+	    String source = error.getExcepSource();
+	    throw new WmiException(JOVALMsg.getMessage(JOVALMsg.ERROR_WMI_PROCESS, rc, code, description, source));
 	}
     }
 

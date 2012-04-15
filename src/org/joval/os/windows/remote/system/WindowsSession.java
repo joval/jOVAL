@@ -56,7 +56,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     }
 
     private String host;
-    private String tempDir, cwd;
+    private String tempDir=null, cwd;
     private IWindowsCredential cred;
     private Registry reg, reg32;
     private IWindowsFilesystem fs32;
@@ -145,7 +145,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 
     @Override
     public IProcess createProcess(String command, String[] env) throws Exception {
-	StringBuffer sb = new StringBuffer(tempDir).append(IWindowsFilesystem.DELIM_STR).append("rexec_");
+	StringBuffer sb = new StringBuffer(getTempDir()).append(IWindowsFilesystem.DELIM_STR).append("rexec_");
 	sb.append(Integer.toHexString(counter++));
 
 	IFile out = fs.getFile(sb.toString() + ".out", IFile.READVOLATILE);
@@ -209,7 +209,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		    fs32 = (IWindowsFilesystem)fs;
 		}
 		try {
-		    tempDir = getTempDir();
+		    getTempDir();
 		} catch (IOException e) {
 		    return false;
 		}
@@ -269,14 +269,17 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 
     @Override
     public String getTempDir() throws IOException {
-	Iterator<String> iter = getTempDirCandidates().iterator();
-	while(iter.hasNext()) {
-	    String path = iter.next();
-	    if (testDir(path)) {
-		return path;
+	if (tempDir == null) {
+	    Iterator<String> iter = getTempDirCandidates().iterator();
+	    while(iter.hasNext()) {
+		String path = iter.next();
+		if (testDir(path)) {
+		    tempDir = path;
+		    break;
+		}
 	    }
 	}
-	throw new IOException("Unable to find a temp directory");
+	return tempDir;
     }
 
     // Private

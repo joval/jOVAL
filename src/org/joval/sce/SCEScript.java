@@ -17,6 +17,7 @@ import xccdf.schemas.core.ResultEnumType;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
@@ -95,21 +96,49 @@ public class SCEScript {
 	try {
 	    IFilesystem fs = session.getFilesystem();
 	    HashSet<String> existing = new HashSet<String>(Arrays.asList(fs.getFile(session.getTempDir()).list()));
+	    String extension = source.toString().substring(source.toString().lastIndexOf(".")+1).toLowerCase();
+	    //
+	    // Find an appropriate temp filename and copy the script to the target machine
+	    //
 	    for (int i=0; script == null; i++) {
-		String fname = "sce_script_" + i + ".sh";
+		String fname = "sce_script_" + i + "." + extension;
 		if (!existing.contains(fname)) {
 		    script = fs.getFile(session.getTempDir() + fs.getDelimiter() + fname, IFile.READWRITE);
+		    byte[] buff = new byte[1024];
+		    int len = 0;
+		    in = source.openStream();
+		    out = script.getOutputStream(false);
+		    while((len = in.read(buff)) > 0) {
+			out.write(buff, 0, len);
+		    }
+		    out.close();
+		    out = null;
 		}
 	    }
-	    byte[] buff = new byte[1024];
-	    int len = 0;
-	    in = source.openStream();
-	    out = script.getOutputStream(false);
-	    while((len = in.read(buff)) > 0) {
-		out.write(buff, 0, len);
+
+	    //
+	    // Determine the appropriate command prefix to run the script, based on the ISession type and script
+	    // filename extension.
+	    //
+	    String commandPrefix = "";
+	    switch(session.getType()) {
+	      case UNIX:
+		commandPrefix = "/bin/sh ";
+		break;
+
+	      case WINDOWS:
+		if ("vbs".equals(extension)) {
+		    commandPrefix = "cscript.exe ";
+		}
+		break;
+
+	      default:
+		//DAS throw exception.
 	    }
-	    out.close();
-	    out = null;
+
+	    //
+	    // Prepare the environment and run the script.
+	    //
 	    String[] env = new String[environment.size()];
 	    int i=0;
 	    for (String var : environment.stringPropertyNames()) {
@@ -117,7 +146,7 @@ public class SCEScript {
 	    }
 	    runtime = new Date();
 	    long to = session.getTimeout(ISession.Timeout.M);
-	    SafeCLI.ExecData data = SafeCLI.execData("/bin/sh "+script.getPath(), env, session, to);
+	    SafeCLI.ExecData data = SafeCLI.execData(commandPrefix + script.getPath(), env, session, to);
 	    if (data != null) {
 		exitCode = data.getExitCode();
 		switch(exitCode) {
@@ -180,6 +209,9 @@ public class SCEScript {
 	return false;
     }
 
+    /**
+     * Get the script source URL.
+     */
     public URL getSource() {
 	return source;
     }
@@ -198,6 +230,9 @@ public class SCEScript {
 	}
     }
 
+    /**
+     * Get the script execution XCCDF result.
+     */
     public ResultEnumType getResult() throws IllegalStateException {
 	if (runtime == null) {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, source.getFile(), session.getHostname());
