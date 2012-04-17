@@ -3,8 +3,11 @@
 
 package org.joval.oval.adapter.windows;
 
-import java.util.Hashtable;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
+import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -19,6 +22,7 @@ import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.windows.UserObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
+import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
@@ -31,6 +35,9 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IUser;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.intf.windows.wmi.ISWbemObject;
+import org.joval.intf.windows.wmi.ISWbemProperty;
+import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.CollectException;
@@ -39,7 +46,7 @@ import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 
 /**
- * Evaluates User OVAL tests.
+ * Retrieves windows:user_items.
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -47,6 +54,7 @@ import org.joval.util.JOVALMsg;
 public class UserAdapter implements IAdapter {
     protected IWindowsSession session;
     protected IDirectory directory;
+    private Hashtable<String, Date> logons;
 
     // Implement IAdapter
 
@@ -61,6 +69,9 @@ public class UserAdapter implements IAdapter {
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
 	directory = session.getDirectory();
+	if (logons == null) {
+	    initLogons();
+	}
 	Collection<UserItem> items = new Vector<UserItem>();
 	UserObject uObj = (UserObject)obj;
 	OperationEnumeration op = uObj.getUser().getOperation();
@@ -123,13 +134,62 @@ public class UserAdapter implements IAdapter {
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
 	    rc.addMessage(msg);
+	} catch (ParseException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
 	}
 	return items;
     }
 
     // Private
 
-    private UserItem makeItem(IUser user) {
+    private void initLogons() {
+	logons = new Hashtable<String, Date>();
+	try {
+	    String wql = "select LastLogon from Win32_NetworkLoginProfile";
+	    for (ISWbemObject obj : session.getWmiProvider().execQuery(IWmiProvider.CIMv2, wql)) {
+		String s = null;
+		try {
+		    ISWbemPropertySet props = obj.getProperties();
+		    String name = props.getItem("Name").getValueAsString();
+		    //
+		    // Convert LastLogon string to number of seconds since 1970
+		    //
+		    s = props.getItem("LastLogon").getValueAsString();
+		    if (s != null) {
+			String tz = s.substring(21).trim();
+			if (tz.length() == 4) {
+			    char c = tz.charAt(0);
+			    if (c == '-' || c == '+') {
+				StringBuffer sb = new StringBuffer();
+				sb.append(c);
+				sb.append("0");
+				sb.append(tz.substring(1));
+				tz = sb.toString();
+			    }
+			}
+			Date date = null;
+			if (tz.length() == 5) {
+			    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss.SSSZ");
+			    date = sdf.parse(s.substring(0, 18) + tz);
+			} else {
+			    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss.SSS");
+			    date = sdf.parse(s.substring(0, 18));
+			}
+			logons.put(name, date);
+		    }
+		} catch (ParseException e) {
+		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+	    }
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+    }
+
+    private UserItem makeItem(IUser user) throws WmiException, ParseException {
 	UserItem item = Factories.sc.windows.createUserItem();
 	EntityItemStringType userType = Factories.sc.core.createEntityItemStringType();
 	if (directory.isBuiltinUser(user.getNetbiosName())) {
@@ -158,6 +218,15 @@ public class UserAdapter implements IAdapter {
 		item.getGroup().add(groupType);
 	    }
 	}
+	EntityItemIntType lastLogonType = Factories.sc.core.createEntityItemIntType();
+	if (logons.containsKey(user.getNetbiosName())) {
+	    lastLogonType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	    long secs = logons.get(user.getNetbiosName()).getTime()/1000L;
+	    lastLogonType.setValue(Long.toString(secs));
+	} else {
+	    lastLogonType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	}
+	item.setLastLogon(lastLogonType);
 	return item;
     }
 }

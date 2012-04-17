@@ -122,7 +122,7 @@ public class Version55Adapter implements IAdapter {
 	    StringBuffer sb = new StringBuffer();
 	    for (int i=begin; i < end; i++) {
 		char ch = version.charAt(i);
-		if (isNum(ch)) {
+		if (isNum(ch) || ch == '.') {
 		    sb.append(ch);
 		} else {
 		    break;

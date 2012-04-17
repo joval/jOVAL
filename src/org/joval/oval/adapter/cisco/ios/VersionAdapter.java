@@ -36,23 +36,26 @@ public class VersionAdapter extends Version55Adapter {
     @Override
     protected VersionItem getItem() throws Exception {
 	VersionItem item = super.getItem();
+	if (item.isSetMajorVersion() && item.isSetMinorVersion()) {
+	    StringBuffer sb = new StringBuffer();
+	    sb.append((String)item.getMajorVersion().getValue());
+	    sb.append(".");
+	    sb.append((String)item.getMinorVersion().getValue());
 
-	StringBuffer sb = new StringBuffer();
-	sb.append((String)item.getMajorVersion().getValue());
-	sb.append(".");
-	sb.append((String)item.getMinorVersion().getValue());
-	EntityItemStringType trainNumber = Factories.sc.core.createEntityItemStringType();
-	trainNumber.setValue(sb.toString());
-	item.setTrainNumber(trainNumber);
+	    EntityItemStringType trainNumber = Factories.sc.core.createEntityItemStringType();
+	    trainNumber.setValue(sb.toString());
+	    item.setTrainNumber(trainNumber);
 
-	sb.append("(");
-	sb.append((String)item.getTrainIdentifier().getValue());
-	sb.append(")");
-	sb.append((String)item.getRebuild().getValue());
-	EntityItemStringType majorRelease = Factories.sc.core.createEntityItemStringType();
-	majorRelease.setValue(sb.toString());
-	item.setMajorRelease(majorRelease);
-
+	    if (item.isSetTrainIdentifier()) {
+		sb = new StringBuffer((String)item.getTrainIdentifier().getValue());
+		if (item.isSetRebuild()) {
+		    sb.append((String)item.getRebuild().getValue());
+		}
+		EntityItemStringType majorRelease = Factories.sc.core.createEntityItemStringType();
+		majorRelease.setValue(sb.toString());
+		item.setMajorRelease(majorRelease);
+	    }
+	}
 	return item;
     }
 }
