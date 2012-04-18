@@ -31,6 +31,7 @@ import org.joval.oval.Factories;
 import org.joval.oval.CollectException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
+import org.joval.util.StringTools;
 
 /**
  * Retrieves Pwpolicy59Items.
@@ -118,11 +119,15 @@ public class Pwpolicy59Adapter implements IAdapter {
 	try {
 	    Hashtable<String, String> policies = new Hashtable<String, String>();
 	    for (String line : SafeCLI.multiLine(sb.toString(), session, IUnixSession.Timeout.S)) {
-		int ptr = line.indexOf("=");
-		if (ptr != -1) {
-		    String key = line.substring(0,ptr).trim();
-		    String val = line.substring(ptr+1).trim();
-		    policies.put(key, val);
+		if (line.indexOf("=") > 0) {
+		    for (String pair : StringTools.toList(StringTools.tokenize(line, " "))) {
+			int ptr = line.indexOf("=");
+			if (ptr != -1) {
+			    String key = line.substring(0,ptr).trim();
+			    String val = line.substring(ptr+1).trim();
+			    policies.put(key, val);
+			}
+		    }
 		}
 	    }
 
