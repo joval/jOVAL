@@ -62,6 +62,11 @@ public class SchemaRegistry {
     /**
      * Property indicating the package names for classes in the CPE (Common Platform Enumeration) schema.
      */
+    public static final String OCIL = "ocil.packages";
+
+    /**
+     * Property indicating the package names for classes in the CPE (Common Platform Enumeration) schema.
+     */
     public static final String CPE = "cpe.packages";
 
     /**
@@ -72,6 +77,7 @@ public class SchemaRegistry {
     private static final String OVAL_RESOURCE	= "oval.properties";
     private static final String CPE_RESOURCE	= "cpe.properties";
     private static final String XCCDF_RESOURCE	= "xccdf.properties";
+    private static final String OCIL_RESOURCE	= "ocil.properties";
     private static final String SVRL_RESOURCE	= "svrl.properties";
 
     private static Properties schemaProps;
@@ -98,6 +104,12 @@ public class SchemaRegistry {
 	    } else {
 		schemaProps.load(rsc);
 	    }
+	    rsc = cl.getResourceAsStream(OCIL_RESOURCE);
+	    if (rsc == null) {
+		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, OCIL_RESOURCE));
+	    } else {
+		schemaProps.load(rsc);
+	    }
 	    rsc = cl.getResourceAsStream(SVRL_RESOURCE);
 	    if (rsc == null) {
 		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, SVRL_RESOURCE));
@@ -112,7 +124,7 @@ public class SchemaRegistry {
     /**
      * Retrieve package names from the registry.
      *
-     * @param name specify one of the OVAL_*, CPE, XCCDF or SVRL Strings defined by this class.
+     * @param name specify one of the OVAL_*, CPE, XCCDF, OCIL or SVRL Strings defined by this class.
      */
     public static String lookup(String name) throws NoSuchElementException {
 	return schemaProps.getProperty(name);

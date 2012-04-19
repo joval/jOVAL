@@ -32,6 +32,7 @@ CWD=$(shell pwd)
 JOVAL_VERSION=5.10.1.1_Dev
 OVAL_VERSION=5.10.1
 XCCDF_VERSION=1.1
+OCIL_VERSION=2.0
 CPE_VERSION=2.3
 SCE_VERSION=1.0
 
@@ -59,6 +60,8 @@ CPE_LIB=$(CPE)/cpe-schema-$(CPE_VERSION).jar
 OVAL=$(COMPONENTS)/oval
 OVAL_LIB=$(OVAL)/oval-schema-$(OVAL_VERSION).jar
 SVRL=$(COMPONENTS)/schematron/schema/svrl.jar
+OCIL=$(COMPONENTS)/ocil
+OCIL_LIB=$(XCCDF)/ocil-schema-$(OCIL_VERSION).jar
 XCCDF=$(COMPONENTS)/xccdf
 XCCDF_LIB=$(XCCDF)/xccdf-schema-$(XCCDF_VERSION).jar
 SDK=$(COMPONENTS)/sdk
