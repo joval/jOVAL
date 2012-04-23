@@ -6,6 +6,7 @@ package org.joval.oval.adapter.macos;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
 import oval.schemas.common.MessageLevelEnumeration;
@@ -20,6 +21,7 @@ import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
+import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.macos.Pwpolicy59Item;
 import oval.schemas.results.core.ResultEnumeration;
 
@@ -27,6 +29,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.os.unix.macos.DsclTool;
 import org.joval.oval.Factories;
 import org.joval.oval.CollectException;
 import org.joval.util.JOVALMsg;
@@ -41,6 +44,7 @@ import org.joval.util.StringTools;
  */
 public class Pwpolicy59Adapter implements IAdapter {
     private IUnixSession session;
+    private DsclTool dscl;
 
     // Implement IAdapter
 
@@ -49,6 +53,7 @@ public class Pwpolicy59Adapter implements IAdapter {
 	if (session instanceof IUnixSession) {
 	    if (((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {
 		this.session = (IUnixSession)session;
+		this.dscl = new DsclTool(this.session);
 		classes.add(Pwpolicy59Object.class);
 	    }
 	}
@@ -58,23 +63,46 @@ public class Pwpolicy59Adapter implements IAdapter {
     public Collection<Pwpolicy59Item> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	Collection<Pwpolicy59Item> items = new Vector<Pwpolicy59Item>();
 	Pwpolicy59Object pObj = (Pwpolicy59Object)obj;
-
-	Pwpolicy59Item item = Factories.sc.macos.createPwpolicy59Item();
-	StringBuffer sb = new StringBuffer("pwpolicy -getpolicy -u ");
+	String value = (String)pObj.getTargetUser().getValue();
 	OperationEnumeration op = pObj.getTargetUser().getOperation();
-	if (op == OperationEnumeration.EQUALS) {
-	    String value = (String)pObj.getTargetUser().getValue();
-	    sb.append(value);
-	    EntityItemStringType targetUser = Factories.sc.core.createEntityItemStringType();
-	    targetUser.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-	    targetUser.setValue(value);
-	    item.setTargetUser(targetUser);
-	} else {
+	switch(op) {
+	  case EQUALS:
+	    if (dscl.getUsers().contains(value)) {
+		items.add(getItem(pObj, value));
+	    }
+	    break;
+
+	  case NOT_EQUAL:
+	    for (String username : dscl.getUsers()) {
+		if (!value.equals(username)) {
+		    items.add(getItem(pObj, username));
+		}
+	    }
+	    break;
+
+	  case PATTERN_MATCH:
+	    for (String username : dscl.getUsers(Pattern.compile(value))) {
+		items.add(getItem(pObj, username));
+	    }
+	    break;
+
+	  default:
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
+	return items;
+    }
+
+    private Pwpolicy59Item getItem(Pwpolicy59Object pObj, String targetUser) throws CollectException {
+	Pwpolicy59Item item = Factories.sc.macos.createPwpolicy59Item();
+	EntityItemStringType targetUserType = Factories.sc.core.createEntityItemStringType();
+	targetUserType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+	targetUserType.setValue(targetUser);
+	item.setTargetUser(targetUserType);
+
+	StringBuffer sb = new StringBuffer("pwpolicy -getpolicy -u ").append(targetUser);
 	if (!pObj.getUsername().isNil()) {
-	    op = pObj.getUsername().getValue().getOperation();
+	    OperationEnumeration op = pObj.getUsername().getValue().getOperation();
 	    if (op == OperationEnumeration.EQUALS) {
 		String value = (String)pObj.getUsername().getValue().getValue();
 		sb.append(" -a ").append(value);
@@ -88,7 +116,7 @@ public class Pwpolicy59Adapter implements IAdapter {
 	    }
 	}
 	if (!pObj.getUserpass().isNil()) {
-	    op = pObj.getUserpass().getValue().getOperation();
+	    OperationEnumeration op = pObj.getUserpass().getValue().getOperation();
 	    if (op == OperationEnumeration.EQUALS) {
 		String value = (String)pObj.getUserpass().getValue().getValue();
 		sb.append(" -p ").append(value);
@@ -102,7 +130,7 @@ public class Pwpolicy59Adapter implements IAdapter {
 	    }
 	}
 	if (!pObj.getDirectoryNode().isNil()) {
-	    op = pObj.getDirectoryNode().getValue().getOperation();
+	    OperationEnumeration op = pObj.getDirectoryNode().getValue().getOperation();
 	    if (op == OperationEnumeration.EQUALS) {
 		String value = (String)pObj.getDirectoryNode().getValue().getValue();
 		sb.append(" -n ").append(value);
@@ -278,14 +306,15 @@ public class Pwpolicy59Adapter implements IAdapter {
 		item.setUsingHistory(type);
 	    }
 
-	    items.add(item);
+	    item.setStatus(StatusEnumeration.EXISTS);
 	} catch (Exception e) {
+	    item.setStatus(StatusEnumeration.ERROR);
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
-	    rc.addMessage(msg);
+	    item.getMessage().add(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-	return items;
+	return item;
     }
 }

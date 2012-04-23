@@ -1,4 +1,5 @@
 CLASSES=\
+	org.joval.os.unix.macos.DsclTool				\
 	org.joval.os.windows.pe.Characteristics				\
 	org.joval.os.windows.pe.DLLCharacteristics			\
 	org.joval.os.windows.pe.Header					\

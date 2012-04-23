@@ -28,6 +28,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.os.unix.macos.DsclTool;
 import org.joval.oval.Factories;
 import org.joval.oval.CollectException;
 import org.joval.util.JOVALMsg;
@@ -112,8 +113,9 @@ public class AccountinfoAdapter implements IAdapter {
     // Private
 
     void createAccountInfo() throws Exception {
+	DsclTool tool = new DsclTool(session);
 	accountinfo = new Hashtable<String, AccountinfoItem>();
-	for (String username : SafeCLI.multiLine("dscl . -list Users", session, IUnixSession.Timeout.S)) {
+	for (String username : tool.getUsers()) {
 	    AccountinfoItem item = Factories.sc.macos.createAccountinfoItem();
 
 	    EntityItemStringType usernameType = Factories.sc.core.createEntityItemStringType();
