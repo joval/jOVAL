@@ -71,6 +71,13 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	return fs;
     }
 
+    // Implement IBaseSession
+
+    @Override
+    public long getTime() throws Exception {
+	return System.currentTimeMillis();
+    }
+
     /**
      * Here, we provide an implementation for local ISessions.
      */

@@ -89,6 +89,11 @@ public interface IBaseSession extends ILoggable {
     IProperty getProperties();
 
     /**
+     * Get the number of milliseconds since midnight 1/1/70 UTC, on the system.
+     */
+    long getTime() throws Exception;
+
+    /**
      * Create a process on the machine, with the specified environment variables.
      *
      * @param env Environment variables, each of the form "VARIABLE=VALUE".

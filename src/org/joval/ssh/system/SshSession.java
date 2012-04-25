@@ -135,6 +135,10 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 	return hostname;
     }
 
+    public long getTime() throws Exception {
+	throw new UnsupportedOperationException("getTime");
+    }
+
     @Override
     public boolean isConnected() {
 	return session.isConnected();

@@ -2134,8 +2134,12 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 	    Collection<IType> ts2;
 	    if (children.size() == 1) {
 		ts1 = new Vector<IType>();
-		String val = new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date(System.currentTimeMillis()));
-		ts1.add(TypeFactory.createType(IType.Type.STRING, val));
+		try {
+		    String val = new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date(session.getTime()));
+		    ts1.add(TypeFactory.createType(IType.Type.STRING, val));
+		} catch (Exception e) {
+		    throw new ResolveException(e);
+		}
 		ts2 = resolveComponent(children.get(0), rc);
 	    } else if (children.size() == 2) {
 		ts1 = resolveComponent(children.get(0), rc);

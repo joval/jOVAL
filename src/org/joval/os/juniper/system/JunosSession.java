@@ -3,6 +3,7 @@
 
 package org.joval.os.juniper.system;
 
+import java.text.SimpleDateFormat;
 import java.util.NoSuchElementException;
 
 import org.slf4j.cal10n.LocLogger;
@@ -20,6 +21,7 @@ import org.joval.protocol.netconf.NetconfSession;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.AbstractBaseSession;
 import org.joval.util.JOVALMsg;
+import org.joval.util.SafeCLI;
 
 /**
  * A simple session implementation for Juniper JunOS devices, which is really very similar to an IOS session.
@@ -28,6 +30,8 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class JunosSession extends AbstractBaseSession implements ILocked, IJunosSession {
+    private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
+
     private SshSession ssh;
     private ISupportInformation supportInfo;
     private boolean initialized;
@@ -94,6 +98,16 @@ public class JunosSession extends AbstractBaseSession implements ILocked, IJunos
 	    }
 	    return null;
 	}
+    }
+
+    public long getTime() throws Exception {
+	long to = getProperties().getLongProperty(PROP_READ_TIMEOUT);
+	for (String line : SafeCLI.multiLine("show system uptime", this, to)) {
+	    if (line.startsWith("Current time: ")) {
+		return SDF.parse(line.substring(14)).getTime();
+	    }
+	}
+	throw new NoSuchElementException("Current time");
     }
 
     @Override

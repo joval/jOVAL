@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import javax.security.auth.login.CredentialException;
 
 import org.slf4j.cal10n.LocLogger;
@@ -31,6 +32,7 @@ import org.joval.ssh.io.SftpFilesystem;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.AbstractSession;
 import org.joval.util.JOVALMsg;
+import org.joval.util.SafeCLI;
 
 /**
  * A representation of Unix session.
@@ -39,6 +41,7 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class UnixSession extends BaseUnixSession implements ILocked {
+    private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     private static final String MOTD = "/etc/motd";
 
     SshSession ssh;
@@ -119,6 +122,11 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 	    ssh.disconnect();
 	}
 	connected = false;
+    }
+
+    @Override
+    public long getTime() throws Exception {
+	return SDF.parse(SafeCLI.exec("date \"+%Y-%m-%d %T %z\"", this, Timeout.S)).getTime();
     }
 
     @Override

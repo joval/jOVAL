@@ -108,6 +108,8 @@ public abstract class AbstractBaseSession implements IBaseSession {
 
     public abstract String getHostname();
 
+    public abstract long getTime() throws Exception;
+
     public abstract Type getType();
 
     public abstract IProcess createProcess(String command, String[] env) throws Exception;

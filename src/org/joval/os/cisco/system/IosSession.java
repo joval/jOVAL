@@ -3,6 +3,7 @@
 
 package org.joval.os.cisco.system;
 
+import java.text.SimpleDateFormat;
 import java.util.NoSuchElementException;
 
 import org.slf4j.cal10n.LocLogger;
@@ -19,6 +20,7 @@ import org.joval.protocol.netconf.NetconfSession;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.AbstractBaseSession;
 import org.joval.util.JOVALMsg;
+import org.joval.util.SafeCLI;
 
 /**
  * A simple session implementation for Cisco IOS devices, which is really just an SSH session.
@@ -27,6 +29,8 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class IosSession extends AbstractBaseSession implements ILocked, IIosSession {
+    private static final SimpleDateFormat SDF = new SimpleDateFormat("HH:mm:ss.SSS z EEE MMM dd yyyy");
+
     private SshSession ssh;
     private ITechSupport techSupport;
     private boolean initialized;
@@ -124,6 +128,16 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 	    ssh.disconnect();
 	}
 	connected = false;
+    }
+
+    public long getTime() throws Exception {
+	long to = getProperties().getLongProperty(PROP_READ_TIMEOUT);
+	for (String line : SafeCLI.multiLine("show clock", this, to)) {
+	    if (line.startsWith("*")) {
+		return SDF.parse(line.substring(1)).getTime();
+	    }
+	}
+	throw new NoSuchElementException("*");
     }
 
     /**
