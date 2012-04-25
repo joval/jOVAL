@@ -149,10 +149,10 @@ public class Pwpolicy59Adapter implements IAdapter {
 	    for (String line : SafeCLI.multiLine(sb.toString(), session, IUnixSession.Timeout.S)) {
 		if (line.indexOf("=") > 0) {
 		    for (String pair : StringTools.toList(StringTools.tokenize(line, " "))) {
-			int ptr = line.indexOf("=");
+			int ptr = pair.indexOf("=");
 			if (ptr != -1) {
-			    String key = line.substring(0,ptr).trim();
-			    String val = line.substring(ptr+1).trim();
+			    String key = pair.substring(0,ptr).trim();
+			    String val = pair.substring(ptr+1).trim();
 			    policies.put(key, val);
 			}
 		    }
