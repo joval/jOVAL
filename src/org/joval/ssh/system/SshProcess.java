@@ -134,7 +134,7 @@ class SshProcess implements IProcess {
 		} else {
 		    f = new File(wsdir, "out." + pid + ".log");
 		}
-		debugIn = new StreamLogger(command, in, f, logger);
+		debugIn = new StreamLogger(command, in, f);
 	    }
 	    return debugIn;
 	} else {
@@ -151,7 +151,7 @@ class SshProcess implements IProcess {
 		} else {
 		    f = new File(wsdir, "err." + pid + ".log");
 		}
-		debugErr = new StreamLogger(command, channel.getExtInputStream(), f, logger);
+		debugErr = new StreamLogger(command, channel.getExtInputStream(), f);
 	    }
 	    return debugErr;
 	} else {

@@ -44,7 +44,6 @@ import org.joval.io.fs.DefaultFile;
 import org.joval.io.fs.FileInfo;
 import org.joval.io.BufferedReader;
 import org.joval.io.PerishableReader;
-import org.joval.io.StreamLogger;
 import org.joval.io.StreamTool;
 import org.joval.os.unix.io.driver.AIXDriver;
 import org.joval.os.unix.io.driver.LinuxDriver;

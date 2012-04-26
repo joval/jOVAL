@@ -8,8 +8,6 @@ import java.io.InputStream;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
-import org.joval.util.JOVALMsg;
-
 /**
  * This class is used to retrieve JAXB package mappings for SCAP schemas.
  *
@@ -84,40 +82,46 @@ public class SchemaRegistry {
 
     static {
 	schemaProps = new Properties();
-	try {
-	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    InputStream rsc = cl.getResourceAsStream(OVAL_RESOURCE);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, OVAL_RESOURCE));
-	    } else {
+	ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	InputStream rsc = cl.getResourceAsStream(OVAL_RESOURCE);
+	if (rsc != null) {
+	    try {
 		schemaProps.load(rsc);
+	    } catch (IOException e) {
+		e.printStackTrace();
 	    }
-	    rsc = cl.getResourceAsStream(CPE_RESOURCE);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, CPE_RESOURCE));
-	    } else {
+	}
+	rsc = cl.getResourceAsStream(CPE_RESOURCE);
+	if (rsc != null) {
+	    try {
 		schemaProps.load(rsc);
+	    } catch (IOException e) {
+		e.printStackTrace();
 	    }
-	    rsc = cl.getResourceAsStream(XCCDF_RESOURCE);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, XCCDF_RESOURCE));
-	    } else {
+	}
+	rsc = cl.getResourceAsStream(XCCDF_RESOURCE);
+	if (rsc != null) {
+	    try {
 		schemaProps.load(rsc);
+	    } catch (IOException e) {
+		e.printStackTrace();
 	    }
-	    rsc = cl.getResourceAsStream(OCIL_RESOURCE);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, OCIL_RESOURCE));
-	    } else {
+	}
+	rsc = cl.getResourceAsStream(OCIL_RESOURCE);
+	if (rsc != null) {
+	    try {
 		schemaProps.load(rsc);
+	    } catch (IOException e) {
+		e.printStackTrace();
 	    }
-	    rsc = cl.getResourceAsStream(SVRL_RESOURCE);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, SVRL_RESOURCE));
-	    } else {
+	}
+	rsc = cl.getResourceAsStream(SVRL_RESOURCE);
+	if (rsc != null) {
+	    try {
 		schemaProps.load(rsc);
+	    } catch (IOException e) {
+		e.printStackTrace();
 	    }
-	} catch (IOException e) {
-	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 

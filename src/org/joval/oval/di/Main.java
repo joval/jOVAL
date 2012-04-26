@@ -514,10 +514,11 @@ public class Main implements IObserver {
 
     private boolean validateSchema(File f, File[] schemas) throws SAXException, IOException {
 	SchemaValidator validator = new SchemaValidator(schemas);
-	if (validator.validate(f)) {
+	try {
+	    validator.validate(f);
 	    return true;
-	} else {
-	    print(getMessage("ERROR_VALIDATION", validator.getLastError().getMessage()));
+	} catch (Exception e) {
+	    print(getMessage("ERROR_VALIDATION", e.getMessage()));
 	    return false;
 	}
     }

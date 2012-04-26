@@ -168,7 +168,7 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 		    } else {
 			f = new File(wsdir, "out." + pid + ".log");
 		    }
-		    debugIn = new StreamLogger(command, p.getInputStream(), f, logger);
+		    debugIn = new StreamLogger(command, p.getInputStream(), f);
 		}
 		return debugIn;
 	    } else {
@@ -185,7 +185,7 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 		    } else {
 			f = new File(wsdir, "err." + pid + ".log");
 		    }
-		    debugErr = new StreamLogger(command, p.getErrorStream(), f, logger);
+		    debugErr = new StreamLogger(command, p.getErrorStream(), f);
 		}
 		return debugErr;
 	    } else {

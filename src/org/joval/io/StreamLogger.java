@@ -10,11 +10,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 
-import org.slf4j.cal10n.LocLogger;
-
-import org.joval.intf.io.IFile;
-import org.joval.util.JOVALMsg;
-
 /**
  * Provides a facade for an InputStream while logging its contents to a file.
  *
@@ -24,22 +19,17 @@ import org.joval.util.JOVALMsg;
 public class StreamLogger extends InputStream {
     private InputStream in;
     private OutputStream out;
-    private LocLogger logger;
     private boolean closed = false;
 
     public StreamLogger(InputStream in, File outLog) throws IOException {
-	this(null, in, outLog, JOVALMsg.getLogger());
+	this(null, in, outLog);
     }
 
-    public StreamLogger(String comment, InputStream in, File outLog, LocLogger logger) throws IOException {
-	this(comment, in, new FileOutputStream(outLog), logger);
+    public StreamLogger(String comment, InputStream in, File outLog) throws IOException {
+	this(comment, in, new FileOutputStream(outLog));
     }
 
-    public StreamLogger(String comment, InputStream in, IFile outLog, LocLogger logger) throws IOException {
-	this(comment, in, outLog.getOutputStream(false), logger);
-    }
-
-    public StreamLogger(String comment, InputStream in, OutputStream out, LocLogger logger) throws IOException {
+    public StreamLogger(String comment, InputStream in, OutputStream out) throws IOException {
 	this.in = in;
 	this.out = out;
 	if (comment != null) {
@@ -48,7 +38,6 @@ public class StreamLogger extends InputStream {
 	    sb.append(System.getProperty("line.separator"));
 	    out.write(sb.toString().getBytes());
 	}
-	this.logger = logger;
     }
 
     public void setInputStream(InputStream in) {
@@ -101,7 +90,7 @@ public class StreamLogger extends InputStream {
 	try {
 	    out.close();
 	} catch (IOException e) {
-	    logger.warn(JOVALMsg.ERROR_STREAMLOGGER_CLOSE, e.getMessage());
+	    // fail silently
 	}
 	closed = true;
 	if (ex != null) {
