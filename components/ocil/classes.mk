@@ -81,4 +81,33 @@ CLASSES=\
 	ocil.schemas.core.VariableDataType	\
 	ocil.schemas.core.VariableSetType	\
 	ocil.schemas.core.VariablesType	\
-	ocil.schemas.core.VariableType
+	ocil.schemas.core.VariableType	\
+	ocil.schemas.variables.ObjectFactory	\
+	ocil.schemas.variables.OcilVariables	\
+	ocil.schemas.variables.package-info	\
+	ocil.schemas.variables.VariablesType	\
+	ocil.schemas.variables.VariableType	\
+	org.w3c.xml.signature.CanonicalizationMethodType	\
+	org.w3c.xml.signature.DigestMethodType	\
+	org.w3c.xml.signature.DSAKeyValueType	\
+	org.w3c.xml.signature.KeyInfoType	\
+	org.w3c.xml.signature.KeyValueType	\
+	org.w3c.xml.signature.ManifestType	\
+	org.w3c.xml.signature.ObjectFactory	\
+	org.w3c.xml.signature.ObjectType	\
+	org.w3c.xml.signature.package-info	\
+	org.w3c.xml.signature.PGPDataType	\
+	org.w3c.xml.signature.ReferenceType	\
+	org.w3c.xml.signature.RetrievalMethodType	\
+	org.w3c.xml.signature.RSAKeyValueType	\
+	org.w3c.xml.signature.SignatureMethodType	\
+	org.w3c.xml.signature.SignaturePropertiesType	\
+	org.w3c.xml.signature.SignaturePropertyType	\
+	org.w3c.xml.signature.SignatureType	\
+	org.w3c.xml.signature.SignatureValueType	\
+	org.w3c.xml.signature.SignedInfoType	\
+	org.w3c.xml.signature.SPKIDataType	\
+	org.w3c.xml.signature.TransformsType	\
+	org.w3c.xml.signature.TransformType	\
+	org.w3c.xml.signature.X509DataType	\
+	org.w3c.xml.signature.X509IssuerSerialType	\
