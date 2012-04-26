@@ -41,11 +41,11 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class UnixSession extends BaseUnixSession implements ILocked {
-    private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     private static final String MOTD = "/etc/motd";
 
     SshSession ssh;
 
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     private SftpFilesystem sfs;
     private ICredential cred;
     private Credential rootCred = null;
@@ -126,7 +126,9 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 
     @Override
     public long getTime() throws Exception {
-	return SDF.parse(SafeCLI.exec("date \"+%Y-%m-%d %T %z\"", this, Timeout.S)).getTime();
+	synchronized(sdf) {
+	    return sdf.parse(SafeCLI.exec("date \"+%Y-%m-%d %T %z\"", this, Timeout.S)).getTime();
+	}
     }
 
     @Override

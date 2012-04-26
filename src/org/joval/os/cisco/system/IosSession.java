@@ -29,8 +29,7 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class IosSession extends AbstractBaseSession implements ILocked, IIosSession {
-    private static final SimpleDateFormat SDF = new SimpleDateFormat("HH:mm:ss.SSS z EEE MMM dd yyyy");
-
+    private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS z EEE MMM dd yyyy");
     private SshSession ssh;
     private ITechSupport techSupport;
     private boolean initialized;
@@ -134,7 +133,9 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 	long to = getProperties().getLongProperty(PROP_READ_TIMEOUT);
 	for (String line : SafeCLI.multiLine("show clock", this, to)) {
 	    if (line.startsWith("*")) {
-		return SDF.parse(line.substring(1)).getTime();
+		synchronized(sdf) {
+		    return sdf.parse(line.substring(1)).getTime();
+		}
 	    }
 	}
 	throw new NoSuchElementException("*");

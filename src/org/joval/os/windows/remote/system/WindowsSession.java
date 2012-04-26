@@ -51,8 +51,6 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class WindowsSession extends AbstractSession implements IWindowsSession, ILocked {
-    private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
-
     private static int counter = 0;
     static {
 	JISystem.getLogger().setLevel(Level.WARNING);
@@ -60,6 +58,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	JISystem.setJavaCoClassAutoCollection(false);
     }
 
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
     private String host;
     private String tempDir=null, cwd;
     private IWindowsCredential cred;
@@ -165,7 +164,9 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	sb.append(":");
 	sb.append(props.getItem("Second").getValueAsString());
 	sb.append(" +0000");
-	return SDF.parse(sb.toString()).getTime();
+	synchronized(sdf) {
+	    return sdf.parse(sb.toString()).getTime();
+	}
     }
 
     @Override

@@ -30,8 +30,7 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class JunosSession extends AbstractBaseSession implements ILocked, IJunosSession {
-    private static final SimpleDateFormat SDF = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
-
+    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
     private SshSession ssh;
     private ISupportInformation supportInfo;
     private boolean initialized;
@@ -104,7 +103,9 @@ public class JunosSession extends AbstractBaseSession implements ILocked, IJunos
 	long to = getProperties().getLongProperty(PROP_READ_TIMEOUT);
 	for (String line : SafeCLI.multiLine("show system uptime", this, to)) {
 	    if (line.startsWith("Current time: ")) {
-		return SDF.parse(line.substring(14)).getTime();
+		synchronized(sdf) {
+		    return sdf.parse(line.substring(14)).getTime();
+		}
 	    }
 	}
 	throw new NoSuchElementException("Current time");
