@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-  Copyright (C) 2012 gOCIL.org.  All rights reserved.
+  Copyright (C) 2012 jOVAL.org.  All rights reserved.
+  This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 -->
 <jxb:bindings version="1.0" xmlns:jxb="http://java.sun.com/xml/ns/jaxb" xmlns:xs="http://www.w3.org/2001/XMLSchema">
