@@ -55,6 +55,7 @@ import oval.schemas.definitions.core.ConstantVariable;
 import oval.schemas.definitions.core.CountFunctionType;
 import oval.schemas.definitions.core.CriteriaType;
 import oval.schemas.definitions.core.CriterionType;
+import oval.schemas.definitions.core.DateTimeFormatEnumeration;
 import oval.schemas.definitions.core.DefinitionType;
 import oval.schemas.definitions.core.DefinitionsType;
 import oval.schemas.definitions.core.EndFunctionType;
@@ -2133,10 +2134,11 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 	    Collection<IType> ts1;
 	    Collection<IType> ts2;
 	    if (children.size() == 1) {
+		tt.setFormat1(DateTimeFormatEnumeration.SECONDS_SINCE_EPOCH);
 		ts1 = new Vector<IType>();
 		try {
-		    String val = new SimpleDateFormat("yyyyMMdd'T'HHmmss").format(new Date(session.getTime()));
-		    ts1.add(TypeFactory.createType(IType.Type.STRING, val));
+		    String val = Long.toString(session.getTime() / 1000L);
+		    ts1.add(TypeFactory.createType(IType.Type.INT, val));
 		} catch (Exception e) {
 		    throw new ResolveException(e);
 		}
