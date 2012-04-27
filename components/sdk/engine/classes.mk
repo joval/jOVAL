@@ -15,6 +15,8 @@ CLASSES=\
 	org.joval.intf.system.IProcess			\
 	org.joval.intf.net.ICIDR			\
 	org.joval.intf.xml.ITransformable		\
+	org.joval.net.Ip4Address			\
+	org.joval.net.Ip6Address			\
 	org.joval.os.windows.Timestamp			\
 	org.joval.oval.CollectException			\
 	org.joval.oval.DefinitionFilter			\

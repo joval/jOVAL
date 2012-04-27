@@ -7,62 +7,23 @@ import java.util.StringTokenizer;
 
 import org.joval.intf.net.ICIDR;
 import org.joval.intf.oval.IType;
+import org.joval.net.Ip4Address;
 
 /**
- * A utility class for dealing with individual addresses or CIDR ranges for IPv4.
+ * A type class for dealing with individual addresses or CIDR ranges for IPv4.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class Ip4AddressType extends AbstractType implements ICIDR<Ip4AddressType> {
-    private short[] addr = new short[4];
-    private short[] mask = new short[4];
-    private int maskVal;
+    private Ip4Address addr;
 
     public Ip4AddressType(String str) throws IllegalArgumentException {
-	int ptr = str.indexOf("/");
-	maskVal = 32;
-	String ipStr = null;
-	if (ptr == -1) {
-	    ipStr = str;
-	} else {
-	    maskVal = Integer.parseInt(str.substring(ptr+1));
-	    ipStr = str.substring(0, ptr);
-	}
-
-	//
-	// Create the netmask
-	//
-	short[] maskBits = new short[32];
-	for (int i=0; i < 32; i++) {
-	    if (i < maskVal) {
-		maskBits[i] = 1;
-	    } else {
-		maskBits[i] = 0;
-	    }
-	}
-	for (int i=0; i < 4; i++) {
-	    mask[i] = (short)(maskBits[8*i + 1] * 8 +
-			      maskBits[8*i + 2] * 4 +
-			      maskBits[8*i + 3] * 2 +
-			      maskBits[8*i + 4]);
-	}
-
-	StringTokenizer tok = new StringTokenizer(ipStr, ".");
-	int numTokens = tok.countTokens();
-	if (numTokens > 4) {
-	    throw new IllegalArgumentException(str);
-	}
-	for (int i=0; i < 4 - numTokens; i++) {
-	    addr[i] = 0;
-	}
-	for (int i = 4 - tok.countTokens(); tok.hasMoreTokens(); i++) {
-	    addr[i] = (short)(Short.parseShort(tok.nextToken()) & mask[i]);
-	}
+	addr = new Ip4Address(str);
     }
 
     public String getData() {
-	return toString();
+	return addr.toString();
     }
 
     // Implement IType
@@ -72,14 +33,7 @@ public class Ip4AddressType extends AbstractType implements ICIDR<Ip4AddressType
     }
 
     public String getString() {
-	StringBuffer sb = new StringBuffer();
-	for (int i=0; i < 4; i++) {
-	    if (i > 0) {
-		sb.append(".");
-	    }
-	    sb.append(Short.toString(addr[i]));
-	}
-	return sb.append("/").append(Integer.toString(maskVal)).toString();
+	return addr.toString();
     }
 
     // Implement Comparable
@@ -91,26 +45,18 @@ public class Ip4AddressType extends AbstractType implements ICIDR<Ip4AddressType
 	} catch (UnsupportedOperationException e) {
 	    throw new IllegalArgumentException(e);
 	}
-	for (int i=0; i < 4; i++) {
-	    if (addr[i] == other.addr[i]) {
-		continue;
-	    } else if (addr[i] < other.addr[i]) {
-		return -1;
-	    } else {
-		return 1;
-	    }
+	if (getData().equals(other.getData())) {
+	    return 0;
+	} else if (addr.contains(other.addr)) {
+	    return 1;
+	} else {
+	    return -1;
 	}
-	return 0;
     }
 
     // Implement ICIDR
 
     public boolean contains(Ip4AddressType other) {
-	for (int i=0; i < 4; i++) {
-	    if (addr[i] != (other.addr[i] & mask[i])) {
-		return false;
-	    }
-	}
-	return true;
+	return addr.contains(other.addr);
     }
 }

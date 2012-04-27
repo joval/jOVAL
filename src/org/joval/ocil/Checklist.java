@@ -5,7 +5,9 @@ package org.joval.ocil;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Hashtable;
+import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -14,6 +16,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
 import ocil.schemas.core.OCILType;
+import ocil.schemas.core.QuestionnaireType;
 
 import org.joval.xml.SchemaRegistry;
 
@@ -56,6 +59,7 @@ public class Checklist {
     }
 
     private OCILType ocil;
+    private Hashtable<String, QuestionnaireType> questionnaires;
 
     /**
      * Create a Checklist based on the contents of a checklist file.
@@ -72,10 +76,37 @@ public class Checklist {
      * Create a Checklist from unmarshalled XML.
      */
     public Checklist(OCILType ocil) {
+	this();
 	this.ocil = ocil;
+	for (QuestionnaireType q : ocil.getQuestionnaires().getQuestionnaire()) {
+	    questionnaires.put(q.getId(), q);
+	}
+    }
+
+    /**
+     * Create an empty Checklist.
+     */
+    public Checklist() {
+	questionnaires = new Hashtable<String, QuestionnaireType>();
     }
 
     public OCILType getOCILType() {
 	return ocil;
+    }
+
+    public boolean containsQuestionnaire(String id) {
+	return questionnaires.contains(id);
+    }
+
+    public QuestionnaireType getQuestionnaire(String id) throws NoSuchElementException {
+	if (questionnaires.containsKey(id)) {
+	    return questionnaires.get(id);
+	} else {
+	    throw new NoSuchElementException(id);
+	}
+    }
+
+    public Collection<QuestionnaireType> getQuestionnaires() {
+	return questionnaires.values();
     }
 }

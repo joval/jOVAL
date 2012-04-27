@@ -48,14 +48,14 @@ public class Variables {
     /**
      * Create Variables from a file.
      */
-    Variables(File f) throws OcilException {
+    public Variables(File f) throws OcilException {
 	this(getOcilVariables(f));
     }
 
     /**
      * Create Variables from parsed OcilVariables.
      */
-    Variables(OcilVariables variables) throws OcilException {
+    public Variables(OcilVariables variables) throws OcilException {
 	this.variables = variables;
     }
 
