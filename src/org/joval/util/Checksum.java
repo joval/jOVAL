@@ -48,8 +48,12 @@ public class Checksum {
 	}
     }
 
-    public static String getChecksum(String data, Algorithm algorithm) throws IOException {
-	return getChecksum(new ByteArrayInputStream(data.getBytes()), algorithm);
+    public static String getChecksum(String data, Algorithm algorithm) {
+	try {
+	    return getChecksum(new ByteArrayInputStream(data.getBytes()), algorithm);
+	} catch (IOException e) {
+	    throw new RuntimeException(e);
+	}
     }
 
     public static String getChecksum(InputStream in, Algorithm algorithm) throws IOException {
