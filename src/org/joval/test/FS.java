@@ -9,8 +9,6 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.regex.Pattern;
@@ -22,6 +20,7 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;
 import org.joval.intf.util.ISearchable;
+import org.joval.util.Checksum;
 
 public class FS {
     private ISession session;
@@ -63,7 +62,7 @@ public class FS {
 		    }
 		} else if (f.isFile()) {
 		    in = f.getInputStream();
-		    String cs = getMD5Checksum(in);
+		    String cs = Checksum.getChecksum(in, Checksum.Algorithm.MD5);
 		    System.out.println("Path:  " + path);
 		    System.out.println(" Size: " + f.length());
 		    System.out.println("  md5: " + cs);
@@ -83,29 +82,5 @@ public class FS {
 		e.printStackTrace();
 	    }
 	}
-    }
-
-    public static String getMD5Checksum(InputStream in) throws IOException {
-        byte[] buff = createChecksum(in);
-        String str = "";
-        for (int i=0; i < buff.length; i++) {
-          str += Integer.toString((buff[i]&0xff) + 0x100, 16).substring(1);
-        }
-        return str;
-    }
-
-    public static byte[] createChecksum(InputStream in) throws IOException {
-        try {
-            byte[] buff = new byte[1024];
-            MessageDigest digest = MessageDigest.getInstance("MD5");
-            int len = 0;
-            while ((len = in.read(buff)) > 0) {
-                digest.update(buff, 0, len);
-            }
-            in.close();
-            return digest.digest();
-        } catch (NoSuchAlgorithmException e) {
-            throw new IOException (e.getMessage());
-        }
     }
 }

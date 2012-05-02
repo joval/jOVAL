@@ -18,29 +18,42 @@ import java.security.NoSuchAlgorithmException;
  * @version %I% %G%
  */
 public class Checksum {
-    public static String getMD5Checksum(File f) throws IOException {
+    public enum Algorithm {
+	MD5("MD5"),
+	SHA1("SHA-1");
+
+	String value;
+
+	Algorithm(String value) {
+	    this.value = value;
+	}
+
+	String value() {
+	    return value;
+	}
+    }
+
+    public static String getChecksum(File f, Algorithm algorithm) throws IOException {
 	InputStream in = null;
 	try {
 	    in = new FileInputStream(f);
-	    return getMD5Checksum(in);
+	    return getChecksum(in, algorithm);
 	} finally {
 	    try {
 		if (in != null) {
 		    in.close();
 		}
 	    } catch (IOException e) {
-		JOVALMsg.getLogger().warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
-		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
     }
 
-    public static String getMD5Checksum(String data) throws IOException {
-	return getMD5Checksum(new ByteArrayInputStream(data.getBytes()));
+    public static String getChecksum(String data, Algorithm algorithm) throws IOException {
+	return getChecksum(new ByteArrayInputStream(data.getBytes()), algorithm);
     }
 
-    public static String getMD5Checksum(InputStream in) throws IOException {
-        byte[] buff = createChecksum(in);
+    public static String getChecksum(InputStream in, Algorithm algorithm) throws IOException {
+        byte[] buff = createChecksum(in, algorithm);
         String str = "";
         for (int i=0; i < buff.length; i++) {
           str += Integer.toString((buff[i]&0xff) + 0x100, 16).substring(1);
@@ -48,10 +61,10 @@ public class Checksum {
         return str;
     }
 
-    public static byte[] createChecksum(InputStream in) throws IOException {
+    public static byte[] createChecksum(InputStream in, Algorithm algorithm) throws IOException {
 	try {
-            byte[] buff = new byte[1024];
-            MessageDigest digest = MessageDigest.getInstance("MD5");
+            byte[] buff = new byte[512];
+            MessageDigest digest = MessageDigest.getInstance(algorithm.value());
             int len = 0;
             while ((len = in.read(buff)) > 0) {
         	digest.update(buff, 0, len);

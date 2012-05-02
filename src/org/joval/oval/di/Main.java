@@ -340,11 +340,11 @@ public class Main implements IObserver {
 	try {
 	    if (state.computeChecksum) {
 		print("");
-		print(Checksum.getMD5Checksum(state.defsFile));
+		print(Checksum.getChecksum(state.defsFile, Checksum.Algorithm.MD5));
 		return OK;
 	    } else if (state.validateChecksum) {
 		print(" ** verifying the MD5 hash of '" + state.getPath(state.defsFile) + "' file");
-		String checksum = Checksum.getMD5Checksum(state.defsFile);
+		String checksum = Checksum.getChecksum(state.defsFile, Checksum.Algorithm.MD5);
 		if (!state.specifiedChecksum.equals(checksum)) {
 		    print(getMessage("ERROR_CHECKSUM_MISMATCH", state.getPath(state.defsFile)));
 		    return ERR;
