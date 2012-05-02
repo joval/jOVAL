@@ -65,6 +65,25 @@ public class Checksum {
         return str;
     }
 
+    public static String getChecksum(byte[] buff, Algorithm algorithm) {
+        byte[] cs = createChecksum(buff, algorithm);
+        String str = "";
+        for (int i=0; i < cs.length; i++) {
+          str += Integer.toString((cs[i]&0xff) + 0x100, 16).substring(1);
+        }
+        return str;
+    }
+
+    public static byte[] createChecksum(byte[] buff, Algorithm algorithm) {
+	try {
+            MessageDigest digest = MessageDigest.getInstance(algorithm.value());
+            digest.update(buff, 0, buff.length);
+            return digest.digest();
+	} catch (NoSuchAlgorithmException e) {
+	    throw new RuntimeException(e.getMessage());
+	}
+    }
+
     public static byte[] createChecksum(InputStream in, Algorithm algorithm) throws IOException {
 	try {
             byte[] buff = new byte[512];
@@ -76,7 +95,7 @@ public class Checksum {
             in.close();
             return digest.digest();
 	} catch (NoSuchAlgorithmException e) {
-	    throw new IOException(e.getMessage());
+	    throw new RuntimeException(e.getMessage());
 	}
     }
 }

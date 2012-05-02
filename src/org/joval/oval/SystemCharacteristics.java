@@ -11,8 +11,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -49,6 +47,7 @@ import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.util.ILoggable;
 import org.joval.oval.OvalException;
 import org.joval.oval.xml.OvalNamespacePrefixMapper;
+import org.joval.util.Checksum;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
@@ -421,17 +420,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    ByteArrayOutputStream out = new ByteArrayOutputStream();
 	    try {
 		csMarshaller.marshal(elt, out);
-		byte[] buff = out.toByteArray();
-		MessageDigest digest = MessageDigest.getInstance("MD5");
-		digest.update(buff, 0, buff.length);
-		byte[] cs = digest.digest();
-		StringBuffer sb = new StringBuffer();
-		for (int i=0; i < cs.length; i++) {
-		    sb.append(Integer.toHexString(0xFF & cs[i]));
-		}
-		checksum = sb.toString();
-	    } catch (NoSuchAlgorithmException e) {
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		checksum = Checksum.getChecksum(out.toByteArray(), Checksum.Algorithm.MD5);
 	    } catch (JAXBException e) {
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
