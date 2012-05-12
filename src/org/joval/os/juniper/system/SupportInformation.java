@@ -29,6 +29,9 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class SupportInformation implements ISupportInformation {
+    private static final String NOFORWARDING = "no-forwarding";
+    private static final int NOFORWARDING_LEN = NOFORWARDING.length();
+
     private Hashtable<String, List<String>> data = new Hashtable<String, List<String>>();
     private LocLogger logger;
 
@@ -139,6 +142,10 @@ public class SupportInformation implements ISupportInformation {
     }
 
     private String getHeading(String line) {
-	return line.substring(prompt.length()).trim();
+	String s = line.substring(prompt.length()).trim();
+	if (s.endsWith(NOFORWARDING)) {
+	    s = s.substring(0, s.length() - NOFORWARDING_LEN).trim();
+	}
+	return s;
     }
 }

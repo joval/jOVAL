@@ -4,6 +4,8 @@
 package org.joval.ocil;
 
 import java.io.File;
+import java.util.Hashtable;
+import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -11,6 +13,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
 import ocil.schemas.variables.OcilVariables;
+import ocil.schemas.variables.VariableType;
 
 import org.joval.xml.SchemaRegistry;
 
@@ -44,6 +47,7 @@ public class Variables {
     }
 
     private OcilVariables variables;
+    private Hashtable<String, VariableType> table;
 
     /**
      * Create Variables from a file.
@@ -57,9 +61,27 @@ public class Variables {
      */
     public Variables(OcilVariables variables) throws OcilException {
 	this.variables = variables;
+	table = new Hashtable<String, VariableType>();
+	if (variables.isSetVariables() && variables.getVariables().isSetVariable()) {
+	    for (VariableType var : variables.getVariables().getVariable()) {
+		table.put(var.getId(), var);
+	    }
+	}
     }
 
     public OcilVariables getOcilVariables() {
 	return variables;
+    }
+
+    public boolean containsVariable(String id) {
+	return table.containsKey(id);
+    }
+
+    public VariableType getVariable(String id) throws NoSuchElementException {
+	if (table.containsKey(id)) {
+	    return table.get(id);
+	} else {
+	    throw new NoSuchElementException(id);
+	}
     }
 }
