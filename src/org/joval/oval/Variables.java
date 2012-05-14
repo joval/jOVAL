@@ -201,14 +201,8 @@ public class Variables implements IVariables {
 
     // Implement ITransformable
 
-    public Source getSource() {
-	Source src = null;
-	try {
-	    src = new JAXBSource(ctx, getOvalVariables());
-	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return src;
+    public Source getSource() throws JAXBException {
+	return new JAXBSource(ctx, getOvalVariables());
     }
 
     // Implement ILogger

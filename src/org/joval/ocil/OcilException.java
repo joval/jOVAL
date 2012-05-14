@@ -3,13 +3,15 @@
 
 package org.joval.ocil;
 
+import org.joval.scap.ScapException;
+
 /**
  * An exception class for OCIL parsing.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class OcilException extends Exception {
+public class OcilException extends ScapException {
     public OcilException(String message) {
 	super(message);
     }

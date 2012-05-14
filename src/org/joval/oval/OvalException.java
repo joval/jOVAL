@@ -3,13 +3,15 @@
 
 package org.joval.oval;
 
+import org.joval.scap.ScapException;
+
 /**
  * An exception class for OVAL parsing.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class OvalException extends Exception {
+public class OvalException extends ScapException {
     public OvalException(String message) {
 	super(message);
     }

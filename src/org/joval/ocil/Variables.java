@@ -9,12 +9,14 @@ import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
 import ocil.schemas.variables.OcilVariables;
 import ocil.schemas.variables.VariableType;
 
+import org.joval.intf.xml.ITransformable;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -23,7 +25,7 @@ import org.joval.xml.SchemaRegistry;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Variables {
+public class Variables implements ITransformable {
     /**
      * Unmarshal an XML file and return the OcilVariables root object.
      */
@@ -83,5 +85,12 @@ public class Variables {
 	} else {
 	    throw new NoSuchElementException(id);
 	}
+    }
+
+    // Implement ITransformable
+
+    public Source getSource() throws JAXBException {
+	JAXBContext ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OCIL));
+	return new JAXBSource(ctx, getOcilVariables());
     }
 }

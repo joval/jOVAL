@@ -144,15 +144,9 @@ public class Definitions implements IDefinitions, ILoggable {
 
     // Implement ITransformable
 
-    public Source getSource() {
-	Source src = null;
-	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_DEFINITIONS);
-	    src = new JAXBSource(JAXBContext.newInstance(packages), getOvalDefinitions());
-	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return src;
+    public Source getSource() throws JAXBException {
+	String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_DEFINITIONS);
+	return new JAXBSource(JAXBContext.newInstance(packages), getOvalDefinitions());
     }
 
     // Implement IDefinitions

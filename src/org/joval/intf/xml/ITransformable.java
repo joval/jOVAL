@@ -3,7 +3,10 @@
 
 package org.joval.intf.xml;
 
+import javax.xml.bind.JAXBException;
 import javax.xml.transform.Source;
+
+import org.joval.scap.ScapException;
 
 /**
  * Interface of an XML structure that is transformable.
@@ -15,6 +18,6 @@ public interface ITransformable {
     /**
      * Get a source that can be used for performing transforms.
      */
-    public Source getSource();
+    public Source getSource() throws JAXBException, ScapException;
 }
 

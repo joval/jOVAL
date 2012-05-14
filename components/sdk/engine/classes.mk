@@ -59,4 +59,5 @@ CLASSES=\
 	org.joval.oval.types.StringType			\
 	org.joval.oval.types.TypeFactory		\
 	org.joval.oval.types.VersionType		\
-	org.joval.oval.xml.OvalNamespacePrefixMapper
+	org.joval.oval.xml.OvalNamespacePrefixMapper	\
+	org.joval.scap.ScapException

@@ -387,6 +387,8 @@ public class Main implements IObserver {
 			}
 		    }
 		    return ERR;
+		} catch (Exception e) {
+		    logger.log(Level.WARNING, e.getMessage(), e);
 		}
 	    } else {
 		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));
@@ -483,6 +485,8 @@ public class Main implements IObserver {
 			}
 		    }
 		    return ERR;
+		} catch (Exception e) {
+		    logger.log(Level.WARNING, e.getMessage(), e);
 		}
 	    } else {
 		print(getMessage("MESSAGE_SKIPPING_SCHEMATRON"));

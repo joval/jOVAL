@@ -3,13 +3,15 @@
 
 package org.joval.xccdf;
 
+import org.joval.scap.ScapException;
+
 /**
  * An exception class for XCCDF parsing.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class XccdfException extends Exception {
+public class XccdfException extends ScapException {
     public XccdfException(String message) {
 	super(message);
     }

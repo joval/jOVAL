@@ -1,22 +1,20 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.cpe;
-
-import org.joval.scap.ScapException;
+package org.joval.scap;
 
 /**
- * An exception class for CPE parsing.
+ * The parent exception class for all SCAP-related exceptions.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class CpeException extends ScapException {
-    public CpeException(String message) {
+public abstract class ScapException extends Exception {
+    public ScapException(String message) {
 	super(message);
     }
 
-    public CpeException(Exception e) {
+    public ScapException(Exception e) {
 	super(e);
     }
 }

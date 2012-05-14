@@ -150,16 +150,8 @@ public class Results implements IResults, ILoggable {
 
     // Implement ITransformable
 
-    public Source getSource() {
-	Source src = null;
-	try {
-	    src = new JAXBSource(ctx, getOvalResults());
-	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (OvalException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return src;
+    public Source getSource() throws JAXBException, OvalException {
+	return new JAXBSource(ctx, getOvalResults());
     }
 
     // Implement IResults
@@ -221,6 +213,10 @@ public class Results implements IResults, ILoggable {
 	    TransformerFactory xf = TransformerFactory.newInstance();
 	    Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(transform)));
 	    transformer.transform(getSource(), new StreamResult(output));
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (OvalException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FileNotFoundException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	} catch (TransformerConfigurationException e) {
