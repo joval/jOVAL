@@ -19,6 +19,7 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
@@ -42,6 +43,7 @@ import ocil.schemas.core.SystemTargetType;
 import ocil.schemas.core.TestActionRefType;
 import ocil.schemas.core.VariableType;
 
+import org.joval.intf.xml.ITransformable;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -50,7 +52,7 @@ import org.joval.xml.SchemaRegistry;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Checklist {
+public class Checklist implements ITransformable {
     public static final OCILType getOCILType(File f) throws OcilException {
 	return getOCILType(new StreamSource(f));
     }
@@ -82,6 +84,7 @@ public class Checklist {
 	}
     }
 
+    private JAXBContext ctx;
     private OCILType ocil;
     private Hashtable<String, QuestionnaireType> questionnaires;
     private Hashtable<String, QuestionType> questions;
@@ -102,7 +105,7 @@ public class Checklist {
     /**
      * Create a Checklist from unmarshalled XML.
      */
-    public Checklist(OCILType ocil) {
+    public Checklist(OCILType ocil) throws OcilException {
 	this();
 	this.ocil = ocil;
 	for (QuestionnaireType q : ocil.getQuestionnaires().getQuestionnaire()) {
@@ -128,7 +131,7 @@ public class Checklist {
 	}
 	if (ocil.getQuestions().isSetChoiceGroup()) {
 	    for (ChoiceGroupType cg : ocil.getQuestions().getChoiceGroup()) {
-	        choiceGroups.put(cg.getId(), cg.getChoice());
+		choiceGroups.put(cg.getId(), cg.getChoice());
 	    }
 	}
     }
@@ -136,7 +139,12 @@ public class Checklist {
     /**
      * Create an empty Checklist.
      */
-    private Checklist() {
+    private Checklist() throws OcilException {
+	try {
+	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OCIL));
+	} catch (JAXBException e) {
+	    throw new OcilException(e);
+	}
 	questionnaires = new Hashtable<String, QuestionnaireType>();
 	questions = new Hashtable<String, QuestionType>();
 	testActions = new Hashtable<String, QuestionTestActionType>();
@@ -206,7 +214,7 @@ public class Checklist {
      * Test to see if the specified questionnaire contains a cycle. Cycles are bad.
      *
      * @throws NoSuchElementException if there is no questionnaire with the specified ID, or if an illegal reference
-     *                                is encountered during the evaluation process
+     *				is encountered during the evaluation process
      */
     public boolean containsCycle(String id) throws NoSuchElementException {
 	return cycleCheck(id, new Stack<String>());
@@ -342,8 +350,6 @@ public class Checklist {
     public void writeXML(File f) throws IOException {
 	OutputStream out = null;
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OCIL);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
 	    Marshaller marshaller = ctx.createMarshaller();
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    out = new FileOutputStream(f);
@@ -362,6 +368,12 @@ public class Checklist {
 	}
     }
 
+    // Implement ITransformable
+
+    public Source getSource() throws JAXBException {
+	return new JAXBSource(ctx, new ObjectFactory().createOcil(getOCILType()));
+    }
+
     // Private
 
     private boolean cycleCheck(String id, Stack<String> stack) throws NoSuchElementException {
@@ -373,12 +385,12 @@ public class Checklist {
 	stack.push(id);
 	if (questionnaire.isSetActions() && questionnaire.getActions().isSetTestActionRef()) {
 	    for (TestActionRefType ref : questionnaire.getActions().getTestActionRef()) {
-	        String refId = ref.getValue();
-	        if (containsTestAction(refId)) {
+		String refId = ref.getValue();
+		if (containsTestAction(refId)) {
 		    // continue
-	        } else if (containsQuestionnaire(refId)) {
-	            return cycleCheck(refId, stack);
-	        } else {
+		} else if (containsQuestionnaire(refId)) {
+		    return cycleCheck(refId, stack);
+		} else {
 		    throw new NoSuchElementException(refId);
 		}
 	    }
