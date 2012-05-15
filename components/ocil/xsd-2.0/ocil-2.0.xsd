@@ -2146,7 +2146,8 @@ OR 	|| 0   | 0+ | 1+ | 0+ | 0+ | 0+ || Error
     <xsd:complexContent>
       <xsd:extension base="inter:VariableType">
         <xsd:sequence>
-          <xsd:element name="set" minOccurs="0" maxOccurs="1">
+	  <!-- jOVAL added the correct type, according to the specification -->
+          <xsd:element name="set" minOccurs="0" maxOccurs="1" type="inter:VariableSetType">
             <xsd:annotation>
               <xsd:documentation>The set element contains information
                         describing how to compute the value to be stored on the

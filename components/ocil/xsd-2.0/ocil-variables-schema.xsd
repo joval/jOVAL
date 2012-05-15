@@ -38,7 +38,7 @@
    </xsd:complexType>
    <xsd:complexType name="VariableType">
       <xsd:sequence>
-         <xsd:element name="value" type="xsd:anySimpleType" minOccurs="1" maxOccurs="unbounded"/>
+         <xsd:element name="value" type="xsd:anySimpleType" minOccurs="1" maxOccurs="1"/>
       </xsd:sequence>
       <xsd:attribute name="id" type="ocil:VariableIDPattern" use="required"/>
       <xsd:attribute name="datatype" use="required" type="ocil:VariableDataType"/>

@@ -27,6 +27,7 @@ import javax.xml.transform.stream.StreamSource;
 import ocil.schemas.core.ArtifactType;
 import ocil.schemas.core.ChoiceType;
 import ocil.schemas.core.ChoiceGroupType;
+import ocil.schemas.core.ChoiceQuestionType;
 import ocil.schemas.core.CompoundTestActionType;
 import ocil.schemas.core.InstructionsType;
 import ocil.schemas.core.ItemBaseType;
@@ -88,8 +89,10 @@ public class Checklist implements ITransformable {
     private OCILType ocil;
     private Hashtable<String, QuestionnaireType> questionnaires;
     private Hashtable<String, QuestionType> questions;
+    private Hashtable<String, VariableType> variables;
     private Hashtable<String, QuestionTestActionType> testActions;
     private Hashtable<String, List<ChoiceType>> choiceGroups;
+    private Hashtable<String, ChoiceType> choices;
 
     /**
      * Create a Checklist based on the contents of a checklist file.
@@ -115,6 +118,16 @@ public class Checklist implements ITransformable {
 	    if (!elt.isNil()) {
 		QuestionType q = elt.getValue();
 		questions.put(q.getId(), q);
+		if (q instanceof ChoiceQuestionType) {
+		    for (JAXBElement elt2 : ((ChoiceQuestionType)q).getChoiceOrChoiceGroupRef()) {
+			if (!elt2.isNil()) {
+			    Object obj = elt2.getValue();
+			    if (obj instanceof ChoiceType) {
+				choices.put(((ChoiceType)obj).getId(), ((ChoiceType)obj));
+			    }
+			}
+		    }
+		}
 	    }
 	}
 	for (JAXBElement<? extends ItemBaseType> elt : ocil.getTestActions().getTestAction()) {
@@ -129,9 +142,20 @@ public class Checklist implements ITransformable {
 		}
 	    }
 	}
+	if (ocil.isSetVariables() && ocil.getVariables().isSetVariable()) {
+	    for (JAXBElement<? extends VariableType> elt : ocil.getVariables().getVariable()) {
+		if (!elt.isNil()) {
+		    VariableType variable = elt.getValue();
+		    variables.put(variable.getId(), variable);
+		}
+	    }
+	}
 	if (ocil.getQuestions().isSetChoiceGroup()) {
 	    for (ChoiceGroupType cg : ocil.getQuestions().getChoiceGroup()) {
 		choiceGroups.put(cg.getId(), cg.getChoice());
+		for (ChoiceType choice : cg.getChoice()) {
+		    choices.put(choice.getId(), choice);
+		}
 	    }
 	}
     }
@@ -147,8 +171,10 @@ public class Checklist implements ITransformable {
 	}
 	questionnaires = new Hashtable<String, QuestionnaireType>();
 	questions = new Hashtable<String, QuestionType>();
+	variables = new Hashtable<String, VariableType>();
 	testActions = new Hashtable<String, QuestionTestActionType>();
 	choiceGroups = new Hashtable<String, List<ChoiceType>>();
+	choices = new Hashtable<String, ChoiceType>();
     }
 
     public OCILType getOCILType() {
@@ -176,12 +202,24 @@ public class Checklist implements ITransformable {
     }
 
     public boolean containsQuestion(String id) {
-	return questions.contains(id);
+	return questions.containsKey(id);
     }
 
     public QuestionType getQuestion(String id) throws NoSuchElementException {
 	if (questions.containsKey(id)) {
 	    return questions.get(id);
+	} else {
+	    throw new NoSuchElementException(id);
+	}
+    }
+
+    public boolean containsVariable(String id) {
+	return variables.containsKey(id);
+    }
+
+    public VariableType getVariable(String id) throws NoSuchElementException {
+	if (variables.containsKey(id)) {
+	    return variables.get(id);
 	} else {
 	    throw new NoSuchElementException(id);
 	}
@@ -205,6 +243,18 @@ public class Checklist implements ITransformable {
     public List<ChoiceType> getChoices(String id) throws NoSuchElementException {
 	if (choiceGroups.containsKey(id)) {
 	    return choiceGroups.get(id);
+	} else {
+	    throw new NoSuchElementException(id);
+	}
+    }
+
+    public boolean containsChoice(String id) {
+	return choices.containsKey(id);
+    }
+
+    public ChoiceType getChoice(String id) throws NoSuchElementException {
+	if (choices.containsKey(id)) {
+	    return choices.get(id);
 	} else {
 	    throw new NoSuchElementException(id);
 	}

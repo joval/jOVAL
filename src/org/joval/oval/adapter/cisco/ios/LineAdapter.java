@@ -58,6 +58,9 @@ public class LineAdapter implements IAdapter {
 	Collection<LineItem> items = new Vector<LineItem>();
 
 	LineObject lObj = (LineObject)obj;
+	if (lObj.getShowSubcommand() == null || !lObj.getShowSubcommand().isSetValue()) {
+	    throw new CollectException("show subcommand required", FlagEnumeration.ERROR);//DAS
+	}
 	String subcommand = (String)lObj.getShowSubcommand().getValue();
 	OperationEnumeration op = lObj.getShowSubcommand().getOperation();
 	switch(op) {
