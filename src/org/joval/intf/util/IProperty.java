@@ -31,7 +31,7 @@ public interface IProperty extends Iterable<String> {
     boolean getBooleanProperty(String key);
 
     /**
-     * Set the value for the specified key.
+     * Set the value for the specified key.  Set the value to null to remove the property.
      */
     void setProperty(String key, String value);
 }

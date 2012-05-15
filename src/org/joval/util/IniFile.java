@@ -9,23 +9,32 @@ import java.io.InputStreamReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.StringTokenizer;
 
 import org.joval.intf.util.IProperty;
 
 /**
  * A class for interpreting an ini-style config file.  Each header is treated as a section full of properties.  Comment
- * lines begin with a ';'.  Delimiters can be either ':' or '='. Key and value names are trimmed of leading and trailing
- * white-space.
+ * lines begin with a ';'.  Delimiters can be either ':' or '=', and can appear in the name of a Key if escaped in the file
+ * using a \\ character.  Key and value names are trimmed of leading and trailing white-space.  Multi-line values can be
+ * created by ending the line with the \\ character, in which case whitespace is not trimmed.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class IniFile {
+    private static final String SEMICOLON	= ";";
+    private static final String ESC		= "\\";
+    private static final String COLON		= ":";
+    private static final String EQUAL		= "=";
+
     private Hashtable<String, IProperty> sections;
 
     /**
@@ -82,9 +91,37 @@ public class IniFile {
 		    // skip comment
 		} else if ((ptr = delimIndex(line)) > 0) {
 		    if (section != null) {
-			String key = line.substring(0,ptr).trim();
-			String val = line.substring(ptr+1).trim();
-			section.setProperty(key, val);
+			String rawKey = line.substring(0,ptr).trim();
+			StringTokenizer tok = new StringTokenizer(rawKey, ESC);
+			StringBuffer sb = new StringBuffer(tok.nextToken());
+			while(tok.hasMoreTokens()) {
+			    String token = tok.nextToken();
+			    switch((int)token.charAt(0)) {
+			      case ':':
+			      case '=':
+				break;
+			      default:
+				sb.append(ESC);
+			    }
+			    sb.append(token);
+			}
+			String key = sb.toString();
+			String rawVal = line.substring(ptr+1);
+			if (rawVal.endsWith(ESC)) {
+			    StringBuffer val = new StringBuffer(rawVal.substring(0, rawVal.length() - 1));
+			    while ((rawVal = br.readLine()) != null) {
+				val.append("\n");
+				if (rawVal.endsWith(ESC)) {
+				    val.append(rawVal.substring(0, rawVal.length() - 1));
+				} else {
+				    val.append(rawVal.trim());
+				    break;
+				}
+			    }
+			    section.setProperty(key, val.toString());
+			} else {
+			    section.setProperty(key, rawVal.trim());
+			}
 		    }
 		}
 	    }
@@ -98,8 +135,36 @@ public class IniFile {
 	}
     }
 
+    public synchronized void save(OutputStream out) throws IOException {
+	PrintWriter writer = new PrintWriter(out);
+	writer.println("; Saved " + new java.util.Date().toString());
+	for (String header : listSections()) {
+	    writer.println("[" + header + "]");
+	    IProperty props = getSection(header);
+	    for (String key : props) {
+		String escapedKey = key.replace(COLON, ESC + COLON).replace(EQUAL, ESC + EQUAL);
+		StringTokenizer tok = new StringTokenizer(props.getProperty(key), "\n");
+		StringBuffer sb = new StringBuffer();
+		if(tok.countTokens() > 0) {
+		    sb.append(tok.nextToken());
+		}
+		while(tok.hasMoreTokens()) {
+		    sb.append("\\\n");
+		    sb.append(tok.nextToken());
+		}
+
+		writer.println(escapedKey + COLON + sb.toString());
+	    }
+	}
+	writer.close();
+    }
+
     public Collection<String> listSections() {
 	return sections.keySet();
+    }
+
+    public boolean containsSection(String name) {
+	return sections.containsKey(name);
     }
 
     public IProperty getSection(String name) throws NoSuchElementException {
@@ -111,20 +176,44 @@ public class IniFile {
 	}
     }
 
+    public void deleteSection(String name) throws NoSuchElementException {
+	if (sections.containsKey(name)) {
+	    sections.remove(name);
+	} else {
+	    throw new NoSuchElementException(name);
+	}
+    }
+
+    /**
+     * Get the section with the given name, or create it if it doesn't already exist.
+     */
+    public IProperty getCreateSection(String name) {
+	if (!sections.contains(name)) {
+	    sections.put(name, new PropertyUtil());
+	}
+	return sections.get(name);
+    }
+
     public String getProperty(String section, String key) throws NoSuchElementException {
 	return getSection(section).getProperty(key);
     }
 
     // Private
 
-    private static final String SEMICOLON = ";";
-
-    private static final String COLON = ":";
-    private static final String EQUAL = "=";
-
     private int delimIndex(String line) {
-	int i1 = line.indexOf(COLON);
-	int i2 = line.indexOf(EQUAL);
+	int i1 = -1;
+	while ((i1 = (line.indexOf(COLON, i1 + 1))) > 0) {
+	    if (line.charAt(i1 - 1) != '\\') {
+		break;
+	    }
+	}
+
+	int i2 = -1;
+	while ((i2 = (line.indexOf(EQUAL, i2 + 1))) > 0) {
+	    if (line.charAt(i2 - 1) != '\\') {
+		break;
+	    }
+	}
 
 	if (i1 == -1) {
 	    return i2;

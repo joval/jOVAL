@@ -80,7 +80,11 @@ public class PropertyUtil implements IProperty {
 	}
 
 	public void setProperty(String key, String val) {
-	    props.setProperty(key, val);
+	    if (val == null) {
+		props.remove(key);
+	    } else {
+		props.setProperty(key, val);
+	    }
 	}
 
 	public Iterator<String> iterator() {

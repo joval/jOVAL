@@ -90,6 +90,7 @@ public class Checklist implements ITransformable {
     private Hashtable<String, QuestionnaireType> questionnaires;
     private Hashtable<String, QuestionType> questions;
     private Hashtable<String, VariableType> variables;
+    private Hashtable<String, ArtifactType> artifacts;
     private Hashtable<String, QuestionTestActionType> testActions;
     private Hashtable<String, List<ChoiceType>> choiceGroups;
     private Hashtable<String, ChoiceType> choices;
@@ -158,6 +159,11 @@ public class Checklist implements ITransformable {
 		}
 	    }
 	}
+	if (ocil.isSetArtifacts() && ocil.getArtifacts().isSetArtifact()) {
+	    for (ArtifactType artifact: ocil.getArtifacts().getArtifact()) {
+		artifacts.put(artifact.getId(), artifact);
+	    }
+	}
     }
 
     /**
@@ -169,6 +175,7 @@ public class Checklist implements ITransformable {
 	} catch (JAXBException e) {
 	    throw new OcilException(e);
 	}
+	artifacts = new Hashtable<String, ArtifactType>();
 	questionnaires = new Hashtable<String, QuestionnaireType>();
 	questions = new Hashtable<String, QuestionType>();
 	variables = new Hashtable<String, VariableType>();
@@ -211,6 +218,10 @@ public class Checklist implements ITransformable {
 	} else {
 	    throw new NoSuchElementException(id);
 	}
+    }
+
+    public boolean containsArtifact(String id) {
+	return artifacts.containsKey(id);
     }
 
     public boolean containsVariable(String id) {
@@ -277,118 +288,76 @@ public class Checklist implements ITransformable {
      */
     public Collection<String> getLanguages() {
 	HashSet<String> locales = new HashSet<String>();
-	if (ocil != null) {
-	    if (ocil.getQuestions().isSetQuestion()) {
-		for (JAXBElement<? extends QuestionType> elt : ocil.getQuestions().getQuestion()) {
-		    if (elt.isNil()) {
-			continue;
-		    }
-		    QuestionType question = elt.getValue();
-		    if (question.isSetInstructions()) {
-			InstructionsType instructions = question.getInstructions();
-			if (instructions.isSetTitle() && instructions.getTitle().isSetLang()) {
-			    locales.add(instructions.getTitle().getLang());
-			}
-			if (instructions.isSetStep()) {
-			    for (StepType step : instructions.getStep()) {
-				if (step.isSetDescription() && step.getDescription().isSetLang()) {
-				    locales.add(step.getDescription().getLang());
-				}
-				if (step.isSetReference()) {
-				    for (ReferenceType reference : step.getReference()) {
-					if (reference.isSetLang()) {
-					    locales.add(reference.getLang());
-					}
-				    }
-				}
-			    }
-			}
-		    }
+	for (QuestionType question : questions.values()) {
+	    if (question.isSetInstructions()) {
+		InstructionsType instructions = question.getInstructions();
+		if (instructions.isSetTitle() && instructions.getTitle().isSetLang()) {
+		    locales.add(instructions.getTitle().getLang());
 		}
-	    }
-	    if (ocil.getTestActions().isSetTestAction()) {
-		for (JAXBElement<? extends ItemBaseType> elt : ocil.getTestActions().getTestAction()) {
-		    if (elt.isNil()) {
-			continue;
-		    }
-		    ItemBaseType item = elt.getValue();
-		    if (item instanceof CompoundTestActionType) {
-			CompoundTestActionType action = (CompoundTestActionType)item;
-			if (action.isSetTitle() && action.getTitle().isSetLang()) {
-			    locales.add(action.getTitle().getLang());
+		if (instructions.isSetStep()) {
+		    for (StepType step : instructions.getStep()) {
+			if (step.isSetDescription() && step.getDescription().isSetLang()) {
+			    locales.add(step.getDescription().getLang());
 			}
-			if (action.isSetDescription() && action.getDescription().isSetLang()) {
-			    locales.add(action.getDescription().getLang());
-			}
-			if (action.isSetReferences() && action.getReferences().isSetReference()) {
-			    for (ReferenceType reference : action.getReferences().getReference()) {
+			if (step.isSetReference()) {
+			    for (ReferenceType reference : step.getReference()) {
 				if (reference.isSetLang()) {
 				    locales.add(reference.getLang());
 				}
 			    }
 			}
-		    } else if (item instanceof QuestionTestActionType) {
-			QuestionTestActionType action = (QuestionTestActionType)item;
-			if (action.isSetTitle() && action.getTitle().isSetLang()) {
-			    locales.add(action.getTitle().getLang());
-			}
 		    }
 		}
 	    }
-	    if (ocil.getQuestionnaires().isSetQuestionnaire()) {
-		for (QuestionnaireType questionnaire : ocil.getQuestionnaires().getQuestionnaire()) {
-		    if (questionnaire.isSetTitle() && questionnaire.getTitle().isSetLang()) {
-			locales.add(questionnaire.getTitle().getLang());
-		    }
-		    if (questionnaire.isSetDescription() && questionnaire.getDescription().isSetLang()) {
-			locales.add(questionnaire.getDescription().getLang());
-		    }
-		    if (questionnaire.isSetReferences() && questionnaire.getReferences().isSetReference()) {
-			for (ReferenceType reference : questionnaire.getReferences().getReference()) {
-			    if (reference.isSetLang()) {
-				locales.add(reference.getLang());
-			    }
-			}
+	}
+	for (QuestionnaireType questionnaire : questionnaires.values()) {
+	    if (questionnaire.isSetTitle() && questionnaire.getTitle().isSetLang()) {
+		locales.add(questionnaire.getTitle().getLang());
+	    }
+	    if (questionnaire.isSetDescription() && questionnaire.getDescription().isSetLang()) {
+		locales.add(questionnaire.getDescription().getLang());
+	    }
+	    if (questionnaire.isSetReferences() && questionnaire.getReferences().isSetReference()) {
+		for (ReferenceType reference : questionnaire.getReferences().getReference()) {
+		    if (reference.isSetLang()) {
+			locales.add(reference.getLang());
 		    }
 		}
 	    }
-	    if (ocil.isSetArtifacts() && ocil.getArtifacts().isSetArtifact()) {
-		for (ArtifactType artifact: ocil.getArtifacts().getArtifact()) {
-		    if (artifact.isSetTitle() && artifact.getTitle().isSetLang()) {
-			locales.add(artifact.getTitle().getLang());
-		    }
-		    if (artifact.isSetDescription() && artifact.getDescription().isSetLang()) {
-			locales.add(artifact.getDescription().getLang());
-		    }
-		}
+	}
+	for (VariableType variable : variables.values()) {
+	    if (variable.isSetDescription() && variable.getDescription().isSetLang()) {
+		locales.add(variable.getDescription().getLang());
 	    }
-	    if (ocil.isSetVariables() && ocil.getVariables().isSetVariable()) {
-		for (JAXBElement<? extends VariableType> elt : ocil.getVariables().getVariable()) {
+	}
+	for (ArtifactType artifact: artifacts.values()) {
+	    if (artifact.isSetTitle() && artifact.getTitle().isSetLang()) {
+		locales.add(artifact.getTitle().getLang());
+	    }
+	    if (artifact.isSetDescription() && artifact.getDescription().isSetLang()) {
+		locales.add(artifact.getDescription().getLang());
+	    }
+	}
+	for (QuestionTestActionType action : testActions.values()) {
+	    if (action.isSetTitle() && action.getTitle().isSetLang()) {
+		locales.add(action.getTitle().getLang());
+	    }
+	}
+	if (ocil != null && ocil.isSetResults()) {
+	    ResultsType results = ocil.getResults();
+	    if (results.isSetTitle() && results.getTitle().isSetLang()) {
+		locales.add(results.getTitle().getLang());
+	    }
+	    if (results.isSetTargets() && results.getTargets().isSetTarget()) {
+		for (JAXBElement<? extends NamedItemBaseType> elt : results.getTargets().getTarget()) {
 		    if (elt.isNil()) {
 			continue;
 		    }
-		    VariableType variable = elt.getValue();
-		    if (variable.isSetDescription() && variable.getDescription().isSetLang()) {
-			locales.add(variable.getDescription().getLang());
-		    }
-		}
-	    }
-	    if (ocil.isSetResults()) {
-		ResultsType results = ocil.getResults();
-		if (results.isSetTitle() && results.getTitle().isSetLang()) {
-		    locales.add(results.getTitle().getLang());
-		}
-		if (results.isSetTargets() && results.getTargets().isSetTarget()) {
-		    for (JAXBElement<? extends NamedItemBaseType> elt : results.getTargets().getTarget()) {
-			if (elt.isNil()) {
-			    continue;
-			}
-			NamedItemBaseType item = elt.getValue();
-			if (item instanceof SystemTargetType) {
-			    SystemTargetType system = (SystemTargetType)item;
-			    if (system.isSetDescription() && system.getDescription().isSetLang()) {
-				locales.add(system.getDescription().getLang());
-			    }
+		    NamedItemBaseType item = elt.getValue();
+		    if (item instanceof SystemTargetType) {
+			SystemTargetType system = (SystemTargetType)item;
+			if (system.isSetDescription() && system.getDescription().isSetLang()) {
+			    locales.add(system.getDescription().getLang());
 			}
 		    }
 		}
