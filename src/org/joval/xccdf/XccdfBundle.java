@@ -92,12 +92,12 @@ public class XccdfBundle implements ILoggable {
 	    if (f.isDirectory()) {
 		fnames = Arrays.asList(f.list());
 	    } else if (f.isFile() && f.getName().toLowerCase().endsWith(".zip")) {
-		List<String> list = new Vector<String>();
+		fnames = new Vector<String>();
 		ZipFile zip = new ZipFile(f);
 		for (Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); ) {
 		    ZipEntry entry = entries.nextElement();
 		    if (!entry.isDirectory()) {
-			list.add(entry.getName());
+			fnames.add(entry.getName());
 		    }
 		}
 	    }

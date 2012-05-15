@@ -1621,11 +1621,12 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 	    varInstance.setDatatype(base.getDatatype());
 	    varInstance.setOperation(base.getOperation());
 	    varInstance.setMask(base.isMask());
+	    String ref = base.getVarRef();
 	    try {
-		Collection<IType> values = resolveVariable(base.getVarRef(), rc);
+		Collection<IType> values = resolveVariable(ref, rc);
 		if (values.size() == 0) {
 		    String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_NO_VALUES);
-		    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, base.getVarRef(), reason));
+		    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, reason));
 		} else {
 		    for (IType value : values) {
 			value = value.cast(TypeFactory.getSimpleDatatype(base.getDatatype()));
@@ -1634,12 +1635,18 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 		    }
 		}
 	    } catch (UnsupportedOperationException e) {
-		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, base.getVarRef(), e.getMessage()));
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, e.getMessage()));
+	    } catch (IllegalArgumentException e) {
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_ILLEGAL_ARG, ref, e.getMessage()));
 	    } catch (NoSuchElementException e) {
 		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_MISSING);
-		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, base.getVarRef(), reason));
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, reason));
 	    } catch (ResolveException e) {
-		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, base.getVarRef(), e.getMessage()));
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, e.getMessage()));
+	    } catch (OvalException e) {
+		throw e;
+	    } catch (Exception e) {
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, e.getMessage()));
 	    }
 	    return cd.getResult(base.getVarCheck());
 	} else {

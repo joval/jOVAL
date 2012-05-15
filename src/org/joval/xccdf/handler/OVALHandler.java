@@ -108,8 +108,10 @@ public class OVALHandler {
 	for (VariableType var : getVariables().getOvalVariables().getVariables().getVariable()) {
 	    ProfileSetValueType val = factory.createProfileSetValueType();
 	    val.setIdref(var.getComment());
-	    val.setValue(var.getValue().get(0).toString());
-	    xccdfResult.getSetValue().add(val);
+	    if (var.isSetValue() && var.getValue().size() > 0 && var.getValue().get(0) != null) {
+		val.setValue(var.getValue().get(0).toString());
+		xccdfResult.getSetValue().add(val);
+	    }
 	}
 	for (String href : engines.keySet()) {
 	    integrateResults(href, engines.get(href).getResults(), xccdfResult);
