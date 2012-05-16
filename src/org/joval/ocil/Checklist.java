@@ -1,4 +1,3 @@
-// Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 package org.joval.ocil;
@@ -13,6 +12,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Stack;
+import java.util.Vector;
 import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -25,22 +25,31 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
 import ocil.schemas.core.ArtifactType;
+import ocil.schemas.core.BooleanQuestionTestActionType;
 import ocil.schemas.core.ChoiceType;
 import ocil.schemas.core.ChoiceGroupType;
+import ocil.schemas.core.ChoiceQuestionTestActionType;
 import ocil.schemas.core.ChoiceQuestionType;
+import ocil.schemas.core.ChoiceTestActionConditionType;
 import ocil.schemas.core.CompoundTestActionType;
+import ocil.schemas.core.EqualsTestActionConditionType;
 import ocil.schemas.core.InstructionsType;
 import ocil.schemas.core.ItemBaseType;
 import ocil.schemas.core.NamedItemBaseType;
+import ocil.schemas.core.NumericQuestionTestActionType;
 import ocil.schemas.core.ObjectFactory;
 import ocil.schemas.core.OCILType;
+import ocil.schemas.core.PatternTestActionConditionType;
 import ocil.schemas.core.QuestionnaireType;
 import ocil.schemas.core.QuestionTestActionType;
 import ocil.schemas.core.QuestionType;
+import ocil.schemas.core.RangeTestActionConditionType;
 import ocil.schemas.core.ReferenceType;
 import ocil.schemas.core.ResultsType;
 import ocil.schemas.core.StepType;
+import ocil.schemas.core.StringQuestionTestActionType;
 import ocil.schemas.core.SystemTargetType;
+import ocil.schemas.core.TestActionConditionType;
 import ocil.schemas.core.TestActionRefType;
 import ocil.schemas.core.VariableType;
 
@@ -91,7 +100,7 @@ public class Checklist implements ITransformable {
     private Hashtable<String, QuestionType> questions;
     private Hashtable<String, VariableType> variables;
     private Hashtable<String, ArtifactType> artifacts;
-    private Hashtable<String, QuestionTestActionType> testActions;
+    private Hashtable<String, QuestionTestActionType> questionTestActions;
     private Hashtable<String, List<ChoiceType>> choiceGroups;
     private Hashtable<String, ChoiceType> choices;
 
@@ -135,11 +144,11 @@ public class Checklist implements ITransformable {
 	    if (!elt.isNil()) {
 		ItemBaseType item = elt.getValue();
 		//
-		// DAS: Technically, any ItemBaseType is valid, but reality, only QuestionTestActionTypes make sense here.
+		// DAS: Technically any ItemBaseType is valid, but only QuestionTestActions make any sense here.
 		//
 		if (item instanceof QuestionTestActionType) {
 		    QuestionTestActionType action = (QuestionTestActionType)item;
-		    testActions.put(action.getId(), action);
+		    questionTestActions.put(action.getId(), action);
 		}
 	    }
 	}
@@ -164,24 +173,6 @@ public class Checklist implements ITransformable {
 		artifacts.put(artifact.getId(), artifact);
 	    }
 	}
-    }
-
-    /**
-     * Create an empty Checklist.
-     */
-    private Checklist() throws OcilException {
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OCIL));
-	} catch (JAXBException e) {
-	    throw new OcilException(e);
-	}
-	artifacts = new Hashtable<String, ArtifactType>();
-	questionnaires = new Hashtable<String, QuestionnaireType>();
-	questions = new Hashtable<String, QuestionType>();
-	variables = new Hashtable<String, VariableType>();
-	testActions = new Hashtable<String, QuestionTestActionType>();
-	choiceGroups = new Hashtable<String, List<ChoiceType>>();
-	choices = new Hashtable<String, ChoiceType>();
     }
 
     public OCILType getOCILType() {
@@ -236,16 +227,133 @@ public class Checklist implements ITransformable {
 	}
     }
 
-    public boolean containsTestAction(String id) {
-	return testActions.containsKey(id);
+    public boolean containsQuestionTestAction(String id) {
+	return questionTestActions.containsKey(id);
     }
 
-    public QuestionTestActionType getTestAction(String id) throws NoSuchElementException {
-	if (testActions.containsKey(id)) {
-	    return testActions.get(id);
+    public QuestionTestActionType getQuestionTestAction(String id) throws NoSuchElementException {
+	if (questionTestActions.containsKey(id)) {
+	    return questionTestActions.get(id);
 	} else {
 	    throw new NoSuchElementException(id);
 	}
+    }
+
+    public Collection<String> getQuestionIdsRecursive(String questionnaireId) throws NoSuchElementException {
+	HashSet<String> questionIds = new HashSet<String>();
+	crawlQuestions(getQuestionnaire(questionnaireId), questionIds);
+	return questionIds;
+    }
+
+    /**
+     * Given a list of questionnaire IDs, return a table of lists of all the test actions that refer to individual questions,
+     * indexed by the question ID.
+     */
+    public Hashtable<String, Collection<String>> getQuestionActions(List<String> questionnaireIds)
+		throws NoSuchElementException {
+
+	HashSet<String> expandedQuestionnaireIds = new HashSet<String>();
+	for (String id : questionnaireIds) {
+	    crawlQuestionnaires(getQuestionnaire(id), expandedQuestionnaireIds);
+	}
+	Hashtable<String, Collection<String>> questionActions = new Hashtable<String, Collection<String>>();
+	for (String id : expandedQuestionnaireIds) {
+	    crawlQuestionActions(getQuestionnaire(id), questionActions);
+	}
+	return questionActions;
+    }
+
+    /**
+     * Returns a list of all the QuestionType and QuestionnaireType objects that can be considered immediate children of
+     * the specified QuestionTestActionType or QuestionnaireType parent.
+     */
+    public List<ItemBaseType> listChildren(ItemBaseType parent) throws NoSuchElementException {
+	List<ItemBaseType> children = new Vector<ItemBaseType>();
+	if (parent instanceof QuestionTestActionType) {
+	    QuestionTestActionType action = (QuestionTestActionType)parent;
+	    QuestionType question = getQuestion(action.getQuestionRef());
+	    if (!children.contains(question)) {
+		children.add(question);
+	    }
+	    for (TestActionConditionType condition : getConditions(action)) {
+		if (condition.isSetTestActionRef()) {
+		    String refId = condition.getTestActionRef().getValue();
+		    if (containsQuestionnaire(refId)) {
+			QuestionnaireType child = getQuestionnaire(refId);
+			if (!children.contains(child)) {
+			    children.add(child);
+			}
+		    } else if (containsQuestionTestAction(refId)) {
+			for (ItemBaseType child : listChildren(getQuestionTestAction(refId))) {
+			    if (!children.contains(child)) {
+				children.add(child);
+			    }
+			}
+		    } else {
+			throw new NoSuchElementException(refId);
+		    }
+		}
+	    }
+	} else if (parent instanceof QuestionnaireType) {
+	    QuestionnaireType questionnaire = (QuestionnaireType)parent;
+	    for (TestActionRefType ref : questionnaire.getActions().getTestActionRef()) {
+		String refId = ref.getValue();
+		if (containsQuestionnaire(refId)) {
+		    QuestionnaireType child = getQuestionnaire(refId);
+		    if (!children.contains(child)) {
+			children.add(child);
+		    }
+		} else if (containsQuestionTestAction(refId)) {
+		    children.addAll(listChildren(getQuestionTestAction(refId)));
+		} else {
+		    throw new NoSuchElementException(refId);
+		}
+	    }
+	} else {
+	    throw new IllegalArgumentException(parent.getClass().getName());
+	}
+	return children;
+    }
+
+    public List<TestActionConditionType> getConditions(QuestionTestActionType action) {
+	List<TestActionConditionType> conditions = new Vector<TestActionConditionType>();
+	if (action instanceof BooleanQuestionTestActionType) {
+	    BooleanQuestionTestActionType qt = (BooleanQuestionTestActionType)action;
+	    if (qt.isSetWhenTrue()) {
+		conditions.add(qt.getWhenTrue());
+	    }
+	    if (qt.isSetWhenFalse()) {
+		conditions.add(qt.getWhenFalse());
+	    }
+	} else if (action instanceof ChoiceQuestionTestActionType) {
+	    ChoiceQuestionTestActionType qt = (ChoiceQuestionTestActionType)action;
+	    if (qt.isSetWhenChoice()) {
+		conditions.addAll(qt.getWhenChoice());
+	    }
+	} else if (action instanceof NumericQuestionTestActionType) {
+	    NumericQuestionTestActionType qt = (NumericQuestionTestActionType)action;
+	    for (JAXBElement<? extends TestActionConditionType> elt : qt.getRest()) {
+		if (!elt.isNil()) {
+		    conditions.add(elt.getValue());
+		}
+	    }
+	} else if (action instanceof StringQuestionTestActionType) {
+	    StringQuestionTestActionType qt = (StringQuestionTestActionType)action;
+	    conditions.addAll(qt.getWhenPattern());
+	}
+	if (action.isSetWhenUnknown()) {
+	    conditions.add(action.getWhenUnknown());
+	}
+	if (action.isSetWhenNotTested()) {
+	    conditions.add(action.getWhenNotTested());
+	}
+	if (action.isSetWhenNotApplicable()) {
+	    conditions.add(action.getWhenNotApplicable());
+	}
+	if (action.isSetWhenError()) {
+	    conditions.add(action.getWhenError());
+	}
+	return conditions;
     }
 
     /**
@@ -338,7 +446,7 @@ public class Checklist implements ITransformable {
 		locales.add(artifact.getDescription().getLang());
 	    }
 	}
-	for (QuestionTestActionType action : testActions.values()) {
+	for (QuestionTestActionType action : questionTestActions.values()) {
 	    if (action.isSetTitle() && action.getTitle().isSetLang()) {
 		locales.add(action.getTitle().getLang());
 	    }
@@ -395,26 +503,125 @@ public class Checklist implements ITransformable {
 
     // Private
 
-    private boolean cycleCheck(String id, Stack<String> stack) throws NoSuchElementException {
-	if (stack.contains(id)) {
-	    return true;
+    /**
+     * Create an empty Checklist.
+     */
+    private Checklist() throws OcilException {
+	try {
+	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OCIL));
+	} catch (JAXBException e) {
+	    throw new OcilException(e);
 	}
+	artifacts = new Hashtable<String, ArtifactType>();
+	questionnaires = new Hashtable<String, QuestionnaireType>();
+	questions = new Hashtable<String, QuestionType>();
+	variables = new Hashtable<String, VariableType>();
+	questionTestActions = new Hashtable<String, QuestionTestActionType>();
+	choiceGroups = new Hashtable<String, List<ChoiceType>>();
+	choices = new Hashtable<String, ChoiceType>();
+    }
 
-	QuestionnaireType questionnaire = getQuestionnaire(id);
-	stack.push(id);
-	if (questionnaire.isSetActions() && questionnaire.getActions().isSetTestActionRef()) {
-	    for (TestActionRefType ref : questionnaire.getActions().getTestActionRef()) {
+    private void crawlQuestions(QuestionnaireType questionnaire, HashSet<String> questionIds) throws NoSuchElementException {
+	for (ItemBaseType item : listChildren(questionnaire)) {
+	    if (item instanceof QuestionnaireType) {
+		crawlQuestions((QuestionnaireType)item, questionIds);
+	    } else if (item instanceof QuestionType) {
+		questionIds.add(((QuestionType)item).getId());
+	    }
+	}
+    }
+
+    private void crawlQuestionnaires(QuestionnaireType questionnaire, HashSet<String> questionnaireIds)
+		throws NoSuchElementException {
+
+	String id = questionnaire.getId();
+	if (!questionnaireIds.contains(id)) {
+	    questionnaireIds.add(id);
+	    for (ItemBaseType item : listChildren(questionnaire)) {
+		if (item instanceof QuestionnaireType) {
+		    crawlQuestionnaires((QuestionnaireType)item, questionnaireIds);
+		}
+	    }
+	}
+    }
+
+    private void crawlQuestionActions(ItemBaseType item, Hashtable<String, Collection<String>> questionActions)
+		throws NoSuchElementException {
+
+	if (item instanceof QuestionnaireType) {
+	    QuestionnaireType questionnaire = (QuestionnaireType)item;
+	    for (TestActionRefType ref  : questionnaire.getActions().getTestActionRef()) {
 		String refId = ref.getValue();
-		if (containsTestAction(refId)) {
-		    // continue
+		if (containsQuestionTestAction(refId)) {
+		    crawlQuestionActions(getQuestionTestAction(refId), questionActions);
 		} else if (containsQuestionnaire(refId)) {
-		    return cycleCheck(refId, stack);
+		    crawlQuestionActions(getQuestionnaire(refId), questionActions);
 		} else {
 		    throw new NoSuchElementException(refId);
 		}
 	    }
+
+	} else if (item instanceof QuestionTestActionType) {
+	    QuestionTestActionType action = (QuestionTestActionType)item;
+	    String questionId = action.getQuestionRef();
+	    if (!questionActions.containsKey(questionId)) {
+		questionActions.put(questionId, new HashSet<String>());
+	    }
+	    questionActions.get(questionId).add(action.getId());
+
+	    for (TestActionConditionType condition : getConditions(action)) {
+		if (condition.isSetTestActionRef()) {
+		    String actionRef = condition.getTestActionRef().getValue();
+		    if (containsQuestionTestAction(actionRef)) {
+			crawlQuestionActions(getQuestionTestAction(actionRef), questionActions);
+		    } else if (containsQuestionnaire(actionRef)) {
+			crawlQuestionActions(getQuestionnaire(actionRef), questionActions);
+		    } else {
+			throw new NoSuchElementException(actionRef);
+		    }
+		}
+	    }
+	} else {
+	    throw new IllegalArgumentException(item.getClass().getName());
 	}
-	stack.pop();
-	return false;
+
+
+    }
+
+    /**
+     * Returns true if the questionnaire with the specified ID contains a cycle.
+     */
+    private boolean cycleCheck(String id, Stack<String> stack) throws NoSuchElementException {
+	if (stack.contains(id)) {
+	    return true;
+	} else {
+	    stack.push(id);
+	    QuestionnaireType questionnaire = getQuestionnaire(id);
+	    if (questionnaire.isSetActions() && questionnaire.getActions().isSetTestActionRef()) {
+		for (TestActionRefType ref : questionnaire.getActions().getTestActionRef()) {
+		    String refId = ref.getValue();
+		    if (containsQuestionTestAction(refId)) {
+			for (TestActionConditionType condition : getConditions(getQuestionTestAction(refId))) {
+			    if (condition.isSetTestActionRef()) {
+				String actionRef = condition.getTestActionRef().getValue();
+				if (containsQuestionnaire(actionRef)) {
+				    if (cycleCheck(actionRef, stack)) {
+					return true;
+				    }
+				}
+			    }
+			}
+		    } else if (containsQuestionnaire(refId)) {
+			if (cycleCheck(refId, stack)) {
+			    return true;
+			}
+		    } else {
+			throw new NoSuchElementException(refId);
+		    }
+		}
+	    }
+	    stack.pop();
+	    return false;
+	}
     }
 }

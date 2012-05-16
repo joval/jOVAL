@@ -958,12 +958,16 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 		      case INCLUDE:
 			if (result == ResultEnumeration.TRUE) {
 			    filteredItems.add(item);
+			    logger.debug(JOVALMsg.STATUS_FILTER, filter.getAction().value(),
+					 item.getId() == null ? "(unassigned)" : item.getId(), rc.getObject().getId());
 			}
 			break;
 
 		      case EXCLUDE:
 			if (result != ResultEnumeration.TRUE) {
 			    filteredItems.add(item);
+			    logger.debug(JOVALMsg.STATUS_FILTER, filter.getAction().value(),
+					 item.getId() == null ? "(unassigned)" : item.getId(), rc.getObject().getId());
 			}
 			break;
 		    }
