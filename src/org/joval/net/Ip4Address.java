@@ -41,10 +41,14 @@ public class Ip4Address implements ICIDR<Ip4Address> {
 	    }
 	}
 	for (int i=0; i < 4; i++) {
-	    mask[i] = (short)(maskBits[8*i + 1] * 8 +
-			      maskBits[8*i + 2] * 4 +
-			      maskBits[8*i + 3] * 2 +
-			      maskBits[8*i + 4]);
+	    mask[i] = (short)(maskBits[8*i + 0] * 128 +
+			      maskBits[8*i + 1] * 64 +
+			      maskBits[8*i + 2] * 32 +
+			      maskBits[8*i + 3] * 16 +
+			      maskBits[8*i + 4] * 8 +
+			      maskBits[8*i + 5] * 4 +
+			      maskBits[8*i + 6] * 2 +
+			      maskBits[8*i + 7]);
 	}
 
 	StringTokenizer tok = new StringTokenizer(ipStr, ".");
