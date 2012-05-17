@@ -420,7 +420,7 @@ public class Main implements IObserver {
 		filter = OvalFactory.createDefinitionFilter(state.definitionIDs);
 	    }
 
-	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.EXHAUSTIVE, state.plugin.getSession());
+	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.EXHAUSTIVE, state.getSession());
 	    engine.setDefinitions(defs);
 
 	    if (filter != null) {

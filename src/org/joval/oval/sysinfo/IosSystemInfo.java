@@ -25,6 +25,8 @@ class IosSystemInfo {
 	ITechSupport techSupport = session.getTechSupport();
 	SystemInfoType info = Factories.sc.core.createSystemInfoType();
 	info.setOsName("Cisco IOS");
+	info.setOsVersion("unknown");
+	info.setArchitecture("unknown");
 	for (String line : techSupport.getData("show running-config")) {
 	    if (line.startsWith("hostname")) {
 		info.setPrimaryHostName(line.substring(9).trim());

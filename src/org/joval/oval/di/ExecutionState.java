@@ -17,6 +17,7 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.system.IBaseSession;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.util.JOVALSystem;
@@ -341,6 +342,14 @@ public class ExecutionState {
 	    Main.print(Main.getMessage("ERROR_PLUGIN_CONFIG", e.getMessage(), logFile));
 	}
 	return false;
+    }
+
+    IBaseSession getSession() {
+	if (plugin == null) {
+	    return null;
+	} else {
+	    return plugin.getSession();
+	}
     }
 
     // Private

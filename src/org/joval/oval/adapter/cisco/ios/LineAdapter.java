@@ -59,7 +59,7 @@ public class LineAdapter implements IAdapter {
 
 	LineObject lObj = (LineObject)obj;
 	if (lObj.getShowSubcommand() == null || !lObj.getShowSubcommand().isSetValue()) {
-	    throw new CollectException("show subcommand required", FlagEnumeration.ERROR);//DAS
+	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_NO_SHOW), FlagEnumeration.ERROR);
 	}
 	String subcommand = (String)lObj.getShowSubcommand().getValue();
 	OperationEnumeration op = lObj.getShowSubcommand().getOperation();

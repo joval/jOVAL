@@ -135,6 +135,9 @@ public class SupportInformation implements ISupportInformation {
 		}
 	    }
 	}
+	if (heading != null && body.size() > 0) {
+	    data.put(heading, body);
+	}
     }
 
     private boolean isHeading(String line) {
