@@ -59,7 +59,7 @@ public class FloatType extends AbstractType {
 	FloatType other = null;
 	try {
 	    other = (FloatType)t.cast(getType());
-	} catch (UnsupportedOperationException e) {
+	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
 	return data.compareTo(other.data);

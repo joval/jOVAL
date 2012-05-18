@@ -108,7 +108,7 @@ public class OvalNamespacePrefixMapper extends NamespacePrefixMapper {
 	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#sharepoint",	"sharepoint-sc");
 	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#solaris",	"solaris-sc");
 	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#unix",		"unix-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows",	"windows-sc");
+	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows",	"win-sc");
 
 	switch(uri) {
 	  case SC:

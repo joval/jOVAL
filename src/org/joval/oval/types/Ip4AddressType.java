@@ -42,7 +42,7 @@ public class Ip4AddressType extends AbstractType implements ICIDR<Ip4AddressType
 	Ip4AddressType other = null;
 	try {
 	    other = (Ip4AddressType)t.cast(getType());
-	} catch (UnsupportedOperationException e) {
+	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
 	if (getData().equals(other.getData())) {

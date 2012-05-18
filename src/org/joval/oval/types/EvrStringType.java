@@ -46,7 +46,7 @@ public class EvrStringType extends AbstractType {
 	EvrStringType other = null;
 	try {
 	    other = (EvrStringType)t.cast(getType());
-	} catch (UnsupportedOperationException e) {
+	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
 

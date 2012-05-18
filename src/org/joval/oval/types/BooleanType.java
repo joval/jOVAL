@@ -54,7 +54,7 @@ public class BooleanType extends AbstractType {
 	BooleanType other = null;
 	try {
 	    other = (BooleanType)t.cast(getType());
-	} catch (UnsupportedOperationException e) {
+	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
 	if (data == other.data) {

@@ -141,6 +141,7 @@ import org.joval.oval.types.Ip4AddressType;
 import org.joval.oval.types.Ip6AddressType;
 import org.joval.oval.types.RecordType;
 import org.joval.oval.types.StringType;
+import org.joval.oval.types.TypeConversionException;
 import org.joval.oval.types.TypeFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -778,10 +779,10 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 			instance.setOperation(simple.getOperation());
 			result.add(instance);
 		    }
-		} catch (UnsupportedOperationException e) {
+		} catch (TypeConversionException e) {
 		    MessageType message = Factories.common.createMessageType();
 		    message.setLevel(MessageLevelEnumeration.ERROR);
-		    message.setValue(e.getMessage());
+		    message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage()));
 		    rc.addMessage(message);
 		}
 	    } else {
@@ -890,10 +891,10 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 		    fieldEntity.setEntityCheck(field.getEntityCheck());
 		    result.add(fieldEntity);
 		}
-	    } catch (UnsupportedOperationException e) {
+	    } catch (TypeConversionException e) {
 		MessageType message = Factories.common.createMessageType();
 		message.setLevel(MessageLevelEnumeration.ERROR);
-		message.setValue(e.getMessage());
+		message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage()));
 		rc.addMessage(message);
 	    }
 	} else {
@@ -1638,10 +1639,9 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 			cd.addResult(testImpl(varInstance, item));
 		    }
 		}
-	    } catch (UnsupportedOperationException e) {
-		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, e.getMessage()));
-	    } catch (IllegalArgumentException e) {
-		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_ILLEGAL_ARG, ref, e.getMessage()));
+	    } catch (TypeConversionException e) {
+		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage());
+		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, reason));
 	    } catch (NoSuchElementException e) {
 		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_MISSING);
 		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, reason));
@@ -1679,7 +1679,12 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 	// Let the base dictate the datatype
 	//
 	IType baseValue = TypeFactory.createType(base);
-	IType itemValue = TypeFactory.createType(item).cast(baseValue.getType());
+	IType itemValue = null;
+	try {
+	    itemValue = TypeFactory.createType(item).cast(baseValue.getType());
+	} catch (TypeConversionException e) {
+	    throw new TestException(e);
+	}
 
 	//
 	// Validate the operation by datatype, then execute it. See section 5.3.6.3.1 of the specification:

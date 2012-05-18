@@ -6,6 +6,8 @@ package org.joval.intf.oval;
 import oval.schemas.common.ComplexDatatypeEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 
+import org.joval.oval.types.TypeConversionException;
+
 /**
  * Generic type interface, for both simple and complex OVAL types.
  *
@@ -85,12 +87,12 @@ public interface IType extends Comparable<IType> {
     /**
      * Cast to another Type.
      */
-    IType cast(Type type) throws UnsupportedOperationException;
+    IType cast(Type type) throws TypeConversionException;
 
     /**
      * Cast to another Type.
      */
-    IType cast(SimpleDatatypeEnumeration type) throws UnsupportedOperationException;
+    IType cast(SimpleDatatypeEnumeration type) throws TypeConversionException;
 
     /**
      * @throws UnsupportedOperationException if the Type is RECORD.

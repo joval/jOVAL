@@ -56,7 +56,7 @@ public class BinaryType extends AbstractType {
 	BinaryType other = null;
 	try {
 	    other = (BinaryType)t.cast(getType());
-	} catch (UnsupportedOperationException e) {
+	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
 	if (data.length > other.data.length) {

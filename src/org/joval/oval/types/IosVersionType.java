@@ -38,7 +38,7 @@ public class IosVersionType extends AbstractType {
 	IosVersionType other = null;
 	try {
 	    other = (IosVersionType)t.cast(getType());
-	} catch (UnsupportedOperationException e) {
+	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
 	return new EvrStringType(data).compareTo(new EvrStringType(other.data));

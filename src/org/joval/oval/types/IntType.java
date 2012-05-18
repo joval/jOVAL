@@ -44,7 +44,7 @@ public class IntType extends AbstractType {
 	IntType other = null;
 	try {
 	    other = (IntType)t.cast(getType());
-	} catch (UnsupportedOperationException e) {
+	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
 	return data.compareTo(other.data);

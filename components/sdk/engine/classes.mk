@@ -57,6 +57,7 @@ CLASSES=\
 	org.joval.oval.types.Ip6AddressType		\
 	org.joval.oval.types.RecordType			\
 	org.joval.oval.types.StringType			\
+	org.joval.oval.types.TypeConversionException	\
 	org.joval.oval.types.TypeFactory		\
 	org.joval.oval.types.VersionType		\
 	org.joval.oval.xml.OvalNamespacePrefixMapper	\

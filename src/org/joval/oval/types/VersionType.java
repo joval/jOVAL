@@ -43,7 +43,7 @@ public class VersionType extends AbstractType {
 	VersionType other = null;
 	try {
 	    other = (VersionType)t.cast(getType());
-	} catch (UnsupportedOperationException e) {
+	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
 	return data.compareTo(other.data);

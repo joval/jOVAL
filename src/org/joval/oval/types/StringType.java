@@ -40,7 +40,7 @@ public class StringType extends AbstractType {
 	StringType other = null;
 	try {
 	    other = (StringType)t.cast(getType());
-	} catch (UnsupportedOperationException e) {
+	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
 	return data.compareTo(other.data);

@@ -38,7 +38,7 @@ public class FilesetRevisionType extends AbstractType {
 	FilesetRevisionType other = null;
 	try {
 	    other = (FilesetRevisionType)t.cast(getType());
-	} catch (UnsupportedOperationException e) {
+	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
 	return new EvrStringType(data).compareTo(new EvrStringType(other.data));

@@ -17,20 +17,24 @@ import org.joval.util.JOVALMsg;
 abstract class AbstractType implements IType {
     AbstractType(){}
 
-    public IType cast(Type type) throws UnsupportedOperationException {
+    public IType cast(Type type) throws TypeConversionException {
 	if (type == getType()) {
 	    return this;
 	}
 	switch(type) {
 	  case RECORD:
-	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, getType(), Type.RECORD));
+	    throw new TypeConversionException(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_INCOMPATIBLE, getType(), Type.RECORD));
 
 	  default:
-	    return TypeFactory.createType(type.getSimple(), getString());
+	    try {
+		return TypeFactory.createType(type.getSimple(), getString());
+	    } catch (Exception e) {
+		throw new TypeConversionException(e);
+	    }
 	}
     }
 
-    public IType cast(SimpleDatatypeEnumeration type) throws UnsupportedOperationException {
+    public IType cast(SimpleDatatypeEnumeration type) throws TypeConversionException {
 	return cast(TypeFactory.convertType(type));
     }
 
