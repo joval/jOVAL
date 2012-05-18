@@ -51,8 +51,12 @@ dist-clean: clean
 
 dist: dist-$(ARCH)
 
-dist-x86: all
+$(DIST32)/jre : $(JRE_HOME)/x86
 	mkdir -p $(DIST32)
+	rm -rf $@
+	cp -R $< $@
+
+dist-x86: all $(DIST32)/jre
 	cp -R $(BIN_DIR)/* $(DIST32)
 	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST32)/Readme.txt
 	cp -R $(RSRC)/docs/Remote.txt $(DIST32)/Remote.txt
@@ -83,10 +87,13 @@ dist-x86: all
 	cp -R plugin/cisco/rsrc/* $(DIST32)/plugin/cisco
 	cp -R $(PLUGIN_CISCO_LIB) $(DIST32)/plugin/cisco/lib
 	cp -R $(PLUGIN_CISCO)/$(LIBDIR)/*.jar $(DIST32)/plugin/cisco/lib
-	cp -R $(JRE_HOME)/x86 $(DIST32)/jre
 
-dist-x64: all
+$(DIST64)/jre : $(JRE_HOME)/x64
 	mkdir -p $(DIST64)
+	rm -rf $@
+	cp -R $< $@
+
+dist-x64: all $(DIST64)/jre
 	cp -R $(BIN_DIR)/* $(DIST64)
 	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST64)/Readme.txt
 	cp -R $(RSRC)/docs/Remote.txt $(DIST64)/Remote.txt
@@ -117,7 +124,6 @@ dist-x64: all
 	cp -R plugin/cisco/rsrc/* $(DIST64)/plugin/cisco
 	cp -R $(PLUGIN_CISCO_LIB) $(DIST64)/plugin/cisco/lib
 	cp -R $(PLUGIN_CISCO)/$(LIBDIR)/*.jar $(DIST64)/plugin/cisco/lib
-	cp -R $(JRE_HOME)/x64 $(DIST64)/jre
 
 release-win32: dist-x86
 	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x86.zip -C $(DIST32) .
