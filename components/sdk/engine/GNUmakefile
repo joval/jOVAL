@@ -16,8 +16,12 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 all: $(JOVAL_CORE_LIB)
 
-$(JOVAL_CORE_LIB): classes
+$(JOVAL_CORE_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
+
+resources:
+	rm -f $(BUILD)/*.ini
+	cp $(RSRC)/*.ini $(BUILD)
 
 clean:
 	rm -rf $(BUILD)

@@ -3,12 +3,18 @@
 
 package org.joval.oval.xml;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Hashtable;
 import java.util.Set;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 
 import com.sun.xml.internal.bind.marshaller.NamespacePrefixMapper;
+
+import org.joval.intf.util.IProperty;
+import org.joval.util.IniFile;
+import org.joval.util.JOVALMsg;
 
 /**
  * Ovaldi doesn't like interoperating with the XML files that the Marshaller spits out unassisted, so this class helps
@@ -20,6 +26,17 @@ import com.sun.xml.internal.bind.marshaller.NamespacePrefixMapper;
  * @version %I% %G%
  */
 public class OvalNamespacePrefixMapper extends NamespacePrefixMapper {
+    private static final String PREFIXMAPPER_PROP	= "com.sun.xml.internal.bind.namespacePrefixMapper";
+    private static final String NAMESPACE		= "namespace";
+    private static final String LOCATION		= "location";
+    private static final String RESOURCE		= "oval_xml.ini";
+
+    private static final String DEF_BASE		= "def";
+    private static final String SC_BASE			= "sc";
+
+    private StringBuffer locations;
+    private Hashtable<String, String> namespaces;
+
     public enum URI {
 	SC("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5"),
 	RES("http://oval.mitre.org/XMLSchema/oval-results-5");
@@ -43,103 +60,58 @@ public class OvalNamespacePrefixMapper extends NamespacePrefixMapper {
     // Overrides
 
     public String getPreferredPrefix(String namespaceUri, String suggestion, boolean requirePrefix) {
-	return namespaceMap.get(namespaceUri);
+	return namespaces.get(namespaceUri);
     }
-
-/*
-    public String[] getPreDeclaredNamespaceUris() {
-	return namespaceMap.keySet().toArray(new String[namespaceMap.size()]);
-    }
-
-    public String[] getPreDeclaredNamespaceUris2() {
-	String[] sa = new String[namespaceMap.size() * 2];
-	int index = 0;
-	Set<String> keys = namespaceMap.keySet();
-	for (String key : keys) {
-	    sa[index++] = namespaceMap.get(key);
-	    sa[index++] = key;
-	}
-	return sa;
-    }
-*/
 
     // Private
 
-    private static String PREFIXMAPPER_PROP	= "com.sun.xml.internal.bind.namespacePrefixMapper";
-
-    private static String COMMON_LOCATION	= "http://oval.mitre.org/XMLSchema/oval-common-5 " +
-						  "oval-common-schema.xsd";
-
-    private static String DEF_SCHEMA_LOCATION	= "http://oval.mitre.org/XMLSchema/oval-definitions-5 " +
-						  "oval-definitions-schema.xsd";
-
-    private static String SC_SCHEMA_LOCATION	= "http://oval.mitre.org/XMLSchema/oval-system-characteristics-5 " +
-						  "oval-system-characteristics-schema.xsd";
-
-    private static String RES_SCHEMA_LOCATION	= "http://oval.mitre.org/XMLSchema/oval-results-5 " +
-						  "oval-results-schema.xsd " +
-						  SC_SCHEMA_LOCATION + " " + DEF_SCHEMA_LOCATION;
-
-    private Hashtable<String, String> namespaceMap;
-
     private OvalNamespacePrefixMapper(URI uri, Marshaller marshaller) throws PropertyException {
-	namespaceMap = new Hashtable<String, String>();
+	locations = new StringBuffer();
+	namespaces = new Hashtable<String, String>();
+	namespaces.put("http://www.w3.org/2001/XMLSchema-instance", "xsi");
 
-	namespaceMap.put(uri.getUri(), "");
-	namespaceMap.put("http://www.w3.org/2001/XMLSchema-instance",		"xsi");
-	namespaceMap.put("http://www.w3.org/2000/09/xmldsig#",			"xmldsig");
+	try {
+	    switch(uri) {
+	      case SC:
+		loadData(getData(SC_BASE));
+		namespaces.put(URI.SC.getUri(), "");
+		break;
 
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-common-5",	"oval");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5",	"oval-def");
+	      case RES:
+		loadData(getData(DEF_BASE));
+		loadData(getData(SC_BASE));
+		namespaces.put(URI.RES.getUri(), "");
+		break;
+	    }
+	} catch (IOException e) {
+	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
 
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#aix",		"aix-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#apache",	"apache-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#catos",		"catos-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#esx",		"esx-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#freebsd",	"freebsd-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#hpux",		"hpux-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#independent",	"ind-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#ios",		"ios-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#junos",		"junos-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#linux",		"linux-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#macos",		"macos-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#netconf",	"netconf-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#pixos",		"pixos-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#sharepoint",	"sharepoint-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#solaris",	"solaris-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#unix",		"unix-sc");
-	namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5#windows",	"win-sc");
+	marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, locations.toString());
+    }
 
-	switch(uri) {
-	  case SC:
-	    marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, SC_SCHEMA_LOCATION + " " + COMMON_LOCATION);
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5",	"");
-	    break;
+    private void loadData(IniFile data) {
+	for (String prefix : data.listSections()) {
+	    IProperty section = data.getSection(prefix);
+	    String namespace = section.getProperty(NAMESPACE);
+	    if (namespace != null) {
+		namespaces.put(namespace, prefix);
+		if (locations.length() > 0) {
+		    locations.append(" ");
+		}
+		locations.append(namespace).append(" ").append(section.getProperty(LOCATION));
+	    }
+	}
+    }
 
-	  case RES:
-	    marshaller.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, RES_SCHEMA_LOCATION + " " + COMMON_LOCATION);
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-system-characteristics-5",	"oval-sc");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-results-5",			"");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#aix",		"aix-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#apache",	"apache-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#catos",	"catos-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#esx",		"esx-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#freebsd",	"freebsd-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#hpux",		"hpux-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#independent",	"ind-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#ios",		"ios-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#junos",	"junos-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#linux",	"linux-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#macos",	"macos-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#netconf",	"netconf-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#pixos",	"pixos-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#sharepoint",	"sharepoint-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris",	"solaris-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris",	"solaris-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#solaris",	"solaris-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#unix",		"unix-def");
-	    namespaceMap.put("http://oval.mitre.org/XMLSchema/oval-definitions-5#windows",	"win-def");
-	    break;
+    private IniFile getData(String base) throws IOException {
+	ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	String resName = "oval-" + base + ".ini";
+	InputStream rsc = cl.getResourceAsStream("oval-" + base + ".ini");
+	if (rsc == null) {
+	    throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, resName));
+	} else {
+	    return new IniFile(rsc);
 	}
     }
 }
