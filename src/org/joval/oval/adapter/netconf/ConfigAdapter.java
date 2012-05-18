@@ -6,20 +6,12 @@ package org.joval.oval.adapter.netconf;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Stack;
 import java.util.Vector;
-import javax.xml.namespace.QName;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
@@ -43,6 +35,7 @@ import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
+import org.joval.xml.XPathTools;
 
 /**
  * Collects netconf:config_items from supported devices.
@@ -51,8 +44,8 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class ConfigAdapter implements IAdapter {
-    private DocumentBuilder builder;
     private INetconf session;
+    private XPath xpath;
 
     // Implement IAdapter
 
@@ -60,12 +53,10 @@ public class ConfigAdapter implements IAdapter {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof INetconf) {
 	    try {
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		factory.setNamespaceAware(true);
-		builder = factory.newDocumentBuilder();
 		this.session = (INetconf)session;
 		classes.add(ConfigObject.class);
-	    } catch (ParserConfigurationException e) {
+		xpath = XPathFactory.newInstance().newXPath();
+	    } catch (RuntimeException e) {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
@@ -73,6 +64,16 @@ public class ConfigAdapter implements IAdapter {
     }
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
+	ConfigObject cObj = (ConfigObject)obj;
+	String expression = (String)cObj.getXpath().getValue();
+	XPathExpression xpe = null;
+	try {
+	    xpe = xpath.compile(expression);
+	} catch (XPathExpressionException e) {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_XML_XPATH, expression, XPathTools.getMessage(e));
+	    throw new CollectException(msg, FlagEnumeration.ERROR);
+	}
+
 	Document config = null;
 	try {
 	    config = session.getConfig();
@@ -81,75 +82,19 @@ public class ConfigAdapter implements IAdapter {
 	    throw new CollectException(msg, FlagEnumeration.ERROR);
 	}
 
-	Collection<ConfigItem> items = new Vector<ConfigItem>();
-	ConfigObject cObj = null;
-	if (obj instanceof ConfigObject) {
-	    cObj = (ConfigObject)obj;
-	}
-
 	ConfigItem item = Factories.sc.netconf.createConfigItem();
 	EntityItemStringType xpathType = Factories.sc.core.createEntityItemStringType();
-	String expression = (String)cObj.getXpath().getValue();
 	xpathType.setValue(expression);
 	item.setXpath(xpathType);
 
-	try {
-	    XPath xpath = XPathFactory.newInstance().newXPath();
-	    XPathExpression expr = xpath.compile(expression);
-	    for (String value : typesafeEval(expr, config)) {
-		EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
-		valueOf.setValue(value);
-		item.getValueOf().add(valueOf);
-	    }
-	    items.add(item);
-	} catch (XPathExpressionException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_XPATH, expression, e.getMessage()));
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	for (String value : XPathTools.typesafeEval(xpe, config)) {
+	    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
+	    valueOf.setValue(value);
+	    item.getValueOf().add(valueOf);
 	}
 
+	Collection<ConfigItem> items = new Vector<ConfigItem>();
+	items.add(item);
 	return items;
-    }
-
-    // Private
-
-    private Collection<String> typesafeEval(XPathExpression expr, Document doc) {
-	Stack<QName> types = new Stack<QName>();
-	types.push(XPathConstants.BOOLEAN);
-	types.push(XPathConstants.NODE);
-	types.push(XPathConstants.NODESET);
-	types.push(XPathConstants.NUMBER);
-	types.push(XPathConstants.STRING);
-
-	return typesafeEval(expr, doc, types);
-    }
-
-    private Collection<String> typesafeEval(XPathExpression exp, Document doc, Stack<QName> types) {
-	Collection<String> list = new Vector<String>();
-	if (types.empty()) {
-	    return list;
-	}
-	try {
-	    QName qn = types.pop();
-	    Object o = exp.evaluate(doc, qn);
-	    if (o instanceof String) {
-		list.add((String)o);
-	    } else if (o instanceof NodeList) {
-		NodeList nodes = (NodeList)o;
-		int len = nodes.getLength();
-		for (int i=0; i < len; i++) {
-		    list.add(nodes.item(i).getNodeValue());
-		}
-	    } else if (o instanceof Double) {
-		list.add(((Double)o).toString());
-	    } else if (o instanceof Boolean) {
-		list.add(((Boolean)o).toString());
-	    }
-	    return list;
-	} catch (XPathExpressionException e) {
-	    return typesafeEval(exp, doc, types);
-	}
     }
 }

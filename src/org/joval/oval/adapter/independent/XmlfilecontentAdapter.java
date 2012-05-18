@@ -6,19 +6,15 @@ package org.joval.oval.adapter.independent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Stack;
 import java.util.Vector;
-import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 import oval.schemas.common.MessageLevelEnumeration;
@@ -40,6 +36,7 @@ import org.joval.intf.system.ISession;
 import org.joval.oval.Factories;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
+import org.joval.xml.XPathTools;
 
 /**
  * Evaluates Xmlfilecontent OVAL tests.
@@ -83,14 +80,8 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 		throws IOException {
 
 	Collection<XmlfilecontentItem> items = new Vector<XmlfilecontentItem>();
-	XmlfilecontentObject xObj = null;
-	if (obj instanceof XmlfilecontentObject) {
-	    xObj = (XmlfilecontentObject)obj;
-	}
-	XmlfilecontentItem baseItem = null;
-	if (base instanceof XmlfilecontentItem) {
-	    baseItem = (XmlfilecontentItem)base;
-	}
+	XmlfilecontentObject xObj = (XmlfilecontentObject)obj;
+	XmlfilecontentItem baseItem = (XmlfilecontentItem)base;
 	if (baseItem != null && xObj != null && f.isFile()) {
 	    XmlfilecontentItem item = Factories.sc.independent.createXmlfilecontentItem();
 	    item.setPath(baseItem.getPath());
@@ -105,10 +96,11 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 	    try {
 		XPath xpath = XPathFactory.newInstance().newXPath();
 		XPathExpression expr = xpath.compile(expression);
+
 		in = f.getInputStream();
 		Document doc = builder.parse(in);
 
-		for (String value : typesafeEval(expr, doc)) {
+		for (String value : XPathTools.typesafeEval(expr, doc)) {
 		    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
 		    valueOf.setValue(value);
 		    item.getValueOf().add(valueOf);
@@ -118,7 +110,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 	    } catch (XPathExpressionException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_XPATH, expression, e.getMessage()));
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_XPATH, expression, XPathTools.getMessage(e)));
 		rc.addMessage(msg);
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } catch (SAXException e) {
@@ -138,43 +130,5 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 	    }
 	}
 	return items;
-    }
-
-    private Collection<String> typesafeEval(XPathExpression expr, Document doc) {
-	Stack<QName> types = new Stack<QName>();
-	types.push(XPathConstants.BOOLEAN);
-	types.push(XPathConstants.NODE);
-	types.push(XPathConstants.NODESET);
-	types.push(XPathConstants.NUMBER);
-	types.push(XPathConstants.STRING);
-
-	return typesafeEval(expr, doc, types);
-    }
-
-    private Collection<String> typesafeEval(XPathExpression exp, Document doc, Stack<QName> types) {
-	Collection<String> list = new Vector<String>();
-	if (types.empty()) {
-	    return list;
-	}
-	try {
-	    QName qn = types.pop();
-	    Object o = exp.evaluate(doc, qn);
-	    if (o instanceof String) {
-		list.add((String)o);
-	    } else if (o instanceof NodeList) {
-		NodeList nodes = (NodeList)o;
-		int len = nodes.getLength();
-		for (int i=0; i < len; i++) {
-		    list.add(nodes.item(i).getNodeValue());
-		}
-	    } else if (o instanceof Double) {
-		list.add(((Double)o).toString());
-	    } else if (o instanceof Boolean) {
-		list.add(((Boolean)o).toString());
-	    }
-	    return list;
-	} catch (XPathExpressionException e) {
-	    return typesafeEval(exp, doc, types);
-	}
     }
 }
