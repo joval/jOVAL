@@ -5,6 +5,7 @@ package org.joval.os.cisco.system;
 
 import java.text.SimpleDateFormat;
 import java.util.NoSuchElementException;
+import org.w3c.dom.Document;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -13,7 +14,6 @@ import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFilesystem;
-import org.joval.intf.net.INetconf;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.protocol.netconf.NetconfSession;
@@ -32,6 +32,7 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     private SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss.SSS z EEE MMM dd yyyy");
     private SshSession ssh;
     private ITechSupport techSupport;
+    private Document config;
     private boolean initialized;
 
     /**
@@ -52,13 +53,18 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 	initialized = true;
     }
 
-    protected void handlePropertyChange(String key, String value) {}
+    // Implement INetconf
+
+    public Document getConfig() throws Exception {
+	if (config == null) {
+	    NetconfSession netconf = new NetconfSession(ssh, internalProps.getLongProperty(PROP_READ_TIMEOUT));
+	    netconf.setLogger(logger);
+	    config = netconf.getConfig();
+	}
+	return config;
+    }
 
     // Implement IIosSession
-
-    public INetconf getNetconf() {
-	return new NetconfSession(ssh, internalProps.getLongProperty(PROP_READ_TIMEOUT));
-    }
 
     public ITechSupport getTechSupport() {
 	if (!initialized) {

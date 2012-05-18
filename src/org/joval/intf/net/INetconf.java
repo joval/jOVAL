@@ -5,15 +5,15 @@ package org.joval.intf.net;
 
 import org.w3c.dom.Document;
 
-import org.joval.intf.util.ILoggable;
+import org.joval.intf.system.IBaseSession;
 
 /**
- * An interface for performing NETCONF operations.
+ * An interface for a session that can perform NETCONF operations.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface INetconf extends ILoggable {
+public interface INetconf extends IBaseSession {
     /**
      * Get an XML Document containing an unfiltered get-config reply.
      */

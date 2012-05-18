@@ -47,6 +47,7 @@ CLASSES=\
 	org.joval.oval.adapter.macos.AccountinfoAdapter			\
 	org.joval.oval.adapter.macos.PlistAdapter			\
 	org.joval.oval.adapter.macos.Pwpolicy59Adapter			\
+	org.joval.oval.adapter.netconf.ConfigAdapter			\
 	org.joval.oval.adapter.solaris.IsainfoAdapter			\
 	org.joval.oval.adapter.solaris.PackageAdapter			\
 	org.joval.oval.adapter.solaris.Patch54Adapter			\

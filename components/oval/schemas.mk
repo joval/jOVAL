@@ -22,6 +22,8 @@ SCHEMAS=	\
 	linux-system-characteristics-schema.xsd		\
 	macos-definitions-schema.xsd			\
 	macos-system-characteristics-schema.xsd		\
+	netconf-definitions-schema.xsd			\
+	netconf-system-characteristics-schema.xsd	\
 	oval-common-schema.xsd				\
 	oval-definitions-schema.xsd			\
 	oval-directives-schema.xsd			\

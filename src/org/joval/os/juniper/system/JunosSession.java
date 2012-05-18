@@ -5,6 +5,7 @@ package org.joval.os.juniper.system;
 
 import java.text.SimpleDateFormat;
 import java.util.NoSuchElementException;
+import org.w3c.dom.Document;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -13,7 +14,6 @@ import org.joval.intf.juniper.system.ISupportInformation;
 import org.joval.intf.identity.ICredential;
 import org.joval.intf.identity.ILocked;
 import org.joval.intf.io.IFilesystem;
-import org.joval.intf.net.INetconf;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.os.cisco.system.IosSession;
@@ -33,6 +33,7 @@ public class JunosSession extends AbstractBaseSession implements ILocked, IJunos
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
     private SshSession ssh;
     private ISupportInformation supportInfo;
+    private Document config;
     private boolean initialized;
 
     /**
@@ -50,6 +51,17 @@ public class JunosSession extends AbstractBaseSession implements ILocked, IJunos
 	initialized = true;
     }
 
+    // Implement INetconf
+
+    public Document getConfig() throws Exception {
+	if (config == null) {
+	    NetconfSession netconf = new NetconfSession(ssh, internalProps.getLongProperty(PROP_READ_TIMEOUT));
+	    netconf.setLogger(logger);
+	    config = netconf.getConfig();
+	}
+	return config;
+    }
+
     // Implement IJunosSession
 
     public ISupportInformation getSupportInformation() {
@@ -62,10 +74,6 @@ public class JunosSession extends AbstractBaseSession implements ILocked, IJunos
 	    }
 	}
 	return supportInfo;
-    }
-
-    public INetconf getNetconf() {
-	return new NetconfSession(ssh, internalProps.getLongProperty(PROP_READ_TIMEOUT));
     }
 
     // Implement ILocked

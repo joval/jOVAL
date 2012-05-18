@@ -27,6 +27,7 @@ import org.vngx.jsch.Session;
 import org.vngx.jsch.exception.JSchException;
 
 import org.joval.intf.net.INetconf;
+import org.joval.intf.util.ILoggable;
 import org.joval.io.PerishableReader;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
@@ -37,7 +38,7 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class NetconfSession implements INetconf {
+public class NetconfSession implements ILoggable {
     private static final String SUBSYS	= "netconf";
     private static final String MARKER	= "]]>]]>";
     private static final int ID_GET_CONFIG	= 101;
@@ -58,18 +59,6 @@ public class NetconfSession implements INetconf {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
-
-    // Implement ILoggable
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
-    }
-
-    public LocLogger getLogger() {
-	return logger;
-    }
-
-    // Implement INetconf
 
     public Document getConfig() throws Exception {
 	Document config = builder.newDocument();
@@ -157,6 +146,16 @@ public class NetconfSession implements INetconf {
 	}
 
 	return config;
+    }
+
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
     }
 
     // Private

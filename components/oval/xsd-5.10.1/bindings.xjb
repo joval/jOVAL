@@ -160,6 +160,16 @@
       <jxb:package name="oval.schemas.systemcharacteristics.junos"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="netconf-definitions-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="oval.schemas.definitions.netconf"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="netconf-system-characteristics-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="oval.schemas.systemcharacteristics.netconf"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
   <jxb:bindings schemaLocation="linux-definitions-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.definitions.linux"/>

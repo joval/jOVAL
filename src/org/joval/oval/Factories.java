@@ -61,6 +61,7 @@ public class Factories {
 	public oval.schemas.definitions.junos.ObjectFactory junos;
 	public oval.schemas.definitions.linux.ObjectFactory linux;
 	public oval.schemas.definitions.macos.ObjectFactory macos;
+	public oval.schemas.definitions.netconf.ObjectFactory netconf;
 	public oval.schemas.definitions.pixos.ObjectFactory pixos;
 	public oval.schemas.definitions.sharepoint.ObjectFactory sharepoint;
 	public oval.schemas.definitions.solaris.ObjectFactory solaris;
@@ -80,6 +81,7 @@ public class Factories {
 	    junos = new oval.schemas.definitions.junos.ObjectFactory();
 	    linux = new oval.schemas.definitions.linux.ObjectFactory();
 	    macos = new oval.schemas.definitions.macos.ObjectFactory();
+	    netconf = new oval.schemas.definitions.netconf.ObjectFactory();
 	    pixos = new oval.schemas.definitions.pixos.ObjectFactory();
 	    sharepoint = new oval.schemas.definitions.sharepoint.ObjectFactory();
 	    solaris = new oval.schemas.definitions.solaris.ObjectFactory();
@@ -104,6 +106,7 @@ public class Factories {
 	public oval.schemas.systemcharacteristics.junos.ObjectFactory junos;
 	public oval.schemas.systemcharacteristics.linux.ObjectFactory linux;
 	public oval.schemas.systemcharacteristics.macos.ObjectFactory macos;
+	public oval.schemas.systemcharacteristics.netconf.ObjectFactory netconf;
 	public oval.schemas.systemcharacteristics.pixos.ObjectFactory pixos;
 	public oval.schemas.systemcharacteristics.sharepoint.ObjectFactory sharepoint;
 	public oval.schemas.systemcharacteristics.solaris.ObjectFactory solaris;
@@ -123,6 +126,7 @@ public class Factories {
 	    junos = new oval.schemas.systemcharacteristics.junos.ObjectFactory();
 	    linux = new oval.schemas.systemcharacteristics.linux.ObjectFactory();
 	    macos = new oval.schemas.systemcharacteristics.macos.ObjectFactory();
+	    netconf = new oval.schemas.systemcharacteristics.netconf.ObjectFactory();
 	    pixos = new oval.schemas.systemcharacteristics.pixos.ObjectFactory();
 	    sharepoint = new oval.schemas.systemcharacteristics.sharepoint.ObjectFactory();
 	    solaris = new oval.schemas.systemcharacteristics.solaris.ObjectFactory();
