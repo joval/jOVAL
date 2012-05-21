@@ -55,7 +55,7 @@ public class InterfaceAdapter implements IAdapter {
     public Collection<InterfaceItem> getItems(ObjectType obj, IRequestContext rc) {
 	Collection<InterfaceItem> items = new Vector<InterfaceItem>();
 	try {
-	    List<String> lines = session.getTechSupport().getData(ITechSupport.GLOBAL);
+	    List<String> lines = session.getTechSupport().getLines(ITechSupport.GLOBAL);
 	    InterfaceItem item = null;
 	    for (String line : lines) {
 		if (line.toLowerCase().startsWith("interface ")) {

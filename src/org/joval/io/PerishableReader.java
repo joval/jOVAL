@@ -33,6 +33,8 @@ import org.joval.util.JOVALSystem;
  * @version %I% %G%
  */
 public class PerishableReader extends InputStream implements IReader, IPerishable {
+    private final static String LF = System.getProperty("line.separator");
+
     /**
      * Create a new instance using the given InputStream and initial timeout.  The clock begins ticking immediately, so
      * it is important to start reading before the timeout has expired.
@@ -196,6 +198,10 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	}
     }
 
+    public int read(byte[] buff) throws IOException {
+	return read(buff, 0, buff.length);
+    }
+
     public int read(byte[] buff, int offset, int len) throws IOException {
 	int bytesRead = 0;
 	while (buffer.hasNext() && offset < buff.length) {
@@ -308,7 +314,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 		//
 		StringBuffer sb = new StringBuffer();
 		for (int i=0; i < trace.length; i++) {
-		    sb.append("\n");
+		    sb.append(LF);
 		    if (i > 0) {
 			sb.append("    at ");
 		    }

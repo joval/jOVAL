@@ -3,14 +3,17 @@
 
 package org.joval.util;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.util.List;
 import java.util.Vector;
 
-import org.joval.intf.io.IReader;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
@@ -43,22 +46,19 @@ public class SafeCLI {
      * Run a command and get the first line of output.
      */
     public static final String exec(String cmd, IBaseSession session, long readTimeout) throws Exception {
-	List<String> output = multiLine(cmd, null, session, readTimeout);
-	if (output != null && output.size() > 0) {
-	    return output.get(0);
-	}
-	return null;
+	return exec(cmd, null, session, readTimeout);
     }
 
     /**
      * Run a command and get the first line of output, using the specified environment.
      */
     public static final String exec(String cmd, String[] env, IBaseSession session, long readTimeout) throws Exception {
-	List<String> output = multiLine(cmd, env, session, readTimeout);
-	if (output != null && output.size() > 0) {
-	    return output.get(0);
+	List<String> lines = multiLine(cmd, env, session, readTimeout);
+	if (lines != null && lines.size() > 0) {
+	    return lines.get(0);
+	} else {
+	    return null;
 	}
-	return null;
     }
 
     /**
@@ -90,7 +90,14 @@ public class SafeCLI {
     public static final List<String> multiLine(String cmd, String[] env, IBaseSession session, long readTimeout)
 		throws Exception {
 
-	return execData(cmd, env, session, readTimeout).getStdout();
+	byte[] buff = execData(cmd, env, session, readTimeout).data;
+	BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buff)));
+	List<String> lines = new Vector<String>();
+	String line = null;
+	while((line = reader.readLine()) != null) {
+	    lines.add(line);
+	}
+	return lines;
     }
 
     /**
@@ -132,17 +139,19 @@ public class SafeCLI {
 
 	for (int attempt=0; !success; attempt++) {
 	    IProcess p = null;
-	    IReader in = null;
+	    PerishableReader reader = null;
 	    try {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		p = session.createProcess(cmd, env);
 		p.start();
-		in = PerishableReader.newInstance(p.getInputStream(), readTimeout);
-		in.setLogger(session.getLogger());
-		result.stdout = new Vector<String>();
-		String line = null;
-		while((line = in.readLine()) != null) {
-		    result.stdout.add(line);
+		reader = PerishableReader.newInstance(p.getInputStream(), readTimeout);
+		reader.setLogger(session.getLogger());
+		byte[] buff = new byte[512];
+		int len = 0;
+		while((len = reader.read(buff)) > 0) {
+		    out.write(buff, 0, len);
 		}
+		result.data = out.toByteArray();
 		try {
 		    p.waitFor(session.getTimeout(IBaseSession.Timeout.M));
 		    result.exitCode = p.exitValue();
@@ -164,9 +173,9 @@ public class SafeCLI {
 		    throw e;
 		}
 	    } finally {
-		if (in != null) {
+		if (reader != null) {
 		    try {
-			in.close();
+			reader.close();
 		    } catch (IOException e) {
 		    }
 		}
@@ -188,19 +197,19 @@ public class SafeCLI {
 
     public class ExecData {
 	int exitCode;
-	List<String> stdout;
+	byte[] data;
 
 	ExecData() {
 	    exitCode = -1;
-	    stdout = null;
+	    data = null;
 	}
 
 	public int getExitCode() {
 	    return exitCode;
 	}
 
-	public List<String> getStdout() {
-	    return stdout;
+	public byte[] getData() {
+	    return data;
 	}
     }
 }

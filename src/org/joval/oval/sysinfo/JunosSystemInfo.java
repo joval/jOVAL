@@ -26,7 +26,7 @@ class JunosSystemInfo {
 	ISupportInformation supportInfo = session.getSupportInformation();
 	SystemInfoType info = Factories.sc.core.createSystemInfoType();
 	info.setOsName("Juniper JunOS");
-	for (String line : supportInfo.getData("show version detail")) {
+	for (String line : supportInfo.getLines("show version detail")) {
 	    if (line.startsWith("Hostname:")) {
 		info.setPrimaryHostName(line.substring(9).trim());
 	    } else if (line.startsWith("Model:")) {

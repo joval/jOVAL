@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -62,45 +63,58 @@ public class GlobalAdapter implements IAdapter {
 	EntityObjectStringType globalCommand = gObj.getGlobalCommand();
 	OperationEnumeration op = globalCommand.getOperation();
 
-	List<String> lines = null;
+	Collection<GlobalItem> items = new Vector<GlobalItem>();
 	String command = (String)globalCommand.getValue();
+	List<String> lines = null;
 	try {
-	    lines = session.getTechSupport().getData(ITechSupport.GLOBAL);
+	    lines = session.getTechSupport().getLines(ITechSupport.GLOBAL);
 	} catch (NoSuchElementException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ITechSupport.GLOBAL));
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_TECH_SHOW, ITechSupport.GLOBAL);
+	    throw new CollectException(msg, FlagEnumeration.ERROR);
 	}
 
-	Collection<GlobalItem> items = new Vector<GlobalItem>();
-	for (String line : lines) {
-	    if (isGlobalCommand(line)) {
-		boolean add = false;
+	try {
+	    Pattern p = null;
+	    if (op == OperationEnumeration.PATTERN_MATCH) {
+		p = Pattern.compile(command);
+	    }
+	    for (String line : lines) {
+		if (isGlobalCommand(line)) {
+		    boolean add = false;
 
-		switch(op) {
-		  case EQUALS:
-		    add = line.equals(command);
-		    break;
+		    switch(op) {
+		      case EQUALS:
+			add = line.equals(command);
+			break;
 
-		  case PATTERN_MATCH:
-		    add = Pattern.matches(command, line);
-		    break;
+		      case NOT_EQUAL:
+			add = !line.equals(command);
+			break;
 
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-		}
+		      case PATTERN_MATCH:
+			add = p.matcher(line).find();
+			break;
 
-		if (add) {
-		    GlobalItem item = Factories.sc.ios.createGlobalItem();
-		    EntityItemStringType globalCommandType = Factories.sc.core.createEntityItemStringType();
-		    globalCommandType.setValue(line);
-		    item.setGlobalCommand(globalCommandType);
-		    items.add(item);
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    }
+
+		    if (add) {
+			GlobalItem item = Factories.sc.ios.createGlobalItem();
+			EntityItemStringType globalCommandType = Factories.sc.core.createEntityItemStringType();
+			globalCommandType.setValue(line);
+			item.setGlobalCommand(globalCommandType);
+			items.add(item);
+		    }
 		}
 	    }
+	} catch (PatternSyntaxException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
     }

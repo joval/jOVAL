@@ -28,6 +28,8 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class TechSupport implements ITechSupport {
+    private static final String CRLF = "\r\n";
+
     private Hashtable<String, List<String>> data = new Hashtable<String, List<String>>();
     private LocLogger logger;
 
@@ -81,12 +83,28 @@ public class TechSupport implements ITechSupport {
 	return data.keySet();
     }
 
-    public List<String> getData(String heading) throws NoSuchElementException {
+    public List<String> getLines(String heading) throws NoSuchElementException {
 	List<String> list = data.get(heading);
 	if (list == null) {
 	    throw new NoSuchElementException(heading);
 	} else {
 	    return list;
+	}
+    }
+
+    public String getData(String heading) throws NoSuchElementException {
+	StringBuffer sb = new StringBuffer();
+	for (String line : getLines(heading)) {
+	    if (sb.length() > 0) {
+		sb.append(CRLF);
+	    }
+	    sb.append(line);
+	}
+	String s = sb.toString();
+	if (s.endsWith(CRLF)) {
+	    return s;
+	} else {
+	    return sb.append(CRLF).toString();
 	}
     }
 

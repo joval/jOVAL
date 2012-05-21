@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -39,6 +40,7 @@ public class SCEScript {
     public static final int XCCDF_RESULT_INFORMATIONAL	= 108;
     public static final int XCCDF_RESULT_FIXED		= 109;
 
+    private static final Charset UTF8 = Charset.forName("UTF-8");
     private static final String ENV_VALUE_PREFIX	= "XCCDF_VALUE_";
     private static final String ENV_TYPE_PREFIX		= "XCCDF_TYPE_";
     private static final String ENV_OPERATOR_PREFIX	= "XCCDF_OPERATOR_";
@@ -47,7 +49,7 @@ public class SCEScript {
     private ISession session;
     private Properties environment;
     private Date runtime;
-    private List<String> stdout;
+    private String stdout;
     private int exitCode = -1;
     private ResultEnumType result;
 
@@ -179,7 +181,7 @@ public class SCEScript {
 		    result = ResultEnumType.UNKNOWN;
 		    break;
 		}
-		stdout = data.getStdout();
+		stdout = new String(data.getData(), UTF8);
 		return true;
 	    }
 	} catch (IOException e) {
@@ -217,11 +219,11 @@ public class SCEScript {
     }
 
     /**
-     * Obtain a list of lines of output from the script execution.
+     * Obtain the output from the script execution.
      *
      * @throws IllegalStateException if the script has not been executed.
      */
-    public List<String> getStdout() throws IllegalStateException {
+    public String getStdout() throws IllegalStateException {
 	if (runtime == null) {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, source.getFile(), session.getHostname());
 	    throw new IllegalStateException(msg);

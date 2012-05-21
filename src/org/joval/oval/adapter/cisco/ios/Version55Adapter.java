@@ -84,7 +84,7 @@ public class Version55Adapter implements IAdapter {
     private VersionItem makeItem() throws Exception {
 	VersionItem item = Factories.sc.ios.createVersionItem();
 	String version = null;
-	for (String line : session.getTechSupport().getData("show version")) {
+	for (String line : session.getTechSupport().getLines("show version")) {
 	    if (line.startsWith("Cisco IOS")) {
 		int ptr = line.indexOf("Version ");
 		if (ptr != -1) {

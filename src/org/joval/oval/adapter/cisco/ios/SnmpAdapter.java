@@ -55,7 +55,7 @@ public class SnmpAdapter implements IAdapter {
     public Collection<SnmpItem> getItems(ObjectType obj, IRequestContext rc) {
 	Collection<SnmpItem> items = new Vector<SnmpItem>();
 	try {
-	    for (String line : session.getTechSupport().getData(ITechSupport.GLOBAL)) {
+	    for (String line : session.getTechSupport().getLines(ITechSupport.GLOBAL)) {
 		if (line.toLowerCase().startsWith("snmp-server community ")) {
 		    StringTokenizer tok = new StringTokenizer(line);
 		    String name = null;

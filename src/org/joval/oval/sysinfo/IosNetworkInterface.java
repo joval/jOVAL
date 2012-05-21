@@ -19,7 +19,7 @@ class IosNetworkInterface {
     static List<IosNetworkInterface> getInterfaces(ITechSupport techSupport) throws NoSuchElementException {
 	Vector<IosNetworkInterface> interfaces = new Vector<IosNetworkInterface>();
 	Vector<String> lines = new Vector<String>();
-	for (String line : techSupport.getData("show interfaces")) {
+	for (String line : techSupport.getLines("show interfaces")) {
 	    if (line.startsWith(" ")) {
 		lines.add(line);
 	    } else if (lines.size() > 0) {

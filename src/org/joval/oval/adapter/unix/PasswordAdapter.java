@@ -280,7 +280,6 @@ public class PasswordAdapter implements IAdapter {
 					    } else {
 						lastLogin.setValue(Long.toString(secs));
 					    }
-System.out.println("DAS last login for " + username + ": " + new Date(Long.parseLong((String)lastLogin.getValue()) * 1000L));
 					    lastLogin.setStatus(StatusEnumeration.EXISTS);
 					} catch (Exception e) {
 					    lastLogin.setStatus(StatusEnumeration.ERROR);

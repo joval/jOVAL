@@ -3,6 +3,7 @@
 
 package org.joval.util;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -18,6 +19,8 @@ import java.util.NoSuchElementException;
  * @version %I% %G%
  */
 public class StringTools {
+    public static final Charset UTF8 = Charset.forName("UTF-8");
+
     /**
      * Sort the array from A->Z (ascending ordering).
      */

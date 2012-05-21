@@ -78,8 +78,9 @@ public class OvalNamespacePrefixMapper extends NamespacePrefixMapper {
 		break;
 
 	      case RES:
-		loadData(getData(DEF_BASE));
 		loadData(getData(SC_BASE));
+		namespaces.put(URI.SC.getUri(), "oval-sc");
+		loadData(getData(DEF_BASE));
 		namespaces.put(URI.RES.getUri(), "");
 		break;
 	    }

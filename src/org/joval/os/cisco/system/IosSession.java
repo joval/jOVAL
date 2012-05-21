@@ -100,7 +100,7 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 	if (ssh != null) {
 	    return ssh.getHostname();
 	} else {
-	    for (String line : techSupport.getData("show running-config")) {
+	    for (String line : techSupport.getLines("show running-config")) {
 		if (line.startsWith("hostname ")) {
 		    return line.substring(9).trim();
 		}

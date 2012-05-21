@@ -1678,10 +1678,12 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 	//
 	// Let the base dictate the datatype
 	//
-	IType baseValue = TypeFactory.createType(base);
-	IType itemValue = null;
+	IType baseValue=null, itemValue=null;
 	try {
+	    baseValue = TypeFactory.createType(base);
 	    itemValue = TypeFactory.createType(item).cast(baseValue.getType());
+	} catch (IllegalArgumentException e) {
+	    throw new TestException(e);
 	} catch (TypeConversionException e) {
 	    throw new TestException(e);
 	}
@@ -1869,6 +1871,8 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 	    logger.trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
 	    try {
 		result = resolveComponent(var, rc);
+	    } catch (IllegalArgumentException e) {
+		throw new ResolveException(e);
 	    } catch (UnsupportedOperationException e) {
 		throw new ResolveException(e);
 	    }
@@ -1884,8 +1888,9 @@ DAS: The following is commented out because it doesn't always apply properly.  I
      *
      * @see http://oval.mitre.org/language/version5.10/ovaldefinition/documentation/oval-definitions-schema.html#FunctionGroup
      */
-    private Collection<IType> resolveComponent(Object object, RequestContext rc)
-		throws NoSuchElementException, UnsupportedOperationException, ResolveException, OvalException {
+    private Collection<IType> resolveComponent(Object object, RequestContext rc) throws NoSuchElementException,
+		UnsupportedOperationException, IllegalArgumentException, ResolveException, OvalException {
+
 	//
 	// This is a good place to check if the engine is being destroyed
 	//
@@ -2230,7 +2235,9 @@ DAS: The following is commented out because it doesn't always apply properly.  I
     /**
      * Perform the Arithmetic operation on permutations of the Stack, and return the resulting permutations.
      */
-    private List<IType> computeProduct(ArithmeticEnumeration op, Stack<Collection<IType>> rows) {
+    private List<IType> computeProduct(ArithmeticEnumeration op, Stack<Collection<IType>> rows)
+		throws IllegalArgumentException {
+
 	List<IType> results = new Vector<IType>();
 	if (rows.empty()) {
 	    switch(op) {
@@ -2280,7 +2287,7 @@ DAS: The following is commented out because it doesn't always apply properly.  I
      * associated with that ObjectType, which is the function of this method.
      */
     private List<IType> extractItemData(String objectId, ObjectComponentType oc, Collection list)
-		throws OvalException, ResolveException, NoSuchElementException {
+		throws OvalException, ResolveException, NoSuchElementException, IllegalArgumentException {
 
 	List<IType> values = new Vector<IType>();
 	for (Object o : list) {

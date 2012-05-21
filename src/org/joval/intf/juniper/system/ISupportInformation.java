@@ -27,9 +27,16 @@ public interface ISupportInformation {
     Collection<String> getHeadings();
 
     /**
-     * Fetches the String data associates with the given heading.
+     * Fetches the response lines associated with the given heading.
      *
      * @throws NoSuchElementException if the heading is not found.
      */
-    List<String> getData(String heading) throws NoSuchElementException;
+    List<String> getLines(String heading) throws NoSuchElementException;
+
+    /**
+     * Fetches the raw data associated with the given heading.
+     *
+     * @throws NoSuchElementException if the heading is not found.
+     */
+    String getData(String heading) throws NoSuchElementException;
 }

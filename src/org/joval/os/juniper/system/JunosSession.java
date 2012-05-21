@@ -98,7 +98,7 @@ public class JunosSession extends AbstractBaseSession implements ILocked, IJunos
 	if (ssh != null) {
 	    return ssh.getHostname();
 	} else {
-	    for (String line : supportInfo.getData("show version detail")) {
+	    for (String line : supportInfo.getLines("show version detail")) {
 		if (line.startsWith("Hostname: ")) {
 		    return line.substring(10).trim();
 		}

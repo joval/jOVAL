@@ -31,6 +31,7 @@ import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.PropertyUtil;
 import org.joval.util.SafeCLI;
+import org.joval.util.StringTools;
 
 /**
  * Provides Cisco IOS Line OVAL items.
@@ -92,28 +93,24 @@ public class LineAdapter implements IAdapter {
 	    subcommand = new StringBuffer("show ").append(subcommand).toString();
 	}
 
-	List<String> lines = null;
+	String stdout = null;
 	try {
-	    lines = session.getSupportInformation().getData(subcommand);
+	    stdout = session.getSupportInformation().getData(subcommand);
 	} catch (NoSuchElementException e) {
-	    lines = SafeCLI.multiLine(subcommand, session, readTimeout);
-	}
-
-	StringBuffer sb = new StringBuffer();
-	for (String line : lines) {
-	    if (sb.length() > 0) {
-		sb.append('\n');
+	    SafeCLI.ExecData data = SafeCLI.execData(subcommand, null, session, readTimeout);
+	    byte[] raw = data.getData();
+	    if (raw != null) {
+		stdout = new String(raw, StringTools.UTF8);
 	    }
-	    sb.append(line);
 	}
 
 	LineItem item = Factories.sc.junos.createLineItem();
 	EntityItemStringType showSubcommand = Factories.sc.core.createEntityItemStringType();
 	showSubcommand.setValue(subcommand);
 	item.setShowSubcommand(showSubcommand);
-	if (sb.length() > 0) {
+	if (stdout != null) {
 	    EntityItemStringType configLine = Factories.sc.core.createEntityItemStringType();
-	    configLine.setValue(sb.toString());
+	    configLine.setValue(stdout);
 	    item.setConfigLine(configLine);
 	}
 	return item;

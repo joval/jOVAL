@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;
@@ -56,19 +57,28 @@ public class GlobalAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<GlobalItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException, OvalException {
+    public Collection<GlobalItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	GlobalObject gObj = (GlobalObject)obj;
 	EntityObjectStringType globalCommand = gObj.getGlobalCommand();
 	OperationEnumeration op = globalCommand.getOperation();
 
 	Collection<GlobalItem> items = new Vector<GlobalItem>();
+	String command = (String)globalCommand.getValue();
+	List<String> lines = null;
 	try {
-	    String command = (String)globalCommand.getValue();
-	    List<String> lines = null;
 	    try {
-		lines = session.getSupportInformation().getData(ISupportInformation.GLOBAL);
+		lines = session.getSupportInformation().getLines(ISupportInformation.GLOBAL);
 	    } catch (NoSuchElementException e) {
 		lines = SafeCLI.multiLine(ISupportInformation.GLOBAL, session, readTimeout);
+	    }
+	} catch (Exception e) {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_JUNOS_SHOW, ISupportInformation.GLOBAL);
+	    throw new CollectException(msg, FlagEnumeration.ERROR);
+	}
+	try {
+	    Pattern p = null;
+	    if (op == OperationEnumeration.PATTERN_MATCH) {
+		p = Pattern.compile(command);
 	    }
 	    for (String line : lines) {
 		boolean add = false;
@@ -78,8 +88,12 @@ public class GlobalAdapter implements IAdapter {
 		    add = line.equals(command);
 		    break;
 
+		  case NOT_EQUAL:
+		    add = !line.equals(command);
+		    break;
+
 		  case PATTERN_MATCH:
-		    add = Pattern.matches(command, line);
+		    add = p.matcher(line).find();
 		    break;
 
 		  default:
@@ -95,10 +109,10 @@ public class GlobalAdapter implements IAdapter {
 		    items.add(item);
 		}
 	    }
-	} catch (Exception e) {
+	} catch (PatternSyntaxException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_JUNOS_SHOW, ISupportInformation.GLOBAL));
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}

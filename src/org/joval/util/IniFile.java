@@ -143,7 +143,7 @@ public class IniFile {
 	    IProperty props = getSection(header);
 	    for (String key : props) {
 		String escapedKey = key.replace(COLON, ESC + COLON).replace(EQUAL, ESC + EQUAL);
-		StringTokenizer tok = new StringTokenizer(props.getProperty(key), "\n");
+		StringTokenizer tok = new StringTokenizer(props.getProperty(key), "\r\n");
 		StringBuffer sb = new StringBuffer();
 		if(tok.countTokens() > 0) {
 		    sb.append(tok.nextToken());

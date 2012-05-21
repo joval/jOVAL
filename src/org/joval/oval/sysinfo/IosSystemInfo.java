@@ -27,14 +27,14 @@ class IosSystemInfo {
 	info.setOsName("Cisco IOS");
 	info.setOsVersion("unknown");
 	info.setArchitecture("unknown");
-	for (String line : techSupport.getData("show running-config")) {
+	for (String line : techSupport.getLines("show running-config")) {
 	    if (line.startsWith("hostname")) {
 		info.setPrimaryHostName(line.substring(9).trim());
 		break;
 	    }
 	}
 
-	for (String line : techSupport.getData("show version")) {
+	for (String line : techSupport.getLines("show version")) {
 	    if (line.startsWith("Cisco IOS")) {
 		int ptr = line.indexOf("Version ");
 		if (ptr != -1) {

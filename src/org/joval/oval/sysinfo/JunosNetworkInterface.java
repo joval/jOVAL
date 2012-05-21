@@ -21,7 +21,7 @@ class JunosNetworkInterface {
 	Vector<JunosNetworkInterface> interfaces = new Vector<JunosNetworkInterface>();
 	Vector<String> lines = new Vector<String>();
 	String mac = null;
-	for (String line : supportInfo.getData("show interfaces extensive")) {
+	for (String line : supportInfo.getLines("show interfaces extensive")) {
 	    line = line.trim();
 	    if (line.startsWith("Physical interface")) {
 		mac = null;

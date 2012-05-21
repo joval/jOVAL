@@ -61,7 +61,7 @@ public class VersionAdapter implements IAdapter {
 	    componentItems = new Hashtable<String, VersionItem>();
 	    try {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss z");
-		for (String line : session.getSupportInformation().getData("show version detail")) {
+		for (String line : session.getSupportInformation().getLines("show version detail")) {
 		    if (line.trim().length() > 0) {
 			if (line.startsWith("Hostname:") || line.startsWith("Model:")) {
 			    // no-op
