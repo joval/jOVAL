@@ -200,6 +200,10 @@ public class Checklist implements ITransformable {
 	return questionnaires.values();
     }
 
+    public Collection<String> getQuestionIds() {
+	return questions.keySet();
+    }
+
     public boolean containsQuestion(String id) {
 	return questions.containsKey(id);
     }
@@ -226,6 +230,10 @@ public class Checklist implements ITransformable {
 	} else {
 	    throw new NoSuchElementException(id);
 	}
+    }
+
+    public Collection<String> getQuestionTestActionIds() {
+	return questionTestActions.keySet();
     }
 
     public boolean containsQuestionTestAction(String id) {
