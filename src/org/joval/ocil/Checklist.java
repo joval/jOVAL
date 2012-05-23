@@ -184,8 +184,12 @@ public class Checklist implements ITransformable {
 	ocil.setResults(results);
     }
 
+    public Collection<String> getQuestionnaireIds() {
+	return questionnaires.keySet();
+    }
+
     public boolean containsQuestionnaire(String id) {
-	return questionnaires.contains(id);
+	return questionnaires.containsKey(id);
     }
 
     public QuestionnaireType getQuestionnaire(String id) throws NoSuchElementException {
@@ -194,10 +198,6 @@ public class Checklist implements ITransformable {
 	} else {
 	    throw new NoSuchElementException(id);
 	}
-    }
-
-    public Collection<QuestionnaireType> getQuestionnaires() {
-	return questionnaires.values();
     }
 
     public Collection<String> getQuestionIds() {
