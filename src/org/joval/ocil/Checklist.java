@@ -184,8 +184,15 @@ public class Checklist implements ITransformable {
 	ocil.setResults(results);
     }
 
-    public Collection<String> getQuestionnaireIds() {
-	return questionnaires.keySet();
+    /**
+     * List questionnaire IDs in document order.
+     */
+    public List<String> listQuestionnaireIds() {
+	List<String> list = new Vector<String>();
+	for (QuestionnaireType q : ocil.getQuestionnaires().getQuestionnaire()) {
+	    list.add(q.getId());
+	}
+	return list;
     }
 
     public boolean containsQuestionnaire(String id) {
