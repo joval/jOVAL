@@ -7,4 +7,4 @@ SET LIB=%INSTALL_DIR%lib
 SET PLUGIN=%INSTALL_DIR%plugin
 IF NOT DEFINED JAVA_HOME SET JAVA_HOME=%INSTALL_DIR%jre
 SET JMEM=-Xmx1024m
-"%JAVA_HOME%\bin\java" %JMEM% -cp "%LIB%\*";"%PLUGIN%\cisco\lib\*" org.joval.plugin.CiscoPlugin %*
+"%JAVA_HOME%\bin\java" %JMEM% -cp "%LIB%\*";"%PLUGIN%\offline\lib\*" org.joval.plugin.OfflinePlugin %*

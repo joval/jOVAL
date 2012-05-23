@@ -34,6 +34,7 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.macos.PlistItem;
 import oval.schemas.systemcharacteristics.macos.EntityItemPlistTypeType;
 
+import org.joval.intf.apple.system.IiOSSession;
 import org.joval.intf.io.IFile;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
@@ -53,6 +54,8 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class PlistAdapter extends BaseFileAdapter<PlistItem> {
+    private IiOSSession iSession;
+
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
@@ -65,8 +68,50 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 		classes.add(Plist510Object.class);
 		break;
 	    }
+	} else if (session instanceof IiOSSession) {
+	    iSession = (IiOSSession)session;
+	    classes.add(PlistObject.class);
 	}
 	return classes;
+    }
+
+    // Implement IAdapter
+
+    @Override
+    public Collection<PlistItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
+	if (iSession == null) {
+	    return super.getItems(obj, rc);
+	} else {
+	    PlistObject pObj = (PlistObject)obj;
+	    NSObject nso = iSession.getConfigurationProfile();
+
+	    Collection<PlistItem> items = new Vector<PlistItem>();
+	    try {
+		String appId = null;
+		if (pObj.isSetAppId()) {
+		    appId = (String)pObj.getAppId().getValue();
+		} else {
+		    appId = findAppId(nso);
+		}
+    
+		String key = null;
+		if (pObj.isSetKey()) {
+		    key = (String)pObj.getKey().getValue().getValue();
+		}
+		
+		for (PlistItem item : getItems(appId, key, null, nso)) {
+		    item.setFilepath(Factories.sc.core.createEntityItemStringType());
+		    items.add(item);
+		}
+	    } catch (Exception e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_PARSE, "input", e.getMessage()));
+		rc.addMessage(msg);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	    return items;
+	}
     }
 
     // Protected
@@ -283,11 +328,11 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 	    NSNumber num = (NSNumber)obj;
 	    switch(num.type()) {
 	      case NSNumber.BOOLEAN:
-	        return Boolean.valueOf(((NSNumber)obj).boolValue()).toString();
+		return Boolean.valueOf(((NSNumber)obj).boolValue()).toString();
 	      case NSNumber.INTEGER:
-	        return Integer.valueOf(((NSNumber)obj).intValue()).toString();
+		return Integer.valueOf(((NSNumber)obj).intValue()).toString();
 	      case NSNumber.REAL:
-	        return Float.valueOf(((NSNumber)obj).floatValue()).toString();
+		return Float.valueOf(((NSNumber)obj).floatValue()).toString();
 	    }
 	} else if (obj instanceof NSString) {
 	    return ((NSString)obj).toString();

@@ -139,6 +139,11 @@ public interface IBaseSession extends ILoggable {
 	JUNIPER_JUNOS("junos"),
 
 	/**
+	 * Indicates a session with a device running Apple iOS.
+	 */
+	APPLE_IOS("apple_iOS"),
+
+	/**
 	 * Indicates a session with a Windows host.
 	 */
 	WINDOWS("windows"),

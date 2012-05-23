@@ -15,7 +15,7 @@ all:
 	@$(MAKE) --keep-going --directory=adapters all
 	@$(MAKE) --keep-going --directory=plugin/local all
 	@$(MAKE) --keep-going --directory=plugin/remote all
-	@$(MAKE) --keep-going --directory=plugin/cisco all
+	@$(MAKE) --keep-going --directory=plugin/offline all
 
 clean:
 	@$(MAKE) --keep-going --directory=common clean
@@ -23,7 +23,7 @@ clean:
 	@$(MAKE) --keep-going --directory=adapters clean
 	@$(MAKE) --keep-going --directory=plugin/local clean
 	@$(MAKE) --keep-going --directory=plugin/remote clean
-	@$(MAKE) --keep-going --directory=plugin/cisco clean
+	@$(MAKE) --keep-going --directory=plugin/offline clean
 
 javadocs:
 	mkdir -p $(DOCS)

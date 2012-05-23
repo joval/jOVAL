@@ -1,4 +1,5 @@
 CLASSES=\
+	org.joval.intf.apple.system.IiOSSession			\
 	org.joval.intf.cisco.system.IIosSession			\
 	org.joval.intf.cisco.system.ITechSupport		\
 	org.joval.intf.io.IFile					\

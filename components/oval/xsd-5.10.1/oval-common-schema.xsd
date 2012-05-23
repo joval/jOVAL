@@ -105,6 +105,7 @@
       <xsd:restriction base="xsd:string">
          <xsd:enumeration value="catos"/>
          <xsd:enumeration value="ios"/>
+         <xsd:enumeration value="apple_ios"/>
          <xsd:enumeration value="junos"/>
          <xsd:enumeration value="macos"/>
          <xsd:enumeration value="pixos"/>

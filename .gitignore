@@ -17,7 +17,7 @@ components/oval/oval-schema-*.jar
 components/sdk/docs/api/
 components/sdk/engine/jOVALCore.jar
 components/sdk/plugin/shared/jOVALPluginShared.jar
-components/sdk/plugin/cisco/jOVALPluginCisco.jar
+components/sdk/plugin/offline/jOVALPluginOffline.jar
 components/sdk/plugin/local/jOVALPluginLocal.jar
 components/sdk/plugin/remote/jOVALPluginRemote.jar
 components/xccdf/docs/api/

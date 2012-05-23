@@ -83,10 +83,10 @@ dist-x86: all $(DIST32)/jre
 	cp -R plugin/remote/rsrc/* $(DIST32)/plugin/remote
 	cp -R $(PLUGIN_REMOTE_LIB) $(DIST32)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST32)/plugin/remote/lib
-	mkdir -p $(DIST)/x86/plugin/cisco/lib
-	cp -R plugin/cisco/rsrc/* $(DIST32)/plugin/cisco
-	cp -R $(PLUGIN_CISCO_LIB) $(DIST32)/plugin/cisco/lib
-	cp -R $(PLUGIN_CISCO)/$(LIBDIR)/*.jar $(DIST32)/plugin/cisco/lib
+	mkdir -p $(DIST)/x86/plugin/offline/lib
+	cp -R plugin/offline/rsrc/* $(DIST32)/plugin/offline
+	cp -R $(PLUGIN_OFFLINE_LIB) $(DIST32)/plugin/offline/lib
+	cp -R $(PLUGIN_OFFLINE)/$(LIBDIR)/*.jar $(DIST32)/plugin/offline/lib
 
 $(DIST64)/jre : $(JRE_HOME)/x64
 	mkdir -p $(DIST64)
@@ -120,10 +120,10 @@ dist-x64: all $(DIST64)/jre
 	cp -R plugin/remote/rsrc/* $(DIST64)/plugin/remote
 	cp -R $(PLUGIN_REMOTE_LIB) $(DIST64)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST64)/plugin/remote/lib
-	mkdir -p $(DIST)/x64/plugin/cisco/lib
-	cp -R plugin/cisco/rsrc/* $(DIST64)/plugin/cisco
-	cp -R $(PLUGIN_CISCO_LIB) $(DIST64)/plugin/cisco/lib
-	cp -R $(PLUGIN_CISCO)/$(LIBDIR)/*.jar $(DIST64)/plugin/cisco/lib
+	mkdir -p $(DIST)/x64/plugin/offline/lib
+	cp -R plugin/offline/rsrc/* $(DIST64)/plugin/offline
+	cp -R $(PLUGIN_OFFLINE_LIB) $(DIST64)/plugin/offline/lib
+	cp -R $(PLUGIN_OFFLINE)/$(LIBDIR)/*.jar $(DIST64)/plugin/offline/lib
 
 release-win32: dist-x86
 	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x86.zip -C $(DIST32) .

@@ -31,6 +31,9 @@ import java.util.logging.SimpleFormatter;
 
 import org.slf4j.cal10n.LocLogger;
 
+import com.dd.plist.NSObject;
+import com.dd.plist.PropertyListParser;
+
 import org.joval.intf.cisco.system.ITechSupport;
 import org.joval.intf.juniper.system.ISupportInformation;
 import org.joval.intf.oval.IEngine;
@@ -41,6 +44,7 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
+import org.joval.os.apple.system.iOSSession;
 import org.joval.os.cisco.system.IosSession;
 import org.joval.os.cisco.system.TechSupport;
 import org.joval.os.juniper.system.JunosSession;
@@ -57,7 +61,7 @@ import org.joval.util.JOVALSystem;
  *
  * @author David A. Solin
  */
-public class CiscoPlugin extends BasePlugin {
+public class OfflinePlugin extends BasePlugin {
     /**
      * The Cisco utility accepts two command-line arguments.  The first is the path to an XML file containing OVAL
      * definitions, and the second is a URL to information returned from the command "show tech-support" run on a Cisco
@@ -107,13 +111,16 @@ public class CiscoPlugin extends BasePlugin {
 	    }
 
 	    IPlugin plugin = null;
-	    ITechSupport tech = null;
-	    tech = new TechSupport(new ByteArrayInputStream(out.toByteArray()));
-	    if (tech.getHeadings().size() == 0) {
-		ISupportInformation info = new SupportInformation(new ByteArrayInputStream(out.toByteArray()));
-		plugin = new CiscoPlugin(info);
-	    } else {
-		plugin = new CiscoPlugin(tech);
+	    try {
+		plugin = new OfflinePlugin(PropertyListParser.parse(new ByteArrayInputStream(out.toByteArray())));
+	    } catch (Exception e) {
+		ITechSupport tech = new TechSupport(new ByteArrayInputStream(out.toByteArray()));
+		if (tech.getHeadings().size() == 0) {
+		    ISupportInformation info = new SupportInformation(new ByteArrayInputStream(out.toByteArray()));
+		    plugin = new OfflinePlugin(info);
+		} else {
+		    plugin = new OfflinePlugin(tech);
+		}
 	    }
 
 	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.EXHAUSTIVE, plugin.getSession());
@@ -165,7 +172,7 @@ public class CiscoPlugin extends BasePlugin {
     }
 
     static void usage() {
-	System.out.println("jOVAL(TM) Disco utility: An offline OVAL evaluator for Cisco IOS devices.");
+	System.out.println("jOVAL(TM) Disco utility: An offline OVAL evaluator for devices.");
 	System.out.println("Copyright(C) 2012, jOVAL.org.  All rights reserved.");
 	System.out.println("");
 	System.out.println("Usage:");
@@ -175,8 +182,10 @@ public class CiscoPlugin extends BasePlugin {
 	System.out.println("  [defs]  = Required argument specifying the path to an XML file containing");
 	System.out.println("            OVAL definitions.");
 	System.out.println("  [input] = Optional argument specifying the URL or path to a file containing");
-	System.out.println("            the contents of the IOS command \"show tech-support\".  If not");
-	System.out.println("            specified, data is read from the standard input.");
+	System.out.println("            the contents of the IOS command \"show tech-support\", the JunOS");
+	System.out.println("            command \"request support information\", or an Apple iOS device");
+	System.out.println("            configuration profile.  If not specified, data is read from the");
+	System.out.println("            standard input.");
     }
 
     /**
@@ -219,7 +228,7 @@ public class CiscoPlugin extends BasePlugin {
 
     // Implement IPlugin
 
-    public CiscoPlugin() {
+    public OfflinePlugin() {
 	super();
     }
 
@@ -227,11 +236,11 @@ public class CiscoPlugin extends BasePlugin {
     public void configure(Properties props) throws Exception {
 	super.configure(props);
 
-	String str = props.getProperty("tech.url");
+	String str = props.getProperty("input.url");
 	if (str == null) {
-	    throw new Exception(getMessage("err.configPropMissing", "tech.url"));
+	    throw new Exception(getMessage("err.configPropMissing", "input.url"));
 	}
-	URL url = CiscoPlugin.toURL(props.getProperty("tech.url"));
+	URL url = OfflinePlugin.toURL(props.getProperty("input.url"));
 	ByteArrayOutputStream out = new ByteArrayOutputStream();
 	InputStream in = url.openStream();
 	byte[] buff = new byte[1024];
@@ -240,24 +249,38 @@ public class CiscoPlugin extends BasePlugin {
 	    out.write(buff, 0, len);
 	}
 
-	ITechSupport tech = new TechSupport(new ByteArrayInputStream(out.toByteArray()));
-	if (tech.getHeadings().size() == 0) {
-	    session = new JunosSession(new SupportInformation(new ByteArrayInputStream(out.toByteArray())));
-	} else {
-	    session = new IosSession(tech);
+	try {
+	    NSObject nso = PropertyListParser.parse(new ByteArrayInputStream(out.toByteArray()));
+	    session = new iOSSession(nso);
+	} catch (Exception e) {
+	    try {
+		ITechSupport tech = new TechSupport(new ByteArrayInputStream(out.toByteArray()));
+		if (tech.getHeadings().size() == 0) {
+		    session = new JunosSession(new SupportInformation(new ByteArrayInputStream(out.toByteArray())));
+		} else {
+		    session = new IosSession(tech);
+		}
+	    } catch (Exception e2) {
+		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_OFFLINE_INPUT));
+	    }
 	}
     }
 
     // Private
 
-    private CiscoPlugin(ITechSupport tech) {
+    private OfflinePlugin(ITechSupport tech) {
 	super();
 	session = new IosSession(tech);
     }
 
-    private CiscoPlugin(ISupportInformation info) {
+    private OfflinePlugin(ISupportInformation info) {
 	super();
 	session = new JunosSession(info);
+    }
+
+    private OfflinePlugin(NSObject nso) {
+	super();
+	session = new iOSSession(nso);
     }
 }
 

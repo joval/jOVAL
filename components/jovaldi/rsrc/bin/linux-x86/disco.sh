@@ -9,4 +9,4 @@ if [ "x${JAVA_HOME}" == x ]; then
     export JAVA_HOME=${INSTALL_DIR}/jre
 fi
 export JMEM=-Xmx1024m
-${JAVA_HOME}/bin/java ${JMEM} -cp "${LIB}/*":"${PLUGIN}/cisco/lib/*" org.joval.plugin.CiscoPlugin "$@"
+${JAVA_HOME}/bin/java ${JMEM} -cp "${LIB}/*":"${PLUGIN}/offline/lib/*" org.joval.plugin.OfflinePlugin "$@"

@@ -37,6 +37,7 @@ CLASSES=\
 	org.joval.oval.engine.RequestContext		\
 	org.joval.oval.engine.ResolveException		\
 	org.joval.oval.engine.TestException		\
+	org.joval.oval.sysinfo.AppleiOSSystemInfo	\
 	org.joval.oval.sysinfo.IosNetworkInterface	\
 	org.joval.oval.sysinfo.IosSystemInfo		\
 	org.joval.oval.sysinfo.JunosNetworkInterface	\
