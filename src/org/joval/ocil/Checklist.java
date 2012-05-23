@@ -227,6 +227,14 @@ public class Checklist implements ITransformable {
 	return artifacts.containsKey(id);
     }
 
+    public ArtifactType getArtifact(String id) throws NoSuchElementException {
+	if (artifacts.containsKey(id)) {
+	    return artifacts.get(id);
+	} else {
+	    throw new NoSuchElementException(id);
+	}
+    }
+
     public boolean containsVariable(String id) {
 	return variables.containsKey(id);
     }
