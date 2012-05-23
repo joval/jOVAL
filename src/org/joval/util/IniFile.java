@@ -188,7 +188,7 @@ public class IniFile {
      * Get the section with the given name, or create it if it doesn't already exist.
      */
     public IProperty getCreateSection(String name) {
-	if (!sections.contains(name)) {
+	if (!sections.containsKey(name)) {
 	    sections.put(name, new PropertyUtil());
 	}
 	return sections.get(name);
