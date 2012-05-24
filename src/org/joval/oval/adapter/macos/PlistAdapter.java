@@ -6,6 +6,7 @@ package org.joval.oval.adapter.macos;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Stack;
 import java.util.Vector;
 
@@ -71,6 +72,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 	} else if (session instanceof IiOSSession) {
 	    iSession = (IiOSSession)session;
 	    classes.add(PlistObject.class);
+	    classes.add(Plist510Object.class);
 	}
 	return classes;
     }
@@ -80,37 +82,33 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
     @Override
     public Collection<PlistItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	if (iSession == null) {
+	    //
+	    // For the normal MacOS X case, delegate to the BaseFileAdapter
+	    //
 	    return super.getItems(obj, rc);
 	} else {
-	    PlistObject pObj = (PlistObject)obj;
+	    //
+	    // For the iOS device case, evaluate using the sole plist
+	    //
+	    Plist510Object pObj = getPlist510Object(obj);
 	    NSObject nso = iSession.getConfigurationProfile();
 
-	    Collection<PlistItem> items = new Vector<PlistItem>();
 	    try {
-		String appId = null;
-		if (pObj.isSetAppId()) {
-		    appId = (String)pObj.getAppId().getValue();
-		} else {
-		    appId = findAppId(nso);
-		}
-    
-		String key = null;
-		if (pObj.isSetKey()) {
-		    key = (String)pObj.getKey().getValue().getValue();
-		}
-		
-		for (PlistItem item : getItems(appId, key, null, nso)) {
-		    item.setFilepath(Factories.sc.core.createEntityItemStringType());
-		    items.add(item);
-		}
+		return getItems(pObj, Factories.sc.core.createEntityItemStringType(), nso);
 	    } catch (Exception e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_PARSE, "input", e.getMessage()));
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		if (e instanceof CollectException) {
+		    throw (CollectException)e;
+		} else {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_PARSE, "input", e.getMessage()));
+		    rc.addMessage(msg);
+		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
 	    }
-	    return items;
+	    @SuppressWarnings("unchecked")
+	    Collection<PlistItem> empty = (Collection<PlistItem>)Collections.EMPTY_LIST;
+	    return empty;
 	}
     }
 
@@ -121,12 +119,11 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
     }
 
     /**
-     * Parse the plist specified by the Object, and decorate the Item.
+     * Entry point for the BaseFileAdapter super-class. Parse the plist specified by the Object, and decorate the Item.
      */
     protected Collection<PlistItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws IOException, CollectException {
 
-	Collection<PlistItem> items = new Vector<PlistItem>();
 	PlistItem baseItem = null;
 	if (base instanceof PlistItem) {
 	    baseItem = (PlistItem)base;
@@ -134,6 +131,43 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
 	    throw new CollectException(message, FlagEnumeration.ERROR);
 	}
+
+	if (baseItem != null && f.isFile()) {
+	    InputStream in = null;
+	    try {
+		in = f.getInputStream();
+		return getItems(getPlist510Object(obj), baseItem.getFilepath(), PropertyListParser.parse(in));
+	    } catch (Exception e) {
+		if (e instanceof CollectException) {
+		    throw (CollectException)e;
+		} else if (e instanceof IOException) {
+		    throw (IOException)e;
+		} else {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_PARSE, f.getPath(), e.getMessage()));
+		    rc.addMessage(msg);
+		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+	    } finally {
+		if (in != null) {
+		    try {
+			in.close();
+		    } catch (IOException e) {
+			session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
+		    }
+		}
+	    }
+	}
+
+	@SuppressWarnings("unchecked")
+	Collection<PlistItem> empty = (Collection<PlistItem>)Collections.EMPTY_LIST;
+	return empty;
+    }
+
+    // Private
+
+    private Plist510Object getPlist510Object(ObjectType obj) throws CollectException {
 	Plist510Object pObj = null;
 	if (obj instanceof PlistObject) {
 	    pObj = Factories.definitions.macos.createPlist510Object();
@@ -150,69 +184,41 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName());
 	    throw new CollectException(message, FlagEnumeration.ERROR);
 	}
+	return pObj;
+    }
 
-	if (baseItem != null && pObj != null && f.isFile()) {
-	    InputStream in = null;
-	    try {
-		in = f.getInputStream();
-		NSObject nso = PropertyListParser.parse(in);
+    private Collection<PlistItem> getItems(Plist510Object pObj, EntityItemStringType filepath, NSObject obj) throws Exception {
+	String appId = null;
+	if (pObj.isSetAppId()) {
+	    appId = (String)pObj.getAppId().getValue();
+	} else {
+	    appId = findAppId(obj);
+	}
 
-		String appId = null;
-		if (pObj.isSetAppId()) {
-		    appId = (String)pObj.getAppId().getValue();
-		} else {
-		    appId = findAppId(nso);
-		}
-    
-		String key = null;
-		if (pObj.isSetKey()) {
-		    key = (String)pObj.getKey().getValue().getValue();
-		}
-    
-		Integer instance = null;
-		if (pObj.isSetInstance()) {
-		    String s = (String)pObj.getInstance().getValue();
-    
-		    if (s != null && s.length() > 0) {
-			try {
-			    instance = new Integer(s);
-			} catch (NumberFormatException e) {
-			    throw new CollectException(e, FlagEnumeration.ERROR);
-			}
-		    }
-		}
-
-		for (PlistItem item : getItems(appId, key, instance, nso)) {
-		    item.setFilepath(baseItem.getFilepath());
-		    items.add(item);
-		}
-	    } catch (Exception e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_PARSE, f.getPath(), e.getMessage()));
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    } finally {
-		if (in != null) {
-		    try {
-			in.close();
-		    } catch (IOException e) {
-			session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
-		    }
+	String key = null;
+	if (pObj.isSetKey()) {
+	    key = (String)pObj.getKey().getValue().getValue();
+	}
+  
+	Integer instance = null;
+	if (pObj.isSetInstance()) {
+	    String s = (String)pObj.getInstance().getValue();
+   
+	    if (s != null && s.length() > 0) {
+		try {
+		    instance = new Integer(s);
+		} catch (NumberFormatException e) {
+		    throw new CollectException(e, FlagEnumeration.ERROR);
 		}
 	    }
 	}
-	return items;
-    }
 
-    // Private
-
-    private Collection<PlistItem> getItems(String appId, String key, Integer instance, NSObject obj) throws Exception {
 	Collection<PlistItem> items = new Vector<PlistItem>();
 
 	int inst = 0;
 	for (NSObject value : findValues(obj, key)) {
 	    PlistItem item = Factories.sc.macos.createPlistItem();
+	    item.setFilepath(filepath);
 	    inst++; // start instance counting at 1
 
 	    if (instance != null) {
