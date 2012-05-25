@@ -4,7 +4,6 @@
 package org.joval.oval.adapter.junos;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -12,6 +11,7 @@ import java.util.Vector;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
@@ -54,8 +54,6 @@ import org.joval.xml.XPathTools;
  * @version %I% %G%
  */
 public class XmlLineAdapter implements IAdapter {
-    private static final String XML_DOC_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
-
     private DocumentBuilder builder;
     private XPath xpath;
     private IJunosSession session;
@@ -126,6 +124,12 @@ public class XmlLineAdapter implements IAdapter {
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_PARSE, subcommand, e.getMessage()));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (TransformerException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_TRANSFORM, e.getMessage()));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -150,12 +154,7 @@ public class XmlLineAdapter implements IAdapter {
 	if (!subcommand.toLowerCase().endsWith(" | display xml")) {
 	    subcommand = new StringBuffer(subcommand).append(" | display xml").toString();
 	}
-
-	ByteArrayOutputStream out = new ByteArrayOutputStream();
-//	out.write(XML_DOC_HEADER.getBytes());
 	SafeCLI.ExecData data = SafeCLI.execData(subcommand, null, session, readTimeout);
-	out.write(data.getData());
-System.out.println(new String(out.toByteArray(), StringTools.UTF8));
-	return builder.parse(new ByteArrayInputStream(out.toByteArray()));
+	return builder.parse(new ByteArrayInputStream(data.getData()));
     }
 }

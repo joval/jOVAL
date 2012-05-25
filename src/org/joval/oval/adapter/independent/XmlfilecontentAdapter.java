@@ -11,6 +11,7 @@ import java.util.Vector;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
@@ -49,6 +50,7 @@ import org.joval.xml.XPathTools;
  */
 public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
     private DocumentBuilder builder;
+    private XPath xpath;
 
     // Implement IAdapter
 
@@ -60,10 +62,11 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		factory.setNamespaceAware(true);
 		builder = factory.newDocumentBuilder();
+		xpath = XPathFactory.newInstance().newXPath();
+		classes.add(XmlfilecontentObject.class);
 	    } catch (ParserConfigurationException e) {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
-	    classes.add(XmlfilecontentObject.class);
 	}
 	return classes;
     }
@@ -95,12 +98,9 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 
 	    InputStream in = null;
 	    try {
-		XPath xpath = XPathFactory.newInstance().newXPath();
 		XPathExpression expr = xpath.compile(expression);
-
 		in = f.getInputStream();
 		Document doc = builder.parse(in);
-
 		List<String> values = XPathTools.typesafeEval(expr, doc);
 		if (values.size() == 0) {
 		    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
@@ -113,7 +113,6 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 			item.getValueOf().add(valueOf);
 		    }
 		}
-
 		items.add(item);
 	    } catch (XPathExpressionException e) {
 		MessageType msg = Factories.common.createMessageType();
@@ -125,6 +124,12 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_PARSE, f.getPath(), e.getMessage()));
+		rc.addMessage(msg);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    } catch (TransformerException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_TRANSFORM, e.getMessage()));
 		rc.addMessage(msg);
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {

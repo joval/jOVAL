@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
+import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathFactory;
@@ -88,17 +89,25 @@ public class ConfigAdapter implements IAdapter {
 	xpathType.setValue(expression);
 	item.setXpath(xpathType);
 
-	List<String> values = XPathTools.typesafeEval(xpe, config);
-	if (values.size() == 0) {
-	    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
-	    valueOf.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    item.getValueOf().add(valueOf);
-	} else {
-	    for (String value : values) {
+	try {
+	    List<String> values = XPathTools.typesafeEval(xpe, config);
+	    if (values.size() == 0) {
 		EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
-		valueOf.setValue(value);
+		valueOf.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		item.getValueOf().add(valueOf);
+	    } else {
+		for (String value : values) {
+		    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
+		    valueOf.setValue(value);
+		    item.getValueOf().add(valueOf);
+		}
 	    }
+	} catch (TransformerException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_TRANSFORM, e.getMessage()));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	Collection<ConfigItem> items = new Vector<ConfigItem>();
