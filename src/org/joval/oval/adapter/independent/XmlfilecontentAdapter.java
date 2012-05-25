@@ -6,6 +6,7 @@ package org.joval.oval.adapter.independent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.Vector;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -100,10 +101,17 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 		in = f.getInputStream();
 		Document doc = builder.parse(in);
 
-		for (String value : XPathTools.typesafeEval(expr, doc)) {
+		List<String> values = XPathTools.typesafeEval(expr, doc);
+		if (values.size() == 0) {
 		    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
-		    valueOf.setValue(value);
+		    valueOf.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		    item.getValueOf().add(valueOf);
+		} else {
+		    for (String value : values) {
+			EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
+			valueOf.setValue(value);
+			item.getValueOf().add(valueOf);
+		    }
 		}
 
 		items.add(item);

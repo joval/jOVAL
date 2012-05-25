@@ -43,6 +43,7 @@ CLASSES=\
 	org.joval.oval.adapter.junos.GlobalAdapter			\
 	org.joval.oval.adapter.junos.LineAdapter			\
 	org.joval.oval.adapter.junos.VersionAdapter			\
+	org.joval.oval.adapter.junos.XmlLineAdapter			\
 	org.joval.oval.adapter.linux.RpminfoAdapter			\
 	org.joval.oval.adapter.macos.AccountinfoAdapter			\
 	org.joval.oval.adapter.macos.PlistAdapter			\

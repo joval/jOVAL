@@ -3,15 +3,25 @@
 
 package org.joval.xml;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.Stack;
 import java.util.Vector;
 import javax.xml.namespace.QName;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+
+import org.joval.util.StringTools;
 
 /**
  * Useful methods for XPath evaluation.
@@ -20,15 +30,26 @@ import org.w3c.dom.NodeList;
  * @version %I% %G%
  */
 public class XPathTools {
-    public static Collection<String> typesafeEval(XPathExpression xpe, Document doc) {
-	Stack<QName> types = new Stack<QName>();
-	types.push(XPathConstants.BOOLEAN);
-	types.push(XPathConstants.NODE);
-	types.push(XPathConstants.NODESET);
-	types.push(XPathConstants.NUMBER);
-	types.push(XPathConstants.STRING);
+    /**
+     * The QName types, in evaluation preference order.
+     */
+    private static final QName[] TYPES = {XPathConstants.NODESET,
+					  XPathConstants.NODE,
+					  XPathConstants.STRING,
+					  XPathConstants.NUMBER,
+					  XPathConstants.BOOLEAN};
 
-	return typesafeEval(xpe, doc, types);
+    /**
+     * Returns the String result of the XPath query. This may be XML in String form, for instance.
+     */
+    public static List<String> typesafeEval(XPathExpression xpe, Document doc) throws TransformerException {
+	for (QName qn : TYPES) {
+	    try {
+		return eval(xpe, doc, qn);
+	    } catch (XPathExpressionException e) {
+	    }
+	}
+	return new Vector<String>();
     }
 
     public static String getMessage(XPathExpressionException err) {
@@ -37,31 +58,31 @@ public class XPathTools {
 
     // Private
 
-    private static Collection<String> typesafeEval(XPathExpression xpe, Document doc, Stack<QName> types) {
-	Collection<String> list = new Vector<String>();
-	if (types.empty()) {
-	    return list;
-	}
-	try {
-	    QName qn = types.pop();
-	    Object o = xpe.evaluate(doc, qn);
-	    if (o instanceof String) {
-		list.add((String)o);
-	    } else if (o instanceof NodeList) {
-		NodeList nodes = (NodeList)o;
-		int len = nodes.getLength();
-		for (int i=0; i < len; i++) {
-		    list.add(nodes.item(i).getNodeValue());
-		}
-	    } else if (o instanceof Double) {
-		list.add(((Double)o).toString());
-	    } else if (o instanceof Boolean) {
-		list.add(((Boolean)o).toString());
+    private static List<String> eval(XPathExpression xpe, Document doc, QName qn)
+		throws TransformerException, XPathExpressionException {
+
+	List<String> list = new Vector<String>();
+	Object o = xpe.evaluate(doc, qn);
+	if (o instanceof NodeList) {
+	    NodeList nodes = (NodeList)o;
+	    int len = nodes.getLength();
+	    for (int i=0; i < len; i++) {
+		DOMSource src = new DOMSource(nodes.item(i));
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		StreamResult res = new StreamResult(out);
+		getTransformer().transform(src, res);
+		list.add(new String(out.toByteArray(), StringTools.UTF8));
 	    }
-	    return list;
-	} catch (XPathExpressionException e) {
-	    return typesafeEval(xpe, doc, types);
+	} else if (o instanceof Double) {
+	    list.add(((Double)o).toString());
+	} else if (o instanceof Boolean) {
+	    list.add(((Boolean)o).toString());
+	} else if (o instanceof String) {
+	    list.add((String)o);
+	} else {
+	    list.add(o.toString());
 	}
+	return list;
     }
 
     private static String crawlMessage(Throwable t) {
@@ -75,5 +96,15 @@ public class XPathTools {
 		return s;
 	    }
 	}
+    }
+
+    private static Transformer transformer = null;
+
+    private static Transformer getTransformer() throws TransformerException {
+	if (transformer == null) {
+	    transformer = TransformerFactory.newInstance().newTransformer();
+	    transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+	}
+	return transformer;
     }
 }

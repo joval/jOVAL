@@ -6,6 +6,7 @@ package org.joval.oval.adapter.netconf;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
+import java.util.List;
 import java.util.Vector;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
@@ -87,10 +88,17 @@ public class ConfigAdapter implements IAdapter {
 	xpathType.setValue(expression);
 	item.setXpath(xpathType);
 
-	for (String value : XPathTools.typesafeEval(xpe, config)) {
+	List<String> values = XPathTools.typesafeEval(xpe, config);
+	if (values.size() == 0) {
 	    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
-	    valueOf.setValue(value);
+	    valueOf.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    item.getValueOf().add(valueOf);
+	} else {
+	    for (String value : values) {
+		EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
+		valueOf.setValue(value);
+		item.getValueOf().add(valueOf);
+	    }
 	}
 
 	Collection<ConfigItem> items = new Vector<ConfigItem>();

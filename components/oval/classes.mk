@@ -290,6 +290,9 @@ CLASSES=\
 	oval.schemas.definitions.junos.VersionObject	\
 	oval.schemas.definitions.junos.VersionState	\
 	oval.schemas.definitions.junos.VersionTest	\
+	oval.schemas.definitions.junos.XmlLineTest	\
+	oval.schemas.definitions.junos.XmlLineObject	\
+	oval.schemas.definitions.junos.XmlLineState	\
 	oval.schemas.definitions.linux.DpkginfoObject	\
 	oval.schemas.definitions.linux.DpkginfoState	\
 	oval.schemas.definitions.linux.DpkginfoTest	\
@@ -818,6 +821,7 @@ CLASSES=\
 	oval.schemas.systemcharacteristics.junos.ObjectFactory	\
 	oval.schemas.systemcharacteristics.junos.package-info	\
 	oval.schemas.systemcharacteristics.junos.VersionItem	\
+	oval.schemas.systemcharacteristics.junos.XmlLineItem	\
 	oval.schemas.systemcharacteristics.linux.DpkginfoItem	\
 	oval.schemas.systemcharacteristics.linux.EntityItemProtocolType	\
 	oval.schemas.systemcharacteristics.linux.EntityItemRpmVerifyResultType	\
