@@ -4,22 +4,30 @@
 package org.joval.xml;
 
 import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Stack;
 import java.util.Vector;
 import javax.xml.namespace.QName;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import org.joval.util.StringTools;
 
@@ -39,6 +47,32 @@ public class XPathTools {
 					  XPathConstants.NUMBER,
 					  XPathConstants.BOOLEAN};
 
+    private static DocumentBuilder builder;
+    private static XPath xpath;
+    static {
+	try {
+	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    builder = factory.newDocumentBuilder();
+	    xpath = XPathFactory.newInstance().newXPath();
+	} catch (ParserConfigurationException e) {
+	    throw new RuntimeException(e);
+	}
+    }
+
+    /**
+     * Convenience method, for parsing an InputStream into a DOM Document.
+     */
+    public static synchronized Document parse(InputStream in) throws SAXException, IOException {
+	return builder.parse(in);
+    }
+
+    /**
+     * Convenience method, for compiling an XPath Expression.
+     */
+    public static synchronized XPathExpression compile(String s) throws XPathExpressionException {
+	return xpath.compile(s);
+    }
+
     /**
      * Returns the String result of the XPath query. This may be XML in String form, for instance.
      */
@@ -52,6 +86,9 @@ public class XPathTools {
 	return new Vector<String>();
     }
 
+    /**
+     * Extract an intelligible error message from an XPathExpressionException.
+     */
     public static String getMessage(XPathExpressionException err) {
 	return crawlMessage(err);
     }

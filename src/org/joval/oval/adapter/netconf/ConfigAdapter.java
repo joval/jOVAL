@@ -9,9 +9,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
 import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Document;
 
@@ -47,7 +45,6 @@ import org.joval.xml.XPathTools;
  */
 public class ConfigAdapter implements IAdapter {
     private INetconf session;
-    private XPath xpath;
 
     // Implement IAdapter
 
@@ -57,7 +54,6 @@ public class ConfigAdapter implements IAdapter {
 	    try {
 		this.session = (INetconf)session;
 		classes.add(ConfigObject.class);
-		xpath = XPathFactory.newInstance().newXPath();
 	    } catch (RuntimeException e) {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
@@ -70,7 +66,7 @@ public class ConfigAdapter implements IAdapter {
 	String expression = (String)cObj.getXpath().getValue();
 	XPathExpression xpe = null;
 	try {
-	    xpe = xpath.compile(expression);
+	    xpe = XPathTools.compile(expression);
 	} catch (XPathExpressionException e) {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_XML_XPATH, expression, XPathTools.getMessage(e));
 	    throw new CollectException(msg, FlagEnumeration.ERROR);

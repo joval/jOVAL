@@ -8,13 +8,8 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -49,24 +44,13 @@ import org.joval.xml.XPathTools;
  * @version %I% %G%
  */
 public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
-    private DocumentBuilder builder;
-    private XPath xpath;
-
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof ISession) {
 	    super.init((ISession)session);
-	    try {
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		factory.setNamespaceAware(true);
-		builder = factory.newDocumentBuilder();
-		xpath = XPathFactory.newInstance().newXPath();
-		classes.add(XmlfilecontentObject.class);
-	    } catch (ParserConfigurationException e) {
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
+	    classes.add(XmlfilecontentObject.class);
 	}
 	return classes;
     }
@@ -98,9 +82,9 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
 
 	    InputStream in = null;
 	    try {
-		XPathExpression expr = xpath.compile(expression);
+		XPathExpression expr = XPathTools.compile(expression);
 		in = f.getInputStream();
-		Document doc = builder.parse(in);
+		Document doc = XPathTools.parse(in);
 		List<String> values = XPathTools.typesafeEval(expr, doc);
 		if (values.size() == 0) {
 		    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();

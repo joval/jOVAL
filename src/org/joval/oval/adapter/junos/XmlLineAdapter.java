@@ -8,13 +8,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Vector;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
-import javax.xml.xpath.XPathFactory;
 import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -54,8 +49,6 @@ import org.joval.xml.XPathTools;
  * @version %I% %G%
  */
 public class XmlLineAdapter implements IAdapter {
-    private DocumentBuilder builder;
-    private XPath xpath;
     private IJunosSession session;
     private long readTimeout = 0;
 
@@ -64,18 +57,9 @@ public class XmlLineAdapter implements IAdapter {
     public Collection<Class> init(IBaseSession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IJunosSession) {
-	    try {
-		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-		factory.setNamespaceAware(false);
-		builder = factory.newDocumentBuilder();
-
-		xpath = XPathFactory.newInstance().newXPath();
-		readTimeout = session.getProperties().getLongProperty(IJunosSession.PROP_READ_TIMEOUT);
-		this.session = (IJunosSession)session;
-		classes.add(XmlLineObject.class);
-	    } catch (ParserConfigurationException e) {
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
+	    this.session = (IJunosSession)session;
+	    readTimeout = session.getProperties().getLongProperty(IJunosSession.PROP_READ_TIMEOUT);
+	    classes.add(XmlLineObject.class);
 	}
 	return classes;
     }
@@ -85,7 +69,7 @@ public class XmlLineAdapter implements IAdapter {
 	String expression = (String)xObj.getXpath().getValue();
 	XPathExpression xpe = null;
 	try {
-	    xpe = xpath.compile(expression);
+	    xpe = XPathTools.compile(expression);
 	} catch (XPathExpressionException e) {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_XML_XPATH, expression, XPathTools.getMessage(e));
 	    throw new CollectException(msg, FlagEnumeration.ERROR);
@@ -105,31 +89,46 @@ public class XmlLineAdapter implements IAdapter {
 	EntityItemStringType showSubcommandType = Factories.sc.core.createEntityItemStringType();
 	showSubcommandType.setValue(subcommand);
 	item.setShowSubcommand(showSubcommandType);
+
+	//
+	// Insure that the subcommand to be executed is properly-formed
+	//
+	if (!subcommand.toLowerCase().startsWith("show ")) {
+	    subcommand = new StringBuffer("show ").append(subcommand).toString();
+	}
+	if (!subcommand.toLowerCase().endsWith(" | display xml")) {
+	    subcommand = new StringBuffer(subcommand).append(" | display xml").toString();
+	}
+
 	try {
-	    List<String> values = XPathTools.typesafeEval(xpe, getDocument(subcommand));
-	    if (values.size() == 0) {
-		EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
-		valueOf.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		item.getValueOf().add(valueOf);
-	    } else {
-		for (String value : values) {
+	    SafeCLI.ExecData data = SafeCLI.execData(subcommand, null, session, readTimeout);
+	    try {
+		Document doc = XPathTools.parse(new ByteArrayInputStream(data.getData()));
+		List<String> values = XPathTools.typesafeEval(xpe, doc);
+		if (values.size() == 0) {
 		    EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
-		    valueOf.setValue(value);
+		    valueOf.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		    item.getValueOf().add(valueOf);
+		} else {
+		    for (String value : values) {
+			EntityItemAnySimpleType valueOf = Factories.sc.core.createEntityItemAnySimpleType();
+			valueOf.setValue(value);
+			item.getValueOf().add(valueOf);
+		    }
 		}
+	    } catch (SAXException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_PARSE, subcommand, e.getMessage()));
+		rc.addMessage(msg);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    } catch (TransformerException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_TRANSFORM, e.getMessage()));
+		rc.addMessage(msg);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
-	} catch (SAXException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_PARSE, subcommand, e.getMessage()));
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (TransformerException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_XML_TRANSFORM, e.getMessage()));
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -143,18 +142,5 @@ public class XmlLineAdapter implements IAdapter {
 	Collection<XmlLineItem> items = new Vector<XmlLineItem>();
 	items.add(item);
 	return items;
-    }
-
-    // Private
-
-    private Document getDocument(String subcommand) throws Exception {
-	if (!subcommand.toLowerCase().startsWith("show ")) {
-	    subcommand = new StringBuffer("show ").append(subcommand).toString();
-	}
-	if (!subcommand.toLowerCase().endsWith(" | display xml")) {
-	    subcommand = new StringBuffer(subcommand).append(" | display xml").toString();
-	}
-	SafeCLI.ExecData data = SafeCLI.execData(subcommand, null, session, readTimeout);
-	return builder.parse(new ByteArrayInputStream(data.getData()));
     }
 }

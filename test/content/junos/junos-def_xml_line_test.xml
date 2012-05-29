@@ -26,8 +26,7 @@
   <objects>
     <xml_line_object id="oval:org.joval.junos.test:obj:2" version="1" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#junos">
       <show_subcommand>system users</show_subcommand>
-<!--      <xpath>/rpc-reply/system-users-information/uptime-information/user-table/user-entry/user/text()</xpath> -->
-      <xpath>//user/text()</xpath>
+      <xpath>/rpc-reply/system-users-information/uptime-information/user-table/user-entry/user/text()</xpath>
     </xml_line_object>
   </objects>
 </oval_definitions>
