@@ -68,10 +68,16 @@ public class SchemaRegistry {
     public static final String CPE = "cpe.packages";
 
     /**
+     * Property indicating the package names for classes in the DS (SCAP Data Stream) schema.
+     */
+    public static final String DS = "ds.packages";
+
+    /**
      * Property indicating the package names for classes in the SVRL (Schematron Validation Report Language) schema.
      */
     public static final String SVRL = "svrl.packages";
 
+    private static final String DS_RESOURCE	= "ds.properties";
     private static final String OVAL_RESOURCE	= "oval.properties";
     private static final String CPE_RESOURCE	= "cpe.properties";
     private static final String XCCDF_RESOURCE	= "xccdf.properties";
@@ -115,6 +121,14 @@ public class SchemaRegistry {
 		e.printStackTrace();
 	    }
 	}
+	rsc = cl.getResourceAsStream(DS_RESOURCE);
+	if (rsc != null) {
+	    try {
+		schemaProps.load(rsc);
+	    } catch (IOException e) {
+		e.printStackTrace();
+	    }
+	}
 	rsc = cl.getResourceAsStream(SVRL_RESOURCE);
 	if (rsc != null) {
 	    try {
@@ -128,7 +142,7 @@ public class SchemaRegistry {
     /**
      * Retrieve package names from the registry.
      *
-     * @param name specify one of the OVAL_*, CPE, XCCDF, OCIL or SVRL Strings defined by this class.
+     * @param name specify one of the OVAL_*, CPE, XCCDF, OCIL, DS or SVRL Strings defined by this class.
      */
     public static String lookup(String name) throws NoSuchElementException {
 	return schemaProps.getProperty(name);

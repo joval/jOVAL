@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:oval-var="http://oval.mitre.org/XMLSchema/oval-variables-5"
+            xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-variables-5"
+            elementFormDefault="qualified"
+            version="5.10.1">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
+               schemaLocation="oval-common-schema.xsd"/>
+   <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#"
+               schemaLocation="../xml-1.0/xmldsig-core-schema.xsd"/>
+   <xsd:element name="oval_variables">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element name="generator" type="oval:GeneratorType"/>
+            <xsd:element name="variables" type="oval-var:VariablesType" minOccurs="0" maxOccurs="1"/>
+            <xsd:element ref="ds:Signature" minOccurs="0" maxOccurs="1"/>
+         </xsd:sequence>
+      </xsd:complexType>
+      <xsd:key name="varKey">
+         <xsd:selector xpath=".//oval-var:variable"/>
+         <xsd:field xpath="@id"/>
+      </xsd:key>
+   </xsd:element>
+   <xsd:complexType name="VariablesType">
+      <xsd:sequence>
+         <xsd:element name="variable" type="oval-var:VariableType" minOccurs="1"
+                      maxOccurs="unbounded"/>
+      </xsd:sequence>
+   </xsd:complexType>
+   <xsd:complexType name="VariableType">
+      <xsd:sequence>
+         <xsd:element name="value" type="xsd:anySimpleType" minOccurs="1" maxOccurs="unbounded"/>
+      </xsd:sequence>
+      <xsd:attribute name="id" type="oval:VariableIDPattern" use="required"/>
+      <xsd:attribute name="datatype" use="required" type="oval:SimpleDatatypeEnumeration"/>
+      <xsd:attribute name="comment" type="xsd:string" use="required"/>
+   </xsd:complexType>
+</xsd:schema>

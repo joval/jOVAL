@@ -30,10 +30,8 @@ SHELL=/bin/sh
 CWD=$(shell pwd)
 
 JOVAL_VERSION=5.10.1.1_Dev
+SCAP_VERSION=1.2
 OVAL_VERSION=5.10.1
-XCCDF_VERSION=1.1
-OCIL_VERSION=2.0
-CPE_VERSION=2.3
 SCE_VERSION=1.0
 
 # If your system is 32-bit, set ARCH to x86
@@ -55,15 +53,9 @@ SRC=$(TOP)/src
 COMPONENTS=$(TOP)/components
 LIBDIR=$(RSRC)/lib
 LIB=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(LIBDIR)/*)))
-CPE=$(COMPONENTS)/cpe
-CPE_LIB=$(CPE)/cpe-schema-$(CPE_VERSION).jar
-OVAL=$(COMPONENTS)/oval
-OVAL_LIB=$(OVAL)/oval-schema-$(OVAL_VERSION).jar
 SVRL=$(COMPONENTS)/schematron/schema/svrl.jar
-OCIL=$(COMPONENTS)/ocil
-OCIL_LIB=$(OCIL)/ocil-schema-$(OCIL_VERSION).jar
-XCCDF=$(COMPONENTS)/xccdf
-XCCDF_LIB=$(XCCDF)/xccdf-schema-$(XCCDF_VERSION).jar
+SCAP=$(COMPONENTS)/scap
+SCAP_LIB=$(SCAP)/scap-schema-$(SCAP_VERSION).jar
 SDK=$(COMPONENTS)/sdk
 COMMON=$(SDK)/common
 COMMON_LIB=$(SDK)/common/jOVALCommon.jar

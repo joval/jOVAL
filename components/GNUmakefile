@@ -9,31 +9,23 @@ rebuild:
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
 clean:
-	@$(MAKE) --keep-going --directory=cpe clean
-	@$(MAKE) --keep-going --directory=jovaldi dist-clean
-	@$(MAKE) --keep-going --directory=oval clean
+	@$(MAKE) --keep-going --directory=scap clean
 	@$(MAKE) --keep-going --directory=schematron clean
 	@$(MAKE) --keep-going --directory=sdk dist-clean
-	@$(MAKE) --keep-going --directory=xccdf clean
+	@$(MAKE) --keep-going --directory=jovaldi dist-clean
 	@$(MAKE) --keep-going --directory=xpert clean
 
 _jovaldi: _sdk _schematron _xpert
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
-_sdk: _oval
+_sdk: _scap
 	@$(MAKE) --keep-going --directory=sdk dist
 
-_oval:
-	@$(MAKE) --keep-going --directory=oval all
+_scap:
+	@$(MAKE) --keep-going --directory=scap all
 
 _schematron:
 	@$(MAKE) --keep-going --directory=schematron all
 
-_cpe:
-	@$(MAKE) --keep-going --directory=cpe all
-
-_xccdf:
-	@$(MAKE) --keep-going --directory=xccdf all
-
-_xpert: _oval _cpe _xccdf
+_xpert: _scap
 	@$(MAKE) --keep-going --directory=xpert all

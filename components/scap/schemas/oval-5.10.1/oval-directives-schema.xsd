@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
+            xmlns:oval-res="http://oval.mitre.org/XMLSchema/oval-results-5"
+            xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+            xmlns:sch="http://purl.oclc.org/dsdl/schematron"
+            xmlns:oval-dir="http://oval.mitre.org/XMLSchema/oval-directives-5"
+            targetNamespace="http://oval.mitre.org/XMLSchema/oval-directives-5"
+            elementFormDefault="qualified"
+            version="5.10.1">
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
+               schemaLocation="oval-common-schema.xsd"/>
+   <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-results-5"
+               schemaLocation="oval-results-schema.xsd"/>
+   <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#"
+               schemaLocation="../xml-1.0/xmldsig-core-schema.xsd"/>
+   <xsd:element name="oval_directives">
+      <xsd:complexType>
+         <xsd:sequence>
+            <xsd:element name="generator" type="oval:GeneratorType"/>
+            <xsd:element name="directives" type="oval-res:DefaultDirectivesType"/>
+            <xsd:element name="class_directives" type="oval-res:ClassDirectivesType" minOccurs="0"
+                         maxOccurs="5"/>
+            <xsd:element ref="ds:Signature" minOccurs="0" maxOccurs="1"/>
+         </xsd:sequence>
+      </xsd:complexType>
+      <xsd:unique name="UniqueDirectiveClass">
+         <xsd:selector xpath="oval-dir:class_directives"/>
+         <xsd:field xpath="@class"/>
+      </xsd:unique>
+   </xsd:element>
+</xsd:schema>

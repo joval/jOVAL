@@ -5,7 +5,7 @@ TOP=../..
 
 include $(TOP)/common.mk
 
-SOURCEPATH="$(OVAL)/gen-src$(CLN)$(SRC)"
+SOURCEPATH="$(SCAP)/gen-src$(CLN)$(SRC)"
 API=$(PLUGIN_REMOTE_DEPS)$(CLN)$(PLUGIN_LOCAL_DEPS)$(CLN)$(PLUGIN_CISCO_DEPS)$(CLN)$(COMMON)$(CLN)$(COMMON_DEPS)
 CLASSPATH="$(CLASSLIB)$(CLN)$(API)"
 
@@ -50,7 +50,7 @@ install: all
 	mkdir -p $(DIST)
 	cp -r $(RSRC)/* $(DIST)
 	cp sample/TrivialScanner.java $(DIST)
-	cp $(OVAL_LIB) $(DIST)
+	cp $(SCAP_LIB) $(DIST)
 	$(JAR) cvf $(DIST)/jOVAL-SDK.jar -C $(COMMON)/$(BUILD)/ .
 	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(PLUGIN_REMOTE)/$(BUILD)/ .
 	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(JOVAL_CORE)/$(BUILD)/ .

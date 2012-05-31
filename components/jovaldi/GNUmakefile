@@ -12,7 +12,7 @@ DIST32=$(DIST)/x86
 DIST64=$(DIST)/x64
 BIN_DIR=$(RSRC)/bin/$(PLATFORM)-$(ARCH)
 
-API=$(COMMON_LIB)$(CLN)$(COMMON_DEPS)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(OVAL_LIB)$(CLN)$(SVRL)
+API=$(COMMON_LIB)$(CLN)$(COMMON_DEPS)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(SVRL)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
 
 include classes.mk
@@ -63,15 +63,13 @@ dist-x86: all $(DIST32)/jre
 	cp -R $(RSRC)/lib $(DIST32)
 	cp -R $(RSRC)/licenses $(DIST32)
 	cp -R $(RSRC)/xml $(DIST32)
-	cp -R $(OVAL)/xsd-$(OVAL_VERSION)/*.xsd $(DIST32)/xml
+	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST32)/xml
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST32)/xml
 	cp $(PRODUCTNAME).jar $(DIST32)/lib
 	cp $(COMMON_LIB) $(DIST32)/lib
 	cp $(COMMON)/$(LIBDIR)/*.jar $(DIST32)/lib
 	cp $(ADAPTERS_LIB) $(DIST32)/lib
-	cp $(CPE_LIB) $(DIST32)/lib
-	cp $(OVAL_LIB) $(DIST32)/lib
-	cp $(XCCDF_LIB) $(DIST32)/lib
+	cp $(SCAP_LIB) $(DIST32)/lib
 	cp $(SVRL) $(DIST32)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST32)/lib
 	cp $(XPERT_LIB) $(DIST32)/lib
@@ -100,15 +98,13 @@ dist-x64: all $(DIST64)/jre
 	cp -R $(RSRC)/lib $(DIST64)
 	cp -R $(RSRC)/licenses $(DIST64)
 	cp -R $(RSRC)/xml $(DIST64)
-	cp -R $(OVAL)/xsd-$(OVAL_VERSION)/*.xsd $(DIST64)/xml
+	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST64)/xml
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST64)/xml
 	cp $(PRODUCTNAME).jar $(DIST64)/lib
 	cp $(COMMON_LIB) $(DIST64)/lib
 	cp $(COMMON)/$(LIBDIR)/*.jar $(DIST64)/lib
 	cp $(ADAPTERS_LIB) $(DIST64)/lib
-	cp $(CPE_LIB) $(DIST64)/lib
-	cp $(OVAL_LIB) $(DIST64)/lib
-	cp $(XCCDF_LIB) $(DIST64)/lib
+	cp $(SCAP_LIB) $(DIST64)/lib
 	cp $(SVRL) $(DIST64)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST64)/lib
 	mkdir -p $(DIST64)/plugin/default/lib

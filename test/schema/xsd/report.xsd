@@ -11,7 +11,7 @@
            xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5"
            elementFormDefault="qualified" attributeFormDefault="unqualified">
   <xs:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
-             schemaLocation="../../../components/oval/xsd-5.10.1/oval-common-schema.xsd"/>
+             schemaLocation="../../../components/scap/schemas/oval-5.10.1/oval-common-schema.xsd"/>
   <xs:element name="Report">
     <xs:complexType>
       <xs:sequence>

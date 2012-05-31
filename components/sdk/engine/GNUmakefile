@@ -5,7 +5,7 @@ TOP=../../..
 
 include $(TOP)/common.mk
 
-API=$(OVAL_LIB)$(CLN)$(COMMON_LIB)$(CLN)$(COMMON_DEPS)
+API=$(SCAP_LIB)$(CLN)$(COMMON_LIB)$(CLN)$(COMMON_DEPS)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
 
 include classes.mk

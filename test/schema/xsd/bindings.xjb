@@ -11,7 +11,7 @@
   <jxb:bindings>
     <jxb:globalBindings generateIsSetMethod="true"/>
   </jxb:bindings>
-  <jxb:bindings schemaLocation="../../../components/oval/xsd-5.10.1/oval-common-schema.xsd" node="/xs:schema">
+  <jxb:bindings schemaLocation="../../../components/scap/schemas/oval-5.10.1/oval-common-schema.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="oval.schemas.common"/>
     </jxb:schemaBindings>

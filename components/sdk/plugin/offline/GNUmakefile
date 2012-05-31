@@ -6,7 +6,7 @@ TOP=../../../..
 include $(TOP)/common.mk
 
 SLF4J_IMPL=$(COMPONENTS)/jovaldi/$(LIBDIR)/slf4j-jdk14-1.6.2.jar
-API=$(OVAL_LIB)$(CLN)$(COMMON_LIB)$(CLN)$(COMMON_DEPS)$(CLN)$(JOVAL_CORE_LIB)
+API=$(CLN)$(COMMON_LIB)$(CLN)$(COMMON_DEPS)$(CLN)$(JOVAL_CORE_LIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)$(CLN)$(PLUGIN_REMOTE_DEPS)"
 RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(PLUGIN_OFFLINE_LIB)$(CLN)$(SLF4J_IMPL)"
 
@@ -22,7 +22,7 @@ $(PLUGIN_OFFLINE_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 test:
-	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.plugin.CiscoPlugin $(TOP)/content/test/cisco/cisco.ios.xml ios-tech.txt
+	$(JRE) -Djava.library.path=$(LIBDIR) -classpath $(RUNTIMECP) org.joval.plugin.OfflinePlugin $(TOP)/content/test/cisco/cisco.ios.xml ios-tech.txt
 
 clean:
 	rm -rf $(BUILD)
