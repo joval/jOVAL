@@ -17,9 +17,9 @@
   <xs:import namespace="http://oval.mitre.org/XMLSchema/oval-definitions-5" schemaLocation="../oval-5.10.1/oval-definitions-schema.xsd"/>
   <xs:import namespace="http://cpe.mitre.org/dictionary/2.0" schemaLocation="../cpe-2.3/cpe-dictionary_2.3.xsd"/>
   <xs:import namespace="http://scap.nist.gov/schema/ocil/2.0" schemaLocation="../ocil-2.0/ocil-2.0.xsd"/>
-  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="../xml-1.0/xmldsig-core-schema.xsd"/>
+  <xs:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="../xml/xmldsig-core-schema.xsd"/>
   <xs:import namespace="urn:oasis:names:tc:entity:xmlns:xml:catalog" schemaLocation="../oasis/catalog-1.1.xsd"/>
-  <xs:import namespace="http://www.w3.org/1999/xlink" schemaLocation="../xml-1.0/xlink.xsd"/>
+  <xs:import namespace="http://www.w3.org/1999/xlink" schemaLocation="../xml/xlink.xsd"/>
   <xs:element name="data-stream-collection">
     <xs:annotation>
       <xs:documentation>Holds a collection of data streams and components.</xs:documentation>

@@ -11,7 +11,7 @@
    <xsd:import namespace="http://oval.mitre.org/XMLSchema/oval-common-5"
                schemaLocation="oval-common-schema.xsd"/>
    <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#"
-               schemaLocation="../xml-1.0/xmldsig-core-schema.xsd"/>
+               schemaLocation="../xml/xmldsig-core-schema.xsd"/>
    <xsd:element name="oval_system_characteristics">
       <xsd:complexType>
          <xsd:sequence>

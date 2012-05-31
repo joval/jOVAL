@@ -64,6 +64,7 @@ dist-x86: all $(DIST32)/jre
 	cp -R $(RSRC)/licenses $(DIST32)
 	cp -R $(RSRC)/xml $(DIST32)
 	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST32)/xml
+	cp -R $(SCAP)/schemas/xml/xmldsig-core-schema.xsd $(DIST32)/xml
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST32)/xml
 	cp $(PRODUCTNAME).jar $(DIST32)/lib
 	cp $(COMMON_LIB) $(DIST32)/lib
@@ -99,6 +100,7 @@ dist-x64: all $(DIST64)/jre
 	cp -R $(RSRC)/licenses $(DIST64)
 	cp -R $(RSRC)/xml $(DIST64)
 	cp -R $(SCAP)/schemas/oval-$(OVAL_VERSION)/*.xsd $(DIST64)/xml
+	cp -R $(SCAP)/schemas/xml/xmldsig-core-schema.xsd $(DIST64)/xml
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST64)/xml
 	cp $(PRODUCTNAME).jar $(DIST64)/lib
 	cp $(COMMON_LIB) $(DIST64)/lib
