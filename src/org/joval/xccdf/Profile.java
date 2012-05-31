@@ -14,15 +14,19 @@ import cpe.schemas.dictionary.CheckType;
 import cpe.schemas.dictionary.ItemType;
 import cpe.schemas.dictionary.ListType;
 
+import xccdf.schemas.core.CPE2IdrefType;
 import xccdf.schemas.core.GroupType;
+import xccdf.schemas.core.OverrideableCPE2IdrefType;
 import xccdf.schemas.core.ProfileType;
+import xccdf.schemas.core.ProfileRefineRuleType;
 import xccdf.schemas.core.ProfileRefineValueType;
+import xccdf.schemas.core.ProfileSetComplexValueType;
 import xccdf.schemas.core.ProfileSetValueType;
 import xccdf.schemas.core.ProfileSelectType;
 import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.SelectableItemType;
+import xccdf.schemas.core.SelComplexValueType;
 import xccdf.schemas.core.SelStringType;
-import xccdf.schemas.core.URIidrefType;
 import xccdf.schemas.core.ValueType;
 
 import org.joval.xccdf.XccdfBundle;
@@ -55,7 +59,7 @@ public class Profile {
 	//
 	// Set Benchmark-wide platforms
 	//
-	for (URIidrefType platform : xccdf.getBenchmark().getPlatform()) {
+	for (CPE2IdrefType platform : xccdf.getBenchmark().getPlatform()) {
 	    addPlatform(platform.getIdref());
 	}
 
@@ -75,13 +79,13 @@ public class Profile {
 	    if (prof == null) {
 		throw new NoSuchElementException(name);
 	    } else {
-		for (URIidrefType platform : prof.getPlatform()) {
+		for (OverrideableCPE2IdrefType platform : prof.getPlatform()) {
 		    addPlatform(platform.getIdref());
 		}
 
 		selections = new Hashtable<String, Boolean>();
 		refinements = new Hashtable<String, String>();
-		for (Object obj : prof.getSelectOrSetValueOrRefineValue()) {
+		for (Object obj : prof.getSelectOrSetComplexValueOrSetValue()) {
 		    if (obj instanceof ProfileSelectType) {
 			ProfileSelectType select = (ProfileSelectType)obj;
 			if (select.isSelected()) {
@@ -95,6 +99,12 @@ public class Profile {
 		    } else if (obj instanceof ProfileRefineValueType) {
 			ProfileRefineValueType refine = (ProfileRefineValueType)obj;
 			refinements.put(refine.getIdref(), refine.getSelector());
+		    } else if (obj instanceof ProfileRefineRuleType) {
+			ProfileRefineRuleType rule = (ProfileRefineRuleType)obj;
+			//TBD
+		    } else if (obj instanceof ProfileSetComplexValueType) {
+			ProfileSetComplexValueType complex = (ProfileSetComplexValueType)obj;
+			//TBD
 		    }
 		}
 	    }
@@ -117,15 +127,20 @@ public class Profile {
 	// Set all the selected values
 	//
 	for (ValueType val : vals) {
-	    for (SelStringType sel : val.getValue()) {
-		if (values.containsKey(val.getItemId())) {
-		    // already set ... DAS throw an exception?
-		} else if (refinements == null || refinements.get(val.getItemId()) == null) {
-		    if (!sel.isSetSelector()) {
+	    for (Object obj : val.getValueOrComplexValue()) {
+		if (obj instanceof SelStringType) {
+		    SelStringType sel = (SelStringType)obj;
+		    if (values.containsKey(val.getItemId())) {
+			// already set ... DAS throw an exception?
+		    } else if (refinements == null || refinements.get(val.getItemId()) == null) {
+			if (!sel.isSetSelector()) {
+			    values.put(val.getItemId(), sel.getValue());
+			}
+		    } else if (refinements.get(val.getItemId()).equals(sel.getSelector())) {
 			values.put(val.getItemId(), sel.getValue());
 		    }
-		} else if (refinements.get(val.getItemId()).equals(sel.getSelector())) {
-		    values.put(val.getItemId(), sel.getValue());
+		} else if (obj instanceof SelComplexValueType) {
+		    // TBD
 		}
 	    }
 	}

@@ -132,7 +132,7 @@ public class SCEHandler {
 					if (importStdout) {
 					    CheckImportType cit = factory.createCheckImportType();
 					    cit.setImportName("stdout");
-					    cit.setValue(script.getStdout());
+					    cit.getContent().add(script.getStdout());
 					    checkResult.getCheckImport().add(cit);
 					}
 				    }

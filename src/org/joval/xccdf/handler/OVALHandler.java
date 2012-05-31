@@ -110,7 +110,7 @@ public class OVALHandler {
 	    val.setIdref(var.getComment());
 	    if (var.isSetValue() && var.getValue().size() > 0 && var.getValue().get(0) != null) {
 		val.setValue(var.getValue().get(0).toString());
-		xccdfResult.getSetValue().add(val);
+		xccdfResult.getSetValueOrSetComplexValue().add(val);
 	    }
 	}
 	for (String href : engines.keySet()) {
