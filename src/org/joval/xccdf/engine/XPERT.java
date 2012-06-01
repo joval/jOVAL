@@ -22,6 +22,8 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.oval.OvalException;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
+import org.joval.scap.Datastream;
+import org.joval.scap.ScapException;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
 import org.joval.xccdf.Profile;
@@ -168,28 +170,24 @@ public class XPERT {
 		System.exit(1);
 	    }
 
-	    try {
-		//
-		// Load the XCCDF and selected profile
-		//
-		logger.info("Loading " + xccdfBaseName);
-		XccdfBundle xccdf = new XccdfBundle(new File(xccdfBaseName));
-		Profile profile = new Profile(xccdf, profileName);
 
-		//
-		// Perform the evaluation
-		//
-		Engine engine = new Engine(xccdf, profile, plugin.getSession(), debug);
-		engine.run();
-		logger.info("Finished processing XCCDF bundle");
-		exitCode = 0;
-	    } catch (CpeException e) {
-		logger.severe(LogFormatter.toString(e));
-	    } catch (OvalException e) {
-		logger.severe(LogFormatter.toString(e));
-	    } catch (XccdfException e) {
-		logger.severe(LogFormatter.toString(e));
-	    } catch (Exception e) {
+	    try {
+		logger.info("Loading " + xccdfBaseName);
+		Datastream ds = new Datastream(new File(xccdfBaseName));
+
+		if (ds.getStreamIds().size() == 1) {
+		    String streamId = ds.getStreamIds().iterator().next();
+		    logger.info("Selected stream " + streamId);
+		    Profile profile = new Profile(ds, streamId, profileName);
+
+		    Engine engine = new Engine(ds, profile, plugin.getSession(), debug);
+		    engine.run();
+		    logger.info("Finished processing XCCDF bundle");
+		    exitCode = 0;
+		} else {
+		    logger.severe("Multi-stream datastreams are not supported");
+		}
+	    } catch (ScapException e) {
 		logger.severe(LogFormatter.toString(e));
 	    }
 	}

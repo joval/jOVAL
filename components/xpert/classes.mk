@@ -5,6 +5,8 @@ CLASSES=\
 	org.joval.plugin.PluginFactory					\
 	org.joval.protocol.zip.ZipURLConnection				\
 	org.joval.protocol.zip.ZipURLStreamHandler			\
+	org.joval.scap.Datastream					\
+	org.joval.scap.ScapException					\
 	org.joval.sce.SCEScript						\
 	org.joval.util.LogFormatter					\
 	org.joval.xccdf.Profile						\

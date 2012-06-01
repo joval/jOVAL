@@ -60,12 +60,12 @@ import org.joval.oval.OvalException;
 import org.joval.oval.OvalFactory;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
+import org.joval.scap.Datastream;
 import org.joval.sce.SCEScript;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
 import org.joval.xccdf.Profile;
-import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
 import org.joval.xccdf.handler.OVALHandler;
 import org.joval.xccdf.handler.SCEHandler;
@@ -78,7 +78,7 @@ import org.joval.xccdf.handler.SCEHandler;
  */
 public class Engine implements Runnable, IObserver {
     private boolean debug;
-    private XccdfBundle xccdf;
+    private Datastream xccdf;
     private IBaseSession session;
     private Collection<String> platforms;
     private Profile profile;
@@ -90,7 +90,7 @@ public class Engine implements Runnable, IObserver {
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
      */
-    public Engine(XccdfBundle xccdf, Profile profile, IBaseSession session, boolean debug) {
+    public Engine(Datastream xccdf, Profile profile, IBaseSession session, boolean debug) {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	this.session = session;
@@ -177,7 +177,7 @@ public class Engine implements Runnable, IObserver {
 	    }
 
 	    for (RuleType rule : listAllRules()) {
-		String ruleId = rule.getItemId();
+		String ruleId = rule.getId();
 		if (resultIndex.containsKey(ruleId)) {
 		    logger.info(ruleId + ": " + resultIndex.get(ruleId).getResult());
 		} else {
@@ -195,10 +195,10 @@ public class Engine implements Runnable, IObserver {
 		}
 	    }
 
-	    xccdf.getBenchmark().getTestResult().add(testResult);
+	    xccdf.getBenchmark(profile.getStreamId()).getTestResult().add(testResult);
 	    File reportFile = new File(XPERT.ws, "xccdf-results.xml");
 	    logger.info("Saving report: " + reportFile.getPath());
-	    xccdf.writeBenchmarkXML(reportFile);
+	    xccdf.writeBenchmarkXML(profile.getStreamId(), reportFile);
 	}
 	logger.info("XCCDF processing complete.");
     }
@@ -240,7 +240,7 @@ public class Engine implements Runnable, IObserver {
 	Collection<RuleType> rules = profile.getSelectedRules();
 	if (rules.size() == 0) {
 	    logger.severe("No reason to evaluate!");
-	    List<ProfileType> profiles = xccdf.getBenchmark().getProfile();
+	    List<ProfileType> profiles = xccdf.getBenchmark(profile.getStreamId()).getProfile();
 	    if (profiles.size() > 0) {
 		logger.info("Try selecting a profile:");
 		for (ProfileType pt : profiles) {
@@ -261,19 +261,33 @@ public class Engine implements Runnable, IObserver {
 	phase = "discovery";
 	logger.info("Determining system applicability...");
 
-	Collection<String> definitions = profile.getPlatformDefinitionIds();
-	if (definitions.size() == 0) {
+	Collection<String> hrefs = profile.getPlatformDefinitionHrefs();
+	if (hrefs.size() == 0) {
 	    logger.info("No platforms specified, skipping applicability checks...");
 	    return true;
 	}
-	IDefinitions cpeOval = xccdf.getCpeOval();
-	if (cpeOval == null) {
-	    logger.severe("Cannot perform applicability checks: CPE OVAL definitions were not found in the XCCDF bundle!");
-	    return false;
+
+	for (String href : hrefs) {
+	    try {
+		if (!isApplicable(profile.getDefinitions(href), profile.getPlatformDefinitionIds(href))) {
+		    return false;
+		}
+	    } catch (OvalException e) {
+		logger.severe(LogFormatter.toString(e));
+		return false;
+	    } catch (NoSuchElementException e) {
+		logger.severe("Cannot perform applicability checks: CPE OVAL definitions " + e.getMessage() +
+			      " were not found in the XCCDF datastream!");
+		return false;
+	    }
 	}
+	return true;
+    }
+
+    private boolean isApplicable(IDefinitions cpeOval, List<String> definitions) {
 	IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
 	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
-	engine.setDefinitions(xccdf.getCpeOval());
+	engine.setDefinitions(cpeOval);
 	try {
 	    session.connect();
 	    for (String definition : definitions) {
@@ -305,7 +319,7 @@ public class Engine implements Runnable, IObserver {
      */
     private List<RuleType> listAllRules() {
 	List<RuleType> rules = new Vector<RuleType>();
-	for (SelectableItemType item : xccdf.getBenchmark().getGroupOrRule()) {
+	for (SelectableItemType item : xccdf.getBenchmark(profile.getStreamId()).getGroupOrRule()) {
 	    rules.addAll(getRules(item));
 	}
 	return rules;

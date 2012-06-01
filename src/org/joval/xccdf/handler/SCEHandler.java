@@ -3,6 +3,7 @@
 
 package org.joval.xccdf.handler;
 
+import java.net.URL;
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.Hashtable;
@@ -20,10 +21,10 @@ import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.TestResultType;
 
 import org.joval.intf.system.ISession;
+import org.joval.scap.Datastream;
 import org.joval.sce.SCEScript;
 import org.joval.util.JOVALMsg;
 import org.joval.xccdf.Profile;
-import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
 import org.joval.xccdf.engine.RuleResult;
 import org.joval.xccdf.engine.XPERT;
@@ -37,7 +38,7 @@ import org.joval.xccdf.engine.XPERT;
 public class SCEHandler {
     public static final String NAMESPACE = "http://open-scap.org/page/SCE";
 
-    private XccdfBundle xccdf;
+    private Datastream xccdf;
     private Profile profile;
     private ISession session;
     private Hashtable<String, Hashtable<String, SCEScript>> scriptTable;
@@ -47,7 +48,7 @@ public class SCEHandler {
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
      */
-    public SCEHandler(XccdfBundle xccdf, Profile profile, ISession session) {
+    public SCEHandler(Datastream xccdf, Profile profile, ISession session) {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	this.session = session;
@@ -70,8 +71,8 @@ public class SCEHandler {
 			    for (CheckContentRefType ref : check.getCheckContentRef()) {
 				if (ref.isSetHref()) {
 				    try {
-					String ruleId = rule.getItemId();
-					SCEScript sce = new SCEScript(xccdf.getURL(ref.getHref()), session);
+					String ruleId = rule.getId();
+					SCEScript sce = new SCEScript(new URL(ref.getHref()), session);
 					for (CheckExportType export : check.getCheckExport()) {
 					    String name = export.getExportName();
 					    String valueId = export.getValueId();
@@ -104,7 +105,7 @@ public class SCEHandler {
 	// Iterate through the rules and record the results
 	//
 	for (RuleType rule : profile.getSelectedRules()) {
-	    String ruleId = rule.getItemId();
+	    String ruleId = rule.getId();
 	    if (scriptTable.containsKey(ruleId)) {
 		RuleResultType ruleResult = factory.createRuleResultType();
 		ruleResult.setIdref(ruleId);

@@ -37,8 +37,8 @@ import org.joval.intf.oval.IVariables;
 import org.joval.intf.system.IBaseSession;
 import org.joval.oval.OvalException;
 import org.joval.oval.OvalFactory;
+import org.joval.scap.Datastream;
 import org.joval.xccdf.Profile;
-import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
 import org.joval.xccdf.engine.XPERT;
 import org.joval.xccdf.engine.RuleResult;
@@ -52,7 +52,7 @@ import org.joval.xccdf.engine.RuleResult;
 public class OVALHandler {
     public static final String NAMESPACE = "http://oval.mitre.org/XMLSchema/oval-definitions-5";
 
-    private XccdfBundle xccdf;
+    private Datastream xccdf;
     private Profile profile;
     private ObjectFactory factory;
     private IVariables variables;
@@ -62,7 +62,7 @@ public class OVALHandler {
      * Create an OVAL handler utility for the given XCCDF and Profile. An OVAL engine will be created for every
      * discrete OVAL href referenced by a profile-selected check in the XCCDF document.
      */
-    public OVALHandler(XccdfBundle xccdf, Profile profile, IBaseSession session) throws Exception {
+    public OVALHandler(Datastream xccdf, Profile profile, IBaseSession session) throws Exception {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	factory = new ObjectFactory();
@@ -77,7 +77,7 @@ public class OVALHandler {
 				if (!engines.containsKey(href)) {
 				    session.getLogger().info("Creating engine for href " + href);
 				    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
-				    engine.setDefinitions(OvalFactory.createDefinitions(xccdf.getURL(href)));
+				    engine.setDefinitions(xccdf.getDefinitions(profile.getStreamId(), href));
 				    engine.setExternalVariables(getVariables());
 				    engine.setDefinitionFilter(getDefinitionFilter(href));
 				    engines.put(href, engine);
@@ -186,7 +186,7 @@ public class OVALHandler {
 	//
 	for (RuleType rule : profile.getSelectedRules()) {
 	    RuleResultType ruleResult = factory.createRuleResultType();
-	    String ruleId = rule.getItemId();
+	    String ruleId = rule.getId();
 	    ruleResult.setIdref(ruleId);
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {
@@ -202,10 +202,11 @@ public class OVALHandler {
 					addResult(result, def.getResult());
 				    }
 				}
+				ruleResult.setResult(result.getResult());
+				xccdfResult.getRuleResult().add(ruleResult);
+				break;
 			    }
 			}
-			ruleResult.setResult(result.getResult());
-			xccdfResult.getRuleResult().add(ruleResult);
 		    }
 		}
 	    }

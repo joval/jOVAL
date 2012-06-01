@@ -4,12 +4,13 @@
 package org.joval.scap;
 
 /**
- * The parent exception class for all SCAP-related exceptions.
+ * The parent exception class for all SCAP-related exceptions.  Also used for exceptions originating
+ * from a Data Stream.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class ScapException extends Exception {
+public class ScapException extends Exception {
     public ScapException(String message) {
 	super(message);
     }

@@ -92,7 +92,7 @@ public class Definitions implements IDefinitions, ILoggable {
 	this(getOvalDefinitions(in));
     }
 
-    Definitions(OvalDefinitions defs) {
+    public Definitions(OvalDefinitions defs) {
 	this.defs = defs;
 	this.logger = JOVALMsg.getLogger();
 

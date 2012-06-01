@@ -9,6 +9,7 @@ import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Vector;
 
 import cpe.schemas.dictionary.CheckType;
 import cpe.schemas.dictionary.ItemType;
@@ -29,7 +30,10 @@ import xccdf.schemas.core.SelComplexValueType;
 import xccdf.schemas.core.SelStringType;
 import xccdf.schemas.core.ValueType;
 
-import org.joval.xccdf.XccdfBundle;
+import org.joval.cpe.CpeException;
+import org.joval.intf.oval.IDefinitions;
+import org.joval.oval.OvalException;
+import org.joval.scap.Datastream;
 import org.joval.xccdf.handler.OVALHandler;
 
 /**
@@ -39,27 +43,28 @@ import org.joval.xccdf.handler.OVALHandler;
  * @version %I% %G%
  */
 public class Profile {
-    private XccdfBundle xccdf;
-    private String name;
+    private Datastream xccdf;
+    private String streamId, name;
     private HashSet<RuleType> rules;
-    private HashSet<String> platforms;
+    private Hashtable<String, List<String>> platforms;
     private Hashtable<String, String> values = null;
 
     /**
      * Create an XCCDF profile. If name == null, then defaults are selected. If there is no profile with the given name,
      * a NoSuchElementException is thrown.
      */
-    public Profile(XccdfBundle xccdf, String name) throws NoSuchElementException {
+    public Profile(Datastream xccdf, String streamId, String name) throws NoSuchElementException {
 	this.xccdf = xccdf;
+	this.streamId = streamId;
 	this.name = name;
-	platforms = new HashSet<String>();
+	platforms = new Hashtable<String, List<String>>();
 	values = new Hashtable<String, String>();
 	rules = new HashSet<RuleType>();
 
 	//
 	// Set Benchmark-wide platforms
 	//
-	for (CPE2IdrefType platform : xccdf.getBenchmark().getPlatform()) {
+	for (CPE2IdrefType platform : xccdf.getBenchmark(streamId).getPlatform()) {
 	    addPlatform(platform.getIdref());
 	}
 
@@ -70,7 +75,7 @@ public class Profile {
 	Hashtable<String, String> refinements = null;
 	if (name != null) {
 	    ProfileType prof = null;
-	    for (ProfileType pt : xccdf.getBenchmark().getProfile()) {
+	    for (ProfileType pt : xccdf.getBenchmark(streamId).getProfile()) {
 		if (name.equals(pt.getProfileId())) {
 		    prof = pt;
 		    break;
@@ -114,8 +119,8 @@ public class Profile {
 	// Discover all the selected rules and values
 	//
 	HashSet<ValueType> vals = new HashSet<ValueType>();
-	vals.addAll(xccdf.getBenchmark().getValue());
-	for (SelectableItemType item : getSelected(xccdf.getBenchmark().getGroupOrRule(), selections)) {
+	vals.addAll(xccdf.getBenchmark(streamId).getValue());
+	for (SelectableItemType item : getSelected(xccdf.getBenchmark(streamId).getGroupOrRule(), selections)) {
 	    if (item instanceof GroupType) {
 		vals.addAll(((GroupType)item).getValue());
 	    } else if (item instanceof RuleType) {
@@ -130,14 +135,14 @@ public class Profile {
 	    for (Object obj : val.getValueOrComplexValue()) {
 		if (obj instanceof SelStringType) {
 		    SelStringType sel = (SelStringType)obj;
-		    if (values.containsKey(val.getItemId())) {
+		    if (values.containsKey(val.getId())) {
 			// already set ... DAS throw an exception?
-		    } else if (refinements == null || refinements.get(val.getItemId()) == null) {
+		    } else if (refinements == null || refinements.get(val.getId()) == null) {
 			if (!sel.isSetSelector()) {
-			    values.put(val.getItemId(), sel.getValue());
+			    values.put(val.getId(), sel.getValue());
 			}
-		    } else if (refinements.get(val.getItemId()).equals(sel.getSelector())) {
-			values.put(val.getItemId(), sel.getValue());
+		    } else if (refinements.get(val.getId()).equals(sel.getSelector())) {
+			values.put(val.getId(), sel.getValue());
 		    }
 		} else if (obj instanceof SelComplexValueType) {
 		    // TBD
@@ -146,11 +151,26 @@ public class Profile {
 	}
     }
 
+    public String getStreamId() {
+	return streamId;
+    }
+
     /**
-     * Return all of the OVAL definition IDs associated with this Profile's platforms.
+     * Return the hrefs to all the checks relevant to the profile.
      */
-    public Collection<String> getPlatformDefinitionIds() {
-	return platforms;
+    public Collection<String> getPlatformDefinitionHrefs() {
+	return platforms.keySet();
+    }
+
+    public IDefinitions getDefinitions(String href) throws NoSuchElementException, OvalException {
+	return xccdf.getDefinitions(streamId, href);
+    }
+
+    /**
+     * Return all of the OVAL definition IDs associated with the specified href.
+     */
+    public List<String> getPlatformDefinitionIds(String href) {
+	return platforms.get(href);
     }
 
     /**
@@ -175,14 +195,22 @@ public class Profile {
     private Collection<SelectableItemType> getSelected(List<SelectableItemType> items, Hashtable<String, Boolean> selections) {
 	Collection<SelectableItemType> results = new HashSet<SelectableItemType>();
 	for (SelectableItemType item : items) {
-	    if (selections == null || selections.get(item.getItemId()) == null) {
+	    String id = null;
+	    if (item instanceof GroupType) {
+		id = ((GroupType)item).getId();
+	    } else if (item instanceof RuleType) {
+		id = ((RuleType)item).getId();
+	    } else {
+		throw new RuntimeException("Not a group or rule: " + item.getClass().getName());
+	    }
+	    if (selections == null || selections.get(id) == null) {
 		if (item.isSelected()) {
 		    results.add(item);
 		    if (item instanceof GroupType) {
 			results.addAll(getSelected(((GroupType)item).getGroupOrRule(), selections));
 		    }
 		}
-	    } else if (selections.get(item.getItemId()).booleanValue()) {
+	    } else if (selections.get(id).booleanValue()) {
 		results.add(item);
 		if (item instanceof GroupType) {
 		    results.addAll(getSelected(((GroupType)item).getGroupOrRule(), selections));
@@ -196,15 +224,21 @@ public class Profile {
      * Given a CPE platform name, add the corresponding OVAL definition IDs to the platforms list.
      */
     private void addPlatform(String cpeName) {
-	ItemType cpeItem = xccdf.getDictionary().getItem(cpeName);
-	if (cpeItem != null && cpeItem.isSetCheck()) {
-	    for (CheckType check : cpeItem.getCheck()) {
-		if (OVALHandler.NAMESPACE.equals(check.getSystem()) && check.isSetHref()) {
-		    if (check.getHref().equals(xccdf.getCpeOvalHref())) {
-			platforms.add(check.getValue());
+	try {
+	    ItemType cpeItem = xccdf.getDictionary(streamId).getItem(cpeName);
+	    if (cpeItem != null && cpeItem.isSetCheck()) {
+		for (CheckType check : cpeItem.getCheck()) {
+		    if (OVALHandler.NAMESPACE.equals(check.getSystem()) && check.isSetHref()) {
+			String href = check.getHref();
+			if (!platforms.containsKey(href)) {
+			    platforms.put(href, new Vector<String>());
+			}
+			platforms.get(href).add(check.getValue());
 		    }
 		}
 	    }
+	} catch (Exception e) {
+	    e.printStackTrace();
 	}
     }
 }
