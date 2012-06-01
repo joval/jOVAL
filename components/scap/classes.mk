@@ -1139,7 +1139,7 @@ CLASSES=\
 	scap.datastream.package-info	\
 	scap.datastream.RefListType	\
 	scap.datastream.UseCaseType	\
-	xccdf.schemas.core.Benchmark	\
+	xccdf.schemas.core.BenchmarkType	\
 	xccdf.schemas.core.CcOperatorEnumType	\
 	xccdf.schemas.core.CheckContentRefType	\
 	xccdf.schemas.core.CheckContentType	\

@@ -31,7 +31,6 @@ import oval.schemas.results.core.DefinitionType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.variables.core.VariableType;
 
-import xccdf.schemas.core.Benchmark;
 import xccdf.schemas.core.CheckContentRefType;
 import xccdf.schemas.core.CheckType;
 import xccdf.schemas.core.CheckExportType;
@@ -60,11 +59,11 @@ import org.joval.oval.OvalException;
 import org.joval.oval.OvalFactory;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
-import org.joval.scap.Datastream;
 import org.joval.sce.SCEScript;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
+import org.joval.xccdf.Benchmark;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfException;
 import org.joval.xccdf.handler.OVALHandler;
@@ -78,7 +77,7 @@ import org.joval.xccdf.handler.SCEHandler;
  */
 public class Engine implements Runnable, IObserver {
     private boolean debug;
-    private Datastream xccdf;
+    private Benchmark xccdf;
     private IBaseSession session;
     private Collection<String> platforms;
     private Profile profile;
@@ -86,16 +85,18 @@ public class Engine implements Runnable, IObserver {
     private List<GroupType> groups = null;
     private String phase = null;
     private Logger logger;
+    private File ws = null;
 
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
      */
-    public Engine(Datastream xccdf, Profile profile, IBaseSession session, boolean debug) {
+    public Engine(Benchmark xccdf, Profile profile, IBaseSession session, File ws) {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	this.session = session;
+	this.ws = ws;
+	debug = ws != null;
 	logger = XPERT.logger;
-	this.debug = debug;
     }
 
     // Implement Runnable
@@ -125,7 +126,11 @@ public class Engine implements Runnable, IObserver {
 		switch(engine.getResult()) {
 		  case OK:
 		    if (debug) {
-			File resultFile = new File(XPERT.ws, "oval-res_" + encode(href) + ".xml");
+			String basename = encode(href);
+			if (!basename.toLowerCase().endsWith(".xml")) {
+			    basename = basename + ".xml";
+			}
+			File resultFile = new File(ws, "oval-res_" + basename);
 			logger.info("Saving OVAL results: " + resultFile.getPath());
 			engine.getResults().writeXML(resultFile);
 		    }
@@ -195,10 +200,10 @@ public class Engine implements Runnable, IObserver {
 		}
 	    }
 
-	    xccdf.getBenchmark(profile.getStreamId()).getTestResult().add(testResult);
-	    File reportFile = new File(XPERT.ws, "xccdf-results.xml");
+	    xccdf.getBenchmark().getTestResult().add(testResult);
+	    File reportFile = new File(ws, "xccdf-results.xml");
 	    logger.info("Saving report: " + reportFile.getPath());
-	    xccdf.writeBenchmarkXML(profile.getStreamId(), reportFile);
+	    xccdf.writeBenchmarkXML(reportFile);
 	}
 	logger.info("XCCDF processing complete.");
     }
@@ -240,7 +245,7 @@ public class Engine implements Runnable, IObserver {
 	Collection<RuleType> rules = profile.getSelectedRules();
 	if (rules.size() == 0) {
 	    logger.severe("No reason to evaluate!");
-	    List<ProfileType> profiles = xccdf.getBenchmark(profile.getStreamId()).getProfile();
+	    List<ProfileType> profiles = xccdf.getBenchmark().getProfile();
 	    if (profiles.size() > 0) {
 		logger.info("Try selecting a profile:");
 		for (ProfileType pt : profiles) {
@@ -319,7 +324,7 @@ public class Engine implements Runnable, IObserver {
      */
     private List<RuleType> listAllRules() {
 	List<RuleType> rules = new Vector<RuleType>();
-	for (SelectableItemType item : xccdf.getBenchmark(profile.getStreamId()).getGroupOrRule()) {
+	for (SelectableItemType item : xccdf.getBenchmark().getGroupOrRule()) {
 	    rules.addAll(getRules(item));
 	}
 	return rules;

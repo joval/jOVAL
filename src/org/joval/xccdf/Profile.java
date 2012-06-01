@@ -33,7 +33,7 @@ import xccdf.schemas.core.ValueType;
 import org.joval.cpe.CpeException;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.oval.OvalException;
-import org.joval.scap.Datastream;
+import org.joval.xccdf.Benchmark;
 import org.joval.xccdf.handler.OVALHandler;
 
 /**
@@ -43,8 +43,8 @@ import org.joval.xccdf.handler.OVALHandler;
  * @version %I% %G%
  */
 public class Profile {
-    private Datastream xccdf;
-    private String streamId, name;
+    private Benchmark xccdf;
+    private String name;
     private HashSet<RuleType> rules;
     private Hashtable<String, List<String>> platforms;
     private Hashtable<String, String> values = null;
@@ -53,9 +53,8 @@ public class Profile {
      * Create an XCCDF profile. If name == null, then defaults are selected. If there is no profile with the given name,
      * a NoSuchElementException is thrown.
      */
-    public Profile(Datastream xccdf, String streamId, String name) throws NoSuchElementException {
+    public Profile(Benchmark xccdf, String name) throws NoSuchElementException {
 	this.xccdf = xccdf;
-	this.streamId = streamId;
 	this.name = name;
 	platforms = new Hashtable<String, List<String>>();
 	values = new Hashtable<String, String>();
@@ -64,7 +63,7 @@ public class Profile {
 	//
 	// Set Benchmark-wide platforms
 	//
-	for (CPE2IdrefType platform : xccdf.getBenchmark(streamId).getPlatform()) {
+	for (CPE2IdrefType platform : xccdf.getBenchmark().getPlatform()) {
 	    addPlatform(platform.getIdref());
 	}
 
@@ -75,7 +74,7 @@ public class Profile {
 	Hashtable<String, String> refinements = null;
 	if (name != null) {
 	    ProfileType prof = null;
-	    for (ProfileType pt : xccdf.getBenchmark(streamId).getProfile()) {
+	    for (ProfileType pt : xccdf.getBenchmark().getProfile()) {
 		if (name.equals(pt.getProfileId())) {
 		    prof = pt;
 		    break;
@@ -119,8 +118,8 @@ public class Profile {
 	// Discover all the selected rules and values
 	//
 	HashSet<ValueType> vals = new HashSet<ValueType>();
-	vals.addAll(xccdf.getBenchmark(streamId).getValue());
-	for (SelectableItemType item : getSelected(xccdf.getBenchmark(streamId).getGroupOrRule(), selections)) {
+	vals.addAll(xccdf.getBenchmark().getValue());
+	for (SelectableItemType item : getSelected(xccdf.getBenchmark().getGroupOrRule(), selections)) {
 	    if (item instanceof GroupType) {
 		vals.addAll(((GroupType)item).getValue());
 	    } else if (item instanceof RuleType) {
@@ -151,10 +150,6 @@ public class Profile {
 	}
     }
 
-    public String getStreamId() {
-	return streamId;
-    }
-
     /**
      * Return the hrefs to all the checks relevant to the profile.
      */
@@ -163,7 +158,7 @@ public class Profile {
     }
 
     public IDefinitions getDefinitions(String href) throws NoSuchElementException, OvalException {
-	return xccdf.getDefinitions(streamId, href);
+	return xccdf.getDefinitions(href);
     }
 
     /**
@@ -225,7 +220,7 @@ public class Profile {
      */
     private void addPlatform(String cpeName) {
 	try {
-	    ItemType cpeItem = xccdf.getDictionary(streamId).getItem(cpeName);
+	    ItemType cpeItem = xccdf.getDictionary().getItem(cpeName);
 	    if (cpeItem != null && cpeItem.isSetCheck()) {
 		for (CheckType check : cpeItem.getCheck()) {
 		    if (OVALHandler.NAMESPACE.equals(check.getSystem()) && check.isSetHref()) {

@@ -21,9 +21,9 @@ import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.TestResultType;
 
 import org.joval.intf.system.ISession;
-import org.joval.scap.Datastream;
 import org.joval.sce.SCEScript;
 import org.joval.util.JOVALMsg;
+import org.joval.xccdf.Benchmark;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfException;
 import org.joval.xccdf.engine.RuleResult;
@@ -38,7 +38,7 @@ import org.joval.xccdf.engine.XPERT;
 public class SCEHandler {
     public static final String NAMESPACE = "http://open-scap.org/page/SCE";
 
-    private Datastream xccdf;
+    private Benchmark xccdf;
     private Profile profile;
     private ISession session;
     private Hashtable<String, Hashtable<String, SCEScript>> scriptTable;
@@ -48,7 +48,7 @@ public class SCEHandler {
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
      */
-    public SCEHandler(Datastream xccdf, Profile profile, ISession session) {
+    public SCEHandler(Benchmark xccdf, Profile profile, ISession session) {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	this.session = session;

@@ -26,8 +26,8 @@ import org.joval.scap.Datastream;
 import org.joval.scap.ScapException;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
+import org.joval.xccdf.Benchmark;
 import org.joval.xccdf.Profile;
-import org.joval.xccdf.XccdfBundle;
 import org.joval.xccdf.XccdfException;
 
 /**
@@ -100,37 +100,81 @@ public class XPERT {
      * Run from the command-line.
      */
     public static void main(String[] argv) {
-	int exitCode = 1;
-	if (!ws.exists()) {
-	    ws.mkdir();
-	}
-	try {
-	    logger = LogFormatter.createDuplex(new File(ws, "xpert.log"), Level.INFO);
-	} catch (IOException e) {
-	    throw new RuntimeException(e);
-	}
-
-	String pluginName = "default";
-	String configFileName = "config.properties";
+	boolean help = false;
+	File streamFile = new File("scap-datastream.xml");
+	String streamId = null;
+	String benchmarkId = null;
 	String profileName = null;
-	String xccdfBaseName = null;
-	boolean printHelp = false;
-	boolean debug = false;
+	File resultsFile = new File("xccdf-results.xml");
+	File ws = null;
+	Level level = Level.INFO;
+	boolean query = false;
+	File logFile = new File("xpert.log");
+	String pluginName = "default";
+	File configFile = new File("config.properties");
 
 	for (int i=0; i < argv.length; i++) {
 	    if (argv[i].equals("-h")) {
-		printHelp = true;
-	    } else if (i == (argv.length - 1)) { // last arg (but not -h)
-		xccdfBaseName = argv[i];
-	    } else if (argv[i].equals("-config")) {
-		configFileName = argv[++i];
-	    } else if (argv[i].equals("-profile")) {
-		profileName = argv[++i];
-	    } else if (argv[i].equals("-plugin")) {
-		pluginName = argv[++i];
-	    } else if (argv[i].equals("-debug")) {
-		debug = true;
+		help = true;
+	    } else if (argv[i].equals("-q")) {
+		query = true;
+	    } else if ((i + 1) < argv.length) {
+		if (argv[i].equals("-d")) {
+		    streamFile = new File(argv[++i]);
+		} else if (argv[i].equals("-s")) {
+		    streamId = argv[++i];
+		} else if (argv[i].equals("-b")) {
+		    benchmarkId = argv[++i];
+		} else if (argv[i].equals("-p")) {
+		    profileName = argv[++i];
+		} else if (argv[i].equals("-r")) {
+		    resultsFile = new File(argv[++i]);
+		} else if (argv[i].equals("-v")) {
+		    ws = new File(argv[++i]);
+		} else if (argv[i].equals("-l")) {
+		    try {
+			switch(Integer.parseInt(argv[++i])) {
+			  case 4:
+			    level = Level.SEVERE;
+			    break;
+			  case 3:
+			    level = Level.WARNING;
+			    break;
+			  case 2:
+			    level = Level.INFO;
+			    break;
+			  case 1:
+			    level = Level.FINEST;
+			    break;
+			  default:
+			    System.out.println("WARNING log level value not in range: " + argv[i]);
+			    break;
+			}
+		    } catch (NumberFormatException e) {
+			System.out.println("WARNING illegal log level value: " + argv[i]);
+		    }
+		} else if (argv[i].equals("-y")) {
+		    logFile = new File(argv[++i]);
+		} else if (argv[i].equals("-plugin")) {
+		    pluginName = argv[++i];
+		} else if (argv[i].equals("-config")) {
+		    configFile = new File(argv[++i]);
+		} else {
+		    System.out.println("WARNING unrecognized command-line argument: " + argv[i]);
+		}
+	    } else {
+		System.out.println("WARNING unrecognized command-line argument: " + argv[i]);
 	    }
+	}
+
+	int exitCode = 1;
+	if (ws != null && !ws.exists()) {
+	    ws.mkdir();
+	}
+	try {
+	    logger = LogFormatter.createDuplex(logFile, level);
+	} catch (IOException e) {
+	    throw new RuntimeException(e);
 	}
 
 	IPlugin plugin = null;
@@ -145,12 +189,28 @@ public class XPERT {
 	}
 
 	printHeader(plugin);
-	if (printHelp) {
+	if (help) {
 	    printHelp(plugin);
 	    exitCode = 0;
-	} else if (xccdfBaseName == null) {
-	    logger.warning("No XCCDF file was specified");
+	} else if (!streamFile.isFile()) {
+	    logger.warning("ERROR: No such file " + streamFile.toString());
 	    printHelp(plugin);
+	} else if (query) {
+	    logger.info("Querying Data Stream: " + streamFile.toString());
+	    try {
+		Datastream ds = new Datastream(streamFile);
+		for (String sId : ds.getStreamIds()) {
+		    logger.info("Stream ID=\"" + sId + "\"");
+		    for (String bId : ds.getBenchmarkIds(sId)) {
+			logger.info("  Benchmark ID=\"" + bId + "\"");
+			for (String profileId : ds.getBenchmark(sId, bId).getProfileIds()) {
+			    logger.info("    Profile Name=\"" + profileId + "\"");
+			}
+		    }
+		}
+	    } catch (ScapException e) {
+		logger.warning(LogFormatter.toString(e));
+	    }
 	} else if (plugin == null) {
 	    printHelp(null);
 	} else {
@@ -160,7 +220,6 @@ public class XPERT {
 		// Configure the jOVAL plugin
 		//
 		Properties config = new Properties();
-		File configFile = new File(configFileName);
 		if (configFile.isFile()) {
 		    config.load(new FileInputStream(configFile));
 		}
@@ -170,23 +229,40 @@ public class XPERT {
 		System.exit(1);
 	    }
 
+	    Datastream ds = null;
+	    try {
+		logger.info("Loading " + streamFile.toString());
+		ds = new Datastream(streamFile);
+
+		if (streamId == null) {
+		    if (ds.getStreamIds().size() == 1) {
+			streamId = ds.getStreamIds().iterator().next();
+			logger.info("Selected stream " + streamId);
+		    } else {
+			throw new ScapException("ERROR: A stream must be selected for this stream collection source");
+		    }
+		}
+
+		if (benchmarkId == null) {
+		    if (ds.getBenchmarkIds(streamId).size() == 1) {
+			benchmarkId = ds.getBenchmarkIds(streamId).iterator().next();
+			logger.info("Selected benchmark " + benchmarkId);
+		    } else {
+			throw new ScapException("ERROR: A benchmark must be selected for stream " + streamId);
+		    }
+		}
+	    } catch (ScapException e) {
+		logger.severe(e.getMessage());
+		System.exit(1);
+	    }
 
 	    try {
-		logger.info("Loading " + xccdfBaseName);
-		Datastream ds = new Datastream(new File(xccdfBaseName));
-
-		if (ds.getStreamIds().size() == 1) {
-		    String streamId = ds.getStreamIds().iterator().next();
-		    logger.info("Selected stream " + streamId);
-		    Profile profile = new Profile(ds, streamId, profileName);
-
-		    Engine engine = new Engine(ds, profile, plugin.getSession(), debug);
-		    engine.run();
-		    logger.info("Finished processing XCCDF bundle");
-		    exitCode = 0;
-		} else {
-		    logger.severe("Multi-stream datastreams are not supported");
-		}
+		Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
+		Profile profile = new Profile(benchmark, profileName);
+		Engine engine = new Engine(benchmark, profile, plugin.getSession(), ws);
+		engine.run();
+		logger.info("Finished processing XCCDF bundle");
+		exitCode = 0;
 	    } catch (ScapException e) {
 		logger.severe(LogFormatter.toString(e));
 	    }

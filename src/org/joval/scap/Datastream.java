@@ -38,16 +38,17 @@ import scap.datastream.RefListType;
 import scap.datastream.UseCaseType;
 import org.oasis.catalog.Catalog;
 import org.oasis.catalog.Uri;
-import xccdf.schemas.core.Benchmark;
+import xccdf.schemas.core.BenchmarkType;
 
 import org.joval.cpe.CpeException;
 import org.joval.cpe.Dictionary;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.util.ILoggable;
-import org.joval.intf.xml.ITransformable;
 import org.joval.oval.OvalException;
 import org.joval.oval.Definitions;
+import org.joval.scap.ScapException;
 import org.joval.util.JOVALMsg;
+import org.joval.xccdf.Benchmark;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -56,7 +57,7 @@ import org.joval.xml.SchemaRegistry;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Datastream implements ITransformable, ILoggable {
+public class Datastream implements ILoggable {
     public static final DataStreamCollection getDSCollection(File f) throws ScapException {
 	return getDSCollection(new StreamSource(f));
     }
@@ -95,7 +96,7 @@ public class Datastream implements ITransformable, ILoggable {
     private Hashtable<String, StreamResolver> resolvers;
     private Hashtable<String, Component> components;
     private Hashtable<String, Dictionary> dictionaries;
-    private Hashtable<String, Benchmark> benchmarks;
+    private Hashtable<String, BenchmarkType> benchmarks;
 
     /**
      * Create a Datastream based on the contents of a checklist file.
@@ -127,56 +128,52 @@ public class Datastream implements ITransformable, ILoggable {
 	return dsc;
     }
 
+    /**
+     * Return a collection of the DataStream IDs in the source document.
+     */
     public Collection<String> getStreamIds() {
-	return resolvers.keySet();
+	return streams.keySet();
     }
 
-    public Benchmark getBenchmark(String streamId) throws NoSuchElementException {
-	if (benchmarks.containsKey(streamId)) {
-	    return benchmarks.get(streamId);
-	} else if (streams.containsKey(streamId)) {
-	    RefListType refs = streams.get(streamId).getChecklists();
-	    if (refs.getComponentRef().size() == 1) {
-		String componentHref = refs.getComponentRef().get(0).getHref();
-		if (componentHref.startsWith("#")) {
-		    componentHref = componentHref.substring(1);
+    /**
+     * Return a collection of Benchmark component IDs, for the given stream ID.
+     */
+    public Collection<String> getBenchmarkIds(String streamId) throws NoSuchElementException {
+	if (streams.containsKey(streamId)) {
+	    Collection<String> benchmarkIds = new Vector<String>();
+	    for (ComponentRef ref : streams.get(streamId).getChecklists().getComponentRef()) {
+		String href = ref.getHref();
+		if (href.startsWith("#")) {
+		    href = href.substring(1);
 		}
-		if (components.containsKey(componentHref)) {
-		    Benchmark b = components.get(componentHref).getBenchmark();
-		    benchmarks.put(streamId, b);
-		    return b;
-		} else {
-		    throw new NoSuchElementException(componentHref);
-		}
-	    } else if (refs.getComponentRef().size() > 1) {
-		System.out.println("ERROR: Multiple Benchmarks specified in stream " + streamId);
+		benchmarkIds.add(href);
 	    }
+	    return benchmarkIds; 
+	} else {
+	    throw new NoSuchElementException(streamId);
 	}
-	throw new NoSuchElementException(streamId);
     }
 
-    public Dictionary getDictionary(String streamId) throws NoSuchElementException, CpeException {
-	if (dictionaries.containsKey(streamId)) {
-	    return dictionaries.get(streamId);
+    public Benchmark getBenchmark(String streamId, String benchmarkId) throws NoSuchElementException, ScapException {
+	String comboId = streamId + ":" + benchmarkId;
+	if (benchmarks.containsKey(comboId)) {
+	    return new Benchmark(streamId, this, benchmarks.get(comboId), getDictionary(streamId));
 	} else if (streams.containsKey(streamId)) {
-	    RefListType refs = streams.get(streamId).getDictionaries();
-	    if (refs.getComponentRef().size() == 1) {
-		String dictionaryId = refs.getComponentRef().get(0).getHref();
-		if (dictionaryId.startsWith("#")) {
-		    dictionaryId = dictionaryId.substring(1);
-		}
-		if (components.containsKey(dictionaryId)) {
-		    Dictionary d = new Dictionary(components.get(dictionaryId).getCpeList());
-		    dictionaries.put(streamId, d);
-		    return d;
+	    if (components.containsKey(benchmarkId)) {
+		Component component = components.get(benchmarkId);
+		if (component.isSetBenchmark()) {
+		    BenchmarkType b = component.getBenchmark();
+		    benchmarks.put(comboId, b);
+		    return new Benchmark(streamId, this, b, getDictionary(streamId));
 		} else {
-		    throw new NoSuchElementException(dictionaryId);
+		    throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
 		}
-	    } else if (refs.getComponentRef().size() > 1) {
-		System.out.println("ERROR: Multiple dictionaries specified in stream " + streamId);
+	    } else {
+		throw new NoSuchElementException(benchmarkId);
 	    }
+	} else {
+	    throw new NoSuchElementException(streamId);
 	}
-	throw new NoSuchElementException(streamId);
     }
 
     public IDefinitions getDefinitions(String streamId, String href) throws NoSuchElementException, OvalException {
@@ -190,41 +187,6 @@ public class Datastream implements ITransformable, ILoggable {
 	} else {
 	    throw new NoSuchElementException(streamId);
 	}
-    }
-
-    public void writeBenchmarkXML(String streamId, File f) throws NoSuchElementException {
-	OutputStream out = null;
-	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.XCCDF);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Marshaller marshaller = ctx.createMarshaller();
-	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-	    out = new FileOutputStream(f);
-	    marshaller.marshal(getBenchmark(streamId), out);
-	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (FactoryConfigurationError e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (FileNotFoundException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} finally {
-	    if (out != null) {
-		try {
-		    out.close();
-		} catch (IOException e) {
-		    logger.warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
-		}
-	    }
-	}
-    }
-
-    // Implement ITransformable
-
-    public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, getDSCollection());
     }
 
     // Implement ILoggable
@@ -251,9 +213,33 @@ public class Datastream implements ITransformable, ILoggable {
 	components = new Hashtable<String, Component>();
 	resolvers = new Hashtable<String, StreamResolver>();
 	streams = new Hashtable<String, DataStream>();
-	benchmarks = new Hashtable<String, Benchmark>();
+	benchmarks = new Hashtable<String, BenchmarkType>();
 	dictionaries = new Hashtable<String, Dictionary>();
 	logger = JOVALMsg.getLogger();
+    }
+
+    private Dictionary getDictionary(String streamId) throws NoSuchElementException, CpeException {
+	if (dictionaries.containsKey(streamId)) {
+	    return dictionaries.get(streamId);
+	} else if (streams.containsKey(streamId)) {
+	    RefListType refs = streams.get(streamId).getDictionaries();
+	    if (refs.getComponentRef().size() == 1) {
+		String dictionaryId = refs.getComponentRef().get(0).getHref();
+		if (dictionaryId.startsWith("#")) {
+		    dictionaryId = dictionaryId.substring(1);
+		}
+		if (components.containsKey(dictionaryId)) {
+		    Dictionary d = new Dictionary(components.get(dictionaryId).getCpeList());
+		    dictionaries.put(streamId, d);
+		    return d;
+		} else {
+		    throw new NoSuchElementException(dictionaryId);
+		}
+	    } else if (refs.getComponentRef().size() > 1) {
+		System.out.println("ERROR: Multiple dictionaries specified in stream " + streamId);
+	    }
+	}
+	throw new NoSuchElementException(streamId);
     }
 
     /**

@@ -9,6 +9,7 @@ CLASSES=\
 	org.joval.scap.ScapException					\
 	org.joval.sce.SCEScript						\
 	org.joval.util.LogFormatter					\
+	org.joval.xccdf.Benchmark					\
 	org.joval.xccdf.Profile						\
 	org.joval.xccdf.XccdfBundle					\
 	org.joval.xccdf.XccdfException					\

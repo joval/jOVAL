@@ -37,7 +37,7 @@ import org.joval.intf.oval.IVariables;
 import org.joval.intf.system.IBaseSession;
 import org.joval.oval.OvalException;
 import org.joval.oval.OvalFactory;
-import org.joval.scap.Datastream;
+import org.joval.xccdf.Benchmark;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfException;
 import org.joval.xccdf.engine.XPERT;
@@ -52,7 +52,7 @@ import org.joval.xccdf.engine.RuleResult;
 public class OVALHandler {
     public static final String NAMESPACE = "http://oval.mitre.org/XMLSchema/oval-definitions-5";
 
-    private Datastream xccdf;
+    private Benchmark xccdf;
     private Profile profile;
     private ObjectFactory factory;
     private IVariables variables;
@@ -62,7 +62,7 @@ public class OVALHandler {
      * Create an OVAL handler utility for the given XCCDF and Profile. An OVAL engine will be created for every
      * discrete OVAL href referenced by a profile-selected check in the XCCDF document.
      */
-    public OVALHandler(Datastream xccdf, Profile profile, IBaseSession session) throws Exception {
+    public OVALHandler(Benchmark xccdf, Profile profile, IBaseSession session) throws Exception {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	factory = new ObjectFactory();
@@ -77,7 +77,7 @@ public class OVALHandler {
 				if (!engines.containsKey(href)) {
 				    session.getLogger().info("Creating engine for href " + href);
 				    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
-				    engine.setDefinitions(xccdf.getDefinitions(profile.getStreamId(), href));
+				    engine.setDefinitions(xccdf.getDefinitions(href));
 				    engine.setExternalVariables(getVariables());
 				    engine.setDefinitionFilter(getDefinitionFilter(href));
 				    engines.put(href, engine);

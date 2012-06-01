@@ -473,6 +473,9 @@
     <jxb:schemaBindings>
       <jxb:package name="xccdf.schemas.core"/>
     </jxb:schemaBindings>
+    <jxb:bindings node="xs:element[@name='Benchmark']">
+        <jxb:class name="BenchmarkType" />
+    </jxb:bindings>
     <jxb:bindings node="xs:element[@name='Benchmark']//xs:attribute[@name='id']">
         <jxb:property name="benchmarkId" />
     </jxb:bindings>
