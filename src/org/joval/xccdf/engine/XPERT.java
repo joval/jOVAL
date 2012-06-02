@@ -259,7 +259,7 @@ public class XPERT {
 	    try {
 		Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
 		Profile profile = new Profile(benchmark, profileName);
-		Engine engine = new Engine(benchmark, profile, plugin.getSession(), ws);
+		Engine engine = new Engine(benchmark, profile, plugin.getSession(), resultsFile, ws);
 		engine.run();
 		logger.info("Finished processing XCCDF bundle");
 		exitCode = 0;

@@ -93,7 +93,6 @@ public class Registry extends BaseRegistry {
 	this.host = host;
 	this.cred = cred;
 	map = new Hashtable <String, Key>();
-	heartbeat = new RegistryTask();
     }
 
     /**
@@ -101,6 +100,7 @@ public class Registry extends BaseRegistry {
      */
     public synchronized boolean connect() {
 	try {
+	    heartbeat = new RegistryTask();
 	    JOVALSystem.getTimer().scheduleAtFixedRate(heartbeat, INTERVAL, INTERVAL);
 	    log.getLogger().trace(JOVALMsg.STATUS_WINREG_CONNECT, host);
 	    winreg = factory.getWinreg(new AuthInfo(cred), host, true);
@@ -123,6 +123,7 @@ public class Registry extends BaseRegistry {
     public synchronized void disconnect() {
 	try {
 	    heartbeat.cancel();
+	    JOVALSystem.getTimer().purge();
 	    Enumeration <Key>keys = map.elements();
 	    while (keys.hasMoreElements()) {
 		Key key = keys.nextElement();
@@ -133,6 +134,7 @@ public class Registry extends BaseRegistry {
 	    }
 	    winreg.closeConnection();
 	    state = STATE_DISCONNECTED;
+	    log.getLogger().trace(JOVALMsg.STATUS_WINREG_DISCONNECT, host);
 	} catch (JIException e) {
 	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_DISCONNECT);
 	    log.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

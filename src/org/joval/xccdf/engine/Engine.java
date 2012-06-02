@@ -85,16 +85,17 @@ public class Engine implements Runnable, IObserver {
     private List<GroupType> groups = null;
     private String phase = null;
     private Logger logger;
-    private File ws = null;
+    private File resultsFile, ws = null;
 
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
      */
-    public Engine(Benchmark xccdf, Profile profile, IBaseSession session, File ws) {
+    public Engine(Benchmark xccdf, Profile profile, IBaseSession session, File resultsFile, File ws) {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	this.session = session;
 	this.ws = ws;
+	this.resultsFile = resultsFile;
 	debug = ws != null;
 	logger = XPERT.logger;
     }
@@ -201,9 +202,8 @@ public class Engine implements Runnable, IObserver {
 	    }
 
 	    xccdf.getBenchmark().getTestResult().add(testResult);
-	    File reportFile = new File(ws, "xccdf-results.xml");
-	    logger.info("Saving report: " + reportFile.getPath());
-	    xccdf.writeBenchmarkXML(reportFile);
+	    logger.info("Saving report: " + resultsFile.toString());
+	    xccdf.writeBenchmarkXML(resultsFile);
 	}
 	logger.info("XCCDF processing complete.");
     }

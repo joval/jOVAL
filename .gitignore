@@ -9,10 +9,14 @@ components/jovaldi/jOVAL*.zip
 components/jovaldi/jOVAL*.tar.gz
 components/scap/docs/api/
 components/scap/scap-schema-*.jar
+components/sce/docs/api/
+components/sce/sce-schema-*.jar
 components/schematron/*.xsl
 components/schematron/schema/docs/
 components/schematron/schema/svrl.jar
 components/sdk/docs/api/
+components/sdk/adapters/jOVALAdapters.jar
+components/sdk/common/jOVALCommon.jar
 components/sdk/engine/jOVALCore.jar
 components/sdk/plugin/shared/jOVALPluginShared.jar
 components/sdk/plugin/offline/jOVALPluginOffline.jar
