@@ -41,8 +41,8 @@
           .infoA{background-color: #DEC8E0; font: 10pt/12pt "Arial"}
           .infoB{background-color: #FAE6F1; font: 10pt/12pt "Arial"}
 
-          .fixedA{background-color: #ACD6B9; font: 10pt/12pt "Arial"}
-          .fixedB{background-color: #CBE6FF; font: 10pt/12pt "Arial"}
+          .fixedA{background-color: #84C4B9; font: 10pt/12pt "Arial"}
+          .fixedB{background-color: #A7D0FF; font: 10pt/12pt "Arial"}
         </style>
       <head>
         <title>XPERT&#8482; Benchmark Test Results</title>
@@ -55,10 +55,10 @@
           </tr>
           <tr>
             <td class="label" nowrap="nowrap">System</td>
+            <td class="label" nowrap="nowrap">Start Date</td>
             <td class="label" nowrap="nowrap">Start Time</td>
+            <td class="label" nowrap="nowrap">End Date</td>
             <td class="label" nowrap="nowrap">End Time</td>
-            <td class="label" nowrap="nowrap">Benchmark Version</td>
-            <td class="label" nowrap="nowrap">Benchmark ID</td>
           </tr>
           <tr>
             <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/@test-system"/></td>
@@ -68,16 +68,42 @@
               </xsl:call-template>
             </td>
             <td class="text">
+              <xsl:call-template name="printTime">
+                <xsl:with-param name="date" select="/xccdf:Benchmark/xccdf:TestResult/@start-time"/>
+              </xsl:call-template>
+            </td>
+            <td class="text">
               <xsl:call-template name="printDate">
                 <xsl:with-param name="date" select="/xccdf:Benchmark/xccdf:TestResult/@end-time"/>
               </xsl:call-template>
             </td>
-            <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/@version"/></td>
-            <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/xccdf:benchmark/@id"/></td>
+            <td class="text">
+              <xsl:call-template name="printTime">
+                <xsl:with-param name="date" select="/xccdf:Benchmark/xccdf:TestResult/@end-time"/>
+              </xsl:call-template>
+            </td>
           </tr>
         </table>
 
         <br/>
+
+        <table border="1" cellpadding="2" cellspacing="0" width="100%" bgcolor="#cccccc">
+          <tr>
+            <td class="title" colspan="2">Benchmark Information</td>
+          </tr>
+          <tr>
+            <td class="label2">Benchmark ID</td>
+            <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/xccdf:benchmark/@id"/></td>
+          </tr>
+          <tr>
+            <td class="label2" width="20%">Benchmark Version</td>
+            <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/@version"/></td>
+          </tr>
+          <tr>
+            <td class="label2">Profile ID</td>
+            <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/xccdf:profile/@idref"/></td>
+          </tr>
+	</table>
 
         <table border="1" cellpadding="2" cellspacing="0" width="100%" bgcolor="#cccccc">
           <tr>
@@ -115,6 +141,14 @@
                 <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:target-address">
                   <xsl:sort select="./text()" data-type="text" order="ascending"/>
                   <tr>
+                    <xsl:choose>
+                      <xsl:when test="position() mod 2 = 1">
+                        <xsl:attribute name="bgcolor">#eeeeee</xsl:attribute>
+                      </xsl:when>
+                      <xsl:when test="position() mod 2 = 0">
+                        <xsl:attribute name="bgcolor">#ffffff</xsl:attribute>
+                      </xsl:when>
+                    </xsl:choose>
                     <td class="label2" width="20%">IP Address</td>
                     <td class="text"><xsl:value-of select="./text()"/></td>
                   </tr>
@@ -126,7 +160,7 @@
 
         <table border="1" cellpadding="2" cellspacing="0" width="100%">
           <tr>
-            <td class="title" colspan="2">XCCDF Benchmark Test Results</td>
+            <td class="title" colspan="2">Benchmark Test Results</td>
           </tr>
           <tr>
             <td colspan="2">
@@ -168,6 +202,11 @@
     <xsl:variable name="day">
       <xsl:value-of select="substring-before(substring-after(substring-after($date, '-'), '-'), 'T')"/>
     </xsl:variable>
+    <xsl:value-of select="concat($day, ' ', $month, ' ', $year)"/>
+  </xsl:template>
+
+  <xsl:template name="printTime">
+    <xsl:param name="date"/>
     <xsl:variable name="hh">
       <xsl:value-of select="format-number(substring-before(substring-after($date, 'T'), ':'), '00')"/>
     </xsl:variable>
@@ -177,7 +216,7 @@
     <xsl:variable name="ss">
       <xsl:value-of select="format-number(substring-before(substring-after(substring-after($date, ':'), ':'), '.'), '00')"/>
     </xsl:variable>
-    <xsl:value-of select="concat($day, ' ', $month, ' ', $year, ' ', $hh, ':', $mm, ':', $ss)"/>
+    <xsl:value-of select="concat($hh, ':', $mm, ':', $ss)"/>
   </xsl:template>
 
   <xsl:template name="RuleResult">
@@ -324,7 +363,7 @@
             <tr>
               <td class="infoA" width="10">&#160;</td>
               <td class="infoB" width="10">&#160;</td>
-              <td class="text">&#160;Info&#160;&#160;</td>
+              <td class="text">&#160;Informational&#160;&#160;</td>
             </tr>
           </table>
         </td>
