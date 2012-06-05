@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 import org.joval.intf.system.IBaseSession;
+import org.joval.plugin.PluginConfigurationException;
 
 /**
  * Defines an interface for a plugin, which is a utility class that manages an IBaseSession, and configuration data that
@@ -85,6 +86,8 @@ public interface IPlugin {
 
     /**
      * Get the session object. This call may take some time if it involves a discovery process.
+     *
+     * @throws IOException if a session cannot be obtained. This can potentially be a ConnectException or UnknownHostException.
      */
-    IBaseSession getSession();
+    IBaseSession getSession() throws IOException;
 }

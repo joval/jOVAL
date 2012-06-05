@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Hashtable;
@@ -93,11 +94,16 @@ public class SessionFactory implements ILoggable {
 	    // Look up or discover the session type (Windows or SSH)
 	    //
 	    Properties props = getProperties(hostname);
-	    String s = props.getProperty(PROP_SESSION);
-	    if (s == null) {
+	    boolean cached = props.containsKey(PROP_SESSION);
+	    boolean discover = !cached;
+	    if (cached) {
+		type = IBaseSession.Type.typeOf(props.getProperty(PROP_SESSION));
+		if (IBaseSession.Type.UNKNOWN == type) {
+		    discover = true; // re-attempt discovery
+		}
+	    }
+	    if (discover) {
 		type = discoverSessionType(hostname);
-	    } else {
-		type = IBaseSession.Type.typeOf(s);
 	    }
 	} else {
 	    //
@@ -228,6 +234,8 @@ public class SessionFactory implements ILoggable {
 	    return true;
 	} catch (ConnectException e) {
 	    return false;
+	} catch (UnknownHostException e) {
+	    throw e;
 	} catch (IOException e) {
 	} finally {
 	    if (sock != null) {

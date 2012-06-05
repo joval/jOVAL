@@ -101,7 +101,7 @@
           </tr>
           <tr>
             <td class="label2">Profile ID</td>
-            <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/xccdf:profile/@idref"/></td>
+            <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/xccdf:profile/@idref"/>&#160;</td>
           </tr>
 	</table>
 

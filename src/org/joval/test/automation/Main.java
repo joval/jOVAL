@@ -55,7 +55,6 @@ import org.joval.test.automation.schema.Report;
 import org.joval.discovery.SessionFactory;
 import org.joval.identity.SimpleCredentialStore;
 import org.joval.intf.oval.IResults;
-import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.intf.util.IProperty;

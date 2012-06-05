@@ -8,6 +8,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -280,7 +282,11 @@ public class XPERT {
 
 		logger.info("Finished processing XCCDF bundle");
 		exitCode = 0;
-	    } catch (ScapException e) {
+	    } catch (UnknownHostException e) {
+		logger.severe(">>> ERROR - No such host: " + e.getMessage());
+	    } catch (ConnectException e) {
+		logger.severe(">>> ERROR - Failed to connect to host: " + e.getMessage());
+	    } catch (Exception e) {
 		logger.severe(LogFormatter.toString(e));
 	    }
 	}

@@ -22,6 +22,6 @@ public class LocalPlugin extends BasePlugin {
     }
 
     @Override
-    public void configure(Properties props) throws Exception {
+    public void configure(Properties props) {
     }
 }

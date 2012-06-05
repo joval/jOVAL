@@ -88,11 +88,11 @@ public abstract class BasePlugin implements IPlugin {
      */
     public void configure(Properties props) throws Exception {
 	if (props == null) {
-	    throw new Exception(getMessage("err.configMissing", DEFAULT_FILE));
+	    throw new PluginConfigurationException(getMessage("err.configMissing", DEFAULT_FILE));
 	}
     }
 
-    public IBaseSession getSession() {
+    public IBaseSession getSession() throws IOException {
 	return session;
     }
 }

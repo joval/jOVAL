@@ -13,6 +13,8 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -291,7 +293,7 @@ public class Main implements IObserver {
 		try {
 		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.getPath(state.dataFile)));
 		    if (!validateSchema(state.dataFile, SystemCharacteristicsSchemaFilter.list())) {
-			state.plugin.getSession().disconnect();
+			state.getSession().disconnect();
 			System.exit(ERR);
 		    }
 		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.getPath(state.dataFile)));
@@ -312,7 +314,10 @@ public class Main implements IObserver {
 			    }
 			}
 		    }
-		    state.plugin.getSession().disconnect();
+		    try {
+			state.getSession().disconnect();
+		    } catch (IOException e2) {
+		    }
 		    System.exit(ERR);
 		} catch (Exception e) {
 		    logger.log(Level.WARNING, e.getMessage(), e);
@@ -500,6 +505,18 @@ public class Main implements IObserver {
 	    print("");
 	    print(getMessage("MESSAGE_DIVIDER"));
 	    return OK;
+	} catch (UnknownHostException e) {
+	    print("");
+	    print("");
+	    print(getMessage("ERROR_UNKNOWN_HOST", e.getMessage()));
+	    print("");
+	    return ERR;
+	} catch (ConnectException e) {
+	    print("");
+	    print("");
+	    print(getMessage("ERROR_CONNECT", e.getMessage()));
+	    print("");
+	    return ERR;
 	} catch (OvalException e) {
 	    print("");
 	    print("");

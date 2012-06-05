@@ -8,6 +8,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ConnectException;
+import java.net.UnknownHostException;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -221,6 +223,10 @@ public class TestExecutor implements Runnable {
 	    } else {
 		sysLogger.info(name + " - Unable to connect to " + hostname + " - abandoning test suite");
 	    }
+	} catch (ConnectException e) {
+	    sysLogger.warning(name + " - Failed to connect to host: " + hostname);
+	} catch (UnknownHostException e) {
+	    sysLogger.warning(name + " - No such host: " + hostname);
 	} catch (IOException e) {
 	    sysLogger.warning(name + " - Failed to install validation support files for " + hostname);
 	    sysLogger.warning(name + " - " + LogFormatter.toString(e));

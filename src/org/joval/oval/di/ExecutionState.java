@@ -344,7 +344,7 @@ public class ExecutionState {
 	return false;
     }
 
-    IBaseSession getSession() {
+    IBaseSession getSession() throws IOException {
 	if (plugin == null) {
 	    return null;
 	} else {

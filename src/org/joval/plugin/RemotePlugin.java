@@ -41,15 +41,9 @@ public class RemotePlugin extends BasePlugin {
     // Implement IPlugin
 
     @Override
-    public IBaseSession getSession() {
-	try {
-	    if (session == null) {
-		session = sessionFactory.createSession(hostname);
-	    }
-	} catch (ConnectException e) {
-	    throw new RuntimeException(e.getMessage());
-	} catch (UnknownHostException e) {
-	    throw new RuntimeException(e.getMessage());
+    public IBaseSession getSession() throws IOException {
+	if (session == null) {
+	    session = sessionFactory.createSession(hostname);
 	}
 	return session;
     }
