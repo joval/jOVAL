@@ -100,6 +100,10 @@ public abstract class AbstractBaseSession implements IBaseSession {
 	return connected;
     }
 
+    public String getUsername() {
+	return null;
+    }
+
     // All the abstract methods, for reference
 
     public abstract boolean connect();

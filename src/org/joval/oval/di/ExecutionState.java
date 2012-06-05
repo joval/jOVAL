@@ -46,7 +46,7 @@ public class ExecutionState {
 
     static File CWD = new File(".");
     static File BASE_DIR = new File(".");
-    static{
+    static {
 	String s = System.getProperty("jovaldi.baseDir");
 	if (s != null) {
 	    BASE_DIR = new File(s);

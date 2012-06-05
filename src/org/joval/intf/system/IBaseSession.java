@@ -72,6 +72,11 @@ public interface IBaseSession extends ILoggable {
     boolean isConnected();
 
     /**
+     * Returns the account name used by this session, if any.
+     */
+    String getUsername();
+
+    /**
      * Connect the session.
      */
     boolean connect();

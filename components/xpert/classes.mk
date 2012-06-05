@@ -11,7 +11,6 @@ CLASSES=\
 	org.joval.util.LogFormatter					\
 	org.joval.xccdf.Benchmark					\
 	org.joval.xccdf.Profile						\
-	org.joval.xccdf.XccdfBundle					\
 	org.joval.xccdf.XccdfException					\
 	org.joval.xccdf.engine.Engine					\
 	org.joval.xccdf.engine.RuleResult				\

@@ -96,7 +96,6 @@ public class Datastream implements ILoggable {
     private Hashtable<String, StreamResolver> resolvers;
     private Hashtable<String, Component> components;
     private Hashtable<String, Dictionary> dictionaries;
-    private Hashtable<String, BenchmarkType> benchmarks;
 
     /**
      * Create a Datastream based on the contents of a checklist file.
@@ -155,16 +154,11 @@ public class Datastream implements ILoggable {
     }
 
     public Benchmark getBenchmark(String streamId, String benchmarkId) throws NoSuchElementException, ScapException {
-	String comboId = streamId + ":" + benchmarkId;
-	if (benchmarks.containsKey(comboId)) {
-	    return new Benchmark(streamId, this, benchmarks.get(comboId), getDictionary(streamId));
-	} else if (streams.containsKey(streamId)) {
+	if (streams.containsKey(streamId)) {
 	    if (components.containsKey(benchmarkId)) {
-		Component component = components.get(benchmarkId);
-		if (component.isSetBenchmark()) {
-		    BenchmarkType b = component.getBenchmark();
-		    benchmarks.put(comboId, b);
-		    return new Benchmark(streamId, this, b, getDictionary(streamId));
+		Component comp = components.get(benchmarkId);
+		if (comp.isSetBenchmark()) {
+		    return new Benchmark(streamId, comp.getId(), this, comp.getBenchmark(), getDictionary(streamId));
 		} else {
 		    throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
 		}
@@ -213,7 +207,6 @@ public class Datastream implements ILoggable {
 	components = new Hashtable<String, Component>();
 	resolvers = new Hashtable<String, StreamResolver>();
 	streams = new Hashtable<String, DataStream>();
-	benchmarks = new Hashtable<String, BenchmarkType>();
 	dictionaries = new Hashtable<String, Dictionary>();
 	logger = JOVALMsg.getLogger();
     }

@@ -37,7 +37,8 @@ import org.joval.xccdf.XccdfException;
  * @version %I% %G%
  */
 public class XPERT {
-    private static File BASE_DIR = new File(".");
+    private static File CWD = new File(".");
+    private static File BASE_DIR = CWD;
     private static PropertyResourceBundle resources;
     static {
 	String s = System.getProperty("xpert.baseDir");
@@ -62,7 +63,7 @@ public class XPERT {
     }
 
     static Logger logger;
-    static final File ws = new File("artifacts");
+    static final File ws = new File(CWD, "artifacts");
 
     static void printHeader(IPlugin plugin) {
 	PrintStream console = System.out;
@@ -101,17 +102,21 @@ public class XPERT {
      */
     public static void main(String[] argv) {
 	boolean help = false;
-	File streamFile = new File("scap-datastream.xml");
+	File streamFile = new File(CWD, "scap-datastream.xml");
 	String streamId = null;
 	String benchmarkId = null;
 	String profileName = null;
-	File resultsFile = new File("xccdf-results.xml");
+	File resultsFile = new File(CWD, "xccdf-results.xml");
+	File xmlDir = new File(BASE_DIR, "xml");
+	File transformFile = new File(xmlDir, "xccdf_results_to_html.xsl");
+	File reportFile = new File("xccdf-result.html");
+
 	File ws = null;
 	Level level = Level.INFO;
 	boolean query = false;
-	File logFile = new File("xpert.log");
+	File logFile = new File(CWD, "xpert.log");
 	String pluginName = "default";
-	File configFile = new File("config.properties");
+	File configFile = new File(CWD, IPlugin.DEFAULT_FILE);
 
 	for (int i=0; i < argv.length; i++) {
 	    if (argv[i].equals("-h")) {
@@ -155,6 +160,10 @@ public class XPERT {
 		    }
 		} else if (argv[i].equals("-y")) {
 		    logFile = new File(argv[++i]);
+		} else if (argv[i].equals("-t")) {
+		    transformFile = new File(argv[++i]);
+		} else if (argv[i].equals("-x")) {
+		    reportFile = new File(argv[++i]);
 		} else if (argv[i].equals("-plugin")) {
 		    pluginName = argv[++i];
 		} else if (argv[i].equals("-config")) {
@@ -259,8 +268,16 @@ public class XPERT {
 	    try {
 		Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
 		Profile profile = new Profile(benchmark, profileName);
-		Engine engine = new Engine(benchmark, profile, plugin.getSession(), resultsFile, ws);
+		Engine engine = new Engine(benchmark, profile, plugin.getSession(), ws);
 		engine.run();
+
+		if (benchmark.getBenchmark().isSetTestResult()) {
+		    logger.info("Saving report: " + resultsFile.toString());
+		    benchmark.writeBenchmarkXML(resultsFile);
+		    logger.info("Transforming to HTML report: " + reportFile.toString());
+		    benchmark.writeTransform(transformFile, reportFile);
+		}
+
 		logger.info("Finished processing XCCDF bundle");
 		exitCode = 0;
 	    } catch (ScapException e) {

@@ -174,7 +174,9 @@ public class OVALHandler {
      */
     private void integrateResults(String href, IResults ovalResult, TestResultType xccdfResult) throws OvalException {
 	SystemInfoType info = ovalResult.getSystemCharacteristics().getSystemInfo();
-	xccdfResult.getTarget().add(info.getPrimaryHostName());
+	if (!xccdfResult.getTarget().contains(info.getPrimaryHostName())) {
+	    xccdfResult.getTarget().add(info.getPrimaryHostName());
+	}
 	for (InterfaceType intf : info.getInterfaces().getInterface()) {
 	    if (!xccdfResult.getTargetAddress().contains(intf.getIpAddress())) {
 		xccdfResult.getTargetAddress().add(intf.getIpAddress());

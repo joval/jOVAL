@@ -73,6 +73,14 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 
     // Implement IBaseSession
 
+    /**
+     * The account name running the Java process.
+     */
+    @Override
+    public String getUsername() {
+	return System.getProperty("user.name");
+    }
+
     @Override
     public long getTime() throws Exception {
 	return System.currentTimeMillis();

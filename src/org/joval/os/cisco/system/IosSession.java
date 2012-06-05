@@ -96,6 +96,15 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 
     // Implement IBaseSession
 
+    @Override
+    public String getUsername() {
+	if (ssh == null) {
+	    return null;
+	} else {
+	    return ssh.getUsername();
+	}
+    }
+
     public String getHostname() {
 	if (ssh != null) {
 	    return ssh.getHostname();

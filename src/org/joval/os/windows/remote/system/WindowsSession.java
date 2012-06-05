@@ -143,6 +143,11 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     // Implement IBaseSession
 
     @Override
+    public String getUsername() {
+	return cred.getUsername();
+    }
+
+    @Override
     public void setWorkingDir(String path) {
 	cwd = env.expand(path);
     }

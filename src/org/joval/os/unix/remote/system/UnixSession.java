@@ -93,6 +93,15 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 	return ssh.getHostname();
     }
 
+    @Override
+    public String getUsername() {
+	if (rootCred == null) {
+	    return cred.getUsername();
+	} else {
+	    return "root";
+	}
+    }
+
     public boolean connect() {
 	if (ssh.connect()) {
 	    if (env == null) {

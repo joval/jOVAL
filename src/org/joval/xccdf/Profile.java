@@ -47,6 +47,7 @@ public class Profile {
     private String name;
     private HashSet<RuleType> rules;
     private Hashtable<String, List<String>> platforms;
+    private List<String> cpePlatforms;
     private Hashtable<String, String> values = null;
 
     /**
@@ -57,6 +58,7 @@ public class Profile {
 	this.xccdf = xccdf;
 	this.name = name;
 	platforms = new Hashtable<String, List<String>>();
+	cpePlatforms = new Vector<String>();
 	values = new Hashtable<String, String>();
 	rules = new HashSet<RuleType>();
 
@@ -151,6 +153,13 @@ public class Profile {
     }
 
     /**
+     * Returns the profile Idref.
+     */
+    public String getName() {
+	return name;
+    }
+
+    /**
      * Return the hrefs to all the checks relevant to the profile.
      */
     public Collection<String> getPlatformDefinitionHrefs() {
@@ -159,6 +168,13 @@ public class Profile {
 
     public IDefinitions getDefinitions(String href) throws NoSuchElementException, OvalException {
 	return xccdf.getDefinitions(href);
+    }
+
+    /**
+     * Return a list of all the CPE platform IDs for this profile.
+     */
+    public List<String> getCpePlatforms() {
+	return cpePlatforms;
     }
 
     /**
@@ -219,6 +235,7 @@ public class Profile {
      * Given a CPE platform name, add the corresponding OVAL definition IDs to the platforms list.
      */
     private void addPlatform(String cpeName) {
+	cpePlatforms.add(cpeName);
 	try {
 	    ItemType cpeItem = xccdf.getDictionary().getItem(cpeName);
 	    if (cpeItem != null && cpeItem.isSetCheck()) {

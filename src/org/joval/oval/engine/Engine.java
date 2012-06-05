@@ -531,7 +531,6 @@ public class Engine implements IEngine, IAdapter {
 		List<MessageType> messages = new Vector<MessageType>();
 		FlagData flag = new FlagData();
 		try {
-		    Collection<ItemType> collectedItems = new Vector<ItemType>();
 		    for (ObjectType obj : resolveObject(rc)) {
 			//
 			// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
@@ -545,7 +544,7 @@ public class Engine implements IEngine, IAdapter {
 			    @SuppressWarnings("unchecked")
 			    Collection<ItemType> retrieved = (Collection<ItemType>)adapter.getItems(obj, rc);
 			    flag.add(FlagEnumeration.COMPLETE);
-			    collectedItems.addAll(filterItems(getObjectFilters(masterObj), retrieved, rc));
+			    items.addAll(filterItems(getObjectFilters(masterObj), retrieved, rc));
 			} catch (CollectException e) {
 			    MessageType msg = Factories.common.createMessageType();
 			    msg.setLevel(MessageLevelEnumeration.WARNING);
@@ -565,39 +564,6 @@ public class Engine implements IEngine, IAdapter {
 			    flag.add(FlagEnumeration.ERROR);
 			}
 		    }
-
-/*
-
-DAS: The following is commented out because it doesn't always apply properly.  In cases where the object entity supplies
-     data that is used in a non-trivial way by the adapter to create items, it will fail.  Examples include the pattern
-     in a TextfilecontentObject, a registry or file object with recursive behaviors, etc.
-
-     The only way this will work is if the adapter can be supplied all the resolved values at the same time.  But then we're
-     back to having the adapter resolve variables itself, which multiplies the amount of work that must be done to write an
-     adapter...
-
-		    //
-		    // Implement the ObjectType var_check by filtering the collected items against the master object.
-		    //
-		    for (ItemType item : collectedItems) {
-			try {
-			    switch(varCheck(masterObj, item, rc)) {
-			      case TRUE:
-				items.add(item);
-				break;
-			    }
-			} catch (TestException e) {
-			    MessageType msg = Factories.common.createMessageType();
-			    msg.setLevel(MessageLevelEnumeration.ERROR);
-			    msg.setValue(e.getMessage());
-			    messages.add(msg);
-			    flag.add(FlagEnumeration.ERROR);
-			}
-		    }
-*/
-		    // DAS: in lieu of the above logic, simply add all the collected items...
-		    items.addAll(collectedItems);
-
 		    messages.addAll(rc.getMessages());
 		    sc.setObject(objectId, null, null, null, null);
 		    for (VariableValueType var : rc.getVars()) {
@@ -653,6 +619,11 @@ DAS: The following is commented out because it doesn't always apply properly.  I
     /**
      * Convert an ObectType whose EntityObjectSimpleBaseType members may contain var_refs into a list of ObjectTypes
      * containing only resolved entities (i.e., isSetVarRef() == false).
+     *
+     * DAS: Implement var_check here?  Here's the basic idea...  This method should return a data structure that manages
+     *      the associations between lists of variable values and fields.  This structure would resolve all the permutations,
+     *      scan all the resulting objects, and create item sets corresponding to groups matching distinct variable values.
+     *      It would then implement the var_check by performing set operations.
      */
     private Collection<ObjectType> resolveObject(RequestContext rc) throws OvalException, ResolveException {
 	ObjectType obj = rc.getObject();
@@ -668,47 +639,66 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 		if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
 		    Object entity = method.invoke(obj);
 		    if (entity == null) {
-			// continue
+			//
+			// entity was unspeficied in the object definition, so it must be optional
+			//
 		    } else {
 			List<Object> list = resolveUnknownEntity(methodName, entity, rc);
-			if (list.size() > 0) {
+			if (list.size() == 0) {
+			    //
+			    // This condition means that the entity was a variable reference with no value (or a record with
+			    // a field entity that referenced a variable with no value).  The OVAL specification dictates
+			    // that this should mean the object does not exist.  Returning an empty list makes this assertion.
+			    // See:
+			    //
+			    // http://oval.mitre.org/language/version5.10.1/ovaldefinition/documentation/oval-definitions-schema.html#EntityAttributeGroup
+			    //
+			    numPermutations = 0;
+			    MessageType message = Factories.common.createMessageType();
+			    message.setLevel(MessageLevelEnumeration.INFO);
+			    String entityName = methodName.substring(3).toLowerCase();
+			    message.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_ENTITY, entityName));
+			    rc.addMessage(message);
+			} else {
 			    numPermutations = numPermutations * list.size();
 			    lists.put(methodName, list);
 			}
 		    }
 		}
 	    }
-	    //
-	    // Create a permutation list of objects using the entity lists
-	    //
-	    Class<?> objClass = obj.getClass();
-	    String pkgName = objClass.getPackage().getName();
-	    Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
-	    Object factory = factoryClass.newInstance();
-	    String unqualClassName = objClass.getName().substring(pkgName.length() + 1);
-	    Method createObj = factoryClass.getMethod("create" + unqualClassName);
-	    for (int i=0; i < numPermutations; i++) {
-		ObjectType ot = (ObjectType)createObj.invoke(factory);
-		ot.setId(obj.getId());
-		Object behaviors = safeInvokeMethod(obj, "getBehaviors");
-		if (behaviors != null) {
-		    Method setBehaviors = objClass.getMethod("setBehaviors", behaviors.getClass());
-		    setBehaviors.invoke(ot, behaviors);
+	    if (numPermutations > 0) {
+		//
+		// Create a permutation list of objects using the entity lists
+		//
+		Class<?> objClass = obj.getClass();
+		String pkgName = objClass.getPackage().getName();
+		Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
+		Object factory = factoryClass.newInstance();
+		String unqualClassName = objClass.getName().substring(pkgName.length() + 1);
+		Method createObj = factoryClass.getMethod("create" + unqualClassName);
+		for (int i=0; i < numPermutations; i++) {
+		    ObjectType ot = (ObjectType)createObj.invoke(factory);
+		    ot.setId(obj.getId());
+		    Object behaviors = safeInvokeMethod(obj, "getBehaviors");
+		    if (behaviors != null) {
+			Method setBehaviors = objClass.getMethod("setBehaviors", behaviors.getClass());
+			setBehaviors.invoke(ot, behaviors);
+		    }
+		    objects.add(ot);
 		}
-		objects.add(ot);
-	    }
-	    for (String getter : lists.keySet()) {
-		List<Object> list = lists.get(getter);
-		int divisor = list.size();
-		int groupSize = objects.size() / divisor;
-		int index = 0;
-		String setter = new StringBuffer("s").append(getter.substring(1)).toString();
-		Class entityClass = list.get(0).getClass();
-		@SuppressWarnings("unchecked")
-		Method setObj = objClass.getMethod(setter, entityClass);
-		for (Object entity : list) {
-		    for (int i=0; i < groupSize; i++) {
-			setObj.invoke(objects.get(index++), entity);
+		for (String getter : lists.keySet()) {
+		    List<Object> list = lists.get(getter);
+		    int divisor = list.size();
+		    int groupSize = objects.size() / divisor;
+		    int index = 0;
+		    String setter = new StringBuffer("s").append(getter.substring(1)).toString();
+		    Class entityClass = list.get(0).getClass();
+		    @SuppressWarnings("unchecked")
+		    Method setObj = objClass.getMethod(setter, entityClass);
+		    for (Object entity : list) {
+			for (int i=0; i < groupSize; i++) {
+			    setObj.invoke(objects.get(index++), entity);
+			}
 		    }
 		}
 	    }
@@ -841,29 +831,46 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 		List<List<EntityObjectFieldType>> lists = new Vector<List<EntityObjectFieldType>>();
 		for (EntityObjectFieldType field : record.getField()) {
 		    List<EntityObjectFieldType> resolved = resolveField(field, rc);
-		    if (resolved.size() > 0) {
+		    if (resolved.size() == 0) {
+			//
+			// This condition means that the field was a variable reference with no value.  The
+			// OVAL specification implies that this should mean the record does not exist.  Returning
+			// an empty entity list makes this assertion.
+			//
+			// http://oval.mitre.org/language/version5.10.1/ovaldefinition/documentation/oval-definitions-schema.html#EntityAttributeGroup
+			//
+			numPermutations = 0;
+			MessageType message = Factories.common.createMessageType();
+			message.setLevel(MessageLevelEnumeration.INFO);
+			String entityName = methodName.substring(3).toLowerCase();
+			String s = JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_RECORD, entityName, field.getName());
+			message.setValue(s);
+			rc.addMessage(message);
+		    } else if (resolved.size() > 0) {
 			numPermutations = numPermutations * resolved.size();
 			lists.add(resolved);
 		    }
 		}
-		List<EntityObjectRecordType> records = new Vector<EntityObjectRecordType>();
-		for (int i=0; i < numPermutations; i++) {
-		    EntityObjectRecordType base = Factories.definitions.core.createEntityObjectRecordType();
-		    base.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
-		    base.setMask(record.isMask());
-		    base.setOperation(record.getOperation());
-		}
-		for (List<EntityObjectFieldType> list : lists) {
-		    int divisor = list.size();
-		    int groupSize = records.size() / divisor;
-		    int index = 0;
-		    for (int i=0; i < list.size(); i++) {
-			for (int j=0; j < groupSize; j++) {
-			    records.get(index++).getField().add(list.get(i));
+		if (numPermutations > 0) {
+		    List<EntityObjectRecordType> records = new Vector<EntityObjectRecordType>();
+		    for (int i=0; i < numPermutations; i++) {
+			EntityObjectRecordType base = Factories.definitions.core.createEntityObjectRecordType();
+			base.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
+			base.setMask(record.isMask());
+			base.setOperation(record.getOperation());
+		    }
+		    for (List<EntityObjectFieldType> list : lists) {
+			int divisor = list.size();
+			int groupSize = records.size() / divisor;
+			int index = 0;
+			for (int i=0; i < list.size(); i++) {
+			    for (int j=0; j < groupSize; j++) {
+				records.get(index++).getField().add(list.get(i));
+			    }
 			}
 		    }
+		    result.addAll(records);
 		}
-		result.addAll(records);
 	    }
 	} else {
 	    String id = rc.getObject().getId();
@@ -1046,6 +1053,8 @@ DAS: The following is commented out because it doesn't always apply properly.  I
      * Compare an object to an item, for the purpose of determing compliance with any var_check attributes on the object's
      * entities.  This is similar to comparing a state with an item, as is done during test evaluation, except the object
      * lacks an entityCheck, and comparisons are only invoked when there is a var_ref.
+     *
+     * DAS: eliminate this method? (It's obsolete/unused)
      */
     private ResultEnumeration varCheck(ObjectType obj, ItemType item, RequestContext rc) throws OvalException, TestException {
 	try {
@@ -1496,6 +1505,8 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 
     /**
      * Determine whether or not the specified item matches the specified state.
+     *
+     * DAS: simplify this method by using the resolveUnknownEntity method?
      */
     private ResultEnumeration compare(StateType state, ItemType item, RequestContext rc) throws OvalException, TestException {
 	try {
@@ -1630,6 +1641,10 @@ DAS: The following is commented out because it doesn't always apply properly.  I
 	    try {
 		Collection<IType> values = resolveVariable(ref, rc);
 		if (values.size() == 0) {
+		    //
+		    // According to the specification, the test must result in an error condition in this case.  See:
+		    // http://oval.mitre.org/language/version5.10.1/ovaldefinition/documentation/oval-definitions-schema.html#EntityAttributeGroup
+		    //
 		    String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_VARIABLE_NO_VALUES);
 		    throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, reason));
 		} else {

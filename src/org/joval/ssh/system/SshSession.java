@@ -114,6 +114,11 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
     // Implement IBaseSession
 
     @Override
+    public String getUsername() {
+	return cred.getUsername();
+    }
+
+    @Override
     public IProcess createProcess(String command, String[] env) throws Exception {
 	if (connect()) {
 	    if (env == null) {

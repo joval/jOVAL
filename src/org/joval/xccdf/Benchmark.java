@@ -4,6 +4,7 @@
 package org.joval.xccdf;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -19,6 +20,12 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -42,7 +49,7 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Benchmark implements ILoggable, ITransformable {
-    private String streamId;
+    private String streamId, componentId;
     private Datastream ds;
     private LocLogger logger;
     private JAXBContext ctx;
@@ -50,8 +57,11 @@ public class Benchmark implements ILoggable, ITransformable {
     private Dictionary dictionary;
     private Hashtable<String, ProfileType> profiles;
 
-    public Benchmark(String streamId, Datastream ds, BenchmarkType bt, Dictionary dictionary) throws XccdfException {
+    public Benchmark(String streamId, String componentId, Datastream ds, BenchmarkType bt, Dictionary dictionary)
+		throws XccdfException {
+
 	this.streamId = streamId;
+	this.componentId = componentId;
 	this.ds = ds;
 	this.bt = bt;
 	this.dictionary = dictionary;
@@ -73,6 +83,10 @@ public class Benchmark implements ILoggable, ITransformable {
      */
     public BenchmarkType getBenchmark() {
 	return bt;
+    }
+
+    public String getHref() {
+	return "#" + componentId;
     }
 
     public Collection<String> getProfileIds() {
@@ -111,6 +125,25 @@ public class Benchmark implements ILoggable, ITransformable {
 		    logger.warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
 		}
 	    }
+	}
+    }
+
+    /**
+     * Transform using the specified template, and serialize to the specified file.
+     */
+    public void writeTransform(File transform, File output) {
+	try {
+	    TransformerFactory xf = TransformerFactory.newInstance();
+	    Transformer transformer = xf.newTransformer(new StreamSource(new FileInputStream(transform)));
+	    transformer.transform(getSource(), new StreamResult(output));
+	} catch (JAXBException e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (FileNotFoundException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
+	} catch (TransformerConfigurationException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
+	} catch (TransformerException e) {
+	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, output);
 	}
     }
 

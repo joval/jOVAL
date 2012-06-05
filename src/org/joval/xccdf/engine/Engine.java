@@ -12,6 +12,7 @@ import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.List;
@@ -22,6 +23,9 @@ import java.util.PropertyResourceBundle;
 import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.datatype.DatatypeConfigurationException;
 
 import cpe.schemas.dictionary.ListType;
 import oval.schemas.common.GeneratorType;
@@ -34,7 +38,10 @@ import oval.schemas.variables.core.VariableType;
 import xccdf.schemas.core.CheckContentRefType;
 import xccdf.schemas.core.CheckType;
 import xccdf.schemas.core.CheckExportType;
+import xccdf.schemas.core.CPE2IdrefType;
 import xccdf.schemas.core.GroupType;
+import xccdf.schemas.core.IdrefType;
+import xccdf.schemas.core.IdentityType;
 import xccdf.schemas.core.ObjectFactory;
 import xccdf.schemas.core.ProfileSetValueType;
 import xccdf.schemas.core.ProfileType;
@@ -76,6 +83,15 @@ import org.joval.xccdf.handler.SCEHandler;
  * @version %I% %G%
  */
 public class Engine implements Runnable, IObserver {
+    private static DatatypeFactory datatypeFactory = null;
+    static {
+	try {
+	    datatypeFactory = DatatypeFactory.newInstance();
+	} catch (DatatypeConfigurationException e) {
+	    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+    }
+
     private boolean debug;
     private Benchmark xccdf;
     private IBaseSession session;
@@ -85,17 +101,16 @@ public class Engine implements Runnable, IObserver {
     private List<GroupType> groups = null;
     private String phase = null;
     private Logger logger;
-    private File resultsFile, ws = null;
+    private File ws = null;
 
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
      */
-    public Engine(Benchmark xccdf, Profile profile, IBaseSession session, File resultsFile, File ws) {
+    public Engine(Benchmark xccdf, Profile profile, IBaseSession session, File ws) {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	this.session = session;
 	this.ws = ws;
-	this.resultsFile = resultsFile;
 	debug = ws != null;
 	logger = XPERT.logger;
     }
@@ -106,104 +121,92 @@ public class Engine implements Runnable, IObserver {
      * Process the XCCDF document bundle.
      */
     public void run() {
-	if (hasSelection() && isApplicable()) {
-	    phase = "evaluation";
-
-	    //
-	    // Run the OVAL engines
-	    //
-	    OVALHandler ovalHandler = null;
-	    try {
-		ovalHandler = new OVALHandler(xccdf, profile, session);
-	    } catch (Exception e) {
-		logger.severe(LogFormatter.toString(e));
-		return;
-	    }
-	    for (String href : ovalHandler.getHrefs()) {
-		IEngine engine = ovalHandler.getEngine(href);
-		engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
-		logger.info("Evaluating OVAL rules");
-		engine.run();
-		switch(engine.getResult()) {
-		  case OK:
-		    if (debug) {
-			String basename = encode(href);
-			if (!basename.toLowerCase().endsWith(".xml")) {
-			    basename = basename + ".xml";
-			}
-			File resultFile = new File(ws, "oval-res_" + basename);
-			logger.info("Saving OVAL results: " + resultFile.getPath());
-			engine.getResults().writeXML(resultFile);
-		    }
-		    break;
-		  case ERR:
-		    logger.severe(LogFormatter.toString(engine.getError()));
-		    return;
-		}
-		engine.getNotificationProducer().removeObserver(this);
-	    }
-
-	    //
-	    // Run the SCE scripts
-	    //
-	    SCEHandler sceHandler = null;
-	    logger.info("Evaluating SCE rules");
-	    if (session instanceof ISession) {
-		ISession s = (ISession)session;
-		if (s.connect()) {
-		    sceHandler = new SCEHandler(xccdf, profile, s);
-		    for (SCEScript script : sceHandler.getScripts()) {
-			logger.info("Running SCE script: " + getFile(script.getSource()));
-			if (!script.exec()) {
-			    logger.warning("SCE script execution failed!");
-			}
-		    } 
-		    s.disconnect();
+	Collection<RuleType> rules = profile.getSelectedRules();
+	if (rules.size() == 0) {
+	    logger.severe("No reason to evaluate!");
+	    List<ProfileType> profiles = xccdf.getBenchmark().getProfile();
+	    if (profiles.size() > 0) {
+		logger.info("Try selecting a profile:");
+		for (ProfileType pt : profiles) {
+		    logger.info("  " + pt.getProfileId());
 		}
 	    }
+	} else {
+	    logger.info("There are " + rules.size() + " rules to process for the selected profile");
+	    if (session.connect()) {
+		//
+		// Create the Benchmark.TestResult node
+		//
+		ObjectFactory factory = new ObjectFactory();
+		TestResultType testResult = factory.createTestResultType();
+		testResult.setVersion(xccdf.getBenchmark().getVersion().getValue());
+		testResult.setTestSystem(XPERT.getMessage("product.name"));
+		TestResultType.Benchmark trb = factory.createTestResultTypeBenchmark();
+		trb.setId(xccdf.getBenchmark().getBenchmarkId());
+		trb.setHref(xccdf.getHref());
+		testResult.setBenchmark(trb);
+		if (profile.getName() != null) {
+		    IdrefType profileRef = factory.createIdrefType();
+		    profileRef.setIdref(profile.getName());
+		    testResult.setProfile(profileRef);
+		}
+		IdentityType identity = factory.createIdentityType();
+		String user = session.getUsername();
+		identity.setValue(user);
+		if ("root".equals(user) || "Administrator".equals(user)) {
+		    identity.setPrivileged(true);
+		}
+		identity.setAuthenticated(true);
+		testResult.setIdentity(identity);
+		for (String href : profile.getCpePlatforms()) {
+		    CPE2IdrefType cpeRef = factory.createCPE2IdrefType();
+		    cpeRef.setIdref(href);
+		    testResult.getPlatform().add(cpeRef);
+		}
 
-	    //
-	    // Create the Benchmark.TestResult node
-	    //
-	    ObjectFactory factory = new ObjectFactory();
-	    TestResultType testResult = factory.createTestResultType();
-	    testResult.setTestSystem(XPERT.getMessage("product.name"));
-	    try {
-		ovalHandler.integrateResults(testResult);
-	    } catch (OvalException e) {
-		logger.severe(LogFormatter.toString(e));
-	    }
-	    if (sceHandler != null) {
-		sceHandler.integrateResults(testResult);
-	    }
-
-	    Hashtable<String, RuleResultType> resultIndex = new Hashtable<String, RuleResultType>();
-	    for (RuleResultType rrt : testResult.getRuleResult()) {
-		resultIndex.put(rrt.getIdref(), rrt);
-	    }
-
-	    for (RuleType rule : listAllRules()) {
-		String ruleId = rule.getId();
-		if (resultIndex.containsKey(ruleId)) {
-		    logger.info(ruleId + ": " + resultIndex.get(ruleId).getResult());
+		//
+		// Perform the applicability tests, and if applicable, the automated checks
+		//
+		testResult.setStartTime(getTimestamp());
+		if (isApplicable()) {
+		    logger.info("The target system is applicable to the specified XCCDF");
+		    processXccdf(testResult);
 		} else {
-		    //
-		    // Add the unchecked result, just for fun.
-		    //
-		    RuleResultType rrt = factory.createRuleResultType();
-		    rrt.setResult(ResultEnumType.NOTCHECKED);
-		    if (rule.isSetCheck()) {
-			for (CheckType check : rule.getCheck()) {
-			    rrt.getCheck().add(check);
-			}
-		    }
-		    testResult.getRuleResult().add(rrt);
+		    logger.info("The target system is not applicable to the specified XCCDF");
 		}
-	    }
+		session.disconnect();
+		testResult.setEndTime(getTimestamp());
 
-	    xccdf.getBenchmark().getTestResult().add(testResult);
-	    logger.info("Saving report: " + resultsFile.toString());
-	    xccdf.writeBenchmarkXML(resultsFile);
+		//
+		// Print results to the console, and save them to a file.
+		//
+		Hashtable<String, RuleResultType> resultIndex = new Hashtable<String, RuleResultType>();
+		for (RuleResultType rrt : testResult.getRuleResult()) {
+		    resultIndex.put(rrt.getIdref(), rrt);
+		}
+		for (RuleType rule : listAllRules()) {
+		    String ruleId = rule.getId();
+		    if (resultIndex.containsKey(ruleId)) {
+			logger.info(ruleId + ": " + resultIndex.get(ruleId).getResult());
+		    } else {
+			//
+			// Add the unchecked result, just for fun.
+			//
+			RuleResultType rrt = factory.createRuleResultType();
+			rrt.setIdref(rule.getId());
+			rrt.setResult(ResultEnumType.NOTCHECKED);
+			if (rule.isSetCheck()) {
+			    for (CheckType check : rule.getCheck()) {
+				rrt.getCheck().add(check);
+			    }
+			}
+			testResult.getRuleResult().add(rrt);
+		    }
+		}
+		xccdf.getBenchmark().getTestResult().add(testResult);
+	    } else {
+		logger.info("Failed to connect to the target system: " + session.getHostname());
+	    }
 	}
 	logger.info("XCCDF processing complete.");
     }
@@ -238,24 +241,62 @@ public class Engine implements Runnable, IObserver {
 
     // Private
 
-    /**
-     * Check whether or not the Profile has any selected rules.
-     */
-    private boolean hasSelection() {
-	Collection<RuleType> rules = profile.getSelectedRules();
-	if (rules.size() == 0) {
-	    logger.severe("No reason to evaluate!");
-	    List<ProfileType> profiles = xccdf.getBenchmark().getProfile();
-	    if (profiles.size() > 0) {
-		logger.info("Try selecting a profile:");
-		for (ProfileType pt : profiles) {
-		    logger.info("  " + pt.getProfileId());
+    private void processXccdf(TestResultType testResult) {
+	phase = "evaluation";
+
+	//
+	// Run the OVAL engines
+	//
+	OVALHandler ovalHandler = null;
+	try {
+	    ovalHandler = new OVALHandler(xccdf, profile, session);
+	} catch (Exception e) {
+	    logger.severe(LogFormatter.toString(e));
+	    return;
+	}
+	for (String href : ovalHandler.getHrefs()) {
+	    IEngine engine = ovalHandler.getEngine(href);
+	    engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
+	    logger.info("Evaluating OVAL rules");
+	    engine.run();
+	    switch(engine.getResult()) {
+	      case OK:
+		if (debug) {
+		    String basename = encode(href);
+		    if (!basename.toLowerCase().endsWith(".xml")) {
+			basename = basename + ".xml";
+		    }
+		    File resultFile = new File(ws, "oval-res_" + basename);
+		    logger.info("Saving OVAL results: " + resultFile.getPath());
+		    engine.getResults().writeXML(resultFile);
 		}
+		break;
+	      case ERR:
+		logger.severe(LogFormatter.toString(engine.getError()));
+		return;
 	    }
-	    return false;
-	} else {
-	    logger.info("There are " + rules.size() + " rules to process for the selected profile");
-	    return true;
+	    engine.getNotificationProducer().removeObserver(this);
+	}
+	try {
+	    ovalHandler.integrateResults(testResult);
+	} catch (OvalException e) {
+	    logger.severe(LogFormatter.toString(e));
+	}
+
+	//
+	// Run the SCE scripts
+	//
+	logger.info("Evaluating SCE rules");
+	if (session instanceof ISession) {
+	    ISession s = (ISession)session;
+	    SCEHandler sceHandler = new SCEHandler(xccdf, profile, s);
+	    for (SCEScript script : sceHandler.getScripts()) {
+		logger.info("Running SCE script: " + getFile(script.getSource()));
+		if (!script.exec()) {
+		    logger.warning("SCE script execution failed!");
+		}
+	    } 
+	    sceHandler.integrateResults(testResult);
 	}
     }
 
@@ -294,7 +335,6 @@ public class Engine implements Runnable, IObserver {
 	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	engine.setDefinitions(cpeOval);
 	try {
-	    session.connect();
 	    for (String definition : definitions) {
 		ResultEnumeration result = engine.evaluateDefinition(definition);
 		switch(result) {
@@ -304,17 +344,14 @@ public class Engine implements Runnable, IObserver {
 
 		  default:
 		    logger.warning("Bad result " + result + " for definition " + definition);
-		    logger.info("The target system is not applicable to the XCCDF bundle");
 		    return false;
 		}
 	    }
-	    logger.info("The target system is applicable to the XCCDF bundle");
 	    return true;
 	} catch (Exception e) {
 	    logger.severe(LogFormatter.toString(e));
 	    return false;
 	} finally {
-	    session.disconnect();
 	    engine.getNotificationProducer().removeObserver(this);
 	}
     }
@@ -357,5 +394,13 @@ public class Engine implements Runnable, IObserver {
 	} else {
 	    return s.substring(ptr+1);
 	}
+    }
+
+    private XMLGregorianCalendar getTimestamp() {
+	XMLGregorianCalendar tm = null;
+	if (datatypeFactory != null) {
+	    tm = datatypeFactory.newXMLGregorianCalendar(new GregorianCalendar());
+	}
+	return tm;
     }
 }
