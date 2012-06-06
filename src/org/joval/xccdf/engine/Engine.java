@@ -293,7 +293,7 @@ public class Engine implements Runnable, IObserver {
 	    ISession s = (ISession)session;
 	    SCEHandler sceHandler = new SCEHandler(xccdf, profile, s);
 	    for (SCEScript script : sceHandler.getScripts()) {
-		logger.info("Running SCE script: " + getFile(script.getSource()));
+		logger.info("Running SCE script: " + script.getId());
 		if (!script.exec()) {
 		    logger.warning("SCE script execution failed!");
 		}
@@ -386,16 +386,6 @@ public class Engine implements Runnable, IObserver {
 
     private String encode(String s) {
 	return s.replace(System.getProperty("file.separator"), "~");
-    }
-
-    private String getFile(URL url) {
-	String s = url.toString();
-	int ptr = s.lastIndexOf("/");
-	if (ptr == -1) {
-	    return s;
-	} else {
-	    return s.substring(ptr+1);
-	}
     }
 
     private XMLGregorianCalendar getTimestamp() {

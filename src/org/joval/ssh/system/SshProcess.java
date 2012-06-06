@@ -56,7 +56,7 @@ class SshProcess implements IProcess {
 	this.logger = logger;
     }
 
-    // Implement IProchannel
+    // Implement IProcess
 
     public String getCommand() {
 	return command;
@@ -312,6 +312,21 @@ class SshProcess implements IProcess {
 	}
 
 	@Override
+	public int read(byte[] buff, int offset, int len) throws IOException {
+	    int bytesRead = 0;
+	    for (int i=offset; i < len; i++) {
+		int ch = read();
+		if (ch == -1) {
+		    break;
+		} else {
+		    buff[i] = (byte)ch;
+		    bytesRead++;
+		}
+	    }
+	    return bytesRead;
+	}
+
+	@Override
 	public int read() throws IOException {
 	    if (isEOF) {
 		return -1;
@@ -319,6 +334,8 @@ class SshProcess implements IProcess {
 	    if (buffer.hasNext()) {
 		reset();
 		return buffer.next();
+	    } else if (!buffer.isEmpty()) {
+		buffer.clear();
 	    }
 	    int ch = in.read();
 	    reset();

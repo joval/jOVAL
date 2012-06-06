@@ -3,11 +3,10 @@
 
 package org.joval.xccdf.handler;
 
-import java.net.URL;
-import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 
 import xccdf.schemas.core.CheckContentRefType;
@@ -65,14 +64,15 @@ public class SCEHandler {
 	    Hashtable<String, String> values = profile.getValues();
 	    Collection<RuleType> rules = profile.getSelectedRules();
 	    for (RuleType rule : rules) {
+		String ruleId = rule.getId();
 		if (rule.isSetCheck()) {
 		    for (CheckType check : rule.getCheck()) {
 			if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
 			    for (CheckContentRefType ref : check.getCheckContentRef()) {
 				if (ref.isSetHref()) {
+				    String scriptId = ref.getHref();
 				    try {
-					String ruleId = rule.getId();
-					SCEScript sce = new SCEScript(new URL(ref.getHref()), session);
+					SCEScript sce = new SCEScript(scriptId, xccdf.getScript(scriptId), session);
 					for (CheckExportType export : check.getCheckExport()) {
 					    String name = export.getExportName();
 					    String valueId = export.getValueId();
@@ -84,8 +84,10 @@ public class SCEHandler {
 					Hashtable<String, SCEScript> table = scriptTable.get(ruleId);
 					table.put(ref.getHref(), sce);
 					scripts.add(sce);
-				    } catch (MalformedURLException e) {
-					xccdf.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+				    } catch (NoSuchElementException e) {
+e.printStackTrace();
+					String s = JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, scriptId);
+					xccdf.getLogger().warn(s);
 				    }
 				}
 			    }

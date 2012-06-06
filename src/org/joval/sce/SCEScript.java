@@ -3,11 +3,11 @@
 
 package org.joval.sce;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
@@ -15,13 +15,17 @@ import java.util.List;
 import java.util.Properties;
 
 import xccdf.schemas.core.ResultEnumType;
+import org.openscap.sce.xccdf.LangEnumeration;
+import org.openscap.sce.xccdf.ScriptDataType;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
+import org.joval.intf.unix.system.IUnixSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
+import org.joval.util.StringTools;
 
 /**
  * A representation of a script.
@@ -40,13 +44,15 @@ public class SCEScript {
     public static final int XCCDF_RESULT_INFORMATIONAL	= 108;
     public static final int XCCDF_RESULT_FIXED		= 109;
 
-    private static final Charset UTF8 = Charset.forName("UTF-8");
     private static final String ENV_VALUE_PREFIX	= "XCCDF_VALUE_";
     private static final String ENV_TYPE_PREFIX		= "XCCDF_TYPE_";
     private static final String ENV_OPERATOR_PREFIX	= "XCCDF_OPERATOR_";
 
-    private URL source;
+    private String id;
+    private ScriptDataType source;
     private ISession session;
+    private String commandPrefix;
+    private String extension;
     private Properties environment;
     private Date runtime;
     private String stdout;
@@ -56,9 +62,92 @@ public class SCEScript {
     /**
      * Create a new SCE script specifying the URL of its source.
      */
-    public SCEScript(URL source, ISession session) {
+    public SCEScript(String id, ScriptDataType source, ISession session) throws IllegalArgumentException {
+	this.id = id;
 	this.source = source;
 	this.session = session;
+	result = ResultEnumType.NOTCHECKED;
+
+	//
+	// Determine the appropriate command prefix to run the script, based on the ISession type and script
+	// filename extension.
+	//
+	commandPrefix = "";
+	extension = ".dat";
+	switch(session.getType()) {
+	  case UNIX:
+	    switch(source.getLang()) {
+	      case APPLE_SCRIPT:
+		if (((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {
+		    extension = "APPLESCRIPT";
+		    commandPrefix = "/usr/bin/osascript ";
+		} else {
+		    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_PLATFORMLANG, session.getType(), source.getLang());
+		    throw new IllegalArgumentException(s);
+		}
+		break;
+	      case JYTHON:
+		extension = "jy";
+		commandPrefix = "/usr/bin/env jython ";
+		break;
+	      case PERL:
+		extension = "pl";
+		commandPrefix = "/usr/bin/env perl ";
+		break;
+	      case PYTHON:
+		extension = "py";
+		commandPrefix = "/usr/bin/env python ";
+		break;
+	      case RUBY:
+		extension = "rb";
+		commandPrefix = "/usr/bin/env ruby ";
+		break;
+	      case SHELL:
+		extension = "sh";
+		commandPrefix = "/bin/sh ";
+		break;
+	      case TCL:
+		extension = "tcl";
+		commandPrefix = "/usr/bin/env tclsh ";
+		break;
+	      default:
+		String s = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_PLATFORMLANG, session.getType(), source.getLang());
+		throw new IllegalArgumentException(s);
+	    }
+	    break;
+
+	  case WINDOWS:
+	    switch(source.getLang()) {
+	      case PERL:
+		extension = "pl";
+		commandPrefix = "perl.exe ";
+		break;
+	      case POWERSHELL:
+		extension = "ps1";
+		commandPrefix = "powershell.exe ";
+		break;
+	      case PYTHON:
+		extension = "py";
+		commandPrefix = "python.exe ";
+		break;
+	      case VISUAL_BASIC:
+		extension = "vbs";
+		commandPrefix = "cscript.exe ";
+		break;
+	      case WINDOWS_BATCH:
+		extension = "bat";
+		break;
+	      default:
+		String s = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_PLATFORMLANG, session.getType(), source.getLang());
+		throw new IllegalArgumentException(s);
+	    }
+	    break;
+
+	  default:
+	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_PLATFORM, session.getType());
+	    throw new IllegalArgumentException(s);
+	}
+
 	runtime = null;
 	environment = new Properties();
 	setenv("XCCDF_RESULT_PASS", Integer.toString(XCCDF_RESULT_PASS));
@@ -70,6 +159,10 @@ public class SCEScript {
 	setenv("XCCDF_RESULT_NOT_SELECTED", Integer.toString(XCCDF_RESULT_NOT_SELECTED));
 	setenv("XCCDF_RESULT_INFORMATIONAL", Integer.toString(XCCDF_RESULT_INFORMATIONAL));
 	setenv("XCCDF_RESULT_FIXED", Integer.toString(XCCDF_RESULT_FIXED));
+    }
+
+    public String getId() {
+	return id;
     }
 
     /**
@@ -88,54 +181,33 @@ public class SCEScript {
      */
     public boolean exec() throws IllegalStateException {
 	if (runtime != null) {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_RAN, source.getFile(), session.getHostname(), runtime);
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_RAN, id, session.getHostname(), runtime);
 	    throw new IllegalStateException(msg);
 	}
-
-	InputStream in = null;
+	result = ResultEnumType.ERROR;
 	OutputStream out = null;
 	IFile script = null;
 	try {
-	    IFilesystem fs = session.getFilesystem();
-	    HashSet<String> existing = new HashSet<String>(Arrays.asList(fs.getFile(session.getTempDir()).list()));
-	    String extension = source.toString().substring(source.toString().lastIndexOf(".")+1).toLowerCase();
 	    //
 	    // Find an appropriate temp filename and copy the script to the target machine
 	    //
+	    IFilesystem fs = session.getFilesystem();
+	    HashSet<String> existing = new HashSet<String>(Arrays.asList(fs.getFile(session.getTempDir()).list()));
 	    for (int i=0; script == null; i++) {
 		String fname = "sce_script_" + i + "." + extension;
 		if (!existing.contains(fname)) {
 		    script = fs.getFile(session.getTempDir() + fs.getDelimiter() + fname, IFile.READWRITE);
 		    byte[] buff = new byte[1024];
 		    int len = 0;
-		    in = source.openStream();
+		    InputStream in = new ByteArrayInputStream(source.getValue().getBytes());
 		    out = script.getOutputStream(false);
 		    while((len = in.read(buff)) > 0) {
 			out.write(buff, 0, len);
 		    }
+		    in.close();
 		    out.close();
 		    out = null;
 		}
-	    }
-
-	    //
-	    // Determine the appropriate command prefix to run the script, based on the ISession type and script
-	    // filename extension.
-	    //
-	    String commandPrefix = "";
-	    switch(session.getType()) {
-	      case UNIX:
-		commandPrefix = "/bin/sh ";
-		break;
-
-	      case WINDOWS:
-		if ("vbs".equals(extension)) {
-		    commandPrefix = "cscript.exe ";
-		}
-		break;
-
-	      default:
-		//DAS throw exception.
 	    }
 
 	    //
@@ -181,7 +253,7 @@ public class SCEScript {
 		    result = ResultEnumType.UNKNOWN;
 		    break;
 		}
-		stdout = new String(data.getData(), UTF8);
+		stdout = new String(data.getData(), StringTools.UTF8);
 		return true;
 	    }
 	} catch (IOException e) {
@@ -189,12 +261,6 @@ public class SCEScript {
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
-	    if (in != null) {
-		try {
-		    in.close();
-		} catch (IOException e) {
-		}
-	    }
 	    if (out != null) {
 		try {
 		    out.close();
@@ -212,20 +278,13 @@ public class SCEScript {
     }
 
     /**
-     * Get the script source URL.
-     */
-    public URL getSource() {
-	return source;
-    }
-
-    /**
      * Obtain the output from the script execution.
      *
      * @throws IllegalStateException if the script has not been executed.
      */
     public String getStdout() throws IllegalStateException {
 	if (runtime == null) {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, source.getFile(), session.getHostname());
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, id, session.getHostname());
 	    throw new IllegalStateException(msg);
 	} else {
 	    return stdout;
@@ -237,7 +296,7 @@ public class SCEScript {
      */
     public ResultEnumType getResult() throws IllegalStateException {
 	if (runtime == null) {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, source.getFile(), session.getHostname());
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, id, session.getHostname());
 	    throw new IllegalStateException(msg);
 	} else {
 	    return result;

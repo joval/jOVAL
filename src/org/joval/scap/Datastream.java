@@ -38,6 +38,7 @@ import scap.datastream.RefListType;
 import scap.datastream.UseCaseType;
 import org.oasis.catalog.Catalog;
 import org.oasis.catalog.Uri;
+import org.openscap.sce.xccdf.ScriptDataType;
 import xccdf.schemas.core.BenchmarkType;
 
 import org.joval.cpe.CpeException;
@@ -95,6 +96,7 @@ public class Datastream implements ILoggable {
     private Hashtable<String, DataStream> streams;
     private Hashtable<String, StreamResolver> resolvers;
     private Hashtable<String, Component> components;
+    private Hashtable<String, ExtendedComponent> extendedComponents;
     private Hashtable<String, Dictionary> dictionaries;
 
     /**
@@ -116,6 +118,9 @@ public class Datastream implements ILoggable {
 	this.dsc = dsc;
 	for (Component component : dsc.getComponent()) {
 	    components.put(component.getId(), component);
+	}
+	for (ExtendedComponent component : dsc.getExtendedComponent()) {
+	    extendedComponents.put(component.getId(), component);
 	}
 	for (DataStream stream : dsc.getDataStream()) {
 	    streams.put(stream.getId(), stream);
@@ -178,12 +183,33 @@ public class Datastream implements ILoggable {
 
     public IDefinitions getDefinitions(String streamId, String href) throws NoSuchElementException, OvalException {
 	if (resolvers.containsKey(streamId)) {
-	    Component component = resolvers.get(streamId).resolve(href);
-	    if (component.isSetOvalDefinitions()) {
-		return new Definitions(component.getOvalDefinitions());
-	    } else {
-		throw new NoSuchElementException(href);
+	    Object obj = resolvers.get(streamId).resolve(href);
+	    if (obj instanceof Component) {
+		Component component = (Component)obj;
+		if (component.isSetOvalDefinitions()) {
+		    return new Definitions(component.getOvalDefinitions());
+		}
 	    }
+	    throw new NoSuchElementException(href);
+	} else {
+	    throw new NoSuchElementException(streamId);
+	}
+    }
+
+    public ScriptDataType getScript(String streamId, String href) throws NoSuchElementException {
+	if (resolvers.containsKey(streamId)) {
+	    Object obj = resolvers.get(streamId).resolve(href);
+	    if (obj instanceof ExtendedComponent) {
+		ExtendedComponent component = (ExtendedComponent)obj;
+		Object data = component.getAny();
+		if (data instanceof JAXBElement) {
+		    JAXBElement elt = (JAXBElement)data;
+		    if (elt.getValue() instanceof ScriptDataType) {
+			return (ScriptDataType)elt.getValue();
+		    }
+		}
+	    }
+	    throw new NoSuchElementException(href);
 	} else {
 	    throw new NoSuchElementException(streamId);
 	}
@@ -211,6 +237,7 @@ public class Datastream implements ILoggable {
 	    throw new ScapException(e);
 	}
 	components = new Hashtable<String, Component>();
+	extendedComponents = new Hashtable<String, ExtendedComponent>();
 	resolvers = new Hashtable<String, StreamResolver>();
 	streams = new Hashtable<String, DataStream>();
 	dictionaries = new Hashtable<String, Dictionary>();
@@ -221,21 +248,27 @@ public class Datastream implements ILoggable {
 	if (dictionaries.containsKey(streamId)) {
 	    return dictionaries.get(streamId);
 	} else if (streams.containsKey(streamId)) {
-	    RefListType refs = streams.get(streamId).getDictionaries();
-	    if (refs.getComponentRef().size() == 1) {
-		String dictionaryId = refs.getComponentRef().get(0).getHref();
-		if (dictionaryId.startsWith("#")) {
-		    dictionaryId = dictionaryId.substring(1);
+	    if (streams.get(streamId).isSetDictionaries() &&
+		streams.get(streamId).getDictionaries().getComponentRef().size() > 0) {
+
+		RefListType refs = streams.get(streamId).getDictionaries();
+		if (refs.getComponentRef().size() == 1) {
+		    String dictionaryId = refs.getComponentRef().get(0).getHref();
+		    if (dictionaryId.startsWith("#")) {
+			dictionaryId = dictionaryId.substring(1);
+		    }
+		    if (components.containsKey(dictionaryId)) {
+			Dictionary d = new Dictionary(components.get(dictionaryId).getCpeList());
+			dictionaries.put(streamId, d);
+			return d;
+		    } else {
+			throw new NoSuchElementException(dictionaryId);
+		    }
+		} else if (refs.getComponentRef().size() > 1) {
+		    logger.warn("ERROR: Multiple dictionaries specified in stream " + streamId);
 		}
-		if (components.containsKey(dictionaryId)) {
-		    Dictionary d = new Dictionary(components.get(dictionaryId).getCpeList());
-		    dictionaries.put(streamId, d);
-		    return d;
-		} else {
-		    throw new NoSuchElementException(dictionaryId);
-		}
-	    } else if (refs.getComponentRef().size() > 1) {
-		logger.warn("ERROR: Multiple dictionaries specified in stream " + streamId);
+	    } else {
+		logger.warn("ERROR: No dictionaries defined in stream " + streamId);
 	    }
 	}
 	throw new NoSuchElementException(streamId);
@@ -245,7 +278,7 @@ public class Datastream implements ILoggable {
      * A class that relates XCCDF check hrefs to Components.
      */
     class StreamResolver {
-	private Hashtable<String, Component> map;
+	private Hashtable<String, Object> map;
 
 	StreamResolver(DataStream stream) {
 	    String id = stream.getId();
@@ -257,10 +290,12 @@ public class Datastream implements ILoggable {
 		}
 		checks.put(ref.getId(), href);
 	    }
-	    map = new Hashtable<String, Component>();
-	    for (ComponentRef ref : stream.getDictionaries().getComponentRef()) {
-		if (ref.isSetCatalog()) {
-		    addCatalog(ref.getCatalog(), checks);
+	    map = new Hashtable<String, Object>();
+	    if (stream.isSetDictionaries()) {
+		for (ComponentRef ref : stream.getDictionaries().getComponentRef()) {
+		    if (ref.isSetCatalog()) {
+			addCatalog(ref.getCatalog(), checks);
+		    }
 		}
 	    }
 	    for (ComponentRef ref : stream.getChecklists().getComponentRef()) {
@@ -273,7 +308,7 @@ public class Datastream implements ILoggable {
 	/**
 	 * Get the component corresponding to the specified href in this stream.
 	 */
-	Component resolve(String href) throws NoSuchElementException {
+	Object resolve(String href) throws NoSuchElementException {
 	    if (map.containsKey(href)) {
 		return map.get(href);
 	    } else {
@@ -298,20 +333,26 @@ public class Datastream implements ILoggable {
 			    String componentId = checks.get(uri);
 			    if (components.containsKey(componentId)) {
 				if (map.containsKey(u.getName())) {
-				    System.out.println("ERROR: Duplicate URI name: " + u.getName());
+				    logger.warn("ERROR: Duplicate URI name: " + u.getName());
 				} else {
 				    map.put(u.getName(), components.get(componentId));
 				}
+			    } else if (extendedComponents.containsKey(u.getName())) {
+				if (map.containsKey(u.getName())) {
+				    logger.warn("ERROR: Duplicate URI name: " + u.getName());
+				} else {
+				    map.put(u.getName(), extendedComponents.get(componentId));
+				}
 			    } else {
-				System.out.println("ERROR: No component found for id " + componentId);
+				logger.warn("ERROR: No component found for id " + componentId);
 			    }
 			} else {
-			    System.out.println("ERROR: No check found for catalog URI " + uri);
+			    logger.warn("ERROR: No check found for catalog URI " + uri);
 			}
 		    } else if (elt.isNil()) {
-			System.out.println("ERROR: Nil element");
+			logger.warn("ERROR: Nil element");
 		    } else {
-			System.out.println("ERROR: Not a Uri: " + elt.getValue().getClass().getName());
+			logger.warn("ERROR: Not a Uri: " + elt.getValue().getClass().getName());
 		    }
 		}
 	    }

@@ -31,6 +31,7 @@ import org.slf4j.cal10n.LocLogger;
 
 import xccdf.schemas.core.BenchmarkType;
 import xccdf.schemas.core.ProfileType;
+import org.openscap.sce.xccdf.ScriptDataType;
 
 import org.joval.cpe.CpeException;
 import org.joval.cpe.Dictionary;
@@ -99,6 +100,10 @@ public class Benchmark implements ILoggable, ITransformable {
 
     public IDefinitions getDefinitions(String href) throws OvalException, NoSuchElementException {
 	return ds.getDefinitions(streamId, href);
+    }
+
+    public ScriptDataType getScript(String href) throws NoSuchElementException {
+	return ds.getScript(streamId, href);
     }
 
     public void writeBenchmarkXML(File f) throws NoSuchElementException {

@@ -31,6 +31,7 @@ import xccdf.schemas.core.SelStringType;
 import xccdf.schemas.core.ValueType;
 
 import org.joval.cpe.CpeException;
+import org.joval.cpe.Dictionary;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.oval.OvalException;
 import org.joval.xccdf.Benchmark;
@@ -234,9 +235,11 @@ public class Profile {
     /**
      * Given a CPE platform name, add the corresponding OVAL definition IDs to the platforms list.
      */
-    private void addPlatform(String cpeName) {
+    private void addPlatform(String cpeName) throws IllegalStateException, NoSuchElementException {
 	cpePlatforms.add(cpeName);
-	try {
+	Dictionary dictionary = xccdf.getDictionary();
+	boolean found = false;
+	if (dictionary != null) {
 	    ItemType cpeItem = xccdf.getDictionary().getItem(cpeName);
 	    if (cpeItem != null && cpeItem.isSetCheck()) {
 		for (CheckType check : cpeItem.getCheck()) {
@@ -246,11 +249,13 @@ public class Profile {
 			    platforms.put(href, new Vector<String>());
 			}
 			platforms.get(href).add(check.getValue());
+			found = true;
 		    }
 		}
 	    }
-	} catch (Exception e) {
-	    e.printStackTrace();
+	}
+	if (!found) {
+	    throw new NoSuchElementException(cpeName);
 	}
     }
 }

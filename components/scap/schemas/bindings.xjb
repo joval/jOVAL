@@ -466,6 +466,15 @@
     </jxb:bindings>
   </jxb:bindings>
 
+  <!-- ++++++++++++ -->
+  <!-- SCE Bindings -->
+  <!-- ++++++++++++ -->
+  <jxb:bindings schemaLocation="sce-1.0/sce-1.0-xccdf-extended-component.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.openscap.sce.xccdf"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+
   <!-- ++++++++++++++ -->
   <!-- XCCDF Bindings -->
   <!-- ++++++++++++++ -->

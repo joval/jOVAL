@@ -358,6 +358,10 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	    }
 	}
 
+	public boolean isEmpty() {
+	    return buff == null;
+	}
+
 	public void clear() throws IllegalStateException {
 	    if (hasNext()) {
 		throw new IllegalStateException(Integer.toString(len - pos));

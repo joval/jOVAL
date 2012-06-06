@@ -133,6 +133,10 @@ CLASSES=\
 	org.oasis.catalog.System	\
 	org.oasis.catalog.SystemOrPublic	\
 	org.oasis.catalog.Uri	\
+	org.openscap.sce.xccdf.ObjectFactory	\
+	org.openscap.sce.xccdf.package-info	\
+	org.openscap.sce.xccdf.LangEnumeration	\
+	org.openscap.sce.xccdf.ScriptDataType	\
 	org.purl.dc.ElementType	\
 	org.purl.dc.ObjectFactory	\
 	org.purl.dc.package-info	\
