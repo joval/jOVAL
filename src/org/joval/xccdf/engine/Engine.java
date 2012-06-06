@@ -150,14 +150,16 @@ public class Engine implements Runnable, IObserver {
 		    profileRef.setIdref(profile.getName());
 		    testResult.setProfile(profileRef);
 		}
-		IdentityType identity = factory.createIdentityType();
 		String user = session.getUsername();
-		identity.setValue(user);
-		if ("root".equals(user) || "Administrator".equals(user)) {
-		    identity.setPrivileged(true);
+		if (user != null) {
+		    IdentityType identity = factory.createIdentityType();
+		    identity.setValue(user);
+		    if ("root".equals(user) || "Administrator".equals(user)) {
+			identity.setPrivileged(true);
+		    }
+		    identity.setAuthenticated(true);
+		    testResult.setIdentity(identity);
 		}
-		identity.setAuthenticated(true);
-		testResult.setIdentity(identity);
 		for (String href : profile.getCpePlatforms()) {
 		    CPE2IdrefType cpeRef = factory.createCPE2IdrefType();
 		    cpeRef.setIdref(href);

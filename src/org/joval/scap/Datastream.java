@@ -158,7 +158,13 @@ public class Datastream implements ILoggable {
 	    if (components.containsKey(benchmarkId)) {
 		Component comp = components.get(benchmarkId);
 		if (comp.isSetBenchmark()) {
-		    return new Benchmark(streamId, comp.getId(), this, comp.getBenchmark(), getDictionary(streamId));
+		    Dictionary dictionary = null;
+		    try {
+			dictionary = getDictionary(streamId);
+		    } catch (NoSuchElementException e) {
+			logger.warn("WARNING - dictionary not found: " + e.getMessage());
+		    }
+		    return new Benchmark(streamId, comp.getId(), this, comp.getBenchmark(), dictionary);
 		} else {
 		    throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
 		}
@@ -229,7 +235,7 @@ public class Datastream implements ILoggable {
 		    throw new NoSuchElementException(dictionaryId);
 		}
 	    } else if (refs.getComponentRef().size() > 1) {
-		System.out.println("ERROR: Multiple dictionaries specified in stream " + streamId);
+		logger.warn("ERROR: Multiple dictionaries specified in stream " + streamId);
 	    }
 	}
 	throw new NoSuchElementException(streamId);

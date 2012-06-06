@@ -198,7 +198,11 @@ public class OVALHandler {
 			for (CheckContentRefType ref : check.getCheckContentRef()) {
 			    if (ref.isSetHref() && ref.getHref().equals(href)) {
 				if (ref.isSetName()) {
-				    addResult(result, ovalResult.getDefinitionResult(ref.getName()));
+				    try {
+					addResult(result, ovalResult.getDefinitionResult(ref.getName()));
+				    } catch (NoSuchElementException e) {
+					result.add(ResultEnumType.UNKNOWN);
+				    }
 				} else {
 				    for (DefinitionType def : ovalResult.getDefinitionResults()) {
 					addResult(result, def.getResult());

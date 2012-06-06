@@ -115,25 +115,27 @@
               <td class="text"><xsl:value-of select="./text()"/></td>
             </tr>
           </xsl:for-each>
-          <tr>
-            <td class="label2" width="20%">Identity</td>
-            <td>
-              <table border="1" cellpadding="1" cellspacing="0" bgcolor="#ffffff" width="100%">
-                <tr>
-                  <td class="label2" width="20%">Name</td>
-                  <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/xccdf:identity/text()"/></td>
-                </tr>
-                <tr>
-                  <td class="label2">Authenticated</td>
-                  <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/xccdf:identity/@authenticated"/></td>
-                </tr>
-                <tr>
-                  <td class="label2">Privileged</td>
-                  <td class="text"><xsl:value-of select="/xccdf:Benchmark/xccdf:TestResult/xccdf:identity/@privileged"/></td>
-                </tr>
-              </table>
-            </td>
-          </tr>
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:identity">
+            <tr>
+              <td class="label2" width="20%">Identity</td>
+              <td>
+                <table border="1" cellpadding="1" cellspacing="0" bgcolor="#ffffff" width="100%">
+                  <tr>
+                    <td class="label2" width="20%">Name</td>
+                    <td class="text"><xsl:value-of select="./text()"/></td>
+                  </tr>
+                  <tr>
+                    <td class="label2">Authenticated</td>
+                    <td class="text"><xsl:value-of select="./@authenticated"/></td>
+                  </tr>
+                  <tr>
+                    <td class="label2">Privileged</td>
+                    <td class="text"><xsl:value-of select="./@privileged"/></td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </xsl:for-each>
           <tr>
             <td class="label2" width="20%">Interfaces</td>
             <td>
