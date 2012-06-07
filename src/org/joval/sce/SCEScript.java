@@ -23,6 +23,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
@@ -76,13 +77,14 @@ public class SCEScript {
 	extension = ".dat";
 	switch(session.getType()) {
 	  case UNIX:
+	    IUnixSession us = (IUnixSession)session;
 	    switch(source.getLang()) {
 	      case APPLE_SCRIPT:
-		if (((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {
+		if (us.getFlavor() == IUnixSession.Flavor.MACOSX) {
 		    extension = "APPLESCRIPT";
 		    commandPrefix = "/usr/bin/osascript ";
 		} else {
-		    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_PLATFORMLANG, session.getType(), source.getLang());
+		    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_PLATFORMLANG, us.getFlavor(), source.getLang());
 		    throw new IllegalArgumentException(s);
 		}
 		break;
@@ -117,6 +119,7 @@ public class SCEScript {
 	    break;
 
 	  case WINDOWS:
+	    IWindowsSession ws = (IWindowsSession)session;
 	    switch(source.getLang()) {
 	      case PERL:
 		extension = "pl";
@@ -150,15 +153,15 @@ public class SCEScript {
 
 	runtime = null;
 	environment = new Properties();
-	setenv("XCCDF_RESULT_PASS", Integer.toString(XCCDF_RESULT_PASS));
-	setenv("XCCDF_RESULT_FAIL", Integer.toString(XCCDF_RESULT_FAIL));
-	setenv("XCCDF_RESULT_ERROR", Integer.toString(XCCDF_RESULT_ERROR));
-	setenv("XCCDF_RESULT_UNKNOWN", Integer.toString(XCCDF_RESULT_UNKNOWN));
-	setenv("XCCDF_RESULT_NOT_APPLICABLE", Integer.toString(XCCDF_RESULT_NOT_APPLICABLE));
-	setenv("XCCDF_RESULT_NOT_CHECKED", Integer.toString(XCCDF_RESULT_NOT_CHECKED));
-	setenv("XCCDF_RESULT_NOT_SELECTED", Integer.toString(XCCDF_RESULT_NOT_SELECTED));
-	setenv("XCCDF_RESULT_INFORMATIONAL", Integer.toString(XCCDF_RESULT_INFORMATIONAL));
-	setenv("XCCDF_RESULT_FIXED", Integer.toString(XCCDF_RESULT_FIXED));
+	setenv( "XCCDF_RESULT_PASS",		Integer.toString(XCCDF_RESULT_PASS));
+	setenv( "XCCDF_RESULT_FAIL",		Integer.toString(XCCDF_RESULT_FAIL));
+	setenv( "XCCDF_RESULT_ERROR",		Integer.toString(XCCDF_RESULT_ERROR));
+	setenv( "XCCDF_RESULT_UNKNOWN",		Integer.toString(XCCDF_RESULT_UNKNOWN));
+	setenv( "XCCDF_RESULT_NOT_APPLICABLE",	Integer.toString(XCCDF_RESULT_NOT_APPLICABLE));
+	setenv( "XCCDF_RESULT_NOT_CHECKED",	Integer.toString(XCCDF_RESULT_NOT_CHECKED));
+	setenv( "XCCDF_RESULT_NOT_SELECTED",	Integer.toString(XCCDF_RESULT_NOT_SELECTED));
+	setenv( "XCCDF_RESULT_INFORMATIONAL",	Integer.toString(XCCDF_RESULT_INFORMATIONAL));
+	setenv( "XCCDF_RESULT_FIXED",		Integer.toString(XCCDF_RESULT_FIXED));
     }
 
     public String getId() {

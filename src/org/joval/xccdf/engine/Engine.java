@@ -33,6 +33,7 @@ import oval.schemas.definitions.core.OvalDefinitions;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.DefinitionType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.variables.core.VariableType;
 
 import xccdf.schemas.core.CheckContentRefType;
@@ -64,6 +65,7 @@ import org.joval.intf.util.IProducer;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.OvalFactory;
+import org.joval.oval.sysinfo.SysinfoFactory;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.sce.SCEScript;
@@ -164,6 +166,19 @@ public class Engine implements Runnable, IObserver {
 		    CPE2IdrefType cpeRef = factory.createCPE2IdrefType();
 		    cpeRef.setIdref(href);
 		    testResult.getPlatform().add(cpeRef);
+		}
+		try {
+		    SystemInfoType info = SysinfoFactory.createSystemInfo(session);
+		    if (!testResult.getTarget().contains(info.getPrimaryHostName())) {
+			testResult.getTarget().add(info.getPrimaryHostName());
+		    }
+		    for (InterfaceType intf : info.getInterfaces().getInterface()) {
+			if (!testResult.getTargetAddress().contains(intf.getIpAddress())) {
+			    testResult.getTargetAddress().add(intf.getIpAddress());
+			}
+		    }
+		} catch (OvalException e) {
+		    logger.severe(LogFormatter.toString(e));
 		}
 
 		//

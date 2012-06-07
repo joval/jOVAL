@@ -164,10 +164,8 @@ public class Datastream implements ILoggable {
 		Component comp = components.get(benchmarkId);
 		if (comp.isSetBenchmark()) {
 		    Dictionary dictionary = null;
-		    try {
+		    if (streams.get(streamId).isSetDictionaries()) {
 			dictionary = getDictionary(streamId);
-		    } catch (NoSuchElementException e) {
-			logger.warn("WARNING - dictionary not found: " + e.getMessage());
 		    }
 		    return new Benchmark(streamId, comp.getId(), this, comp.getBenchmark(), dictionary);
 		} else {
@@ -268,7 +266,7 @@ public class Datastream implements ILoggable {
 		    logger.warn("ERROR: Multiple dictionaries specified in stream " + streamId);
 		}
 	    } else {
-		logger.warn("ERROR: No dictionaries defined in stream " + streamId);
+		logger.warn("WARNING: No dictionaries defined in stream " + streamId);
 	    }
 	}
 	throw new NoSuchElementException(streamId);

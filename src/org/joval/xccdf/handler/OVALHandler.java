@@ -14,8 +14,6 @@ import oval.schemas.common.GeneratorType;
 import oval.schemas.definitions.core.OvalDefinitions;
 import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.DefinitionType;
-import oval.schemas.systemcharacteristics.core.InterfaceType;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.variables.core.VariableType;
 
 import xccdf.schemas.core.CheckContentRefType;
@@ -173,16 +171,6 @@ public class OVALHandler {
      * the selected rules in the profile.
      */
     private void integrateResults(String href, IResults ovalResult, TestResultType xccdfResult) throws OvalException {
-	SystemInfoType info = ovalResult.getSystemCharacteristics().getSystemInfo();
-	if (!xccdfResult.getTarget().contains(info.getPrimaryHostName())) {
-	    xccdfResult.getTarget().add(info.getPrimaryHostName());
-	}
-	for (InterfaceType intf : info.getInterfaces().getInterface()) {
-	    if (!xccdfResult.getTargetAddress().contains(intf.getIpAddress())) {
-		xccdfResult.getTargetAddress().add(intf.getIpAddress());
-	    }
-	}
-
 	//
 	// Iterate through the rules and record the results
 	//

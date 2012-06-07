@@ -84,8 +84,9 @@ public class SCEHandler {
 					Hashtable<String, SCEScript> table = scriptTable.get(ruleId);
 					table.put(ref.getHref(), sce);
 					scripts.add(sce);
+				    } catch (IllegalArgumentException e) {
+					xccdf.getLogger().warn(e.getMessage());
 				    } catch (NoSuchElementException e) {
-e.printStackTrace();
 					String s = JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, scriptId);
 					xccdf.getLogger().warn(s);
 				    }

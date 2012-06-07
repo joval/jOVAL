@@ -171,7 +171,7 @@
           </tr>
           <tr>
             <td class="label" align="center">Check ID</td>
-            <td class="label" align="center">Result</td>
+            <td class="label" align="center" width="120">Result</td>
           </tr>
 
           <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result">
@@ -335,7 +335,7 @@
             <tr>
               <td class="naA" width="10">&#160;</td>
               <td class="naB" width="10">&#160;</td>
-              <td class="text">&#160;Not Applicable&#160;&#160;</td>
+              <td class="text">&#160;Not&#160;Applicable&#160;&#160;</td>
             </tr>
           </table>
         </td>
@@ -345,7 +345,7 @@
             <tr>
               <td class="ncA" width="10">&#160;</td>
               <td class="ncB" width="10">&#160;</td>
-              <td class="text">&#160;Not Checked&#160;&#160;</td>
+              <td class="text">&#160;Not&#160;Checked&#160;&#160;</td>
             </tr>
           </table>
         </td>
@@ -355,7 +355,7 @@
             <tr>
               <td class="nsA" width="10">&#160;</td>
               <td class="nsB" width="10">&#160;</td>
-              <td class="text">&#160;Not Selected&#160;&#160;</td>
+              <td class="text">&#160;Not&#160;Selected&#160;&#160;</td>
             </tr>
           </table>
         </td>
