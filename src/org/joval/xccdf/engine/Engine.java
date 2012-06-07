@@ -62,6 +62,7 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
+import org.joval.ocil.Checklist;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.oval.OvalFactory;
@@ -75,6 +76,7 @@ import org.joval.util.LogFormatter;
 import org.joval.xccdf.Benchmark;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfException;
+import org.joval.xccdf.handler.OCILHandler;
 import org.joval.xccdf.handler.OVALHandler;
 import org.joval.xccdf.handler.SCEHandler;
 
@@ -99,6 +101,7 @@ public class Engine implements Runnable, IObserver {
     private IBaseSession session;
     private Collection<String> platforms;
     private Profile profile;
+    private Checklist checklist;
     private List<RuleType> rules = null;
     private List<GroupType> groups = null;
     private String phase = null;
@@ -108,9 +111,10 @@ public class Engine implements Runnable, IObserver {
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
      */
-    public Engine(Benchmark xccdf, Profile profile, IBaseSession session, File ws) {
+    public Engine(Benchmark xccdf, Profile profile, Checklist checklist, IBaseSession session, File ws) {
 	this.xccdf = xccdf;
 	this.profile = profile;
+	this.checklist = checklist;
 	this.session = session;
 	this.ws = ws;
 	debug = ws != null;
@@ -260,6 +264,14 @@ public class Engine implements Runnable, IObserver {
 
     private void processXccdf(TestResultType testResult) {
 	phase = "evaluation";
+
+	//
+        // Integrate OCIL results
+	//
+	if (checklist != null) {
+	    OCILHandler ocilHandler = new OCILHandler(xccdf, profile, checklist);
+	    ocilHandler.integrateResults(testResult);
+	}
 
 	//
 	// Run the OVAL engines

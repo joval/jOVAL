@@ -344,10 +344,10 @@ public class Checklist implements ITransformable {
 	if (action instanceof BooleanQuestionTestActionType) {
 	    BooleanQuestionTestActionType qt = (BooleanQuestionTestActionType)action;
 	    if (qt.isSetWhenTrue()) {
-		conditions.add(qt.getWhenTrue());
+		conditions.add(new BooleanTestActionConditionType(true, qt.getWhenTrue()));
 	    }
 	    if (qt.isSetWhenFalse()) {
-		conditions.add(qt.getWhenFalse());
+		conditions.add(new BooleanTestActionConditionType(false, qt.getWhenFalse()));
 	    }
 	} else if (action instanceof ChoiceQuestionTestActionType) {
 	    ChoiceQuestionTestActionType qt = (ChoiceQuestionTestActionType)action;

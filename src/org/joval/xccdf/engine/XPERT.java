@@ -21,6 +21,8 @@ import java.util.logging.Logger;
 
 import org.joval.cpe.CpeException;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.ocil.Checklist;
+import org.joval.ocil.OcilException;
 import org.joval.oval.OvalException;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
@@ -108,6 +110,7 @@ public class XPERT {
 	String streamId = null;
 	String benchmarkId = null;
 	String profileName = null;
+	File ocilFile = new File(CWD, "ocil-results.xml");
 	File resultsFile = new File(CWD, "xccdf-results.xml");
 	File xmlDir = new File(BASE_DIR, "xml");
 	File transformFile = new File(xmlDir, "xccdf_results_to_html.xsl");
@@ -134,6 +137,8 @@ public class XPERT {
 		    benchmarkId = argv[++i];
 		} else if (argv[i].equals("-p")) {
 		    profileName = argv[++i];
+		} else if (argv[i].equals("-c")) {
+		    ocilFile = new File(argv[++i]);
 		} else if (argv[i].equals("-r")) {
 		    resultsFile = new File(argv[++i]);
 		} else if (argv[i].equals("-v")) {
@@ -267,10 +272,20 @@ public class XPERT {
 		System.exit(1);
 	    }
 
+	    Checklist checklist = null;
+	    if (ocilFile.isFile()) {
+		try {
+		    checklist = new Checklist(ocilFile);
+		} catch (OcilException e) {
+		    logger.severe(e.getMessage());
+		    System.exit(1);
+		}
+	    }
+
 	    try {
 		Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
 		Profile profile = new Profile(benchmark, profileName);
-		Engine engine = new Engine(benchmark, profile, plugin.getSession(), ws);
+		Engine engine = new Engine(benchmark, profile, checklist, plugin.getSession(), ws);
 		engine.run();
 
 		if (benchmark.getBenchmark().isSetTestResult()) {

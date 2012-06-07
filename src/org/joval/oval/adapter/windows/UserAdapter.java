@@ -158,7 +158,7 @@ public class UserAdapter implements IAdapter {
 		    // Convert LastLogon string to number of seconds since 1970
 		    //
 		    s = props.getItem("LastLogon").getValueAsString();
-		    if (s != null) {
+		    if (s != null && s.length() > 21) {
 			String tz = s.substring(21).trim();
 			if (tz.length() == 4) {
 			    char c = tz.charAt(0);

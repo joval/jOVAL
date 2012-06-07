@@ -15,5 +15,6 @@ CLASSES=\
 	org.joval.xccdf.engine.Engine					\
 	org.joval.xccdf.engine.RuleResult				\
 	org.joval.xccdf.engine.XPERT					\
+	org.joval.xccdf.handler.OCILHandler				\
 	org.joval.xccdf.handler.OVALHandler				\
 	org.joval.xccdf.handler.SCEHandler

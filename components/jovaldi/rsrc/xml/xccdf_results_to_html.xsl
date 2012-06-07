@@ -11,7 +11,8 @@
   <xsl:output method="html" indent="yes"/>
   <xsl:template match="/">
     <html>
-      <style type="text/css">
+      <head>
+        <style type="text/css">
           TD.title {BACKGROUND-COLOR: #000000; COLOR: #ffc; TEXT-ALIGN: left; font: bold 12pt/14pt "Arial"} 
           TD.label {BACKGROUND-COLOR: #99cc99; font: 10pt/12pt "Arial"}
           TD.label2 {font: bold 10pt/14pt "Arial"}
@@ -44,7 +45,6 @@
           .fixedA{background-color: #84C4B9; font: 10pt/12pt "Arial"}
           .fixedB{background-color: #A7D0FF; font: 10pt/12pt "Arial"}
         </style>
-      <head>
         <title>XPERT&#8482; Benchmark Test Results</title>
       </head>
       <body>
@@ -171,7 +171,7 @@
           </tr>
           <tr>
             <td class="label" align="center">Check ID</td>
-            <td class="label" align="center" width="120">Result</td>
+            <td class="label" align="center">Result</td>
           </tr>
 
           <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result">
