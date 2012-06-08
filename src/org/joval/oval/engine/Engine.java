@@ -543,8 +543,12 @@ public class Engine implements IEngine, IAdapter {
 			    IAdapter adapter = adapters.get(obj.getClass());
 			    @SuppressWarnings("unchecked")
 			    Collection<ItemType> retrieved = (Collection<ItemType>)adapter.getItems(obj, rc);
-			    flag.add(FlagEnumeration.COMPLETE);
 			    items.addAll(filterItems(getObjectFilters(masterObj), retrieved, rc));
+			    if (items.size() == 0) {
+				flag.add(FlagEnumeration.DOES_NOT_EXIST);
+			    } else {
+				flag.add(FlagEnumeration.COMPLETE);
+			    }
 			} catch (CollectException e) {
 			    MessageType msg = Factories.common.createMessageType();
 			    msg.setLevel(MessageLevelEnumeration.WARNING);
@@ -570,12 +574,6 @@ public class Engine implements IEngine, IAdapter {
 			sc.storeVariable(var);
 			sc.relateVariable(objectId, var.getVariableId());
 		    }
-		    if (items.size() == 0) {
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.INFO);
-			msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_OBJECT));
-			messages.add(msg);
-		    }
 		} catch (ResolveException e) {
 		    MessageType msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -595,13 +593,15 @@ public class Engine implements IEngine, IAdapter {
 		sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), flag.getFlag(), null);
 	    } else {
 		items = getSetItems(s, rc);
+		FlagEnumeration flag = FlagEnumeration.COMPLETE;
 		MessageType msg = null;
 		if (items.size() == 0) {
+		    flag = FlagEnumeration.DOES_NOT_EXIST;
 		    msg = Factories.common.createMessageType();
 		    msg.setLevel(MessageLevelEnumeration.INFO);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_SET));
 		}
-		sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), FlagEnumeration.COMPLETE, msg);
+		sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), flag, msg);
 	    }
 	} else {
 	    MessageType msg = Factories.common.createMessageType();
