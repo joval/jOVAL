@@ -285,6 +285,7 @@ public class Engine implements IEngine, IAdapter {
     public void setDefinitionFilter(IDefinitionFilter filter) throws IllegalThreadStateException {
 	switch(state) {
 	  case CONFIGURE:
+	    mode = Mode.DIRECTED;
 	    this.filter = filter;
 	    break;
 
@@ -529,44 +530,13 @@ public class Engine implements IEngine, IAdapter {
 	    Set s = getObjectSet(masterObj);
 	    if (s == null) {
 		List<MessageType> messages = new Vector<MessageType>();
-		FlagData flag = new FlagData();
+		FlagData flags = new FlagData();
 		try {
-		    for (ObjectType obj : resolveObject(rc)) {
-			//
-			// As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
-			//
-			if (abort) {
-			    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
-			}
-
-			try {
-			    IAdapter adapter = adapters.get(obj.getClass());
-			    @SuppressWarnings("unchecked")
-			    Collection<ItemType> retrieved = (Collection<ItemType>)adapter.getItems(obj, rc);
-			    items.addAll(filterItems(getObjectFilters(masterObj), retrieved, rc));
-			    if (items.size() == 0) {
-				flag.add(FlagEnumeration.DOES_NOT_EXIST);
-			    } else {
-				flag.add(FlagEnumeration.COMPLETE);
-			    }
-			} catch (CollectException e) {
-			    MessageType msg = Factories.common.createMessageType();
-			    msg.setLevel(MessageLevelEnumeration.WARNING);
-			    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
-			    msg.setValue(err);
-			    messages.add(msg);
-			    flag.add(e.getFlag());
-			} catch (Exception e) {
-			    //
-			    // Handle an uncaught, unexpected exception emanating from the adapter.
-			    //
-			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			    MessageType msg = Factories.common.createMessageType();
-			    msg.setLevel(MessageLevelEnumeration.ERROR);
-			    msg.setValue(e.getMessage());
-			    messages.add(msg);
-			    flag.add(FlagEnumeration.ERROR);
-			}
+		    items = new ObjectGroup(rc).getItems(flags);
+		    if (items.size() == 0) {
+			flags.add(FlagEnumeration.DOES_NOT_EXIST);
+		    } else {
+			flags.add(FlagEnumeration.COMPLETE);
 		    }
 		    messages.addAll(rc.getMessages());
 		    sc.setObject(objectId, null, null, null, null);
@@ -579,18 +549,18 @@ public class Engine implements IEngine, IAdapter {
 		    msg.setLevel(MessageLevelEnumeration.ERROR);
 		    msg.setValue(e.getMessage());
 		    messages.add(msg);
-		    flag.add(FlagEnumeration.ERROR);
+		    flags.add(FlagEnumeration.ERROR);
 		}
 		for (MessageType msg : messages) {
 		    sc.setObject(objectId, null, null, null, msg);
 		    switch(msg.getLevel()) {
 		      case FATAL:
 		      case ERROR:
-			flag.add(FlagEnumeration.INCOMPLETE);
+			flags.add(FlagEnumeration.INCOMPLETE);
 			break;
 		    }
 		}
-		sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), flag.getFlag(), null);
+		sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), flags.getFlag(), null);
 	    } else {
 		items = getSetItems(s, rc);
 		FlagEnumeration flag = FlagEnumeration.COMPLETE;
@@ -617,107 +587,291 @@ public class Engine implements IEngine, IAdapter {
     }
 
     /**
-     * Convert an ObectType whose EntityObjectSimpleBaseType members may contain var_refs into a list of ObjectTypes
-     * containing only resolved entities (i.e., isSetVarRef() == false).
-     *
-     * DAS: Implement var_check here?  Here's the basic idea...  This method should return a data structure that manages
-     *      the associations between lists of variable values and fields.  This structure would resolve all the permutations,
-     *      scan all the resulting objects, and create item sets corresponding to groups matching distinct variable values.
-     *      It would then implement the var_check by performing set operations.
+     * An ObjectGroup is a container for ObjectType information, where the constituent entities of the ObjectType
+     * may be formed by references to multi-valued variables.
      */
-    private Collection<ObjectType> resolveObject(RequestContext rc) throws OvalException, ResolveException {
-	ObjectType obj = rc.getObject();
-	List<ObjectType>objects = new Vector<ObjectType>();
-	try {
-	    //
-	    // First, create lists of entities within the object indexed by getter-function name
-	    //
-	    Hashtable<String, List<Object>> lists = new Hashtable<String, List<Object>>();
-	    int numPermutations = 1;
-	    for (Method method : getMethods(obj.getClass()).values()) {
-		String methodName = method.getName();
-		if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
-		    Object entity = method.invoke(obj);
-		    if (entity == null) {
-			//
-			// entity was unspeficied in the object definition, so it must be optional
-			//
-		    } else {
-			List<Object> list = resolveUnknownEntity(methodName, entity, rc);
-			if (list.size() == 0) {
+    class ObjectGroup {
+	RequestContext rc;
+	IAdapter adapter;
+	String id;
+	Class<?> clazz;
+	Object behaviors = null, factory;
+	Method create;
+	int size = 1;
+
+	/**
+	 * Lists of entity values, indexed by getter method name.
+	 */
+	Hashtable<String, List<Object>> entities;
+
+	/**
+	 * Check operations to perform on entities, indexed by getter method name. Only set for entites sourced from
+	 * variable references.
+	 */
+	Hashtable<String, CheckEnumeration> varChecks;
+
+	/**
+	 * Create a new ObjectGroup for the specified request context.
+	 */
+	ObjectGroup(RequestContext rc) throws OvalException, ResolveException {
+	    this.rc = rc;
+	    ObjectType obj = rc.getObject();
+	    id = obj.getId();
+	    clazz = obj.getClass();
+	    adapter = adapters.get(clazz);
+	    try {
+		//
+		// Collect everything necessary to manufacture new ObjectTypes
+		//
+		String pkgName = clazz.getPackage().getName();
+		Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
+		factory = factoryClass.newInstance();
+		String unqualClassName = clazz.getName().substring(pkgName.length() + 1);
+		create = factoryClass.getMethod("create" + unqualClassName);
+		behaviors = safeInvokeMethod(obj, "getBehaviors");
+
+		//
+		// Collect all the entity values
+		//
+		entities = new Hashtable<String, List<Object>>();
+		varChecks = new Hashtable<String, CheckEnumeration>();
+		for (Method method : getMethods(clazz).values()) {
+		    String methodName = method.getName();
+		    if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
+			Object entity = method.invoke(obj);
+			if (entity == null) {
 			    //
-			    // This condition means that the entity was a variable reference with no value (or a record with
-			    // a field entity that referenced a variable with no value).  The OVAL specification dictates
-			    // that this should mean the object does not exist.  Returning an empty list makes this assertion.
-			    // See:
+			    // entity was unspeficied in the object definition, so it must be optional, and its absence
+			    // will not impact the number of available permutations.
 			    //
-			    // http://oval.mitre.org/language/version5.10.1/ovaldefinition/documentation/oval-definitions-schema.html#EntityAttributeGroup
-			    //
-			    numPermutations = 0;
-			    MessageType message = Factories.common.createMessageType();
-			    message.setLevel(MessageLevelEnumeration.INFO);
-			    String entityName = methodName.substring(3).toLowerCase();
-			    message.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_ENTITY, entityName));
-			    rc.addMessage(message);
 			} else {
-			    numPermutations = numPermutations * list.size();
-			    lists.put(methodName, list);
+			    VarData vd = new VarData();
+			    List<Object> values = resolveUnknownEntity(methodName, entity, rc, vd);
+			    if (vd.isRef()) {
+				varChecks.put(methodName, vd.getCheck());
+			    }
+			    size = size * values.size();
+			    if (values.size() == 0) {
+				MessageType message = Factories.common.createMessageType();
+				message.setLevel(MessageLevelEnumeration.INFO);
+				String entityName = methodName.substring(3).toLowerCase();
+				message.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_ENTITY, entityName));
+				rc.addMessage(message);
+			    }
+			    entities.put(methodName, values);
+			}
+		    }
+		}
+	    } catch (ClassNotFoundException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id));
+	    } catch (InstantiationException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id));
+	    } catch (NoSuchMethodException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id));
+	    } catch (IllegalAccessException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id));
+	    } catch (InvocationTargetException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id));
+	    }
+	}
+
+	/**
+	 * Retrieve all the items associated with this object group.
+	 */
+	Collection<ItemType> getItems(FlagData flags) throws OvalException, ResolveException {
+	    if (varChecks.size() == 0) {
+		//
+		// There are no variables in the object entity definitions
+		//
+		return getItems(rc.getObject(), flags);
+	    } else if (size > 0) {
+		//
+		// There are variable references in the object entity definitions, so implement var_check using sets.
+		//
+		ItemSet<ItemType> items = new ItemSet<ItemType>();
+		for (String methodName : varChecks.keySet()) {
+		    List<Object> values = entities.get(methodName);
+		    Vector<ItemSet<ItemType>> sets = new Vector<ItemSet<ItemType>>(values.size());
+		    for (Object value : values) {
+			for (ObjectType obj : getPermutations(methodName, value)) {
+			    sets.add(new ItemSet<ItemType>(getItems(obj, flags)));
+			}
+		    }
+
+		    ItemSet<ItemType> checked = null;
+		    for (ItemSet<ItemType> set : sets) {
+			if (checked == null) {
+			    checked = set;
+			} else {
+			    CheckEnumeration check = varChecks.get(methodName);
+			    switch(check) {
+			      case ALL:
+				checked = checked.intersection(set);
+				break;
+
+			      case AT_LEAST_ONE:
+				checked = checked.union(set);
+				break;
+
+			      default:
+				throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_CHECK, check));
+			    }
+			}
+		    }
+		    items = items.union(checked);
+		}
+		return items.toList();
+	    } else {
+		@SuppressWarnings("unchecked")
+		Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
+		return empty;
+	    }
+	}
+
+	/**
+	 * Gather (and filter) items for a single resolved object.
+	 */
+	private Collection<ItemType> getItems(ObjectType obj, FlagData flags) throws OvalException, ResolveException {
+	    //
+	    // As the lowest level scan operation, this is a good place to check if the engine is being destroyed.
+	    //
+	    if (abort) {
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	    }
+
+	    try {
+		@SuppressWarnings("unchecked")
+		Collection<ItemType> unfiltered = (Collection<ItemType>)adapter.getItems(obj, rc);
+		List<Filter> filters = getObjectFilters(rc.getObject());
+		Collection<ItemType> filtered = filterItems(filters, unfiltered, rc);
+		return filtered;
+	    } catch (CollectException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.WARNING);
+		String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
+		msg.setValue(err);
+		rc.addMessage(msg);
+		flags.add(e.getFlag());
+	    } catch (Exception e) {
+		//
+		// Handle an uncaught, unexpected exception emanating from the adapter.
+		//
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
+		flags.add(FlagEnumeration.ERROR);
+	    }
+	    @SuppressWarnings("unchecked")
+	    Collection<ItemType> empty = (Collection<ItemType>)Collections.EMPTY_LIST;
+	    return empty;
+	}
+
+	/**
+	 * Given a particular value of an entity, create a collection of all the possible resulting ObjectTypes.
+	 */
+	private Collection<ObjectType> getPermutations(String getter, Object value) throws OvalException {
+	    if (!entities.get(getter).contains(value)) {
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_OBJECT_PERMUTATION, getter, value.toString()));
+	    } else if (size == 0) {
+		@SuppressWarnings("unchecked")
+		Collection<ObjectType> empty = (Collection<ObjectType>)Collections.EMPTY_LIST;
+	    }
+	    int numPermutations = size / entities.get(getter).size();
+	    Vector<Hashtable<String, Object>> valList = new Vector<Hashtable<String, Object>>(numPermutations);
+	    for (int i=0; i < numPermutations; i++) {
+		Hashtable<String, Object> values = new Hashtable<String, Object>();
+		values.put(getter, value);
+		valList.add(values);
+	    }
+	    for (String key : entities.keySet()) {
+		if (!getter.equals(key)) {
+		    List<Object> list = entities.get(key);
+		    int numRepeats = numPermutations / list.size();
+		    int index = 0;
+		    for (Object val : list) {
+			for (int i=0; i < numRepeats; i++) {
+			    valList.get(index++).put(key, val);
 			}
 		    }
 		}
 	    }
-	    if (numPermutations > 0) {
-		//
-		// Create a permutation list of objects using the entity lists
-		//
-		Class<?> objClass = obj.getClass();
-		String pkgName = objClass.getPackage().getName();
-		Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
-		Object factory = factoryClass.newInstance();
-		String unqualClassName = objClass.getName().substring(pkgName.length() + 1);
-		Method createObj = factoryClass.getMethod("create" + unqualClassName);
-		for (int i=0; i < numPermutations; i++) {
-		    ObjectType ot = (ObjectType)createObj.invoke(factory);
-		    ot.setId(obj.getId());
-		    Object behaviors = safeInvokeMethod(obj, "getBehaviors");
-		    if (behaviors != null) {
-			Method setBehaviors = objClass.getMethod("setBehaviors", behaviors.getClass());
-			setBehaviors.invoke(ot, behaviors);
-		    }
-		    objects.add(ot);
+	    Vector<ObjectType> objects = new Vector<ObjectType>();
+	    try {
+		for (Hashtable<String, Object> values : valList) {
+		    objects.add(newObject(values));
 		}
-		for (String getter : lists.keySet()) {
-		    List<Object> list = lists.get(getter);
-		    int divisor = list.size();
-		    int groupSize = objects.size() / divisor;
-		    int index = 0;
-		    String setter = new StringBuffer("s").append(getter.substring(1)).toString();
-		    Class entityClass = list.get(0).getClass();
-		    @SuppressWarnings("unchecked")
-		    Method setObj = objClass.getMethod(setter, entityClass);
-		    for (Object entity : list) {
-			for (int i=0; i < groupSize; i++) {
-			    setObj.invoke(objects.get(index++), entity);
-			}
-		    }
-		}
+	    } catch (InstantiationException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id));
+	    } catch (NoSuchMethodException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id));
+	    } catch (IllegalAccessException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id));
+	    } catch (InvocationTargetException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id));
 	    }
 	    return objects;
-	} catch (ClassNotFoundException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
-	} catch (InstantiationException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
-	} catch (NoSuchMethodException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
-	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
-	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
+	}
+
+	/**
+	 * Make a new instance of an ObjectType, with the specified group of entity values.
+	 */
+	private ObjectType newObject(Hashtable<String, Object> values)
+		throws InstantiationException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+
+	    ObjectType obj = (ObjectType)create.invoke(factory);
+	    obj.setId(id);
+	    if (behaviors != null) {
+		Method setBehaviors = clazz.getMethod("setBehaviors", behaviors.getClass());
+		setBehaviors.invoke(obj, behaviors);
+	    }
+	    for (String getter : values.keySet()) {
+		Object entity = values.get(getter);
+		String setter = new StringBuffer("s").append(getter.substring(1)).toString();
+		@SuppressWarnings("unchecked")
+		Method setObj = clazz.getMethod(setter, entity.getClass());
+		setObj.invoke(obj, entity);
+	    }
+	    return obj;
+	}
+    }
+
+    /**
+     * A container class for communicating discovered variable reference information from the resolveUnknownEntity method.
+     */
+    private class VarData {
+	boolean isVar;
+	CheckEnumeration check;
+
+	VarData() {
+	    isVar = false;
+	}
+
+	boolean isRef() {
+	    return isVar;
+	}
+
+	void setCheck(CheckEnumeration check) {
+	    isVar = true;
+	    if (check == null) {
+		this.check = CheckEnumeration.ALL;
+	    } else {
+		this.check = check;
+	    }
+	}
+
+	CheckEnumeration getCheck() {
+	    return check;
 	}
     }
 
@@ -725,7 +879,7 @@ public class Engine implements IEngine, IAdapter {
      * Take an entity that may be a var_ref, and return a list of all resulting concrete entities (i.e., isSetValue == true).
      * The result may be a JAXBElement list, or EntitySimpleBaseType list or an EntityObjectRecordType list.
      */
-    private List<Object> resolveUnknownEntity(String methodName, Object entity, RequestContext rc)
+    private List<Object> resolveUnknownEntity(String methodName, Object entity, RequestContext rc, VarData vd)
 		throws OvalException, ResolveException, InstantiationException, ClassNotFoundException,
 		NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 
@@ -744,7 +898,7 @@ public class Engine implements IEngine, IAdapter {
 	    } else {
 		Class targetClass = ((JAXBElement)entity).getValue().getClass();
 		Method method = factoryClass.getMethod("create" + unqualClassName + entityName, targetClass);
-		for (Object resolved : resolveUnknownEntity(methodName, ((JAXBElement)entity).getValue(), rc)) {
+		for (Object resolved : resolveUnknownEntity(methodName, ((JAXBElement)entity).getValue(), rc, vd)) {
 		    result.add(method.invoke(factory, resolved));
 		}
 	    }
@@ -754,6 +908,7 @@ public class Engine implements IEngine, IAdapter {
 	} else if (entity instanceof EntitySimpleBaseType) {
 	    EntitySimpleBaseType simple = (EntitySimpleBaseType)entity;
 	    if (simple.isSetVarRef()) {
+		vd.setCheck((CheckEnumeration)safeInvokeMethod(simple, "getVarCheck"));
 		try {
 		    IType.Type t = TypeFactory.convertType(TypeFactory.getSimpleDatatype(simple.getDatatype()));
 		    Class objClass = entity.getClass();
@@ -785,6 +940,7 @@ public class Engine implements IEngine, IAdapter {
 	} else if (entity instanceof EntityObjectRecordType) {
 	    EntityObjectRecordType record = (EntityObjectRecordType)entity;
 	    if (record.isSetVarRef()) {
+		vd.setCheck((CheckEnumeration)safeInvokeMethod(record, "getVarCheck"));
 		for (IType type : resolveVariable(record.getVarRef(), rc)) {
 		    switch(type.getType()) {
 		      case RECORD: {
@@ -1046,105 +1202,6 @@ public class Engine implements IEngine, IAdapter {
 	    }
 	    return union.toList();
 	  }
-	}
-    }
-
-    /**
-     * Compare an object to an item, for the purpose of determing compliance with any var_check attributes on the object's
-     * entities.  This is similar to comparing a state with an item, as is done during test evaluation, except the object
-     * lacks an entityCheck, and comparisons are only invoked when there is a var_ref.
-     *
-     * DAS: eliminate this method? (It's obsolete/unused)
-     */
-    private ResultEnumeration varCheck(ObjectType obj, ItemType item, RequestContext rc) throws OvalException, TestException {
-	try {
-	    OperatorData result = new OperatorData();
-	    int entityCount = 0;
-	    for (Method method : getMethods(obj.getClass()).values()) {
-		String methodName = method.getName();
-		if (methodName.startsWith("get") && !objectBaseMethodNames.contains(methodName)) {
-		    entityCount++;
-		    Object objEntityObj = method.invoke(obj);
-		    if (objEntityObj instanceof JAXBElement) {
-			objEntityObj = ((JAXBElement)objEntityObj).getValue();
-		    }
-		    if (objEntityObj == null) {
-			// continue
-		    } else if (objEntityObj instanceof EntitySimpleBaseType) {
-			EntitySimpleBaseType objEntity = (EntitySimpleBaseType)objEntityObj;
-			if (objEntity.isSetVarRef()) {
-			    Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
-			    if (itemEntityObj instanceof EntityItemSimpleBaseType || itemEntityObj == null) {
-				result.addResult(compare(objEntity, (EntityItemSimpleBaseType)itemEntityObj, rc));
-			    } else if (itemEntityObj instanceof JAXBElement) {
-				JAXBElement element = (JAXBElement)itemEntityObj;
-				EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)element.getValue();
-				result.addResult(compare(objEntity, itemEntity, rc));
-			    } else if (itemEntityObj instanceof Collection) {
-				CheckData cd = new CheckData();
-				for (Object entityObj : (Collection)itemEntityObj) {
-				    EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)entityObj;
-				    cd.addResult(compare(objEntity, itemEntity, rc));
-				}
-				result.addResult(cd.getResult(CheckEnumeration.ALL));
-			    } else {
-				String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
-								     itemEntityObj.getClass().getName(), item.getId());
-				throw new OvalException(message);
-			    }
-			} else {
-			    result.addResult(ResultEnumeration.TRUE);
-			}
-		    } else if (objEntityObj instanceof EntityObjectRecordType) {
-			EntityObjectRecordType objEntity = (EntityObjectRecordType)objEntityObj;
-			if (objEntity.isSetVarRef()) {
-			    Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
-			    if (itemEntityObj instanceof EntityItemRecordType) {
-				result.addResult(compare(objEntity, (EntityItemRecordType)itemEntityObj, rc));
-			    } else if (itemEntityObj instanceof Collection) {
-				CheckData cd = new CheckData();
-				for (Object entityObj : (Collection)itemEntityObj) {
-				    if (entityObj instanceof EntityItemRecordType) {
-					cd.addResult(compare(objEntity, (EntityItemRecordType)entityObj, rc));
-				    } else {
-					String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
-									 entityObj.getClass().getName(), item.getId());
-					throw new OvalException(msg);
-				    }
-				}
-				result.addResult(cd.getResult(CheckEnumeration.ALL));
-			    } else {
-				String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
-								     itemEntityObj.getClass().getName(), item.getId());
-				throw new OvalException(message);
-			    }
-			} else {
-			    result.addResult(ResultEnumeration.TRUE);
-			}
-		    } else {
-			String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
-							     objEntityObj.getClass().getName(), obj.getId());
-	    		throw new OvalException(message);
-		    }
-		}
-	    }
-	    if (entityCount == 0) {
-		//
-		// Entity-free objects, like FamilyObject, are not filtered.
-		//
-		return ResultEnumeration.TRUE;
-	    } else {
-		return result.getResult(OperatorEnumeration.AND);
-	    }
-	} catch (NoSuchMethodException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
-	} catch (IllegalAccessException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
-	} catch (InvocationTargetException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), obj.getId()));
 	}
     }
 
@@ -1879,21 +1936,25 @@ public class Engine implements IEngine, IAdapter {
     private Collection<IType> resolveVariable(String variableId, RequestContext rc)
 		throws NoSuchElementException, ResolveException, OvalException {
 
-	VariableType var = definitions.getVariable(variableId);
-	String varId = var.getId();
-	Collection<IType> result = variableMap.get(varId);
+	Collection<IType> result = variableMap.get(variableId);
 	if (result == null) {
-	    logger.trace(JOVALMsg.STATUS_VARIABLE_CREATE, varId);
+	    logger.trace(JOVALMsg.STATUS_VARIABLE_CREATE, variableId);
 	    try {
-		result = resolveComponent(var, rc);
+		result = resolveComponent(definitions.getVariable(variableId), rc);
 	    } catch (IllegalArgumentException e) {
 		throw new ResolveException(e);
 	    } catch (UnsupportedOperationException e) {
 		throw new ResolveException(e);
 	    }
-	    variableMap.put(varId, result);
+	    variableMap.put(variableId, result);
 	} else {
-	    logger.trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, varId);
+	    for (IType value : result) {
+		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
+		variableValueType.setVariableId(variableId);
+		variableValueType.setValue(value.getString());
+		rc.addVar(variableValueType);
+	    }
+	    logger.trace(JOVALMsg.STATUS_VARIABLE_RECYCLE, variableId);
 	}
 	return result;
     }
