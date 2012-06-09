@@ -162,15 +162,16 @@
 
         <table border="1" cellpadding="2" cellspacing="0" width="100%">
           <tr>
-            <td class="title" colspan="2">Benchmark Test Results</td>
+            <td class="title" colspan="3">Benchmark Test Results</td>
           </tr>
           <tr>
-            <td colspan="2">
+            <td colspan="3">
               <xsl:call-template name="ResultColorTable"/>
             </td>
           </tr>
           <tr>
             <td class="label" align="center">Check ID</td>
+            <td class="label" align="center">Reference</td>
             <td class="label" align="center">Result</td>
           </tr>
 
@@ -223,6 +224,7 @@
 
   <xsl:template name="RuleResult">
     <xsl:param name="ruleResultElt"/>
+    <xsl:variable name="ruleId" select="$ruleResultElt/@idref"/>
       <tr>
       <!-- set results to alternating colors -->
       <xsl:choose>
@@ -281,7 +283,8 @@
           <xsl:attribute name="class">fixedB</xsl:attribute>
         </xsl:when>
       </xsl:choose>
-        <td>&#160;<xsl:value-of select="$ruleResultElt/@idref"/></td>
+        <td>&#160;<xsl:value-of select="$ruleId"/></td>
+        <td align="center">&#160;<xsl:value-of select="//xccdf:Rule[@id = $ruleId]/xccdf:ident/text()"/></td>
         <td align="center"><xsl:value-of select="$ruleResultElt/xccdf:result/text()"/></td>
     </tr>
   </xsl:template>
