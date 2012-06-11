@@ -180,9 +180,7 @@ public class ExecutionState {
 	String pluginName = DEFAULT_PLUGIN;
 
 	for (int i=0; i < argv.length; i++) {
-	    if (validateChecksum && i == (argv.length - 1)) {
-		specifiedChecksum = argv[i];
-	    } else if (argv[i].equals("-h")) {
+	    if (argv[i].equals("-h")) {
 		printHelp = true;
 	    } else if (argv[i].equals("-z")) {
 		computeChecksum = true;
@@ -286,6 +284,8 @@ public class ExecutionState {
 		} else {
 		    Main.print(Main.getMessage("WARNING_ARG", argv[i]));
 		}
+	    } else if (validateChecksum && i == (argv.length - 1)) {
+		specifiedChecksum = argv[i];
 	    } else {
 	 	Main.print(Main.getMessage("WARNING_ARG", argv[i]));
 	    }
