@@ -143,17 +143,8 @@ public class IniFile {
 	    IProperty props = getSection(header);
 	    for (String key : props) {
 		String escapedKey = key.replace(COLON, ESC + COLON).replace(EQUAL, ESC + EQUAL);
-		StringTokenizer tok = new StringTokenizer(props.getProperty(key), "\r\n");
-		StringBuffer sb = new StringBuffer();
-		if(tok.countTokens() > 0) {
-		    sb.append(tok.nextToken());
-		}
-		while(tok.hasMoreTokens()) {
-		    sb.append("\\\n");
-		    sb.append(tok.nextToken());
-		}
-
-		writer.println(escapedKey + COLON + sb.toString());
+		String escapedValue = props.getProperty(key).replace("\r\n", "\n").replace("\n", ESC + "\n");
+		writer.println(escapedKey + COLON + escapedValue);
 	    }
 	}
 	writer.close();
