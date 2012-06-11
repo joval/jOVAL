@@ -1,15 +1,14 @@
 # Copyright (C) 2011 jOVAL.org.  All rights reserved.
 # This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
+include $(TOP)/customize.mk
+
+JOVAL_VERSION=5.10.1.1_Dev
+SCAP_VERSION=1.2
+OVAL_VERSION=5.10.1
+SCE_VERSION=1.0
+
 Default: all
-
-ifeq (cygwin, $(findstring cygwin,$(SHELL)))
-    JAVA_HOME=$(TOP)/../../tools/jdk160_26
-endif
-
-ifndef JAVA_HOME
-    JAVA_HOME=~/tools/jdk160_31
-endif
 
 PLATFORM=unknown
 ifeq (Windows, $(findstring Windows,$(OS)))
@@ -29,16 +28,11 @@ SPACE:=$(NULL) # end of the line
 SHELL=/bin/sh
 CWD=$(shell pwd)
 
-JOVAL_VERSION=5.10.1.1_Dev
-SCAP_VERSION=1.2
-OVAL_VERSION=5.10.1
-SCE_VERSION=1.0
-
-# If your system is 32-bit, set ARCH to x86
-#ARCH=x86
-ARCH=x64
-JRE_HOME=$(TOP)/../../tools/jre160_31
-JRE=$(JRE_HOME)/$(ARCH)/bin/java
+ifeq (x86, $(ARCH))
+    JRE=$(JRE32_HOME)/bin/java
+else
+    JRE=$(JRE64_HOME)/bin/java
+endif
 JAVA=$(JAVA_HOME)/bin/java
 JAVAC=$(JAVA_HOME)/bin/javac
 JAR=$(JAVA_HOME)/bin/jar

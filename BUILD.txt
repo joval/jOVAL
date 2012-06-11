@@ -1,0 +1,13 @@
+BUILD INSTRUCTIONS FOR jOVAL:
+
+jOVAL is easily built from source code using GNU make. But, you must first
+modify the file "customize.mk" to tailor the build to your environment. Simply
+follow the instructions documented in the file.
+
+After editing the customization file, simply build the default target from the
+components/ directory. This will create a default distribution of the product
+in components/jovaldi/dist/[ARCH].
+
+For an expedited re-build (i.e., if you have only made a simple change in a few
+.java source files), you can use the "rebuild" target in the components
+directory.

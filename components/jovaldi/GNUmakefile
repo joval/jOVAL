@@ -7,10 +7,11 @@ include $(TOP)/common.mk
 
 PRODUCTNAME=jovaldi
 ZIPNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_Windows
-TARNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_`uname -s`_`uname -p`
+TARNAME=$(PRODUCTNAME)_$(JOVAL_VERSION)_`uname -s`
 DIST32=$(DIST)/x86
+BIN32=$(RSRC)/bin/$(PLATFORM)-x86
 DIST64=$(DIST)/x64
-BIN_DIR=$(RSRC)/bin/$(PLATFORM)-$(ARCH)
+BIN64=$(RSRC)/bin/$(PLATFORM)-x64
 
 API=$(COMMON_LIB)$(CLN)$(COMMON_DEPS)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(SVRL)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
@@ -44,20 +45,20 @@ $(BUILD)/%.class: $(SRC)/%.java
 $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
 
-dist-clean: clean
-	rm -f $(ZIPNAME)*.zip
-	rm -f $(TARNAME).tar.gz
-	rm -rf $(DIST)
-
 dist: dist-$(ARCH)
 
-$(DIST32)/jre : $(JRE_HOME)/x86
+dist-clean: clean
+	rm -f $(ZIPNAME)*.zip
+	rm -f $(TARNAME)*.tar.gz
+	rm -rf $(DIST)
+
+$(DIST32)/jre : $(JRE32_HOME)
 	mkdir -p $(DIST32)
 	rm -rf $@
 	cp -R $< $@
 
 dist-x86: all $(DIST32)/jre
-	cp -R $(BIN_DIR)/* $(DIST32)
+	cp -R $(BIN32)/* $(DIST32)
 	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST32)/Readme.txt
 	cp -R $(RSRC)/docs/Remote.txt $(DIST32)/Remote.txt
 	cp -R $(RSRC)/lib $(DIST32)
@@ -87,13 +88,13 @@ dist-x86: all $(DIST32)/jre
 	cp -R $(PLUGIN_OFFLINE_LIB) $(DIST32)/plugin/offline/lib
 	cp -R $(PLUGIN_OFFLINE)/$(LIBDIR)/*.jar $(DIST32)/plugin/offline/lib
 
-$(DIST64)/jre : $(JRE_HOME)/x64
+$(DIST64)/jre : $(JRE64_HOME)
 	mkdir -p $(DIST64)
 	rm -rf $@
 	cp -R $< $@
 
 dist-x64: all $(DIST64)/jre
-	cp -R $(BIN_DIR)/* $(DIST64)
+	cp -R $(BIN64)/* $(DIST64)
 	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST64)/Readme.txt
 	cp -R $(RSRC)/docs/Remote.txt $(DIST64)/Remote.txt
 	cp -R $(RSRC)/lib $(DIST64)
@@ -129,6 +130,10 @@ release-win32: dist-x86
 release-win64: dist-x64
 	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x64.zip -C $(DIST64) .
 
-release-tar: dist-$(ARCH)
-	tar -cvf $(TARNAME).tar -C $(DIST)/$(ARCH) .
-	gzip $(TARNAME).tar
+release-tar32: dist-x86
+	tar -cvf $(TARNAME)_x86.tar -C $(DIST32) .
+	gzip $(TARNAME)_x86.tar
+
+release-tar64: dist-x64
+	tar -cvf $(TARNAME)_x64.tar -C $(DIST64) .
+	gzip $(TARNAME)_x64.tar
