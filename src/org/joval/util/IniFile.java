@@ -68,7 +68,7 @@ public class IniFile {
     }
 
     /**
-     * Add configuratino data from a stream.  If the IniFile already contains configuration information,
+     * Add configuration data from a stream.  If the IniFile already contains configuration information,
      * the information from the stream is added.
      */
     public void load(InputStream in) throws IOException {

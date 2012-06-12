@@ -32,13 +32,13 @@ import org.joval.util.tree.Tree;
 import org.joval.util.tree.TreeHash;
 
 /**
- * An abstract tree that is intended to serve as a base class for ITree implementations whose access operations are too
- * expensive for direct, repeated use in searches.  The CachingTree stores search results in an in-memory cache for better
+ * An abstract hierarchy that is intended to serve as a base class for ITree implementations whose access operations are too
+ * expensive for direct, repeated use in searches.  The CachingHierarchy stores search results in an in-memory cache for better
  * performance.
  *
- * The CachingTree provides methods abstract that must be overridden by subclasses to populate the cache in bulk, and it
- * also provides internal methods that convert regular expression searches into progressive tree node searches, which are
- * used when the preload methods return false.
+ * The CachingHierarchy provides abstract methods that must be implemented by subclasses to populate the cache in bulk, and it
+ * also provides internal methods that convert regular expression searches into progressive tree node searches, which are used
+ * when the preload methods return false.
  *
  * @author David A. Solin
  * @version %I% %G%

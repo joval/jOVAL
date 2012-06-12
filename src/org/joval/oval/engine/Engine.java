@@ -381,8 +381,8 @@ public class Engine implements IEngine, IAdapter {
     /**
      * The engine runs differently depending on the mode that was used to initialize it:
      *
-     * DIRECTED & LAZY:
-     *   The Engine will iterate through the [filtered] definitions and probe objects as they are encountered.
+     * DIRECTED:
+     *   The Engine will iterate through the [filtered] definitions and probe objects as they are encountered/required.
      *
      * EXHAUSTIVE:
      *   First the Engine probes all the objects in the OVAL definitions, or it uses the supplied ISystemCharacteristics.
@@ -2564,14 +2564,11 @@ public class Engine implements IEngine, IAdapter {
 	StringTokenizer tok = new StringTokenizer(fieldName, "_");
 	StringBuffer sb = new StringBuffer("get");
 	while(tok.hasMoreTokens()) {
-	    try {
-		byte[] ba = tok.nextToken().toLowerCase().getBytes("US-ASCII");
-		if (97 <= ba[0] && ba[0] <= 122) {
-		    ba[0] -= 32; // Capitalize the first letter.
-		}
-		sb.append(new String(ba, Charset.forName("US-ASCII")));
-	    } catch (UnsupportedEncodingException e) {
+	    byte[] ba = tok.nextToken().toLowerCase().getBytes(StringTools.ASCII);
+	    if (97 <= ba[0] && ba[0] <= 122) {
+		ba[0] -= 32; // Capitalize the first letter.
 	    }
+	    sb.append(new String(ba, StringTools.ASCII));
 	}
 	return sb.toString();
     }

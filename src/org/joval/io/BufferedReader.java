@@ -12,6 +12,7 @@ import java.io.IOException;
 import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.io.IReader;
+import org.joval.util.StringTools;
 
 /**
  * An IReader backed by a BufferedReader.
@@ -27,7 +28,7 @@ public class BufferedReader implements IReader {
 	open = true;
 	eof = false;
 	// Use ASCII encoding so that a char is a byte
-	this.reader = new java.io.BufferedReader(new InputStreamReader(in, "US-ASCII"));
+	this.reader = new java.io.BufferedReader(new InputStreamReader(in, StringTools.ASCII));
     }
 
     // Implement IReader

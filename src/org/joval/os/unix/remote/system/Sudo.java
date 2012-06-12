@@ -22,11 +22,8 @@ import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
 
 /**
- * A tool for running processes as a specific user.  This does not typically actually involve using the sudo command, as
- * it is not normally standard on a Unix operation system.  Rather, it makes use of the su command.  The notable exception
- * is Mac OS X, where it is installed by default (and hence used by this class).
- *
- * It is used exclusively by the remote UnixSession class.
+ * An IProcess implementation that leverages a UnixSession's IPrivilegeEscalationDriver to execute a command in the context
+ * of an administrative user account.
  *
  * @author David A. Solin
  * @version %I% %G%

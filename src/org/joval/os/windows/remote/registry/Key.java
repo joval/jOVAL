@@ -338,7 +338,6 @@ public class Key implements IKey {
 								   new Integer(index), Key.this.toString()));
 		}
 	    } catch (JIException e) {
-//DAS
 		throw new NoSuchElementException(new Integer(index).toString());
 	    }
 	}

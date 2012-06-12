@@ -13,9 +13,7 @@ import org.joval.intf.util.IPerishable;
 import org.joval.io.PerishableReader;
 
 /**
- * A tool for running processes as a specific user.  This does not typically actually involve using the sudo command, as
- * it is not normally standard on a Unix operation system.  Rather, it makes use of the su command.  The notable exception
- * is Mac OS X, where it is installed by default (and hence used by this class).
+ * IPrivilegeEscalationDriver implementation for Linux.
  *
  * It is used exclusively by the remote UnixSession class.
  *

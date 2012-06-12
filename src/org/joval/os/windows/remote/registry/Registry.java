@@ -67,7 +67,6 @@ public class Registry extends BaseRegistry {
     public static final int BUFFER_LEN = 512;
 
     public static final String PATH		= "path";
-    public static final String DEFAULT_ENCODING	= "US-ASCII";
 
     private static final long INTERVAL = 5000L; // a registry operation should never take longer than this
     private static final JIWinRegFactory factory = JIWinRegFactory.getSingleTon();
@@ -430,16 +429,8 @@ public class Registry extends BaseRegistry {
      */
     String getString(byte[] b) {
 	String s = null;
-	try {
-	    if (b != null) {
-		s = new String(b, Charset.forName(DEFAULT_ENCODING));
-	    }
-	} catch (IllegalCharsetNameException e) {
-	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_CONVERSION);
-	    log.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (UnsupportedCharsetException e) {
-	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_CONVERSION);
-	    log.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	if (b != null) {
+	    s = new String(b, StringTools.ASCII);
 	}
 	return s;
     }

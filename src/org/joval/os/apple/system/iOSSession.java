@@ -17,7 +17,8 @@ import org.joval.util.AbstractBaseSession;
 import org.joval.util.JOVALMsg;
 
 /**
- * A simple session implementation for Juniper JunOS devices, which is really very similar to an IOS session.
+ * A simple session implementation for Apple iOS devices, which distinguishes itself simply by being capable of
+ * providing a single configuration plist.
  *
  * @author David A. Solin
  * @version %I% %G%
