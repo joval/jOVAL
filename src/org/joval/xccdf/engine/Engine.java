@@ -102,6 +102,7 @@ public class Engine implements Runnable, IObserver {
     private Collection<String> platforms;
     private Profile profile;
     private Checklist checklist;
+    private File ocilDir;
     private List<RuleType> rules = null;
     private List<GroupType> groups = null;
     private String phase = null;
@@ -111,10 +112,11 @@ public class Engine implements Runnable, IObserver {
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
      */
-    public Engine(Benchmark xccdf, Profile profile, Checklist checklist, IBaseSession session, File ws) {
+    public Engine(Benchmark xccdf, Profile profile, Checklist checklist, File ocilDir, IBaseSession session, File ws) {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	this.checklist = checklist;
+	this.ocilDir = ocilDir;
 	this.session = session;
 	this.ws = ws;
 	debug = ws != null;
@@ -139,7 +141,19 @@ public class Engine implements Runnable, IObserver {
 	    }
 	} else {
 	    logger.info("There are " + rules.size() + " rules to process for the selected profile");
-	    if (session.connect()) {
+
+	    boolean ocilComplete = true;
+	    if (checklist == null) {
+		OCILHandler oh = new OCILHandler(xccdf, profile);
+		if (oh.exportFiles(ocilDir)) {
+		    ocilComplete = false;
+		}
+	    }
+	    if (!ocilComplete) {
+		logger.info(  "\n  ***************** ATTENTION *****************\n\n" +
+				"  This XCCDF content requires OCIL result data.\n" +
+				"  Content has been exported to: " + ocilDir + "\n");
+	    } else if (session.connect()) {
 		//
 		// Create the Benchmark.TestResult node
 		//

@@ -38,7 +38,6 @@ import ocil.schemas.core.InstructionsType;
 import ocil.schemas.core.ItemBaseType;
 import ocil.schemas.core.NamedItemBaseType;
 import ocil.schemas.core.NumericQuestionTestActionType;
-import ocil.schemas.core.ObjectFactory;
 import ocil.schemas.core.OCILType;
 import ocil.schemas.core.PatternTestActionConditionType;
 import ocil.schemas.core.QuestionnaireType;
@@ -504,7 +503,7 @@ public class Checklist implements ITransformable {
 	    Marshaller marshaller = ctx.createMarshaller();
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    out = new FileOutputStream(f);
-	    marshaller.marshal(new ObjectFactory().createOcil(getOCILType()), out);
+	    marshaller.marshal(Factories.core.createOcil(getOCILType()), out);
 	} catch (JAXBException e) {
 	    throw new IOException(e);
 	} catch (FactoryConfigurationError e) {
@@ -522,7 +521,7 @@ public class Checklist implements ITransformable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, new ObjectFactory().createOcil(getOCILType()));
+	return new JAXBSource(ctx, Factories.core.createOcil(getOCILType()));
     }
 
     // Private

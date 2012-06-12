@@ -1,10 +1,14 @@
 CLASSES=\
 	org.joval.cpe.CpeException					\
 	org.joval.cpe.Dictionary					\
+	org.joval.ocil.BooleanTestActionConditionType			\
+	org.joval.ocil.Checklist					\
+	org.joval.ocil.Factories					\
+	org.joval.ocil.OcilException					\
+	org.joval.ocil.OcilFactory					\
+	org.joval.ocil.Variables					\
 	org.joval.plugin.PluginConfigurationException			\
 	org.joval.plugin.PluginFactory					\
-	org.joval.protocol.zip.ZipURLConnection				\
-	org.joval.protocol.zip.ZipURLStreamHandler			\
 	org.joval.scap.Datastream					\
 	org.joval.scap.ScapException					\
 	org.joval.sce.SCEScript						\

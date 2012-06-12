@@ -45,6 +45,8 @@ import org.joval.cpe.CpeException;
 import org.joval.cpe.Dictionary;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.util.ILoggable;
+import org.joval.ocil.Checklist;
+import org.joval.ocil.OcilException;
 import org.joval.oval.OvalException;
 import org.joval.oval.Definitions;
 import org.joval.scap.ScapException;
@@ -186,6 +188,21 @@ public class Datastream implements ILoggable {
 		Component component = (Component)obj;
 		if (component.isSetOvalDefinitions()) {
 		    return new Definitions(component.getOvalDefinitions());
+		}
+	    }
+	    throw new NoSuchElementException(href);
+	} else {
+	    throw new NoSuchElementException(streamId);
+	}
+    }
+
+    public Checklist getChecklist(String streamId, String href) throws NoSuchElementException, OcilException {
+	if (resolvers.containsKey(streamId)) {
+	    Object obj = resolvers.get(streamId).resolve(href);
+	    if (obj instanceof Component) {
+		Component component = (Component)obj;
+		if (component.isSetOcil()) {
+		    return new Checklist(component.getOcil());
 		}
 	    }
 	    throw new NoSuchElementException(href);

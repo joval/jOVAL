@@ -38,8 +38,10 @@ import org.joval.cpe.Dictionary;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.xml.ITransformable;
-import org.joval.scap.Datastream;
+import org.joval.ocil.Checklist;
+import org.joval.ocil.OcilException;
 import org.joval.oval.OvalException;
+import org.joval.scap.Datastream;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
@@ -100,6 +102,10 @@ public class Benchmark implements ILoggable, ITransformable {
 
     public IDefinitions getDefinitions(String href) throws OvalException, NoSuchElementException {
 	return ds.getDefinitions(streamId, href);
+    }
+
+    public Checklist getChecklist(String href) throws OcilException, NoSuchElementException {
+	return ds.getChecklist(streamId, href);
     }
 
     public ScriptDataType getScript(String href) throws NoSuchElementException {

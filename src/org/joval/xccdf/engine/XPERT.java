@@ -115,6 +115,7 @@ public class XPERT {
 	File xmlDir = new File(BASE_DIR, "xml");
 	File transformFile = new File(xmlDir, "xccdf_results_to_html.xsl");
 	File reportFile = new File("xccdf-result.html");
+	File ocilDir = new File("ocil-export");
 
 	File ws = null;
 	Level level = Level.INFO;
@@ -167,6 +168,8 @@ public class XPERT {
 		    }
 		} else if (argv[i].equals("-y")) {
 		    logFile = new File(argv[++i]);
+		} else if (argv[i].equals("-g")) {
+		    ocilDir = new File(argv[++i]);
 		} else if (argv[i].equals("-t")) {
 		    transformFile = new File(argv[++i]);
 		} else if (argv[i].equals("-x")) {
@@ -285,7 +288,7 @@ public class XPERT {
 	    try {
 		Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
 		Profile profile = new Profile(benchmark, profileName);
-		Engine engine = new Engine(benchmark, profile, checklist, plugin.getSession(), ws);
+		Engine engine = new Engine(benchmark, profile, checklist, ocilDir, plugin.getSession(), ws);
 		engine.run();
 
 		if (benchmark.getBenchmark().isSetTestResult()) {
