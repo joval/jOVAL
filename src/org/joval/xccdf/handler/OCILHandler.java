@@ -49,26 +49,57 @@ public class OCILHandler {
     private Benchmark xccdf;
     private Profile profile;
     private XMLGregorianCalendar startTime;
-    private Hashtable<String, QuestionnaireResultType> questionnaireResults;
+    private Hashtable<String, Hashtable<String, String>> results;
     private Hashtable<String, Variables> variables;
     private ObjectFactory factory;
 
     /**
-     * Create an OCIL handler utility for the given XCCDF, Profile and Checklist (results).
+     * Create an OCIL handler utility for the given XCCDF, Profile and href-indexed Checklists (results).
      */
-    public OCILHandler(Benchmark xccdf, Profile profile, Checklist checklist) {
+    public OCILHandler(Benchmark xccdf, Profile profile, Hashtable<String, Checklist> checklists)
+		throws IllegalArgumentException {
+
 	this.xccdf = xccdf;
 	this.profile = profile;
-	if (checklist.getOCILType().isSetResults()) {
-	    questionnaireResults = new Hashtable<String, QuestionnaireResultType>();
-	    factory = new ObjectFactory();
-	    ResultsType results = checklist.getOCILType().getResults();
-	    if (results.isSetStartTime()) {
-		startTime = results.getStartTime();
+	factory = new ObjectFactory();
+	results = new Hashtable<String, Hashtable<String, String>>();
+
+	for (String href : checklists.keySet()) {
+	    Checklist checklist = checklists.get(href);
+
+	    //
+	    // If the HREF was not specified, then discover the singleton HREF, or throw an error.
+	    //
+	    if ("".equals(href)) {
+		Collection<String> hrefs = getOcilHrefs();
+		if (checklists.size() == 1 && hrefs.size() == 1) {
+		    href = hrefs.iterator().next();
+		} else {
+		    throw new IllegalArgumentException("href");
+		}
 	    }
-	    if (results.isSetQuestionnaireResults() && results.getQuestionnaireResults().isSetQuestionnaireResult()) {
-		for (QuestionnaireResultType qr : results.getQuestionnaireResults().getQuestionnaireResult()) {
-		    questionnaireResults.put(qr.getQuestionnaireRef(), qr);
+
+	    if (checklist.getOCILType().isSetResults()) {
+		ResultsType rt = checklist.getOCILType().getResults();
+
+		//
+		// Set the start time to the earliest checklist result start time.
+		//
+		if (rt.isSetStartTime()) {
+		    XMLGregorianCalendar cal = rt.getStartTime();
+		    if (startTime == null) {
+			startTime = cal;
+		    } else if (cal.toGregorianCalendar().compareTo(startTime.toGregorianCalendar()) < 0) {
+			startTime = cal;
+		    }
+		}
+
+		if (rt.isSetQuestionnaireResults()) {
+		    Hashtable<String, String> result = new Hashtable<String, String>();
+		    for (QuestionnaireResultType qr : rt.getQuestionnaireResults().getQuestionnaireResult()) {
+			result.put(qr.getQuestionnaireRef(), qr.getResult());
+		    }
+		    results.put(href, result);
 		}
 	    }
 	}
@@ -87,30 +118,14 @@ public class OCILHandler {
      * Export relevant OCIL files to the specified directory. Returns false if there are no OCIL checks in the profile.
      */
     public boolean exportFiles(File exportDir) {
-	if (!exportDir.exists()) {
-	    exportDir.mkdirs();
-	}
-
-	//
-	// Get the unique OCIL hrefs from the selected profile.
-	//
-	HashSet<String> ocilHrefs = new HashSet<String>();
-	for (RuleType rule : profile.getSelectedRules()) {
-	    for (CheckType check : rule.getCheck()) {
-		if (NAMESPACE.equals(check.getSystem())) {
-		    if (check.isSetCheckContentRef()) {
-			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    if (ref.isSetHref()) {
-				ocilHrefs.add(ref.getHref());
-			    }
-			}
-		    }
-		}
-	    }
-	}
-
+	HashSet<String> ocilHrefs = getOcilHrefs();
 	if (ocilHrefs.size() == 0) {
+	    //
+	    // There are no OCIL files to export
+	    //
 	    return false;
+	} else if (!exportDir.exists()) {
+	    exportDir.mkdirs();
 	}
 
 	//
@@ -143,7 +158,7 @@ public class OCILHandler {
      * Integrate all the OCIL results with the XCCDF results.
      */
     public void integrateResults(TestResultType xccdfResult) {
-	if (questionnaireResults == null) {
+	if (results == null) {
 	    return;
 	}
 
@@ -174,24 +189,28 @@ public class OCILHandler {
 			    RuleResult result = new RuleResult();
 			    CheckType checkResult = factory.createCheckType();
 			    for (CheckContentRefType ref : check.getCheckContentRef()) {
-				checkResult.getCheckContentRef().add(ref);
-				if (questionnaireResults.containsKey(ref.getName())) {
-				    String qr = questionnaireResults.get(ref.getName()).getResult();
-				    if ("PASS".equals(qr)) {
-					result.add(ResultEnumType.PASS);
-				    } else if ("FAIL".equals(qr)) {
-					result.add(ResultEnumType.FAIL);
-				    } else if (qr.equals(ExceptionalResultType.UNKNOWN.value())) {
-					result.add(ResultEnumType.UNKNOWN);
-				    } else if (qr.equals(ExceptionalResultType.ERROR.value())) {
-					result.add(ResultEnumType.ERROR);
-				    } else if (qr.equals(ExceptionalResultType.NOT_TESTED.value())) {
+				if (ref.isSetHref() && ref.isSetName()) {
+				    String href = ref.getHref();
+				    String name = ref.getName();
+				    checkResult.getCheckContentRef().add(ref);
+				    if (results.containsKey(href) && results.get(href).containsKey(name)) {
+					String qr = results.get(href).get(name);
+					if ("PASS".equals(qr)) {
+					    result.add(ResultEnumType.PASS);
+					} else if ("FAIL".equals(qr)) {
+					    result.add(ResultEnumType.FAIL);
+					} else if (qr.equals(ExceptionalResultType.UNKNOWN.value())) {
+					    result.add(ResultEnumType.UNKNOWN);
+					} else if (qr.equals(ExceptionalResultType.ERROR.value())) {
+					    result.add(ResultEnumType.ERROR);
+					} else if (qr.equals(ExceptionalResultType.NOT_TESTED.value())) {
+					    result.add(ResultEnumType.NOTCHECKED);
+					} else if (qr.equals(ExceptionalResultType.NOT_APPLICABLE.value())) {
+					    result.add(ResultEnumType.NOTAPPLICABLE);
+					}
+				    } else {
 					result.add(ResultEnumType.NOTCHECKED);
-				    } else if (qr.equals(ExceptionalResultType.NOT_APPLICABLE.value())) {
-					result.add(ResultEnumType.NOTAPPLICABLE);
 				    }
-				} else {
-				    result.add(ResultEnumType.NOTCHECKED);
 				}
 			    }
 			    ruleResult.getCheck().add(checkResult);
@@ -241,5 +260,24 @@ public class OCILHandler {
 	    variables.put(href, vars);
 	}
 	return variables.get(href);
+    }
+
+    /**
+     * Gather all the hrefs of all the OCIL check references.
+     */
+    private HashSet<String> getOcilHrefs() {
+	HashSet<String> hrefs = new HashSet<String>();
+	for (RuleType rule : profile.getSelectedRules()) {
+	    for (CheckType check : rule.getCheck()) {
+		if (NAMESPACE.equals(check.getSystem())) {
+		    for (CheckContentRefType ref : check.getCheckContentRef()) {
+			if (ref.isSetHref()) {
+			    hrefs.add(ref.getHref());
+			}
+		    }
+		}
+	    }
+	}
+	return hrefs;
     }
 }

@@ -101,7 +101,7 @@ public class Engine implements Runnable, IObserver {
     private IBaseSession session;
     private Collection<String> platforms;
     private Profile profile;
-    private Checklist checklist;
+    private Hashtable<String, Checklist> checklists;
     private File ocilDir;
     private List<RuleType> rules = null;
     private List<GroupType> groups = null;
@@ -112,10 +112,12 @@ public class Engine implements Runnable, IObserver {
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
      */
-    public Engine(Benchmark xccdf, Profile profile, Checklist checklist, File ocilDir, IBaseSession session, File ws) {
+    public Engine(Benchmark xccdf, Profile profile, Hashtable<String, Checklist> checklists, File ocilDir,
+		  IBaseSession session, File ws) {
+
 	this.xccdf = xccdf;
 	this.profile = profile;
-	this.checklist = checklist;
+	this.checklists = checklists;
 	this.ocilDir = ocilDir;
 	this.session = session;
 	this.ws = ws;
@@ -143,7 +145,7 @@ public class Engine implements Runnable, IObserver {
 	    logger.info("There are " + rules.size() + " rules to process for the selected profile");
 
 	    boolean ocilComplete = true;
-	    if (checklist == null) {
+	    if (checklists.size() == 0) {
 		OCILHandler oh = new OCILHandler(xccdf, profile);
 		if (oh.exportFiles(ocilDir)) {
 		    ocilComplete = false;
@@ -282,8 +284,8 @@ public class Engine implements Runnable, IObserver {
 	//
         // Integrate OCIL results
 	//
-	if (checklist != null) {
-	    OCILHandler ocilHandler = new OCILHandler(xccdf, profile, checklist);
+	if (checklists != null) {
+	    OCILHandler ocilHandler = new OCILHandler(xccdf, profile, checklists);
 	    ocilHandler.integrateResults(testResult);
 	}
 

@@ -12,6 +12,7 @@ import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.text.MessageFormat;
 import java.util.Date;
+import java.util.Hashtable;
 import java.util.Locale;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -110,7 +111,7 @@ public class XPERT {
 	String streamId = null;
 	String benchmarkId = null;
 	String profileName = null;
-	File ocilFile = new File(CWD, "ocil-results.xml");
+	Hashtable<String, File> ocilFiles = new Hashtable<String, File>();
 	File resultsFile = new File(CWD, "xccdf-results.xml");
 	File xmlDir = new File(BASE_DIR, "xml");
 	File transformFile = new File(xmlDir, "xccdf_results_to_html.xsl");
@@ -138,8 +139,21 @@ public class XPERT {
 		    benchmarkId = argv[++i];
 		} else if (argv[i].equals("-p")) {
 		    profileName = argv[++i];
-		} else if (argv[i].equals("-c")) {
-		    ocilFile = new File(argv[++i]);
+		} else if (argv[i].equals("-i")) {
+		    String pair = argv[++i];
+		    int ptr = pair.indexOf("=");
+		    String key, val;
+		    if (ptr == -1) {
+			key = "";
+			val = pair;
+		    } else {
+			key = pair.substring(0,ptr);
+			val = pair.substring(ptr+1);
+		    }
+		    if (ocilFiles.containsKey(key)) {
+			System.out.println("WARNING: duplicate OCIL href - " + key);
+		    }
+		    ocilFiles.put(key, new File(val));
 		} else if (argv[i].equals("-r")) {
 		    resultsFile = new File(argv[++i]);
 		} else if (argv[i].equals("-v")) {
@@ -168,7 +182,7 @@ public class XPERT {
 		    }
 		} else if (argv[i].equals("-y")) {
 		    logFile = new File(argv[++i]);
-		} else if (argv[i].equals("-g")) {
+		} else if (argv[i].equals("-e")) {
 		    ocilDir = new File(argv[++i]);
 		} else if (argv[i].equals("-t")) {
 		    transformFile = new File(argv[++i]);
@@ -275,10 +289,10 @@ public class XPERT {
 		System.exit(1);
 	    }
 
-	    Checklist checklist = null;
-	    if (ocilFile.isFile()) {
+	    Hashtable<String, Checklist> checklists = new Hashtable<String, Checklist>();
+	    for (String href : ocilFiles.keySet()) {
 		try {
-		    checklist = new Checklist(ocilFile);
+		    checklists.put(href, new Checklist(ocilFiles.get(href)));
 		} catch (OcilException e) {
 		    logger.severe(e.getMessage());
 		    System.exit(1);
@@ -288,7 +302,7 @@ public class XPERT {
 	    try {
 		Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
 		Profile profile = new Profile(benchmark, profileName);
-		Engine engine = new Engine(benchmark, profile, checklist, ocilDir, plugin.getSession(), ws);
+		Engine engine = new Engine(benchmark, profile, checklists, ocilDir, plugin.getSession(), ws);
 		engine.run();
 
 		if (benchmark.getBenchmark().isSetTestResult()) {
