@@ -42,17 +42,17 @@ class FlagData {
     }
 
     FlagEnumeration getFlag() throws OvalException {
-	if (	   e > 0) {
+	if (e > 0) {
 	    return FlagEnumeration.ERROR;
-	} else if (e == 0 &&	c > 0 &&	i == 0 &&	d == 0 &&	nc == 0 &&	na == 0) {
+	} else if (c > 0 &&	i == 0 &&	d >= 0 &&	nc == 0 &&	na >= 0) {
 	    return FlagEnumeration.COMPLETE;
-	} else if (e == 0 &&	c >= 0 &&	i > 0 &&	d == 0 &&	nc >= 0 &&	na == 0) {
+	} else if (c >= 0 &&	i > 0 &&	d >= 0 &&	nc >= 0 &&	na >= 0) {
 	    return FlagEnumeration.INCOMPLETE;
-	} else if (e == 0 &&	c == 0 &&	i == 0 &&	d > 0 &&	nc == 0 &&	na == 0) {
+	} else if (c == 0 &&	i == 0 &&	d > 0 &&	nc == 0 &&	na == 0) {
 	    return FlagEnumeration.DOES_NOT_EXIST;
-	} else if (e == 0 &&	c == 0 &&	i == 0 &&	d == 0 &&	nc > 0 &&	na == 0) {
+	} else if (c == 0 &&	i == 0 &&	d == 0 &&	nc > 0 &&	na == 0) {
 	    return FlagEnumeration.NOT_COLLECTED;
-	} else if (e == 0 &&	c == 0 &&	i == 0 &&	d == 0 &&	nc == 0 &&	na >= 0) {
+	} else if (c == 0 &&	i == 0 &&	d == 0 &&	nc == 0 &&	na >= 0) {
 	    return FlagEnumeration.NOT_APPLICABLE;
 	} else {
 	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_FLAG, e, c, i, d, nc, na));
