@@ -17,8 +17,9 @@ import org.joval.util.AbstractSession;
  * @version %I% %G%
  */
 public class UnixSession extends BaseUnixSession {
-    public UnixSession() {
+    public UnixSession(File wsdir) {
 	super();
+	this.wsdir = wsdir;
     }
 
     // Implement IBaseSession

@@ -22,6 +22,9 @@ import org.joval.util.StringTools;
 /**
  * A class that represents a node within a tree.
  *
+ * Note that whenever a node is modified, it must be re-added to the Tree.nodes map, so that the changes will be
+ * persisted in the JDBM storage.
+ *
  * @author David A. Solin
  * @version %I% %G%
  */
@@ -30,17 +33,18 @@ public class Node implements INode {
 
     Tree tree;
     Type type;
-    String name = null, path = null, canonPath = null, linkPath = null;
-    Node parent = null, linkParent = null;
-    Hashtable<String, INode> children;
+    boolean isLinkChild = false;
+    String name = null, path = null, canonPath = null, linkPath = null, parentPath = null;
+    HashSet<String> children = null;
 
     public void setBranch() {
 	if (type != Type.TREE) {
 	    type = Type.BRANCH;
 	}
 	if (children == null) {
-	    children = new Hashtable<String, INode>();
+	    children = new HashSet<String>();
 	}
+	tree.nodes.put(getPath(), this);
     }
 
     // Implement ILoggable
@@ -67,8 +71,13 @@ public class Node implements INode {
 	if (children == null) {
 	    getChildren();
 	}
-	if (children.containsKey(name)) {
-	    return children.get(name);
+	if (children.contains(name)) {
+	    String childPath = getPath() + tree.getDelimiter() + name;
+	    if (tree.nodes.containsKey(childPath)) {
+		return tree.nodes.get(childPath);
+	    } else {
+		throw new NoSuchElementException(childPath);
+	    }
 	} else {
 	    throw new NoSuchElementException(name);
 	}
@@ -79,35 +88,56 @@ public class Node implements INode {
 	  case LINK:
 	    if (hasChildren() && children == null) {
 		copyChildren((Node)lookup(linkPath));
+		tree.nodes.put(getPath(), this);
 	    }
 	    if (children == null) {
 		throw new UnsupportedOperationException(JOVALMsg.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
 	    } else {
-		return children.values();
+		Collection<INode> clist = new Vector<INode>();
+		for (String childName : children) {
+		    clist.add(getChild(childName));
+		}
+		return clist;
 	    }
 
 	  case UNRESOLVED: {
 	    Node prototype = (Node)lookup(getCanonicalPath());
+	    switch(prototype.type) {
+	      case LINK:
+		linkPath = prototype.linkPath;
+		// fall-thru
+	      default:
+		type = prototype.type;
+		break;
+	    }
 	    if (prototype.hasChildren()) {
 		copyChildren(prototype);
 	    }
-	    linkPath = prototype.linkPath; // may or may not be a link
-	    type = prototype.type;
+	    tree.nodes.put(getPath(), this);
 	    return getChildren();
 	  }
 
 	  case LEAF:
 	    throw new UnsupportedOperationException(JOVALMsg.getMessage(JOVALMsg.ERROR_NODE_CHILDREN, getPath(), type));
 
-	  case BRANCH:
-	    return children.values();
+	  case BRANCH: {
+	    Collection<INode> clist = new Vector<INode>();
+	    for (String childName : children) {
+		clist.add(getChild(childName));
+	    }
+	    return clist;
+	  }
 
 	  case TREE:
 	  default:
 	    if (children == null) {
 		throw new NoSuchElementException(getPath());
 	    } else {
-		return children.values();
+		Collection<INode> clist = new Vector<INode>();
+		for (String childName : children) {
+		    clist.add(getChild(childName));
+		}
+		return clist;
 	    }
 	}
     }
@@ -142,31 +172,40 @@ public class Node implements INode {
 
     public String getPath() {
 	if (path == null) {
-	    if (parent == null) {
+	    if (parentPath == null) {
 		if (name.endsWith(tree.getDelimiter())) {
 		    path = name.substring(0, name.lastIndexOf(tree.getDelimiter()));
 		} else {
 		    path = name;
 		}
-	    } else if (linkParent == null) {
-		path = new StringBuffer(parent.getPath()).append(tree.getDelimiter()).append(name).toString();
 	    } else {
-		path = new StringBuffer(linkParent.getPath()).append(tree.getDelimiter()).append(name).toString();
+		path = new StringBuffer(parentPath).append(tree.getDelimiter()).append(name).toString();
 	    }
+	    tree.nodes.put(path, this);
 	}
 	return path;
     }
 
     public String getCanonicalPath() {
-	if (parent == null) {
-	    return name;
-	} else if (canonPath == null) {
-	    String parentCanon = parent.getCanonicalPath();
-	    if (parentCanon.endsWith(tree.getDelimiter())) {
-		canonPath = new StringBuffer(parentCanon).append(name).toString();
+	if (canonPath == null) {
+	    if (parentPath == null) {
+		canonPath = name;
 	    } else {
-		canonPath = new StringBuffer(parentCanon).append(tree.getDelimiter()).append(name).toString();
+		String parentCanon = null;
+		if (isLinkChild) {
+		    String realPath = tree.links.get(getPath());
+		    canonPath = tree.lookup(realPath).getCanonicalPath();
+		} else {
+		    Node parent = (Node)tree.lookup(parentPath);
+		    parentCanon = parent.getCanonicalPath();
+		    if (parentCanon.endsWith(tree.getDelimiter())) {
+			canonPath = new StringBuffer(parentCanon).append(name).toString();
+		    } else {
+			canonPath = new StringBuffer(parentCanon).append(tree.getDelimiter()).append(name).toString();
+		    }
+		}
 	    }
+	    tree.nodes.put(path, this);
 	}
 	return canonPath;
     }
@@ -186,8 +225,8 @@ public class Node implements INode {
      */
     Node(Node parent, String name) {
 	this(name);
-	this.parent = parent;
-	this.tree = parent.tree;
+	parentPath = parent.getPath();
+	tree = parent.tree;
 	type = Type.LEAF;
     }
 
@@ -222,34 +261,32 @@ public class Node implements INode {
      * Convenience method for looking up another node in the Forest (yes, FOREST).
      */
     private INode lookup(String path) throws NoSuchElementException {
-	if (parent instanceof ITree) {
-	    return ((Tree)parent).lookup(path, false);
-	} else {
-	    return parent.lookup(path);
-	}
+	return tree.lookup(path, false);
     }
 
     /**
-     * Copy from canonical into a link path.
+     * Copy children from a source (i.e., the canonical node).
      */
-    private void copyChildren(Node target) {
-	children = new Hashtable<String, INode>();
-	for (INode inode : target.getChildren()) {
-	    Node node = (Node)inode;
-	    if (getCanonicalPath().equals(node.getCanonicalPath())) {
-		tree.getLogger().error(JOVALMsg.ERROR_LINK_SELF, getCanonicalPath());
-	    } else {
-		Node child = new Node(node.parent, node.getName());
-		child.linkParent = this;
-		switch(((Node)node).type) {
-		  case LEAF:
-		    child.type = Type.LEAF;
-		    break;
-		  default:
-		    child.type = Type.UNRESOLVED;
-		    break;
+    private void copyChildren(Node source) {
+	Collection<INode> adoptees = source.getChildren();
+	if (adoptees.size() == 0) {
+	    //
+	    // Link to an empty directory
+	    //
+	    children = new HashSet<String>();
+	} else {
+	    for (INode inode : adoptees) {
+		Node child = (Node)inode;
+		if (getCanonicalPath().equals(child.getCanonicalPath())) {
+		    tree.getLogger().error(JOVALMsg.ERROR_LINK_SELF, getCanonicalPath());
+		} else {
+		    Node myChild = tree.makeNode(this, child.getName());
+		    myChild.type = Type.UNRESOLVED;
+		    if (type == Type.LINK) {
+			myChild.isLinkChild = true;
+			tree.links.put(myChild.getPath(), child.getPath());
+		    }
 		}
-		children.put(child.getName(), child);
 	    }
 	}
     }

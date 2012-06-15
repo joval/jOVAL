@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
+import org.apache.jdbm.Serializer;
+
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
@@ -30,7 +32,7 @@ import org.joval.util.tree.Node;
 
 /**
  * A CacheFilesystem is a CachingHierarchy that implements the IFilesystem interface.  It works with CacheFile
- * objects.  A CacheFilesystem will automatically store information about accessed files in memory, in order to
+ * objects.  A CacheFilesystem will automatically store information about accessed files in JDBM, in order to
  * minimize traffic with the target machine.
  *
  * All IFilesystem implementations extend this base class.
@@ -45,11 +47,11 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
     protected IEnvironment env;
     protected IPathRedirector redirector;
 
-    protected CacheFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector, String delimiter) {
-	super(session.getHostname(), delimiter);
+    protected CacheFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redir, String delim, String dbKey) {
+	super(session.getHostname(), delim, new File(session.getWorkspace(), dbKey));
 	this.session = session;
 	this.env = env;
-	this.redirector = redirector;
+	this.redirector = redir;
 	props = session.getProperties();
 	setLogger(session.getLogger());
     }
@@ -59,6 +61,10 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
     }
 
     // Implement methods abstract in CachingHierarchy
+
+    protected Serializer<IFile> getSerializer() {
+	return new CacheFileSerializer(this);
+    }
 
     protected boolean loadCache() {
 	return false;

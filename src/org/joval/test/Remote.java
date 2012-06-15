@@ -140,6 +140,7 @@ public class Remote {
 	    } else {
 		System.out.println("Failed to connect the session: " + session.getClass().getName());
 	    }
+	    session.dispose();
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}

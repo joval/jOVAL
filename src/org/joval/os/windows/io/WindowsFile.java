@@ -48,6 +48,12 @@ public class WindowsFile extends DefaultFile {
 	}
     }
 
+    public WindowsFile(CacheFilesystem fs, FileInfo info, String path) {
+	super(fs, path);
+	this.info = info;
+	accessor = new WindowsAccessor(new File(path));
+    }
+
     @Override
     public FileAccessor getAccessor() {
 	return accessor;

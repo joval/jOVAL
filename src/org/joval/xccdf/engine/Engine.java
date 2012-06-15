@@ -107,21 +107,21 @@ public class Engine implements Runnable, IObserver {
     private List<GroupType> groups = null;
     private String phase = null;
     private Logger logger;
-    private File ws = null;
+    private File ovalDir = null;
 
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
      */
     public Engine(Benchmark xccdf, Profile profile, Hashtable<String, Checklist> checklists, File ocilDir,
-		  IBaseSession session, File ws) {
+		  IBaseSession session, File ovalDir) {
 
 	this.xccdf = xccdf;
 	this.profile = profile;
 	this.checklists = checklists;
 	this.ocilDir = ocilDir;
 	this.session = session;
-	this.ws = ws;
-	debug = ws != null;
+	this.ovalDir = ovalDir;
+	debug = ovalDir != null;
 	logger = XPERT.logger;
     }
 
@@ -308,10 +308,19 @@ public class Engine implements Runnable, IObserver {
 	      case OK:
 		if (debug) {
 		    String basename = encode(href);
-		    if (!basename.toLowerCase().endsWith(".xml")) {
-			basename = basename + ".xml";
+		    if (basename.toLowerCase().endsWith(".xml")) {
+			basename = basename.substring(0, basename.length() - 4);
 		    }
-		    File resultFile = new File(ws, "oval-res_" + basename);
+
+		    File varsFile = new File(ovalDir, basename + "_variables.xml");
+		    logger.info("Saving OVAL variables: " + varsFile.getPath());
+		    ovalHandler.getVariables(href).writeXML(varsFile);
+
+		    File filterFile = new File(ovalDir, basename + "_evaluation-ids.xml");
+		    logger.info("Saving OVAL definition filter: " + filterFile.getPath());
+		    ovalHandler.getDefinitionFilter(href).writeXML(filterFile);
+
+		    File resultFile = new File(ovalDir, basename + "_results.xml");
 		    logger.info("Saving OVAL results: " + resultFile.getPath());
 		    engine.getResults().writeXML(resultFile);
 		}

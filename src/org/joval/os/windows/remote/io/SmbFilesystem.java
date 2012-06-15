@@ -11,6 +11,8 @@ import java.util.NoSuchElementException;
 
 import org.slf4j.cal10n.LocLogger;
 
+import org.apache.jdbm.Serializer;
+
 import jcifs.smb.NtlmPasswordAuthentication;
 import jcifs.smb.SmbException;
 import jcifs.smb.SmbFile;
@@ -54,10 +56,15 @@ public class SmbFilesystem extends CacheFilesystem implements IWindowsFilesystem
      * @param env The host environment, used to expand variables that are passed inside of paths.  If null, autoExpand is
      *	    automatically set to false.
      */
-    public SmbFilesystem(IBaseSession session, IWindowsCredential cred, IEnvironment env, IPathRedirector fsr) {
-	super(session, env, fsr, DELIM_STR);
+    public SmbFilesystem(IBaseSession session, IWindowsCredential cred, IEnvironment env, IPathRedirector fsr, String dbKey) {
+	super(session, env, fsr, DELIM_STR, dbKey);
 	host = session.getHostname();
 	auth = getNtlmPasswordAuthentication(cred);
+    }
+
+    @Override
+    protected Serializer<IFile> getSerializer() {
+	return new SmbCacheFileSerializer(this);
     }
 
     @Override

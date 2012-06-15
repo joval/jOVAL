@@ -85,15 +85,10 @@ public class RemotePlugin extends BasePlugin {
 	}
 
 	setCredentialStore(scs);
-	if (dir != null) {
-	    setDataDirectory(dir);
-	}
 	hostname = props.getProperty(SimpleCredentialStore.PROP_HOSTNAME);
     }
 
-    /**
-     * Set a location where the RemotePlugin class can store host discovery information.
-     */
+    @Override
     public void setDataDirectory(File dir) throws IOException {
 	sessionFactory.setDataDirectory(dir);
     }

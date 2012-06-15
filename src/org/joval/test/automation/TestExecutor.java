@@ -114,11 +114,11 @@ public class TestExecutor implements Runnable {
 	long tm = 0;
 	Handler handler = null;
         String hostname = props.getProperty("hostname");
+        IBaseSession session = null;
 	try {
-            IBaseSession session = null;
             if (LOCAL.equals(name)) {
 		hostname = "localhost";
-                session = Local.createSession();
+                session = Local.createSession(JOVALSystem.getDataDirectory());
             } else {
                 session = sf.createSession(props.getProperty("hostname"));
             }
@@ -220,6 +220,7 @@ public class TestExecutor implements Runnable {
 		} else {
 		    sysLogger.info(name + " - No test content found for " + hostname + " at " + testDir.getPath());
 		}
+		session.disconnect();
 	    } else {
 		sysLogger.info(name + " - Unable to connect to " + hostname + " - abandoning test suite");
 	    }
@@ -239,6 +240,9 @@ public class TestExecutor implements Runnable {
 	    if (tm > 0) {
 		tm = System.currentTimeMillis() - tm;
 		suite.setRuntime(datatype.newDuration(tm));
+	    }
+	    if (session != null) {
+		session.dispose();
 	    }
 	    Report report = ctx.getReport();
 	    synchronized(report) {

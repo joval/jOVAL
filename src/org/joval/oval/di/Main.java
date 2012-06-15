@@ -294,6 +294,7 @@ public class Main implements IObserver {
 		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.getPath(state.dataFile)));
 		    if (!validateSchema(state.dataFile, SystemCharacteristicsSchemaFilter.list())) {
 			state.getSession().disconnect();
+			state.getSession().dispose();
 			System.exit(ERR);
 		    }
 		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.getPath(state.dataFile)));
@@ -316,7 +317,9 @@ public class Main implements IObserver {
 		    }
 		    try {
 			state.getSession().disconnect();
+			state.getSession().dispose();
 		    } catch (IOException e2) {
+			logger.log(Level.WARNING, e.getMessage(), e2);
 		    }
 		    System.exit(ERR);
 		} catch (Exception e) {
@@ -443,6 +446,7 @@ public class Main implements IObserver {
 	      case ERR:
 		throw engine.getError();
 	    }
+	    state.getSession().dispose();
 
 	    IResults results = engine.getResults();
 	    if (state.directivesFile.exists() && state.directivesFile.isFile()) {

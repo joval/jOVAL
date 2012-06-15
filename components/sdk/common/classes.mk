@@ -62,6 +62,7 @@ CLASSES=\
 	org.joval.io.StreamLogger				\
 	org.joval.io.StreamTool					\
 	org.joval.io.fs.CacheFile				\
+	org.joval.io.fs.CacheFileSerializer			\
 	org.joval.io.fs.CacheFilesystem				\
 	org.joval.io.fs.DefaultFile				\
 	org.joval.io.fs.FileAccessor				\
@@ -82,6 +83,7 @@ CLASSES=\
 	org.joval.util.Version					\
 	org.joval.util.tree.Forest				\
 	org.joval.util.tree.Node				\
+	org.joval.util.tree.NodeSerializer			\
 	org.joval.util.tree.Tree				\
 	org.joval.util.tree.TreeHash				\
 	org.joval.xml.SchemaRegistry

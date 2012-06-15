@@ -3,6 +3,7 @@
 
 package org.joval.os.unix.io;
 
+import java.io.DataInput;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -26,6 +27,8 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.cal10n.LocLogger;
+
+import org.apache.jdbm.Serializer;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IReader;
@@ -82,7 +85,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
     private int entries, maxEntries;
 
     public UnixFilesystem(IBaseSession session, IEnvironment env) {
-	super(session, env, null, DELIM_STR);
+	super(session, env, null, DELIM_STR, "fs.db");
 	us = (IUnixSession)session;
 	S = us.getTimeout(IUnixSession.Timeout.S);
 	M = us.getTimeout(IUnixSession.Timeout.M);
@@ -100,6 +103,11 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
     @Override
     protected int getDefaultFlags() {
 	return super.getDefaultFlags();
+    }
+
+    @Override
+    protected Serializer<IFile> getSerializer() {
+	return new UnixCacheFileSerializer(this);
     }
 
     @Override
@@ -282,8 +290,6 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	}
 	return driver;
     }
-
-    // Internal
 
     /**
      * Create a UnixFile from the output line of the stat command.

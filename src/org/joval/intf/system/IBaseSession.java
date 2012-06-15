@@ -177,4 +177,9 @@ public interface IBaseSession extends ILoggable {
 	    return UNKNOWN;
 	}
     }
+
+    /**
+     * When you're completely finished using the session, call this method to clean up caches and other resources.
+     */
+    void dispose();
 }

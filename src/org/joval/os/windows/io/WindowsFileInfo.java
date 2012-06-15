@@ -3,6 +3,8 @@
 
 package org.joval.os.windows.io;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.joval.intf.windows.identity.IACE;
@@ -31,6 +33,22 @@ public class WindowsFileInfo extends FileInfo implements IWindowsFileInfo {
 	this.provider = provider;
     }
 
+    public WindowsFileInfo(DataInput in) throws IOException {
+	super(in);
+	provider = new InternalProvider(in);
+    }
+
+    public void write(DataOutput out) throws IOException {
+	super.write(out);
+	out.writeInt(getWindowsFileType());
+	IACE[] aces = getSecurity();
+	out.writeInt(aces.length);
+	for (int i=0; i < aces.length; i++) {
+	    out.writeInt(aces[i].getAccessMask());
+	    out.writeUTF(aces[i].getSid());
+	}
+    }
+
     // Implement IWindowsFileInfo
 
     /**
@@ -42,5 +60,47 @@ public class WindowsFileInfo extends FileInfo implements IWindowsFileInfo {
 
     public final IACE[] getSecurity() throws IOException {
 	return provider.getSecurity();
+    }
+
+    // Private
+
+    private class InternalProvider implements IWindowsFileInfo {
+	private int winType;
+	private IACE[] aces;
+
+	InternalProvider(DataInput in) throws IOException {
+	    winType = in.readInt();
+	    int numAces = in.readInt();
+	    aces = new IACE[numAces];
+	    for (int i=0; i < numAces; i++) {
+		aces[i] = new InternalAce(in.readInt(), in.readUTF());
+	    }
+	}
+
+	public int getWindowsFileType() {
+	    return winType;
+	}
+
+	public IACE[] getSecurity() {
+	    return aces;
+	}
+    }
+
+    private class InternalAce implements IACE {
+	private int mask;
+	private String sid;
+
+	InternalAce(int mask, String sid) {
+	    this.mask = mask;
+	    this.sid = sid;
+	}
+
+	public int getAccessMask() {
+	    return mask;
+	}
+
+	public String getSid() {
+	    return sid;
+	}
     }
 }

@@ -28,6 +28,7 @@ import org.joval.os.windows.registry.Registry;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.wmi.WmiProvider;
 import org.joval.util.AbstractSession;
+import org.joval.util.CachingHierarchy;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -54,8 +55,9 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	}
     }
 
-    public WindowsSession() {
+    public WindowsSession(File wsdir) {
 	super();
+	this.wsdir = wsdir;
     }
 
     // Implement IWindowsSession extensions
@@ -112,6 +114,14 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 
     // Implement IBaseSession
 
+    @Override
+    public void dispose() {
+	super.dispose();
+	if (fs32 instanceof CachingHierarchy) {
+	    ((CachingHierarchy)fs32).dispose();
+	}
+    }
+
     public String getHostname() {
 	if (isConnected()) {
 	    try {
@@ -138,7 +148,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	    env = reg.getEnvironment();
 	}
 	if (fs == null) {
-	    fs = new WindowsFilesystem(this, env, null);
+	    fs = new WindowsFilesystem(this, env, null, "winfs.db");
 	}
 	is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 	if (is64bit) {
@@ -151,7 +161,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 		reg32 = new Registry(new WOW3264RegistryRedirector(flavor), this);
 	    }
 	    if (fs32 == null) {
-		fs32 = new WindowsFilesystem(this, env, new WOW3264FilesystemRedirector(env));
+		fs32 = new WindowsFilesystem(this, env, new WOW3264FilesystemRedirector(env), "winfs32.db");
 	    }
 	} else {
 	    logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");

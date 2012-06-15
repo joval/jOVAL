@@ -3,6 +3,9 @@
 
 package org.joval.os.unix.io;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.Stack;
 
 import org.joval.intf.unix.io.IUnixFileInfo;
@@ -45,6 +48,37 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	this.uid = uid;
 	this.gid = gid;
 	this.hasExtendedAcl = hasExtendedAcl;
+    }
+
+    public UnixFileInfo(DataInput in) throws IOException {
+	super(in);
+	path = in.readUTF();
+	String temp = in.readUTF();
+	if ("".equals(temp)) {
+	    canonicalPath = null;
+	} else {
+	    canonicalPath = temp;
+	}
+	unixType = in.readChar();
+	permissions = in.readUTF();
+	uid = in.readInt();
+	gid = in.readInt();
+	hasExtendedAcl = in.readBoolean();
+    }
+
+    public void write(DataOutput out) throws IOException {
+	super.write(out);
+	out.writeUTF(path);
+	if (canonicalPath == null) {
+	    out.writeUTF("");
+	} else {
+	    out.writeUTF(canonicalPath);
+	}
+	out.writeChar(unixType);
+	out.writeUTF(permissions);
+	out.writeInt(uid);
+	out.writeInt(gid);
+	out.writeBoolean(hasExtendedAcl);
     }
 
     // Implement IUnixFileInfo

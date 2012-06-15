@@ -3,6 +3,8 @@
 
 package org.joval.io.fs;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 
 import org.joval.intf.io.IFile;
@@ -17,12 +19,45 @@ import org.joval.intf.io.IFileEx;
  * @version %I% %G%
  */
 public class FileInfo implements IFileEx {
-    public enum Type {FILE, DIRECTORY, LINK;}
+    public enum Type {
+	FILE((short)0),
+	DIRECTORY((short)1),
+	LINK((short)2);
+
+	short val;
+
+	Type(short val) {
+	    this.val = val;
+	}
+
+	short getVal() {
+	    return val;
+	}
+
+	static final Type fromVal(short s) {
+	    switch(s) {
+	      case 1:
+		return DIRECTORY;
+	      case 2:
+		return LINK;
+	      default:
+		return FILE;
+	    }
+	}
+    }
 
     protected long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, length=-1L;
     protected Type type = null;
 
     public FileInfo() {}
+
+    public FileInfo(DataInput in) throws IOException {
+	ctime = in.readLong();
+	mtime = in.readLong();
+	atime = in.readLong();
+	length = in.readLong();
+	type = Type.fromVal(in.readShort());
+    }
 
     public FileInfo(FileAccessor access, Type type) throws IOException {
 	this.type = type;
@@ -58,5 +93,13 @@ public class FileInfo implements IFileEx {
 
     public Type getType() {
 	return type;
+    }
+
+    public void write(DataOutput out) throws IOException {
+	out.writeLong(ctime);
+	out.writeLong(mtime);
+	out.writeLong(atime);
+	out.writeLong(length);
+	out.writeShort(type.getVal());
     }
 }

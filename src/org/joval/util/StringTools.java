@@ -3,6 +3,10 @@
 
 package org.joval.util;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -11,6 +15,8 @@ import java.util.List;
 import java.util.Stack;
 import java.util.Vector;
 import java.util.NoSuchElementException;
+
+import org.apache.jdbm.Serializer;
 
 /**
  * Apparently there are still a few things that haven't yet been packed into java.lang.String!
@@ -21,6 +27,9 @@ import java.util.NoSuchElementException;
 public class StringTools {
     public static final Charset ASCII	= Charset.forName("US-ASCII");
     public static final Charset UTF8	= Charset.forName("UTF-8");
+
+    public static final Comparator<String> COMPARATOR = new StringComparator(true);
+    public static final Serializer<String> SERIALIZER = new StringSerializer();
 
     /**
      * Sort the array from A->Z (ascending ordering).
@@ -200,7 +209,21 @@ public class StringTools {
 	}
     }
 
-    static final class StringComparator implements Comparator<String> {
+    static final class StringSerializer implements Serializer<String>, Serializable {
+        StringSerializer() {}
+
+        // Implement Serializer<String>
+
+        public String deserialize(DataInput in) throws IOException {
+            return in.readUTF();
+        }
+
+        public void serialize(DataOutput out, String s) throws IOException {
+            out.writeUTF(s);
+        }
+    }
+
+    static final class StringComparator implements Comparator<String>, Serializable {
 	boolean ascending = true;
 
 	StringComparator (boolean asc) {
@@ -216,10 +239,7 @@ public class StringTools {
 	}
 
 	public boolean equals(Object obj) {
-	    if (obj instanceof StringComparator) {
-		return ascending == ((StringComparator)obj).ascending;
-	    }
-	    return false;
+	    return super.equals(obj);
 	}
     }
 

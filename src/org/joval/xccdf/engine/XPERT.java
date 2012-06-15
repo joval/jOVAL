@@ -68,7 +68,6 @@ public class XPERT {
     }
 
     static Logger logger;
-    static final File ws = new File(CWD, "artifacts");
 
     static void printHeader(IPlugin plugin) {
 	PrintStream console = System.out;
@@ -118,7 +117,7 @@ public class XPERT {
 	File reportFile = new File("xccdf-result.html");
 	File ocilDir = new File("ocil-export");
 
-	File ws = null;
+	File ovalDir = null;
 	Level level = Level.INFO;
 	boolean query = false;
 	File logFile = new File(CWD, "xpert.log");
@@ -157,7 +156,7 @@ public class XPERT {
 		} else if (argv[i].equals("-r")) {
 		    resultsFile = new File(argv[++i]);
 		} else if (argv[i].equals("-v")) {
-		    ws = new File(argv[++i]);
+		    ovalDir = new File(argv[++i]);
 		} else if (argv[i].equals("-l")) {
 		    try {
 			switch(Integer.parseInt(argv[++i])) {
@@ -201,8 +200,8 @@ public class XPERT {
 	}
 
 	int exitCode = 1;
-	if (ws != null && !ws.exists()) {
-	    ws.mkdir();
+	if (ovalDir != null && !ovalDir.exists()) {
+	    ovalDir.mkdir();
 	}
 	try {
 	    logger = LogFormatter.createDuplex(logFile, level);
@@ -302,7 +301,7 @@ public class XPERT {
 	    try {
 		Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
 		Profile profile = new Profile(benchmark, profileName);
-		Engine engine = new Engine(benchmark, profile, checklists, ocilDir, plugin.getSession(), ws);
+		Engine engine = new Engine(benchmark, profile, checklists, ocilDir, plugin.getSession(), ovalDir);
 		engine.run();
 
 		if (benchmark.getBenchmark().isSetTestResult()) {

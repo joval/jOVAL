@@ -3,10 +3,14 @@
 
 package org.joval.io.fs;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.NotSerializableException;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Vector;
@@ -269,12 +273,15 @@ public abstract class CacheFile implements IFile, Cloneable {
     }
 
     public final IFile getChild(String name) throws IOException {
+boolean special="cron".equals(name);
+if(special)fs.getLogger().info("DAS getChild(" + name + ") for " + getPath());
 	if (name.equals(".")) {
 	    return this;
 	} else if (name.equals("..")) {
 	    return fs.getFile(getParent());
 	} else {
 	    for (IFile child : listFiles()) {
+if(special)fs.getLogger().info("DAS   CHILD: " + child.getName());
 		if (name.equals(child.getName())) {
 		    return child;
 		}

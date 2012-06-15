@@ -6,16 +6,20 @@ package org.joval.util.tree;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
 
 import org.slf4j.cal10n.LocLogger;
 
+import org.apache.jdbm.DB;
+
 import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.ITree;
 import org.joval.intf.util.tree.INode;
 import org.joval.util.JOVALMsg;
+import org.joval.util.StringTools;
 
 /**
  * Generic implementation of a forest.
@@ -27,16 +31,33 @@ public class Forest implements IForest, Iterable<ITree> {
     private String name, delimiter;
     private Hashtable<String, ITree> trees;
     private LocLogger logger;
+    private DB db;
 
     public Forest(String name, String delimiter) {
+	this(name, delimiter, null);
+    }
+
+    public Forest(String name, String delimiter, DB db) {
 	this.name = name;
 	this.delimiter = delimiter;
+	this.db = db;
 	trees = new Hashtable<String, ITree>();
 	logger = JOVALMsg.getLogger();
     }
 
     public Tree makeTree(String name) {
-	Tree tree = new Tree(this, name);
+	Tree tree = null;
+	if (db == null) {
+	    tree = new Tree(this, name, new Hashtable<String, Node>(), new Hashtable<String, String>());
+	} else {
+	    NodeSerializer ser = new NodeSerializer();
+	    String nodeTableName = "tree:" + this.name + ":" + name + ":nodes";
+	    Map<String, Node> nodes = db.createTreeMap(nodeTableName, StringTools.COMPARATOR, StringTools.SERIALIZER, ser);
+	    String linkTableName = "tree:" + this.name + ":" + name + ":links";
+	    Map<String, String> links = db.createTreeMap(linkTableName);
+	    tree = new Tree(this, name, nodes, links);
+	    ser.setTree(tree);
+	}
 	addTree(tree);
 	return tree;
     }

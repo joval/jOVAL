@@ -44,6 +44,7 @@ import org.joval.os.windows.remote.io.SmbFilesystem;
 import org.joval.os.windows.remote.registry.Registry;
 import org.joval.os.windows.remote.wmi.WmiConnection;
 import org.joval.util.AbstractSession;
+import org.joval.util.CachingHierarchy;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -143,6 +144,14 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     // Implement IBaseSession
 
     @Override
+    public void dispose() {
+	super.dispose();
+	if (fs32 instanceof CachingHierarchy) {
+	    ((CachingHierarchy)fs32).dispose();
+	}
+    }
+
+    @Override
     public String getUsername() {
 	return cred.getUsername();
     }
@@ -222,7 +231,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		    env = reg.getEnvironment();
 		}
 		if (fs == null) {
-		    fs = new SmbFilesystem(this, cred, env, null);
+		    fs = new SmbFilesystem(this, cred, env, null, "winfs.db");
 		}
 		is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 		if (is64bit) {
@@ -233,7 +242,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 			return false;
 		    }
 		    if (fs32 == null) {
-			fs32 = new SmbFilesystem(this, cred, env, new WOW3264FilesystemRedirector(env));
+			fs32 = new SmbFilesystem(this, cred, env, new WOW3264FilesystemRedirector(env), "winfs32.db");
 		    }
 		} else {
 		    reg32 = reg;

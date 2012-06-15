@@ -5,7 +5,9 @@ package org.joval.util.tree;
 
 import java.util.Collection;
 import java.util.Hashtable;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 import java.util.Vector;
@@ -27,17 +29,19 @@ import org.joval.util.StringTools;
  */
 public class Tree extends Node implements ITree {
     private Forest forest;
-    private int nodeCount = 0;
     private int linkCount = 0;
-    private Hashtable<String, Node> shortcuts;
 
-    Tree(Forest forest, String name) {
+    Map<String, Node> nodes;
+    Map<String, String> links; // mapping of virtualPath -> realPath
+
+    Tree(Forest forest, String name, Map<String, Node> nodes, Map<String, String> links) {
 	super(name);
 	tree = this;
 	this.forest = forest;
 	this.type = Type.TREE;
-	shortcuts = new Hashtable<String, Node>();
-	shortcuts.put(name, this);
+	this.nodes = nodes;
+	this.links = links;
+	nodes.put(getPath(), this);
     }
 
     /**
@@ -49,12 +53,12 @@ public class Tree extends Node implements ITree {
 	    parent.type = INode.Type.BRANCH;
 	}
 	if (parent.children == null) {
-	    parent.children = new Hashtable<String, INode>();
+	    parent.children = new HashSet<String>();
 	}
-	parent.children.put(name, node);
+	parent.children.add(name);
 	getLogger().trace(JOVALMsg.STATUS_TREE_MKNODE, name, node.getPath());
-	nodeCount++;
-	shortcuts.put(node.getPath(), node);
+	nodes.put(parent.getPath(), parent); // re-commit the parent
+	nodes.put(node.getPath(), node);
 	return node;
     }
 
@@ -66,7 +70,11 @@ public class Tree extends Node implements ITree {
 	  case LEAF:
 	  case LINK: // over-link?
             node.type = INode.Type.LINK;
-            node.linkPath = destination;
+	    if (destination == null) {
+        	node.linkPath = node.getPath(); // DAS: link to self?
+	    } else {
+        	node.linkPath = destination;
+	    }
 	    getLogger().debug(JOVALMsg.STATUS_TREE_MKLINK, node.getPath(), destination);
 	    linkCount++;
 	    break;
@@ -75,6 +83,7 @@ public class Tree extends Node implements ITree {
             String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_TREE_MKLINK, node.getPath(), destination, node.type);
     	    throw new UnsupportedOperationException(msg);
 	}
+	nodes.put(node.getPath(), node);
     }
 
     // Implement ILoggable
@@ -94,7 +103,7 @@ public class Tree extends Node implements ITree {
     public Collection<String> search(Pattern p, boolean followLinks) {
 	if (linkCount == 0 || !followLinks) {
 	    Collection<String> results = new Vector<String>();
-	    for (String path : shortcuts.keySet()) {
+	    for (String path : nodes.keySet()) {
 		if (p.matcher(path).find()) {
 		    results.add(path);
 		}
@@ -106,22 +115,23 @@ public class Tree extends Node implements ITree {
     }
 
     public INode lookup(String path) throws NoSuchElementException {
-	if (shortcuts.containsKey(path)) {
-	    return shortcuts.get(path);
+	if (nodes.containsKey(path)) {
+	    return nodes.get(path);
 	} else {
 	    return lookup(path, true);
 	}
     }
 
     public int size() {
-	return nodeCount;
+	return nodes.size();
     }
 
     // Internal
 
     void remove(Node node) {
-	shortcuts.remove(node.getPath());
-	node.parent.children.remove(node.getName());
+	nodes.remove(node.getPath());
+	nodes.get(node.parentPath).children.remove(node.getName());
+	nodes.put(node.getPath(), node);
     }
 
     String getDelimiter() {

@@ -4,6 +4,7 @@ CLASSES=\
 	org.joval.os.unix.io.driver.LinuxDriver			\
 	org.joval.os.unix.io.driver.MacOSXDriver		\
 	org.joval.os.unix.io.driver.SolarisDriver		\
+	org.joval.os.unix.io.UnixCacheFileSerializer		\
 	org.joval.os.unix.io.UnixFile				\
 	org.joval.os.unix.io.UnixFileInfo			\
 	org.joval.os.unix.io.UnixFilesystem			\
@@ -17,6 +18,7 @@ CLASSES=\
 	org.joval.os.windows.identity.LocalDirectory		\
 	org.joval.os.windows.identity.Principal			\
 	org.joval.os.windows.identity.User			\
+	org.joval.os.windows.io.WindowsCacheFileSerializer	\
 	org.joval.os.windows.io.WindowsFile			\
 	org.joval.os.windows.io.WindowsFileInfo			\
 	org.joval.os.windows.io.WindowsFilesystem		\

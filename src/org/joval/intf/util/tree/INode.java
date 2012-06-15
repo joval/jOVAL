@@ -21,30 +21,58 @@ public interface INode extends ILoggable {
      */
     enum Type {
 	/**
-	 * The type for an IForest.
-	 */
-	FOREST,
-	/**
-	 * The type for an ITree (i.e., a root node).
-	 */
-	TREE,
-	/**
-	 * The type for an INode that has children.
-	 */
-	BRANCH,
-	/**
-	 * The type for an INode with no children.
-	 */
-	LEAF,
-	/**
-	 * The type for an INode which is a link to another INode.
-	 */
-	LINK,
-	/**
 	 * The type for an INode that is the child of a LINK node, whose underlying type (BRANCH, LEAF, LINK) has not
 	 * yet been determined.
 	 */
-	UNRESOLVED;
+	UNRESOLVED(0),
+	/**
+	 * The type for an INode with no children.
+	 */
+	LEAF(1),
+	/**
+	 * The type for an INode that has children.
+	 */
+	BRANCH(2),
+	/**
+	 * The type for an ITree (i.e., a root node).
+	 */
+	TREE(3),
+	/**
+	 * The type for an IForest.
+	 */
+	FOREST(4),
+	/**
+	 * The type for an INode which is a link to another INode.
+	 */
+	LINK(5);
+
+	private short val;
+
+	Type(int val) {
+	    this.val = (short)val;
+	}
+
+	public short getVal() {
+	    return val;
+	}
+
+	public static Type fromVal(int val) {
+	    switch(val) {
+	    case 0:
+		return UNRESOLVED;
+	      case 2:
+		return BRANCH;
+	      case 3:
+		return TREE;
+	      case 4:
+		return FOREST;
+	      case 5:
+		return LINK;
+	      default:
+	      case 1:
+		return LEAF;
+	    }
+	}
     }
 
     /**

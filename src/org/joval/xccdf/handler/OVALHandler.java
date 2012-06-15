@@ -53,7 +53,7 @@ public class OVALHandler {
     private Benchmark xccdf;
     private Profile profile;
     private ObjectFactory factory;
-    private IVariables variables;
+    private Hashtable<String, IVariables> variables;
     private Hashtable<String, IEngine> engines;
 
     /**
@@ -64,6 +64,7 @@ public class OVALHandler {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	factory = new ObjectFactory();
+	variables = new Hashtable<String, IVariables>();
 	engines = new Hashtable<String, IEngine>();
 	for (RuleType rule : profile.getSelectedRules()) {
 	    if (rule.isSetCheck()) {
@@ -76,7 +77,7 @@ public class OVALHandler {
 				    session.getLogger().info("Creating engine for href " + href);
 				    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
 				    engine.setDefinitions(xccdf.getDefinitions(href));
-				    engine.setExternalVariables(getVariables());
+				    engine.setExternalVariables(getVariables(href));
 				    engine.setDefinitionFilter(getDefinitionFilter(href));
 				    engines.put(href, engine);
 				}
@@ -103,12 +104,14 @@ public class OVALHandler {
      * Integrate all the OVAL results with the XCCDF results.
      */
     public void integrateResults(TestResultType xccdfResult) throws OvalException {
-	for (VariableType var : getVariables().getOvalVariables().getVariables().getVariable()) {
-	    ProfileSetValueType val = factory.createProfileSetValueType();
-	    val.setIdref(var.getComment());
-	    if (var.isSetValue() && var.getValue().size() > 0 && var.getValue().get(0) != null) {
-		val.setValue(var.getValue().get(0).toString());
-		xccdfResult.getSetValueOrSetComplexValue().add(val);
+	for (String href : variables.keySet()) {
+	    for (VariableType var : getVariables(href).getOvalVariables().getVariables().getVariable()) {
+		ProfileSetValueType val = factory.createProfileSetValueType();
+		val.setIdref(var.getComment());
+		if (var.isSetValue() && var.getValue().size() > 0 && var.getValue().get(0) != null) {
+		    val.setValue(var.getValue().get(0).toString());
+		    xccdfResult.getSetValueOrSetComplexValue().add(val);
+		}
 	    }
 	}
 	for (String href : engines.keySet()) {
@@ -116,12 +119,10 @@ public class OVALHandler {
 	}
     }
 
-    // Private
-
     /**
      * Get all the definition IDs for a given Href based on the checks selected in the profile.
      */
-    private IDefinitionFilter getDefinitionFilter(String href) {
+    public IDefinitionFilter getDefinitionFilter(String href) {
 	IDefinitionFilter filter = OvalFactory.createDefinitionFilter();
 	for (RuleType rule : profile.getSelectedRules()) {
 	    if (rule.isSetCheck()) {
@@ -145,26 +146,38 @@ public class OVALHandler {
      * Gather all the variable exports for OVAL checks from the selected rules in the profile, and create an OVAL
      * variables structure containing their values.
      */
-    private IVariables getVariables() {
-	if (variables == null) {
-	    variables = OvalFactory.createVariables();
+    public IVariables getVariables(String href) {
+	if (!variables.containsKey(href)) {
+	    IVariables vars = OvalFactory.createVariables();
+	    variables.put(href, vars);
 	    Collection<RuleType> rules = profile.getSelectedRules();
 	    Hashtable<String, String> values = profile.getValues();
 	    for (RuleType rule : rules) {
 		for (CheckType check : rule.getCheck()) {
 		    if (check.getSystem().equals(NAMESPACE)) {
-			for (CheckExportType export : check.getCheckExport()) {
-			    String ovalVariableId = export.getExportName();
-			    String valueId = export.getValueId();
-			    variables.addValue(ovalVariableId, values.get(valueId));
-			    variables.setComment(ovalVariableId, valueId);
+			boolean applicable = false;
+			for (CheckContentRefType ref : check.getCheckContentRef()) {
+			    if (href.equals(ref.getHref())) {
+				applicable = true;
+				break;
+			    }
+			}
+			if (applicable) {
+			    for (CheckExportType export : check.getCheckExport()) {
+				String ovalVariableId = export.getExportName();
+				String valueId = export.getValueId();
+				vars.addValue(ovalVariableId, values.get(valueId));
+				vars.setComment(ovalVariableId, valueId);
+			    }
 			}
 		    }
 		}
 	    }
 	}
-	return variables;
+	return variables.get(href);
     }
+
+    // Private
 
     /**
      * Integrate the OVAL results with the XCCDF results, assuming the OVAL results contain information pertaining to

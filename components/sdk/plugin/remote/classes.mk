@@ -19,6 +19,7 @@ CLASSES=\
 	org.joval.os.unix.io.driver.LinuxDriver				\
 	org.joval.os.unix.io.driver.MacOSXDriver			\
 	org.joval.os.unix.io.driver.SolarisDriver			\
+	org.joval.os.unix.io.UnixCacheFileSerializer			\
 	org.joval.os.unix.io.UnixFile					\
 	org.joval.os.unix.io.UnixFileInfo				\
 	org.joval.os.unix.io.UnixFilesystem				\
@@ -56,6 +57,7 @@ CLASSES=\
 	org.joval.os.windows.registry.WOW3264RegistryRedirector		\
 	org.joval.os.windows.remote.identity.SmbACE			\
 	org.joval.os.windows.remote.io.SmbAccessor			\
+	org.joval.os.windows.remote.io.SmbCacheFileSerializer		\
 	org.joval.os.windows.remote.io.SmbFileInfo			\
 	org.joval.os.windows.remote.io.SmbFileProxy			\
 	org.joval.os.windows.remote.io.SmbFilesystem			\

@@ -18,10 +18,10 @@ import org.joval.intf.system.ISession;
 public class LocalPlugin extends BasePlugin {
     public LocalPlugin() {
 	super();
-	session = Local.createSession();
     }
 
     @Override
     public void configure(Properties props) {
+	session = Local.createSession(dir);
     }
 }

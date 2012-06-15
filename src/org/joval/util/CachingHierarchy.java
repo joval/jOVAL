@@ -21,6 +21,10 @@ import java.util.regex.PatternSyntaxException;
 
 import org.slf4j.cal10n.LocLogger;
 
+import org.apache.jdbm.DB;
+import org.apache.jdbm.DBMaker;
+import org.apache.jdbm.Serializer;
+
 import org.joval.intf.util.ISearchable;
 import org.joval.intf.util.tree.ICacheable;
 import org.joval.intf.util.tree.ITree;
@@ -47,26 +51,52 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
     private String ESCAPED_DELIM;
     private String DELIM;
     private String name;
+    private File datafile;
+    private DB db;
+    private Serializer<T> ser;
     private TreeHash<T> cache;
     private Hashtable<String, Exception> irretrievable;
 
     protected LocLogger logger;
 
-    protected CachingHierarchy(String name, String delimiter) {
+    protected CachingHierarchy(String name, String delimiter, File datafile) {
 	this.name = name;
 	ESCAPED_DELIM = Matcher.quoteReplacement(delimiter);
 	DELIM = delimiter;
 	logger = JOVALMsg.getLogger();
+	this.datafile = datafile;
+	ser = getSerializer();
 	reset();
+    }
+
+    public void dispose() {
+	cache.clear();
+	db.close();
+    }
+
+    /**
+     * Clear the cache.
+     */
+    public void clear() {
+	cache.clear();
     }
 
     /**
      * Reset the cache to a pristine state.
      */
     public final void reset() {
-	cache = new TreeHash<T>(name, DELIM);
+	if (cache == null) {
+	    DBMaker maker = DBMaker.openFile(datafile.toString());
+	    maker.disableTransactions();
+	    maker.deleteFilesAfterClose();
+	    maker.closeOnExit();
+	    db = maker.make();
+	    cache = new TreeHash<T>(name, DELIM, db, ser);
+	    setLogger(logger);
+	} else {
+	    cache.reset();
+	}
 	irretrievable = new Hashtable<String, Exception>();
-	setLogger(logger);
     }
 
     /**
@@ -179,6 +209,8 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
     }
 
     // Subclasses must implement the following methods
+
+    protected abstract Serializer<T> getSerializer();
 
     /**
      * Return the default flags used for internal accessResource calls.

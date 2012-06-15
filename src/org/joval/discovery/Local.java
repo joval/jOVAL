@@ -3,6 +3,8 @@
 
 package org.joval.discovery;
 
+import java.io.File;
+
 import org.joval.intf.system.ISession;
 import org.joval.os.unix.system.UnixSession;
 import org.joval.os.windows.system.WindowsSession;
@@ -14,11 +16,15 @@ import org.joval.os.windows.system.WindowsSession;
  * @version %I% %G%
  */
 public class Local {
-    public static ISession createSession() {
+    public static ISession createSession(File dataDir) {
+	File wsdir = new File(dataDir, ISession.LOCALHOST);
+	if (!wsdir.isDirectory()) {
+	    wsdir.mkdirs();
+	}
 	if (System.getProperty("os.name").startsWith("Windows")) {
-	    return new WindowsSession();
+	    return new WindowsSession(wsdir);
 	} else {
-	    return new UnixSession();
+	    return new UnixSession(wsdir);
 	}
     }
 }

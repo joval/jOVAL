@@ -104,6 +104,10 @@ public abstract class AbstractBaseSession implements IBaseSession {
 	return null;
     }
 
+    public void dispose() {
+	logger.info(JOVALMsg.STATUS_SESSION_DISPOSE, getHostname());
+    }
+
     // All the abstract methods, for reference
 
     public abstract boolean connect();

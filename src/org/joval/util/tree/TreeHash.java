@@ -3,10 +3,19 @@
 
 package org.joval.util.tree;
 
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Hashtable;
+import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Vector;
+
+import org.apache.jdbm.DB;
+import org.apache.jdbm.Serializer;
 
 import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.INode;
@@ -22,12 +31,46 @@ import org.joval.util.StringTools;
 public class TreeHash<T> {
     private String delim;
     private Forest forest;
-    private Hashtable<String, T> table;
+    private DB db;
+    private Serializer<T> ser;
+    private Map<String, T> table;
 
+    /**
+     * Create an in-memory TreeHash.
+     */
     public TreeHash(String name, String delimiter) {
+	this(name, delimiter, null, null);
+    }
+
+    /**
+     * Create a JDBM-backed TreeHash.
+     */
+    public TreeHash(String name, String delimiter, DB db, Serializer<T> ser) {
 	delim = delimiter;
-	forest = new Forest(name, delimiter);
-	table = new Hashtable<String, T>();
+	forest = new Forest(name, delimiter, db);
+	this.db = db;
+	this.ser = ser;
+	reset();
+    }
+
+    public void clear() {
+	if (db != null) {
+	    if (db.getCollections() != null) {
+		for (String name : db.getCollections().keySet()) {
+		    db.deleteCollection(name);
+		}
+	    }
+	}
+	table = null;
+    }
+
+    public void reset() {
+	clear();
+	if (db == null) {
+	    table = new Hashtable<String, T>();
+	} else {
+	    table = db.createTreeMap(forest.getName(), StringTools.COMPARATOR, StringTools.SERIALIZER, ser);
+	}
     }
 
     public Forest getRoot() {
@@ -61,6 +104,7 @@ public class TreeHash<T> {
 	    }
 	} else {
 	    INode node = getCreateNode(path);
+if(path.startsWith("/var/log"))System.out.println("**>>> DAS cache add " + path);
 	    table.put(path, data);
 	    return node;
 	}

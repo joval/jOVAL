@@ -3,6 +3,7 @@
 
 package org.joval.os.windows.io;
 
+import java.io.DataInput;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
@@ -16,6 +17,8 @@ import java.util.regex.Pattern;
 import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.platform.win32.Win32Exception;
 
+import org.apache.jdbm.Serializer;
+
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
@@ -24,6 +27,7 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.io.IWindowsFilesystem;
+import org.joval.io.fs.CacheFile;
 import org.joval.io.fs.CacheFilesystem;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
@@ -42,8 +46,8 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
     private int entries = 0, maxEntries = 0;
     private boolean preloaded = false;
 
-    public WindowsFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector) {
-	super(session, env, redirector, File.separator);
+    public WindowsFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector, String dbKey) {
+	super(session, env, redirector, File.separator, dbKey);
 	if (mounts == null) {
 	    try {
 		String filterStr = props.getProperty(PROP_MOUNT_FSTYPE_FILTER);
@@ -60,24 +64,29 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
     }
 
     @Override
-    protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
-        if (autoExpand) {
-            path = env.expand(path);
-        }
-        String realPath = path;
-        if (redirector != null) {
-            String alt = redirector.getRedirect(path);
-            if (alt != null) {
-                realPath = alt;
-            }
-        }
+    protected Serializer<IFile> getSerializer() {
+	return new WindowsCacheFileSerializer(this);
+    }
 
-        if (isValidPath(realPath)) {
-            return new WindowsFile(this, new File(realPath), path);
+    @Override
+    protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
+	if (autoExpand) {
+	    path = env.expand(path);
+	}
+	String realPath = path;
+	if (redirector != null) {
+	    String alt = redirector.getRedirect(path);
+	    if (alt != null) {
+		realPath = alt;
+	    }
+	}
+
+	if (isValidPath(realPath)) {
+	    return new WindowsFile(this, new File(realPath), path);
 	} else if (isDrive(realPath)) {
-            return new WindowsFile(this, new File(realPath + DELIM_STR), path);
-        }
-        throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
+	    return new WindowsFile(this, new File(realPath + DELIM_STR), path);
+	}
+	throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
     }
 
     @Override
@@ -132,7 +141,6 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
     private int count = 0;
 
     private void addRecursive(File f) throws PreloadOverflowException, IOException {
-System.out.println("DAS addRecursive " + f.toString());
 	if (++count % 20000 == 0) {
 	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, count);
 	}
@@ -158,14 +166,14 @@ System.out.println("DAS addRecursive " + f.toString());
 
     private boolean isValidPath(String s) {
 	if (s.length() >= 3) {
-            return StringTools.isLetter(s.charAt(0)) && s.charAt(1) == ':' && s.charAt(2) == DELIM_CH;
+	    return StringTools.isLetter(s.charAt(0)) && s.charAt(1) == ':' && s.charAt(2) == DELIM_CH;
 	}
 	return false;
     }
 
     private boolean isDrive(String s) {
 	if (s.length() == 2) {
-            return StringTools.isLetter(s.charAt(0)) && s.charAt(1) == ':';
+	    return StringTools.isLetter(s.charAt(0)) && s.charAt(1) == ':';
 	}
 	return false;
     }

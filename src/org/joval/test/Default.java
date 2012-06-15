@@ -35,7 +35,7 @@ public class Default {
 		Logger.getLogger(JOVALSystem.class.getName()).addHandler(consoleHandler);
 	    }
 
-	    ISession session = Local.createSession();
+	    ISession session = Local.createSession(JOVALSystem.getDataDirectory());
 	    if (session.connect()) {
 		if ("true".equals(props.getProperty("test.ad"))) {
 		    new AD(session).test(props.getProperty("ad.user"));
@@ -57,6 +57,7 @@ public class Default {
 		}
 		session.disconnect();
 	    }
+	    session.dispose();
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
