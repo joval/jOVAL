@@ -45,6 +45,11 @@ public interface IFilesystem extends ISearchable {
     String PROP_PRELOAD_REMOTE = "fs.preload.remote";
 
     /**
+     * Property governing whether the filesystem cache layer should be JDBM-backed (true) or memory-backed (false).
+     */
+    String PROP_CACHE_JDBM = "fs.cache.useJDBM";
+
+    /**
      * Return whether or not the path points to a file on the local machine.
      */
     boolean isLocalPath(String path);

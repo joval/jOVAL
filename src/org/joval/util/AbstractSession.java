@@ -21,7 +21,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamLogger;
-import org.joval.util.CachingHierarchy;
+import org.joval.io.fs.CacheFilesystem;
 
 /**
  * Base class for the local and remote Windows and Unix ISession implementations.
@@ -77,8 +77,8 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
     @Override
     public void dispose() {
 	super.dispose();
-	if (fs instanceof CachingHierarchy) {
-	    ((CachingHierarchy)fs).dispose();
+	if (fs instanceof CacheFilesystem) {
+	    ((CacheFilesystem)fs).dispose();
 	}
     }
 

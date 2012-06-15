@@ -48,7 +48,12 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
     protected IPathRedirector redirector;
 
     protected CacheFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redir, String delim, String dbKey) {
-	super(session.getHostname(), delim, new File(session.getWorkspace(), dbKey));
+	super(session.getHostname(), delim);
+	if ("true".equals(session.getProperties().getProperty(PROP_CACHE_JDBM))) {
+	    init(makeDatabase(new File(session.getWorkspace(), dbKey)), getSerializer());
+	} else {
+	    init();
+	}
 	this.session = session;
 	this.env = env;
 	this.redirector = redir;
@@ -60,11 +65,16 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 	this.autoExpand = autoExpand;
     }
 
-    // Implement methods abstract in CachingHierarchy
+    public void dispose() {
+	clear();
+	db.close();
+    }
 
     protected Serializer<IFile> getSerializer() {
 	return new CacheFileSerializer(this);
     }
+
+    // Implement methods abstract in CachingHierarchy
 
     protected boolean loadCache() {
 	return false;

@@ -48,30 +48,56 @@ import org.joval.util.tree.TreeHash;
  * @version %I% %G%
  */
 public abstract class CachingHierarchy<T extends ICacheable> implements ISearchable {
+    /**
+     * Convenience method to get a JDBM database instance.
+     */
+    protected static DB makeDatabase(File datafile) {
+	DBMaker maker = DBMaker.openFile(datafile.toString());
+	maker.disableTransactions();
+	maker.deleteFilesAfterClose();
+	maker.closeOnExit();
+	return maker.make();
+    }
+
     private String ESCAPED_DELIM;
     private String DELIM;
     private String name;
-    private File datafile;
-    private DB db;
-    private Serializer<T> ser;
     private TreeHash<T> cache;
     private Hashtable<String, Exception> irretrievable;
 
+    protected DB db;
+    protected Serializer<T> ser;
     protected LocLogger logger;
 
-    protected CachingHierarchy(String name, String delimiter, File datafile) {
+    /**
+     * Instantiate a cache.
+     */
+    protected CachingHierarchy(String name, String delimiter) {
 	this.name = name;
 	ESCAPED_DELIM = Matcher.quoteReplacement(delimiter);
 	DELIM = delimiter;
 	logger = JOVALMsg.getLogger();
-	this.datafile = datafile;
-	ser = getSerializer();
-	reset();
+	irretrievable = new Hashtable<String, Exception>();
     }
 
-    public void dispose() {
-	cache.clear();
-	db.close();
+    /**
+     * Initialize as an in-memory cache.
+     */
+    public void init() throws IllegalStateException {
+	init(null, null);
+    }
+
+    /**
+     * Initialize as a JDBM-backed cache.
+     */
+    public void init(DB db, Serializer<T> ser) throws IllegalStateException {
+	if (cache == null) {
+	    this.db = db;
+	    this.ser = ser;
+	    reset();
+	} else {
+	    throw new IllegalStateException("Already initialized");
+	}
     }
 
     /**
@@ -79,6 +105,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
      */
     public void clear() {
 	cache.clear();
+	irretrievable.clear();
     }
 
     /**
@@ -86,17 +113,11 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
      */
     public final void reset() {
 	if (cache == null) {
-	    DBMaker maker = DBMaker.openFile(datafile.toString());
-	    maker.disableTransactions();
-	    maker.deleteFilesAfterClose();
-	    maker.closeOnExit();
-	    db = maker.make();
 	    cache = new TreeHash<T>(name, DELIM, db, ser);
-	    setLogger(logger);
 	} else {
 	    cache.reset();
 	}
-	irretrievable = new Hashtable<String, Exception>();
+	setLogger(logger);
     }
 
     /**

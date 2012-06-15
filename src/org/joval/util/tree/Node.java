@@ -23,7 +23,7 @@ import org.joval.util.StringTools;
  * A class that represents a node within a tree.
  *
  * Note that whenever a node is modified, it must be re-added to the Tree.nodes map, so that the changes will be
- * persisted in the JDBM storage.
+ * persisted in the JDBM storage (if the Tree is JDBM-backed).
  *
  * @author David A. Solin
  * @version %I% %G%
