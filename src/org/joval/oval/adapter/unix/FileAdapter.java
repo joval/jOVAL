@@ -72,12 +72,10 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	return FileItem.class;
     }
 
-boolean special=false;
     protected Collection<FileItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws CollectException, IOException {
 
 	Collection<FileItem> items = new Vector<FileItem>();
-special="oval:org.open-scap.f14:obj:201491".equals(obj.getId());
 	if (base instanceof FileItem) {
 	    items.add(setItem((FileItem)base, f));
 	}
@@ -90,7 +88,6 @@ special="oval:org.open-scap.f14:obj:201491".equals(obj.getId());
      * Decorate the Item with information about the file.
      */
     private FileItem setItem(FileItem item, IFile f) throws IOException, CollectException {
-if(special)session.getLogger().info("DAS file: " + f.getPath());
 	IFileEx info = f.getExtended();
 	IUnixFileInfo ufi = null;
 	if (info instanceof IUnixFileInfo) {

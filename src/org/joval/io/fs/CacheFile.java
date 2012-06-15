@@ -273,15 +273,12 @@ public abstract class CacheFile implements IFile, Cloneable {
     }
 
     public final IFile getChild(String name) throws IOException {
-boolean special="cron".equals(name);
-if(special)fs.getLogger().info("DAS getChild(" + name + ") for " + getPath());
 	if (name.equals(".")) {
 	    return this;
 	} else if (name.equals("..")) {
 	    return fs.getFile(getParent());
 	} else {
 	    for (IFile child : listFiles()) {
-if(special)fs.getLogger().info("DAS   CHILD: " + child.getName());
 		if (name.equals(child.getName())) {
 		    return child;
 		}

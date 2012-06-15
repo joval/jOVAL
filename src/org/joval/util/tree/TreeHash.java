@@ -104,7 +104,6 @@ public class TreeHash<T> {
 	    }
 	} else {
 	    INode node = getCreateNode(path);
-if(path.startsWith("/var/log"))System.out.println("**>>> DAS cache add " + path);
 	    table.put(path, data);
 	    return node;
 	}

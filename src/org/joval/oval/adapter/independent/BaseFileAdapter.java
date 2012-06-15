@@ -62,11 +62,8 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
     // Implement IAdapter
 
-boolean special=false;
     public Collection<T> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	String id = obj.getId();
-special = "oval:org.open-scap.f14:obj:201491".equals(id);
-if(special)session.getLogger().info("**********DAS SPECIAL OBJECT!!!");
 
 	//
 	// Get the appropriate IFilesystem
@@ -95,7 +92,6 @@ if(special)session.getLogger().info("**********DAS SPECIAL OBJECT!!!");
 
 	Collection<T> items = new Vector<T>();
 	for (String path : getPathList(fObj, rc, fs)) {
-if(special)session.getLogger().info("DAS getPathList match: " + path);
 	    IFile f = null;
 	    try {
 		f = fs.getFile(path);
@@ -287,9 +283,7 @@ if(special)session.getLogger().info("DAS getPathList match: " + path);
 		Collection<String> paths = new HashSet<String>();
 		EntityObjectStringType path = fObj.getPath();
 		String value = (String)path.getValue();
-if(special)session.getLogger().info("DAS - path: " + value);
 		OperationEnumeration op = path.getOperation();
-if(special)session.getLogger().info("DAS - operation: " + op);
 		switch(op) {
 		  case EQUALS:
 		    try {
@@ -339,13 +333,10 @@ if(special)session.getLogger().info("DAS - operation: " + op);
 		if (fObj.isSetFilename()) {
 		    EntityObjectStringType filename = fObj.getFilename();
 		    String fname = (String)filename.getValue();
-if(special)session.getLogger().info("DAS - filename: " + fname);
 		    Collection<String> files = new Vector<String>();
 		    for (String pathString : list) {
-if(special)session.getLogger().info("DAS - pathString: " + pathString);
 			try {
 			    op = filename.getOperation();
-if(special)session.getLogger().info("DAS - filename operation: " + op);
 			    switch(op) {
 			      case PATTERN_MATCH: {
 				IFile f = fs.getFile(pathString);
@@ -361,7 +352,6 @@ if(special)session.getLogger().info("DAS - filename operation: " + op);
  
 			      case EQUALS: {
 				IFile f = fs.getFile(pathString).getChild(fname);
-if(special)session.getLogger().info("DAS - filename path: " + f.getPath());
 				if (f.exists()) {
 				    files.add(f.getPath());
 				}
@@ -385,12 +375,9 @@ if(special)session.getLogger().info("DAS - filename path: " + f.getPath());
 				throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 			    }
 			} catch (FileNotFoundException e) {
-if(special)session.getLogger().info("DAS - FileNotFoundException " + e.getMessage());
-if(special)e.printStackTrace();
 			} catch (IllegalArgumentException e) {
 			    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			} catch (IOException e) {
-if(special)session.getLogger().info("DAS - IOException " + e.getMessage());
 			    MessageType msg = Factories.common.createMessageType();
 			    msg.setLevel(MessageLevelEnumeration.ERROR);
 			    msg.setValue(e.getMessage());
@@ -454,7 +441,6 @@ if(special)session.getLogger().info("DAS - IOException " + e.getMessage());
 	} else {
 	    Collection<String> results = new HashSet<String>();
 	    for (String path : list) {
-if(special)session.getLogger().info("DAS getDirs from " + path + " depth=" + depth);
 		if (ancestors == null) {
 		    ancestors = new Stack<String>();
 		}
