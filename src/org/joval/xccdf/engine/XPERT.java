@@ -211,7 +211,16 @@ public class XPERT {
 
 	IPlugin plugin = null;
 	try {
+	    File configDir = new File(BASE_DIR, "config");
+	    if (configDir.isDirectory()) {
+		File configOverrides = new File(configDir, "xpert.ini");
+		if (configOverrides.isFile()) {
+		    JOVALSystem.addConfiguration(configOverrides);
+		}
+	    }
 	    plugin = PluginFactory.newInstance(new File(BASE_DIR, "plugin")).createPlugin(pluginName);
+	} catch (IOException e) {
+	    logger.severe(LogFormatter.toString(e));
 	} catch (IllegalArgumentException e) {
 	    logger.severe("Not a directory: " + e.getMessage());
 	} catch (NoSuchElementException e) {
