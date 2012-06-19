@@ -101,6 +101,16 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
     }
 
     /**
+     * Permanently close the cache. It cannot be re-used after being closed; a new instance would be required.
+     */
+    public void dispose() {
+	clear();
+	if (db != null) {
+	    db.close();
+	}
+    }
+
+    /**
      * Clear the cache.
      */
     public void clear() {

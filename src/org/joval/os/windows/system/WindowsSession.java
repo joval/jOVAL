@@ -21,7 +21,6 @@ import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.io.fs.CacheFilesystem;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WindowsFilesystem;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
@@ -29,6 +28,7 @@ import org.joval.os.windows.registry.Registry;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.wmi.WmiProvider;
 import org.joval.util.AbstractSession;
+import org.joval.util.CachingHierarchy;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -117,8 +117,8 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     @Override
     public void dispose() {
 	super.dispose();
-	if (fs32 instanceof CacheFilesystem) {
-	    ((CacheFilesystem)fs32).dispose();
+	if (fs32 instanceof CachingHierarchy) {
+	    ((CachingHierarchy)fs32).dispose();
 	}
     }
 

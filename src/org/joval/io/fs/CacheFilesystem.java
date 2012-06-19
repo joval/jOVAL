@@ -65,11 +65,6 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 	this.autoExpand = autoExpand;
     }
 
-    public void dispose() {
-	clear();
-	db.close();
-    }
-
     protected Serializer<IFile> getSerializer() {
 	return new CacheFileSerializer(this);
     }
