@@ -24,6 +24,7 @@ import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
+import org.xml.sax.SAXParseException;
 
 import ocil.schemas.core.ArtifactType;
 import ocil.schemas.core.BooleanQuestionTestActionType;
@@ -90,7 +91,17 @@ public class Checklist implements ITransformable {
 		throw new OcilException("Bad OCIL source: " + source.getSystemId());
 	    }
 	} catch (JAXBException e) {
-	    throw new OcilException(e);
+	    Throwable linkedEx = e.getLinkedException();
+	    if (linkedEx instanceof SAXParseException) {
+		SAXParseException spe = (SAXParseException)linkedEx;
+		String s = "Error encountered while parsing OCIL document; " +
+			   "Entity: " + spe.getPublicId() +
+			   ", Line: " + spe.getLineNumber() +
+			   ", Col: " + spe.getColumnNumber();
+		throw new OcilException(s);
+	    } else {
+		throw new OcilException(e);
+	    }
 	}
     }
 
