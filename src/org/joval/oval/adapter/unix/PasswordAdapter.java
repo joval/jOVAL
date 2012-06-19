@@ -158,6 +158,14 @@ public class PasswordAdapter implements IAdapter {
 	      }
 
 	      //
+	      // On Linux and Solaris, use getent to interact with NIS, LDAP or just the /etc/passwd file, as appropriate.
+	      //
+	      case LINUX:
+	      case SOLARIS:
+		lines = SafeCLI.multiLine("getent passwd", session, IUnixSession.Timeout.S);
+		break;
+
+	      //
 	      // By default, cat the contents of /etc/passwd, to leverage elevated privileges if necessary.
 	      //
 	      default:
