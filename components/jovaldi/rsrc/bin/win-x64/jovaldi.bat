@@ -8,4 +8,4 @@ SET PLUGIN=%INSTALL_DIR%plugin
 IF NOT DEFINED JAVA_HOME SET JAVA_HOME=%INSTALL_DIR%jre
 SET INSTALL_DIR=%INSTALL_DIR:~0,-1%
 SET JMEM=-Xmx2048m
-"%JAVA_HOME%\bin\java.exe" %JMEM% -Djava.library.path="%PLUGIN%\default\lib" -Djovaldi.baseDir="%INSTALL_DIR%" -cp "%LIB%\*" org.joval.oval.di.Main %*
+"%JAVA_HOME%\bin\java.exe" %JMEM% -Djava.library.path="%PLUGIN%\default\lib" -Djovaldi.baseDir="%INSTALL_DIR%" -cp "%LIB%\*;" org.joval.oval.di.Main %*

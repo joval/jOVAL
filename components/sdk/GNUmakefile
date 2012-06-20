@@ -56,5 +56,6 @@ install: all
 	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(JOVAL_CORE)/$(BUILD)/ .
 	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(ADAPTERS)/$(BUILD)/ .
 
-dist: install javadocs
+#dist: install javadocs
+dist: install
 	cp -r docs $(DIST)

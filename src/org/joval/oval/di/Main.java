@@ -180,18 +180,19 @@ public class Main implements IObserver {
     // Private
 
     /**
+     * Proceed to the next line on the console.
+     */
+    private static void clearStatus() {
+	System.out.println("");
+	lastStatus = null;
+    }
+
+    /**
      * Print to the console only (not the log).  Repeated calls to printStatus will all appear on a single line in the console,
      * over-writing the status message that was previously shown.  (Actually, it only over-writes the characters that differ
      * from the last status message, for a more fluid appearance when changes are very rapid).
      */
     private static void printStatus(String format, Object... args) {
-	printStatus(format, false, args);
-    }
-
-    /**
-     * @param clear set to true to proceed to the next line on the console.
-     */
-    private static void printStatus(String format, boolean clear, Object... args) {
 	String s = String.format(format, args).toString();
 	int offset=0;
 	if (lastStatus != null) {
@@ -214,12 +215,7 @@ public class Main implements IObserver {
 	    System.out.print(back.toString());
 	}
 	System.out.print(s.substring(offset));
-	if (clear) {
-	    System.out.println("");
-	    lastStatus = null;
-	} else {
-	    lastStatus = s;
-	}
+	lastStatus = s;
     }
 
     /**
@@ -274,7 +270,8 @@ public class Main implements IObserver {
 	    logger.log(Level.INFO, getMessage("MESSAGE_OBJECT_LOG", (String)arg).trim());
 	    break;
 	  case IEngine.MESSAGE_OBJECT_PHASE_END:
-	    printStatus(getMessage("MESSAGE_OBJECTS_DONE"), true);
+	    printStatus(getMessage("MESSAGE_OBJECTS_DONE"));
+	    clearStatus();
 	    break;
 	  case IEngine.MESSAGE_DEFINITION_PHASE_START:
 	    print(getMessage("MESSAGE_DEFINITION_PHASE"));
@@ -283,7 +280,8 @@ public class Main implements IObserver {
 	    printStatus(getMessage("MESSAGE_DEFINITION", (String)arg));
 	    break;
 	  case IEngine.MESSAGE_DEFINITION_PHASE_END:
-	    printStatus(getMessage("MESSAGE_DEFINITIONS_DONE"), true);
+	    printStatus(getMessage("MESSAGE_DEFINITIONS_DONE"));
+	    clearStatus();
 	    break;
 	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS: {
 	    ISystemCharacteristics sc = (ISystemCharacteristics)arg;
