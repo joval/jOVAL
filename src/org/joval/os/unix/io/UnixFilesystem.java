@@ -80,7 +80,8 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
     protected long S, M, L, XL;
     protected boolean preloaded = false;
 
-    private IUnixSession us;
+    IUnixSession us;
+
     private IUnixFilesystemDriver driver;
     private int entries, maxEntries;
 

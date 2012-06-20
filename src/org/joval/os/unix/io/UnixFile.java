@@ -18,12 +18,14 @@ import org.slf4j.cal10n.LocLogger;
 import org.joval.intf.io.IFileEx;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.unix.io.IUnixFileInfo;
+import org.joval.intf.unix.io.IUnixFilesystemDriver;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.tree.INode;
 import org.joval.io.fs.CacheFile;
 import org.joval.io.fs.DefaultFile;
 import org.joval.io.fs.FileAccessor;
 import org.joval.io.fs.FileInfo;
+import org.joval.util.SafeCLI;
 
 /**
  * Implements an IFile with info having extended Unix attributes.
@@ -95,7 +97,9 @@ public class UnixFile extends DefaultFile {
 	    try {
 		info = ufs.getUnixFileInfo(getPath());
 		if (info == null) {
-		    info = internal.getInfo();
+		    IUnixFilesystemDriver driver = ufs.getDriver();
+		    String cmd = driver.getStatCommand() + " " + getPath();
+		    info = (FileInfo)driver.nextFileInfo(SafeCLI.multiLine(cmd, ufs.us, IUnixSession.Timeout.S).iterator());
 		}
 		return info;
 	    } catch (Exception e) {
