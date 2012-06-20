@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -25,6 +26,7 @@ import org.joval.io.fs.CacheFile;
 import org.joval.io.fs.DefaultFile;
 import org.joval.io.fs.FileAccessor;
 import org.joval.io.fs.FileInfo;
+import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 
 /**
@@ -99,7 +101,12 @@ public class UnixFile extends DefaultFile {
 		if (info == null) {
 		    IUnixFilesystemDriver driver = ufs.getDriver();
 		    String cmd = driver.getStatCommand() + " " + getPath();
-		    info = (FileInfo)driver.nextFileInfo(SafeCLI.multiLine(cmd, ufs.us, IUnixSession.Timeout.S).iterator());
+		    List<String> data = SafeCLI.multiLine(cmd, ufs.us, IUnixSession.Timeout.S);
+		    info = (FileInfo)driver.nextFileInfo(data.iterator());
+		    if (info == null) {
+			ufs.getLogger().warn(JOVALMsg.ERROR_UNIXFILEINFO, getPath(), data.get(0));
+			info = new UnixFileInfo(internal.getInfo(), getPath());
+		    }
 		}
 		return info;
 	    } catch (Exception e) {

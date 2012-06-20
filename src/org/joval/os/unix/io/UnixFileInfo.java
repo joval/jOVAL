@@ -50,6 +50,18 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	this.hasExtendedAcl = hasExtendedAcl;
     }
 
+    public UnixFileInfo(FileInfo info, String path) {
+	ctime = info.getCtime();
+	mtime = info.getMtime();
+	atime = info.getAtime();
+	type = info.getType();
+	length = info.getLength();
+	this.path = path;
+	permissions = "-rwxrwxrwx";
+	uid = -1;
+	gid = -1;
+    }
+
     public UnixFileInfo(DataInput in) throws IOException {
 	super(in);
 	path = in.readUTF();
