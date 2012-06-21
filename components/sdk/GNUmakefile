@@ -7,7 +7,7 @@ include $(TOP)/common.mk
 
 SOURCEPATH="$(SCAP)/gen-src$(CLN)$(SRC)"
 API=$(PLUGIN_REMOTE_DEPS)$(CLN)$(PLUGIN_LOCAL_DEPS)$(CLN)$(PLUGIN_OFFLINE_DEPS)$(CLN)$(COMMON)$(CLN)$(COMMON_DEPS)
-CLASSPATH="$(CLASSLIB)$(CLN)$(API)"
+CLASSPATH="$(SOURCEPATH)$(CLN)$(API)"
 
 all:
 	@$(MAKE) --keep-going --directory=common all
@@ -27,7 +27,7 @@ clean:
 
 javadocs:
 	mkdir -p $(DOCS)
-	$(JAVA_HOME)/bin/javadoc -quiet -J-Xmx512m -XDignore.symbol.file=true -d $(DOCS) -classpath $(CLASSPATH) -sourcepath $(SOURCEPATH) -subpackages \
+	$(JAVA_HOME)/bin/javadoc -quiet -J-Xmx512m -XDignore.symbol.file=true -d $(DOCS) -classpath $(CLASSPATH) -subpackages \
 	oval:org.w3c            				\
 	org.joval.intf.identity					\
 	org.joval.intf.oval					\
@@ -56,6 +56,5 @@ install: all
 	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(JOVAL_CORE)/$(BUILD)/ .
 	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(ADAPTERS)/$(BUILD)/ .
 
-#dist: install javadocs
-dist: install
+dist: install javadocs
 	cp -r docs $(DIST)
