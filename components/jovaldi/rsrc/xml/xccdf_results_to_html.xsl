@@ -171,6 +171,7 @@
           </tr>
           <tr>
             <td class="label" align="center">Check ID</td>
+            <td class="label" align="center">Title</td>
             <td class="label" align="center">Reference</td>
             <td class="label" align="center">Result</td>
           </tr>
@@ -283,7 +284,8 @@
           <xsl:attribute name="class">fixedB</xsl:attribute>
         </xsl:when>
       </xsl:choose>
-        <td>&#160;<xsl:value-of select="$ruleId"/></td>
+        <td><xsl:value-of select="$ruleId"/></td>
+        <td align="center">&#160;<xsl:value-of select="//xccdf:Rule[@id = $ruleId]/xccdf:title/text()"/></td>
         <td align="center">&#160;<xsl:value-of select="//xccdf:Rule[@id = $ruleId]/xccdf:ident/text()"/></td>
         <td align="center"><xsl:value-of select="$ruleResultElt/xccdf:result/text()"/></td>
     </tr>
