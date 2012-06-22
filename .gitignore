@@ -1,5 +1,4 @@
 *.log
-customize.mk
 test.properties
 id_rsa
 gen-src/

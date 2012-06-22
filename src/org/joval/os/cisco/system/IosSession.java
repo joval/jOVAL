@@ -56,7 +56,9 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     // Implement INetconf
 
     public Document getConfig() throws Exception {
-	if (config == null) {
+	if (ssh == null) {
+	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_OFFLINE));
+	} else if (config == null) {
 	    NetconfSession netconf = new NetconfSession(ssh, internalProps.getLongProperty(PROP_READ_TIMEOUT));
 	    netconf.setLogger(logger);
 	    config = netconf.getConfig();
