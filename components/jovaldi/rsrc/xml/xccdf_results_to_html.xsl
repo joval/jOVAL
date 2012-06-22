@@ -162,10 +162,10 @@
 
         <table border="1" cellpadding="2" cellspacing="0" width="100%">
           <tr>
-            <td class="title" colspan="3">Benchmark Test Results</td>
+            <td class="title" colspan="4">Benchmark Test Results</td>
           </tr>
           <tr>
-            <td colspan="3">
+            <td colspan="4">
               <xsl:call-template name="ResultColorTable"/>
             </td>
           </tr>
