@@ -6,6 +6,7 @@ package org.joval.oval.adapter.linux;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -67,6 +68,8 @@ public class RpminfoAdapter implements IAdapter {
 	  case EQUALS:
 	    try {
 		items.add(getItem((String)rObj.getName().getValue()));
+	    } catch (NoSuchElementException e) {
+		// the package is not installed; don't add to the item list
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -251,7 +254,7 @@ public class RpminfoAdapter implements IAdapter {
 		}
 	    }
 	} else {
-	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    throw new NoSuchElementException(packageName);
 	}
 
 	packageMap.put(packageName, item);

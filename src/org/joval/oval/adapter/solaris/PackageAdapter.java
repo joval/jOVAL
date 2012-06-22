@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
@@ -64,6 +65,8 @@ public class PackageAdapter implements IAdapter {
 	  case EQUALS:
 	    try {
 		items.add(getItem((String)pObj.getPkginst().getValue()));
+	    } catch (NoSuchElementException e) {
+		// package is not installed
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -209,15 +212,10 @@ public class PackageAdapter implements IAdapter {
 	}
 
 	if (isInstalled) {
-	    item.setStatus(StatusEnumeration.EXISTS);
+	    packageMap.put(pkginst, item);
+	    return item;
 	} else {
-	    EntityItemStringType pkginstType = Factories.sc.core.createEntityItemStringType();
-	    pkginstType.setValue(pkginst);
-	    item.setPkginst(pkginstType);
-	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    throw new NoSuchElementException(pkginst);
 	}
-
-	packageMap.put(pkginst, item);
-	return item;
     }
 }

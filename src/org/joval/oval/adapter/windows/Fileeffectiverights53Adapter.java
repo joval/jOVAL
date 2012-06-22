@@ -131,7 +131,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter<Fileeffectiver
 	    } catch (WmiException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
 		rc.addMessage(msg);
 	    }
 	    break;
@@ -157,7 +157,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter<Fileeffectiver
 	    } catch (WmiException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, e.getMessage()));
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
 		rc.addMessage(msg);
 	    }
 	    break;

@@ -33,7 +33,6 @@ import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.oval.Factories;
-import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -57,7 +56,7 @@ public class Wmi57Adapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<Wmi57Item> getItems(ObjectType obj, IRequestContext rc) throws OvalException {
+    public Collection<Wmi57Item> getItems(ObjectType obj, IRequestContext rc) {
 	//
 	// Grab a fresh WMI provider in case there has been a reconnect since init.
 	//
@@ -81,24 +80,18 @@ public class Wmi57Adapter implements IAdapter {
 
 	    ISWbemObjectSet objSet = wmi.execQuery(ns, wql);
 	    int size = objSet.getSize();
-	    if (size == 0) {
+	    for (ISWbemObject swbObj : objSet) {
 		EntityItemRecordType record = Factories.sc.core.createEntityItemRecordType();
-		record.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		item.getResult().add(record);
-	    } else {
-		for (ISWbemObject swbObj : objSet) {
-		    EntityItemRecordType record = Factories.sc.core.createEntityItemRecordType();
-		    record.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
-		    for (ISWbemProperty prop : swbObj.getProperties()) {
-			EntityItemFieldType field = Factories.sc.core.createEntityItemFieldType();
-			field.setName(prop.getName().toLowerCase()); // upper-case chars are not allowed per the OVAL spec.
-			field.setValue(prop.getValueAsString());
-			record.getField().add(field);
-		    }
-		    item.getResult().add(record);
+		record.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
+		for (ISWbemProperty prop : swbObj.getProperties()) {
+		    EntityItemFieldType field = Factories.sc.core.createEntityItemFieldType();
+		    field.setName(prop.getName().toLowerCase()); // upper-case chars are not allowed per the OVAL spec.
+		    field.setValue(prop.getValueAsString());
+		    record.getField().add(field);
 		}
+		item.getResult().add(record);
 	    }
-	} catch (Exception e) {
+	} catch (WmiException e) {
 	    item.setStatus(StatusEnumeration.ERROR);
 	    item.unsetResult();
 	    MessageType msg = Factories.common.createMessageType();
@@ -106,15 +99,12 @@ public class Wmi57Adapter implements IAdapter {
 	    msg.setValue(e.getMessage());
 	    item.getMessage().add(msg);
 
-	    if (e instanceof WmiException) {
-		session.getLogger().debug(JOVALMsg.ERROR_WINWMI_GENERAL, id);
-		session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    } else {
-		session.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id);
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
+	    session.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id, e.getMessage());
+	    session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-	items.add(item);
+	if (item.isSetResult()) {
+	    items.add(item);
+	}
 	return items;
     }
 }

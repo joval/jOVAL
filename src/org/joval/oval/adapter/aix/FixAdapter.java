@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -61,6 +62,8 @@ public class FixAdapter implements IAdapter {
 	  case EQUALS:
 	    try {
 		items.add(getItem((String)fObj.getAparNumber().getValue()));
+	    } catch (NoSuchElementException e) {
+		// we'll return an empty list
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -129,7 +132,7 @@ public class FixAdapter implements IAdapter {
 	    //
 	    // No stdout output means the fix is not installed.
 	    //
-	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	    throw new NoSuchElementException(apar);
 	} else {
 	    //
 	    // Final line contains the status text
@@ -150,8 +153,8 @@ public class FixAdapter implements IAdapter {
 		installationStatus.setValue(status);
 		item.setInstallationStatus(installationStatus);
 	    }
-	}
 
-	return item;
+	    return item;
+	}
     }
 }

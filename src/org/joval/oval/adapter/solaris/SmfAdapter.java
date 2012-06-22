@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.logging.Logger;
@@ -71,6 +72,8 @@ public class SmfAdapter implements IAdapter {
 		if (item != null) {
 		    items.add(item);
 		}
+	    } catch (NoSuchElementException e) {
+		// FMRI was not found
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -242,14 +245,11 @@ public class SmfAdapter implements IAdapter {
 		    }
 		}
 	    }
-	} else {
-	    EntityItemStringType fmriType = Factories.sc.core.createEntityItemStringType();
-	    fmriType.setValue(fmri);
-	    item.setFmri(fmriType);
-	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	}
 
-	return item;
+	    return item;
+	} else {
+	    throw new NoSuchElementException(fmri);
+	}
     }
 
     /**

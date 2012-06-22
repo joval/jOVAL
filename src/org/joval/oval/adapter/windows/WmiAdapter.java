@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -59,25 +60,17 @@ public class WmiAdapter implements IAdapter {
     public Collection<WmiItem> getItems(ObjectType obj, IRequestContext rc) throws OvalException {
 	wmi = session.getWmiProvider();
 	Collection<WmiItem> items = new Vector<WmiItem>();
-	items.add(getItem((WmiObject)obj));
+	try {
+	    items.add(getItem((WmiObject)obj));
+	} catch (NoSuchElementException e) {
+	    // no results
+	}
 	return items;
     }
 
     // Private
 
-    private boolean hasResult(WmiItem item) {
-	List<EntityItemAnySimpleType> results = item.getResult();
-	switch(results.size()) {
-	  case 0:
-	    return false;
-	  case 1:
-	    return results.get(0).getStatus() == StatusEnumeration.EXISTS;
-	  default:
-	    return true;
-	}
-    }
-
-    private WmiItem getItem(WmiObject wObj) {
+    private WmiItem getItem(WmiObject wObj) throws NoSuchElementException {
 	String id = wObj.getId();
 	WmiItem item = Factories.sc.windows.createWmiItem();
 	String ns = wObj.getNamespace().getValue().toString();
@@ -92,9 +85,7 @@ public class WmiAdapter implements IAdapter {
 	    ISWbemObjectSet objSet = wmi.execQuery(ns, wql);
 	    int size = objSet.getSize();
 	    if (size == 0) {
-		EntityItemAnySimpleType resultType = Factories.sc.core.createEntityItemAnySimpleType();
-		resultType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		item.getResult().add(resultType);
+		throw new NoSuchElementException(ns + ":" + wql);
 	    } else {
 		String field = getField(wql);
 		for (ISWbemObject swbObj : objSet) {
@@ -108,24 +99,14 @@ public class WmiAdapter implements IAdapter {
 		    }
 		}
 	    }
-	    if (!hasResult(item)) {
-		item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    }
 	} catch (WmiException e) {
 	    item.setStatus(StatusEnumeration.ERROR);
-	    item.unsetResult();
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.INFO);
 	    msg.setValue(e.getMessage());
 	    item.getMessage().add(msg);
-
-	    if (e instanceof WmiException) {
-		session.getLogger().debug(JOVALMsg.ERROR_WINWMI_GENERAL, id);
-		session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    } else {
-		session.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id);
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
+	    session.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id);
+	    session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return item;
     }
