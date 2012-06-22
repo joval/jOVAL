@@ -170,12 +170,86 @@
             </td>
           </tr>
           <tr>
-            <td class="label" align="center">Check ID</td>
-            <td class="label" align="center">Title</td>
-            <td class="label" align="center">Reference</td>
+            <td class="label" align="center">Rule ID</td>
             <td class="label" align="center">Result</td>
+            <td class="label" align="center">Reference ID</td>
+            <td class="label" align="center">Title</td>
           </tr>
 
+          <!-- process fail results -->
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result[./xccdf:result/text()='fail']">
+            <xsl:sort select="./@idref" data-type="text" order="ascending"/>
+            <xsl:call-template name="RuleResult">
+              <xsl:with-param name="ruleResultElt" select="."/>
+            </xsl:call-template>
+          </xsl:for-each>
+
+          <!-- process error results -->
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result[./xccdf:result/text()='error']">
+            <xsl:sort select="./@idref" data-type="text" order="ascending"/>
+            <xsl:call-template name="RuleResult">
+              <xsl:with-param name="ruleResultElt" select="."/>
+            </xsl:call-template>
+          </xsl:for-each>
+
+          <!-- process unknown results -->
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result[./xccdf:result/text()='unknown']">
+            <xsl:sort select="./@idref" data-type="text" order="ascending"/>
+            <xsl:call-template name="RuleResult">
+              <xsl:with-param name="ruleResultElt" select="."/>
+            </xsl:call-template>
+          </xsl:for-each>
+
+          <!-- process informational results -->
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result[./xccdf:result/text()='informational']">
+            <xsl:sort select="./@idref" data-type="text" order="ascending"/>
+            <xsl:call-template name="RuleResult">
+              <xsl:with-param name="ruleResultElt" select="."/>
+            </xsl:call-template>
+          </xsl:for-each>
+
+          <!-- process notapplicable results -->
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result[./xccdf:result/text()='notapplicable']">
+            <xsl:sort select="./@idref" data-type="text" order="ascending"/>
+            <xsl:call-template name="RuleResult">
+              <xsl:with-param name="ruleResultElt" select="."/>
+            </xsl:call-template>
+          </xsl:for-each>
+
+          <!-- process notchecked results -->
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result[./xccdf:result/text()='notchecked']">
+            <xsl:sort select="./@idref" data-type="text" order="ascending"/>
+            <xsl:call-template name="RuleResult">
+              <xsl:with-param name="ruleResultElt" select="."/>
+            </xsl:call-template>
+          </xsl:for-each>
+
+          <!-- process fixed results -->
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result[./xccdf:result/text()='fixed']">
+            <xsl:sort select="./@idref" data-type="text" order="ascending"/>
+            <xsl:call-template name="RuleResult">
+              <xsl:with-param name="ruleResultElt" select="."/>
+            </xsl:call-template>
+          </xsl:for-each>
+
+          <!-- process pass results -->
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result[./xccdf:result/text()='pass']">
+            <xsl:sort select="./@idref" data-type="text" order="ascending"/>
+            <xsl:call-template name="RuleResult">
+              <xsl:with-param name="ruleResultElt" select="."/>
+            </xsl:call-template>
+          </xsl:for-each>
+
+          <!-- process notselected results -->
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result[./xccdf:result/text()='notselected']">
+            <xsl:sort select="./@idref" data-type="text" order="ascending"/>
+            <xsl:call-template name="RuleResult">
+              <xsl:with-param name="ruleResultElt" select="."/>
+            </xsl:call-template>
+          </xsl:for-each>
+
+
+<!--
           <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:rule-result">
             <xsl:sort select="./xccdf:result/text()" data-type="text" order="ascending"/>
             <xsl:sort select="./@idref" data-type="text" order="ascending"/>
@@ -183,6 +257,7 @@
               <xsl:with-param name="ruleResultElt" select="."/>
             </xsl:call-template>
           </xsl:for-each>
+-->
         </table>
 
       </body>
@@ -284,10 +359,10 @@
           <xsl:attribute name="class">fixedB</xsl:attribute>
         </xsl:when>
       </xsl:choose>
-        <td><xsl:value-of select="$ruleId"/></td>
-        <td align="center">&#160;<xsl:value-of select="//xccdf:Rule[@id = $ruleId]/xccdf:title/text()"/></td>
-        <td align="center">&#160;<xsl:value-of select="//xccdf:Rule[@id = $ruleId]/xccdf:ident/text()"/></td>
+        <td align="center"><xsl:value-of select="$ruleId"/></td>
         <td align="center"><xsl:value-of select="$ruleResultElt/xccdf:result/text()"/></td>
+        <td align="center">&#160;<xsl:value-of select="//xccdf:Rule[@id = $ruleId]/xccdf:ident/text()"/></td>
+        <td align="left">&#160;<xsl:value-of select="//xccdf:Rule[@id = $ruleId]/xccdf:title/text()"/></td>
     </tr>
   </xsl:template>
 

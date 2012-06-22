@@ -144,6 +144,11 @@ public class Engine implements Runnable, IObserver {
 	} else {
 	    logger.info("There are " + rules.size() + " rules to process for the selected profile");
 
+	    HashSet<String> selectedIds = new HashSet<String>();
+	    for (RuleType rule : rules) {
+		selectedIds.add(rule.getId());
+	    }
+
 	    boolean ocilComplete = true;
 	    if (checklists.size() == 0) {
 		OCILHandler oh = new OCILHandler(xccdf, profile);
@@ -227,11 +232,15 @@ public class Engine implements Runnable, IObserver {
 			logger.info(ruleId + ": " + resultIndex.get(ruleId).getResult());
 		    } else {
 			//
-			// Add the unchecked result, just for fun.
+			// Record unselected/unchecked rules
 			//
 			RuleResultType rrt = factory.createRuleResultType();
 			rrt.setIdref(rule.getId());
-			rrt.setResult(ResultEnumType.NOTCHECKED);
+			if (selectedIds.contains(ruleId)) {
+			    rrt.setResult(ResultEnumType.NOTCHECKED);
+			} else {
+			    rrt.setResult(ResultEnumType.NOTSELECTED);
+			}
 			if (rule.isSetCheck()) {
 			    for (CheckType check : rule.getCheck()) {
 				rrt.getCheck().add(check);
