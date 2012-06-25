@@ -1,3 +1,6 @@
+// Copyright (C) 2012 jOVAL.org.  All rights reserved.
+// This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+
 package org.joval.os.windows.remote.io;
 
 import java.io.DataInput;
@@ -7,6 +10,12 @@ import org.joval.intf.io.IFile;
 import org.joval.io.fs.CacheFileSerializer;
 import org.joval.os.windows.io.WindowsFileInfo;
 
+/**
+ * JDBM object serializer for remote Windows CacheFile instances.
+ *
+ * @author David A. Solin
+ * @version %I% %G%
+ */
 class SmbCacheFileSerializer extends CacheFileSerializer {
     private transient SmbFilesystem fs;
 

@@ -1,3 +1,6 @@
+// Copyright (C) 2012 jOVAL.org.  All rights reserved.
+// This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
+
 package org.joval.util.tree;
 
 import java.io.DataInput;
@@ -12,6 +15,12 @@ import org.apache.jdbm.Serializer;
 import org.joval.intf.util.tree.INode;
 import org.joval.util.StringTools;
 
+/**
+ * JDBM object serializer for generic Node instances.
+ *
+ * @author David A. Solin
+ * @version %I% %G%
+ */
 public class NodeSerializer implements Serializer<Node>, Serializable {
     private static final byte[] NULLBYTE = {0x00};
     private static final String NULL = new String(NULLBYTE, StringTools.ASCII);
