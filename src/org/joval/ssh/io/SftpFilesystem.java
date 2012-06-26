@@ -16,9 +16,10 @@ import java.util.NoSuchElementException;
 
 import org.slf4j.cal10n.LocLogger;
 
-import org.vngx.jsch.Session;
 import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.ChannelSftp;
+import org.vngx.jsch.Session;
+import org.vngx.jsch.SftpATTRS;
 import org.vngx.jsch.exception.JSchException;
 import org.vngx.jsch.exception.SftpException;
 
@@ -33,6 +34,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.io.PerishableReader;
+import org.joval.os.unix.io.UnixFileInfo;
 import org.joval.os.unix.io.UnixFilesystem;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
@@ -143,6 +145,22 @@ public class SftpFilesystem extends UnixFilesystem {
     }
 
     // Internal
+
+    UnixFileInfo getUnixFileInfo(SftpATTRS attrs, String permissions, String path) throws Exception {
+	switch(us.getFlavor()) {
+	  //
+	  // On Linux, we need to use the IUnixFilesystemDriver to fetch SELinux attributes.
+	  //
+	  case LINUX:
+	    return super.getUnixFileInfo(path);
+
+	  //
+	  // On other Unix platforms, we can use the SFTP-derived attribute data (much faster).
+	  //
+	  default:
+	    return new SftpFileInfo(attrs, permissions, path, getCS());
+	}
+    }
 
     ChannelSftp getCS() throws IOException {
 	if (!connect()) {

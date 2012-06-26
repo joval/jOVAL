@@ -99,14 +99,7 @@ public class UnixFile extends DefaultFile {
 	    try {
 		info = ufs.getUnixFileInfo(getPath());
 		if (info == null) {
-		    IUnixFilesystemDriver driver = ufs.getDriver();
-		    String cmd = driver.getStatCommand() + " " + getPath();
-		    List<String> data = SafeCLI.multiLine(cmd, ufs.us, IUnixSession.Timeout.S);
-		    info = (FileInfo)driver.nextFileInfo(data.iterator());
-		    if (info == null) {
-			ufs.getLogger().warn(JOVALMsg.ERROR_UNIXFILEINFO, getPath(), data.get(0));
-			info = new UnixFileInfo(internal.getInfo(), getPath());
-		    }
+		    info = new UnixFileInfo(internal.getInfo(), getPath());
 		}
 		return info;
 	    } catch (Exception e) {

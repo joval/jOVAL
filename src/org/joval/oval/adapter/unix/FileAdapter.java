@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
+import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
@@ -75,11 +76,12 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
     protected Collection<FileItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws CollectException, IOException {
 
-	Collection<FileItem> items = new Vector<FileItem>();
 	if (base instanceof FileItem) {
-	    items.add(setItem((FileItem)base, f));
+	    return Arrays.asList(setItem((FileItem)base, f));
+	} else {
+	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
+	    throw new CollectException(message, FlagEnumeration.ERROR);
 	}
-	return items;
     }
 
     // Private

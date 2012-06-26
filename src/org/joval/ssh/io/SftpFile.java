@@ -49,9 +49,9 @@ class SftpFile extends CacheFile {
 	return getAccessor().getCanonicalPath();
     }
 
-    // Private
+    // Internal
 
-    private class SftpAccessor extends FileAccessor {
+    class SftpAccessor extends FileAccessor {
 	private SftpFilesystem sfs;
 	private SftpATTRS attrs = null;
 	private String permissions = null;
@@ -96,8 +96,8 @@ class SftpFile extends CacheFile {
 	public FileInfo getInfo() throws IOException {
 	    if (exists()) {
 		try {
-		    return new SftpFileInfo(attrs, permissions, getPath(), sfs.getCS());
-		} catch (SftpException e) {
+		    return sfs.getUnixFileInfo(attrs, permissions, getPath());
+		} catch (Exception e) {
 		    throw new IOException(e);
 		}
 	    } else {

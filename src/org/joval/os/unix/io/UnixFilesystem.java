@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -79,8 +80,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 
     protected long S, M, L, XL;
     protected boolean preloaded = false;
-
-    IUnixSession us;
+    protected IUnixSession us;
 
     private IUnixFilesystemDriver driver;
     private int entries, maxEntries;
@@ -292,12 +292,24 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	return driver;
     }
 
+    // Protected
+
     /**
      * Create a UnixFile from the output line of the stat command.
      */
-    UnixFileInfo getUnixFileInfo(String path) throws Exception {
-	String command = new StringBuffer(getDriver().getStatCommand()).append(" ").append(path).toString();
-	return (UnixFileInfo)getDriver().nextFileInfo(SafeCLI.multiLine(command, session, IUnixSession.Timeout.S).iterator());
+    protected UnixFileInfo getUnixFileInfo(String path) throws Exception {
+	String cmd = new StringBuffer(getDriver().getStatCommand()).append(" ").append(path).toString();
+	List<String> lines = SafeCLI.multiLine(cmd, us, IUnixSession.Timeout.S);
+	UnixFileInfo ufi = null;
+	if (lines.size() > 0) {
+	    ufi = (UnixFileInfo)getDriver().nextFileInfo(lines.iterator());
+	    if (ufi == null) {
+		logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, lines.get(0));
+	    }
+	} else {
+	    logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, "''");
+	}
+	return ufi;
     }
 
     // Private

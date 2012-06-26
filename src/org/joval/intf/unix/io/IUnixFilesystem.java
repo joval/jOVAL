@@ -23,10 +23,10 @@ public interface IUnixFilesystem extends IFilesystem {
     String PROP_PRELOAD_METHOD = "fs.preload.method";
 
     /**
-     * Property governing the threshold used to automatically preload the cache.  Set to 0 to always preload the cache,
-     * -1 to never preload.  A "good" value is 100.
+     * Property governing the threshold used to automatically preload the cache for remote IUnixFilesystem implementations.
+     * Set to 0 to always preload the cache, -1 to never preload.  A "good" value is around 100.
      */
-    String PROP_PRELOAD_TRIGGER = "fs.preload.autoTrigger.threshold";
+    String PROP_PRELOAD_TRIGGER = "fs.preload.remote.threshold";
 
     /**
      * Specifies a preload method wherein the output of the find command is staged in a file on the remote system.  If
