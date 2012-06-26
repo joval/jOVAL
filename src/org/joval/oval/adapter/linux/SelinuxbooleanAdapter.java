@@ -1,4 +1,4 @@
-// Copyright (C) 2011 jOVAL.org.  All rights reserved.
+// Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 package org.joval.oval.adapter.linux;
@@ -150,23 +150,51 @@ public class SelinuxbooleanAdapter implements IAdapter {
 	}
     }
 
-    private static final String DELIM = "-->";
+    private static final String DELIM1	= ">";		// early version of the delimiter
+    private static final String DELIM2	= "-->";	// delimiter since FC5 release
+    private static final String PENDING	= "pending:";	// delimiter for pending state
 
     private SelinuxbooleanItem parseBoolean(String line) {
-	int ptr = line.indexOf(DELIM);
+	String name = null, value = null;
+	int ptr = line.indexOf(DELIM2);
 	if (ptr > 0) {
+	    name = line.substring(0,ptr).trim();
+	    value = line.substring(ptr+4).trim();
+	} else {
+	    ptr = line.indexOf(DELIM1);
+	    if (ptr > 0) {
+		name = line.substring(0,ptr).trim();
+		value = line.substring(ptr+1).trim();
+	    }
+	}
+	if (name == null) {
+	    return null;
+	} else {
 	    SelinuxbooleanItem item = Factories.sc.linux.createSelinuxbooleanItem();
 
-	    String name = line.substring(0,ptr).trim();
 	    EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
 	    nameType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	    nameType.setValue(name);
 	    item.setName(nameType);
 
-	    String value = line.substring(ptr+4).trim();
+	    ptr = value.indexOf(PENDING);
+	    if (ptr > 0) {
+		String pending = value.substring(0,ptr).trim();
+		value = value.substring(ptr+8).trim();
+
+		EntityItemBoolType pendingStatus = Factories.sc.core.createEntityItemBoolType();
+		pendingStatus.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		if ("on".equals(value) || "active".equals(value)) {
+		    pendingStatus.setValue("1");
+		} else {
+		    pendingStatus.setValue("0");
+		}
+		item.setPendingStatus(pendingStatus);
+	    }
+
 	    EntityItemBoolType currentStatus = Factories.sc.core.createEntityItemBoolType();
 	    currentStatus.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-	    if ("on".equals(value)) {
+	    if ("on".equals(value) || "active".equals(value)) {
 		currentStatus.setValue("1");
 	    } else {
 		currentStatus.setValue("0");
@@ -174,8 +202,6 @@ public class SelinuxbooleanAdapter implements IAdapter {
 	    item.setCurrentStatus(currentStatus);
 
 	    return item;
-	} else {
-	    return null;
 	}
     }
 }
