@@ -20,6 +20,7 @@ org.joval.oval.adapter.independent.Textfilecontent54Adapter
 org.joval.oval.adapter.independent.TextfilecontentAdapter
 org.joval.oval.adapter.independent.XmlfilecontentAdapter
 org.joval.oval.adapter.linux.RpminfoAdapter
+org.joval.oval.adapter.linux.SelinuxbooleanAdapter
 org.joval.oval.adapter.junos.GlobalAdapter
 org.joval.oval.adapter.junos.LineAdapter
 org.joval.oval.adapter.junos.VersionAdapter
