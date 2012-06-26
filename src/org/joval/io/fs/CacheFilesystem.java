@@ -134,7 +134,7 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 	      default:
 		throw new IllegalArgumentException(Integer.toString(flags));
 	    }
-	} catch (Exception e) {
+	} catch (Throwable e) { // also catches errors originating from JDBM
 	    if (e instanceof IOException) {
 		throw (IOException)e;
 	    } else if (e instanceof IllegalArgumentException) {

@@ -138,6 +138,8 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 	    TextfilecontentItem item = Factories.sc.independent.createTextfilecontentItem();
 	    item.setPath(baseItem.getPath());
 	    item.setFilename(baseItem.getFilename());
+	    item.setFilepath(baseItem.getFilepath());
+	    item.setWindowsView(baseItem.getWindowsView());
 
 	    EntityItemStringType patternType = Factories.sc.core.createEntityItemStringType();
 	    patternType.setValue(p.toString());

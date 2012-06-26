@@ -76,7 +76,23 @@ public class StreamTool {
      * Copy completely from in to out.  Closes the InputStream when done, but not the OutputStream.
      */
     public static void copy(InputStream in, OutputStream out) {
-	new Copier(in, out).run();
+	copy(in, out, false);
+    }
+
+    /**
+     * Copy completely from in to out.  Closes the InputStream when done.  Closes the OutputStream according to closeOut.
+     */
+    public static void copy(InputStream in, OutputStream out, boolean closeOut) {
+	try {
+	    new Copier(in, out).run();
+	} finally {
+	    if (closeOut && out != null) {
+		try {
+		    out.close();
+		} catch (IOException e) {
+		}
+	    }
+	}
     }
 
     // Private

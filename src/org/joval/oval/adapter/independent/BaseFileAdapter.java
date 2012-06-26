@@ -365,8 +365,8 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 			      case NOT_EQUAL: {
 				IFile f = fs.getFile(pathString);
 				if (f.isDirectory()) {
-				    for (IFile child : f.listFiles(Pattern.compile(fname))) {
-					if (child.isFile()) {
+				    for (IFile child : f.listFiles()) {
+					if (child.isFile() && !fname.equals(child.getName())) {
 					    files.add(child.getPath());
 					}
 				    }
