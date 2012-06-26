@@ -6,6 +6,9 @@ package org.joval.os.unix.io;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.NoSuchElementException;
+import java.util.Properties;
+import java.util.Set;
 import java.util.Stack;
 
 import org.joval.intf.unix.io.IUnixFileInfo;
@@ -26,17 +29,23 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
     protected char unixType = FILE_TYPE;
     protected String path;
     protected String canonicalPath;
+    protected Properties extended;
 
     /**
      * Create an empty UnixFileInfo.
      */
     protected UnixFileInfo(){}
 
+    public UnixFileInfo(long ctime, long mtime, long atime, Type type, long length, String path, String linkTarget,
+			char unixType, String permissions, int uid, int gid, boolean hasExtendedAcl) {
+	this(ctime, mtime, atime, type, length, path, linkTarget, unixType, permissions, uid, gid, hasExtendedAcl, null);
+    }
+
     /**
      * Create a UnixFile with a live IFile accessor.
      */
     public UnixFileInfo(long ctime, long mtime, long atime, Type type, long length, String path, String linkTarget,
-			char unixType, String permissions, int uid, int gid, boolean hasExtendedAcl) {
+			char unixType, String permissions, int uid, int gid, boolean hasExtendedAcl, Properties extended) {
 
 	super(ctime, mtime, atime, type, length);
 
@@ -48,6 +57,7 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	this.uid = uid;
 	this.gid = gid;
 	this.hasExtendedAcl = hasExtendedAcl;
+	this.extended = extended; // extended data
     }
 
     public UnixFileInfo(FileInfo info, String path) {
@@ -76,6 +86,13 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	uid = in.readInt();
 	gid = in.readInt();
 	hasExtendedAcl = in.readBoolean();
+	if (in.readBoolean()) {
+	    extended = new Properties();
+	    int pairs = in.readInt();
+	    for (int i=0; i < pairs; i++) {
+		extended.setProperty(in.readUTF(), in.readUTF());
+	    }
+	}
     }
 
     public void write(DataOutput out) throws IOException {
@@ -91,6 +108,15 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	out.writeInt(uid);
 	out.writeInt(gid);
 	out.writeBoolean(hasExtendedAcl);
+	if (extended != null) {
+	    out.writeBoolean(true);
+	    Set<String> propertyNames = extended.stringPropertyNames();
+	    out.writeInt(propertyNames.size());
+	    for (String key : propertyNames) {
+		out.writeUTF(key);
+		out.writeUTF(extended.getProperty(key));
+	    }
+	}
     }
 
     // Implement IUnixFileInfo
@@ -173,6 +199,14 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 
     public boolean hasExtendedAcl() {
 	return hasExtendedAcl;
+    }
+
+    public String getExtendedData(String key) throws NoSuchElementException {
+	if (extended != null && extended.containsKey(key)) {
+	    return extended.getProperty(key);
+	} else {
+	    throw new NoSuchElementException(key);
+	}
     }
 
     // Private

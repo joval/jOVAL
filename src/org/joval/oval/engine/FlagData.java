@@ -46,11 +46,11 @@ class FlagData {
 	    return FlagEnumeration.ERROR;
 	} else if (c > 0 &&	i == 0 &&	d >= 0 &&	nc == 0 &&	na >= 0) {
 	    return FlagEnumeration.COMPLETE;
-	} else if (c >= 0 &&	i > 0 &&	d >= 0 &&	nc >= 0 &&	na >= 0) {
+	} else if (c >= 0 &&	i > 0 &&	d >= 0 &&	nc == 0 &&	na >= 0) {
 	    return FlagEnumeration.INCOMPLETE;
 	} else if (c == 0 &&	i == 0 &&	d > 0 &&	nc == 0 &&	na >= 0) {
 	    return FlagEnumeration.DOES_NOT_EXIST;
-	} else if (c == 0 &&	i == 0 &&	d == 0 &&	nc > 0 &&	na == 0) {
+	} else if (c >= 0 &&	i >= 0 &&	d >= 0 &&	nc > 0 &&	na >= 0) {
 	    return FlagEnumeration.NOT_COLLECTED;
 	} else if (c == 0 &&	i == 0 &&	d == 0 &&	nc == 0 &&	na >= 0) {
 	    return FlagEnumeration.NOT_APPLICABLE;

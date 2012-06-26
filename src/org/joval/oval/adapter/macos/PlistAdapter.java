@@ -5,6 +5,7 @@ package org.joval.oval.adapter.macos;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Stack;
@@ -24,6 +25,7 @@ import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.ObjectType;
+import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.macos.PlistObject;
 import oval.schemas.definitions.macos.Plist510Object;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
@@ -37,6 +39,7 @@ import oval.schemas.systemcharacteristics.macos.EntityItemPlistTypeType;
 
 import org.joval.intf.apple.system.IiOSSession;
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
@@ -82,10 +85,52 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
     @Override
     public Collection<PlistItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	if (iSession == null) {
-	    //
-	    // For the normal MacOS X case, delegate to the BaseFileAdapter
-	    //
-	    return super.getItems(obj, rc);
+	    boolean fileBased = false;
+	    if (obj instanceof PlistObject) {
+		PlistObject pObj = (PlistObject)obj;
+		fileBased = pObj.isSetFilepath();
+	    } else {
+		Plist510Object pObj = (Plist510Object)obj;
+		fileBased = pObj.isSetFilepath();
+	    }
+	    if (fileBased) {
+		//
+		// Delegate to the BaseFileAdapter
+		//
+		return super.getItems(obj, rc);
+	    } else {
+		//
+		// Create an item based on the appid and current user account
+		//
+		String appid = getAppId(obj);
+		if (appid == null) {
+		    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_PLIST_OBJECT, obj.getId());
+		    throw new CollectException(message, FlagEnumeration.ERROR);
+		} else {
+		    PlistItem base = Factories.sc.macos.createPlistItem();
+		    EntityItemStringType appId = Factories.sc.core.createEntityItemStringType();
+		    appId.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+		    appId.setValue(appid);
+		    base.setAppId(appId);
+
+		    StringBuffer sb = new StringBuffer(session.getEnvironment().getenv("HOME"));
+		    String path = sb.append("/Library/Preferences/").append(appid).append(".plist").toString();
+		    EntityItemStringType filepath = Factories.sc.core.createEntityItemStringType();
+		    filepath.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+		    filepath.setValue(path);
+		    base.setFilepath(filepath);
+
+		    try {
+			IFile f = session.getFilesystem().getFile(path);
+			return getItems(obj, base, f, rc);
+		    } catch (IOException e) {
+			MessageType msg = Factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.ERROR);
+			msg.setValue(e.getMessage());
+			rc.addMessage(msg);
+		    }
+		}
+	    }
 	} else {
 	    //
 	    // For the iOS device case, evaluate using the sole plist
@@ -106,10 +151,10 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
-	    @SuppressWarnings("unchecked")
-	    Collection<PlistItem> empty = (Collection<PlistItem>)Collections.EMPTY_LIST;
-	    return empty;
 	}
+	@SuppressWarnings("unchecked")
+	Collection<PlistItem> empty = (Collection<PlistItem>)Collections.EMPTY_LIST;
+	return empty;
     }
 
     // Protected
@@ -166,6 +211,19 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
     }
 
     // Private
+
+    /**
+     * Get the app ID from the object.
+     */
+    private String getAppId(ObjectType obj) {
+	EntityObjectStringType appIdType = null;
+	if (obj instanceof PlistObject) {
+	    appIdType = ((PlistObject)obj).getAppId();
+	} else if (obj instanceof Plist510Object) {
+	    appIdType = ((Plist510Object)obj).getAppId();
+	}
+	return (String)appIdType.getValue();
+    }
 
     private Plist510Object getPlist510Object(ObjectType obj) throws CollectException {
 	Plist510Object pObj = null;

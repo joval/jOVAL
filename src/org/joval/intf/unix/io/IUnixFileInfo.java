@@ -3,6 +3,8 @@
 
 package org.joval.intf.unix.io;
 
+import java.util.NoSuchElementException;
+
 import org.joval.intf.io.IFileEx;
 
 /**
@@ -12,6 +14,12 @@ import org.joval.intf.io.IFileEx;
  * @version %I% %G%
  */
 public interface IUnixFileInfo extends IFileEx {
+    /**
+     * Key for SELinux extended data. Data will be of the form "[user]:[role]:[type]:[level]".
+     * @see http://selinuxproject.org/page/SELinux_contexts
+     */
+    String SELINUX_DATA = "selinux";
+
     char DIR_TYPE   = 'd';
     char FIFO_TYPE  = 'p';
     char LINK_TYPE  = 'l';
@@ -51,4 +59,9 @@ public interface IUnixFileInfo extends IFileEx {
     boolean sticky();
 
     boolean hasExtendedAcl();
+
+    /**
+     * Get extended data about the file, such as SELINUX_DATA.
+     */
+    String getExtendedData(String key) throws NoSuchElementException;
 }

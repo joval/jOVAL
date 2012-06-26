@@ -24,8 +24,6 @@ import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.macos.Plist510Object;
-import oval.schemas.definitions.macos.PlistObject;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -62,6 +60,11 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
     // Implement IAdapter
 
+    /**
+     * Certain object types, like the macos.PlistObject and linux.Selinuxsecuritycontext, do not necessarily contain file
+     * path data. Subclasses implementing adapters (based on this one) for such objects should therefore override this method
+     * as necessary.
+     */
     public Collection<T> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	String id = obj.getId();
 
@@ -223,15 +226,16 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     protected abstract Collection<T> getItems(ObjectType obj, ItemType it, IFile f, IRequestContext rc)
 	throws IOException, CollectException;
 
-    // Internal
+    // Private
 
     /**
-     * Get a list of String paths for this object.  This accommodates searches (from pattern match operations),
-     * singletons (from equals operations) and handles recursive searches specified by FileBehaviors.
-     *
-     * The resulting collection should only contain matches that exist.
+     * Get a list of String paths corresponding to this object's specifications. This accommodates searches (from pattern
+     * match operations), singletons (from equals operations) and handles recursive searches specified by FileBehaviors.
+     * The resulting collection only contains matches that exist.
      */
-    final Collection<String> getPathList(ReflectedFileObject fObj, IRequestContext rc, IFilesystem fs) throws CollectException {
+    private Collection<String> getPathList(ReflectedFileObject fObj, IRequestContext rc, IFilesystem fs)
+		throws CollectException {
+
 	String id = fObj.getId();
 	ReflectedFileBehaviors fb = fObj.getBehaviors();
 	Collection<String> list = new HashSet<String>();
@@ -386,8 +390,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    }
 		    list = files;
 		}
-	    } else if (isPlistObject(fObj.obj)) {
-		list.add(getPlistPath(fObj.obj));
 	    } else {
 		//
 		// This has probably happened because one or more variables resolves to nothing.
@@ -401,40 +403,10 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     }
 
     /**
-     * Is the object a Plist type?
-     */
-    private boolean isPlistObject(ObjectType obj) {
-	return obj instanceof PlistObject || obj instanceof Plist510Object;
-    }
-
-    /**
-     * Get the path of the plist file based on the app_id.
-     */
-    private String getPlistPath(ObjectType obj) throws CollectException {
-	EntityObjectStringType appIdType = null;
-	if (obj instanceof PlistObject) {
-	    appIdType = ((PlistObject)obj).getAppId();
-	} else if (obj instanceof Plist510Object) {
-	    appIdType = ((Plist510Object)obj).getAppId();
-	}
-	if (appIdType != null) {
-	    Collection<String> paths = new Vector<String>();
-
-	    StringBuffer sb = new StringBuffer(session.getEnvironment().getenv("HOME"));
-	    sb.append("/Library/Preferences/");
-	    if (appIdType.isSetValue()) {
-		return sb.append((String)appIdType.getValue()).append(".plist").toString();
-	    }
-	}
-	String message = JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_PLIST_OBJECT, obj.getId());
-	throw new CollectException(message, FlagEnumeration.ERROR);
-    }
-
-    /**
      * Finds directories recursively based on FileBahaviors.
      */
-    private Collection<String> getDirs(Collection<String> list, int depth, ReflectedFileBehaviors behaviors,
-				       IFilesystem fs, Stack<String> ancestors) {
+    private Collection<String> getDirs(Collection<String> list, int depth, ReflectedFileBehaviors behaviors, IFilesystem fs,
+		Stack<String> ancestors) {
 
 	if ("none".equals(behaviors.getRecurseDirection()) || depth == 0) {
 	    return list;
@@ -555,6 +527,8 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	ReflectedFileBehaviors behaviors = null;
 
 	ReflectedFileObject(ObjectType obj) {
+	    this.obj = obj;
+
 	    try {
 		Method getId = obj.getClass().getMethod("getId");
 		Object o = getId.invoke(obj);
@@ -621,43 +595,47 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    }
 	}
 
-	String getId() {
+	public ObjectType getObject() {
+	    return obj;
+	}
+
+	public String getId() {
 	    return id;
 	}
 
-	boolean isSetFilepath() {
+	public boolean isSetFilepath() {
 	    return filepath != null;
 	}
 
-	EntityObjectStringType getFilepath() {
+	public EntityObjectStringType getFilepath() {
 	    return filepath;
 	}
 
-	boolean isFilenameNil() {
+	public boolean isFilenameNil() {
 	    return filenameNil;
 	}
 
-	boolean isSetFilename() {
+	public boolean isSetFilename() {
 	    return filename != null;
 	}
 
-	EntityObjectStringType getFilename() {
+	public EntityObjectStringType getFilename() {
 	    return filename;
 	}
 
-	boolean isSetPath() {
+	public boolean isSetPath() {
 	    return path != null;
 	}
 
-	EntityObjectStringType getPath() {
+	public EntityObjectStringType getPath() {
 	    return path;
 	}
 
-	boolean isSetBehaviors() {
+	public boolean isSetBehaviors() {
 	    return behaviors != null;
 	}
 
-	ReflectedFileBehaviors getBehaviors() {
+	public ReflectedFileBehaviors getBehaviors() {
 	    return behaviors;
 	}
     }
@@ -712,23 +690,23 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    }
 	}
 
-	String getRecurse() {
+	public String getRecurse() {
 	    return recurse;
 	}
 
-	String getRecurseDirection() {
+	public String getRecurseDirection() {
 	    return recurseDirection;
 	}
 
-	int getDepth() {
+	public int getDepth() {
 	    return Integer.parseInt(maxDepth.toString());
 	}
 
-	String getRecurseFileSystem() {
+	public String getRecurseFileSystem() {
 	    return recurseFS;
 	}
 
-	String getWindowsView() {
+	public String getWindowsView() {
 	    return windowsView;
 	}
     }

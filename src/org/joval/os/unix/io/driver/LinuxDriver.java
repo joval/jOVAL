@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
@@ -75,7 +76,7 @@ public class LinuxDriver implements IUnixFilesystemDriver {
     }
 
     public String getStatCommand() {
-	return "ls -dn --time-style=full-iso";
+	return "ls -dnZ --full-time";
     }
 
     public UnixFileInfo nextFileInfo(Iterator<String> lines) {
@@ -95,6 +96,7 @@ public class LinuxDriver implements IUnixFilesystemDriver {
 
 	StringTokenizer tok = new StringTokenizer(line.substring(11));
 	String linkCount = tok.nextToken();
+	String selinux = tok.nextToken();
 	int uid = -1;
 	try {
 	    uid = Integer.parseInt(tok.nextToken());
@@ -154,7 +156,10 @@ public class LinuxDriver implements IUnixFilesystemDriver {
 	    }
 	}
 
+	Properties extended = new Properties();
+	extended.setProperty(IUnixFileInfo.SELINUX_DATA, selinux);
+
 	return new UnixFileInfo(IFile.UNKNOWN_TIME, mtime, IFile.UNKNOWN_TIME, type, length, path, linkPath,
-				unixType, permissions, uid, gid, hasExtendedAcl);
+				unixType, permissions, uid, gid, hasExtendedAcl, extended);
     }
 }

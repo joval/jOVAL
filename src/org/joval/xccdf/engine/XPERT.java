@@ -266,7 +266,7 @@ public class XPERT {
 		}
 		plugin.configure(config);
 	    } catch (Exception e) {
-		logger.severe("Problem configuring the plugin -- check that the configuration is valid");
+		logger.severe("Problem configuring the plugin:\n  " + e.getMessage());
 		System.exit(1);
 	    }
 
