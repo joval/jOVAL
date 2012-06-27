@@ -140,7 +140,8 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
 	    } else if (e instanceof IllegalArgumentException) {
 		throw (IllegalArgumentException)e;
 	    } else {
-		throw new IOException(e);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new IOException(e.getMessage());
 	    }
 	}
     }

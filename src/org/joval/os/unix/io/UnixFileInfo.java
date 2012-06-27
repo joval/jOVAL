@@ -108,7 +108,9 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	out.writeInt(uid);
 	out.writeInt(gid);
 	out.writeBoolean(hasExtendedAcl);
-	if (extended != null) {
+	if (extended == null) {
+	    out.writeBoolean(false);
+	} else {
 	    out.writeBoolean(true);
 	    Set<String> propertyNames = extended.stringPropertyNames();
 	    out.writeInt(propertyNames.size());
