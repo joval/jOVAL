@@ -1416,6 +1416,9 @@ public class Engine implements IEngine, IAdapter {
 		testedItem.setItemId(item.getId());
 		testedItem.setResult(ResultEnumeration.NOT_EVALUATED);
 
+		//
+		// Note: items with a status of DOES_NOT_EXIST have no impact on the result.
+		//
 		switch(item.getStatus()) {
 		  case EXISTS:
 		    if (stateIds.size() > 0) {
@@ -1440,12 +1443,10 @@ public class Engine implements IEngine, IAdapter {
 		    }
 		    break;
 
-		  case DOES_NOT_EXIST:
-		    check.addResult(ResultEnumeration.NOT_APPLICABLE);
-		    break;
 		  case ERROR:
 		    check.addResult(ResultEnumeration.ERROR);
 		    break;
+
 		  case NOT_COLLECTED:
 		    check.addResult(ResultEnumeration.NOT_EVALUATED);
 		    break;
@@ -1671,7 +1672,8 @@ public class Engine implements IEngine, IAdapter {
 		throws TestException, OvalException {
 
 	if (item == null) {
-	    return ResultEnumeration.NOT_APPLICABLE;
+	    // Absence of the item is equivalent to a status of DOES_NOT_EXIST
+	    return ResultEnumeration.FALSE;
 	} else {
 	    switch(item.getStatus()) {
 	      case NOT_COLLECTED:

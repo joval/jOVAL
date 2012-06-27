@@ -22,15 +22,15 @@
     </definition>
   </definitions>
   <tests>
-    <shadow_test id="oval:org.mitre.oval.test:tst:1948" version="2" comment="This test checks if spwd::sp_min for user 'root' is 0." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+    <shadow_test id="oval:org.mitre.oval.test:tst:1948" version="2" comment="This test checks if the last password change for user 'root' is greater than 0." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <object object_ref="oval:org.mitre.oval.test:obj:1339"/>
       <state state_ref="oval:org.mitre.oval.test:ste:1594"/>
     </shadow_test>
-    <shadow_test id="oval:org.mitre.oval.test:tst:1745" version="2" comment="This test checks if there is a non-root account with spwd::sp_warn = 7." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+    <shadow_test id="oval:org.mitre.oval.test:tst:1745" version="2" comment="This test checks if there is a non-root account with no password." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <object object_ref="oval:org.mitre.oval.test:obj:1280"/>
       <state state_ref="oval:org.mitre.oval.test:ste:1491"/>
     </shadow_test>
-    <shadow_test id="oval:org.mitre.oval.test:tst:1956" version="2" comment="This test checks if there is an account which does not start with 'r' with spwd::sp_warn = 7." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+    <shadow_test id="oval:org.mitre.oval.test:tst:1956" version="2" comment="This test checks if there is an account which does not start with 'r' with no password." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
       <object object_ref="oval:org.mitre.oval.test:obj:1189"/>
       <state state_ref="oval:org.mitre.oval.test:ste:1491"/>
     </shadow_test>
@@ -47,11 +47,11 @@
     </shadow_object>
   </objects>
   <states>
-    <shadow_state id="oval:org.mitre.oval.test:ste:1594" version="2" comment="The state of spwd::sp_min equaling -1." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <chg_allow datatype="int">-1</chg_allow>
+    <shadow_state id="oval:org.mitre.oval.test:ste:1594" version="2" comment="The state of spwd::sp_lst equaling -1." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <chg_lst datatype="int" operation="greater than">0</chg_lst>
     </shadow_state>
-    <shadow_state id="oval:org.mitre.oval.test:ste:1491" version="2" comment="The state of spwd::sp_warn equaling -1." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
-      <exp_warn datatype="int">-1</exp_warn>
+    <shadow_state id="oval:org.mitre.oval.test:ste:1491" version="2" comment="The state of spwd::password equaling NO PASSWORD." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#unix">
+      <password datatype="string">NP</password>
     </shadow_state>
   </states>
 </oval_definitions>

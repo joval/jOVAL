@@ -202,7 +202,7 @@ public class ShadowAdapter implements IAdapter {
 			    }
 			} else if (pw.startsWith("_")) {
 			    encryptMethod.setValue("BSDi");
-			} else if ("NP".equals(pw) || "!".equals(pw) || "LK".equals(pw) || "*".equals(pw) || "!!".equals(pw)) {
+			} else if (pw.startsWith("*") || pw.startsWith("!") || "NP".equals(pw) || "LK".equals(pw)) {
 			    encryptMethod.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 			} else {
 			    encryptMethod.setValue("DES");
@@ -258,11 +258,10 @@ public class ShadowAdapter implements IAdapter {
 		    } catch (NumberFormatException e) {
 		    }
 
-		    try {
+		    if (tokens.get(FLAG).length() > 0) {
 			EntityItemStringType flag = Factories.sc.core.createEntityItemStringType();
 			flag.setValue(tokens.get(FLAG));
 			item.setFlag(flag);
-		    } catch (NumberFormatException e) {
 		    }
 
 		    shadowMap.put(usernameString, item);
