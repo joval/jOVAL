@@ -468,8 +468,15 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    er.join();
 	}
 
-	SafeCLI.exec("mv " + tempPath + " " + destPath, session, S);
-	logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_CREATE, destPath);
+	//
+	// Move the temp file; retry once if the attempt fails for some reason.
+	//
+	for (int i=0; i < 2; i++) {
+	    if (SafeCLI.execData("mv " + tempPath + " " + destPath, null, session, S).getExitCode() == 0) {
+		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_CREATE, destPath);
+		break;
+	    }
+	}
 	return getFile(destPath);
     }
 

@@ -103,14 +103,12 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 	    throw new CollectException(message, FlagEnumeration.ERROR);
 	}
 
-	if (baseItem != null) {
-	    if (f.getExtended() instanceof IUnixFileInfo) {
-		IUnixFileInfo info = (IUnixFileInfo)f.getExtended();
-		try {
-		    parseSecurityContextData(baseItem, info.getExtendedData(IUnixFileInfo.SELINUX_DATA));
-		    return Arrays.asList(baseItem);
-		} catch (NoSuchElementException e) {
-		}
+	if (f.getExtended() instanceof IUnixFileInfo) {
+	    IUnixFileInfo info = (IUnixFileInfo)f.getExtended();
+	    try {
+		parseSecurityContextData(baseItem, info.getExtendedData(IUnixFileInfo.SELINUX_DATA));
+		return Arrays.asList(baseItem);
+	    } catch (NoSuchElementException e) {
 	    }
 	}
 
@@ -186,66 +184,73 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 	return items;
     }
 
+    /**
+     * Follows the OpenSCAP implementation, which doesn't distinguish between raw-hi/lo and hi/lo either.
+     */
     private void parseSecurityContextData(SelinuxsecuritycontextItem item, String context) {
 	StringTokenizer tok = new StringTokenizer(context, ":");
 	if (tok.countTokens() > 2) {
 	    EntityItemStringType user = Factories.sc.core.createEntityItemStringType();
-	    user.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	    user.setValue(tok.nextToken());
 	    item.setUser(user);
 
 	    EntityItemStringType role = Factories.sc.core.createEntityItemStringType();
-	    role.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	    role.setValue(tok.nextToken());
 	    item.setRole(role);
 
 	    EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
-	    type.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	    type.setValue(tok.nextToken());
 	    item.setType(type);
 
 	    if (tok.hasMoreTokens()) {
 		String level = tok.nextToken("\n").substring(1); // rest of entry data, less beginning :
-		int ptr = level.indexOf("-");
-		String highLevel = null;
-		if (ptr > 0) {
-		    //
-		    // Indicates a range
-		    //
-		    highLevel = level.substring(ptr+1).trim();
-		    level = level.substring(0,ptr).trim();
+		String loRange=null, hiRange=null;
+		String[] sa = split(level, "-");
+		if (sa.length == 1) {
+		    loRange = sa[0].trim();
+		} else {
+		    loRange = sa[0].trim();
+		    hiRange = sa[1].trim();
 		}
 
-		ptr = level.indexOf(":");
-		String lowSensitivity = level, lowCategory = null;
-		if (ptr > 0) {
-		    lowSensitivity = level.substring(0,ptr);
-		    lowCategory = level.substring(ptr+1);
+		String loSen=null, loCat=null;
+		sa = split(loRange, ":");
+		if (sa.length == 1) {
+		    loSen = sa[0].trim();
+		} else {
+		    loSen = sa[0].trim();
+		    loCat = sa[1].trim();
+		}
+		EntityItemStringType lowSensitivity = Factories.sc.core.createEntityItemStringType();
+		lowSensitivity.setValue(loSen);
+		item.setLowSensitivity(lowSensitivity);
+		item.setRawlowSensitivity(lowSensitivity);
+		if (loCat != null) {
 		    EntityItemStringType lowCategoryType = Factories.sc.core.createEntityItemStringType();
-		    lowCategoryType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-		    lowCategoryType.setValue(lowCategory);
+		    lowCategoryType.setValue(loCat);
 		    item.setLowCategory(lowCategoryType);
+		    item.setRawlowCategory(lowCategoryType);
 		}
-		EntityItemStringType lowSensitivityType = Factories.sc.core.createEntityItemStringType();
-		lowSensitivityType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-		lowSensitivityType.setValue(lowSensitivity);
-		item.setLowSensitivity(lowSensitivityType);
 
-		if (highLevel != null) {
-		    ptr = highLevel.indexOf(":");
-		    String highSensitivity = highLevel, highCategory = null;
-		    if (ptr > 0) {
-			highSensitivity = highLevel.substring(0,ptr);
-			highCategory = highLevel.substring(ptr+1);
-			EntityItemStringType highCategoryType = Factories.sc.core.createEntityItemStringType();
-			highCategoryType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-			highCategoryType.setValue(highCategory);
-			item.setHighCategory(highCategoryType);
+		if (hiRange != null) {
+		    String hiSen=null, hiCat=null;
+		    sa = split(hiRange, ":");
+		    if (sa.length == 1) {
+			hiSen = sa[0].trim();
+		    } else {
+			hiSen = sa[0].trim();
+			hiCat = sa[1].trim();
 		    }
-		    EntityItemStringType highSensitivityType = Factories.sc.core.createEntityItemStringType();
-		    highSensitivityType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-		    highSensitivityType.setValue(highSensitivity);
-		    item.setHighSensitivity(highSensitivityType);
+		    EntityItemStringType highSensitivity = Factories.sc.core.createEntityItemStringType();
+		    highSensitivity.setValue(hiSen);
+		    item.setHighSensitivity(highSensitivity);
+		    item.setRawhighSensitivity(highSensitivity);
+		    if (hiCat != null) {
+			EntityItemStringType highCategory = Factories.sc.core.createEntityItemStringType();
+			highCategory.setValue(hiCat);
+			item.setHighCategory(highCategory);
+			item.setRawhighCategory(highCategory);
+		    }
 		}
 	    }
 	}
@@ -313,6 +318,20 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 	    } catch (Exception e) {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
+	}
+    }
+
+    private String[] split(String str, String delim) {
+	int ptr = str.indexOf(delim);
+	if (ptr > 0) {
+	    int delimLen = delim.length();
+	    String lhs = str.substring(0,ptr);
+	    String rhs = str.substring(ptr+delimLen);
+	    String[] sa = {lhs, rhs};
+	    return sa;
+	} else {
+	    String[] sa = {str};
+	    return sa;
 	}
     }
 }
