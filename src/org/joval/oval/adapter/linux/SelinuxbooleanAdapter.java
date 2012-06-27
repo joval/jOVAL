@@ -177,20 +177,20 @@ public class SelinuxbooleanAdapter implements IAdapter {
 	    nameType.setValue(name);
 	    item.setName(nameType);
 
+	    EntityItemBoolType pendingStatus = Factories.sc.core.createEntityItemBoolType();
+	    pendingStatus.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	    ptr = value.indexOf(PENDING);
 	    if (ptr > 0) {
 		String pending = value.substring(0,ptr).trim();
 		value = value.substring(ptr+8).trim();
 
-		EntityItemBoolType pendingStatus = Factories.sc.core.createEntityItemBoolType();
-		pendingStatus.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 		if ("on".equals(value) || "active".equals(value)) {
 		    pendingStatus.setValue("1");
 		} else {
 		    pendingStatus.setValue("0");
 		}
-		item.setPendingStatus(pendingStatus);
 	    }
+	    item.setPendingStatus(pendingStatus);
 
 	    EntityItemBoolType currentStatus = Factories.sc.core.createEntityItemBoolType();
 	    currentStatus.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
@@ -200,6 +200,10 @@ public class SelinuxbooleanAdapter implements IAdapter {
 		currentStatus.setValue("0");
 	    }
 	    item.setCurrentStatus(currentStatus);
+
+	    if (!pendingStatus.isSetValue()) {
+		pendingStatus.setValue(currentStatus.getValue());
+	    }
 
 	    return item;
 	}
