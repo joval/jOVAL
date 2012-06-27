@@ -62,6 +62,7 @@ CLASSES=\
 	org.joval.oval.adapter.unix.PasswordAdapter			\
 	org.joval.oval.adapter.unix.ProcessAdapter			\
 	org.joval.oval.adapter.unix.RunlevelAdapter			\
+	org.joval.oval.adapter.unix.ShadowAdapter			\
 	org.joval.oval.adapter.unix.UnameAdapter			\
 	org.joval.oval.adapter.windows.FileAdapter			\
 	org.joval.oval.adapter.windows.Fileeffectiverights53Adapter	\
