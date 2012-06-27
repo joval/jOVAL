@@ -10,6 +10,7 @@ import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -50,12 +51,15 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
+    private Hashtable<String, String[]> checksumMap;
+
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof ISession) {
 	    super.init((ISession)session);
+	    checksumMap = new Hashtable<String, String[]>();
 	    classes.add(FilehashObject.class);
 	}
 	return classes;
@@ -124,6 +128,8 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
     private String[] computeChecksums(IFile f) throws Exception {
 	if (!f.isFile()) {
 	    throw new IllegalArgumentException(f.getPath());
+	} else if (checksumMap.containsKey(f.getPath())) {
+	    return checksumMap.get(f.getPath());
 	}
 	String[] checksums = new String[2];
 	switch(session.getType()) {
@@ -183,6 +189,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    break;
 	  }
 	}
+	checksumMap.put(f.getPath(), checksums);
 	return checksums;
     }
 }
