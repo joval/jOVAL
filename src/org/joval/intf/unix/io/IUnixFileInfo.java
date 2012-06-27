@@ -20,6 +20,9 @@ public interface IUnixFileInfo extends IFileEx {
      */
     String SELINUX_DATA = "selinux";
 
+    /**
+     * Native UNIX stat file type identifiers.
+     */
     char DIR_TYPE   = 'd';
     char FIFO_TYPE  = 'p';
     char LINK_TYPE  = 'l';
@@ -27,6 +30,17 @@ public interface IUnixFileInfo extends IFileEx {
     char CHAR_TYPE  = 'c';
     char SOCK_TYPE  = 's';
     char FILE_TYPE  = '-';
+
+    /**
+     * OVAL UNIX file types, returned by getUnixFileType(), as required by the schema.
+     */
+    String FILE_TYPE_DIR	= "directory";
+    String FILE_TYPE_FIFO	= "fifo";
+    String FILE_TYPE_LINK	= "symlink";
+    String FILE_TYPE_BLOCK	= "block";
+    String FILE_TYPE_CHAR	= "character";
+    String FILE_TYPE_SOCK	= "socket";
+    String FILE_TYPE_REGULAR	= "regular";
 
     String getUnixFileType();
 

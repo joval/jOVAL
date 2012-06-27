@@ -24,11 +24,12 @@ import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.independent.EntityObjectHashTypeType;
-import oval.schemas.definitions.independent.FilehashObject;
+import oval.schemas.definitions.independent.Filehash58Object;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.independent.FilehashItem;
+import oval.schemas.systemcharacteristics.independent.EntityItemHashTypeType;
+import oval.schemas.systemcharacteristics.independent.Filehash58Item;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.io.IFile;
@@ -48,13 +49,40 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 
 /**
- * Collects items for filehash OVAL objects.
+ * Collects items for filehash58 OVAL objects.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
-    private Hashtable<String, String[]> checksumMap;
+public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
+    enum Algorithm {
+	MD5("MD5", "md5"),
+	SHA1("SHA-1", "sha1"),
+	SHA224("SHA-224", "sha224"),
+	SHA256("SHA-256", "sha256"),
+	SHA384("SHA-384", "sha384"),
+	SHA512("SHA-512", "sha512");
+
+	String ovalId, osId;
+
+	Algorithm(String ovalId, String osId) {
+	    this.ovalId = ovalId;
+	    this.osId = osId;
+	}
+
+	static Algorithm fromOval(String id) throws IllegalArgumentException {
+	    for (Algorithm alg : values()) {
+		if (id.equals(alg.ovalId)) {
+		    return alg;
+		}
+	    }
+	    throw new IllegalArgumentException(id);
+	}
+
+	String getOsName() {
+	    return osId;
+	}
+    }
 
     // Implement IAdapter
 
@@ -62,8 +90,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof ISession) {
 	    super.init((ISession)session);
-	    checksumMap = new Hashtable<String, String[]>();
-	    classes.add(FilehashObject.class);
+	    classes.add(Filehash58Object.class);
 	}
 	return classes;
     }
@@ -71,28 +98,30 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
     // Protected
 
     protected Class getItemClass() {
-	return FilehashItem.class;
+	return Filehash58Item.class;
     }
 
     /**
      * Parse the file as specified by the Object, and decorate the Item.
      */
-    protected Collection<FilehashItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
+    protected Collection<Filehash58Item> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws IOException, CollectException {
 
-	FilehashItem baseItem = null;
-	if (base instanceof FilehashItem) {
-	    baseItem = (FilehashItem)base;
+	Filehash58Item baseItem = null;
+	if (base instanceof Filehash58Item) {
+	    baseItem = (Filehash58Item)base;
 	} else {
 	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
 	    throw new CollectException(message, FlagEnumeration.ERROR);
 	}
 
+	String hashType = (String)((Filehash58Object)obj).getHashType().getValue();
 	try {
-	    String[] checksums = computeChecksums(f);
-	    return Arrays.asList(getItem(baseItem, checksums[MD5], checksums[SHA1]));
+	    Algorithm alg = Algorithm.fromOval(hashType);
+	    return Arrays.asList(getItem(baseItem, alg, computeChecksum(f, alg)));
 	} catch (IllegalArgumentException e) {
-	    session.getLogger().warn(JOVALMsg.STATUS_NOT_FILE, f.getPath()); 
+	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_CHECKSUM_ALGORITHM, hashType);
+	    throw new CollectException(message, FlagEnumeration.ERROR);
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -101,34 +130,31 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	}
 
 	@SuppressWarnings("unchecked")
-	Collection<FilehashItem> empty = (Collection<FilehashItem>)Collections.EMPTY_LIST;
+	Collection<Filehash58Item> empty = (Collection<Filehash58Item>)Collections.EMPTY_LIST;
 	return empty;
     }
 
     // Internal
 
-    protected FilehashItem getItem(FilehashItem baseItem, String md5, String sha1) {
-	FilehashItem item = Factories.sc.independent.createFilehashItem();
+    protected Filehash58Item getItem(Filehash58Item baseItem, Algorithm alg, String checksum) {
+	Filehash58Item item = Factories.sc.independent.createFilehash58Item();
 	item.setPath(baseItem.getPath());
 	item.setFilename(baseItem.getFilename());
 	item.setFilepath(baseItem.getFilepath());
 	item.setWindowsView(baseItem.getWindowsView());
 
-	EntityItemStringType md5Type = Factories.sc.core.createEntityItemStringType();
-	md5Type.setValue(md5);
-	item.setMd5(md5Type);
+	EntityItemHashTypeType hashType = Factories.sc.independent.createEntityItemHashTypeType();
+	hashType.setValue(alg.ovalId);
+	item.setHashType(hashType);
 
-	EntityItemStringType sha1Type = Factories.sc.core.createEntityItemStringType();
-	sha1Type.setValue(sha1);
-	item.setSha1(sha1Type);
+	EntityItemStringType hash = Factories.sc.core.createEntityItemStringType();
+	hash.setValue(checksum);
+	item.setHash(hash);
 
 	return item;
     }
 
-    private static final int MD5	= 0;
-    private static final int SHA1	= 1;
-
-    private String[] computeChecksums(IFile f) throws Exception {
+    private String computeChecksum(IFile f, Algorithm alg) throws Exception {
 	IFileEx ext = f.getExtended();
 	boolean typecheck = false;
 	if (ext instanceof IWindowsFileInfo) {
@@ -138,46 +164,27 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	}
 	if (!typecheck) {
 	    throw new IllegalArgumentException(f.getPath());
-	} else if (checksumMap.containsKey(f.getPath())) {
-	    return checksumMap.get(f.getPath());
 	}
-	String[] checksums = new String[2];
+	String checksum = null;
 	switch(session.getType()) {
 	  case UNIX: {
 	    IUnixSession us = (IUnixSession)session;
 	    switch(us.getFlavor()) {
+	      case AIX:
 	      case LINUX:
 	      case MACOSX: {
-		String temp = SafeCLI.exec("openssl dgst -hex -md5 " + f.getPath(), session, IUnixSession.Timeout.M);
+		String cmd = "openssl dgst -hex -" + alg.getOsName() + " " + f.getPath();
+		String temp = SafeCLI.exec(cmd, session, IUnixSession.Timeout.M);
 		int ptr = temp.indexOf("= ");
 		if (ptr > 0) {
-		    checksums[MD5] = temp.substring(ptr+2).trim();
-		}
-		temp = SafeCLI.exec("openssl dgst -hex -sha1 " + f.getPath(), session, IUnixSession.Timeout.M);
-		ptr = temp.indexOf("= ");
-		if (ptr > 0) {
-		    checksums[SHA1] = temp.substring(ptr+2).trim();
+		    checksum = temp.substring(ptr+2).trim();
 		}
 		break;
 	      }
 
 	      case SOLARIS: {
-		checksums[MD5] = SafeCLI.exec("digest -a md5 " + f.getPath(), session, IUnixSession.Timeout.M);
-		checksums[SHA1] = SafeCLI.exec("digest -a sha1 " + f.getPath(), session, IUnixSession.Timeout.M);
-		break;
-	      }
-
-	      case AIX: {
-		String temp = SafeCLI.exec("csum -h MD5 " + f.getPath(), session, IUnixSession.Timeout.M);
-		StringTokenizer tok = new StringTokenizer(temp);
-		if (tok.countTokens() == 2) {
-		    checksums[MD5] = tok.nextToken();
-		}
-		temp = SafeCLI.exec("csum -h SHA1 " + f.getPath(), session, IUnixSession.Timeout.M);
-		tok = new StringTokenizer(temp);
-		if (tok.countTokens() == 2) {
-		    checksums[SHA1] = tok.nextToken();
-		}
+		String cmd = "digest -a " + alg.getOsName() + " " + f.getPath();
+		checksum = SafeCLI.exec(cmd, session, IUnixSession.Timeout.M);
 		break;
 	      }
 	    }
@@ -191,15 +198,34 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    File temp = File.createTempFile("cksum", "dat", session.getWorkspace());
 	    try {
 		StreamTool.copy(f.getInputStream(), new FileOutputStream(temp), true);
-		checksums[MD5] = Checksum.getChecksum(temp, Checksum.Algorithm.MD5);
-		checksums[SHA1] = Checksum.getChecksum(temp, Checksum.Algorithm.SHA1);
+		Checksum.Algorithm ca = null;
+		switch(alg) {
+		  case MD5:
+		    ca = Checksum.Algorithm.MD5;
+		    break;
+		  case SHA1:
+		    ca = Checksum.Algorithm.SHA1;
+		    break;
+		  case SHA224:
+		    ca = Checksum.Algorithm.SHA224;
+		    break;
+		  case SHA256:
+		    ca = Checksum.Algorithm.SHA256;
+		    break;
+		  case SHA384:
+		    ca = Checksum.Algorithm.SHA384;
+		    break;
+		  case SHA512:
+		    ca = Checksum.Algorithm.SHA512;
+		    break;
+		}
+		checksum = Checksum.getChecksum(temp, ca);
 	    } finally {
 		temp.delete();
 	    }
 	    break;
 	  }
 	}
-	checksumMap.put(f.getPath(), checksums);
-	return checksums;
+	return checksum;
     }
 }

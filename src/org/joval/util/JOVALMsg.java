@@ -338,6 +338,7 @@ public enum JOVALMsg {
     ERROR_TYPED_STATUS,
     ERROR_TYPE_CONVERSION,
     ERROR_TYPE_INCOMPATIBLE,
+    ERROR_CHECKSUM_ALGORITHM,
     ERROR_EXCEPTION;
 
     private static IMessageConveyor mc;

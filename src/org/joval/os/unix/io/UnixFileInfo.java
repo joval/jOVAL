@@ -126,20 +126,20 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
     public String getUnixFileType() {
 	switch(unixType) {
 	  case DIR_TYPE:
-	    return "directory";
+	    return FILE_TYPE_DIR;
 	  case FIFO_TYPE:
-	    return "fifo";
+	    return FILE_TYPE_FIFO;
 	  case LINK_TYPE:
-	    return "symlink";
+	    return FILE_TYPE_LINK;
 	  case BLOCK_TYPE:
-	    return "block";
+	    return FILE_TYPE_BLOCK;
 	  case CHAR_TYPE:
-	    return "character";
+	    return FILE_TYPE_CHAR;
 	  case SOCK_TYPE:
-	    return "socket";
+	    return FILE_TYPE_SOCK;
 	  case FILE_TYPE:
 	  default:
-	    return "regular";
+	    return FILE_TYPE_REGULAR;
 	}
     }
 

@@ -719,7 +719,7 @@ public class Engine implements IEngine, IAdapter {
 				break;
 
 			      default:
-				throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_CHECK, check));
+				throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_CHECK, check));
 			    }
 			}
 		    }

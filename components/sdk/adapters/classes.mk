@@ -37,6 +37,7 @@ CLASSES=\
 	org.joval.oval.adapter.independent.Environmentvariable58Adapter	\
 	org.joval.oval.adapter.independent.EnvironmentvariableAdapter	\
 	org.joval.oval.adapter.independent.FamilyAdapter		\
+	org.joval.oval.adapter.independent.Filehash58Adapter		\
 	org.joval.oval.adapter.independent.FilehashAdapter		\
 	org.joval.oval.adapter.independent.Textfilecontent54Adapter	\
 	org.joval.oval.adapter.independent.TextfilecontentAdapter	\
