@@ -128,22 +128,19 @@ public class SmfAdapter implements IAdapter {
 
 	try {
 	    session.getLogger().trace(JOVALMsg.STATUS_SMF);
-	    List<String> services = new Vector<String>();
-	    for (String line : SafeCLI.multiLine("/usr/bin/svcs -o fmri", session, IUnixSession.Timeout.M)) {
-		if (line.startsWith("FMRI")) {
-		    continue;
-		}
-		String fmri = getFullFmri(line.trim());
-		if (fmri == null) {
-		    session.getLogger().warn(JOVALMsg.ERROR_FMRI, line);
-		} else {
-		    services.add(fmri);
-		}
-	    }
-	    for (String service : services) {
+	    for (String service : SafeCLI.multiLine("/usr/bin/svcs -H -o fmri", session, IUnixSession.Timeout.M)) {
 		try {
-		    SmfItem item = getItem(service);
+		    SmfItem item = null;
+		    if (service.startsWith(LEGACY)) {
+			item = getLegacyItem(service);
+		    } else {
+			item = getItem(service);
+		    }
 		    serviceMap.put((String)item.getFmri().getValue(), item);
+		} catch (IllegalArgumentException e) {
+		    session.getLogger().warn(e.getMessage());
+		} catch (NoSuchElementException e) {
+		    session.getLogger().warn(JOVALMsg.ERROR_SMF, service);
 		} catch (Exception e) {
 		    session.getLogger().warn(JOVALMsg.ERROR_SMF, service);
 		    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -155,6 +152,7 @@ public class SmfAdapter implements IAdapter {
 	}
     }
 
+    private static final String LEGACY		= "lrc:";
     private static final String FMRI		= "fmri";
     private static final String NAME		= "name";
     private static final String ENABLED		= "enabled";
@@ -168,7 +166,34 @@ public class SmfAdapter implements IAdapter {
     private static final String INETD_USER_PROP	= "inetd_start/user";
     private static final String INETD_EXEC_PROP	= "inetd_start/exec";
 
-    private SmfItem getItem(String fmri) throws Exception {
+    private SmfItem getLegacyItem(String fmri) throws Exception {
+	SmfItem item = Factories.sc.solaris.createSmfItem();
+
+	EntityItemStringType fmriType = Factories.sc.core.createEntityItemStringType();
+	fmriType.setValue(getFullFmri(fmri));
+	item.setFmri(fmriType);
+
+	String line = SafeCLI.exec("/usr/bin/svcs -H " + fmri, session, IUnixSession.Timeout.S);
+	StringTokenizer tok = new StringTokenizer(line);
+	if (tok.countTokens() > 0) {
+	    EntityItemSmfServiceStateType serviceState = Factories.sc.solaris.createEntityItemSmfServiceStateType();
+	    try {
+		serviceState.setValue(toServiceState(tok.nextToken()));
+	    } catch (IllegalArgumentException e) {
+		serviceState.setStatus(StatusEnumeration.ERROR);
+	    }
+	    item.setServiceState(serviceState);
+	}
+
+	return item;
+    }
+
+    private SmfItem getItem(String s) throws Exception {
+	String fmri = getFullFmri(s);
+	if (fmri == null) {
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_FMRI, s));
+	}
+
 	SmfItem item = serviceMap.get(fmri);
 	if (item != null) {
 	    return item;
@@ -177,6 +202,7 @@ public class SmfAdapter implements IAdapter {
 	session.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
 	item = Factories.sc.solaris.createSmfItem();
 	boolean found = false;
+
 	for (String line : SafeCLI.multiLine("/usr/bin/svcs -l " + fmri, session, IUnixSession.Timeout.S)) {
 	    line = line.trim();
 	    if (line.length() == 0) {
@@ -198,9 +224,13 @@ public class SmfAdapter implements IAdapter {
 		item.setServiceName(nameType);
 	    } else if (line.startsWith(STATE_TIME)) { // NB: this condition MUST appear before STATE
 	    } else if (line.startsWith(STATE)) {
-		EntityItemSmfServiceStateType type = Factories.sc.solaris.createEntityItemSmfServiceStateType();
-		type.setValue(line.substring(STATE.length()).trim().toUpperCase());
-		item.setServiceState(type);
+		EntityItemSmfServiceStateType serviceState = Factories.sc.solaris.createEntityItemSmfServiceStateType();
+		try {
+		    serviceState.setValue(toServiceState(line.substring(STATE.length())));
+		} catch (IllegalArgumentException e) {
+		    serviceState.setStatus(StatusEnumeration.ERROR);
+		}
+		item.setServiceState(serviceState);
 	    }
 	}
 
@@ -249,6 +279,25 @@ public class SmfAdapter implements IAdapter {
 	    return item;
 	} else {
 	    throw new NoSuchElementException(fmri);
+	}
+    }
+
+    private String toServiceState(String s) throws IllegalArgumentException {
+	s = s.trim();
+	if (s.equalsIgnoreCase("degraded")) {
+	    return "DEGRADED";
+	} else if (s.equalsIgnoreCase("disabled")) {
+	    return "DISABLED";
+	} else if (s.equalsIgnoreCase("legacy_run")) {
+	    return "LEGACY-RUN";
+	} else if (s.equalsIgnoreCase("offline")) {
+	    return "OFFLINE";
+	} else if (s.equalsIgnoreCase("online")) {
+	    return "ONLINE";
+	} else if (s.equalsIgnoreCase("uninitialized")) {
+	    return "UNINITIALIZED";
+	} else {
+	    throw new IllegalArgumentException(s);
 	}
     }
 
