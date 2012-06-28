@@ -3,11 +3,13 @@
 
 package org.joval.oval.adapter.unix;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
@@ -49,7 +51,8 @@ import org.joval.util.StringTools;
 public class PasswordAdapter implements IAdapter {
     private IUnixSession session;
     private Hashtable<String, PasswordItem> passwordMap;
-    private String error;
+    private Hashtable<String, Exception> errors;
+    private List<String> errorMessages;
     private boolean initialized;
 
     // Implement IAdapter
@@ -59,7 +62,8 @@ public class PasswordAdapter implements IAdapter {
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
 	    passwordMap = new Hashtable<String, PasswordItem>();
-	    error = null;
+	    errors = new Hashtable<String, Exception>();
+	    errorMessages = new Vector<String>();
 	    initialized = false;
 	    classes.add(PasswordObject.class);
 	}
@@ -67,15 +71,13 @@ public class PasswordAdapter implements IAdapter {
     }
 
     public Collection<PasswordItem> getItems(ObjectType obj, IRequestContext rc) throws OvalException, CollectException {
-	if (!initialized) {
-	    loadPasswords();
-	}
-
-	if (error != null) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(error);
-	    rc.addMessage(msg);
+	if (errorMessages.size() > 0) {
+	    for (String error : errorMessages) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(error);
+		rc.addMessage(msg);
+	    }
 	}
 
 	Collection<PasswordItem> items = new Vector<PasswordItem>();
@@ -86,24 +88,22 @@ public class PasswordAdapter implements IAdapter {
 	    OperationEnumeration op = usernameType.getOperation();
 	    switch(op) {
 	      case EQUALS:
-		if (passwordMap.containsKey(username)) {
-		    items.add(passwordMap.get(username));
-		}
+		items.add(getPasswordItem(username, rc));
 		break;
 
 	      case NOT_EQUAL:
-		for (String s : passwordMap.keySet()) {
+		for (String s : getUsernames()) {
 		    if (!s.equals(username)) {
-			items.add(passwordMap.get(s));
+			items.add(getPasswordItem(s, rc));
 		    }
 		}
 		break;
 
 	      case PATTERN_MATCH: {
 		Pattern p = Pattern.compile(username);
-		for (String s : passwordMap.keySet()) {
+		for (String s : getUsernames()) {
 		    if (p.matcher(s).find()) {
-			items.add(passwordMap.get(s));
+			items.add(getPasswordItem(s, rc));
 		    }
 		}
 		break;
@@ -119,11 +119,47 @@ public class PasswordAdapter implements IAdapter {
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (NoSuchElementException e) {
+	    // Ignore
+	} catch (CollectException e) {
+	    throw e;
+	} catch (Exception e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
 	}
 	return items;
     }
 
     // Internal
+
+    private Collection<String> getUsernames() {
+	if (!initialized) {
+	    loadPasswords();
+	}
+	return passwordMap.keySet();
+    }
+
+    private PasswordItem getPasswordItem(String username, IRequestContext rc) throws Exception {
+	if (!initialized) {
+	    loadPasswords();
+	}
+	if (passwordMap.containsKey(username)) {
+	    // Log any non-fatal errors for this username
+	    if (errors.containsKey(username)) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(errors.get(username).getMessage());
+		rc.addMessage(msg);
+	    }
+	    return passwordMap.get(username);
+	} else if (errors.containsKey(username)) {
+	    throw errors.get(username);
+	} else {
+	    throw new NoSuchElementException(username);
+	}
+    }
 
     private void loadPasswords() {
 	try {
@@ -225,147 +261,139 @@ public class PasswordAdapter implements IAdapter {
 	    //
 	    // For each user, collect the last login time.
 	    //
+	    long systime = System.currentTimeMillis();
+	    try {
+		systime = session.getTime();
+	    } catch (Exception e) {
+		errorMessages.add(e.getMessage());
+		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
 	    for (String username : passwordMap.keySet()) {
-		PasswordItem item = passwordMap.get(username);
-		EntityItemIntType lastLogin = Factories.sc.core.createEntityItemIntType();
-		lastLogin.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		switch(session.getFlavor()) {
-		  case MACOSX:
-		  case SOLARIS:
-		    Date now = new Date(session.getTime());
-		    for (String line : SafeCLI.multiLine("last -1 " + username, session, IUnixSession.Timeout.M)) {
-			if (line.startsWith(username)) {
-			    StringTokenizer tok = new StringTokenizer(line);
-			    if (tok.countTokens() > 4) {
-				tok.nextToken(); // username
-				tok.nextToken(); // tty
-				tok.nextToken(); // host:port
-				String rest = tok.nextToken("\n").trim();
-				int ptr = rest.indexOf("-");
-				if (ptr == -1) {
-				    ptr = rest.indexOf("still");
-				}
-				if (ptr > 0) {
-				    SimpleDateFormat sdf = null;
-				    String datestr = rest.substring(0, ptr).trim();
-				    boolean adjust = true;
-				    switch(datestr.length()) {
-				      case 12: // hack, in case the host was not listed!
-					sdf = new SimpleDateFormat("MMM dd HH:mm");
-					break;
-				      case 16:
-					sdf = new SimpleDateFormat("EEE MMM dd HH:mm");
-					break;
-				      case 24:
-					sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
-					adjust = false;
-					break;
-				      default: {
-	    				MessageType msg = Factories.common.createMessageType();
-	    				msg.setLevel(MessageLevelEnumeration.WARNING);
-	    				msg.setValue("Unknown date string format: " + datestr);
-	    				item.getMessage().add(msg);
-					break;
-				      }
-				    }
-				    if (sdf != null) {
-					try {
-					    long secs = sdf.parse(datestr).getTime()/1000L;
-					    if (adjust) {
-						//
-						// DAS: doesn't handle leap years
-						//
-						long realnowsecs = now.getTime()/1000L;
-						long nowsecs = sdf.parse(sdf.format(now)).getTime()/1000L;
-						long adjustedSecs = 0;
-						if (secs > nowsecs) {
-						    // last login happened last year
-						    adjustedSecs = realnowsecs - 31536000 + secs;
-						} else {
-						    adjustedSecs = realnowsecs - nowsecs + secs;
-						}
-						lastLogin.setValue(Long.toString(adjustedSecs));
-					    } else {
-						lastLogin.setValue(Long.toString(secs));
-					    }
-					    lastLogin.setStatus(StatusEnumeration.EXISTS);
-					} catch (Exception e) {
-					    lastLogin.setStatus(StatusEnumeration.ERROR);
-	    				    MessageType msg = Factories.common.createMessageType();
-	    				    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    				    msg.setValue(e.getMessage());
-	    				    item.getMessage().add(msg);
-					}
-					break;
-				    }
-				}
-			    }
-			}
-		    }
-		    break;
+		setLastLogin(username, systime);
+	    }
+	} catch (Exception e) {
+	    errorMessages.add(e.getMessage());
+	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	initialized = true;
+    }
 
-		  case LINUX: {
-		    SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
-		    for (String line : SafeCLI.multiLine("last -n 1 -F " + username, session, IUnixSession.Timeout.M)) {
-			if (line.startsWith(username)) {
-			    StringTokenizer tok = new StringTokenizer(line);
-			    if (tok.countTokens() > 4) {
-				tok.nextToken(); // username
-				tok.nextToken(); // tty
-				tok.nextToken(); // host:port
-				String rest = tok.nextToken("\n").trim();
-				if (rest.length() > 24) {
-				    try {
-					long secs = sdf.parse(rest.substring(0, 24)).getTime()/1000L;
+    /**
+     * Set the last_login entity for the item associated with this user, using the supplied system time as a reference.
+     */
+    private void setLastLogin(String username, long systime) {
+	EntityItemIntType lastLogin = Factories.sc.core.createEntityItemIntType();
+	lastLogin.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	lastLogin.setStatus(StatusEnumeration.DOES_NOT_EXIST); // default, in case it's not found/handled below
+	try {
+	    switch(session.getFlavor()) {
+	      case MACOSX:
+	      case SOLARIS:
+		Date now = new Date(systime);
+		for (String line : SafeCLI.multiLine("last -1 " + username, session, IUnixSession.Timeout.M)) {
+		    if (line.startsWith(username)) {
+			StringTokenizer tok = new StringTokenizer(line);
+			if (tok.countTokens() > 4) {
+			    tok.nextToken(); // username
+			    tok.nextToken(); // tty
+			    tok.nextToken(); // host:port
+			    String rest = tok.nextToken("\n").trim();
+			    int ptr = rest.indexOf("-");
+			    if (ptr == -1) {
+				ptr = rest.indexOf("still");
+			    }
+			    if (ptr > 0) {
+				SimpleDateFormat sdf = null;
+				String datestr = rest.substring(0, ptr).trim();
+				boolean adjust = true;
+				switch(datestr.length()) {
+				  case 12: // hack, in case the host was not listed!
+				    sdf = new SimpleDateFormat("MMM dd HH:mm");
+				    break;
+				  case 16:
+				    sdf = new SimpleDateFormat("EEE MMM dd HH:mm");
+				    break;
+				  case 24:
+				    sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+				    adjust = false;
+				    break;
+				  default:
+				    throw new ParseException(datestr, 0);
+				}
+				if (sdf != null) {
+				    long secs = sdf.parse(datestr).getTime()/1000L;
+				    if (adjust) {
+					//
+					// DAS: leap year handling is TBD
+					//
+					long realnowsecs = now.getTime()/1000L;
+					long nowsecs = sdf.parse(sdf.format(now)).getTime()/1000L;
+					long adjustedSecs = 0;
+					if (secs > nowsecs) {
+					    // last login happened last year
+					    adjustedSecs = realnowsecs - 31536000 + secs;
+					} else {
+					    adjustedSecs = realnowsecs - nowsecs + secs;
+					}
+					lastLogin.setValue(Long.toString(adjustedSecs));
+				    } else {
 					lastLogin.setValue(Long.toString(secs));
-					lastLogin.setStatus(StatusEnumeration.EXISTS);
-				    } catch (Exception e) {
-					lastLogin.setStatus(StatusEnumeration.ERROR);
-	    				MessageType msg = Factories.common.createMessageType();
-	    				msg.setLevel(MessageLevelEnumeration.ERROR);
-	    				msg.setValue(e.getMessage());
-	    				item.getMessage().add(msg);
 				    }
+				    lastLogin.setStatus(StatusEnumeration.EXISTS);
 				    break;
 				}
 			    }
 			}
 		    }
-		    break;
-		  }
-
-		  case AIX: {
-		    String command = "lsuser -a time_last_login " + username;
-		    for (String line : SafeCLI.multiLine(command, session, IUnixSession.Timeout.S)) {
-			if (line.startsWith(username)) {
-			    int ptr = line.indexOf("=");
-			    if (ptr > 0) {
-				String tm = line.substring(ptr+1);
-				lastLogin.setValue(tm);
+		}
+		break;
+    
+	      case LINUX: {
+		SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+		for (String line : SafeCLI.multiLine("last -n 1 -F " + username, session, IUnixSession.Timeout.M)) {
+		    if (line.startsWith(username)) {
+			StringTokenizer tok = new StringTokenizer(line);
+			if (tok.countTokens() > 4) {
+			    tok.nextToken(); // username
+			    tok.nextToken(); // tty
+			    tok.nextToken(); // host:port
+			    String rest = tok.nextToken("\n").trim();
+			    if (rest.length() > 24) {
+				long secs = sdf.parse(rest.substring(0, 24)).getTime()/1000L;
+				lastLogin.setValue(Long.toString(secs));
 				lastLogin.setStatus(StatusEnumeration.EXISTS);
 				break;
 			    }
 			}
 		    }
-		    break;
-		  }
-
-		  default:
-		    lastLogin.setStatus(StatusEnumeration.NOT_COLLECTED);
-		    break;
 		}
-		if (!lastLogin.isSetStatus()) {
-		    //
-		    // User has never logged in.
-		    //
-		    lastLogin.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		break;
+	      }
+    
+	      case AIX: {
+		String command = "lsuser -a time_last_login " + username;
+		for (String line : SafeCLI.multiLine(command, session, IUnixSession.Timeout.S)) {
+		    if (line.startsWith(username)) {
+			int ptr = line.indexOf("=");
+			if (ptr > 0) {
+			    String tm = line.substring(ptr+1);
+			    lastLogin.setValue(tm);
+			    lastLogin.setStatus(StatusEnumeration.EXISTS);
+			    break;
+			}
+		    }
 		}
-		item.setLastLogin(lastLogin);
+		break;
+	      }
+    
+	      default:
+		lastLogin.setStatus(StatusEnumeration.NOT_COLLECTED);
+		break;
 	    }
 	} catch (Exception e) {
-	    error = e.getMessage();
-	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    lastLogin.setStatus(StatusEnumeration.ERROR);
+	    errors.put(username, e);
 	}
-	initialized = true;
+	passwordMap.get(username).setLastLogin(lastLogin);
     }
 }

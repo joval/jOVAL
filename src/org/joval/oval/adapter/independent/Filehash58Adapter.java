@@ -128,6 +128,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		msg.setValue(e.getMessage());
 		rc.addMessage(msg);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
@@ -144,6 +145,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 			msg.setLevel(MessageLevelEnumeration.ERROR);
 			msg.setValue(e.getMessage());
 			rc.addMessage(msg);
+			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
 		}
 	    }

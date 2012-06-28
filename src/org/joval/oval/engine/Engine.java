@@ -1485,12 +1485,19 @@ public class Engine implements IEngine, IAdapter {
 	ExistenceData existence = new ExistenceData();
 	CheckData check = new CheckData();
 	switch(sc.getObjectFlag(objectId)) {
-	  case COMPLETE:
-	    //
-	    // If object flag == COMPLETE but there are no items, existenceResult will default to DOES_NOT_EXIST
-	    // (which is, of course, exactly what we want to happen).
-	    //
+	  //
+	  // If the object is flagged as incomplete, then at least one item will not have been checked against the
+	  // state. So, we record the fact that we don't know how it would evaluate against the state.
+	  //
 	  case INCOMPLETE:
+	    check.addResult(ResultEnumeration.UNKNOWN);
+	    // fall-thru
+
+	  //
+	  // Note: If the object is flagged as complete but there are no items, existenceResult will remain at its
+	  // default value of DOES_NOT_EXIST (which is, of course, exactly what we want to happen).
+	  //
+	  case COMPLETE:
 	    for (ItemType item : sc.getItemsByObjectId(objectId)) {
 		existence.addStatus(item.getStatus());
 

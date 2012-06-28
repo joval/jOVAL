@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Provider;
+
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  * Simple utility for computing checksums.
@@ -79,27 +82,40 @@ public class Checksum {
     }
 
     public static byte[] createChecksum(byte[] buff, Algorithm algorithm) {
-	try {
-            MessageDigest digest = MessageDigest.getInstance(algorithm.value());
-            digest.update(buff, 0, buff.length);
-            return digest.digest();
-	} catch (NoSuchAlgorithmException e) {
-	    throw new RuntimeException(e.getMessage());
-	}
+	MessageDigest digest = getDigest(algorithm);
+       	digest.update(buff, 0, buff.length);
+        return digest.digest();
     }
 
     public static byte[] createChecksum(InputStream in, Algorithm algorithm) throws IOException {
+	MessageDigest digest = getDigest(algorithm);
+        byte[] buff = new byte[512];
+        int len = 0;
+        while ((len = in.read(buff)) > 0) {
+       	    digest.update(buff, 0, len);
+        }
+        in.close();
+        return digest.digest();
+    }
+
+    // Private
+
+    private static Provider ALT_PROVIDER;
+
+    private static MessageDigest getDigest(Algorithm algorithm) throws RuntimeException {
+        MessageDigest digest = null;
 	try {
-            byte[] buff = new byte[512];
-            MessageDigest digest = MessageDigest.getInstance(algorithm.value());
-            int len = 0;
-            while ((len = in.read(buff)) > 0) {
-        	digest.update(buff, 0, len);
-            }
-            in.close();
-            return digest.digest();
+            digest = MessageDigest.getInstance(algorithm.value());
 	} catch (NoSuchAlgorithmException e) {
-	    throw new RuntimeException(e.getMessage());
+	    if (ALT_PROVIDER == null) {
+		ALT_PROVIDER = new BouncyCastleProvider();
+	    }
+	    try {
+        	digest = MessageDigest.getInstance(algorithm.value(), ALT_PROVIDER);
+	    } catch (NoSuchAlgorithmException e2) {
+		throw new RuntimeException(e2);
+	    }
 	}
+	return digest;
     }
 }
