@@ -78,10 +78,6 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	    }
 	    throw new IllegalArgumentException(id);
 	}
-
-	String getOsName() {
-	    return osId;
-	}
     }
 
     // Implement IAdapter
@@ -115,23 +111,49 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	    throw new CollectException(message, FlagEnumeration.ERROR);
 	}
 
-	String hashType = (String)((Filehash58Object)obj).getHashType().getValue();
-	try {
-	    Algorithm alg = Algorithm.fromOval(hashType);
-	    return Arrays.asList(getItem(baseItem, alg, computeChecksum(f, alg)));
-	} catch (IllegalArgumentException e) {
-	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_CHECKSUM_ALGORITHM, hashType);
-	    throw new CollectException(message, FlagEnumeration.ERROR);
-	} catch (Exception e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    rc.addMessage(msg);
-	}
+	Collection<Filehash58Item> items = new Vector<Filehash58Item>();
+	EntityObjectHashTypeType hashType = ((Filehash58Object)obj).getHashType();
+	String hash = (String)hashType.getValue();
+	OperationEnumeration op = hashType.getOperation();
+	switch(op) {
+	  case EQUALS:
+	    try {
+		Algorithm alg = Algorithm.fromOval(hash);
+		items.add(getItem(baseItem, alg, computeChecksum(f, alg)));
+	    } catch (IllegalArgumentException e) {
+		String message = JOVALMsg.getMessage(JOVALMsg.ERROR_CHECKSUM_ALGORITHM, hashType);
+		throw new CollectException(message, FlagEnumeration.ERROR);
+	    } catch (Exception e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
+	    }
+	    break;
 
-	@SuppressWarnings("unchecked")
-	Collection<Filehash58Item> empty = (Collection<Filehash58Item>)Collections.EMPTY_LIST;
-	return empty;
+	  case NOT_EQUAL:
+	    for (Algorithm alg : Algorithm.values()) {
+		if (!hash.equals(alg.ovalId)) {
+		    try {
+			items.add(getItem(baseItem, alg, computeChecksum(f, alg)));
+		    } catch (IllegalArgumentException e) {
+			String message = JOVALMsg.getMessage(JOVALMsg.ERROR_CHECKSUM_ALGORITHM, hashType);
+			throw new CollectException(message, FlagEnumeration.ERROR);
+		    } catch (Exception e) {
+			MessageType msg = Factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.ERROR);
+			msg.setValue(e.getMessage());
+			rc.addMessage(msg);
+		    }
+		}
+	    }
+	    break;
+
+	  default:
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	}
+	return items;
     }
 
     // Internal
@@ -173,7 +195,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	      case AIX:
 	      case LINUX:
 	      case MACOSX: {
-		String cmd = "openssl dgst -hex -" + alg.getOsName() + " " + f.getPath();
+		String cmd = "openssl dgst -hex -" + alg.osId + " " + f.getPath();
 		String temp = SafeCLI.exec(cmd, session, IUnixSession.Timeout.M);
 		int ptr = temp.indexOf("= ");
 		if (ptr > 0) {
@@ -183,7 +205,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	      }
 
 	      case SOLARIS: {
-		String cmd = "digest -a " + alg.getOsName() + " " + f.getPath();
+		String cmd = "digest -a " + alg.osId + " " + f.getPath();
 		checksum = SafeCLI.exec(cmd, session, IUnixSession.Timeout.M);
 		break;
 	      }

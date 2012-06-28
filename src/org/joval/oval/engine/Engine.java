@@ -693,8 +693,27 @@ public class Engine implements IEngine, IAdapter {
 		//
 		// There are variable references in the object entity definitions, so implement var_check using sets.
 		//
+		// First, we go through the varChecks, and if any matches NONE_SATISFY, we invert all its entities.
+		//
+		for (String methodName : varChecks.keySet()) {
+		    if (varChecks.get(methodName) == CheckEnumeration.NONE_SATISFY) {
+			for (Object entity : entities.get(methodName)) {
+			    try {
+				invertEntity(rc.getObject(), methodName, entity);
+			    } catch (Exception e) {
+				throw new ResolveException(e);
+			    }
+			}
+		    }
+		}
+
+		//
+		// Next, implement var_check using sets.
+		//
 		ItemSet<ItemType> items = new ItemSet<ItemType>();
 		for (String methodName : varChecks.keySet()) {
+		    CheckEnumeration check = varChecks.get(methodName);
+
 		    List<Object> values = entities.get(methodName);
 		    Vector<ItemSet<ItemType>> sets = new Vector<ItemSet<ItemType>>(values.size());
 		    for (Object value : values) {
@@ -708,8 +727,10 @@ public class Engine implements IEngine, IAdapter {
 			if (checked == null) {
 			    checked = set;
 			} else {
-			    CheckEnumeration check = varChecks.get(methodName);
 			    switch(check) {
+			      case NONE_SATISFY:
+				// In this case, we have inverted all the entity operations, so performing the ALL
+				// check will yield the equivalent results.
 			      case ALL:
 				checked = checked.intersection(set);
 				break;
@@ -872,6 +893,67 @@ public class Engine implements IEngine, IAdapter {
 
 	CheckEnumeration getCheck() {
 	    return check;
+	}
+    }
+
+    private OperationEnumeration invert(OperationEnumeration op) throws IllegalArgumentException {
+	switch(op) {
+	  case EQUALS:
+	    return OperationEnumeration.NOT_EQUAL;
+	  case GREATER_THAN:
+	    return OperationEnumeration.LESS_THAN_OR_EQUAL;
+	  case GREATER_THAN_OR_EQUAL:
+	    return OperationEnumeration.LESS_THAN;
+	  case LESS_THAN:
+	    return OperationEnumeration.GREATER_THAN_OR_EQUAL;
+	  case LESS_THAN_OR_EQUAL:
+	    return OperationEnumeration.GREATER_THAN;
+	  case NOT_EQUAL:
+	    return OperationEnumeration.EQUALS;
+	  case CASE_INSENSITIVE_EQUALS:
+	    return OperationEnumeration.CASE_INSENSITIVE_NOT_EQUAL;
+	  case CASE_INSENSITIVE_NOT_EQUAL:
+	    return OperationEnumeration.CASE_INSENSITIVE_EQUALS;
+
+	  case SUBSET_OF:
+	  case SUPERSET_OF:
+	  case BITWISE_AND:
+	  case BITWISE_OR:
+	  case PATTERN_MATCH:
+	  default:
+	    throw new IllegalArgumentException(op.value());
+	}
+    }
+
+    private Object invertEntity(ObjectType obj, String methodName, Object entity) throws IllegalArgumentException,
+		OvalException, ResolveException, InstantiationException, ClassNotFoundException,
+		NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+
+	if (entity instanceof JAXBElement) {
+	    String pkgName = obj.getClass().getPackage().getName();
+	    Class<?> factoryClass = Class.forName(pkgName + ".ObjectFactory");
+	    Object factory = factoryClass.newInstance();
+	    String unqualClassName = obj.getClass().getName().substring(pkgName.length() + 1);
+	    String entityName = methodName.substring(3);
+	    if (((JAXBElement)entity).getValue() == null) {
+		throw new IllegalArgumentException(((JAXBElement)entity).getName().toString());
+	    } else {
+		Class targetClass = ((JAXBElement)entity).getValue().getClass();
+		Method method = factoryClass.getMethod("create" + unqualClassName + entityName, targetClass);
+		return method.invoke(factory, invertEntity(obj, methodName, ((JAXBElement)entity).getValue()));
+	    }
+	} else if (entity instanceof EntitySimpleBaseType) {
+	    EntitySimpleBaseType base = (EntitySimpleBaseType)entity;
+	    base.setOperation(invert(base.getOperation()));
+	    return base;
+	} else if (entity instanceof EntityObjectRecordType) {
+	    EntityObjectRecordType record = (EntityObjectRecordType)entity;
+	    record.setOperation(invert(record.getOperation()));
+	    return record;
+	} else {
+	    String id = obj.getId();
+	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY, entity.getClass().getName(), id);
+	    throw new OvalException(message);
 	}
     }
 
