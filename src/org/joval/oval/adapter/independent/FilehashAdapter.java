@@ -28,6 +28,7 @@ import oval.schemas.definitions.independent.FilehashObject;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
+import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.independent.FilehashItem;
 import oval.schemas.results.core.ResultEnumeration;
 
@@ -92,12 +93,13 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    String[] checksums = computeChecksums(f);
 	    return Arrays.asList(getItem(baseItem, checksums[MD5], checksums[SHA1]));
 	} catch (IllegalArgumentException e) {
-	    session.getLogger().warn(JOVALMsg.STATUS_NOT_FILE, f.getPath()); 
+	    session.getLogger().warn(JOVALMsg.STATUS_NOT_FILE, f.getPath(), e.getMessage()); 
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -115,11 +117,19 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	item.setWindowsView(baseItem.getWindowsView());
 
 	EntityItemStringType md5Type = Factories.sc.core.createEntityItemStringType();
-	md5Type.setValue(md5);
+	if (md5 == null) {
+	    md5Type.setStatus(StatusEnumeration.ERROR);
+	} else {
+	    md5Type.setValue(md5);
+	}
 	item.setMd5(md5Type);
 
 	EntityItemStringType sha1Type = Factories.sc.core.createEntityItemStringType();
-	sha1Type.setValue(sha1);
+	if (sha1 == null) {
+	    sha1Type.setStatus(StatusEnumeration.ERROR);
+	} else {
+	    sha1Type.setValue(sha1);
+	}
 	item.setSha1(sha1Type);
 
 	return item;
@@ -130,15 +140,37 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 
     private String[] computeChecksums(IFile f) throws Exception {
 	IFileEx ext = f.getExtended();
-	boolean typecheck = false;
 	if (ext instanceof IWindowsFileInfo) {
-	    typecheck = ((IWindowsFileInfo)ext).getWindowsFileType() == IWindowsFileInfo.FILE_TYPE_DISK;
+	    String type = null;
+	    switch(((IWindowsFileInfo)ext).getWindowsFileType()) {
+	      case IWindowsFileInfo.FILE_TYPE_DISK:
+		break;
+	      case IWindowsFileInfo.FILE_TYPE_UNKNOWN:
+		type = "unknown";
+		break;
+	      case IWindowsFileInfo.FILE_TYPE_CHAR:
+		type = "char";
+		break;
+	      case IWindowsFileInfo.FILE_TYPE_PIPE:
+		type = "pipe";
+		break;
+	      case IWindowsFileInfo.FILE_TYPE_REMOTE:
+		type = "remote";
+		break;
+	      case IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY:
+		type = "directory";
+		break;
+	    }
+	    if (type != null) {
+		throw new IllegalArgumentException(type);
+	    }
 	} else if (ext instanceof IUnixFileInfo) {
-	    typecheck = ((IUnixFileInfo)ext).getUnixFileType().equals(IUnixFileInfo.FILE_TYPE_REGULAR);
+	    String type = ((IUnixFileInfo)ext).getUnixFileType();
+	    if (!type.equals(IUnixFileInfo.FILE_TYPE_REGULAR)) {
+		throw new IllegalArgumentException(type);
+	    }
 	}
-	if (!typecheck) {
-	    throw new IllegalArgumentException(f.getPath());
-	} else if (checksumMap.containsKey(f.getPath())) {
+	if (checksumMap.containsKey(f.getPath())) {
 	    return checksumMap.get(f.getPath());
 	}
 	String[] checksums = new String[2];

@@ -53,12 +53,7 @@ public class SafeCLI {
      * Run a command and get the first line of output, using the specified environment.
      */
     public static final String exec(String cmd, String[] env, IBaseSession session, long readTimeout) throws Exception {
-	List<String> lines = multiLine(cmd, env, session, readTimeout);
-	if (lines != null && lines.size() > 0) {
-	    return lines.get(0);
-	} else {
-	    return null;
-	}
+	return multiLine(cmd, env, session, readTimeout).get(0);
     }
 
     /**
@@ -90,14 +85,7 @@ public class SafeCLI {
     public static final List<String> multiLine(String cmd, String[] env, IBaseSession session, long readTimeout)
 		throws Exception {
 
-	byte[] buff = execData(cmd, env, session, readTimeout).data;
-	BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(buff)));
-	List<String> lines = new Vector<String>();
-	String line = null;
-	while((line = reader.readLine()) != null) {
-	    lines.add(line);
-	}
-	return lines;
+	return execData(cmd, env, session, readTimeout).getLines();
     }
 
     /**
@@ -210,6 +198,23 @@ public class SafeCLI {
 
 	public byte[] getData() {
 	    return data;
+	}
+
+	/**
+	 * Guaranteed to have at least one entry.
+	 */
+	public List<String> getLines() throws IOException {
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)));
+	    List<String> lines = new Vector<String>();
+	    String line = null;
+	    while((line = reader.readLine()) != null) {
+		lines.add(line);
+	    }
+	    if (lines.size() == 0) {
+		session.getLogger().warn(JOVALMsg.WARNING_MISSING_OUTPUT, cmd, exitCode, data.length);
+		lines.add("");
+	    }
+	    return lines;
 	}
     }
 }
