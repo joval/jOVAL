@@ -74,6 +74,24 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 	return session;
     }
 
+    public IProcess createSshProcess(String command, String[] env, SshProcess.Type type) throws Exception {
+	if (connect()) {
+	    switch(type) {
+	      case SHELL:
+		return new PosixShellProcess(session, command, env, debug, wsdir, pid++, logger);
+
+	      case POSIX:
+		return new PosixShellProcess(session, command, env, debug, wsdir, pid++, logger);
+
+	      case EXEC:
+	      default:
+		return new ExecProcess(session, command, null, debug, wsdir, pid++, logger);
+	    }
+	} else {
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
+	}
+    }
+
     protected void handlePropertyChange(String key, String value) {
 	super.handlePropertyChange(key, value);
 	if (PROP_ATTACH_LOG.equals(key)) {
@@ -120,18 +138,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 
     @Override
     public IProcess createProcess(String command, String[] env) throws Exception {
-	if (connect()) {
-	    if (env == null) {
-		return new ExecProcess(session, command, null, debug, wsdir, pid++, logger);
-	    } else {
-		//
-		// Since SSH is very strict about setting environment variables, we use a shell.
-		//
-		return new PosixShellProcess(session, command, env, debug, wsdir, pid++, logger);
-	    }
-	} else {
-	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
-	}
+	return createSshProcess(command, env, SshProcess.Type.EXEC);
     }
 
     public String getHostname() {

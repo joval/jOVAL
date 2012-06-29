@@ -35,7 +35,7 @@ class ExecProcess extends SshProcess {
 
     @Override
     public void start() throws Exception {
-	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, "EXEC", command);
+	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, Type.EXEC, command);
 	((ChannelExec)channel).setPty(interactive);
 	((ChannelExec)channel).setCommand(command);
 	channel.connect();

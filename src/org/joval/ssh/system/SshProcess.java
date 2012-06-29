@@ -32,7 +32,11 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-abstract class SshProcess implements IProcess {
+public abstract class SshProcess implements IProcess {
+    public enum Type {
+	EXEC, SHELL, POSIX;
+    }
+
     Channel channel;
     String command;
     boolean debug;

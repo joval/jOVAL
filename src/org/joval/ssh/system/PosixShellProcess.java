@@ -37,7 +37,7 @@ class PosixShellProcess extends BasicShellProcess {
 
     @Override
     public void start() throws Exception {
-	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, "POSIX", command);
+	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, Type.POSIX, command);
 	((ChannelShell)channel).setPty(true);
 	((ChannelShell)channel).setTerminalMode(MODE);
 	channel.connect();

@@ -29,6 +29,7 @@ import org.joval.os.unix.system.BaseUnixSession;
 import org.joval.os.unix.system.Environment;
 import org.joval.ssh.identity.SshCredential;
 import org.joval.ssh.io.SftpFilesystem;
+import org.joval.ssh.system.SshProcess;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.AbstractSession;
 import org.joval.util.JOVALMsg;
@@ -142,20 +143,19 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 
     @Override
     public IProcess createProcess(String command, String[] env) throws Exception {
+	SshProcess.Type type = SshProcess.Type.EXEC;
+
 	switch(getFlavor()) {
-	  //
-	  // Force Linux and MacOS X to use the more reliable shell-style process.
-	  //
 	  case LINUX:
 	  case MACOSX:
-	    if (env == null) {
-		env = new String[0];
-	    }
+	    type = SshProcess.Type.POSIX;
+	    break;
 	}
+
 	if (rootCred == null || flavor == Flavor.UNKNOWN) {
-	    return ssh.createProcess(command, env);
+	    return ssh.createSshProcess(command, env, type);
 	} else {
-	    return new Sudo(this, command, env);
+	    return new Sudo(this, command, env, type);
 	}
     }
 

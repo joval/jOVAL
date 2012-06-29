@@ -41,7 +41,7 @@ class BasicShellProcess extends SshProcess {
 
     @Override
     public void start() throws Exception {
-	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, "SHELL", command);
+	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, Type.SHELL, command);
 	((ChannelShell)channel).setPty(true);
 	((ChannelShell)channel).setTerminalMode(MODE);
 	channel.connect();

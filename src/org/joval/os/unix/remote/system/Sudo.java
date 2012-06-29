@@ -18,6 +18,7 @@ import org.joval.intf.unix.system.IPrivilegeEscalationDriver;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IPerishable;
 import org.joval.io.PerishableReader;
+import org.joval.ssh.system.SshProcess;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.JOVALMsg;
 
@@ -38,12 +39,12 @@ class Sudo implements IProcess {
     private InputStream in=null, err=null;
     private OutputStream out=null;
 
-    Sudo(UnixSession us, String cmd, String[] env) throws Exception {
+    Sudo(UnixSession us, String cmd, String[] env, SshProcess.Type type) throws Exception {
 	this.us = us;
 	innerCommand = cmd;
 	shell = env != null;
 	driver = us.getDriver();
-	p = us.ssh.createProcess(driver.getSuString(cmd), env);
+	p = us.ssh.createSshProcess(driver.getSuString(cmd), env, type);
 	timeout = us.getProperties().getLongProperty(IUnixSession.PROP_SUDO_READ_TIMEOUT);
     }
 
