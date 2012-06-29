@@ -76,12 +76,18 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 
     // Implement IReader
 
+    @Override
     public synchronized void close() throws IOException {
 	if (!closed)  {
 	    defuse();
 	    in.close();
 	    closed = true;
 	}
+    }
+
+    @Override
+    public int available() throws IOException {
+	return in.available();
     }
 
     public boolean checkClosed() {
@@ -198,10 +204,12 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	}
     }
 
+    @Override
     public int read(byte[] buff) throws IOException {
 	return read(buff, 0, buff.length);
     }
 
+    @Override
     public int read(byte[] buff, int offset, int len) throws IOException {
 	int bytesRead = 0;
 	while (buffer.hasNext() && offset < buff.length) {
@@ -217,6 +225,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	return bytesRead;
     }
 
+    @Override
     public int read() throws IOException {
 	int i = -1;
 	if (buffer.hasNext()) {
@@ -282,13 +291,24 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 
     protected PerishableReader(InputStream in, long timeout) {
 	trace = Thread.currentThread().getStackTrace();
-	logger = JOVALMsg.getLogger();
-	this.in = in;
+	if (in instanceof PerishableReader) {
+	    PerishableReader input = (PerishableReader)in;
+	    input.defuse();
+	    this.in = input.in;
+	    isEOF = input.isEOF;
+	    closed = input.closed;
+	    expired = input.expired;
+	    buffer = input.buffer;
+	    logger = input.getLogger();
+	} else {
+	    this.in = in;
+	    isEOF = false;
+	    closed = false;
+	    expired = false;
+	    buffer = new Buffer(0);
+	    logger = JOVALMsg.getLogger();
+	}
 	setTimeout(timeout);
-	isEOF = false;
-	closed = false;
-	expired = false;
-	buffer = new Buffer(0);
 	reset();
     }
 

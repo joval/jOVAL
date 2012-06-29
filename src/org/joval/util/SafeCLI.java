@@ -29,31 +29,36 @@ import org.joval.util.JOVALMsg;
  */
 public class SafeCLI {
     /**
-     * Run a command and get the first line of output.
+     * Run a command and get the first (non-empty) line of output.
      */
     public static final String exec(String cmd, IBaseSession session, IBaseSession.Timeout to) throws Exception {
 	return exec(cmd, null, session, session.getTimeout(to));
     }
 
     /**
-     * Run a command and get the first line of output, using the specified environment.
+     * Run a command and get the first (non-empty) line of output, using the specified environment.
      */
     public static final String exec(String cmd, String[] env, IBaseSession session, IBaseSession.Timeout to) throws Exception {
 	return exec(cmd, env, session, session.getTimeout(to));
     }
 
     /**
-     * Run a command and get the first line of output.
+     * Run a command and get the first (non-empty) line of output.
      */
     public static final String exec(String cmd, IBaseSession session, long readTimeout) throws Exception {
 	return exec(cmd, null, session, readTimeout);
     }
 
     /**
-     * Run a command and get the first line of output, using the specified environment.
+     * Run a command and get the first (non-empty) line of output, using the specified environment.
      */
     public static final String exec(String cmd, String[] env, IBaseSession session, long readTimeout) throws Exception {
-	return multiLine(cmd, env, session, readTimeout).get(0);
+	List<String> lines = multiLine(cmd, env, session, readTimeout);
+	if (lines.size() == 2 && lines.get(0).equals("")) {
+	    return lines.get(1);
+	} else {
+	    return lines.get(0);
+	}
     }
 
     /**

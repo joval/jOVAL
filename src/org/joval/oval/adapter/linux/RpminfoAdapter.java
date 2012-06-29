@@ -130,12 +130,14 @@ public class RpminfoAdapter implements IAdapter {
 	    session.getLogger().info(JOVALMsg.STATUS_RPMINFO_LIST);
 	    packageMap = new Hashtable<String, RpminfoItem>();
 	    for (String rpm : SafeCLI.multiLine("rpm -qa", session, IUnixSession.Timeout.M)) {
-		try {
-		    RpminfoItem item = getItem(rpm);
-		    packageMap.put((String)item.getName().getValue(), item);
-		} catch (Exception e) {
-		    session.getLogger().warn(JOVALMsg.ERROR_RPMINFO, rpm);
-		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		if (rpm.length() > 0) {
+		    try {
+			RpminfoItem item = getItem(rpm);
+			packageMap.put((String)item.getName().getValue(), item);
+		    } catch (Exception e) {
+			session.getLogger().warn(JOVALMsg.ERROR_RPMINFO, rpm);
+			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    }
 		}
 	    }
 	    loaded = true;
@@ -173,6 +175,8 @@ public class RpminfoAdapter implements IAdapter {
 	for (String line : lines) {
 	    if (!isInstalled) {
 		break;
+	    } else if (line.length() == 0) {
+		continue;
 	    }
 	    switch(lineNum++) {
 	      case 1: // NAME
@@ -247,7 +251,7 @@ public class RpminfoAdapter implements IAdapter {
 
 	if (isInstalled) {
 	    for (String line : SafeCLI.multiLine("rpm -ql " + packageName, session, IUnixSession.Timeout.S)) {
-		if (!"(contains no files)".equals(line.trim())) {
+		if (line.length() > 0 && !"(contains no files)".equals(line.trim())) {
 		    EntityItemStringType filepath = Factories.sc.core.createEntityItemStringType();
 		    filepath.setValue(line.trim());
 		    item.getFilepath().add(filepath);

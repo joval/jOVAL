@@ -67,7 +67,7 @@ public abstract class CacheFile implements IFile, Cloneable {
 	if (info == null) {
 	    if (getAccessor().exists()) {
 		try {
-		    info = accessor.getInfo();
+		    info = getAccessor().getInfo();
 		    return true;
 		} catch (IOException e) {
 		    return false;

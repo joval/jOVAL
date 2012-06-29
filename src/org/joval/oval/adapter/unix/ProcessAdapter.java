@@ -366,9 +366,13 @@ public class ProcessAdapter implements IAdapter {
 	    Hashtable<String, String> labels = new Hashtable<String, String>();
 	    if (session.getFlavor() == IUnixSession.Flavor.LINUX) {
 	        lines = SafeCLI.multiLine("ps axZ", session, IUnixSession.Timeout.S);
-		if (lines.size() > 0) {
+		int index = 0;
+		for (; index < lines.size() && lines.get(index).length() == 0; index++) {
+		    // find the first non-empty line
+		}
+		if (lines.size() > index) {
 		    int labelIndex = -1, pidIndex = -1;
-		    StringTokenizer tok = new StringTokenizer(lines.get(0));
+		    StringTokenizer tok = new StringTokenizer(lines.get(index++));
 		    for (int i=0; tok.hasMoreTokens(); i++) {
 			String header = tok.nextToken();
 			if ("LABEL".equals(header)) {
@@ -379,16 +383,16 @@ public class ProcessAdapter implements IAdapter {
 		    }
 
 		    if (labelIndex != -1 && pidIndex != -1) {
-			for (int i=1; i < lines.size(); i++) {
-			    String line = lines.get(i);
+			for (; index < lines.size(); index++) {
+			    String line = lines.get(index);
 			    tok = new StringTokenizer(line);
 
 			    String label=null, pid=null;
-			    for (int index=0; tok.hasMoreTokens(); index++) {
+			    for (int i=0; tok.hasMoreTokens(); i++) {
 				String token = tok.nextToken();
-				if (index == labelIndex) {
+				if (i == labelIndex) {
 				    label = token;
-				} else if (index == pidIndex) {
+				} else if (i == pidIndex) {
 				    pid = token;
 				}
 			    }

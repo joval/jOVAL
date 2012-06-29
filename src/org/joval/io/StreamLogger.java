@@ -40,10 +40,6 @@ public class StreamLogger extends InputStream {
 	}
     }
 
-    public void setInputStream(InputStream in) {
-	this.in = in;
-    }
-
     public InputStream getInputStream() {
 	return in;
     }

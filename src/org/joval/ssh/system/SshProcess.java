@@ -35,8 +35,7 @@ class SshProcess implements IProcess {
     private Channel channel;
     private String command;
     private boolean debug, shell;
-    private StreamLogger debugIn, debugErr;
-    private InputStream in = null;
+    private InputStream in = null, err = null;
     private OutputStream out = null;
     private boolean interactive=false, dirty = true, running = false;
     private File wsdir;
@@ -70,17 +69,16 @@ class SshProcess implements IProcess {
 
     public void start() throws Exception {
 	logger.debug(JOVALMsg.STATUS_PROCESS_START, command);
-
 	switch(channel.getType()) {
 	  case SHELL: {
 	    ChannelShell shell = (ChannelShell)channel;
 	    shell.setPty(true);
 	    byte[] mode = {0x35, 0x00, 0x00, 0x00, 0x00, 0x00}; // echo off
 	    shell.setTerminalMode(mode);
-	    channel.connect();
+	    shell.connect();
 	    getOutputStream();
 	    PerishableReader reader = PerishableReader.newInstance(getInputStream(), 10000L);
-	    determinePrompt(reader); // garbage
+	    determinePrompt(reader); // garbage - may include MOTD
 	    out.write("/bin/sh\r".getBytes());
 	    out.flush();
 	    String prompt = determinePrompt(reader);
@@ -96,11 +94,7 @@ class SshProcess implements IProcess {
 		    }
 		}
 	    }
-	    reader.defuse();
-	    in = new MarkerTerminatedInputStream(channel.getInputStream(), prompt);
-	    if (debug) {
-		debugIn.setInputStream(in);
-	    }
+	    in = new MarkerTerminatedInputStream(reader, prompt);
 	    out.write(command.getBytes());
 	    out.write(CR);
 	    out.flush();
@@ -124,39 +118,36 @@ class SshProcess implements IProcess {
 
     public InputStream getInputStream() throws IOException {
 	if (in == null) {
-	    in = channel.getInputStream();
-	}
-	if (debug) {
-	    if (debugIn == null) {
+	    if (debug) {
 		File f = null;
 		if (wsdir == null) {
 		    f = new File("out." + pid + ".log");
 		} else {
 		    f = new File(wsdir, "out." + pid + ".log");
 		}
-		debugIn = new StreamLogger(command, in, f);
+		in = new StreamLogger(command, channel.getInputStream(), f);
+	    } else {
+		in = channel.getInputStream();
 	    }
-	    return debugIn;
-	} else {
-	    return in;
 	}
+	return in;
     }
 
     public InputStream getErrorStream() throws IOException {
-	if (debug) {
-	    if (debugErr == null) {
+	if (err == null) {
+	    if (debug) {
 		File f = null;
 		if (wsdir == null) {
 		    f = new File("err." + pid + ".log");
 		} else {
 		    f = new File(wsdir, "err." + pid + ".log");
 		}
-		debugErr = new StreamLogger(command, channel.getExtInputStream(), f);
+		err = new StreamLogger(command, channel.getExtInputStream(), f);
+	    } else {
+		err = channel.getExtInputStream();
 	    }
-	    return debugErr;
-	} else {
-	    return channel.getExtInputStream();
 	}
+	return err;
     }
 
     public OutputStream getOutputStream() throws IOException {
@@ -234,31 +225,22 @@ class SshProcess implements IProcess {
 	if (!dirty) {
 	    return;
 	}
-	if (debug) {
-	    if (debugIn != null) {
-		try {
-		    debugIn.close();
-		} catch (IOException e) {
-		}
+	if (in != null) {
+	    try {
+		in.close();
+	    } catch (IOException e) {
 	    }
-	    if (debugErr != null) {
-		try {
-		    debugErr.close();
-		} catch (IOException e) {
-		}
+	}
+	if (err != null) {
+	    try {
+		err.close();
+	    } catch (IOException e) {
 	    }
-	} else {
-	    if (in != null) {
-		try {
-		    in.close();
-		} catch (IOException e) {
-		}
-	    }
-	    if (out != null) {
-		try {
-		    out.close();
-		} catch (IOException e) {
-		}
+	}
+	if (out != null) {
+	    try {
+		out.close();
+	    } catch (IOException e) {
 	    }
 	}
 	if (channel.isConnected()) {
@@ -267,7 +249,7 @@ class SshProcess implements IProcess {
 	    }
 	    channel.disconnect();
 	}
-	logger.trace(JOVALMsg.STATUS_PROCESS_END, command);
+	logger.debug(JOVALMsg.STATUS_PROCESS_END, command);
 	dirty = false;
 	running = false;
     }
@@ -314,16 +296,41 @@ class SshProcess implements IProcess {
 	@Override
 	public int read(byte[] buff, int offset, int len) throws IOException {
 	    int bytesRead = 0;
-	    for (int i=offset; i < len; i++) {
-		int ch = read();
-		if (ch == -1) {
-		    break;
-		} else {
-		    buff[i] = (byte)ch;
+	    if (buffer.hasNext()) {
+		for (int i=offset; i < len && buffer.hasNext(); i++) {
+		    buff[i] = (byte)(buffer.next() & 0xFF);
 		    bytesRead++;
 		}
+		reset();
+		return bytesRead;
+	    } else if (!buffer.isEmpty()) {
+		buffer.clear();
 	    }
-	    return bytesRead;
+
+	    int avail = available();
+	    if (avail == 0) {
+		for (int i=offset; i < len; i++) {
+		    int ch = read();
+		    if (ch == -1) {
+			break;
+		    } else {
+			buff[i] = (byte)ch;
+			bytesRead++;
+		    }
+		}
+		return bytesRead;
+	    } else {
+		byte[] temp = new byte[Math.min(avail, 512)];
+		int tempLen = in.read(temp);
+		for (int i=0; i < tempLen; i++) {
+		    if (temp[i] == markerBytes[0] && markerTest(temp, i) == -1) {
+			System.arraycopy(temp, 0, buff, offset, i);
+			return i;
+		    }
+		}
+		System.arraycopy(temp, 0, buff, offset, tempLen);
+		return tempLen;
+	    }
 	}
 
 	@Override
@@ -348,34 +355,53 @@ class SshProcess implements IProcess {
 		    buffer.clear(); // buffer overflow
 		}
 		if (ch == (int)markerBytes[0]) {
-		    setCheckpoint(markerBytes.length);
-		    for (int i=1; i < markerBytes.length; i++) {
-			byte b = (byte)(in.read() & 0xFF);
-			buffer.add(b);
-			reset();
-			if (b != markerBytes[i]) {
-			    restoreCheckpoint();
-			    return ch;
-			}
-		    }
-		    try {
-			out.write("echo $?".getBytes());
-			out.write(CR);
-			out.flush();
-			PerishableReader pr = PerishableReader.newInstance(in, 0);
-			exitValue = Integer.parseInt(pr.readUntil(marker).trim());
-			pr.close();
-			close();
-			running = false;
-			channel.disconnect();
-		    } catch (Exception e) {
-			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    }
-		    isEOF = true;
-		    ch = -1;
+		    return markerTest();
 		}
 	    }
 	    return ch;
+	}
+
+	private int markerTest() throws IOException {
+	    return markerTest(null, 0);
+	}
+
+	private int markerTest(byte[] buff, int offset) throws IOException {
+	    boolean overflow = false;
+	    for (int i=1; i < markerBytes.length; i++) {
+		byte b;
+		if (buff != null && (offset + i) < buff.length) {
+		    b = buff[offset + i];
+		} else {
+		    if (!overflow) {
+			setCheckpoint(markerBytes.length - i);
+			overflow = true;
+		    }
+		    b = (byte)(in.read() & 0xFF);
+		    buffer.add(b);
+		    reset();
+		}
+		if (b != markerBytes[i]) {
+		    if (overflow) {
+			restoreCheckpoint();
+		    }
+		    return markerBytes[0];
+		}
+	    }
+	    try {
+		out.write("echo $?".getBytes());
+		out.write(CR);
+		out.flush();
+		PerishableReader pr = PerishableReader.newInstance(in, 0);
+		exitValue = Integer.parseInt(pr.readUntil(marker).trim());
+		pr.close();
+		close();
+		running = false;
+		channel.disconnect();
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	    isEOF = true;
+	    return -1;
 	}
     }
 }

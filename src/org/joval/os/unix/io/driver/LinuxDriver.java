@@ -81,9 +81,12 @@ public class LinuxDriver implements IUnixFilesystemDriver {
 
     public UnixFileInfo nextFileInfo(Iterator<String> lines) {
 	String line = null;
-	if (lines.hasNext()) {
-	    line = lines.next();
-	} else {
+	while(lines.hasNext()) {
+	    if ((line = lines.next()).length() > 11) {
+		break;
+	    }
+	}
+	if (line == null || line.length() == 0) {
 	    return null;
 	}
 
