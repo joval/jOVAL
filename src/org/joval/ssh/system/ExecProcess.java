@@ -12,6 +12,8 @@ import org.vngx.jsch.ChannelType;
 import org.vngx.jsch.Session;
 import org.vngx.jsch.exception.JSchException;
 
+import org.joval.util.JOVALMsg;
+
 /**
  * An SSH exec-channel-based IProcess implementation.
  *
@@ -33,7 +35,7 @@ class ExecProcess extends SshProcess {
 
     @Override
     public void start() throws Exception {
-	super.start();
+	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, "EXEC", command);
 	((ChannelExec)channel).setPty(interactive);
 	((ChannelExec)channel).setCommand(command);
 	channel.connect();

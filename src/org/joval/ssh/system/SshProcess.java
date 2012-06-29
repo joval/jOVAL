@@ -147,10 +147,6 @@ abstract class SshProcess implements IProcess {
 	}
     }
 
-    public void start() throws Exception {
-	logger.debug(JOVALMsg.STATUS_PROCESS_START, command);
-    }
-
     public int exitValue() throws IllegalThreadStateException {
 	if (isRunning()) {
 	    throw new IllegalThreadStateException(command);
@@ -188,11 +184,11 @@ abstract class SshProcess implements IProcess {
 	}
 	if (channel.isConnected()) {
 	    if (!channel.isEOF()) {
-		logger.debug(JOVALMsg.ERROR_PROCESS_DESTROY, command);
+		logger.debug(JOVALMsg.ERROR_SSH_PROCESS_DESTROY, command);
 	    }
 	    channel.disconnect();
 	}
-	logger.debug(JOVALMsg.STATUS_PROCESS_END, command);
+	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_END, command);
 	dirty = false;
 	running = false;
     }

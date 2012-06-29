@@ -19,18 +19,18 @@ import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
 
 /**
- * An SSH shell-channel-based IProcess implementation.
+ * A basic SSH shell-channel-based IProcess implementation.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-class ShellProcess extends SshProcess {
-    private static final int CR = '\r';
-    private static final byte[] MODE = {0x35, 0x00, 0x00, 0x00, 0x00, 0x00}; // echo off
+class BasicShellProcess extends SshProcess {
+    static final int CR = '\r';
+    static final byte[] MODE = {0x35, 0x00, 0x00, 0x00, 0x00, 0x00}; // echo off
 
-    private int exitValue = -1;
+    int exitValue = -1;
 
-    ShellProcess(Session session, String command, String[] env, boolean debug, File wsdir, int pid, LocLogger logger)
+    BasicShellProcess(Session session, String command, String[] env, boolean debug, File wsdir, int pid, LocLogger logger)
 		throws JSchException {
 
 	super(command, env, debug, wsdir, pid, logger);
@@ -41,28 +41,16 @@ class ShellProcess extends SshProcess {
 
     @Override
     public void start() throws Exception {
-	super.start();
+	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, "SHELL", command);
 	((ChannelShell)channel).setPty(true);
 	((ChannelShell)channel).setTerminalMode(MODE);
 	channel.connect();
 	getOutputStream();
 	PerishableReader reader = PerishableReader.newInstance(getInputStream(), 10000L);
 	determinePrompt(reader); // garbage - may include MOTD
-	out.write("/bin/sh\r".getBytes());
+	out.write("\r".getBytes());
 	out.flush();
 	String prompt = determinePrompt(reader);
-	if (env != null) {
-	    for (String var : env) {
-		int ptr = var.indexOf("=");
-		if (ptr > 0) {
-		    StringBuffer setenv = new StringBuffer(var).append("; export ").append(var.substring(0,ptr));
-		    out.write(setenv.toString().getBytes());
-		    out.write(CR);
-		    out.flush();
-		    reader.readUntil(prompt); // ignore
-		}
-	    }
-	}
 	in = new MarkerTerminatedInputStream(reader, prompt);
 	out.write(command.getBytes());
 	out.write(CR);
@@ -78,9 +66,19 @@ class ShellProcess extends SshProcess {
 	return exitValue;
     }
 
-    // Private
+    // Internal
 
-    private String determinePrompt(InputStream in) throws IOException {
+    /**
+     * Get the exit code of the last command, given the prompt pattern.
+     */
+    int getExitValueInternal(InputStream in, String prompt) throws Exception {
+	return -1;
+    }
+
+    /**
+     * The prompt ends with, "$", ">" or "#", and possibly, a space after that.
+     */
+    String determinePrompt(InputStream in) throws IOException {
 	int ch = -1;
 	boolean trigger = false;
 	StringBuffer sb = new StringBuffer();
@@ -90,14 +88,18 @@ class ShellProcess extends SshProcess {
 	      case '$':
 	      case '#':
 		sb.append((char)ch);
+		if (in.available() == 0) {
+		    return sb.toString();
+		}
 		trigger = true;
 		break;
 
 	      case ' ':
 		sb.append((char)ch);
-		if (trigger) {
+		if (trigger && in.available() == 0) {
 		    return sb.toString();
 		}
+		trigger = false;
 		break;
 
 	      default:
@@ -214,12 +216,7 @@ class ShellProcess extends SshProcess {
 		}
 	    }
 	    try {
-		out.write("echo $?".getBytes());
-		out.write(CR);
-		out.flush();
-		PerishableReader pr = PerishableReader.newInstance(in, 0);
-		exitValue = Integer.parseInt(pr.readUntil(marker).trim());
-		pr.close();
+		exitValue = getExitValueInternal(in, marker);
 		close();
 		running = false;
 		channel.disconnect();

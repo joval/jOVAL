@@ -127,7 +127,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 		//
 		// Since SSH is very strict about setting environment variables, we use a shell.
 		//
-		return new ShellProcess(session, command, env, debug, wsdir, pid++, logger);
+		return new PosixShellProcess(session, command, env, debug, wsdir, pid++, logger);
 	    }
 	} else {
 	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
