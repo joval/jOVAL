@@ -142,11 +142,15 @@ public class UnixSession extends BaseUnixSession implements ILocked {
 
     @Override
     public IProcess createProcess(String command, String[] env) throws Exception {
-	if (getFlavor() == IUnixSession.Flavor.LINUX && env == null) {
-	    //
-	    // Force Linux sessions to use the more reliable Shell process
-	    //
-	    env = new String[0];
+	switch(getFlavor()) {
+	  //
+	  // Force Linux and MacOS X to use the more reliable shell-style process.
+	  //
+	  case LINUX:
+	  case MACOSX:
+	    if (env == null) {
+		env = new String[0];
+	    }
 	}
 	if (rootCred == null || flavor == Flavor.UNKNOWN) {
 	    return ssh.createProcess(command, env);

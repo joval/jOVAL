@@ -436,13 +436,15 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 
 	    IProcess p = session.createProcess(sb.toString(), null);
 	    p.start();
-	    InputStream in = p.getInputStream();
-	    if (in instanceof PerishableReader) {
-		// This could take a while!
-		((PerishableReader)in).setTimeout(XL);
-	    }
-	    ErrorReader er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), XL));
-	    er.start();
+
+	    //
+	    // We have redirected stdout to the file, but we don't know which stream stderr can be read from, so
+	    // we'll try reading from both!
+	    //
+	    ErrorReader er1 = new ErrorReader(PerishableReader.newInstance(p.getInputStream(), XL));
+	    er1.start();
+	    ErrorReader er2 = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), XL));
+	    er2.start();
 
 	    //
 	    // Log a status update every 15 seconds while we wait, but wait for no more than an hour.
@@ -461,9 +463,10 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    if (!done) {
 		p.destroy();
 	    }
-	    in.close();
-	    er.close();
-	    er.join();
+	    er1.close();
+	    er2.close();
+	    er1.join();
+	    er2.join();
 	}
 
 	//
