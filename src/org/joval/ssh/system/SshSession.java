@@ -122,14 +122,12 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
     public IProcess createProcess(String command, String[] env) throws Exception {
 	if (connect()) {
 	    if (env == null) {
-		ChannelExec ce = session.openChannel(ChannelType.EXEC);
-		return new SshProcess(ce, command, null, debug, wsdir, pid++, logger);
+		return new ExecProcess(session, command, null, debug, wsdir, pid++, logger);
 	    } else {
 		//
 		// Since SSH is very strict about setting environment variables, we use a shell.
 		//
-		ChannelShell cs = session.openChannel(ChannelType.SHELL);
-		return new SshProcess(cs, command, env, debug, wsdir, pid++, logger);
+		return new ShellProcess(session, command, env, debug, wsdir, pid++, logger);
 	    }
 	} else {
 	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));

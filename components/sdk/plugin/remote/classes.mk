@@ -82,6 +82,8 @@ CLASSES=\
 	org.joval.ssh.io.SftpFile					\
 	org.joval.ssh.io.SftpFileInfo					\
 	org.joval.ssh.io.SftpFilesystem					\
+	org.joval.ssh.system.ExecProcess				\
+	org.joval.ssh.system.ShellProcess				\
 	org.joval.ssh.system.SshProcess					\
 	org.joval.ssh.system.SshSession					\
 	org.joval.test.AD						\
