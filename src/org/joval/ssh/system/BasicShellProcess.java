@@ -205,7 +205,6 @@ class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
 	    }
 	    buffer = new Buffer(0);
 	    isEOF = false;
-	    expired = false;
 	    reset();
 	    return this;
 	}
@@ -215,18 +214,6 @@ class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
 	 */
 	@Override
 	public int read(byte[] buff, int offset, int len) throws IOException {
-/*
-int ch = -1;
-for (int i=0; i < len; i++) {
-    ch = read();
-    if (ch == -1) {
-	return i;
-    } else {
-	buff[offset + i] = (byte)(ch & 0xFF);
-    }
-}
-return len;
-*/
 	    int bytesRead = 0;
 	    if (buffer.hasNext()) {
 		for (int i=0; i < len && buffer.hasNext(); i++) {

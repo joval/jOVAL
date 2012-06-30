@@ -273,10 +273,10 @@ public class ProcessAdapter implements IAdapter {
 	}
 	try {
 	    List<String> lines = SafeCLI.multiLine(args, session, IUnixSession.Timeout.S);
-	    for (int i=1; i < lines.size(); i++) { // skip the header at line 0
+	    for (int i=0; i < lines.size(); i++) {
 		String line = lines.get(i).trim();
-		if (line.length() > 0) {
-		    StringTokenizer tok = new StringTokenizer(lines.get(i).trim());
+		if (line.length() > 0 && !line.startsWith("PID")) {
+		    StringTokenizer tok = new StringTokenizer(line);
 		    ProcessData process = new ProcessData();
 		    process.pid.setValue(tok.nextToken());
 		    process.pid.setDatatype(SimpleDatatypeEnumeration.INT.value());
@@ -349,7 +349,7 @@ public class ProcessAdapter implements IAdapter {
 			process.startTime.setValue(stime);
 			process.command.setValue(cmd);
 		    } catch (LineInsertionException e) {
-			Vector<String> v = new Vector<String>(lines.size() + 1);
+			Vector<String> v = new Vector<String>();
 			for (String temp : lines) {
 			    v.add(temp);
 			}
