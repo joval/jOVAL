@@ -78,7 +78,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 	if (connect()) {
 	    switch(type) {
 	      case SHELL:
-		return new PosixShellProcess(session, command, env, debug, wsdir, pid++, logger);
+		return new BasicShellProcess(session, command, env, debug, wsdir, pid++, logger);
 
 	      case POSIX:
 		return new PosixShellProcess(session, command, env, debug, wsdir, pid++, logger);
@@ -215,7 +215,7 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 	}
     }
 
-    public Type getType() {
+    public synchronized Type getType() {
 	if (cred != null) {
 	    try {
 		for (String line : SafeCLI.multiLine("pwd", this, Timeout.S)) {

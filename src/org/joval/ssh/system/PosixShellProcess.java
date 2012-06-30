@@ -19,6 +19,7 @@ import org.vngx.jsch.exception.JSchException;
 
 import org.joval.io.PerishableReader;
 import org.joval.util.JOVALMsg;
+import org.joval.util.StringTools;
 
 /**
  * An SSH shell-channel-based IProcess implementation for POSIX-compliant systems.
@@ -27,10 +28,14 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 class PosixShellProcess extends BasicShellProcess {
+    /**
+     * Create a shell-based IProcess for a POSIX system.  Permits the setting of arbitrary environment variables.
+     */
     PosixShellProcess(Session session, String command, String[] env, boolean debug, File wsdir, int pid, LocLogger logger)
 		throws JSchException {
 
 	super(session, command, env, debug, wsdir, pid, logger);
+	keepAlive = false; // always close the channel after determining the exit code
     }
 
     // Implement IProcess
@@ -44,23 +49,23 @@ class PosixShellProcess extends BasicShellProcess {
 	getOutputStream();
 	PerishableReader reader = PerishableReader.newInstance(getInputStream(), 10000L);
 	determinePrompt(reader); // garbage - may include MOTD
-	out.write("/bin/sh\r".getBytes());
+	out.write("/bin/sh\r".getBytes(StringTools.ASCII));
 	out.flush();
-	String prompt = determinePrompt(reader);
+	String prompt = trimLeft(determinePrompt(reader));
 	if (env != null) {
 	    for (String var : env) {
 		int ptr = var.indexOf("=");
 		if (ptr > 0) {
 		    StringBuffer setenv = new StringBuffer(var).append("; export ").append(var.substring(0,ptr));
-		    out.write(setenv.toString().getBytes());
+		    out.write(setenv.toString().getBytes(StringTools.ASCII));
 		    out.write(CR);
 		    out.flush();
 		    reader.readUntil(prompt); // ignore
 		}
 	    }
 	}
-	in = new MarkerTerminatedInputStream(reader, prompt);
-	out.write(command.getBytes());
+	in = new MarkerTerminatedInputStream(reader, prompt.getBytes(StringTools.ASCII));
+	out.write(command.getBytes(StringTools.ASCII));
 	out.write(CR);
 	out.flush();
 	running = true;
@@ -77,11 +82,13 @@ class PosixShellProcess extends BasicShellProcess {
     // Internal
 
     @Override
-    int getExitValueInternal(InputStream in, String prompt) throws Exception {
-	out.write("echo $?".getBytes());
+    int getExitValueInternal(InputStream in, byte[] prompt) throws Exception {
+	out.write("echo $?".getBytes(StringTools.ASCII));
 	out.write(CR);
 	out.flush();
 	PerishableReader reader = PerishableReader.newInstance(in, 0);
-	return Integer.parseInt(reader.readLine());
+	int ec = Integer.parseInt(reader.readLine());
+	reader.readFully(new byte[prompt.length]);
+	return ec;
     }
 }

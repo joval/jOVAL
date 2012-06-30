@@ -42,7 +42,7 @@ class Sudo implements IProcess {
     Sudo(UnixSession us, String cmd, String[] env, SshProcess.Type type) throws Exception {
 	this.us = us;
 	innerCommand = cmd;
-	shell = env != null;
+	shell = SshProcess.Type.EXEC != type;
 	driver = us.getDriver();
 	p = us.ssh.createSshProcess(driver.getSuString(cmd), env, type);
 	timeout = us.getProperties().getLongProperty(IUnixSession.PROP_SUDO_READ_TIMEOUT);

@@ -58,10 +58,11 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
     protected InputStream in;
     protected boolean isEOF;
     protected Buffer buffer;
+    protected LocLogger logger;
+
     private boolean closed, expired;
     private long timeout;
     private TimerTask task;
-    private LocLogger logger;
     private StackTraceElement[] trace;
 
     // Implement ILoggable
@@ -355,7 +356,7 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	int len = 0;
 	int resetPos = 0;
 
-	Buffer(int size) {
+	public Buffer(int size) {
 	    init(size);
 	}
 
@@ -414,6 +415,12 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 	    if (hasCapacity()) {
 		buff[len++] = b;
 		pos = len;
+	    }
+	}
+
+	public void add(byte[] bytes, int offset, int len) {
+	    for (int i=0; i < len; i++) {
+		add(bytes[offset + i]);
 	    }
 	}
     }

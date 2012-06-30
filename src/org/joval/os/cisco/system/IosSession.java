@@ -4,6 +4,7 @@
 package org.joval.os.cisco.system;
 
 import java.text.SimpleDateFormat;
+import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import org.w3c.dom.Document;
 
@@ -17,6 +18,8 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.protocol.netconf.NetconfSession;
+import org.joval.ssh.system.RecyclableShellProcess;
+import org.joval.ssh.system.SshProcess;
 import org.joval.ssh.system.SshSession;
 import org.joval.util.AbstractBaseSession;
 import org.joval.util.JOVALMsg;
@@ -142,6 +145,7 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
     public void disconnect() {
 	if (ssh != null) {
 	    ssh.disconnect();
+	    shell = null;
 	}
 	connected = false;
     }
@@ -158,15 +162,21 @@ public class IosSession extends AbstractBaseSession implements ILocked, IIosSess
 	throw new NoSuchElementException("*");
     }
 
+    private RecyclableShellProcess shell = null;
+
     /**
-     * IOS seems to require a session reconnect after every command session disconnect.
+     * Recycle the same shell over and over.
      */
     public IProcess createProcess(String command, String[] env) throws Exception {
 	if (ssh == null) {
 	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_IOS_OFFLINE));
+	} else if (shell == null) {
+	    shell = (RecyclableShellProcess)ssh.createSshProcess(command, env, SshProcess.Type.SHELL);
+	    shell.setKeepAlive(true);
+	    return shell;
 	} else {
-//	    disconnect();
-	    return ssh.createProcess(command, env);
+	    shell.recycle(command);
+	    return shell;
 	}
     }
 

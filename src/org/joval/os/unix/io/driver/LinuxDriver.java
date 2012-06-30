@@ -72,7 +72,7 @@ public class LinuxDriver implements IUnixFilesystemDriver {
     }
 
     public String getFindCommand() {
-	return "find %MOUNT% -print0 -mount | xargs -0 " + getStatCommand();
+	return "find %MOUNT% -mount -print0 | xargs -0 " + getStatCommand();
     }
 
     public String getStatCommand() {

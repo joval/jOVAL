@@ -134,11 +134,11 @@ public class SafeCLI {
 	    IProcess p = null;
 	    PerishableReader reader = null;
 	    try {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		p = session.createProcess(cmd, env);
 		p.start();
 		reader = PerishableReader.newInstance(p.getInputStream(), readTimeout);
 		reader.setLogger(session.getLogger());
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		byte[] buff = new byte[512];
 		int len = 0;
 		while((len = reader.read(buff)) > 0) {
