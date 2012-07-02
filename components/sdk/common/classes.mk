@@ -11,6 +11,8 @@ CLASSES=\
 	org.joval.intf.juniper.system.ISupportInformation	\
 	org.joval.intf.net.INetconf				\
 	org.joval.intf.plugin.IPlugin				\
+	org.joval.intf.ssh.system.IShell			\
+	org.joval.intf.ssh.system.IShellProcess			\
 	org.joval.intf.system.IBaseSession			\
 	org.joval.intf.system.IEnvironment			\
 	org.joval.intf.system.IProcess				\
@@ -79,6 +81,7 @@ CLASSES=\
 	org.joval.util.PropertyHierarchy			\
 	org.joval.util.PropertyUtil				\
 	org.joval.util.SafeCLI					\
+	org.joval.util.SessionException				\
 	org.joval.util.StringTools				\
 	org.joval.util.Version					\
 	org.joval.util.tree.Forest				\

@@ -46,11 +46,9 @@ public abstract class SshProcess implements IProcess {
     File wsdir;
     LocLogger logger;
     int pid;
-    String[] env;
 
-    SshProcess(String command, String[] env, boolean debug, File wsdir, int pid, LocLogger logger) {
+    SshProcess(String command, boolean debug, File wsdir, int pid, LocLogger logger) {
 	this.command = command;
-	this.env = env;
 	this.debug = debug;
 	this.wsdir = wsdir;
 	this.pid = pid;
@@ -158,13 +156,13 @@ public abstract class SshProcess implements IProcess {
 	return channel.getExitStatus();
     }
 
-    // Private
+    // Internal
 
     /**
      * This method is always called by the first thread to notice that the process is finished (or the first thread to
      * destroy the process).
      */
-    private synchronized void cleanup() {
+    synchronized void cleanup() {
 	if (!dirty) {
 	    return;
 	}

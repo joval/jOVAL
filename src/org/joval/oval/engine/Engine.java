@@ -785,7 +785,11 @@ public class Engine implements IEngine, IAdapter {
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(e.getMessage());
+		if (e.getMessage() == null) {
+		    msg.setValue(e.getClass().getName());
+		} else {
+		    msg.setValue(e.getMessage());
+		}
 		rc.addMessage(msg);
 		flags.add(FlagEnumeration.ERROR);
 	    }

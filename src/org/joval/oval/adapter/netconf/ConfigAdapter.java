@@ -76,6 +76,7 @@ public class ConfigAdapter implements IAdapter {
 	try {
 	    config = session.getConfig();
 	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_NETCONF_GETCONFIG, e.getMessage());
 	    throw new CollectException(msg, FlagEnumeration.ERROR);
 	}

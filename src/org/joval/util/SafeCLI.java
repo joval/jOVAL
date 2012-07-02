@@ -165,6 +165,15 @@ public class SafeCLI {
 		} else {
 		    throw e;
 		}
+	    } catch (SessionException e) {
+		if (attempt > execRetries) {
+		    session.getLogger().warn(JOVALMsg.ERROR_PROCESS_RETRY, cmd, attempt);
+		    throw e;
+		} else {
+		    session.getLogger().warn(JOVALMsg.ERROR_SESSION_INTEGRITY, e.getMessage());
+		    session.getLogger().info(JOVALMsg.STATUS_PROCESS_RETRY, cmd);
+		    session.disconnect();
+		}
 	    } finally {
 		if (reader != null) {
 		    try {

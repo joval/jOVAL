@@ -18,6 +18,7 @@ import org.vngx.jsch.Session;
 import org.vngx.jsch.exception.JSchException;
 
 import org.joval.io.PerishableReader;
+import org.joval.intf.io.IReader;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -28,30 +29,37 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 class PosixShellProcess extends BasicShellProcess {
+    private String[] env;
+
     /**
      * Create a shell-based IProcess for a POSIX system.  Permits the setting of arbitrary environment variables.
      */
     PosixShellProcess(Session session, String command, String[] env, boolean debug, File wsdir, int pid, LocLogger logger)
 		throws JSchException {
 
-	super(session, command, env, debug, wsdir, pid, logger);
-	keepAlive = false; // always close the channel after determining the exit code
+	super(session, command, debug, wsdir, pid, logger);
+	this.env = env;
+	type = Type.POSIX;
     }
 
     // Implement IProcess
 
     @Override
     public void start() throws Exception {
-	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, Type.POSIX, command);
-	((ChannelShell)channel).setPty(true);
-	((ChannelShell)channel).setTerminalMode(MODE);
-	channel.connect();
-	getOutputStream();
-	PerishableReader reader = PerishableReader.newInstance(getInputStream(), 10000L);
-	determinePrompt(reader); // garbage - may include MOTD
+	switch(mode) {
+	  case SHELL:
+	  case INACTIVE:
+	    throw new IllegalStateException(mode.toString());
+	}
+
+	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, type, command);
+	if (!channel.isConnected()) {
+	    connect();
+	}
 	out.write("/bin/sh\r".getBytes(StringTools.ASCII));
 	out.flush();
-	String prompt = trimLeft(determinePrompt(reader));
+	readInternal(10000L);
+	PerishableReader reader = PerishableReader.newInstance(in, 10000L);
 	if (env != null) {
 	    for (String var : env) {
 		int ptr = var.indexOf("=");
@@ -71,24 +79,15 @@ class PosixShellProcess extends BasicShellProcess {
 	running = true;
     }
 
-    @Override
-    public int exitValue() throws IllegalThreadStateException {
-	if (isRunning()) {
-	    throw new IllegalThreadStateException(command);
-	}
-	return exitValue;
-    }
-
     // Internal
 
     @Override
-    int getExitValueInternal(InputStream in, byte[] prompt) throws Exception {
+    int getExitValueInternal(IReader reader) throws Exception {
 	out.write("echo $?".getBytes(StringTools.ASCII));
 	out.write(CR);
 	out.flush();
-	PerishableReader reader = PerishableReader.newInstance(in, 0);
 	int ec = Integer.parseInt(reader.readLine());
-	reader.readFully(new byte[prompt.length]);
+	while (reader.readLine() != null) {} // advance to the end of the reader
 	return ec;
     }
 }

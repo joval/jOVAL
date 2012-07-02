@@ -24,10 +24,8 @@ class ExecProcess extends SshProcess {
     /**
      * Create an IProcess based on an SSH exec channel.
      */
-    ExecProcess(Session session, String command, String[] env, boolean debug, File wsdir, int pid, LocLogger logger)
-		throws JSchException {
-
-	super(command, env, debug, wsdir, pid, logger);
+    ExecProcess(Session session, String command, boolean debug, File wsdir, int pid, LocLogger logger) throws JSchException {
+	super(command, debug, wsdir, pid, logger);
 	channel = (ChannelExec)session.openChannel(ChannelType.EXEC);
     }
 

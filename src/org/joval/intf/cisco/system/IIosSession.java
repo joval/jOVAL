@@ -4,6 +4,7 @@
 package org.joval.intf.cisco.system;
 
 import org.joval.intf.net.INetconf;
+import org.joval.intf.ssh.system.IShell;
 
 /**
  * A representation of an IOS command-line session.
@@ -21,4 +22,9 @@ public interface IIosSession extends INetconf {
      * Retrieve "show tech-support" data from the device.
      */
     ITechSupport getTechSupport();
+
+    /**
+     * Obtain a shell connection to the device.
+     */
+    IShell getShell() throws Exception;
 }

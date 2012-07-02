@@ -5,8 +5,10 @@ package org.joval.ssh.system;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InterruptedIOException;
 import java.io.File;
 import java.io.OutputStream;
+import java.util.StringTokenizer;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -16,65 +18,166 @@ import org.vngx.jsch.Session;
 import org.vngx.jsch.exception.JSchException;
 
 import org.joval.io.PerishableReader;
+import org.joval.intf.io.IReader;
+import org.joval.intf.ssh.system.IShell;
+import org.joval.intf.ssh.system.IShellProcess;
+import org.joval.intf.system.IProcess;
 import org.joval.util.JOVALMsg;
+import org.joval.util.SessionException;
 import org.joval.util.StringTools;
 
 /**
- * A basic SSH shell-channel-based IProcess implementation.  If initialized with an environment, that will be ignored.
+ * A basic SSH shell-channel-based IProcess implementation.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
+class BasicShellProcess extends SshProcess implements IShell, IShellProcess {
     static final int CR = '\r';
     static final byte[] MODE = {0x35, 0x00, 0x00, 0x00, 0x00, 0x00}; // echo off
 
+    enum Mode {
+	INACTIVE, SHELL, PROCESS;
+    }
+
+    private boolean keepAlive = false;
+
+    Type type = Type.SHELL;
     int exitValue = -1;
-    boolean keepAlive = false;
+    String prompt;
+    Mode mode;
 
     /**
      * A basic shell-based IProcess that also implements the recyclable interface.
+     *
+     * @param command Set to null to initialize as a shell, or non-null to initialize as a process.
      */
-    BasicShellProcess(Session session, String command, String[] env, boolean debug, File wsdir, int pid, LocLogger logger)
+    BasicShellProcess(Session session, String command, boolean debug, File wsdir, int pid, LocLogger logger)
 		throws JSchException {
 
-	super(command, null, debug, wsdir, pid, logger);
+	super(command, debug, wsdir, pid, logger);
+	if (command == null) {
+	    mode = Mode.INACTIVE;
+	} else {
+	    mode = Mode.PROCESS;
+	}
 	channel = session.openChannel(ChannelType.SHELL);
     }
 
-    // Implement RecyclableShellProcess
+    // Implement IShell
+
+    public boolean ready() {
+	return !running;
+    }
+
+    public synchronized void println(String str) throws IllegalStateException, SessionException, IOException {
+	if (running) {
+	    throw new IllegalStateException(command);
+	}
+	mode = Mode.SHELL;
+	if (!channel.isConnected()) {
+	    connect();
+	}
+	logger.debug(JOVALMsg.STATUS_SSH_SHELL_PRINTLN, str);
+	out.write(str.getBytes(StringTools.ASCII));
+	out.write(CR);
+	out.flush();
+    }
+
+    public String read(long timeout) throws IllegalStateException, IOException {
+	switch(mode) {
+	  case SHELL:
+	    return readInternal(timeout);
+
+	  default:
+	    throw new IllegalStateException(mode.toString());
+	}
+    }
+
+    public String readLine(long timeout) throws IllegalStateException, IOException {
+	switch(mode) {
+	  case SHELL:
+	    return readLineInternal(timeout);
+
+	  default:
+	    throw new IllegalStateException(mode.toString());
+	}
+    }
+
+    public String getPrompt() {
+	return prompt;
+    }
+
+    public void close() throws IllegalStateException {
+	switch(mode) {
+	  case PROCESS:
+	    throw new IllegalStateException(mode.toString());
+
+	  case SHELL:
+	    try {
+		// an active shell; drain any unread data
+		read(1000L);
+		mode = Mode.INACTIVE;
+	    } catch (IOException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	    break;
+	}
+	logger.debug(JOVALMsg.STATUS_SSH_SHELL_DETACH);
+	if (!keepAlive) {
+	    channel.disconnect();
+	}
+    }
+
+    // Implement IShellProcess
 
     public void setKeepAlive(boolean keepAlive) {
 	this.keepAlive = keepAlive;
     }
 
-    public void recycle(String command) throws IllegalStateException {
-	if (running) {
+    public boolean isAlive() {
+	return channel.isConnected();
+    }
+
+    public IProcess newProcess(String command) throws IllegalStateException {
+	switch(mode) {
+	  case SHELL:
+	    throw new IllegalStateException(mode.toString());
+
+	  case PROCESS:
 	    throw new IllegalStateException(this.command);
+
+	  case INACTIVE:
+	  default:
+	    mode = Mode.PROCESS;
+	    this.command = command;
+	    return this;
 	}
-	this.command = command;
+    }
+
+    public IShell getShell() throws IllegalStateException {
+	if (mode == Mode.PROCESS) {
+	    throw new IllegalStateException(mode.toString());
+	}
+	logger.debug(JOVALMsg.STATUS_SSH_SHELL_ATTACH);
+	return this;
     }
 
     // Implement IProcess
 
     @Override
-    public void start() throws Exception {
-	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, Type.SHELL, command);
-	if (channel.isConnected()) {
-	    ((MarkerTerminatedInputStream)in).nextMarker();
-	} else {
-	    ((ChannelShell)channel).setPty(true);
-	    ((ChannelShell)channel).setTerminalMode(MODE);
-	    channel.connect();
-	    getOutputStream();
-	    PerishableReader reader = PerishableReader.newInstance(getInputStream(), 10000L);
-	    determinePrompt(reader); // garbage - may include MOTD
-	    out.write("\r".getBytes(StringTools.ASCII));
-	    out.flush();
-	    String prompt = trimLeft(determinePrompt(reader));
-	    in = new MarkerTerminatedInputStream(reader, prompt.getBytes(StringTools.ASCII));
-	    err = new KeepAliveInputStream(getErrorStream());
+    public synchronized void start() throws Exception {
+	switch(mode) {
+	  case SHELL:
+	  case INACTIVE:
+	    throw new IllegalStateException(mode.toString());
 	}
+
+	logger.debug(JOVALMsg.STATUS_SSH_PROCESS_START, type, command);
+	if (!channel.isConnected()) {
+	    connect();
+	}
+	in = new MarkerTerminatedInputStream(in, prompt.getBytes(StringTools.ASCII));
 	out.write(command.getBytes(StringTools.ASCII));
 	out.write(CR);
 	out.flush();
@@ -83,8 +186,10 @@ class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
 
     @Override
     public int exitValue() throws IllegalThreadStateException {
-	if (isRunning()) {
-	    throw new IllegalThreadStateException(command);
+	switch(mode) {
+	  case SHELL:
+	  case PROCESS:
+	    throw new IllegalThreadStateException(mode.toString());
 	}
 	return exitValue;
     }
@@ -97,67 +202,72 @@ class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
     // Internal
 
     /**
-     * Get the exit code of the last command, given the prompt pattern.
+     * Get the exit code of the last command, given a reader to the shell input.
      */
-    int getExitValueInternal(InputStream in, byte[] prompt) throws Exception {
+    int getExitValueInternal(IReader reader) throws Exception {
 	return -1;
     }
 
     /**
-     * The prompt ends with, "$", ">" or "#", and possibly, a space after that.
+     * Connect the shell channel, determine the prompt, and set up streams.
      */
-    String determinePrompt(InputStream in) throws IOException {
-	int ch = -1;
-	boolean trigger = false;
-	StringBuffer sb = new StringBuffer();
-	while ((ch = in.read()) != -1) {
-	    switch(ch) {
-	      case '>':
-	      case '$':
-	      case '#':
-		sb.append((char)ch);
-		if (in.available() == 0) {
-		    return sb.toString();
-		}
-		trigger = true;
-		break;
-
-	      case ' ':
-		sb.append((char)ch);
-		if (trigger && in.available() == 0) {
-		    return sb.toString();
-		}
-		trigger = false;
-		break;
-
-	      default:
-		sb.append((char)ch);
-		trigger = false;
-		break;
-	    }
+    final void connect() throws IOException, SessionException {
+	((ChannelShell)channel).setPty(true);
+	((ChannelShell)channel).setTerminalMode(MODE);
+	try {
+	    channel.connect();
+	} catch (JSchException e) {
+	    throw new SessionException(e);
 	}
-	return null;
+	in = new KeepAliveInputStream(getInputStream());
+	//
+	// Determine the prompt by temporarily assuming SHELL mode and using the internal read method.
+	//
+	readInternal(10000L);
+	out = new KeepAliveOutputStream(getOutputStream());
+	err = new KeepAliveInputStream(getErrorStream());
     }
 
-    /**
-     * Trim any newline char preceding the prompt.
-     */
-    String trimLeft(String s) {
-	byte[] bytes = s.getBytes(StringTools.ASCII);
-	int toTrim = 0;
-	for (int i=0; i < bytes.length; i++) {
-	    switch(bytes[i]) {
-	      case '\n':
-	      case '\r':
-		toTrim++;
-		break;
-
-	      default:
-		i = bytes.length; // done
-		break;
+    synchronized String readInternal(long timeout) throws IOException {
+	StringBuffer sb = null;
+	String line = null;
+	while((line = readLineInternal(timeout)) != null) {
+	    if (sb == null) {
+		sb = new StringBuffer();
+	    } else {
+		sb.append("\n");
 	    }
+	    sb.append(line);
 	}
-	return s.substring(toTrim);
+	if (sb == null) {
+	    return null;
+	} else {
+	    return sb.toString();
+	}
+    }
+
+    synchronized String readLineInternal(long timeout) throws IOException {
+	PerishableReader reader = PerishableReader.newInstance(in, timeout);
+	try {
+	    StringBuffer sb = new StringBuffer();
+	    int ch = -1;
+	    while((ch = reader.read()) != -1) {
+		switch(ch) {
+		  case '\n':
+		    return sb.toString();
+		  default:
+		    sb.append((char)(ch & 0xFF));
+		}
+		if (in.available() == 0 && isPrompt(sb.toString())) {
+		    prompt = sb.toString();
+		    mode = Mode.INACTIVE;
+		    return null;
+		}
+	    }
+	} finally {
+	    reader.defuse();
+	}
+	return null;
     }
 
     class KeepAliveInputStream extends InputStream {
@@ -167,8 +277,16 @@ class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
 	    this.in = in;
 	}
 
+	public int available() throws IOException {
+	    return in.available();
+	}
+
 	public int read() throws IOException {
 	    return in.read();
+	}
+
+	public int read(byte[] buff) throws IOException {
+	    return in.read(buff, 0, buff.length);
 	}
 
 	public int read(byte[] buff, int offset, int len) throws IOException {
@@ -182,10 +300,37 @@ class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
 	}
     }
 
+    class KeepAliveOutputStream extends OutputStream {
+	private OutputStream out;
+
+	KeepAliveOutputStream(OutputStream out) {
+	    this.out = out;
+	}
+
+	public void write(int i) throws IOException {
+	    out.write(i);
+	}
+
+	public void write(byte[] buff, int offset, int len) throws IOException {
+	    out.write(buff, offset, len);
+	}
+
+	public void flush() throws IOException {
+	    out.flush();
+	}
+
+	public void close() throws IOException {
+	    if (!keepAlive) {
+		out.close();
+	    }
+	}
+    }
+
     /**
      * An input that reads until a character sequence is reached, then behaves as if it's ended.
      */
     class MarkerTerminatedInputStream extends PerishableReader {
+	private boolean forInternalExitCode = false;
 	byte[] markerBytes;
 
 	/**
@@ -196,17 +341,8 @@ class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
 	    this.markerBytes = markerBytes;
 	}
 
-	/**
-	 * Resets the stream so that it can be read once again.
-	 */
-	MarkerTerminatedInputStream nextMarker() {
-	    if (!isEOF) {
-		throw new IllegalStateException("not EOF");
-	    }
-	    buffer = new Buffer(0);
-	    isEOF = false;
-	    reset();
-	    return this;
+	byte[] getMarker() {
+	    return markerBytes;
 	}
 
 	/**
@@ -237,7 +373,7 @@ class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
 		}
 		return bytesRead;
 	    } else {
-		byte[] temp = new byte[Math.min(avail, 512)];
+		byte[] temp = new byte[Math.min(avail, buff.length)];
 		int tempLen = in.read(temp);
 		for (int i=0; i < tempLen; i++) {
 		    if (temp[i] == markerBytes[0] && markerTest(temp, i) == -1) {
@@ -253,8 +389,11 @@ class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
 	}
 
 	@Override
-	public void close() {
-	    // no-op
+	public void close() throws IOException {
+	    super.close();
+	    if (!keepAlive) {
+		channel.disconnect();
+	    }
 	}
 
 	@Override
@@ -320,20 +459,32 @@ class BasicShellProcess extends SshProcess implements RecyclableShellProcess {
 		    return markerBytes[0];
 		}
 	    }
-	    try {
-		exitValue = getExitValueInternal(in, markerBytes);
-		if (keepAlive) {
+	    if (!forInternalExitCode) {
+		try {
+		    MarkerTerminatedInputStream childInput = new MarkerTerminatedInputStream(in, markerBytes);
+		    childInput.forInternalExitCode = true;
+		    exitValue = getExitValueInternal(childInput);
+		    childInput.close();
+		    close();
 		    running = false;
-		} else {
-		    super.close();
-		    running = false;
-		    channel.disconnect();
+		    mode = Mode.INACTIVE;
+		    BasicShellProcess.this.in = in;
+		    logger.debug(JOVALMsg.STATUS_SSH_PROCESS_END, command);
+		} catch (Exception e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
-	    } catch (Exception e) {
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    isEOF = true;
 	    return -1;
 	}
+    }
+
+    // Private
+
+    private boolean isPrompt(String s) {
+	return (s.endsWith("> ") || s.endsWith(">") ||
+		s.endsWith("# ") || s.endsWith("#") ||
+		s.endsWith("$ ") || s.endsWith("$") ||
+		s.endsWith("? ") || s.endsWith("?"));
     }
 }

@@ -78,14 +78,14 @@ public class SshSession extends AbstractBaseSession implements ISshSession, ILoc
 	if (connect()) {
 	    switch(type) {
 	      case SHELL:
-		return new BasicShellProcess(session, command, env, debug, wsdir, pid++, logger);
+		return new BasicShellProcess(session, command, debug, wsdir, pid++, logger);
 
 	      case POSIX:
 		return new PosixShellProcess(session, command, env, debug, wsdir, pid++, logger);
 
 	      case EXEC:
 	      default:
-		return new ExecProcess(session, command, null, debug, wsdir, pid++, logger);
+		return new ExecProcess(session, command, debug, wsdir, pid++, logger);
 	    }
 	} else {
 	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SSH_DISCONNECTED));
