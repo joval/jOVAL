@@ -12,8 +12,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 /**
  * Simple utility for computing checksums.
  *
@@ -100,6 +98,7 @@ public class Checksum {
 
     // Private
 
+    private static final String ALT_PROVIDER_NAME = "org.bouncycastle.jce.provider.BouncyCastleProvider";
     private static Provider ALT_PROVIDER;
 
     private static MessageDigest getDigest(Algorithm algorithm) throws RuntimeException {
@@ -108,12 +107,19 @@ public class Checksum {
             digest = MessageDigest.getInstance(algorithm.value());
 	} catch (NoSuchAlgorithmException e) {
 	    if (ALT_PROVIDER == null) {
-		ALT_PROVIDER = new BouncyCastleProvider();
+		//
+		// Use introspection to load the alternate provider, so as to make the dependency optional.
+		//
+		try {
+		    ALT_PROVIDER = (Provider)Class.forName(ALT_PROVIDER_NAME).newInstance();
+		} catch (Exception e2) {
+		    throw new RuntimeException(e);
+		}
 	    }
 	    try {
         	digest = MessageDigest.getInstance(algorithm.value(), ALT_PROVIDER);
 	    } catch (NoSuchAlgorithmException e2) {
-		throw new RuntimeException(e2);
+		throw new RuntimeException(e);
 	    }
 	}
 	return digest;

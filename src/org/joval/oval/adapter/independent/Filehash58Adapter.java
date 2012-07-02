@@ -6,10 +6,12 @@ package org.joval.oval.adapter.independent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -111,49 +113,79 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	    throw new CollectException(message, FlagEnumeration.ERROR);
 	}
 
-	Collection<Filehash58Item> items = new Vector<Filehash58Item>();
+	HashSet<Algorithm> algorithms = new HashSet<Algorithm>();
 	EntityObjectHashTypeType hashType = ((Filehash58Object)obj).getHashType();
 	String hash = (String)hashType.getValue();
 	OperationEnumeration op = hashType.getOperation();
 	switch(op) {
 	  case EQUALS:
 	    try {
-		Algorithm alg = Algorithm.fromOval(hash);
-		items.add(getItem(baseItem, alg, computeChecksum(f, alg)));
+		algorithms.add(Algorithm.fromOval(hash));
 	    } catch (IllegalArgumentException e) {
 		String message = JOVALMsg.getMessage(JOVALMsg.ERROR_CHECKSUM_ALGORITHM, hashType);
 		throw new CollectException(message, FlagEnumeration.ERROR);
-	    } catch (Exception e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(e.getMessage());
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
 	  case NOT_EQUAL:
 	    for (Algorithm alg : Algorithm.values()) {
 		if (!hash.equals(alg.ovalId)) {
-		    try {
-			items.add(getItem(baseItem, alg, computeChecksum(f, alg)));
-		    } catch (IllegalArgumentException e) {
-			String message = JOVALMsg.getMessage(JOVALMsg.ERROR_CHECKSUM_ALGORITHM, hashType);
-			throw new CollectException(message, FlagEnumeration.ERROR);
-		    } catch (Exception e) {
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.ERROR);
-			msg.setValue(e.getMessage());
-			rc.addMessage(msg);
-			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    algorithms.add(alg);
+		}
+	    }
+	    break;
+
+	  case PATTERN_MATCH:
+	    try {
+		Pattern p = Pattern.compile(hash);
+		for (Algorithm alg : Algorithm.values()) {
+		    if (p.matcher(alg.ovalId).find()) {
+			algorithms.add(alg);
 		    }
 		}
+	    } catch (PatternSyntaxException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+		rc.addMessage(msg);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
 
 	  default:
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	}
+
+	Collection<Filehash58Item> items = new Vector<Filehash58Item>();
+	File temp = null;
+	try {
+	    //
+	    // If the file is remote and we're not on Unix, then create a temporary local copy.
+	    //
+	    if (session.getType() != IBaseSession.Type.UNIX && !IBaseSession.LOCALHOST.equals(session.getHostname())) {
+		temp = File.createTempFile("cksum", "dat", session.getWorkspace());
+		StreamTool.copy(f.getInputStream(), new FileOutputStream(temp), true);
+	    }
+	    for (Algorithm alg : algorithms) {
+		try {
+		    if (temp == null) {
+			items.add(getItem(baseItem, alg, computeChecksum(f, alg)));
+		    } else {
+			items.add(getItem(baseItem, alg, computeChecksum(new FileInputStream(temp), alg)));
+		    }
+		} catch (Exception e) {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(e.getMessage());
+		    rc.addMessage(msg);
+		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+	    }
+	} finally {
+	    if (temp != null) {
+		temp.delete();
+	    }
 	}
 	return items;
     }
@@ -191,7 +223,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	}
 	String checksum = null;
 	switch(session.getType()) {
-	  case UNIX: {
+	  case UNIX:
 	    IUnixSession us = (IUnixSession)session;
 	    switch(us.getFlavor()) {
 	      case AIX:
@@ -213,43 +245,36 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	      }
 	    }
 	    break;
-	  }
 
-	  //
-	  // No tools on the local OS to perform checksumming, so copy the file locally and hash it.
-	  //
-	  default: {
-	    File temp = File.createTempFile("cksum", "dat", session.getWorkspace());
-	    try {
-		StreamTool.copy(f.getInputStream(), new FileOutputStream(temp), true);
-		Checksum.Algorithm ca = null;
-		switch(alg) {
-		  case MD5:
-		    ca = Checksum.Algorithm.MD5;
-		    break;
-		  case SHA1:
-		    ca = Checksum.Algorithm.SHA1;
-		    break;
-		  case SHA224:
-		    ca = Checksum.Algorithm.SHA224;
-		    break;
-		  case SHA256:
-		    ca = Checksum.Algorithm.SHA256;
-		    break;
-		  case SHA384:
-		    ca = Checksum.Algorithm.SHA384;
-		    break;
-		  case SHA512:
-		    ca = Checksum.Algorithm.SHA512;
-		    break;
-		}
-		checksum = Checksum.getChecksum(temp, ca);
-	    } finally {
-		temp.delete();
-	    }
+	  default:
+	    checksum = computeChecksum(f.getInputStream(), alg);
 	    break;
-	  }
 	}
 	return checksum;
+    }
+
+    private String computeChecksum(InputStream in, Algorithm alg) throws Exception {
+	Checksum.Algorithm ca = null;
+	switch(alg) {
+	  case MD5:
+	    ca = Checksum.Algorithm.MD5;
+	    break;
+	  case SHA1:
+	    ca = Checksum.Algorithm.SHA1;
+	    break;
+	  case SHA224:
+	    ca = Checksum.Algorithm.SHA224;
+	    break;
+	  case SHA256:
+	    ca = Checksum.Algorithm.SHA256;
+	    break;
+	  case SHA384:
+	    ca = Checksum.Algorithm.SHA384;
+	    break;
+	  case SHA512:
+	    ca = Checksum.Algorithm.SHA512;
+	    break;
+	}
+	return Checksum.getChecksum(in, ca);
     }
 }
