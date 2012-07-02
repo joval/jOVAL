@@ -6,6 +6,7 @@ package org.joval.ocil;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
@@ -64,6 +65,13 @@ public class Variables implements ITransformable {
      */
     public Variables(File f) throws OcilException {
 	this(getOcilVariables(f));
+    }
+
+    /**
+     * Create Variables from a file.
+     */
+    public Variables(InputStream in) throws OcilException {
+	this(getOcilVariables(new StreamSource(in)));
     }
 
     /**

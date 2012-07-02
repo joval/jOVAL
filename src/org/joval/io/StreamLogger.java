@@ -84,6 +84,7 @@ public class StreamLogger extends InputStream {
 	    ex = e;
 	}
 	try {
+	    out.flush();
 	    out.close();
 	} catch (IOException e) {
 	    // fail silently
