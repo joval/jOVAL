@@ -37,6 +37,8 @@ public abstract class SshProcess implements IProcess {
 	EXEC, SHELL, POSIX;
     }
 
+    private int exitValue = -1;
+
     Channel channel;
     String command;
     boolean debug;
@@ -152,8 +154,11 @@ public abstract class SshProcess implements IProcess {
     public int exitValue() throws IllegalThreadStateException {
 	if (isRunning()) {
 	    throw new IllegalThreadStateException(command);
+	} else if (exitValue == -1) {
+	    exitValue = channel.getExitStatus();
+	    cleanup();
 	}
-	return channel.getExitStatus();
+	return exitValue;
     }
 
     // Internal

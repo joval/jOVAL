@@ -45,7 +45,7 @@
       <object object_ref="oval:org.mitre.oval.test:obj:13"/>
       <state state_ref="oval:org.mitre.oval.test:ste:654"/>
     </filehash_test>
-    <filehash_test id="oval:org.mitre.oval.test:tst:102" version="1" comment="Test that the max_depth behavior is supported for an unlimited depth of recursion." check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
+    <filehash_test id="oval:org.mitre.oval.test:tst:102" version="1" comment="Test that the max_depth behavior is supported for an unlimited depth of recursion." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
       <object object_ref="oval:org.mitre.oval.test:obj:444"/>
       <state state_ref="oval:org.mitre.oval.test:ste:951"/>
     </filehash_test>

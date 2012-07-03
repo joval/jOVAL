@@ -153,6 +153,86 @@ public class ShadowAdapter implements IAdapter {
 		break;
 
 	      //
+	      // On AIX, the shadow file information is in /etc/security/passwd and /etc/security/user, so we
+	      // construct a shadow file equivalent using the available information.
+	      //
+	      case AIX: {
+		Hashtable<String, String[]> shadow = new Hashtable<String, String[]>();
+		String[] entry = null;
+		for (String line : SafeCLI.multiLine("cat /etc/security/passwd", session, IUnixSession.Timeout.S)) {
+		    if (line.length() == 0 || line.startsWith("#")) {
+			// continue
+		    } else if (line.charAt(0) == ' ' && entry != null) {
+			int ptr = line.indexOf("=");
+			if (ptr > 1) {
+			    String key = line.substring(0,ptr).trim();
+			    String val = line.substring(ptr+1).trim();
+			    if ("password".equals(key)) {
+				entry[PASSWORD] = val;
+			    } else if ("lastupdate".equals(key)) {
+				entry[CHG_LST] = val;
+			    } else if ("flags".equals(key)) {
+				entry[FLAG] = val;
+			    }
+			}
+		    } else {
+			int ptr = line.indexOf(":");
+			if (ptr > 0) {
+			    if (entry != null) {
+				shadow.put(entry[USERNAME], entry);
+			    }
+			    entry = new String[9];
+			    entry[USERNAME] = line.substring(0,ptr);
+			}
+		    }
+		}
+		if (entry != null && !shadow.containsKey(entry[USERNAME])) {
+		    shadow.put(entry[USERNAME], entry);
+		}
+		String username = null;
+		String[] def = new String[9];
+		for (String line : SafeCLI.multiLine("cat /etc/security/user", session, IUnixSession.Timeout.S)) {
+		    if (line.length() == 0 || line.startsWith("*")) {
+			// continue
+		    } else if (line.charAt(0) == ' ' && username != null) {
+			int ptr = line.indexOf("=");
+			if (ptr > 1) {
+			    String key = line.substring(0,ptr).trim();
+			    String val = line.substring(ptr+1).trim();
+			    if ("pwdwarntime".equals(key)) {
+				if ("default".equals(username)) {
+				    def[EXP_WARN] = val;
+				} else if (shadow.containsKey(username)) {
+				    shadow.get(username)[EXP_WARN] = val;
+				}
+			    }
+			}
+		    } else {
+			int ptr = line.indexOf(":");
+			if (ptr > 0) {
+			    username = line.substring(0,ptr);
+			}
+		    }
+		}
+		lines = new Vector<String>();
+		for (String[] data : shadow.values()) {
+		    StringBuffer sb = new StringBuffer(data[USERNAME]);
+		    for (int i=1; i < data.length; i++) {
+			sb.append(":");
+			if (data[i] == null) {
+			    if (def != null && def[i] != null) {
+				sb.append(def[i]);
+			    }
+			} else {
+			    sb.append(data[i]);
+			}
+		    }
+		    lines.add(sb.toString());
+		}
+		break;
+	      }
+
+	      //
 	      // By default, cat the contents of /etc/shadow, to leverage elevated privileges if necessary.
 	      //
 	      default:

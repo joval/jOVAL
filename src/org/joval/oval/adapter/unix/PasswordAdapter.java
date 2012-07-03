@@ -3,6 +3,9 @@
 
 package org.joval.oval.adapter.unix;
 
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
@@ -30,6 +33,7 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.unix.PasswordItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import org.joval.intf.io.IFile;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
@@ -202,10 +206,21 @@ public class PasswordAdapter implements IAdapter {
 		break;
 
 	      //
-	      // By default, cat the contents of /etc/passwd, to leverage elevated privileges if necessary.
+	      // By default, read in the contents of /etc/passwd ... which is famously world-readable.
 	      //
 	      default:
-		lines = SafeCLI.multiLine("cat /etc/passwd", session, IUnixSession.Timeout.S);
+		try {
+		    IFile passwd = session.getFilesystem().getFile("/etc/passwd");
+		    BufferedReader reader = new BufferedReader(new InputStreamReader(passwd.getInputStream()));
+		    lines = new Vector<String>();
+		    String line = null;
+		    while ((line = reader.readLine()) != null) {
+			lines.add(line);
+		    }
+		} catch (IOException e) {
+		    session.getLogger().warn(JOVALMsg.ERROR_IO, "/etc/passwd", e.getMessage());
+		    errorMessages.add(e.getMessage());
+		}
 		break;
 	    }
 
@@ -347,7 +362,7 @@ public class PasswordAdapter implements IAdapter {
 		    }
 		}
 		break;
-    
+ 
 	      case LINUX: {
 		SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
 		for (String line : SafeCLI.multiLine("last -n 1 -F " + username, session, IUnixSession.Timeout.M)) {
@@ -369,7 +384,7 @@ public class PasswordAdapter implements IAdapter {
 		}
 		break;
 	      }
-    
+
 	      case AIX: {
 		String command = "lsuser -a time_last_login " + username;
 		for (String line : SafeCLI.multiLine(command, session, IUnixSession.Timeout.S)) {
@@ -385,7 +400,7 @@ public class PasswordAdapter implements IAdapter {
 		}
 		break;
 	      }
-    
+
 	      default:
 		lastLogin.setStatus(StatusEnumeration.NOT_COLLECTED);
 		break;
