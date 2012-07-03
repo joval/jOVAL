@@ -85,7 +85,6 @@ CLASSES=\
 	org.joval.ssh.system.BasicShellProcess				\
 	org.joval.ssh.system.ExecProcess				\
 	org.joval.ssh.system.PosixShellProcess				\
-	org.joval.ssh.system.RecyclableShellProcess			\
 	org.joval.ssh.system.SshProcess					\
 	org.joval.ssh.system.SshSession					\
 	org.joval.test.AD						\
