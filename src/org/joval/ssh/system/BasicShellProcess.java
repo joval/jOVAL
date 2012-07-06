@@ -33,8 +33,13 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 class BasicShellProcess extends SshProcess implements IShell, IShellProcess {
-    static final int CR = '\r';
-    static final byte[] MODE = {0x35, 0x00, 0x00, 0x00, 0x00, 0x00}; // echo off
+    static final int CR = '\n';
+
+    /**
+     * RFC4254 terminal mode byte stream
+     */
+    static final byte[] MODE = {0x35, 0x00,0x00,
+				0x00, 0x00,0x00};
 
     enum Mode {
 	INACTIVE, SHELL, PROCESS;
@@ -74,10 +79,10 @@ class BasicShellProcess extends SshProcess implements IShell, IShellProcess {
 	if (running) {
 	    throw new IllegalStateException(command);
 	}
-	mode = Mode.SHELL;
 	if (!channel.isConnected()) {
 	    connect();
 	}
+	mode = Mode.SHELL;
 	logger.debug(JOVALMsg.STATUS_SSH_SHELL_PRINTLN, str);
 	out.write(str.getBytes(StringTools.ASCII));
 	out.write(CR);
@@ -253,6 +258,18 @@ class BasicShellProcess extends SshProcess implements IShell, IShellProcess {
 	    int ch = -1;
 	    while((ch = reader.read()) != -1) {
 		switch(ch) {
+		  case '\r':
+		    if (in.markSupported() && in.available() > 0) {
+			in.mark(1);
+			switch(in.read()) {
+			  case '\n':
+			    return sb.toString();
+			  default:
+			    in.reset();
+			    break;
+			}
+		    }
+		    // fall-thru
 		  case '\n':
 		    return sb.toString();
 		  default:
@@ -297,6 +314,18 @@ class BasicShellProcess extends SshProcess implements IShell, IShellProcess {
 	    if (!keepAlive) {
 		in.close();
 	    }
+	}
+
+	public boolean markSupported() {
+	    return in.markSupported();
+	}
+
+	public void mark(int readlimit) {
+	    in.mark(readlimit);
+	}
+
+	public void reset() throws IOException {
+	    in.reset();
 	}
     }
 

@@ -14,6 +14,7 @@ import java.io.InterruptedIOException;
 import java.util.List;
 import java.util.Vector;
 
+import org.joval.intf.cisco.system.IIosSession;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
@@ -138,6 +139,13 @@ public class SafeCLI {
 		p.start();
 		reader = PerishableReader.newInstance(p.getInputStream(), readTimeout);
 		reader.setLogger(session.getLogger());
+		if (session instanceof IIosSession) {
+		    //
+		    // IOS ignores the terminal mode bytes and echoes anyway, so discard the first line
+		    // of output from IOS, as it's always the echo of the issued command.
+		    //
+		    reader.readLine();
+		}
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		byte[] buff = new byte[512];
 		int len = 0;

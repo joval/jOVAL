@@ -228,7 +228,7 @@ public class PasswordAdapter implements IAdapter {
 	    // Create the basic PasswordItems
 	    //
 	    for (String line : lines) {
-		if (line.startsWith("#")) {
+		if (line.startsWith("#") || line.trim().length() == 0) {
 		    continue;
 		}
 		List<String> tokens = StringTools.toList(StringTools.tokenize(line, ":", false));

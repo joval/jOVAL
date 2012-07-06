@@ -594,15 +594,19 @@ public class Checklist implements ITransformable {
 		    throw new NoSuchElementException(refId);
 		}
 	    }
-
 	} else if (item instanceof QuestionTestActionType) {
 	    QuestionTestActionType action = (QuestionTestActionType)item;
-	    String questionId = action.getQuestionRef();
-	    if (!questionActions.containsKey(questionId)) {
-		questionActions.put(questionId, new HashSet<String>());
+	    String refId = action.getQuestionRef();
+	    if (containsQuestion(refId)) {
+		if (!questionActions.containsKey(refId)) {
+		    questionActions.put(refId, new HashSet<String>());
+		}
+		questionActions.get(refId).add(action.getId());
+	    } else if (containsQuestionnaire(refId)) {
+		crawlQuestionActions(getQuestionnaire(refId), questionActions);
+	    } else {
+		throw new NoSuchElementException(refId);
 	    }
-	    questionActions.get(questionId).add(action.getId());
-
 	    for (TestActionConditionType condition : getConditions(action)) {
 		if (condition.isSetTestActionRef()) {
 		    String actionRef = condition.getTestActionRef().getValue();
@@ -618,8 +622,6 @@ public class Checklist implements ITransformable {
 	} else {
 	    throw new IllegalArgumentException(item.getClass().getName());
 	}
-
-
     }
 
     /**
