@@ -3,6 +3,7 @@
 
 package org.joval.net;
 
+import java.math.BigInteger;
 import java.util.StringTokenizer;
 
 import org.joval.intf.net.ICIDR;
@@ -88,6 +89,14 @@ public class Ip6Address implements ICIDR<Ip6Address> {
 	    addrIndex++;
 	    addr[addrIndex] = (short)((val & 0xFF) & mask[addrIndex]);
 	}
+    }
+
+    public BigInteger toBigInteger() {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < addr.length; i++) {
+	    sb.append(Integer.toHexString(addr[i] & 0xFF));
+	}
+	return new BigInteger(sb.toString(), 16);
     }
 
     @Override

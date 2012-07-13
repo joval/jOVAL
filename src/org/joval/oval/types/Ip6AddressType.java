@@ -45,13 +45,7 @@ public class Ip6AddressType extends AbstractType implements ICIDR<Ip6AddressType
 	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
-	if (toString().equals(other.toString())) {
-	    return 0;
-	} else if (addr.contains(other.addr)) {
-	    return 1;
-	} else {
-	    return -1;
-	}
+	return addr.toBigInteger().compareTo(other.addr.toBigInteger());
     }
 
     // Implement ICIDR
