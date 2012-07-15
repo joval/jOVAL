@@ -73,6 +73,10 @@ public class Ip4Address implements ICIDR<Ip4Address> {
 	return new BigInteger(sb.toString(), 16);
     }
 
+    public int getMask() {
+	return maskVal;
+    }
+
     public String toString() {
 	StringBuffer sb = new StringBuffer();
 	for (int i=0; i < 4; i++) {

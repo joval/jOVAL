@@ -44,10 +44,17 @@ abstract class AbstractType implements IType {
 	    IType other = (IType)obj;
 	    if (getType() == other.getType()) {
 		// equality testing should not trigger type conversion
-		try {
-		    return compareTo(other) == 0;
-		} catch (IllegalArgumentException e) {
-		    return false;
+		switch(getType()) {
+		  case IPV_4_ADDRESS:
+		  case IPV_6_ADDRESS:
+		    return getString().equals(other.getString());
+
+		  default:
+		    try {
+			return compareTo(other) == 0;
+		    } catch (IllegalArgumentException e) {
+			return false;
+		    }
 		}
 	    } else {
 		return false;

@@ -45,7 +45,11 @@ public class Ip4AddressType extends AbstractType implements ICIDR<Ip4AddressType
 	} catch (TypeConversionException e) {
 	    throw new IllegalArgumentException(e);
 	}
-	return addr.toBigInteger().compareTo(other.addr.toBigInteger());
+	if (addr.getMask() == other.addr.getMask()) {
+	    return addr.toBigInteger().compareTo(other.addr.toBigInteger());
+	} else {
+	    throw new IllegalArgumentException(Integer.toString(other.addr.getMask()));
+	}
     }
 
     // Implement ICIDR

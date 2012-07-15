@@ -91,6 +91,10 @@ public class Ip6Address implements ICIDR<Ip6Address> {
 	}
     }
 
+    public int getMask() {
+	return maskVal;
+    }
+
     public BigInteger toBigInteger() {
 	StringBuffer sb = new StringBuffer();
 	for (int i=0; i < addr.length; i++) {
