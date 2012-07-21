@@ -1,0 +1,27 @@
+<xs:schema targetNamespace="http://schemas.microsoft.com/wbem/wsman/1/config/service/wsmanfault" xmlns:tns="http://schemas.microsoft.com/wbem/wsman/1/config/service/wsmanfault" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <xs:complexType name="MessageType" mixed="true">
+        <xs:sequence>
+            <xs:element name="ProviderFault" type="tns:ProviderFaultType" minOccurs="0"/>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="WSManFaultType">
+        <xs:sequence>
+            <xs:element name="Message" type="tns:MessageType" minOccurs="0"/>
+        </xs:sequence>
+        <xs:attribute name="Code" type="xs:unsignedInt" use="required"/>
+        <xs:attribute name="Machine" type="xs:string" use="required"/>
+        <xs:anyAttribute processContents="lax"/>
+    </xs:complexType>
+    <xs:simpleType name="GUIDType">
+        <xs:restriction base="xs:string">
+            <xs:pattern value="[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"/>
+        </xs:restriction>
+    </xs:simpleType>
+    <xs:complexType name="ProviderFaultType" mixed="true">
+        <xs:sequence>
+            <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="providerId" type="tns:GUIDType"/>
+        <xs:anyAttribute processContents="lax"/>
+    </xs:complexType>
+</xs:schema>
