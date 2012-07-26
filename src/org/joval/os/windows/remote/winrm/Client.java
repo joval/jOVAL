@@ -72,7 +72,7 @@ public class Client {
 	    GetOperation getOperation = new GetOperation(arg);
 	    getOperation.addResourceURI(processor);
 	    getOperation.addSelectorSet(set);
-	    DOMSource ds = new DOMSource((Element)getOperation.dispatch(port));
+	    DOMSource ds = new DOMSource((Element)getOperation.dispatch(port).getAny());
 	    StreamResult sr = new StreamResult(new OutputStreamWriter(System.out, "utf-8"));
 	    TransformerFactory tf = TransformerFactory.newInstance();
 	    tf.setAttribute("indent-number", 4);
