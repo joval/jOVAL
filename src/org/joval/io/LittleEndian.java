@@ -21,6 +21,14 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class LittleEndian {
+    public static final String toHexString(byte[] b) {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < b.length; i++) {
+	    sb.append(toHexString(b[i]));
+	}
+	return sb.toString();
+    }
+
     public static final String toHexString(byte b) {
 	String s = Integer.toHexString(b & 0xFF);
 	if (s.length() == 1) {

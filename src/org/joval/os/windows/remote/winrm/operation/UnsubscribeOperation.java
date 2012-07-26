@@ -3,43 +3,11 @@
 
 package org.joval.os.windows.remote.winrm.operation;
 
-import java.util.Collections;
-import java.util.List;
+import org.xmlsoap.ws.eventing.Unsubscribe;
+import org.xmlsoap.ws.eventing.UnsubscribeResponse;
 
-import org.joval.os.windows.remote.winrm.IMessage;
-import org.joval.os.windows.remote.winrm.IOperation;
-import org.joval.os.windows.remote.winrm.message.UnsubscribeMessage;
-import org.joval.os.windows.remote.winrm.message.UnsubscribeResponseMessage;
-
-public class UnsubscribeOperation implements IOperation<UnsubscribeResponseMessage> {
-    private UnsubscribeMessage input;
-    private UnsubscribeResponseMessage output;
-
-    public UnsubscribeOperation(UnsubscribeMessage input) {
-	this.input = input;
-    }
-
-    // Implement IOperation
-
-    public IMessage getInput() {
-	return input;
-    }
-
-    public void setOutput(UnsubscribeResponseMessage output) {
-	this.output = output;
-    }
-
-    public UnsubscribeResponseMessage getOutput() {
-	return output;
-    }
-
-    public String getSOAPAction() {
-	return "http://schemas.xmlsoap.org/ws/2004/08/eventing/Unsubscribe";
-    }
-
-    public List<Object> getHeaders() {
-	@SuppressWarnings("unchecked")
-	List<Object> empty = (List<Object>)Collections.EMPTY_LIST;
-	return empty;
+public class UnsubscribeOperation extends BaseOperation<Unssubscribe, UnsubscribeResponse> {
+    public UnsubscribeOperation(Unsubscribe input) {
+	super("http://schemas.xmlsoap.org/ws/2004/08/eventing/Unsubscribe", input);
     }
 }
