@@ -15,23 +15,21 @@ import org.joval.os.windows.remote.winrm.IPort;
 import org.joval.os.windows.remote.winrm.WSMFault;
 
 public class GetOperation extends BaseOperation<AnyXmlOptionalType, AnyXmlType> {
-    private static final ObjectFactory TRANSFER_FACTORY = new ObjectFactory();
-
     public GetOperation(AnyXmlOptionalType input) {
 	super("http://schemas.xmlsoap.org/ws/2004/09/transfer/Get", input);
     }
 
     public void addSelectorSet(SelectorSetType selectors) {
-	headers.add(FACTORY.createSelectorSet(selectors));
+	headers.add(Factories.WSMAN.createSelectorSet(selectors));
     }
 
     @Override
     public AnyXmlType dispatch(IPort port) throws IOException, JAXBException, WSMFault {
-	Object obj = port.dispatch(action, headers, input);
+	Object obj = dispatch0(port);
 	if (obj instanceof AnyXmlType) {
 	    return (AnyXmlType)obj;
 	} else {
-	    AnyXmlType any = TRANSFER_FACTORY.createAnyXmlType();
+	    AnyXmlType any = Factories.TRANSFER.createAnyXmlType();
 	    any.setAny(obj);
 	    return any;
 	}

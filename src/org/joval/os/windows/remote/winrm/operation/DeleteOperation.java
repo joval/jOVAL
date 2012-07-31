@@ -6,6 +6,7 @@ package org.joval.os.windows.remote.winrm.operation;
 import java.io.IOException;
 import javax.xml.bind.JAXBException;
 
+import org.dmtf.wsman.SelectorSetType;
 import org.xmlsoap.ws.transfer.AnyXmlOptionalType;
 import org.xmlsoap.ws.transfer.ObjectFactory;
 
@@ -13,19 +14,21 @@ import org.joval.os.windows.remote.winrm.IPort;
 import org.joval.os.windows.remote.winrm.WSMFault;
 
 public class DeleteOperation extends BaseOperation<Object, AnyXmlOptionalType> {
-    private static final ObjectFactory TRANSFER_FACTORY = new ObjectFactory();
-
     public DeleteOperation() {
 	super("http://schemas.xmlsoap.org/ws/2004/09/transfer/Delete", null);
     }
 
+    public void addSelectorSet(SelectorSetType selectors) {
+	headers.add(Factories.WSMAN.createSelectorSet(selectors));
+    }
+
     @Override
-    public AnyXmlOptionalType dispatch(IPort port) throws IOException, JAXBException, WSFault {
-	Object obj = port.dispatch(action, headers, input);
+    public AnyXmlOptionalType dispatch(IPort port) throws IOException, JAXBException, WSMFault {
+	Object obj = dispatch0(port);
 	if (obj instanceof AnyXmlOptionalType) {
 	    return (AnyXmlOptionalType)obj;
 	} else {
-	    AnyXmlOptionalType any = TRANSFER_FACTORY.createAnyXmlOptionalType();
+	    AnyXmlOptionalType any = Factories.TRANSFER.createAnyXmlOptionalType();
 	    if (obj != null) {
 		any.setAny(obj);
 	    }

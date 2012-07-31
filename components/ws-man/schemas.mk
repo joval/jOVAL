@@ -10,6 +10,7 @@ SCHEMA_FILES=\
 	xsd/ms-wsman-fault.xsd		\
 	xsd/ms-wsman-interactive.xsd	\
 	xsd/ms-wsman-plugin.xsd		\
+	xsd/ms-wsman-shell.xsd		\
 	xsd/soap-envelope.xsd		\
 	xsd/transfer.xsd		\
 	xsd/ws-addr.xsd	

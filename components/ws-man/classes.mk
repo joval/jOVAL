@@ -39,6 +39,31 @@ CLASSES=\
 	com.microsoft.wsman.config.ServiceDefaultPortsType	\
 	com.microsoft.wsman.config.ServiceType	\
 	com.microsoft.wsman.config.WinrsType	\
+	com.microsoft.wsman.shell.AuthenticationType	\
+	com.microsoft.wsman.shell.ClientCertificateType	\
+	com.microsoft.wsman.shell.CommandLine	\
+	com.microsoft.wsman.shell.CommandResponse	\
+	com.microsoft.wsman.shell.CommandStateType	\
+	com.microsoft.wsman.shell.CustomRemoteShell	\
+	com.microsoft.wsman.shell.DesiredStreamType	\
+	com.microsoft.wsman.shell.EnvironmentVariable	\
+	com.microsoft.wsman.shell.EnvironmentVariableList	\
+	com.microsoft.wsman.shell.MachineIDType	\
+	com.microsoft.wsman.shell.ObjectFactory	\
+	com.microsoft.wsman.shell.package-info	\
+	com.microsoft.wsman.shell.QueryListType	\
+	com.microsoft.wsman.shell.QueryType	\
+	com.microsoft.wsman.shell.Receive	\
+	com.microsoft.wsman.shell.ReceiveResponse	\
+	com.microsoft.wsman.shell.SelectType	\
+	com.microsoft.wsman.shell.Send	\
+	com.microsoft.wsman.shell.SendResponse	\
+	com.microsoft.wsman.shell.ShellType	\
+	com.microsoft.wsman.shell.Signal	\
+	com.microsoft.wsman.shell.SignalResponse	\
+	com.microsoft.wsman.shell.StreamType	\
+	com.microsoft.wsman.shell.SubscriptionType	\
+	com.microsoft.wsman.shell.ThumbprintType	\
 	org.dmtf.cim.common.CimAnySimpleType	\
 	org.dmtf.cim.common.CimBase64Binary	\
 	org.dmtf.cim.common.CimBoolean	\

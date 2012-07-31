@@ -25,13 +25,15 @@ import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.dom.DOMSource;
 import org.ietf.jgss.GSSException;
-import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 //import jcifs.http.NtlmHttpURLConnection;
 import net.sourceforge.spnego.SpnegoHttpURLConnection;
 
 import org.dmtf.wsman.MaxEnvelopeSizeType;
+import org.dmtf.wsman.Locale;
 import org.xmlsoap.ws.addressing.AttributedURI;
 import org.xmlsoap.ws.addressing.EndpointReferenceType;
 import org.xmlsoap.ws.transfer.AnyXmlOptionalType;
@@ -51,6 +53,7 @@ import org.joval.util.Base64;
  * @version %I% %G%
  */
 public class WSMPort implements IPort {
+
     private static Properties schemaProps = new Properties();
     static {
 	ClassLoader cl = Thread.currentThread().getContextClassLoader();
@@ -77,6 +80,8 @@ public class WSMPort implements IPort {
     public static class Factories {
 	public static org.dmtf.wsman.ObjectFactory WSMAN = new org.dmtf.wsman.ObjectFactory();
 	public static org.xmlsoap.ws.addressing.ObjectFactory ADDRESS = new org.xmlsoap.ws.addressing.ObjectFactory();
+	public static org.xmlsoap.ws.enumeration.ObjectFactory ENUMERATION = new org.xmlsoap.ws.enumeration.ObjectFactory();
+	public static org.xmlsoap.ws.eventing.ObjectFactory EVENTING = new org.xmlsoap.ws.eventing.ObjectFactory();
 	public static org.w3c.soap.envelope.ObjectFactory SOAP = new org.w3c.soap.envelope.ObjectFactory();
 	public static com.microsoft.wsman.config.ObjectFactory WSMC = new com.microsoft.wsman.config.ObjectFactory();
     }
@@ -102,7 +107,7 @@ public class WSMPort implements IPort {
 	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 	unmarshaller = ctx.createUnmarshaller();
 //DAS
-scheme = AuthScheme.BASIC;
+scheme = AuthScheme.NTLM;
 
 	this.url = url;
 	this.proxy = proxy;
@@ -119,11 +124,19 @@ scheme = AuthScheme.BASIC;
 
     // Implement IPort
 
+    public Object unmarshal(Node node) throws JAXBException {
+	return unmarshaller.unmarshal(new DOMSource(node));
+    }
+
     public Object dispatch(String action, List<Object> headers, Object input) throws IOException, JAXBException, WSMFault {
 	Header header = Factories.SOAP.createHeader();
 
 	AttributedURI to = Factories.ADDRESS.createAttributedURI();
-	to.setValue(url);
+//	to.setValue(url);
+{
+URL u = new URL(url);
+to.setValue(u.getProtocol()+"://"+u.getHost()+":80/"+u.getPath());
+}
 	to.getOtherAttributes().put(MUST_UNDERSTAND, "true");
 	header.getAny().add(Factories.ADDRESS.createTo(to));
 
@@ -140,7 +153,7 @@ scheme = AuthScheme.BASIC;
 	header.getAny().add(Factories.ADDRESS.createAction(soapAction));
 
 	AttributedURI messageId = Factories.ADDRESS.createAttributedURI();
-	messageId.setValue("uuid:" + UUID.randomUUID().toString());
+	messageId.setValue("uuid:" + UUID.randomUUID().toString().toUpperCase());
 	header.getAny().add(Factories.ADDRESS.createMessageID(messageId));
 
 	for (Object obj : headers) {
@@ -148,9 +161,14 @@ scheme = AuthScheme.BASIC;
 	}
 
 	MaxEnvelopeSizeType size = Factories.WSMAN.createMaxEnvelopeSizeType();
-	size.setValue(BigInteger.valueOf(51200));
+	size.setValue(BigInteger.valueOf(153600));
 	size.getOtherAttributes().put(MUST_UNDERSTAND, "true");
 	header.getAny().add(Factories.WSMAN.createMaxEnvelopeSize(size));
+
+	Locale locale = Factories.WSMAN.createLocale();
+	locale.setLang("en-US");
+	locale.getOtherAttributes().put(MUST_UNDERSTAND, "false");
+	header.getAny().add(locale);
 
 	//
 	// Convert any non-directly-serializable WS-Transfer input types
@@ -239,6 +257,7 @@ System.out.println("Connecting to " + url + " using authScheme " + scheme);
 
 		conn.connect();
 		OutputStream out = conn.getOutputStream();
+System.out.write(bytes);
 		out.write(bytes);
 		out.flush();
 
@@ -256,6 +275,16 @@ System.out.println("Connecting to " + url + " using authScheme " + scheme);
 		  case HttpURLConnection.HTTP_BAD_REQUEST:
 		  case HttpURLConnection.HTTP_INTERNAL_ERROR:
 		    result = getSOAPBodyContents(conn.getErrorStream());
+		    String raw = null;
+		    if (result instanceof JAXBElement) {
+			ByteArrayOutputStream buff = new ByteArrayOutputStream();
+			marshaller.marshal(result, buff);
+			raw = new String(buff.toByteArray(), (String)marshaller.getProperty(Marshaller.JAXB_ENCODING));
+			result = ((JAXBElement)result).getValue();
+		    }
+		    if (result instanceof Fault) {
+			throw new WSMFault((Fault)result, raw);
+		    }
 		    break;
 
 		  default:
@@ -279,15 +308,15 @@ System.out.println("Connecting to " + url + " using authScheme " + scheme);
 	    }
 	} while (!success && nextAuthScheme(conn));
 
+//DAS
+if (result != null) System.out.println("Result is of type " + result.getClass().getName());
+else System.out.println("Result is NULL");
 	if (result instanceof JAXBElement) {
 //DAS
 marshaller.marshal(result, System.out);
-	    result = ((JAXBElement)result).getValue();
-	}
-	if (result instanceof Fault) {
-	    throw new WSMFault((Fault)result);
+	    return ((JAXBElement)result).getValue();
 	} else {
-System.out.println("Result is of type " + result.getClass().getName());
+if (result != null) marshaller.marshal(result, System.out);
 	    return result;
 	}
     }

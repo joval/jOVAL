@@ -79,4 +79,9 @@
       <jxb:package name="com.microsoft.wsman.cim.interactive"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="xsd/ms-wsman-shell.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="com.microsoft.wsman.shell"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
 </jxb:bindings>

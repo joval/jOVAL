@@ -7,7 +7,7 @@ import org.xmlsoap.ws.enumeration.Pull;
 import org.xmlsoap.ws.enumeration.PullResponse;
 
 public class PullOperation extends BaseOperation<Pull, PullResponse> {
-    public PullOperation(PullMessage input) {
+    public PullOperation(Pull input) {
 	super("http://schemas.xmlsoap.org/ws/2004/09/enumeration/Pull", input);
     }
 }

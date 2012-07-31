@@ -8,6 +8,7 @@ import java.net.Proxy;
 import java.util.List;
 import javax.xml.namespace.QName;
 import javax.xml.bind.JAXBException;
+import org.w3c.dom.Node;
 
 /**
  * Interface defining a generic SOAP port, which is an address to which messages can be dispatched.
@@ -15,17 +16,12 @@ import javax.xml.bind.JAXBException;
  * @author David A. Solin
  * @version %I%, %G%
  */
-public interface IPort {
+public interface IPort extends IWSMConstants {
     /**
-     * URI for anonymous role addressing
+     * Convenience method for converting from DOM to JAXB.
      */
-    String REPLY_TO = "http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous";
-
-    /**
-     * QName for "mustUnderstand" attributes
-     */
-    QName MUST_UNDERSTAND = new QName("http://www.w3.org/2003/05/soap-envelope", "mustUnderstand");
-
+    Object unmarshal(Node node) throws JAXBException;
+    
     /**
      * Dispatch a SOAP action.
      *

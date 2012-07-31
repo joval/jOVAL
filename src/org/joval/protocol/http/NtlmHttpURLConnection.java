@@ -36,6 +36,8 @@ import org.microsoft.security.ntlm.NtlmAuthenticator;
 import org.microsoft.security.ntlm.NtlmAuthenticator.NtlmVersion;
 import org.microsoft.security.ntlm.NtlmAuthenticator.ConnectionType;
 import org.microsoft.security.ntlm.NtlmSession;
+import org.microsoft.security.ntlm.impl.NtlmChallengeMessage;
+import org.microsoft.security.ntlm.impl.NtlmRoutines;
 
 /**
  * Based on jcifs.http.NtlmHttpURLConnection, but uses a superior NTLM implementation.
@@ -51,12 +53,13 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
     private String authMethod;
     private boolean handshakeComplete;
     private NtlmSession session;
+    private URL url;
 
     public NtlmHttpURLConnection(HttpURLConnection connection) {
 	super(connection.getURL());
 	this.connection = connection;
 	requestProperties = new HashMap();
-	URL url = getURL();
+	url = getURL();
 	String user = url.getUserInfo();
 	String pass = null;
 	String host = null;
@@ -455,8 +458,6 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	    byte[] type1 = attemptNegotiation(response);
 	    if (type1 == null) return;
 	    int attempt = 0;
-System.out.println(new jcifs.ntlmssp.Type1Message(type1).toString());
-System.out.println("Type 1: " + Base64.encodeBytes(type1));
 	    while (attempt < MAX_REDIRECTS) {
 		connection.setRequestProperty(authProperty, authMethod + ' ' + Base64.encodeBytes(type1));
 		connection.setFixedLengthStreamingMode(0);
@@ -469,19 +470,6 @@ System.out.println("Type 1: " + Base64.encodeBytes(type1));
 		if (type3 == null) {
 		    return;
 		}
-
-System.out.println("T3HEX: " + org.joval.io.LittleEndian.toHexString(type3));
-jcifs.ntlmssp.Type3Message t3 = new jcifs.ntlmssp.Type3Message(type3);
-System.out.println(t3.toString());
-System.out.println("NTResponse:");
-jcifs.util.Hexdump.hexdump(t3.getNTResponse());
-System.out.println("LMResponse:");
-jcifs.util.Hexdump.hexdump(t3.getLMResponse());
-System.out.println("MasterKey:");
-jcifs.util.Hexdump.hexdump(t3.getMasterKey());
-System.out.println("SessionKey:");
-jcifs.util.Hexdump.hexdump(t3.getSessionKey());
-
 		connection.setRequestProperty(authProperty, authMethod + ' ' + Base64.encodeBytes(type3));
 		if (cachedOutput != null) {
 		    connection.setFixedLengthStreamingMode(cachedOutput.size());
@@ -558,13 +546,24 @@ jcifs.util.Hexdump.hexdump(t3.getSessionKey());
 	if (authorization != null) {
 	    // read type 2
 	    message = Base64.decode(authorization);
-jcifs.ntlmssp.Type2Message t2 = new jcifs.ntlmssp.Type2Message(message);
-System.out.println(t2.toString());
-System.out.println("TargetInfo:");
-jcifs.util.Hexdump.hexdump(t2.getTargetInformation());
-System.out.println("Challenge:");
-jcifs.util.Hexdump.hexdump(t2.getChallenge());
-	    session.processChallengeMessage(message);
+//DAS
+	    NtlmChallengeMessage challenge = new NtlmChallengeMessage(message);
+	    challenge.setTargetInfoPair(NtlmRoutines.MsvAvFlags, new byte[] {
+					(byte)0x02, (byte)0x00, (byte)0x00, (byte)0x00});
+	    challenge.setTargetInfoPair(NtlmRoutines.MsAvRestrictions, new byte[] {
+					(byte)0x30, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
+					(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
+					(byte)0x00, (byte)0x30, (byte)0x00, (byte)0x00, (byte)0x37, (byte)0xef,
+					(byte)0x99, (byte)0x63, (byte)0xdf, (byte)0xd0, (byte)0xf6, (byte)0xba,
+					(byte)0xb1, (byte)0x3e, (byte)0xa8, (byte)0xe0, (byte)0xa9, (byte)0xa0,
+					(byte)0xb9, (byte)0x53, (byte)0x2c, (byte)0xf2, (byte)0x02, (byte)0x7e,
+					(byte)0x6d, (byte)0x52, (byte)0x06, (byte)0xff, (byte)0xc5, (byte)0xbb,
+					(byte)0xcb, (byte)0x05, (byte)0x3b, (byte)0xd3, (byte)0x1d, (byte)0xc2});
+	    challenge.setTargetInfoPair(NtlmRoutines.MsvChannelBindings, new byte[16]); // empty
+	    String targetName = url.getProtocol().toUpperCase() + "/" + url.getHost().toUpperCase();
+	    challenge.setTargetInfoPair(NtlmRoutines.MsvAvTargetName, targetName.getBytes("UTF-16LE"));
+
+	    session.processChallengeMessage(challenge.getMessageData());
 	}
 	reconnect();
 	if (message == null) {

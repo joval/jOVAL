@@ -77,6 +77,8 @@
             <xs:element name="DefaultPorts" type="cfg:ServiceDefaultPortsType"/>
             <xs:element name="IPv4Filter" type="xs:string"/>
             <xs:element name="IPv6Filter" type="xs:string"/>
+            <xs:element name="EnableCompatibilityHttpListener" type="xs:boolean"/>  <!-- added by jOVAL -->
+            <xs:element name="EnableCompatibilityHttpsListener" type="xs:boolean"/> <!-- added by jOVAL -->
             <xs:element name="CertificateThumbprint" type="xs:string" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
@@ -95,4 +97,5 @@
             <xs:element name="MaxShellsPerUser" type="xs:unsignedLong" default="2"/>
         </xs:sequence>
     </xs:complexType>
+    <xs:element name="Config" type="cfg:ConfigType"/> <!-- added by jOVAL -->
 </xs:schema>
