@@ -14,9 +14,10 @@ import org.xmlsoap.ws.addressing.EndpointReferenceType;
 import org.dmtf.wsman.AttributableDuration;
 import org.dmtf.wsman.AttributableURI;
 
-import org.joval.os.windows.remote.winrm.IOperation;
-import org.joval.os.windows.remote.winrm.IPort;
-import org.joval.os.windows.remote.winrm.WSMFault;
+import org.joval.intf.ws.IOperation;
+import org.joval.intf.ws.IPort;
+import org.joval.os.windows.remote.winrm.IWSMConstants;
+import org.joval.ws.WSMFault;
 
 /**
  * Base class for all WS-Management operations.
@@ -24,7 +25,7 @@ import org.joval.os.windows.remote.winrm.WSMFault;
  * @author David A. Solin
  * @version %I%, %G%
  */
-abstract class BaseOperation<I, O> implements IOperation<I, O> {
+abstract class BaseOperation<I, O> implements IOperation<I, O>, IWSMConstants {
     String action;
     List<Object> headers;
     AttributableDuration duration = null;

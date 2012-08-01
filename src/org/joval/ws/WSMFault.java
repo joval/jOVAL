@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.windows.remote.winrm;
+package org.joval.ws;
 
 import java.util.List;
 import java.util.Locale;
@@ -18,18 +18,7 @@ import org.w3c.soap.envelope.Reasontext;
  * @version %I% %G%
  */
 public class WSMFault extends Exception {
-    private String raw;
-
-    public String getMessage() {
-	return raw;
-    }
-
-    // Internal
-
-    /**
-     * The constructor is intended to be called exclusively by the WSMPort class.
-     */
-    WSMFault(Fault fault, String raw) {
-	this.raw = raw;
+    public WSMFault(String message) {
+	super(message);
     }
 }

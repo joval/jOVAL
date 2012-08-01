@@ -3,8 +3,8 @@
 
 package org.joval.os.windows.remote.winrm.operation;
 
-import org.dmtf.wsman.Receive;
-import org.dmtf.wsman.ReceiveResponse;
+import com.microsoft.wsman.shell.Receive;
+import com.microsoft.wsman.shell.ReceiveResponse;
 
 public class ReceiveOperation extends BaseOperation<Receive, ReceiveResponse> {
     public ReceiveOperation(Receive input) {

@@ -16,8 +16,8 @@ import org.xmlsoap.ws.transfer.AnyXmlType;
 import org.xmlsoap.ws.transfer.CreateResponseType;
 import org.xmlsoap.ws.transfer.ResourceCreated;
 
-import org.joval.os.windows.remote.winrm.IPort;
-import org.joval.os.windows.remote.winrm.WSMFault;
+import org.joval.intf.ws.IPort;
+import org.joval.ws.WSMFault;
 
 /**
  * IOperation implementation of WS-Transfer:Create

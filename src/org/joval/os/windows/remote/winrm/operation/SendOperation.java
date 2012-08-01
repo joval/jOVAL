@@ -3,10 +3,10 @@
 
 package org.joval.os.windows.remote.winrm.operation;
 
-import org.dmtf.wsman.Send;
-import org.dmtf.wsman.SendResponse;
+import com.microsoft.wsman.shell.Send;
+import com.microsoft.wsman.shell.SendResponse;
 
-public class SendOperation implements IOperation<Send, SendResponse> {
+public class SendOperation extends BaseOperation<Send, SendResponse> {
     public SendOperation(Send input) {
 	super("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Send", input);
     }

@@ -10,6 +10,8 @@ CLASSES=\
 	org.joval.intf.ssh.ISftpError					\
 	org.joval.intf.ssh.system.ISshSession				\
 	org.joval.intf.windows.identity.IWindowsCredential		\
+	org.joval.intf.ws.IOperation					\
+	org.joval.intf.ws.IPort						\
 	org.joval.io.TailDashF						\
 	org.joval.os.cisco.system.IosSession				\
 	org.joval.os.cisco.system.TechSupport				\
@@ -66,6 +68,24 @@ CLASSES=\
 	org.joval.os.windows.remote.registry.Registry			\
 	org.joval.os.windows.remote.system.WindowsProcess		\
 	org.joval.os.windows.remote.system.WindowsSession		\
+	org.joval.os.windows.remote.winrm.Client			\
+	org.joval.os.windows.remote.winrm.IWSMConstants			\
+	org.joval.os.windows.remote.winrm.Server			\
+	org.joval.os.windows.remote.winrm.WSMPort			\
+	org.joval.os.windows.remote.winrm.operation.BaseOperation	\
+	org.joval.os.windows.remote.winrm.operation.CommandOperation	\
+	org.joval.os.windows.remote.winrm.operation.CreateOperation	\
+	org.joval.os.windows.remote.winrm.operation.DeleteOperation	\
+	org.joval.os.windows.remote.winrm.operation.EnumerateOperation	\
+	org.joval.os.windows.remote.winrm.operation.GetOperation	\
+	org.joval.os.windows.remote.winrm.operation.PullOperation	\
+	org.joval.os.windows.remote.winrm.operation.PutOperation	\
+	org.joval.os.windows.remote.winrm.operation.ReceiveOperation	\
+	org.joval.os.windows.remote.winrm.operation.ReleaseOperation	\
+	org.joval.os.windows.remote.winrm.operation.SendOperation	\
+	org.joval.os.windows.remote.winrm.operation.SignalOperation	\
+	org.joval.os.windows.remote.winrm.operation.SubscribeOperation	\
+	org.joval.os.windows.remote.winrm.operation.UnsubscribeOperation\
 	org.joval.os.windows.remote.wmi.scripting.SWbemObject		\
 	org.joval.os.windows.remote.wmi.scripting.SWbemObjectSet	\
 	org.joval.os.windows.remote.wmi.scripting.SWbemProperty		\
@@ -77,6 +97,7 @@ CLASSES=\
 	org.joval.os.windows.system.Environment				\
 	org.joval.plugin.BasePlugin					\
 	org.joval.plugin.RemotePlugin					\
+	org.joval.protocol.http.NtlmHttpURLConnection			\
 	org.joval.protocol.netconf.NetconfSession			\
 	org.joval.ssh.identity.SshCredential				\
 	org.joval.ssh.io.SftpFile					\
@@ -96,4 +117,5 @@ CLASSES=\
 	org.joval.test.WMI						\
 	org.joval.util.AbstractBaseSession				\
 	org.joval.util.AbstractSession					\
-	org.joval.util.JSchLogger
+	org.joval.util.JSchLogger					\
+	org.joval.ws.WSMFault

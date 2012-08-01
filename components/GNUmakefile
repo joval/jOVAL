@@ -11,6 +11,7 @@ rebuild:
 clean:
 	@$(MAKE) --keep-going --directory=scap clean
 	@$(MAKE) --keep-going --directory=schematron clean
+	@$(MAKE) --keep-going --directory=ws-man clean
 	@$(MAKE) --keep-going --directory=sdk dist-clean
 	@$(MAKE) --keep-going --directory=jovaldi dist-clean
 	@$(MAKE) --keep-going --directory=xpert clean
@@ -18,11 +19,14 @@ clean:
 _jovaldi: _sdk _schematron _xpert
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
-_sdk: _scap
+_sdk: _scap _ws-man
 	@$(MAKE) --keep-going --directory=sdk dist
 
 _scap:
 	@$(MAKE) --keep-going --directory=scap all
+
+_ws-man:
+	@$(MAKE) --keep-going --directory=ws-man install
 
 _schematron:
 	@$(MAKE) --keep-going --directory=schematron all

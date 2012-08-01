@@ -4,10 +4,9 @@
 package org.joval.os.windows.remote.winrm.operation;
 
 import org.xmlsoap.ws.enumeration.Release;
-import org.xmlsoap.ws.enumeration.ReleaseResponse;
 
-public class ReleaseOperation extends BaseOperation<Release, ReleaseResponse> {
-    public ReleaseOperation(ReleaseMessage input) {
+public class ReleaseOperation extends BaseOperation<Release, Object> {
+    public ReleaseOperation(Release input) {
 	super("http://schemas.xmlsoap.org/ws/2004/09/enumeration/Release", input);
     }
 }

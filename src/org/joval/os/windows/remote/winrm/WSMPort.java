@@ -29,7 +29,6 @@ import javax.xml.transform.dom.DOMSource;
 import org.ietf.jgss.GSSException;
 import org.w3c.dom.Node;
 
-//import jcifs.http.NtlmHttpURLConnection;
 import net.sourceforge.spnego.SpnegoHttpURLConnection;
 
 import org.dmtf.wsman.MaxEnvelopeSizeType;
@@ -43,8 +42,10 @@ import org.w3c.soap.envelope.Envelope;
 import org.w3c.soap.envelope.Fault;
 import org.w3c.soap.envelope.Header;
 
+import org.joval.intf.ws.IPort;
 import org.joval.protocol.http.NtlmHttpURLConnection;
 import org.joval.util.Base64;
+import org.joval.ws.WSMFault;
 
 /**
  * An IPort implementation for WS-Management.
@@ -52,7 +53,7 @@ import org.joval.util.Base64;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WSMPort implements IPort {
+public class WSMPort implements IPort, IWSMConstants {
 
     private static Properties schemaProps = new Properties();
     static {
@@ -283,7 +284,7 @@ System.out.write(bytes);
 			result = ((JAXBElement)result).getValue();
 		    }
 		    if (result instanceof Fault) {
-			throw new WSMFault((Fault)result, raw);
+			throw new WSMFault(raw);
 		    }
 		    break;
 

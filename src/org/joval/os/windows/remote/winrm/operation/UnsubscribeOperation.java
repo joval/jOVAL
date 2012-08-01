@@ -4,9 +4,8 @@
 package org.joval.os.windows.remote.winrm.operation;
 
 import org.xmlsoap.ws.eventing.Unsubscribe;
-import org.xmlsoap.ws.eventing.UnsubscribeResponse;
 
-public class UnsubscribeOperation extends BaseOperation<Unssubscribe, UnsubscribeResponse> {
+public class UnsubscribeOperation extends BaseOperation<Unsubscribe, Object> {
     public UnsubscribeOperation(Unsubscribe input) {
 	super("http://schemas.xmlsoap.org/ws/2004/08/eventing/Unsubscribe", input);
     }

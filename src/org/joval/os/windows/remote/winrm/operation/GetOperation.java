@@ -11,8 +11,8 @@ import org.xmlsoap.ws.transfer.AnyXmlType;
 import org.xmlsoap.ws.transfer.ObjectFactory;
 import org.dmtf.wsman.SelectorSetType;
 
-import org.joval.os.windows.remote.winrm.IPort;
-import org.joval.os.windows.remote.winrm.WSMFault;
+import org.joval.intf.ws.IPort;
+import org.joval.ws.WSMFault;
 
 public class GetOperation extends BaseOperation<AnyXmlOptionalType, AnyXmlType> {
     public GetOperation(AnyXmlOptionalType input) {

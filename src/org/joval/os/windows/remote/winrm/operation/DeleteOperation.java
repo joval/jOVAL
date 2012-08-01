@@ -10,8 +10,8 @@ import org.dmtf.wsman.SelectorSetType;
 import org.xmlsoap.ws.transfer.AnyXmlOptionalType;
 import org.xmlsoap.ws.transfer.ObjectFactory;
 
-import org.joval.os.windows.remote.winrm.IPort;
-import org.joval.os.windows.remote.winrm.WSMFault;
+import org.joval.intf.ws.IPort;
+import org.joval.ws.WSMFault;
 
 public class DeleteOperation extends BaseOperation<Object, AnyXmlOptionalType> {
     public DeleteOperation() {

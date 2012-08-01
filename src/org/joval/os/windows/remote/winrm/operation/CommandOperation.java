@@ -3,8 +3,8 @@
 
 package org.joval.os.windows.remote.winrm.operation;
 
-import org.dmtf.wsman.CommandLine;
-import org.dmtf.wsman.CommandResponse;
+import com.microsoft.wsman.shell.CommandLine;
+import com.microsoft.wsman.shell.CommandResponse;
 
 public class CommandOperation extends BaseOperation<CommandLine, CommandResponse> {
     public CommandOperation(CommandLine input) {

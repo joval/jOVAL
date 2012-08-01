@@ -49,6 +49,7 @@ import com.microsoft.wsman.shell.ShellType;
 import com.microsoft.wsman.shell.EnvironmentVariable;
 import com.microsoft.wsman.shell.EnvironmentVariableList;
 
+import org.joval.intf.ws.IPort;
 import org.joval.os.windows.remote.winrm.operation.EnumerateOperation;
 import org.joval.os.windows.remote.winrm.operation.PullOperation;
 import org.joval.os.windows.remote.winrm.operation.CreateOperation;
@@ -260,7 +261,6 @@ public class Client implements IWSMConstants {
 
     public void testSubscribe() throws Exception {
 	Subscribe subscribe = WSMPort.Factories.EVENTING.createSubscribe();
-	
 
 	SubscribeOperation operation = new SubscribeOperation(subscribe);
 	operation.addResourceURI("http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog");
@@ -288,8 +288,7 @@ public class Client implements IWSMConstants {
     }
 
     public void testShell() throws Exception {
-//String uri = "http://schemas.microsoft.com/wbem/wsman/1/windows/shell";
-String uri = "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd";
+	String uri = "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd";
 	AnyXmlType arg = Factories.TRANSFER.createAnyXmlType();
 	ShellType shell = Factories.SHELL.createShellType();
 	EnvironmentVariableList env = Factories.SHELL.createEnvironmentVariableList();
