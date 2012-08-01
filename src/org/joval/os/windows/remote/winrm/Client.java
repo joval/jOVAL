@@ -37,8 +37,6 @@ import org.xmlsoap.ws.eventing.Subscribe;
 import org.xmlsoap.ws.eventing.SubscribeResponse;
 import org.xmlsoap.ws.transfer.AnyXmlOptionalType;
 import org.xmlsoap.ws.transfer.AnyXmlType;
-import org.xmlsoap.ws.transfer.CreateResponseType;
-import org.xmlsoap.ws.transfer.ResourceCreated;
 import com.microsoft.wsman.config.ClientDefaultPortsType;
 import com.microsoft.wsman.config.ClientAuthType;
 import com.microsoft.wsman.config.ClientType;
@@ -320,33 +318,29 @@ String uri = "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd";
 	option2.setValue("437");
 	options.getOption().add(option2);
 	createOperation.addOptionSet(options);
-	CreateResponseType response = createOperation.dispatch(port);
-	ResourceCreated resource = response.getResourceCreated();
+	Object response = createOperation.dispatch(port);
 	String shellId = null;
-	for (Object obj : resource.getAny()) {
-	    if (obj instanceof EndpointReferenceType) {
-		for (Object param : ((EndpointReferenceType)obj).getReferenceParameters().getAny()) {
-		    if (param instanceof JAXBElement) {
-			param = ((JAXBElement)param).getValue();
-		    }
-		    if (param instanceof SelectorSetType) {
-			for (SelectorType sel : ((SelectorSetType)param).getSelector()) {
-			    if ("ShellId".equals(sel.getName())) {
-				shellId = (String)sel.getContent().get(0);
-				break;
-			    } else {
-				System.out.println("selector name is " + sel.getName());
-			    }
-			}
-		    } else {
-			System.out.println("param is " + param.getClass().getName());
-		    }
-		    if (shellId != null) break;
+	if (response instanceof EndpointReferenceType) {
+	    for (Object param : ((EndpointReferenceType)response).getReferenceParameters().getAny()) {
+		if (param instanceof JAXBElement) {
+		    param = ((JAXBElement)param).getValue();
 		}
-	    } else {
-		System.out.println("obj is " + obj.getClass().getName());
+		if (param instanceof SelectorSetType) {
+		    for (SelectorType sel : ((SelectorSetType)param).getSelector()) {
+			if ("ShellId".equals(sel.getName())) {
+			    shellId = (String)sel.getContent().get(0);
+			    break;
+			} else {
+			    System.out.println("selector name is " + sel.getName());
+			}
+		   }
+		} else {
+		    System.out.println("param is " + param.getClass().getName());
+		}
+		if (shellId != null) break;
 	    }
-	    if (shellId != null) break;
+	} else {
+	    System.out.println("response is " + response.getClass().getName());
 	}
 	if (shellId != null) {
 	    System.out.println("Created shell " + shellId);

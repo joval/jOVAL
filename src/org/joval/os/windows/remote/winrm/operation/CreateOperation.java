@@ -8,6 +8,7 @@ import java.util.List;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.namespace.QName;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import org.dmtf.wsman.OptionSet;
@@ -18,11 +19,16 @@ import org.xmlsoap.ws.transfer.ResourceCreated;
 import org.joval.os.windows.remote.winrm.IPort;
 import org.joval.os.windows.remote.winrm.WSMFault;
 
-public class CreateOperation extends BaseOperation<AnyXmlType, CreateResponseType> {
+/**
+ * IOperation implementation of WS-Transfer:Create
+ *
+ * @author David A. Solin
+ * @version %I% %G%
+ */
+public class CreateOperation extends BaseOperation<AnyXmlType, Object> {
     public CreateOperation(AnyXmlType input) {
 	super("http://schemas.xmlsoap.org/ws/2004/09/transfer/Create", input);
     }
-
 
     public void addOptionSet(OptionSet options) {
 	headers.add(options);
@@ -32,26 +38,28 @@ public class CreateOperation extends BaseOperation<AnyXmlType, CreateResponseTyp
     static final String WSA10 = "http://www.w3.org/2005/08/addressing";
 
     /**
-     * The CreateResponseType is merely a container for one of the two EndpointReferenceType classes.  This confuses
-     * JAXB, and forces it to unmarshal the XML into DOM Nodes.
+     * The CreateResponseType is merely a container for a ResourceCreated, which is itself defined to be one of the two
+     * EndpointReferenceType classes.  Since XSD does not allow unions of complex types, the schema is loosely defined using
+     * xs:any, and consequently, JAXB unmarshals the XML into DOM Elements.
      *
-     * So, to make the API nicer, we put the appropriate EndpointReferenceType into the ResourceCreated's any contents.
+     * This IOperation implementation has no such restrictions, so we construct the appropriate EndpointReferenceType from
+     * the DOM, and return it.
+     *
+     * @returns either an org.w3c.ws.addressing.EndpointReferenceType, or an org.xmlsoap.ws.addressing.EndpointReferenceType.
      */
     @Override
-    public CreateResponseType dispatch(IPort port) throws IOException, JAXBException, WSMFault {
+    public Object dispatch(IPort port) throws IOException, JAXBException, WSMFault {
         Object obj = dispatch0(port);
 	if (obj instanceof ResourceCreated) {
 	    //
 	    // ResourceCreated is ambiguous, so its children will be Nodes.  We must determine the appropriate
 	    // type and unmarshall the correct JAXB objects.
 	    //
-	    CreateResponseType response = Factories.TRANSFER.createCreateResponseType();
-	    List<Object> list = ((ResourceCreated)obj).getAny();
-	    String ns = ((Node)list.get(0)).getNamespaceURI();
+	    List<Element> list = ((ResourceCreated)obj).getAny();
+	    String ns = list.get(0).getNamespaceURI();
 	    if (WSA10.equals(ns)) {
 		org.w3c.ws.addressing.EndpointReferenceType ref = Factories.WSADDRESS.createEndpointReferenceType();
-		for (Object element : list) {
-		    Node node = (Node)element;
+		for (Element node : list) {
 		    if ("Address".equals(node.getLocalName())) {
 			org.w3c.ws.addressing.AttributedURIType address = Factories.WSADDRESS.createAttributedURIType();
 			int numAttrs = node.getAttributes().getLength();
@@ -95,9 +103,7 @@ public class CreateOperation extends BaseOperation<AnyXmlType, CreateResponseTyp
 			ref.getAny().add(node);
 		    }
 		}
-		ResourceCreated res = Factories.TRANSFER.createResourceCreated();
-		res.getAny().add(ref);
-		response.setResourceCreated(res);
+		return ref;
 	    } else if (WSA04.equals(ns)) {
 		org.xmlsoap.ws.addressing.EndpointReferenceType ref = Factories.ADDRESS.createEndpointReferenceType();
 		for (Object element : list) {
@@ -158,15 +164,13 @@ public class CreateOperation extends BaseOperation<AnyXmlType, CreateResponseTyp
 			ref.getAny().add(node);
 		    }
 		}
-		ResourceCreated res = Factories.TRANSFER.createResourceCreated();
-		res.getAny().add(ref);
-		response.setResourceCreated(res);
+		return ref;
 	    } else {
-        	response.setResourceCreated((ResourceCreated)obj);
+        	throw new IllegalArgumentException("Namespace: " + ns);
 	    }
-	    return response;
-        }
-	throw new IllegalArgumentException(obj.getClass().getName());
+        } else {
+	    throw new IllegalArgumentException(obj.getClass().getName());
+	}
     }
 
     // Private
