@@ -4,6 +4,7 @@
 package org.joval.os.windows.remote.winrm;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.math.BigInteger;
@@ -49,6 +50,7 @@ import com.microsoft.wsman.shell.ShellType;
 import com.microsoft.wsman.shell.EnvironmentVariable;
 import com.microsoft.wsman.shell.EnvironmentVariableList;
 
+import org.joval.intf.system.IProcess;
 import org.joval.intf.ws.IPort;
 import org.joval.os.windows.remote.winrm.operation.EnumerateOperation;
 import org.joval.os.windows.remote.winrm.operation.PullOperation;
@@ -232,6 +234,10 @@ public class Client implements IWSMConstants {
     }
 
     public void testEnumerate() throws Exception {
+	String uri = SHELL_URI;
+//	String uri = "http://schemas.microsoft.com/wbem/wsman/1/wmi/root/cimv2/Win32_Processor";
+//	String uri = "http://schemas.microsoft.com/wbem/wsman/1/config/service/certmapping";
+
 	Enumerate enumerate = WSMPort.Factories.ENUMERATION.createEnumerate();
 	AttributableEmpty optimize = WSMPort.Factories.WSMAN.createAttributableEmpty();
 	enumerate.getAny().add(WSMPort.Factories.WSMAN.createOptimizeEnumeration(optimize));
@@ -239,23 +245,27 @@ public class Client implements IWSMConstants {
 	maxElements.setValue(new BigInteger("1"));
 	enumerate.getAny().add(WSMPort.Factories.WSMAN.createMaxElements(maxElements));
 	EnumerateOperation operation = new EnumerateOperation(new Enumerate());
-	operation.addResourceURI("http://schemas.microsoft.com/wbem/wsman/1/wmi/root/cimv2/Win32_Processor");
-//	operation.addResourceURI("http://schemas.microsoft.com/wbem/wsman/1/config/service/certmapping");
+	operation.addResourceURI(uri);
 	EnumerateResponse response = operation.dispatch(port);
-
-
 
 	Pull pull = WSMPort.Factories.ENUMERATION.createPull();
 	pull.setEnumerationContext(response.getEnumerationContext());
 	pull.setMaxElements(new BigInteger("1"));
 	PullOperation pullOperation = new PullOperation(pull);
-	pullOperation.addResourceURI("http://schemas.microsoft.com/wbem/wsman/1/wmi/root/cimv2/Win32_Processor");
-//	pullOperation.addResourceURI("http://schemas.microsoft.com/wbem/wsman/1/config/service/certmapping");
+	pullOperation.addResourceURI(uri);
 
 	boolean endOfSequence = false;
 	while(!endOfSequence) {
 	    PullResponse pullResponse = pullOperation.dispatch(port);
-	    endOfSequence = pullResponse.isSetEndOfSequence();
+	    if (pullResponse.isSetItems()) {
+		int itemNum = 0;
+		for (Object obj : pullResponse.getItems().getAny()) {
+		    System.out.println("Enumerate item " + itemNum++ + " is a " + obj.getClass().getName());
+		}
+	    }
+	    if (pullResponse.isSetEndOfSequence()) {
+		endOfSequence = true;
+	    }
 	}
     }
 
@@ -288,76 +298,25 @@ public class Client implements IWSMConstants {
     }
 
     public void testShell() throws Exception {
-	String uri = "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd";
-	AnyXmlType arg = Factories.TRANSFER.createAnyXmlType();
-	ShellType shell = Factories.SHELL.createShellType();
-	EnvironmentVariableList env = Factories.SHELL.createEnvironmentVariableList();
-	EnvironmentVariable var = Factories.SHELL.createEnvironmentVariable();
-	var.setName("test");
-	var.setValue("1");
-	env.getVariable().add(var);
-	shell.setEnvironment(env);
-	shell.setWorkingDirectory("%windir%");
-//	shell.setLifetime(Factories.XMLDT.newDuration(1000000));
-	shell.getOutputStreams().add("stdout");
-	shell.getOutputStreams().add("stderr");
-	shell.getInputStreams().add("stdin");
-	arg.setAny(Factories.SHELL.createShell(shell));
-	CreateOperation createOperation = new CreateOperation(arg);
-	createOperation.addResourceURI(uri);
-	createOperation.setTimeout(60000);
+	Shell shell = new Shell(port, null, "%windir%");
+System.out.println("Created shell " + shell.getId());
 
-	OptionSet options = Factories.WSMAN.createOptionSet();
-	OptionType option1 = Factories.WSMAN.createOptionType();
-	option1.setName("WINRS_NOPROFILE");
-	option1.setValue("TRUE");
-	options.getOption().add(option1);
-	OptionType option2 = Factories.WSMAN.createOptionType();
-	option2.setName("WINRS_CODEPAGE");
-	option2.setValue("437");
-	options.getOption().add(option2);
-	createOperation.addOptionSet(options);
-	Object response = createOperation.dispatch(port);
-	String shellId = null;
-	if (response instanceof EndpointReferenceType) {
-	    for (Object param : ((EndpointReferenceType)response).getReferenceParameters().getAny()) {
-		if (param instanceof JAXBElement) {
-		    param = ((JAXBElement)param).getValue();
-		}
-		if (param instanceof SelectorSetType) {
-		    for (SelectorType sel : ((SelectorSetType)param).getSelector()) {
-			if ("ShellId".equals(sel.getName())) {
-			    shellId = (String)sel.getContent().get(0);
-			    break;
-			} else {
-			    System.out.println("selector name is " + sel.getName());
-			}
-		   }
-		} else {
-		    System.out.println("param is " + param.getClass().getName());
-		}
-		if (shellId != null) break;
-	    }
-	} else {
-	    System.out.println("response is " + response.getClass().getName());
-	}
-	if (shellId != null) {
-	    System.out.println("Created shell " + shellId);
+try {
+    String[] args = new String[] {"TARDIS"};
+    IProcess p = shell.createProcess("ping", args);
+    p.start();
+    byte[] buff = new byte[256];
+    int len = 0;
+    InputStream in = p.getInputStream();
+    while((len = in.read(buff)) > 0) {
+	System.out.write(buff, 0, len);
+    }
+    System.out.println("Exit Code: " + p.exitValue());
+} catch (Exception e) {
+    e.printStackTrace();
+}
 
-	    // do stuff in the shell
-
-	    // close/delete the shell
-	    DeleteOperation deleteOperation = new DeleteOperation();
-	    deleteOperation.addResourceURI(uri);
-	    SelectorSetType set = WSMPort.Factories.WSMAN.createSelectorSetType();
-	    SelectorType sel = WSMPort.Factories.WSMAN.createSelectorType();
-	    sel.setName("ShellId");
-	    sel.getContent().add(shellId);
-	    set.getSelector().add(sel);
-	    deleteOperation.addSelectorSet(set);
-	    if (deleteOperation.dispatch(port) == null) {
-		System.out.println("Deleted shell " + shellId);
-	    }
-	}
+	shell.finalize();
+System.out.println("Destroyed shell");
     }
 }

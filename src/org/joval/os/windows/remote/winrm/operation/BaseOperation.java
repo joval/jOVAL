@@ -13,6 +13,8 @@ import javax.xml.datatype.Duration;
 import org.xmlsoap.ws.addressing.EndpointReferenceType;
 import org.dmtf.wsman.AttributableDuration;
 import org.dmtf.wsman.AttributableURI;
+import org.dmtf.wsman.OptionSet;
+import org.dmtf.wsman.SelectorSetType;
 
 import org.joval.intf.ws.IOperation;
 import org.joval.intf.ws.IPort;
@@ -37,7 +39,16 @@ abstract class BaseOperation<I, O> implements IOperation<I, O>, IWSMConstants {
 	headers = new Vector<Object>();
     }
 
-    // Implement IOperation (sparsely)
+
+    public void addOptionSet(OptionSet options) {
+	headers.add(options);
+    }
+
+    public void addSelectorSet(SelectorSetType selectors) {
+	headers.add(Factories.WSMAN.createSelectorSet(selectors));
+    }
+
+    // Implement IOperation
 
     public void setTimeout(long millis) {
 	if (duration == null) {

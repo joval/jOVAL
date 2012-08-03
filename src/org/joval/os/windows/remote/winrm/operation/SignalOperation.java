@@ -3,11 +3,13 @@
 
 package org.joval.os.windows.remote.winrm.operation;
 
+import javax.xml.bind.JAXBElement;
+
 import com.microsoft.wsman.shell.Signal;
 import com.microsoft.wsman.shell.SignalResponse;
 
-public class SignalOperation extends BaseOperation<Signal, SignalResponse> {
+public class SignalOperation extends BaseOperation<JAXBElement<Signal>, SignalResponse> {
     public SignalOperation(Signal input) {
-	super("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Signal", input);
+	super("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Signal", Factories.SHELL.createSignal(input));
     }
 }

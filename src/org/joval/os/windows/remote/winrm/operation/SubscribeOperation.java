@@ -3,16 +3,11 @@
 
 package org.joval.os.windows.remote.winrm.operation;
 
-import org.dmtf.wsman.OptionSet;
 import org.xmlsoap.ws.eventing.Subscribe;
 import org.xmlsoap.ws.eventing.SubscribeResponse;
 
 public class SubscribeOperation extends BaseOperation<Subscribe, SubscribeResponse> {
     public SubscribeOperation(Subscribe input) {
 	super("http://schemas.xmlsoap.org/ws/2004/08/eventing/Subscribe", input);
-    }
-
-    public void addOptionSet(OptionSet options) {
-	headers.add(options);
     }
 }

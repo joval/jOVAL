@@ -16,6 +16,8 @@ import javax.xml.namespace.QName;
 public interface IWSMConstants {
     String URL_PREFIX = "wsman";
 
+    String SHELL_URI = "http://schemas.microsoft.com/wbem/wsman/1/windows/shell/cmd";
+
     int HTTP_PORT   = 5985;
     int HTTPS_PORT  = 5986;
 

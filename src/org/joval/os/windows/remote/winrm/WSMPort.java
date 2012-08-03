@@ -125,19 +125,17 @@ scheme = AuthScheme.NTLM;
 
     // Implement IPort
 
-    public Object unmarshal(Node node) throws JAXBException {
+    public synchronized Object unmarshal(Node node) throws JAXBException {
 	return unmarshaller.unmarshal(new DOMSource(node));
     }
 
-    public Object dispatch(String action, List<Object> headers, Object input) throws IOException, JAXBException, WSMFault {
+    public synchronized Object dispatch(String action, List<Object> headers, Object input)
+		throws IOException, JAXBException, WSMFault {
+
 	Header header = Factories.SOAP.createHeader();
 
 	AttributedURI to = Factories.ADDRESS.createAttributedURI();
-//	to.setValue(url);
-{
-URL u = new URL(url);
-to.setValue(u.getProtocol()+"://"+u.getHost()+":80/"+u.getPath());
-}
+	to.setValue(url);
 	to.getOtherAttributes().put(MUST_UNDERSTAND, "true");
 	header.getAny().add(Factories.ADDRESS.createTo(to));
 
@@ -258,9 +256,13 @@ System.out.println("Connecting to " + url + " using authScheme " + scheme);
 
 		conn.connect();
 		OutputStream out = conn.getOutputStream();
+System.out.println("**************BEGIN****************");
+System.out.println("*                                 *");
+System.out.println("Client sending SOAP Message:");
 System.out.write(bytes);
 		out.write(bytes);
 		out.flush();
+System.out.println("SOAP Message Sent");
 
 		int code = conn.getResponseCode();
 		switch(code) {
@@ -310,14 +312,19 @@ System.out.write(bytes);
 	} while (!success && nextAuthScheme(conn));
 
 //DAS
-if (result != null) System.out.println("Result is of type " + result.getClass().getName());
-else System.out.println("Result is NULL");
+if (result != null) {
+    System.out.println("SOAP reply body is of type " + result.getClass().getName());
+System.out.println("*** SOAP Reply Body ***");
+    marshaller.marshal(result, System.out);
+} else {
+    System.out.println("SOAP reply body is NULL");
+}
+System.out.println("*                                 *");
+System.out.println("****************END****************");
+
 	if (result instanceof JAXBElement) {
-//DAS
-marshaller.marshal(result, System.out);
 	    return ((JAXBElement)result).getValue();
 	} else {
-if (result != null) marshaller.marshal(result, System.out);
 	    return result;
 	}
     }

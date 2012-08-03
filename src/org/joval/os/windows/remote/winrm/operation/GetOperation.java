@@ -8,8 +8,6 @@ import javax.xml.bind.JAXBException;
 
 import org.xmlsoap.ws.transfer.AnyXmlOptionalType;
 import org.xmlsoap.ws.transfer.AnyXmlType;
-import org.xmlsoap.ws.transfer.ObjectFactory;
-import org.dmtf.wsman.SelectorSetType;
 
 import org.joval.intf.ws.IPort;
 import org.joval.ws.WSMFault;
@@ -17,10 +15,6 @@ import org.joval.ws.WSMFault;
 public class GetOperation extends BaseOperation<AnyXmlOptionalType, AnyXmlType> {
     public GetOperation(AnyXmlOptionalType input) {
 	super("http://schemas.xmlsoap.org/ws/2004/09/transfer/Get", input);
-    }
-
-    public void addSelectorSet(SelectorSetType selectors) {
-	headers.add(Factories.WSMAN.createSelectorSet(selectors));
     }
 
     @Override

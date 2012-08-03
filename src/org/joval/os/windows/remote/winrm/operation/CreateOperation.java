@@ -11,7 +11,6 @@ import javax.xml.namespace.QName;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import org.dmtf.wsman.OptionSet;
 import org.xmlsoap.ws.transfer.AnyXmlType;
 import org.xmlsoap.ws.transfer.CreateResponseType;
 import org.xmlsoap.ws.transfer.ResourceCreated;
@@ -28,10 +27,6 @@ import org.joval.ws.WSMFault;
 public class CreateOperation extends BaseOperation<AnyXmlType, Object> {
     public CreateOperation(AnyXmlType input) {
 	super("http://schemas.xmlsoap.org/ws/2004/09/transfer/Create", input);
-    }
-
-    public void addOptionSet(OptionSet options) {
-	headers.add(options);
     }
 
     static final String WSA04 = "http://schemas.xmlsoap.org/ws/2004/08/addressing";

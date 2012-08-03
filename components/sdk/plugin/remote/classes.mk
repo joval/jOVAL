@@ -70,7 +70,8 @@ CLASSES=\
 	org.joval.os.windows.remote.system.WindowsSession		\
 	org.joval.os.windows.remote.winrm.Client			\
 	org.joval.os.windows.remote.winrm.IWSMConstants			\
-	org.joval.os.windows.remote.winrm.Server			\
+	org.joval.os.windows.remote.winrm.Shell				\
+	org.joval.os.windows.remote.winrm.ShellCommand			\
 	org.joval.os.windows.remote.winrm.WSMPort			\
 	org.joval.os.windows.remote.winrm.operation.BaseOperation	\
 	org.joval.os.windows.remote.winrm.operation.CommandOperation	\

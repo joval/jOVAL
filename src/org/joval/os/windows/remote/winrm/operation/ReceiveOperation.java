@@ -3,11 +3,13 @@
 
 package org.joval.os.windows.remote.winrm.operation;
 
+import javax.xml.bind.JAXBElement;
+
 import com.microsoft.wsman.shell.Receive;
 import com.microsoft.wsman.shell.ReceiveResponse;
 
-public class ReceiveOperation extends BaseOperation<Receive, ReceiveResponse> {
+public class ReceiveOperation extends BaseOperation<JAXBElement<Receive>, ReceiveResponse> {
     public ReceiveOperation(Receive input) {
-	super("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Receive", input);
+	super("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/Receive", Factories.SHELL.createReceive(input));
     }
 }

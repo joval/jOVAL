@@ -6,7 +6,6 @@ package org.joval.os.windows.remote.winrm.operation;
 import java.io.IOException;
 import javax.xml.bind.JAXBException;
 
-import org.dmtf.wsman.SelectorSetType;
 import org.xmlsoap.ws.transfer.AnyXmlOptionalType;
 import org.xmlsoap.ws.transfer.ObjectFactory;
 
@@ -16,10 +15,6 @@ import org.joval.ws.WSMFault;
 public class DeleteOperation extends BaseOperation<Object, AnyXmlOptionalType> {
     public DeleteOperation() {
 	super("http://schemas.xmlsoap.org/ws/2004/09/transfer/Delete", null);
-    }
-
-    public void addSelectorSet(SelectorSetType selectors) {
-	headers.add(Factories.WSMAN.createSelectorSet(selectors));
     }
 
     @Override
