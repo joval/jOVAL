@@ -3,24 +3,18 @@
 
 package org.joval.ws;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Vector;
-import javax.xml.namespace.QName;
-
 import org.w3c.soap.envelope.Fault;
-import org.w3c.soap.envelope.Reasontext;
 
 /**
- * A WS-Management Fault-derived exception class
+ * A Web-Service (SOAP) Fault-derived exception class
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WSMFault extends Exception {
+public class WSFault extends Exception {
     Fault fault;
 
-    public WSMFault(Fault fault, String message) {
+    public WSFault(Fault fault, String message) {
 	super(message);
 	this.fault = fault;
     }

@@ -32,12 +32,13 @@ import org.w3c.soap.envelope.Fault;
 
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
+import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
-import org.joval.os.windows.remote.winrm.operation.CommandOperation;
-import org.joval.os.windows.remote.winrm.operation.ReceiveOperation;
-import org.joval.os.windows.remote.winrm.operation.SendOperation;
-import org.joval.os.windows.remote.winrm.operation.SignalOperation;
-import org.joval.ws.WSMFault;
+import org.joval.os.windows.remote.wsmv.operation.CommandOperation;
+import org.joval.os.windows.remote.wsmv.operation.ReceiveOperation;
+import org.joval.os.windows.remote.wsmv.operation.SendOperation;
+import org.joval.os.windows.remote.wsmv.operation.SignalOperation;
+import org.joval.ws.WSFault;
 
 /**
  * A WinRM client.  To use it, you must first do this on the target machine:
@@ -48,7 +49,7 @@ import org.joval.ws.WSMFault;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class ShellCommand implements IWSMConstants, IProcess {
+public class ShellCommand implements IWSMVConstants, IProcess {
     public enum Code {
 	TERMINATE("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/signal/terminate"),
 	CTL_C("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/signal/ctrl_c"),
@@ -153,7 +154,7 @@ public class ShellCommand implements IWSMConstants, IProcess {
 	return state == State.RUNNING;
     }
 
-    public void start() throws JAXBException, IOException, WSMFault {
+    public void start() throws JAXBException, IOException, WSFault {
 	CommandLine cl = Factories.SHELL.createCommandLine();
 	cl.setCommand(cmd);
 	if (args != null) {
@@ -278,7 +279,7 @@ public class ShellCommand implements IWSMConstants, IProcess {
 		}
 	    } catch (JAXBException e) {
 		throw new IOException(e);
-	    } catch (WSMFault e) {
+	    } catch (WSFault e) {
 		throw new IOException(e);
 	    }
 	}
@@ -382,7 +383,7 @@ public class ShellCommand implements IWSMConstants, IProcess {
 		}
 	    } catch (JAXBException e) {
 		throw new IOException(e);
-	    } catch (WSMFault e) {
+	    } catch (WSFault e) {
 		boolean retry = false;
 		Fault fault = e.getFault();
 		if (fault.isSetDetail()) {

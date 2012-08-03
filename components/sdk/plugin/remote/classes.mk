@@ -10,6 +10,7 @@ CLASSES=\
 	org.joval.intf.ssh.ISftpError					\
 	org.joval.intf.ssh.system.ISshSession				\
 	org.joval.intf.windows.identity.IWindowsCredential		\
+	org.joval.intf.windows.wsmv.IWSMVConstants			\
 	org.joval.intf.ws.IOperation					\
 	org.joval.intf.ws.IPort						\
 	org.joval.io.TailDashF						\
@@ -69,24 +70,23 @@ CLASSES=\
 	org.joval.os.windows.remote.system.WindowsProcess		\
 	org.joval.os.windows.remote.system.WindowsSession		\
 	org.joval.os.windows.remote.winrm.Client			\
-	org.joval.os.windows.remote.winrm.IWSMConstants			\
 	org.joval.os.windows.remote.winrm.Shell				\
 	org.joval.os.windows.remote.winrm.ShellCommand			\
-	org.joval.os.windows.remote.winrm.WSMPort			\
-	org.joval.os.windows.remote.winrm.operation.BaseOperation	\
-	org.joval.os.windows.remote.winrm.operation.CommandOperation	\
-	org.joval.os.windows.remote.winrm.operation.CreateOperation	\
-	org.joval.os.windows.remote.winrm.operation.DeleteOperation	\
-	org.joval.os.windows.remote.winrm.operation.EnumerateOperation	\
-	org.joval.os.windows.remote.winrm.operation.GetOperation	\
-	org.joval.os.windows.remote.winrm.operation.PullOperation	\
-	org.joval.os.windows.remote.winrm.operation.PutOperation	\
-	org.joval.os.windows.remote.winrm.operation.ReceiveOperation	\
-	org.joval.os.windows.remote.winrm.operation.ReleaseOperation	\
-	org.joval.os.windows.remote.winrm.operation.SendOperation	\
-	org.joval.os.windows.remote.winrm.operation.SignalOperation	\
-	org.joval.os.windows.remote.winrm.operation.SubscribeOperation	\
-	org.joval.os.windows.remote.winrm.operation.UnsubscribeOperation\
+	org.joval.os.windows.remote.wsmv.WSMVPort			\
+	org.joval.os.windows.remote.wsmv.operation.BaseOperation	\
+	org.joval.os.windows.remote.wsmv.operation.CommandOperation	\
+	org.joval.os.windows.remote.wsmv.operation.CreateOperation	\
+	org.joval.os.windows.remote.wsmv.operation.DeleteOperation	\
+	org.joval.os.windows.remote.wsmv.operation.EnumerateOperation	\
+	org.joval.os.windows.remote.wsmv.operation.GetOperation		\
+	org.joval.os.windows.remote.wsmv.operation.PullOperation	\
+	org.joval.os.windows.remote.wsmv.operation.PutOperation		\
+	org.joval.os.windows.remote.wsmv.operation.ReceiveOperation	\
+	org.joval.os.windows.remote.wsmv.operation.ReleaseOperation	\
+	org.joval.os.windows.remote.wsmv.operation.SendOperation	\
+	org.joval.os.windows.remote.wsmv.operation.SignalOperation	\
+	org.joval.os.windows.remote.wsmv.operation.SubscribeOperation	\
+	org.joval.os.windows.remote.wsmv.operation.UnsubscribeOperation	\
 	org.joval.os.windows.remote.wmi.scripting.SWbemObject		\
 	org.joval.os.windows.remote.wmi.scripting.SWbemObjectSet	\
 	org.joval.os.windows.remote.wmi.scripting.SWbemProperty		\
@@ -119,4 +119,4 @@ CLASSES=\
 	org.joval.util.AbstractBaseSession				\
 	org.joval.util.AbstractSession					\
 	org.joval.util.JSchLogger					\
-	org.joval.ws.WSMFault
+	org.joval.ws.WSFault

@@ -8,7 +8,7 @@ import java.util.List;
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.Duration;
 
-import org.joval.ws.WSMFault;
+import org.joval.ws.WSFault;
 
 /**
  * Interface describing a SOAP operation, with generic input and output types.
@@ -31,5 +31,5 @@ public interface IOperation<I, O> {
      * Get the output (i.e., SOAP response message body contents) for the operation, dispatched through the specified
      * port.
      */
-    O dispatch(IPort port) throws IOException, JAXBException, WSMFault;
+    O dispatch(IPort port) throws IOException, JAXBException, WSFault;
 }

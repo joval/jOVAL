@@ -30,13 +30,14 @@ import com.microsoft.wsman.shell.ShellType;
 
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
+import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
-import org.joval.os.windows.remote.winrm.operation.CommandOperation;
-import org.joval.os.windows.remote.winrm.operation.CreateOperation;
-import org.joval.os.windows.remote.winrm.operation.DeleteOperation;
-import org.joval.os.windows.remote.winrm.operation.EnumerateOperation;
-import org.joval.os.windows.remote.winrm.operation.PullOperation;
-import org.joval.ws.WSMFault;
+import org.joval.os.windows.remote.wsmv.operation.CommandOperation;
+import org.joval.os.windows.remote.wsmv.operation.CreateOperation;
+import org.joval.os.windows.remote.wsmv.operation.DeleteOperation;
+import org.joval.os.windows.remote.wsmv.operation.EnumerateOperation;
+import org.joval.os.windows.remote.wsmv.operation.PullOperation;
+import org.joval.ws.WSFault;
 
 /**
  * A WinRM client.  To use it, you must first do this on the target machine:
@@ -47,7 +48,7 @@ import org.joval.ws.WSMFault;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Shell implements IWSMConstants {
+public class Shell implements IWSMVConstants {
     public static final String STDOUT	= "stdout";
     public static final String STDERR	= "stderr";
     public static final String STDIN	= "stdin";
@@ -58,7 +59,7 @@ public class Shell implements IWSMConstants {
     /**
      * Create a new Shell.
      */
-    public Shell(IPort port, IEnvironment env, String cwd) throws JAXBException, IOException, WSMFault {
+    public Shell(IPort port, IEnvironment env, String cwd) throws JAXBException, IOException, WSFault {
 	this.port = port;
 
 	//
@@ -141,7 +142,7 @@ public class Shell implements IWSMConstants {
     /**
      * Grab an existing shell on the target. Uses WS-Transfer Enumerate to validate the existence of the ID.
      */
-    public Shell(IPort port, String id) throws JAXBException, IOException, WSMFault {
+    public Shell(IPort port, String id) throws JAXBException, IOException, WSFault {
 	this.port = port;
 	this.id = id;
 

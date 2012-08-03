@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.windows.remote.winrm.operation;
+package org.joval.os.windows.remote.wsmv.operation;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -16,18 +16,18 @@ import org.dmtf.wsman.AttributableURI;
 import org.dmtf.wsman.OptionSet;
 import org.dmtf.wsman.SelectorSetType;
 
+import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IOperation;
 import org.joval.intf.ws.IPort;
-import org.joval.os.windows.remote.winrm.IWSMConstants;
-import org.joval.ws.WSMFault;
+import org.joval.ws.WSFault;
 
 /**
- * Base class for all WS-Management operations.
+ * Base class for all WSMV operations.
  *
  * @author David A. Solin
  * @version %I%, %G%
  */
-abstract class BaseOperation<I, O> implements IOperation<I, O>, IWSMConstants {
+abstract class BaseOperation<I, O> implements IOperation<I, O>, IWSMVConstants {
     String action;
     List<Object> headers;
     AttributableDuration duration = null;
@@ -64,7 +64,7 @@ abstract class BaseOperation<I, O> implements IOperation<I, O>, IWSMConstants {
 	headers.add(Factories.WSMAN.createResourceURI(uri));
     }
 
-    public O dispatch(IPort port) throws IOException, JAXBException, WSMFault {
+    public O dispatch(IPort port) throws IOException, JAXBException, WSFault {
 	@SuppressWarnings("unchecked")
         O result = (O)dispatch0(port);
 	return result;
@@ -75,7 +75,7 @@ abstract class BaseOperation<I, O> implements IOperation<I, O>, IWSMConstants {
     /**
      * The internal implementation of dispatch, which subclasses that override the typed public dispatch method can use.
      */
-    final Object dispatch0(IPort port) throws IOException, JAXBException, WSMFault {
+    final Object dispatch0(IPort port) throws IOException, JAXBException, WSFault {
 	List<Object> dispatchHeaders = new Vector<Object>();
 	dispatchHeaders.addAll(headers);
 	if (duration != null) {

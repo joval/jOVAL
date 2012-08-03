@@ -10,7 +10,7 @@ import javax.xml.namespace.QName;
 import javax.xml.bind.JAXBException;
 import org.w3c.dom.Node;
 
-import org.joval.ws.WSMFault;
+import org.joval.ws.WSFault;
 
 /**
  * Interface defining a generic SOAP port, which is an address to which messages can be dispatched.
@@ -31,5 +31,5 @@ public interface IPort {
      * @param headers any headers that should be added to the SOAP envelope headers
      * @param body contents for the SOAP envelope body.
      */
-    Object dispatch(String action, List<Object> headers, Object body) throws IOException, JAXBException, WSMFault;
+    Object dispatch(String action, List<Object> headers, Object body) throws IOException, JAXBException, WSFault;
 }

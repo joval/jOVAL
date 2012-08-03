@@ -51,14 +51,16 @@ import com.microsoft.wsman.shell.EnvironmentVariable;
 import com.microsoft.wsman.shell.EnvironmentVariableList;
 
 import org.joval.intf.system.IProcess;
+import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
-import org.joval.os.windows.remote.winrm.operation.EnumerateOperation;
-import org.joval.os.windows.remote.winrm.operation.PullOperation;
-import org.joval.os.windows.remote.winrm.operation.CreateOperation;
-import org.joval.os.windows.remote.winrm.operation.DeleteOperation;
-import org.joval.os.windows.remote.winrm.operation.GetOperation;
-import org.joval.os.windows.remote.winrm.operation.PutOperation;
-import org.joval.os.windows.remote.winrm.operation.SubscribeOperation;
+import org.joval.os.windows.remote.wsmv.WSMVPort;
+import org.joval.os.windows.remote.wsmv.operation.EnumerateOperation;
+import org.joval.os.windows.remote.wsmv.operation.PullOperation;
+import org.joval.os.windows.remote.wsmv.operation.CreateOperation;
+import org.joval.os.windows.remote.wsmv.operation.DeleteOperation;
+import org.joval.os.windows.remote.wsmv.operation.GetOperation;
+import org.joval.os.windows.remote.wsmv.operation.PutOperation;
+import org.joval.os.windows.remote.wsmv.operation.SubscribeOperation;
 
 /**
  * A WinRM client.  To use it, you must first do this on the target machine:
@@ -69,7 +71,7 @@ import org.joval.os.windows.remote.winrm.operation.SubscribeOperation;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Client implements IWSMConstants {
+public class Client implements IWSMVConstants {
     public static void main(String[] argv) {
 	String host = argv[0];
 	String user = argv[1];
@@ -86,7 +88,7 @@ public class Client implements IWSMConstants {
 	String url = targetSpec.toString();
 
 	try {
-	    Client client = new Client(new WSMPort(url, user, pass));
+	    Client client = new Client(new WSMVPort(url, user, pass));
 
 /*
 	    client.testGet();
@@ -120,8 +122,8 @@ public class Client implements IWSMConstants {
 
 /*
 	operation.addResourceURI("http://schemas.microsoft.com/wbem/wsman/1/wmi/root/cimv2/Win32_Processor");
-	SelectorSetType set = WSMPort.Factories.WSMAN.createSelectorSetType();
-	SelectorType sel = WSMPort.Factories.WSMAN.createSelectorType();
+	SelectorSetType set = Factories.WSMAN.createSelectorSetType();
+	SelectorType sel = Factories.WSMAN.createSelectorType();
 	sel.setName("DeviceID");
 	sel.getContent().add("CPU0");
 	set.getSelector().add(sel);
@@ -211,16 +213,16 @@ public class Client implements IWSMConstants {
 	DeleteOperation operation = new DeleteOperation();
 	operation.addResourceURI("http://schemas.microsoft.com/wbem/wsman/1/config/service/certmapping");
 	//DAS
-	SelectorSetType set = WSMPort.Factories.WSMAN.createSelectorSetType();
-	SelectorType sel1 = WSMPort.Factories.WSMAN.createSelectorType();
+	SelectorSetType set = Factories.WSMAN.createSelectorSetType();
+	SelectorType sel1 = Factories.WSMAN.createSelectorType();
 	sel1.setName("Issuer");
 	sel1.getContent().add("1212131238d84023982e381f2");
 	set.getSelector().add(sel1);
-	SelectorType sel2 = WSMPort.Factories.WSMAN.createSelectorType();
+	SelectorType sel2 = Factories.WSMAN.createSelectorType();
 	sel2.setName("Subject");
 	sel2.getContent().add("*.sampl.com");
 	set.getSelector().add(sel2);
-	SelectorType sel3 = WSMPort.Factories.WSMAN.createSelectorType();
+	SelectorType sel3 = Factories.WSMAN.createSelectorType();
 	sel3.setName("URI");
 	sel3.getContent().add("http://schemas.microsoft.com/wbem/wsman/1/wmi/root/cimv2/*");
 	set.getSelector().add(sel3);
@@ -238,17 +240,17 @@ public class Client implements IWSMConstants {
 //	String uri = "http://schemas.microsoft.com/wbem/wsman/1/wmi/root/cimv2/Win32_Processor";
 //	String uri = "http://schemas.microsoft.com/wbem/wsman/1/config/service/certmapping";
 
-	Enumerate enumerate = WSMPort.Factories.ENUMERATION.createEnumerate();
-	AttributableEmpty optimize = WSMPort.Factories.WSMAN.createAttributableEmpty();
-	enumerate.getAny().add(WSMPort.Factories.WSMAN.createOptimizeEnumeration(optimize));
-	AttributablePositiveInteger maxElements = WSMPort.Factories.WSMAN.createAttributablePositiveInteger();
+	Enumerate enumerate = Factories.ENUMERATION.createEnumerate();
+	AttributableEmpty optimize = Factories.WSMAN.createAttributableEmpty();
+	enumerate.getAny().add(Factories.WSMAN.createOptimizeEnumeration(optimize));
+	AttributablePositiveInteger maxElements = Factories.WSMAN.createAttributablePositiveInteger();
 	maxElements.setValue(new BigInteger("1"));
-	enumerate.getAny().add(WSMPort.Factories.WSMAN.createMaxElements(maxElements));
+	enumerate.getAny().add(Factories.WSMAN.createMaxElements(maxElements));
 	EnumerateOperation operation = new EnumerateOperation(new Enumerate());
 	operation.addResourceURI(uri);
 	EnumerateResponse response = operation.dispatch(port);
 
-	Pull pull = WSMPort.Factories.ENUMERATION.createPull();
+	Pull pull = Factories.ENUMERATION.createPull();
 	pull.setEnumerationContext(response.getEnumerationContext());
 	pull.setMaxElements(new BigInteger("1"));
 	PullOperation pullOperation = new PullOperation(pull);
@@ -270,7 +272,7 @@ public class Client implements IWSMConstants {
     }
 
     public void testSubscribe() throws Exception {
-	Subscribe subscribe = WSMPort.Factories.EVENTING.createSubscribe();
+	Subscribe subscribe = Factories.EVENTING.createSubscribe();
 
 	SubscribeOperation operation = new SubscribeOperation(subscribe);
 	operation.addResourceURI("http://schemas.microsoft.com/wbem/wsman/1/windows/EventLog");

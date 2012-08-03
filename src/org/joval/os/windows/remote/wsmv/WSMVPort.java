@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.windows.remote.winrm;
+package org.joval.os.windows.remote.wsmv;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -42,18 +42,24 @@ import org.w3c.soap.envelope.Envelope;
 import org.w3c.soap.envelope.Fault;
 import org.w3c.soap.envelope.Header;
 
+import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
 import org.joval.protocol.http.NtlmHttpURLConnection;
 import org.joval.util.Base64;
-import org.joval.ws.WSMFault;
+import org.joval.ws.WSFault;
 
 /**
- * An IPort implementation for WS-Management.
+ * An IPort implementation for MS-WSMV (Microsoft Web Services Management for Vista).
+ *
+ * Since MS-WSMV is implemented on top of WS-Management, including the non-BP/1.0 compliant WS-Transfer specification,
+ * it is necessary to implement a custom SOAP client to perform the various operations therein entailed.  This is the
+ * IPort implementation for those operations, which should support both NTLM and Kerberos authentication, and HTTP
+ * encryption.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WSMPort implements IPort, IWSMConstants {
+public class WSMVPort implements IPort, IWSMVConstants {
     private static boolean debug = false;
 
     private static Properties schemaProps = new Properties();
@@ -95,14 +101,14 @@ public class WSMPort implements IPort, IWSMConstants {
     private Marshaller marshaller;
     private Unmarshaller unmarshaller;
 
-    public WSMPort(String url, String user, String pass) throws JAXBException {
+    public WSMVPort(String url, String user, String pass) throws JAXBException {
 	this(url, null, user, pass);
     }
 
     /**
      * MS-WSMV client.
      */
-    public WSMPort(String url, Proxy proxy, String user, String pass) throws JAXBException {
+    public WSMVPort(String url, Proxy proxy, String user, String pass) throws JAXBException {
 	JAXBContext ctx = JAXBContext.newInstance(schemaProps.getProperty("ws-man.packages"));
 	marshaller = ctx.createMarshaller();
 	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -131,7 +137,7 @@ scheme = AuthScheme.BASIC;
     }
 
     public synchronized Object dispatch(String action, List<Object> headers, Object input)
-		throws IOException, JAXBException, WSMFault {
+		throws IOException, JAXBException, WSFault {
 
 	Header header = Factories.SOAP.createHeader();
 
@@ -289,7 +295,7 @@ if (debug) System.out.println("SOAP Message Sent");
 			result = ((JAXBElement)result).getValue();
 		    }
 		    if (result instanceof Fault) {
-			throw new WSMFault((Fault)result, raw);
+			throw new WSFault((Fault)result, raw);
 		    }
 		    break;
 
