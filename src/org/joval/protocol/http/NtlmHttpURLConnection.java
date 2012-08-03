@@ -7,6 +7,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.Authenticator;
 import java.net.InetAddress;
 import java.net.HttpURLConnection;
@@ -46,8 +47,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
     private static final int MAX_REDIRECTS = 20;
 
     private HttpURLConnection connection;
-    private Map requestProperties;
-    private Map headerFields;
+    private Map<String, List<String>> headerFields, requestProperties;
     private ByteArrayOutputStream cachedOutput;
     private String authProperty;
     private String authMethod;
@@ -58,14 +58,17 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
     public NtlmHttpURLConnection(HttpURLConnection connection) {
 	super(connection.getURL());
 	this.connection = connection;
-	requestProperties = new HashMap();
+	requestProperties = new HashMap<String, List<String>>();
 	url = getURL();
 	String user = url.getUserInfo();
 	String pass = null;
 	String host = null;
 	String domain = null;
 	if (user != null) {
-	    user = URLDecoder.decode(user);
+	    try {
+		user = URLDecoder.decode(user, "UTF-8");
+	    } catch (UnsupportedEncodingException e) {
+	    }
 	    int ptr = user.indexOf(':');
 	    if (ptr != -1) {
 		pass = user.substring(ptr+1);
@@ -89,23 +92,19 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	session = auth.createSession();
     }
 
+    @Override
     public void connect() throws IOException {
 	if (connected) return;
 	connection.connect();
 	connected = true;
     }
 
-    private void handshake() throws IOException {
-	if (!handshakeComplete) {
-	    doHandshake();
-	    handshakeComplete = true;
-	}
-    }
-
+    @Override
     public URL getURL() {
 	return connection.getURL();
     }
 
+    @Override
     public int getContentLength() {
 	try {
 	    handshake();
@@ -114,6 +113,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getContentLength();
     }
 
+    @Override
     public String getContentType() {
 	try {
 	    handshake();
@@ -122,6 +122,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getContentType();
     }
 
+    @Override
     public String getContentEncoding() {
 	try {
 	    handshake();
@@ -130,6 +131,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getContentEncoding();
     }
 
+    @Override
     public long getExpiration() {
 	try {
 	    handshake();
@@ -138,6 +140,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getExpiration();
     }
 
+    @Override
     public long getDate() {
 	try {
 	    handshake();
@@ -146,6 +149,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getDate();
     }
 
+    @Override
     public long getLastModified() {
 	try {
 	    handshake();
@@ -154,6 +158,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getLastModified();
     }
 
+    @Override
     public String getHeaderField(String header) {
 	try {
 	    handshake();
@@ -162,40 +167,20 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getHeaderField(header);
     }
 
-    private Map getHeaderFields0() {
+    @Override
+    public Map<String, List<String>> getHeaderFields() {
 	if (headerFields != null) {
 	    return headerFields;
-	}
-	Map map = new HashMap();
-	String key = connection.getHeaderFieldKey(0);
-	String value = connection.getHeaderField(0);
-	for (int i = 1; key != null || value != null; i++) {
-	    List values = (List) map.get(key);
-	    if (values == null) {
-		values = new ArrayList();
-		map.put(key, values);
+	} else {
+	    try {
+		handshake();
+	    } catch (IOException e) {
 	    }
-	    values.add(value);
-	    key = connection.getHeaderFieldKey(i);
-	    value = connection.getHeaderField(i);
+	    return getHeaderFields0();
 	}
-	Iterator entries = map.entrySet().iterator();
-	while (entries.hasNext()) {
-	    Map.Entry entry = (Map.Entry) entries.next();
-	    entry.setValue(Collections.unmodifiableList((List)entry.getValue()));
-	}
-	return (headerFields = Collections.unmodifiableMap(map));
     }
 
-    public Map getHeaderFields() {
-	if (headerFields != null) return headerFields;
-	try {
-	    handshake();
-	} catch (IOException e) {
-	}
-	return getHeaderFields0();
-    }
-
+    @Override
     public int getHeaderFieldInt(String header, int def) {
 	try {
 	    handshake();
@@ -204,6 +189,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getHeaderFieldInt(header, def);
     }
 
+    @Override
     public long getHeaderFieldDate(String header, long def) {
 	try {
 	    handshake();
@@ -212,6 +198,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getHeaderFieldDate(header, def);
     }
 
+    @Override
     public String getHeaderFieldKey(int index) {
 	try {
 	    handshake();
@@ -220,6 +207,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getHeaderFieldKey(index);
     }
 
+    @Override
     public String getHeaderField(int index) {
 	try {
 	    handshake();
@@ -228,6 +216,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getHeaderField(index);
     }
 
+    @Override
     public Object getContent() throws IOException {
 	try {
 	    handshake();
@@ -236,6 +225,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getContent();
     }
 
+    @Override
     public Object getContent(Class[] classes) throws IOException {
 	try {
 	    handshake();
@@ -244,10 +234,12 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getContent(classes);
     }
 
+    @Override
     public Permission getPermission() throws IOException {
 	return connection.getPermission();
     }
 
+    @Override
     public InputStream getInputStream() throws IOException {
 	try {
 	    handshake();
@@ -256,6 +248,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getInputStream();
     }
 
+    @Override
     public OutputStream getOutputStream() throws IOException {
 	try {
 	    connect();
@@ -266,141 +259,159 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return new CacheStream(output, cachedOutput);
     }
 
+    @Override
     public String toString() {
 	return connection.toString();
     }
 
+    @Override
     public void setDoInput(boolean doInput) {
 	connection.setDoInput(doInput);
 	this.doInput = doInput;
     }
 
+    @Override
     public boolean getDoInput() {
 	return connection.getDoInput();
     }
 
+    @Override
     public void setDoOutput(boolean doOutput) {
 	connection.setDoOutput(doOutput);
 	this.doOutput = doOutput;
     }
 
+    @Override
     public boolean getDoOutput() {
 	return connection.getDoOutput();
     }
 
+    @Override
     public void setAllowUserInteraction(boolean allowUserInteraction) {
 	connection.setAllowUserInteraction(allowUserInteraction);
 	this.allowUserInteraction = allowUserInteraction;
     }
 
+    @Override
     public boolean getAllowUserInteraction() {
 	return connection.getAllowUserInteraction();
     }
 
+    @Override
     public void setUseCaches(boolean useCaches) {
 	connection.setUseCaches(useCaches);
 	this.useCaches = useCaches;
     }
 
+    @Override
     public boolean getUseCaches() {
 	return connection.getUseCaches();
     }
 
+    @Override
     public void setIfModifiedSince(long ifModifiedSince) {
 	connection.setIfModifiedSince(ifModifiedSince);
 	this.ifModifiedSince = ifModifiedSince;
     }
 
+    @Override
     public long getIfModifiedSince() {
 	return connection.getIfModifiedSince();
     }
 
+    @Override
     public boolean getDefaultUseCaches() {
 	return connection.getDefaultUseCaches();
     }
 
+    @Override
     public void setDefaultUseCaches(boolean defaultUseCaches) {
 	connection.setDefaultUseCaches(defaultUseCaches);
     }
 
+    @Override
     public void setRequestProperty(String key, String value) {
 	if (key == null) throw new NullPointerException();
-	List values = new ArrayList();
+	List<String> values = new ArrayList<String>();
 	values.add(value);
 	boolean found = false;
-	Iterator entries = requestProperties.entrySet().iterator();
-	while (entries.hasNext()) {
-	    Map.Entry entry = (Map.Entry) entries.next();
-	    if (key.equalsIgnoreCase((String) entry.getKey())) {
+	for (Map.Entry<String, List<String>> entry : requestProperties.entrySet()) {
+	    if (key.equalsIgnoreCase(entry.getKey())) {
 		entry.setValue(values);
 		found = true;
 		break;
 	    }
 	}
-	if (!found) requestProperties.put(key, values);
+	if (!found) {
+	    requestProperties.put(key, values);
+	}
 	connection.setRequestProperty(key, value);
     }
 
+    @Override
     public void addRequestProperty(String key, String value) {
-	if (key == null) throw new NullPointerException();
-	List values = null;
-	Iterator entries = requestProperties.entrySet().iterator();
-	while (entries.hasNext()) {
-	    Map.Entry entry = (Map.Entry) entries.next();
-	    if (key.equalsIgnoreCase((String) entry.getKey())) {
-		values = (List) entry.getValue();
+	if (key == null) {
+	    throw new NullPointerException();
+	}
+	List<String> values = null;
+	for (Map.Entry<String, List<String>> entry : requestProperties.entrySet()) {
+	    if (key.equalsIgnoreCase(entry.getKey())) {
+		values = entry.getValue();
 		values.add(value);
 		break;
 	    }
 	}
 	if (values == null) {
-	    values = new ArrayList();
+	    values = new ArrayList<String>();
 	    values.add(value);
 	    requestProperties.put(key, values);
 	}
-	// 1.3-compatible.
 	StringBuffer buffer = new StringBuffer();
-	Iterator propertyValues = values.iterator();
-	while (propertyValues.hasNext()) {
-	    buffer.append(propertyValues.next());
-	    if (propertyValues.hasNext()) {
+	for (String s : values) {
+	    if (buffer.length() > 0) {
 		buffer.append(", ");
 	    }
+	    buffer.append(s);
 	}
 	connection.setRequestProperty(key, buffer.toString());
     }
 
+    @Override
     public String getRequestProperty(String key) {
 	return connection.getRequestProperty(key);
     }
 
-    public Map getRequestProperties() {
-	Map map = new HashMap();
-	Iterator entries = requestProperties.entrySet().iterator();
-	while (entries.hasNext()) {
-	    Map.Entry entry = (Map.Entry) entries.next();
-	    map.put(entry.getKey(), Collections.unmodifiableList((List) entry.getValue()));
+    @Override
+    public Map<String, List<String>> getRequestProperties() {
+	Map<String, List<String>> map = new HashMap<String, List<String>>();
+	for (Map.Entry<String, List<String>> entry : requestProperties.entrySet()) {
+	    map.put(entry.getKey(), Collections.unmodifiableList(entry.getValue()));
 	}
 	return Collections.unmodifiableMap(map);
     }
 
+    @Override
     public void setInstanceFollowRedirects(boolean instanceFollowRedirects) {
 	connection.setInstanceFollowRedirects(instanceFollowRedirects);
     }
 
+    @Override
     public boolean getInstanceFollowRedirects() {
 	return connection.getInstanceFollowRedirects();
     }
 
+    @Override
     public void setRequestMethod(String requestMethod) throws ProtocolException {
 	connection.setRequestMethod(requestMethod);
 	this.method = requestMethod;
     }
 
+    @Override
     public String getRequestMethod() {
 	return connection.getRequestMethod();
     }
 
+    @Override
     public int getResponseCode() throws IOException {
 	try {
 	    handshake();
@@ -409,6 +420,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getResponseCode();
     }
 
+    @Override
     public String getResponseMessage() throws IOException {
 	try {
 	    handshake();
@@ -417,16 +429,19 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getResponseMessage();
     }
 
+    @Override
     public void disconnect() {
 	connection.disconnect();
 	handshakeComplete = false;
 	connected = false;
     }
 
+    @Override
     public boolean usingProxy() {
 	return connection.usingProxy();
     }
 
+    @Override
     public InputStream getErrorStream() {
 	try {
 	    handshake();
@@ -437,6 +452,29 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 
     // Private
 
+    private Map<String, List<String>> getHeaderFields0() {
+	if (headerFields != null) {
+	    return headerFields;
+	}
+	Map<String, List<String>> map = new HashMap<String, List<String>>();
+	String key = connection.getHeaderFieldKey(0);
+	String value = connection.getHeaderField(0);
+	for (int i=1; key != null || value != null; i++) {
+	    List<String> values = map.get(key);
+	    if (values == null) {
+		values = new ArrayList<String>();
+		map.put(key, values);
+	    }
+	    values.add(value);
+	    key = connection.getHeaderFieldKey(i);
+	    value = connection.getHeaderField(i);
+	}
+	for (Map.Entry<String, List<String>> entry : map.entrySet()) {
+	    entry.setValue(Collections.unmodifiableList(entry.getValue()));
+	}
+	return (headerFields = Collections.unmodifiableMap(map));
+    }
+
     private int parseResponseCode() throws IOException {
 	try {
 	    String response = connection.getHeaderField(0);
@@ -445,6 +483,13 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	    return Integer.parseInt(response.substring(index, index + 3));
 	} catch (Exception ex) {
 	    throw new IOException(ex.getMessage());
+	}
+    }
+
+    private void handshake() throws IOException {
+	if (!handshakeComplete) {
+	    doHandshake();
+	    handshakeComplete = true;
 	}
     }
 
