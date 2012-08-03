@@ -82,18 +82,6 @@ public class WSMVPort implements IPort, IWSMVConstants {
 	NONE, BASIC, NTLM, KERBEROS;
     }
 
-    /**
-     * JAXB ObjectFactories used by this class.
-     */
-    public static class Factories {
-	public static org.dmtf.wsman.ObjectFactory WSMAN = new org.dmtf.wsman.ObjectFactory();
-	public static org.xmlsoap.ws.addressing.ObjectFactory ADDRESS = new org.xmlsoap.ws.addressing.ObjectFactory();
-	public static org.xmlsoap.ws.enumeration.ObjectFactory ENUMERATION = new org.xmlsoap.ws.enumeration.ObjectFactory();
-	public static org.xmlsoap.ws.eventing.ObjectFactory EVENTING = new org.xmlsoap.ws.eventing.ObjectFactory();
-	public static org.w3c.soap.envelope.ObjectFactory SOAP = new org.w3c.soap.envelope.ObjectFactory();
-	public static com.microsoft.wsman.config.ObjectFactory WSMC = new com.microsoft.wsman.config.ObjectFactory();
-    }
-
     private AuthScheme scheme;
     private String url;
     private Proxy proxy;
@@ -106,7 +94,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
     }
 
     /**
-     * MS-WSMV client.
+     * Create a new IPort for the specified URL.
      */
     public WSMVPort(String url, Proxy proxy, String user, String pass) throws JAXBException {
 	JAXBContext ctx = JAXBContext.newInstance(schemaProps.getProperty("ws-man.packages"));
