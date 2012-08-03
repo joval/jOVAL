@@ -18,7 +18,14 @@ import org.w3c.soap.envelope.Reasontext;
  * @version %I% %G%
  */
 public class WSMFault extends Exception {
-    public WSMFault(String message) {
+    Fault fault;
+
+    public WSMFault(Fault fault, String message) {
 	super(message);
+	this.fault = fault;
+    }
+
+    public Fault getFault() {
+	return fault;
     }
 }

@@ -54,6 +54,7 @@ import org.joval.ws.WSMFault;
  * @version %I% %G%
  */
 public class WSMPort implements IPort, IWSMConstants {
+    private static boolean debug = false;
 
     private static Properties schemaProps = new Properties();
     static {
@@ -108,7 +109,7 @@ public class WSMPort implements IPort, IWSMConstants {
 	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 	unmarshaller = ctx.createUnmarshaller();
 //DAS
-scheme = AuthScheme.NTLM;
+scheme = AuthScheme.BASIC;
 
 	this.url = url;
 	this.proxy = proxy;
@@ -198,7 +199,7 @@ scheme = AuthScheme.NTLM;
 		    conn.disconnect();
 		}
 
-System.out.println("Connecting to " + url + " using authScheme " + scheme);
+		if (debug) System.out.println("Connecting to " + url + " using authScheme " + scheme);
 		switch(scheme) {
 		  case NONE:
 		    if (proxy == null) {
@@ -256,13 +257,15 @@ System.out.println("Connecting to " + url + " using authScheme " + scheme);
 
 		conn.connect();
 		OutputStream out = conn.getOutputStream();
-System.out.println("**************BEGIN****************");
-System.out.println("*                                 *");
-System.out.println("Client sending SOAP Message:");
-System.out.write(bytes);
+if (debug) {
+    System.out.println("**************BEGIN****************");
+    System.out.println("*                                 *");
+    System.out.println("Client sending SOAP Message:");
+    System.out.write(bytes);
+}
 		out.write(bytes);
 		out.flush();
-System.out.println("SOAP Message Sent");
+if (debug) System.out.println("SOAP Message Sent");
 
 		int code = conn.getResponseCode();
 		switch(code) {
@@ -286,7 +289,7 @@ System.out.println("SOAP Message Sent");
 			result = ((JAXBElement)result).getValue();
 		    }
 		    if (result instanceof Fault) {
-			throw new WSMFault(raw);
+			throw new WSMFault((Fault)result, raw);
 		    }
 		    break;
 
@@ -311,16 +314,18 @@ System.out.println("SOAP Message Sent");
 	    }
 	} while (!success && nextAuthScheme(conn));
 
-//DAS
-if (result != null) {
-    System.out.println("SOAP reply body is of type " + result.getClass().getName());
-System.out.println("*** SOAP Reply Body ***");
-    marshaller.marshal(result, System.out);
-} else {
-    System.out.println("SOAP reply body is NULL");
+
+if (debug) {
+    if (result != null) {
+	System.out.println("SOAP reply body is of type " + result.getClass().getName());
+	System.out.println("*** SOAP Reply Body ***");
+	marshaller.marshal(result, System.out);
+    } else {
+	System.out.println("SOAP reply body is NULL");
+    }
+    System.out.println("*                                 *");
+    System.out.println("****************END****************");
 }
-System.out.println("*                                 *");
-System.out.println("****************END****************");
 
 	if (result instanceof JAXBElement) {
 	    return ((JAXBElement)result).getValue();

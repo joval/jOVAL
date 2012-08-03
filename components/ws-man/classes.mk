@@ -30,15 +30,15 @@ CLASSES=\
 	com.microsoft.wsman.config.service.certmapping.CertMappingType	\
 	com.microsoft.wsman.config.service.certmapping.ObjectFactory	\
 	com.microsoft.wsman.config.service.certmapping.package-info	\
-	com.microsoft.wsman.config.service.fault.MessageType	\
-	com.microsoft.wsman.config.service.fault.ObjectFactory	\
-	com.microsoft.wsman.config.service.fault.package-info	\
-	com.microsoft.wsman.config.service.fault.ProviderFaultType	\
-	com.microsoft.wsman.config.service.fault.WSManFaultType	\
 	com.microsoft.wsman.config.ServiceAuthType	\
 	com.microsoft.wsman.config.ServiceDefaultPortsType	\
 	com.microsoft.wsman.config.ServiceType	\
 	com.microsoft.wsman.config.WinrsType	\
+	com.microsoft.wsman.fault.MessageType	\
+	com.microsoft.wsman.fault.ObjectFactory	\
+	com.microsoft.wsman.fault.package-info	\
+	com.microsoft.wsman.fault.ProviderFaultType	\
+	com.microsoft.wsman.fault.WSManFaultType	\
 	com.microsoft.wsman.shell.AuthenticationType	\
 	com.microsoft.wsman.shell.ClientCertificateType	\
 	com.microsoft.wsman.shell.CommandLine	\

@@ -7,14 +7,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
-import org.dmtf.wsman.AttributableEmpty;
-import org.dmtf.wsman.AttributablePositiveInteger;
-import org.dmtf.wsman.OptionSet;
-import org.dmtf.wsman.OptionType;
-import org.dmtf.wsman.SelectorSetType;
-import org.dmtf.wsman.SelectorType;
+import com.microsoft.wsman.fault.WSManFaultType;
 import com.microsoft.wsman.shell.CommandLine;
 import com.microsoft.wsman.shell.CommandResponse;
 import com.microsoft.wsman.shell.CommandStateType;
@@ -26,6 +22,13 @@ import com.microsoft.wsman.shell.SignalResponse;
 import com.microsoft.wsman.shell.Send;
 import com.microsoft.wsman.shell.SendResponse;
 import com.microsoft.wsman.shell.StreamType;
+import org.dmtf.wsman.AttributableEmpty;
+import org.dmtf.wsman.AttributablePositiveInteger;
+import org.dmtf.wsman.OptionSet;
+import org.dmtf.wsman.OptionType;
+import org.dmtf.wsman.SelectorSetType;
+import org.dmtf.wsman.SelectorType;
+import org.w3c.soap.envelope.Fault;
 
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
@@ -293,6 +296,32 @@ public class ShellCommand implements IWSMConstants, IProcess {
 	}
 
 	@Override
+	public int read(byte[] bytes) throws IOException {
+	    return read(bytes, 0, bytes.length);
+	}
+
+	@Override
+	public int read(byte[] bytes, int offset, int len) throws IOException {
+	    int maxToRead = Math.min(bytes.length - offset, len);
+	    if (available() > 0) {
+		int bytesToRead = Math.min(maxToRead, available());
+		System.arraycopy(buff, pos, bytes, offset, bytesToRead);
+		pos = pos + bytesToRead;
+		return bytesToRead;
+	    } else if (maxToRead > 0) {
+		int ch = read();
+		if (ch == -1) {
+		    return -1;
+		} else {
+		    bytes[offset] = (byte)(ch & 0xFF);
+		    return 1;
+		}
+	    } else {
+		return 0;
+	    }
+	}
+
+	@Override
 	public int read() throws IOException {
 	    if (pos < buff.length) {
 		// return from buffer
@@ -327,6 +356,12 @@ public class ShellCommand implements IWSMConstants, IProcess {
 		ReceiveOperation receiveOperation = new ReceiveOperation(receive);
 		receiveOperation.addResourceURI(SHELL_URI);
 		receiveOperation.addSelectorSet(getSelectorSet());
+		OptionType keepAlive = Factories.WSMAN.createOptionType();
+		keepAlive.setName("WSMAN_CMDSHELL_OPTION_KEEPALIVE");
+		keepAlive.setValue("TRUE");
+		OptionSet options = Factories.WSMAN.createOptionSet();
+		options.getOption().add(keepAlive);
+		receiveOperation.addOptionSet(options);
 
 		ReceiveResponse response = receiveOperation.dispatch(port);
 		buff = null;
@@ -348,7 +383,26 @@ public class ShellCommand implements IWSMConstants, IProcess {
 	    } catch (JAXBException e) {
 		throw new IOException(e);
 	    } catch (WSMFault e) {
-		throw new IOException(e);
+		boolean retry = false;
+		Fault fault = e.getFault();
+		if (fault.isSetDetail()) {
+		    for (Object obj : fault.getDetail().getAny()) {
+			if (obj instanceof JAXBElement) {
+			    obj = ((JAXBElement)obj).getValue();
+			}
+			if (obj instanceof WSManFaultType) {
+			    WSManFaultType wsFault = (WSManFaultType)obj;
+			    if (wsFault.getCode() == 2150858793L) {
+				retry = true;
+			    }
+			}
+		    }
+		}
+		if (retry) {
+		    refill();
+		} else {
+		    throw new IOException(e);
+		}
 	    }
 	}
     }

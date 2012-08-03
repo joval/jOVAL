@@ -66,7 +66,7 @@
   </jxb:bindings>
   <jxb:bindings schemaLocation="xsd/ms-wsman-fault.xsd" node="/xs:schema">
     <jxb:schemaBindings>
-      <jxb:package name="com.microsoft.wsman.config.service.fault"/>
+      <jxb:package name="com.microsoft.wsman.fault"/>
     </jxb:schemaBindings>
   </jxb:bindings>
   <jxb:bindings schemaLocation="xsd/ms-wsman-cert.xsd" node="/xs:schema">

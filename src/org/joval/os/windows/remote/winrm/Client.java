@@ -303,7 +303,7 @@ System.out.println("Created shell " + shell.getId());
 
 try {
     String[] args = new String[] {"TARDIS"};
-    IProcess p = shell.createProcess("ping", args);
+    IProcess p = shell.createProcess("ping www.google.com", null);
     p.start();
     byte[] buff = new byte[256];
     int len = 0;
