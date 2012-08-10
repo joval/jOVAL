@@ -44,6 +44,7 @@ import org.w3c.soap.envelope.Header;
 
 import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
+import org.joval.protocol.http.HttpSocketConnection;
 import org.joval.protocol.http.NtlmHttpURLConnection;
 import org.joval.util.Base64;
 import org.joval.ws.WSFault;
@@ -103,7 +104,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
 	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 	unmarshaller = ctx.createUnmarshaller();
 //DAS
-scheme = AuthScheme.BASIC;
+scheme = AuthScheme.NTLM;
 
 	this.url = url;
 	this.proxy = proxy;
@@ -220,11 +221,7 @@ scheme = AuthScheme.BASIC;
 		    URL authURL = new URL(u.getProtocol() + "://" +
 					  domain + "\\" + user + ":" + pass + "@" +
 					  u.getHost() + ":" + u.getPort() + u.getPath());
-		    if (proxy == null) {
-			conn = new NtlmHttpURLConnection((HttpURLConnection)authURL.openConnection());
-		    } else {
-			conn = new NtlmHttpURLConnection((HttpURLConnection)authURL.openConnection(proxy));
-		    }
+		    conn = new NtlmHttpURLConnection(new HttpSocketConnection(authURL, proxy));
 		    break;
 
 		  case BASIC:
@@ -335,6 +332,7 @@ if (debug) {
      */
     private Object getSOAPBodyContents(InputStream in) throws JAXBException, IOException {
 	Object result = unmarshaller.unmarshal(in);
+	in.close();
 	if (result instanceof JAXBElement) {
 	    JAXBElement elt = (JAXBElement)result;
 	    if (elt.getValue() instanceof Envelope) {

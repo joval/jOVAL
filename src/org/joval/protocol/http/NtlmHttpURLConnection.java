@@ -31,7 +31,6 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.joval.util.Base64;
-import org.joval.util.StringTools;
 
 import org.microsoft.security.ntlm.NtlmAuthenticator;
 import org.microsoft.security.ntlm.NtlmAuthenticator.NtlmVersion;
@@ -416,6 +415,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	try {
 	    handshake();
 	} catch (IOException e) {
+e.printStackTrace();
 	}
 	return connection.getResponseCode();
     }
@@ -482,6 +482,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	    while (response.charAt(index) == ' ') index++;
 	    return Integer.parseInt(response.substring(index, index + 3));
 	} catch (Exception ex) {
+ex.printStackTrace();
 	    throw new IOException(ex.getMessage());
 	}
     }
@@ -551,6 +552,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	    int count;
 	    byte[] buf = new byte[1024];
 	    while ((count = errorStream.read(buf, 0, 1024)) != -1);
+	    errorStream.close();
 	}
 	String authHeader;
 	if (response == HTTP_UNAUTHORIZED) {
@@ -561,28 +563,26 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	    authProperty = "Proxy-Authorization";
 	}
 	String authorization = null;
-	List methods = (List)getHeaderFields0().get(authHeader);
+	List<String> methods = getHeaderFields0().get(authHeader);
 	if (methods == null) return null;
-	Iterator iterator = methods.iterator();
-	while (iterator.hasNext()) {
-	    String currentAuthMethod = (String) iterator.next();
-	    if (currentAuthMethod.startsWith("NTLM")) {
-		if (currentAuthMethod.length() == 4) {
+	for (String method : methods) {
+	    if (method.startsWith("NTLM")) {
+		if (method.length() == 4) {
 		    authMethod = "NTLM";
 		    break;
 		}
-		if (currentAuthMethod.indexOf(' ') != 4) continue;
+		if (method.indexOf(' ') != 4) continue;
 		authMethod = "NTLM";
-		authorization = currentAuthMethod.substring(5).trim();
+		authorization = method.substring(5).trim();
 		break;
-	    } else if (currentAuthMethod.startsWith("Negotiate")) {
-		if (currentAuthMethod.length() == 9) {
+	    } else if (method.startsWith("Negotiate")) {
+		if (method.length() == 9) {
 		    authMethod = "Negotiate";
 		    break;
 		}
-		if (currentAuthMethod.indexOf(' ') != 9) continue;
+		if (method.indexOf(' ') != 9) continue;
 		authMethod = "Negotiate";
-		authorization = currentAuthMethod.substring(10).trim();
+		authorization = method.substring(10).trim();
 		break;
 	    }
 	}
@@ -591,24 +591,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	if (authorization != null) {
 	    // read type 2
 	    message = Base64.decode(authorization);
-//DAS
-	    NtlmChallengeMessage challenge = new NtlmChallengeMessage(message);
-	    challenge.setTargetInfoPair(NtlmRoutines.MsvAvFlags, new byte[] {
-					(byte)0x02, (byte)0x00, (byte)0x00, (byte)0x00});
-	    challenge.setTargetInfoPair(NtlmRoutines.MsAvRestrictions, new byte[] {
-					(byte)0x30, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-					(byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00, (byte)0x00,
-					(byte)0x00, (byte)0x30, (byte)0x00, (byte)0x00, (byte)0x37, (byte)0xef,
-					(byte)0x99, (byte)0x63, (byte)0xdf, (byte)0xd0, (byte)0xf6, (byte)0xba,
-					(byte)0xb1, (byte)0x3e, (byte)0xa8, (byte)0xe0, (byte)0xa9, (byte)0xa0,
-					(byte)0xb9, (byte)0x53, (byte)0x2c, (byte)0xf2, (byte)0x02, (byte)0x7e,
-					(byte)0x6d, (byte)0x52, (byte)0x06, (byte)0xff, (byte)0xc5, (byte)0xbb,
-					(byte)0xcb, (byte)0x05, (byte)0x3b, (byte)0xd3, (byte)0x1d, (byte)0xc2});
-	    challenge.setTargetInfoPair(NtlmRoutines.MsvChannelBindings, new byte[16]); // empty
-	    String targetName = url.getProtocol().toUpperCase() + "/" + url.getHost().toUpperCase();
-	    challenge.setTargetInfoPair(NtlmRoutines.MsvAvTargetName, targetName.getBytes("UTF-16LE"));
-
-	    session.processChallengeMessage(challenge.getMessageData());
+	    session.processChallengeMessage(message);
 	}
 	reconnect();
 	if (message == null) {
@@ -622,18 +605,21 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
     }
 
     private void reconnect() throws IOException {
-	connection = (HttpURLConnection) connection.getURL().openConnection();
+	if (connection instanceof HttpSocketConnection) {
+	    ((HttpSocketConnection)connection).reset();
+	} else {
+	    connection = (HttpURLConnection)connection.getURL().openConnection();
+	}
 	connection.setRequestMethod(method);
 	headerFields = null;
-	Iterator properties = requestProperties.entrySet().iterator();
-	while (properties.hasNext()) {
-	    Map.Entry property = (Map.Entry) properties.next();
-	    String key = (String) property.getKey();
+	for (Map.Entry<String, List<String>> property : requestProperties.entrySet()) {
+	    String key = property.getKey();
 	    StringBuffer value = new StringBuffer();
-	    Iterator values = ((List) property.getValue()).iterator();
-	    while (values.hasNext()) {
-		value.append(values.next());
-		if (values.hasNext()) value.append(", ");
+	    for (String val : property.getValue()) {
+		if (value.length() > 0) {
+		    value.append(", ");
+		}
+		value.append(val);
 	    }
 	    connection.setRequestProperty(key, value.toString());
 	}
