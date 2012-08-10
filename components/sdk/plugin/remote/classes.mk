@@ -98,6 +98,7 @@ CLASSES=\
 	org.joval.os.windows.system.Environment				\
 	org.joval.plugin.BasePlugin					\
 	org.joval.plugin.RemotePlugin					\
+	org.joval.protocol.http.HttpSocketConnection			\
 	org.joval.protocol.http.NtlmHttpURLConnection			\
 	org.joval.protocol.netconf.NetconfSession			\
 	org.joval.ssh.identity.SshCredential				\

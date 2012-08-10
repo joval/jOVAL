@@ -101,10 +101,9 @@ public class WSMVPort implements IPort, IWSMVConstants {
 	JAXBContext ctx = JAXBContext.newInstance(schemaProps.getProperty("ws-man.packages"));
 	marshaller = ctx.createMarshaller();
 	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+//	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 	unmarshaller = ctx.createUnmarshaller();
-//DAS
-scheme = AuthScheme.NTLM;
+	scheme = AuthScheme.NTLM;
 
 	this.url = url;
 	this.proxy = proxy;
@@ -239,7 +238,6 @@ scheme = AuthScheme.NTLM;
 		conn.setRequestMethod("POST");
 		conn.setRequestProperty("Content-Type", "application/soap+xml;charset=UTF-8");
 		conn.setRequestProperty("SOAPAction", action);
-		conn.setRequestProperty("Accept", "*/*");
 
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		marshaller.marshal(Factories.SOAP.createEnvelope(request), buffer);

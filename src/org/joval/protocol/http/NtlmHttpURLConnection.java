@@ -16,10 +16,7 @@ import java.net.ProtocolException;
 import java.net.UnknownHostException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.security.Key;
-import java.security.MessageDigest;
 import java.security.Permission;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -27,8 +24,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
 
 import org.joval.util.Base64;
 
@@ -415,7 +410,6 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	try {
 	    handshake();
 	} catch (IOException e) {
-e.printStackTrace();
 	}
 	return connection.getResponseCode();
     }
@@ -450,6 +444,16 @@ e.printStackTrace();
 	return connection.getErrorStream();
     }
 
+    @Override
+    public void setChunkedStreamingMode(int chunkSize) {
+	connection.setChunkedStreamingMode(chunkSize);
+    }
+
+    @Override
+    public void setFixedLengthStreamingMode(int contentLength) {
+	connection.setFixedLengthStreamingMode(contentLength);
+    }
+
     // Private
 
     private Map<String, List<String>> getHeaderFields0() {
@@ -482,7 +486,6 @@ e.printStackTrace();
 	    while (response.charAt(index) == ' ') index++;
 	    return Integer.parseInt(response.substring(index, index + 3));
 	} catch (Exception ex) {
-ex.printStackTrace();
 	    throw new IOException(ex.getMessage());
 	}
     }

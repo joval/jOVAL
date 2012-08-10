@@ -8,54 +8,41 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.Authenticator;
-import java.net.InetAddress;
 import java.net.HttpURLConnection;
-import java.net.PasswordAuthentication;
 import java.net.ProtocolException;
 import java.net.Proxy;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.nio.charset.Charset;
-import java.security.Key;
-import java.security.MessageDigest;
 import java.security.Permission;
-import java.security.SecureRandom;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-
-import org.joval.util.Base64;
 
 /**
- * An HTTP 1.1 connection implementation that re-uses a single socket connection.
+ * An HTTP 1.1 connection implementation that re-uses a single socket connection.  This is useful when a single TCP connection
+ * is needed to communicate repeatedly with a particular URL, for example, when performing NTLM authentication negotiation.
  */
 public class HttpSocketConnection extends HttpURLConnection {
     public static final byte[] CRLF = {'\r', '\n'};
-static boolean debug = false;
 
-    private static final int MAX_REDIRECTS = 20;
+    private static int defaultChunkLength = 512;
+    private static boolean debug = false;
 
     private Socket socket;
     private Proxy proxy;
     private String host; // host:port
     private Map<String, List<String>> headerFields, requestProperties;
     private List<KVP> orderedHeaderFields;
-    private int outputLength, contentLength;
+    private int contentLength;
     private String contentType, contentEncoding;
     private long expiration, date, lastModified;
-    private boolean didRequest;
-    private ByteArrayOutputStream buffer;
+    private boolean gotResponse;
+    private HSOutputStream stream;
+    private HSBufferedInputStream responseData;
 
     /**
      * Create a direct connection.
@@ -89,7 +76,6 @@ static boolean debug = false;
 	    sb.append(":").append(Integer.toString(url.getPort()));
 	}
 	host = sb.toString();
-	connected = false;
 	reset();
     }
 
@@ -100,6 +86,7 @@ static boolean debug = false;
 	//
 	// reset inherited fields
 	//
+	connected = false;
 	chunkLength = -1;
 	fixedContentLength = -1;
 	method = "GET";
@@ -118,36 +105,40 @@ static boolean debug = false;
 	headerFields = null;
 	requestProperties = new HashMap<String, List<String>>();
 	setRequestProperty("User-Agent", "jOVAL HTTP Client");
-	buffer = null;
-	outputLength = 0;
+	if (stream != null) {
+	    try {
+		stream.close();
+	    } catch (IOException e) {
+		disconnect();
+	    }
+	    stream = null;
+	}
+	responseData = null;
 	contentLength = 0;
 	contentType = null;
 	contentEncoding = null;
 	expiration = 0;
 	date = 0;
 	lastModified = 0;
-	didRequest = false;
+	gotResponse = false;
     }
 
     // Overrides for HttpURLConnection
 
     @Override
-    public void connect() throws IOException {
-	if (!connected) {
-	    if (proxy == null) {
-		socket = new Socket(url.getHost(), url.getPort());
-	    } else {
-		socket = new Socket();
-		socket.connect(proxy.address());
-	    }
-	    connected = true;
-	}
+    public Permission getPermission() throws IOException {
+	return new java.net.SocketPermission(host, "connect");
+    }
+
+    @Override
+    public boolean usingProxy() {
+	return proxy != null;
     }
 
     @Override
     public int getContentLength() {
 	try {
-	    doRequest();
+	    getResponse();
 	} catch (IOException e) {
 	}
 	return contentLength;
@@ -156,7 +147,7 @@ static boolean debug = false;
     @Override
     public String getContentType() {
 	try {
-	    doRequest();
+	    getResponse();
 	} catch (IOException e) {
 	}
 	return contentType;
@@ -165,7 +156,7 @@ static boolean debug = false;
     @Override
     public String getContentEncoding() {
 	try {
-	    doRequest();
+	    getResponse();
 	} catch (IOException e) {
 	}
 	return contentEncoding;
@@ -174,7 +165,7 @@ static boolean debug = false;
     @Override
     public long getExpiration() {
 	try {
-	    doRequest();
+	    getResponse();
 	} catch (IOException e) {
 	}
 	return expiration;
@@ -183,7 +174,7 @@ static boolean debug = false;
     @Override
     public long getDate() {
 	try {
-	    doRequest();
+	    getResponse();
 	} catch (IOException e) {
 	}
 	return date;
@@ -192,43 +183,33 @@ static boolean debug = false;
     @Override
     public long getLastModified() {
 	try {
-	    doRequest();
+	    getResponse();
 	} catch (IOException e) {
 	}
 	return lastModified;
     }
 
     @Override
-    public String getHeaderField(String header) {
-	try {
-	    doRequest();
-	} catch (IOException e) {
-	}
-	List<String> values = headerFields.get(header);
-	if (values == null) {
-	    return null;
-	} else {
-	    return values.get(0);
-	}
-    }
-
-    @Override
     public Map<String, List<String>> getHeaderFields() {
-	if (headerFields == null) {
-	    try {
-		doRequest();
-	    } catch (IOException e) {
-	    }
+	try {
+	    getResponse();
+	} catch (IOException e) {
 	}
 	return headerFields;
     }
 
     @Override
-    public int getHeaderFieldInt(String header, int def) {
-	try {
-	    doRequest();
-	} catch (IOException e) {
+    public String getHeaderField(String header) {
+	for (Map.Entry<String, List<String>> entry : getHeaderFields().entrySet()) {
+	    if (header.equalsIgnoreCase(entry.getKey())) {
+		return entry.getValue().get(0);
+	    }
 	}
+	return null;
+    }
+
+    @Override
+    public int getHeaderFieldInt(String header, int def) {
 	String s = getHeaderField(header);
 	if (s != null) {
 	    try {
@@ -241,18 +222,17 @@ static boolean debug = false;
 
     @Override
     public long getHeaderFieldDate(String header, long def) {
-	try {
-	    doRequest();
-	} catch (IOException e) {
-	}
+	String s = getHeaderField(header);
+//
 //DAS: TBD - attempt all the possible date formats
-	return 0;
+//
+	return def;
     }
 
     @Override
     public String getHeaderFieldKey(int index) {
 	try {
-	    doRequest();
+	    getResponse();
 	} catch (IOException e) {
 	}
 	if (orderedHeaderFields.size() > index) {
@@ -265,8 +245,8 @@ static boolean debug = false;
     @Override
     public String getHeaderField(int index) {
 	try {
-	    doRequest();
-	} catch (IOException ex) {
+	    getResponse();
+	} catch (IOException e) {
 	}
 	if (orderedHeaderFields.size() > index) {
 	    return orderedHeaderFields.get(index).value();
@@ -275,96 +255,86 @@ static boolean debug = false;
 	}
     }
 
-    @Override
-    public Object getContent() {
-	throw new UnsupportedOperationException("getContent");
-    }
-
-    @Override
-    public Object getContent(Class[] classes) throws IOException {
-	throw new UnsupportedOperationException("getContent");
-    }
-
-    @Override
-    public Permission getPermission() throws IOException {
-	return new java.net.SocketPermission(host, "connect");
-    }
-
+    /**
+     * Closing the resulting stream will automatically reset this connection.
+     */
     @Override
     public InputStream getInputStream() throws IOException {
 	try {
-	    doRequest();
+	    getResponse();
 	} catch (IOException e) {
 	}
-	if (buffer == null) {
+	if (responseCode == 200) {
+	    return responseData;
+	} else {
+	    throw new IOException("Response error: " + responseCode);
+	}
+    }
+
+    /**
+     * Closing this stream will automatically reset this connection.
+     */
+    @Override
+    public InputStream getErrorStream() {
+	try {
+	    getResponse();
+	} catch (IOException e) {
+	}
+	if (responseCode == 200) {
 	    return null;
 	} else {
-	    return new HSBufferStream(buffer.toByteArray());
+	    return responseData;
 	}
     }
 
+    /**
+     * If a fixed content length has not been set, this method causes the connection to use chunked encoding.
+     */
     @Override
     public OutputStream getOutputStream() throws IOException {
-	try {
+	if (gotResponse) {
+	    throw new IllegalStateException("The request has already been processed");
+	}
+	if (doOutput) {
+	    if (stream == null) {
+		switch(fixedContentLength) {
+		  case -1:
+		    stream = new HSChunkedOutputStream(chunkLength);
+		    break;
+		  default:
+		    stream = new HSOutputStream(fixedContentLength);
+		    break;
+		}
+	    }
 	    connect();
-	} catch (IOException ex) {
+	    return stream;
+	} else {
+	    throw new IllegalStateException("Output not allowed");
 	}
-	if (buffer == null) {
-	    buffer = new ByteArrayOutputStream();
-	}
-	return buffer;
-    }
-
-    @Override
-    public String toString() {
-	return "Connection to " + url.toString();
-    }
-
-    @Override
-    public void setRequestMethod(String method) {
-	this.method = method;
-    }
-
-    @Override
-    public void setDoOutput(boolean doOutput) {
-	this.doOutput = doOutput;
-    }
-
-    @Override
-    public void setDoInput(boolean doInput) {
-	this.doInput = doInput;
-    }
-
-    @Override
-    public void setAllowUserInteraction(boolean allowUserInteraction) {
-	this.allowUserInteraction = allowUserInteraction;
-    }
-
-    @Override
-    public void setIfModifiedSince(long ifModifiedSince) {
-	this.ifModifiedSince = ifModifiedSince;
-    }
-
-    @Override
-    public void setUseCaches(boolean useCaches) {
-	this.useCaches = useCaches;
     }
 
     @Override
     public void setRequestProperty(String key, String value) {
+	if (connected) {
+	    throw new IllegalStateException("Already connected");
+	}
 	setMapProperty(key, value, requestProperties);
     }
 
     @Override
     public void addRequestProperty(String key, String value) {
+	if (connected) {
+	    throw new IllegalStateException("Already connected");
+	}
 	addMapProperty(key, value, requestProperties);
     }
 
     @Override
     public String getRequestProperty(String key) {
-	if (requestProperties.containsKey(key)) {
-	    List<String> values = requestProperties.get(key);
-	    return values.get(0);
+	for (Map.Entry<String, List<String>> entry : requestProperties.entrySet()) {
+	    if (key.equalsIgnoreCase(entry.getKey())) {
+		return entry.getValue().get(0);
+	    }
 	}
 	return null;
     }
@@ -381,7 +351,7 @@ static boolean debug = false;
     @Override
     public int getResponseCode() throws IOException {
 	try {
-	    doRequest();
+	    getResponse();
 	} catch (IOException e) {
 	}
 	return responseCode;
@@ -390,7 +360,7 @@ static boolean debug = false;
     @Override
     public String getResponseMessage() throws IOException {
 	try {
-	    doRequest();
+	    getResponse();
 	} catch (IOException e) {
 	}
 	return responseMessage;
@@ -408,33 +378,16 @@ static boolean debug = false;
     }
 
     @Override
-    public boolean usingProxy() {
-	return proxy != null;
-    }
-
-    @Override
-    public InputStream getErrorStream() {
-	try {
-	    return getInputStream();
-	} catch (IOException e) {
+    public void connect() throws IOException {
+	if (socket == null || socket.isClosed()) {
+	    if (proxy == null) {
+		socket = new Socket(url.getHost(), url.getPort());
+	    } else {
+		socket = new Socket();
+		socket.connect(proxy.address());
+	    }
 	}
-	return null;
-    }
-
-    @Override
-    public void setFixedLengthStreamingMode(int contentLength) {
-	outputLength = contentLength;
-    }
-
-    // Private
-
-    /**
-     * Write the request and read the response over the socket.
-     */
-    private void doRequest() throws IOException {
-	if (didRequest) return;
-	connect();
-	try {
+	if (!connected) {
 	    StringBuffer req = new StringBuffer(getRequestMethod()).append(" ");
 	    if (proxy != null) {
 		req.append(host);
@@ -448,10 +401,15 @@ static boolean debug = false;
 	    setRequestProperty("Connection", "Keep-Alive");
 	    setRequestProperty("Host", host);
 	    if (doOutput) {
-		if (buffer != null) {
-		    outputLength = buffer.size();
+		if (fixedContentLength != -1) {
+		    setRequestProperty("Content-Length", Integer.toString(fixedContentLength));
+		} else {
+		    if (chunkLength == -1) {
+			chunkLength = defaultChunkLength;
+		    }
+		    setRequestProperty("Transfer-Encoding", "chunked");
+Thread.currentThread().dumpStack();
 		}
-		setRequestProperty("Content-Length", Integer.toString(outputLength));
 	    }
 	    write(req.toString());
 	    for (Map.Entry<String, List<String>> entry : requestProperties.entrySet()) {
@@ -468,67 +426,99 @@ static boolean debug = false;
 		write(header.toString());
 	    }
 	    write(CRLF);
-	    if (buffer != null) {
-		write(buffer.toByteArray());
-		buffer = null;
+	    connected = true;
+	}
+    }
+
+    // Private
+
+    /**
+     * Read the response over the socket.
+     */
+    private void getResponse() throws IOException {
+	if (gotResponse) return;
+	connect();
+	try {
+	    if (stream == null) {
+		switch(fixedContentLength) {
+		  case -1:
+		    //
+		    // connect() would have assumed chunked transfer-encoding, so write a final 0-length chunk.
+		    //
+		    write("0");
+		    write(CRLF);
+		    write(CRLF);
+		    // fall-thru
+		  case 0:
+		    break;
+		  default:
+		    throw new IllegalStateException("You promised to write " + fixedContentLength + " bytes!");
+		}
+	    } else if (!stream.complete()) {
+		throw new IllegalStateException("You must write " + stream.remaining() + " more bytes!");
+	    } else {
+		stream.close();
 	    }
 
 	    orderedHeaderFields = new ArrayList<KVP>();
 	    Map<String, List<String>> map = new HashMap<String, List<String>>();
 
 if(debug)System.out.println("\nRESPONSE:");
+
+	    boolean chunked = false;
 	    InputStream in = socket.getInputStream();
-	    StringBuffer sb = new StringBuffer();
-	    boolean done = false;
-	    boolean cr = false;
-	    while(!done) {
-		int ch = in.read();
-		switch(ch) {
-		  case -1:
-		    throw new IOException("Connection was closed!");
-		  case '\r':
-		    if (sb.length() == 0) {
-			cr = true;
+	    KVP pair = null;
+	    while((pair = readKVP(in)) != null) {
+if(debug)System.out.println(pair.toString());
+		if (orderedHeaderFields.size() == 0) {
+		    parseResponse(pair.value());
+		} else {
+		    for (String val : pair.value().split(", ")) {
+			addMapProperty(pair.key(), val, map);
 		    }
-		    break;
-		  case '\n':
-		    if (cr) {
-			done = true;
-		    } else if (sb.length() > 0) {
-if(debug)System.out.println(sb.toString());
-			if (orderedHeaderFields.size() == 0) {
-			    String response = sb.toString();
-			    orderedHeaderFields.add(new KVP("", response));
-			    parseResponse(response);
-			} else {
-			    KVP pair = new KVP(sb.toString());
-			    if (pair.key().equalsIgnoreCase("Content-Length")) {
-				contentLength = Integer.parseInt(pair.value());
-			    } else if (pair.key().equalsIgnoreCase("Content-Type")) {
-				contentType = pair.value();
-			    } else if (pair.key().equalsIgnoreCase("Content-Encoding")) {
-				contentEncoding = pair.value();
-			    }
-			    orderedHeaderFields.add(pair);
-			    for (String val : pair.value().split(", ")) {
-				addMapProperty(pair.key(), val, map);
-			    }
-			}
-			sb = new StringBuffer();
-		    }
-		    break;
-		  default:
-		    cr = false;
-		    sb.append((char)ch);
-		    break;
+		}
+		orderedHeaderFields.add(pair);
+		if ("Content-Length".equalsIgnoreCase(pair.key())) {
+		    contentLength = Integer.parseInt(pair.value());
+		} else if ("Content-Type".equalsIgnoreCase(pair.key())) {
+		    contentType = pair.value();
+		} else if ("Content-Encoding".equalsIgnoreCase(pair.key())) {
+		    contentEncoding = pair.value();
+		} else if ("Transfer-Encoding".equalsIgnoreCase(pair.key())) {
+		    chunked = pair.value().equalsIgnoreCase("chunked");
 		}
 	    }
 	    headerFields = Collections.unmodifiableMap(map);
-	    if (contentLength > 0) {
-		buffer = new ByteArrayOutputStream(contentLength);
+
+	    if (chunked) {
+		HSBufferedOutputStream buffer = new HSBufferedOutputStream();
+		int len = 0;
+		while((len = readChunkLength(in)) > 0) {
+		    byte[] bytes = new byte[len];
+		    in.read(bytes);
+		    buffer.write(bytes);
+if(debug)System.out.write(bytes);
+		    assert(in.read() == '\r');
+		    assert(in.read() == '\n');
+if(debug)System.out.write(CRLF);
+		}
+		responseData = new HSBufferedInputStream(buffer);
+		contentLength = responseData.size();
+
+		//
+		// Read footers (if any)
+		//
+		while((pair = readKVP(in)) != null) {
+if(debug)System.out.println(pair.toString());
+		    orderedHeaderFields.add(pair);
+		    for (String val : pair.value().split(", ")) {
+			addMapProperty(pair.key(), val, map);
+		    }
+		}
+	    } else {
 		byte[] bytes = new byte[contentLength];
 		in.read(bytes, 0, contentLength);
-		buffer.write(bytes, 0, contentLength);
+		responseData = new HSBufferedInputStream(bytes);
 	    }
 	} catch (Exception e) {
 	    if (debug) {
@@ -536,7 +526,7 @@ if(debug)System.out.println(sb.toString());
 	    }
 	    throw e;
 	} finally {
-	    didRequest = true;
+	    gotResponse = true;
 	    if ("Close".equalsIgnoreCase(getHeaderField("Connection"))) {
 		disconnect();
 	    }
@@ -547,9 +537,17 @@ if(debug)System.out.println(sb.toString());
 	write(s.getBytes("US-ASCII"));
     }
 
+    private void write(int ch) throws IOException {
+	socket.getOutputStream().write(ch);
+    }
+
     private void write(byte[] bytes) throws IOException {
-if (debug) System.out.write(bytes);
-	socket.getOutputStream().write(bytes);
+	write(bytes, 0, bytes.length);
+    }
+
+    private void write(byte[] bytes, int offset, int len) throws IOException {
+	if (debug) System.out.write(bytes, offset, len);
+	socket.getOutputStream().write(bytes, offset, len);
 	socket.getOutputStream().flush();
     }
 
@@ -607,6 +605,76 @@ if (debug) System.out.write(bytes);
     }
 
     /**
+     * Read a line ending in CRLF that indicates the length of the next chunk.
+     */
+    private int readChunkLength(InputStream in) throws IOException {
+	StringBuffer sb = new StringBuffer();
+	boolean done = false;
+	boolean cr = false;
+	while(!done) {
+	    int ch = in.read();
+	    switch(ch) {
+	      case -1:
+		throw new IOException("Connection was closed!");
+	      case '\r':
+		if (sb.length() == 0) {
+		    cr = true;
+		}
+		break;
+	      case '\n':
+		if (cr) {
+		    done = true;
+		}
+		break;
+	      default:
+		sb.append((char)ch);
+		break;
+	    }
+	}
+
+	String line = sb.toString();
+if(debug)System.out.println(line);
+	int ptr = line.indexOf(";");
+	if (ptr > 0) {
+	    return Integer.parseInt(line.substring(0,ptr), 16);
+	} else {
+	    return Integer.parseInt(line, 16);
+	}
+    }
+
+    /**
+     * Reads a line as a key-value-pair, or returns null when CRLF is reached.
+     */
+    private KVP readKVP(InputStream in) throws IOException {
+	StringBuffer sb = new StringBuffer();
+	boolean done = false;
+	boolean cr = false;
+	while(!done) {
+	    int ch = in.read();
+	    switch(ch) {
+	      case -1:
+		throw new IOException("Connection was closed!");
+	      case '\r':
+		if (sb.length() == 0) {
+		    cr = true;
+		}
+		break;
+	      case '\n':
+		if (cr) {
+		    return null;
+		} else if (sb.length() > 0) {
+		    return new KVP(sb.toString());
+		}
+	      default:
+		cr = false;
+		sb.append((char)ch);
+		break;
+	    }
+	}
+	throw new ProtocolException("Failed to parse header from " + sb.toString());
+    }
+
+    /**
      * Container for a Key-Value Pair.
      */
     class KVP {
@@ -615,7 +683,8 @@ if (debug) System.out.write(bytes);
 	KVP(String header) throws IllegalArgumentException {
 	    int ptr = header.indexOf(": ");
 	    if (ptr == -1) {
-		throw new IllegalArgumentException(header);
+		key = "";
+		value = header;
 	    } else {
 		key = header.substring(0,ptr);
 		value = header.substring(ptr+2);
@@ -627,6 +696,15 @@ if (debug) System.out.write(bytes);
 	    this.value = value;
 	}
 
+	@Override
+	public String toString() {
+	    if (key.length() == 0) {
+		return value;
+	    } else {
+		return new StringBuffer(key).append(": ").append(value).toString();
+	    }
+	}
+
 	String key() {
 	    return key;
 	}
@@ -636,15 +714,198 @@ if (debug) System.out.write(bytes);
 	}
     }
 
-    class HSBufferStream extends ByteArrayInputStream {
-	HSBufferStream(byte[] buffer) {
+    /**
+     * ByteArrayOutputStream that provides access to the underlying memory buffer.
+     */
+    class HSBufferedOutputStream extends ByteArrayOutputStream {
+	HSBufferedOutputStream() {
+	    super();
+	}
+
+	/**
+	 * Access the underlying buffer -- NOT A COPY.
+	 */
+	byte[] getBuf() {
+	    return buf;
+	}
+    }
+
+    /**
+     * InputStream that resets this connection when closed.
+     */
+    class HSBufferedInputStream extends ByteArrayInputStream {
+	private boolean closed;
+
+	HSBufferedInputStream(HSBufferedOutputStream out) {
+	    super(out.getBuf(), 0, out.size());
+	    closed = false;
+	}
+
+	HSBufferedInputStream(byte[] buffer) {
 	    super(buffer);
+	    closed = false;
+	}
+
+	int size() {
+	    return count;
 	}
 
 	@Override
 	public void close() throws IOException {
-	    super.close();
-	    reset();
+	    if (!closed) {
+		super.close();
+		reset();
+		closed = true;
+	    }
+	}
+    }
+
+    /**
+     * An OutputStream for a fixed-length stream.
+     */
+    class HSOutputStream extends OutputStream {
+	private int size;
+
+	int ptr;
+	boolean closed;
+
+	HSOutputStream(int size) {
+	    this.size = size;
+	    ptr = 0;
+	    closed = false;
+	}
+
+	boolean complete() {
+	    return remaining() == 0;
+	}
+
+	int remaining() {
+	    return size - ptr;
+	}
+
+	// InputStream overrides
+
+	@Override
+	public void write(int ch) throws IOException {
+	    if (closed) throw new IOException("stream closed");
+	    ptr++;
+	    if (ptr > size) {
+		throw new IOException("Buffer overflow " + ptr);
+	    }
+	    HttpSocketConnection.this.write(ch);
+	}
+
+	@Override
+	public void write(byte[] b) throws IOException {
+	    if (closed) throw new IOException("stream closed");
+	    write(b, 0, b.length);
+	}
+
+	@Override
+	public void write(byte[] b, int off, int len) throws IOException {
+	    if (closed) throw new IOException("stream closed");
+	    ptr = ptr + len;
+	    if (ptr > size) {
+		throw new IOException("Buffer overflow " + ptr + ", size=" + size);
+	    }
+	    HttpSocketConnection.this.write(b, off, len);
+	}
+
+	@Override
+	public void flush() throws IOException {
+	    if (closed) throw new IOException("stream closed");
+	    socket.getOutputStream().flush();
+	}
+
+	@Override
+	public void close() throws IOException {
+	    if (!closed) {
+		if (complete()) {
+		    flush();
+		    closed = true;
+		} else {
+		    throw new IOException("You need to write " + stream.remaining() + " more bytes!");
+		}
+	    }
+	}
+    }
+
+    /**
+     * An OutputStream for chunked stream encoding.
+     */
+    class HSChunkedOutputStream extends HSOutputStream {
+	private byte[] buffer;
+
+	HSChunkedOutputStream(int chunkSize) {
+	    super(chunkSize);
+	    buffer = new byte[chunkSize];
+	}
+
+	@Override
+	boolean complete() {
+	    return ptr == 0;
+	}
+
+	@Override
+	public void write(int ch) throws IOException {
+	    if (closed) throw new IOException("stream closed");
+	    int end = ptr + 1;
+	    if (end <= buffer.length) {
+		buffer[ptr++] = (byte)(ch & 0xFF);
+		if (end == buffer.length) {
+		    flush();
+		}
+	    } else {
+		throw new IOException("Buffer overrun " + ptr);
+	    }
+	}
+
+	@Override
+	public void write(byte[] buff) throws IOException {
+	    if (closed) throw new IOException("stream closed");
+	    write(buff, 0, buff.length);
+	}
+
+	@Override
+	public void write(byte[] buff, int offset, int len) throws IOException {
+	    if (closed) throw new IOException("stream closed");
+	    len = Math.min(buff.length - offset, len);
+	    int end = ptr + len;
+	    if (end <= buffer.length) {
+		System.arraycopy(buff, offset, buffer, ptr, len);
+		ptr = end;
+		if (end == buffer.length) {
+		    flush();
+		}
+	    } else {
+		int remainder = buffer.length - ptr;
+		write(buff, offset, remainder);
+		write(buff, offset + remainder, len - remainder);
+	    }
+	}
+
+	@Override
+	public void flush() throws IOException {
+	    if (closed) throw new IOException("stream closed");
+	    if (ptr > 0) {
+		HttpSocketConnection.this.write(Integer.toHexString(ptr));
+		HttpSocketConnection.this.write(CRLF);
+		HttpSocketConnection.this.write(buffer, 0, ptr);
+		HttpSocketConnection.this.write(CRLF);
+		buffer = new byte[buffer.length];
+		ptr = 0;
+	    }
+	}
+
+	@Override
+	public void close() throws IOException {
+	    if (!closed) {
+		flush();
+		HttpSocketConnection.this.write("0");
+		HttpSocketConnection.this.write(CRLF);
+		HttpSocketConnection.this.write(CRLF);
+		closed = true;
+	    }
 	}
     }
 }
