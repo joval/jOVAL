@@ -21,10 +21,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  * An HTTP 1.1 connection implementation that re-uses a single socket connection.  This is useful when a single TCP connection
  * is needed to communicate repeatedly with a particular URL, for example, when performing NTLM authentication negotiation.
+ *
+ * Thanks to James Marshall for his concise discussion of HTTP/1.1:
+ * @see http://www.jmarshall.com/easy/http/#http1.1c2
  */
 public class HttpSocketConnection extends HttpURLConnection {
     public static final byte[] CRLF = {'\r', '\n'};
@@ -32,6 +36,7 @@ public class HttpSocketConnection extends HttpURLConnection {
     private static int defaultChunkLength = 512;
     private static boolean debug = false;
 
+    private boolean secure, tunnelFailure;
     private Socket socket;
     private Proxy proxy;
     private String host; // host:port
@@ -56,6 +61,13 @@ public class HttpSocketConnection extends HttpURLConnection {
      */
     public HttpSocketConnection(URL url, Proxy proxy) throws IllegalArgumentException {
 	super(url);
+	if (url.getProtocol().equalsIgnoreCase("HTTPS")) {
+	    secure = true;
+	} else if (url.getProtocol().equalsIgnoreCase("HTTP")) {
+	    secure = false;
+	} else {
+	    throw new IllegalArgumentException("Unsupported protocol: " + url.getProtocol());
+	}
 	if (proxy != null) {
 	    switch(proxy.type()) {
 	      case HTTP:
@@ -71,7 +83,11 @@ public class HttpSocketConnection extends HttpURLConnection {
 	}
 	StringBuffer sb = new StringBuffer(url.getHost());
 	if (url.getPort() == -1) {
-	    sb.append(":80");
+	    if (secure) {
+		sb.append(":443");
+	    } else {
+		sb.append(":80");
+	    }
 	} else {
 	    sb.append(":").append(Integer.toString(url.getPort()));
 	}
@@ -264,7 +280,7 @@ public class HttpSocketConnection extends HttpURLConnection {
 	    getResponse();
 	} catch (IOException e) {
 	}
-	if (responseCode == 200) {
+	if (responseCode == HTTP_OK) {
 	    return responseData;
 	} else {
 	    throw new IOException("Response error: " + responseCode);
@@ -280,7 +296,7 @@ public class HttpSocketConnection extends HttpURLConnection {
 	    getResponse();
 	} catch (IOException e) {
 	}
-	if (responseCode == 200) {
+	if (responseCode == HTTP_OK) {
 	    return null;
 	} else {
 	    return responseData;
@@ -292,9 +308,6 @@ public class HttpSocketConnection extends HttpURLConnection {
      */
     @Override
     public OutputStream getOutputStream() throws IOException {
-	if (gotResponse) {
-	    throw new IllegalStateException("The request has already been processed");
-	}
 	if (doOutput) {
 	    if (stream == null) {
 		switch(fixedContentLength) {
@@ -379,6 +392,9 @@ public class HttpSocketConnection extends HttpURLConnection {
 
     @Override
     public void connect() throws IOException {
+	if (connected) {
+	    return;
+	}
 	if (socket == null || socket.isClosed()) {
 	    if (proxy == null) {
 		socket = new Socket(url.getHost(), url.getPort());
@@ -387,17 +403,60 @@ public class HttpSocketConnection extends HttpURLConnection {
 		socket.connect(proxy.address());
 	    }
 	}
-	if (!connected) {
+	if (secure && proxy != null) {
+	    //
+	    // Establish a tunnel through the proxy
+	    //
+	    write(new StringBuffer("CONNECT ").append(host).append(" HTTP/1.1").toString());
+	    write(CRLF);
+	    String temp = getRequestProperty("Proxy-authorization");
+	    if (temp != null) {
+		write(new KVP("Proxy-authorization", temp));
+	    }
+	    temp = getRequestProperty("User-Agent");
+	    if (temp != null) {
+		write(new KVP("User-Agent", temp));
+	    }
+	    write(new KVP("Connection", "Keep-Alive"));
+	    write(CRLF);
+
+	    InputStream in = socket.getInputStream();
+	    Map<String, List<String>> map = new HashMap<String, List<String>>();
+	    KVP pair = null;
+	    while((pair = readKVP(in)) != null) {
+		if (pair.key().length() == 0) {
+		    parseResponse(pair.value());
+		}
+		if (responseCode != HTTP_OK) {
+		    if (orderedHeaderFields.size() > 0) {
+			addMapProperties(pair, map);
+		    }
+		    orderedHeaderFields.add(pair);
+		}
+	    }
+	    if (responseCode == HTTP_OK) {
+		//
+		// Establish a socket tunnel
+		//
+		int port = Integer.parseInt(host.substring(host.indexOf(":") + 1));
+		socket = ((SSLSocketFactory)SSLSocketFactory.getDefault()).createSocket(socket, url.getHost(), port, true);
+	    } else {
+		stream = new HSDevNull();
+		headerFields = Collections.unmodifiableMap(map);
+		gotResponse = true;
+	    }
+	} else {
 	    StringBuffer req = new StringBuffer(getRequestMethod()).append(" ");
-	    if (proxy != null) {
-		req.append(host);
+	    if (proxy == null) {
+		String path = url.getPath();
+		if (!path.startsWith("/")) {
+		    req.append("/");
+		}
+		req.append(path);
+	    } else {
+		req.append(url.toString());
 	    }
-	    String path = url.getPath();
-	    if (!path.startsWith("/")) {
-		req.append("/");
-	    }
-	    req.append(path);
-	    req.append(" HTTP/1.1\n");
+	    req.append(" HTTP/1.1");
 	    setRequestProperty("Connection", "Keep-Alive");
 	    setRequestProperty("Host", host);
 	    if (doOutput) {
@@ -408,26 +467,16 @@ public class HttpSocketConnection extends HttpURLConnection {
 			chunkLength = defaultChunkLength;
 		    }
 		    setRequestProperty("Transfer-Encoding", "chunked");
-Thread.currentThread().dumpStack();
 		}
 	    }
 	    write(req.toString());
+	    write(CRLF);
 	    for (Map.Entry<String, List<String>> entry : requestProperties.entrySet()) {
-		StringBuffer header = new StringBuffer();
-		for (String s : entry.getValue()) {
-		    if (header.length() > 0) {
-			header.append(", ");
-		    }
-		    header.append(s);
-		}
-		header.insert(0, ": ");
-		header.insert(0, entry.getKey());
-		header.append("\n");
-		write(header.toString());
+		write(new KVP(entry));
 	    }
 	    write(CRLF);
-	    connected = true;
 	}
+	connected = true;
     }
 
     // Private
@@ -473,9 +522,7 @@ if(debug)System.out.println(pair.toString());
 		if (orderedHeaderFields.size() == 0) {
 		    parseResponse(pair.value());
 		} else {
-		    for (String val : pair.value().split(", ")) {
-			addMapProperty(pair.key(), val, map);
-		    }
+		    addMapProperties(pair, map);
 		}
 		orderedHeaderFields.add(pair);
 		if ("Content-Length".equalsIgnoreCase(pair.key())) {
@@ -488,7 +535,6 @@ if(debug)System.out.println(pair.toString());
 		    chunked = pair.value().equalsIgnoreCase("chunked");
 		}
 	    }
-	    headerFields = Collections.unmodifiableMap(map);
 
 	    if (chunked) {
 		HSBufferedOutputStream buffer = new HSBufferedOutputStream();
@@ -511,15 +557,15 @@ if(debug)System.out.write(CRLF);
 		while((pair = readKVP(in)) != null) {
 if(debug)System.out.println(pair.toString());
 		    orderedHeaderFields.add(pair);
-		    for (String val : pair.value().split(", ")) {
-			addMapProperty(pair.key(), val, map);
-		    }
+		    addMapProperties(pair, map);
 		}
 	    } else {
 		byte[] bytes = new byte[contentLength];
 		in.read(bytes, 0, contentLength);
 		responseData = new HSBufferedInputStream(bytes);
 	    }
+
+	    headerFields = Collections.unmodifiableMap(map);
 	} catch (Exception e) {
 	    if (debug) {
 		e.printStackTrace();
@@ -531,6 +577,11 @@ if(debug)System.out.println(pair.toString());
 		disconnect();
 	    }
 	}
+    }
+
+    private void write(KVP header) throws IOException {
+	write(header.toString());
+	write(CRLF);
     }
 
     private void write(String s) throws IOException {
@@ -562,7 +613,7 @@ if(debug)System.out.println(pair.toString());
 	String httpVersion = tok.nextToken();
 	responseCode = Integer.parseInt(tok.nextToken());
 	if (tok.hasMoreTokens()) {
-	    responseMessage = tok.nextToken("\n");
+	    responseMessage = tok.nextToken("\r\n");
 	}
     }
 
@@ -582,6 +633,16 @@ if(debug)System.out.println(pair.toString());
 	}
 	if (!found) {
 	    map.put(key, values);
+	}
+    }
+
+    /**
+     * Add a key/value pair to a multi-valued map. If the value is comma-delimited, its values are parsed and added to
+     * the map accordingly.
+     */
+    private void addMapProperties(KVP pair, Map<String, List<String>> map) {
+	for (String val : pair.value().split(", ")) {
+	    addMapProperty(pair.key(), val, map);
 	}
     }
 
@@ -665,6 +726,7 @@ if(debug)System.out.println(line);
 		} else if (sb.length() > 0) {
 		    return new KVP(sb.toString());
 		}
+		// fall-thru
 	      default:
 		cr = false;
 		sb.append((char)ch);
@@ -694,6 +756,18 @@ if(debug)System.out.println(line);
 	KVP(String key, String value) {
 	    this.key = key;
 	    this.value = value;
+	}
+
+	KVP(Map.Entry<String, List<String>> entry) {
+	    key = entry.getKey();
+	    StringBuffer sb = new StringBuffer();
+	    for (String s : entry.getValue()) {
+		if (sb.length() > 0) {
+		    sb.append(", ");
+		}
+		sb.append(s);
+	    }
+	    value = sb.toString();
 	}
 
 	@Override
@@ -824,10 +898,35 @@ if(debug)System.out.println(line);
 		    flush();
 		    closed = true;
 		} else {
-		    throw new IOException("You need to write " + stream.remaining() + " more bytes!");
+		    throw new IOException("You need to write " + remaining() + " more bytes!");
 		}
 	    }
 	}
+    }
+
+    /**
+     * A safe place (i.e., nowhere) to write output in the event of a failure to establish a CONNECT tunnel through
+     * an HTTP proxy.
+     */
+    class HSDevNull extends HSOutputStream {
+	HSDevNull() {
+	    super(0);
+	}
+
+	@Override
+	public void write(int ch) {}
+
+	@Override
+	public void write(byte[] b) {}
+
+	@Override
+	public void write(byte[] b, int offset, int len) {}
+
+	@Override
+	public void flush() {}
+
+	@Override
+	public void close() {}
     }
 
     /**
@@ -907,5 +1006,15 @@ if(debug)System.out.println(line);
 		closed = true;
 	    }
 	}
+    }
+
+    /**
+     * An output stream to nowhere.
+     */
+    class DevNull extends OutputStream {
+	DevNull() {}
+
+	@Override
+	public void write(int ch) {}
     }
 }
