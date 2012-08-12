@@ -45,7 +45,13 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
     private NtlmSession session, proxySession;
     private String authProperty, authMethod;
     private boolean negotiated;
-    private CachingOutputStream cachedOutput;
+    private ByteArrayOutputStream cachedOutput;
+
+    enum NtlmPhase {
+	NA, TYPE1, TYPE3;
+    }
+
+    private NtlmPhase phase, proxyPhase;
 
     /**
      * Create a connection to a URL.
@@ -60,7 +66,13 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
     public NtlmHttpURLConnection(URL url, IWindowsCredential cred) {
 	super(url);
 	connection = new HttpSocketConnection(url);
-	session = createSession(cred);
+	if (cred == null) {
+	    phase = NtlmPhase.NA;
+	} else {
+	    session = createSession(cred);
+	    phase = NtlmPhase.TYPE1;
+	}
+	proxyPhase = NtlmPhase.NA;
     }
 
     /**
@@ -78,7 +90,10 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	    throw new IllegalStateException("connected");
 	} else {
 	    connection.setProxy(proxy);
-	    proxySession = createSession(cred);
+	    if (cred != null) {
+		proxySession = createSession(cred);
+		proxyPhase = NtlmPhase.TYPE1;
+	    }
 	}
     }
 
@@ -91,13 +106,18 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	//
 	// Seed the initial connection with negotiate headers
 	//
-	if (proxySession != null && getRequestProperty("Proxy-Authorization") == null) {
+	if (proxyPhase == NtlmPhase.TYPE1) {
 	    connection.setRequestProperty("Proxy-Authorization", "Negotiate " +
 		Base64.encodeBytes(proxySession.generateNegotiateMessage()));
 	}
-	if (session != null && getRequestProperty("Authorization") == null) {
+	if (phase == NtlmPhase.TYPE1) {
 	    connection.setRequestProperty("Authorization", "Negotiate " +
 		Base64.encodeBytes(session.generateNegotiateMessage()));
+	}
+
+	setFixedLengthStreamingMode(0);
+	if (sendOutput() && cachedOutput != null) {
+	    setFixedLengthStreamingMode(cachedOutput.size());
 	}
 
 	connection.connect();
@@ -105,10 +125,12 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	//
 	// Send any cached output
 	//
-	if (cachedOutput != null) {
-	    OutputStream out = connection.getOutputStream();
-	    cachedOutput.writeTo(out);
-	    out.close();
+	if (sendOutput()) {
+	    if (cachedOutput != null) {
+		OutputStream out = connection.getOutputStream();
+		cachedOutput.writeTo(out);
+		out.close();
+	    }
 	}
 
 	connected = true;
@@ -278,7 +300,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
     @Override
     public OutputStream getOutputStream() throws IOException {
 	if (cachedOutput == null) {
-	    cachedOutput = new CachingOutputStream(connection.getOutputStream());
+	    cachedOutput = new ByteArrayOutputStream();
 	}
 	return cachedOutput;
     }
@@ -438,6 +460,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 			if (auth.isNegotiate()) {
 			    reset();
 			    setRequestProperty("Authorization", auth.createAuthenticateHeader(session));
+			    phase = NtlmPhase.TYPE3;
 			} else {
 			    return;
 			}
@@ -452,6 +475,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 			if (auth.isNegotiate()) {
 			    reset();
 			    setRequestProperty("Proxy-Authorization", auth.createAuthenticateHeader(proxySession));
+			    proxyPhase = NtlmPhase.TYPE3;
 			} else {
 			    return;
 			}
@@ -477,11 +501,24 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	connection.reset();
 	connected = false;
 
+	//
+	// Transfer all headers, except the authorization headers
+	//
 	for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-	    List<String> values = entry.getValue();
-	    connection.setRequestProperty(entry.getKey(), values.get(0));
-	    for (int i=1; i < values.size(); i++) {
-		connection.addRequestProperty(entry.getKey(), values.get(i));
+	    if (phase != NtlmPhase.NA && "Authorization".equalsIgnoreCase(entry.getKey())) {
+		//
+		// Don't copy the Authorization header if this class is managing NTLM authentication
+		//
+	    } else if (proxyPhase != NtlmPhase.NA && "Proxy-Authorization".equalsIgnoreCase(entry.getKey())) {
+		//
+		// Don't copy the Proxy-Authorization header if this class is managing NTLM authentication
+		//
+	    } else {
+		List<String> values = entry.getValue();
+		connection.setRequestProperty(entry.getKey(), values.get(0));
+		for (int i=1; i < values.size(); i++) {
+		    connection.addRequestProperty(entry.getKey(), values.get(i));
+		}
 	    }
 	}
 	connection.setRequestMethod(method);
@@ -490,11 +527,6 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	connection.setDoOutput(doOutput);
 	connection.setIfModifiedSince(ifModifiedSince);
 	connection.setUseCaches(useCaches);
-	if (cachedOutput == null) {
-	    setFixedLengthStreamingMode(0);
-	} else {
-	    setFixedLengthStreamingMode(cachedOutput.size());
-	}
     }
 
     /**
@@ -514,6 +546,11 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	String pass = cred.getPassword();
 	NtlmAuthenticator auth = new NtlmAuthenticator(NTLMV2, CO, host, domain, user, pass);
 	return auth.createSession();
+    }
+
+    private boolean sendOutput() {
+	return	(proxyPhase == NtlmPhase.NA || proxyPhase == NtlmPhase.TYPE3) &&
+		(phase == NtlmPhase.NA || phase == NtlmPhase.TYPE3);
     }
 
     private void drain(InputStream stream) throws IOException {
@@ -564,54 +601,6 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	    header.append(" ");
 	    header.append(Base64.encodeBytes(session.generateAuthenticateMessage()));
 	    return header.toString();
-	}
-    }
-
-    class CachingOutputStream extends OutputStream {
-	private OutputStream destination;
-	private ByteArrayOutputStream cache;
-
-	CachingOutputStream(OutputStream destination) {
-	    this.destination = destination;
-	    cache = new ByteArrayOutputStream();
-	}
-
-	void writeTo(OutputStream out) throws IOException {
-	    cache.writeTo(out);
-	}
-
-	int size() {
-	    return cache.size();
-	}
-
-	// OutputStream Overrides
-
-	@Override
-	public void write(int ch) throws IOException {
-	    cache.write(ch);
-	    destination.write(ch);
-	}
-
-	@Override
-	public void write(byte[] b) throws IOException {
-	    write(b, 0, b.length);
-	}
-
-	@Override
-	public void write(byte[] b, int offset, int len) throws IOException {
-	    cache.write(b, offset, len);
-	    destination.write(b, offset, len);
-	}
-
-	@Override
-	public void close() throws IOException {
-	    cache.close();
-	    destination.close();
-	}
-
-	@Override
-	public void flush() throws IOException {
-	    destination.flush();
 	}
     }
 }
