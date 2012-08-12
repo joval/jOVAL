@@ -29,6 +29,9 @@ import javax.net.ssl.SSLSocketFactory;
  *
  * Thanks to James Marshall for his concise discussion of HTTP/1.1:
  * @see http://www.jmarshall.com/easy/http/#http1.1c2
+ *
+ * @author David A. Solin
+ * @version %I% %G%
  */
 public class HttpSocketConnection extends HttpURLConnection {
     public static final byte[] CRLF = {'\r', '\n'};
@@ -68,19 +71,7 @@ public class HttpSocketConnection extends HttpURLConnection {
 	} else {
 	    throw new IllegalArgumentException("Unsupported protocol: " + url.getProtocol());
 	}
-	if (proxy != null) {
-	    switch(proxy.type()) {
-	      case HTTP:
-		this.proxy = proxy;
-		break;
-	      case SOCKS:
-		throw new IllegalArgumentException("Illegal proxy type: SOCKS");
-	      case DIRECT:
-	      default:
-		this.proxy = null;
-		break;
-	    }
-	}
+	setProxy(proxy);
 	StringBuffer sb = new StringBuffer(url.getHost());
 	if (url.getPort() == -1) {
 	    if (secure) {
@@ -93,50 +84,6 @@ public class HttpSocketConnection extends HttpURLConnection {
 	}
 	host = sb.toString();
 	reset();
-    }
-
-    /**
-     * Reset the connection to a pristine state.
-     */
-    public void reset() {
-	//
-	// reset inherited fields
-	//
-	connected = false;
-	chunkLength = -1;
-	fixedContentLength = -1;
-	method = "GET";
-	responseCode = -1;
-	responseMessage = null;
-	allowUserInteraction = getDefaultAllowUserInteraction();
-	doInput = true;
-	doOutput = false;
-	ifModifiedSince = 0;
-	useCaches = getDefaultUseCaches();
-
-	//
-	// reset private fields
-	//
-	orderedHeaderFields = null;
-	headerFields = null;
-	requestProperties = new HashMap<String, List<String>>();
-	setRequestProperty("User-Agent", "jOVAL HTTP Client");
-	if (stream != null) {
-	    try {
-		stream.close();
-	    } catch (IOException e) {
-		disconnect();
-	    }
-	    stream = null;
-	}
-	responseData = null;
-	contentLength = 0;
-	contentType = null;
-	contentEncoding = null;
-	expiration = 0;
-	date = 0;
-	lastModified = 0;
-	gotResponse = false;
     }
 
     // Overrides for HttpURLConnection
@@ -477,6 +424,71 @@ public class HttpSocketConnection extends HttpURLConnection {
 	    write(CRLF);
 	}
 	connected = true;
+    }
+
+    // Internal
+
+    /**
+     * Set a proxy.
+     */
+    void setProxy(Proxy proxy) {
+	if (proxy != null) {
+	    switch(proxy.type()) {
+	      case HTTP:
+		this.proxy = proxy;
+		break;
+	      case SOCKS:
+		throw new IllegalArgumentException("Illegal proxy type: SOCKS");
+	      case DIRECT:
+	      default:
+		this.proxy = null;
+		break;
+	    }
+	}
+    }
+
+    /**
+     * Reset the connection to a pristine state.
+     */
+    void reset() {
+	//
+	// reset inherited fields
+	//
+	connected = false;
+	chunkLength = -1;
+	fixedContentLength = -1;
+	method = "GET";
+	responseCode = -1;
+	responseMessage = null;
+	allowUserInteraction = getDefaultAllowUserInteraction();
+	doInput = true;
+	doOutput = false;
+	ifModifiedSince = 0;
+	useCaches = getDefaultUseCaches();
+
+	//
+	// reset private fields
+	//
+	orderedHeaderFields = null;
+	headerFields = null;
+	requestProperties = new HashMap<String, List<String>>();
+	setRequestProperty("User-Agent", "jOVAL HTTP Client");
+	if (stream != null) {
+	    try {
+		stream.close();
+	    } catch (IOException e) {
+		disconnect();
+	    }
+	    stream = null;
+	}
+	responseData = null;
+	contentLength = 0;
+	contentType = null;
+	contentEncoding = null;
+	expiration = 0;
+	date = 0;
+	lastModified = 0;
+	gotResponse = false;
     }
 
     // Private

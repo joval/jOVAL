@@ -53,6 +53,7 @@ import com.microsoft.wsman.shell.EnvironmentVariableList;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
+import org.joval.os.windows.identity.WindowsCredential;
 import org.joval.os.windows.remote.wsmv.WSMVPort;
 import org.joval.os.windows.remote.wsmv.operation.EnumerateOperation;
 import org.joval.os.windows.remote.wsmv.operation.PullOperation;
@@ -88,15 +89,15 @@ public class Client implements IWSMVConstants {
 	String url = targetSpec.toString();
 
 	try {
-	    Client client = new Client(new WSMVPort(url, user, pass));
+	    Client client = new Client(new WSMVPort(url, new WindowsCredential(user + ":" + pass)));
 
-/*
 	    client.testGet();
+/*
 	    client.testEnumerate();
 	    client.testPut();
 	    client.testDelete();
-*/
 	    client.testShell();
+*/
 
 	} catch (Exception e) {
 	    e.printStackTrace();

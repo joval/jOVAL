@@ -42,6 +42,7 @@ import org.w3c.soap.envelope.Envelope;
 import org.w3c.soap.envelope.Fault;
 import org.w3c.soap.envelope.Header;
 
+import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
 import org.joval.protocol.http.HttpSocketConnection;
@@ -86,18 +87,18 @@ public class WSMVPort implements IPort, IWSMVConstants {
     private AuthScheme scheme;
     private String url;
     private Proxy proxy;
-    private String domain, user, pass;
+    private IWindowsCredential cred;
     private Marshaller marshaller;
     private Unmarshaller unmarshaller;
 
-    public WSMVPort(String url, String user, String pass) throws JAXBException {
-	this(url, null, user, pass);
+    public WSMVPort(String url, IWindowsCredential cred) throws JAXBException {
+	this(url, null, cred);
     }
 
     /**
      * Create a new IPort for the specified URL.
      */
-    public WSMVPort(String url, Proxy proxy, String user, String pass) throws JAXBException {
+    public WSMVPort(String url, Proxy proxy, IWindowsCredential cred) throws JAXBException {
 	JAXBContext ctx = JAXBContext.newInstance(schemaProps.getProperty("ws-man.packages"));
 	marshaller = ctx.createMarshaller();
 	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -107,15 +108,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
 
 	this.url = url;
 	this.proxy = proxy;
-	int ptr = user.indexOf("\\");
-	if (ptr == -1) {
-	    domain = null;
-	    this.user = user;
-	} else {
-	    domain = user.substring(0, ptr);
-	    this.user = user.substring(ptr + 1);
-	}
-	this.pass = pass;
+	this.cred = cred;
     }
 
     // Implement IPort
@@ -208,7 +201,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
 		    System.setProperty("sun.security.krb5.debug", "true");
 		    System.setProperty("java.security.auth.login.config", "login.conf");
 		    System.setProperty("javax.security.auth.useSubjectCredsOnly", "false");
-		    spnego = new SpnegoHttpURLConnection("com.sun.security.jgss.krb5.initiate", user, pass);
+		    spnego = new SpnegoHttpURLConnection("com.sun.security.jgss.krb5.initiate", cred.getDomainUser(), cred.getPassword());
 		    if (proxy == null) {
 			conn = spnego.connect(u);
 		    } else {
@@ -217,10 +210,8 @@ public class WSMVPort implements IPort, IWSMVConstants {
 		    break;
 
 		  case NTLM:
-		    URL authURL = new URL(u.getProtocol() + "://" +
-					  domain + "\\" + user + ":" + pass + "@" +
-					  u.getHost() + ":" + u.getPort() + u.getPath());
-		    conn = new NtlmHttpURLConnection(new HttpSocketConnection(authURL, proxy));
+		    conn = new NtlmHttpURLConnection(u, cred);
+		    ((NtlmHttpURLConnection)conn).setProxy(proxy);
 		    break;
 
 		  case BASIC:
@@ -229,7 +220,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
 		    } else {
 			conn = (HttpURLConnection)u.openConnection(proxy);
 		    }
-		    conn.setRequestProperty("Authorization", "Basic " + Base64.encodeBytes((user + ":" + pass).getBytes()));
+		    conn.setRequestProperty("Authorization", "Basic " + Base64.encodeBytes((cred.getDomainUser() + ":" + cred.getPassword()).getBytes()));
 		    break;
 		}
 
