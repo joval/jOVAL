@@ -72,6 +72,10 @@ public class WmiConnection implements IWmiProvider {
 	map.clear();
     }
 
+    public SWbemServices getServices(String namespace) throws UnknownHostException, JIException {
+	return getServices(host, namespace);
+    }
+
     public SWbemServices getServices(String target, String namespace) throws UnknownHostException, JIException {
 	String key = new StringBuffer(target).append(":").append(namespace).toString();
 	SWbemServices services = map.get(key);

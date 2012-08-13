@@ -41,10 +41,7 @@ import org.joval.os.windows.remote.wsmv.operation.SignalOperation;
 import org.joval.ws.WSFault;
 
 /**
- * A WinRM client.  To use it, you must first do this on the target machine:
- *
- *   winrm set winrm/config/service @{AllowUnencrypted="true"}
- *   winrm set winrm/config/service/auth @{Basic="true"}
+ * Simple implementation of a WinRM Shell-based IProcess.
  *
  * @author David A. Solin
  * @version %I% %G%

@@ -36,20 +36,33 @@ public class Reg {
 	}
     }
 
-    public void test(String keyName, String valueName) {
+    public void testLicense() {
 	try {
 	    IRegistry r = session.getRegistry(IWindowsSession.View._64BIT);
 	    Hashtable<String, IEntry> ht = r.getLicenseData().getEntries();
 	    for (IEntry entry : ht.values()) {
 		System.out.println(entry.toString());
 	    }
+	} catch (NoSuchElementException e) {
+	    e.printStackTrace();
+	}
+    }
 
+    public void test(String keyName, String valueName) {
+	try {
+	    IRegistry r = session.getRegistry(IWindowsSession.View._64BIT);
 	    IKey key = r.fetchKey(keyName);
 
 	    if (valueName == null) {
-		String[] sa = key.listValues();
+		String[] sa = key.listSubkeys();
+		System.out.println("Subkeys: " + sa.length);
 		for (int i=0; i < sa.length; i++) {
-		    System.out.println("Value name: " + sa[i] + " val: " + key.getValue(sa[i]).toString());
+		    System.out.println("  Subkey name: " + sa[i]);
+		}
+		sa = key.listValues();
+		System.out.println("Values: " + sa.length);
+		for (int i=0; i < sa.length; i++) {
+		    System.out.println("  Value name: " + sa[i] + " val: " + key.getValue(sa[i]).toString());
 		}
 	    } else {
 		IValue value = r.fetchValue(key, valueName);

@@ -40,12 +40,12 @@ public interface IUnixFilesystem extends IFilesystem {
      * discarded and a new one computed.
      *
      */
-    String VAL_FILE_METHOD      = "file";
+    String VAL_FILE_METHOD = "file";
 
     /**
      * Specifies a preload method wherein the output of the find command is streamed down live to jOVAL.
      */
-    String VAL_STREAM_METHOD    = "stream";
+    String VAL_STREAM_METHOD = "stream";
 
     /**
      * Property governing the maximum age, in milliseconds, of the file storing the find results used by precaching.  This

@@ -74,6 +74,7 @@ CLASSES=\
 	org.joval.util.Base64					\
 	org.joval.util.CachingHierarchy				\
 	org.joval.util.Checksum					\
+	org.joval.util.Environment				\
 	org.joval.util.IniFile					\
 	org.joval.util.JOVALMsg					\
 	org.joval.util.JOVALSystem				\

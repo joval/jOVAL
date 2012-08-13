@@ -91,6 +91,9 @@ public interface IBaseSession extends ILoggable {
      */
     String getHostname();
 
+    /**
+     * Access the instance properties controlling various session behaviors (defined by the PROP_* constants).
+     */
     IProperty getProperties();
 
     /**

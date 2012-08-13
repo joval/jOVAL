@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.windows.remote.system;
+package org.joval.os.windows.remote.wmi;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,6 +17,7 @@ import com.h9labs.jwbem.SWbemServices;
 import com.h9labs.jwbem.SWbemObjectSet;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.wmi.ISWbemEventSource;
@@ -32,18 +33,18 @@ import org.joval.os.windows.wmi.WmiException;
 import org.joval.util.JOVALMsg;
 
 /**
- * Remote Windows implementation of an IProcess.
+ * Remote WMI-based implementation of a Windows IProcess.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-class WindowsProcess implements IProcess, ILoggable {
-    private IWmiProvider wmi;
+public class WmiProcessControl implements IProcess, ILoggable {
+    private WmiConnection wmi;
     private SWbemServices services;
     private Win32ProcessStartup startupInfo;
     private Win32Process process;
     private int pid = 0;
-    private String command, cwd;
+    private String cmd, cwd;
     private IFile out, err;
     private TailDashF outTail, errTail;
     private boolean running = false;
@@ -51,16 +52,16 @@ class WindowsProcess implements IProcess, ILoggable {
     private LocLogger logger;
     private Monitor monitor;
 
-    WindowsProcess(WindowsSession ws, String command, String[] env, String cwd, IFile out, IFile err)
-		throws JIException, UnknownHostException {
+    public WmiProcessControl(WmiConnection wmi, IEnvironment baseEnv, String cmd, String[] env, String cwd,
+		IFile out, IFile err) throws JIException, UnknownHostException {
 
-	wmi = ws.conn;
-	services = ws.conn.getServices(ws.getHostname(), IWmiProvider.CIMv2);
-	this.command = command;
+	this.wmi = wmi;
+	services = wmi.getServices(IWmiProvider.CIMv2);
+	this.cmd = cmd;
 	this.cwd = cwd;
 	this.out = out;
 	this.err = err;
-	startupInfo = new Win32ProcessStartup(ws.getEnvironment(), services);
+	startupInfo = new Win32ProcessStartup(baseEnv, services);
 	startupInfo.setEnvironmentVariables(env);
 	logger = JOVALMsg.getLogger();
     }
@@ -78,7 +79,7 @@ class WindowsProcess implements IProcess, ILoggable {
     // Implement IProcess
 
     public String getCommand() {
-	return command;
+	return cmd;
     }
 
     // REMIND (DAS): implement this...
@@ -95,7 +96,7 @@ class WindowsProcess implements IProcess, ILoggable {
 	outTail.start();
 	errTail = new TailDashF(err);
 	errTail.start();
-	StringBuffer sb = new StringBuffer("cmd /c ").append(command);
+	StringBuffer sb = new StringBuffer("cmd /c ").append(cmd);
 	sb.append(" >> ").append(out.getPath());
 	sb.append(" 2>> ").append(err.getPath());
 	int rc = process.create(sb.toString(), cwd, startupInfo);

@@ -5,6 +5,7 @@ package org.joval.os.windows.remote.winrm;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
@@ -40,10 +41,9 @@ import org.joval.os.windows.remote.wsmv.operation.PullOperation;
 import org.joval.ws.WSFault;
 
 /**
- * A WinRM client.  To use it, you must first do this on the target machine:
+ * An implementation of MS-WSMV Shell, using WS-Management.
  *
  *   winrm set winrm/config/service @{AllowUnencrypted="true"}
- *   winrm set winrm/config/service/auth @{Basic="true"}
  *
  * @author David A. Solin
  * @version %I% %G%
@@ -180,8 +180,18 @@ public class Shell implements IWSMVConstants {
 */
     }
 
-    public IProcess createProcess(String command, String[] args) {
-	return new ShellCommand(port, id, command, args);
+    public IProcess createProcess(String command) throws IllegalArgumentException {
+	ArrayList<String> args = new ArrayList<String>();
+	ArgumentTokenizer tok = new ArgumentTokenizer(command);
+	String arg = null;
+	while((arg = tok.nextArg()) != null) {
+	    args.add(arg);
+	}
+	String[] argv = new String[args.size() - 1];
+	for (int i=0; i < argv.length; i++) {
+	    argv[i] = args.get(i+1);
+	}
+	return new ShellCommand(port, id, args.get(0), argv);
     }
 
     /**
@@ -208,6 +218,114 @@ public class Shell implements IWSMVConstants {
 	    deleteOperation.dispatch(port);
 	} catch (Exception e) {
 	    e.printStackTrace();
+	}
+    }
+
+    // Private
+
+    /**
+     * The argument tokenizer ...
+     */
+    class ArgumentTokenizer {
+	String command;
+	int ptr;
+
+	/**
+	 * Create a tokenizer for a command string.
+	 */
+	ArgumentTokenizer(String command) {
+	    this.command = command;
+	    ptr = 0;
+	}
+
+	/**
+	 * Get the next argument from the command string.
+	 */
+	String nextArg() {
+	    return nextArg(ptr);
+	}
+
+	// Private
+
+	/**
+	 * Determine the next argument after ptr, starting the search for a space at the specified index.
+	 */
+	private String nextArg(int index) {
+	    if (ptr >= command.length()) {
+		return null;
+	    } else if (index == -1) {
+		StringBuffer sb = new StringBuffer();
+		int unclosed = unescapedIndexOf("\"", command, ptr);
+		while(unclosed-- > 0) {
+		    sb.append(" ");
+		}
+		sb.append("^");
+		throw new IllegalArgumentException("Unclosed quote in command:\n    " + command + "\n" +
+						   "    " + sb.toString());
+	    }
+
+	    int nextQuote = unescapedIndexOf("\"", command, index);
+	    if (nextQuote == -1) {
+		nextQuote = command.length();
+	    }
+	    String arg = null;
+	    int nextSpace = unescapedIndexOf(" ", command, index);
+	    if (nextSpace == -1) {
+		arg = command.substring(ptr);
+		ptr = command.length();
+	    } else if (nextSpace < nextQuote) {
+		arg = command.substring(ptr, nextSpace);
+		ptr = nextSpace+1;
+	    } else {
+		int nextIndex = unescapedIndexOf("\"", command, nextQuote+1);
+		if (nextIndex == -1) {
+		    arg = nextArg(-1);
+		} else {
+		    arg = nextArg(nextIndex + 1);
+		}
+	    }
+
+	    arg = arg.trim();
+	    if (arg.length() == 0) {
+		arg = nextArg();
+	    }
+	    return arg;
+	}
+
+	/**
+	 * Get the index of s in target starting from fromIndex, which is not preceded by an unescaped escape character.
+	 */
+	private int unescapedIndexOf(String s, String target, int fromIndex) {
+	    int candidate = target.indexOf(s, fromIndex);
+	    if (candidate == -1) {
+		return -1;
+	    } else if (escapedChar(candidate, target)) {
+		return unescapedIndexOf(s, target, candidate+1);
+	    } else {
+		return candidate;
+	    }
+	}
+
+	/**
+	 * Is the character at index of s escaped?
+	 */
+	private boolean escapedChar(int index, String s) throws IllegalArgumentException {
+	    if (index < 0) {
+		throw new IllegalArgumentException(Integer.toString(index));
+	    } else if (index == 0) {
+		return false;
+	    } else {
+		int escapes = 0;
+		for (int i=index-1; i >= 0; i--) {
+		    char c = s.charAt(i);
+		    if (c == '\\') {
+			escapes++;
+		    } else {
+			break;
+		    }
+		}
+		return (escapes % 2) == 1;
+	    }
 	}
     }
 }

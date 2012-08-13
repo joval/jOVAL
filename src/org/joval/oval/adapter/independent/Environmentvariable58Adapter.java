@@ -41,7 +41,7 @@ import org.joval.io.PerishableReader;
 import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
-import org.joval.util.AbstractEnvironment;
+import org.joval.util.Environment;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 
@@ -217,7 +217,7 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 	    if (processEnv == null) {
 		return new Vector<Environmentvariable58Item>();
 	    } else {
-		return getItems(obj, rc, new PropertyEnvironment(processEnv), pid);
+		return getItems(obj, rc, new Environment(processEnv), pid);
 	    }
 	}
     }
@@ -235,13 +235,5 @@ public class Environmentvariable58Adapter extends EnvironmentvariableAdapter {
 	pidType.setValue(pid);
 	item.setPid(pidType);
 	return item;
-    }
-
-    // Private
-
-    class PropertyEnvironment extends AbstractEnvironment {
-	public PropertyEnvironment(Properties props) {
-	    this.props = props;
-	}
     }
 }

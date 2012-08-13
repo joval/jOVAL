@@ -67,11 +67,19 @@ CLASSES=\
 	org.joval.os.windows.remote.io.SmbRandomAccessProxy		\
 	org.joval.os.windows.remote.registry.Key			\
 	org.joval.os.windows.remote.registry.Registry			\
-	org.joval.os.windows.remote.system.WindowsProcess		\
 	org.joval.os.windows.remote.system.WindowsSession		\
 	org.joval.os.windows.remote.winrm.Client			\
 	org.joval.os.windows.remote.winrm.Shell				\
 	org.joval.os.windows.remote.winrm.ShellCommand			\
+	org.joval.os.windows.remote.wmi.WmiConnection			\
+	org.joval.os.windows.remote.wmi.WmiProcessControl		\
+	org.joval.os.windows.remote.wmi.scripting.SWbemObject		\
+	org.joval.os.windows.remote.wmi.scripting.SWbemObjectSet	\
+	org.joval.os.windows.remote.wmi.scripting.SWbemProperty		\
+	org.joval.os.windows.remote.wmi.scripting.SWbemPropertySet	\
+	org.joval.os.windows.remote.wmi.scripting.SWbemSecurity		\
+	org.joval.os.windows.remote.wmi.win32.Win32Process		\
+	org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup	\
 	org.joval.os.windows.remote.wsmv.WSMVPort			\
 	org.joval.os.windows.remote.wsmv.operation.BaseOperation	\
 	org.joval.os.windows.remote.wsmv.operation.CommandOperation	\
@@ -87,14 +95,6 @@ CLASSES=\
 	org.joval.os.windows.remote.wsmv.operation.SignalOperation	\
 	org.joval.os.windows.remote.wsmv.operation.SubscribeOperation	\
 	org.joval.os.windows.remote.wsmv.operation.UnsubscribeOperation	\
-	org.joval.os.windows.remote.wmi.scripting.SWbemObject		\
-	org.joval.os.windows.remote.wmi.scripting.SWbemObjectSet	\
-	org.joval.os.windows.remote.wmi.scripting.SWbemProperty		\
-	org.joval.os.windows.remote.wmi.scripting.SWbemPropertySet	\
-	org.joval.os.windows.remote.wmi.scripting.SWbemSecurity		\
-	org.joval.os.windows.remote.wmi.win32.Win32Process		\
-	org.joval.os.windows.remote.wmi.win32.Win32ProcessStartup	\
-	org.joval.os.windows.remote.wmi.WmiConnection			\
 	org.joval.os.windows.system.Environment				\
 	org.joval.plugin.BasePlugin					\
 	org.joval.plugin.RemotePlugin					\

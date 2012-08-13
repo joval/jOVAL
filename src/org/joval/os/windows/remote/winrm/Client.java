@@ -91,13 +91,13 @@ public class Client implements IWSMVConstants {
 	try {
 	    Client client = new Client(new WSMVPort(url, new WindowsCredential(user + ":" + pass)));
 
-	    client.testGet();
 /*
+	    client.testGet();
 	    client.testEnumerate();
 	    client.testPut();
 	    client.testDelete();
-	    client.testShell();
 */
+	    client.testShell();
 
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -305,8 +305,7 @@ public class Client implements IWSMVConstants {
 System.out.println("Created shell " + shell.getId());
 
 try {
-    String[] args = new String[] {"TARDIS"};
-    IProcess p = shell.createProcess("ping www.google.com", null);
+    IProcess p = shell.createProcess("ping www.google.com");
     p.start();
     byte[] buff = new byte[256];
     int len = 0;

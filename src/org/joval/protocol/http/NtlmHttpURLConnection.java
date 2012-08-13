@@ -46,11 +46,6 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
     private String authProperty, authMethod;
     private boolean negotiated;
     private ByteArrayOutputStream cachedOutput;
-
-    enum NtlmPhase {
-	NA, TYPE1, TYPE3;
-    }
-
     private NtlmPhase phase, proxyPhase;
 
     /**
@@ -115,9 +110,10 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 		Base64.encodeBytes(session.generateNegotiateMessage()));
 	}
 
-	setFixedLengthStreamingMode(0);
-	if (sendOutput() && cachedOutput != null) {
+	if (sendOutput()) {
 	    setFixedLengthStreamingMode(cachedOutput.size());
+	} else {
+	    setFixedLengthStreamingMode(0);
 	}
 
 	connection.connect();
@@ -126,11 +122,9 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	// Send any cached output
 	//
 	if (sendOutput()) {
-	    if (cachedOutput != null) {
-		OutputStream out = connection.getOutputStream();
-		cachedOutput.writeTo(out);
-		out.close();
-	    }
+	    OutputStream out = connection.getOutputStream();
+	    cachedOutput.writeTo(out);
+	    out.close();
 	}
 
 	connected = true;
@@ -296,7 +290,6 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return connection.getInputStream();
     }
 
-// DAS: TBD - only send cached output on the final attempt.
     @Override
     public OutputStream getOutputStream() throws IOException {
 	if (cachedOutput == null) {
@@ -443,7 +436,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
     // Private
 
     /**
-     *
+     * Perform NTLM negotiations.
      */
     private void negotiate() throws IOException {
 	if (negotiated) return;
@@ -507,11 +500,11 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	for (Map.Entry<String, List<String>> entry : map.entrySet()) {
 	    if (phase != NtlmPhase.NA && "Authorization".equalsIgnoreCase(entry.getKey())) {
 		//
-		// Don't copy the Authorization header if this class is managing NTLM authentication
+		// Don't copy the Authorization header if this class is managing target NTLM authentication
 		//
 	    } else if (proxyPhase != NtlmPhase.NA && "Proxy-Authorization".equalsIgnoreCase(entry.getKey())) {
 		//
-		// Don't copy the Proxy-Authorization header if this class is managing NTLM authentication
+		// Don't copy the Proxy-Authorization header if this class is managing proxy NTLM authentication
 		//
 	    } else {
 		List<String> values = entry.getValue();
@@ -548,11 +541,17 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	return auth.createSession();
     }
 
+    /**
+     * Returns true when there is output to send, and any negotiations are concluding.
+     */
     private boolean sendOutput() {
 	return	(proxyPhase == NtlmPhase.NA || proxyPhase == NtlmPhase.TYPE3) &&
-		(phase == NtlmPhase.NA || phase == NtlmPhase.TYPE3);
+		(phase == NtlmPhase.NA || phase == NtlmPhase.TYPE3) && cachedOutput != null;
     }
 
+    /**
+     * Read any available data from the InputStream.
+     */
     private void drain(InputStream stream) throws IOException {
 	if (stream != null && stream.available() != 0) {
 	    int count;
@@ -560,6 +559,12 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	    while ((count = stream.read(buf, 0, 1024)) != -1);
 	    stream.close();
 	}
+    }
+
+    // Inner Classes
+
+    enum NtlmPhase {
+	NA, TYPE1, TYPE3;
     }
 
     class AuthenticateData {

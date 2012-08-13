@@ -16,6 +16,21 @@ import org.joval.intf.windows.wmi.IWmiProvider;
  * @version %I% %G%
  */
 public interface IWindowsSession extends ISession {
+    /**
+     * Property governing the method use to control the execution of processes on remote Windows machines.
+     */
+    String PROP_REMOTE_EXEC_IMPL = "remote.exec.method";
+
+    /**
+     * Specifies a remote execution implementation based on WMI-over-DCOM.
+     */
+    String VAL_WMI = "wmi";
+
+    /**
+     * Specifies a remote execution implementation based on Windows Remote Management Web Services (MS-WSMV).
+     */
+    String VAL_WINRM = "winrm";
+
     String ENV_ARCH = "PROCESSOR_ARCHITECTURE";
 
     public enum View {

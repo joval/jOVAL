@@ -43,6 +43,9 @@ public class Default {
 		if ("true".equals(props.getProperty("test.registry"))) {
 		    new Reg(session).test(props.getProperty("registry.key"), props.getProperty("registry.value"));
 		}
+		if ("true".equals(props.getProperty("test.license"))) {
+		    new Reg(session).testLicense();
+		}
 		if ("true".equals(props.getProperty("test.exec"))) {
 		    new Exec(session).test(props.getProperty("exec.command"));
 		}
@@ -53,7 +56,7 @@ public class Default {
 		    new WMI(session).test(props.getProperty("wmi.namespace"), props.getProperty("wmi.query"));
 		}
 		if ("true".equals(props.getProperty("test.pe"))) {
-//		    new PE(session).test(props.getProperty("pe.file"));
+		    new PE(session).test(props.getProperty("pe.file"));
 		}
 		session.disconnect();
 	    }

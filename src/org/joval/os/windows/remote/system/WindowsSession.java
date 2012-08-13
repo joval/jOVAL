@@ -43,8 +43,12 @@ import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.remote.io.SmbFilesystem;
 import org.joval.os.windows.remote.registry.Registry;
 import org.joval.os.windows.remote.wmi.WmiConnection;
+import org.joval.os.windows.remote.wmi.WmiProcessControl;
+import org.joval.os.windows.remote.winrm.Shell;
+import org.joval.os.windows.remote.wsmv.WSMVPort;
 import org.joval.util.AbstractSession;
 import org.joval.util.CachingHierarchy;
+import org.joval.util.Environment;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -68,14 +72,16 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private Vector<IFile> tempFiles;
     private boolean is64bit = false;
     private Directory directory = null;
-
-    WmiConnection conn;
+    private WmiConnection conn;
+    private WSMVPort port;
+    private List<Shell> shells;
 
     public WindowsSession(String host, File wsdir) {
 	super();
 	this.wsdir = wsdir;
 	this.host = host;
 	tempFiles = new Vector<IFile>();
+	shells = new Vector<Shell>();
     }
 
     // Implement IWindowsSession extensions
@@ -185,20 +191,36 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 
     @Override
     public IProcess createProcess(String command, String[] env) throws Exception {
-	StringBuffer sb = new StringBuffer(getTempDir()).append(IWindowsFilesystem.DELIM_STR).append("rexec_");
-	sb.append(Integer.toHexString(counter++));
+	String method = getProperties().getProperty(PROP_REMOTE_EXEC_IMPL);
+	if (VAL_WINRM.equals(method)) {
+	    Environment environment = new Environment(this.env);
+	    if (env != null) {
+		for (String pair : env) {
+		    environment.setenv(pair);
+		}
+	    }
+	    Shell shell = new Shell(port, environment, cwd);
+	    shells.add(shell);
+	    return shell.createProcess(command);
+	} else {
+	    //
+	    // WMI process control is the default
+	    //
+	    StringBuffer sb = new StringBuffer(getTempDir()).append(IWindowsFilesystem.DELIM_STR).append("rexec_");
+	    sb.append(Integer.toHexString(counter++));
 
-	IFile out = fs.getFile(sb.toString() + ".out", IFile.READVOLATILE);
-	out.getOutputStream(false).close(); // create/clear tmpOutFile
-	tempFiles.add(out);
+	    IFile out = fs.getFile(sb.toString() + ".out", IFile.READVOLATILE);
+	    out.getOutputStream(false).close(); // create/clear tmpOutFile
+	    tempFiles.add(out);
 
-	IFile err = fs.getFile(sb.toString() + ".err", IFile.READVOLATILE);
-	err.getOutputStream(false).close(); // create/clear tmpErrFile
-	tempFiles.add(err);
+	    IFile err = fs.getFile(sb.toString() + ".err", IFile.READVOLATILE);
+	    err.getOutputStream(false).close(); // create/clear tmpErrFile
+	    tempFiles.add(err);
 
-	WindowsProcess wp = new WindowsProcess(this, command, env, cwd, out, err);
-	wp.setLogger(logger);
-	return wp;
+	    WmiProcessControl wp = new WmiProcessControl(conn, this.env, command, env, cwd, out, err);
+	    wp.setLogger(logger);
+	    return wp;
+	}
     }
 
     public String getHostname() {
@@ -254,6 +276,19 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		    return false;
 		}
 		cwd = env.expand("%SystemRoot%");
+		if (port == null) {
+		    StringBuffer sb = new StringBuffer("http://").append(host).append(":5985/wsman");
+		    try {
+			port = new WSMVPort(sb.toString(), cred);
+		    } catch (Exception e) {
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			reg.disconnect();
+			if (is64bit) {
+			    reg32.disconnect();
+			}
+			return false;
+		    }
+		}
 		if (conn == null) {
 		    conn = new WmiConnection(host, cred, this);
 		}
@@ -278,9 +313,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     }
 
     public void disconnect() {
-	Iterator<IFile> iter = tempFiles.iterator();
-	while(iter.hasNext()) {
-	    IFile f = iter.next();
+	for (IFile f : tempFiles) {
 	    try {
 		synchronized(f) {
 		    if (f.exists()) {
@@ -290,6 +323,9 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	    } catch (Exception e) {
 		logger.warn(JOVALMsg.ERROR_FILE_DELETE, f.toString());
 	    }
+	}
+	for (Shell shell : shells) {
+	    shell.finalize();
 	}
 	reg.disconnect();
 	if (is64bit) {
