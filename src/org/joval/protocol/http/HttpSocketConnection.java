@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import javax.net.ssl.SSLSocketFactory;
 
+import org.joval.util.RFC822;
+
 /**
  * An HTTP 1.1 connection implementation that re-uses a single socket connection.  This is useful when a single TCP connection
  * is needed to communicate repeatedly with a particular URL, for example, when performing NTLM authentication negotiation.
@@ -186,9 +188,12 @@ public class HttpSocketConnection extends HttpURLConnection {
     @Override
     public long getHeaderFieldDate(String header, long def) {
 	String s = getHeaderField(header);
-//
-//DAS: TBD - attempt all the possible date formats
-//
+	if (s != null) {
+	    try {
+		return RFC822.valueOf(s);
+	    } catch (IllegalArgumentException e) {
+	    }
+	}
 	return def;
     }
 

@@ -120,4 +120,5 @@ CLASSES=\
 	org.joval.util.AbstractBaseSession				\
 	org.joval.util.AbstractSession					\
 	org.joval.util.JSchLogger					\
+	org.joval.util.RFC822						\
 	org.joval.ws.WSFault
