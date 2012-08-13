@@ -369,6 +369,9 @@ public class HttpSocketConnection extends HttpURLConnection {
 	    if (temp != null) {
 		write(new KVP("User-Agent", temp));
 	    }
+	    if (method.equalsIgnoreCase("GET") && ifModifiedSince > 0) {
+		write(new KVP("If-Modified-Since", RFC822.toString(ifModifiedSince)));
+	    }
 	    write(new KVP("Connection", "Keep-Alive"));
 	    write(CRLF);
 
@@ -550,6 +553,21 @@ if(debug)System.out.println(pair.toString());
 		    contentEncoding = pair.value();
 		} else if ("Transfer-Encoding".equalsIgnoreCase(pair.key())) {
 		    chunked = pair.value().equalsIgnoreCase("chunked");
+		} else if ("Date".equalsIgnoreCase(pair.key())) {
+		    try {
+			date = RFC822.valueOf(pair.value());
+		    } catch (IllegalArgumentException e) {
+		    }
+		} else if ("Last-Modified".equalsIgnoreCase(pair.key())) {
+		    try {
+			lastModified = RFC822.valueOf(pair.value());
+		    } catch (IllegalArgumentException e) {
+		    }
+		} else if ("Expires".equalsIgnoreCase(pair.key())) {
+		    try {
+			expiration = RFC822.valueOf(pair.value());
+		    } catch (IllegalArgumentException e) {
+		    }
 		}
 	    }
 

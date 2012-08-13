@@ -3,6 +3,7 @@
 
 package org.joval.util;
 
+import java.util.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
@@ -34,5 +35,9 @@ public class RFC822 {
 	    }
 	}
 	throw new IllegalArgumentException(s);
+    }
+
+    public static final String toString(long tm) {
+	return formats[0].format(new Date(tm));
     }
 }
