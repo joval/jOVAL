@@ -14,9 +14,11 @@ PLATFORM=unknown
 ifeq (Windows, $(findstring Windows,$(OS)))
     PLATFORM=win
     CLN=;
+    JAVACFLAGS=-Xlint:unchecked
 else
     OS=$(shell uname)
     CLN=:
+    JAVACFLAGS=-Xlint:unchecked -XDignore.symbol.file=true -Xbootclasspath/p:$(JAXB_HOME)/lib/jaxb-api.jar:$(JAXB_HOME)/lib/jaxb-impl.jar
 endif
 
 ifeq (Linux, $(findstring Linux,$(OS)))
@@ -44,7 +46,6 @@ JAXB_HOME=$(TOP)/tools/jaxb-ri-2.2.6
 XJC=$(JAVA) -jar $(JAXB_HOME)/lib/jaxb-xjc.jar
 XJCFLAGS=-enableIntrospection
 JAVAC=$(JAVA_HOME)/bin/javac
-JAVACFLAGS=-Xlint:unchecked -XDignore.symbol.file=true -deprecation
 JAR=$(JAVA_HOME)/bin/jar
 CLASSLIB=$(JAVA_HOME)/jre/lib/rt.jar
 BUILD=build
