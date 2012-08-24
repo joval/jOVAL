@@ -119,8 +119,8 @@ public class SidSidAdapter extends UserAdapter {
 	boolean includeGroups = true;
 	boolean resolveGroups = false;
 	if (behaviors != null) {
-	    includeGroups = behaviors.isIncludeGroup();
-	    resolveGroups = behaviors.isResolveGroup();
+	    includeGroups = behaviors.getIncludeGroup();
+	    resolveGroups = behaviors.getResolveGroup();
 	}
 	for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
 	    items.add(makeItem(p));

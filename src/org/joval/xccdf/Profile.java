@@ -216,7 +216,7 @@ public class Profile {
 		throw new RuntimeException("Not a group or rule: " + item.getClass().getName());
 	    }
 	    if (selections == null || selections.get(id) == null) {
-		if (item.isSelected()) {
+		if (item.getSelected()) {
 		    results.add(item);
 		    if (item instanceof GroupType) {
 			results.addAll(getSelected(((GroupType)item).getGroupOrRule(), selections));

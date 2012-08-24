@@ -26,7 +26,7 @@ _scap:
 	@$(MAKE) --keep-going --directory=scap all
 
 _ws-man:
-	@$(MAKE) --keep-going --directory=ws-man install
+	@$(MAKE) --keep-going --directory=ws-man all
 
 _schematron:
 	@$(MAKE) --keep-going --directory=schematron all

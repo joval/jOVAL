@@ -84,13 +84,13 @@ public class Textfilecontent54Adapter extends TextfilecontentAdapter {
 		//
 		int flags = 0;
 		if (tfcObj.isSetBehaviors()) {
-		    if (tfcObj.getBehaviors().isMultiline()) {
+		    if (tfcObj.getBehaviors().getMultiline()) {
 			flags |= Pattern.MULTILINE;
 		    }
-		    if (tfcObj.getBehaviors().isIgnoreCase()) {
+		    if (tfcObj.getBehaviors().getIgnoreCase()) {
 			flags |= Pattern.CASE_INSENSITIVE;
 		    }
-		    if (tfcObj.getBehaviors().isSingleline()) {
+		    if (tfcObj.getBehaviors().getSingleline()) {
 			flags |= Pattern.DOTALL;
 		    }
 		} else {

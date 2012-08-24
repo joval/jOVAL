@@ -180,8 +180,8 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter<Fileeffectiver
 	boolean includeGroups = true;
 	boolean resolveGroups = false;
 	if (behaviors != null) {
-	    includeGroups = behaviors.isIncludeGroup();
-	    resolveGroups = behaviors.isResolveGroup();
+	    includeGroups = behaviors.getIncludeGroup();
+	    resolveGroups = behaviors.getResolveGroup();
 	}
 	return directory.getAllPrincipals(principal, includeGroups, resolveGroups);
     }

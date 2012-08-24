@@ -270,7 +270,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		SendResponse response = sendOperation.dispatch(port);
 		if (response.isSetDesiredStream()) {
 		    StreamType rs = response.getDesiredStream();
-		    if (rs.getName().equals(Shell.STDIN) && rs.isEnd()) {
+		    if (rs.getName().equals(Shell.STDIN) && rs.getEnd()) {
 			close();
 		    }
 		}

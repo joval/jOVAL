@@ -41,7 +41,7 @@ classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 
 $(GEN): $(SCHEMA_FILES)
 	mkdir -p $@
-	$(XJC) $(SCHEMA_FILES) -b $(BINDINGS) -d $(GEN)
+	$(XJC) $(XJCFLAGS) $(SCHEMA_FILES) -b $(BINDINGS) -d $(GEN)
 
 $(BUILD)/%.class: $(GEN)/%.java
 	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<

@@ -149,7 +149,7 @@ public class Patch54Adapter extends PatchAdapter {
 	PatchBehaviors behaviors = pObj.getBehaviors();
 	boolean isSupercedence = false;
 	if (behaviors != null) {
-	    isSupercedence = behaviors.isSupersedence();
+	    isSupercedence = behaviors.getSupersedence();
 	}
 	int version = Integer.parseInt((String)pObj.getPatchVersion().getValue());
 

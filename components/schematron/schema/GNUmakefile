@@ -40,7 +40,7 @@ classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 
 $(GEN): xsd/svrl.xsd
 	mkdir -p $@
-	$(XJC) xsd/svrl.xsd -b $(BINDINGS) -d $(GEN)
+	$(XJC) $(XJCFLAGS) xsd/svrl.xsd -b $(BINDINGS) -d $(GEN)
 
 $(BUILD)/%.class: $(GEN)/%.java
 	$(JAVAC) $(JAVACFLAGS) -d $(BUILD) -classpath $(CLASSPATH) $<

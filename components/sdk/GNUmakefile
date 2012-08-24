@@ -52,6 +52,7 @@ install: all
 	cp sample/TrivialScanner.java $(DIST)
 	cp $(SCAP_LIB) $(DIST)
 	$(JAR) cvf $(DIST)/jOVAL-SDK.jar -C $(COMMON)/$(BUILD)/ .
+	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(WSMAN)/$(BUILD)/ .
 	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(PLUGIN_REMOTE)/$(BUILD)/ .
 	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(JOVAL_CORE)/$(BUILD)/ .
 	$(JAR) uvf $(DIST)/jOVAL-SDK.jar -C $(ADAPTERS)/$(BUILD)/ .

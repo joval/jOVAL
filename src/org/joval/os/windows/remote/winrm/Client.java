@@ -91,13 +91,13 @@ public class Client implements IWSMVConstants {
 	try {
 	    Client client = new Client(new WSMVPort(url, new WindowsCredential(user + ":" + pass)));
 
-/*
 	    client.testGet();
+/*
 	    client.testEnumerate();
 	    client.testPut();
 	    client.testDelete();
-*/
 	    client.testShell();
+*/
 
 	} catch (Exception e) {
 	    e.printStackTrace();

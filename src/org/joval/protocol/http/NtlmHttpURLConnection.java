@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.joval.intf.windows.identity.IWindowsCredential;
+import org.joval.io.LittleEndian;
 import org.joval.util.Base64;
 
 import org.microsoft.security.ntlm.NtlmAuthenticator;
@@ -43,6 +44,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 
     private HttpSocketConnection connection;
     private NtlmSession session, proxySession;
+    private boolean encrypt;
     private String authProperty, authMethod;
     private boolean negotiated;
     private ByteArrayOutputStream cachedOutput;
@@ -52,13 +54,13 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
      * Create a connection to a URL.
      */
     public NtlmHttpURLConnection(URL url) {
-	this(url, null);
+	this(url, null, false);
     }
 
     /**
      * Create a connection to a URL, and use the specified credentials to negotiate with the destination server.
      */
-    public NtlmHttpURLConnection(URL url, IWindowsCredential cred) {
+    public NtlmHttpURLConnection(URL url, IWindowsCredential cred, boolean encrypt) {
 	super(url);
 	connection = new HttpSocketConnection(url);
 	if (cred == null) {
@@ -66,6 +68,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	} else {
 	    session = createSession(cred);
 	    phase = NtlmPhase.TYPE1;
+	    this.encrypt = encrypt;
 	}
 	proxyPhase = NtlmPhase.NA;
     }
@@ -111,6 +114,36 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	}
 
 	if (sendOutput()) {
+	    if (encrypt) {
+		StringBuffer sb = new StringBuffer("OriginalContent: type=");
+		sb.append(getRequestProperty("Content-Type"));
+		sb.append(";Length=").append(Integer.toString(cachedOutput.size()));
+		sb.append("\r\n");
+
+		StringBuffer ctBuff = new StringBuffer("multipart/encrypted;");
+		ctBuff.append("protocol=\"application/HTTP-SPNEGO-session-encrypted\";");
+		ctBuff.append("boundary=\"Encrypted Boundary\"");
+		setRequestProperty("Content-Type", ctBuff.toString());
+
+		ByteArrayOutputStream temp = new ByteArrayOutputStream();
+		temp.write("--Encrypted Boundary\r\n".getBytes("US-ASCII"));
+		temp.write("Content-Type: application/HTTP-SPNEGO-session-encrypted\r\n".getBytes("US-ASCII"));
+		temp.write(sb.toString().getBytes("US-ASCII"));
+		temp.write("--Encrypted Boundary\r\n".getBytes("US-ASCII"));
+		temp.write("Content-Type: application/octet-stream\r\n".getBytes("US-ASCII"));
+//DAS
+
+LittleEndian.writeUInt(10, temp); // SECBUFFER_VERSION
+LittleEndian.writeUInt(1, temp); // number of SecBuffers
+byte[] sealed = session.seal(cachedOutput.toByteArray());
+LittleEndian.writeUInt(sealed.length, temp);
+LittleEndian.writeUInt(0x01, temp); // SECBUFFER_DATA
+temp.write(sealed);
+
+//		temp.write(session.sign(sealed));
+		temp.write("--Encrypted Boundary--\r\n".getBytes("US-ASCII"));
+		cachedOutput = temp;
+	    }
 	    setFixedLengthStreamingMode(cachedOutput.size());
 	} else {
 	    setFixedLengthStreamingMode(0);
@@ -287,7 +320,11 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	    negotiate();
 	} catch (IOException e) {
 	}
-	return connection.getInputStream();
+	if (encrypt) {
+	    return new DecryptionStream(connection.getInputStream());
+	} else {
+	    return connection.getInputStream();
+	}
     }
 
     @Override
@@ -606,6 +643,20 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	    header.append(" ");
 	    header.append(Base64.encodeBytes(session.generateAuthenticateMessage()));
 	    return header.toString();
+	}
+    }
+
+//DAS TBD
+    class DecryptionStream extends InputStream {
+	private InputStream in;
+
+	DecryptionStream(InputStream in) {
+	    this.in = in;
+	}
+
+	@Override
+	public int read() throws IOException {
+	    return in.read();
 	}
     }
 }

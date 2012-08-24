@@ -39,6 +39,7 @@ public class HttpSocketConnection extends HttpURLConnection {
     public static final byte[] CRLF = {'\r', '\n'};
 
     private static int defaultChunkLength = 512;
+//DAS
     private static boolean debug = false;
 
     private boolean secure, tunnelFailure;
@@ -355,6 +356,7 @@ public class HttpSocketConnection extends HttpURLConnection {
 		socket.connect(proxy.address());
 	    }
 	}
+if(debug)System.out.println("\nREQUEST:");
 	if (secure && proxy != null) {
 	    //
 	    // Establish a tunnel through the proxy
@@ -570,17 +572,18 @@ if(debug)System.out.println(pair.toString());
 		    }
 		}
 	    }
+if(debug)System.out.println("");
 
 	    if (chunked) {
 		HSBufferedOutputStream buffer = new HSBufferedOutputStream();
 		int len = 0;
 		while((len = readChunkLength(in)) > 0) {
 		    byte[] bytes = new byte[len];
-		    in.read(bytes);
+		    posit(len == in.read(bytes, 0, len));
 		    buffer.write(bytes);
 if(debug)System.out.write(bytes);
-		    assert(in.read() == '\r');
-		    assert(in.read() == '\n');
+		    posit(in.read() == '\r');
+		    posit(in.read() == '\n');
 if(debug)System.out.write(CRLF);
 		}
 		responseData = new HSBufferedInputStream(buffer);
@@ -596,19 +599,19 @@ if(debug)System.out.println(pair.toString());
 		}
 	    } else {
 		byte[] bytes = new byte[contentLength];
-		in.read(bytes, 0, contentLength);
+		posit(contentLength == in.read(bytes, 0, contentLength));
 		responseData = new HSBufferedInputStream(bytes);
 	    }
 
 	    headerFields = Collections.unmodifiableMap(map);
-	} catch (Exception e) {
+	} catch (IOException e) {
 	    if (debug) {
 		e.printStackTrace();
 	    }
 	    throw e;
 	} finally {
 	    gotResponse = true;
-	    if ("Close".equalsIgnoreCase(getHeaderField("Connection"))) {
+	    if (headerFields == null || "Close".equalsIgnoreCase(getHeaderField("Connection"))) {
 		disconnect();
 	    }
 	}
@@ -772,6 +775,13 @@ if(debug)System.out.println(line);
     }
 
     /**
+     * Like assert, but always enabled.
+     */
+    private void posit(boolean test) throws AssertionError {
+	if (!test) throw new AssertionError();
+    }
+
+    /**
      * Container for a Key-Value Pair.
      */
     class KVP {
@@ -847,11 +857,20 @@ if(debug)System.out.println(line);
 
 	HSBufferedInputStream(HSBufferedOutputStream out) {
 	    super(out.getBuf(), 0, out.size());
+if(debug) {
+    System.out.write(out.getBuf(), 0, out.size());
+}
 	    closed = false;
 	}
 
 	HSBufferedInputStream(byte[] buffer) {
 	    super(buffer);
+if(debug) {
+    try {
+	System.out.write(buffer);
+    } catch (IOException e) {
+    }
+}
 	    closed = false;
 	}
 

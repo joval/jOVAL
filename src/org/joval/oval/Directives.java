@@ -99,7 +99,7 @@ public class Directives {
      * Specifies whether or not the OvalDefinitions source should be included in the results.
      */
     public boolean includeSource() {
-	return directives.getDirectives().isIncludeSourceDefinitions();
+	return directives.getDirectives().getIncludeSourceDefinitions();
     }
 
     /**

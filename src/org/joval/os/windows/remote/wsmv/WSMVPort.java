@@ -4,6 +4,7 @@
 package org.joval.os.windows.remote.wsmv;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,6 +15,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.math.BigInteger;
 import java.security.PrivilegedActionException;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -63,6 +65,8 @@ import org.joval.ws.WSFault;
  */
 public class WSMVPort implements IPort, IWSMVConstants {
     private static boolean debug = false;
+//DAS
+    private static boolean encrypt = false;
 
     private static Properties schemaProps = new Properties();
     static {
@@ -102,7 +106,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
 	JAXBContext ctx = JAXBContext.newInstance(schemaProps.getProperty("ws-man.packages"));
 	marshaller = ctx.createMarshaller();
 	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-//	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 	unmarshaller = ctx.createUnmarshaller();
 	scheme = AuthScheme.NTLM;
 
@@ -176,7 +180,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
 	request.setBody(body);
 
 	URL u = new URL(url);
-	boolean success = false;
+	boolean retry = false;
 	Object result = null;
 	HttpURLConnection conn = null;
 	SpnegoHttpURLConnection spnego = null;
@@ -210,7 +214,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
 		    break;
 
 		  case NTLM:
-		    conn = new NtlmHttpURLConnection(u, cred);
+		    conn = new NtlmHttpURLConnection(u, cred, encrypt);
 		    ((NtlmHttpURLConnection)conn).setProxy(proxy);
 		    break;
 
@@ -228,7 +232,6 @@ public class WSMVPort implements IPort, IWSMVConstants {
 		conn.setDoOutput(true);
 		conn.setRequestMethod("POST");
 		conn.setRequestProperty("Content-Type", "application/soap+xml;charset=UTF-8");
-		conn.setRequestProperty("SOAPAction", action);
 
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		marshaller.marshal(Factories.SOAP.createEnvelope(request), buffer);
@@ -247,20 +250,21 @@ if (debug) {
 		out.flush();
 if (debug) System.out.println("SOAP Message Sent");
 
+		retry = false;
 		int code = conn.getResponseCode();
 		switch(code) {
 		  case HttpURLConnection.HTTP_OK:
-		    result = getSOAPBodyContents(conn.getInputStream());
-		    success = true;
+		    result = getSOAPBodyContents(conn.getInputStream(), conn.getContentType());
 		    break;
 
 		  case HttpURLConnection.HTTP_UNAUTHORIZED:
+		    retry = true;
 		    debug(conn);
 		    break;
 
 		  case HttpURLConnection.HTTP_BAD_REQUEST:
 		  case HttpURLConnection.HTTP_INTERNAL_ERROR:
-		    result = getSOAPBodyContents(conn.getErrorStream());
+		    result = getSOAPBodyContents(conn.getErrorStream(), conn.getContentType());
 		    String raw = null;
 		    if (result instanceof JAXBElement) {
 			ByteArrayOutputStream buff = new ByteArrayOutputStream();
@@ -292,7 +296,7 @@ if (debug) System.out.println("SOAP Message Sent");
 		    spnego.disconnect();
 		}
 	    }
-	} while (!success && nextAuthScheme(conn));
+	} while (retry && nextAuthScheme(conn));
 
 
 if (debug) {
@@ -319,7 +323,47 @@ if (debug) {
     /**
      * Read a SOAP envelope and return the unmarshalled object contents of the body.
      */
-    private Object getSOAPBodyContents(InputStream in) throws JAXBException, IOException {
+    private Object getSOAPBodyContents(InputStream in, String contentType) throws JAXBException, IOException {
+/*
+	//
+	// Parse the content-type.
+	//
+	Hashtable<String, String> table = new Hashtable<String, String>();
+	for (String token : contentType.split(";")) {
+	    if (table.size() == 0) {
+		table.put("", token); //the content-type itself
+	    } else {
+		int ptr = token.indexOf("=");
+		if (ptr > 0) {
+		    String key = token.substring(0,ptr).toLowerCase();
+		    String val = token.substring(ptr+1).trim();
+		}
+	    }
+	}
+	if (!"application/soap+xml".equals(table.get(""))) {
+	    throw new IOException("Unexpected contentType: " + table.get(""));
+	}
+	StringBuffer prolog = new StringBuffer("<?xml version=\"1.0\"");
+	if (table.containsKey("charset")) {
+	    prolog.append(" encoding=\"").append(table.get("charset")).append("\"");
+	}
+	prolog.append("?>\n");
+
+	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+	BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+	String line = reader.readLine();
+	if (!line.startsWith("<?xml")) {
+	    buffer.write(prolog.toString().getBytes("US-ASCII"));
+System.out.println("DAS wrote prolog: " + prolog.toString());
+	}
+	buffer.write(line.getBytes("US-ASCII"));
+	while((line = reader.readLine()) != null) {
+	    buffer.write(line.getBytes("US-ASCII"));
+	}
+
+	in.close();
+	Object result = unmarshaller.unmarshal(new ByteArrayInputStream(buffer.toByteArray()));
+*/
 	Object result = unmarshaller.unmarshal(in);
 	in.close();
 	if (result instanceof JAXBElement) {

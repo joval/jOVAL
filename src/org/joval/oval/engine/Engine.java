@@ -1098,7 +1098,7 @@ public class Engine implements IEngine, IAdapter {
 		    for (int i=0; i < numPermutations; i++) {
 			EntityObjectRecordType base = Factories.definitions.core.createEntityObjectRecordType();
 			base.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
-			base.setMask(record.isMask());
+			base.setMask(record.getMask());
 			base.setOperation(record.getOperation());
 		    }
 		    for (List<EntityObjectFieldType> list : lists) {
@@ -1377,7 +1377,7 @@ public class Engine implements IEngine, IAdapter {
 		edtResult = Factories.results.createExtendDefinitionType();
 		edtResult.setDefinitionRef(defId);
 		edtResult.setVersion(defDefinition.getVersion());
-		if (edtDefinition.isSetNegate() && edtDefinition.isNegate()) {
+		if (edtDefinition.isSetNegate() && edtDefinition.getNegate()) {
 		    edtResult.setNegate(true);
 		    edtResult.setResult(defResult.getResult()); // Overridden for true and false, below
 		    switch(defResult.getResult()) {
@@ -1400,7 +1400,7 @@ public class Engine implements IEngine, IAdapter {
 	}
 
 	ResultEnumeration result = operator.getResult(criteriaDefinition.getOperator());
-	if (criteriaDefinition.isSetNegate() && criteriaDefinition.isNegate()) {
+	if (criteriaDefinition.isSetNegate() && criteriaDefinition.getNegate()) {
 	    criteriaResult.setNegate(true);
 	    if (result == ResultEnumeration.TRUE) {
 		result = ResultEnumeration.FALSE;
@@ -1440,7 +1440,7 @@ public class Engine implements IEngine, IAdapter {
 
 	oval.schemas.results.core.CriterionType criterionResult = Factories.results.createCriterionType();
 	criterionResult.setTestRef(testId);
-	if (criterionDefinition.isSetNegate() && criterionDefinition.isNegate()) {
+	if (criterionDefinition.isSetNegate() && criterionDefinition.getNegate()) {
 	    criterionResult.setNegate(true);
 	    switch (testResult.getResult()) {
 	      case TRUE:
@@ -1788,7 +1788,7 @@ public class Engine implements IEngine, IAdapter {
 	    EntitySimpleBaseType varInstance = Factories.definitions.core.createEntityObjectAnySimpleType();
 	    varInstance.setDatatype(base.getDatatype());
 	    varInstance.setOperation(base.getOperation());
-	    varInstance.setMask(base.isMask());
+	    varInstance.setMask(base.getMask());
 	    String ref = base.getVarRef();
 	    try {
 		Collection<IType> values = resolveVariable(ref, rc);
@@ -2694,7 +2694,7 @@ public class Engine implements IEngine, IAdapter {
     private class ObjectFieldBridge extends EntitySimpleBaseType {
 	ObjectFieldBridge(EntityObjectFieldType field) {
 	    datatype = field.getDatatype();
-	    mask = field.isMask();
+	    mask = field.getMask();
 	    operation = field.getOperation();
 	    value = field.getValue();
 	    varCheck = field.getVarCheck();
@@ -2708,7 +2708,7 @@ public class Engine implements IEngine, IAdapter {
     private class StateFieldBridge extends EntityStateSimpleBaseType {
 	StateFieldBridge(EntityStateFieldType field) {
 	    datatype = field.getDatatype();
-	    mask = field.isMask();
+	    mask = field.getMask();
 	    operation = field.getOperation();
 	    value = field.getValue();
 	    varCheck = field.getVarCheck();
@@ -2723,7 +2723,7 @@ public class Engine implements IEngine, IAdapter {
     private class ItemFieldBridge extends EntityItemSimpleBaseType {
 	ItemFieldBridge(EntityItemFieldType field) {
 	    datatype = field.getDatatype();
-	    mask = field.isMask();
+	    mask = field.getMask();
 	    value = field.getValue();
 	}
     }

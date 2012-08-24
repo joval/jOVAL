@@ -39,7 +39,7 @@ classes: classdirs $(CLASS_FILES)
 classdirs: $(foreach pkg, $(PACKAGEDIRS), $(BUILD)/$(pkg)/)
 
 sources: $(GEN)
-	$(XJC) $(SCHEMA_FILES) -b $(BINDINGS) -d $(GEN)
+	$(XJC) $(XJCFLAGS) $(SCHEMA_FILES) -b $(BINDINGS) -d $(GEN)
 
 $(GEN):
 	mkdir -p $@

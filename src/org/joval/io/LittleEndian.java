@@ -3,9 +3,10 @@
 
 package org.joval.io;
 
-import java.io.InputStream;
 import java.io.EOFException;
+import java.io.InputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.IllegalCharsetNameException;
 import java.nio.charset.UnsupportedCharsetException;
@@ -130,6 +131,16 @@ public class LittleEndian {
 	byte[] buff = new byte[4];
 	ra.readFully(buff);
 	return getUInt(buff, 0);
+    }
+
+    public static final void writeUInt(int i, OutputStream out) throws IOException {
+	byte[] buff = new byte[4];
+	buff[0] = (byte)(0xFF & i);
+	buff[1] = (byte)(0xFF & (i >> 8));
+	buff[2] = (byte)(0xFF & (i >> 16));
+	buff[3] = (byte)(0xFF & (i >> 24));
+System.out.println("DAS: writeUInt: " + toHexString(buff));
+	out.write(buff);
     }
 
     public static final long getLong(byte[] buff) {

@@ -83,6 +83,7 @@ dist-x86: all $(DIST32)/jre
 	cp -R plugin/remote/rsrc/* $(DIST32)/plugin/remote
 	cp -R $(PLUGIN_REMOTE_LIB) $(DIST32)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST32)/plugin/remote/lib
+	cp $(WSMAN_LIB) $(DIST32)/plugin/remote/lib
 	mkdir -p $(DIST)/x86/plugin/offline/lib
 	cp -R plugin/offline/rsrc/* $(DIST32)/plugin/offline
 	cp -R $(PLUGIN_OFFLINE_LIB) $(DIST32)/plugin/offline/lib
@@ -119,6 +120,7 @@ dist-x64: all $(DIST64)/jre
 	cp -R plugin/remote/rsrc/* $(DIST64)/plugin/remote
 	cp -R $(PLUGIN_REMOTE_LIB) $(DIST64)/plugin/remote/lib
 	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST64)/plugin/remote/lib
+	cp $(WSMAN_LIB) $(DIST64)/plugin/remote/lib
 	mkdir -p $(DIST)/x64/plugin/offline/lib
 	cp -R plugin/offline/rsrc/* $(DIST64)/plugin/offline
 	cp -R $(PLUGIN_OFFLINE_LIB) $(DIST64)/plugin/offline/lib

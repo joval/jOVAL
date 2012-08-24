@@ -20,9 +20,6 @@ all: $(WSMAN_LIB)
 $(WSMAN_LIB): classes resources $(DOCS)
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
-install: $(WSMAN_LIB)
-	cp $(WSMAN_LIB) $(PLUGIN_REMOTE)/$(RSRC)/lib
-
 clean:
 	rm -rf $(BUILD)
 	rm -rf $(GEN)
@@ -34,7 +31,7 @@ $(DOCS): $(GEN)
 
 $(GEN): $(SCHEMA_FILES)
 	mkdir -p $@
-	$(XJC) $(SCHEMA_FILES) -b bindings.xjb -d $(GEN)
+	$(XJC) $(XJCFLAGS) $(SCHEMA_FILES) -b bindings.xjb -d $(GEN)
 
 resources:
 	cp $(RSRC)/ws-man.properties $(BUILD)
