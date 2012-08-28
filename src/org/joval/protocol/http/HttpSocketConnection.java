@@ -40,7 +40,7 @@ public class HttpSocketConnection extends HttpURLConnection {
 
     private static int defaultChunkLength = 512;
 //DAS
-    private static boolean debug = false;
+    private static boolean debug = true;
 
     private boolean secure, tunnelFailure;
     private Socket socket;
@@ -599,7 +599,9 @@ if(debug)System.out.println(pair.toString());
 		}
 	    } else {
 		byte[] bytes = new byte[contentLength];
-		posit(contentLength == in.read(bytes, 0, contentLength));
+		for (int offset=0; offset < contentLength; ) {
+		    offset += in.read(bytes, offset, contentLength - offset);
+		}
 		responseData = new HSBufferedInputStream(bytes);
 	    }
 

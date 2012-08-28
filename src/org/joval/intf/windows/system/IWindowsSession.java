@@ -22,6 +22,11 @@ public interface IWindowsSession extends ISession {
     String PROP_REMOTE_EXEC_IMPL = "remote.exec.method";
 
     /**
+     * Property governing whether or not to encrypt WS-Management SOAP envelopes.
+     */
+    String PROP_WSMAN_ENCRYPT = "remote.wsman.encryption";
+
+    /**
      * Specifies a remote execution implementation based on WMI-over-DCOM.
      */
     String VAL_WMI = "wmi";

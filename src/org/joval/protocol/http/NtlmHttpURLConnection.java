@@ -66,7 +66,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	if (cred == null) {
 	    phase = NtlmPhase.NA;
 	} else {
-	    session = createSession(cred);
+	    session = createSession(cred, encrypt);
 	    phase = NtlmPhase.TYPE1;
 	    this.encrypt = encrypt;
 	}
@@ -89,7 +89,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	} else {
 	    connection.setProxy(proxy);
 	    if (cred != null) {
-		proxySession = createSession(cred);
+		proxySession = createSession(cred, false);
 		proxyPhase = NtlmPhase.TYPE1;
 	    }
 	}
@@ -131,16 +131,11 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 		temp.write(sb.toString().getBytes("US-ASCII"));
 		temp.write("--Encrypted Boundary\r\n".getBytes("US-ASCII"));
 		temp.write("Content-Type: application/octet-stream\r\n".getBytes("US-ASCII"));
-//DAS
 
-LittleEndian.writeUInt(10, temp); // SECBUFFER_VERSION
-LittleEndian.writeUInt(1, temp); // number of SecBuffers
-byte[] sealed = session.seal(cachedOutput.toByteArray());
-LittleEndian.writeUInt(sealed.length, temp);
-LittleEndian.writeUInt(0x01, temp); // SECBUFFER_DATA
-temp.write(sealed);
-
-//		temp.write(session.sign(sealed));
+		byte[] mac = session.calculateMac(cachedOutput.toByteArray());
+		LittleEndian.writeUInt(mac.length, temp);
+		temp.write(mac);
+		temp.write(session.seal(cachedOutput.toByteArray()));
 		temp.write("--Encrypted Boundary--\r\n".getBytes("US-ASCII"));
 		cachedOutput = temp;
 	    }
@@ -562,7 +557,7 @@ temp.write(sealed);
     /**
      * Create an NtlmSession using the supplied credentials.
      */
-    private NtlmSession createSession(IWindowsCredential cred) {
+    private NtlmSession createSession(IWindowsCredential cred, boolean encrypt) {
 	if (cred == null) {
 	    return null;
 	}
@@ -574,7 +569,7 @@ temp.write(sealed);
 	String domain = cred.getDomain();
 	String user = cred.getUsername();
 	String pass = cred.getPassword();
-	NtlmAuthenticator auth = new NtlmAuthenticator(NTLMV2, CO, host, domain, user, pass);
+	NtlmAuthenticator auth = new NtlmAuthenticator(NTLMV2, CO, host, domain, user, pass, encrypt);
 	return auth.createSession();
     }
 

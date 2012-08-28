@@ -139,7 +139,6 @@ public class LittleEndian {
 	buff[1] = (byte)(0xFF & (i >> 8));
 	buff[2] = (byte)(0xFF & (i >> 16));
 	buff[3] = (byte)(0xFF & (i >> 24));
-System.out.println("DAS: writeUInt: " + toHexString(buff));
 	out.write(buff);
     }
 

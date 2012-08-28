@@ -89,8 +89,10 @@ public class Client implements IWSMVConstants {
 	String url = targetSpec.toString();
 
 	try {
-	    Client client = new Client(new WSMVPort(url, new WindowsCredential(user + ":" + pass)));
+//DAS
+	    Client client = new Client(new WSMVPort(url, null, new WindowsCredential(user + ":" + pass), true));
 
+System.out.println("DAS testGet()");
 	    client.testGet();
 /*
 	    client.testEnumerate();

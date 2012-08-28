@@ -279,7 +279,8 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		if (port == null) {
 		    StringBuffer sb = new StringBuffer("http://").append(host).append(":5985/wsman");
 		    try {
-			port = new WSMVPort(sb.toString(), cred);
+			boolean encrypt = getProperties().getBooleanProperty(PROP_WSMAN_ENCRYPT);
+			port = new WSMVPort(sb.toString(), null, cred, encrypt);
 		    } catch (Exception e) {
 			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			reg.disconnect();
