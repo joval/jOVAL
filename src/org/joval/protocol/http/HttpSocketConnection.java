@@ -35,25 +35,17 @@ import org.joval.util.RFC822;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class HttpSocketConnection extends HttpURLConnection {
-    public static final byte[] CRLF = {'\r', '\n'};
-
+public class HttpSocketConnection extends AbstractConnection {
     private static int defaultChunkLength = 512;
 //DAS
-    private static boolean debug = true;
+    private static boolean debug = false;
 
     private boolean secure, tunnelFailure;
     private Socket socket;
     private Proxy proxy;
     private String host; // host:port
-    private Map<String, List<String>> headerFields, requestProperties;
-    private List<KVP> orderedHeaderFields;
-    private int contentLength;
-    private String contentType, contentEncoding;
-    private long expiration, date, lastModified;
     private boolean gotResponse;
     private HSOutputStream stream;
-    private HSBufferedInputStream responseData;
 
     /**
      * Create a direct connection.
@@ -99,161 +91,6 @@ public class HttpSocketConnection extends HttpURLConnection {
     @Override
     public boolean usingProxy() {
 	return proxy != null;
-    }
-
-    @Override
-    public int getContentLength() {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	return contentLength;
-    }
-
-    @Override
-    public String getContentType() {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	return contentType;
-    }
-
-    @Override
-    public String getContentEncoding() {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	return contentEncoding;
-    }
-
-    @Override
-    public long getExpiration() {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	return expiration;
-    }
-
-    @Override
-    public long getDate() {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	return date;
-    }
-
-    @Override
-    public long getLastModified() {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	return lastModified;
-    }
-
-    @Override
-    public Map<String, List<String>> getHeaderFields() {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	return headerFields;
-    }
-
-    @Override
-    public String getHeaderField(String header) {
-	for (Map.Entry<String, List<String>> entry : getHeaderFields().entrySet()) {
-	    if (header.equalsIgnoreCase(entry.getKey())) {
-		return entry.getValue().get(0);
-	    }
-	}
-	return null;
-    }
-
-    @Override
-    public int getHeaderFieldInt(String header, int def) {
-	String s = getHeaderField(header);
-	if (s != null) {
-	    try {
-		return Integer.parseInt(s);
-	    } catch (NumberFormatException e) {
-	    }
-	}
-	return def;
-    }
-
-    @Override
-    public long getHeaderFieldDate(String header, long def) {
-	String s = getHeaderField(header);
-	if (s != null) {
-	    try {
-		return RFC822.valueOf(s);
-	    } catch (IllegalArgumentException e) {
-	    }
-	}
-	return def;
-    }
-
-    @Override
-    public String getHeaderFieldKey(int index) {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	if (orderedHeaderFields.size() > index) {
-	    return orderedHeaderFields.get(index).key();
-	} else {
-	    return null;
-	}
-    }
-
-    @Override
-    public String getHeaderField(int index) {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	if (orderedHeaderFields.size() > index) {
-	    return orderedHeaderFields.get(index).value();
-	} else {
-	    return null;
-	}
-    }
-
-    /**
-     * Closing the resulting stream will automatically reset this connection.
-     */
-    @Override
-    public InputStream getInputStream() throws IOException {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	if (responseCode == HTTP_OK) {
-	    return responseData;
-	} else {
-	    throw new IOException("Response error: " + responseCode);
-	}
-    }
-
-    /**
-     * Closing this stream will automatically reset this connection.
-     */
-    @Override
-    public InputStream getErrorStream() {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	if (responseCode == HTTP_OK) {
-	    return null;
-	} else {
-	    return responseData;
-	}
     }
 
     /**
@@ -312,24 +149,6 @@ public class HttpSocketConnection extends HttpURLConnection {
 	    map.put(entry.getKey(), Collections.unmodifiableList(entry.getValue()));
 	}
 	return Collections.unmodifiableMap(map);
-    }
-
-    @Override
-    public int getResponseCode() throws IOException {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	return responseCode;
-    }
-
-    @Override
-    public String getResponseMessage() throws IOException {
-	try {
-	    getResponse();
-	} catch (IOException e) {
-	}
-	return responseMessage;
     }
 
     @Override
@@ -461,27 +280,7 @@ if(debug)System.out.println("\nREQUEST:");
      * Reset the connection to a pristine state.
      */
     void reset() {
-	//
-	// reset inherited fields
-	//
-	connected = false;
-	chunkLength = -1;
-	fixedContentLength = -1;
-	method = "GET";
-	responseCode = -1;
-	responseMessage = null;
-	allowUserInteraction = getDefaultAllowUserInteraction();
-	doInput = true;
-	doOutput = false;
-	ifModifiedSince = 0;
-	useCaches = getDefaultUseCaches();
-
-	//
-	// reset private fields
-	//
-	orderedHeaderFields = null;
-	headerFields = null;
-	requestProperties = new HashMap<String, List<String>>();
+	initialize();
 	setRequestProperty("User-Agent", "jOVAL HTTP Client");
 	if (stream != null) {
 	    try {
@@ -491,22 +290,14 @@ if(debug)System.out.println("\nREQUEST:");
 	    }
 	    stream = null;
 	}
-	responseData = null;
-	contentLength = 0;
-	contentType = null;
-	contentEncoding = null;
-	expiration = 0;
-	date = 0;
-	lastModified = 0;
 	gotResponse = false;
     }
-
-    // Private
 
     /**
      * Read the response over the socket.
      */
-    private void getResponse() throws IOException {
+    @Override
+    void getResponse() throws IOException {
 	if (gotResponse) return;
 	connect();
 	try {
@@ -587,7 +378,7 @@ if(debug)System.out.write(bytes);
 if(debug)System.out.write(CRLF);
 		}
 		responseData = new HSBufferedInputStream(buffer);
-		contentLength = responseData.size();
+		contentLength = ((HSBufferedInputStream)responseData).size();
 
 		//
 		// Read footers (if any)
@@ -618,6 +409,8 @@ if(debug)System.out.println(pair.toString());
 	    }
 	}
     }
+
+    // Private
 
     private void write(KVP header) throws IOException {
 	write(header.toString());
@@ -654,54 +447,6 @@ if(debug)System.out.println(pair.toString());
 	responseCode = Integer.parseInt(tok.nextToken());
 	if (tok.hasMoreTokens()) {
 	    responseMessage = tok.nextToken("\r\n");
-	}
-    }
-
-    /**
-     * Set a property of a multi-valued map.
-     */
-    private void setMapProperty(String key, String value, Map<String, List<String>> map) {
-	List<String> values = new ArrayList<String>();
-	values.add(value);
-	boolean found = false;
-	for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-	    if (key.equalsIgnoreCase(entry.getKey())) {
-		entry.setValue(values);
-		found = true;
-		break;
-	    }
-	}
-	if (!found) {
-	    map.put(key, values);
-	}
-    }
-
-    /**
-     * Add a key/value pair to a multi-valued map. If the value is comma-delimited, its values are parsed and added to
-     * the map accordingly.
-     */
-    private void addMapProperties(KVP pair, Map<String, List<String>> map) {
-	for (String val : pair.value().split(", ")) {
-	    addMapProperty(pair.key(), val, map);
-	}
-    }
-
-    /**
-     * Add a property to a multi-valued map.
-     */
-    private void addMapProperty(String key, String value, Map<String, List<String>>map) {
-	List<String> values = null;
-	for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-	    if (key.equalsIgnoreCase(entry.getKey())) {
-		values = entry.getValue();
-		values.add(value);
-		break;
-	    }
-	}
-	if (values == null) {
-	    values = new ArrayList<String>();
-	    values.add(value);
-	    map.put(key, values);
 	}
     }
 
@@ -744,95 +489,10 @@ if(debug)System.out.println(line);
     }
 
     /**
-     * Reads a line as a key-value-pair, or returns null when CRLF is reached.
-     */
-    private KVP readKVP(InputStream in) throws IOException {
-	StringBuffer sb = new StringBuffer();
-	boolean done = false;
-	boolean cr = false;
-	while(!done) {
-	    int ch = in.read();
-	    switch(ch) {
-	      case -1:
-		throw new IOException("Connection was closed!");
-	      case '\r':
-		if (sb.length() == 0) {
-		    cr = true;
-		}
-		break;
-	      case '\n':
-		if (cr) {
-		    return null;
-		} else if (sb.length() > 0) {
-		    return new KVP(sb.toString());
-		}
-		// fall-thru
-	      default:
-		cr = false;
-		sb.append((char)ch);
-		break;
-	    }
-	}
-	throw new ProtocolException("Failed to parse header from " + sb.toString());
-    }
-
-    /**
      * Like assert, but always enabled.
      */
     private void posit(boolean test) throws AssertionError {
 	if (!test) throw new AssertionError();
-    }
-
-    /**
-     * Container for a Key-Value Pair.
-     */
-    class KVP {
-	private String key, value;
-
-	KVP(String header) throws IllegalArgumentException {
-	    int ptr = header.indexOf(": ");
-	    if (ptr == -1) {
-		key = "";
-		value = header;
-	    } else {
-		key = header.substring(0,ptr);
-		value = header.substring(ptr+2);
-	    }
-	}
-
-	KVP(String key, String value) {
-	    this.key = key;
-	    this.value = value;
-	}
-
-	KVP(Map.Entry<String, List<String>> entry) {
-	    key = entry.getKey();
-	    StringBuffer sb = new StringBuffer();
-	    for (String s : entry.getValue()) {
-		if (sb.length() > 0) {
-		    sb.append(", ");
-		}
-		sb.append(s);
-	    }
-	    value = sb.toString();
-	}
-
-	@Override
-	public String toString() {
-	    if (key.length() == 0) {
-		return value;
-	    } else {
-		return new StringBuffer(key).append(": ").append(value).toString();
-	    }
-	}
-
-	String key() {
-	    return key;
-	}
-
-	String value() {
-	    return value;
-	}
     }
 
     /**
