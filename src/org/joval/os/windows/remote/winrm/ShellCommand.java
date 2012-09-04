@@ -191,7 +191,6 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	CommandResponse response = commandOperation.dispatch(port);
 	state = State.RUNNING;
 	id = response.getCommandId();
-	System.out.println("Started command: " + id);
     }
 
     /**

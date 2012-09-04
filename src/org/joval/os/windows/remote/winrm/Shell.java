@@ -57,7 +57,52 @@ public class Shell implements IWSMVConstants {
     private String id;
 
     /**
-     * Create a new Shell.
+     * Return an Iterator of all the remote shells available at the specified port.
+     */
+    public static Iterable<Shell> enumerate(IPort port) throws JAXBException, IOException, WSFault {
+	Enumerate enumerate = Factories.ENUMERATION.createEnumerate();
+	AttributableEmpty optimize = Factories.WSMAN.createAttributableEmpty();
+	enumerate.getAny().add(Factories.WSMAN.createOptimizeEnumeration(optimize));
+	AttributablePositiveInteger maxElements = Factories.WSMAN.createAttributablePositiveInteger();
+	maxElements.setValue(new BigInteger("10"));
+	enumerate.getAny().add(Factories.WSMAN.createMaxElements(maxElements));
+	EnumerateOperation operation = new EnumerateOperation(new Enumerate());
+	operation.addResourceURI(SHELL_BASE_URI);
+
+	EnumerateResponse response = operation.dispatch(port);
+
+	Pull pull = Factories.ENUMERATION.createPull();
+	pull.setEnumerationContext(response.getEnumerationContext());
+	pull.setMaxElements(new BigInteger("10"));
+	PullOperation pullOperation = new PullOperation(pull);
+	pullOperation.addResourceURI(SHELL_BASE_URI);
+
+	ArrayList<Shell> shells = new ArrayList<Shell>();
+	boolean endOfSequence = false;
+	while(!endOfSequence) {
+	    PullResponse pullResponse = pullOperation.dispatch(port);
+	    if (pullResponse.isSetItems()) {
+	        int itemNum = 0;
+	        for (Object obj : pullResponse.getItems().getAny()) {
+		    if (obj instanceof JAXBElement) {
+			obj = ((JAXBElement)obj).getValue();
+		    }
+		    if (obj instanceof ShellType) {
+			shells.add(new Shell(port, ((ShellType)obj).getShellId()));
+		    } else {
+	        	System.out.println("Enumerate item " + itemNum++ + " is a " + obj.getClass().getName());
+		    }
+	        }
+	    }
+	    if (pullResponse.isSetEndOfSequence()) {
+	        endOfSequence = true;
+	    }
+	}
+	return shells;
+    }
+
+    /**
+     * Create a new Shell on the specified port.
      */
     public Shell(IPort port, IEnvironment env, String cwd) throws JAXBException, IOException, WSFault {
 	this.port = port;
@@ -80,7 +125,7 @@ public class Shell implements IWSMVConstants {
 	if (cwd != null) {
 	    shell.setWorkingDirectory(cwd);
 	}
-//	shell.setLifetime(Factories.XMLDT.newDuration(1000000));
+	shell.setLifetime(Factories.XMLDT.newDuration(1800000)); // 30 min.
 	shell.getOutputStreams().add(STDOUT);
 	shell.getOutputStreams().add(STDERR);
 	shell.getInputStreams().add(STDIN);
@@ -140,46 +185,8 @@ public class Shell implements IWSMVConstants {
     }
 
     /**
-     * Grab an existing shell on the target. Uses WS-Transfer Enumerate to validate the existence of the ID.
+     * Create an IProcess using this shell.
      */
-    public Shell(IPort port, String id) throws JAXBException, IOException, WSFault {
-	this.port = port;
-	this.id = id;
-
-/*
-	Enumerate enumerate = Factories.ENUMERATION.createEnumerate();
-	AttributableEmpty optimize = Factories.WSMAN.createAttributableEmpty();
-	enumerate.getAny().add(Factories.WSMAN.createOptimizeEnumeration(optimize));
-	AttributablePositiveInteger maxElements = Factories.WSMAN.createAttributablePositiveInteger();
-	maxElements.setValue(new BigInteger("1"));
-	enumerate.getAny().add(Factories.WSMAN.createMaxElements(maxElements));
-	EnumerateOperation operation = new EnumerateOperation(new Enumerate());
-	operation.addResourceURI(SHELL_URI);
-
-	EnumerateResponse response = operation.dispatch(port);
-
-	Pull pull = Factories.ENUMERATION.createPull();
-	pull.setEnumerationContext(response.getEnumerationContext());
-	pull.setMaxElements(new BigInteger("1"));
-	PullOperation pullOperation = new PullOperation(pull);
-	pullOperation.addResourceURI(SHELL_URI);
-
-	boolean endOfSequence = false;
-	while(!endOfSequence) {
-	    PullResponse pullResponse = pullOperation.dispatch(port);
-	    if (pullResponse.isSetItems()) {
-	        int itemNum = 0;
-	        for (Object obj : pullResponse.getItems().getAny()) {
-	            System.out.println("Enumerate item " + itemNum++ + " is a " + obj.getClass().getName());
-	        }
-	    }
-	    if (pullResponse.isSetEndOfSequence()) {
-	        endOfSequence = true;
-	    }
-	}
-*/
-    }
-
     public IProcess createProcess(String command) throws IllegalArgumentException {
 	ArrayList<String> args = new ArrayList<String>();
 	ArgumentTokenizer tok = new ArgumentTokenizer(command);
@@ -222,6 +229,16 @@ public class Shell implements IWSMVConstants {
     }
 
     // Private
+
+    /**
+     * Grab an existing shell on the target. Uses WS-Transfer Enumerate to validate the existence of the ID.
+     *
+     * @throws NoSuchElementException if no shell with the given ID is found.
+     */
+    private Shell(IPort port, String id) {
+	this.port = port;
+	this.id = id;
+    }
 
     /**
      * The argument tokenizer ...

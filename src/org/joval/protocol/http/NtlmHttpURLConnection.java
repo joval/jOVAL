@@ -377,9 +377,6 @@ public class NtlmHttpURLConnection extends AbstractConnection {
 		    return;
 		}
 	    }
-}catch(IOException e) {
-e.printStackTrace();
-throw e;
 	} finally {
 	    cachedOutput = null;
 	    negotiated = true;
@@ -388,6 +385,9 @@ throw e;
 
     // Private
 
+    /**
+     * REMIND (DAS): still need to implement validation of the signature.
+     */
     private byte[] decrypt(InputStream in) throws IOException {
 	StringTokenizer tok = new StringTokenizer(contentType, ";");
 	if ("multipart/encrypted".equals(tok.nextToken())) {
