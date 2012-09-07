@@ -19,6 +19,9 @@ import org.joval.ws.WSFault;
  * @version %I%, %G%
  */
 public interface IPort {
+    String PROP_ENCRYPT	= "soap.encrypt";
+    String PROP_DEBUG	= "soap.debug";
+
     /**
      * Convenience method for converting from DOM to JAXB.
      */

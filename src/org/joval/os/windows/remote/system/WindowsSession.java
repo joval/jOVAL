@@ -5,6 +5,7 @@ package org.joval.os.windows.remote.system;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,6 +39,7 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
+import org.joval.intf.ws.IPort;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
@@ -75,6 +77,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private Directory directory = null;
     private WmiConnection conn;
     private WSMVPort port;
+    private FileOutputStream soapLog;
     private HashMap<String, Shell> shells;
 
     public WindowsSession(String host, File wsdir) {
@@ -133,6 +136,9 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	}
 	if (directory != null) {
 	    directory.setLogger(logger);
+	}
+	if (port != null) {
+	    port.setLogger(logger);
 	}
     }
 
@@ -282,8 +288,13 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		if (port == null) {
 		    StringBuffer sb = new StringBuffer("http://").append(host).append(":5985/wsman");
 		    try {
-			boolean encrypt = getProperties().getBooleanProperty(PROP_WSMAN_ENCRYPT);
-			port = new WSMVPort(sb.toString(), null, cred, encrypt);
+			port = new WSMVPort(sb.toString(), null, cred);
+			port.setLogger(logger);
+			port.setEncryption(getProperties().getBooleanProperty(IPort.PROP_ENCRYPT));
+			if (getProperties().getBooleanProperty(IPort.PROP_DEBUG)) {
+			    soapLog = new FileOutputStream(new File(wsdir, "wsmv.soap.log"));
+			    port.setDebug(soapLog);
+			}
 		    } catch (Exception e) {
 			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			reg.disconnect();
@@ -318,6 +329,12 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 
     public void disconnect() {
 	deleteFiles();
+	if (soapLog != null) {
+	    try {
+		soapLog.close();
+	    } catch (IOException e) {
+	    }
+	}
 	for (Shell shell : shells.values()) {
 	    shell.finalize();
 	}

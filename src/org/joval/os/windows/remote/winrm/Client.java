@@ -90,9 +90,10 @@ public class Client implements IWSMVConstants {
 
 	try {
 //DAS
-	    Client client = new Client(new WSMVPort(url, null, new WindowsCredential(user + ":" + pass), true));
+	    Client client = new Client(new WSMVPort(url, null, new WindowsCredential(user + ":" + pass)));
 
 /*
+	    client.testPowershell();
 	    client.testGet();
 	    client.testShell();
 	    client.testEnumerate();
@@ -323,4 +324,13 @@ public class Client implements IWSMVConstants {
 	shell.finalize();
 	System.out.println("Destroyed shell");
     }
+
+/*
+    public void testPowershell() throws Exception {
+	Powershell ps = new Powershell(port, null, "%windir%");
+	System.out.println("Created powershell " + ps.getId());
+	ps.finalize();
+	System.out.println("Destroyed powershell");
+    }
+*/
 }
