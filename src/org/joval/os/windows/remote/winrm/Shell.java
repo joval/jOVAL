@@ -41,6 +41,7 @@ import org.joval.os.windows.remote.wsmv.operation.CreateOperation;
 import org.joval.os.windows.remote.wsmv.operation.DeleteOperation;
 import org.joval.os.windows.remote.wsmv.operation.EnumerateOperation;
 import org.joval.os.windows.remote.wsmv.operation.PullOperation;
+import org.joval.util.JOVALMsg;
 import org.joval.ws.WSFault;
 
 /**

@@ -38,6 +38,7 @@ import org.joval.os.windows.remote.wsmv.operation.CommandOperation;
 import org.joval.os.windows.remote.wsmv.operation.ReceiveOperation;
 import org.joval.os.windows.remote.wsmv.operation.SendOperation;
 import org.joval.os.windows.remote.wsmv.operation.SignalOperation;
+import org.joval.util.JOVALMsg;
 import org.joval.ws.WSFault;
 
 /**
@@ -47,7 +48,10 @@ import org.joval.ws.WSFault;
  * @version %I% %G%
  */
 public class ShellCommand implements IWSMVConstants, IProcess {
-    public enum Code {
+    /**
+     * An enumeration of codes that can be issued to a running process using a signal.
+     */
+    public enum SignalCode {
 	TERMINATE("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/signal/terminate"),
 	CTL_C("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/signal/ctrl_c"),
 	CTL_BREAK("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/signal/ctrl_break");
@@ -63,6 +67,9 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	}
     }
 
+    /**
+     * An enumeration of the possible states of a running process, embedding their URI values.
+     */
     public enum State {
 	DONE("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/CommandState/Done"),
 	PENDING("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/CommandState/Pending"),
@@ -98,6 +105,9 @@ public class ShellCommand implements IWSMVConstants, IProcess {
     private String cmd;
     private String[] args;
 
+    /**
+     * Create a command on the specified shell, using the specified port.
+     */
     public ShellCommand(IPort port, String shellId, String cmd, String[] args) {
 	this.port = port;
 	this.shellId = shellId;
@@ -138,7 +148,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
     }
 
     /**
-     * NOTE: if nobody is reading the process output or error stream, the process will never end.
+     * WARNING: If no Thread is reading the process output or error streams, this method will never return!
      */
     public void waitFor(long millis) throws InterruptedException {
 	long endTime = System.currentTimeMillis() + millis;
@@ -200,7 +210,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	try {
 	    Signal signal = Factories.SHELL.createSignal();
 	    signal.setCommandId(id);
-	    signal.setCode(Code.TERMINATE.value());
+	    signal.setCode(SignalCode.TERMINATE.value());
 	    SignalOperation signalOperation = new SignalOperation(signal);
 	    signalOperation.addResourceURI(SHELL_URI);
 	    signalOperation.addSelectorSet(getSelectorSet());
@@ -247,6 +257,9 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 
     // Internal
 
+    /**
+     * An OutputStream implementation that is triggered by flush() to send data upstream to the process.
+     */
     class CommandOutputStream extends ByteArrayOutputStream {
 	CommandOutputStream(int size) {
 	    super(size);
@@ -281,6 +294,10 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	}
     }
 
+    /**
+     * An InputStream implementation fills an internal buffer, when required, by issuing a receive operation
+     * to the process.
+     */
     class CommandInputStream extends InputStream {
 	String type;
 	byte[] buff;
