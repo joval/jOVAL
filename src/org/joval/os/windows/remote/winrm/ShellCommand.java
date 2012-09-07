@@ -58,7 +58,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 
 	private String value;
 
-	private Code(String value) {
+	private SignalCode(String value) {
 	    this.value = value;
 	}
 
