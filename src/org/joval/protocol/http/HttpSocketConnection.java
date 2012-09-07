@@ -37,8 +37,6 @@ import org.joval.util.RFC822;
  */
 public class HttpSocketConnection extends AbstractConnection {
     private static int defaultChunkLength = 512;
-//DAS
-    private static boolean debug = false;
 
     private boolean secure, tunnelFailure;
     private Socket socket;
@@ -175,7 +173,6 @@ public class HttpSocketConnection extends AbstractConnection {
 		socket.connect(proxy.address());
 	    }
 	}
-if(debug)System.out.println("\nREQUEST:");
 	if (secure && proxy != null) {
 	    //
 	    // Establish a tunnel through the proxy
@@ -325,13 +322,10 @@ if(debug)System.out.println("\nREQUEST:");
 	    orderedHeaderFields = new ArrayList<KVP>();
 	    Map<String, List<String>> map = new HashMap<String, List<String>>();
 
-if(debug)System.out.println("\nRESPONSE:");
-
 	    boolean chunked = false;
 	    InputStream in = socket.getInputStream();
 	    KVP pair = null;
 	    while((pair = readKVP(in)) != null) {
-if(debug)System.out.println(pair.toString());
 		if (orderedHeaderFields.size() == 0) {
 		    parseResponse(pair.value());
 		} else {
@@ -363,7 +357,6 @@ if(debug)System.out.println(pair.toString());
 		    }
 		}
 	    }
-if(debug)System.out.println("");
 
 	    if (chunked) {
 		HSBufferedOutputStream buffer = new HSBufferedOutputStream();
@@ -372,10 +365,8 @@ if(debug)System.out.println("");
 		    byte[] bytes = new byte[len];
 		    posit(len == in.read(bytes, 0, len));
 		    buffer.write(bytes);
-if(debug)System.out.write(bytes);
 		    posit(in.read() == '\r');
 		    posit(in.read() == '\n');
-if(debug)System.out.write(CRLF);
 		}
 		responseData = new HSBufferedInputStream(buffer);
 		contentLength = ((HSBufferedInputStream)responseData).size();
@@ -384,7 +375,6 @@ if(debug)System.out.write(CRLF);
 		// Read footers (if any)
 		//
 		while((pair = readKVP(in)) != null) {
-if(debug)System.out.println(pair.toString());
 		    orderedHeaderFields.add(pair);
 		    addMapProperties(pair, map);
 		}
@@ -397,11 +387,6 @@ if(debug)System.out.println(pair.toString());
 	    }
 
 	    headerFields = Collections.unmodifiableMap(map);
-	} catch (IOException e) {
-	    if (debug) {
-		e.printStackTrace();
-	    }
-	    throw e;
 	} finally {
 	    gotResponse = true;
 	    if (headerFields == null || "Close".equalsIgnoreCase(getHeaderField("Connection"))) {
@@ -430,7 +415,6 @@ if(debug)System.out.println(pair.toString());
     }
 
     private void write(byte[] bytes, int offset, int len) throws IOException {
-	if (debug) System.out.write(bytes, offset, len);
 	socket.getOutputStream().write(bytes, offset, len);
 	socket.getOutputStream().flush();
     }
@@ -479,7 +463,6 @@ if(debug)System.out.println(pair.toString());
 	}
 
 	String line = sb.toString();
-if(debug)System.out.println(line);
 	int ptr = line.indexOf(";");
 	if (ptr > 0) {
 	    return Integer.parseInt(line.substring(0,ptr), 16);
@@ -519,20 +502,11 @@ if(debug)System.out.println(line);
 
 	HSBufferedInputStream(HSBufferedOutputStream out) {
 	    super(out.getBuf(), 0, out.size());
-if(debug) {
-    System.out.write(out.getBuf(), 0, out.size());
-}
 	    closed = false;
 	}
 
 	HSBufferedInputStream(byte[] buffer) {
 	    super(buffer);
-if(debug) {
-    try {
-	System.out.write(buffer);
-    } catch (IOException e) {
-    }
-}
 	    closed = false;
 	}
 
