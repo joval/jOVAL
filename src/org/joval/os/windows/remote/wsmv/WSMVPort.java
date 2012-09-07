@@ -66,9 +66,9 @@ import org.joval.ws.WSFault;
 public class WSMVPort implements IPort, IWSMVConstants {
     private static boolean debug = false;
 
+    private static ClassLoader cl = WSMVPort.class.getClassLoader();
     private static Properties schemaProps = new Properties();
     static {
-	ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	InputStream rsc = cl.getResourceAsStream("ws-man.properties");
 	if (rsc != null) {
 	    try {
@@ -102,7 +102,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
      * Create a new IPort for the specified URL.
      */
     public WSMVPort(String url, Proxy proxy, IWindowsCredential cred, boolean encrypt) throws JAXBException {
-	JAXBContext ctx = JAXBContext.newInstance(schemaProps.getProperty("ws-man.packages"));
+	JAXBContext ctx = JAXBContext.newInstance(schemaProps.getProperty("ws-man.packages"), cl);
 	marshaller = ctx.createMarshaller();
 	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);

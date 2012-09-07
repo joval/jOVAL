@@ -3,12 +3,9 @@
 
 package org.joval.intf.ssh.system;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.IOException;
 
 import org.joval.intf.system.IProcess;
-import org.joval.io.PerishableReader;
 import org.joval.util.SessionException;
 
 /**

@@ -6,6 +6,7 @@ package org.joval.os.windows.remote.system;
 import java.io.IOException;
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -47,6 +48,7 @@ import org.joval.os.windows.remote.wmi.WmiProcessControl;
 import org.joval.os.windows.remote.winrm.Shell;
 import org.joval.os.windows.remote.wsmv.WSMVPort;
 import org.joval.util.AbstractSession;
+import org.joval.util.Checksum;
 import org.joval.util.CachingHierarchy;
 import org.joval.util.Environment;
 import org.joval.util.JOVALMsg;
@@ -74,14 +76,14 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private Directory directory = null;
     private WmiConnection conn;
     private WSMVPort port;
-    private List<Shell> shells;
+    private HashMap<String, Shell> shells;
 
     public WindowsSession(String host, File wsdir) {
 	super();
 	this.wsdir = wsdir;
 	this.host = host;
 	tempFiles = new Vector<IFile>();
-	shells = new Vector<Shell>();
+	shells = new HashMap<String, Shell>();
     }
 
     // Implement IWindowsSession extensions
@@ -193,15 +195,18 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     public IProcess createProcess(String command, String[] env) throws Exception {
 	String method = getProperties().getProperty(PROP_REMOTE_EXEC_IMPL);
 	if (VAL_WINRM.equals(method)) {
-	    Environment environment = new Environment(this.env);
-	    if (env != null) {
-		for (String pair : env) {
-		    environment.setenv(pair);
+	    String cs = getChecksum(env);
+	    if (!shells.containsKey(cs)) {
+		Environment environment = new Environment(this.env);
+		if (env != null) {
+		    for (String pair : env) {
+			environment.setenv(pair);
+		    }
 		}
+		Shell shell = new Shell(port, environment, cwd);
+		shells.put(cs, shell);
 	    }
-	    Shell shell = new Shell(port, environment, cwd);
-	    shells.add(shell);
-	    return shell.createProcess(command);
+	    return shells.get(cs).createProcess(command);
 	} else {
 	    //
 	    // WMI process control is the default
@@ -325,9 +330,10 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		logger.warn(JOVALMsg.ERROR_FILE_DELETE, f.toString());
 	    }
 	}
-	for (Shell shell : shells) {
+	for (Shell shell : shells.values()) {
 	    shell.finalize();
 	}
+	shells.clear();
 	reg.disconnect();
 	if (is64bit) {
 	    reg32.disconnect();
@@ -379,5 +385,18 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	    }
 	}
 	return false;
+    }
+
+    private String getChecksum(String[] env) {
+	StringBuffer sb = new StringBuffer("");
+	if (env != null) {
+	    for (String s : env) {
+		if (sb.length() > 0) {
+		    sb.append("\n");
+		}
+		sb.append(s);
+	    }
+	}
+	return Checksum.getChecksum(sb.toString(), Checksum.Algorithm.MD5);
     }
 }

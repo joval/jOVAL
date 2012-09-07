@@ -1,0 +1,36 @@
+#include "windows.h"
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#define MANIFEST_RESOURCE_ID 1
+MANIFEST_RESOURCE_ID RT_MANIFEST "accesstoken.exe.manifest"
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
+ FILEFLAGSMASK 0x17L
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "FileDescription", "jOVAL Windows:AccessToken Probe"
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", "accesstoken.exe"
+            VALUE "OriginalFilename", "accesstoken.exe"
+            VALUE "ProductName", "jOVAL"
+            VALUE "ProductVersion", "5.10.1.0"
+	    VALUE "LegalCopyright", "Copyright (C) 2012 jOVAL.org.  All rights reserved."
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+	VALUE "Translation", 0x409, 1200
+    END
+END

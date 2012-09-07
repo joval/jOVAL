@@ -29,5 +29,10 @@ public interface IEnvironment extends Iterable<String> {
      * Returns an Iterator over the names of the variables defined in this environment.
      */
     public Iterator<String> iterator();
+
+    /**
+     * Returns a String array suitable for passing into IBaseSession.createProcess as the environment argument.
+     */
+    public String[] toArray();
 }
 

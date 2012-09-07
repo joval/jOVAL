@@ -5,6 +5,7 @@ package org.joval.util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Properties;
 import java.util.regex.Matcher;
@@ -53,5 +54,13 @@ public abstract class AbstractEnvironment implements IEnvironment {
 
     public Iterator<String> iterator() {
 	return props.stringPropertyNames().iterator();
+    }
+
+    public String[] toArray() {
+	ArrayList<String> list = new ArrayList<String>();
+	for (String key : this) {
+	    list.add(new StringBuffer(key).append("=").append(getenv(key)).toString());
+	}
+	return list.toArray(new String[list.size()]);
     }
 }

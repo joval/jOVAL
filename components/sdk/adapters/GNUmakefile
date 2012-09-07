@@ -16,10 +16,11 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 all: $(ADAPTERS_LIB)
 
-$(ADAPTERS_LIB): classes resources
+$(ADAPTERS_LIB): classes resources _probes
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
+	@$(MAKE) --keep-going --directory=probes clean
 	rm -rf $(BUILD)
 	rm -f $(ADAPTERS_LIB)
 
@@ -28,6 +29,9 @@ resources:
 	cp $(RSRC)/adapters.txt $(BUILD)
 	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/windows.locales.properties $(BUILD)
+
+_probes: classdirs
+	@$(MAKE) --keep-going --directory=probes install
 
 classes: classdirs $(CLASS_FILES)
 

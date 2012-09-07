@@ -15,6 +15,20 @@ ifeq (Windows, $(findstring Windows,$(OS)))
     PLATFORM=win
     CLN=;
     JAVACFLAGS=-Xlint:unchecked
+
+    # Windows compiler definitions for making C++ probes
+    CC="$(VCINSTALLDIR)/bin/cl.exe"
+    RC="$(WindowsSdkDir)/bin/rc.exe"
+    CC32="$(VCINSTALLDIR)/bin/cl.exe"
+    RC32="$(WindowsSdkDir)/bin/rc.exe"
+    CCFLAGS=/MD
+    MS_INCLUDES=/I "$(VCINSTALLDIR)/include" /I "$(WindowsSdkDir)/include"
+    MSVCRT="$(VCINSTALLDIR)/Lib/msvcrt.lib"
+    UUID="$(WindowsSdkDir)/Lib/uuid.lib"
+    OLDNAMES="$(VCINSTALLDIR)/Lib/oldnames.lib"
+    KERNEL32="$(WindowsSdkDir)/Lib/kernel32.lib"
+    ADVAPI32="$(WindowsSdkDir)/Lib/advapi32.lib"
+    USER32="$(WindowsSdkDir)/Lib/user32.lib"
 else
     OS=$(shell uname)
     CLN=:
@@ -67,6 +81,7 @@ JOVAL_CORE=$(SDK)/engine
 JOVAL_CORE_LIB=$(JOVAL_CORE)/jOVALCore.jar
 ADAPTERS=$(SDK)/adapters
 ADAPTERS_LIB=$(ADAPTERS)/jOVALAdapters.jar
+WIN32_PROBES_DESTINATION=$(ADAPTERS)/$(BUILD)/org/joval/oval/adapter/windows
 ADAPTERS_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(ADAPTERS)/$(LIBDIR)/*)))
 PLUGIN_REMOTE=$(SDK)/plugin/remote
 PLUGIN_REMOTE_LIB=$(PLUGIN_REMOTE)/jOVALPluginRemote.jar

@@ -64,11 +64,13 @@ CLASSES=\
 	org.joval.oval.adapter.unix.RunlevelAdapter			\
 	org.joval.oval.adapter.unix.ShadowAdapter			\
 	org.joval.oval.adapter.unix.UnameAdapter			\
+	org.joval.oval.adapter.windows.AccesstokenAdapter		\
 	org.joval.oval.adapter.windows.FileAdapter			\
 	org.joval.oval.adapter.windows.Fileeffectiverights53Adapter	\
 	org.joval.oval.adapter.windows.GroupAdapter			\
 	org.joval.oval.adapter.windows.GroupSidAdapter			\
 	org.joval.oval.adapter.windows.LicenseAdapter			\
+	org.joval.oval.adapter.windows.Probe				\
 	org.joval.oval.adapter.windows.RegistryAdapter			\
 	org.joval.oval.adapter.windows.SidAdapter			\
 	org.joval.oval.adapter.windows.SidSidAdapter			\

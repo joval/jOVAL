@@ -92,13 +92,12 @@ public class Client implements IWSMVConstants {
 //DAS
 	    Client client = new Client(new WSMVPort(url, null, new WindowsCredential(user + ":" + pass), true));
 
-System.out.println("DAS testGet()");
-	    client.testGet();
 /*
+	    client.testGet();
+	    client.testShell();
 	    client.testEnumerate();
 	    client.testPut();
 	    client.testDelete();
-	    client.testShell();
 */
 
 	} catch (Exception e) {
@@ -239,7 +238,8 @@ System.out.println("DAS testGet()");
     }
 
     public void testEnumerate() throws Exception {
-	String uri = SHELL_URI;
+//	String uri = SHELL_URI;
+	String uri = "http://schemas.microsoft.com/wbem/wsman/1/windows/shell";
 //	String uri = "http://schemas.microsoft.com/wbem/wsman/1/wmi/root/cimv2/Win32_Processor";
 //	String uri = "http://schemas.microsoft.com/wbem/wsman/1/config/service/certmapping";
 
@@ -259,6 +259,7 @@ System.out.println("DAS testGet()");
 	PullOperation pullOperation = new PullOperation(pull);
 	pullOperation.addResourceURI(uri);
 
+	System.out.println("Enumerate start");
 	boolean endOfSequence = false;
 	while(!endOfSequence) {
 	    PullResponse pullResponse = pullOperation.dispatch(port);
@@ -269,6 +270,7 @@ System.out.println("DAS testGet()");
 		}
 	    }
 	    if (pullResponse.isSetEndOfSequence()) {
+		System.out.println("Enumerate end");
 		endOfSequence = true;
 	    }
 	}
@@ -304,23 +306,21 @@ System.out.println("DAS testGet()");
 
     public void testShell() throws Exception {
 	Shell shell = new Shell(port, null, "%windir%");
-System.out.println("Created shell " + shell.getId());
-
-try {
-    IProcess p = shell.createProcess("ping www.google.com");
-    p.start();
-    byte[] buff = new byte[256];
-    int len = 0;
-    InputStream in = p.getInputStream();
-    while((len = in.read(buff)) > 0) {
-	System.out.write(buff, 0, len);
-    }
-    System.out.println("Exit Code: " + p.exitValue());
-} catch (Exception e) {
-    e.printStackTrace();
-}
-
+	System.out.println("Created shell " + shell.getId());
+	try {
+	    IProcess p = shell.createProcess("ping www.google.com");
+	    p.start();
+	    byte[] buff = new byte[256];
+	    int len = 0;
+	    InputStream in = p.getInputStream();
+	    while((len = in.read(buff)) > 0) {
+		System.out.write(buff, 0, len);
+	    }
+	    System.out.println("Exit Code: " + p.exitValue());
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
 	shell.finalize();
-System.out.println("Destroyed shell");
+	System.out.println("Destroyed shell");
     }
 }
