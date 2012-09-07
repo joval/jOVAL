@@ -134,14 +134,16 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
      * Delete all the files that have been registered for deletion on disconnect.  Subclasses should call this.
      */
     protected void deleteFiles() {
-	for (String fname : toDelete) {
-	    try {
-		IFile f = fs.getFile(fname, IFile.READWRITE);
-		if (f.isFile()) {
-		    f.delete();
+	if (toDelete != null) {
+	    for (String fname : toDelete) {
+		try {
+		    IFile f = fs.getFile(fname, IFile.READWRITE);
+		    if (f.isFile()) {
+			f.delete();
+		    }
+		} catch (IOException e) {
+		    logger.warn(JOVALMsg.ERROR_FILE_DELETE, fname);
 		}
-	    } catch (IOException e) {
-		logger.warn(JOVALMsg.ERROR_FILE_DELETE, fname);
 	    }
 	}
     }
