@@ -31,7 +31,7 @@ class Probe {
     private IWindowsSession session;
     private String id;
     private boolean installed;
-    private IFile probe;
+    private String installPath;
     private long timeout;
     private String[] env;
 
@@ -56,22 +56,23 @@ class Probe {
 	try {
 	    StringBuffer sb = new StringBuffer(session.getTempDir());
 	    sb.append(IWindowsFilesystem.DELIM_STR).append(id);
-	    probe = session.getFilesystem().getFile(sb.toString(), IFile.READWRITE);
+	    IFile exe = session.getFilesystem().getFile(sb.toString(), IFile.READWRITE);
 	    byte[] buff = new byte[1024];
 	    InputStream in = AccesstokenAdapter.class.getResourceAsStream(id);
 	    if (in == null) {
 		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, id));
 	    }
-	    OutputStream out = probe.getOutputStream(false);
+	    OutputStream out = exe.getOutputStream(false);
 	    try {
 		int len = 0;
 		while ((len = in.read(buff)) > 0) {
 		    out.write(buff, 0, len);
 		}
+		installPath = exe.getPath();
+		session.deleteOnDisconnect(exe);
 		installed = true;
-		return true;
 	    } catch (IOException e) {
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_IO), probe.toString(), e.getMessage());
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_IO), exe.toString(), e.getMessage());
 	    } finally {
 		if (out != null) {
 		    out.close();
@@ -83,7 +84,7 @@ class Probe {
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-	return false;
+	return installed;
     }
 
     /**
@@ -97,7 +98,7 @@ class Probe {
      * Execute the probe with the specified arguments.
      */
     SafeCLI.ExecData exec(String[] args) throws Exception {
-	String path = probe.getPath();
+	String path = installPath;
 	if (path.indexOf(" ") != -1) {
 	    path = quote(path);
 	}

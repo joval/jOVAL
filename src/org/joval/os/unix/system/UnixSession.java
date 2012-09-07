@@ -42,6 +42,7 @@ public class UnixSession extends BaseUnixSession {
     }
 
     public void disconnect() {
+	deleteFiles();
 	connected = false;
     }
 }

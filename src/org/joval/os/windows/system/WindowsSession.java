@@ -185,6 +185,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     }
 
     public void disconnect() {
+	deleteFiles();
 	wmi.deregister();
 	connected = false;
     }

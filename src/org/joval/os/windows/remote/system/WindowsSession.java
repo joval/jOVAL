@@ -71,7 +71,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private IWindowsCredential cred;
     private Registry reg, reg32;
     private IWindowsFilesystem fs32;
-    private Vector<IFile> tempFiles;
     private boolean is64bit = false;
     private Directory directory = null;
     private WmiConnection conn;
@@ -82,7 +81,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	super();
 	this.wsdir = wsdir;
 	this.host = host;
-	tempFiles = new Vector<IFile>();
 	shells = new HashMap<String, Shell>();
     }
 
@@ -216,11 +214,11 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 
 	    IFile out = fs.getFile(sb.toString() + ".out", IFile.READVOLATILE);
 	    out.getOutputStream(false).close(); // create/clear tmpOutFile
-	    tempFiles.add(out);
+	    deleteOnDisconnect(out);
 
 	    IFile err = fs.getFile(sb.toString() + ".err", IFile.READVOLATILE);
 	    err.getOutputStream(false).close(); // create/clear tmpErrFile
-	    tempFiles.add(err);
+	    deleteOnDisconnect(err);
 
 	    WmiProcessControl wp = new WmiProcessControl(conn, this.env, command, env, cwd, out, err);
 	    wp.setLogger(logger);
@@ -319,17 +317,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     }
 
     public void disconnect() {
-	for (IFile f : tempFiles) {
-	    try {
-		synchronized(f) {
-		    if (f.exists()) {
-			f.delete();
-		    }
-		}
-	    } catch (Exception e) {
-		logger.warn(JOVALMsg.ERROR_FILE_DELETE, f.toString());
-	    }
-	}
+	deleteFiles();
 	for (Shell shell : shells.values()) {
 	    shell.finalize();
 	}

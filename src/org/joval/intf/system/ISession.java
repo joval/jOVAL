@@ -5,6 +5,7 @@ package org.joval.intf.system;
 
 import java.io.IOException;
 
+import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 
 /**
@@ -20,6 +21,13 @@ public interface ISession extends IBaseSession {
      * Get the path to the "temp" directory.
      */
     public String getTempDir() throws IOException;
+
+    /**
+     * Configure the session to delete the specified file when it is disconnected.
+     *
+     * @throws IllegalStateException if the session is not connected.
+     */
+    public void deleteOnDisconnect(IFile file) throws IllegalStateException;
 
     public IFilesystem getFilesystem();
 
