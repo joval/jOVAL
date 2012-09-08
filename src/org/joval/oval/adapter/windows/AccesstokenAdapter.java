@@ -140,6 +140,7 @@ public class AccesstokenAdapter implements IAdapter {
 			    items.put(principalName, item);
 			    itemCache.put(principalName, item);
 			} catch (Exception e) {
+			    session.getLogger().warn(JOVALMsg.ERROR_PROCESS_CREATE, e.getMessage());
 			    MessageType msg = Factories.common.createMessageType();
 			    msg.setLevel(MessageLevelEnumeration.ERROR);
 			    msg.setValue(e.getMessage());

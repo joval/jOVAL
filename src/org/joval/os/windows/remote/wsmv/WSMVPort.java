@@ -257,7 +257,9 @@ public class WSMVPort implements IPort, IWSMVConstants, ILoggable {
 		    } else {
 			conn = (HttpURLConnection)u.openConnection(proxy);
 		    }
-		    conn.setRequestProperty("Authorization", "Basic " + Base64.encodeBytes((cred.getDomainUser() + ":" + cred.getPassword()).getBytes()));
+		    String clear = new StringBuffer(cred.getDomainUser()).append(":").append(cred.getPassword()).toString();
+		    String auth = new StringBuffer("Basic ").append(Base64.encodeBytes(clear.getBytes())).toString();
+		    conn.setRequestProperty("Authorization", auth);
 		    break;
 		}
 
@@ -301,13 +303,10 @@ public class WSMVPort implements IPort, IWSMVConstants, ILoggable {
 		    result = getSOAPBodyContents(conn.getErrorStream(), conn.getContentType());
 		    String raw = null;
 		    if (result instanceof JAXBElement) {
-			ByteArrayOutputStream buff = new ByteArrayOutputStream();
-			marshaller.marshal(result, buff);
-			raw = new String(buff.toByteArray(), (String)marshaller.getProperty(Marshaller.JAXB_ENCODING));
 			result = ((JAXBElement)result).getValue();
 		    }
 		    if (result instanceof Fault) {
-			throw new WSFault((Fault)result, raw);
+			throw new WSFault((Fault)result);
 		    }
 		    break;
 
