@@ -13,13 +13,12 @@ import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.PasswordpolicyObject;
-import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
-import oval.schemas.systemcharacteristics.core.EntityItemIntType;
+import oval.schemas.definitions.windows.AuditeventpolicyObject;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.windows.PasswordpolicyItem;
+import oval.schemas.systemcharacteristics.windows.AuditeventpolicyItem;
+import oval.schemas.systemcharacteristics.windows.EntityItemAuditType;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
@@ -42,9 +41,9 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class PasswordpolicyAdapter implements IAdapter {
+public class AuditeventpolicyAdapter implements IAdapter {
     protected IWindowsSession session;
-    private Collection<PasswordpolicyItem> items = null;
+    private Collection<AuditeventpolicyItem> items = null;
     private CollectException error = null;
 
     // Implement IAdapter
@@ -53,7 +52,7 @@ public class PasswordpolicyAdapter implements IAdapter {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
-	    classes.add(PasswordpolicyObject.class);
+	    classes.add(AuditeventpolicyObject.class);
 	}
 	return classes;
     }
@@ -89,40 +88,46 @@ public class PasswordpolicyAdapter implements IAdapter {
 		try {
 		    file = session.getFilesystem().getFile(secpol, IFile.READWRITE);
 		    IniFile config = new IniFile(file.getInputStream(), StringTools.UTF16LE);
-		    items = new Vector<PasswordpolicyItem>();
-		    PasswordpolicyItem item = Factories.sc.windows.createPasswordpolicyItem();
-		    IProperty prop = config.getSection("System Access");
+		    items = new Vector<AuditeventpolicyItem>();
+		    AuditeventpolicyItem item = Factories.sc.windows.createAuditeventpolicyItem();
+		    IProperty prop = config.getSection("Event Audit");
 		    for (String key : prop) {
-			if ("MaximumPasswordAge".equals(key)) {
-			    EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
-			    type.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			    type.setValue(prop.getProperty(key));
-			    item.setMaxPasswdAge(type);
-			} else if ("MinimumPasswordAge".equals(key)) {
-			    EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
-			    type.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			    type.setValue(prop.getProperty(key));
-			    item.setMinPasswdAge(type);
-			} else if ("MinimumPasswordLength".equals(key)) {
-			    EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
-			    type.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			    type.setValue(prop.getProperty(key));
-			    item.setMinPasswdLen(type);
-			} else if ("PasswordHistorySize".equals(key)) {
-			    EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
-			    type.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			    type.setValue(prop.getProperty(key));
-			    item.setPasswordHistLen(type);
-			} else if ("ClearTextPassword".equals(key)) {
-			    EntityItemBoolType type = Factories.sc.core.createEntityItemBoolType();
-			    type.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-			    type.setValue(prop.getProperty(key));
-			    item.setReversibleEncryption(type);
-			} else if ("PasswordComplexity".equals(key)) {
-			    EntityItemBoolType type = Factories.sc.core.createEntityItemBoolType();
-			    type.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
-			    type.setValue(prop.getProperty(key));
-			    item.setReversibleEncryption(type);
+			if ("AuditAccountLogon".equals(key)) {
+			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
+			    item.setAccountLogon(type);
+			} else if ("AuditAccountManage".equals(key)) {
+			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
+			    item.setAccountManagement(type);
+			} else if ("AuditProcessTracking".equals(key)) {
+			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
+			    item.setDetailedTracking(type);
+			} else if ("AuditDSAccess".equals(key)) {
+			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
+			    item.setDirectoryServiceAccess(type);
+			} else if ("AuditLogonEvents".equals(key)) {
+			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
+			    item.setLogon(type);
+			} else if ("AuditObjectAccess".equals(key)) {
+			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
+			    item.setObjectAccess(type);
+			} else if ("AuditPolicyChange".equals(key)) {
+			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
+			    item.setPolicyChange(type);
+			} else if ("AuditPrivilegeUse".equals(key)) {
+			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
+			    item.setPrivilegeUse(type);
+			} else if ("AuditSystemEvents".equals(key)) {
+			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
+			    item.setSystem(type);
 			}
 		    }
 		    items.add(item);
@@ -149,6 +154,24 @@ public class PasswordpolicyAdapter implements IAdapter {
 	    session.getLogger().warn(JOVALMsg.ERROR_PROCESS_CREATE, e.getMessage());
 	    error = new CollectException(e.getMessage(), FlagEnumeration.ERROR);
 	    throw error;
+	}
+    }
+
+    /**
+     * Convert the policy int in the INF file to the OVAL String value.
+     */
+    private String getPolicyValue(int val) throws IllegalArgumentException {
+	switch(val) {
+	  case 0:
+	    return "AUDIT_NONE";
+	  case 1:
+	    return "AUDIT_SUCCESS";
+	  case 2:
+	    return "AUDIT_FAILURE";
+	  case 3:
+	    return "AUDIT_SUCCESS_FAILURE";
+	  default:
+	    throw new IllegalArgumentException(Integer.toString(val));
 	}
     }
 }
