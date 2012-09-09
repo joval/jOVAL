@@ -1,18 +1,10 @@
-// Copyright (C) 2011 jOVAL.org.  All rights reserved.
+// Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 package org.joval.oval.adapter.windows;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
-import java.util.Date;
-import java.util.Hashtable;
-import java.util.NoSuchElementException;
 import java.util.Vector;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import oval.schemas.common.MessageType;
 import oval.schemas.common.MessageLevelEnumeration;

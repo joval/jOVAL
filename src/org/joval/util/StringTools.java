@@ -27,6 +27,7 @@ import org.apache.jdbm.Serializer;
 public class StringTools {
     public static final Charset ASCII	= Charset.forName("US-ASCII");
     public static final Charset UTF8	= Charset.forName("UTF-8");
+    public static final Charset UTF16LE	= Charset.forName("UTF-16LE");
 
     public static final Comparator<String> COMPARATOR = new StringComparator(true);
     public static final Serializer<String> SERIALIZER = new StringSerializer();

@@ -7,12 +7,10 @@ import java.io.EOFException;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
-import java.nio.charset.IllegalCharsetNameException;
-import java.nio.charset.UnsupportedCharsetException;
 
 import org.joval.intf.io.IRandomAccess;
 
+import org.joval.util.StringTools;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -215,11 +213,7 @@ public class LittleEndian {
 		    }
 		}
 	    }
-	    return new String(buff, offset, len, Charset.forName("UTF-16LE"));
-	} catch (UnsupportedCharsetException e) {
-	    e.printStackTrace();
-	} catch (IllegalCharsetNameException e) {
-	    e.printStackTrace();
+	    return new String(buff, offset, len, StringTools.UTF16LE);
 	} catch (IllegalArgumentException e) {
 	    e.printStackTrace();
 	}

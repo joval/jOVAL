@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -60,6 +61,11 @@ public class IniFile {
 	load(in);
     }
 
+    public IniFile(InputStream in, Charset encoding) throws IOException {
+	this();
+	load(in, encoding);
+    }
+
     /**
      * A convenience method for loading files.
      */
@@ -72,9 +78,16 @@ public class IniFile {
      * the information from the stream is added.
      */
     public void load(InputStream in) throws IOException {
+	load(in, Charset.defaultCharset());
+    }
+
+    /**
+     * Use a specific encoding.
+     */
+    public void load(InputStream in, Charset encoding) throws IOException {
 	BufferedReader br = null;
 	try {
-	    br = new BufferedReader(new InputStreamReader(in));
+	    br = new BufferedReader(new InputStreamReader(in, encoding));
 	    String line = null;
 	    IProperty section = null;
 	    String name = null;
