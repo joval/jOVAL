@@ -92,42 +92,46 @@ public class AuditeventpolicyAdapter implements IAdapter {
 		    AuditeventpolicyItem item = Factories.sc.windows.createAuditeventpolicyItem();
 		    IProperty prop = config.getSection("Event Audit");
 		    for (String key : prop) {
-			if ("AuditAccountLogon".equals(key)) {
-			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
-			    item.setAccountLogon(type);
-			} else if ("AuditAccountManage".equals(key)) {
-			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
-			    item.setAccountManagement(type);
-			} else if ("AuditProcessTracking".equals(key)) {
-			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
-			    item.setDetailedTracking(type);
-			} else if ("AuditDSAccess".equals(key)) {
-			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
-			    item.setDirectoryServiceAccess(type);
-			} else if ("AuditLogonEvents".equals(key)) {
-			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
-			    item.setLogon(type);
-			} else if ("AuditObjectAccess".equals(key)) {
-			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
-			    item.setObjectAccess(type);
-			} else if ("AuditPolicyChange".equals(key)) {
-			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
-			    item.setPolicyChange(type);
-			} else if ("AuditPrivilegeUse".equals(key)) {
-			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
-			    item.setPrivilegeUse(type);
-			} else if ("AuditSystemEvents".equals(key)) {
-			    EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
-			    type.setValue(getPolicyValue(prop.getIntProperty(key)));
-			    item.setSystem(type);
+			try {
+			    if ("AuditAccountLogon".equals(key)) {
+				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+				type.setValue(getPolicyValue(prop.getIntProperty(key)));
+				item.setAccountLogon(type);
+			    } else if ("AuditAccountManage".equals(key)) {
+				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+				type.setValue(getPolicyValue(prop.getIntProperty(key)));
+				item.setAccountManagement(type);
+			    } else if ("AuditProcessTracking".equals(key)) {
+				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+				type.setValue(getPolicyValue(prop.getIntProperty(key)));
+				item.setDetailedTracking(type);
+			    } else if ("AuditDSAccess".equals(key)) {
+				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+				type.setValue(getPolicyValue(prop.getIntProperty(key)));
+				item.setDirectoryServiceAccess(type);
+			    } else if ("AuditLogonEvents".equals(key)) {
+				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+				type.setValue(getPolicyValue(prop.getIntProperty(key)));
+				item.setLogon(type);
+			    } else if ("AuditObjectAccess".equals(key)) {
+				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+				type.setValue(getPolicyValue(prop.getIntProperty(key)));
+				item.setObjectAccess(type);
+			    } else if ("AuditPolicyChange".equals(key)) {
+				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+				type.setValue(getPolicyValue(prop.getIntProperty(key)));
+				item.setPolicyChange(type);
+			    } else if ("AuditPrivilegeUse".equals(key)) {
+				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+				type.setValue(getPolicyValue(prop.getIntProperty(key)));
+				item.setPrivilegeUse(type);
+			    } else if ("AuditSystemEvents".equals(key)) {
+				EntityItemAuditType type = Factories.sc.windows.createEntityItemAuditType();
+				type.setValue(getPolicyValue(prop.getIntProperty(key)));
+				item.setSystem(type);
+			    }
+			} catch (IllegalArgumentException e) {
+			    session.getLogger().warn(JOVALMsg.ERROR_WIN_SECEDIT_VALUE, e.getMessage(), key);
 			}
 		    }
 		    items.add(item);
