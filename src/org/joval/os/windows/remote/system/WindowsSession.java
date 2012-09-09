@@ -78,13 +78,11 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private WmiConnection conn;
     private WSMVPort port;
     private FileOutputStream soapLog;
-    private HashMap<String, Shell> shells;
 
     public WindowsSession(String host, File wsdir) {
 	super();
 	this.wsdir = wsdir;
 	this.host = host;
-	shells = new HashMap<String, Shell>();
     }
 
     // Implement IWindowsSession extensions
@@ -199,18 +197,13 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     public IProcess createProcess(String command, String[] env) throws Exception {
 	String method = getProperties().getProperty(PROP_REMOTE_EXEC_IMPL);
 	if (VAL_WINRM.equals(method)) {
-	    String cs = getChecksum(env);
-	    if (!shells.containsKey(cs)) {
-		Environment environment = new Environment(this.env);
-		if (env != null) {
-		    for (String pair : env) {
-			environment.setenv(pair);
-		    }
+	    Environment environment = new Environment(this.env);
+	    if (env != null) {
+		for (String pair : env) {
+		    environment.setenv(pair);
 		}
-		Shell shell = new Shell(port, environment, cwd);
-		shells.put(cs, shell);
 	    }
-	    return shells.get(cs).createProcess(command);
+	    return new Shell(port, environment, cwd).createProcess(command);
 	} else {
 	    //
 	    // WMI process control is the default
@@ -335,10 +328,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	    } catch (IOException e) {
 	    }
 	}
-	for (Shell shell : shells.values()) {
-	    shell.finalize();
-	}
-	shells.clear();
 	reg.disconnect();
 	if (is64bit) {
 	    reg32.disconnect();

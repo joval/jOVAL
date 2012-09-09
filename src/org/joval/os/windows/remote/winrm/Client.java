@@ -90,16 +90,18 @@ public class Client implements IWSMVConstants {
 
 	try {
 //DAS
-	    Client client = new Client(new WSMVPort(url, null, new WindowsCredential(user + ":" + pass)));
+	    WSMVPort port = new WSMVPort(url, null, new WindowsCredential(user + ":" + pass));
+	    port.setEncryption(false);
+	    Client client = new Client(port);
 
 /*
 	    client.testPowershell();
 	    client.testGet();
-	    client.testShell();
 	    client.testEnumerate();
 	    client.testPut();
 	    client.testDelete();
 */
+	    client.testShell();
 
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -306,10 +308,15 @@ public class Client implements IWSMVConstants {
     }
 
     public void testShell() throws Exception {
+for (Shell shell : Shell.enumerate(port)) {
+    shell.finalize();
+    System.out.println("Killed zimbie shell: " + shell.getId());
+}
+for (int i=0; i < 16; i++) {
 	Shell shell = new Shell(port, null, "%windir%");
 	System.out.println("Created shell " + shell.getId());
 	try {
-	    IProcess p = shell.createProcess("ping www.google.com");
+	    IProcess p = shell.createProcess("echo hello");
 	    p.start();
 	    byte[] buff = new byte[256];
 	    int len = 0;
@@ -321,8 +328,8 @@ public class Client implements IWSMVConstants {
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
-	shell.finalize();
 	System.out.println("Destroyed shell");
+}
     }
 
 /*

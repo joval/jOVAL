@@ -35,6 +35,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
 import org.joval.os.windows.remote.wsmv.operation.CommandOperation;
+import org.joval.os.windows.remote.wsmv.operation.DeleteOperation;
 import org.joval.os.windows.remote.wsmv.operation.ReceiveOperation;
 import org.joval.os.windows.remote.wsmv.operation.SendOperation;
 import org.joval.os.windows.remote.wsmv.operation.SignalOperation;
@@ -95,8 +96,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	}
     }
 
-    private IPort port;
-    private String shellId;
+    private Shell shell;
     private String id;
     private State state;
     private int exitCode;
@@ -104,19 +104,20 @@ public class ShellCommand implements IWSMVConstants, IProcess {
     private OutputStream stdin;
     private String cmd;
     private String[] args;
+    private boolean disposable;
 
     /**
-     * Create a command on the specified shell, using the specified port.
+     * Create a new command for the specified Shell.
      */
-    public ShellCommand(IPort port, String shellId, String cmd, String[] args) {
-	this.port = port;
-	this.shellId = shellId;
+    public ShellCommand(Shell shell, String cmd, String[] args) {
+	this.shell = shell;
 	this.cmd = cmd;
 	this.args = args;
 	stdin = null;
 	stderr = null;
 	stdout = null;
 	exitCode = -1;
+	disposable = false;
     }
 
     /**
@@ -124,6 +125,28 @@ public class ShellCommand implements IWSMVConstants, IProcess {
      */
     public String getId() {
 	return id;
+    }
+
+    /**
+     * Delete the ShellCommand on the target machine (idempotent).
+     */
+    @Override
+    protected void finalize() {
+	if (disposable) {
+	    try {
+		Signal signal = Factories.SHELL.createSignal();
+		signal.setCommandId(id);
+		signal.setCode(SignalCode.TERMINATE.value());
+		SignalOperation signalOperation = new SignalOperation(signal);
+		signalOperation.addResourceURI(SHELL_URI);
+		signalOperation.addSelectorSet(getSelectorSet());
+		SignalResponse response = signalOperation.dispatch(shell.port);
+		shell.finalize();
+	    } catch (Exception e) {
+		e.printStackTrace();
+	    }
+	    disposable = false;
+	}
     }
 
     // Implement IProcess
@@ -198,8 +221,9 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	options.getOption().add(winrsSkipCmd);
 	commandOperation.addOptionSet(options);
 
-	CommandResponse response = commandOperation.dispatch(port);
+	CommandResponse response = commandOperation.dispatch(shell.port);
 	state = State.RUNNING;
+	disposable = true;
 	id = response.getCommandId();
     }
 
@@ -207,21 +231,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
      * Send a signal to the command.
      */
     public void destroy() {
-	try {
-	    Signal signal = Factories.SHELL.createSignal();
-	    signal.setCommandId(id);
-	    signal.setCode(SignalCode.TERMINATE.value());
-	    SignalOperation signalOperation = new SignalOperation(signal);
-	    signalOperation.addResourceURI(SHELL_URI);
-	    signalOperation.addSelectorSet(getSelectorSet());
-
-	    SignalResponse response = signalOperation.dispatch(port);
-	    for (Object obj : response.getAny()) {
-		System.out.println("Response " + obj.getClass().getName());
-	    }
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+	finalize();
 	state = State.DONE;
     }
 
@@ -279,7 +289,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		sendOperation.addResourceURI(SHELL_URI);
 		sendOperation.addSelectorSet(getSelectorSet());
 
-		SendResponse response = sendOperation.dispatch(port);
+		SendResponse response = sendOperation.dispatch(shell.port);
 		if (response.isSetDesiredStream()) {
 		    StreamType rs = response.getDesiredStream();
 		    if (rs.getName().equals(Shell.STDIN) && rs.getEnd()) {
@@ -377,7 +387,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		options.getOption().add(keepAlive);
 		receiveOperation.addOptionSet(options);
 
-		ReceiveResponse response = receiveOperation.dispatch(port);
+		ReceiveResponse response = receiveOperation.dispatch(shell.port);
 		buff = null;
 		pos = 0;
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -392,6 +402,11 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		    ShellCommand.this.state = State.fromValue(state.getState());
 		    if (state.isSetExitCode()) {
 			exitCode = state.getExitCode().intValue();
+			//
+			// Per section section 3.1.4.14, point 4 of MS-WSMV specification client MUST send
+			// signal message with Terminate code after receiving final response from server.
+			//
+			ShellCommand.this.finalize();
 		    }
 		}
 	    } catch (JAXBException e) {
@@ -428,7 +443,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	SelectorSetType set = Factories.WSMAN.createSelectorSetType();
 	SelectorType sel = Factories.WSMAN.createSelectorType();
 	sel.setName("ShellId");
-	sel.getContent().add(shellId);
+	sel.getContent().add(shell.id);
 	set.getSelector().add(sel);
 	return set;
     }

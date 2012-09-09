@@ -34,7 +34,14 @@ public class WSFault extends Exception {
     public String getMessage() {
 	Detail detail = fault.getDetail();
 	JAXBElement elt = (JAXBElement)detail.getAny().get(0);
-	WSManFaultType wsmft = (WSManFaultType)elt.getValue();
-	return (String)wsmft.getMessage().getContent().get(0);
+	Object obj = elt.getValue();
+	if (obj instanceof String) {
+	    return (String)obj;
+	} else if (obj instanceof WSManFaultType) {
+	    WSManFaultType wsmft = (WSManFaultType)obj;
+	    return (String)wsmft.getMessage().getContent().get(0);
+	} else {
+	    return obj.toString();
+	}
     }
 }

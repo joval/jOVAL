@@ -289,25 +289,17 @@ public class WSMVPort implements IPort, IWSMVConstants, ILoggable {
 		retry = false;
 		int code = conn.getResponseCode();
 		switch(code) {
+		  case HttpURLConnection.HTTP_BAD_REQUEST:
+		  case HttpURLConnection.HTTP_INTERNAL_ERROR:
+		    result = getSOAPBodyContents(conn.getErrorStream(), conn.getContentType());
+		    break;
+
 		  case HttpURLConnection.HTTP_OK:
 		    result = getSOAPBodyContents(conn.getInputStream(), conn.getContentType());
 		    break;
 
 		  case HttpURLConnection.HTTP_UNAUTHORIZED:
 		    retry = true;
-		    debug(conn);
-		    break;
-
-		  case HttpURLConnection.HTTP_BAD_REQUEST:
-		  case HttpURLConnection.HTTP_INTERNAL_ERROR:
-		    result = getSOAPBodyContents(conn.getErrorStream(), conn.getContentType());
-		    String raw = null;
-		    if (result instanceof JAXBElement) {
-			result = ((JAXBElement)result).getValue();
-		    }
-		    if (result instanceof Fault) {
-			throw new WSFault((Fault)result);
-		    }
 		    break;
 
 		  default:
@@ -331,19 +323,12 @@ public class WSMVPort implements IPort, IWSMVConstants, ILoggable {
 	    }
 	} while (retry && nextAuthScheme(conn));
 
-	if (result != null) {
-	    logger.debug(JOVALMsg.STATUS_WSMV_RESPONSE, result.getClass().getName());
-	    if (debug != null) {
-		StringBuffer sb = new StringBuffer("[").append(new Date().toString()).append("] - SOAP Reply:\r\n");
-		debug.write(sb.toString().getBytes());
-		marshaller.marshal(result, debug);
-		debug.write("\r\n".getBytes());
-		debug.flush();
-	    }
-	}
-
+	logger.debug(JOVALMsg.STATUS_WSMV_RESPONSE, result == null ? "null" : result.getClass().getName());
 	if (result instanceof JAXBElement) {
-	    return ((JAXBElement)result).getValue();
+	    result = ((JAXBElement)result).getValue();
+	}
+	if (result instanceof Fault) {
+	    throw new WSFault((Fault)result);
 	} else {
 	    return result;
 	}
@@ -357,6 +342,13 @@ public class WSMVPort implements IPort, IWSMVConstants, ILoggable {
     private Object getSOAPBodyContents(InputStream in, String contentType) throws JAXBException, IOException {
 	Object result = unmarshaller.unmarshal(in);
 	in.close();
+	if (debug != null) {
+	    StringBuffer sb = new StringBuffer("[").append(new Date().toString()).append("] - SOAP Reply:\r\n");
+	    debug.write(sb.toString().getBytes());
+	    marshaller.marshal(result, debug);
+	    debug.write("\r\n".getBytes());
+	    debug.flush();
+	}
 	if (result instanceof JAXBElement) {
 	    JAXBElement elt = (JAXBElement)result;
 	    if (elt.getValue() instanceof Envelope) {

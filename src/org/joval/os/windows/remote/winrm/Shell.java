@@ -55,8 +55,10 @@ public class Shell implements IWSMVConstants {
     public static final String STDERR	= "stderr";
     public static final String STDIN	= "stdin";
 
-    private IPort port;
-    private String id;
+    private boolean disposed = false;
+
+    IPort port;
+    String id;
 
     /**
      * Return an Iterator of all the remote shells available at the specified port.
@@ -244,7 +246,7 @@ public class Shell implements IWSMVConstants {
 	for (int i=0; i < argv.length; i++) {
 	    argv[i] = args.get(i+1);
 	}
-	return new ShellCommand(port, id, args.get(0), argv);
+	return new ShellCommand(this, args.get(0), argv);
     }
 
     /**
@@ -255,22 +257,25 @@ public class Shell implements IWSMVConstants {
     }
 
     /**
-     * Delete the Shell on the target machine.
+     * Delete the Shell on the target machine (idempotent).
      */
     @Override
-    public void finalize() {
-	try {
-	    DeleteOperation deleteOperation = new DeleteOperation();
-	    deleteOperation.addResourceURI(SHELL_URI);
-	    SelectorSetType set = Factories.WSMAN.createSelectorSetType();
-	    SelectorType sel = Factories.WSMAN.createSelectorType();
-	    sel.setName("ShellId");
-	    sel.getContent().add(id);
-	    set.getSelector().add(sel);
-	    deleteOperation.addSelectorSet(set);
-	    deleteOperation.dispatch(port);
-	} catch (Exception e) {
-	    e.printStackTrace();
+    protected void finalize() {
+	if (!disposed) {
+	    try {
+		DeleteOperation deleteOperation = new DeleteOperation();
+		deleteOperation.addResourceURI(SHELL_URI);
+		SelectorSetType set = Factories.WSMAN.createSelectorSetType();
+		SelectorType sel = Factories.WSMAN.createSelectorType();
+		sel.setName("ShellId");
+		sel.getContent().add(id);
+		set.getSelector().add(sel);
+		deleteOperation.addSelectorSet(set);
+		deleteOperation.dispatch(port);
+		disposed = true;
+	    } catch (Exception e) {
+		e.printStackTrace();
+	    }
 	}
     }
 
