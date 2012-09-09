@@ -80,7 +80,7 @@ public class PasswordpolicyAdapter implements IAdapter {
 	    }
 	    sb.append("secpol.inf");
 	    String secpol = sb.toString();
-	    String cmd = "secedit /export /areas SECURITYPOLICY /cfg " + secpol;
+	    String cmd = "secedit.exe /export /areas SECURITYPOLICY /cfg " + secpol;
 	    SafeCLI.ExecData data = SafeCLI.execData(cmd, env, session, timeout);
 	    int code = data.getExitCode();
 	    switch(code) {

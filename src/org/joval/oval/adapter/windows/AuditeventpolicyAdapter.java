@@ -71,7 +71,6 @@ public class AuditeventpolicyAdapter implements IAdapter {
     private void makeItem() throws CollectException {
 	try {
 	    long timeout = session.getTimeout(IBaseSession.Timeout.M);
-	    String[] env = session.getEnvironment().toArray();
 	    String tempDir = session.getTempDir();
 	    StringBuffer sb = new StringBuffer(tempDir);
 	    if (!tempDir.endsWith(session.getFilesystem().getDelimiter())) {
@@ -79,8 +78,8 @@ public class AuditeventpolicyAdapter implements IAdapter {
 	    }
 	    sb.append("secpol.inf");
 	    String secpol = sb.toString();
-	    String cmd = "secedit /export /areas SECURITYPOLICY /cfg " + secpol;
-	    SafeCLI.ExecData data = SafeCLI.execData(cmd, env, session, timeout);
+	    String cmd = "secedit.exe /export /areas SECURITYPOLICY /cfg " + secpol;
+	    SafeCLI.ExecData data = SafeCLI.execData(cmd, null, session, timeout);
 	    int code = data.getExitCode();
 	    switch(code) {
 	      case 0: // success

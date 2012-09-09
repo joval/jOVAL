@@ -33,7 +33,6 @@ class Probe {
     private boolean installed;
     private String installPath;
     private long timeout;
-    private String[] env;
 
     /**
      * Initialize the adapter and install the probe on the target host.
@@ -45,7 +44,6 @@ class Probe {
 	this.id = probeId;
 	this.session = session;
 	timeout = session.getTimeout(IBaseSession.Timeout.M);
-	env = session.getEnvironment().toArray();
 	installed = false;
     }
 
@@ -111,7 +109,7 @@ class Probe {
 		sb.append(quote(arg));
 	    }
 	}
-	return SafeCLI.execData(sb.toString(), env, session, timeout);
+	return SafeCLI.execData(sb.toString(), null, session, timeout);
     }
 
     // Private
