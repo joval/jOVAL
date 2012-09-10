@@ -255,10 +255,12 @@ class BasicShellProcess extends SshProcess implements IShell, IShellProcess {
 	PerishableReader reader = PerishableReader.newInstance(in, timeout);
 	try {
 	    StringBuffer sb = new StringBuffer();
+	    boolean cr = false;
 	    int ch = -1;
 	    while((ch = reader.read()) != -1) {
 		switch(ch) {
 		  case '\r':
+		    cr = true;
 		    if (in.markSupported() && in.available() > 0) {
 			in.mark(1);
 			switch(in.read()) {
@@ -269,10 +271,16 @@ class BasicShellProcess extends SshProcess implements IShell, IShellProcess {
 			    break;
 			}
 		    }
-		    // fall-thru
+		    break;
+
 		  case '\n':
 		    return sb.toString();
+
 		  default:
+		    if (cr) {
+			sb.append((char)('\r' & 0xFF));
+			cr = false;
+		    }
 		    sb.append((char)(ch & 0xFF));
 		}
 		if (in.available() == 0 && isPrompt(sb.toString())) {
