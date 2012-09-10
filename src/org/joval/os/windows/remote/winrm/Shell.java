@@ -233,9 +233,17 @@ public class Shell implements IWSMVConstants {
     }
 
     /**
-     * Create an IProcess using this shell.
+     * Create a singleton IProcess using this shell.
      */
     public IProcess createProcess(String command) throws IllegalArgumentException {
+	return createProcess(command, true);
+    }
+
+    /**
+     * Create an IProcess using this shell. If singleton is true, the shell is tied to the process, and will be deleted
+     * automatically once the shell terminates.
+     */
+    public IProcess createProcess(String command, boolean singleton) throws IllegalArgumentException {
 	ArrayList<String> args = new ArrayList<String>();
 	ArgumentTokenizer tok = new ArgumentTokenizer(command);
 	String arg = null;
@@ -246,7 +254,11 @@ public class Shell implements IWSMVConstants {
 	for (int i=0; i < argv.length; i++) {
 	    argv[i] = args.get(i+1);
 	}
-	return new ShellCommand(this, args.get(0), argv);
+	if (singleton) {
+	    return new ShellCommand(this, args.get(0), argv);
+	} else {
+	    return new ShellCommand(port, id, args.get(0), argv);
+	}
     }
 
     /**
@@ -254,6 +266,10 @@ public class Shell implements IWSMVConstants {
      */
     public String getId() {
 	return id;
+    }
+
+    public void dispose() {
+	finalize();
     }
 
     /**

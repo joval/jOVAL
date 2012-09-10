@@ -132,6 +132,9 @@ public class Remote {
 		    Reg reg = new Reg(session);
 		    reg.test(props.getProperty("registry.key"), props.getProperty("registry.value"));
 		}
+		if ("true".equals(props.getProperty("test.powershell"))) {
+		    new Powershell(session).test(props.getProperty("powershell.command"));
+		}
 		if ("true".equals(props.getProperty("test.license"))) {
 		    Reg reg = new Reg(session);
 		    reg.testLicense();

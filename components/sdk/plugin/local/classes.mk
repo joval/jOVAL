@@ -23,6 +23,8 @@ CLASSES=\
 	org.joval.os.windows.io.WindowsFileInfo			\
 	org.joval.os.windows.io.WindowsFilesystem		\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector	\
+	org.joval.os.windows.powershell.Runspace		\
+	org.joval.os.windows.powershell.RunspacePool		\
 	org.joval.os.windows.registry.BaseRegistry		\
 	org.joval.os.windows.registry.BinaryValue		\
 	org.joval.os.windows.registry.DwordValue		\
@@ -48,6 +50,7 @@ CLASSES=\
 	org.joval.test.Default					\
 	org.joval.test.Exec					\
 	org.joval.test.FS					\
+	org.joval.test.Powershell				\
 	org.joval.test.Reg					\
 	org.joval.test.WMI					\
 	org.joval.util.AbstractBaseSession			\

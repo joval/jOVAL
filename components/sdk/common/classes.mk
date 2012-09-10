@@ -51,6 +51,8 @@ CLASSES=\
 	org.joval.intf.windows.registry.IRegistry		\
 	org.joval.intf.windows.registry.IStringValue		\
 	org.joval.intf.windows.registry.IValue			\
+	org.joval.intf.windows.powershell.IRunspace		\
+	org.joval.intf.windows.powershell.IRunspacePool		\
 	org.joval.intf.windows.system.IWindowsSession		\
 	org.joval.intf.windows.wmi.ISWbemEventSource		\
 	org.joval.intf.windows.wmi.ISWbemObject			\

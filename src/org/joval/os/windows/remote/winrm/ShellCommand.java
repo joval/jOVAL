@@ -97,7 +97,8 @@ public class ShellCommand implements IWSMVConstants, IProcess {
     }
 
     private Shell shell;
-    private String id;
+    private IPort port;
+    private String shellId, id;
     private State state;
     private int exitCode;
     private InputStream stdout, stderr;
@@ -107,10 +108,27 @@ public class ShellCommand implements IWSMVConstants, IProcess {
     private boolean disposable;
 
     /**
-     * Create a new command for the specified Shell.
+     * Create a singleton command for the specified Shell. The shell will be deleted when the command terminates.
      */
     public ShellCommand(Shell shell, String cmd, String[] args) {
 	this.shell = shell;
+	this.shellId = shell.id;
+	this.port = shell.port;
+	this.cmd = cmd;
+	this.args = args;
+	stdin = null;
+	stderr = null;
+	stdout = null;
+	exitCode = -1;
+	disposable = false;
+    }
+
+    /**
+     * Add a new command to the specified Shell.
+     */
+    public ShellCommand(IPort port, String shellId, String cmd, String[] args) {
+	this.port = port;
+	this.shellId = shellId;
 	this.cmd = cmd;
 	this.args = args;
 	stdin = null;
@@ -140,8 +158,10 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		SignalOperation signalOperation = new SignalOperation(signal);
 		signalOperation.addResourceURI(SHELL_URI);
 		signalOperation.addSelectorSet(getSelectorSet());
-		SignalResponse response = signalOperation.dispatch(shell.port);
-		shell.finalize();
+		SignalResponse response = signalOperation.dispatch(port);
+		if (shell != null) {
+		    shell.finalize();
+		}
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }
@@ -221,7 +241,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	options.getOption().add(winrsSkipCmd);
 	commandOperation.addOptionSet(options);
 
-	CommandResponse response = commandOperation.dispatch(shell.port);
+	CommandResponse response = commandOperation.dispatch(port);
 	state = State.RUNNING;
 	disposable = true;
 	id = response.getCommandId();
@@ -289,7 +309,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		sendOperation.addResourceURI(SHELL_URI);
 		sendOperation.addSelectorSet(getSelectorSet());
 
-		SendResponse response = sendOperation.dispatch(shell.port);
+		SendResponse response = sendOperation.dispatch(port);
 		if (response.isSetDesiredStream()) {
 		    StreamType rs = response.getDesiredStream();
 		    if (rs.getName().equals(Shell.STDIN) && rs.getEnd()) {
@@ -387,7 +407,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		options.getOption().add(keepAlive);
 		receiveOperation.addOptionSet(options);
 
-		ReceiveResponse response = receiveOperation.dispatch(shell.port);
+		ReceiveResponse response = receiveOperation.dispatch(port);
 		buff = null;
 		pos = 0;
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
@@ -443,7 +463,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	SelectorSetType set = Factories.WSMAN.createSelectorSetType();
 	SelectorType sel = Factories.WSMAN.createSelectorType();
 	sel.setName("ShellId");
-	sel.getContent().add(shell.id);
+	sel.getContent().add(shellId);
 	set.getSelector().add(sel);
 	return set;
     }

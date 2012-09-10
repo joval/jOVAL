@@ -6,6 +6,7 @@ package org.joval.intf.windows.system;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.io.IWindowsFilesystem;
+import org.joval.intf.windows.powershell.IRunspacePool;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.wmi.IWmiProvider;
 
@@ -55,4 +56,6 @@ public interface IWindowsSession extends ISession {
     IWmiProvider getWmiProvider();
 
     IDirectory getDirectory();
+
+    IRunspacePool getRunspacePool();
 }

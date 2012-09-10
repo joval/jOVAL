@@ -31,6 +31,7 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.intf.windows.io.IWindowsFilesystem;
+import org.joval.intf.windows.powershell.IRunspacePool;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IStringValue;
@@ -44,6 +45,7 @@ import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.remote.io.SmbFilesystem;
+import org.joval.os.windows.remote.powershell.RunspacePool;
 import org.joval.os.windows.remote.registry.Registry;
 import org.joval.os.windows.remote.wmi.WmiConnection;
 import org.joval.os.windows.remote.wmi.WmiProcessControl;
@@ -74,6 +76,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private Registry reg, reg32;
     private IWindowsFilesystem fs32;
     private boolean is64bit = false;
+    private RunspacePool runspaces = null;
     private Directory directory = null;
     private WmiConnection conn;
     private WSMVPort port;
@@ -86,6 +89,17 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     }
 
     // Implement IWindowsSession extensions
+
+    public IRunspacePool getRunspacePool() {
+	if (runspaces == null) {
+	    try {
+		runspaces = new RunspacePool(new Shell(port, env, cwd), port);
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	}
+	return runspaces;
+    }
 
     public IDirectory getDirectory() {
 	return directory;
@@ -322,6 +336,9 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 
     public void disconnect() {
 	deleteFiles();
+	if (runspaces != null) {
+	    runspaces.shutdown();
+	}
 	if (soapLog != null) {
 	    try {
 		soapLog.close();

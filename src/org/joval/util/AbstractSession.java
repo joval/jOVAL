@@ -278,11 +278,15 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	}
 
 	public boolean isRunning() {
-	    try {
-		exitValue();
+	    if (p == null) {
 		return false;
-	    } catch (IllegalThreadStateException e) {
-		return true;
+	    } else {
+		try {
+		    exitValue();
+		    return false;
+		} catch (IllegalThreadStateException e) {
+		    return true;
+		}
 	    }
 	}
     }

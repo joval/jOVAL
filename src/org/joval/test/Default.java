@@ -46,6 +46,9 @@ public class Default {
 		if ("true".equals(props.getProperty("test.license"))) {
 		    new Reg(session).testLicense();
 		}
+		if ("true".equals(props.getProperty("test.powershell"))) {
+		    new Powershell(session).test(props.getProperty("powershell.command"));
+		}
 		if ("true".equals(props.getProperty("test.exec"))) {
 		    new Exec(session).test(props.getProperty("exec.command"));
 		}

@@ -53,7 +53,9 @@ import com.microsoft.wsman.shell.EnvironmentVariableList;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
+import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.os.windows.identity.WindowsCredential;
+import org.joval.os.windows.remote.powershell.RunspacePool;
 import org.joval.os.windows.remote.wsmv.WSMVPort;
 import org.joval.os.windows.remote.wsmv.operation.EnumerateOperation;
 import org.joval.os.windows.remote.wsmv.operation.PullOperation;
@@ -332,12 +334,12 @@ for (int i=0; i < 16; i++) {
 }
     }
 
-/*
     public void testPowershell() throws Exception {
-	Powershell ps = new Powershell(port, null, "%windir%");
-	System.out.println("Created powershell " + ps.getId());
-	ps.finalize();
-	System.out.println("Destroyed powershell");
+	RunspacePool pool = new RunspacePool(new Shell(port, null, "%windir%"), port);
+	IRunspace runspace = pool.spawn();
+	System.out.println("Powershell ID=" + runspace.getId() + ", Prompt: " + runspace.getPrompt());
+	runspace.println("echo \"hello powershell\"");
+	String s = runspace.read(5000L);
+	pool.shutdown();
     }
-*/
 }
