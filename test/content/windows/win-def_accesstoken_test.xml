@@ -74,7 +74,7 @@
       <security_principle operation="not equal">SYSTEM</security_principle>
     </accesstoken_state>
     <accesstoken_state id="oval:org.mitre.oval.test:ste:1183" version="1" comment="This represents a accesstoken_state which has a security_principle that equals 'ADMINISTRATORS'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
-      <security_principle>ADMINISTRATORS</security_principle>
+      <security_principle operation="case insensitive equals">ADMINISTRATORS</security_principle>
     </accesstoken_state>
     <accesstoken_state id="oval:org.mitre.oval.test:ste:1138" version="1" comment="This accesstoken_state represents an access token which has a security_principle that matches the regular expression '[A-Z]*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
       <security_principle operation="pattern match">[A-Z]*</security_principle>
