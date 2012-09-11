@@ -6,6 +6,7 @@ package org.joval.os.windows.powershell;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.StringTokenizer;
 
 import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.powershell.IRunspace;
@@ -50,7 +51,8 @@ public class Runspace implements IRunspace {
     }
 
     public void println(String str) throws IOException {
-	stdin.write(str.getBytes());
+	byte[] bytes = str.trim().getBytes();
+	stdin.write(bytes);
 	stdin.write("\r\n".getBytes());
 	stdin.flush();
     }
@@ -126,6 +128,6 @@ public class Runspace implements IRunspace {
     // Private
 
     private boolean isPrompt(String str) {
-	return str.startsWith("PS") && str.endsWith("> ");
+	return (str.startsWith("PS") && str.endsWith("> ")) || str.endsWith(">> ");
     }
 }

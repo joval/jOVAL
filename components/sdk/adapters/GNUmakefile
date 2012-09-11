@@ -24,11 +24,13 @@ clean:
 	rm -rf $(BUILD)
 	rm -f $(ADAPTERS_LIB)
 
-resources:
+resources: classdirs
 	rm -f $(BUILD)/*.txt
 	cp $(RSRC)/adapters.txt $(BUILD)
 	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/windows.locales.properties $(BUILD)
+	rm -f $(BUILD)/org/joval/oval/adapter/windows/*.ps1
+	cp $(SRC)/org/joval/oval/adapter/windows/*.ps1 $(BUILD)/org/joval/oval/adapter/windows/
 
 _probes: classdirs
 	@$(MAKE) --keep-going --directory=probes install
