@@ -3,6 +3,7 @@
 
 package org.joval.intf.windows.powershell;
 
+import java.io.InputStream;
 import java.io.IOException;
 
 /**
@@ -18,9 +19,14 @@ public interface IRunspace {
     String getId();
 
     /**
-     * Send a line of text (or multiple lines at once).
+     * Load a Powershell module into the runspace from a stream.
      */
-    void println(String str) throws IOException;
+    void loadModule(InputStream in, long timeout) throws IOException;
+
+    /**
+     * Invoke a command or module.
+     */
+    void invoke(String command) throws IOException;
 
     /**
      * Read until there is either (1) a new prompt, or (2) the timeout has been reached.

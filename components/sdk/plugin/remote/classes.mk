@@ -66,6 +66,7 @@ CLASSES=\
 	org.joval.os.windows.remote.io.SmbFileProxy			\
 	org.joval.os.windows.remote.io.SmbFilesystem			\
 	org.joval.os.windows.remote.io.SmbRandomAccessProxy		\
+	org.joval.os.windows.remote.powershell.Runspace			\
 	org.joval.os.windows.remote.powershell.RunspacePool		\
 	org.joval.os.windows.remote.registry.Key			\
 	org.joval.os.windows.remote.registry.Registry			\

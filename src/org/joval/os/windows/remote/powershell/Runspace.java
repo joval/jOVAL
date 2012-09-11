@@ -1,70 +1,55 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.windows.powershell;
+package org.joval.os.windows.remote.powershell;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.StringTokenizer;
 
 import org.joval.intf.system.IProcess;
-import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.io.PerishableReader;
 import org.joval.util.StringTools;
 
 /**
- * A process-based implementation of an IRunspace.
+ * A Runspace implementation with a flush-optimized implementation of loadModule, for use with MS-WSMV.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Runspace implements IRunspace {
-    protected String id, prompt;
-    protected IProcess p;
-    protected InputStream stdout, stderr;	// Output from the powershell process
-    protected OutputStream stdin;		// Input to the powershell process
-
+class Runspace extends org.joval.os.windows.powershell.Runspace {
     /**
      * Create a new Runspace, based on a process.
      */
-    public Runspace(String id, IProcess p) throws Exception {
-	this.id = id;
-	this.p = p;
-	if (!p.isRunning()) {
-	    p.start();
-	}
-	stdout = p.getInputStream();
-	stderr = p.getErrorStream();
-	stdin = p.getOutputStream();
-	read(10000L);
-    }
-
-    public IProcess getProcess() {
-	return p;
+    Runspace(String id, IProcess p) throws Exception {
+	super(id, p);
     }
 
     // Implement IRunspace
 
-    public String getId() {
-	return id;
-    }
-
+    /**
+     * For efficient use of WS-Transfer/Send, this method transmits the entire module in one envelope, then loops
+     * through the resulting string of prompts.
+     */
+    @Override
     public void loadModule(InputStream in, long timeout) throws IOException {
 	try {
 	    StringBuffer buffer = new StringBuffer();
 	    String line = null;
+	    int lines = 0;
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StringTools.ASCII));
 	    while((line = reader.readLine()) != null) {
 		line = line.trim();
 		if (!line.startsWith("#") && line.length() > 0) {
 		    stdin.write(line.getBytes());
 		    stdin.write("\r\n".getBytes());
-		    stdin.flush();
-		    readLine(timeout);
+		    lines++;
 		}
+	    }
+	    stdin.flush();
+	    for (int i=0; i < lines; i++) {
+		readLineInternal(timeout);
 	    }
 	    if (">> ".equals(getPrompt())) {
 		invoke("");
@@ -80,32 +65,13 @@ public class Runspace implements IRunspace {
 	}
     }
 
-    public void invoke(String command) throws IOException {
-	byte[] bytes = command.trim().getBytes();
-	stdin.write(bytes);
-	stdin.write("\r\n".getBytes());
-	stdin.flush();
-    }
+    // Private
 
-    public synchronized String read(long timeout) throws IOException {
-	StringBuffer sb = null;
-	String line = null;
-	while((line = readLine(timeout)) != null) {
-	    if (sb == null) {
-		sb = new StringBuffer();
-	    } else {
-		sb.append("\r\n");
-	    }
-	    sb.append(line);
-	}
-	if (sb == null) {
-	    return null;
-	} else {
-	    return sb.toString();
-	}
-    }
-
-    public synchronized String readLine(long timeout) throws IOException {
+    /**
+     * Same as super.readLine(long), except insensitive to stdout.available().  This makes it usable with input that
+     * has built-up from a multi-line WS-Transfer/Send operation continaing input to the process.
+     */
+    private synchronized String readLineInternal(long timeout) throws IOException {
 	PerishableReader reader = PerishableReader.newInstance(stdout, timeout);
 	try {
 	    StringBuffer sb = new StringBuffer();
@@ -137,7 +103,7 @@ public class Runspace implements IRunspace {
 		    }
 		    sb.append((char)(ch & 0xFF));
 		}
-		if (stdout.available() == 0 && isPrompt(sb.toString())) {
+		if (isPrompt(sb.toString())) {
 		    prompt = sb.toString();
 		    return null;
 		}
@@ -146,18 +112,5 @@ public class Runspace implements IRunspace {
 	    reader.defuse();
 	}
 	return null;
-    }
-
-    /**
-     * Get the current prompt String.
-     */
-    public String getPrompt() {
-	return prompt;
-    }
-
-    // Internal
-
-    protected boolean isPrompt(String str) {
-	return (str.startsWith("PS") && str.endsWith("> ")) || str.equals(">> ");
     }
 }

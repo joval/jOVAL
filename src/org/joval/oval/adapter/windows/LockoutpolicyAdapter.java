@@ -3,9 +3,7 @@
 
 package org.joval.oval.adapter.windows;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.Vector;
 
@@ -68,7 +66,8 @@ public class LockoutpolicyAdapter implements IAdapter {
     private void makeItem() throws CollectException {
 	try {
 	    //
-	    // Get a runspace if there are any in the pool, or create a new one.
+	    // Get a runspace if there are any in the pool, or create a new one, and load the Get-LockoutPolicy
+	    // Powershell module code.
 	    //
 	    long timeout = session.getTimeout(IBaseSession.Timeout.M);
 	    IRunspace runspace = null;
@@ -79,27 +78,14 @@ public class LockoutpolicyAdapter implements IAdapter {
 	    if (runspace == null) {
 		runspace = session.getRunspacePool().spawn();
 	    }
-
-	    //
-	    // Load the Get-LockoutPolicy Powershell module code
-	    //
-	    InputStream in = getClass().getResourceAsStream("Lockoutpolicy.ps1");
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StringTools.ASCII));
-	    String line = null;
-	    while ((line = reader.readLine()) != null) {
-		if (line.length() > 0 && !line.startsWith("#")) {
-		    runspace.println(line);
-		    runspace.readLine(timeout);
-		}
-	    }
-	    runspace.println("");
-	    runspace.readLine(timeout);
+	    runspace.loadModule(getClass().getResourceAsStream("Lockoutpolicy.psm1"), timeout);
 
 	    //
 	    // Run the Get-LockoutPolicy module and parse the output
 	    //
 	    LockoutpolicyItem item = Factories.sc.windows.createLockoutpolicyItem();
-	    runspace.println("Get-LockoutPolicy");
+	    String line = null;
+	    runspace.invoke("Get-LockoutPolicy");
 	    while((line = runspace.readLine(timeout)) != null) {
 		int ptr = line.indexOf("=");
 		String key=null, val=null;

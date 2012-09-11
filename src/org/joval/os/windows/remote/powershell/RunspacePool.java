@@ -20,7 +20,6 @@ import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.powershell.IRunspacePool;
 import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
-import org.joval.os.windows.powershell.Runspace;
 import org.joval.os.windows.remote.winrm.Shell;
 import org.joval.os.windows.remote.wsmv.operation.GetOperation;
 import org.joval.util.SessionException;
@@ -59,7 +58,7 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
 	if (shell != null) {
 	    for (Runspace runspace : pool.values()) {
 		try {
-		    runspace.println("exit");
+		    runspace.invoke("exit");
 		    String line = null;
 		    while((line = runspace.readLine(10000L)) != null) {}
 		    IProcess p = runspace.getProcess();

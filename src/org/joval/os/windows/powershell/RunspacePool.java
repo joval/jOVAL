@@ -35,7 +35,7 @@ public class RunspacePool implements IRunspacePool {
     public void shutdown() {
 	for (Runspace runspace : pool.values()) {
 	    try {
-		runspace.println("exit");
+		runspace.invoke("exit");
 		String line = null;
 		long timeout = session.getTimeout(IBaseSession.Timeout.M);
 		while((line = runspace.readLine(timeout)) != null) {}
