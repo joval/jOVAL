@@ -128,6 +128,6 @@ public class Runspace implements IRunspace {
     // Private
 
     private boolean isPrompt(String str) {
-	return (str.startsWith("PS") && str.endsWith("> ")) || str.endsWith(">> ");
+	return (str.startsWith("PS") && str.endsWith("> ")) || str.equals(">> ");
     }
 }

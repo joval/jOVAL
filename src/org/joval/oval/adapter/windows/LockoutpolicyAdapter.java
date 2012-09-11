@@ -87,8 +87,10 @@ public class LockoutpolicyAdapter implements IAdapter {
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StringTools.ASCII));
 	    String line = null;
 	    while ((line = reader.readLine()) != null) {
-		runspace.println(line);
-		runspace.readLine(timeout);
+		if (line.length() > 0 && !line.startsWith("#")) {
+		    runspace.println(line);
+		    runspace.readLine(timeout);
+		}
 	    }
 	    runspace.println("");
 	    runspace.readLine(timeout);
