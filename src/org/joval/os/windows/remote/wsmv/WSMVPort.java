@@ -15,6 +15,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.math.BigInteger;
 import java.security.PrivilegedActionException;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Properties;
@@ -31,6 +32,7 @@ import javax.xml.transform.dom.DOMSource;
 import org.ietf.jgss.GSSException;
 import org.w3c.dom.Node;
 
+import org.slf4j.cal10n.LocLogger;
 import net.sourceforge.spnego.SpnegoHttpURLConnection;
 
 import org.dmtf.wsman.MaxEnvelopeSizeType;
@@ -44,12 +46,14 @@ import org.w3c.soap.envelope.Envelope;
 import org.w3c.soap.envelope.Fault;
 import org.w3c.soap.envelope.Header;
 
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
 import org.joval.protocol.http.HttpSocketConnection;
 import org.joval.protocol.http.NtlmHttpURLConnection;
 import org.joval.util.Base64;
+import org.joval.util.JOVALMsg;
 import org.joval.ws.WSFault;
 
 /**
@@ -63,14 +67,10 @@ import org.joval.ws.WSFault;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WSMVPort implements IPort, IWSMVConstants {
-    private static boolean debug = false;
-//DAS
-    private static boolean encrypt = false;
-
+public class WSMVPort implements IPort, IWSMVConstants, ILoggable {
+    private static ClassLoader cl = WSMVPort.class.getClassLoader();
     private static Properties schemaProps = new Properties();
     static {
-	ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	InputStream rsc = cl.getResourceAsStream("ws-man.properties");
 	if (rsc != null) {
 	    try {
@@ -94,25 +94,58 @@ public class WSMVPort implements IPort, IWSMVConstants {
     private IWindowsCredential cred;
     private Marshaller marshaller;
     private Unmarshaller unmarshaller;
+    private boolean encrypt;
+    private OutputStream debug;
+    private LocLogger logger;
 
+    /**
+     * Create a SOAP Web-Services port.
+     */
     public WSMVPort(String url, IWindowsCredential cred) throws JAXBException {
 	this(url, null, cred);
     }
 
     /**
-     * Create a new IPort for the specified URL.
+     * Create a SOAP Web-Services port through an HTTP proxy.
      */
     public WSMVPort(String url, Proxy proxy, IWindowsCredential cred) throws JAXBException {
-	JAXBContext ctx = JAXBContext.newInstance(schemaProps.getProperty("ws-man.packages"));
+	JAXBContext ctx = JAXBContext.newInstance(schemaProps.getProperty("ws-man.packages"), cl);
 	marshaller = ctx.createMarshaller();
 	marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 	unmarshaller = ctx.createUnmarshaller();
 	scheme = AuthScheme.NTLM;
+	logger = JOVALMsg.getLogger();
 
 	this.url = url;
 	this.proxy = proxy;
 	this.cred = cred;
+	this.encrypt = true;
+	this.debug = null;
+    }
+
+    /**
+     * Enable/disable SOAP encryption.
+     */
+    public void setEncryption(boolean encrypt) {
+	this.encrypt = encrypt;
+    }
+
+    /**
+     * Enable debug logging by setting an OutputStream to which to log SOAP traffic (or null to disable).
+     */
+    public void setDebug(OutputStream debug) {
+	this.debug = debug;
+    }
+
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
     }
 
     // Implement IPort
@@ -190,7 +223,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
 		    conn.disconnect();
 		}
 
-		if (debug) System.out.println("Connecting to " + url + " using authScheme " + scheme);
+		logger.trace(JOVALMsg.STATUS_WSMV_CONNECT, url, scheme);
 		switch(scheme) {
 		  case NONE:
 		    if (proxy == null) {
@@ -202,7 +235,7 @@ public class WSMVPort implements IPort, IWSMVConstants {
 
 		  case KERBEROS:
 		    System.setProperty("java.security.krb5.conf", "krb5.conf");
-		    System.setProperty("sun.security.krb5.debug", "true");
+		    System.setProperty("sun.security.krb5.debug", Boolean.toString(debug != null));
 		    System.setProperty("java.security.auth.login.config", "login.conf");
 		    System.setProperty("javax.security.auth.useSubjectCredsOnly", "false");
 		    spnego = new SpnegoHttpURLConnection("com.sun.security.jgss.krb5.initiate", cred.getDomainUser(), cred.getPassword());
@@ -224,7 +257,9 @@ public class WSMVPort implements IPort, IWSMVConstants {
 		    } else {
 			conn = (HttpURLConnection)u.openConnection(proxy);
 		    }
-		    conn.setRequestProperty("Authorization", "Basic " + Base64.encodeBytes((cred.getDomainUser() + ":" + cred.getPassword()).getBytes()));
+		    String clear = new StringBuffer(cred.getDomainUser()).append(":").append(cred.getPassword()).toString();
+		    String auth = new StringBuffer("Basic ").append(Base64.encodeBytes(clear.getBytes())).toString();
+		    conn.setRequestProperty("Authorization", auth);
 		    break;
 		}
 
@@ -240,45 +275,35 @@ public class WSMVPort implements IPort, IWSMVConstants {
 
 		conn.connect();
 		OutputStream out = conn.getOutputStream();
-if (debug) {
-    System.out.println("**************BEGIN****************");
-    System.out.println("*                                 *");
-    System.out.println("Client sending SOAP Message:");
-    System.out.write(bytes);
-}
 		out.write(bytes);
 		out.flush();
-if (debug) System.out.println("SOAP Message Sent");
+		logger.debug(JOVALMsg.STATUS_WSMV_REQUEST, action);
+		if (debug != null) {
+		    StringBuffer sb = new StringBuffer("[").append(new Date().toString()).append("] - SOAP Request:\r\n");
+		    debug.write(sb.toString().getBytes());
+		    debug.write(bytes);
+		    debug.write("\r\n".getBytes());
+		    debug.flush();
+		}
 
 		retry = false;
 		int code = conn.getResponseCode();
 		switch(code) {
+		  case HttpURLConnection.HTTP_BAD_REQUEST:
+		  case HttpURLConnection.HTTP_INTERNAL_ERROR:
+		    result = getSOAPBodyContents(conn.getErrorStream(), conn.getContentType());
+		    break;
+
 		  case HttpURLConnection.HTTP_OK:
 		    result = getSOAPBodyContents(conn.getInputStream(), conn.getContentType());
 		    break;
 
 		  case HttpURLConnection.HTTP_UNAUTHORIZED:
 		    retry = true;
-		    debug(conn);
-		    break;
-
-		  case HttpURLConnection.HTTP_BAD_REQUEST:
-		  case HttpURLConnection.HTTP_INTERNAL_ERROR:
-		    result = getSOAPBodyContents(conn.getErrorStream(), conn.getContentType());
-		    String raw = null;
-		    if (result instanceof JAXBElement) {
-			ByteArrayOutputStream buff = new ByteArrayOutputStream();
-			marshaller.marshal(result, buff);
-			raw = new String(buff.toByteArray(), (String)marshaller.getProperty(Marshaller.JAXB_ENCODING));
-			result = ((JAXBElement)result).getValue();
-		    }
-		    if (result instanceof Fault) {
-			throw new WSFault((Fault)result, raw);
-		    }
 		    break;
 
 		  default:
-		    System.out.println("Bad response: " + code);
+		    logger.warn(JOVALMsg.ERROR_WSMV_RESPONSE, code);
 		    debug(conn);
 		    break;
 		}
@@ -298,21 +323,12 @@ if (debug) System.out.println("SOAP Message Sent");
 	    }
 	} while (retry && nextAuthScheme(conn));
 
-
-if (debug) {
-    if (result != null) {
-	System.out.println("SOAP reply body is of type " + result.getClass().getName());
-	System.out.println("*** SOAP Reply Body ***");
-	marshaller.marshal(result, System.out);
-    } else {
-	System.out.println("SOAP reply body is NULL");
-    }
-    System.out.println("*                                 *");
-    System.out.println("****************END****************");
-}
-
+	logger.debug(JOVALMsg.STATUS_WSMV_RESPONSE, result == null ? "null" : result.getClass().getName());
 	if (result instanceof JAXBElement) {
-	    return ((JAXBElement)result).getValue();
+	    result = ((JAXBElement)result).getValue();
+	}
+	if (result instanceof Fault) {
+	    throw new WSFault((Fault)result);
 	} else {
 	    return result;
 	}
@@ -324,48 +340,15 @@ if (debug) {
      * Read a SOAP envelope and return the unmarshalled object contents of the body.
      */
     private Object getSOAPBodyContents(InputStream in, String contentType) throws JAXBException, IOException {
-/*
-	//
-	// Parse the content-type.
-	//
-	Hashtable<String, String> table = new Hashtable<String, String>();
-	for (String token : contentType.split(";")) {
-	    if (table.size() == 0) {
-		table.put("", token); //the content-type itself
-	    } else {
-		int ptr = token.indexOf("=");
-		if (ptr > 0) {
-		    String key = token.substring(0,ptr).toLowerCase();
-		    String val = token.substring(ptr+1).trim();
-		}
-	    }
-	}
-	if (!"application/soap+xml".equals(table.get(""))) {
-	    throw new IOException("Unexpected contentType: " + table.get(""));
-	}
-	StringBuffer prolog = new StringBuffer("<?xml version=\"1.0\"");
-	if (table.containsKey("charset")) {
-	    prolog.append(" encoding=\"").append(table.get("charset")).append("\"");
-	}
-	prolog.append("?>\n");
-
-	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-	BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-	String line = reader.readLine();
-	if (!line.startsWith("<?xml")) {
-	    buffer.write(prolog.toString().getBytes("US-ASCII"));
-System.out.println("DAS wrote prolog: " + prolog.toString());
-	}
-	buffer.write(line.getBytes("US-ASCII"));
-	while((line = reader.readLine()) != null) {
-	    buffer.write(line.getBytes("US-ASCII"));
-	}
-
-	in.close();
-	Object result = unmarshaller.unmarshal(new ByteArrayInputStream(buffer.toByteArray()));
-*/
 	Object result = unmarshaller.unmarshal(in);
 	in.close();
+	if (debug != null) {
+	    StringBuffer sb = new StringBuffer("[").append(new Date().toString()).append("] - SOAP Reply:\r\n");
+	    debug.write(sb.toString().getBytes());
+	    marshaller.marshal(result, debug);
+	    debug.write("\r\n".getBytes());
+	    debug.flush();
+	}
 	if (result instanceof JAXBElement) {
 	    JAXBElement elt = (JAXBElement)result;
 	    if (elt.getValue() instanceof Envelope) {
@@ -388,23 +371,32 @@ System.out.println("DAS wrote prolog: " + prolog.toString());
     }
 
     /**
-     * Spit out information about a non-HTTP_OK reply.
+     * Write information about a non-HTTP_OK reply to the debug log, if applicable.
      */
     private void debug(HttpURLConnection conn) throws IOException {
-	int len = conn.getHeaderFields().size();
-	if (len > 0) {
-	    System.out.println("HTTP Headers:");
-	    System.out.println("  " + conn.getHeaderField(0));
-	    for (int i=1; i < len; i++) {
-		System.out.println("  " + conn.getHeaderFieldKey(i) + ": " + conn.getHeaderField(i));
+	if (debug != null) {
+	    StringBuffer sb = new StringBuffer("[").append(new Date().toString()).append("] - HTTP Reply:\r\n");
+	    debug.write(sb.toString().getBytes());
+	    int len = conn.getHeaderFields().size();
+	    if (len > 0) {
+		sb = new StringBuffer("  ").append("  ").append(conn.getHeaderField(0)).append("\r\n");
+		debug.write(sb.toString().getBytes());
+		for (int i=1; i < len; i++) {
+		    sb = new StringBuffer("  ");
+		    sb.append(conn.getHeaderFieldKey(i)).append(": ").append(conn.getHeaderField(i));
+		    debug.write(sb.toString().getBytes());
+		}
 	    }
-	}
-	if (conn.getContentLength() > 0) {
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
-	    String line = null;
-	    while((line = reader.readLine()) != null) {
-		System.out.println(line);
+	    len = conn.getContentLength();
+	    if (len > 0) {
+		byte[] buff = new byte[len];
+		for (int offset=0; offset < len; ) {
+		    offset += conn.getErrorStream().read(buff, offset, len - offset);
+		}
+		debug.write(buff);
+		debug.write("\r\n".getBytes());
 	    }
+	    debug.flush();
 	}
     }
 

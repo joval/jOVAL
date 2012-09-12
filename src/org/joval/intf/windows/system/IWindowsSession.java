@@ -6,6 +6,7 @@ package org.joval.intf.windows.system;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.io.IWindowsFilesystem;
+import org.joval.intf.windows.powershell.IRunspacePool;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.wmi.IWmiProvider;
 
@@ -20,6 +21,11 @@ public interface IWindowsSession extends ISession {
      * Property governing the method use to control the execution of processes on remote Windows machines.
      */
     String PROP_REMOTE_EXEC_IMPL = "remote.exec.method";
+
+    /**
+     * Property governing whether or not to encrypt WS-Management SOAP envelopes.
+     */
+    String PROP_WSMAN_ENCRYPT = "remote.wsman.encryption";
 
     /**
      * Specifies a remote execution implementation based on WMI-over-DCOM.
@@ -50,4 +56,6 @@ public interface IWindowsSession extends ISession {
     IWmiProvider getWmiProvider();
 
     IDirectory getDirectory();
+
+    IRunspacePool getRunspacePool();
 }

@@ -46,6 +46,7 @@ CLASSES=\
 	org.joval.os.windows.identity.WindowsCredential			\
 	org.joval.os.windows.io.WindowsFileInfo				\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector		\
+	org.joval.os.windows.powershell.Runspace			\
 	org.joval.os.windows.registry.BaseRegistry			\
 	org.joval.os.windows.registry.BinaryValue			\
 	org.joval.os.windows.registry.DwordValue			\
@@ -65,6 +66,8 @@ CLASSES=\
 	org.joval.os.windows.remote.io.SmbFileProxy			\
 	org.joval.os.windows.remote.io.SmbFilesystem			\
 	org.joval.os.windows.remote.io.SmbRandomAccessProxy		\
+	org.joval.os.windows.remote.powershell.Runspace			\
+	org.joval.os.windows.remote.powershell.RunspacePool		\
 	org.joval.os.windows.remote.registry.Key			\
 	org.joval.os.windows.remote.registry.Registry			\
 	org.joval.os.windows.remote.system.WindowsSession		\
@@ -98,6 +101,7 @@ CLASSES=\
 	org.joval.os.windows.system.Environment				\
 	org.joval.plugin.BasePlugin					\
 	org.joval.plugin.RemotePlugin					\
+	org.joval.protocol.http.AbstractConnection			\
 	org.joval.protocol.http.HttpSocketConnection			\
 	org.joval.protocol.http.NtlmHttpURLConnection			\
 	org.joval.protocol.netconf.NetconfSession			\
@@ -114,6 +118,7 @@ CLASSES=\
 	org.joval.test.Exec						\
 	org.joval.test.FS						\
 	org.joval.test.Netconf						\
+	org.joval.test.Powershell					\
 	org.joval.test.Reg						\
 	org.joval.test.Remote						\
 	org.joval.test.WMI						\

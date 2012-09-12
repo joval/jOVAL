@@ -3,12 +3,9 @@
 
 package org.joval.intf.ssh.system;
 
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.IOException;
 
 import org.joval.intf.system.IProcess;
-import org.joval.io.PerishableReader;
 import org.joval.util.SessionException;
 
 /**
@@ -35,7 +32,7 @@ public interface IShell extends IProcess {
      * Read from the shell until there is either (1) a new prompt, or (2) the timeout has been reached.
      *
      * @throws IllegalStateException if the shell is being used to run an IProcess
-     * @throws InterruptedIOException if the timeout is expires
+     * @throws InterruptedIOException if the timeout expires
      */
     String read(long timeout) throws IllegalStateException, IOException;
 
@@ -43,7 +40,7 @@ public interface IShell extends IProcess {
      * Read a single line from the shell until there is either (1) a new prompt, or (2) the timeout has been reached.
      *
      * @throws IllegalStateException if the shell is being used to run an IProcess
-     * @throws InterruptedIOException if the timeout is expires
+     * @throws InterruptedIOException if the timeout expires
      */
     String readLine(long timeout) throws IllegalStateException, IOException;
 

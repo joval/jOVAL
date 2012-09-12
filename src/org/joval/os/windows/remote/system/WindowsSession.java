@@ -5,7 +5,9 @@ package org.joval.os.windows.remote.system;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
@@ -29,6 +31,7 @@ import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.intf.windows.io.IWindowsFilesystem;
+import org.joval.intf.windows.powershell.IRunspacePool;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IStringValue;
@@ -37,16 +40,19 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
+import org.joval.intf.ws.IPort;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.remote.io.SmbFilesystem;
+import org.joval.os.windows.remote.powershell.RunspacePool;
 import org.joval.os.windows.remote.registry.Registry;
 import org.joval.os.windows.remote.wmi.WmiConnection;
 import org.joval.os.windows.remote.wmi.WmiProcessControl;
 import org.joval.os.windows.remote.winrm.Shell;
 import org.joval.os.windows.remote.wsmv.WSMVPort;
 import org.joval.util.AbstractSession;
+import org.joval.util.Checksum;
 import org.joval.util.CachingHierarchy;
 import org.joval.util.Environment;
 import org.joval.util.JOVALMsg;
@@ -69,22 +75,31 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     private IWindowsCredential cred;
     private Registry reg, reg32;
     private IWindowsFilesystem fs32;
-    private Vector<IFile> tempFiles;
     private boolean is64bit = false;
+    private RunspacePool runspaces = null;
     private Directory directory = null;
     private WmiConnection conn;
     private WSMVPort port;
-    private List<Shell> shells;
+    private FileOutputStream soapLog;
 
     public WindowsSession(String host, File wsdir) {
 	super();
 	this.wsdir = wsdir;
 	this.host = host;
-	tempFiles = new Vector<IFile>();
-	shells = new Vector<Shell>();
     }
 
     // Implement IWindowsSession extensions
+
+    public IRunspacePool getRunspacePool() {
+	if (runspaces == null) {
+	    try {
+		runspaces = new RunspacePool(new Shell(port, env, cwd), port);
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	}
+	return runspaces;
+    }
 
     public IDirectory getDirectory() {
 	return directory;
@@ -133,6 +148,9 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	}
 	if (directory != null) {
 	    directory.setLogger(logger);
+	}
+	if (port != null) {
+	    port.setLogger(logger);
 	}
     }
 
@@ -199,9 +217,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		    environment.setenv(pair);
 		}
 	    }
-	    Shell shell = new Shell(port, environment, cwd);
-	    shells.add(shell);
-	    return shell.createProcess(command);
+	    return new Shell(port, environment, cwd).createProcess(command);
 	} else {
 	    //
 	    // WMI process control is the default
@@ -211,11 +227,11 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 
 	    IFile out = fs.getFile(sb.toString() + ".out", IFile.READVOLATILE);
 	    out.getOutputStream(false).close(); // create/clear tmpOutFile
-	    tempFiles.add(out);
+	    deleteOnDisconnect(out);
 
 	    IFile err = fs.getFile(sb.toString() + ".err", IFile.READVOLATILE);
 	    err.getOutputStream(false).close(); // create/clear tmpErrFile
-	    tempFiles.add(err);
+	    deleteOnDisconnect(err);
 
 	    WmiProcessControl wp = new WmiProcessControl(conn, this.env, command, env, cwd, out, err);
 	    wp.setLogger(logger);
@@ -279,7 +295,13 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 		if (port == null) {
 		    StringBuffer sb = new StringBuffer("http://").append(host).append(":5985/wsman");
 		    try {
-			port = new WSMVPort(sb.toString(), cred);
+			port = new WSMVPort(sb.toString(), null, cred);
+			port.setLogger(logger);
+			port.setEncryption(getProperties().getBooleanProperty(IPort.PROP_ENCRYPT));
+			if (getProperties().getBooleanProperty(IPort.PROP_DEBUG)) {
+			    soapLog = new FileOutputStream(new File(wsdir, "wsmv.soap.log"));
+			    port.setDebug(soapLog);
+			}
 		    } catch (Exception e) {
 			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			reg.disconnect();
@@ -313,19 +335,15 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     }
 
     public void disconnect() {
-	for (IFile f : tempFiles) {
-	    try {
-		synchronized(f) {
-		    if (f.exists()) {
-			f.delete();
-		    }
-		}
-	    } catch (Exception e) {
-		logger.warn(JOVALMsg.ERROR_FILE_DELETE, f.toString());
-	    }
+	deleteFiles();
+	if (runspaces != null) {
+	    runspaces.shutdown();
 	}
-	for (Shell shell : shells) {
-	    shell.finalize();
+	if (soapLog != null) {
+	    try {
+		soapLog.close();
+	    } catch (IOException e) {
+	    }
 	}
 	reg.disconnect();
 	if (is64bit) {
@@ -378,5 +396,18 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	    }
 	}
 	return false;
+    }
+
+    private String getChecksum(String[] env) {
+	StringBuffer sb = new StringBuffer("");
+	if (env != null) {
+	    for (String s : env) {
+		if (sb.length() > 0) {
+		    sb.append("\n");
+		}
+		sb.append(s);
+	    }
+	}
+	return Checksum.getChecksum(sb.toString(), Checksum.Algorithm.MD5);
     }
 }

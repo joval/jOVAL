@@ -51,6 +51,8 @@ CLASSES=\
 	org.joval.intf.windows.registry.IRegistry		\
 	org.joval.intf.windows.registry.IStringValue		\
 	org.joval.intf.windows.registry.IValue			\
+	org.joval.intf.windows.powershell.IRunspace		\
+	org.joval.intf.windows.powershell.IRunspacePool		\
 	org.joval.intf.windows.system.IWindowsSession		\
 	org.joval.intf.windows.wmi.ISWbemEventSource		\
 	org.joval.intf.windows.wmi.ISWbemObject			\
@@ -59,6 +61,7 @@ CLASSES=\
 	org.joval.intf.windows.wmi.ISWbemPropertySet		\
 	org.joval.intf.windows.wmi.IWmiProvider			\
 	org.joval.io.BufferedReader				\
+	org.joval.io.InterruptableInputStream			\
 	org.joval.io.LittleEndian				\
 	org.joval.io.PerishableReader				\
 	org.joval.io.StreamLogger				\
@@ -69,6 +72,7 @@ CLASSES=\
 	org.joval.io.fs.DefaultFile				\
 	org.joval.io.fs.FileAccessor				\
 	org.joval.io.fs.FileInfo				\
+	org.joval.os.windows.powershell.PowershellException	\
 	org.joval.os.windows.wmi.WmiException			\
 	org.joval.util.AbstractEnvironment			\
 	org.joval.util.Base64					\

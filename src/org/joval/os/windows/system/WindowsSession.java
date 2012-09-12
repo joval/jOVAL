@@ -15,6 +15,7 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.io.IWindowsFilesystem;
+import org.joval.intf.windows.powershell.IRunspacePool;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IStringValue;
@@ -24,6 +25,7 @@ import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WindowsFilesystem;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
+import org.joval.os.windows.powershell.RunspacePool;
 import org.joval.os.windows.registry.Registry;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.wmi.WmiProvider;
@@ -43,6 +45,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     private Registry reg32, reg;
     private IWindowsFilesystem fs32;
     private Directory directory = null;
+    private RunspacePool runspaces = null;
 
     //
     // Load the JACOB DLL
@@ -61,6 +64,10 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     }
 
     // Implement IWindowsSession extensions
+
+    public IRunspacePool getRunspacePool() {
+	return runspaces;
+    }
 
     public IDirectory getDirectory() {
 	return directory;
@@ -178,6 +185,9 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 		directory = new Directory(this);
 	    }
 	    directory.setWmiProvider(wmi);
+	    if (runspaces == null) {
+		runspaces = new RunspacePool(this);
+	    }
 	    return true;
 	} else {
 	    return false;
@@ -185,6 +195,8 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     }
 
     public void disconnect() {
+	deleteFiles();
+	runspaces.shutdown();
 	wmi.deregister();
 	connected = false;
     }

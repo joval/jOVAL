@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.StringTokenizer;
 import java.util.TimerTask;
@@ -15,13 +16,13 @@ import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
 
+import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.io.StreamLogger;
-import org.joval.util.CachingHierarchy;
 
 /**
  * Base class for the local and remote Windows and Unix ISession implementations.
@@ -33,6 +34,7 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
     protected File cwd;
     protected IEnvironment env;
     protected IFilesystem fs;
+    protected HashSet<String> toDelete;
 
     /**
      * Create an ISession with no workspace to store state information, i.e., for a local ISession.
@@ -58,6 +60,17 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 
     public void setWorkingDir(String path) {
 	cwd = new File(path);
+    }
+
+    public void deleteOnDisconnect(IFile file) throws IllegalStateException {
+	if (connected) {
+	    if (toDelete == null) {
+		toDelete = new HashSet<String>();
+	    }
+	    toDelete.add(file.getPath());
+	} else {
+	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_NOT_CONNECTED));
+	}
     }
 
     public String getTempDir() throws IOException {
@@ -113,7 +126,25 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 
     public abstract Type getType();
 
-    // Private
+    // Internal
+
+    /**
+     * Delete all the files that have been registered for deletion on disconnect.  Subclasses should call this.
+     */
+    protected void deleteFiles() {
+	if (toDelete != null) {
+	    for (String fname : toDelete) {
+		try {
+		    IFile f = fs.getFile(fname, IFile.READWRITE);
+		    if (f.isFile()) {
+			f.delete();
+		    }
+		} catch (IOException e) {
+		    logger.warn(JOVALMsg.ERROR_FILE_DELETE, fname);
+		}
+	    }
+	}
+    }
 
     private static final char NULL = (char)0;
     private static final char SQ = '\'';
@@ -245,11 +276,15 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	}
 
 	public boolean isRunning() {
-	    try {
-		exitValue();
+	    if (p == null) {
 		return false;
-	    } catch (IllegalThreadStateException e) {
-		return true;
+	    } else {
+		try {
+		    exitValue();
+		    return false;
+		} catch (IllegalThreadStateException e) {
+		    return true;
+		}
 	    }
 	}
     }

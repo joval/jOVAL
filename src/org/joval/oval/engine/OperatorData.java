@@ -121,5 +121,17 @@ class OperatorData {
 	}
 	return result;
     }
+
+    @Override
+    public String toString() {
+	StringBuffer sb = new StringBuffer();
+	sb.append("t: ").append(Integer.toString(t)).append(", ");
+	sb.append("f: ").append(Integer.toString(f)).append(", ");
+	sb.append("e: ").append(Integer.toString(e)).append(", ");
+	sb.append("u: ").append(Integer.toString(u)).append(", ");
+	sb.append("ne: ").append(Integer.toString(ne)).append(", ");
+	sb.append("na: ").append(Integer.toString(na));
+	return sb.toString();
+    }
 }
 

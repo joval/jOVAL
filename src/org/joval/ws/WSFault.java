@@ -3,6 +3,10 @@
 
 package org.joval.ws;
 
+import javax.xml.bind.JAXBElement;
+
+import com.microsoft.wsman.fault.WSManFaultType;
+import org.w3c.soap.envelope.Detail;
 import org.w3c.soap.envelope.Fault;
 
 /**
@@ -14,12 +18,30 @@ import org.w3c.soap.envelope.Fault;
 public class WSFault extends Exception {
     Fault fault;
 
-    public WSFault(Fault fault, String message) {
-	super(message);
+    public WSFault(Fault fault) {
+	super();
 	this.fault = fault;
     }
 
     public Fault getFault() {
 	return fault;
+    }
+
+    /**
+     * Extract the (required) detail message from the fault.
+     */
+    @Override
+    public String getMessage() {
+	Detail detail = fault.getDetail();
+	JAXBElement elt = (JAXBElement)detail.getAny().get(0);
+	Object obj = elt.getValue();
+	if (obj instanceof String) {
+	    return (String)obj;
+	} else if (obj instanceof WSManFaultType) {
+	    WSManFaultType wsmft = (WSManFaultType)obj;
+	    return (String)wsmft.getMessage().getContent().get(0);
+	} else {
+	    return obj.toString();
+	}
     }
 }

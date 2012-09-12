@@ -67,6 +67,7 @@ JOVAL_CORE=$(SDK)/engine
 JOVAL_CORE_LIB=$(JOVAL_CORE)/jOVALCore.jar
 ADAPTERS=$(SDK)/adapters
 ADAPTERS_LIB=$(ADAPTERS)/jOVALAdapters.jar
+WIN32_PROBES_DESTINATION=$(ADAPTERS)/$(BUILD)/org/joval/oval/adapter/windows
 ADAPTERS_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(ADAPTERS)/$(LIBDIR)/*)))
 PLUGIN_REMOTE=$(SDK)/plugin/remote
 PLUGIN_REMOTE_LIB=$(PLUGIN_REMOTE)/jOVALPluginRemote.jar

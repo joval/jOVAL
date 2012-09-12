@@ -3,6 +3,7 @@
 
 package org.joval.protocol.http;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
@@ -19,9 +20,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.joval.intf.windows.identity.IWindowsCredential;
 import org.joval.io.LittleEndian;
+import org.joval.io.StreamTool;
 import org.joval.util.Base64;
 
 import org.microsoft.security.ntlm.NtlmAuthenticator;
@@ -38,7 +41,7 @@ import org.microsoft.security.ntlm.impl.NtlmRoutines;
  * @author David A. Solin
  * @version %I% %V%
  */
-public class NtlmHttpURLConnection extends HttpURLConnection {
+public class NtlmHttpURLConnection extends AbstractConnection {
     private static NtlmAuthenticator.NtlmVersion NTLMV2	= NtlmAuthenticator.NtlmVersion.ntlmv2;
     private static NtlmAuthenticator.ConnectionType CO	= NtlmAuthenticator.ConnectionType.connectionOriented;
 
@@ -66,7 +69,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	if (cred == null) {
 	    phase = NtlmPhase.NA;
 	} else {
-	    session = createSession(cred);
+	    session = createSession(cred, encrypt);
 	    phase = NtlmPhase.TYPE1;
 	    this.encrypt = encrypt;
 	}
@@ -89,7 +92,7 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 	} else {
 	    connection.setProxy(proxy);
 	    if (cred != null) {
-		proxySession = createSession(cred);
+		proxySession = createSession(cred, false);
 		proxyPhase = NtlmPhase.TYPE1;
 	    }
 	}
@@ -131,16 +134,11 @@ public class NtlmHttpURLConnection extends HttpURLConnection {
 		temp.write(sb.toString().getBytes("US-ASCII"));
 		temp.write("--Encrypted Boundary\r\n".getBytes("US-ASCII"));
 		temp.write("Content-Type: application/octet-stream\r\n".getBytes("US-ASCII"));
-//DAS
 
-LittleEndian.writeUInt(10, temp); // SECBUFFER_VERSION
-LittleEndian.writeUInt(1, temp); // number of SecBuffers
-byte[] sealed = session.seal(cachedOutput.toByteArray());
-LittleEndian.writeUInt(sealed.length, temp);
-LittleEndian.writeUInt(0x01, temp); // SECBUFFER_DATA
-temp.write(sealed);
-
-//		temp.write(session.sign(sealed));
+		byte[] mac = session.calculateMac(cachedOutput.toByteArray());
+		LittleEndian.writeUInt(mac.length, temp);
+		temp.write(mac);
+		temp.write(session.seal(cachedOutput.toByteArray()));
 		temp.write("--Encrypted Boundary--\r\n".getBytes("US-ASCII"));
 		cachedOutput = temp;
 	    }
@@ -171,135 +169,9 @@ temp.write(sealed);
     }
 
     @Override
-    public int getResponseCode() throws IOException {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getResponseCode();
-    }
-
-    @Override
-    public String getResponseMessage() throws IOException {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getResponseMessage();
-    }
-
-    @Override
-    public int getContentLength() {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getContentLength();
-    }
-
-    @Override
-    public String getContentType() {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getContentType();
-    }
-
-    @Override
-    public String getContentEncoding() {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getContentEncoding();
-    }
-
-    @Override
-    public long getExpiration() {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getExpiration();
-    }
-
-    @Override
-    public long getDate() {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getDate();
-    }
-
-    @Override
-    public long getLastModified() {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getLastModified();
-    }
-
-    @Override
-    public String getHeaderField(String header) {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getHeaderField(header);
-    }
-
-    @Override
-    public Map<String, List<String>> getHeaderFields() {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getHeaderFields();
-    }
-
-    @Override
-    public int getHeaderFieldInt(String header, int def) {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getHeaderFieldInt(header, def);
-    }
-
-    @Override
-    public long getHeaderFieldDate(String header, long def) {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getHeaderFieldDate(header, def);
-    }
-
-    @Override
-    public String getHeaderFieldKey(int index) {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getHeaderFieldKey(index);
-    }
-
-    @Override
-    public String getHeaderField(int index) {
-	try {
-	    negotiate();
-	} catch (IOException ex) {
-	}
-	return connection.getHeaderField(index);
-    }
-
-    @Override
     public Object getContent() throws IOException {
 	try {
-	    negotiate();
+	    getResponse();
 	} catch (IOException ex) {
 	}
 	return connection.getContent();
@@ -308,23 +180,10 @@ temp.write(sealed);
     @Override
     public Object getContent(Class[] classes) throws IOException {
 	try {
-	    negotiate();
+	    getResponse();
 	} catch (IOException ex) {	
 	}
 	return connection.getContent(classes);
-    }
-
-    @Override
-    public InputStream getInputStream() throws IOException {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	if (encrypt) {
-	    return new DecryptionStream(connection.getInputStream());
-	} else {
-	    return connection.getInputStream();
-	}
     }
 
     @Override
@@ -333,15 +192,6 @@ temp.write(sealed);
 	    cachedOutput = new ByteArrayOutputStream();
 	}
 	return cachedOutput;
-    }
-
-    @Override
-    public InputStream getErrorStream() {
-	try {
-	    negotiate();
-	} catch (IOException e) {
-	}
-	return connection.getErrorStream();
     }
 
     @Override
@@ -387,11 +237,6 @@ temp.write(sealed);
     @Override
     public long getIfModifiedSince() {
 	return connection.getIfModifiedSince();
-    }
-
-    @Override
-    public boolean getDefaultUseCaches() {
-	return connection.getDefaultUseCaches();
     }
 
     @Override
@@ -470,18 +315,30 @@ temp.write(sealed);
 	connection.setRequestMethod(requestMethod);
     }
 
-    // Private
+    // Internal
 
     /**
      * Perform NTLM negotiations.
      */
-    private void negotiate() throws IOException {
+    void getResponse() throws IOException {
 	if (negotiated) return;
 	try {
 	    for (int attempt=1; attempt < 3; attempt++) {
 		connect();
-		int response = connection.getResponseCode();
-		switch(response) {
+		responseCode = connection.getResponseCode();
+		contentLength = connection.getContentLength();
+		responseMessage = connection.getResponseMessage();
+		contentType = connection.getContentType();
+		contentEncoding = connection.getContentEncoding();
+		expiration = connection.getExpiration();
+		date = connection.getDate();
+		lastModified = connection.getLastModified();
+		headerFields = new HashMap<String, List<String>>();
+		for (Map.Entry<String, List<String>> entry : connection.getHeaderFields().entrySet()) {
+		    headerFields.put(entry.getKey(), entry.getValue());
+		}
+
+		switch(responseCode) {
 		  case HTTP_UNAUTHORIZED:
 		    if (session == null) {
 			return;
@@ -513,12 +370,149 @@ temp.write(sealed);
 		    break;
 
 		  default:
+		    responseData = responseCode == HTTP_OK ? connection.getInputStream() : connection.getErrorStream();
+		    if (encrypt) {
+			responseData = new ByteArrayInputStream(decrypt(responseData));
+		    }
 		    return;
 		}
 	    }
 	} finally {
 	    cachedOutput = null;
 	    negotiated = true;
+	}
+    }
+
+    // Private
+
+    /**
+     * REMIND (DAS): still need to implement validation of the signature.
+     */
+    private byte[] decrypt(InputStream in) throws IOException {
+	StringTokenizer tok = new StringTokenizer(contentType, ";");
+	if ("multipart/encrypted".equals(tok.nextToken())) {
+	    String boundary = null;
+	    while(tok.hasMoreTokens()) {
+		String token = tok.nextToken();
+		int ptr = token.indexOf("=");
+		if (ptr != -1) {
+		    String key = token.substring(0,ptr);
+		    String val = token.substring(ptr+1);
+		    if (val.startsWith("\"") && val.endsWith("\"")) {
+			val = val.substring(1, val.length()-1);
+		    }
+		    if ("protocol".equalsIgnoreCase(key) && !"application/HTTP-SPNEGO-session-encrypted".equals(val)) {
+			throw new IOException("Unknown encryption protocol: " + val);
+		    } else if ("boundary".equalsIgnoreCase(key)) {
+			boundary = val;
+		    }
+		}
+	    }
+	    if (boundary == null) {
+		throw new IOException("No boundary specified for multipart message");
+	    }
+	    String pattern = new StringBuffer("--").append(boundary).toString();
+	    KVP pair = null;
+	    String line = null;
+	    boolean started = false;
+	    while((pair = readKVP(in)) != null) {
+		if (pair.value().equals(pattern)) {
+		    if (started) {
+			break;
+		    } else {
+			started = true;
+		    }
+		} else if ("Content-Type".equalsIgnoreCase(pair.key())) {
+		    if (!"application/HTTP-SPNEGO-session-encrypted".equals(pair.value())) {
+			throw new IOException("Unknown " + pair.toString());
+		    }
+		} else if ("OriginalContent".equalsIgnoreCase(pair.key())) {
+		    tok = new StringTokenizer(pair.value(), ";");
+		    while(tok.hasMoreTokens()) {
+			String token = tok.nextToken();
+			int ptr = token.indexOf("=");
+			if (ptr != -1) {
+			    String key = token.substring(0,ptr);
+			    String val = token.substring(ptr+1);
+			    if (val.startsWith("\"") && val.endsWith("\"")) {
+				val = val.substring(1, val.length()-1);
+			    }
+			    if ("type".equalsIgnoreCase(key)) {
+				contentType = val;
+			    } else if ("charset".equalsIgnoreCase(key)) {
+				contentEncoding = val;
+			    } else if ("length".equalsIgnoreCase(key)) {
+				contentLength = Integer.parseInt(val);
+			    }
+			}
+		    }
+		}
+	    }
+	    pair = readKVP(in);
+	    if ("Content-Type".equalsIgnoreCase(pair.key()) && "application/octet-stream".equals(pair.value())) {
+		int sigLen = LittleEndian.readUInt(in);
+		byte[] signature = new byte[sigLen];
+		StreamTool.readFully(in, signature);
+
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		byte[] buff = new byte[512];
+		int len = 0;
+		while((len = in.read(buff)) > 0) {
+		    out.write(buff, 0, len);
+		}
+		byte[] data = out.toByteArray();
+		byte[] end = new StringBuffer(pattern).append("--\r\n").toString().getBytes("US-ASCII");
+
+		int offset = data.length - end.length;
+		if (offset < 0) {
+		    throw new IOException("Data shorter than barrier");
+		}
+		for (int i=0; i < end.length; i++) {
+		    if (end[i] != data[offset+i]) {
+			throw new IOException("Data not terminated with barrier");
+		    }
+		}
+		byte[] sealed = new byte[offset];
+		System.arraycopy(data, 0, sealed, 0, sealed.length);
+		data = session.unseal(sealed);
+		return data;
+	    } else {
+		throw new IOException("Unexpected line: " + pair.toString());
+	    }
+	} else {
+	    throw new IOException("Not encrypted content: " + contentType);
+	}
+    }
+
+    /**
+     * Read as ASCII from the stream until encountering CRLF.
+     */
+    private String readLine(InputStream in) throws IOException {
+	ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+	int ch = -1;
+	boolean cr = false;
+	while((ch = in.read()) != -1) {
+	    switch(ch) {
+	      case '\r':
+		cr = true;
+		break;
+	      case '\n':
+		if (cr) {
+		    return new String(buffer.toByteArray(), "US-ASCII");
+		}
+	      default:
+		if (cr) {
+		    buffer.write(0xFF & '\r');
+		    cr = false;
+		}
+		buffer.write((byte)(0xFF & ch));
+		break;
+	    }
+	}
+	if (buffer.size() > 0) {
+	    return new String(buffer.toByteArray(), "US-ASCII");
+	} else {
+	    return null;
 	}
     }
 
@@ -562,7 +556,7 @@ temp.write(sealed);
     /**
      * Create an NtlmSession using the supplied credentials.
      */
-    private NtlmSession createSession(IWindowsCredential cred) {
+    private NtlmSession createSession(IWindowsCredential cred, boolean encrypt) {
 	if (cred == null) {
 	    return null;
 	}
@@ -574,7 +568,7 @@ temp.write(sealed);
 	String domain = cred.getDomain();
 	String user = cred.getUsername();
 	String pass = cred.getPassword();
-	NtlmAuthenticator auth = new NtlmAuthenticator(NTLMV2, CO, host, domain, user, pass);
+	NtlmAuthenticator auth = new NtlmAuthenticator(NTLMV2, CO, host, domain, user, pass, encrypt);
 	return auth.createSession();
     }
 
@@ -643,20 +637,6 @@ temp.write(sealed);
 	    header.append(" ");
 	    header.append(Base64.encodeBytes(session.generateAuthenticateMessage()));
 	    return header.toString();
-	}
-    }
-
-//DAS TBD
-    class DecryptionStream extends InputStream {
-	private InputStream in;
-
-	DecryptionStream(InputStream in) {
-	    this.in = in;
-	}
-
-	@Override
-	public int read() throws IOException {
-	    return in.read();
 	}
     }
 }

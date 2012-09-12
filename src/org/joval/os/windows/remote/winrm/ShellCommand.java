@@ -7,6 +7,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
@@ -35,9 +37,11 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
 import org.joval.os.windows.remote.wsmv.operation.CommandOperation;
+import org.joval.os.windows.remote.wsmv.operation.DeleteOperation;
 import org.joval.os.windows.remote.wsmv.operation.ReceiveOperation;
 import org.joval.os.windows.remote.wsmv.operation.SendOperation;
 import org.joval.os.windows.remote.wsmv.operation.SignalOperation;
+import org.joval.util.JOVALMsg;
 import org.joval.ws.WSFault;
 
 /**
@@ -47,14 +51,17 @@ import org.joval.ws.WSFault;
  * @version %I% %G%
  */
 public class ShellCommand implements IWSMVConstants, IProcess {
-    public enum Code {
+    /**
+     * An enumeration of codes that can be issued to a running process using a signal.
+     */
+    public enum SignalCode {
 	TERMINATE("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/signal/terminate"),
 	CTL_C("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/signal/ctrl_c"),
 	CTL_BREAK("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/signal/ctrl_break");
 
 	private String value;
 
-	private Code(String value) {
+	private SignalCode(String value) {
 	    this.value = value;
 	}
 
@@ -63,6 +70,9 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	}
     }
 
+    /**
+     * An enumeration of the possible states of a running process, embedding their URI values.
+     */
     public enum State {
 	DONE("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/CommandState/Done"),
 	PENDING("http://schemas.microsoft.com/wbem/wsman/1/windows/shell/CommandState/Pending"),
@@ -88,16 +98,37 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	}
     }
 
+    private Shell shell;
     private IPort port;
-    private String shellId;
-    private String id;
+    private String shellId, id;
     private State state;
     private int exitCode;
     private InputStream stdout, stderr;
+    private PipedOutputStream stderrPipe;
     private OutputStream stdin;
     private String cmd;
     private String[] args;
+    private boolean disposable;
 
+    /**
+     * Create a singleton command for the specified Shell. The shell will be deleted when the command terminates.
+     */
+    public ShellCommand(Shell shell, String cmd, String[] args) {
+	this.shell = shell;
+	this.shellId = shell.id;
+	this.port = shell.port;
+	this.cmd = cmd;
+	this.args = args;
+	stdin = null;
+	stderr = null;
+	stdout = null;
+	exitCode = -1;
+	disposable = false;
+    }
+
+    /**
+     * Add a new command to the specified Shell.
+     */
     public ShellCommand(IPort port, String shellId, String cmd, String[] args) {
 	this.port = port;
 	this.shellId = shellId;
@@ -107,6 +138,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	stderr = null;
 	stdout = null;
 	exitCode = -1;
+	disposable = false;
     }
 
     /**
@@ -114,6 +146,31 @@ public class ShellCommand implements IWSMVConstants, IProcess {
      */
     public String getId() {
 	return id;
+    }
+
+    /**
+     * Delete the ShellCommand on the target machine (idempotent).
+     */
+    @Override
+    protected void finalize() {
+	if (disposable) {
+	    try {
+		Signal signal = Factories.SHELL.createSignal();
+		signal.setCommandId(id);
+		signal.setCode(SignalCode.TERMINATE.value());
+		SignalOperation signalOperation = new SignalOperation(signal);
+		signalOperation.addResourceURI(SHELL_URI);
+		signalOperation.addSelectorSet(getSelectorSet());
+		SignalResponse response = signalOperation.dispatch(port);
+		stderrPipe.close();
+		if (shell != null) {
+		    shell.finalize();
+		}
+	    } catch (Exception e) {
+		e.printStackTrace();
+	    }
+	    disposable = false;
+	}
     }
 
     // Implement IProcess
@@ -138,7 +195,9 @@ public class ShellCommand implements IWSMVConstants, IProcess {
     }
 
     /**
-     * NOTE: if nobody is reading the process output or error stream, the process will never end.
+     * WARNING: If no Thread is reading the process output or error streams, this method will never return.  We
+     * previously attempted to read the streams from another thread, but asynchronous reads cause major performance
+     * problems.
      */
     public void waitFor(long millis) throws InterruptedException {
 	long endTime = System.currentTimeMillis() + millis;
@@ -190,29 +249,18 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 
 	CommandResponse response = commandOperation.dispatch(port);
 	state = State.RUNNING;
+	disposable = true;
 	id = response.getCommandId();
-	System.out.println("Started command: " + id);
+
+	stderrPipe = new PipedOutputStream();
+	stderr = new PipedInputStream(stderrPipe);
     }
 
     /**
      * Send a signal to the command.
      */
     public void destroy() {
-	try {
-	    Signal signal = Factories.SHELL.createSignal();
-	    signal.setCommandId(id);
-	    signal.setCode(Code.TERMINATE.value());
-	    SignalOperation signalOperation = new SignalOperation(signal);
-	    signalOperation.addResourceURI(SHELL_URI);
-	    signalOperation.addSelectorSet(getSelectorSet());
-
-	    SignalResponse response = signalOperation.dispatch(port);
-	    for (Object obj : response.getAny()) {
-		System.out.println("Response " + obj.getClass().getName());
-	    }
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+	finalize();
 	state = State.DONE;
     }
 
@@ -225,15 +273,12 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 
     public InputStream getInputStream() {
 	if (stdout == null) {
-	    stdout = new CommandInputStream(Shell.STDOUT);
+	    stdout = new CommandInputStream();
 	}
 	return stdout;
     }
 
     public InputStream getErrorStream() {
-	if (stderr == null) {
-	    stderr = new CommandInputStream(Shell.STDERR);
-	}
 	return stderr;
     }
 
@@ -248,6 +293,9 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 
     // Internal
 
+    /**
+     * An OutputStream implementation that is triggered by flush() to send data upstream to the process.
+     */
     class CommandOutputStream extends ByteArrayOutputStream {
 	CommandOutputStream(int size) {
 	    super(size);
@@ -282,13 +330,15 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	}
     }
 
+    /**
+     * An InputStream implementation fills an internal buffer, when required, by issuing a receive operation
+     * to the process.
+     */
     class CommandInputStream extends InputStream {
-	String type;
 	byte[] buff;
 	int pos;
 
-	CommandInputStream(String type) {
-	    this.type = type;
+	CommandInputStream() {
 	    buff = new byte[0];
 	    pos = 0;
 	}
@@ -348,7 +398,8 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	    try {
 		DesiredStreamType desired = Factories.SHELL.createDesiredStreamType();
 		desired.setCommandId(id);
-		desired.getValue().add(type);
+		desired.getValue().add(Shell.STDOUT);
+		desired.getValue().add(Shell.STDERR);
 		Receive receive = Factories.SHELL.createReceive();
 		receive.setDesiredStream(desired);
 		ReceiveOperation receiveOperation = new ReceiveOperation(receive);
@@ -366,8 +417,17 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		pos = 0;
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		for (StreamType stream : response.getStream()) {
-		    if (stream.getName().equals(type)) {
-			buffer.write(stream.getValue());
+		    if (stream.isSetValue()) {
+			byte[] val = stream.getValue();
+			if (val.length > 0) {
+			    String streamName = stream.getName();
+			    if (Shell.STDOUT.equals(streamName)) {
+				buffer.write(val);
+			    } else if (Shell.STDERR.equals(streamName)) {
+				stderrPipe.write(val);
+				stderrPipe.flush();
+			    }
+			}
 		    }
 		}
 		buff = buffer.toByteArray();
@@ -376,6 +436,11 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		    ShellCommand.this.state = State.fromValue(state.getState());
 		    if (state.isSetExitCode()) {
 			exitCode = state.getExitCode().intValue();
+			//
+			// Per section section 3.1.4.14, point 4 of MS-WSMV specification client MUST send
+			// signal message with Terminate code after receiving final response from server.
+			//
+			ShellCommand.this.finalize();
 		    }
 		}
 	    } catch (JAXBException e) {

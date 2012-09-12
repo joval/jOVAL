@@ -64,9 +64,12 @@ public class StreamTool {
     }
 
     /**
-     * Copy from in to out in a Thread.  Returns the Thread.  Closes the InputStream when done, but not the OutputStream.
+     * Copy from in to out asynchronously (i.e., in a new Thread). Closes the InputStream when done, but not
+     * the OutputStream.
+     *
+     * @returns the new Thread
      */
-    public static Thread copyInThread(InputStream in, OutputStream out) {
+    public static Thread copyAsync(InputStream in, OutputStream out) {
 	Thread thread = new Thread(new Copier(in, out));
 	thread.start();
 	return thread;

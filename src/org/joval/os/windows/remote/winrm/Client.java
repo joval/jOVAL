@@ -53,7 +53,9 @@ import com.microsoft.wsman.shell.EnvironmentVariableList;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
+import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.os.windows.identity.WindowsCredential;
+import org.joval.os.windows.remote.powershell.RunspacePool;
 import org.joval.os.windows.remote.wsmv.WSMVPort;
 import org.joval.os.windows.remote.wsmv.operation.EnumerateOperation;
 import org.joval.os.windows.remote.wsmv.operation.PullOperation;
@@ -89,15 +91,19 @@ public class Client implements IWSMVConstants {
 	String url = targetSpec.toString();
 
 	try {
-	    Client client = new Client(new WSMVPort(url, new WindowsCredential(user + ":" + pass)));
+//DAS
+	    WSMVPort port = new WSMVPort(url, null, new WindowsCredential(user + ":" + pass));
+	    port.setEncryption(false);
+	    Client client = new Client(port);
 
-	    client.testGet();
 /*
+	    client.testPowershell();
+	    client.testGet();
 	    client.testEnumerate();
 	    client.testPut();
 	    client.testDelete();
-	    client.testShell();
 */
+	    client.testShell();
 
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -237,7 +243,8 @@ public class Client implements IWSMVConstants {
     }
 
     public void testEnumerate() throws Exception {
-	String uri = SHELL_URI;
+//	String uri = SHELL_URI;
+	String uri = "http://schemas.microsoft.com/wbem/wsman/1/windows/shell";
 //	String uri = "http://schemas.microsoft.com/wbem/wsman/1/wmi/root/cimv2/Win32_Processor";
 //	String uri = "http://schemas.microsoft.com/wbem/wsman/1/config/service/certmapping";
 
@@ -257,6 +264,7 @@ public class Client implements IWSMVConstants {
 	PullOperation pullOperation = new PullOperation(pull);
 	pullOperation.addResourceURI(uri);
 
+	System.out.println("Enumerate start");
 	boolean endOfSequence = false;
 	while(!endOfSequence) {
 	    PullResponse pullResponse = pullOperation.dispatch(port);
@@ -267,6 +275,7 @@ public class Client implements IWSMVConstants {
 		}
 	    }
 	    if (pullResponse.isSetEndOfSequence()) {
+		System.out.println("Enumerate end");
 		endOfSequence = true;
 	    }
 	}
@@ -301,24 +310,36 @@ public class Client implements IWSMVConstants {
     }
 
     public void testShell() throws Exception {
-	Shell shell = new Shell(port, null, "%windir%");
-System.out.println("Created shell " + shell.getId());
-
-try {
-    IProcess p = shell.createProcess("ping www.google.com");
-    p.start();
-    byte[] buff = new byte[256];
-    int len = 0;
-    InputStream in = p.getInputStream();
-    while((len = in.read(buff)) > 0) {
-	System.out.write(buff, 0, len);
-    }
-    System.out.println("Exit Code: " + p.exitValue());
-} catch (Exception e) {
-    e.printStackTrace();
+for (Shell shell : Shell.enumerate(port)) {
+    shell.finalize();
+    System.out.println("Killed zimbie shell: " + shell.getId());
 }
+for (int i=0; i < 16; i++) {
+	Shell shell = new Shell(port, null, "%windir%");
+	System.out.println("Created shell " + shell.getId());
+	try {
+	    IProcess p = shell.createProcess("echo hello");
+	    p.start();
+	    byte[] buff = new byte[256];
+	    int len = 0;
+	    InputStream in = p.getInputStream();
+	    while((len = in.read(buff)) > 0) {
+		System.out.write(buff, 0, len);
+	    }
+	    System.out.println("Exit Code: " + p.exitValue());
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
+	System.out.println("Destroyed shell");
+}
+    }
 
-	shell.finalize();
-System.out.println("Destroyed shell");
+    public void testPowershell() throws Exception {
+	RunspacePool pool = new RunspacePool(new Shell(port, null, "%windir%"), port);
+	IRunspace runspace = pool.spawn();
+	System.out.println("Powershell ID=" + runspace.getId() + ", Prompt: " + runspace.getPrompt());
+	runspace.invoke("echo \"hello powershell\"");
+	String s = runspace.read(5000L);
+	pool.shutdown();
     }
 }

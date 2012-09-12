@@ -125,6 +125,7 @@ public class UnixSession extends BaseUnixSession implements ILocked {
     }
 
     public void disconnect() {
+	deleteFiles();
 	if (sfs != null) {
 	    sfs.disconnect();
 	}
