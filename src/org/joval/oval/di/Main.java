@@ -69,7 +69,7 @@ import org.joval.xml.schematron.Validator;
 public class Main implements IObserver {
     private static final String LF			= System.getProperty("line.separator");
     private static final String JAVA_VERSION		= System.getProperty("java.specification.version");
-    private static final String MIN_JAVA_VERSION	= "1.6";
+    private static final String MIN_JAVA_VERSION	= "1.5";
 
     private static ExecutionState state = null;
     private static String lastStatus = null;
