@@ -46,4 +46,14 @@ public interface IRunspace {
      * Get the current prompt String.
      */
     String getPrompt();
+
+    /**
+     * Determine whether an error was detected during the last read.
+     */
+    boolean hasError();
+
+    /**
+     * Retrieve any error messages generated since the last time this method was invoked.
+     */
+    String getError();
 }

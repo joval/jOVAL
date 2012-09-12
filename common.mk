@@ -15,20 +15,6 @@ ifeq (Windows, $(findstring Windows,$(OS)))
     PLATFORM=win
     CLN=;
     JAVACFLAGS=-Xlint:unchecked
-
-    # Windows compiler definitions for making C++ probes
-    CC="$(VCINSTALLDIR)/bin/cl.exe"
-    RC="$(WindowsSdkDir)/bin/rc.exe"
-    CC32="$(VCINSTALLDIR)/bin/cl.exe"
-    RC32="$(WindowsSdkDir)/bin/rc.exe"
-    CCFLAGS=/MD
-    MS_INCLUDES=/I "$(VCINSTALLDIR)/include" /I "$(WindowsSdkDir)/include"
-    MSVCRT="$(VCINSTALLDIR)/Lib/msvcrt.lib"
-    UUID="$(WindowsSdkDir)/Lib/uuid.lib"
-    OLDNAMES="$(VCINSTALLDIR)/Lib/oldnames.lib"
-    KERNEL32="$(WindowsSdkDir)/Lib/kernel32.lib"
-    ADVAPI32="$(WindowsSdkDir)/Lib/advapi32.lib"
-    USER32="$(WindowsSdkDir)/Lib/user32.lib"
 else
     OS=$(shell uname)
     CLN=:

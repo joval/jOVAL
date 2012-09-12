@@ -7,6 +7,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PipedInputStream;
+import java.io.PipedOutputStream;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 
@@ -102,6 +104,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
     private State state;
     private int exitCode;
     private InputStream stdout, stderr;
+    private PipedOutputStream stderrPipe;
     private OutputStream stdin;
     private String cmd;
     private String[] args;
@@ -159,6 +162,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		signalOperation.addResourceURI(SHELL_URI);
 		signalOperation.addSelectorSet(getSelectorSet());
 		SignalResponse response = signalOperation.dispatch(port);
+		stderrPipe.close();
 		if (shell != null) {
 		    shell.finalize();
 		}
@@ -191,7 +195,9 @@ public class ShellCommand implements IWSMVConstants, IProcess {
     }
 
     /**
-     * WARNING: If no Thread is reading the process output or error streams, this method will never return!
+     * WARNING: If no Thread is reading the process output or error streams, this method will never return.  We
+     * previously attempted to read the streams from another thread, but asynchronous reads cause major performance
+     * problems.
      */
     public void waitFor(long millis) throws InterruptedException {
 	long endTime = System.currentTimeMillis() + millis;
@@ -245,6 +251,9 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	state = State.RUNNING;
 	disposable = true;
 	id = response.getCommandId();
+
+	stderrPipe = new PipedOutputStream();
+	stderr = new PipedInputStream(stderrPipe);
     }
 
     /**
@@ -264,15 +273,12 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 
     public InputStream getInputStream() {
 	if (stdout == null) {
-	    stdout = new CommandInputStream(Shell.STDOUT);
+	    stdout = new CommandInputStream();
 	}
 	return stdout;
     }
 
     public InputStream getErrorStream() {
-	if (stderr == null) {
-	    stderr = new CommandInputStream(Shell.STDERR);
-	}
 	return stderr;
     }
 
@@ -329,12 +335,10 @@ public class ShellCommand implements IWSMVConstants, IProcess {
      * to the process.
      */
     class CommandInputStream extends InputStream {
-	String type;
 	byte[] buff;
 	int pos;
 
-	CommandInputStream(String type) {
-	    this.type = type;
+	CommandInputStream() {
 	    buff = new byte[0];
 	    pos = 0;
 	}
@@ -394,7 +398,8 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	    try {
 		DesiredStreamType desired = Factories.SHELL.createDesiredStreamType();
 		desired.setCommandId(id);
-		desired.getValue().add(type);
+		desired.getValue().add(Shell.STDOUT);
+		desired.getValue().add(Shell.STDERR);
 		Receive receive = Factories.SHELL.createReceive();
 		receive.setDesiredStream(desired);
 		ReceiveOperation receiveOperation = new ReceiveOperation(receive);
@@ -412,8 +417,17 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		pos = 0;
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		for (StreamType stream : response.getStream()) {
-		    if (stream.getName().equals(type)) {
-			buffer.write(stream.getValue());
+		    if (stream.isSetValue()) {
+			byte[] val = stream.getValue();
+			if (val.length > 0) {
+			    String streamName = stream.getName();
+			    if (Shell.STDOUT.equals(streamName)) {
+				buffer.write(val);
+			    } else if (Shell.STDERR.equals(streamName)) {
+				stderrPipe.write(val);
+				stderrPipe.flush();
+			    }
+			}
 		    }
 		}
 		buff = buffer.toByteArray();

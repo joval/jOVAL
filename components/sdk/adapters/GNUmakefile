@@ -16,7 +16,7 @@ PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
 all: $(ADAPTERS_LIB)
 
-$(ADAPTERS_LIB): classes resources _probes
+$(ADAPTERS_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
@@ -31,9 +31,6 @@ resources: classdirs
 	cp $(RSRC)/windows.locales.properties $(BUILD)
 	rm -f $(BUILD)/org/joval/oval/adapter/windows/*.psm1
 	cp $(SRC)/org/joval/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/oval/adapter/windows/
-
-_probes: classdirs
-	@$(MAKE) --keep-going --directory=probes install
 
 classes: classdirs $(CLASS_FILES)
 

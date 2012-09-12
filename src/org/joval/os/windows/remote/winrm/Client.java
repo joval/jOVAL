@@ -338,7 +338,7 @@ for (int i=0; i < 16; i++) {
 	RunspacePool pool = new RunspacePool(new Shell(port, null, "%windir%"), port);
 	IRunspace runspace = pool.spawn();
 	System.out.println("Powershell ID=" + runspace.getId() + ", Prompt: " + runspace.getPrompt());
-	runspace.println("echo \"hello powershell\"");
+	runspace.invoke("echo \"hello powershell\"");
 	String s = runspace.read(5000L);
 	pool.shutdown();
     }

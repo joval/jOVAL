@@ -41,7 +41,6 @@ public class RunspacePool implements IRunspacePool {
 		while((line = runspace.readLine(timeout)) != null) {}
 		IProcess p = runspace.getProcess();
 		p.waitFor(timeout);
-		System.out.println("DAS: Runspace " + runspace.getId() + " exited with code " + p.exitValue());
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }

@@ -27,7 +27,6 @@ import org.joval.oval.CollectException;
 import org.joval.oval.Factories;
 import org.joval.oval.OvalException;
 import org.joval.util.JOVALMsg;
-import org.joval.util.StringTools;
 
 /**
  * Retrieves the unary windows:lockoutpolicy_item.
@@ -121,11 +120,13 @@ public class LockoutpolicyAdapter implements IAdapter {
 		    session.getLogger().warn(JOVALMsg.ERROR_WIN_LOCKOUTPOLICY_VALUE, e.getMessage(), key);
 		}
 	    }
+	    if (runspace.hasError()) {
+		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_LOCKOUTPOLICY_OUTPUT, runspace.getError()));
+	    }
 	    items = new Vector<LockoutpolicyItem>();
 	    items.add(item);
 	} catch (Exception e) {
-e.printStackTrace();
-	    session.getLogger().warn(JOVALMsg.ERROR_PROCESS_CREATE, e.getMessage());
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    error = new CollectException(e.getMessage(), FlagEnumeration.ERROR);
 	    throw error;
 	}

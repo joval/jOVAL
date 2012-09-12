@@ -63,7 +63,6 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
 		    while((line = runspace.readLine(10000L)) != null) {}
 		    IProcess p = runspace.getProcess();
 		    p.waitFor(10000L);
-		    System.out.println("DAS: Runspace " + runspace.getId() + " exited with code " + p.exitValue());
 		} catch (Exception e) {
 		    e.printStackTrace();
 		}

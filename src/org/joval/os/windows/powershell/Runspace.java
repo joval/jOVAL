@@ -78,6 +78,9 @@ public class Runspace implements IRunspace {
 		}
 	    }
 	}
+	if (hasError()) {
+	    throw new IOException(getError());
+	}
     }
 
     public void invoke(String command) throws IOException {
@@ -148,9 +151,20 @@ public class Runspace implements IRunspace {
 	return null;
     }
 
-    /**
-     * Get the current prompt String.
-     */
+    public boolean hasError() {
+	try {
+	    return p.getErrorStream().available() > 0;
+	} catch (IOException e) {
+	    return true;
+	}
+    }
+
+    public String getError() throws IOException {
+	byte[] buff = new byte[p.getErrorStream().available()];
+	p.getErrorStream().read(buff);
+	return new String(buff, StringTools.ASCII);
+    }
+
     public String getPrompt() {
 	return prompt;
     }

@@ -63,6 +63,9 @@ class Runspace extends org.joval.os.windows.powershell.Runspace {
 		}
 	    }
 	}
+	if (hasError()) {
+	    throw new IOException(getError());
+	}
     }
 
     // Private
