@@ -61,7 +61,6 @@ CLASSES=\
 	org.joval.intf.windows.wmi.ISWbemPropertySet		\
 	org.joval.intf.windows.wmi.IWmiProvider			\
 	org.joval.io.BufferedReader				\
-	org.joval.io.InterruptableInputStream			\
 	org.joval.io.LittleEndian				\
 	org.joval.io.PerishableReader				\
 	org.joval.io.StreamLogger				\
