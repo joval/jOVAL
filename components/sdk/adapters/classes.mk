@@ -81,4 +81,5 @@ CLASSES=\
 	org.joval.oval.adapter.windows.UserSid55Adapter				\
 	org.joval.oval.adapter.windows.UserSidAdapter				\
 	org.joval.oval.adapter.windows.Wmi57Adapter				\
-	org.joval.oval.adapter.windows.WmiAdapter
+	org.joval.oval.adapter.windows.WmiAdapter				\
+	org.joval.oval.adapter.windows.WuaupdatesearcherAdapter

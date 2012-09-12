@@ -187,7 +187,7 @@ public class AccesstokenAdapter implements IAdapter {
 	session.getLogger().debug(JOVALMsg.STATUS_WIN_ACCESSTOKEN, principalName);
 	String data = null;
 	try {
-	    data = runspace.invoke("Get-AccessTokens(\"" + principalName + "\")");
+	    data = runspace.invoke("Get-AccessTokens \"" + principalName + "\"");
 	} catch (PowershellException e) {
 	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_ACCESSTOKEN_PRINCIPAL, principalName, e.getMessage());
 	    session.getLogger().warn(s);
