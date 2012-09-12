@@ -68,7 +68,6 @@ public class LockoutpolicyAdapter implements IAdapter {
 	    // Get a runspace if there are any in the pool, or create a new one, and load the Get-LockoutPolicy
 	    // Powershell module code.
 	    //
-	    long timeout = session.getTimeout(IBaseSession.Timeout.M);
 	    IRunspace runspace = null;
 	    for (IRunspace rs : session.getRunspacePool().enumerate()) {
 		runspace = rs;
@@ -77,15 +76,13 @@ public class LockoutpolicyAdapter implements IAdapter {
 	    if (runspace == null) {
 		runspace = session.getRunspacePool().spawn();
 	    }
-	    runspace.loadModule(getClass().getResourceAsStream("Lockoutpolicy.psm1"), timeout);
+	    runspace.loadModule(getClass().getResourceAsStream("Lockoutpolicy.psm1"));
 
 	    //
 	    // Run the Get-LockoutPolicy module and parse the output
 	    //
 	    LockoutpolicyItem item = Factories.sc.windows.createLockoutpolicyItem();
-	    String line = null;
-	    runspace.invoke("Get-LockoutPolicy");
-	    while((line = runspace.readLine(timeout)) != null) {
+	    for (String line : runspace.invoke("Get-LockoutPolicy").split("\n")) {
 		int ptr = line.indexOf("=");
 		String key=null, val=null;
 		if (ptr > 0) {
@@ -113,15 +110,10 @@ public class LockoutpolicyAdapter implements IAdapter {
 			type.setDatatype(SimpleDatatypeEnumeration.INT.value());
 			type.setValue(new Integer(val).toString());
 			item.setLockoutThreshold(type);
-		    } else {
-			throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_LOCKOUTPOLICY_OUTPUT, line));
 		    }
 		} catch (IllegalArgumentException e) {
 		    session.getLogger().warn(JOVALMsg.ERROR_WIN_LOCKOUTPOLICY_VALUE, e.getMessage(), key);
 		}
-	    }
-	    if (runspace.hasError()) {
-		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_LOCKOUTPOLICY_OUTPUT, runspace.getError()));
 	    }
 	    items = new Vector<LockoutpolicyItem>();
 	    items.add(item);

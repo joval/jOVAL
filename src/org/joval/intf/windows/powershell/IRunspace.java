@@ -6,6 +6,8 @@ package org.joval.intf.windows.powershell;
 import java.io.InputStream;
 import java.io.IOException;
 
+import org.joval.os.windows.powershell.PowershellException;
+
 /**
  * An interface to a powershell runspace.
  *
@@ -20,40 +22,24 @@ public interface IRunspace {
 
     /**
      * Load a Powershell module into the runspace from a stream.
+     *
+     * @throws IOException if there is a problem reading from the input, or writing to the Runspace
+     * @throws PowershellException if there is a Powershell syntactical error with the module contents
      */
-    void loadModule(InputStream in, long timeout) throws IOException;
+    void loadModule(InputStream in) throws IOException, PowershellException;
 
     /**
      * Invoke a command or module.
-     */
-    void invoke(String command) throws IOException;
-
-    /**
-     * Read until there is either (1) a new prompt, or (2) the timeout has been reached.
      *
-     * @throws InterruptedIOException if the timeout expires
-     */
-    String read(long timeout) throws IOException;
-
-    /**
-     * Read until there is either (1) a line break, (2) a new prompt, or (3) the timeout has been reached.
+     * @returns Text output from the command
      *
-     * @throws InterruptedIOException if the timeout expires
+     * @throws IOException if there is a problem reading or writing data to/from the Runspace
+     * @throws PowershellException if the command causes Powershell to raise an exception
      */
-    String readLine(long timeout) throws IOException;
+    String invoke(String command) throws IOException, PowershellException;
 
     /**
      * Get the current prompt String.
      */
     String getPrompt();
-
-    /**
-     * Determine whether an error was detected during the last read.
-     */
-    boolean hasError();
-
-    /**
-     * Retrieve any error messages generated since the last time this method was invoked.
-     */
-    String getError();
 }

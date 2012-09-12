@@ -9,7 +9,7 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 
 import org.joval.intf.system.IProcess;
-import org.joval.io.PerishableReader;
+import org.joval.os.windows.powershell.PowershellException;
 import org.joval.util.StringTools;
 
 /**
@@ -33,27 +33,23 @@ class Runspace extends org.joval.os.windows.powershell.Runspace {
      * through the resulting string of prompts.
      */
     @Override
-    public void loadModule(InputStream in, long timeout) throws IOException {
+    public void loadModule(InputStream in) throws IOException, PowershellException {
 	try {
 	    StringBuffer buffer = new StringBuffer();
 	    String line = null;
 	    int lines = 0;
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StringTools.ASCII));
 	    while((line = reader.readLine()) != null) {
-		line = line.trim();
-		if (!line.startsWith("#") && line.length() > 0) {
-		    stdin.write(line.getBytes());
-		    stdin.write("\r\n".getBytes());
-		    lines++;
-		}
+		stdin.write(line.getBytes());
+		stdin.write("\r\n".getBytes());
+		lines++;
 	    }
 	    stdin.flush();
 	    for (int i=0; i < lines; i++) {
-		readLineInternal(timeout);
+		readLineInternal();
 	    }
 	    if (">> ".equals(getPrompt())) {
 		invoke("");
-		readLine(timeout);
 	    }
 	} finally {
 	    if (in != null) {
@@ -71,48 +67,43 @@ class Runspace extends org.joval.os.windows.powershell.Runspace {
     // Private
 
     /**
-     * Same as super.readLine(long), except insensitive to stdout.available().  This makes it usable with input that
+     * Same as super.readLine(), except insensitive to stdout.available().  This makes it usable with input that
      * has built-up from a multi-line WS-Transfer/Send operation continaing input to the process.
      */
-    private synchronized String readLineInternal(long timeout) throws IOException {
-	PerishableReader reader = PerishableReader.newInstance(stdout, timeout);
-	try {
-	    StringBuffer sb = new StringBuffer();
-	    boolean cr = false;
-	    int ch = -1;
-	    while((ch = reader.read()) != -1) {
-		switch(ch) {
-		  case '\r':
-		    cr = true;
-		    if (stdout.markSupported() && stdout.available() > 0) {
-			stdout.mark(1);
-			switch(stdout.read()) {
-			  case '\n':
-			    return sb.toString();
-			  default:
-			    stdout.reset();
-			    break;
-			}
+    private synchronized String readLineInternal() throws IOException {
+	StringBuffer sb = new StringBuffer();
+	boolean cr = false;
+	int ch = -1;
+	while((ch = stdout.read()) != -1) {
+	    switch(ch) {
+	      case '\r':
+		cr = true;
+		if (stdout.markSupported() && stdout.available() > 0) {
+		    stdout.mark(1);
+		    switch(stdout.read()) {
+		      case '\n':
+			return sb.toString();
+		      default:
+			stdout.reset();
+			break;
 		    }
-		    break;
-
-		  case '\n':
-		    return sb.toString();
-
-		  default:
-		    if (cr) {
-			cr = false;
-			sb.append((char)('\r' & 0xFF));
-		    }
-		    sb.append((char)(ch & 0xFF));
 		}
-		if (isPrompt(sb.toString())) {
+		break;
+
+	      case '\n':
+		return sb.toString();
+
+	      default:
+		if (cr) {
+		    cr = false;
+		    sb.append((char)('\r' & 0xFF));
+		}
+		sb.append((char)(ch & 0xFF));
+	    }
+	    if (isPrompt(sb.toString())) {
 		    prompt = sb.toString();
 		    return null;
-		}
 	    }
-	} finally {
-	    reader.defuse();
 	}
 	return null;
     }

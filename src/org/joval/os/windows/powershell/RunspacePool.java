@@ -36,11 +36,8 @@ public class RunspacePool implements IRunspacePool {
 	for (Runspace runspace : pool.values()) {
 	    try {
 		runspace.invoke("exit");
-		String line = null;
-		long timeout = session.getTimeout(IBaseSession.Timeout.M);
-		while((line = runspace.readLine(timeout)) != null) {}
 		IProcess p = runspace.getProcess();
-		p.waitFor(timeout);
+		p.waitFor(10000L);
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }

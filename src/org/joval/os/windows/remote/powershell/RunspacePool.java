@@ -59,8 +59,6 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
 	    for (Runspace runspace : pool.values()) {
 		try {
 		    runspace.invoke("exit");
-		    String line = null;
-		    while((line = runspace.readLine(10000L)) != null) {}
 		    IProcess p = runspace.getProcess();
 		    p.waitFor(10000L);
 		} catch (Exception e) {

@@ -74,7 +74,6 @@ CLASSES=\
 	org.joval.oval.adapter.windows.LicenseAdapter				\
 	org.joval.oval.adapter.windows.LockoutpolicyAdapter			\
 	org.joval.oval.adapter.windows.PasswordpolicyAdapter			\
-	org.joval.oval.adapter.windows.Probe					\
 	org.joval.oval.adapter.windows.RegistryAdapter				\
 	org.joval.oval.adapter.windows.SidAdapter				\
 	org.joval.oval.adapter.windows.SidSidAdapter				\

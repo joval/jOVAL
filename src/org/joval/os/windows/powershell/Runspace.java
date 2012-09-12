@@ -12,7 +12,6 @@ import java.util.StringTokenizer;
 
 import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.powershell.IRunspace;
-import org.joval.io.PerishableReader;
 import org.joval.util.StringTools;
 
 /**
@@ -39,7 +38,7 @@ public class Runspace implements IRunspace {
 	stdout = p.getInputStream();
 	stderr = p.getErrorStream();
 	stdin = p.getOutputStream();
-	read(10000L);
+	read();
     }
 
     public IProcess getProcess() {
@@ -52,23 +51,19 @@ public class Runspace implements IRunspace {
 	return id;
     }
 
-    public void loadModule(InputStream in, long timeout) throws IOException {
+    public void loadModule(InputStream in) throws IOException, PowershellException {
 	try {
 	    StringBuffer buffer = new StringBuffer();
 	    String line = null;
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StringTools.ASCII));
-	    while((line = reader.readLine()) != null) {
-		line = line.trim();
-		if (!line.startsWith("#") && line.length() > 0) {
-		    stdin.write(line.getBytes());
-		    stdin.write("\r\n".getBytes());
-		    stdin.flush();
-		    readLine(timeout);
-		}
+	    while ((line = reader.readLine()) != null) {
+		stdin.write(line.getBytes());
+		stdin.write("\r\n".getBytes());
+		stdin.flush();
+		readLine();
 	    }
 	    if (">> ".equals(getPrompt())) {
 		invoke("");
-		readLine(timeout);
 	    }
 	} finally {
 	    if (in != null) {
@@ -79,21 +74,36 @@ public class Runspace implements IRunspace {
 	    }
 	}
 	if (hasError()) {
-	    throw new IOException(getError());
+	    throw new PowershellException(getError());
 	}
     }
 
-    public void invoke(String command) throws IOException {
+    public String invoke(String command) throws IOException, PowershellException {
 	byte[] bytes = command.trim().getBytes();
 	stdin.write(bytes);
 	stdin.write("\r\n".getBytes());
 	stdin.flush();
+	String result = read();
+	if (hasError()) {
+	    throw new PowershellException(getError());
+	} else {
+	    return result;
+	}
     }
 
-    public synchronized String read(long timeout) throws IOException {
+    public String getPrompt() {
+	return prompt;
+    }
+
+    // Internal
+
+    /**
+     * Read lines until the next prompt is reached.
+     */
+    protected String read() throws IOException {
 	StringBuffer sb = null;
 	String line = null;
-	while((line = readLine(timeout)) != null) {
+	while((line = readLine()) != null) {
 	    if (sb == null) {
 		sb = new StringBuffer();
 	    } else {
@@ -108,50 +118,51 @@ public class Runspace implements IRunspace {
 	}
     }
 
-    public synchronized String readLine(long timeout) throws IOException {
-	PerishableReader reader = PerishableReader.newInstance(stdout, timeout);
-	try {
-	    StringBuffer sb = new StringBuffer();
-	    boolean cr = false;
-	    int ch = -1;
-	    while((ch = reader.read()) != -1) {
-		switch(ch) {
-		  case '\r':
-		    cr = true;
-		    if (stdout.markSupported() && stdout.available() > 0) {
-			stdout.mark(1);
-			switch(stdout.read()) {
-			  case '\n':
-			    return sb.toString();
-			  default:
-			    stdout.reset();
-			    break;
-			}
+    /**
+     * Read a single line, or the next prompt. Returns null if the line is a prompt.
+     */
+    protected String readLine() throws IOException {
+	StringBuffer sb = new StringBuffer();
+	boolean cr = false;
+	int ch = -1;
+	while((ch = stdout.read()) != -1) {
+	    switch(ch) {
+	      case '\r':
+		cr = true;
+		if (stdout.markSupported() && stdout.available() > 0) {
+		    stdout.mark(1);
+		    switch(stdout.read()) {
+		      case '\n':
+			return sb.toString();
+		      default:
+			stdout.reset();
+			break;
 		    }
-		    break;
-
-		  case '\n':
-		    return sb.toString();
-
-		  default:
-		    if (cr) {
-			cr = false;
-			sb.append((char)('\r' & 0xFF));
-		    }
-		    sb.append((char)(ch & 0xFF));
 		}
-		if (stdout.available() == 0 && isPrompt(sb.toString())) {
-		    prompt = sb.toString();
-		    return null;
+		break;
+
+	      case '\n':
+		return sb.toString();
+
+	      default:
+		if (cr) {
+		    cr = false;
+		    sb.append((char)('\r' & 0xFF));
 		}
+		sb.append((char)(ch & 0xFF));
 	    }
-	} finally {
-	    reader.defuse();
+	    if (stdout.available() == 0 && isPrompt(sb.toString())) {
+		prompt = sb.toString();
+		return null;
+	    }
 	}
 	return null;
     }
 
-    public boolean hasError() {
+    /**
+     * Is there data available in the error stream?
+     */
+    protected boolean hasError() {
 	try {
 	    return p.getErrorStream().available() > 0;
 	} catch (IOException e) {
@@ -159,17 +170,14 @@ public class Runspace implements IRunspace {
 	}
     }
 
-    public String getError() throws IOException {
+    /**
+     * Get all the data available in the error stream.
+     */
+    protected String getError() throws IOException {
 	byte[] buff = new byte[p.getErrorStream().available()];
 	p.getErrorStream().read(buff);
 	return new String(buff, StringTools.ASCII);
     }
-
-    public String getPrompt() {
-	return prompt;
-    }
-
-    // Internal
 
     protected boolean isPrompt(String str) {
 	return (str.startsWith("PS") && str.endsWith("> ")) || str.equals(">> ");

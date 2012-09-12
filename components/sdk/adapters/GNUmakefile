@@ -20,7 +20,6 @@ $(ADAPTERS_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
 
 clean:
-	@$(MAKE) --keep-going --directory=probes clean
 	rm -rf $(BUILD)
 	rm -f $(ADAPTERS_LIB)
 
