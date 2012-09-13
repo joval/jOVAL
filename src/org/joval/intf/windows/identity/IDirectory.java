@@ -66,8 +66,11 @@ public interface IDirectory extends ILoggable {
 
     /**
      * Returns a Principal (User or Group) given a Netbios name.
+     *
+     * @throws IllegalArgumentException if the domain is not recognized
+     * @throws NoSuchElementException if no matching user or group exists
      */
-    public IPrincipal queryPrincipal(String netbiosName) throws NoSuchElementException, WmiException;
+    public IPrincipal queryPrincipal(String netbiosName) throws IllegalArgumentException, NoSuchElementException, WmiException;
 
     /**
      * Returns a Principal (User or Group) given a sid.

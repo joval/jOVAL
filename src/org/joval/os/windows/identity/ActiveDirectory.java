@@ -203,7 +203,7 @@ class ActiveDirectory implements ILoggable {
 	return group;
     }
 
-    Principal queryPrincipal(String netbiosName) throws NoSuchElementException, WmiException {
+    Principal queryPrincipal(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
 	try {
 	    return queryUser(netbiosName);
 	} catch (NoSuchElementException e) {

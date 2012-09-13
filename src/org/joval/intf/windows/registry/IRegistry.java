@@ -34,8 +34,10 @@ public interface IRegistry extends ILoggable {
 
     /**
      * Get Windows license data from the registry.
+     *
+     * @throws Exception if there was a problem retrieving the license information.
      */
-    public ILicenseData getLicenseData();
+    public ILicenseData getLicenseData() throws Exception;
 
     /**
      * Get a particular hive.  Accepts the HK constants.

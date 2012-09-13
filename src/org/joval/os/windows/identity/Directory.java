@@ -108,7 +108,7 @@ public class Directory implements IDirectory {
 	return local.queryAllGroups();
     }
 
-    public IPrincipal queryPrincipal(String netbiosName) throws NoSuchElementException, WmiException {
+    public IPrincipal queryPrincipal(String netbiosName) throws NoSuchElementException, IllegalArgumentException, WmiException {
 	if (isLocal(netbiosName)) {
 	    return local.queryPrincipal(netbiosName);
 	} else {

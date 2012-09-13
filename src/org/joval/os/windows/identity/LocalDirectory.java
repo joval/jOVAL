@@ -323,7 +323,8 @@ class LocalDirectory implements ILoggable {
      * the local hostname.
      */
     boolean isMember(String netbiosName) {
-	return hostname.equalsIgnoreCase(getDomain(netbiosName));
+	String domain = getDomain(netbiosName);
+	return hostname.equalsIgnoreCase(domain) || "NT SERVICE".equalsIgnoreCase(domain);
     }
 
     boolean isMemberSid(String sid) {

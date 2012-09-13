@@ -49,7 +49,6 @@ public class Registry extends BaseRegistry {
 	    try {
 		loadingEnv = true;
 		env = new Environment(this);
-		license = new LicenseData(this);
 		loadingEnv = false;
 	    } catch (Exception e) {
 		log.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

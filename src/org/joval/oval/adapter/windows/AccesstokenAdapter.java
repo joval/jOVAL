@@ -152,8 +152,10 @@ public class AccesstokenAdapter implements IAdapter {
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (IllegalArgumentException e) {
+	    // Domain was not found
 	} catch (NoSuchElementException e) {
-	    // No match.
+	    // No match
 	} catch (WmiException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);

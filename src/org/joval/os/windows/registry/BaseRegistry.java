@@ -6,6 +6,7 @@ package org.joval.os.windows.registry;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.MissingResourceException;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
@@ -70,9 +71,9 @@ public abstract class BaseRegistry implements IRegistry {
 	return env;
     }
 
-    public ILicenseData getLicenseData() throws IllegalStateException {
+    public ILicenseData getLicenseData() throws Exception {
 	if (license == null) {
-	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_STATE));
+	    license = new LicenseData(this);
 	}
 	return license;
     }
