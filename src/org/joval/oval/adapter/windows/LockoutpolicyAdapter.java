@@ -83,6 +83,7 @@ public class LockoutpolicyAdapter implements IAdapter {
 	    //
 	    LockoutpolicyItem item = Factories.sc.windows.createLockoutpolicyItem();
 	    for (String line : runspace.invoke("Get-LockoutPolicy").split("\n")) {
+		line = line.trim();
 		int ptr = line.indexOf("=");
 		String key=null, val=null;
 		if (ptr > 0) {

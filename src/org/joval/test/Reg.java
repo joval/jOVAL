@@ -43,7 +43,7 @@ public class Reg {
 	    for (IEntry entry : ht.values()) {
 		System.out.println(entry.toString());
 	    }
-	} catch (NoSuchElementException e) {
+	} catch (Exception e) {
 	    e.printStackTrace();
 	}
     }
