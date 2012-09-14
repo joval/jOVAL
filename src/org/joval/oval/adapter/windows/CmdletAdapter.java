@@ -24,6 +24,7 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
 import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
+import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.CmdletItem;
@@ -199,6 +200,10 @@ public class CmdletAdapter implements IAdapter {
 	    EntityItemStringType moduleNameType = Factories.sc.core.createEntityItemStringType();
 	    moduleNameType.setValue(moduleName);
 	    item.setModuleName(Factories.sc.windows.createCmdletItemModuleName(moduleNameType));
+
+	    EntityItemVersionType moduleVersionType = Factories.sc.core.createEntityItemVersionType();
+	    moduleVersionType.setValue(moduleVersion);
+	    item.setModuleVersion(Factories.sc.windows.createCmdletItemModuleVersion(moduleVersionType));
 
 	    if (cObj.isSetParameters()) {
 		EntityItemRecordType record = Factories.sc.core.createEntityItemRecordType();
