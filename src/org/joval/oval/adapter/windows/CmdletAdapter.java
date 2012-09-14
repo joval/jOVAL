@@ -166,11 +166,11 @@ public class CmdletAdapter implements IAdapter {
 	    String noun = (String)cObj.getNoun().getValue();
 	    StringBuffer command = new StringBuffer(verb).append("-").append(noun);
 	    if (cObj.isSetParameters() && cObj.getParameters().getValue() != null) {
-		command.append(toParameterString(cObj.getSelect().getValue()));
+		command.append(toParameterString(cObj.getParameters().getValue()));
 	    }
 	    if (cObj.isSetSelect() && cObj.getSelect().getValue() != null) {
-		command.append(" | Select-Object ");
-		command.append(toParameterString(cObj.getSelect().getValue()));
+		command.append(" | Select-Object");
+		command.append(toSelectString(cObj.getSelect().getValue()));
 	    }
 	    command.append(" | ConvertTo-OVAL");
 	    String data = runspace.invoke(command.toString());
@@ -324,14 +324,43 @@ public class CmdletAdapter implements IAdapter {
     private String toParameterString(EntityObjectRecordType record) throws IllegalArgumentException {
 	StringBuffer sb = new StringBuffer();
 	for (EntityObjectFieldType field : record.getField()) {
-	    if (field.getName().indexOf(" ") != -1) {
+	    if (field.getName().indexOf(" ") == -1) {
+		sb.append(" ").append(field.getName());
+	    } else {
 		throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_CMDLET_FIELD, field.getName()));
 	    }
-	    sb.append(field.getName()).append(" ");
-	    String val = (String)field.getValue();
-	    // TBD: validate the datatype using the type classes?
-	    if (val.indexOf(" ") != -1) { // quote the value if it contains a space
-		val = new StringBuffer("\"").append(val).append("\"").toString();
+	    if (field.isSetValue()) {
+		String val = (String)field.getValue();
+		// TBD: validate the datatype using the type classes?
+
+		//
+		// quote the value if it contains a space, unless it's already quoted
+		//
+		if (val.indexOf(" ") != -1 && !(val.startsWith("\"") && val.endsWith("\""))) {
+		    val = new StringBuffer("\"").append(val).append("\"").toString();
+		}
+		sb.append(" ").append(val);
+	    }
+	}
+	return sb.toString();
+    }
+
+    /**
+     * Convert an EntityItemRecordType into a validated parameter String for the Select-Object cmdlet. The result always
+     * begins with a space, if there are any parameters defined in the record at all.
+     */
+    private String toSelectString(EntityObjectRecordType record) throws IllegalArgumentException {
+	StringBuffer sb = new StringBuffer();
+	for (EntityObjectFieldType field : record.getField()) {
+	    if ("*".equals(field.getName()) || field.getName().indexOf(" ") != -1) {
+		throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_CMDLET_FIELD, field.getName()));
+	    } else {
+		if (sb.length() == 0) {
+		    sb.append(" ");
+		} else {
+		    sb.append(",");
+		}
+		sb.append(field.getName());
 	    }
 	}
 	return sb.toString();
@@ -342,8 +371,12 @@ public class CmdletAdapter implements IAdapter {
 	for (EntityObjectFieldType field : record.getField()) {
 	    EntityItemFieldType ifield = Factories.sc.core.createEntityItemFieldType();
 	    ifield.setName(field.getName());
-	    ifield.setDatatype(field.getDatatype());
-	    ifield.setValue(field.getValue());
+	    if (field.isSetDatatype()) {
+		ifield.setDatatype(field.getDatatype());
+	    }
+	    if (field.isSetValue()) {
+		ifield.setValue(field.getValue());
+	    }
 	    irecord.getField().add(ifield);
 	}
 	return irecord;

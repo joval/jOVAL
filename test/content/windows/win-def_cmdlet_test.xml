@@ -29,9 +29,16 @@
             <module_id>{8FA5064B-8479-4c5c-86EA-0D311FE48875}</module_id>
             <module_version datatype="version">1.0.0.0</module_version>
             <verb>Get</verb>
-            <noun>Process</noun>
-            <parameters xsi:nil="true"/>
-            <select xsi:nil="true"/>
+            <noun>Module</noun>
+            <parameters>
+                <oval-def:field name="-listavailable"/>
+                <oval-def:field name="-all"/>
+                <oval-def:field name="-name">PSDiagnostics</oval-def:field>
+            </parameters>
+            <select>
+                <oval-def:field name="moduletype"/>
+                <oval-def:field name="name"/>
+            </select>
         </cmdlet_object>
     </objects>
 </oval_definitions>

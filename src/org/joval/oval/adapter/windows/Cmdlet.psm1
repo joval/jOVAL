@@ -44,11 +44,11 @@ function ConvertTo-OVAL {
       for ($i=0; $i -lt $inputObjects.count; $i++) {
         $inputObject = $inputObjects[$i]
         $value = "<win-sc:value datatype=`"record`">"
-        $members = $inputObject | Get-Member -MemberType Property
+        $members = $inputObject | Get-Member -MemberType Property, NoteProperty
         foreach ($member in $members) {
           $name = $member.Name
           $object = $inputObject.$name
-          $field = "<field name=`"" + $name + "`""
+          $field = "<field name=`"" + $name.ToLower() + "`""
           if ($object -eq $null) {
             $field += "/>"
           } else {
