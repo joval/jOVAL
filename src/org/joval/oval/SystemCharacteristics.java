@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
@@ -61,23 +62,31 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class SystemCharacteristics implements ISystemCharacteristics, ILoggable {
+    public static final Object parse(InputStream in) throws OvalException {
+	return parse(new StreamSource(in));
+    }
+
+    public static final Object parse(Source src) throws OvalException {
+	try {
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
+	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    return unmarshaller.unmarshal(src);
+	} catch (JAXBException e) {
+	    throw new OvalException(e);
+	}
+    }
+
     public static final OvalSystemCharacteristics getOvalSystemCharacteristics(File f) throws OvalException {
 	return getOvalSystemCharacteristics(new StreamSource(f));
     }
 
     public static final OvalSystemCharacteristics getOvalSystemCharacteristics(Source src) throws OvalException {
-	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
-	    Object rootObj = unmarshaller.unmarshal(src);
-	    if (rootObj instanceof OvalSystemCharacteristics) {
-		return (OvalSystemCharacteristics)rootObj;
-	    } else {
-		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_SC_BAD_SOURCE, src.getSystemId()));
-	    }
-	} catch (JAXBException e) {
-	    throw new OvalException(e);
+	Object rootObj = parse(src);
+	if (rootObj instanceof OvalSystemCharacteristics) {
+	    return (OvalSystemCharacteristics)rootObj;
+	} else {
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_SC_BAD_SOURCE, src.getSystemId()));
 	}
     }
 
