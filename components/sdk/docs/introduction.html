@@ -51,8 +51,8 @@
     <p>The jOVAL library makes it easy to embed OVAL scanning capabilities inside a Java application, but since jovaldi seeks to fully duplicate the functions of ovaldi, it is not necessarily illustrative of how to use the classes.  Therefore, the following TrivialScanner code sample has been developed as a guide.  The basic steps are:</p>
     <ol>
       <li>(Optional) Create and configure the desired logging implementation into which SLF4J will feed.  By design, this is very easily accomplished.  For Java Util Logging (JUL), the Logger to which jOVAL sends all its log messages can be obtained using <code>Logger.getLogger(JOVALSystem.getLogger().getName())</code>.
-      <li>(Optional) Create an implementation of the <code>ICredentialStore</code> interface, and set it as the credential store for the <code>RemotePlugin</code> class.  The sample app (and jovaldi) use the <code>SimpleCredentialStore</code> which uses Java Properties to store credentials for machines.  If your application has complex encryption and access control requirements, you'll want to implement a store that is suitable for your application.</li>
-      <li>(Optional) The <code>RemotePlugin</code> class can cache basic information about hosts (i.e., if they are Windows or SSH-enabled machines), so to prevent re-discovery over the network and to get faster repeat-performance, it's a good idea to provide the class with a data directory inside of which it can safely persist its cache file.</li>
+      <li>(Optional) Create an implementation of the <code>ICredentialStore</code> interface, and set it as the credential store for the <code>RemotePlugin</code> class.  The sample app (and jovaldi) use <code>RemotePlugin</code>'s default <code>SimpleCredentialStore</code>, which is assigned machine credentials via the same java.util.Properties instance used to configure the plugin.  If your application has complex encryption and access control requirements, you'll want to implement a store that is better suited to those requirements.</li>
+      <li>(Optional) The <code>RemotePlugin</code> class can cache basic information about hosts (i.e., if they are Windows or SSH-enabled machines), and can also cache intermediate state information about remote registries and filesystems. So, to prevent re-discovery over the network, and to keep the memory utilization profile flat, it's a good idea to provide jOVAL with a data directory inside of which it can safely persist its cache file.</li>
       <li>Construct an instance of the <code>RemotePlugin</code> class, setting the target hostname or address.</li>
       <li>Instantiate an engine that will use the plugin instance using the <code>createEngine</code> method of the <code>JOVALSystem</code> class.</li>
       <li>Configure the engine by adding definitions (at minimum), and optionally add directives, a definition filter, etc.</li>
@@ -104,7 +104,7 @@
 	<td>Alternative JCE Crypto implementation, used when the native JCE doesn't implement SHA-224.</td>
       </tr>
       <tr>
-        <td><a href="https://github.com/jankotek/JDBM3/">JDBMv3</a></li>
+        <td><a href="https://github.com/jankotek/JDBM3/">JDBM3</a></li>
         <td>Alpha 4</td>
         <td><a href="http://www.joval.org/licenses/JDBM.txt">BSD-style</a></td>
 	<td>Btree file store implementation.</td>
