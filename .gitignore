@@ -23,6 +23,7 @@ components/sdk/plugin/offline/jOVALPluginOffline.jar
 components/sdk/plugin/local/jOVALPluginLocal.jar
 components/sdk/plugin/remote/jOVALPluginRemote.jar
 components/ws-man/ws-man.jar
+components/ws-man/docs/api
 components/xpert/XPERT.jar
 test/test.ini
 test/logs/
