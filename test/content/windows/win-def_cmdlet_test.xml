@@ -21,6 +21,7 @@
     <tests>
         <cmdlet_test id="oval:org.mitre.oval.test:tst:944" version="1" comment="Test that a cmdlet_object with a security_principle is supported." check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <object object_ref="oval:org.mitre.oval.test:obj:125"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:125"/>
         </cmdlet_test>
     </tests>
     <objects>
@@ -41,4 +42,24 @@
             </select>
         </cmdlet_object>
     </objects>
+    <states>
+        <cmdlet_state id="oval:org.mitre.oval.test:ste:125" version="1" comment="A cmdlet_state." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <module_name>BitsTransfer</module_name>
+            <module_id>{8FA5064B-8479-4c5c-86EA-0D311FE48875}</module_id>
+            <module_version datatype="version">1.0.0.0</module_version>
+            <parameters>
+                <oval-def:field name="-listavailable"></oval-def:field>
+                <oval-def:field name="-all"></oval-def:field>
+                <oval-def:field name="-name">PSDiagnostics</oval-def:field>
+            </parameters>
+            <select>
+                <oval-def:field name="moduletype"></oval-def:field>
+                <oval-def:field name="name"></oval-def:field>
+            </select>
+            <value datatype="record" entity_check="at least one">
+                <oval-def:field name="moduletype" datatype="string">Manifest</oval-def:field>
+                <oval-def:field name="name" datatype="string">PSDiagnostics</oval-def:field>
+            </value>
+        </cmdlet_state>
+    </states>
 </oval_definitions>

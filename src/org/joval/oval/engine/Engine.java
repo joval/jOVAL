@@ -1100,6 +1100,7 @@ public class Engine implements IEngine, IAdapter {
 			base.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
 			base.setMask(record.getMask());
 			base.setOperation(record.getOperation());
+			records.add(base);
 		    }
 		    for (List<EntityObjectFieldType> list : lists) {
 			int divisor = list.size();
@@ -1694,6 +1695,10 @@ public class Engine implements IEngine, IAdapter {
 			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
 			if (itemEntityObj instanceof EntityItemRecordType) {
 			    result.addResult(compare(stateEntity, (EntityItemRecordType)itemEntityObj, rc));
+			} else if (itemEntityObj instanceof JAXBElement) {
+			    JAXBElement element = (JAXBElement)itemEntityObj;
+			    EntityItemRecordType itemEntity = (EntityItemRecordType)element.getValue();
+			    result.addResult(compare(stateEntity, itemEntity, rc));
 			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
 			    for (Object entityObj : (Collection)itemEntityObj) {

@@ -251,7 +251,7 @@ public class CmdletAdapter implements IAdapter {
 	}
 
 	//
-	// Get a runspace if there are any in the pool, or create a new one, and load the Get-AccessTokens
+	// Get a runspace if there are any in the pool, or create a new one, and load the Cmdlet utilities
 	// Powershell module code.
 	//
 	for (IRunspace rs : session.getRunspacePool().enumerate()) {
