@@ -1672,12 +1672,11 @@ public class Engine implements IEngine, IAdapter {
 		    } else if (stateEntityObj instanceof EntityStateSimpleBaseType) {
 			EntityStateSimpleBaseType stateEntity = (EntityStateSimpleBaseType)stateEntityObj;
 			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			if (itemEntityObj instanceof JAXBElement) {
+			    itemEntityObj = ((JAXBElement)itemEntityObj).getValue();
+			}
 			if (itemEntityObj instanceof EntityItemSimpleBaseType || itemEntityObj == null) {
 			    result.addResult(compare(stateEntity, (EntityItemSimpleBaseType)itemEntityObj, rc));
-			} else if (itemEntityObj instanceof JAXBElement) {
-			    JAXBElement element = (JAXBElement)itemEntityObj;
-			    EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)element.getValue();
-			    result.addResult(compare(stateEntity, itemEntity, rc));
 			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
 			    for (Object entityObj : (Collection)itemEntityObj) {
@@ -1693,12 +1692,11 @@ public class Engine implements IEngine, IAdapter {
 		    } else if (stateEntityObj instanceof EntityStateRecordType) {
 			EntityStateRecordType stateEntity = (EntityStateRecordType)stateEntityObj;
 			Object itemEntityObj = getMethod(item.getClass(), methodName).invoke(item);
+			if (itemEntityObj instanceof JAXBElement) {
+			    itemEntityObj = ((JAXBElement)itemEntityObj).getValue();
+			}
 			if (itemEntityObj instanceof EntityItemRecordType) {
 			    result.addResult(compare(stateEntity, (EntityItemRecordType)itemEntityObj, rc));
-			} else if (itemEntityObj instanceof JAXBElement) {
-			    JAXBElement element = (JAXBElement)itemEntityObj;
-			    EntityItemRecordType itemEntity = (EntityItemRecordType)element.getValue();
-			    result.addResult(compare(stateEntity, itemEntity, rc));
 			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
 			    for (Object entityObj : (Collection)itemEntityObj) {

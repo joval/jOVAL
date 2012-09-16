@@ -51,7 +51,7 @@ public class Runspace implements IRunspace {
 	return id;
     }
 
-    public void loadModule(InputStream in) throws IOException, PowershellException {
+    public synchronized void loadModule(InputStream in) throws IOException, PowershellException {
 	try {
 	    StringBuffer buffer = new StringBuffer();
 	    String line = null;
@@ -78,7 +78,7 @@ public class Runspace implements IRunspace {
 	}
     }
 
-    public String invoke(String command) throws IOException, PowershellException {
+    public synchronized String invoke(String command) throws IOException, PowershellException {
 	byte[] bytes = command.trim().getBytes();
 	stdin.write(bytes);
 	stdin.write("\r\n".getBytes());

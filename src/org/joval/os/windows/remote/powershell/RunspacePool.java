@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.HashMap;
+import java.util.TimerTask;
+
+import org.slf4j.cal10n.LocLogger;
 
 import com.microsoft.wsman.config.ConfigType;
 import com.microsoft.wsman.config.ServiceType;
@@ -22,6 +25,8 @@ import org.joval.intf.windows.wsmv.IWSMVConstants;
 import org.joval.intf.ws.IPort;
 import org.joval.os.windows.remote.winrm.Shell;
 import org.joval.os.windows.remote.wsmv.operation.GetOperation;
+import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 import org.joval.util.SessionException;
 
 /**
@@ -31,19 +36,24 @@ import org.joval.util.SessionException;
  * @version %I% %G%
  */
 public class RunspacePool implements IRunspacePool, IWSMVConstants {
+    private static final long INTERVAL = 30000L;
+
+    private LocLogger logger;
     private Shell shell;
     private IPort port;
     private HashMap<String, Runspace> pool;
     private int capacity;
+    private RunspacePoolTask heartbeat;
 
-    public RunspacePool(Shell shell, IPort port) throws Exception {
+    public RunspacePool(Shell shell, IPort port, LocLogger logger) throws Exception {
 	this.shell = shell;
 	this.port = port;
+	this.logger = logger;
 
 	pool = new HashMap<String, Runspace>();
 
 	//
-	// Set runspace capacity to the maximum number of concurrent operations per user
+	// Set runspace capacity to the maximum number of concurrent operations per user, minus one
 	//
 	AnyXmlOptionalType arg = Factories.TRANSFER.createAnyXmlOptionalType();
 	GetOperation operation = new GetOperation(arg);
@@ -51,11 +61,16 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
 	AnyXmlType any = (AnyXmlType)operation.dispatch(port);
 	ConfigType config = (ConfigType)any.getAny();
 	ServiceType service = config.getService();
-	capacity = service.getMaxConcurrentOperationsPerUser().intValue();
+	capacity = service.getMaxConcurrentOperationsPerUser().intValue() - 1;
+
+	heartbeat = new RunspacePoolTask();
+	JOVALSystem.getTimer().scheduleAtFixedRate(heartbeat, INTERVAL, INTERVAL);
     }
 
     public void shutdown() {
 	if (shell != null) {
+	    heartbeat.cancel();
+	    JOVALSystem.getTimer().purge();
 	    for (Runspace runspace : pool.values()) {
 		try {
 		    runspace.invoke("exit");
@@ -106,6 +121,28 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
 	    return runspace;
 	} else {
 	    throw new IndexOutOfBoundsException(Integer.toString(pool.size() + 1));
+	}
+    }
+
+    // Internal
+
+    class RunspacePoolTask extends TimerTask {
+	RunspacePoolTask() {
+	    super();
+	}
+
+	public void run() {
+	    for (IRunspace ir : enumerate()) {
+		try {
+		    Runspace rs = (Runspace)ir;
+		    long idle = System.currentTimeMillis() - rs.lastOperation();
+		    if (idle > 25000L) {
+			rs.invoke("echo ping");
+		    }
+		} catch (Exception e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+	    }
 	}
     }
 }

@@ -93,7 +93,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     public IRunspacePool getRunspacePool() {
 	if (runspaces == null) {
 	    try {
-		runspaces = new RunspacePool(new Shell(port, env, cwd), port);
+		runspaces = new RunspacePool(new Shell(port, env, cwd), port, logger);
 	    } catch (Exception e) {
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }

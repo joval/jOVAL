@@ -19,6 +19,8 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 class Runspace extends org.joval.os.windows.powershell.Runspace {
+    private long timestamp;
+
     /**
      * Create a new Runspace, based on a process.
      */
@@ -33,7 +35,7 @@ class Runspace extends org.joval.os.windows.powershell.Runspace {
      * through the resulting string of prompts.
      */
     @Override
-    public void loadModule(InputStream in) throws IOException, PowershellException {
+    public synchronized void loadModule(InputStream in) throws IOException, PowershellException {
 	try {
 	    StringBuffer buffer = new StringBuffer();
 	    String line = null;
@@ -51,6 +53,7 @@ class Runspace extends org.joval.os.windows.powershell.Runspace {
 	    if (">> ".equals(getPrompt())) {
 		invoke("");
 	    }
+	    timestamp = System.currentTimeMillis();
 	} finally {
 	    if (in != null) {
 		try {
@@ -62,6 +65,22 @@ class Runspace extends org.joval.os.windows.powershell.Runspace {
 	if (hasError()) {
 	    throw new IOException(getError());
 	}
+    }
+
+    @Override
+    public synchronized String invoke(String command) throws IOException, PowershellException {
+	String result = super.invoke(command);
+	timestamp = System.currentTimeMillis();
+	return result;
+    }
+
+    // Internal
+
+    /**
+     * Returns the last time this Runspace was used to perform an operation.  Used for keep-alive.
+     */
+    long lastOperation() {
+	return timestamp;
     }
 
     // Private
