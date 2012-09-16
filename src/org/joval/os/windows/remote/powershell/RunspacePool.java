@@ -135,7 +135,7 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
 	    for (IRunspace ir : enumerate()) {
 		try {
 		    Runspace rs = (Runspace)ir;
-		    long idle = System.currentTimeMillis() - rs.lastOperation();
+		    long idle = System.currentTimeMillis() - rs.idleSince();
 		    if (idle > 25000L) {
 			rs.invoke("echo ping");
 		    }

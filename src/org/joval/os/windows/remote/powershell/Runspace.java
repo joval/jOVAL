@@ -10,6 +10,7 @@ import java.io.IOException;
 
 import org.joval.intf.system.IProcess;
 import org.joval.os.windows.powershell.PowershellException;
+import org.joval.os.windows.remote.winrm.ShellCommand;
 import org.joval.util.StringTools;
 
 /**
@@ -53,7 +54,6 @@ class Runspace extends org.joval.os.windows.powershell.Runspace {
 	    if (">> ".equals(getPrompt())) {
 		invoke("");
 	    }
-	    timestamp = System.currentTimeMillis();
 	} finally {
 	    if (in != null) {
 		try {
@@ -70,17 +70,17 @@ class Runspace extends org.joval.os.windows.powershell.Runspace {
     @Override
     public synchronized String invoke(String command) throws IOException, PowershellException {
 	String result = super.invoke(command);
-	timestamp = System.currentTimeMillis();
 	return result;
     }
 
     // Internal
 
     /**
-     * Returns the last time this Runspace was used to perform an operation.  Used for keep-alive.
+     * Returns the last time the ShellProcess managing the Powershell runspace interacted with the server.
+     * Used for keep-alive.
      */
-    long lastOperation() {
-	return timestamp;
+    long idleSince() {
+	return ((ShellCommand)p).lastDispatch();
     }
 
     // Private

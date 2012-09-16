@@ -109,6 +109,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
     private String cmd;
     private String[] args;
     private boolean disposable;
+    private long lastDispatch;
 
     /**
      * Create a singleton command for the specified Shell. The shell will be deleted when the command terminates.
@@ -146,6 +147,10 @@ public class ShellCommand implements IWSMVConstants, IProcess {
      */
     public String getId() {
 	return id;
+    }
+
+    public long lastDispatch() {
+	return lastDispatch;
     }
 
     /**
@@ -248,6 +253,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 	commandOperation.addOptionSet(options);
 
 	CommandResponse response = commandOperation.dispatch(port);
+	lastDispatch = System.currentTimeMillis();
 	state = State.RUNNING;
 	disposable = true;
 	id = response.getCommandId();
@@ -316,6 +322,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		sendOperation.addSelectorSet(getSelectorSet());
 
 		SendResponse response = sendOperation.dispatch(port);
+		lastDispatch = System.currentTimeMillis();
 		if (response.isSetDesiredStream()) {
 		    StreamType rs = response.getDesiredStream();
 		    if (rs.getName().equals(Shell.STDIN) && rs.getEnd()) {
@@ -413,6 +420,7 @@ public class ShellCommand implements IWSMVConstants, IProcess {
 		receiveOperation.addOptionSet(options);
 
 		ReceiveResponse response = receiveOperation.dispatch(port);
+		lastDispatch = System.currentTimeMillis();
 		buff = null;
 		pos = 0;
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
