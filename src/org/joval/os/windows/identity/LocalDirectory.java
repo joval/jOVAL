@@ -32,6 +32,9 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 class LocalDirectory implements ILoggable {
+    static final User TRUSTED_INSTALLER = new User("NT SERVICE", "TrustedInstaller",
+	"S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464", null, true);
+
     static final String USER_WQL		= "SELECT SID, Name, Domain, Disabled FROM Win32_UserAccount";
     static final String SYSUSER_WQL		= "SELECT SID, Name, Domain FROM Win32_SystemAccount";
     static final String GROUP_WQL		= "SELECT SID, Name, Domain FROM Win32_Group";
@@ -73,6 +76,10 @@ class LocalDirectory implements ILoggable {
 	builtinUsers.add("Administrator".toUpperCase());
 	builtinUsers.add("Guest".toUpperCase());
 	builtinUsers.add("HomeGroupUser$".toUpperCase());
+	builtinUsers.add("TrustedInstaller".toUpperCase());
+
+	usersByNetbiosName.put(TRUSTED_INSTALLER.getNetbiosName(), TRUSTED_INSTALLER);
+	usersBySid.put(TRUSTED_INSTALLER.getSid(), TRUSTED_INSTALLER);
 
 	builtinGroups = new HashSet<String>();
 	builtinGroups.add("Account Operators".toUpperCase());

@@ -20,7 +20,7 @@ import oval.schemas.common.OperationEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.definitions.windows.Fileeffectiverights53Object;
-import oval.schemas.definitions.windows.FileEffectiveRights53Behaviors;
+import oval.schemas.definitions.windows.FileeffectiverightsObject;
 import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
@@ -49,12 +49,12 @@ import org.joval.util.StringTools;
 import org.joval.util.Version;
 
 /**
- * Collects items for Fileeffectiverights53 objects.
+ * Collects items for Fileeffectiverights and Fileeffectiverights53 objects.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Fileeffectiverights53Adapter extends BaseFileAdapter<FileeffectiverightsItem> {
+public class FileeffectiverightsAdapter extends BaseFileAdapter<FileeffectiverightsItem> {
     private IWindowsSession ws;
     private IDirectory directory;
 
@@ -66,6 +66,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter<Fileeffectiver
 	    super.init((ISession)session);
 	    this.ws = (IWindowsSession)session;
 	    classes.add(Fileeffectiverights53Object.class);
+	    classes.add(FileeffectiverightsObject.class);
 	}
 	return classes;
     }
@@ -84,18 +85,37 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter<Fileeffectiver
 	directory = ws.getDirectory();
 
 	Collection<FileeffectiverightsItem> items = new Vector<FileeffectiverightsItem>();
-	Fileeffectiverights53Object fObj = null;
-	if (obj instanceof Fileeffectiverights53Object) {
-	    fObj = (Fileeffectiverights53Object)obj;
-	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
-	    throw new CollectException(msg, FlagEnumeration.ERROR);
-	}
+
 	FileeffectiverightsItem baseItem = null;
 	if (base instanceof FileeffectiverightsItem) {
 	    baseItem = (FileeffectiverightsItem)base;
 	} else {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
+	    throw new CollectException(msg, FlagEnumeration.ERROR);
+	}
+
+	String pSid = null, pName = null;
+	boolean includeGroups = true;
+	boolean resolveGroups = true;
+	OperationEnumeration op = OperationEnumeration.EQUALS;
+	if (obj instanceof Fileeffectiverights53Object) {
+	    Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)obj;
+	    op = fObj.getTrusteeSid().getOperation();
+	    pSid = (String)fObj.getTrusteeSid().getValue();
+	    if (fObj.isSetBehaviors()) {
+		includeGroups = fObj.getBehaviors().getIncludeGroup();
+		resolveGroups = fObj.getBehaviors().getResolveGroup();
+	    }
+	} else if (obj instanceof FileeffectiverightsObject) {
+	    FileeffectiverightsObject fObj = (FileeffectiverightsObject)obj;
+	    op = fObj.getTrusteeName().getOperation();
+	    pName = (String)fObj.getTrusteeName().getValue();
+	    if (fObj.isSetBehaviors()) {
+		includeGroups = fObj.getBehaviors().getIncludeGroup();
+		resolveGroups = fObj.getBehaviors().getResolveGroup();
+	    }
+	} else {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
 	    throw new CollectException(msg, FlagEnumeration.ERROR);
 	}
 
@@ -108,18 +128,45 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter<Fileeffectiver
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 	IACE[] aces = wfi.getSecurity();
-	String sid = (String)fObj.getTrusteeSid().getValue();
 
-	OperationEnumeration op = fObj.getTrusteeSid().getOperation();
 	switch(op) {
 	  case PATTERN_MATCH:
 	    try {
-		Pattern p = Pattern.compile(sid);
+		Pattern p = null;
+		if (pSid == null) {
+		    p = Pattern.compile(pName);
+		} else {
+		    p = Pattern.compile(pSid);
+		}
 		for (int i=0; i < aces.length; i++) {
 		    IACE ace = aces[i];
-		    if (p.matcher(ace.getSid()).find()) {
-			IPrincipal principal = directory.queryPrincipalBySid(ace.getSid());
-			items.add(makeItem(baseItem, principal, ace));
+		    IPrincipal principal = null;
+		    try {
+			if (pSid == null) {
+			    IPrincipal temp = directory.queryPrincipalBySid(ace.getSid());
+			    if (directory.isBuiltinUser(temp.getNetbiosName()) ||
+				directory.isBuiltinGroup(temp.getNetbiosName())) {
+				if (p.matcher(temp.getName()).find()) {
+				    principal = temp;
+				}
+			    } else {
+				if (p.matcher(temp.getNetbiosName()).find()) {
+				    principal = temp;
+				}
+			    }
+			} else {
+			    if (p.matcher(ace.getSid()).find()) {
+				principal = directory.queryPrincipalBySid(ace.getSid());
+			    }
+			}
+			if (principal != null) {
+			    items.add(makeItem(baseItem, principal, ace));
+			}
+		    } catch (NoSuchElementException e) {
+			MessageType msg = Factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.WARNING);
+			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINDIR_NOPRINCIPAL, e.getMessage()));
+			rc.addMessage(msg);
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
@@ -136,23 +183,41 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter<Fileeffectiver
 	    }
 	    break;
 
+	  case CASE_INSENSITIVE_EQUALS:
 	  case EQUALS:
 	  case NOT_EQUAL:
 	    try {
-		Collection<IPrincipal> principals = getPrincipals(directory.queryPrincipalBySid(sid), fObj.getBehaviors());
+		Collection<IPrincipal> principals = null;
+		if (pSid == null) {
+		    principals = directory.getAllPrincipals(directory.queryPrincipal(pName), includeGroups, resolveGroups);
+		} else {
+		    principals = directory.getAllPrincipals(directory.queryPrincipalBySid(pSid), includeGroups, resolveGroups);
+		}
 		for (IPrincipal principal : principals) {
 		    for (int i=0; i < aces.length; i++) {
-			if (op == OperationEnumeration.EQUALS && directory.isApplicable(principal, aces[i])) {
-			    items.add(makeItem(baseItem, principal, aces[i]));
-			} else if (op == OperationEnumeration.NOT_EQUAL && !directory.isApplicable(principal, aces[i])) {
-			    items.add(makeItem(baseItem, principal, aces[i]));
+			switch(op) {
+			  case EQUALS:
+			  case CASE_INSENSITIVE_EQUALS:
+			    if (directory.isApplicable(principal, aces[i])) {
+				items.add(makeItem(baseItem, principal, aces[i]));
+			    }
+			    break;
+			  case NOT_EQUAL:
+			    if (!directory.isApplicable(principal, aces[i])) {
+				items.add(makeItem(baseItem, principal, aces[i]));
+			    }
+			    break;
 			}
 		    }
 		}
 	    } catch (NoSuchElementException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINDIR_NOPRINCIPAL, sid));
+		if (pSid == null) {
+		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINDIR_NOPRINCIPAL, pName));
+		} else {
+		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINDIR_NOPRINCIPAL, pSid));
+		}
 		rc.addMessage(msg);
 	    } catch (WmiException e) {
 		MessageType msg = Factories.common.createMessageType();
@@ -170,21 +235,6 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter<Fileeffectiver
     }
 
     // Private
-
-    /**
-     * Recursively fetch all members of the IPrincipal (if it's a group) according to the specified behaviors.
-     */
-    private Collection<IPrincipal> getPrincipals(IPrincipal principal, FileEffectiveRights53Behaviors behaviors)
-		throws WmiException {
-
-	boolean includeGroups = true;
-	boolean resolveGroups = false;
-	if (behaviors != null) {
-	    includeGroups = behaviors.getIncludeGroup();
-	    resolveGroups = behaviors.getResolveGroup();
-	}
-	return directory.getAllPrincipals(principal, includeGroups, resolveGroups);
-    }
 
     /**
      * Create a new wrapped FileeffectiverightsItem based on the base FileeffectiverightsItem, IPrincipal and IACE.
@@ -314,7 +364,7 @@ public class Fileeffectiverights53Adapter extends BaseFileAdapter<Fileeffectiver
 	item.setStandardWriteOwner(standardWriteOwner);
 
 	EntityItemStringType trusteeName = Factories.sc.core.createEntityItemStringType();
-	if (directory.isBuiltinUser(p.getNetbiosName())) {
+	if (directory.isBuiltinUser(p.getNetbiosName()) || directory.isBuiltinGroup(p.getNetbiosName())) {
 	    trusteeName.setValue(p.getName());
 	} else {
 	    trusteeName.setValue(p.getNetbiosName());
