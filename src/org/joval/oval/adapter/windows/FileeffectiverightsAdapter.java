@@ -96,7 +96,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 
 	String pSid = null, pName = null;
 	boolean includeGroups = true;
-	boolean resolveGroups = true;
+	boolean resolveGroups = false;
 	OperationEnumeration op = OperationEnumeration.EQUALS;
 	if (obj instanceof Fileeffectiverights53Object) {
 	    Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)obj;
