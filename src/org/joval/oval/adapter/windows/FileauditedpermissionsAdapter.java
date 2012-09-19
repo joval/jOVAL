@@ -271,23 +271,26 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	    Map<String, List<IACE>> aces = new HashMap<String, List<IACE>>();
 	    acls.put(path, aces);
 
-	    String pathArg = path;
+	    String pathArg = path.replace("\\", "\\\\");
 	    if (path.indexOf(" ") != -1) {
 		if (!path.startsWith("\"") && !path.endsWith("\"")) {
-		    pathArg = new StringBuffer("\"").append(path).append("\"").toString();
+		    pathArg = new StringBuffer("\"").append(pathArg).append("\"").toString();
 		}
 	    }
-	    for (String entry : runspace.invoke("Get-FileAuditedPermissions " + pathArg).split("\r\n")) {
-		int ptr1 = entry.indexOf(":");
-		int ptr2 = entry.indexOf(",");
-		String sid = entry.substring(0,ptr1).trim();
-		int mask = Integer.valueOf(entry.substring(ptr1+1,ptr2).trim());
-		int flags = Integer.valueOf(entry.substring(ptr2+1).trim());
+	    String data = runspace.invoke("Get-FileAuditedPermissions " + pathArg);
+	    if (data != null) {
+		for (String entry : data.split("\r\n")) {
+		    int ptr1 = entry.indexOf(":");
+		    int ptr2 = entry.indexOf(",");
+		    String sid = entry.substring(0,ptr1).trim();
+		    int mask = Integer.valueOf(entry.substring(ptr1+1,ptr2).trim());
+		    int flags = Integer.valueOf(entry.substring(ptr2+1).trim());
 
-		if (!aces.containsKey(sid)) {
-		    aces.put(sid, new ArrayList<IACE>());
+		    if (!aces.containsKey(sid)) {
+			aces.put(sid, new ArrayList<IACE>());
+		    }
+		    aces.get(sid).add(new ACE(sid, mask, flags));
 		}
-		aces.get(sid).add(new ACE(sid, mask, flags));
 	    }
 	    return aces;
 	}

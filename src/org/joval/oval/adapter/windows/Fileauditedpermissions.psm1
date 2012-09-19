@@ -15,6 +15,8 @@ function Get-FileAuditedPermissions {
   $Query = "Select * FROM Win32_LogicalFileSecuritySetting Where Path='" + $Path + "'"
   $SD = Get-WmiObject -Query $Query | Invoke-WmiMethod -Name GetSecurityDescriptor
   foreach ($SACL in $SD.Descriptor.SACL) {
-    Write-Output ($SACL.Trustee.SIDString + ": " + $SACL.AccessMask + ", " + $SACL.AceFlags)
+    if (!($SACL -eq $null)) {
+      Write-Output ($SACL.Trustee.SIDString + ": " + $SACL.AccessMask + ", " + $SACL.AceFlags)
+    }
   }
 }
