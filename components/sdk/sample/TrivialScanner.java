@@ -34,6 +34,9 @@ public class TrivialScanner {
      */
     public static void main(String[] argv) {
 	try {
+	    //
+	    // Hook up the application's logging framework to jOVAL's logging facade.
+	    //
 	    LogManager.getLogManager().readConfiguration(new FileInputStream("logging.properties"));
 	    Handler handler = new FileHandler("TrivialScanner.log", false);
 	    handler.setFormatter(new SimpleFormatter());
@@ -41,11 +44,22 @@ public class TrivialScanner {
 	    Logger logger = Logger.getLogger(JOVALMsg.getLogger().getName());
 	    logger.addHandler(handler);
 
+	    //
+	    // Instantiate and configure a RemotePlugin.
+	    //
+	    // In this example, we simply use the built-in default SimpleCredentialStore, which is configured along
+	    // with the target hostname, using the properties file specified on the command-line.
+	    //
 	    RemotePlugin plugin = new RemotePlugin();
 	    plugin.setDataDirectory(new File("state"));
 	    Properties props = new Properties();
 	    props.load(new FileInputStream(new File(argv[1])));
 	    plugin.configure(props);
+
+	    //
+	    // Create, configure and run an OVAL engine, which uses the plugin's session to collect information from
+	    // the target system.
+	    //
 	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin.getSession());
 	    engine.setDefinitions(OvalFactory.createDefinitions(new File(argv[0])));
 	    engine.getNotificationProducer().addObserver(new Observer(), IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);

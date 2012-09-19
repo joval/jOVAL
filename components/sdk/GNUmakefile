@@ -35,12 +35,12 @@ javadocs:
 	org.joval.intf.util					\
 	$(SRC)/org/joval/oval/CollectException.java		\
 	$(SRC)/org/joval/oval/OvalException.java		\
+	$(SRC)/org/joval/oval/OvalFactory.java			\
 	$(SRC)/org/joval/plugin/BasePlugin.java			\
 	$(SRC)/org/joval/plugin/RemotePlugin.java		\
+	$(SRC)/org/joval/identity/SimpleCredentialStore.java	\
 	$(SRC)/org/joval/intf/system/IBaseSession.java		\
-	$(SRC)/org/joval/intf/system/IProcess.java		\
-	$(SRC)/org/joval/util/JOVALSystem.java			\
-	$(SRC)/org/joval/util/JOVALMsg.java
+	$(SRC)/org/joval/intf/system/IProcess.java
 
 dist-clean: clean
 	rm -rf $(DIST)

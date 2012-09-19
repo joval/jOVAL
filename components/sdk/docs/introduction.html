@@ -11,14 +11,14 @@
 
     <h2>The jOVAL API</h2>
     <p>The jOVAL API consists of an OVAL data model, interfaces and internal implementation classes.  The data model is a JAXB-generated model based on the OVAL language schema specifications from MITRE.  Classes in the data model are all located in the <code>oval.*</code> package namespace.  The remaining classes are organized into the following packages:</p>
-    <table cellpadding=10 cellspacing=10 width=1000>
+    <table cellpadding=10 cellspacing=10 width=1200>
       <tr>
         <td valign="top"><code>org.joval.plugin</code></td>
         <td>The primary class of interest in this package is the <code>RemotePlugin</code>, which can be used to scan Windows, Mac OSX, Solaris, Linux and Cisco IOS devices over the network.  The <code>RemotePlugin</code> requires an <code>ICredentialStore</code>, an example of which is <code>org.joval.identity.SimpleCredentialStore</code>.</td>
       </tr>
       <tr>
-        <td valign="top"><code>org.joval.util</code></td>
-        <td>The primary class of interest in this package is the <code>JOVALSystem</code>, which can be considered the "main" class of the core SDK.  The <code>JOVALSystem</code> is used to instantiate an engine, and to configure certain property-governed behaviors.</td>
+        <td valign="top"><code>org.joval.identity.SimpleCredentialStore</code></td>
+        <td>A simple implementation of an <code>ICredentialStore</code>, defining properties required to create credentials for remote hosts.</td>
       </tr>
       <tr>
         <td valign="top"><code>org.joval.intf.identity</code></td>
@@ -39,6 +39,10 @@
       <tr>
         <td valign="top"><code>org.joval.intf.system</code></td>
         <td>Interfaces pertaining to the execution of activities on machines.  The <code>ICredentialStore</code> interface takes an <code>IBaseSession</code> to determine the appropriate set of credentials to return.</td>
+      </tr>
+      <tr>
+        <td valign="top"><code>org.joval.oval.OvalFactory</code></td>
+        <td>A utility class providing access to data model object factories, and methods to instantiate OVAL engines.
       </tr>
     </table>
     <p>The full public API javadoc documentation can be found <a href="api/index.html">here</a>.</p>
