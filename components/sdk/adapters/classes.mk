@@ -68,6 +68,7 @@ CLASSES=\
 	org.joval.oval.adapter.windows.AuditeventpolicyAdapter			\
 	org.joval.oval.adapter.windows.AuditeventpolicysubcategoriesAdapter	\
 	org.joval.oval.adapter.windows.CmdletAdapter				\
+	org.joval.oval.adapter.windows.FileauditedpermissionsAdapter		\
 	org.joval.oval.adapter.windows.FileAdapter				\
 	org.joval.oval.adapter.windows.FileeffectiverightsAdapter		\
 	org.joval.oval.adapter.windows.GroupAdapter				\

@@ -75,7 +75,7 @@ public class RunspacePool implements IRunspacePool {
     public IRunspace spawn() throws Exception {
 	if (pool.size() < capacity()) {
 	    String id = Integer.toString(pool.size());
-	    Runspace runspace = new Runspace(id, session.createProcess("powershell -File -", null));
+	    Runspace runspace = new Runspace(id, session.createProcess("powershell -NoProfile -File -", null));
 	    pool.put(id, runspace);
 	    return runspace;
 	} else {

@@ -99,6 +99,10 @@ public class WindowsFileInfo extends FileInfo implements IWindowsFileInfo {
 	    return mask;
 	}
 
+	public int getFlags() {
+	    return 0;
+	}
+
 	public String getSid() {
 	    return sid;
 	}

@@ -116,7 +116,7 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
     public IRunspace spawn() throws Exception {
 	if (pool.size() < capacity()) {
 	    String id = Integer.toString(pool.size());
-	    Runspace runspace = new Runspace(id, shell.createProcess("powershell -File -", false));
+	    Runspace runspace = new Runspace(id, shell.createProcess("powershell -NoProfile -File -", false));
 	    pool.put(id, runspace);
 	    return runspace;
 	} else {

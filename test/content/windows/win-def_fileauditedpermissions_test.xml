@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<oval_definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://oval.mitre.org/XMLSchema/oval-definitions-5 oval-definitions-schema.xsd 
+    http://oval.mitre.org/XMLSchema/oval-definitions-5#independent independent-definitions-schema.xsd
+    http://oval.mitre.org/XMLSchema/oval-definitions-5#windows windows-definitions-schema.xsd" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:ind-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent" xmlns:oval-def="http://oval.mitre.org/XMLSchema/oval-definitions-5" xmlns:oval="http://oval.mitre.org/XMLSchema/oval-common-5" xmlns:win-def="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+    <generator>
+        <oval:schema_version>5.6</oval:schema_version>
+        <oval:timestamp>2009-01-12T10:41:00-05:00</oval:timestamp>
+    </generator>
+    <definitions>
+        <definition id="oval:org.mitre.oval.test:def:50" version="3" class="miscellaneous">
+            <metadata>
+                <title>Evaluate to true if the win-def:fileauditedpermissions_test is properly supported</title>
+                <description>This definition is intended to evalutate to true if the interpreter properly supports the win-def:fileauditedpermissions_test.</description>
+            </metadata>
+            <notes>
+                <note>It is important to note that the values used in this test definition are specific to a particular machine, and may not necessarily apply to your system. As a result, in order to have the definition return a result of 'true', you must either change these values to the ones found on your particular system, or you must configure your system to use these values.</note>
+            </notes>
+            <criteria operator="AND">
+                <criterion comment="Test that a fileauditedpermissions_object with a path and trustee_name is supported." test_ref="oval:org.mitre.oval.test:tst:1110"/>
+                <criterion comment="Test that a fileauditedpermissions_object with a path, filename, and trustee_name is supported." test_ref="oval:org.mitre.oval.test:tst:1145"/>
+                <criterion comment="Test that a fileauditedpermissions_object with a path, filename, and trustee_name pattern match is supported." test_ref="oval:org.mitre.oval.test:tst:2025"/>
+                <criterion comment="Test that a fileauditedpermissions_object with a path pattern match, filename, and trustee_name is supported." test_ref="oval:org.mitre.oval.test:tst:1822"/>
+                <criterion comment="Test that a fileauditedpermissions_object with a path, filename pattern match, and trustee_name is supported." test_ref="oval:org.mitre.oval.test:tst:1483"/>
+                <criterion comment="Test that the max_depth behavior is supported for limited depth of recursion." test_ref="oval:org.mitre.oval.test:tst:1391"/>
+                <criterion comment="Test that the max_depth behavior is supported for unlimited depth of recursion." test_ref="oval:org.mitre.oval.test:tst:1247"/>
+                <criterion comment="Test that the recurse_direction behavior is supported in the 'up' direction." test_ref="oval:org.mitre.oval.test:tst:1640"/>
+                <criterion comment="Test that the include_group behavior is supported." test_ref="oval:org.mitre.oval.test:tst:1299"/>
+                <criterion comment="Test that the resolve_group behavior is supported." test_ref="oval:org.mitre.oval.test:tst:1738"/>
+            </criteria>
+        </definition>
+    </definitions>
+    <tests>
+        <fileauditedpermissions_test id="oval:org.mitre.oval.test:tst:1110" comment="Test that a fileauditedpermissions_object with a path and trustee_name is supported." version="1" check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <object object_ref="oval:org.mitre.oval.test:obj:529"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:1700"/>
+        </fileauditedpermissions_test>
+        <fileauditedpermissions_test id="oval:org.mitre.oval.test:tst:1145" comment="Test that a fileauditedpermissions_object with a path, filename, and trustee_name is supported." version="1" check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <object object_ref="oval:org.mitre.oval.test:obj:847"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:1476"/>
+        </fileauditedpermissions_test>
+        <fileauditedpermissions_test id="oval:org.mitre.oval.test:tst:2025" comment="Test that a fileauditedpermissions_object with a path, filename, and trustee_name pattern match is supported." version="1" check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <object object_ref="oval:org.mitre.oval.test:obj:619"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:1289"/>
+        </fileauditedpermissions_test>
+        <fileauditedpermissions_test id="oval:org.mitre.oval.test:tst:1822" comment="Test that a fileauditedpermissions_object with a path pattern match, filename, and trustee_name is supported." version="1" check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <object object_ref="oval:org.mitre.oval.test:obj:586"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:970"/>
+        </fileauditedpermissions_test>
+        <fileauditedpermissions_test id="oval:org.mitre.oval.test:tst:1483" comment="Test that a fileauditedpermissions_object with a path, filename pattern match, and trustee_name is supported." version="1" check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <object object_ref="oval:org.mitre.oval.test:obj:1506"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:1459"/>
+        </fileauditedpermissions_test>
+        <fileauditedpermissions_test id="oval:org.mitre.oval.test:tst:1391" comment="Test that the max_depth behavior is supported for limited depth of recursion." version="2" check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <object object_ref="oval:org.mitre.oval.test:obj:1209"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:1109"/>
+        </fileauditedpermissions_test>
+        <fileauditedpermissions_test id="oval:org.mitre.oval.test:tst:1247" comment="Test that the max_depth behavior is supported for unlimited depth of recursion." version="2" check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <object object_ref="oval:org.mitre.oval.test:obj:569"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:1271"/>
+        </fileauditedpermissions_test>
+        <fileauditedpermissions_test id="oval:org.mitre.oval.test:tst:1640" comment="Test that the recurse_direction behavior is supported in the 'up' direction." version="2" check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <object object_ref="oval:org.mitre.oval.test:obj:848"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:1109"/>
+        </fileauditedpermissions_test>
+        <fileauditedpermissions_test id="oval:org.mitre.oval.test:tst:1299" comment="Test that the include_group behavior is supported." version="1" check_existence="at_least_one_exists" check="at least one" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <object object_ref="oval:org.mitre.oval.test:obj:951"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:1579"/>
+        </fileauditedpermissions_test>
+        <fileauditedpermissions_test id="oval:org.mitre.oval.test:tst:1738" comment="Test that the resolve_group behavior is supported." version="1" check_existence="at_least_one_exists" check="all" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <object object_ref="oval:org.mitre.oval.test:obj:1096"/>
+            <state state_ref="oval:org.mitre.oval.test:ste:1060"/>
+        </fileauditedpermissions_test>
+    </tests>
+    <objects>
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:529" version="1" comment="File object with path equals 'C:\Program Files\Internet Explorer' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename xsi:nil="true"/>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+        </fileauditedpermissions_object>
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:847" version="1" comment="File object with path equals 'C:\Program Files\Internet Explorer' filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+        </fileauditedpermissions_object>
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:619" version="1" comment="File object with path equals 'C:\Program Files\Internet Explorer' filename equals 'iexplore.exe' and trustee_name matching '^A[A-Za-z]+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="pattern match">^A[A-Za-z]+</trustee_name>
+        </fileauditedpermissions_object>
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:586" version="1" comment="File object with path matching '^C:\\Program Files\\Internet.*' filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="pattern match">^C:\\Program Files\\Internet.*</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>      
+        </fileauditedpermissions_object>
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:1506" version="1" comment="File object with path equals 'C:\Program Files\Internet Explorer' filename matching '^i.*' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="pattern match">^i.*</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>      
+        </fileauditedpermissions_object>
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:1209" version="1" comment="File object with path starting at 'C:\Program Files', recursing down 1 level, and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <behaviors max_depth="1" recurse_direction="down"/>
+            <path datatype="string" operation="equals">C:\Program Files</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+        </fileauditedpermissions_object>
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:569" version="1" comment="File object with path starting at 'C:\Program Files', recursing down 1 infinitely, and filename equals 'install.ins' and trustee_name equals 'ADMINISTRATOR'" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <behaviors max_depth="-1" recurse_direction="down"/>
+            <path datatype="string" operation="equals">C:\Program Files</path>
+            <filename datatype="string" operation="equals">install.ins</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+        </fileauditedpermissions_object>
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:848" version="1" comment="File object with path starting at 'C:\Program Files\Internet Explorer\SIGNUP', recursing up 1 level, and filename equals 'iexplore.exe', and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <behaviors max_depth="1" recurse_direction="up"/>
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer\SIGNUP</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+        </fileauditedpermissions_object>
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:951" version="1" comment="File object with path equals 'C:\Program Files\Internet Explorer', filename equals 'iexplore.exe'. and trustee_name equals 'ADMINISTRATORS' with the resolve_group behavior set to true and the include_group behavior set to true." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <behaviors resolve_group="true" include_group="true"/>
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATORS</trustee_name>
+        </fileauditedpermissions_object>
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:1096" version="1" comment="File object with path equals 'C:\Program Files\Internet Explorer', a filename equal to 'iexplore.exe', and trustee_name equals 'ADMINISTRATORS' with resolve_group behavior set to true and the include_group behavior set to false." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <behaviors resolve_group="true" include_group="false"/>
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATORS</trustee_name>
+        </fileauditedpermissions_object>
+    </objects>
+    <states>
+        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1700" version="1" comment="This state represents a file which has a path equals 'C:\Program Files\Internet Explorer' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+        </fileauditedpermissions_state>
+        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1476" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+        </fileauditedpermissions_state>
+        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1289" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name matching '^A[A-Za-z]+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="pattern match">^[A-Za-z]+</trustee_name>
+        </fileauditedpermissions_state>
+        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:970" version="1" comment="This state represents a file which has a path matching '^C:\\Program Files\\Internet.*' and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="pattern match">^C:\\Program Files\\Internet.*</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>        
+        </fileauditedpermissions_state>
+        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1459" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename matching '^i.*' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="pattern match">^i.*</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>      
+        </fileauditedpermissions_state>
+        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1109" version="2" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+        </fileauditedpermissions_state>        
+        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1271" version="2" comment="This state represents a file which has a path that matches '^C:\\Program Files\\Internet Explorer.*' filename equals 'install.ins' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="pattern match">^C:\\Program Files\\Internet Explorer.*</path>
+            <filename datatype="string" operation="equals">install.ins</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+        </fileauditedpermissions_state>
+        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1579" version="1" comment="This state represents a file which has a path that matches 'C:\Program Files\Internet Explorer' and filename of 'iexplore.exe', and trustee_name equal to 'ADMINISTRATORS'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="equals">ADMINISTRATORS</trustee_name>
+        </fileauditedpermissions_state>
+        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1060" version="1" comment="This state represents a file which has a path that matches 'C:\Program Files\Internet Explorer' and filename of 'iexplore.exe' and trustee_name that is not equal to 'ADMINISTRATORS'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+            <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
+            <filename datatype="string" operation="equals">iexplore.exe</filename>
+            <trustee_name datatype="string" operation="not equal">ADMINISTRATORS</trustee_name>
+        </fileauditedpermissions_state>
+    </states>
+</oval_definitions>

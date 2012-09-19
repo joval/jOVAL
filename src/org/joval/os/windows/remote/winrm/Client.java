@@ -64,6 +64,7 @@ import org.joval.os.windows.remote.wsmv.operation.DeleteOperation;
 import org.joval.os.windows.remote.wsmv.operation.GetOperation;
 import org.joval.os.windows.remote.wsmv.operation.PutOperation;
 import org.joval.os.windows.remote.wsmv.operation.SubscribeOperation;
+import org.joval.util.JOVALMsg;
 
 /**
  * A WinRM client.  To use it, you must first do this on the target machine:
@@ -335,7 +336,7 @@ for (int i=0; i < 16; i++) {
     }
 
     public void testPowershell() throws Exception {
-	RunspacePool pool = new RunspacePool(new Shell(port, null, "%windir%"), port);
+	RunspacePool pool = new RunspacePool(new Shell(port, null, "%windir%"), port, JOVALMsg.getLogger());
 	IRunspace runspace = pool.spawn();
 	System.out.println("Powershell ID=" + runspace.getId() + ", Prompt: " + runspace.getPrompt());
 	System.out.println(runspace.invoke("echo \"hello powershell\""));

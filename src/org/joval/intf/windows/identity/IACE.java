@@ -28,6 +28,10 @@ public interface IACE {
     int FLAGS_NO_PROPAGATE	= 4;
     int FLAGS_OBJECT_INHERIT	= 1;
 
+    // for SACL ACEs only
+    int SUCCESSFUL_ACCESS_ACE_FLAG	= 64;
+    int FAILED_ACCESS_ACE_FLAG		= 128;
+
     int GENERIC_ALL		= 268435456;
     int GENERIC_EXECUTE		= 536870912;
     int GENERIC_READ		= -2147483648;
@@ -39,6 +43,7 @@ public interface IACE {
     int STANDARD_WRITE_DAC	= 262144;
     int STANDARD_WRITE_OWNER	= 524288;
 
+    int getFlags();
     int getAccessMask();
     String getSid();
 }
