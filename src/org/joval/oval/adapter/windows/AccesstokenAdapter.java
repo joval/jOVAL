@@ -125,23 +125,23 @@ public class AccesstokenAdapter implements IAdapter {
 
 	    for (IPrincipal principal : principals) {
 		for (IPrincipal p : directory.getAllPrincipals(principal, include, resolve)) {
-		    String pn = getCanonicalizedPrincipalName(p);
-		    if (errors.containsKey(pn)) {
-			rc.addMessage(errors.get(pn));
-		    } else if (itemCache.containsKey(pn)) {
-			items.put(pn, itemCache.get(pn));
+		    String sid = principal.getSid();
+		    if (errors.containsKey(sid)) {
+			rc.addMessage(errors.get(sid));
+		    } else if (itemCache.containsKey(sid)) {
+			items.put(sid, itemCache.get(sid));
 		    } else {
 			try {
-			    AccesstokenItem item = makeItem(pn);
-			    items.put(pn, item);
-			    itemCache.put(pn, item);
+			    AccesstokenItem item = makeItem(p);
+			    items.put(sid, item);
+			    itemCache.put(sid, item);
 			} catch (Exception e) {
 			    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 			    MessageType msg = Factories.common.createMessageType();
 			    msg.setLevel(MessageLevelEnumeration.ERROR);
 			    msg.setValue(e.getMessage());
 			    rc.addMessage(msg);
-			    errors.put(pn, msg);
+			    errors.put(sid, msg);
 			}
 		    }
 		}
@@ -181,15 +181,16 @@ public class AccesstokenAdapter implements IAdapter {
 	FALSE = tempF;
     }
 
-    private AccesstokenItem makeItem(String principalName) throws Exception {
+    private AccesstokenItem makeItem(IPrincipal principal) throws Exception {
 	AccesstokenItem item = Factories.sc.windows.createAccesstokenItem();
 	EntityItemStringType principalType = Factories.sc.core.createEntityItemStringType();
+	String principalName = getCanonicalizedPrincipalName(principal);
 	principalType.setValue(principalName);
 	item.setSecurityPrincipal(principalType);
 	session.getLogger().debug(JOVALMsg.STATUS_WIN_ACCESSTOKEN, principalName);
 	String data = null;
 	try {
-	    data = runspace.invoke("Get-AccessTokens \"" + principalName + "\"");
+	    data = runspace.invoke("Get-AccessTokens \"" + principal.getSid() + "\"");
 	} catch (PowershellException e) {
 	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_ACCESSTOKEN_PRINCIPAL, principalName, e.getMessage());
 	    session.getLogger().warn(s);

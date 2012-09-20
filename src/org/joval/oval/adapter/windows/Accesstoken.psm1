@@ -3,10 +3,10 @@
 #
 function Get-AccessTokens {
   param(
-    [string]$Principal=$(throw "Mandatory parameter -Principal missing.")
+    [string]$SID=$(throw "Mandatory parameter -SID missing.")
   )
 
-  if ($Principal -eq $null) {
+  if ($SID -eq $null) {
     throw "Principal is NULL"
   }
  
@@ -18,6 +18,9 @@ using System.Runtime.InteropServices;
 
 namespace jOVAL.AccessToken {
     public class Probe {
+	public const int ERROR_SUCCESS = 0;
+	public const int ERROR_FILE_NOT_FOUND = 0x2;
+
 	public const int POLICY_VIEW_LOCAL_INFORMATION = 0x1;
 	public const int POLICY_LOOKUP_NAMES = 0x00000800;
 	public const int POLICY_ALL_ACCESS = 0x00F0FFF;
@@ -30,9 +33,6 @@ namespace jOVAL.AccessToken {
 
 	[DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true, PreserveSig = true)]
 	public static extern bool ConvertStringSidToSid(string StringSid, out IntPtr pSid);
-
-	[DllImport("advapi32.dll", CharSet = CharSet.Unicode, SetLastError = true, PreserveSig = true)]
-	public static extern bool LookupAccountName(string lpSystemName, string lpAccountName, IntPtr psid, ref int cbsid, StringBuilder domainName, ref int cbdomainLength, ref int use);
 
 	[DllImport("advapi32.dll", CharSet = CharSet.Unicode, PreserveSig = true)]
 	public static extern UInt32 LsaOpenPolicy(string SystemName, ref LSA_OBJECT_ATTRIBUTES ObjectAttributes, Int32 DesiredAccess, out IntPtr PolicyHandle);
@@ -74,66 +74,52 @@ namespace jOVAL.AccessToken {
 	    return new string(cvt);
 	}
 
-	public static List<string> getAccessTokens(string entityName) {
-	    List<string> retList = new List<string>();
+	public static List<string> getAccessTokens(string sidString) {
+	    List<string> tokens = new List<string>();
 	    IntPtr sid = IntPtr.Zero;
-	    int sidSize = 0;
-	    StringBuilder domainName = new StringBuilder();
-	    int nameSize = 0;
-	    int accountType = 0;
-	    UInt32 lretVal;
-	    uint retVal;
-
-	    LookupAccountName(null, entityName, sid, ref sidSize, domainName, ref nameSize, ref accountType);
-	    domainName = new StringBuilder(nameSize);
-	    sid = Marshal.AllocHGlobal(sidSize);
-
-	    if (!LookupAccountName(null, entityName, sid, ref sidSize, domainName, ref nameSize, ref accountType)) {
-		Marshal.FreeHGlobal(sid);
-		throw new System.ComponentModel.Win32Exception(GetLastError());
+	    if (!ConvertStringSidToSid(sidString, out sid)) {
+		int errorCode = GetLastError();
+		switch(errorCode) {
+		  case ERROR_FILE_NOT_FOUND: // no such user?
+		    return tokens;
+		  default:
+		    throw new System.ComponentModel.Win32Exception(errorCode);
+		}
 	    }
 
 	    IntPtr policyHandle = IntPtr.Zero;
 	    LSA_OBJECT_ATTRIBUTES objAttrs = new LSA_OBJECT_ATTRIBUTES();
 	    int mode = POLICY_LOOKUP_NAMES | POLICY_VIEW_LOCAL_INFORMATION;
-	    lretVal = LsaOpenPolicy(null, ref objAttrs, mode, out policyHandle);
-	    retVal = LsaNtStatusToWinError(lretVal);
-
-	    if (retVal != 0) {
+	    uint result = LsaNtStatusToWinError(LsaOpenPolicy(null, ref objAttrs, mode, out policyHandle));
+	    if (result != 0) {
 		Marshal.FreeHGlobal(sid);
-		throw new System.ComponentModel.Win32Exception((int)retVal);
+		throw new System.ComponentModel.Win32Exception((int)result);
 	    }
 
 	    IntPtr rightsArray = IntPtr.Zero;
-	    UInt32 rightsCount = 0;
-	    lretVal = LsaEnumerateAccountRights(policyHandle, sid, out rightsArray, out rightsCount);
-	    retVal = LsaNtStatusToWinError(lretVal);
+	    UInt32 rightsLen = 0;
+	    result = LsaNtStatusToWinError(LsaEnumerateAccountRights(policyHandle, sid, out rightsArray, out rightsLen));
 	    Marshal.FreeHGlobal(sid);
-
-	    if (retVal == 2) {
+	    switch((int)result) {
+	      case ERROR_SUCCESS:
+		LSA_UNICODE_STRING myLsaus = new LSA_UNICODE_STRING();
+		for (ulong i=0; i < rightsLen; i++) {
+		    IntPtr itemAddr = new IntPtr(rightsArray.ToInt64() + (long)(i * (ulong)Marshal.SizeOf(myLsaus)));
+		    myLsaus = (LSA_UNICODE_STRING)Marshal.PtrToStructure(itemAddr, myLsaus.GetType());
+		    string thisRight = LSAUS2string(myLsaus);
+		    tokens.Add(thisRight);
+		}
+		break;
+	      case ERROR_FILE_NOT_FOUND:
+		// no account rights were found for the user
+		break;
+	      default:
 		LsaClose(policyHandle);
-		return retList;
-	    }
-	    if (retVal != 0) {
-		LsaClose(policyHandle);
-		throw new System.ComponentModel.Win32Exception((int)retVal);
+		throw new System.ComponentModel.Win32Exception((int)result);
 	    }
 
-	    LSA_UNICODE_STRING myLsaus = new LSA_UNICODE_STRING();
-	    for (ulong i = 0; i < rightsCount; i++) {
-		IntPtr itemAddr = new IntPtr(rightsArray.ToInt64() + (long)(i * (ulong)Marshal.SizeOf(myLsaus)));
-		myLsaus = (LSA_UNICODE_STRING)Marshal.PtrToStructure(itemAddr, myLsaus.GetType());
-		string thisRight = LSAUS2string(myLsaus);
-		retList.Add(thisRight);
-	    }
-
-	    lretVal = LsaClose(policyHandle);
-	    retVal = LsaNtStatusToWinError(lretVal);
-	    if (retVal != 0) {
-		throw new System.ComponentModel.Win32Exception((int)retVal);
-	    }
-
-	    return retList;
+	    LsaClose(policyHandle);
+	    return tokens;
 	}
     }
 }
@@ -146,7 +132,7 @@ namespace jOVAL.AccessToken {
   }
 
   $ErrorActionPreference = "Continue" 
-  $result = [jOVAL.AccessToken.Probe]::getAccessTokens($Principal)
+  $result = [jOVAL.AccessToken.Probe]::getAccessTokens($SID)
   foreach($token in $result) {
     Write-Output $token
   }
