@@ -93,7 +93,7 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
 
     // Implement IRunspacePool
 
-    public Collection<IRunspace> enumerate() {
+    public synchronized Collection<IRunspace> enumerate() {
 	Collection<IRunspace> runspaces = new ArrayList<IRunspace>();
 	for (Runspace rs : pool.values()) {
 	    runspaces.add(rs);
@@ -113,11 +113,12 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
 	}
     }
 
-    public IRunspace spawn() throws Exception {
+    public synchronized IRunspace spawn() throws Exception {
 	if (pool.size() < capacity()) {
 	    String id = Integer.toString(pool.size());
 	    Runspace runspace = new Runspace(id, shell.createProcess("powershell -NoProfile -File -", false));
 	    pool.put(id, runspace);
+	    runspace.invoke("$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(512,2000)");
 	    return runspace;
 	} else {
 	    throw new IndexOutOfBoundsException(Integer.toString(pool.size() + 1));

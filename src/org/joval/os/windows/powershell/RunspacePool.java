@@ -52,7 +52,7 @@ public class RunspacePool implements IRunspacePool {
 
     // Implement IRunspacePool
 
-    public Collection<IRunspace> enumerate() {
+    public synchronized Collection<IRunspace> enumerate() {
 	Collection<IRunspace> runspaces = new ArrayList<IRunspace>();
 	for (Runspace rs : pool.values()) {
 	    runspaces.add(rs);
@@ -72,10 +72,11 @@ public class RunspacePool implements IRunspacePool {
 	}
     }
 
-    public IRunspace spawn() throws Exception {
+    public synchronized IRunspace spawn() throws Exception {
 	if (pool.size() < capacity()) {
 	    String id = Integer.toString(pool.size());
 	    Runspace runspace = new Runspace(id, session.createProcess("powershell -NoProfile -File -", null));
+	    runspace.invoke("$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(512,2000)");
 	    pool.put(id, runspace);
 	    return runspace;
 	} else {

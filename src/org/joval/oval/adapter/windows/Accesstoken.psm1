@@ -60,14 +60,6 @@ namespace jOVAL.AccessToken {
 	    public UInt32 Length;
 	}
 
-	public static LSA_UNICODE_STRING string2LSAUS(string myString) {
-	    LSA_UNICODE_STRING retStr = new LSA_UNICODE_STRING();
-	    retStr.Buffer = Marshal.StringToHGlobalUni(myString);
-	    retStr.Length = (UInt16)(myString.Length * UnicodeEncoding.CharSize);
-	    retStr.MaximumLength = (UInt16)((myString.Length + 1) * UnicodeEncoding.CharSize);
-	    return retStr;
-	}
-
 	public static string LSAUS2string(LSA_UNICODE_STRING lsaus) {
 	    char[] cvt = new char[lsaus.Length / UnicodeEncoding.CharSize];
 	    Marshal.Copy(lsaus.Buffer, cvt, 0, lsaus.Length / UnicodeEncoding.CharSize);
