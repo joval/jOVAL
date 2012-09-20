@@ -10,13 +10,11 @@ function Get-FileAuditedPermissions {
     throw "Path is NULL"
   }
 
-  $ErrorActionPreference = "Continue" 
-
-  $Query = "Select * FROM Win32_LogicalFileSecuritySetting Where Path='" + $Path + "'"
-  $SD = Get-WmiObject -Query $Query | Invoke-WmiMethod -Name GetSecurityDescriptor
-  foreach ($SACL in $SD.Descriptor.SACL) {
-    if (!($SACL -eq $null)) {
-      Write-Output ($SACL.Trustee.SIDString + ": " + $SACL.AccessMask + ", " + $SACL.AceFlags)
-    }
+  $file = Get-Item $Path
+  $security = $file.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Audit)
+  foreach($ace in $security.GetAuditRules($True, $False, [System.Security.Principal.SecurityIdentifier])) {
+    $mask = [Convert]::ToInt32($ace.FileSystemRights)
+    $flags = [Convert]::ToInt32($ace.AuditFlags)
+    Write-Output "$($ace.IdentityReference): $mask, $flags"
   }
 }

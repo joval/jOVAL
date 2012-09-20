@@ -82,10 +82,10 @@
             <filename datatype="string" operation="equals">iexplore.exe</filename>
             <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
         </fileauditedpermissions_object>
-        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:619" version="1" comment="File object with path equals 'C:\Program Files\Internet Explorer' filename equals 'iexplore.exe' and trustee_name matching '^A[A-Za-z]+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+        <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:619" version="1" comment="File object with path equals 'C:\Program Files\Internet Explorer' filename equals 'iexplore.exe' and trustee_name matching '^.+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
             <filename datatype="string" operation="equals">iexplore.exe</filename>
-            <trustee_name datatype="string" operation="pattern match">^A[A-Za-z]+</trustee_name>
+            <trustee_name datatype="string" operation="pattern match">^.+</trustee_name>
         </fileauditedpermissions_object>
         <fileauditedpermissions_object id="oval:org.mitre.oval.test:obj:586" version="1" comment="File object with path matching '^C:\\Program Files\\Internet.*' filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="pattern match">^C:\\Program Files\\Internet.*</path>
@@ -138,10 +138,10 @@
             <filename datatype="string" operation="equals">iexplore.exe</filename>
             <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
         </fileauditedpermissions_state>
-        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1289" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name matching '^A[A-Za-z]+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+        <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1289" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name matching '^.+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
             <filename datatype="string" operation="equals">iexplore.exe</filename>
-            <trustee_name datatype="string" operation="pattern match">^[A-Za-z]+</trustee_name>
+            <trustee_name datatype="string" operation="pattern match">^.+</trustee_name>
         </fileauditedpermissions_state>
         <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:970" version="1" comment="This state represents a file which has a path matching '^C:\\Program Files\\Internet.*' and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="pattern match">^C:\\Program Files\\Internet.*</path>

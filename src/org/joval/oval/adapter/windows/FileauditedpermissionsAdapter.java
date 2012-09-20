@@ -140,6 +140,10 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		} else {
 		    p = Pattern.compile(pSid);
 		}
+		//
+		// Note: per the specification, the scope is limited to the trustees referenced by the security
+		// descriptor, as opposed to the full scope of all known trustees.
+		//
 		for (Map.Entry<String, List<IACE>> entry : getAccessEntries(f.getPath()).entrySet()) {
 		    IPrincipal principal = null;
 		    try {
@@ -183,17 +187,14 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		}
 		Map<String, List<IACE>> aces = getAccessEntries(f.getPath());
 		for (IPrincipal principal : principals) {
-		    String sid = principal.getSid();
-		    if (aces.containsKey(sid)) {
-			switch(op) {
-			  case EQUALS:
-			  case CASE_INSENSITIVE_EQUALS:
-			    items.add(makeItem(baseItem, principal, aces.get(sid)));
-			    break;
-			  case NOT_EQUAL:
-			    items.add(makeItem(baseItem, principal, aces.get(sid)));
-			    break;
-			}
+		    switch(op) {
+		      case EQUALS:
+		      case CASE_INSENSITIVE_EQUALS:
+			items.add(makeItem(baseItem, principal, aces.get(principal.getSid())));
+			break;
+		      case NOT_EQUAL:
+			items.add(makeItem(baseItem, principal, aces.get(principal.getSid())));
+			break;
 		    }
 		}
 		break;
@@ -289,6 +290,7 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		    if (!aces.containsKey(sid)) {
 			aces.put(sid, new ArrayList<IACE>());
 		    }
+
 		    aces.get(sid).add(new ACE(sid, mask, flags));
 		}
 	    }
@@ -321,101 +323,103 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	item.setFilepath(base.getFilepath());
 	item.setWindowsView(base.getWindowsView());
 
-	for (IACE ace : aces) {
-	    if (IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY | ace.getAccessMask())) {
-		EntityItemAuditType accessSystemSecurity = Factories.sc.windows.createEntityItemAuditType();
-		accessSystemSecurity.setValue(toAuditValue(ace));
-		item.setAccessSystemSecurity(accessSystemSecurity);
-	    }
-	    if (IACE.FILE_APPEND_DATA == (IACE.FILE_APPEND_DATA | ace.getAccessMask())) {
-		EntityItemAuditType fileAppendData = Factories.sc.windows.createEntityItemAuditType();
-		fileAppendData.setValue(toAuditValue(ace));
-		item.setFileAppendData(fileAppendData);
-	    }
-	    if (IACE.FILE_DELETE == (IACE.FILE_DELETE | ace.getAccessMask())) {
-		EntityItemAuditType fileDeleteChild = Factories.sc.windows.createEntityItemAuditType();
-		fileDeleteChild.setValue(toAuditValue(ace));
-		item.setFileDeleteChild(fileDeleteChild);
-	    }
-	    if (IACE.FILE_EXECUTE == (IACE.FILE_EXECUTE | ace.getAccessMask())) {
-		EntityItemAuditType fileExecute = Factories.sc.windows.createEntityItemAuditType();
-		fileExecute.setValue(toAuditValue(ace));
-		item.setFileExecute(fileExecute);
-	    }
-	    if (IACE.FILE_READ_ATTRIBUTES == (IACE.FILE_READ_ATTRIBUTES | ace.getAccessMask())) {
-		EntityItemAuditType fileReadAttributes = Factories.sc.windows.createEntityItemAuditType();
-		fileReadAttributes.setValue(toAuditValue(ace));
-		item.setFileReadAttributes(fileReadAttributes);
-	    }
-	    if (IACE.FILE_READ_DATA == (IACE.FILE_READ_DATA | ace.getAccessMask())) {
-		EntityItemAuditType fileReadData = Factories.sc.windows.createEntityItemAuditType();
-		fileReadData.setValue(toAuditValue(ace));
-		item.setFileReadData(fileReadData);
-	    }
-	    if (IACE.FILE_READ_EA == (IACE.FILE_READ_EA | ace.getAccessMask())) {
-		EntityItemAuditType fileReadEa = Factories.sc.windows.createEntityItemAuditType();
-		fileReadEa.setValue(toAuditValue(ace));
-		item.setFileReadEa(fileReadEa);
-	    }
-	    if (IACE.FILE_WRITE_ATTRIBUTES == (IACE.FILE_WRITE_ATTRIBUTES | ace.getAccessMask())) {
-		EntityItemAuditType fileWriteAttributes = Factories.sc.windows.createEntityItemAuditType();
-		fileWriteAttributes.setValue(toAuditValue(ace));
-		item.setFileWriteAttributes(fileWriteAttributes);
-	    }
-	    if (IACE.FILE_WRITE_DATA == (IACE.FILE_WRITE_DATA | ace.getAccessMask())) {
-		EntityItemAuditType fileWriteData = Factories.sc.windows.createEntityItemAuditType();
-		fileWriteData.setValue(toAuditValue(ace));
-		item.setFileWriteData(fileWriteData);
-	    }
-	    if (IACE.FILE_WRITE_EA == (IACE.FILE_WRITE_EA | ace.getAccessMask())) {
-		EntityItemAuditType fileWriteEa = Factories.sc.windows.createEntityItemAuditType();
-		fileWriteEa.setValue(toAuditValue(ace));
-		item.setFileWriteEa(fileWriteEa);
-	    }
-	    if (IACE.GENERIC_ALL == (IACE.GENERIC_ALL | ace.getAccessMask())) {
-		EntityItemAuditType genericAll = Factories.sc.windows.createEntityItemAuditType();
-		genericAll.setValue(toAuditValue(ace));
-		item.setGenericAll(genericAll);
-	    }
-	    if (IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE | ace.getAccessMask())) {
-		EntityItemAuditType genericExecute = Factories.sc.windows.createEntityItemAuditType();
-		genericExecute.setValue(toAuditValue(ace));
-		item.setGenericExecute(genericExecute);
-	    }
-	    if (IACE.GENERIC_READ == (IACE.GENERIC_READ | ace.getAccessMask())) {
-		EntityItemAuditType genericRead = Factories.sc.windows.createEntityItemAuditType();
-		genericRead.setValue(toAuditValue(ace));
-		item.setGenericRead(genericRead);
-	    }
-	    if (IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE | ace.getAccessMask())) {
-		EntityItemAuditType genericWrite = Factories.sc.windows.createEntityItemAuditType();
-		genericWrite.setValue(toAuditValue(ace));
-		item.setGenericWrite(genericWrite);
-	    }
-	    if (IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE | ace.getAccessMask())) {
-		EntityItemAuditType standardDelete = Factories.sc.windows.createEntityItemAuditType();
-		standardDelete.setValue(toAuditValue(ace));
-		item.setStandardDelete(standardDelete);
-	    }
-	    if (IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL | ace.getAccessMask())) {
-		EntityItemAuditType standardReadControl = Factories.sc.windows.createEntityItemAuditType();
-		standardReadControl.setValue(toAuditValue(ace));
-		item.setStandardReadControl(standardReadControl);
-	    }
-	    if (IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE | ace.getAccessMask())) {
-		EntityItemAuditType standardSynchronize = Factories.sc.windows.createEntityItemAuditType();
-		standardSynchronize.setValue(toAuditValue(ace));
-		item.setStandardSynchronize(standardSynchronize);
-	    }
-	    if (IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC | ace.getAccessMask())) {
-		EntityItemAuditType standardWriteDac = Factories.sc.windows.createEntityItemAuditType();
-		standardWriteDac.setValue(toAuditValue(ace));
-		item.setStandardWriteDac(standardWriteDac);
-	    }
-	    if (IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER | ace.getAccessMask())) {
-		EntityItemAuditType standardWriteOwner = Factories.sc.windows.createEntityItemAuditType();
-		standardWriteOwner.setValue(toAuditValue(ace));
-		item.setStandardWriteOwner(standardWriteOwner);
+	if (aces != null) {
+	    for (IACE ace : aces) {
+		if (IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY | ace.getAccessMask())) {
+		    EntityItemAuditType accessSystemSecurity = Factories.sc.windows.createEntityItemAuditType();
+		    accessSystemSecurity.setValue(toAuditValue(ace));
+		    item.setAccessSystemSecurity(accessSystemSecurity);
+		}
+		if (IACE.FILE_APPEND_DATA == (IACE.FILE_APPEND_DATA | ace.getAccessMask())) {
+		    EntityItemAuditType fileAppendData = Factories.sc.windows.createEntityItemAuditType();
+		    fileAppendData.setValue(toAuditValue(ace));
+		    item.setFileAppendData(fileAppendData);
+		}
+		if (IACE.FILE_DELETE == (IACE.FILE_DELETE | ace.getAccessMask())) {
+		    EntityItemAuditType fileDeleteChild = Factories.sc.windows.createEntityItemAuditType();
+		    fileDeleteChild.setValue(toAuditValue(ace));
+		    item.setFileDeleteChild(fileDeleteChild);
+		}
+		if (IACE.FILE_EXECUTE == (IACE.FILE_EXECUTE | ace.getAccessMask())) {
+		    EntityItemAuditType fileExecute = Factories.sc.windows.createEntityItemAuditType();
+		    fileExecute.setValue(toAuditValue(ace));
+		    item.setFileExecute(fileExecute);
+		}
+		if (IACE.FILE_READ_ATTRIBUTES == (IACE.FILE_READ_ATTRIBUTES | ace.getAccessMask())) {
+		    EntityItemAuditType fileReadAttributes = Factories.sc.windows.createEntityItemAuditType();
+		    fileReadAttributes.setValue(toAuditValue(ace));
+		    item.setFileReadAttributes(fileReadAttributes);
+		}
+		if (IACE.FILE_READ_DATA == (IACE.FILE_READ_DATA | ace.getAccessMask())) {
+		    EntityItemAuditType fileReadData = Factories.sc.windows.createEntityItemAuditType();
+		    fileReadData.setValue(toAuditValue(ace));
+		    item.setFileReadData(fileReadData);
+		}
+		if (IACE.FILE_READ_EA == (IACE.FILE_READ_EA | ace.getAccessMask())) {
+		    EntityItemAuditType fileReadEa = Factories.sc.windows.createEntityItemAuditType();
+		    fileReadEa.setValue(toAuditValue(ace));
+		    item.setFileReadEa(fileReadEa);
+		}
+		if (IACE.FILE_WRITE_ATTRIBUTES == (IACE.FILE_WRITE_ATTRIBUTES | ace.getAccessMask())) {
+		    EntityItemAuditType fileWriteAttributes = Factories.sc.windows.createEntityItemAuditType();
+		    fileWriteAttributes.setValue(toAuditValue(ace));
+		    item.setFileWriteAttributes(fileWriteAttributes);
+		}
+		if (IACE.FILE_WRITE_DATA == (IACE.FILE_WRITE_DATA | ace.getAccessMask())) {
+		    EntityItemAuditType fileWriteData = Factories.sc.windows.createEntityItemAuditType();
+		    fileWriteData.setValue(toAuditValue(ace));
+		    item.setFileWriteData(fileWriteData);
+		}
+		if (IACE.FILE_WRITE_EA == (IACE.FILE_WRITE_EA | ace.getAccessMask())) {
+		    EntityItemAuditType fileWriteEa = Factories.sc.windows.createEntityItemAuditType();
+		    fileWriteEa.setValue(toAuditValue(ace));
+		    item.setFileWriteEa(fileWriteEa);
+		}
+		if (IACE.GENERIC_ALL == (IACE.GENERIC_ALL | ace.getAccessMask())) {
+		    EntityItemAuditType genericAll = Factories.sc.windows.createEntityItemAuditType();
+		    genericAll.setValue(toAuditValue(ace));
+		    item.setGenericAll(genericAll);
+		}
+		if (IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE | ace.getAccessMask())) {
+		    EntityItemAuditType genericExecute = Factories.sc.windows.createEntityItemAuditType();
+		    genericExecute.setValue(toAuditValue(ace));
+		    item.setGenericExecute(genericExecute);
+		}
+		if (IACE.GENERIC_READ == (IACE.GENERIC_READ | ace.getAccessMask())) {
+		    EntityItemAuditType genericRead = Factories.sc.windows.createEntityItemAuditType();
+		    genericRead.setValue(toAuditValue(ace));
+		    item.setGenericRead(genericRead);
+		}
+		if (IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE | ace.getAccessMask())) {
+		    EntityItemAuditType genericWrite = Factories.sc.windows.createEntityItemAuditType();
+		    genericWrite.setValue(toAuditValue(ace));
+		    item.setGenericWrite(genericWrite);
+		}
+		if (IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE | ace.getAccessMask())) {
+		    EntityItemAuditType standardDelete = Factories.sc.windows.createEntityItemAuditType();
+		    standardDelete.setValue(toAuditValue(ace));
+		    item.setStandardDelete(standardDelete);
+		}
+		if (IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL | ace.getAccessMask())) {
+		    EntityItemAuditType standardReadControl = Factories.sc.windows.createEntityItemAuditType();
+		    standardReadControl.setValue(toAuditValue(ace));
+		    item.setStandardReadControl(standardReadControl);
+		}
+		if (IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE | ace.getAccessMask())) {
+		    EntityItemAuditType standardSynchronize = Factories.sc.windows.createEntityItemAuditType();
+		    standardSynchronize.setValue(toAuditValue(ace));
+		    item.setStandardSynchronize(standardSynchronize);
+		}
+		if (IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC | ace.getAccessMask())) {
+		    EntityItemAuditType standardWriteDac = Factories.sc.windows.createEntityItemAuditType();
+		    standardWriteDac.setValue(toAuditValue(ace));
+		    item.setStandardWriteDac(standardWriteDac);
+		}
+		if (IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER | ace.getAccessMask())) {
+		    EntityItemAuditType standardWriteOwner = Factories.sc.windows.createEntityItemAuditType();
+		    standardWriteOwner.setValue(toAuditValue(ace));
+		    item.setStandardWriteOwner(standardWriteOwner);
+		}
 	    }
 	}
 

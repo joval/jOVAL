@@ -80,10 +80,10 @@
       <filename>iexplore.exe</filename>
       <trustee_sid>S-1-5-32-544</trustee_sid>
     </fileauditedpermissions53_object>
-    <fileauditedpermissions53_object id="oval:org.mitre.oval.test:obj:741" version="1" comment="File object with path equals 'C:\Program Files\Internet Explorer' filename equals 'iexplore.exe' and trustee_sid matching '^S-1-5-32-[0-9-]+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
+    <fileauditedpermissions53_object id="oval:org.mitre.oval.test:obj:741" version="1" comment="File object with path equals 'C:\Program Files\Internet Explorer' filename equals 'iexplore.exe' and trustee_sid matching '^S-1.+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
       <path>C:\Program Files\Internet Explorer</path>
       <filename>iexplore.exe</filename>
-      <trustee_sid operation="pattern match">^S-1-5-32-[0-9-]+</trustee_sid>
+      <trustee_sid operation="pattern match">^S-1-.+</trustee_sid>
     </fileauditedpermissions53_object>
     <fileauditedpermissions53_object id="oval:org.mitre.oval.test:obj:424" version="1" comment="File object with path matching '^C:\\Program Files\\Internet.*' filename equals 'iexplore.exe' and trustee_sid equals 'S-1-5-32-544'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
       <path operation="pattern match">^C:\\Program Files\\Internet.*</path>
