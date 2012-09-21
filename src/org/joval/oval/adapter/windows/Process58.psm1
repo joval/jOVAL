@@ -113,6 +113,7 @@ namespace jOVAL.WindowsProcess {
     if ($process.Path -ne $null) {
       Write-Output "[$($process.ProcessId)]"
       # path is the current_dir + image_path
+      Write-Output "command_line=$($process.CommandLine)"
       Write-Output "path=$($process.Path)"
       Write-Output "pid=$($process.ProcessId)"
       Write-Output "ppid=$($process.ParentProcessId)"
