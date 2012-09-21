@@ -182,7 +182,7 @@ public class Process58Adapter implements IAdapter {
 		EntityItemIntType ppid = Factories.sc.core.createEntityItemIntType();
 		ppid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		ppid.setValue(prop.getProperty(key));
-		item.setPid(ppid);
+		item.setPpid(ppid);
 	    } else if ("priority".equals(key)) {
 		EntityItemStringType priority = Factories.sc.core.createEntityItemStringType();
 		priority.setValue(prop.getProperty(key));

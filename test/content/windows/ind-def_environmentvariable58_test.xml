@@ -36,7 +36,7 @@
     </tests>
     <objects>
         <process58_object id="oval:org.joval.oval:obj:100" version="1" comment="Test that retrieval via a process ID works" xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
-            <command_line datatype="string" operation="pattern match">explorer.exe</command_line>
+            <command_line datatype="string" operation="pattern match">(?i)explorer.exe</command_line>
             <pid datatype="int" operation="greater than">0</pid>
         </process58_object>
         <environmentvariable58_object id="oval:org.mitre.oval.test:obj:269" version="1" comment="This environmentvariable_object represents the environment variable with a name equal to 'PATH'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
@@ -44,7 +44,7 @@
             <name>PATH</name>
         </environmentvariable58_object>
         <environmentvariable58_object id="oval:org.mitre.oval.test:obj:874" version="1" comment="This environmentvariable_object represents the environment variable(s) with a name not equal to 'PATH'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">
-            <pid datatype="int" var_ref="oval:org.joval.oval:var:100"/>
+            <pid datatype="int" var_check="at least one" var_ref="oval:org.joval.oval:var:100"/>
             <name operation="not equal">PATH</name>
         </environmentvariable58_object>
         <environmentvariable58_object id="oval:org.mitre.oval.test:obj:822" version="1" comment="This environmentvariable_object represents the environment variables that match the regular expression '.*'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#independent">

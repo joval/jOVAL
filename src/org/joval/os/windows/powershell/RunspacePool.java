@@ -55,11 +55,16 @@ public class RunspacePool implements IRunspacePool {
     // Implement IRunspacePool
 
     public synchronized Collection<IRunspace> enumerate() {
+/*
+DAS: For some reason, the local Powershell implemenataion doesn't work well sharing runspaces.
+
 	Collection<IRunspace> runspaces = new ArrayList<IRunspace>();
 	for (Runspace rs : pool.values()) {
 	    runspaces.add(rs);
 	}
 	return runspaces;
+*/
+return new ArrayList<IRunspace>();
     }
 
     public int capacity() {
