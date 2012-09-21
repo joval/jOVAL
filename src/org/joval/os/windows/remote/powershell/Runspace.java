@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.system.IProcess;
 import org.joval.os.windows.powershell.PowershellException;
 import org.joval.os.windows.remote.winrm.ShellCommand;
@@ -25,8 +27,8 @@ class Runspace extends org.joval.os.windows.powershell.Runspace {
     /**
      * Create a new Runspace, based on a process.
      */
-    Runspace(String id, IProcess p) throws Exception {
-	super(id, p);
+    Runspace(String id, IProcess p, LocLogger logger) throws Exception {
+	super(id, p, logger);
     }
 
     // Implement IRunspace
@@ -120,8 +122,8 @@ class Runspace extends org.joval.os.windows.powershell.Runspace {
 		sb.append((char)(ch & 0xFF));
 	    }
 	    if (isPrompt(sb.toString())) {
-		    prompt = sb.toString();
-		    return null;
+		prompt = sb.toString();
+		return null;
 	    }
 	}
 	return null;

@@ -2,7 +2,6 @@
 # This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 #
 function Get-ProcessInfo {
-
   $code = @"
 using System;
 using System.Diagnostics;
@@ -41,8 +40,8 @@ namespace jOVAL.WindowsProcess {
 	[DllImport("kernel32.dll", SetLastError = true)]
 	static extern bool GetProcessDEPPolicy(IntPtr hProcess, out UInt32 Flags, out bool Permanent);
 
-        [DllImport("kernel32.dll", SetLastError = true)]
-        static extern bool IsWow64Process(IntPtr hProcess, out bool wow64Process);
+	[DllImport("kernel32.dll", SetLastError = true)]
+	static extern bool IsWow64Process(IntPtr hProcess, out bool wow64Process);
 
 	[DllImport("user32.dll", SetLastError=true, CharSet=CharSet.Auto)]
 	static extern int GetWindowTextLength(IntPtr hWnd);
@@ -54,8 +53,8 @@ namespace jOVAL.WindowsProcess {
 	 * Returns 1 if enabled, 0 if disabled, -1 if not applicable (i.e., a 64-bit process)
 	 */
 	public static int IsDepEnabled(UInt32 pid) {
-            UInt32 Flags = PROCESS_DEP_DISABLE;
-            bool Permanent = false;
+	    UInt32 Flags = PROCESS_DEP_DISABLE;
+	    bool Permanent = false;
 
 	    IntPtr hProcess = IntPtr.Zero;
 	    hProcess = OpenProcess(ProcessAccessFlags.QueryInformation, false, (int)pid);
@@ -122,14 +121,14 @@ namespace jOVAL.WindowsProcess {
 
       $dep = [jOVAL.WindowsProcess.Probe]::IsDepEnabled($process.ProcessId);
       if ($dep -eq 0) {
-        Write-Output "dep_enabled=false"
+	Write-Output "dep_enabled=false"
       } elseif ($dep -eq 1) {
-        Write-Output "dep_enabled=true"
+	Write-Output "dep_enabled=true"
       }
 
       $title = [jOVAL.WindowsProcess.Probe]::GetWindowText($process.ProcessId);
       if ($title -ne $null) {
-        Write-Output "primary_window_text=$($title)"
+	Write-Output "primary_window_text=$($title)"
       }
     }
   }

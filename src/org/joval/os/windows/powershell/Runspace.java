@@ -10,8 +10,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.StringTokenizer;
 
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.powershell.IRunspace;
+import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
 /**
@@ -21,7 +24,10 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class Runspace implements IRunspace {
+    public static final String INIT_COMMAND = "powershell -NoProfile -File -";
+
     protected String id, prompt;
+    protected LocLogger logger;
     protected IProcess p;
     protected InputStream stdout, stderr;	// Output from the powershell process
     protected OutputStream stdin;		// Input to the powershell process
@@ -29,8 +35,9 @@ public class Runspace implements IRunspace {
     /**
      * Create a new Runspace, based on a process.
      */
-    public Runspace(String id, IProcess p) throws Exception {
+    public Runspace(String id, IProcess p, LocLogger logger) throws Exception {
 	this.id = id;
+	this.logger = logger;
 	this.p = p;
 	if (!p.isRunning()) {
 	    p.start();
@@ -79,6 +86,7 @@ public class Runspace implements IRunspace {
     }
 
     public synchronized String invoke(String command) throws IOException, PowershellException {
+	logger.debug(JOVALMsg.STATUS_POWERSHELL_INVOKE, id, command);
 	byte[] bytes = command.trim().getBytes();
 	stdin.write(bytes);
 	stdin.write("\r\n".getBytes());
@@ -100,7 +108,7 @@ public class Runspace implements IRunspace {
     /**
      * Read lines until the next prompt is reached.
      */
-    protected String read() throws IOException {
+    protected String read() throws IOException, PowershellException {
 	StringBuffer sb = null;
 	String line = null;
 	while((line = readLine()) != null) {
@@ -121,7 +129,7 @@ public class Runspace implements IRunspace {
     /**
      * Read a single line, or the next prompt. Returns null if the line is a prompt.
      */
-    protected String readLine() throws IOException {
+    protected String readLine() throws IOException, PowershellException {
 	StringBuffer sb = new StringBuffer();
 	boolean cr = false;
 	int ch = -1;
@@ -150,6 +158,9 @@ public class Runspace implements IRunspace {
 		    sb.append((char)('\r' & 0xFF));
 		}
 		sb.append((char)(ch & 0xFF));
+	    }
+	    if (hasError()) {
+		throw new PowershellException(getError());
 	    }
 	    if (stdout.available() == 0 && isPrompt(sb.toString())) {
 		prompt = sb.toString();

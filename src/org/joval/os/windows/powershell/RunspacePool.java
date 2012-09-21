@@ -13,6 +13,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.powershell.IRunspacePool;
+import org.joval.util.JOVALMsg;
 
 /**
  * An implementation of a runspace pool based on a generic ISession.
@@ -38,6 +39,7 @@ public class RunspacePool implements IRunspacePool {
 		runspace.invoke("exit");
 		IProcess p = runspace.getProcess();
 		p.waitFor(10000L);
+		session.getLogger().debug(JOVALMsg.STATUS_POWERSHELL_EXIT, runspace.getId());
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }
@@ -75,7 +77,8 @@ public class RunspacePool implements IRunspacePool {
     public synchronized IRunspace spawn() throws Exception {
 	if (pool.size() < capacity()) {
 	    String id = Integer.toString(pool.size());
-	    Runspace runspace = new Runspace(id, session.createProcess("powershell -NoProfile -File -", null));
+	    Runspace runspace = new Runspace(id, session.createProcess(Runspace.INIT_COMMAND, null), session.getLogger());
+	    session.getLogger().debug(JOVALMsg.STATUS_POWERSHELL_SPAWN, id);
 	    runspace.invoke("$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(512,2000)");
 	    pool.put(id, runspace);
 	    return runspace;

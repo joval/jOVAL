@@ -76,6 +76,7 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
 		    runspace.invoke("exit");
 		    IProcess p = runspace.getProcess();
 		    p.waitFor(10000L);
+		    logger.debug(JOVALMsg.STATUS_POWERSHELL_EXIT, runspace.getId());
 		} catch (Exception e) {
 		    e.printStackTrace();
 		}
@@ -116,7 +117,8 @@ public class RunspacePool implements IRunspacePool, IWSMVConstants {
     public synchronized IRunspace spawn() throws Exception {
 	if (pool.size() < capacity()) {
 	    String id = Integer.toString(pool.size());
-	    Runspace runspace = new Runspace(id, shell.createProcess("powershell -NoProfile -File -", false));
+	    logger.debug(JOVALMsg.STATUS_POWERSHELL_SPAWN, id);
+	    Runspace runspace = new Runspace(id, shell.createProcess(Runspace.INIT_COMMAND, false), logger);
 	    pool.put(id, runspace);
 	    runspace.invoke("$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(512,2000)");
 	    return runspace;

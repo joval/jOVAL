@@ -38,8 +38,8 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class EnvironmentvariableAdapter implements IAdapter {
-    protected ISession session;
-    protected IEnvironment environment;
+    private ISession session;
+    private IEnvironment environment;
 
     // Implement IAdapter
 

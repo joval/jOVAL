@@ -14,7 +14,7 @@ function Get-WuaUpdates {
     Write-Output $update.Identity.UpdateId
     if ($includeSuperseded) {
       foreach($supersededId in $update.SupersededUpdateIDs) {
-        Write-Output $supersededId
+	Write-Output $supersededId
       }
     }
   }

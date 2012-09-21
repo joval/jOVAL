@@ -64,9 +64,7 @@ public class Process58Adapter implements IAdapter {
     }
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	if (processes == null) {
-	    init();
-	}
+	init();
 	if (error != null) {
 	    rc.addMessage(error);
 	}
@@ -80,10 +78,14 @@ public class Process58Adapter implements IAdapter {
 	String commandLine = (String)pObj.getCommandLine().getValue();
 	switch(op) {
 	  case EQUALS:
+	  case CASE_INSENSITIVE_EQUALS:
 	  case NOT_EQUAL:
 	    for (String pid : processes.listSections()) {
 		IProperty props = processes.getSection(pid);
 		if (op == OperationEnumeration.EQUALS && commandLine.equals(props.getProperty("command_line"))) {
+		    map.put(pid, props);
+		} else if (op == OperationEnumeration.CASE_INSENSITIVE_EQUALS &&
+			   commandLine.equalsIgnoreCase(props.getProperty("command_line"))) {
 		    map.put(pid, props);
 		} else if (op == OperationEnumeration.NOT_EQUAL && !commandLine.equals(props.getProperty("command_line"))) {
 		    map.put(pid, props);
@@ -238,9 +240,15 @@ public class Process58Adapter implements IAdapter {
 
     /**
      * Initialize the adapter by retrieving all the data about running processes.
+     *
+     * Idempotent.
      */
     private void init() throws CollectException {
-	processes = new IniFile();
+	if (processes == null) {
+	    processes = new IniFile();
+	} else {
+	    return;
+	}
 
 	//
 	// Get a runspace if there are any in the pool, or create a new one, and load the Get-ProcessInfo

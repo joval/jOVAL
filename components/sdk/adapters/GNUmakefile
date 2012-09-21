@@ -30,6 +30,7 @@ resources: classdirs
 	cp $(RSRC)/windows.locales.properties $(BUILD)
 	rm -f $(BUILD)/org/joval/oval/adapter/windows/*.psm1
 	cp $(SRC)/org/joval/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/oval/adapter/windows/
+	cp $(SRC)/org/joval/oval/adapter/independent/*.psm1 $(BUILD)/org/joval/oval/adapter/independent/
 
 classes: classdirs $(CLASS_FILES)
 
