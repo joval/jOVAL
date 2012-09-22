@@ -194,7 +194,16 @@ public class Node implements INode {
 		String parentCanon = null;
 		if (isLinkChild) {
 		    String realPath = tree.links.get(getPath());
-		    canonPath = tree.lookup(realPath).getCanonicalPath();
+		    try {
+			canonPath = tree.lookup(realPath).getCanonicalPath();
+		    } catch (NoSuchElementException e) {
+			//
+			// realPath is a link to a Node located in another tree
+			//
+			// DAS: We should really try to do a better job, i.e., find the tree, look it up, etc.
+			//
+			canonPath = realPath;
+		    }
 		} else {
 		    Node parent = (Node)tree.lookup(parentPath);
 		    parentCanon = parent.getCanonicalPath();
@@ -205,7 +214,6 @@ public class Node implements INode {
 		    }
 		}
 	    }
-	    tree.nodes.put(path, this);
 	}
 	return canonPath;
     }

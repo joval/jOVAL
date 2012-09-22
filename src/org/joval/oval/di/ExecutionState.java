@@ -218,10 +218,10 @@ public class ExecutionState {
 			    logLevel = Level.FINEST;
 			    break;
 			  case 2:
-			    logLevel = Level.INFO;
+			    logLevel = Level.FINE;
 			    break;
 			  case 3:
-			    logLevel = Level.WARNING;
+			    logLevel = Level.INFO;
 			    break;
 			  case 4:
 			    logLevel = Level.SEVERE;

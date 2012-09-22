@@ -51,9 +51,8 @@ public class UnixFile extends DefaultFile {
      * Create a UnixFile using information.
      */
     UnixFile(UnixFilesystem ufs, UnixFileInfo info, String path) {
-	super(ufs, path);
+	super(ufs, info, path);
 	this.ufs = ufs;
-	this.info = info;
     }
 
     @Override

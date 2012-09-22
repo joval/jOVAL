@@ -50,7 +50,7 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
     protected CacheFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redir, String delim, String dbKey) {
 	super(session.getHostname(), delim);
 	if ("true".equals(session.getProperties().getProperty(PROP_CACHE_JDBM))) {
-	    init(makeDatabase(new File(session.getWorkspace(), dbKey)), getSerializer());
+	    init(makeDatabase(session.getWorkspace(), dbKey), getSerializer());
 	} else {
 	    init();
 	}

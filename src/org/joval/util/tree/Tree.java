@@ -67,8 +67,13 @@ public class Tree extends Node implements ITree {
      */
     public void makeLink(Node node, String destination) throws UnsupportedOperationException {
 	switch(node.type) {
+	  case LINK: // repeat?
+	    if (destination != null && destination.equals(node.linkPath)) {
+		break;
+	    }
+	    // fall-thru
+	  case UNRESOLVED:
 	  case LEAF:
-	  case LINK: // over-link?
             node.type = INode.Type.LINK;
 	    if (destination == null) {
         	node.linkPath = node.getPath(); // DAS: link to self?

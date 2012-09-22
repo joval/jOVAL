@@ -49,10 +49,20 @@ import org.joval.util.tree.TreeHash;
  */
 public abstract class CachingHierarchy<T extends ICacheable> implements ISearchable {
     /**
-     * Convenience method to get a JDBM database instance.
+     * Convenience method to create a new JDBM database instance.
      */
-    protected static DB makeDatabase(File datafile) {
-	DBMaker maker = DBMaker.openFile(datafile.toString());
+    protected static DB makeDatabase(File dir, String name) {
+	//
+	// Start by cleaning up any files that might have been left by a previous crash
+	//
+	if (dir.exists() && dir.isDirectory()) {
+	    for (File f : dir.listFiles()) {
+		if (f.getName().startsWith(name)) {
+		    f.delete();
+		}
+	    }
+	}
+	DBMaker maker = DBMaker.openFile(new File(dir, name).toString());
 	maker.disableTransactions();
 	maker.deleteFilesAfterClose();
 	maker.closeOnExit();
@@ -175,9 +185,8 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 	    T resource = cache.getData(path);
 	    if (resource == null) {
 		throw new NoSuchElementException(path);
-	    } else {
-		return resource;
 	    }
+	    return resource;
 	} catch (NoSuchElementException e) {
 	    logger.debug(JOVALMsg.STATUS_CACHE_ACCESS, path);
 	}
@@ -226,6 +235,8 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
 		    }
 		}
             }
+        } catch (UnsupportedOperationException e) {
+            logger.debug(e.getMessage());
         } catch (Exception e) {
             logger.debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
         }
