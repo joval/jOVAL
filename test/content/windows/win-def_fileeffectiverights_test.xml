@@ -160,7 +160,7 @@
         <fileeffectiverights_state id="oval:org.mitre.oval.test:ste:1247" version="2" comment="This state represents a file which has a path that matches '^C:\\Program Files\\Internet Explorer.*' filename equals 'install.ins' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="pattern match">^C:\\Program Files\\Internet Explorer.*</path>
             <filename datatype="string" operation="equals">install.ins</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>
         </fileeffectiverights_state>
         <fileeffectiverights_state id="oval:org.mitre.oval.test:ste:1073" version="1" comment="This state represents a file which has a path that matches 'C:\Program Files\Internet Explorer' and filename of 'iexplore.exe' and trustee_name equals 'ADMINISTRATORS'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
