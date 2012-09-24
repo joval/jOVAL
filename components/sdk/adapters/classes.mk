@@ -67,6 +67,7 @@ CLASSES=\
 	org.joval.oval.adapter.windows.AccesstokenAdapter			\
 	org.joval.oval.adapter.windows.AuditeventpolicyAdapter			\
 	org.joval.oval.adapter.windows.AuditeventpolicysubcategoriesAdapter	\
+	org.joval.oval.adapter.windows.BaseRegkeyAdapter			\
 	org.joval.oval.adapter.windows.CmdletAdapter				\
 	org.joval.oval.adapter.windows.FileauditedpermissionsAdapter		\
 	org.joval.oval.adapter.windows.FileAdapter				\

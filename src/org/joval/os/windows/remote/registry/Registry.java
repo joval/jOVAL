@@ -518,19 +518,23 @@ public class Registry extends BaseRegistry {
     }
 
     class RegistryTask extends TimerTask {
+	long MAX_TARDINESS = 4500L; // 4.5 secs
+
 	RegistryTask() {
 	    super();
 	}
 
 	public void run() {
-	    try {
-		IKey key = fetchKey(HKLM, COMPUTERNAME_KEY);
-		IValue val = fetchValue(key, COMPUTERNAME_VAL);
-	    } catch (NoSuchElementException e) {
-		String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_KEY_MISSING, e.getMessage());
-		log.getLogger().warn(JOVALMsg.ERROR_WINREG_HEARTBEAT, reason);
-	    } catch (Exception e) {
-		log.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    if (System.currentTimeMillis() - scheduledExecutionTime() <= MAX_TARDINESS) {
+		try {
+		    IKey key = fetchKey(HKLM, COMPUTERNAME_KEY);
+		    IValue val = fetchValue(key, COMPUTERNAME_VAL);
+		} catch (NoSuchElementException e) {
+		    String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_KEY_MISSING, e.getMessage());
+		    log.getLogger().warn(JOVALMsg.ERROR_WINREG_HEARTBEAT, reason);
+		} catch (Exception e) {
+		    log.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
 	    }
 	}
     }

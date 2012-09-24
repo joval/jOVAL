@@ -45,8 +45,8 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.Version;
 
 /**
- * Base class for IFile-based IAdapters. Subclasses need only implement getObjectClass, getItemClass and getItems
- * methods.  The base class handles searches and caching of search results.
+ * Base class for IFile-based IAdapters. Subclasses need only implement getItemClass and getItems
+ * methods. The base class handles searches and caching of search results.
  *
  * @author David A. Solin
  * @version %I% %G%

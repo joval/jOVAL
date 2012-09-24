@@ -91,12 +91,6 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	return classes;
     }
 
-    private static Class[] objectClasses = {FileObject.class};
-
-    public Class[] getObjectClasses() {
-	return objectClasses;
-    }
-
     // Protected
 
     protected Class getItemClass() {
@@ -110,8 +104,8 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	//
 	wmi = ws.getWmiProvider();
 
-	Collection<FileItem> items = new Vector<FileItem>();
 	if (base instanceof FileItem) {
+	    Collection<FileItem> items = new Vector<FileItem>();
 	    IFileEx info = f.getExtended();
 	    IWindowsFileInfo wfi;
 	    if (info instanceof IWindowsFileInfo) {
@@ -121,11 +115,11 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	    items.add(setItem((FileItem)base, f, wfi));
+	    return items;
 	} else {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
 	    throw new CollectException(msg, FlagEnumeration.ERROR);
 	}
-	return items;
     }
 
     // Private
