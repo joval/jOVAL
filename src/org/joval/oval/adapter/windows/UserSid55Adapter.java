@@ -120,15 +120,18 @@ public class UserSid55Adapter extends UserAdapter {
 	enabledType.setValue(user.isEnabled() ? "true" : "false");
 	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setEnabled(enabledType);
-	for (String groupNetbiosName : user.getGroupNetbiosNames()) {
-	    try {
-		IGroup group = directory.queryGroup(groupNetbiosName);
-		EntityItemStringType groupSidType = Factories.sc.core.createEntityItemStringType();
-		groupSidType.setValue(group.getSid());
-		item.getGroupSid().add(groupSidType);
-	    } catch (IllegalArgumentException e) {
-	    } catch (NoSuchElementException e) {
-	    } catch (WmiException e) {
+	Collection<String> groupNetbiosNames = user.getGroupNetbiosNames();
+	if (groupNetbiosNames != null) {
+	    for (String groupNetbiosName : groupNetbiosNames) {
+		try {
+		    IGroup group = directory.queryGroup(groupNetbiosName);
+		    EntityItemStringType groupSidType = Factories.sc.core.createEntityItemStringType();
+		    groupSidType.setValue(group.getSid());
+		    item.getGroupSid().add(groupSidType);
+		} catch (IllegalArgumentException e) {
+		} catch (NoSuchElementException e) {
+		} catch (WmiException e) {
+		}
 	    }
 	}
 	if (item.getGroupSid().size() == 0) {

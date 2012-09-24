@@ -130,12 +130,12 @@
     <states>
         <fileeffectiverights_state id="oval:org.mitre.oval.test:ste:855" version="1" comment="This state represents a file which has a path equals 'C:\Program Files\Internet Explorer' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>
         </fileeffectiverights_state>
         <fileeffectiverights_state id="oval:org.mitre.oval.test:ste:1530" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
             <filename datatype="string" operation="equals">iexplore.exe</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>
         </fileeffectiverights_state>
         <fileeffectiverights_state id="oval:org.mitre.oval.test:ste:1032" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name matching the regular expression '^A[A-Za-z]+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
@@ -145,17 +145,17 @@
         <fileeffectiverights_state id="oval:org.mitre.oval.test:ste:1712" version="1" comment="This state represents a file which has a path matching the regular expression '^C:\\Program Files\\Internet.*' and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="pattern match">^C:\\Program Files\\Internet.*</path>
             <filename datatype="string" operation="equals">iexplore.exe</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>        
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>        
         </fileeffectiverights_state>
         <fileeffectiverights_state id="oval:org.mitre.oval.test:ste:938" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename matching the regular expression '^i.*' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
             <filename datatype="string" operation="pattern match">^i.*</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>      
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>      
         </fileeffectiverights_state>
         <fileeffectiverights_state id="oval:org.mitre.oval.test:ste:1228" version="2" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
             <filename datatype="string" operation="equals">iexplore.exe</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>
         </fileeffectiverights_state>        
         <fileeffectiverights_state id="oval:org.mitre.oval.test:ste:1247" version="2" comment="This state represents a file which has a path that matches '^C:\\Program Files\\Internet Explorer.*' filename equals 'install.ins' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="pattern match">^C:\\Program Files\\Internet Explorer.*</path>

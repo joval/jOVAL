@@ -131,12 +131,12 @@
     <states>
         <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1700" version="1" comment="This state represents a file which has a path equals 'C:\Program Files\Internet Explorer' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>
         </fileauditedpermissions_state>
         <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1476" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
             <filename datatype="string" operation="equals">iexplore.exe</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>
         </fileauditedpermissions_state>
         <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1289" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name matching '^.+'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
@@ -146,27 +146,27 @@
         <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:970" version="1" comment="This state represents a file which has a path matching '^C:\\Program Files\\Internet.*' and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="pattern match">^C:\\Program Files\\Internet.*</path>
             <filename datatype="string" operation="equals">iexplore.exe</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>        
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>        
         </fileauditedpermissions_state>
         <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1459" version="1" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename matching '^i.*' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
             <filename datatype="string" operation="pattern match">^i.*</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>      
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>      
         </fileauditedpermissions_state>
         <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1109" version="2" comment="This state represents a file which has a path of 'C:\Program Files\Internet Explorer' and filename equals 'iexplore.exe' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
             <filename datatype="string" operation="equals">iexplore.exe</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>
         </fileauditedpermissions_state>        
         <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1271" version="2" comment="This state represents a file which has a path that matches '^C:\\Program Files\\Internet Explorer.*' filename equals 'install.ins' and trustee_name equals 'ADMINISTRATOR'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="pattern match">^C:\\Program Files\\Internet Explorer.*</path>
             <filename datatype="string" operation="equals">install.ins</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATOR</trustee_name>
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATOR</trustee_name>
         </fileauditedpermissions_state>
         <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1579" version="1" comment="This state represents a file which has a path that matches 'C:\Program Files\Internet Explorer' and filename of 'iexplore.exe', and trustee_name equal to 'ADMINISTRATORS'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>
             <filename datatype="string" operation="equals">iexplore.exe</filename>
-            <trustee_name datatype="string" operation="equals">ADMINISTRATORS</trustee_name>
+            <trustee_name datatype="string" operation="case insensitive equals">ADMINISTRATORS</trustee_name>
         </fileauditedpermissions_state>
         <fileauditedpermissions_state id="oval:org.mitre.oval.test:ste:1060" version="1" comment="This state represents a file which has a path that matches 'C:\Program Files\Internet Explorer' and filename of 'iexplore.exe' and trustee_name that is not equal to 'ADMINISTRATORS'." xmlns="http://oval.mitre.org/XMLSchema/oval-definitions-5#windows">
             <path datatype="string" operation="equals">C:\Program Files\Internet Explorer</path>

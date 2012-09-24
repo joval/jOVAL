@@ -203,7 +203,7 @@ public class UserAdapter implements IAdapter {
 	enabledType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setEnabled(enabledType);
 	Collection<String> groupNetbiosNames = user.getGroupNetbiosNames();
-	if (groupNetbiosNames.size() == 0) {
+	if (groupNetbiosNames == null || groupNetbiosNames.size() == 0) {
 	    EntityItemStringType groupType = Factories.sc.core.createEntityItemStringType();
 	    groupType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	    item.getGroup().add(groupType);
