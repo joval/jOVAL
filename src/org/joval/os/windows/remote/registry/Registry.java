@@ -118,24 +118,30 @@ public class Registry extends BaseRegistry {
      * Closes the connection to the remote host.  This will cause any open keys to be closed.
      */
     public synchronized void disconnect() {
-	try {
-	    heartbeat.cancel();
-	    JOVALSystem.getTimer().purge();
-	    Enumeration <Key>keys = map.elements();
-	    while (keys.hasMoreElements()) {
-		Key key = keys.nextElement();
-		if (key.open) {
-		    log.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLEAN, key.toString());
-		    key.close();
-		}
+StringBuffer sb = new StringBuffer("Stack trace:");
+for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
+    sb.append(System.getProperty("line.separator")).append("    ").append(ste.toString());
+}
+log.getLogger().warn("DAS DISCONNECT: " + sb.toString());
+	heartbeat.cancel();
+	JOVALSystem.getTimer().purge();
+	Enumeration <Key>keys = map.elements();
+	while (keys.hasMoreElements()) {
+	    Key key = keys.nextElement();
+	    if (key.open) {
+		log.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLEAN, key.toString());
+		key.close();
 	    }
+	}
+	map.clear();
+	try {
 	    winreg.closeConnection();
-	    state = STATE_DISCONNECTED;
-	    log.getLogger().trace(JOVALMsg.STATUS_WINREG_DISCONNECT, host);
 	} catch (JIException e) {
 	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_DISCONNECT);
 	    log.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
+	state = STATE_DISCONNECTED;
+	log.getLogger().trace(JOVALMsg.STATUS_WINREG_DISCONNECT, host);
     }
 
     // Implement IRegistry

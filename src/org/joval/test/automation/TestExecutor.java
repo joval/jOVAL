@@ -69,20 +69,23 @@ public class TestExecutor implements Runnable {
     private static final File contentDir = new File("content");
 
     private static DatatypeFactory datatype;
-    private static HashSet<String> knownFalses, knownUnknowns;
+    private static HashSet<String> knownFalses, knownUnknowns, knownNotApplicables;
     static {
 	try {
 	    datatype = DatatypeFactory.newInstance();
 	    knownFalses = new HashSet<String>();
 	    knownUnknowns = new HashSet<String>();
+	    knownNotApplicables = new HashSet<String>();
 	    knownFalses.add("oval:org.mitre.oval.test:def:608");	// Windows
 	    knownUnknowns.add("oval:org.mitre.oval.test:def:337");	// Windows
 	    knownFalses.add("oval:org.mitre.oval.test:def:997");	// Linux
 	    knownUnknowns.add("oval:org.mitre.oval.test:def:423");	// Linux
+	    knownNotApplicables.add("oval:org.mitre.oval.test:def:260");// Linux
 	    knownFalses.add("oval:org.mitre.oval.test:def:879");	// Solaris
 	    knownUnknowns.add("oval:org.mitre.oval.test:def:909");	// Solaris
 	    knownFalses.add("oval:org.mitre.oval.test:def:87");		// MacOS X
 	    knownUnknowns.add("oval:org.mitre.oval.test:def:581");	// MacOS X
+	    knownNotApplicables.add("oval:org.mitre.oval.test:def:867");// MacOS X
 	} catch (DatatypeConfigurationException e) {
 	    throw new RuntimeException(e);
 	}
@@ -188,6 +191,14 @@ public class TestExecutor implements Runnable {
 
 				  case FALSE:
 				    if (knownFalses.contains(id)) {
+					result.setResult(TestResultEnumeration.PASSED);
+				    } else {
+					result.setResult(TestResultEnumeration.FAILED);
+				    }
+				    break;
+
+				  case NOT_APPLICABLE:
+				    if (knownNotApplicables.contains(id)) {
 					result.setResult(TestResultEnumeration.PASSED);
 				    } else {
 					result.setResult(TestResultEnumeration.FAILED);

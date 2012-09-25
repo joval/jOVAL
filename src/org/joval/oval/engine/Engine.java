@@ -521,23 +521,18 @@ public class Engine implements IEngine, IAdapter {
      * @throws OvalException if processing should cease for some good reason
      */
     private Collection<ItemType> scanObject(RequestContext rc) throws OvalException {
-	ObjectType masterObj = rc.getObject();
-	String objectId = masterObj.getId();
+	ObjectType obj = rc.getObject();
+	String objectId = obj.getId();
 	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
 	producer.sendNotify(MESSAGE_OBJECT, objectId);
 	Collection<ItemType> items = new Vector<ItemType>();
-	if (adapters.containsKey(masterObj.getClass())) {
-	    Set s = getObjectSet(masterObj);
+	if (adapters.containsKey(obj.getClass())) {
+	    Set s = getObjectSet(obj);
 	    if (s == null) {
 		List<MessageType> messages = new Vector<MessageType>();
 		FlagData flags = new FlagData();
 		try {
 		    items = new ObjectGroup(rc).getItems(flags);
-		    if (items.size() == 0) {
-			flags.add(FlagEnumeration.DOES_NOT_EXIST);
-		    } else {
-			flags.add(FlagEnumeration.COMPLETE);
-		    }
 		    messages.addAll(rc.getMessages());
 		    sc.setObject(objectId, null, null, null, null);
 		    for (VariableValueType var : rc.getVars()) {
@@ -560,7 +555,11 @@ public class Engine implements IEngine, IAdapter {
 			break;
 		    }
 		}
-		sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), flags.getFlag(), null);
+		if (flags.getFlag() == FlagEnumeration.COMPLETE && items.size() == 0) {
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
+		} else {
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), flags.getFlag(), null);
+		}
 	    } else {
 		items = getSetItems(s, rc);
 		FlagEnumeration flag = FlagEnumeration.COMPLETE;
@@ -571,14 +570,14 @@ public class Engine implements IEngine, IAdapter {
 		    msg.setLevel(MessageLevelEnumeration.INFO);
 		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_SET));
 		}
-		sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), flag, msg);
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), flag, msg);
 	    }
 	} else {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.WARNING);
-	    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, masterObj.getClass().getName());
+	    String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
 	    msg.setValue(err);
-	    sc.setObject(objectId, masterObj.getComment(), masterObj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
+	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
 	}
 	for (ItemType item : items) {
 	    sc.relateItem(objectId, sc.storeItem(item));
@@ -770,11 +769,12 @@ public class Engine implements IEngine, IAdapter {
 		Collection<ItemType> unfiltered = (Collection<ItemType>)adapter.getItems(obj, rc);
 		List<Filter> filters = getObjectFilters(rc.getObject());
 		Collection<ItemType> filtered = filterItems(filters, unfiltered, rc);
+		flags.add(FlagEnumeration.COMPLETE);
 		return filtered;
 	    } catch (CollectException e) {
 		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.WARNING);
-		String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_COLLECTION, e.getMessage());
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		String err = JOVALMsg.getMessage(JOVALMsg.STATUS_ADAPTER_COLLECTION, e.getMessage());
 		msg.setValue(err);
 		rc.addMessage(msg);
 		flags.add(e.getFlag());
@@ -1583,8 +1583,14 @@ public class Engine implements IEngine, IAdapter {
 	    testResult.setResult(existence.getResult(ExistenceEnumeration.NONE_EXIST));
 
 	//
-	// If there are no items matching the object, or if there is no state for the test, then the result of the test is
-	// simply the result of the existence check.
+	// If the object is not applicable, then the result is NOT_APPLICABLE.
+	//
+	} else if (sc.getObjectFlag(objectId) == FlagEnumeration.NOT_APPLICABLE) {
+	    testResult.setResult(ResultEnumeration.NOT_APPLICABLE);
+
+	//
+	// If there are no items, or there is no state, then the result of the test is simply the result of the existence
+	// check.
 	//
 	} else if (sc.getItemsByObjectId(objectId).size() == 0 || stateIds.size() == 0) {
 	    testResult.setResult(existence.getResult(testDefinition.getCheckExistence()));

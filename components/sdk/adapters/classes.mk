@@ -59,6 +59,7 @@ CLASSES=\
 	org.joval.oval.adapter.solaris.PatchAdapter				\
 	org.joval.oval.adapter.solaris.SmfAdapter				\
 	org.joval.oval.adapter.unix.FileAdapter					\
+	org.joval.oval.adapter.unix.InetdAdapter				\
 	org.joval.oval.adapter.unix.PasswordAdapter				\
 	org.joval.oval.adapter.unix.ProcessAdapter				\
 	org.joval.oval.adapter.unix.RunlevelAdapter				\
