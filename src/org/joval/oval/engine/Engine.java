@@ -1685,9 +1685,14 @@ public class Engine implements IEngine, IAdapter {
 			    result.addResult(compare(stateEntity, (EntityItemSimpleBaseType)itemEntityObj, rc));
 			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
-			    for (Object entityObj : (Collection)itemEntityObj) {
-				EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)entityObj;
-				cd.addResult(compare(stateEntity, itemEntity, rc));
+			    Collection entityObjs = (Collection)itemEntityObj;
+			    if (entityObjs.size() == 0) {
+				cd.addResult(ResultEnumeration.FALSE);
+			    } else {
+				for (Object entityObj : entityObjs) {
+				    EntityItemSimpleBaseType itemEntity = (EntityItemSimpleBaseType)entityObj;
+				    cd.addResult(compare(stateEntity, itemEntity, rc));
+				}
 			    }
 			    result.addResult(cd.getResult(stateEntity.getEntityCheck()));
 			} else {
@@ -1705,13 +1710,18 @@ public class Engine implements IEngine, IAdapter {
 			    result.addResult(compare(stateEntity, (EntityItemRecordType)itemEntityObj, rc));
 			} else if (itemEntityObj instanceof Collection) {
 			    CheckData cd = new CheckData();
-			    for (Object entityObj : (Collection)itemEntityObj) {
-				if (entityObj instanceof EntityItemRecordType) {
-				    cd.addResult(compare(stateEntity, (EntityItemRecordType)entityObj, rc));
-				} else {
-				    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
-								     entityObj.getClass().getName(), item.getId());
-				    throw new OvalException(msg);
+			    Collection entityObjs = (Collection)itemEntityObj;
+			    if (entityObjs.size() == 0) {
+				cd.addResult(ResultEnumeration.FALSE);
+			    } else {
+				for (Object entityObj : entityObjs) {
+				    if (entityObj instanceof EntityItemRecordType) {
+					cd.addResult(compare(stateEntity, (EntityItemRecordType)entityObj, rc));
+				    } else {
+					String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ENTITY,
+									 entityObj.getClass().getName(), item.getId());
+					throw new OvalException(msg);
+				    }
 				}
 			    }
 			    result.addResult(cd.getResult(stateEntity.getEntityCheck()));
