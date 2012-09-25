@@ -300,7 +300,7 @@ public abstract class CachingHierarchy<T extends ICacheable> implements ISearcha
      * Search the cache, or interpret the pattern and crawl the access layer, caching results along the way.
      */
     public Collection<String> search(Pattern p, int flags) {
-	boolean followLinks = (ISearchable.FOLLOW_LINKS == (ISearchable.FOLLOW_LINKS | flags));
+	boolean followLinks = (ISearchable.FOLLOW_LINKS == (ISearchable.FOLLOW_LINKS & flags));
 	try {
 	    String pattern = p.pattern();
 	    if (loadCache()) {

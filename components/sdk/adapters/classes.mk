@@ -79,6 +79,7 @@ CLASSES=\
 	org.joval.oval.adapter.windows.PasswordpolicyAdapter			\
 	org.joval.oval.adapter.windows.Process58Adapter				\
 	org.joval.oval.adapter.windows.RegistryAdapter				\
+	org.joval.oval.adapter.windows.RegkeyeffectiverightsAdapter		\
 	org.joval.oval.adapter.windows.SidAdapter				\
 	org.joval.oval.adapter.windows.SidSidAdapter				\
 	org.joval.oval.adapter.windows.UserAdapter				\
