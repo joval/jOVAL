@@ -303,7 +303,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	if (lines.size() > 0) {
 	    ufi = (UnixFileInfo)getDriver().nextFileInfo(lines.iterator());
 	    if (ufi == null) {
-		logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, lines.get(0));
+		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNIXFILEINFO, path, lines.get(0)));
 	    }
 	} else {
 	    logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, "''");
@@ -320,7 +320,9 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	UnixFileInfo ufi = null;
 	ReaderIterator iter = new ReaderIterator(reader);
 	while((ufi = (UnixFileInfo)getDriver().nextFileInfo(iter)) != null) {
-	    if (entries++ < maxEntries) {
+	    if (ufi.path == null) {
+		// bad entry -- skip it!
+	    } else if (entries++ < maxEntries) {
 		if (entries % 20000 == 0) {
 		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, entries);
 		}

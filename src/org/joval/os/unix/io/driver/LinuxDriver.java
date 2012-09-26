@@ -50,16 +50,14 @@ public class LinuxDriver implements IUnixFilesystemDriver {
 
     public Collection<String> getMounts(Pattern typeFilter) throws Exception {
 	Collection<String> mounts = new HashSet<String>();
-	int lineNum = 0;
-	for (String line : SafeCLI.multiLine("df -TP", us, IUnixSession.Timeout.S)) {
-	    if (lineNum++ > 0) { // skip the first line
+	for (String line : SafeCLI.multiLine("mount", us, IUnixSession.Timeout.S)) {
+	    if (line.length() > 0) {
 		StringTokenizer tok = new StringTokenizer(line);
-		String fsName = tok.nextToken();
+		String device = tok.nextToken();
+		tok.nextToken(); // on
+		String mountPoint = tok.nextToken();
+		tok.nextToken(); // type
 		String fsType = tok.nextToken();
-		String mountPoint = null;
-		while(tok.hasMoreTokens()) {
-		    mountPoint = tok.nextToken();
-		}
 		if (typeFilter != null && typeFilter.matcher(fsType).find()) {
 		    logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mountPoint, fsType);
 		} else if (mountPoint.startsWith(IUnixFilesystem.DELIM_STR)) {
