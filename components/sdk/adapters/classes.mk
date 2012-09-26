@@ -65,6 +65,7 @@ CLASSES=\
 	org.joval.oval.adapter.unix.RunlevelAdapter				\
 	org.joval.oval.adapter.unix.ShadowAdapter				\
 	org.joval.oval.adapter.unix.UnameAdapter				\
+	org.joval.oval.adapter.unix.XinetdAdapter				\
 	org.joval.oval.adapter.windows.AccesstokenAdapter			\
 	org.joval.oval.adapter.windows.AuditeventpolicyAdapter			\
 	org.joval.oval.adapter.windows.AuditeventpolicysubcategoriesAdapter	\
