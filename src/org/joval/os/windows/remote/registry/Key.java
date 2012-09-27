@@ -63,7 +63,7 @@ public class Key implements IKey {
 		registry.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLOSED, toString());
 		return true;
 	    } catch (JIException e) {
-		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_KEYCLOSE, toString(), e.getMessage());
+		registry.getLogger().debug(JOVALMsg.ERROR_WINREG_KEYCLOSE, toString(), e.getMessage());
 		registry.getLogger().trace(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    }
@@ -178,12 +178,24 @@ public class Key implements IKey {
      */
     public String getSubkeyName(int n) throws NoSuchElementException, IllegalStateException {
 	checkOpen();
-	String[] sa = registry.wrEnumKey(handle, n);
-	if (sa.length == 2) {
-	    return sa[0];
-	} else {
-	    registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMKEY, n, toString());
-	    return null;
+	try {
+	    String[] sa = registry.wrEnumKey(handle, n);
+	    if (sa.length == 2) {
+		return sa[0];
+	    } else {
+		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMKEY, n, toString());
+		return null;
+	    }
+	} catch (JIException e) {
+	    switch(e.getErrorCode()) {
+	      case 0x8001FFFF:
+		if (recover()) {
+		    return getSubkeyName(n);
+		}
+
+	      default:
+		throw new RuntimeException(e);
+	    }
 	}
     }
 
@@ -246,12 +258,24 @@ public class Key implements IKey {
      */
     public String getValueName(int n) throws NoSuchElementException, IllegalStateException {
 	checkOpen();
-	Object[] oa = registry.wrEnumValue(handle, n);
-	if (oa.length == 2) {
-	    return (String)oa[0];
-	} else {
-	    registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMVAL, n, toString());
-	    return null;
+	try {
+	    Object[] oa = registry.wrEnumValue(handle, n);
+	    if (oa.length == 2) {
+		return (String)oa[0];
+	    } else {
+		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_ENUMVAL, n, toString());
+		return null;
+	    }
+	} catch (JIException e) {
+	    switch(e.getErrorCode()) {
+	      case 0x8001FFFF:
+		if (recover()) {
+		    return getValueName(n);
+		}
+
+	      default:
+		throw new RuntimeException(e);
+	    }
 	}
     }
 
@@ -276,7 +300,15 @@ public class Key implements IKey {
 	try {
 	    return new Key(this, name, registry.wrOpenKey(handle, name, IJIWinReg.KEY_READ));
 	} catch (JIException e) {
-	    throw new NoSuchElementException(toString() + Registry.DELIM_STR + name);
+	    switch(e.getErrorCode()) {
+	      case 0x8001FFFF:
+		if (recover()) {
+		    return getSubkey(name);
+		}
+
+	      default:
+		throw new RuntimeException(e);
+	    }
 	}
     }
 
@@ -299,6 +331,28 @@ public class Key implements IKey {
     private void checkOpen() throws IllegalStateException {
 	if (!open) {
 	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.STATUS_WINREG_KEYCLOSED, toString()));
+	}
+    }
+
+    /**
+     * Recover from a connection that has inexplicably died.
+     */
+    private boolean recover() {
+	synchronized(registry) {
+	    registry.getLogger().warn(JOVALMsg.ERROR_WINREG_RECOVER);
+	    registry.disconnect(false);
+	    if (registry.connect()) {
+		Key reincarnated = (Key)registry.fetchKey(getHive(), getPath());
+		handle = reincarnated.handle;
+		Key key = this;
+		do {
+		    key.parent = reincarnated.parent;
+		    reincarnated = reincarnated.parent;
+		} while((key = key.parent) != null);
+		return true;
+	    } else {
+		return false;
+	    }
 	}
     }
 
@@ -338,7 +392,15 @@ public class Key implements IKey {
 								   new Integer(index), Key.this.toString()));
 		}
 	    } catch (JIException e) {
-		throw new NoSuchElementException(new Integer(index).toString());
+		switch(e.getErrorCode()) {
+		  case 0x8001FFFF:
+		    if (recover()) {
+			return next();
+		    }
+
+		  default:
+		    throw new RuntimeException(e);
+		}
 	    }
 	}
 
@@ -379,7 +441,17 @@ public class Key implements IKey {
 		    return registry.createValue(Key.this, name);
 		} else {
 		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_ENUMVAL,
-								   new Integer(index), Key.this.toString()));
+								   Integer.toString(index), Key.this.toString()));
+		}
+	    } catch (JIException e) {
+		switch(e.getErrorCode()) {
+		  case 0x8001FFFF:
+		    if (recover()) {
+			return next();
+		    }
+
+		  default:
+		    throw new RuntimeException(e);
 		}
 	    } catch (RegistryException e) {
 		//

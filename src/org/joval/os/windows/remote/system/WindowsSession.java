@@ -168,7 +168,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
     // Implement IBaseSession
 
     @Override
-    public void dispose() {
+    public synchronized void dispose() {
 	super.dispose();
 	if (fs32 instanceof CachingHierarchy) {
 	    ((CachingHierarchy)fs32).dispose();
@@ -257,7 +257,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	return host;
     }
 
-    public boolean connect() {
+    public synchronized boolean connect() {
 	if (cred == null) {
 	    return false;
 	} else {
@@ -334,25 +334,28 @@ public class WindowsSession extends AbstractSession implements IWindowsSession, 
 	}
     }
 
-    public void disconnect() {
-	deleteFiles();
-	if (runspaces != null) {
-	    runspaces.shutdown();
-	}
-	if (soapLog != null) {
-	    try {
-		soapLog.close();
-	    } catch (IOException e) {
+    public synchronized void disconnect() {
+	try {
+	    deleteFiles();
+	    if (runspaces != null) {
+		runspaces.shutdown();
 	    }
+	    if (soapLog != null) {
+		try {
+		    soapLog.close();
+		} catch (IOException e) {
+		}
+	    }
+	    reg.disconnect();
+	    if (is64bit) {
+		reg32.disconnect();
+	    }
+	    if (conn != null) {
+		conn.disconnect();
+	    }
+	} finally {
+	    connected = false;
 	}
-	reg.disconnect();
-	if (is64bit) {
-	    reg32.disconnect();
-	}
-	if (conn != null) {
-	    conn.disconnect();
-	}
-	connected = false;
     }
 
     public Type getType() {

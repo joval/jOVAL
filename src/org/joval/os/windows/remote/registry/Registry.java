@@ -15,6 +15,7 @@ import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -75,7 +76,7 @@ public class Registry extends BaseRegistry {
     private IJIWinReg winreg;
     private RegistryTask heartbeat;
     private Key hklm, hku, hkcu, hkcr;
-    private Hashtable <String, Key> map;
+    private Hashtable<String, Key> map;
 
     private static final int STATE_DISCONNECTED	= 1;
     private static final int STATE_ENV		= 2; // signifies the environment is being created
@@ -100,11 +101,13 @@ public class Registry extends BaseRegistry {
 	try {
 	    heartbeat = new RegistryTask();
 	    JOVALSystem.getTimer().scheduleAtFixedRate(heartbeat, INTERVAL, INTERVAL);
-	    log.getLogger().trace(JOVALMsg.STATUS_WINREG_CONNECT, host);
+	    log.getLogger().info(JOVALMsg.STATUS_WINREG_CONNECT, host);
 	    winreg = factory.getWinreg(new AuthInfo(cred), host, true);
-	    state = STATE_ENV;
-	    env = new Environment(this);
-	    state = STATE_CONNECTED;
+	    if (env == null) {
+		state = STATE_ENV;
+		env = new Environment(this);
+		state = STATE_CONNECTED;
+	    }
 	    return true;
 	} catch (UnknownHostException e) {
 	    log.getLogger().error(JOVALMsg.ERROR_UNKNOWN_HOST, host);
@@ -118,30 +121,7 @@ public class Registry extends BaseRegistry {
      * Closes the connection to the remote host.  This will cause any open keys to be closed.
      */
     public synchronized void disconnect() {
-StringBuffer sb = new StringBuffer("Stack trace:");
-for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
-    sb.append(System.getProperty("line.separator")).append("    ").append(ste.toString());
-}
-log.getLogger().warn("DAS DISCONNECT: " + sb.toString());
-	heartbeat.cancel();
-	JOVALSystem.getTimer().purge();
-	Enumeration <Key>keys = map.elements();
-	while (keys.hasMoreElements()) {
-	    Key key = keys.nextElement();
-	    if (key.open) {
-		log.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLEAN, key.toString());
-		key.close();
-	    }
-	}
-	map.clear();
-	try {
-	    winreg.closeConnection();
-	} catch (JIException e) {
-	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_DISCONNECT);
-	    log.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	state = STATE_DISCONNECTED;
-	log.getLogger().trace(JOVALMsg.STATUS_WINREG_DISCONNECT, host);
+	disconnect(true);
     }
 
     // Implement IRegistry
@@ -220,7 +200,11 @@ log.getLogger().warn("DAS DISCONNECT: " + sb.toString());
 		partialPath.append(next);
 		Key cached = map.get(partialPath.toString());
 		if (cached == null) {
-		    key = key.getSubkey(next);
+		    if (key == null) {
+			key = (Key)getHive(next);
+		    } else {
+			key = key.getSubkey(next);
+		    }
 		} else {
 		    key = cached;
 		}
@@ -253,10 +237,53 @@ log.getLogger().warn("DAS DISCONNECT: " + sb.toString());
     // Package-level access
 
     /**
+     * @param cleanup closes all open keys if true, otherwise abandons them all.
+     */
+    synchronized void disconnect(boolean cleanup) {
+	heartbeat.cancel();
+	JOVALSystem.getTimer().purge();
+	if (cleanup) {
+	    Enumeration <Key>keys = map.elements();
+	    while (keys.hasMoreElements()) {
+		Key key = keys.nextElement();
+		if (key.open) {
+		    log.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLEAN, key.toString());
+		    key.close();
+		}
+	    }
+	}
+	map.clear();
+	hklm = null;
+	hku = null;
+	hkcu = null;
+	hkcr = null;
+	try {
+	    winreg.closeConnection();
+	} catch (JIException e) {
+	    log.getLogger().warn(JOVALMsg.ERROR_WINREG_DISCONNECT);
+	    log.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	state = STATE_DISCONNECTED;
+	log.getLogger().info(JOVALMsg.STATUS_WINREG_DISCONNECT, host);
+    }
+
+    /**
      * Thread-safe proxy for IJIWinReg.winreg_OpenKey.
      */
-    synchronized JIPolicyHandle wrOpenKey(JIPolicyHandle handle, String name, int mode) throws JIException {
-	return winreg.winreg_OpenKey(handle, name, mode);
+    synchronized JIPolicyHandle wrOpenKey(JIPolicyHandle handle, String name, int mode)
+		throws JIException, NoSuchElementException {
+	try {
+	    return winreg.winreg_OpenKey(handle, name, mode);
+	} catch (JIException e) {
+	    switch(e.getErrorCode()) {
+	      case JIErrorCodes.ERROR_FILE_NOT_FOUND:
+	      case JIErrorCodes.ERROR_ACCESS_DENIED:
+		throw new NoSuchElementException(e.getMessage());
+
+	      default:
+		throw e;
+	    }
+	}
     }
 
     /**
@@ -269,7 +296,7 @@ log.getLogger().warn("DAS DISCONNECT: " + sb.toString());
     /**
      * Thread-safe proxy for IJIWinReg.winreg_EnumKey.
      */
-    synchronized String[] wrEnumKey(JIPolicyHandle handle, int n) throws NoSuchElementException {
+    synchronized String[] wrEnumKey(JIPolicyHandle handle, int n) throws JIException, NoSuchElementException {
 	try {
 	    return winreg.winreg_EnumKey(handle, n);
 	} catch (JIException e) {
@@ -278,7 +305,7 @@ log.getLogger().warn("DAS DISCONNECT: " + sb.toString());
 		throw new NoSuchElementException(e.getMessage());
 
 	      default:
-		throw new RuntimeException(e);
+		throw e;
 	    }
 	}
     }
@@ -286,7 +313,7 @@ log.getLogger().warn("DAS DISCONNECT: " + sb.toString());
     /**
      * Thread-safe proxy for IJIWinReg.winreg_EnumValue.
      */
-    synchronized Object[] wrEnumValue(JIPolicyHandle handle, int n) throws NoSuchElementException {
+    synchronized Object[] wrEnumValue(JIPolicyHandle handle, int n) throws JIException, NoSuchElementException {
 	try {
 	    return winreg.winreg_EnumValue(handle, n);
 	} catch (JIException e) {
@@ -298,7 +325,7 @@ log.getLogger().warn("DAS DISCONNECT: " + sb.toString());
 		throw new NoSuchElementException("Key was marked for deletion");
 
 	      default:
-		throw new RuntimeException(e);
+		throw e;
 	    }
 	}
     }

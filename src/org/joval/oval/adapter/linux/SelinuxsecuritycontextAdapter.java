@@ -306,12 +306,14 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 	if (!loaded) {
 	    try {
 		for (String line : SafeCLI.multiLine("ps -eZ --no-headers", us, IUnixSession.Timeout.S)) {
-		    try {
-			SelinuxsecuritycontextItem item = parseProcess(line);
-			processMap.put(new Integer((String)item.getPid().getValue()), item);
-		    } catch (IllegalArgumentException e) {
-			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_SELINUX_SC, e.getMessage()));
-			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    if (line.length() > 0) {
+			try {
+			    SelinuxsecuritycontextItem item = parseProcess(line);
+			    processMap.put(new Integer((String)item.getPid().getValue()), item);
+			} catch (IllegalArgumentException e) {
+			    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_SELINUX_SC, e.getMessage()));
+			    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			}
 		    }
 		}
 		loaded = true;

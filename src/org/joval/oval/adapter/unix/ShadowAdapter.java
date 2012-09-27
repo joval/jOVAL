@@ -244,7 +244,7 @@ public class ShadowAdapter implements IAdapter {
 	    // Create the basic PasswordItems
 	    //
 	    for (String line : lines) {
-		if (line.startsWith("#")) {
+		if (line.length() == 0 || line.startsWith("#")) {
 		    continue;
 		}
 		List<String> tokens = StringTools.toList(StringTools.tokenize(line, ":", false));
