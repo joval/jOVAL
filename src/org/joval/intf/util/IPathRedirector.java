@@ -13,6 +13,11 @@ package org.joval.intf.util;
  */
 public interface IPathRedirector {
     /**
+     * Get the name of the redirector.
+     */
+    public String getName();
+
+    /**
      * Return the path to which path should be redirected.  Returns null if unchanged.
      */
     public String getRedirect(String path);

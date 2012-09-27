@@ -29,6 +29,10 @@ public class WOW3264FilesystemRedirector implements IPathRedirector {
 
     // Implement IPathRedirector
 
+    public String getName() {
+	return "64->32";
+    }
+
     public String getRedirect(String path) {
 	if (path.toUpperCase().startsWith(system32.toUpperCase())) {
 	    return sysWOW64 + path.substring(system32.length());

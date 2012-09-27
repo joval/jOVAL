@@ -94,6 +94,10 @@ public class WOW3264RegistryRedirector implements IPathRedirector {
 
     // Implement IPathRedirector
 
+    public String getName() {
+	return "64->32";
+    }
+
     public String getRedirect(String path) {
 	if (path.startsWith(IRegistry.HKLM + IRegistry.DELIM_STR + "SOFTWARE\\Wow6432Node")) {
 	    return null; // already redirected

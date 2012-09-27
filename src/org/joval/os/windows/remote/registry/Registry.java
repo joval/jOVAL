@@ -101,7 +101,7 @@ public class Registry extends BaseRegistry {
 	try {
 	    heartbeat = new RegistryTask();
 	    JOVALSystem.getTimer().scheduleAtFixedRate(heartbeat, INTERVAL, INTERVAL);
-	    log.getLogger().info(JOVALMsg.STATUS_WINREG_CONNECT, host);
+	    log.getLogger().info(JOVALMsg.STATUS_WINREG_CONNECT, host, redirector == null ? "default" : redirector.getName());
 	    winreg = factory.getWinreg(new AuthInfo(cred), host, true);
 	    if (env == null) {
 		state = STATE_ENV;
@@ -264,7 +264,7 @@ public class Registry extends BaseRegistry {
 	    log.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	state = STATE_DISCONNECTED;
-	log.getLogger().info(JOVALMsg.STATUS_WINREG_DISCONNECT, host);
+	log.getLogger().info(JOVALMsg.STATUS_WINREG_DISCONNECT, host, redirector == null ? "default" : redirector.getName());
     }
 
     /**

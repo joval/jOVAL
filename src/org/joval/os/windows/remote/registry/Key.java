@@ -63,7 +63,7 @@ public class Key implements IKey {
 		registry.getLogger().trace(JOVALMsg.STATUS_WINREG_KEYCLOSED, toString());
 		return true;
 	    } catch (JIException e) {
-		registry.getLogger().debug(JOVALMsg.ERROR_WINREG_KEYCLOSE, toString(), e.getMessage());
+		registry.getLogger().warn(JOVALMsg.ERROR_WINREG_KEYCLOSE, toString(), e.getMessage());
 		registry.getLogger().trace(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    }
