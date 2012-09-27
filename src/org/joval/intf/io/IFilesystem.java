@@ -17,7 +17,11 @@ import org.joval.intf.util.ISearchable;
  * @version %I% %G%
  */
 public interface IFilesystem extends ISearchable {
-    int SEARCH_FLAG_FOLLOW_LINKS = 1;
+    /**
+     * Property governing whether a PATTERN_MATCH search of the filesystem will traverse symbolic links in order to
+     * find matches. The OVAL specification is ambiguous about what the behavior should be.
+     */
+    String PROP_SEARCH_FOLLOW_LINKS = "fs.search.followLinks";
 
     /**
      * Property governing the maximum number of paths to pre-load into the filesystem map cache.

@@ -52,10 +52,17 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
+    private int searchFlags;
+
     protected ISession session;
 
     protected void init(ISession session) {
 	this.session = session;
+	if (session.getProperties().getBooleanProperty(IFilesystem.PROP_SEARCH_FOLLOW_LINKS)) {
+	    searchFlags = ISearchable.FOLLOW_LINKS;
+	} else {
+	    searchFlags = ISearchable.NONE;
+	}
     }
 
     // Implement IAdapter
@@ -262,7 +269,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    break;
 
 		  case PATTERN_MATCH:
-		    for (String match : fs.search(Pattern.compile(value), ISearchable.FOLLOW_LINKS)) {
+		    for (String match : fs.search(Pattern.compile(value), searchFlags)) {
 			try {
 			    if ((fs.getFile(match)).isFile()) {
 				list.add(match);
@@ -309,7 +316,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    break;
 
 		  case PATTERN_MATCH:
-		    for (String match : fs.search(Pattern.compile(value), ISearchable.FOLLOW_LINKS)) {
+		    for (String match : fs.search(Pattern.compile(value), searchFlags)) {
 			try {
 			    //
 			    // Filter search results for directories
