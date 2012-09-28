@@ -119,14 +119,14 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 
     // Private
 
-    private Collection<SelinuxsecuritycontextItem> getItems(JAXBElement<EntityObjectIntType> pidElt, IRequestContext rc)
+    private Collection<SelinuxsecuritycontextItem> getItems(JAXBElement<EntityObjectIntType> elt, IRequestContext rc)
 		throws CollectException {
 
 	Collection<SelinuxsecuritycontextItem> items = new Vector<SelinuxsecuritycontextItem>();
-	EntityObjectIntType pidType = pidElt.getValue();
-	if (pidElt.isNil() || pidType == null || pidType.getOperation() == OperationEnumeration.EQUALS) {
+	EntityObjectIntType pidType = elt.getValue();
+	if (pidType == null || pidType.getOperation() == OperationEnumeration.EQUALS) {
 	    try {
-		return Arrays.asList(getItem(pidElt));
+		return Arrays.asList(getItem(elt));
 	    } catch (NoSuchElementException e) {
 		// no match
 	    } catch (Exception e) {
@@ -136,6 +136,7 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 		rc.addMessage(msg);
 	    }
 	} else {
+	    Integer iPid = new Integer((String)pidType.getValue());
 	    OperationEnumeration op = pidType.getOperation();
 	    loadProcesses();
 	    switch(op) {
@@ -144,7 +145,6 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 	      case GREATER_THAN_OR_EQUAL:
 	      case LESS_THAN:
 	      case LESS_THAN_OR_EQUAL:
-		Integer iPid = new Integer((String)pidType.getValue());
 		for (Integer i : processMap.keySet()) {
 		    switch(op) {
 		      case NOT_EQUAL:
@@ -256,8 +256,8 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 	}
     }
 
-    private SelinuxsecuritycontextItem getItem(JAXBElement<EntityObjectIntType> pidElt) throws Exception {
-	if (pidElt.isNil() || pidElt.getValue() == null) {
+    private SelinuxsecuritycontextItem getItem(JAXBElement<EntityObjectIntType> elt) throws Exception {
+	if (elt.getValue() == null || ((String)elt.getValue().getValue()).length() == 0) {
 	    //
 	    // According to the spec, xsi:nil means get the context of the "current process" -- which for us is the login.
 	    //
@@ -265,7 +265,7 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 	    parseSecurityContextData(item, SafeCLI.exec("id -Z", us, IUnixSession.Timeout.S));
 	    return item;
 	} else {
-	    Integer iPid = new Integer((String)pidElt.getValue().getValue());
+	    Integer iPid = new Integer((String)elt.getValue().getValue());
 	    if (processMap.containsKey(iPid)) {
 		return processMap.get(iPid);
 	    } else {
