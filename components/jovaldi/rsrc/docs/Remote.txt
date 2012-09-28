@@ -33,6 +33,11 @@ following these steps:
    netsh firewall add allowedprogram program=%windir%\system32\wbem\unsecapp.exe name=WMI
    netsh firewall add allowedprogram program=%windir%\system32\dllhost.exe name=Dllhost
 
+4) Configure the Windows Remote Management service to permit remote access by
+   entering the following command:
+
+   winrm quickconfig
+
 You should now be able to scan your Windows machine remotely using jOVAL!
 
 To verify if the Windows Firewall policies are set correctly on a machine, you
@@ -78,6 +83,8 @@ Asynchronous redirection can occur on any port (typically above port 5000).
 However, it is possible to restrict the ports used for RPC for the purpose of
 managing the traffic through firewalls.  See the following KB article:
    http://support.microsoft.com/kb/154596
+
+WinRM traffic normally takes place on port 5985 using the HTTP protocol.
 
 --------------------------------------------------------------------------------
 
