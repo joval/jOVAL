@@ -75,7 +75,7 @@ dist-x86: all $(DIST32)/jre
 	cp $(JOVAL_CORE_LIB) $(DIST32)/lib
 	cp $(XPERT_LIB) $(DIST32)/lib
 	mkdir -p $(DIST32)/plugin/default/lib
-	cp -R plugin/default/rsrc/* $(DIST32)/plugin/default
+	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST32)/plugin/default/plugin.properties
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST32)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST32)/plugin/default/lib
 
@@ -102,7 +102,7 @@ dist-x64: all $(DIST64)/jre
 	cp $(JOVAL_CORE_LIB) $(DIST64)/lib
 	mkdir -p $(DIST64)/plugin/default/lib
 	cp $(XPERT_LIB) $(DIST64)/lib
-	cp -R plugin/default/rsrc/* $(DIST64)/plugin/default
+	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST64)/plugin/default/plugin.properties
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST64)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST64)/plugin/default/lib
 
