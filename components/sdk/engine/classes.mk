@@ -1,6 +1,4 @@
 CLASSES=\
-	org.joval.intf.identity.ICredential		\
-	org.joval.intf.identity.ICredentialStore	\
 	org.joval.intf.oval.IDefinitionFilter		\
 	org.joval.intf.oval.IDefinitions		\
 	org.joval.intf.oval.IEngine			\

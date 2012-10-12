@@ -70,7 +70,8 @@ public class PluginFactory {
 			    throw new PluginConfigurationException(JOVALMsg.getMessage(JOVALMsg.ERROR_PLUGIN_MAIN));
 			} else {
 			    try {
-				Object obj = loader.loadClass(main).newInstance();
+				Class clazz = loader.loadClass(main);
+				Object obj = clazz.newInstance();
 				if (obj instanceof IPlugin) {
 				    IPlugin plugin = (IPlugin)obj;
 				    File dataDir = JOVALSystem.getDataDirectory();
@@ -84,6 +85,7 @@ public class PluginFactory {
 				    throw new PluginConfigurationException(msg);
 				}
 			    } catch (Exception e) {
+e.printStackTrace();
 				throw new PluginConfigurationException(e);
 			    }
 			}

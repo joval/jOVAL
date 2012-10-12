@@ -26,6 +26,13 @@ CLASSES=\
 	org.joval.oval.adapter.aix.FilesetAdapter				\
 	org.joval.oval.adapter.aix.FixAdapter					\
 	org.joval.oval.adapter.aix.OslevelAdapter				\
+	org.joval.oval.adapter.cisco.ios.GlobalAdapter				\
+	org.joval.oval.adapter.cisco.ios.InterfaceAdapter			\
+	org.joval.oval.adapter.cisco.ios.LineAdapter				\
+	org.joval.oval.adapter.cisco.ios.SnmpAdapter				\
+	org.joval.oval.adapter.cisco.ios.TclshAdapter				\
+	org.joval.oval.adapter.cisco.ios.Version55Adapter			\
+	org.joval.oval.adapter.cisco.ios.VersionAdapter				\
 	org.joval.oval.adapter.independent.BaseFileAdapter			\
 	org.joval.oval.adapter.independent.Environmentvariable58Adapter		\
 	org.joval.oval.adapter.independent.EnvironmentvariableAdapter		\
@@ -35,6 +42,10 @@ CLASSES=\
 	org.joval.oval.adapter.independent.Textfilecontent54Adapter		\
 	org.joval.oval.adapter.independent.TextfilecontentAdapter		\
 	org.joval.oval.adapter.independent.XmlfilecontentAdapter		\
+	org.joval.oval.adapter.junos.GlobalAdapter				\
+	org.joval.oval.adapter.junos.LineAdapter				\
+	org.joval.oval.adapter.junos.VersionAdapter				\
+	org.joval.oval.adapter.junos.XmlLineAdapter				\
 	org.joval.oval.adapter.linux.PartitionAdapter				\
 	org.joval.oval.adapter.linux.RpminfoAdapter				\
 	org.joval.oval.adapter.linux.SelinuxbooleanAdapter			\
