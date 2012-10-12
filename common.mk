@@ -3,7 +3,7 @@
 
 include $(TOP)/customize.mk
 
-JOVAL_VERSION=5.10.1.2_Dev
+JOVAL_VERSION=5.10.1.1_Dev
 SCAP_VERSION=1.2
 OVAL_VERSION=5.10.1
 SCE_VERSION=1.0
@@ -69,15 +69,9 @@ ADAPTERS=$(SDK)/adapters
 ADAPTERS_LIB=$(ADAPTERS)/jOVALAdapters.jar
 WIN32_PROBES_DESTINATION=$(ADAPTERS)/$(BUILD)/org/joval/oval/adapter/windows
 ADAPTERS_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(ADAPTERS)/$(LIBDIR)/*)))
-PLUGIN_REMOTE=$(SDK)/plugin/remote
-PLUGIN_REMOTE_LIB=$(PLUGIN_REMOTE)/jOVALPluginRemote.jar
-PLUGIN_REMOTE_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLUGIN_REMOTE)/$(LIBDIR)/*)))
 PLUGIN_LOCAL=$(SDK)/plugin/local
 PLUGIN_LOCAL_LIB=$(PLUGIN_LOCAL)/jOVALPluginLocal.jar
 PLUGIN_LOCAL_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLUGIN_LOCAL)/$(LIBDIR)/*)))
-PLUGIN_OFFLINE=$(SDK)/plugin/offline
-PLUGIN_OFFLINE_LIB=$(PLUGIN_OFFLINE)/jOVALPluginOffline.jar
-PLUGIN_OFFLINE_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLUGIN_OFFLINE)/$(LIBDIR)/*)))
 WSMAN=$(COMPONENTS)/ws-man
 WSMAN_LIB=$(WSMAN)/ws-man.jar
 XPERT=$(COMPONENTS)/xpert

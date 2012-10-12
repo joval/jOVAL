@@ -17,6 +17,28 @@
       <jxb:package name="org.oasis.catalog"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="oasis/xAL.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.oasis.address"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="oasis/xNL.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.oasis.name"/>
+    </jxb:schemaBindings>
+    <jxb:bindings node="xs:complexType[@name='NameDetails']">
+        <jxb:class name="NameDetailsType" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='PersonName']">
+        <jxb:class name="PersonNameType" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:complexType[@name='OrganisationNameDetails']">
+        <jxb:class name="OrganizationNameDetailsType" />
+    </jxb:bindings>
+    <jxb:bindings node="xs:element[@name='OrganisationNameDetails']">
+        <jxb:class name="OrganizationNameDetails" />
+    </jxb:bindings>
+  </jxb:bindings>
   <jxb:bindings schemaLocation="dublin/simpledc20021212.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="org.purl.dc"/>
@@ -45,6 +67,29 @@
   <jxb:bindings schemaLocation="ds-1.2/scap-source-data-stream_1.2.xsd" node="/xs:schema">
     <jxb:schemaBindings>
       <jxb:package name="scap.datastream"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+
+  <!-- ++++++++++++ -->
+  <!-- ARF Bindings -->
+  <!-- ++++++++++++ -->
+  <jxb:bindings schemaLocation="arf-1.1/asset-reporting-format_1.1.0.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="arf.schemas.core"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+  <jxb:bindings schemaLocation="arf-1.1/reporting-core_1.1.0.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="arf.schemas.reporting"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
+
+  <!-- ++++++++++++ -->
+  <!-- AI Bindings -->
+  <!-- ++++++++++++ -->
+  <jxb:bindings schemaLocation="ai-1.1/asset-identification_1.1.0.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="ai.schemas.core"/>
     </jxb:schemaBindings>
   </jxb:bindings>
 

@@ -4,29 +4,25 @@
 all: _jovaldi
 
 rebuild:
-	@$(MAKE) --keep-going --directory=sdk install
+	@$(MAKE) --keep-going --directory=sdk all
 	@$(MAKE) --keep-going --directory=xpert all
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
 clean:
 	@$(MAKE) --keep-going --directory=scap clean
 	@$(MAKE) --keep-going --directory=schematron clean
-	@$(MAKE) --keep-going --directory=ws-man clean
-	@$(MAKE) --keep-going --directory=sdk dist-clean
+	@$(MAKE) --keep-going --directory=sdk clean
 	@$(MAKE) --keep-going --directory=jovaldi dist-clean
 	@$(MAKE) --keep-going --directory=xpert clean
 
 _jovaldi: _sdk _schematron _xpert
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
-_sdk: _scap _ws-man
-	@$(MAKE) --keep-going --directory=sdk dist
+_sdk: _scap
+	@$(MAKE) --keep-going --directory=sdk all
 
 _scap:
 	@$(MAKE) --keep-going --directory=scap all
-
-_ws-man:
-	@$(MAKE) --keep-going --directory=ws-man all
 
 _schematron:
 	@$(MAKE) --keep-going --directory=schematron all

@@ -1,4 +1,43 @@
 CLASSES=\
+	ai.schemas.core.AssetIdentificationType	\
+	ai.schemas.core.AssetsType	\
+	ai.schemas.core.AssetType	\
+	ai.schemas.core.CircuitType	\
+	ai.schemas.core.ComputingDeviceType	\
+	ai.schemas.core.Cpe	\
+	ai.schemas.core.DatabaseType	\
+	ai.schemas.core.DataType	\
+	ai.schemas.core.EmailAddress	\
+	ai.schemas.core.Fqdn	\
+	ai.schemas.core.IpAddressType	\
+	ai.schemas.core.ItAssetType	\
+	ai.schemas.core.LocationPoint	\
+	ai.schemas.core.LocationRegion	\
+	ai.schemas.core.Locations	\
+	ai.schemas.core.NetworkInterfaceType	\
+	ai.schemas.core.NetworkType	\
+	ai.schemas.core.ObjectFactory	\
+	ai.schemas.core.OrganizationType	\
+	ai.schemas.core.package-info	\
+	ai.schemas.core.PersonType	\
+	ai.schemas.core.ServiceType	\
+	ai.schemas.core.SoftwareType	\
+	ai.schemas.core.SyntheticId	\
+	ai.schemas.core.SystemType	\
+	ai.schemas.core.TelephoneNumber	\
+	ai.schemas.core.WebsiteType	\
+	ai.schemas.core.WebsiteUrl	\
+	arf.schemas.core.AssetReportCollection	\
+	arf.schemas.core.ObjectFactory	\
+	arf.schemas.core.ObjectRef	\
+	arf.schemas.core.package-info	\
+	arf.schemas.core.RemoteResource	\
+	arf.schemas.core.ReportRequestType	\
+	arf.schemas.core.ReportType	\
+	arf.schemas.reporting.ObjectFactory	\
+	arf.schemas.reporting.package-info	\
+	arf.schemas.reporting.RelationshipsContainerType	\
+	arf.schemas.reporting.RelationshipType	\
 	cpe.schemas.dictionary.CheckType	\
 	cpe.schemas.dictionary.ext.ChangeDescriptionType	\
 	cpe.schemas.dictionary.ext.ChangeTypeType	\
@@ -119,6 +158,39 @@ CLASSES=\
 	ocil.schemas.variables.package-info	\
 	ocil.schemas.variables.VariablesType	\
 	ocil.schemas.variables.VariableType	\
+	org.oasis.address.AddressDetails	\
+	org.oasis.address.AddressLine	\
+	org.oasis.address.AddressLinesType	\
+	org.oasis.address.AdministrativeArea	\
+	org.oasis.address.BuildingNameType	\
+	org.oasis.address.CountryName	\
+	org.oasis.address.Department	\
+	org.oasis.address.DependentLocalityType	\
+	org.oasis.address.FirmType	\
+	org.oasis.address.LargeMailUserType	\
+	org.oasis.address.Locality	\
+	org.oasis.address.MailStopType	\
+	org.oasis.address.ObjectFactory	\
+	org.oasis.address.package-info	\
+	org.oasis.address.PostalCode	\
+	org.oasis.address.PostalRouteType	\
+	org.oasis.address.PostBox	\
+	org.oasis.address.PostOffice	\
+	org.oasis.address.Premise	\
+	org.oasis.address.PremiseNumber	\
+	org.oasis.address.PremiseNumberPrefix	\
+	org.oasis.address.PremiseNumberSuffix	\
+	org.oasis.address.SubPremiseType	\
+	org.oasis.address.Thoroughfare	\
+	org.oasis.address.ThoroughfareLeadingTypeType	\
+	org.oasis.address.ThoroughfareNameType	\
+	org.oasis.address.ThoroughfareNumber	\
+	org.oasis.address.ThoroughfareNumberPrefix	\
+	org.oasis.address.ThoroughfareNumberSuffix	\
+	org.oasis.address.ThoroughfarePostDirectionType	\
+	org.oasis.address.ThoroughfarePreDirectionType	\
+	org.oasis.address.ThoroughfareTrailingTypeType	\
+	org.oasis.address.XAL	\
 	org.oasis.catalog.Catalog	\
 	org.oasis.catalog.DelegatePublic	\
 	org.oasis.catalog.DelegateSystem	\
@@ -133,9 +205,21 @@ CLASSES=\
 	org.oasis.catalog.System	\
 	org.oasis.catalog.SystemOrPublic	\
 	org.oasis.catalog.Uri	\
+	org.oasis.name.Function	\
+	org.oasis.name.JointPersonName	\
+	org.oasis.name.NameDetails	\
+	org.oasis.name.NameDetailsType	\
+	org.oasis.name.NameLineType	\
+	org.oasis.name.ObjectFactory	\
+	org.oasis.name.OrganizationNameDetails	\
+	org.oasis.name.OrganizationNameDetailsType	\
+	org.oasis.name.package-info	\
+	org.oasis.name.PersonName	\
+	org.oasis.name.PersonNameType	\
+	org.oasis.name.XNL	\
+	org.openscap.sce.xccdf.LangEnumeration	\
 	org.openscap.sce.xccdf.ObjectFactory	\
 	org.openscap.sce.xccdf.package-info	\
-	org.openscap.sce.xccdf.LangEnumeration	\
 	org.openscap.sce.xccdf.ScriptDataType	\
 	org.purl.dc.ElementType	\
 	org.purl.dc.ObjectFactory	\

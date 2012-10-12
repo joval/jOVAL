@@ -1,4 +1,7 @@
 SCHEMAS=\
+	ai-1.1/asset-identification_1.1.0.xsd	\
+	arf-1.1/asset-reporting-format_1.1.0.xsd	\
+	arf-1.1/reporting-core_1.1.0.xsd	\
 	cpe-2.3/cpe-dictionary-extension_2.3.xsd	\
 	cpe-2.3/cpe-dictionary_2.3.xsd	\
 	cpe-2.3/cpe-language_2.3.xsd	\
@@ -6,6 +9,8 @@ SCHEMAS=\
 	ds-1.2/scap-source-data-stream_1.2.xsd	\
 	dublin/simpledc20021212.xsd	\
 	oasis/catalog-1.1.xsd	\
+	oasis/xAL.xsd	\
+	oasis/xNL.xsd	\
 	ocil-2.0/ocil-2.0.xsd	\
 	ocil-2.0/ocil-variables-schema.xsd	\
 	oval-5.10.1/aix-definitions-schema.xsd	\

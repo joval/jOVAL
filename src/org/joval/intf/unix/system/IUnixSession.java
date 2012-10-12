@@ -3,11 +3,6 @@
 
 package org.joval.intf.unix.system;
 
-import java.io.EOFException;
-import javax.security.auth.login.CredentialException;
-
-import org.joval.intf.io.IReader;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
@@ -72,9 +67,4 @@ public interface IUnixSession extends ISession {
 	    return flavor;
 	}
     }
-
-    /**
-     * Return the platform-specific driver.
-     */
-    IPrivilegeEscalationDriver getDriver() throws CredentialException;
 }

@@ -60,7 +60,6 @@ $(DIST32)/jre : $(JRE32_HOME)
 dist-x86: all $(DIST32)/jre
 	cp -R $(BIN32)/* $(DIST32)
 	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST32)/Readme.txt
-	cp -R $(RSRC)/docs/Remote.txt $(DIST32)/Remote.txt
 	cp -R $(RSRC)/lib $(DIST32)
 	cp -R $(RSRC)/licenses $(DIST32)
 	cp -R $(RSRC)/xml $(DIST32)
@@ -79,15 +78,6 @@ dist-x86: all $(DIST32)/jre
 	cp -R plugin/default/rsrc/* $(DIST32)/plugin/default
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST32)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST32)/plugin/default/lib
-	mkdir -p $(DIST)/x86/plugin/remote/lib
-	cp -R plugin/remote/rsrc/* $(DIST32)/plugin/remote
-	cp -R $(PLUGIN_REMOTE_LIB) $(DIST32)/plugin/remote/lib
-	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST32)/plugin/remote/lib
-	cp $(WSMAN_LIB) $(DIST32)/plugin/remote/lib
-	mkdir -p $(DIST)/x86/plugin/offline/lib
-	cp -R plugin/offline/rsrc/* $(DIST32)/plugin/offline
-	cp -R $(PLUGIN_OFFLINE_LIB) $(DIST32)/plugin/offline/lib
-	cp -R $(PLUGIN_OFFLINE)/$(LIBDIR)/*.jar $(DIST32)/plugin/offline/lib
 
 $(DIST64)/jre : $(JRE64_HOME)
 	mkdir -p $(DIST64)
@@ -97,7 +87,6 @@ $(DIST64)/jre : $(JRE64_HOME)
 dist-x64: all $(DIST64)/jre
 	cp -R $(BIN64)/* $(DIST64)
 	sed 's/\[VERSION\]/$(JOVAL_VERSION)/g' $(RSRC)/docs/Readme.txt > $(DIST64)/Readme.txt
-	cp -R $(RSRC)/docs/Remote.txt $(DIST64)/Remote.txt
 	cp -R $(RSRC)/lib $(DIST64)
 	cp -R $(RSRC)/licenses $(DIST64)
 	cp -R $(RSRC)/xml $(DIST64)
@@ -116,15 +105,6 @@ dist-x64: all $(DIST64)/jre
 	cp -R plugin/default/rsrc/* $(DIST64)/plugin/default
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST64)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST64)/plugin/default/lib
-	mkdir -p $(DIST)/x64/plugin/remote/lib
-	cp -R plugin/remote/rsrc/* $(DIST64)/plugin/remote
-	cp -R $(PLUGIN_REMOTE_LIB) $(DIST64)/plugin/remote/lib
-	cp -R $(PLUGIN_REMOTE)/$(LIBDIR)/*.jar $(DIST64)/plugin/remote/lib
-	cp $(WSMAN_LIB) $(DIST64)/plugin/remote/lib
-	mkdir -p $(DIST)/x64/plugin/offline/lib
-	cp -R plugin/offline/rsrc/* $(DIST64)/plugin/offline
-	cp -R $(PLUGIN_OFFLINE_LIB) $(DIST64)/plugin/offline/lib
-	cp -R $(PLUGIN_OFFLINE)/$(LIBDIR)/*.jar $(DIST64)/plugin/offline/lib
 
 release-win32: dist-x86
 	$(JAVA_HOME)/bin/jar -cvfM $(ZIPNAME)_x86.zip -C $(DIST32) .

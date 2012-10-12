@@ -11,10 +11,10 @@ jovaldi has the ability to accommodate "plugins", and therefore it adds a comman
 that is not available in ovaldi. That option is:
   -plugin <string>  = name of the jovaldi plugin to use for the scan. DEFAULT="default"
 
-Three plugins are distributed with jovaldi: the "default" plugin (which scans the local host),
-the "remote" plugin (which can scan remote hosts) and the "offline" plugin (which can scan Cisco
-IOS, Juniper JunOS and Apple iOS devices using configuration data in a file). Plugins are fed a
-configuration via another command-line option:
+The default plugin distributed with jovaldi scans the local host. Available commercial plugins
+include a "remote" plugin (which can scan remote hosts) and an "offline" plugin (which can scan
+Cisco IOS, Juniper JunOS and Apple iOS devices using configuration data in a file). Plugins are
+fed a configuration via another command-line option:
   -config <string>  = name of the configuration file for the plugin. DEFAULT="config.properties"
 
 The format of the plugin configuration file is specified in the help text of the plugin. For
@@ -27,5 +27,4 @@ listing of supported tests and platforms, see:
 
 jovaldi has been written and tested on 64-bit Windows 7 using the 32-bit and 64-bit JRE versions
 1.6.0_31 and 1.7.0_03, and 64-bit Fedora 15 Linux using the 64-bit JRE versions 1.6.0_31 and
-1.7.0_03. The default plugin uses 32-bit or 64-bit DLLs on Windows. The remote plugin is written
-in 100% pure platform-independent Java.
+1.7.0_03. The default plugin uses 32-bit or 64-bit DLLs on Windows.
