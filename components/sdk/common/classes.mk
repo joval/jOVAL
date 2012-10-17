@@ -12,7 +12,6 @@ CLASSES=\
 	org.joval.intf.net.INetconf				\
 	org.joval.intf.plugin.IPlugin				\
 	org.joval.intf.ssh.system.IShell			\
-	org.joval.intf.ssh.system.IShellProcess			\
 	org.joval.intf.system.IBaseSession			\
 	org.joval.intf.system.IEnvironment			\
 	org.joval.intf.system.IProcess				\
