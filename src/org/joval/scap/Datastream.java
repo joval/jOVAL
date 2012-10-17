@@ -112,6 +112,10 @@ public class Datastream implements ILoggable {
 	this(getDSCollection(in));
     }
 
+    public Datastream(Source src) throws ScapException {
+	this(getDSCollection(src));
+    }
+
     /**
      * Create a Datastream from unmarshalled XML.
      */

@@ -34,6 +34,7 @@ import org.joval.util.LogFormatter;
 import org.joval.xccdf.Benchmark;
 import org.joval.xccdf.Profile;
 import org.joval.xccdf.XccdfException;
+import org.joval.xml.SignatureValidator;
 
 /**
  * XCCDF Processing Engine and Reporting Tool (XPERT) main class.
@@ -119,7 +120,7 @@ public class XPERT {
 
 	File ovalDir = null;
 	Level level = Level.INFO;
-	boolean query = false;
+	boolean query = false, verify = false;
 	File logFile = new File(CWD, "xpert.log");
 	String pluginName = "default";
 	File configFile = new File(CWD, IPlugin.DEFAULT_FILE);
@@ -129,6 +130,8 @@ public class XPERT {
 		help = true;
 	    } else if (argv[i].equals("-q")) {
 		query = true;
+	    } else if (argv[i].equals("-s")) {
+		verify = true;
 	    } else if ((i + 1) < argv.length) {
 		if (argv[i].equals("-d")) {
 		    streamFile = new File(argv[++i]);
@@ -236,101 +239,122 @@ public class XPERT {
 	} else if (!streamFile.isFile()) {
 	    logger.warning("ERROR: No such file " + streamFile.toString());
 	    printHelp(plugin);
-	} else if (query) {
-	    logger.info("Querying Data Stream: " + streamFile.toString());
+	} else {
 	    try {
-		Datastream ds = new Datastream(streamFile);
-		for (String sId : ds.getStreamIds()) {
-		    logger.info("Stream ID=\"" + sId + "\"");
-		    for (String bId : ds.getBenchmarkIds(sId)) {
-			logger.info("  Benchmark ID=\"" + bId + "\"");
-			for (String profileId : ds.getBenchmark(sId, bId).getProfileIds()) {
-			    logger.info("    Profile Name=\"" + profileId + "\"");
+		Datastream ds = null;
+		if (verify) {
+		    logger.info("Verifying XML digital signature: " + streamFile.toString());
+		    SignatureValidator validator = new SignatureValidator(streamFile);
+		    if (!validator.containsSignature()) {
+			throw new XPERTException("ERROR: no signature found!");
+		    } else if (validator.validate()) {
+			logger.info("Signature validated");
+			logger.info("Loading Data Stream...");
+			ds = new Datastream(validator.getSource());
+		    } else {
+			throw new XPERTException("ERROR: signature validation failed!");
+		    }
+		} else {
+		    logger.info("Loading Data Stream: " + streamFile.toString());
+		    ds = new Datastream(streamFile);
+		}
+
+		if (query) {
+		    logger.info("Querying Data Stream: " + streamFile.toString());
+		    for (String sId : ds.getStreamIds()) {
+			logger.info("Stream ID=\"" + sId + "\"");
+			for (String bId : ds.getBenchmarkIds(sId)) {
+			    logger.info("  Benchmark ID=\"" + bId + "\"");
+			    for (String profileId : ds.getBenchmark(sId, bId).getProfileIds()) {
+				logger.info("    Profile Name=\"" + profileId + "\"");
+			    }
 			}
+		    }
+		} else if (plugin == null) {
+		    printHelp(null);
+		} else {
+		    logger.info("Start time: " + new Date().toString());
+		    try {
+			//
+			// Configure the jOVAL plugin
+			//
+			Properties config = new Properties();
+			if (configFile.isFile()) {
+			    config.load(new FileInputStream(configFile));
+			}
+			plugin.configure(config);
+		    } catch (Exception e) {
+			throw new XPERTException("Problem configuring the plugin:\n  " + e.getMessage());
+		    }
+
+		    if (streamId == null) {
+			if (ds.getStreamIds().size() == 1) {
+			    streamId = ds.getStreamIds().iterator().next();
+			    logger.info("Selected stream " + streamId);
+			} else {
+			    throw new XPERTException("ERROR: A stream must be selected for this stream collection source");
+			}
+		    }
+
+		    if (benchmarkId == null) {
+			if (ds.getBenchmarkIds(streamId).size() == 1) {
+			    benchmarkId = ds.getBenchmarkIds(streamId).iterator().next();
+			    logger.info("Selected benchmark " + benchmarkId);
+			} else {
+			    throw new XPERTException("ERROR: A benchmark must be selected for stream " + streamId);
+			}
+		    }
+
+		    Hashtable<String, Checklist> checklists = new Hashtable<String, Checklist>();
+		    for (String href : ocilFiles.keySet()) {
+			try {
+			    checklists.put(href, new Checklist(ocilFiles.get(href)));
+			} catch (OcilException e) {
+			    logger.severe(e.getMessage());
+			    System.exit(1);
+			}
+		    }
+
+		    try {
+			Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
+			Profile profile = new Profile(benchmark, profileName);
+			Engine engine = new Engine(benchmark, profile, checklists, ocilDir, plugin.getSession(), ovalDir);
+			engine.run();
+
+			if (benchmark.getBenchmark().isSetTestResult()) {
+			    logger.info("Saving report: " + resultsFile.toString());
+			    benchmark.writeBenchmarkXML(resultsFile);
+			    logger.info("Transforming to HTML report: " + reportFile.toString());
+			    benchmark.writeTransform(transformFile, reportFile);
+			}
+
+			logger.info("Finished processing XCCDF bundle");
+			exitCode = 0;
+		    } catch (UnknownHostException e) {
+			logger.severe(">>> ERROR - No such host: " + e.getMessage());
+		    } catch (ConnectException e) {
+			logger.severe(">>> ERROR - Failed to connect to host: " + e.getMessage());
 		    }
 		}
 	    } catch (ScapException e) {
 		logger.warning(LogFormatter.toString(e));
-	    }
-	} else if (plugin == null) {
-	    printHelp(null);
-	} else {
-	    logger.info("Start time: " + new Date().toString());
-	    try {
-		//
-		// Configure the jOVAL plugin
-		//
-		Properties config = new Properties();
-		if (configFile.isFile()) {
-		    config.load(new FileInputStream(configFile));
-		}
-		plugin.configure(config);
-	    } catch (Exception e) {
-		logger.severe("Problem configuring the plugin:\n  " + e.getMessage());
-		System.exit(1);
-	    }
-
-	    Datastream ds = null;
-	    try {
-		logger.info("Loading " + streamFile.toString());
-		ds = new Datastream(streamFile);
-
-		if (streamId == null) {
-		    if (ds.getStreamIds().size() == 1) {
-			streamId = ds.getStreamIds().iterator().next();
-			logger.info("Selected stream " + streamId);
-		    } else {
-			throw new ScapException("ERROR: A stream must be selected for this stream collection source");
-		    }
-		}
-
-		if (benchmarkId == null) {
-		    if (ds.getBenchmarkIds(streamId).size() == 1) {
-			benchmarkId = ds.getBenchmarkIds(streamId).iterator().next();
-			logger.info("Selected benchmark " + benchmarkId);
-		    } else {
-			throw new ScapException("ERROR: A benchmark must be selected for stream " + streamId);
-		    }
-		}
-	    } catch (ScapException e) {
+		exitCode = 2;
+	    } catch (XPERTException e) {
 		logger.severe(e.getMessage());
-		System.exit(1);
-	    }
-
-	    Hashtable<String, Checklist> checklists = new Hashtable<String, Checklist>();
-	    for (String href : ocilFiles.keySet()) {
-		try {
-		    checklists.put(href, new Checklist(ocilFiles.get(href)));
-		} catch (OcilException e) {
-		    logger.severe(e.getMessage());
-		    System.exit(1);
-		}
-	    }
-
-	    try {
-		Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
-		Profile profile = new Profile(benchmark, profileName);
-		Engine engine = new Engine(benchmark, profile, checklists, ocilDir, plugin.getSession(), ovalDir);
-		engine.run();
-
-		if (benchmark.getBenchmark().isSetTestResult()) {
-		    logger.info("Saving report: " + resultsFile.toString());
-		    benchmark.writeBenchmarkXML(resultsFile);
-		    logger.info("Transforming to HTML report: " + reportFile.toString());
-		    benchmark.writeTransform(transformFile, reportFile);
-		}
-
-		logger.info("Finished processing XCCDF bundle");
-		exitCode = 0;
-	    } catch (UnknownHostException e) {
-		logger.severe(">>> ERROR - No such host: " + e.getMessage());
-	    } catch (ConnectException e) {
-		logger.severe(">>> ERROR - Failed to connect to host: " + e.getMessage());
+		exitCode = 1;
 	    } catch (Exception e) {
 		logger.severe(LogFormatter.toString(e));
+		exitCode = 3;
 	    }
 	}
-
 	System.exit(exitCode);
+    }
+
+    // Internal
+
+    static class XPERTException extends Exception {
+	XPERTException(String message) {
+	    super(message);
+	}
     }
 }

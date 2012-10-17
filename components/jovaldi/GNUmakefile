@@ -74,6 +74,8 @@ dist-x86: all $(DIST32)/jre
 	cp $(SVRL) $(DIST32)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST32)/lib
 	cp $(XPERT_LIB) $(DIST32)/lib
+	mkdir -p $(DIST32)/security
+	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST32)/security
 	mkdir -p $(DIST32)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST32)/plugin/default/plugin.properties
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST32)/plugin/default/lib
@@ -102,6 +104,8 @@ dist-x64: all $(DIST64)/jre
 	cp $(JOVAL_CORE_LIB) $(DIST64)/lib
 	mkdir -p $(DIST64)/plugin/default/lib
 	cp $(XPERT_LIB) $(DIST64)/lib
+	mkdir -p $(DIST64)/security
+	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST64)/security
 	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST64)/plugin/default/plugin.properties
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST64)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST64)/plugin/default/lib
