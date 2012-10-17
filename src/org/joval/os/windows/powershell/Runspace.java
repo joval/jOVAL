@@ -1,4 +1,4 @@
-// Copyright (C) 2012 jOVAL.org.  All rights reserved.
+// Copyrioht (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 package org.joval.os.windows.powershell;
@@ -108,7 +108,7 @@ public class Runspace implements IRunspace {
     /**
      * Read lines until the next prompt is reached.
      */
-    protected String read() throws IOException, PowershellException {
+    protected String read() throws IOException {
 	StringBuffer sb = null;
 	String line = null;
 	while((line = readLine()) != null) {
@@ -129,7 +129,7 @@ public class Runspace implements IRunspace {
     /**
      * Read a single line, or the next prompt. Returns null if the line is a prompt.
      */
-    protected String readLine() throws IOException, PowershellException {
+    protected String readLine() throws IOException {
 	StringBuffer sb = new StringBuffer();
 	boolean cr = false;
 	int ch = -1;
@@ -158,9 +158,6 @@ public class Runspace implements IRunspace {
 		    sb.append((char)('\r' & 0xFF));
 		}
 		sb.append((char)(ch & 0xFF));
-	    }
-	    if (hasError()) {
-		throw new PowershellException(getError());
 	    }
 	    if (stdout.available() == 0 && isPrompt(sb.toString())) {
 		prompt = sb.toString();
