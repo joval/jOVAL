@@ -9,8 +9,7 @@ import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.systemcharacteristics.core.ItemType;
 
 import org.joval.intf.system.IBaseSession;
-import org.joval.oval.CollectException;
-import org.joval.oval.OvalException;
+import org.joval.scap.oval.CollectException;
 
 /**
  * The interface for implementing a jOVAL plug-in adapter.  An adapter knows how to retrieve items that correspond to an
@@ -44,8 +43,6 @@ public interface IAdapter {
      * @throws CollectException if items cannot be collected for the request for some reason, such as an unsupported
      *                       platform for the adapter, or an unsupported operation on the object.  The OVAL object will
      *                       have a resulting status specified by the exception.
-     * @throws OvalException if there has been an error which should stop all processing, such as propagation of an 
-     *                       OvalException that has been thrown by a call to IRequestContext.resolve.
      */
-    public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws OvalException, CollectException;
+    public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException;
 }

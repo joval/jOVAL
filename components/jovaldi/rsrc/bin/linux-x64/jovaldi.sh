@@ -8,4 +8,4 @@ if [ "x${JAVA_HOME}" == x ]; then
     export JAVA_HOME=${INSTALL_DIR}/jre
 fi
 export JMEM=-Xmx2048m
-${JAVA_HOME}/bin/java ${JMEM} "-Djovaldi.baseDir=${INSTALL_DIR}" -cp "${LIB}/*" org.joval.oval.di.Main "$@"
+${JAVA_HOME}/bin/java ${JMEM} "-Djovaldi.baseDir=${INSTALL_DIR}" -cp "${LIB}/*" org.joval.scap.oval.di.Main "$@"

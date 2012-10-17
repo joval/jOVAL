@@ -18,7 +18,7 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.xml.ITransformable;
-import org.joval.oval.OvalException;
+import org.joval.scap.oval.OvalException;
 
 /**
  * Interface defining OVAL System Characteristics.

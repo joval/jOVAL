@@ -28,9 +28,9 @@ resources: classdirs
 	cp $(RSRC)/adapters.txt $(BUILD)
 	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/windows.locales.properties $(BUILD)
-	rm -f $(BUILD)/org/joval/oval/adapter/windows/*.psm1
-	cp $(SRC)/org/joval/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/oval/adapter/windows/
-	cp $(SRC)/org/joval/oval/adapter/independent/*.psm1 $(BUILD)/org/joval/oval/adapter/independent/
+	rm -f $(BUILD)/org/joval/scap/oval/adapter/windows/*.psm1
+	cp $(SRC)/org/joval/scap/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(SRC)/org/joval/scap/oval/adapter/independent/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/independent/
 
 classes: classdirs $(CLASS_FILES)
 

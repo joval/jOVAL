@@ -41,17 +41,17 @@ import org.oasis.catalog.Uri;
 import org.openscap.sce.xccdf.ScriptDataType;
 import xccdf.schemas.core.BenchmarkType;
 
-import org.joval.cpe.CpeException;
-import org.joval.cpe.Dictionary;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.util.ILoggable;
-import org.joval.ocil.Checklist;
-import org.joval.ocil.OcilException;
-import org.joval.oval.OvalException;
-import org.joval.oval.Definitions;
 import org.joval.scap.ScapException;
+import org.joval.scap.cpe.CpeException;
+import org.joval.scap.cpe.Dictionary;
+import org.joval.scap.ocil.Checklist;
+import org.joval.scap.ocil.OcilException;
+import org.joval.scap.oval.OvalException;
+import org.joval.scap.oval.Definitions;
+import org.joval.scap.xccdf.Benchmark;
 import org.joval.util.JOVALMsg;
-import org.joval.xccdf.Benchmark;
 import org.joval.xml.SchemaRegistry;
 
 /**

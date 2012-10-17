@@ -17,7 +17,7 @@ import oval.schemas.definitions.core.TestType;
 import oval.schemas.definitions.core.VariableType;
 
 import org.joval.intf.xml.ITransformable;
-import org.joval.oval.OvalException;
+import org.joval.scap.oval.OvalException;
 
 /**
  * Interface defining a set of variables.

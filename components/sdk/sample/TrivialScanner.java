@@ -15,9 +15,9 @@ import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
-import org.joval.oval.OvalException;
-import org.joval.oval.OvalFactory;
 import org.joval.plugin.RemotePlugin;
+import org.joval.scap.oval.OvalException;
+import org.joval.scap.oval.OvalFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 

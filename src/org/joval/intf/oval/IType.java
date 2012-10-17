@@ -6,7 +6,7 @@ package org.joval.intf.oval;
 import oval.schemas.common.ComplexDatatypeEnumeration;
 import oval.schemas.common.SimpleDatatypeEnumeration;
 
-import org.joval.oval.types.TypeConversionException;
+import org.joval.scap.oval.types.TypeConversionException;
 
 /**
  * Generic type interface, for both simple and complex OVAL types.

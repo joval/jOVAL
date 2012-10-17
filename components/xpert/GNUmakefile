@@ -40,5 +40,5 @@ $(BUILD)/%/:
 	mkdir -p $(subst PKG,,$@)
 
 test:
-	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/content/xccdf/u_windows_7_v1r7_stig_benchmark_20120127
-#	$(JRE) -classpath $(RUNTIMECP) org.joval.xccdf.engine.XPERT $(TOP)/content/xccdf/Win7-54-1.2.0.0/Win7
+	$(JRE) -classpath $(RUNTIMECP) org.joval.scap.xccdf.engine.XPERT $(TOP)/content/xccdf/u_windows_7_v1r7_stig_benchmark_20120127
+#	$(JRE) -classpath $(RUNTIMECP) org.joval.scap.xccdf.engine.XPERT $(TOP)/content/xccdf/Win7-54-1.2.0.0/Win7

@@ -11,7 +11,7 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IProducer;
-import org.joval.oval.OvalException;
+import org.joval.scap.oval.OvalException;
 import org.joval.util.Version;
 
 /**

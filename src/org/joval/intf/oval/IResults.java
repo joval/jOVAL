@@ -13,7 +13,7 @@ import oval.schemas.results.core.OvalResults;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.xml.ITransformable;
-import org.joval.oval.OvalException;
+import org.joval.scap.oval.OvalException;
 
 /**
  * Interface to an OVAL results structure, representing (by convention) the results from a single system.
