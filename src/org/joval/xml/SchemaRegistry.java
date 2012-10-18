@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 
+import org.joval.util.JOVALMsg;
+
 /**
  * This class is used to retrieve JAXB package mappings for SCAP schemas.
  *
@@ -73,68 +75,40 @@ public class SchemaRegistry {
     public static final String DS = "ds.packages";
 
     /**
+     * Property indicating the package names for classes in the ARF (Asset Reporting Format) schema.
+     */
+    public static final String ARF = "arf.packages";
+
+    /**
      * Property indicating the package names for classes in the SVRL (Schematron Validation Report Language) schema.
      */
     public static final String SVRL = "svrl.packages";
 
-    private static final String DS_RESOURCE	= "ds.properties";
-    private static final String OVAL_RESOURCE	= "oval.properties";
-    private static final String CPE_RESOURCE	= "cpe.properties";
-    private static final String XCCDF_RESOURCE	= "xccdf.properties";
-    private static final String OCIL_RESOURCE	= "ocil.properties";
-    private static final String SVRL_RESOURCE	= "svrl.properties";
+    /**
+     * Property resource files, containing JAXB package information.
+     */
+    private static final String[] RESOURCES = {	"arf.properties",
+						"ds.properties",
+						"oval.properties",
+						"cpe.properties",
+						"xccdf.properties",
+						"ocil.properties",
+						"svrl.properties" };
 
     private static Properties schemaProps;
-
     static {
 	schemaProps = new Properties();
 	ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	InputStream rsc = cl.getResourceAsStream(OVAL_RESOURCE);
-	if (rsc != null) {
-	    try {
-		schemaProps.load(rsc);
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
-	}
-	rsc = cl.getResourceAsStream(CPE_RESOURCE);
-	if (rsc != null) {
-	    try {
-		schemaProps.load(rsc);
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
-	}
-	rsc = cl.getResourceAsStream(XCCDF_RESOURCE);
-	if (rsc != null) {
-	    try {
-		schemaProps.load(rsc);
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
-	}
-	rsc = cl.getResourceAsStream(OCIL_RESOURCE);
-	if (rsc != null) {
-	    try {
-		schemaProps.load(rsc);
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
-	}
-	rsc = cl.getResourceAsStream(DS_RESOURCE);
-	if (rsc != null) {
-	    try {
-		schemaProps.load(rsc);
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
-	}
-	rsc = cl.getResourceAsStream(SVRL_RESOURCE);
-	if (rsc != null) {
-	    try {
-		schemaProps.load(rsc);
-	    } catch (IOException e) {
-		e.printStackTrace();
+	for (String res : RESOURCES) {
+	    InputStream rsc = cl.getResourceAsStream(res);
+	    if (rsc == null) {
+		JOVALMsg.getLogger().warn(JOVALMsg.ERROR_MISSING_RESOURCE, res);
+	    } else {
+		try {
+		    schemaProps.load(rsc);
+		} catch (IOException e) {
+		    JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), res);
+		}
 	    }
 	}
     }
