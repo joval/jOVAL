@@ -3,6 +3,9 @@ CLASSES=\
 	org.joval.plugin.PluginFactory					\
 	org.joval.scap.Datastream					\
 	org.joval.scap.ScapException					\
+	org.joval.scap.arf.ArfException					\
+	org.joval.scap.arf.Factories					\
+	org.joval.scap.arf.Report					\
 	org.joval.scap.cpe.CpeException					\
 	org.joval.scap.cpe.Dictionary					\
 	org.joval.scap.ocil.BooleanTestActionConditionType		\

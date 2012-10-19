@@ -239,7 +239,7 @@ public class XPERT {
 	} else if (!streamFile.isFile()) {
 	    logger.warning("ERROR: No such file " + streamFile.toString());
 	    printHelp(plugin);
-	} else {
+	} else if (plugin != null) {
 	    try {
 		Datastream ds = null;
 		if (verify) {
@@ -323,7 +323,7 @@ public class XPERT {
 
 			if (benchmark.getBenchmark().isSetTestResult()) {
 			    logger.info("Saving report: " + resultsFile.toString());
-			    benchmark.writeBenchmarkXML(resultsFile);
+			    benchmark.writeXML(resultsFile);
 			    logger.info("Transforming to HTML report: " + reportFile.toString());
 			    benchmark.writeTransform(transformFile, reportFile);
 			}

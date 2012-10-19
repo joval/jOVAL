@@ -112,7 +112,7 @@ public class Benchmark implements ILoggable, ITransformable {
 	return ds.getScript(streamId, href);
     }
 
-    public void writeBenchmarkXML(File f) throws NoSuchElementException {
+    public void writeXML(File f) throws IOException {
 	OutputStream out = null;
 	try {
 	    Marshaller marshaller = ctx.createMarshaller();
@@ -120,20 +120,14 @@ public class Benchmark implements ILoggable, ITransformable {
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(bt, out);
 	} catch (JAXBException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new IOException(e);
 	} catch (FactoryConfigurationError e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (FileNotFoundException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new IOException(e);
 	} finally {
 	    if (out != null) {
 		try {
 		    out.close();
 		} catch (IOException e) {
-		    logger.warn(JOVALMsg.ERROR_FILE_CLOSE, f.toString());
 		}
 	    }
 	}
