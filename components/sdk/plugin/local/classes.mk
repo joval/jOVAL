@@ -44,7 +44,6 @@ CLASSES=\
 	org.joval.os.windows.wmi.scripting.SWbemProperty	\
 	org.joval.os.windows.wmi.scripting.SWbemPropertySet	\
 	org.joval.os.windows.wmi.WmiProvider			\
-	org.joval.plugin.BasePlugin				\
 	org.joval.plugin.LocalPlugin				\
 	org.joval.test.AD					\
 	org.joval.test.Default					\
