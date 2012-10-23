@@ -50,6 +50,7 @@ public class XPERT {
 	String s = System.getProperty("xpert.baseDir");
 	if (s != null) {
 	    BASE_DIR = new File(s);
+	    System.setProperty("securityDir", new File(BASE_DIR, "security").toString());
 	}
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();

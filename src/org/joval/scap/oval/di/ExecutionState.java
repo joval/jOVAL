@@ -47,6 +47,7 @@ public class ExecutionState {
 	String s = System.getProperty("jovaldi.baseDir");
 	if (s != null) {
 	    BASE_DIR = new File(s);
+	    System.setProperty("securityDir", new File(BASE_DIR, "security").toString());
 	}
     }
 

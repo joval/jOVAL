@@ -62,12 +62,15 @@ public class SignatureValidator {
     static {
 	try {
 	    KEY_STORE = KeyStore.getInstance(KeyStore.getDefaultType());
-	    File baseDir = new File(System.getProperty("xpert.baseDir"));
-	    File cacerts = new File(new File(baseDir, "security"), "cacerts.jks");
-	    if (cacerts.exists()) {
-		KEY_STORE.load(new FileInputStream(cacerts), "jOVAL s3cure".toCharArray());
-	    } else {
-		KEY_STORE.load(null);
+	    String s = System.getProperty("securityDir");
+	    if (s != null) {
+		File baseDir = new File(System.getProperty("securityDir"));
+		File cacerts = new File(baseDir, "cacerts.jks");
+		if (cacerts.exists()) {
+		    KEY_STORE.load(new FileInputStream(cacerts), "jOVAL s3cure".toCharArray());
+		} else {
+		    KEY_STORE.load(null);
+		}
 	    }
 	} catch (Exception e) {
 	    System.out.println("WARNING: " + e.getMessage());
