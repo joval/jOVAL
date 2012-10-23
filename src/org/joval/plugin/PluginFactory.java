@@ -85,7 +85,6 @@ public class PluginFactory {
 				    throw new PluginConfigurationException(msg);
 				}
 			    } catch (Exception e) {
-e.printStackTrace();
 				throw new PluginConfigurationException(e);
 			    }
 			}
