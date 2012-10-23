@@ -70,7 +70,7 @@ public class SignatureValidator {
 		KEY_STORE.load(null);
 	    }
 	} catch (Exception e) {
-	    throw new RuntimeException(e);
+	    System.out.println("WARNING: " + e.getMessage());
 	}
     }
 
@@ -93,22 +93,28 @@ public class SignatureValidator {
 	}
     }
 
+    private Document doc;
+    private NodeList signatures;
+    private KeyStore keyStore;
+
+    /**
+     * Create a new validator for an arbitrary XML file using the default KeyStore.
+     */
+    public SignatureValidator(File f) throws ParserConfigurationException, SAXException, IOException {
+	this(f, KEY_STORE);
+    }
+
+    public SignatureValidator(File f, KeyStore keyStore) throws ParserConfigurationException, SAXException, IOException {
+	doc = DBF.newDocumentBuilder().parse(f);
+	signatures = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
+	this.keyStore = keyStore;
+    }
+
     /**
      * Assign a specific KeyStore to be used for validation.
      */
-    public static void setKeyStore(KeyStore ks) {
-	KEY_STORE = ks;
-    }
-
-    private Document doc;
-    private NodeList signatures;
-
-    /**
-     * Create a new validator for an arbitrary XML file.
-     */
-    public SignatureValidator(File f) throws ParserConfigurationException, SAXException, IOException {
-	doc = DBF.newDocumentBuilder().parse(f);
-	signatures = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
+    public void setKeyStore(KeyStore keyStore) {
+	this.keyStore = keyStore;
     }
 
     /**
@@ -144,6 +150,31 @@ public class SignatureValidator {
     }
 
     /**
+     * Validate the document's XML digital signature using the supplied public key.
+     */
+    public boolean validate(Key validationKey) throws XMLSignatureException {
+	int len = signatures.getLength();
+	if (len == 0) {
+	    throw new XMLSignatureException("Cannot find Signature element");
+	} else {
+	    try {
+		for (int i=0; i < len; i++) {
+		    DOMValidateContext ctx = new DOMValidateContext(validationKey, signatures.item(i));
+		    XMLSignature signature = XSF.unmarshalXMLSignature(ctx);
+		    if (!signature.validate(ctx)) {
+			return false;
+		    }
+		}
+		return true;
+	    } catch (ClassCastException e) {
+		throw new XMLSignatureException(e);
+	    } catch (MarshalException e) {
+		throw new XMLSignatureException(e);
+	    }
+	}
+    }
+
+    /**
      * Obtain a Source for the document. This makes it possible to insure that the underlying data has been validated.
      */
     public Source getSource() {
@@ -155,7 +186,7 @@ public class SignatureValidator {
     /**
      * KeySelector implementation for X.509 certificates.
      */
-    static class X509KeySelector extends KeySelector {
+    class X509KeySelector extends KeySelector {
 	@Override
 	public KeySelectorResult select(KeyInfo ki, KeySelector.Purpose p, AlgorithmMethod am, XMLCryptoContext ctx)
 		throws KeySelectorException {
@@ -169,7 +200,7 @@ public class SignatureValidator {
 		} else if (xs instanceof KeyName) {
 		    KeyName kn = (KeyName)xs;
 		    try {
-			Certificate cert = KEY_STORE.getCertificate(kn.getName());
+			Certificate cert = keyStore.getCertificate(kn.getName());
 			if (cert != null && equals(sm.getAlgorithm(), cert.getPublicKey().getAlgorithm())) {
 			    result = new SimpleKeySelectorResult(cert.getPublicKey());
 			}
@@ -259,8 +290,8 @@ public class SignatureValidator {
 	 * @throws NoSuchElementException if there is no match
 	 */
 	KeySelectorResult select(X509CertSelector cs) throws KeyStoreException, NoSuchElementException {
-	    for (Enumeration e = KEY_STORE.aliases(); e.hasMoreElements(); ) {
-		Certificate cert = KEY_STORE.getCertificate((String)e.nextElement());
+	    for (Enumeration e = keyStore.aliases(); e.hasMoreElements(); ) {
+		Certificate cert = keyStore.getCertificate((String)e.nextElement());
 		if (cert != null && cs.match(cert)) {
 		    return new SimpleKeySelectorResult(cert.getPublicKey());
 		}
@@ -276,9 +307,9 @@ public class SignatureValidator {
 	KeySelectorResult select(X509Certificate xc, SignatureMethod sm) throws KeyStoreException, NoSuchElementException {
 	    boolean[] keyUsage = xc.getKeyUsage();
 	    if (keyUsage[0]) {
-		String alias = KEY_STORE.getCertificateAlias(xc);
+		String alias = keyStore.getCertificateAlias(xc);
 		if (alias != null) {
-		    PublicKey pk = KEY_STORE.getCertificate(alias).getPublicKey();
+		    PublicKey pk = keyStore.getCertificate(alias).getPublicKey();
 		    if (equals(sm.getAlgorithm(), pk.getAlgorithm())) {
 			return new SimpleKeySelectorResult(pk);
 		    }
