@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.net.ConnectException;
 import java.net.URL;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -28,7 +29,7 @@ import java.util.logging.Logger;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
-import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import cpe.schemas.dictionary.ListType;
 import oval.schemas.common.GeneratorType;
@@ -103,7 +104,6 @@ public class Engine implements Runnable, IObserver {
 	}
     }
 
-    private boolean debug;
     private Benchmark xccdf;
     private IBaseSession session;
     private SystemInfoType sysinfo;
@@ -115,24 +115,23 @@ public class Engine implements Runnable, IObserver {
     private List<GroupType> groups = null;
     private String phase = null;
     private Logger logger;
-    private File ovalDir = null;
-    private Report report;
+    private boolean verbose;
+    private Report arfReport;
     private ObjectFactory factory;
 
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
      */
     public Engine(Benchmark xccdf, Profile profile, Hashtable<String, Checklist> checklists, File ocilDir,
-		  IBaseSession session, File ovalDir, Report report) {
+		  IBaseSession session, boolean verbose, Report arfReport) {
 
 	this.xccdf = xccdf;
 	this.profile = profile;
 	this.checklists = checklists;
 	this.ocilDir = ocilDir;
 	this.session = session;
-	this.ovalDir = ovalDir;
-	this.report = report;
-	debug = ovalDir != null;
+	this.verbose = verbose;
+	this.arfReport = arfReport;
 	logger = XPERT.logger;
 	factory = new ObjectFactory();
     }
@@ -173,14 +172,15 @@ public class Engine implements Runnable, IObserver {
 				"  This XCCDF content requires OCIL result data.\n" +
 				"  Content has been exported to: " + ocilDir + "\n");
 	    } else if (session.connect()) {
+		List<Element> reports = new ArrayList<Element>();
 		TestResultType testResult = initializeResult();
 
 		//
 		// Perform the applicability tests, and if applicable, the automated checks
 		//
-		if (isApplicable()) {
+		if (isApplicable(reports)) {
 		    logger.info("The target system is applicable to the specified XCCDF");
-		    processXccdf(testResult);
+		    processXccdf(testResult, reports);
 		} else {
 		    logger.info("The target system is not applicable to the specified XCCDF");
 		}
@@ -216,7 +216,12 @@ public class Engine implements Runnable, IObserver {
 			testResult.getRuleResult().add(rrt);
 		    }
 		}
-		makeArfReport(testResult);
+		try {
+		    reports.add(DOMTools.toElement(new TestResult(testResult)));
+		} catch (Exception e) {
+		    logger.severe(LogFormatter.toString(e));
+		}
+		makeArfReport(reports);
 		xccdf.getBenchmark().getTestResult().add(testResult);
 	    } else {
 		logger.info("Failed to connect to the target system: " + session.getHostname());
@@ -258,7 +263,7 @@ public class Engine implements Runnable, IObserver {
     /**
      * This is the main routine, from which the selected checks are executed and compiled into the result.
      */
-    private void processXccdf(TestResultType testResult) {
+    private void processXccdf(TestResultType testResult, List<Element> reports) {
 	testResult.setStartTime(getTimestamp());
 	phase = "evaluation";
 
@@ -268,6 +273,15 @@ public class Engine implements Runnable, IObserver {
 	if (checklists != null) {
 	    OCILHandler ocilHandler = new OCILHandler(xccdf, profile, checklists);
 	    ocilHandler.integrateResults(testResult);
+	    if (verbose) {
+		for (Checklist checklist : checklists.values()) {
+		    try {
+			reports.add(DOMTools.toElement(checklist));
+		    } catch (Exception e) {
+			logger.severe(LogFormatter.toString(e));
+		    }
+		}
+	    }
 	}
 
 	//
@@ -287,23 +301,12 @@ public class Engine implements Runnable, IObserver {
 	    engine.run();
 	    switch(engine.getResult()) {
 	      case OK:
-		if (debug) {
-		    String basename = encode(href);
-		    if (basename.toLowerCase().endsWith(".xml")) {
-			basename = basename.substring(0, basename.length() - 4);
+		if (verbose) {
+		    try {
+			reports.add(DOMTools.toElement(engine.getResults()));
+		    } catch (Exception e) {
+			logger.severe(LogFormatter.toString(e));
 		    }
-
-		    File varsFile = new File(ovalDir, basename + "_variables.xml");
-		    logger.info("Saving OVAL variables: " + varsFile.getPath());
-		    ovalHandler.getVariables(href).writeXML(varsFile);
-
-		    File filterFile = new File(ovalDir, basename + "_evaluation-ids.xml");
-		    logger.info("Saving OVAL definition filter: " + filterFile.getPath());
-		    ovalHandler.getDefinitionFilter(href).writeXML(filterFile);
-
-		    File resultFile = new File(ovalDir, basename + "_results.xml");
-		    logger.info("Saving OVAL results: " + resultFile.getPath());
-		    engine.getResults().writeXML(resultFile);
 		}
 		break;
 	      case ERR:
@@ -357,11 +360,13 @@ public class Engine implements Runnable, IObserver {
 	}
     }
 
-    private void makeArfReport(TestResultType testResult) {
+    private void makeArfReport(List<Element> reports) {
 	try {
-	    String requestId = report.addRequest(DOMTools.toElement(xccdf));
-	    String assetId = report.addAsset(sysinfo);
-	    report.addReport(requestId, assetId, DOMTools.toElement(new TestResult(testResult)));
+	    String requestId = arfReport.addRequest(DOMTools.toElement(xccdf));
+	    String assetId = arfReport.addAsset(sysinfo);
+	    for (Element report : reports) {
+		arfReport.addReport(requestId, assetId, report);
+	    }
 	} catch (Exception e) {
 	    logger.severe(LogFormatter.toString(e));
 	}
@@ -429,7 +434,7 @@ public class Engine implements Runnable, IObserver {
     /**
      * Test whether the XCCDF bundle's applicability rules are satisfied.
      */
-    private boolean isApplicable() {
+    private boolean isApplicable(List<Element> reports) {
 	phase = "discovery";
 	logger.info("Determining system applicability...");
 
@@ -441,7 +446,7 @@ public class Engine implements Runnable, IObserver {
 
 	for (String href : hrefs) {
 	    try {
-		if (!isApplicable(profile.getDefinitions(href), profile.getPlatformDefinitionIds(href))) {
+		if (!isApplicable(profile.getDefinitions(href), profile.getPlatformDefinitionIds(href), reports)) {
 		    return false;
 		}
 	    } catch (OvalException e) {
@@ -456,7 +461,7 @@ public class Engine implements Runnable, IObserver {
 	return true;
     }
 
-    private boolean isApplicable(IDefinitions cpeOval, List<String> definitions) {
+    private boolean isApplicable(IDefinitions cpeOval, List<String> definitions, List<Element> reports) {
 	IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
 	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	engine.setDefinitions(cpeOval);
@@ -472,6 +477,9 @@ public class Engine implements Runnable, IObserver {
 		    logger.warning("Bad result " + result + " for definition " + definition);
 		    return false;
 		}
+	    }
+	    if (verbose) {
+		reports.add(DOMTools.toElement(engine.getResults()));
 	    }
 	    return true;
 	} catch (Exception e) {

@@ -121,9 +121,8 @@ public class XPERT {
 	File reportFile = new File("xpert-report.html");
 	File ocilDir = new File("ocil-export");
 
-	File ovalDir = null;
 	Level level = Level.INFO;
-	boolean query = false, verify = false;
+	boolean query = false, verify = false, verbose = false;
 	File logFile = new File(CWD, "xpert.log");
 	String pluginName = "default";
 	File configFile = new File(CWD, IPlugin.DEFAULT_FILE);
@@ -135,6 +134,8 @@ public class XPERT {
 		query = true;
 	    } else if (argv[i].equals("-s")) {
 		verify = true;
+	    } else if (argv[i].equals("-v")) {
+		verbose = true;
 	    } else if ((i + 1) < argv.length) {
 		if (argv[i].equals("-d")) {
 		    streamFile = new File(argv[++i]);
@@ -161,8 +162,6 @@ public class XPERT {
 		    ocilFiles.put(key, new File(val));
 		} else if (argv[i].equals("-r")) {
 		    resultsFile = new File(argv[++i]);
-		} else if (argv[i].equals("-v")) {
-		    ovalDir = new File(argv[++i]);
 		} else if (argv[i].equals("-l")) {
 		    try {
 			switch(Integer.parseInt(argv[++i])) {
@@ -206,9 +205,6 @@ public class XPERT {
 	}
 
 	int exitCode = 1;
-	if (ovalDir != null && !ovalDir.exists()) {
-	    ovalDir.mkdir();
-	}
 	try {
 	    logger = LogFormatter.createDuplex(logFile, level);
 	} catch (IOException e) {
@@ -323,7 +319,7 @@ public class XPERT {
 			Profile profile = new Profile(benchmark, profileName);
 			IBaseSession session = plugin.getSession();
 			Report report = new Report();
-			Engine engine = new Engine(benchmark, profile, checklists, ocilDir, session, ovalDir, report);
+			Engine engine = new Engine(benchmark, profile, checklists, ocilDir, session, verbose, report);
 			engine.run();
 			if (report.getAssetReportCollection().isSetReports()) {
 			    logger.info("Saving ARF report: " + resultsFile.toString());

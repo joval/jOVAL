@@ -20,6 +20,7 @@ import xccdf.schemas.core.CheckContentRefType;
 import xccdf.schemas.core.CheckType;
 import xccdf.schemas.core.CheckExportType;
 import xccdf.schemas.core.GroupType;
+import xccdf.schemas.core.InstanceResultType;
 import xccdf.schemas.core.ObjectFactory;
 import xccdf.schemas.core.ProfileSetValueType;
 import xccdf.schemas.core.RuleResultType;
@@ -188,30 +189,47 @@ public class OVALHandler {
 	// Iterate through the rules and record the results
 	//
 	for (RuleType rule : profile.getSelectedRules()) {
-	    RuleResultType ruleResult = factory.createRuleResultType();
 	    String ruleId = rule.getId();
-	    ruleResult.setIdref(ruleId);
-	    ruleResult.setWeight(rule.getWeight());
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {
 		    if (NAMESPACE.equals(check.getSystem())) {
+			RuleResultType ruleResult = factory.createRuleResultType();
+			ruleResult.setIdref(ruleId);
+			ruleResult.setWeight(rule.getWeight());
 			ruleResult.getCheck().add(check);
 			RuleResult result = new RuleResult();
 			for (CheckContentRefType ref : check.getCheckContentRef()) {
 			    if (ref.isSetHref() && ref.getHref().equals(href)) {
 				if (ref.isSetName()) {
 				    try {
-					addResult(result, ovalResult.getDefinitionResult(ref.getName()));
+					result.add(convertResult(ovalResult.getDefinitionResult(ref.getName())));
 				    } catch (NoSuchElementException e) {
 					result.add(ResultEnumType.UNKNOWN);
 				    }
+				    ruleResult.setResult(result.getResult());
+				    xccdfResult.getRuleResult().add(ruleResult);
+				} else if (check.isSetMultiCheck() && check.getMultiCheck()) {
+				    //
+				    // @multicheck=true means a rule-result for each contained OVAL result
+				    //
+				    for (DefinitionType def : ovalResult.getDefinitionResults()) {
+					RuleResultType rrt = factory.createRuleResultType();
+					rrt.setIdref(ruleId);
+					rrt.setWeight(rule.getWeight());
+					rrt.getCheck().add(check);
+					rrt.setResult(convertResult(def.getResult()));
+					InstanceResultType inst = factory.createInstanceResultType();
+					inst.setValue(def.getDefinitionId());
+					rrt.getInstance().add(inst);
+					xccdfResult.getRuleResult().add(rrt);
+				    }
 				} else {
 				    for (DefinitionType def : ovalResult.getDefinitionResults()) {
-					addResult(result, def.getResult());
+					result.add(convertResult(def.getResult()));
 				    }
+				    ruleResult.setResult(result.getResult());
+				    xccdfResult.getRuleResult().add(ruleResult);
 				}
-				ruleResult.setResult(result.getResult());
-				xccdfResult.getRuleResult().add(ruleResult);
 				break;
 			    }
 			}
@@ -221,24 +239,23 @@ public class OVALHandler {
 	}
     }
 
-    private void addResult(RuleResult rr, ResultEnumeration re) {
+    /**
+     * Map an OVAL result to an XCCDF result.
+     */
+    private ResultEnumType convertResult(ResultEnumeration re) {
 	switch (re) {
 	  case ERROR:
-	    rr.add(ResultEnumType.ERROR);
-	    break;
+	    return ResultEnumType.ERROR;
     
 	  case FALSE:
-	    rr.add(ResultEnumType.FAIL);
-	    break;
+	    return ResultEnumType.FAIL;
   
 	  case TRUE:
-	    rr.add(ResultEnumType.PASS);
-	    break;
+	    return ResultEnumType.PASS;
  
 	  case UNKNOWN:
 	  default:
-	    rr.add(ResultEnumType.UNKNOWN);
-	    break;
+	    return ResultEnumType.UNKNOWN;
 	}
     }
 }
