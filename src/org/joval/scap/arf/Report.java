@@ -18,6 +18,7 @@ import javax.xml.bind.Marshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
+import org.w3c.dom.Element;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -32,8 +33,6 @@ import arf.schemas.reporting.RelationshipsContainerType;
 import arf.schemas.reporting.RelationshipType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
-import xccdf.schemas.core.BenchmarkType;
-import xccdf.schemas.core.TestResultType;
 
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.xml.ITransformable;
@@ -52,18 +51,18 @@ public class Report implements ILoggable, ITransformable {
     private LocLogger logger;
     private JAXBContext ctx;
     private AssetReportCollection arc;
-    private HashMap<String, BenchmarkType> requests;
+    private HashMap<String, Element> requests;
     private HashMap<String, AssetType> assets;
-    private HashMap<String, TestResultType> reports;
+    private HashMap<String, Element> reports;
 
     /**
      * Create an empty report.
      */
     public Report() throws ArfException {
 	arc = Factories.core.createAssetReportCollection();
-	requests = new HashMap<String, BenchmarkType>();
+	requests = new HashMap<String, Element>();
 	assets = new HashMap<String, AssetType>();
-	reports = new HashMap<String, TestResultType>();
+	reports = new HashMap<String, Element>();
 
 	try {
 	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.ARF));
@@ -78,19 +77,19 @@ public class Report implements ILoggable, ITransformable {
      *
      * @returns the ID generated for the request
      */
-    public synchronized String addRequest(BenchmarkType benchmark) {
+    public synchronized String addRequest(Element request) {
 	String requestId = new StringBuffer("request_").append(Integer.toString(requests.size())).toString();
-	requests.put(requestId, benchmark);
+	requests.put(requestId, request);
 
 	if (!arc.isSetReportRequests()) {
 	    arc.setReportRequests(Factories.core.createAssetReportCollectionReportRequests());
 	}
-	ReportRequestType request = Factories.core.createReportRequestType();
-	request.setId(requestId);
+	ReportRequestType requestType = Factories.core.createReportRequestType();
+	requestType.setId(requestId);
 	ReportRequestType.Content content = Factories.core.createReportRequestTypeContent();
-	content.setAny(benchmark);
-	request.setContent(content);
-	arc.getReportRequests().getReportRequest().add(request);
+	content.setAny(request);
+	requestType.setContent(content);
+	arc.getReportRequests().getReportRequest().add(requestType);
 	return requestId;
     }
 
@@ -118,15 +117,15 @@ public class Report implements ILoggable, ITransformable {
 		    if (interfaces.containsKey(macAddress)) {
 			nit = interfaces.get(macAddress);
 		    } else {
-			Factories.asset.createNetworkInterfaceType();
+			nit = Factories.asset.createNetworkInterfaceType();
 			NetworkInterfaceType.MacAddress mac = Factories.asset.createNetworkInterfaceTypeMacAddress();
 			mac.setValue(macAddress);
 			nit.setMacAddress(mac);
+			interfaces.put(macAddress, nit);
 		    }
 		    if (intf.isSetIpAddress()) {
 			try {
 			    setIpAddressInfo(nit, intf.getIpAddress());
-			    connections.getConnection().add(nit);
 			} catch (IllegalArgumentException e) {
 			}
 		    }
@@ -152,7 +151,7 @@ public class Report implements ILoggable, ITransformable {
 	    }
 	    cdt.setConnections(connections);
 	}
-	String assetId = new StringBuffer("asset").append(Integer.toString(assets.size())).toString();
+	String assetId = new StringBuffer("asset_").append(Integer.toString(assets.size())).toString();
 	assets.put(assetId, cdt);
 
 	if (!arc.isSetAssets()) {
@@ -170,7 +169,7 @@ public class Report implements ILoggable, ITransformable {
      *
      * @returns the ID generated for the report
      */
-    public synchronized String addReport(String requestId, String assetId, TestResultType report)
+    public synchronized String addReport(String requestId, String assetId, Element report)
 		throws NoSuchElementException {
 
 	if (!requests.containsKey(requestId)) {

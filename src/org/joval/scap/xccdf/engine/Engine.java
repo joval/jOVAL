@@ -28,6 +28,7 @@ import java.util.logging.Logger;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
+import org.w3c.dom.Document;
 
 import cpe.schemas.dictionary.ListType;
 import oval.schemas.common.GeneratorType;
@@ -66,6 +67,7 @@ import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
+import org.joval.scap.arf.Report;
 import org.joval.scap.cpe.CpeException;
 import org.joval.scap.ocil.Checklist;
 import org.joval.scap.oval.Factories;
@@ -75,6 +77,7 @@ import org.joval.scap.oval.sysinfo.SysinfoFactory;
 import org.joval.scap.sce.SCEScript;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.Profile;
+import org.joval.scap.xccdf.TestResult;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.scap.xccdf.handler.OCILHandler;
 import org.joval.scap.xccdf.handler.OVALHandler;
@@ -82,6 +85,7 @@ import org.joval.scap.xccdf.handler.SCEHandler;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
+import org.joval.xml.DOMTools;
 
 /**
  * XCCDF Processing Engine and Reporting Tool (XPERT) engine class.
@@ -102,6 +106,7 @@ public class Engine implements Runnable, IObserver {
     private boolean debug;
     private Benchmark xccdf;
     private IBaseSession session;
+    private SystemInfoType sysinfo;
     private Collection<String> platforms;
     private Profile profile;
     private Hashtable<String, Checklist> checklists;
@@ -111,13 +116,14 @@ public class Engine implements Runnable, IObserver {
     private String phase = null;
     private Logger logger;
     private File ovalDir = null;
+    private Report report;
     private ObjectFactory factory;
 
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
      */
     public Engine(Benchmark xccdf, Profile profile, Hashtable<String, Checklist> checklists, File ocilDir,
-		  IBaseSession session, File ovalDir) {
+		  IBaseSession session, File ovalDir, Report report) {
 
 	this.xccdf = xccdf;
 	this.profile = profile;
@@ -125,6 +131,7 @@ public class Engine implements Runnable, IObserver {
 	this.ocilDir = ocilDir;
 	this.session = session;
 	this.ovalDir = ovalDir;
+	this.report = report;
 	debug = ovalDir != null;
 	logger = XPERT.logger;
 	factory = new ObjectFactory();
@@ -180,7 +187,7 @@ public class Engine implements Runnable, IObserver {
 		session.disconnect();
 
 		//
-		// Print results to the console, and save them to a file.
+		// Print results to the console, and add them to the ARF report.
 		//
 		HashMap<String, RuleResultType> resultIndex = new HashMap<String, RuleResultType>();
 		for (RuleResultType rrt : testResult.getRuleResult()) {
@@ -209,6 +216,7 @@ public class Engine implements Runnable, IObserver {
 			testResult.getRuleResult().add(rrt);
 		    }
 		}
+		makeArfReport(testResult);
 		xccdf.getBenchmark().getTestResult().add(testResult);
 	    } else {
 		logger.info("Failed to connect to the target system: " + session.getHostname());
@@ -349,6 +357,16 @@ public class Engine implements Runnable, IObserver {
 	}
     }
 
+    private void makeArfReport(TestResultType testResult) {
+	try {
+	    String requestId = report.addRequest(DOMTools.toElement(xccdf));
+	    String assetId = report.addAsset(sysinfo);
+	    report.addReport(requestId, assetId, DOMTools.toElement(new TestResult(testResult)));
+	} catch (Exception e) {
+	    logger.severe(LogFormatter.toString(e));
+	}
+    }
+
     /**
      * Create a Benchmark.TestResult node, initialized with information gathered from the profile and session.
      */
@@ -393,11 +411,11 @@ public class Engine implements Runnable, IObserver {
 	    testResult.getPlatform().add(cpeRef);
 	}
 	try {
-	    SystemInfoType info = SysinfoFactory.createSystemInfo(session);
-	    if (!testResult.getTarget().contains(info.getPrimaryHostName())) {
-		testResult.getTarget().add(info.getPrimaryHostName());
+	    sysinfo = SysinfoFactory.createSystemInfo(session);
+	    if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
+		testResult.getTarget().add(sysinfo.getPrimaryHostName());
 	    }
-	    for (InterfaceType intf : info.getInterfaces().getInterface()) {
+	    for (InterfaceType intf : sysinfo.getInterfaces().getInterface()) {
 		if (!testResult.getTargetAddress().contains(intf.getIpAddress())) {
 		    testResult.getTargetAddress().add(intf.getIpAddress());
 		}

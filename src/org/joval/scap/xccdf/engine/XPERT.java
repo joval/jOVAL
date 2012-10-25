@@ -21,11 +21,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.system.IBaseSession;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.scap.Datastream;
 import org.joval.scap.ScapException;
 import org.joval.scap.cpe.CpeException;
+import org.joval.scap.arf.Report;
 import org.joval.scap.ocil.Checklist;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.OvalException;
@@ -113,10 +115,10 @@ public class XPERT {
 	String benchmarkId = null;
 	String profileName = null;
 	Hashtable<String, File> ocilFiles = new Hashtable<String, File>();
-	File resultsFile = new File(CWD, "xccdf-results.xml");
+	File resultsFile = new File(CWD, "xpert-arf.xml");
 	File xmlDir = new File(BASE_DIR, "xml");
 	File transformFile = new File(xmlDir, "xccdf_results_to_html.xsl");
-	File reportFile = new File("xccdf-result.html");
+	File reportFile = new File("xpert-report.html");
 	File ocilDir = new File("ocil-export");
 
 	File ovalDir = null;
@@ -319,12 +321,13 @@ public class XPERT {
 		    try {
 			Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
 			Profile profile = new Profile(benchmark, profileName);
-			Engine engine = new Engine(benchmark, profile, checklists, ocilDir, plugin.getSession(), ovalDir);
+			IBaseSession session = plugin.getSession();
+			Report report = new Report();
+			Engine engine = new Engine(benchmark, profile, checklists, ocilDir, session, ovalDir, report);
 			engine.run();
-
-			if (benchmark.getBenchmark().isSetTestResult()) {
-			    logger.info("Saving report: " + resultsFile.toString());
-			    benchmark.writeXML(resultsFile);
+			if (report.getAssetReportCollection().isSetReports()) {
+			    logger.info("Saving ARF report: " + resultsFile.toString());
+			    report.writeXML(resultsFile);
 			    logger.info("Transforming to HTML report: " + reportFile.toString());
 			    benchmark.writeTransform(transformFile, reportFile);
 			}

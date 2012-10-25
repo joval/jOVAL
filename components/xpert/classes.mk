@@ -10,6 +10,7 @@ CLASSES=\
 	org.joval.scap.cpe.Dictionary					\
 	org.joval.scap.ocil.BooleanTestActionConditionType		\
 	org.joval.scap.ocil.Checklist					\
+	org.joval.scap.ocil.ChecklistResults				\
 	org.joval.scap.ocil.Factories					\
 	org.joval.scap.ocil.OcilException				\
 	org.joval.scap.ocil.OcilFactory					\
@@ -17,6 +18,7 @@ CLASSES=\
 	org.joval.scap.sce.SCEScript					\
 	org.joval.scap.xccdf.Benchmark					\
 	org.joval.scap.xccdf.Profile					\
+	org.joval.scap.xccdf.TestResult					\
 	org.joval.scap.xccdf.XccdfException				\
 	org.joval.scap.xccdf.engine.Engine				\
 	org.joval.scap.xccdf.engine.RuleResult				\

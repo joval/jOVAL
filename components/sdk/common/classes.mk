@@ -91,5 +91,6 @@ CLASSES=\
 	org.joval.util.tree.NodeSerializer			\
 	org.joval.util.tree.Tree				\
 	org.joval.util.tree.TreeHash				\
+	org.joval.xml.DOMTools					\
 	org.joval.xml.SchemaRegistry				\
 	org.joval.xml.SignatureValidator
