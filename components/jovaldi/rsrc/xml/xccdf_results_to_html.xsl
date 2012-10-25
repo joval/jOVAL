@@ -160,6 +160,24 @@
           </tr>
         </table>
 
+        <table border="1" cellpadding="2" cellspacing="0" width="100%" bgcolor="#cccccc">
+          <tr>
+            <td class="title" colspan="3">Benchmark Scores</td>
+          </tr>
+          <tr>
+            <td class="label" width="20%">Score</td>
+            <td class="label" width="20%">Max Score</td>
+            <td class="label" width="60%">Method</td>
+          </tr>
+          <xsl:for-each select="//xccdf:Benchmark/xccdf:TestResult/xccdf:score">
+            <tr>
+              <td class="text"><xsl:value-of select="./text()"/>&#160;</td>
+              <td class="text"><xsl:value-of select="./@maximum"/>&#160;</td>
+              <td class="text"><xsl:value-of select="./@system"/>&#160;</td>
+            </tr>
+          </xsl:for-each>
+        </table>
+
         <table border="1" cellpadding="2" cellspacing="0" width="100%">
           <tr>
             <td class="title" colspan="4">Benchmark Test Results</td>
