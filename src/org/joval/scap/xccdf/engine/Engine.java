@@ -582,26 +582,28 @@ public class Engine implements Runnable, IObserver {
 
 	DefaultScoreKeeper(DefaultScoreKeeper parent, RuleType rule) {
 	    this(parent.results);
-	    switch(results.get(rule.getId()).getResult()) {
-	      case NOTAPPLICABLE:
-	      case NOTCHECKED:
-	      case INFORMATIONAL:
-	      case NOTSELECTED:
-		break;
-	      case PASS:
-		score++;
-		// fall-thru
-	      default:
-		count++;
-		break;
+	    if (results.containsKey(rule.getId())) {
+		switch(results.get(rule.getId()).getResult()) {
+		  case NOTAPPLICABLE:
+		  case NOTCHECKED:
+		  case INFORMATIONAL:
+		  case NOTSELECTED:
+		    break;
+		  case PASS:
+		    score++;
+		    // fall-thru
+		  default:
+		    count++;
+		    break;
+		}
+		if (count == 0) {
+		    score = 0;
+		} else {
+		    count = 1;
+		    score = 100 * score / count;
+		}
+		weightedScore = rule.getWeight().intValue() * score;
 	    }
-	    if (count == 0) {
-		score = 0;
-	    } else {
-		count = 1;
-		score = 100 * score / count;
-	    }
-	    weightedScore = rule.getWeight().intValue() * score;
 	}
 
 	DefaultScoreKeeper(DefaultScoreKeeper parent, GroupType group) {
@@ -649,29 +651,31 @@ public class Engine implements Runnable, IObserver {
 
 	FlatScoreKeeper(FlatScoreKeeper parent, RuleType rule) {
 	    this(parent.weighted, parent.results);
-	    switch(results.get(rule.getId()).getResult()) {
-	      case NOTAPPLICABLE:
-	      case NOTCHECKED:
-	      case INFORMATIONAL:
-	      case NOTSELECTED:
-		break;
-	      case PASS:
-		score++;
-		// fall-thru
-	      default:
-		count++;
-		break;
-	    }
-	    if (count != 0) {
-		int weight = rule.getWeight().intValue();
-		if (weighted) {
-		    max_score += weight;
-		    score = (weight * score / count);
-		} else {
-		    if (weight == 0) {
-			score = 0;
+	    if (results.containsKey(rule.getId())) {
+		switch(results.get(rule.getId()).getResult()) {
+		  case NOTAPPLICABLE:
+		  case NOTCHECKED:
+		  case INFORMATIONAL:
+		  case NOTSELECTED:
+		    break;
+		  case PASS:
+		    score++;
+		    // fall-thru
+		  default:
+		    count++;
+		    break;
+		}
+		if (count != 0) {
+		    int weight = rule.getWeight().intValue();
+		    if (weighted) {
+			max_score += weight;
+			score = (weight * score / count);
 		    } else {
-			score = (score / count);
+			if (weight == 0) {
+			    score = 0;
+			} else {
+			    score = (score / count);
+			}
 		    }
 		}
 	    }
