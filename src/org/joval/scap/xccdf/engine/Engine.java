@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.math.BigDecimal;
 import java.net.ConnectException;
 import java.net.URL;
 import java.text.MessageFormat;
@@ -14,6 +15,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -35,7 +37,6 @@ import oval.schemas.results.core.DefinitionType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.variables.core.VariableType;
-
 import xccdf.schemas.core.CheckContentRefType;
 import xccdf.schemas.core.CheckType;
 import xccdf.schemas.core.CheckExportType;
@@ -43,12 +44,14 @@ import xccdf.schemas.core.CPE2IdrefType;
 import xccdf.schemas.core.GroupType;
 import xccdf.schemas.core.IdrefType;
 import xccdf.schemas.core.IdentityType;
+import xccdf.schemas.core.Model;
 import xccdf.schemas.core.ObjectFactory;
 import xccdf.schemas.core.ProfileSetValueType;
 import xccdf.schemas.core.ProfileType;
 import xccdf.schemas.core.RuleResultType;
 import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.ResultEnumType;
+import xccdf.schemas.core.ScoreType;
 import xccdf.schemas.core.SelectableItemType;
 import xccdf.schemas.core.TestResultType;
 
@@ -108,6 +111,7 @@ public class Engine implements Runnable, IObserver {
     private String phase = null;
     private Logger logger;
     private File ovalDir = null;
+    private ObjectFactory factory;
 
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
@@ -123,6 +127,7 @@ public class Engine implements Runnable, IObserver {
 	this.ovalDir = ovalDir;
 	debug = ovalDir != null;
 	logger = XPERT.logger;
+	factory = new ObjectFactory();
     }
 
     // Implement Runnable
@@ -161,55 +166,11 @@ public class Engine implements Runnable, IObserver {
 				"  This XCCDF content requires OCIL result data.\n" +
 				"  Content has been exported to: " + ocilDir + "\n");
 	    } else if (session.connect()) {
-		//
-		// Create the Benchmark.TestResult node
-		//
-		ObjectFactory factory = new ObjectFactory();
-		TestResultType testResult = factory.createTestResultType();
-		testResult.setVersion(xccdf.getBenchmark().getVersion().getValue());
-		testResult.setTestSystem(XPERT.getMessage("product.name"));
-		TestResultType.Benchmark trb = factory.createTestResultTypeBenchmark();
-		trb.setId(xccdf.getBenchmark().getBenchmarkId());
-		trb.setHref(xccdf.getHref());
-		testResult.setBenchmark(trb);
-		if (profile.getName() != null) {
-		    IdrefType profileRef = factory.createIdrefType();
-		    profileRef.setIdref(profile.getName());
-		    testResult.setProfile(profileRef);
-		}
-		String user = session.getUsername();
-		if (user != null) {
-		    IdentityType identity = factory.createIdentityType();
-		    identity.setValue(user);
-		    if ("root".equals(user) || "Administrator".equals(user)) {
-			identity.setPrivileged(true);
-		    }
-		    identity.setAuthenticated(true);
-		    testResult.setIdentity(identity);
-		}
-		for (String href : profile.getCpePlatforms()) {
-		    CPE2IdrefType cpeRef = factory.createCPE2IdrefType();
-		    cpeRef.setIdref(href);
-		    testResult.getPlatform().add(cpeRef);
-		}
-		try {
-		    SystemInfoType info = SysinfoFactory.createSystemInfo(session);
-		    if (!testResult.getTarget().contains(info.getPrimaryHostName())) {
-			testResult.getTarget().add(info.getPrimaryHostName());
-		    }
-		    for (InterfaceType intf : info.getInterfaces().getInterface()) {
-			if (!testResult.getTargetAddress().contains(intf.getIpAddress())) {
-			    testResult.getTargetAddress().add(intf.getIpAddress());
-			}
-		    }
-		} catch (OvalException e) {
-		    logger.severe(LogFormatter.toString(e));
-		}
+		TestResultType testResult = initializeResult();
 
 		//
 		// Perform the applicability tests, and if applicable, the automated checks
 		//
-		testResult.setStartTime(getTimestamp());
 		if (isApplicable()) {
 		    logger.info("The target system is applicable to the specified XCCDF");
 		    processXccdf(testResult);
@@ -217,12 +178,11 @@ public class Engine implements Runnable, IObserver {
 		    logger.info("The target system is not applicable to the specified XCCDF");
 		}
 		session.disconnect();
-		testResult.setEndTime(getTimestamp());
 
 		//
 		// Print results to the console, and save them to a file.
 		//
-		Hashtable<String, RuleResultType> resultIndex = new Hashtable<String, RuleResultType>();
+		HashMap<String, RuleResultType> resultIndex = new HashMap<String, RuleResultType>();
 		for (RuleResultType rrt : testResult.getRuleResult()) {
 		    resultIndex.put(rrt.getIdref(), rrt);
 		}
@@ -287,11 +247,15 @@ public class Engine implements Runnable, IObserver {
 
     // Private
 
+    /**
+     * This is the main routine, from which the selected checks are executed and compiled into the result.
+     */
     private void processXccdf(TestResultType testResult) {
+	testResult.setStartTime(getTimestamp());
 	phase = "evaluation";
 
 	//
-        // Integrate OCIL results
+	// Integrate OCIL results
 	//
 	if (checklists != null) {
 	    OCILHandler ocilHandler = new OCILHandler(xccdf, profile, checklists);
@@ -361,6 +325,87 @@ public class Engine implements Runnable, IObserver {
 	    } 
 	    sceHandler.integrateResults(testResult);
 	}
+	testResult.setEndTime(getTimestamp());
+
+	//
+	// Compute scores
+	//
+	logger.info("Computing scores...");
+	HashMap<String, RuleResultType> resultMap = new HashMap<String, RuleResultType>();
+	for (RuleResultType rrt : testResult.getRuleResult()) {
+	    resultMap.put(rrt.getIdref(), rrt);
+	}
+	// Note - only selected rules will be in the resultMap at this point
+	for (Model model : xccdf.getBenchmark().getModel()) {
+	    logger.info("Scoring method: " + model.getSystem());
+	    ScoreKeeper sk = computeScore(resultMap, xccdf.getBenchmark().getGroupOrRule(), ScoringModel.fromModel(model));
+	    ScoreType scoreType = factory.createScoreType();
+	    scoreType.setSystem(model.getSystem());
+	    scoreType.setValue(new BigDecimal(Float.toString(sk.getScore())));
+	    if (sk instanceof FlatScoreKeeper) {
+		scoreType.setMaximum(new BigDecimal(Float.toString(((FlatScoreKeeper)sk).getMaxScore())));
+	    }
+	    testResult.getScore().add(scoreType);
+	}
+    }
+
+    /**
+     * Create a Benchmark.TestResult node, initialized with information gathered from the profile and session.
+     */
+    private TestResultType initializeResult() {
+	TestResultType testResult = factory.createTestResultType();
+	String id = xccdf.getBenchmark().getBenchmarkId();
+	String name = "unknown";
+	String namespace = "unknown";
+	if (id.startsWith("xccdf_")) {
+	    String temp = id.substring(6);
+	    int ptr = temp.lastIndexOf("_benchmark_");
+	    if (ptr > 0) {
+		namespace = temp.substring(0,ptr);
+		name = temp.substring(ptr+11);
+	    }
+	}
+	testResult.setTestResultId("xccdf_" + namespace + "_testresult_" + name);
+	testResult.setVersion(xccdf.getBenchmark().getVersion().getValue());
+	testResult.setTestSystem(XPERT.getMessage("product.name"));
+	TestResultType.Benchmark trb = factory.createTestResultTypeBenchmark();
+	trb.setId(xccdf.getBenchmark().getBenchmarkId());
+	trb.setHref(xccdf.getHref());
+	testResult.setBenchmark(trb);
+	if (profile.getName() != null) {
+	    IdrefType profileRef = factory.createIdrefType();
+	    profileRef.setIdref(profile.getName());
+	    testResult.setProfile(profileRef);
+	}
+	String user = session.getUsername();
+	if (user != null) {
+	    IdentityType identity = factory.createIdentityType();
+	    identity.setValue(user);
+	    if ("root".equals(user) || "Administrator".equals(user)) {
+		identity.setPrivileged(true);
+	    }
+	    identity.setAuthenticated(true);
+	    testResult.setIdentity(identity);
+	}
+	for (String href : profile.getCpePlatforms()) {
+	    CPE2IdrefType cpeRef = factory.createCPE2IdrefType();
+	    cpeRef.setIdref(href);
+	    testResult.getPlatform().add(cpeRef);
+	}
+	try {
+	    SystemInfoType info = SysinfoFactory.createSystemInfo(session);
+	    if (!testResult.getTarget().contains(info.getPrimaryHostName())) {
+		testResult.getTarget().add(info.getPrimaryHostName());
+	    }
+	    for (InterfaceType intf : info.getInterfaces().getInterface()) {
+		if (!testResult.getTargetAddress().contains(intf.getIpAddress())) {
+		    testResult.getTargetAddress().add(intf.getIpAddress());
+		}
+	    }
+	} catch (OvalException e) {
+	    logger.severe(LogFormatter.toString(e));
+	}
+	return testResult;
     }
 
     /**
@@ -455,5 +500,225 @@ public class Engine implements Runnable, IObserver {
 	    tm = datatypeFactory.newXMLGregorianCalendar(new GregorianCalendar());
 	}
 	return tm;
+    }
+
+    enum ScoringModel {
+	DEFAULT("urn:xccdf:scoring:default"),
+	FLAT("urn:xccdf:scoring:flat"),
+	FLAT_UNWEIGHTED("urn:xccdf:scoring:flat-unweighted"),
+	ABSOLUTE("urn:xccdf:scoring:absolute");
+
+	private String uri;
+
+	private ScoringModel(String uri) {
+	    this.uri = uri;
+	}
+
+	static ScoringModel fromModel(Model model) throws IllegalArgumentException {
+	    return fromUri(model.getSystem());
+	}
+
+	static ScoringModel fromUri(String uri) throws IllegalArgumentException {
+	    for (ScoringModel model : values()) {
+		if (model.uri.equals(uri)) {
+		    return model;
+		}
+	    }
+	    throw new IllegalArgumentException(uri);
+	}
+    }
+
+    /**
+     * Recursively compute the score of a list of items.
+     *
+     * @param results a HashMap containing the results of all (i.e., exclusively) the /selected/ rules
+     */
+    ScoreKeeper computeScore(HashMap<String, RuleResultType> results, List<SelectableItemType> items, ScoringModel model)
+		throws IllegalArgumentException {
+
+	switch(model) {
+	  case DEFAULT:
+	    return DefaultScoreKeeper.compute(results, items);
+	  case FLAT:
+	    return FlatScoreKeeper.compute(true, results, items);
+	  case FLAT_UNWEIGHTED:
+	    return FlatScoreKeeper.compute(false, results, items);
+	  case ABSOLUTE:
+	    return AbsoluteScoreKeeper.compute(results, items);
+	  default:
+	    throw new IllegalArgumentException(model.toString());
+	}
+    }
+
+    abstract static class ScoreKeeper {
+	HashMap<String, RuleResultType> results;
+	float score, count;
+
+	ScoreKeeper(HashMap<String, RuleResultType> results) {
+	    this.results = results;
+	    score = 0;
+	    count = 0;
+	}
+
+	float getScore() {
+	    return score;
+	}
+    }
+
+    static class DefaultScoreKeeper extends ScoreKeeper {
+	static DefaultScoreKeeper compute(HashMap<String, RuleResultType> results, List<SelectableItemType> items)
+		throws IllegalArgumentException {
+	    return new DefaultScoreKeeper(new DefaultScoreKeeper(results), items);
+	}
+
+	private int accumulator;
+	private float weightedScore;
+
+	DefaultScoreKeeper(HashMap<String, RuleResultType> results) {
+	    super(results);
+	    accumulator = 0;
+	    weightedScore = 0;
+	}
+
+	DefaultScoreKeeper(DefaultScoreKeeper parent, RuleType rule) {
+	    this(parent.results);
+	    switch(results.get(rule.getId()).getResult()) {
+	      case NOTAPPLICABLE:
+	      case NOTCHECKED:
+	      case INFORMATIONAL:
+	      case NOTSELECTED:
+		break;
+	      case PASS:
+		score++;
+		// fall-thru
+	      default:
+		count++;
+		break;
+	    }
+	    if (count == 0) {
+		score = 0;
+	    } else {
+		count = 1;
+		score = 100 * score / count;
+	    }
+	    weightedScore = rule.getWeight().intValue() * score;
+	}
+
+	DefaultScoreKeeper(DefaultScoreKeeper parent, GroupType group) {
+	    this(parent, group.getGroupOrRule());
+	    weightedScore = group.getWeight().intValue() * score;
+	}
+
+	DefaultScoreKeeper(DefaultScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
+	    super(parent.results);
+	    for (SelectableItemType item : items) {
+		DefaultScoreKeeper child = null;
+		if (item instanceof RuleType) {
+		    child = new DefaultScoreKeeper(this, (RuleType)item);
+		} else if (item instanceof GroupType) {
+		    child = new DefaultScoreKeeper(this, (GroupType)item);
+		} else {
+		    throw new IllegalArgumentException(item.getClass().getName());
+		}
+		if (child.count != 0) {
+		    score += child.weightedScore;
+		    count++;
+		    accumulator += item.getWeight().intValue();
+		}
+	    }
+	    if (accumulator > 0) {
+		score = (score / accumulator);
+	    }
+	}
+    }
+
+    static class FlatScoreKeeper extends ScoreKeeper {
+	static FlatScoreKeeper compute(boolean weighted, HashMap<String, RuleResultType> results,
+		List<SelectableItemType> items) throws IllegalArgumentException {
+	    return new FlatScoreKeeper(new FlatScoreKeeper(weighted, results), items);
+	}
+
+	private boolean weighted;
+	private float max_score;
+
+	FlatScoreKeeper(boolean weighted, HashMap<String, RuleResultType> results) {
+	    super(results);
+	    this.weighted = weighted;
+	    max_score = 0;
+	}
+
+	FlatScoreKeeper(FlatScoreKeeper parent, RuleType rule) {
+	    this(parent.weighted, parent.results);
+	    switch(results.get(rule.getId()).getResult()) {
+	      case NOTAPPLICABLE:
+	      case NOTCHECKED:
+	      case INFORMATIONAL:
+	      case NOTSELECTED:
+		break;
+	      case PASS:
+		score++;
+		// fall-thru
+	      default:
+		count++;
+		break;
+	    }
+	    if (count != 0) {
+		int weight = rule.getWeight().intValue();
+		if (weighted) {
+		    max_score += weight;
+		    score = (weight * score / count);
+		} else {
+		    if (weight == 0) {
+			score = 0;
+		    } else {
+			score = (score / count);
+		    }
+		}
+	    }
+	}
+
+	FlatScoreKeeper(FlatScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
+	    this(parent.weighted, parent.results);
+	    for (SelectableItemType item : items) {
+		FlatScoreKeeper child = null;
+		if (item instanceof RuleType) {
+		    child = new FlatScoreKeeper(this, (RuleType)item);
+		} else if (item instanceof GroupType) {
+		    child = new FlatScoreKeeper(this, ((GroupType)item).getGroupOrRule());
+		} else {
+		    throw new IllegalArgumentException(item.getClass().getName());
+		}
+		score += child.score;
+		max_score += child.max_score;
+	    }
+	}
+
+	float getMaxScore() {
+	    return max_score;
+	}
+    }
+
+    static class AbsoluteScoreKeeper extends FlatScoreKeeper {
+	static AbsoluteScoreKeeper compute(HashMap<String, RuleResultType> results, List<SelectableItemType> items)
+		throws IllegalArgumentException {
+	    return new AbsoluteScoreKeeper(new AbsoluteScoreKeeper(results), items);
+	}
+
+	AbsoluteScoreKeeper(HashMap<String, RuleResultType> results) {
+	    super(true, results);
+	}
+
+	AbsoluteScoreKeeper(AbsoluteScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
+	    super(parent, items);
+	}
+
+	@Override
+	float getScore() {
+	    if (super.getScore() == getMaxScore()) {
+		return 1;
+	    } else {
+		return 0;
+	    }
+	}
     }
 }

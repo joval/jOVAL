@@ -186,13 +186,12 @@ public class OCILHandler {
 			if (check.isSetCheckContentRef()) {
 			    RuleResultType ruleResult = factory.createRuleResultType();
 			    ruleResult.setIdref(ruleId);
+			    ruleResult.setWeight(rule.getWeight());
 			    RuleResult result = new RuleResult();
-			    CheckType checkResult = factory.createCheckType();
 			    for (CheckContentRefType ref : check.getCheckContentRef()) {
 				if (ref.isSetHref() && ref.isSetName()) {
 				    String href = ref.getHref();
 				    String name = ref.getName();
-				    checkResult.getCheckContentRef().add(ref);
 				    if (results.containsKey(href) && results.get(href).containsKey(name)) {
 					String qr = results.get(href).get(name);
 					if ("PASS".equals(qr)) {
@@ -213,7 +212,7 @@ public class OCILHandler {
 				    }
 				}
 			    }
-			    ruleResult.getCheck().add(checkResult);
+			    ruleResult.getCheck().add(check);
 			    ruleResult.setResult(result.getResult());
 			    xccdfResult.getRuleResult().add(ruleResult);
 			}

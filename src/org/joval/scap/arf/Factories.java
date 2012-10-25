@@ -3,6 +3,8 @@
 
 package org.joval.scap.arf;
 
+import javax.xml.namespace.QName;
+
 /**
  * This class provides a consolidated access point for accessing all of the ARF schema JAXB object factories.
  *
@@ -10,6 +12,11 @@ package org.joval.scap.arf;
  * @version %I% %G%
  */
 public class Factories {
+    public static final String VOCABULARY_URI = "http://scap.nist.gov/vocabulary/arf/relationships/1.0#";
+
+    public static final QName IS_ABOUT =	new QName(VOCABULARY_URI, "isAbout");
+    public static final QName CREATED_FOR =	new QName(VOCABULARY_URI, "createdFor");
+
     /**
      * Facilitates access to the ARF core schema ObjectFactory.
      */

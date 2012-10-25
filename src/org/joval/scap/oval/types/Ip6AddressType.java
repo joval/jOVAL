@@ -104,8 +104,7 @@ public class Ip6AddressType extends AbstractType {
 	return new BigInteger(sb.toString(), 16);
     }
 
-    @Override
-    public String toString() {
+    public String getIpAddressString() {
 	StringBuffer sb = new StringBuffer();
 	for (int i=0, j=0; i < 16; j++) {
 	    if (i > 0) {
@@ -116,6 +115,26 @@ public class Ip6AddressType extends AbstractType {
 	    octet.append(Integer.toHexString(addr[i++] & 0xFF));
 	    sb.append(Integer.toHexString(Integer.parseInt(octet.toString(), 16)));
 	}
+	return sb.toString();
+    }
+
+    public String getSubnetString() {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0, j=0; i < 16; j++) {
+	    if (i > 0) {
+		sb.append(":");
+	    }
+	    StringBuffer octet = new StringBuffer();
+	    octet.append(Integer.toHexString(mask[i++] & 0xFF));
+	    octet.append(Integer.toHexString(mask[i++] & 0xFF));
+	    sb.append(Integer.toHexString(Integer.parseInt(octet.toString(), 16)));
+	}
+	return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+	StringBuffer sb = new StringBuffer(getIpAddressString());
 	return sb.append("/").append(Integer.toString(maskVal)).toString();
     }
 

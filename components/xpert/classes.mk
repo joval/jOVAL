@@ -24,4 +24,5 @@ CLASSES=\
 	org.joval.scap.xccdf.handler.OCILHandler			\
 	org.joval.scap.xccdf.handler.OVALHandler			\
 	org.joval.scap.xccdf.handler.SCEHandler				\
-	org.joval.util.LogFormatter
+	org.joval.util.LogFormatter					\
+	org.joval.xml.SchemaValidator

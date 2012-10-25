@@ -73,11 +73,7 @@ public class Ip4AddressType extends AbstractType {
 	return new BigInteger(sb.toString(), 16);
     }
 
-    public int getMask() {
-	return maskVal;
-    }
-
-    public String toString() {
+    public String getIpAddressString() {
 	StringBuffer sb = new StringBuffer();
 	for (int i=0; i < 4; i++) {
 	    if (i > 0) {
@@ -85,6 +81,26 @@ public class Ip4AddressType extends AbstractType {
 	    }
 	    sb.append(Short.toString(addr[i]));
 	}
+	return sb.toString();
+    }
+
+    public String getSubnetString() {
+	StringBuffer sb = new StringBuffer();
+	for (int i=0; i < 4; i++) {
+	    if (i > 0) {
+		sb.append(".");
+	    }
+	    sb.append(Short.toString(mask[i]));
+	}
+	return sb.toString();
+    }
+
+    public int getMask() {
+	return maskVal;
+    }
+
+    public String toString() {
+	StringBuffer sb = new StringBuffer(getIpAddressString());
 	return sb.append("/").append(Integer.toString(maskVal)).toString();
     }
 

@@ -112,6 +112,7 @@ public class SCEHandler {
 	    if (scriptTable.containsKey(ruleId)) {
 		RuleResultType ruleResult = factory.createRuleResultType();
 		ruleResult.setIdref(ruleId);
+		ruleResult.setWeight(rule.getWeight());
 		if (rule.isSetCheck()) {
 		    for (CheckType check : rule.getCheck()) {
 			if (NAMESPACE.equals(check.getSystem()) && scriptTable.containsKey(ruleId)) {

@@ -191,6 +191,7 @@ public class OVALHandler {
 	    RuleResultType ruleResult = factory.createRuleResultType();
 	    String ruleId = rule.getId();
 	    ruleResult.setIdref(ruleId);
+	    ruleResult.setWeight(rule.getWeight());
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {
 		    if (NAMESPACE.equals(check.getSystem())) {
