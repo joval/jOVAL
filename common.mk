@@ -15,8 +15,8 @@ ifeq (Windows, $(findstring Windows,$(OS)))
     PLATFORM=win
     CLN=;
     JAVACFLAGS=-Xlint:unchecked
-    ifndef $(ARCH)
-        ARCH=$(PLATFORM_ARCHITECTURE)
+    ifeq (x, x$(ARCH))
+        ARCH=$(PROCESSOR_ARCHITECTURE)
     endif
 else
     OS=$(shell uname)
@@ -39,7 +39,7 @@ JAVA_VERSION=1.6
 ifeq (1.7, $(findstring 1.7,`$(JAVA) -version`))
     JAVA_VERSION=1.7
 endif
-ifndef $(JRE_HOME)
+ifeq (x, x$(JRE_HOME))
     JRE_HOME=$(JAVA_HOME)/jre
 endif
 

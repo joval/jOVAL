@@ -44,7 +44,7 @@ $(BUILD)/%/:
 dist-clean: clean
 	rm -rf $(DIST_DIR)
 
-$(DIST_DIR)/jre : $(JRE_HOME)
+$(DIST_DIR)/jre: $(JRE_HOME)
 	mkdir -p $(DIST_DIR)
 	rm -rf $@
 	cp -R $< $@
