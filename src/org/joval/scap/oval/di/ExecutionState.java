@@ -111,7 +111,7 @@ public class ExecutionState {
 	//
 	dataFile = new File(CWD, DEFAULT_DATA);
 	resultsXML = new File(CWD, DEFAULT_RESULTS_XML);
-	resultsHTML = new File(xmlDir, DEFAULT_RESULTS_HTML);
+	resultsHTML = new File(CWD, DEFAULT_RESULTS_HTML);
 
 	//
 	// Behaviors
