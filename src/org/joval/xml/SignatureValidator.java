@@ -58,57 +58,19 @@ import org.w3c.dom.NodeList;
  * @version %I% %G%
  */
 public class SignatureValidator {
-    private static KeyStore KEY_STORE;
-    static {
-	try {
-	    KEY_STORE = KeyStore.getInstance(KeyStore.getDefaultType());
-	    String s = System.getProperty("securityDir");
-	    if (s != null) {
-		File baseDir = new File(System.getProperty("securityDir"));
-		File cacerts = new File(baseDir, "cacerts.jks");
-		if (cacerts.exists()) {
-		    KEY_STORE.load(new FileInputStream(cacerts), "jOVAL s3cure".toCharArray());
-		} else {
-		    KEY_STORE.load(null);
-		}
-	    }
-	} catch (Exception e) {
-	    System.out.println("WARNING: " + e.getMessage());
-	}
-    }
-
-    private static final DocumentBuilderFactory DBF;
-    static {
-	try {
-	    DBF = DocumentBuilderFactory.newInstance();
-	    DBF.setNamespaceAware(true);
-	} catch (FactoryConfigurationError e) {
-	    throw new RuntimeException(e);
-	}
-    }
-
-    private static final XMLSignatureFactory XSF;
-    static {
-	try {
-	    XSF = XMLSignatureFactory.getInstance();
-	} catch (NoSuchMechanismException e) {
-	    throw new RuntimeException(e);
-	}
-    }
-
     private Document doc;
     private NodeList signatures;
     private KeyStore keyStore;
 
     /**
-     * Create a new validator for an arbitrary XML file using the default KeyStore.
+     * Create a new validator for the specified XML file using the specified KeyStore.
      */
-    public SignatureValidator(File f) throws ParserConfigurationException, SAXException, IOException {
-	this(f, KEY_STORE);
-    }
+    public SignatureValidator(File f, KeyStore keyStore)
+		throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException {
 
-    public SignatureValidator(File f, KeyStore keyStore) throws ParserConfigurationException, SAXException, IOException {
-	doc = DBF.newDocumentBuilder().parse(f);
+	DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+	dbf.setNamespaceAware(true);
+	doc = dbf.newDocumentBuilder().parse(f);
 	signatures = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
 	this.keyStore = keyStore;
     }
@@ -138,12 +100,14 @@ public class SignatureValidator {
 	    try {
 		for (int i=0; i < len; i++) {
 		    DOMValidateContext ctx = new DOMValidateContext(new X509KeySelector(), signatures.item(i));
-		    XMLSignature signature = XSF.unmarshalXMLSignature(ctx);
+		    XMLSignature signature = XMLSignatureFactory.getInstance().unmarshalXMLSignature(ctx);
 		    if (!signature.validate(ctx)) {
 			return false;
 		    }
 		}
 		return true;
+	    } catch (NoSuchMechanismException e) {
+		throw new XMLSignatureException(e);
 	    } catch (ClassCastException e) {
 		throw new XMLSignatureException(e);
 	    } catch (MarshalException e) {
@@ -163,12 +127,14 @@ public class SignatureValidator {
 	    try {
 		for (int i=0; i < len; i++) {
 		    DOMValidateContext ctx = new DOMValidateContext(validationKey, signatures.item(i));
-		    XMLSignature signature = XSF.unmarshalXMLSignature(ctx);
+		    XMLSignature signature = XMLSignatureFactory.getInstance().unmarshalXMLSignature(ctx);
 		    if (!signature.validate(ctx)) {
 			return false;
 		    }
 		}
 		return true;
+	    } catch (NoSuchMechanismException e) {
+		throw new XMLSignatureException(e);
 	    } catch (ClassCastException e) {
 		throw new XMLSignatureException(e);
 	    } catch (MarshalException e) {

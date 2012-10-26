@@ -5,11 +5,13 @@ package org.joval.scap.xccdf.engine;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
 import java.net.ConnectException;
 import java.net.UnknownHostException;
+import java.security.KeyStore;
 import java.text.MessageFormat;
 import java.util.Date;
 import java.util.Hashtable;
@@ -50,10 +52,6 @@ public class XPERT {
     private static PropertyResourceBundle resources;
     static {
 	String s = System.getProperty("xpert.baseDir");
-	if (s != null) {
-	    BASE_DIR = new File(s);
-	    System.setProperty("securityDir", new File(BASE_DIR, "security").toString());
-	}
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	    Locale locale = Locale.getDefault();
@@ -126,6 +124,8 @@ public class XPERT {
 	File logFile = new File(CWD, "xpert.log");
 	String pluginName = "default";
 	File configFile = new File(CWD, IPlugin.DEFAULT_FILE);
+	File ksFile = new File(new File(BASE_DIR, "security"), "cacerts.jks");
+	String ksPass = "jOVAL s3cure";
 
 	for (int i=0; i < argv.length; i++) {
 	    if (argv[i].equals("-h")) {
@@ -192,6 +192,10 @@ public class XPERT {
 		    transformFile = new File(argv[++i]);
 		} else if (argv[i].equals("-x")) {
 		    reportFile = new File(argv[++i]);
+		} else if (argv[i].equals("-k")) {
+		    ksFile = new File(argv[++i]);
+		} else if (argv[i].equals("-w")) {
+		    ksPass = argv[++i];
 		} else if (argv[i].equals("-plugin")) {
 		    pluginName = argv[++i];
 		} else if (argv[i].equals("-config")) {
@@ -243,7 +247,9 @@ public class XPERT {
 		Datastream ds = null;
 		if (verify) {
 		    logger.info("Verifying XML digital signature: " + streamFile.toString());
-		    SignatureValidator validator = new SignatureValidator(streamFile);
+		    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+		    keyStore.load(new FileInputStream(ksFile), ksPass.toCharArray());
+		    SignatureValidator validator = new SignatureValidator(streamFile, keyStore);
 		    if (!validator.containsSignature()) {
 			throw new XPERTException("ERROR: no signature found!");
 		    } else if (validator.validate()) {
@@ -351,6 +357,20 @@ public class XPERT {
     }
 
     // Internal
+
+    /**
+     * Given a file path and password, load a JKS file.
+     */
+    static KeyStore loadKeyStore(String fname, String password) throws Exception {
+	KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
+        File cacerts = new File(fname);
+        if (cacerts.exists()) {
+            ks.load(new FileInputStream(cacerts), password.toCharArray());
+	    return ks;
+        } else {
+            throw new FileNotFoundException(fname);
+        }
+    }
 
     static class XPERTException extends Exception {
 	XPERTException(String message) {
