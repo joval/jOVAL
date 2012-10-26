@@ -503,7 +503,7 @@ public class Main implements IObserver {
 	    }
 	    if (state.applyTransform) {
 		print(getMessage("MESSAGE_RUNNING_TRANSFORM", state.getPath(state.getXMLTransform())));
-		results.writeTransform(state.getXMLTransform(), state.resultsTransform);
+		results.writeTransform(state.getXMLTransform(), state.resultsHTML);
 	    } else {
 		print(getMessage("MESSAGE_SKIPPING_TRANSFORM"));
 	    }

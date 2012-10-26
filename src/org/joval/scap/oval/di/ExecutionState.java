@@ -31,7 +31,7 @@ public class ExecutionState {
     static final String DEFAULT_DATA			= "system-characteristics.xml";
     static final String DEFAULT_DIRECTIVES		= "directives.xml";
     static final String DEFAULT_RESULTS_XML		= "results.xml";
-    static final String DEFAULT_RESULTS_XFORM		= "results.html";
+    static final String DEFAULT_RESULTS_HTML		= "results.html";
     static final String DEFAULT_VARIABLES		= "external-variables.xml";
     static final String DEFAULT_LOGFILE			= "jovaldi.log";
     static final String DEFAULT_XMLDIR			= "xml";
@@ -71,7 +71,7 @@ public class ExecutionState {
 
     File dataFile;
     File resultsXML;
-    File resultsTransform;
+    File resultsHTML;
 
     boolean computeChecksum;
     boolean validateChecksum;
@@ -101,7 +101,7 @@ public class ExecutionState {
 	directivesFile = new File(CWD, DEFAULT_DIRECTIVES);
 	variablesFile = new File(CWD, DEFAULT_VARIABLES);
 	logFile = new File(CWD, DEFAULT_LOGFILE);
-	xmlDir = new File(CWD, DEFAULT_XMLDIR);
+	xmlDir = new File(BASE_DIR, DEFAULT_XMLDIR);
 	xmlTransform = null;
 	schematronDefsXform = null;
 	logLevel = Level.INFO;
@@ -111,7 +111,7 @@ public class ExecutionState {
 	//
 	dataFile = new File(CWD, DEFAULT_DATA);
 	resultsXML = new File(CWD, DEFAULT_RESULTS_XML);
-	resultsTransform = new File(CWD, DEFAULT_RESULTS_XFORM);
+	resultsHTML = new File(xmlDir, DEFAULT_RESULTS_HTML);
 
 	//
 	// Behaviors
@@ -267,7 +267,7 @@ public class ExecutionState {
 		} else if (argv[i].equals("-t")) {
 		    xmlTransform = new File(argv[++i]);
 		} else if (argv[i].equals("-x")) {
-		    resultsTransform = new File(argv[++i]);
+		    resultsHTML = new File(argv[++i]);
 		} else if (argv[i].equals("-plugin")) {
 		    pluginName = argv[++i];
 		} else if (argv[i].equals("-config")) {
