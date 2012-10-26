@@ -10,23 +10,20 @@
 #
 # JAVA_HOME is where you've installed your JDK.
 #
-JAVA_HOME=$(TOP)/../../tools/jdk160_31
+#JAVA_HOME=$(TOP)/../../tools/jdk1.6.0_25
+JAVA_HOME=$(TOP)/../../tools/jdk1.7.0_03
 
 #
 # ARCH defines the default distribution target architecture.  It should correspond to your
-# platform architecture.
+# platform architecture. Left unset, it will be determined automatically.
 #
 #ARCH=x86
-ARCH=x64
+#ARCH=AMD64
+#ARCH=x86_64
 
 #
-# JRE32_HOME is the install path for a 32-bit JRE.
-# This does not have to be set if you will never create a 32-bit distribution.
+# JRE_HOME is the install path for the JRE that will be bundled with the distribution. Left
+# unset, the JRE included with the JDK will be used. If you are overriding ARCH, you will
+# want to set this to a JRE of the desired architecture.
 #
-JRE32_HOME=$(TOP)/../../tools/jre160_31_x86
-
-#
-# JRE64_HOME is the install path for a 64-bit JRE.
-# This does not have to be set if you will never create a 64-bit distribution.
-#
-JRE64_HOME=$(TOP)/../../tools/jre160_31_x64
+#JRE_HOME=$(TOP)/../../tools/jre170_03_x86

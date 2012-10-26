@@ -3,7 +3,7 @@
 
 include $(TOP)/customize.mk
 
-JOVAL_VERSION=5.10.1.1_Dev
+JOVAL_VERSION=5.10.1.1
 SCAP_VERSION=1.2
 OVAL_VERSION=5.10.1
 SCE_VERSION=1.0
@@ -15,10 +15,14 @@ ifeq (Windows, $(findstring Windows,$(OS)))
     PLATFORM=win
     CLN=;
     JAVACFLAGS=-Xlint:unchecked
+    ifndef $(ARCH)
+        ARCH=$(PLATFORM_ARCHITECTURE)
+    endif
 else
     OS=$(shell uname)
     CLN=:
     JAVACFLAGS=-Xlint:unchecked -XDignore.symbol.file=true -Xbootclasspath/p:$(JAXB_HOME)/lib/jaxb-api.jar:$(JAXB_HOME)/lib/jaxb-impl.jar
+    ARCH=$(shell uname -p)
 endif
 
 ifeq (Linux, $(findstring Linux,$(OS)))
@@ -30,16 +34,13 @@ SPACE:=$(NULL) # end of the line
 SHELL=/bin/sh
 CWD=$(shell pwd)
 
-ifeq (x86, $(ARCH))
-    JRE=$(JRE32_HOME)/bin/java
-else
-    JRE=$(JRE64_HOME)/bin/java
-endif
-
 JAVA=$(JAVA_HOME)/bin/java
 JAVA_VERSION=1.6
 ifeq (1.7, $(findstring 1.7,`$(JAVA) -version`))
     JAVA_VERSION=1.7
+endif
+ifndef $(JRE_HOME)
+    JRE_HOME=$(JAVA_HOME)/jre
 endif
 
 JAXB_HOME=$(TOP)/tools/jaxb-ri-2.2.6
