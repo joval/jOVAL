@@ -3,6 +3,8 @@
 
 package org.joval.intf.windows.wmi;
 
+import java.util.NoSuchElementException;
+
 import org.joval.intf.util.ILoggable;
 import org.joval.os.windows.wmi.WmiException;
 
@@ -17,8 +19,17 @@ public interface IWmiProvider extends ILoggable {
 
     /**
      * Execute a WQL query on the given namespace.
+     *
+     * @throws NoSuchElementException if the specified namespace is not registered
+     * @throws WmiException if there was an error performing the query
      */
-    public ISWbemObjectSet execQuery(String ns, String wql) throws WmiException;
+    public ISWbemObjectSet execQuery(String ns, String wql) throws NoSuchElementException, WmiException;
 
-    public ISWbemEventSource execNotificationQuery(String ns, String wql) throws WmiException;
+    /**
+     * Execute a notification query.
+     *
+     * @throws NoSuchElementException if the specified namespace is not registered
+     * @throws WmiException if there was an error performing the query
+     */
+    public ISWbemEventSource execNotificationQuery(String ns, String wql) throws NoSuchElementException, WmiException;
 }

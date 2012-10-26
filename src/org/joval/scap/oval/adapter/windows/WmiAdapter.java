@@ -104,7 +104,7 @@ public class WmiAdapter implements IAdapter {
 	    msg.setLevel(MessageLevelEnumeration.INFO);
 	    msg.setValue(e.getMessage());
 	    item.getMessage().add(msg);
-	    session.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id);
+	    session.getLogger().warn(JOVALMsg.ERROR_WINWMI_GENERAL, id, e.getMessage());
 	    session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return item;
