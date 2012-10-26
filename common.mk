@@ -42,6 +42,7 @@ endif
 ifeq (x, x$(JRE_HOME))
     JRE_HOME=$(JAVA_HOME)/jre
 endif
+JRE=$(JRE_HOME)/bin/java
 
 JAXB_HOME=$(TOP)/tools/jaxb-ri-2.2.6
 XJC=$(JAVA) -jar $(JAXB_HOME)/lib/jaxb-xjc.jar
