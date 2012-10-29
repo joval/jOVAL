@@ -4,9 +4,7 @@ CLASSES=\
 	org.joval.intf.io.IFileEx							\
 	org.joval.intf.io.IFilesystem							\
 	org.joval.intf.io.IReader							\
-	org.joval.intf.net.INetconf							\
 	org.joval.intf.plugin.IAdapter							\
-	org.joval.intf.ssh.system.IShell						\
 	org.joval.intf.system.IBaseSession						\
 	org.joval.intf.system.IEnvironment						\
 	org.joval.intf.system.IProcess							\
@@ -133,13 +131,6 @@ CLASSES=\
 	org.joval.scap.oval.adapter.aix.FilesetAdapter					\
 	org.joval.scap.oval.adapter.aix.FixAdapter					\
 	org.joval.scap.oval.adapter.aix.OslevelAdapter					\
-	org.joval.scap.oval.adapter.cisco.ios.GlobalAdapter				\
-	org.joval.scap.oval.adapter.cisco.ios.InterfaceAdapter				\
-	org.joval.scap.oval.adapter.cisco.ios.LineAdapter				\
-	org.joval.scap.oval.adapter.cisco.ios.SnmpAdapter				\
-	org.joval.scap.oval.adapter.cisco.ios.TclshAdapter				\
-	org.joval.scap.oval.adapter.cisco.ios.Version55Adapter				\
-	org.joval.scap.oval.adapter.cisco.ios.VersionAdapter				\
 	org.joval.scap.oval.adapter.independent.BaseFileAdapter				\
 	org.joval.scap.oval.adapter.independent.Environmentvariable58Adapter		\
 	org.joval.scap.oval.adapter.independent.EnvironmentvariableAdapter		\
@@ -149,10 +140,6 @@ CLASSES=\
 	org.joval.scap.oval.adapter.independent.Textfilecontent54Adapter		\
 	org.joval.scap.oval.adapter.independent.TextfilecontentAdapter			\
 	org.joval.scap.oval.adapter.independent.XmlfilecontentAdapter			\
-	org.joval.scap.oval.adapter.junos.GlobalAdapter					\
-	org.joval.scap.oval.adapter.junos.LineAdapter					\
-	org.joval.scap.oval.adapter.junos.VersionAdapter				\
-	org.joval.scap.oval.adapter.junos.XmlLineAdapter				\
 	org.joval.scap.oval.adapter.linux.PartitionAdapter				\
 	org.joval.scap.oval.adapter.linux.RpminfoAdapter				\
 	org.joval.scap.oval.adapter.linux.SelinuxbooleanAdapter				\
@@ -160,7 +147,6 @@ CLASSES=\
 	org.joval.scap.oval.adapter.macos.AccountinfoAdapter				\
 	org.joval.scap.oval.adapter.macos.PlistAdapter					\
 	org.joval.scap.oval.adapter.macos.Pwpolicy59Adapter				\
-	org.joval.scap.oval.adapter.netconf.ConfigAdapter				\
 	org.joval.scap.oval.adapter.solaris.IsainfoAdapter				\
 	org.joval.scap.oval.adapter.solaris.PackageAdapter				\
 	org.joval.scap.oval.adapter.solaris.Patch54Adapter				\

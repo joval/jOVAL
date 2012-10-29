@@ -153,14 +153,15 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 
     private int pid = 1;
 
-    class JavaProcess implements IProcess {
-	String command;
+    protected class JavaProcess implements IProcess {
 	String[] env;
-	Process p;
 	int pid;
 	StreamLogger debugIn, debugErr;
 
-	JavaProcess(String command, String[] env) {
+	protected Process p;
+	protected String command;
+
+	protected JavaProcess(String command, String[] env) {
 	    this.command = command;
 	    this.env = env;
 	    this.pid = AbstractSession.this.pid++;
