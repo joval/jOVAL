@@ -1,11 +1,11 @@
 # Copyright (C) 2011 jOVAL.org.  All rights reserved.
 # This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-TOP=../../..
+TOP=../..
 
 include $(TOP)/common.mk
 
-API=$(SCAP_LIB)$(CLN)$(COMMON_LIB)$(CLN)$(COMMON_DEPS)$(CLN)$(JOVAL_CORE_LIB)
+API=$(SCAP_LIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
 
 include classes.mk
@@ -14,23 +14,22 @@ CLASS_FILES:=$(foreach class, $(CLASSES), $(BUILD)/$(subst .,/,$(class)).class)
 PACKAGES=$(sort $(basename $(CLASSES)))
 PACKAGEDIRS=$(subst .,/,$(PACKAGES))
 
-all: $(ADAPTERS_LIB)
+all: $(JOVAL_CORE_LIB)
 
-$(ADAPTERS_LIB): classes resources
+$(JOVAL_CORE_LIB): classes resources
 	$(JAR) cvf $@ -C $(BUILD)/ .
+
+resources:
+	rm -f $(BUILD)/*.ini
+	cp $(RSRC)/*.ini $(BUILD)
+	echo -e "version=$(JOVAL_VERSION)\r\n" >> $(BUILD)/defaults.ini
+	echo "build.date=`date`" >> $(BUILD)/defaults.ini
+	rm -f $(BUILD)/*.properties
+	cp $(RSRC)/*.properties $(BUILD)
 
 clean:
 	rm -rf $(BUILD)
-	rm -f $(ADAPTERS_LIB)
-
-resources: classdirs
-	rm -f $(BUILD)/*.txt
-	cp $(RSRC)/adapters.txt $(BUILD)
-	rm -f $(BUILD)/*.properties
-	cp $(RSRC)/windows.locales.properties $(BUILD)
-	rm -f $(BUILD)/org/joval/scap/oval/adapter/windows/*.psm1
-	cp $(SRC)/org/joval/scap/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/windows/
-	cp $(SRC)/org/joval/scap/oval/adapter/independent/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/independent/
+	rm -f $(JOVAL_CORE_LIB)
 
 classes: classdirs $(CLASS_FILES)
 

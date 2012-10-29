@@ -33,7 +33,7 @@ import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.IVariables;
-import org.joval.intf.system.IBaseSession;
+import org.joval.intf.plugin.IPlugin;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.xccdf.Benchmark;
@@ -61,7 +61,7 @@ public class OVALHandler {
      * Create an OVAL handler utility for the given XCCDF and Profile. An OVAL engine will be created for every
      * discrete OVAL href referenced by a profile-selected check in the XCCDF document.
      */
-    public OVALHandler(Benchmark xccdf, Profile profile, IBaseSession session) throws Exception {
+    public OVALHandler(Benchmark xccdf, Profile profile, IPlugin plugin) throws Exception {
 	this.xccdf = xccdf;
 	this.profile = profile;
 	factory = new ObjectFactory();
@@ -75,8 +75,8 @@ public class OVALHandler {
 			    if (ref.isSetHref()) {
 				String href = ref.getHref();
 				if (!engines.containsKey(href)) {
-				    session.getLogger().info("Creating engine for href " + href);
-				    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
+				    plugin.getLogger().info("Creating engine for href " + href);
+				    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin);
 				    engine.setDefinitions(xccdf.getDefinitions(href));
 				    engine.setExternalVariables(getVariables(href));
 				    engine.setDefinitionFilter(getDefinitionFilter(href));

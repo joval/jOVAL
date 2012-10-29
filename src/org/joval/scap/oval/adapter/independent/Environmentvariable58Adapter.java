@@ -34,7 +34,6 @@ import oval.schemas.results.core.ResultEnumeration;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.ISession;

@@ -13,8 +13,6 @@ import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Vector;
 
-import org.joval.intf.io.IReader;
-import org.joval.intf.util.IPerishable;
 import org.joval.util.JOVALMsg;
 
 /**

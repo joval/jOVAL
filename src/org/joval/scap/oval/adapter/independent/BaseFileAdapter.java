@@ -35,7 +35,6 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.ISession;
 import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.system.IWindowsSession;

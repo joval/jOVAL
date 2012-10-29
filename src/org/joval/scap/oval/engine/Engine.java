@@ -116,13 +116,12 @@ import oval.schemas.variables.core.OvalVariables;
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
+import org.joval.intf.oval.IProvider;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IType;
 import org.joval.intf.oval.IVariables;
-import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IRequestContext;
-import org.joval.intf.system.IBaseSession;
+import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.scap.oval.CollectException;
@@ -135,7 +134,6 @@ import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.oval.Results;
 import org.joval.scap.oval.SystemCharacteristics;
-import org.joval.scap.oval.sysinfo.SysinfoFactory;
 import org.joval.scap.oval.types.IntType;
 import org.joval.scap.oval.types.Ip4AddressType;
 import org.joval.scap.oval.types.Ip6AddressType;
@@ -150,47 +148,12 @@ import org.joval.util.StringTools;
 import org.joval.util.Version;
 
 /**
- * Engine that evaluates OVAL tests using an IBaseSession.
+ * Engine that evaluates OVAL tests using an IPlugin.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Engine implements IEngine, IAdapter {
-    private static final String ADAPTERS_RESOURCE = "adapters.txt";
-
-    /**
-     * Get a list of all the IAdapters that are bundled with the engine.
-     */
-    private static Collection<IAdapter> getAdapters() {
-	Collection<IAdapter> adapters = new HashSet<IAdapter>();
-	try {
-	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
-	    InputStream rsc = cl.getResourceAsStream(ADAPTERS_RESOURCE);
-	    if (rsc == null) {
-		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, ADAPTERS_RESOURCE));
-	    } else {
-		BufferedReader reader = new BufferedReader(new InputStreamReader(rsc));
-		String line = null;
-		while ((line = reader.readLine()) != null) {
-		    if (!line.startsWith("#")) {
-			try {
-			    Object obj = Class.forName(line).newInstance();
-			    if (obj instanceof IAdapter) {
-				adapters.add((IAdapter)obj);
-			    }
-			} catch (InstantiationException e) {
-			} catch (IllegalAccessException e) {
-			} catch (ClassNotFoundException e) {
-			}
-		    }
-		}
-	    }
-	} catch (IOException e) {
-	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return adapters;
-    }
-
+public class Engine implements IEngine, IProvider {
     private enum State {
 	CONFIGURE,
 	RUNNING,
@@ -201,11 +164,10 @@ public class Engine implements IEngine, IAdapter {
     private Hashtable <String, Collection<IType>>variableMap;
     private IVariables externalVariables = null;
     private IDefinitions definitions = null;
-    private IBaseSession session = null;
+    private IPlugin plugin = null;
     private ISystemCharacteristics sc = null;
     private IDefinitionFilter filter = null;
     private IEngine.Mode mode;
-    private Hashtable<Class, IAdapter> adapters = null;
     private Exception error;
     private Results results;
     private State state;
@@ -214,14 +176,14 @@ public class Engine implements IEngine, IAdapter {
     private LocLogger logger;
 
     /**
-     * Create an engine for evaluating OVAL definitions using a session.
+     * Create an engine for evaluating OVAL definitions using a plugin.
      */
-    protected Engine(IEngine.Mode mode, IBaseSession session) {
-	if (session == null) {
+    protected Engine(IEngine.Mode mode, IPlugin plugin) {
+	if (plugin == null) {
 	    logger = JOVALMsg.getLogger();
 	} else {
-	    logger = session.getLogger();
-	    this.session = session;
+	    logger = plugin.getLogger();
+	    this.plugin = plugin;
 	}
 	this.mode = mode;
 	producer = new Producer();
@@ -229,41 +191,39 @@ public class Engine implements IEngine, IAdapter {
 	reset();
     }
 
-    // Implement IAdapter
+    // Implement IProvider
 
-    public Collection<Class> init(IBaseSession session) {
-	Collection<Class> classes = new Vector<Class>();
-	classes.add(VariableObject.class);
-	return classes;
-    }
-
-    public Collection<VariableItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	VariableObject vObj = (VariableObject)obj;
-	Collection<VariableItem> items = new Vector<VariableItem>();
-	try {
-	    Collection<IType> values = resolveVariable((String)vObj.getVarRef().getValue(), (RequestContext)rc);
-	    if (values.size() > 0) {
-		VariableItem item = Factories.sc.independent.createVariableItem();
-		EntityItemVariableRefType ref = Factories.sc.independent.createEntityItemVariableRefType();
-		ref.setValue(vObj.getVarRef().getValue());
-		item.setVarRef(ref);
-		for (IType value : values) {
-		    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-		    valueType.setValue(value.getString());
-		    valueType.setDatatype(value.getType().getSimple().value());
-		    item.getValue().add(valueType);
+    public Collection<? extends ItemType> getItems(ObjectType obj, IProvider.IRequestContext rc) throws CollectException {
+	if (obj instanceof VariableObject) {
+	    VariableObject vObj = (VariableObject)obj;
+	    Collection<VariableItem> items = new Vector<VariableItem>();
+	    try {
+		Collection<IType> values = resolveVariable((String)vObj.getVarRef().getValue(), (RequestContext)rc);
+		if (values.size() > 0) {
+		    VariableItem item = Factories.sc.independent.createVariableItem();
+		    EntityItemVariableRefType ref = Factories.sc.independent.createEntityItemVariableRefType();
+		    ref.setValue(vObj.getVarRef().getValue());
+		    item.setVarRef(ref);
+		    for (IType value : values) {
+			EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+			valueType.setValue(value.getString());
+			valueType.setDatatype(value.getType().getSimple().value());
+			item.getValue().add(valueType);
+		    }
+		    items.add(item);
 		}
-		items.add(item);
+	    } catch (UnsupportedOperationException e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
+	    } catch (ResolveException e) {
+		throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
+	    } catch (OvalException e) {
+		throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
 	    }
-	} catch (UnsupportedOperationException e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
-	} catch (ResolveException e) {
-	    throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
-	} catch (OvalException e) {
-	    throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
+	    return items;
+	} else {
+	    return plugin.getItems(obj, rc);
 	}
-	return items;
     }
 
     // Implement IEngine
@@ -362,11 +322,8 @@ public class Engine implements IEngine, IAdapter {
 		throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_DEFINITIONS_NONE));
 	    }
 	    state = State.RUNNING;
-	    if (adapters == null) {
-		loadAdapters();
-	    }
 	    if (sc == null) {
-		SystemCharacteristics sc = new SystemCharacteristics(SysinfoFactory.createSystemInfo(session));
+		SystemCharacteristics sc = new SystemCharacteristics(plugin.getSystemInfo());
 		sc.setLogger(logger);
 		this.sc = sc;
 	    }
@@ -392,7 +349,7 @@ public class Engine implements IEngine, IAdapter {
      *   First the Engine probes all the objects in the OVAL definitions, or it uses the supplied ISystemCharacteristics.
      *   Then, all the definitions are evaluated.  This mirrors the way that ovaldi processes OVAL definitions.
      *
-     * Note: if the session is connected before running, it will remain connected after the run has completed.  If it
+     * Note: if the plugin is connected before running, it will remain connected after the run has completed.  If it
      * was not connected before running, the engine will temporarily connect, then disconnect when finished.
      */
     public void run() {
@@ -401,25 +358,22 @@ public class Engine implements IEngine, IAdapter {
 	boolean doDisconnect = false;
 	try {
 	    //
-	    // Connect and initialize adapters if necessary
+	    // Connect if necessary
 	    //
 	    boolean scanRequired = sc == null;
 	    if (scanRequired) {
-		if (!session.isConnected()) {
-	    	    if (session == null) {
+		if (!plugin.isConnected()) {
+	    	    if (plugin == null) {
 			throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_NONE));
 		    } else {
-			if (session.connect()) {
+			if (plugin.connect()) {
 			    doDisconnect = true;
 			} else {
 			    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
 			}
 		    }
 		}
-		if (adapters == null) {
-		    loadAdapters();
-		}
-		SystemCharacteristics sc = new SystemCharacteristics(SysinfoFactory.createSystemInfo(session));
+		SystemCharacteristics sc = new SystemCharacteristics(plugin.getSystemInfo());
 		sc.setLogger(logger);
 		this.sc = sc;
 	    }
@@ -438,7 +392,7 @@ public class Engine implements IEngine, IAdapter {
 		    }
 		    producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
 		    if (doDisconnect) {
-			session.disconnect();
+			plugin.disconnect();
 			doDisconnect = false;
 		    }
 		    producer.sendNotify(MESSAGE_SYSTEMCHARACTERISTICS, sc);
@@ -487,26 +441,12 @@ public class Engine implements IEngine, IAdapter {
 	    state = State.COMPLETE_ERR;
 	} finally {
 	    if (doDisconnect) {
-		session.disconnect();
+		plugin.disconnect();
 	    }
 	}
     }
 
     // Private
-
-    private void loadAdapters() {
-	adapters = new Hashtable<Class, IAdapter>();
-	Collection<IAdapter> coll = getAdapters();
-	if (coll != null) {
-	    adapters = new Hashtable<Class, IAdapter>();
-	    for (IAdapter adapter : coll) {
-		for (Class clazz : adapter.init(session)) {
-		    adapters.put(clazz, adapter);
-		}
-	    }
-	}
-	adapters.put(VariableObject.class, this);
-    }
 
     private void reset() {
 	sc = null;
@@ -531,62 +471,63 @@ public class Engine implements IEngine, IAdapter {
 	producer.sendNotify(MESSAGE_OBJECT, objectId);
 	Collection<ItemType> items = new Vector<ItemType>();
 	try {
-	    if (adapters.containsKey(obj.getClass())) {
-		Set s = getObjectSet(obj);
-		if (s == null) {
-		    List<MessageType> messages = new Vector<MessageType>();
-		    FlagData flags = new FlagData();
-		    try {
-			items = new ObjectGroup(rc).getItems(flags);
-			messages.addAll(rc.getMessages());
-			sc.setObject(objectId, null, null, null, null);
-			for (VariableValueType var : rc.getVars()) {
-			    sc.storeVariable(var);
-			    sc.relateVariable(objectId, var.getVariableId());
-			}
-		    } catch (ResolveException e) {
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.ERROR);
-			msg.setValue(e.getMessage());
-			messages.add(msg);
-			flags.add(FlagEnumeration.ERROR);
+	    Set s = getObjectSet(obj);
+	    if (s == null) {
+		List<MessageType> messages = new Vector<MessageType>();
+		FlagData flags = new FlagData();
+		try {
+		    items = new ObjectGroup(rc).getItems(flags);
+		    messages.addAll(rc.getMessages());
+		    sc.setObject(objectId, null, null, null, null);
+		    for (VariableValueType var : rc.getVars()) {
+			sc.storeVariable(var);
+			sc.relateVariable(objectId, var.getVariableId());
 		    }
-		    for (MessageType msg : messages) {
-			sc.setObject(objectId, null, null, null, msg);
-			switch(msg.getLevel()) {
-			  case FATAL:
-			  case ERROR:
-			    flags.add(FlagEnumeration.INCOMPLETE);
-			    break;
-			}
+		} catch (ResolveException e) {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(e.getMessage());
+		    messages.add(msg);
+		    flags.add(FlagEnumeration.ERROR);
+		}
+		for (MessageType msg : messages) {
+		    sc.setObject(objectId, null, null, null, msg);
+		    switch(msg.getLevel()) {
+		      case FATAL:
+		      case ERROR:
+			flags.add(FlagEnumeration.INCOMPLETE);
+			break;
 		    }
-		    if (flags.getFlag() == FlagEnumeration.COMPLETE && items.size() == 0) {
-			sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
-		    } else {
-			sc.setObject(objectId, obj.getComment(), obj.getVersion(), flags.getFlag(), null);
-		    }
+		}
+		if (flags.getFlag() == FlagEnumeration.COMPLETE && items.size() == 0) {
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.DOES_NOT_EXIST, null);
 		} else {
-		    items = getSetItems(s, rc);
-		    FlagEnumeration flag = FlagEnumeration.COMPLETE;
-		    MessageType msg = null;
-		    if (items.size() == 0) {
-			flag = FlagEnumeration.DOES_NOT_EXIST;
-			msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.INFO);
-			msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_SET));
-		    }
-		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), flag, msg);
+		    sc.setObject(objectId, obj.getComment(), obj.getVersion(), flags.getFlag(), null);
 		}
 	    } else {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.WARNING);
-		String err = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
-		msg.setValue(err);
-		sc.setObject(objectId, obj.getComment(), obj.getVersion(), FlagEnumeration.NOT_COLLECTED, msg);
+		items = getSetItems(s, rc);
+		FlagEnumeration flag = FlagEnumeration.COMPLETE;
+		MessageType msg = null;
+		if (items.size() == 0) {
+		    flag = FlagEnumeration.DOES_NOT_EXIST;
+		    msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.INFO);
+		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_EMPTY_SET));
+		}
+		sc.setObject(objectId, obj.getComment(), obj.getVersion(), flag, msg);
 	    }
 	    for (ItemType item : items) {
 		sc.relateItem(objectId, sc.storeItem(item));
 	    }
+/*
+//DAS -- unnecessary, I think?
+	} catch (CollectException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.WARNING);
+	    String err = JOVALMsg.getMessage(JOVALMsg.STATUS_ADAPTER_COLLECTION, e.getMessage());
+	    msg.setValue(err);
+	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), e.getFlag(), msg);
+*/
 	} catch (OvalException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -603,7 +544,6 @@ public class Engine implements IEngine, IAdapter {
      */
     class ObjectGroup {
 	RequestContext rc;
-	IAdapter adapter;
 	String id;
 	Class<?> clazz;
 	Object behaviors = null, factory;
@@ -629,7 +569,6 @@ public class Engine implements IEngine, IAdapter {
 	    ObjectType obj = rc.getObject();
 	    id = obj.getId();
 	    clazz = obj.getClass();
-	    adapter = adapters.get(clazz);
 	    try {
 		//
 		// Collect everything necessary to manufacture new ObjectTypes
@@ -778,7 +717,7 @@ public class Engine implements IEngine, IAdapter {
 
 	    try {
 		@SuppressWarnings("unchecked")
-		Collection<ItemType> unfiltered = (Collection<ItemType>)adapter.getItems(obj, rc);
+		Collection<ItemType> unfiltered = (Collection<ItemType>)Engine.this.getItems(obj, rc);
 		List<Filter> filters = getObjectFilters(rc.getObject());
 		Collection<ItemType> filtered = filterItems(filters, unfiltered, rc);
 		flags.add(FlagEnumeration.COMPLETE);
@@ -792,7 +731,7 @@ public class Engine implements IEngine, IAdapter {
 		flags.add(e.getFlag());
 	    } catch (Exception e) {
 		//
-		// Handle an uncaught, unexpected exception emanating from the adapter.
+		// Handle an uncaught, unexpected exception emanating from the adapter
 		//
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		MessageType msg = Factories.common.createMessageType();
@@ -2197,7 +2136,7 @@ public class Engine implements IEngine, IAdapter {
 		items = sc.getItemsByObjectId(objectId);
 	    } catch (NoSuchElementException e) {
 		//
-		// If the object has not yet been scanned, then it must be retrieved live from the adapter.
+		// If the object has not yet been scanned, then it must be retrieved live from the adapter
 		//
 		rc.pushObject(definitions.getObject(objectId));
 		items = scanObject(rc);
@@ -2362,7 +2301,7 @@ public class Engine implements IEngine, IAdapter {
 		tt.setFormat1(DateTimeFormatEnumeration.SECONDS_SINCE_EPOCH);
 		ts1 = new Vector<IType>();
 		try {
-		    String val = Long.toString(session.getTime() / 1000L);
+		    String val = Long.toString(plugin.getTime() / 1000L);
 		    ts1.add(TypeFactory.createType(IType.Type.INT, val));
 		} catch (Exception e) {
 		    throw new ResolveException(e);

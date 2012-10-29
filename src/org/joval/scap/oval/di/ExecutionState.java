@@ -342,14 +342,6 @@ public class ExecutionState {
 	return false;
     }
 
-    IBaseSession getSession() throws IOException {
-	if (plugin == null) {
-	    return null;
-	} else {
-	    return plugin.getSession();
-	}
-    }
-
     // Private
 
     private boolean validState() {

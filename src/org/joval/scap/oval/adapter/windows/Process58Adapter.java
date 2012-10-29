@@ -28,7 +28,6 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.ProcessItem;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IProperty;
 import org.joval.intf.windows.powershell.IRunspace;

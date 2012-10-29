@@ -294,8 +294,8 @@ public class Main implements IObserver {
 		try {
 		    print(getMessage("MESSAGE_RUNNING_XMLVALIDATION", state.getPath(state.dataFile)));
 		    if (!validateSchema(state.dataFile, SystemCharacteristicsSchemaFilter.list())) {
-			state.getSession().disconnect();
-			state.getSession().dispose();
+			state.plugin.disconnect();
+			state.plugin.dispose();
 			System.exit(ERR);
 		    }
 		    print(getMessage("MESSAGE_RUNNING_SCHEMATRON", state.getPath(state.dataFile)));
@@ -316,12 +316,8 @@ public class Main implements IObserver {
 			    }
 			}
 		    }
-		    try {
-			state.getSession().disconnect();
-			state.getSession().dispose();
-		    } catch (IOException e2) {
-			logger.log(Level.WARNING, e.getMessage(), e2);
-		    }
+		    state.plugin.disconnect();
+		    state.plugin.dispose();
 		    System.exit(ERR);
 		} catch (Exception e) {
 		    logger.log(Level.WARNING, e.getMessage(), e);
@@ -429,7 +425,7 @@ public class Main implements IObserver {
 		filter = OvalFactory.createDefinitionFilter(state.definitionIDs);
 	    }
 
-	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.EXHAUSTIVE, state.getSession());
+	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.EXHAUSTIVE, state.plugin);
 	    engine.setDefinitions(defs);
 
 	    if (filter != null) {
@@ -447,7 +443,7 @@ public class Main implements IObserver {
 	      case ERR:
 		throw engine.getError();
 	    }
-	    state.getSession().dispose();
+	    state.plugin.dispose();
 
 	    IResults results = engine.getResults();
 	    if (state.directivesFile.exists() && state.directivesFile.isFile()) {

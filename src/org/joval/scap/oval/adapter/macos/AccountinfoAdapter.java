@@ -25,7 +25,6 @@ import oval.schemas.systemcharacteristics.macos.AccountinfoItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.os.unix.macos.DsclTool;

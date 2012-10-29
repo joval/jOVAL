@@ -16,12 +16,12 @@ import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
-import org.joval.intf.plugin.IRequestContext;
+import org.joval.intf.oval.IProvider;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.OvalException;
 import org.joval.util.JOVALMsg;
 
-class RequestContext implements IRequestContext {
+class RequestContext implements IProvider.IRequestContext {
     private Stack<Level> levels;
 
     RequestContext(ObjectType object) {

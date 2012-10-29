@@ -26,7 +26,6 @@ import oval.schemas.systemcharacteristics.windows.GroupItem;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.identity.IGroup;

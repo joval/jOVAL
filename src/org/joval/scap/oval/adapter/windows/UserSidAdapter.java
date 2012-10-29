@@ -13,7 +13,6 @@ import oval.schemas.definitions.windows.UserSid55Object;
 import oval.schemas.definitions.windows.UserSidObject;
 import oval.schemas.systemcharacteristics.core.ItemType;
 
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;

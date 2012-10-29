@@ -24,7 +24,6 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.UserSidItem;
 
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.intf.windows.identity.IGroup;

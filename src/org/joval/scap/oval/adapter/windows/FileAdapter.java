@@ -30,7 +30,6 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFileEx;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.io.IWindowsFileInfo;

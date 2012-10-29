@@ -9,7 +9,7 @@ PRODUCTNAME=jovaldi
 DIST_DIR=$(DIST)/$(ARCH)
 BIN_DIR=$(RSRC)/bin/$(PLATFORM)-$(ARCH)
 
-API=$(COMMON_LIB)$(CLN)$(COMMON_DEPS)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(SVRL)
+API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCAP_LIB)$(CLN)$(SVRL)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
 
 include classes.mk
@@ -59,12 +59,10 @@ dist: all $(DIST_DIR)/jre
 	cp -R $(SCAP)/schemas/xml/xmldsig-core-schema.xsd $(DIST_DIR)/xml
 	cp $(COMPONENTS)/schematron/*-schematron.xsl $(DIST_DIR)/xml
 	cp $(PRODUCTNAME).jar $(DIST_DIR)/lib
-	cp $(COMMON_LIB) $(DIST_DIR)/lib
-	cp $(COMMON)/$(LIBDIR)/*.jar $(DIST_DIR)/lib
-	cp $(ADAPTERS_LIB) $(DIST_DIR)/lib
 	cp $(SCAP_LIB) $(DIST_DIR)/lib
 	cp $(SVRL) $(DIST_DIR)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST_DIR)/lib
+	cp $(JOVAL_CORE)/$(LIBDIR)/*.jar $(DIST_DIR)/lib
 	cp $(XPERT_LIB) $(DIST_DIR)/lib
 	mkdir -p $(DIST_DIR)/security
 	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST_DIR)/security

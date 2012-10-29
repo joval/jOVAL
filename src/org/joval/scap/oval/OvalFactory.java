@@ -19,7 +19,7 @@ import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.oval.IVariables;
-import org.joval.intf.system.IBaseSession;
+import org.joval.intf.plugin.IPlugin;
 import org.joval.scap.oval.engine.Engine;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
@@ -73,8 +73,8 @@ public class OvalFactory {
 	return new SystemCharacteristics(f);
     }
 
-    public static IEngine createEngine(IEngine.Mode mode, IBaseSession session) {
-	return new OEMEngine(mode, session);
+    public static IEngine createEngine(IEngine.Mode mode, IPlugin plugin) {
+	return new OEMEngine(mode, plugin);
     }
 
     public static GeneratorType getGenerator() {
@@ -94,8 +94,8 @@ public class OvalFactory {
     // Private
 
     private static class OEMEngine extends Engine {
-	OEMEngine(IEngine.Mode mode, IBaseSession session) {
-	    super(mode, session);
+	OEMEngine(IEngine.Mode mode, IPlugin plugin) {
+	    super(mode, plugin);
 	}
     }
 }

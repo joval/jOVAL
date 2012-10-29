@@ -18,7 +18,6 @@ import oval.schemas.systemcharacteristics.windows.AuditeventpolicysubcategoriesI
 import oval.schemas.systemcharacteristics.windows.EntityItemAuditType;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;

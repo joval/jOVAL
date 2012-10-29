@@ -1,12 +1,12 @@
 # Copyright (C) 2011 jOVAL.org.  All rights reserved.
 # This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-TOP=../../../..
+TOP=../..
 
 include $(TOP)/common.mk
 
-API=$(COMMON_LIB)$(CLN)$(COMMON_DEPS)
-CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
+API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCAP_LIB)
+CLASSPATH="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(SRC)"
 RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(PLUGIN_LOCAL_LIB)"
 
 include classes.mk
@@ -28,9 +28,14 @@ clean:
 	rm -f $(PLUGIN_LOCAL_LIB)
 
 resources:
-	rm -f $(BUILD)/plugin.resources.properties
+	rm -f $(BUILD)/*.txt $(BUILD)/*.properties
+	cp $(RSRC)/adapters.txt $(BUILD)
 	cp $(RSRC)/plugin.resources.properties $(BUILD)
 	echo version=$(JOVAL_VERSION) >> $(BUILD)/plugin.resources.properties
+	cp $(RSRC)/windows.locales.properties $(BUILD)
+	rm -f $(BUILD)/org/joval/scap/oval/adapter/windows/*.psm1
+	cp $(SRC)/org/joval/scap/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/windows/
+	cp $(SRC)/org/joval/scap/oval/adapter/independent/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/independent/
 
 classes: classdirs $(CLASS_FILES)
 

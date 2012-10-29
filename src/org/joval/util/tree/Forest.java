@@ -3,6 +3,10 @@
 
 package org.joval.util.tree;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -14,6 +18,7 @@ import java.util.regex.Pattern;
 import org.slf4j.cal10n.LocLogger;
 
 import org.apache.jdbm.DB;
+import org.apache.jdbm.Serializer;
 
 import org.joval.intf.util.tree.IForest;
 import org.joval.intf.util.tree.ITree;
@@ -28,6 +33,8 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class Forest implements IForest, Iterable<ITree> {
+    public static final Serializer<String> SERIALIZER = new StringSerializer();
+
     private String name, delimiter;
     private Hashtable<String, ITree> trees;
     private LocLogger logger;
@@ -52,7 +59,7 @@ public class Forest implements IForest, Iterable<ITree> {
 	} else {
 	    NodeSerializer ser = new NodeSerializer();
 	    String nodeTableName = "tree:" + this.name + ":" + name + ":nodes";
-	    Map<String, Node> nodes = db.createTreeMap(nodeTableName, StringTools.COMPARATOR, StringTools.SERIALIZER, ser);
+	    Map<String, Node> nodes = db.createTreeMap(nodeTableName, StringTools.COMPARATOR, SERIALIZER, ser);
 	    String linkTableName = "tree:" + this.name + ":" + name + ":links";
 	    Map<String, String> links = db.createTreeMap(linkTableName);
 	    tree = new Tree(this, name, nodes, links);
@@ -210,5 +217,21 @@ public class Forest implements IForest, Iterable<ITree> {
 
     public Iterator<ITree> iterator() {
 	return trees.values().iterator();
+    }
+
+    // Internal
+
+    static final class StringSerializer implements Serializer<String>, Serializable {
+        StringSerializer() {}
+
+        // Implement Serializer<String>
+
+        public String deserialize(DataInput in) throws IOException {
+            return in.readUTF();
+        }
+
+        public void serialize(DataOutput out, String s) throws IOException {
+            out.writeUTF(s);
+        }
     }
 }

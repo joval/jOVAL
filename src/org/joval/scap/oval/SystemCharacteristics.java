@@ -215,7 +215,8 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public synchronized BigInteger storeItem(ItemType item) throws OvalException {
 	BigInteger itemId = null;
 	if (item.isSetId() && !itemTable.containsKey(item.getId())) {
-	    itemTable.put(item.getId(), item);
+	    itemId = item.getId();
+	    itemTable.put(itemId, item);
 	} else {
 	    String cs = getChecksum(item);
 	    itemId = itemChecksums.get(cs);

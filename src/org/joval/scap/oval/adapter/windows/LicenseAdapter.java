@@ -24,7 +24,6 @@ import oval.schemas.systemcharacteristics.windows.EntityItemRegistryTypeType;
 import oval.schemas.systemcharacteristics.windows.LicenseItem;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.registry.ILicenseData;
 import org.joval.intf.windows.registry.IRegistry;

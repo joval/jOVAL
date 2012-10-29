@@ -23,7 +23,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.system.IBaseSession;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.scap.Datastream;
@@ -323,9 +322,8 @@ public class XPERT {
 		    try {
 			Benchmark benchmark = ds.getBenchmark(streamId, benchmarkId);
 			Profile profile = new Profile(benchmark, profileName);
-			IBaseSession session = plugin.getSession();
 			Report report = new Report();
-			Engine engine = new Engine(benchmark, profile, checklists, ocilDir, session, verbose, report);
+			Engine engine = new Engine(benchmark, profile, checklists, ocilDir, plugin, verbose, report);
 			engine.run();
 			if (report.getAssetReportCollection().isSetReports()) {
 			    logger.info("Saving ARF report: " + resultsFile.toString());

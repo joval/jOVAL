@@ -7,17 +7,21 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.joval.intf.system.IBaseSession;
+import org.slf4j.cal10n.LocLogger;
+
+import oval.schemas.systemcharacteristics.core.SystemInfoType;
+
+import org.joval.intf.oval.IProvider;
 import org.joval.plugin.PluginConfigurationException;
+import org.joval.scap.oval.OvalException;
 
 /**
- * Defines an interface for a plugin, which is a utility class that manages an IBaseSession, and configuration data that
- * is needed by that session.
+ * Defines an interface for an OVAL engine plugin.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IPlugin {
+public interface IPlugin extends IProvider {
     /**
      * The default filename for a plugin configuration.
      */
@@ -85,9 +89,28 @@ public interface IPlugin {
     void configure(Properties props) throws Exception;
 
     /**
-     * Get the session object. This call may take some time if it involves a discovery process.
-     *
-     * @throws IOException if a session cannot be obtained. This can potentially be a ConnectException or UnknownHostException.
+     * Connect the plugin.
      */
-    IBaseSession getSession() throws IOException;
+    boolean connect();
+
+    /**
+     * Disconnect the plugin.
+     */
+    void disconnect();
+
+    /**
+     * When you're completely finished using the plugin, call this method to clean up caches and other resources.
+     */
+    void dispose();
+
+    /**
+     * Returns whether or not the plugin is connected.
+     */
+    boolean isConnected();
+
+    SystemInfoType getSystemInfo() throws OvalException;
+
+    LocLogger getLogger();
+
+    long getTime();
 }

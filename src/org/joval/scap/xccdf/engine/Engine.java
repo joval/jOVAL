@@ -62,8 +62,8 @@ import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
+import org.joval.intf.system.ISessionProvider;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.plugin.PluginFactory;
@@ -74,7 +74,6 @@ import org.joval.scap.ocil.Checklist;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
-import org.joval.scap.oval.sysinfo.SysinfoFactory;
 import org.joval.scap.sce.SCEScript;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.Profile;
@@ -105,7 +104,7 @@ public class Engine implements Runnable, IObserver {
     }
 
     private Benchmark xccdf;
-    private IBaseSession session;
+    private IPlugin plugin;
     private SystemInfoType sysinfo;
     private Collection<String> platforms;
     private Profile profile;
@@ -120,16 +119,16 @@ public class Engine implements Runnable, IObserver {
     private ObjectFactory factory;
 
     /**
-     * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL session.
+     * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL plugin.
      */
     public Engine(Benchmark xccdf, Profile profile, Hashtable<String, Checklist> checklists, File ocilDir,
-		  IBaseSession session, boolean verbose, Report arfReport) {
+		  IPlugin plugin, boolean verbose, Report arfReport) {
 
 	this.xccdf = xccdf;
 	this.profile = profile;
 	this.checklists = checklists;
 	this.ocilDir = ocilDir;
-	this.session = session;
+	this.plugin = plugin;
 	this.verbose = verbose;
 	this.arfReport = arfReport;
 	logger = XPERT.logger;
@@ -171,7 +170,7 @@ public class Engine implements Runnable, IObserver {
 		logger.info(  "\n  ***************** ATTENTION *****************\n\n" +
 				"  This XCCDF content requires OCIL result data.\n" +
 				"  Content has been exported to: " + ocilDir + "\n");
-	    } else if (session.connect()) {
+	    } else if (plugin.connect()) {
 		List<Element> reports = new ArrayList<Element>();
 		TestResultType testResult = initializeResult();
 
@@ -184,7 +183,7 @@ public class Engine implements Runnable, IObserver {
 		} else {
 		    logger.info("The target system is not applicable to the specified XCCDF");
 		}
-		session.disconnect();
+		plugin.disconnect();
 
 		//
 		// Print results to the console, and add them to the ARF report.
@@ -224,7 +223,7 @@ public class Engine implements Runnable, IObserver {
 		makeArfReport(reports);
 		xccdf.getBenchmark().getTestResult().add(testResult);
 	    } else {
-		logger.info("Failed to connect to the target system: " + session.getHostname());
+		logger.info("Failed to connect to the target system");
 	    }
 	}
 	logger.info("XCCDF processing complete.");
@@ -289,7 +288,7 @@ public class Engine implements Runnable, IObserver {
 	//
 	OVALHandler ovalHandler = null;
 	try {
-	    ovalHandler = new OVALHandler(xccdf, profile, session);
+	    ovalHandler = new OVALHandler(xccdf, profile, plugin);
 	} catch (Exception e) {
 	    logger.severe(LogFormatter.toString(e));
 	    return;
@@ -325,8 +324,8 @@ public class Engine implements Runnable, IObserver {
 	// Run the SCE scripts
 	//
 	logger.info("Evaluating SCE rules");
-	if (session instanceof ISession) {
-	    ISession s = (ISession)session;
+	if (plugin instanceof ISessionProvider) {
+	    ISession s = ((ISessionProvider)plugin).getSession();
 	    SCEHandler sceHandler = new SCEHandler(xccdf, profile, s);
 	    for (SCEScript script : sceHandler.getScripts()) {
 		logger.info("Running SCE script: " + script.getId());
@@ -373,7 +372,7 @@ public class Engine implements Runnable, IObserver {
     }
 
     /**
-     * Create a Benchmark.TestResult node, initialized with information gathered from the profile and session.
+     * Create a Benchmark.TestResult node, initialized with information gathered from the profile and plugin.
      */
     private TestResultType initializeResult() {
 	TestResultType testResult = factory.createTestResultType();
@@ -400,7 +399,7 @@ public class Engine implements Runnable, IObserver {
 	    profileRef.setIdref(profile.getName());
 	    testResult.setProfile(profileRef);
 	}
-	String user = session.getUsername();
+	String user = ((ISessionProvider)plugin).getSession().getUsername();
 	if (user != null) {
 	    IdentityType identity = factory.createIdentityType();
 	    identity.setValue(user);
@@ -416,7 +415,7 @@ public class Engine implements Runnable, IObserver {
 	    testResult.getPlatform().add(cpeRef);
 	}
 	try {
-	    sysinfo = SysinfoFactory.createSystemInfo(session);
+	    sysinfo = plugin.getSystemInfo();
 	    if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
 		testResult.getTarget().add(sysinfo.getPrimaryHostName());
 	    }
@@ -462,7 +461,7 @@ public class Engine implements Runnable, IObserver {
     }
 
     private boolean isApplicable(IDefinitions cpeOval, List<String> definitions, List<Element> reports) {
-	IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, session);
+	IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin);
 	engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	engine.setDefinitions(cpeOval);
 	try {

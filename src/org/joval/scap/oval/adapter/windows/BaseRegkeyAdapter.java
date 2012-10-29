@@ -32,7 +32,6 @@ import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;

@@ -69,7 +69,7 @@ public class TreeHash<T> {
 	if (db == null) {
 	    table = new Hashtable<String, T>();
 	} else {
-	    table = db.createTreeMap(forest.getName(), StringTools.COMPARATOR, StringTools.SERIALIZER, ser);
+	    table = db.createTreeMap(forest.getName(), StringTools.COMPARATOR, Forest.SERIALIZER, ser);
 	}
     }
 

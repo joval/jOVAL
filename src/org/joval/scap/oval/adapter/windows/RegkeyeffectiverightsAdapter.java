@@ -33,7 +33,6 @@ import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
 import oval.schemas.systemcharacteristics.windows.RegkeyeffectiverightsItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.plugin.IRequestContext;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.identity.IACE;

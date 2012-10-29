@@ -4,22 +4,27 @@
 all: _jovaldi
 
 rebuild:
-	@$(MAKE) --keep-going --directory=sdk all
-	@$(MAKE) --keep-going --directory=xpert all
+	@$(MAKE) --keep-going --directory=engine all
+	@$(MAKE) --keep-going --directory=plugin all
 	@$(MAKE) --keep-going --directory=jovaldi dist
+	@$(MAKE) --keep-going --directory=xpert all
 
 clean:
 	@$(MAKE) --keep-going --directory=scap clean
 	@$(MAKE) --keep-going --directory=schematron clean
-	@$(MAKE) --keep-going --directory=sdk clean
-	@$(MAKE) --keep-going --directory=jovaldi dist-clean
+	@$(MAKE) --keep-going --directory=engine clean
+	@$(MAKE) --keep-going --directory=plugin clean
 	@$(MAKE) --keep-going --directory=xpert clean
+	@$(MAKE) --keep-going --directory=jovaldi dist-clean
 
-_jovaldi: _sdk _schematron _xpert
+_jovaldi: _engine _plugin _schematron _xpert
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
-_sdk: _scap
-	@$(MAKE) --keep-going --directory=sdk all
+_engine: _scap
+	@$(MAKE) --keep-going --directory=engine all
+
+_plugin: _engine
+	@$(MAKE) --keep-going --directory=plugin all
 
 _scap:
 	@$(MAKE) --keep-going --directory=scap all

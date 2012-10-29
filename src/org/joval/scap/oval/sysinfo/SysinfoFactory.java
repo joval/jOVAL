@@ -7,9 +7,6 @@ import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.system.IBaseSession;
-import org.joval.intf.apple.system.IiOSSession;
-import org.joval.intf.cisco.system.IIosSession;
-import org.joval.intf.juniper.system.IJunosSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.OvalException;
@@ -38,15 +35,6 @@ public class SysinfoFactory {
 		return FamilyEnumeration.UNIX;
 	    }
 	
-	  case APPLE_IOS:
-	    return FamilyEnumeration.APPLE_IOS;
-
-	  case CISCO_IOS:
-	    return FamilyEnumeration.IOS;
-
-	  case JUNIPER_JUNOS:
-	    return FamilyEnumeration.JUNOS;
-
 	  default:
 	    return FamilyEnumeration.UNDEFINED;
 	}
@@ -57,15 +45,6 @@ public class SysinfoFactory {
      */
     public static SystemInfoType createSystemInfo(IBaseSession session) throws OvalException {
 	switch(session.getType()) {
-	  case CISCO_IOS:
-	    return IosSystemInfo.getSystemInfo((IIosSession)session);
-
-	  case JUNIPER_JUNOS:
-	    return JunosSystemInfo.getSystemInfo((IJunosSession)session);
-
-	  case APPLE_IOS:
-	    return AppleiOSSystemInfo.getSystemInfo((IiOSSession)session);
-
 	  case WINDOWS:
 	    return WindowsSystemInfo.getSystemInfo((IWindowsSession)session);
 
