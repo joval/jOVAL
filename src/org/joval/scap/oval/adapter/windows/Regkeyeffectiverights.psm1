@@ -6,6 +6,7 @@ function Get-RegkeyEffectiveRights {
     [string]$Path=$(throw "Mandatory parameter -Path missing.")
   )
 
+  $ErrorActionPreference = "Continue"
   $key = Get-Item "Registry::$($Path)"
   $security = $key.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Access)
   foreach($ace in $security.GetAccessRules($True, $True, [System.Security.Principal.SecurityIdentifier])) {

@@ -119,6 +119,8 @@ namespace jOVAL.AccessToken {
 
   $ErrorActionPreference = "SilentlyContinue" 
   $type = [jOVAL.AccessToken.Probe]
+
+  $ErrorActionPreference = "Stop" 
   if($type -eq $null){
     add-type $code
   }

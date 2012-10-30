@@ -61,6 +61,8 @@ function Get-LockoutPolicy {
 
   $ErrorActionPreference = "SilentlyContinue"
   $type = [jOVAL.LockoutPolicy.Probe]
+
+  $ErrorActionPreference = "Stop"
   if ($type -eq $null) {
     add-type $code
   }

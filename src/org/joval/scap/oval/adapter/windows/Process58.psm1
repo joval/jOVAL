@@ -102,6 +102,8 @@ namespace jOVAL.WindowsProcess {
 
   $ErrorActionPreference = "SilentlyContinue" 
   $type = [jOVAL.WindowsProcess.Probe]
+
+  $ErrorActionPreference = "Stop" 
   if($type -eq $null){
     add-type $code
   }

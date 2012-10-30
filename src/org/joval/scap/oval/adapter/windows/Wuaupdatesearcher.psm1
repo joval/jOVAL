@@ -7,6 +7,7 @@ function Get-WuaUpdates {
     [boolean]$includeSuperseded = $false
   )
 
+  $ErrorActionPreference = "Continue"
   $wua = New-Object -ComObject Microsoft.Update.Session
   $wusearcher = $wua.CreateUpdateSearcher()
   $results = $wusearcher.Search($searchCriteria)

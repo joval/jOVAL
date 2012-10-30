@@ -27,6 +27,7 @@ public class Runspace implements IRunspace {
     public static final String INIT_COMMAND = "powershell -NoProfile -File -";
 
     protected String id, prompt;
+    protected StringBuffer err;
     protected LocLogger logger;
     protected IProcess p;
     protected InputStream stdout, stderr;	// Output from the powershell process
@@ -45,6 +46,7 @@ public class Runspace implements IRunspace {
 	stdout = p.getInputStream();
 	stderr = p.getErrorStream();
 	stdin = p.getOutputStream();
+	err = null;
 	read();
     }
 
@@ -80,8 +82,10 @@ public class Runspace implements IRunspace {
 		}
 	    }
 	}
-	if (hasError()) {
-	    throw new PowershellException(getError());
+	if (err != null) {
+	    String error = err.toString();
+	    err = null;
+	    throw new PowershellException(error);
 	}
     }
 
@@ -92,10 +96,12 @@ public class Runspace implements IRunspace {
 	stdin.write("\r\n".getBytes());
 	stdin.flush();
 	String result = read();
-	if (hasError()) {
-	    throw new PowershellException(getError());
-	} else {
+	if (err == null) {
 	    return result;
+	} else {
+	    String error = err.toString();
+	    err = null;
+	    throw new PowershellException(error);
 	}
     }
 
@@ -106,7 +112,7 @@ public class Runspace implements IRunspace {
     // Internal
 
     /**
-     * Read lines until the next prompt is reached.
+     * Read lines until the next prompt is reached. If there are errors, they are buffered in err.
      */
     protected String read() throws IOException {
 	StringBuffer sb = null;
@@ -127,12 +133,16 @@ public class Runspace implements IRunspace {
     }
 
     /**
-     * Read a single line, or the next prompt. Returns null if the line is a prompt.
+     * Read a single line, or the next prompt. Returns null if the line is a prompt. If there are errors, they are
+     * buffered in err.
      */
     protected String readLine() throws IOException {
 	StringBuffer sb = new StringBuffer();
 	boolean cr = false;
 	int ch = -1;
+	if (hasError()) {
+	    throw new IOException(getError());
+	}
 	while((ch = stdout.read()) != -1) {
 	    switch(ch) {
 	      case '\r':
@@ -159,7 +169,14 @@ public class Runspace implements IRunspace {
 		}
 		sb.append((char)(ch & 0xFF));
 	    }
-	    if (stdout.available() == 0 && isPrompt(sb.toString())) {
+	    if (hasError()) {
+		if (err == null) {
+		    err = new StringBuffer(getError());
+		} else {
+		    err.append("\r\n");
+		    err.append(getError());
+		}
+	    } else if (stdout.available() == 0 && isPrompt(sb.toString())) {
 		prompt = sb.toString();
 		return null;
 	    }

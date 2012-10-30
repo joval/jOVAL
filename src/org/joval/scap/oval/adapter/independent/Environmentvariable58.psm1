@@ -306,6 +306,8 @@ namespace jOVAL.Environment58 {
 
   $ErrorActionPreference = "SilentlyContinue"
   $type = [jOVAL.Environment58.Probe]
+
+  $ErrorActionPreference = "Stop"
   if($type -eq $null){
     add-type $code
   }

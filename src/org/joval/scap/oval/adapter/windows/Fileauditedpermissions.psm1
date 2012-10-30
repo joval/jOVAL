@@ -10,6 +10,7 @@ function Get-FileAuditedPermissions {
     throw "Path is NULL"
   }
 
+  $ErrorActionPreference = "Continue"
   $file = Get-Item $Path
   $security = $file.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Audit)
   foreach($ace in $security.GetAuditRules($True, $False, [System.Security.Principal.SecurityIdentifier])) {
