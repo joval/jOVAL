@@ -186,7 +186,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	    }
 	    directory.setWmiProvider(wmi);
 	    if (runspaces == null) {
-		runspaces = new RunspacePool(this);
+		runspaces = new RunspacePool(this, 100);
 	    }
 	    return true;
 	} else {

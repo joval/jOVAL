@@ -8,28 +8,30 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.HashMap;
 
-import org.joval.intf.system.IBaseSession;
+import org.slf4j.cal10n.LocLogger;
+
 import org.joval.intf.system.IProcess;
-import org.joval.intf.system.ISession;
 import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.powershell.IRunspacePool;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.util.JOVALMsg;
 
 /**
- * An implementation of a runspace pool based on a generic ISession.
+ * An implementation of a runspace pool based on a generic IWindowsSession.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class RunspacePool implements IRunspacePool {
-    private ISession session;
+    private LocLogger logger;
+    private IWindowsSession session;
     private HashMap<String, Runspace> pool;
+    private int capacity;
 
-    public RunspacePool(ISession session) throws IllegalArgumentException {
-	if (session.getType() != ISession.Type.WINDOWS) {
-	    throw new IllegalArgumentException(session.getType().toString());
-	}
+    public RunspacePool(IWindowsSession session, int capacity) {
 	this.session = session;
+	logger = session.getLogger();
+	this.capacity = capacity;
 	pool = new HashMap<String, Runspace>();
     }
 
@@ -39,7 +41,10 @@ public class RunspacePool implements IRunspacePool {
 		runspace.invoke("exit");
 		IProcess p = runspace.getProcess();
 		p.waitFor(10000L);
-		session.getLogger().debug(JOVALMsg.STATUS_POWERSHELL_EXIT, runspace.getId());
+		if (p.isRunning()) {
+		    p.destroy();
+		}
+		logger.debug(JOVALMsg.STATUS_POWERSHELL_EXIT, runspace.getId());
 	    } catch (Exception e) {
 		e.printStackTrace();
 	    }
@@ -60,15 +65,10 @@ public class RunspacePool implements IRunspacePool {
 	    runspaces.add(rs);
 	}
 	return runspaces;
-/*
-DAS: For some reason, the local Powershell implemenataion doesn't work well sharing runspaces.
-
-return new ArrayList<IRunspace>();
-*/
     }
 
     public int capacity() {
-	return 100;
+	return capacity;
     }
 
     public IRunspace get(String id) throws NoSuchElementException {
@@ -83,9 +83,9 @@ return new ArrayList<IRunspace>();
 	if (pool.size() < capacity()) {
 	    String id = Integer.toString(pool.size());
 	    Runspace runspace = new Runspace(id, session.createProcess(Runspace.INIT_COMMAND, null), session.getLogger());
-	    session.getLogger().debug(JOVALMsg.STATUS_POWERSHELL_SPAWN, id);
-	    runspace.invoke("$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(512,2000)");
+	    logger.debug(JOVALMsg.STATUS_POWERSHELL_SPAWN, id);
 	    pool.put(id, runspace);
+	    runspace.invoke("$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(512,2000)");
 	    return runspace;
 	} else {
 	    throw new IndexOutOfBoundsException(Integer.toString(pool.size() + 1));
