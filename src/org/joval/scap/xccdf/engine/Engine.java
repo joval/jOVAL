@@ -62,6 +62,7 @@ import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.system.ISessionProvider;
 import org.joval.intf.util.IObserver;
@@ -325,15 +326,18 @@ public class Engine implements Runnable, IObserver {
 	//
 	logger.info("Evaluating SCE rules");
 	if (plugin instanceof ISessionProvider) {
-	    ISession s = ((ISessionProvider)plugin).getSession();
-	    SCEHandler sceHandler = new SCEHandler(xccdf, profile, s);
-	    for (SCEScript script : sceHandler.getScripts()) {
-		logger.info("Running SCE script: " + script.getId());
-		if (!script.exec()) {
-		    logger.warning("SCE script execution failed!");
-		}
-	    } 
-	    sceHandler.integrateResults(testResult);
+	    IBaseSession base = ((ISessionProvider)plugin).getSession();
+	    if (base instanceof ISession) {
+		ISession session = (ISession)base;
+		SCEHandler sceHandler = new SCEHandler(xccdf, profile, session);
+		for (SCEScript script : sceHandler.getScripts()) {
+		    logger.info("Running SCE script: " + script.getId());
+		    if (!script.exec()) {
+			logger.warning("SCE script execution failed!");
+		    }
+		} 
+		sceHandler.integrateResults(testResult);
+	    }
 	}
 	testResult.setEndTime(getTimestamp());
 
