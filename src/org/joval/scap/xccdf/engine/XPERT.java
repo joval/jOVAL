@@ -51,6 +51,9 @@ public class XPERT {
     private static PropertyResourceBundle resources;
     static {
 	String s = System.getProperty("xpert.baseDir");
+	if (s != null) {
+	    BASE_DIR = new File(s);
+	}
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	    Locale locale = Locale.getDefault();
