@@ -64,6 +64,10 @@ public class PropertyUtil implements IProperty {
 	return prop.iterator();
     }
 
+    public Properties toProperties() {
+	return prop.toProperties();
+    }
+
     // Private
 
     private class PropertiesProperty implements IProperty {
@@ -117,6 +121,10 @@ public class PropertyUtil implements IProperty {
 
 	public boolean getBooleanProperty(String key) {
 	    return "true".equalsIgnoreCase(prop.getProperty(key));
+	}
+
+	public Properties toProperties() {
+	    return props;
 	}
     }
 }

@@ -102,6 +102,11 @@ public interface IBaseSession extends ILoggable {
     long getTime() throws Exception;
 
     /**
+     * Does the session terminal echo the command?
+     */
+    boolean echo();
+
+    /**
      * Create a process on the machine, with the specified environment variables.
      *
      * @param env Environment variables, each of the form "VARIABLE=VALUE".

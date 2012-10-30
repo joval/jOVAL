@@ -10,5 +10,5 @@ package org.joval.intf.system;
  * @version %I% %G%
  */
 public interface ISessionProvider {
-    ISession getSession();
+    IBaseSession getSession();
 }

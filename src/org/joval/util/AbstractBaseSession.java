@@ -5,6 +5,7 @@ package org.joval.util;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.Properties;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -108,6 +109,10 @@ public abstract class AbstractBaseSession implements IBaseSession {
 	logger.info(JOVALMsg.STATUS_SESSION_DISPOSE, getHostname());
     }
 
+    public boolean echo() {
+	return false;
+    }
+
     // All the abstract methods, for reference
 
     public abstract boolean connect();
@@ -182,6 +187,10 @@ public abstract class AbstractBaseSession implements IBaseSession {
 
 	public Iterator<String> iterator() {
 	    return props.iterator();
+	}
+
+	public Properties toProperties() {
+	    return props.toProperties();
 	}
     }
 }

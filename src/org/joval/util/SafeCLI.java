@@ -138,10 +138,10 @@ public class SafeCLI {
 		p.start();
 		reader = PerishableReader.newInstance(p.getInputStream(), readTimeout);
 		reader.setLogger(session.getLogger());
-		if (session.getType() == IBaseSession.Type.CISCO_IOS) {
+		if (session.echo()) {
 		    //
-		    // IOS ignores the terminal mode bytes and echoes anyway, so discard the first line
-		    // of output from IOS, as it's always the echo of the issued command.
+		    // For sessions that ignore the terminal mode bytes and echo anyway, discard the first line
+		    // of output, as it's always the echo of the issued command.
 		    //
 		    reader.readLine();
 		}

@@ -28,6 +28,7 @@ import org.slf4j.cal10n.LocLogger;
 import org.joval.discovery.Local;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.system.ISessionProvider;
 import org.joval.intf.util.ILoggable;
@@ -185,7 +186,7 @@ public class LocalPlugin implements IPlugin, ILoggable, ISessionProvider {
 
     // Implement ISessionProvider
 
-    public ISession getSession() {
+    public IBaseSession getSession() {
 	return session;
     }
 

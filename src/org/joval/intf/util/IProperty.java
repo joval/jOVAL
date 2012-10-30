@@ -3,6 +3,8 @@
 
 package org.joval.intf.util;
 
+import java.util.Properties;
+
 /**
  * An interface representing something that can have properties.
  *
@@ -34,4 +36,6 @@ public interface IProperty extends Iterable<String> {
      * Set the value for the specified key.  Set the value to null to remove the property.
      */
     void setProperty(String key, String value);
+
+    Properties toProperties();
 }
