@@ -7,7 +7,7 @@ function Get-RegkeyEffectiveRights {
   )
 
   $ErrorActionPreference = "Continue"
-  $key = Get-Item "Registry::$($Path)"
+  $key = Get-Item -literalPath "Registry::$($Path)"
   $security = $key.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Access)
   foreach($ace in $security.GetAccessRules($True, $True, [System.Security.Principal.SecurityIdentifier])) {
     $rights = [Convert]::ToInt32($ace.RegistryRights)

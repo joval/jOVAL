@@ -11,7 +11,7 @@ function Get-FileAuditedPermissions {
   }
 
   $ErrorActionPreference = "Continue"
-  $file = Get-Item $Path
+  $file = Get-Item -literalPath $Path
   $security = $file.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Audit)
   foreach($ace in $security.GetAuditRules($True, $False, [System.Security.Principal.SecurityIdentifier])) {
     $mask = [Convert]::ToInt32($ace.FileSystemRights)
