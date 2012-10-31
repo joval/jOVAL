@@ -62,6 +62,11 @@ public interface IBaseSession extends ILoggable {
     String LOCALHOST = "localhost";
 
     /**
+     * Implement org.joval.intf.util.IConfigurable.
+     */
+    IProperty getProperties();
+
+    /**
      * Check if the session is using debugging mode.
      */
     boolean isDebug();
@@ -90,11 +95,6 @@ public interface IBaseSession extends ILoggable {
      * Get the name of the host to which the session is connected.
      */
     String getHostname();
-
-    /**
-     * Access the instance properties controlling various session behaviors (defined by the PROP_* constants).
-     */
-    IProperty getProperties();
 
     /**
      * Get the number of milliseconds since midnight 1/1/70 UTC, on the system.

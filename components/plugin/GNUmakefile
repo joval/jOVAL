@@ -28,7 +28,8 @@ clean:
 	rm -f $(PLUGIN_LOCAL_LIB)
 
 resources:
-	rm -f $(BUILD)/*.txt $(BUILD)/*.properties
+	rm -f $(BUILD)/*.ini $(BUILD)/*.txt $(BUILD)/*.properties
+	cp $(RSRC)/defaults.ini $(BUILD)
 	cp $(RSRC)/adapters.txt $(BUILD)
 	cp $(RSRC)/plugin.resources.properties $(BUILD)
 	echo version=$(JOVAL_VERSION) >> $(BUILD)/plugin.resources.properties

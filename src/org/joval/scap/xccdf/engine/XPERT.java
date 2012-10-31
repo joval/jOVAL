@@ -211,41 +211,29 @@ public class XPERT {
 	}
 
 	int exitCode = 1;
-	try {
-	    logger = LogFormatter.createDuplex(logFile, level);
-	} catch (IOException e) {
-	    throw new RuntimeException(e);
-	}
-
 	IPlugin plugin = null;
 	try {
-	    File configDir = new File(BASE_DIR, "config");
-	    if (configDir.isDirectory()) {
-		File configOverrides = new File(configDir, "xpert.ini");
-		if (configOverrides.isFile()) {
-		    JOVALSystem.addConfiguration(configOverrides);
-		}
-	    }
 	    plugin = PluginFactory.newInstance(new File(BASE_DIR, "plugin")).createPlugin(pluginName);
-	} catch (IOException e) {
-	    logger.severe(LogFormatter.toString(e));
+	    exitCode = 0;
 	} catch (IllegalArgumentException e) {
-	    logger.severe("Not a directory: " + e.getMessage());
+	    System.out.println("Not a directory: " + e.getMessage());
 	} catch (NoSuchElementException e) {
-	    logger.severe("Plugin not found: " + e.getMessage());
+	    System.out.println("Plugin not found: " + e.getMessage());
 	} catch (PluginConfigurationException e) {
-	    logger.severe(LogFormatter.toString(e));
+	    System.out.println(LogFormatter.toString(e));
 	}
 
 	printHeader(plugin);
 	if (help) {
 	    printHelp(plugin);
-	    exitCode = 0;
 	} else if (!streamFile.isFile()) {
-	    logger.warning("ERROR: No such file " + streamFile.toString());
+	    System.out.println("ERROR: No such file " + streamFile.toString());
+	    exitCode = 4;
 	    printHelp(plugin);
 	} else if (plugin != null) {
+	    exitCode = 1;
 	    try {
+		logger = LogFormatter.createDuplex(logFile, level);
 		Datastream ds = null;
 		if (verify) {
 		    logger.info("Verifying XML digital signature: " + streamFile.toString());
@@ -343,6 +331,8 @@ public class XPERT {
 			logger.severe(">>> ERROR - Failed to connect to host: " + e.getMessage());
 		    }
 		}
+	    } catch (IOException e) {
+		logger.severe(LogFormatter.toString(e));
 	    } catch (ScapException e) {
 		logger.warning(LogFormatter.toString(e));
 		exitCode = 2;

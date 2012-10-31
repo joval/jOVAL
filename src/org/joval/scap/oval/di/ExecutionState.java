@@ -291,19 +291,7 @@ public class ExecutionState {
 
 	if (!printHelp) {
 	    Main.configureLogging(logFile, logLevel);
-	    try {
-		File configDir = new File(BASE_DIR, "config");
-		if (configDir.isDirectory()) {
-		    File configFile = new File(configDir, "jovaldi.ini");
-		    if (configFile.isFile()) {
-			JOVALSystem.addConfiguration(configFile);
-		    }
-		}
-	    } catch (IOException e) {
-		e.printStackTrace();
-	    }
 	}
-
 	if (printHelp || inputFile == null) {
 	    try {
 		plugin = PluginFactory.newInstance(new File(BASE_DIR, "plugin")).createPlugin(pluginName);

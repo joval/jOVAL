@@ -13,22 +13,18 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.IProperty;
+import org.joval.intf.util.IConfigurable;
 
 /**
  * This is the base class for ALL the implementations of all the different types of jOVAL sessions:
  *
- * @see org.joval.os.cisco.system.IosSession
- * @see org.joval.os.juniper.system.JunosSession
  * @see org.joval.os.unix.system.UnixSession
- * @see org.joval.os.unix.remote.system.UnixSession
  * @see org.joval.os.windows.system.WindowsSession
- * @see org.joval.os.windows.remote.system.WindowsSession
- * @see org.joval.ssh.system.SshSession
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class AbstractBaseSession implements IBaseSession {
+public abstract class AbstractBaseSession implements IConfigurable, IBaseSession {
     protected File wsdir = null;
     protected LocLogger logger;
     protected boolean debug;
@@ -38,7 +34,7 @@ public abstract class AbstractBaseSession implements IBaseSession {
     protected AbstractBaseSession() {
 	logger = JOVALMsg.getLogger();
 	internalProps = new InternalProperties();
-	JOVALSystem.configureSession(this);
+	Configurator.configure(this);
 	debug = internalProps.getBooleanProperty(PROP_DEBUG);
     }
 
@@ -66,6 +62,12 @@ public abstract class AbstractBaseSession implements IBaseSession {
 	this.logger = logger;
     }
 
+    // Implement IConfigurable
+
+    public IProperty getProperties() {
+	return internalProps;
+    }
+
     // Implement IBaseSession
 
     public long getTimeout(Timeout to) {
@@ -83,10 +85,6 @@ public abstract class AbstractBaseSession implements IBaseSession {
 	  default:
 	    return internalProps.getLongProperty(PROP_READ_TIMEOUT_S);
 	}
-    }
-
-    public IProperty getProperties() {
-	return internalProps;
     }
 
     public boolean isDebug() {

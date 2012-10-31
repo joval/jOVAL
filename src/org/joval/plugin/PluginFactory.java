@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -18,6 +19,7 @@ import java.util.StringTokenizer;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
+import org.joval.util.LogFormatter;
 
 /**
  * Factory for production of IPlugin instances.
@@ -69,6 +71,7 @@ public class PluginFactory {
 			if (main == null) {
 			    throw new PluginConfigurationException(JOVALMsg.getMessage(JOVALMsg.ERROR_PLUGIN_MAIN));
 			} else {
+			    tailorConfigurator(loader, dir);
 			    try {
 				Class clazz = loader.loadClass(main);
 				Object obj = clazz.newInstance();
@@ -104,6 +107,27 @@ public class PluginFactory {
 	    throw new IllegalArgumentException(baseDir.getPath());
 	} else {
 	    this.baseDir = baseDir;
+	}
+    }
+
+    /**
+     * If the plugin contains a config/session.ini file, then load the plugin classloader's Configurator and invoke its
+     * addConfiguration method.
+     */
+    private void tailorConfigurator(ClassLoader loader, File pluginDir) {
+	File configDir = new File(pluginDir, "config");
+	if (configDir.isDirectory()) {
+	    File configFile = new File(configDir, "session.ini");
+	    if (configFile.exists()) {
+		try {
+		    Class clazz = loader.loadClass("org.joval.util.Configurator");
+		    @SuppressWarnings("unchecked")
+		    Method method = clazz.getMethod("addConfiguration", File.class);
+		    method.invoke(null, configFile);
+		} catch (Exception e) {
+		    JOVALMsg.getLogger().warn(JOVALMsg.ERROR_CONFIG_OVERLAY, LogFormatter.toString(e));
+		}
+	    }
 	}
     }
 }

@@ -6,8 +6,8 @@ all: _jovaldi
 rebuild:
 	@$(MAKE) --keep-going --directory=engine all
 	@$(MAKE) --keep-going --directory=plugin all
-	@$(MAKE) --keep-going --directory=jovaldi dist
 	@$(MAKE) --keep-going --directory=xpert all
+	@$(MAKE) --keep-going --directory=jovaldi dist
 
 clean:
 	@$(MAKE) --keep-going --directory=scap clean

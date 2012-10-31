@@ -41,23 +41,21 @@ public class JOVALSystem {
      */
     public static final String SYSTEM_PROP_BUILD_DATE = "build.date";
 
-    private static final String SYSTEM_SECTION	= JOVALSystem.class.getName();
-    private static final String CONFIG_RESOURCE	= "defaults.ini";
+    private static final String SYSPROPS_RESOURCE = "joval.system.properties";
 
     private static Timer timer;
-    private static IniFile config;
-
+    private static Properties sysProps;
     static {
 	timer = new Timer("jOVAL system timer", true);
-	config = new IniFile();
+	sysProps = new Properties();
 	try {
 	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-	    InputStream rsc = cl.getResourceAsStream(CONFIG_RESOURCE);
+	    InputStream rsc = cl.getResourceAsStream(SYSPROPS_RESOURCE);
 	    if (rsc == null) {
-		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, CONFIG_RESOURCE));
+		JOVALMsg.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_MISSING_RESOURCE, SYSPROPS_RESOURCE));
 	    } else {
-		config.load(rsc);
+		sysProps.load(rsc);
 	    }
 	} catch (IOException e) {
 	    JOVALMsg.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -96,82 +94,11 @@ public class JOVALSystem {
     }
 
     /**
-     * Overlay sectioned jOVAL system configuration parameters from a file.
-     *
-     * jOVAL is equipped with a default configuration that is loaded by this class's static initializer. When using
-     * this method to override the defaults, make sure to do so prior to the creation of any session objects.
-     */
-    public static void addConfiguration(File f) throws IOException {
-	JOVALMsg.getLogger().info(JOVALMsg.STATUS_CONFIG_OVERLAY, f.getPath());
-	config.load(f);
-    }
-
-    /**
-     * Configure a session in accordance with the jOVAL system configuration.
-     */
-    public static void configureSession(IBaseSession session) {
-	List<Class> visited = new Vector<Class>();
-	for (Class clazz : session.getClass().getInterfaces()) {
-	    configureInterface(clazz, session.getProperties(), visited, session.getClass().getName());
-	}
-	Class clazz = session.getClass().getSuperclass();
-	while(clazz != null) {
-	    for (Class intf : clazz.getInterfaces()) {
-		if (!visited.contains(intf)) {
-		    configureInterface(intf, session.getProperties(), visited, session.getClass().getName());
-		}
-	    }
-	    clazz = clazz.getSuperclass();
-	}
-    }
-
-    /**
      * Retrieve an OVAL system property.
      *
-     * @param key specify one of the PROP_* keys
+     * @param key specify one of the SYSTEM_PROP_* keys
      */
     public static String getSystemProperty(String key) {
-	try {
-	    return config.getProperty(SYSTEM_SECTION, key);
-	} catch (NoSuchElementException e) {
-	}
-	return null;
-    }
-
-    // Private
-
-    /**
-     * Recursively configure the class.
-     */
-    private static void configureInterface(Class clazz, IProperty prop, List<Class> visited, String sessionClassname) {
-	//
-	// First, configure all properties from this interface
-	//
-	try {
-	    visited.add(clazz);
-	    String section = clazz.getName();
-	    for (String key : config.getSection(section)) {
-		//
-		// Since configuration happens from the bottom-up, make sure not to override any
-		// properties that have already been set.
-		//
-		if (prop.getProperty(key) == null) {
-		    String value = config.getProperty(section, key);
-		    JOVALMsg.getLogger().debug(JOVALMsg.STATUS_CONFIG_SESSION, sessionClassname, key, value, clazz.getName());
-		    prop.setProperty(key, config.getProperty(section, key));
-		}
-	    }
-	} catch (NoSuchElementException e) {
-	}
-
-	//
-	// Then, configure all super-interfaces
-	//
-	for (Class intf : clazz.getInterfaces()) {
-	    if (!visited.contains(intf)) {
-		configureInterface(intf, prop, visited, sessionClassname);
-	    }
-	}
-
+	return sysProps.getProperty(key);
     }
 }

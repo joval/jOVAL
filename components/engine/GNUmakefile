@@ -22,10 +22,10 @@ $(JOVAL_CORE_LIB): classes resources
 resources:
 	rm -f $(BUILD)/*.ini
 	cp $(RSRC)/*.ini $(BUILD)
-	echo -e "version=$(JOVAL_VERSION)\r\n" >> $(BUILD)/defaults.ini
-	echo "build.date=`date`" >> $(BUILD)/defaults.ini
 	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/*.properties $(BUILD)
+	echo -e "version=$(JOVAL_VERSION)\r\n" >> $(BUILD)/joval.system.properties
+	echo "build.date=`date`" >> $(BUILD)/joval.system.properties
 
 clean:
 	rm -rf $(BUILD)

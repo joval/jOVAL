@@ -14,6 +14,7 @@ CLASSES=\
 	org.joval.intf.unix.io.IUnixFilesystem						\
 	org.joval.intf.unix.io.IUnixFilesystemDriver					\
 	org.joval.intf.unix.system.IUnixSession						\
+	org.joval.intf.util.IConfigurable						\
 	org.joval.intf.util.IPathRedirector						\
 	org.joval.intf.util.IPerishable							\
 	org.joval.intf.util.ISearchable							\
@@ -199,6 +200,7 @@ CLASSES=\
 	org.joval.util.AbstractEnvironment						\
 	org.joval.util.AbstractSession							\
 	org.joval.util.Base64								\
+	org.joval.util.Configurator							\
 	org.joval.util.CachingHierarchy							\
 	org.joval.util.Environment							\
 	org.joval.util.PropertyHierarchy						\
