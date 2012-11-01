@@ -138,70 +138,70 @@ public class Runspace implements IRunspace {
      */
     protected String readLine() throws IOException {
 	StringBuffer sb = new StringBuffer();
-	boolean cr = false;
-	int ch = -1;
-	if (hasError()) {
-	    throw new IOException(getError());
-	}
-	while((ch = stdout.read()) != -1) {
-	    switch(ch) {
-	      case '\r':
-		cr = true;
-		if (stdout.markSupported() && stdout.available() > 0) {
-		    stdout.mark(1);
-		    switch(stdout.read()) {
+	//
+	// Poll the streams for no more than 20 secs if there is no data.
+	//
+	for (int i=0; i < 80; i++) {
+	    int avail = 0;
+	    if ((avail = stderr.available()) > 0) {
+		if (err == null) {
+		    err = new StringBuffer();
+		}
+		byte[] buff = new byte[avail];
+		stderr.read(buff);
+		err.append(new String(buff, StringTools.ASCII));
+	    }
+	    if ((avail = stdout.available()) > 0) {
+		boolean cr = false;
+		while(avail-- > 0) {
+		    int ch = stdout.read();
+		    switch(ch) {
+		      case '\r':
+			cr = true;
+			if (stdout.markSupported() && avail > 0) {
+			    stdout.mark(1);
+			    switch(stdout.read()) {
+			      case '\n':
+				return sb.toString();
+			      default:
+				stdout.reset();
+				break;
+			    }
+			}
+			break;
+
 		      case '\n':
 			return sb.toString();
+
 		      default:
-			stdout.reset();
-			break;
+			if (cr) {
+			    cr = false;
+			    sb.append((char)('\r' & 0xFF));
+			}
+			sb.append((char)(ch & 0xFF));
 		    }
 		}
-		break;
-
-	      case '\n':
-		return sb.toString();
-
-	      default:
-		if (cr) {
-		    cr = false;
-		    sb.append((char)('\r' & 0xFF));
+		if (isPrompt(sb.toString())) {
+		    prompt = sb.toString();
+		    return null;
 		}
-		sb.append((char)(ch & 0xFF));
+		i = 0; // reset the I/O timeout counter
 	    }
-	    if (hasError()) {
-		if (err == null) {
-		    err = new StringBuffer(getError());
+	    if (p.isRunning()) {
+		try {
+		    Thread.sleep(250);
+		} catch (InterruptedException e) {
+		    throw new IOException(e);
+		}
+	    } else {
+		if (sb.length() > 0) {
+		    return sb.toString();
 		} else {
-		    err.append("\r\n");
-		    err.append(getError());
+		    return null;
 		}
-	    } else if (stdout.available() == 0 && isPrompt(sb.toString())) {
-		prompt = sb.toString();
-		return null;
 	    }
 	}
-	return null;
-    }
-
-    /**
-     * Is there data available in the error stream?
-     */
-    protected boolean hasError() {
-	try {
-	    return p.getErrorStream().available() > 0;
-	} catch (IOException e) {
-	    return true;
-	}
-    }
-
-    /**
-     * Get all the data available in the error stream.
-     */
-    protected String getError() throws IOException {
-	byte[] buff = new byte[p.getErrorStream().available()];
-	p.getErrorStream().read(buff);
-	return new String(buff, StringTools.ASCII);
+	throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL_TIMEOUT));
     }
 
     protected boolean isPrompt(String str) {
