@@ -13,6 +13,7 @@ import java.util.StringTokenizer;
 import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.system.IProcess;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
@@ -26,6 +27,7 @@ import org.joval.util.StringTools;
 public class Runspace implements IRunspace {
     public static final String INIT_COMMAND = "powershell -NoProfile -File -";
 
+    protected long timeout;			// contains default timeout
     protected String id, prompt;
     protected StringBuffer err;
     protected LocLogger logger;
@@ -36,18 +38,17 @@ public class Runspace implements IRunspace {
     /**
      * Create a new Runspace, based on a process.
      */
-    public Runspace(String id, IProcess p, LocLogger logger) throws Exception {
+    public Runspace(String id, IWindowsSession session) throws Exception {
 	this.id = id;
-	this.logger = logger;
-	this.p = p;
-	if (!p.isRunning()) {
-	    p.start();
-	}
+	this.timeout = session.getTimeout(IWindowsSession.Timeout.M);
+	this.logger = session.getLogger();
+	p = session.createProcess(INIT_COMMAND, null);
+	p.start();
 	stdout = p.getInputStream();
 	stderr = p.getErrorStream();
 	stdin = p.getOutputStream();
 	err = null;
-	read();
+	read(timeout);
     }
 
     public IProcess getProcess() {
@@ -60,7 +61,11 @@ public class Runspace implements IRunspace {
 	return id;
     }
 
-    public synchronized void loadModule(InputStream in) throws IOException, PowershellException {
+    public void loadModule(InputStream in) throws IOException, PowershellException {
+	loadModule(in, timeout);
+    }
+
+    public synchronized void loadModule(InputStream in, long millis) throws IOException, PowershellException {
 	try {
 	    StringBuffer buffer = new StringBuffer();
 	    String line = null;
@@ -69,7 +74,7 @@ public class Runspace implements IRunspace {
 		stdin.write(line.getBytes());
 		stdin.write("\r\n".getBytes());
 		stdin.flush();
-		readLine();
+		readLine(millis);
 	    }
 	    if (">> ".equals(getPrompt())) {
 		invoke("");
@@ -90,12 +95,16 @@ public class Runspace implements IRunspace {
     }
 
     public synchronized String invoke(String command) throws IOException, PowershellException {
+	return invoke(command, timeout);
+    }
+
+    public synchronized String invoke(String command, long millis) throws IOException, PowershellException {
 	logger.debug(JOVALMsg.STATUS_POWERSHELL_INVOKE, id, command);
 	byte[] bytes = command.trim().getBytes();
 	stdin.write(bytes);
 	stdin.write("\r\n".getBytes());
 	stdin.flush();
-	String result = read();
+	String result = read(millis);
 	if (err == null) {
 	    return result;
 	} else {
@@ -114,10 +123,10 @@ public class Runspace implements IRunspace {
     /**
      * Read lines until the next prompt is reached. If there are errors, they are buffered in err.
      */
-    protected String read() throws IOException {
+    protected String read(long millis) throws IOException {
 	StringBuffer sb = null;
 	String line = null;
-	while((line = readLine()) != null) {
+	while((line = readLine(millis)) != null) {
 	    if (sb == null) {
 		sb = new StringBuffer();
 	    } else {
@@ -136,12 +145,14 @@ public class Runspace implements IRunspace {
      * Read a single line, or the next prompt. Returns null if the line is a prompt. If there are errors, they are
      * buffered in err.
      */
-    protected String readLine() throws IOException {
+    protected String readLine(long millis) throws IOException {
 	StringBuffer sb = new StringBuffer();
 	//
-	// Poll the streams for no more than 20 secs if there is no data.
+	// Poll the streams for no more than timeout millis if there is no data.
 	//
-	for (int i=0; i < 80; i++) {
+	int interval = 250;
+	int max_iterations = (int)(millis / interval);
+	for (int i=0; i < max_iterations; i++) {
 	    int avail = 0;
 	    if ((avail = stderr.available()) > 0) {
 		if (err == null) {
@@ -189,7 +200,7 @@ public class Runspace implements IRunspace {
 	    }
 	    if (p.isRunning()) {
 		try {
-		    Thread.sleep(250);
+		    Thread.sleep(interval);
 		} catch (InterruptedException e) {
 		    throw new IOException(e);
 		}

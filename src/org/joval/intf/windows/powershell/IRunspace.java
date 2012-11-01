@@ -29,6 +29,11 @@ public interface IRunspace {
     void loadModule(InputStream in) throws IOException, PowershellException;
 
     /**
+     * Load a module with the specified read timeout (in millis).
+     */
+    void loadModule(InputStream in, long timeout) throws IOException, PowershellException;
+
+    /**
      * Invoke a command or module.
      *
      * @returns Text output from the command
@@ -37,6 +42,11 @@ public interface IRunspace {
      * @throws PowershellException if the command causes Powershell to raise an exception
      */
     String invoke(String command) throws IOException, PowershellException;
+
+    /**
+     * Invoke a command or module with the specified read timeout (in millis).
+     */
+    String invoke(String command, long timeout) throws IOException, PowershellException;
 
     /**
      * Get the current prompt String.

@@ -82,7 +82,7 @@ public class RunspacePool implements IRunspacePool {
     public synchronized IRunspace spawn() throws Exception {
 	if (pool.size() < capacity()) {
 	    String id = Integer.toString(pool.size());
-	    Runspace runspace = new Runspace(id, session.createProcess(Runspace.INIT_COMMAND, null), session.getLogger());
+	    Runspace runspace = new Runspace(id, session);
 	    logger.debug(JOVALMsg.STATUS_POWERSHELL_SPAWN, id);
 	    pool.put(id, runspace);
 	    runspace.invoke("$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(512,2000)");

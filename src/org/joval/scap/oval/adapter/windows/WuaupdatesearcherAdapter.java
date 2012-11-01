@@ -103,7 +103,8 @@ public class WuaupdatesearcherAdapter implements IAdapter {
 	String data = null;
 	try {
 	    String supersededArg = includeSuperseded ? "1" : "0";
-	    data = runspace.invoke("Get-WuaUpdates \"" + searchString + "\" " + supersededArg);
+	    long timeout = session.getTimeout(IWindowsSession.Timeout.L);
+	    data = runspace.invoke("Get-WuaUpdates \"" + searchString + "\" " + supersededArg, timeout);
 	} catch (Exception e) {
 	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_WUA_SEARCH, searchString, e.getMessage());
 	    session.getLogger().warn(s);
