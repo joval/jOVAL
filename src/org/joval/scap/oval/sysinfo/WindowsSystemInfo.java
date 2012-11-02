@@ -43,10 +43,10 @@ class WindowsSystemInfo {
     static final String CURRENTVERSION_VAL	= "CurrentVersion";
     static final String PRODUCTNAME_VAL		= "ProductName";
 
-    static final String ADAPTER_WQL		= "select * from Win32_NetworkAdapterConfiguration";
     static final String MAC_ADDR_FIELD		= "MACAddress";
     static final String IP_ADDR_FIELD		= "IPAddress";
     static final String DESCRIPTION_FIELD	= "Description";
+    static final String ADAPTER_WQL		= "select * from Win32_NetworkAdapterConfiguration";
 
     public static SystemInfoType getSystemInfo(IWindowsSession session) {
 	IRegistry registry = session.getRegistry(IWindowsSession.View._64BIT);
@@ -90,19 +90,22 @@ class WindowsSystemInfo {
 	    Iterator <ISWbemObject>iter = result.iterator();
 	    while (iter.hasNext()) {
 		ISWbemPropertySet row = iter.next().getProperties();
-		String macAddress = row.getItem(MAC_ADDR_FIELD).getValueAsString();
+		ISWbemProperty macAddress = row.getItem(MAC_ADDR_FIELD);
 		if (macAddress != null) {
-		    String[] ipAddresses = row.getItem(IP_ADDR_FIELD).getValueAsArray();
-		    if (ipAddresses != null && ipAddresses.length > 0) {
-			for (int i=0; i < 2 && i < ipAddresses.length; i++) {
-			    InterfaceType interfaceType = Factories.sc.core.createInterfaceType();
-			    interfaceType.setMacAddress(macAddress);
-			    String description = row.getItem(DESCRIPTION_FIELD).getValueAsString();
-			    if (description != null) {
-				interfaceType.setInterfaceName(description);
+		    ISWbemProperty ipAddress = row.getItem(IP_ADDR_FIELD);
+		    if (ipAddress != null) {
+			String[] ipAddresses = ipAddress.getValueAsArray();
+			if (ipAddresses != null) {
+			    for (int i=0; i < 2 && i < ipAddresses.length; i++) {
+				InterfaceType interfaceType = Factories.sc.core.createInterfaceType();
+				interfaceType.setMacAddress(macAddress.getValueAsString());
+				String description = row.getItem(DESCRIPTION_FIELD).getValueAsString();
+				if (description != null) {
+				    interfaceType.setInterfaceName(description);
+				}
+				interfaceType.setIpAddress(ipAddresses[i]);
+				interfacesType.getInterface().add(interfaceType);
 			    }
-			    interfaceType.setIpAddress(ipAddresses[i]);
-			    interfacesType.getInterface().add(interfaceType);
 			}
 		    }
 		}

@@ -69,12 +69,16 @@ public class Runspace implements IRunspace {
 	try {
 	    StringBuffer buffer = new StringBuffer();
 	    String line = null;
+	    int lines = 0;
 	    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StringTools.ASCII));
-	    while ((line = reader.readLine()) != null) {
+	    while((line = reader.readLine()) != null) {
 		stdin.write(line.getBytes());
 		stdin.write("\r\n".getBytes());
-		stdin.flush();
-		readLine(millis);
+		lines++;
+	    }
+	    stdin.flush();
+	    for (int i=0; i < lines; i++) {
+		readPrompt(millis);
 	    }
 	    if (">> ".equals(getPrompt())) {
 		invoke("");
@@ -145,7 +149,7 @@ public class Runspace implements IRunspace {
      * Read a single line, or the next prompt. Returns null if the line is a prompt. If there are errors, they are
      * buffered in err.
      */
-    protected String readLine(long millis) throws IOException {
+    private String readLine(long millis) throws IOException {
 	StringBuffer sb = new StringBuffer();
 	//
 	// Poll the streams for no more than timeout millis if there is no data.
@@ -215,7 +219,49 @@ public class Runspace implements IRunspace {
 	throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL_TIMEOUT));
     }
 
-    protected boolean isPrompt(String str) {
+    /**
+     * Read a prompt. There must be NO other output to stdout, or this call will time out. Error data is buffered to err.
+     */
+    private synchronized void readPrompt(long millis) throws IOException {
+	StringBuffer sb = new StringBuffer();
+	//
+	// Poll the streams for no more than timeout millis if there is no data.
+	//
+	int interval = 250;
+	int max_iterations = (int)(millis / interval);
+	for (int i=0; i < max_iterations; i++) {
+	    int avail = 0;
+	    if ((avail = stderr.available()) > 0) {
+		if (err == null) {
+		    err = new StringBuffer();
+		}
+		byte[] buff = new byte[avail];
+		stderr.read(buff);
+		err.append(new String(buff, StringTools.ASCII));
+	    }
+	    if ((avail = stdout.available()) > 0) {
+		boolean cr = false;
+		while(avail-- > 0) {
+		    sb.append((char)(stdout.read() & 0xFF));
+		    if (isPrompt(sb.toString())) {
+			prompt = sb.toString();
+			return;
+		    }
+		}
+		i = 0; // reset the I/O timeout counter
+	    }
+	    if (p.isRunning()) {
+		try {
+		    Thread.sleep(interval);
+		} catch (InterruptedException e) {
+		    throw new IOException(e);
+		}
+	    }
+	}
+	throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL_TIMEOUT));
+    }
+
+    private boolean isPrompt(String str) {
 	return (str.startsWith("PS") && str.endsWith("> ")) || str.equals(">> ");
     }
 }

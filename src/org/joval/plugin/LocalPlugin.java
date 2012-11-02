@@ -140,7 +140,6 @@ public class LocalPlugin implements IPlugin, ILoggable, ISessionProvider {
 
     public void configure(Properties props) {
 	session = Local.createSession(dir);
-	loadAdapters();
     }
 
     public boolean isConnected() {
@@ -148,7 +147,14 @@ public class LocalPlugin implements IPlugin, ILoggable, ISessionProvider {
     }
 
     public boolean connect() {
-	return session.connect();
+	if (session.isConnected()) {
+	    loadAdapters();
+	    return true;
+	} else if (session.connect()) {
+	    loadAdapters();
+	    return true;
+	}
+	return false;
     }
 
     public void disconnect() {
