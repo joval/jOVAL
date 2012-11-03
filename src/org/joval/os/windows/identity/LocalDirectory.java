@@ -431,21 +431,16 @@ class LocalDirectory implements ILoggable {
 	Collection<String> groupNetbiosNames = new Vector<String>(), userNetbiosNames = new Vector<String>();
 	for (ISWbemObject row : os) {
 	    ISWbemPropertySet columns = row.getProperties();
-
 	    String partComponent = columns.getItem("PartComponent").getValueAsString();
-	    String memberData = partComponent.substring(partComponent.indexOf(":") + 1);
-	    int ptr = memberData.indexOf(",");
-	    String clazz = memberData.substring(0, memberData.indexOf(".Domain="));
-	    int begin = memberData.indexOf("Domain=\"") + 8;
-	    int end = memberData.indexOf("\"", begin+1);
-	    String memberDomain = memberData.substring(begin, end);
-	    begin = memberData.indexOf("Name=\"") + 6;
-	    end = memberData.indexOf("\"", begin+1);
-	    String memberName = memberData.substring(begin, end);
-
-	    if ("Win32_UserAccount".equals(clazz)) {
+	    int begin = partComponent.indexOf("Domain=\"") + 8;
+	    int end = partComponent.indexOf("\"", begin);
+	    String memberDomain = partComponent.substring(begin, end);
+	    begin = partComponent.indexOf("Name=\"") + 6;
+	    end = partComponent.indexOf("\"", begin+1);
+	    String memberName = partComponent.substring(begin, end);
+	    if (partComponent.indexOf("Win32_UserAccount") != -1) {
 		userNetbiosNames.add(memberDomain + "\\" + memberName);
-	    } else if ("Win32_Group".equals(clazz)) {
+	    } else if (partComponent.indexOf("Win32_Group") != -1) {
 		groupNetbiosNames.add(memberDomain + "\\" + memberName);
 	    }
 	}

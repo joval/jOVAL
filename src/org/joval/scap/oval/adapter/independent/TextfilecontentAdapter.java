@@ -143,27 +143,32 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 	    EntityItemStringType patternType = Factories.sc.core.createEntityItemStringType();
 	    patternType.setValue(p.toString());
 	    item.setPattern(patternType);
+
 	    EntityItemIntType instanceType = Factories.sc.core.createEntityItemIntType();
 	    instanceType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    instanceType.setValue(Integer.toString(instanceNum));
 	    item.setInstance(instanceType);
 
 	    EntityItemAnySimpleType textType = Factories.sc.core.createEntityItemAnySimpleType();
-	    textType.setValue(m.group());
-	    item.setText(textType);
-	    int sCount = m.groupCount();
-	    if (sCount > 0) {
-		for (int sNum=1; sNum <= sCount; sNum++) {
-		    String group = m.group(sNum);
-		    if (group != null) {
-			EntityItemAnySimpleType sType = Factories.sc.core.createEntityItemAnySimpleType();
-			sType.setValue(group);
-			item.getSubexpression().add(sType);
-		    }
-		}
-	    }
+	    String textValue = m.group();
+	    if (textValue != null || items.size() == 0) {
+                textType.setValue(textValue);
+                item.setText(textType);
 
-	    items.add(item);
+                int sCount = m.groupCount();
+                if (sCount > 0) {
+                    for (int sNum=1; sNum <= sCount; sNum++) {
+                        String group = m.group(sNum);
+                        if (group != null) {
+                            EntityItemAnySimpleType sType = Factories.sc.core.createEntityItemAnySimpleType();
+                            sType.setValue(group);
+                            item.getSubexpression().add(sType);
+                        }
+                    }
+                }
+
+                items.add(item);
+	    }
 	}
 	return items;
     }
