@@ -202,24 +202,24 @@ public class Process58Adapter implements IAdapter {
 		if (timeVal.length() >= 24) {
 		    String cnanos = timeVal.substring(18,20);
 		    String tz = timeVal.substring(21).trim();
-		    if (tz.length() == 4) {
-			char c = tz.charAt(0);
-			if (c == '-' || c == '+') {
-        		    StringBuffer sb = new StringBuffer();
-        		    sb.append(c);
-        		    sb.append("0");
-        		    sb.append(tz.substring(1));
-        		    tz = sb.toString();
-			}
-		    }
+		    char c = tz.charAt(0);
 		    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss.SSSZ");
 		    try {
+		        if (c == '-' || c == '+') {
+			    int mins = Integer.parseInt(tz.substring(1));
+			    int hr = mins / 60;
+			    int min = mins % 60;
+        		    StringBuffer sb = new StringBuffer();
+        		    sb.append(c);
+			    sb.append(String.format("%02d%02d", hr, min));
+        		    tz = sb.toString();
+		        }
 			long millis = sdf.parse(timeVal.substring(0, 18) + tz).getTime();
 			EntityItemIntType creationTime = Factories.sc.core.createEntityItemIntType();
 			creationTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
 			creationTime.setValue(Long.toString(millis) + cnanos);
 			item.setCreationTime(creationTime);
-		    } catch (ParseException e) {
+		    } catch (Exception e) {
 			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
 		}
