@@ -146,7 +146,7 @@ public class UserAdapter implements IAdapter {
     private void initLogons() {
 	logons = new Hashtable<String, Date>();
 	try {
-	    String wql = "select LastLogon from Win32_NetworkLoginProfile";
+	    String wql = "select * from Win32_NetworkLoginProfile";
 	    for (ISWbemObject obj : session.getWmiProvider().execQuery(IWmiProvider.CIMv2, wql)) {
 		String s = null;
 		try {
