@@ -66,7 +66,7 @@ dist: all $(DIST_DIR)/jre
 	cp $(XPERT_LIB) $(DIST_DIR)/lib
 	mkdir -p $(DIST_DIR)/security
 	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST_DIR)/security
-	rm -R $(DIST_DIR)/plugin/default
+	rm -rf $(DIST_DIR)/plugin/default
 	mkdir -p $(DIST_DIR)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST_DIR)/plugin/default/plugin.properties
 	cp -R $(PLUGIN_LOCAL_LIB) $(DIST_DIR)/plugin/default/lib

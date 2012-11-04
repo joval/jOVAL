@@ -210,9 +210,16 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 		    fItem.getMessage().add(msg);
 		    ownerType.setStatus(StatusEnumeration.ERROR);
 		}
-
-		wql = TIME_WQL.replaceAll("(?i)\\$path", escapePath(Matcher.quoteReplacement(file.getPath())));
-		objSet = wmi.execQuery(CIMV2, wql);
+	    } catch (Exception e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue(e.getMessage());
+		fItem.getMessage().add(msg);
+		ownerType.setStatus(StatusEnumeration.ERROR);
+	    }
+	    try {
+		String wql = TIME_WQL.replaceAll("(?i)\\$path", escapePath(Matcher.quoteReplacement(file.getPath())));
+		ISWbemObjectSet objSet = wmi.execQuery(CIMV2, wql);
 		if (objSet.getSize() == 1) {
 		    ISWbemObject fileObj = objSet.iterator().next();
 		    ISWbemPropertySet filePropSet = fileObj.getProperties();
@@ -230,8 +237,7 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(e.getMessage());
-		fItem.getMessage().add(msg);
-		ownerType.setStatus(StatusEnumeration.ERROR);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	fItem.setOwner(ownerType);
