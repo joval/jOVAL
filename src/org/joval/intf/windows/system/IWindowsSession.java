@@ -18,9 +18,9 @@ import org.joval.intf.windows.wmi.IWmiProvider;
  */
 public interface IWindowsSession extends ISession {
     /**
-     * Property governing the method use to control the execution of processes on remote Windows machines.
+     * Property governing whether any pre-existing remote shells should be closed upon connecting to a host.
      */
-    String PROP_REMOTE_EXEC_IMPL = "remote.exec.method";
+    String PROP_SHELL_CLEANUP = "remote.shell.cleanup";
 
     /**
      * Property governing whether or not to encrypt WS-Management SOAP envelopes.
