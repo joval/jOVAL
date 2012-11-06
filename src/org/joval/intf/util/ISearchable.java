@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface ISearchable extends ILoggable {
+public interface ISearchable {
     int NONE		= 0;
     int FOLLOW_LINKS	= 1;
 

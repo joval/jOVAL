@@ -268,7 +268,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    break;
 
 		  case PATTERN_MATCH:
-		    for (String match : fs.search(Pattern.compile(value), searchFlags)) {
+		    for (String match : fs.getSearcher().search(Pattern.compile(value), searchFlags)) {
 			try {
 			    if ((fs.getFile(match)).isFile()) {
 				list.add(match);
@@ -315,7 +315,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    break;
 
 		  case PATTERN_MATCH:
-		    for (String match : fs.search(Pattern.compile(value), searchFlags)) {
+		    for (String match : fs.getSearcher().search(Pattern.compile(value), searchFlags)) {
 			try {
 			    //
 			    // Filter search results for directories

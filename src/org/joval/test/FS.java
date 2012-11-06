@@ -39,7 +39,7 @@ public class FS {
 	    IEnvironment env = session.getEnvironment();
 	    if (path.startsWith("search:")) {
 		path = path.substring(7);
-		Collection<String> list = fs.search(Pattern.compile(path), ISearchable.FOLLOW_LINKS);
+		Collection<String> list = fs.getSearcher().search(Pattern.compile(path), ISearchable.FOLLOW_LINKS);
 		System.out.println("Found " + list.size() + " matches");
 		for (String item : list) {
 		    System.out.println("Match: " + item);

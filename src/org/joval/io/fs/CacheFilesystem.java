@@ -22,6 +22,7 @@ import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.util.IProperty;
+import org.joval.intf.util.ISearchable;
 import org.joval.intf.util.tree.INode;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
@@ -102,6 +103,10 @@ public abstract class CacheFilesystem extends CachingHierarchy<IFile> implements
     }
 
     // Implement IFilesystem
+
+    public ISearchable getSearcher() {
+	return this;
+    }
 
     public final IFile getFile(String path) throws IOException {
 	return getFile(path, getDefaultFlags());

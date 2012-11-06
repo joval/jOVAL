@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 
+import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.ISearchable;
 
 /**
@@ -16,7 +17,7 @@ import org.joval.intf.util.ISearchable;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IFilesystem extends ISearchable {
+public interface IFilesystem extends ILoggable {
     /**
      * Property governing whether a PATTERN_MATCH search of the filesystem will traverse symbolic links in order to
      * find matches. The OVAL specification is ambiguous about what the behavior should be.
@@ -62,6 +63,11 @@ public interface IFilesystem extends ISearchable {
      * Get the path delimiter character used by this filesystem.
      */
     String getDelimiter();
+
+    /**
+     * Access an ISearchable for the filesystem.
+     */
+    ISearchable getSearcher();
 
     /**
      * Retrieve an IFile with default (IFile.READONLY) access.
