@@ -1877,10 +1877,10 @@ public class Engine implements IEngine, IProvider {
 		    return ResultEnumeration.FALSE;
 		}
 	      case SUPERSET_OF:
-		if (iIp.contains(sIp)) {
-		    return ResultEnumeration.FALSE;
-		} else {
+		if (sIp.contains(iIp)) {
 		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
 		}
 	      default:
 		return basicComparison(baseValue, itemValue, op);
