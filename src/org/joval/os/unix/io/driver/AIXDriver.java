@@ -80,6 +80,9 @@ public class AIXDriver extends AbstractDriver {
 	    cmd.append(" -L");
 	}
 	cmd.append(" ").append(from);
+	if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
+	    cmd.append(" -xdev");
+	}
 	if (depth != ISearchable.DEPTH_UNLIMITED) {
 	    cmd.append("\\( -type d -a -exec sh -c 'echo $1 | awk -F/ '\\''{print $(");
 	    cmd.append(Integer.toString(depth));
@@ -87,9 +90,6 @@ public class AIXDriver extends AbstractDriver {
 	}
 	if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
 	    cmd.append(" -type d");
-	}
-	if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
-	    cmd.append(" -xdev");
 	}
 	if (pattern != null) {
 	    cmd.append(" | grep -E \"").append(pattern).append("\"");

@@ -70,6 +70,9 @@ public class SolarisDriver extends AbstractDriver {
             cmd.append(" -L");
         }
 	cmd.append(" ").append(from);
+        if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
+            cmd.append(" -mount");
+        }
 	if (depth != ISearchable.DEPTH_UNLIMITED) {
 	    cmd.append(" \\( -type d -a -exec sh -c 'echo $1 | awk -F/ '\\''{print $(");
 	    cmd.append(Integer.toString(depth));
@@ -77,9 +80,6 @@ public class SolarisDriver extends AbstractDriver {
 	}
         if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
             cmd.append(" -type d");
-        }
-        if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
-            cmd.append(" -mount");
         }
 	if (pattern != null) {
 	    cmd.append(" | /usr/xpg4/bin/grep -E \"").append(pattern).append("\"");

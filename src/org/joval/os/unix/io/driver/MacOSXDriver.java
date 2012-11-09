@@ -81,14 +81,14 @@ public class MacOSXDriver extends AbstractDriver {
 	    cmd.append(" -L");
 	}
 	cmd.append(" ").append(from);
+	if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
+	    cmd.append(" -mount");
+	}
 	if (depth != ISearchable.DEPTH_UNLIMITED) {
 	    cmd.append(" -maxdepth ").append(Integer.toString(depth));
 	}
 	if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
 	    cmd.append(" -type d");
-	}
-	if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
-	    cmd.append(" -mount");
 	}
 	if (pattern != null) {
 	    cmd.append(" | grep -E \"").append(pattern).append("\"");
