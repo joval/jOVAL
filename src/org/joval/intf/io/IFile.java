@@ -16,19 +16,30 @@ import org.joval.intf.util.tree.ICacheable;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IFile extends ICacheable {
-    int NOCACHE		= 0;
-    int READVOLATILE	= 1;
-    int READONLY	= 4;
-    int READWRITE	= 6;
+public interface IFile {
+    enum Flags {
+	NOCACHE,
+	READVOLATILE,
+	READONLY,
+	READWRITE;
+    }
 
     long UNKNOWN_TIME = -1L;
 
     /**
-     * Get the name of the filesystem on which this file resides.  On Unix, this is a mount point.  On Windows this is
-     * a drive or share.
+     * Returns whether the ICacheable should be cached (non-existent objects should not be cached).
      */
-    public String getFSName() throws IOException;
+    boolean exists();
+
+    /**
+     * Returns whether the ICacheable represents a link to another ICacheable.
+     */
+    boolean isLink() throws IOException;
+
+    /**
+     * If the IFile represents a link, returns a path to the link target.
+     */
+    String getLinkPath() throws IllegalStateException, IOException;
 
     /**
      * Get the time that the file was last accessed.

@@ -49,22 +49,16 @@ CLASSES=\
 	org.joval.intf.windows.wmi.ISWbemProperty					\
 	org.joval.intf.windows.wmi.ISWbemPropertySet					\
 	org.joval.intf.windows.wmi.IWmiProvider						\
+	org.joval.io.AbstractFilesystem							\
 	org.joval.io.BufferedReader							\
 	org.joval.io.PerishableReader							\
 	org.joval.io.StreamLogger							\
-	org.joval.io.fs.CacheFile							\
-	org.joval.io.fs.CacheFileSerializer						\
-	org.joval.io.fs.CacheFilesystem							\
-	org.joval.io.fs.DefaultFile							\
-	org.joval.io.fs.FileAccessor							\
-	org.joval.io.fs.FileInfo							\
+	org.joval.os.unix.io.driver.AbstractDriver					\
 	org.joval.os.unix.io.driver.AIXDriver						\
 	org.joval.os.unix.io.driver.LinuxDriver						\
 	org.joval.os.unix.io.driver.MacOSXDriver					\
 	org.joval.os.unix.io.driver.SolarisDriver					\
-	org.joval.os.unix.io.UnixCacheFileSerializer					\
-	org.joval.os.unix.io.UnixFile							\
-	org.joval.os.unix.io.UnixFileInfo						\
+	org.joval.os.unix.io.UnixFileSearcher						\
 	org.joval.os.unix.io.UnixFilesystem						\
 	org.joval.os.unix.macos.DsclTool						\
 	org.joval.os.unix.system.BaseUnixSession					\
@@ -77,11 +71,8 @@ CLASSES=\
 	org.joval.os.windows.identity.LocalDirectory					\
 	org.joval.os.windows.identity.Principal						\
 	org.joval.os.windows.identity.User						\
-	org.joval.os.windows.io.WindowsCacheFileSerializer				\
-	org.joval.os.windows.io.WindowsFile						\
-	org.joval.os.windows.io.WindowsFileInfo						\
+	org.joval.os.windows.io.WindowsFileSearcher					\
 	org.joval.os.windows.io.WindowsFilesystem					\
-	org.joval.os.windows.io.WOW3264FilesystemRedirector				\
 	org.joval.os.windows.powershell.PowershellException				\
 	org.joval.os.windows.powershell.Runspace					\
 	org.joval.os.windows.powershell.RunspacePool					\
