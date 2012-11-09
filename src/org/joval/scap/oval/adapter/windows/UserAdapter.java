@@ -158,16 +158,11 @@ public class UserAdapter implements IAdapter {
 		    s = props.getItem("LastLogon").getValueAsString();
 		    if (s != null && s.length() > 21) {
 			String tz = s.substring(21).trim();
-			if (tz.length() == 4) {
-			    char c = tz.charAt(0);
-			    if (c == '-' || c == '+') {
-				StringBuffer sb = new StringBuffer();
-				sb.append(c);
-				sb.append("0");
-				sb.append(tz.substring(1));
-				tz = sb.toString();
-			    }
-			}
+			char sign = tz.charAt(0);
+			int min = Integer.parseInt(tz.substring(1));
+			int tzHr = min / 60;
+			int tzMm = min % 60;
+			tz = String.format("%c%02d%02d", sign, tzHr, tzMm);
 			Date date = null;
 			if (tz.length() == 5) {
 			    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss.SSSZ");

@@ -9,10 +9,10 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
@@ -34,15 +34,33 @@ public class FS {
     public synchronized void test(String path) {
 	InputStream in = null;
 	try {
-//fs = ((org.joval.intf.windows.system.IWindowsSession)session).getFilesystem(org.joval.intf.windows.system.IWindowsSession.View._32BIT);
+//IFilesystem fs = ((org.joval.intf.windows.system.IWindowsSession)session).getFilesystem(org.joval.intf.windows.system.IWindowsSession.View._32BIT);
 	    IFilesystem fs = session.getFilesystem();
 	    IEnvironment env = session.getEnvironment();
 	    if (path.startsWith("search:")) {
 		path = path.substring(7);
-		Collection<String> list = fs.getSearcher().search(Pattern.compile(path), ISearchable.FOLLOW_LINKS);
+		Pattern pattern = Pattern.compile(path);
+		Collection<IFile> list = new ArrayList<IFile>();
+		ISearchable<IFile> searcher = fs.getSearcher();
+		ISearchable.ISearchPlugin<IFile> plugin = fs.getDefaultPlugin();
+		Pattern filter = null;
+		String s = session.getProperties().getProperty(IFilesystem.PROP_MOUNT_FSTYPE_FILTER);
+		if (s != null) {
+		    filter = Pattern.compile(s);
+		}
+		int depth = ISearchable.DEPTH_UNLIMITED;
+		int flags = ISearchable.FLAG_FOLLOW_LINKS;
+		String from = fs.guessParent(pattern);
+		if (from == null) {
+		    for (IFilesystem.IMount mount : fs.getMounts(filter)) {
+			list.addAll(fs.getSearcher().search(mount.getPath(), pattern, depth, flags, plugin));
+		    }
+		} else {
+		    list.addAll(fs.getSearcher().search(from, pattern, depth, flags, plugin));
+		}
 		System.out.println("Found " + list.size() + " matches");
-		for (String item : list) {
-		    System.out.println("Match: " + item);
+		for (IFile file : list) {
+		    System.out.println("Match: " + file.getPath());
 		}
 	    } else {
 		String exp = env.expand(path);
@@ -69,9 +87,7 @@ public class FS {
 		}
 		System.out.println("Canonical path: " + f.getCanonicalPath());
 	    }
-	} catch (PatternSyntaxException e) {
-	    e.printStackTrace();
-	} catch (IOException e) {
+	} catch (Exception e) {
 	    e.printStackTrace();
 	} finally {
 	    try {

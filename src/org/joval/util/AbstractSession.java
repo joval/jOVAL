@@ -135,7 +135,7 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	if (toDelete != null) {
 	    for (String fname : toDelete) {
 		try {
-		    IFile f = fs.getFile(fname, IFile.READWRITE);
+		    IFile f = fs.getFile(fname, IFile.Flags.READWRITE);
 		    if (f.isFile()) {
 			f.delete();
 		    }
