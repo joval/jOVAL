@@ -198,7 +198,7 @@ public class InetdAdapter implements IAdapter {
 	services = new HashSet<Service>();
 	IReader reader = null;
 	try {
-	    IFile f = session.getFilesystem().getFile(CONFIG, IFile.Flags.NOCACHE);
+	    IFile f = session.getFilesystem().getFile(CONFIG, IFile.NOCACHE);
 	    if (f.exists()) {
 		reader = new BufferedReader(f.getInputStream());
 		String line = null;

@@ -199,7 +199,7 @@ public class SCEScript {
 	    for (int i=0; script == null; i++) {
 		String fname = "sce_script_" + i + "." + extension;
 		if (!existing.contains(fname)) {
-		    script = fs.getFile(session.getTempDir() + fs.getDelimiter() + fname, IFile.Flags.READWRITE);
+		    script = fs.getFile(session.getTempDir() + fs.getDelimiter() + fname, IFile.READWRITE);
 		    byte[] buff = new byte[1024];
 		    int len = 0;
 		    InputStream in = new ByteArrayInputStream(source.getValue().getBytes());

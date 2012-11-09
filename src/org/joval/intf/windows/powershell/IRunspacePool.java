@@ -6,8 +6,6 @@ package org.joval.intf.windows.powershell;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
-import org.joval.intf.windows.system.IWindowsSession;
-
 /**
  * An interface to a powershell runspace pool.
  *
@@ -33,16 +31,9 @@ public interface IRunspacePool {
     IRunspace get(String id) throws NoSuchElementException;
 
     /**
-     * Create (and return) a new Runspace in the pool (default architecture).
+     * Create (and return) a new Runspace in the pool.
      *
      * @throws IndexOutOfBoundsException if the pool is already at capacity.
      */
     IRunspace spawn() throws Exception;
-
-    /**
-     * Create (and return) a new Runspace in the pool for the specified architecture.
-     *
-     * @throws IndexOutOfBoundsException if the pool is already at capacity.
-     */
-    IRunspace spawn(IWindowsSession.View view) throws Exception;
 }

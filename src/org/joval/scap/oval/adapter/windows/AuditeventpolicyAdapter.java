@@ -83,7 +83,7 @@ public class AuditeventpolicyAdapter implements IAdapter {
 	      case 0: // success
 		IFile file = null;
 		try {
-		    file = session.getFilesystem().getFile(secpol, IFile.Flags.READWRITE);
+		    file = session.getFilesystem().getFile(secpol, IFile.READWRITE);
 		    IniFile config = new IniFile(file.getInputStream(), StringTools.UTF16LE);
 		    items = new Vector<AuditeventpolicyItem>();
 		    AuditeventpolicyItem item = Factories.sc.windows.createAuditeventpolicyItem();

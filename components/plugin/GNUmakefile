@@ -35,7 +35,6 @@ resources:
 	echo version=$(JOVAL_VERSION) >> $(BUILD)/plugin.resources.properties
 	cp $(RSRC)/windows.locales.properties $(BUILD)
 	rm -f $(BUILD)/org/joval/scap/oval/adapter/windows/*.psm1
-	cp $(SRC)/org/joval/os/windows/io/*.psm1 $(BUILD)/org/joval/os/windows/io/
 	cp $(SRC)/org/joval/scap/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/windows/
 	cp $(SRC)/org/joval/scap/oval/adapter/independent/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/independent/
 

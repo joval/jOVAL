@@ -6,7 +6,6 @@ package org.joval.intf.windows.powershell;
 import java.io.InputStream;
 import java.io.IOException;
 
-import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.powershell.PowershellException;
 
 /**
@@ -53,9 +52,4 @@ public interface IRunspace {
      * Get the current prompt String.
      */
     String getPrompt();
-
-    /**
-     * Get the view for this runspace.
-     */
-    IWindowsSession.View getView();
 }

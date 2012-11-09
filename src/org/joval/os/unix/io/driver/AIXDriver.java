@@ -5,10 +5,10 @@ package org.joval.os.unix.io.driver;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.StringTokenizer;
+import java.util.Vector;
 import java.util.regex.Pattern;
 
 import org.slf4j.cal10n.LocLogger;
@@ -20,10 +20,9 @@ import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.io.IUnixFilesystemDriver;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.util.ISearchable;
-import org.joval.io.AbstractFilesystem.FileInfo;
+import org.joval.io.fs.FileInfo;
 import org.joval.io.PerishableReader;
-import org.joval.os.unix.io.UnixFilesystem.UnixFileInfo;
+import org.joval.os.unix.io.UnixFileInfo;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
@@ -34,17 +33,21 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class AIXDriver extends AbstractDriver {
-    public AIXDriver(IUnixSession session) {
-	super(session);
+public class AIXDriver implements IUnixFilesystemDriver {
+    private IUnixSession us;
+    private LocLogger logger;
+
+    public AIXDriver(IUnixSession us) {
+	this.us = us;
+	logger = us.getLogger();
     }
 
     // Implement IUnixFilesystemDriver
 
-    public Collection<IFilesystem.IMount> getMounts(Pattern typeFilter) throws Exception {
-	Collection<IFilesystem.IMount> mounts = new ArrayList<IFilesystem.IMount>();
+    public Collection<String> getMounts(Pattern typeFilter) throws Exception {
+	Collection<String> mounts = new Vector<String>();
 	int lineNum = 0;
-	for (String line : SafeCLI.multiLine("mount", session, IUnixSession.Timeout.S)) {
+	for (String line : SafeCLI.multiLine("mount", us, IUnixSession.Timeout.S)) {
 	    if (lineNum++ > 1) { // skip the first two lines
 		int mpToken = 1;
 		switch(line.charAt(0)) {
@@ -67,35 +70,15 @@ public class AIXDriver extends AbstractDriver {
 		    logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mountPoint, fsType);
 		} else if (mountPoint.startsWith(IUnixFilesystem.DELIM_STR)) {
 		    logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, mountPoint, fsType);
-		    mounts.add(new Mount(mountPoint, fsType));
+		    mounts.add(mountPoint);
 		}
 	    }
 	}
 	return mounts;
     }
 
-    public String getFindCommand(String from, int depth, int flags, String pattern) {
-	StringBuffer cmd = new StringBuffer("find");
-	if (isSetFlag(ISearchable.FLAG_FOLLOW_LINKS, flags)) {
-	    cmd.append(" -L");
-	}
-	cmd.append(" ").append(from);
-	if (depth != ISearchable.DEPTH_UNLIMITED) {
-	    cmd.append("\\( -type d -a -exec sh -c 'echo $1 | awk -F/ '\\''{print $(");
-	    cmd.append(Integer.toString(depth));
-	    cmd.append("+1)}'\\''|grep \"\\([^ ]\\)\" >/dev/null' {} {} \\; -prune -print \\)");
-	}
-	if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
-	    cmd.append(" -type d");
-	}
-	if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
-	    cmd.append(" -xdev");
-	}
-	if (pattern != null) {
-	    cmd.append(" | grep \"").append(pattern).append("\"");
-	}
-	cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
-	return cmd.toString();
+    public String getFindCommand() {
+	return "find %MOUNT% -xdev -exec " + getStatCommand() + " {} \\;";
     }
 
     public String getStatCommand() {
@@ -170,13 +153,13 @@ public class AIXDriver extends AbstractDriver {
 	}
 
 	String path = null, linkPath = null;
-	int begin = line.indexOf(session.getFilesystem().getDelimiter());
+	int begin = line.indexOf(us.getFilesystem().getDelimiter());
 	if (begin > 0) {
 	    int end = line.indexOf("->");
 	    if (end == -1) {
-		path = line.substring(begin).trim();
+	        path = line.substring(begin).trim();
 	    } else if (end > begin) {
-		path = line.substring(begin, end).trim();
+	        path = line.substring(begin, end).trim();
 		linkPath = line.substring(end+2).trim();
 	    }
 	}

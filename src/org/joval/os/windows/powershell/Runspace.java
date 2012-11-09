@@ -27,36 +27,22 @@ import org.joval.util.StringTools;
 public class Runspace implements IRunspace {
     public static final String INIT_COMMAND = "powershell -NoProfile -File -";
 
-    private long timeout;		// contains default timeout
-    private String id, prompt;
-    private StringBuffer err;
-    private LocLogger logger;
-    private IWindowsSession.View view;
-    private IProcess p;
-    private InputStream stdout, stderr;	// Output from the powershell process
-    private OutputStream stdin;		// Input to the powershell process
+    protected long timeout;			// contains default timeout
+    protected String id, prompt;
+    protected StringBuffer err;
+    protected LocLogger logger;
+    protected IProcess p;
+    protected InputStream stdout, stderr;	// Output from the powershell process
+    protected OutputStream stdin;		// Input to the powershell process
 
     /**
-     * Create a new Runspace, based on the default architecture.
+     * Create a new Runspace, based on a process.
      */
     public Runspace(String id, IWindowsSession session) throws Exception {
-	this(id, session, session.supports(IWindowsSession.View._64BIT) ? IWindowsSession.View._64BIT : null);
-    }
-
-    /**
-     * Create a new Runspace, using the specified architecture (null for default).
-     */
-    public Runspace(String id, IWindowsSession session, IWindowsSession.View view) throws Exception {
 	this.id = id;
 	this.timeout = session.getTimeout(IWindowsSession.Timeout.M);
 	this.logger = session.getLogger();
-	this.view = view;
-	if (view == IWindowsSession.View._32BIT) {
-	    String cmd = new StringBuffer("%SystemRoot%\\SysWOW64\\cmd.exe /c ").append(INIT_COMMAND).toString();
-	    p = session.createProcess(cmd, null);
-	} else {
-	    p = session.createProcess(INIT_COMMAND, null);
-	}
+	p = session.createProcess(INIT_COMMAND, null);
 	p.start();
 	stdout = p.getInputStream();
 	stderr = p.getErrorStream();
@@ -134,10 +120,6 @@ public class Runspace implements IRunspace {
 
     public String getPrompt() {
 	return prompt;
-    }
-
-    public IWindowsSession.View getView() {
-	return view;
     }
 
     // Internal

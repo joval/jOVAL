@@ -33,7 +33,7 @@ public class UnixSession extends BaseUnixSession {
 	    env = new Environment(this);
 	}
 	if (fs == null) {
-	    fs = new UnixFilesystem(this);
+	    fs = new UnixFilesystem(this, env);
 	}
 	cwd = new File(".");
 	flavor = Flavor.flavorOf(this);

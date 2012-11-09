@@ -7,35 +7,28 @@ import java.util.Iterator;
 import java.util.Collection;
 import java.util.regex.Pattern;
 
-import org.joval.intf.io.IFilesystem;
-import org.joval.intf.util.ILoggable;
-
 /**
  * An interface describing the platform-specific requirements for a UnixFilesystem driver.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IUnixFilesystemDriver extends ILoggable {
+public interface IUnixFilesystemDriver {
     /**
      * Get a list of mount points.
      *
      * @arg typeFilter A regex pattern indicating the /types/ of filesystems to /exclude/ from the result.  Use null for
      *                 an unfiltered list of mount points.
      */
-    public Collection<IFilesystem.IMount> getMounts(Pattern typeFilter) throws Exception;
+    public Collection<String> getMounts(Pattern typeFilter) throws Exception;
 
     /**
-     * Returns a string containing the correct find command for the Unix flavor.
+     * Returns a string containing the correct find command for the Unix flavor.  The command contains the String "%MOUNT%"
+     * where the actual path of the mount should be substituted.
      *
      * The resulting command will follow links, but restrict results to the originating filesystem.
-     *
-     * @param from the desired starting-point for the search
-     * @param depth the maximum search depth, or -1 for unlimited
-     * @param flags see the flags from ISearchable.search method.
-     * @param pattern the pattern for filtering results
      */
-    public String getFindCommand(String from, int maxDepth, int flags, String pattern);
+    public String getFindCommand();
 
     /**
      * Returns some variation of the ls or stat command.  The final argument (not included) should be the escaped path of

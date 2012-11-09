@@ -7,7 +7,6 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
-import java.util.regex.Pattern;
 
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.ISearchable;
@@ -37,9 +36,28 @@ public interface IFilesystem extends ILoggable {
     String PROP_MOUNT_FSTYPE_FILTER = "fs.localMount.filter";
 
     /**
+     * Property governing the map cache pre-load behavior for local filesystems (true/false).
+     *
+     * If false, a local IFilesystem implementation will use the tree-search algorithm to resolve searches.  If true, it
+     * will scan (and cache) all file paths on the entire filesystem, and then subsequently perform regular expression
+     * matching directly on the paths.
+     */
+    String PROP_PRELOAD_LOCAL = "fs.preload.local";
+
+    /**
+     * Property governing the map cacle pre-load behavior for remotely-accessed filesystems (true/false).
+     */
+    String PROP_PRELOAD_REMOTE = "fs.preload.remote";
+
+    /**
      * Property governing whether the filesystem cache layer should be JDBM-backed (true) or memory-backed (false).
      */
     String PROP_CACHE_JDBM = "fs.cache.useJDBM";
+
+    /**
+     * Return whether or not the path points to a file on the local machine.
+     */
+    boolean isLocalPath(String path);
 
     /**
      * Get the path delimiter character used by this filesystem.
@@ -49,12 +67,7 @@ public interface IFilesystem extends ILoggable {
     /**
      * Access an ISearchable for the filesystem.
      */
-    ISearchable<IFile> getSearcher();
-
-    /**
-     * Get the default search plugin.
-     */
-    ISearchable.ISearchPlugin<IFile> getDefaultPlugin();
+    ISearchable getSearcher();
 
     /**
      * Retrieve an IFile with default (IFile.READONLY) access.
@@ -62,11 +75,11 @@ public interface IFilesystem extends ILoggable {
     IFile getFile(String path) throws IOException;
 
     /**
-     * Retrieve an IFile with the specified flags.
+     * An interface with all the methods of java.io.File and jcifs.smb.SmbFile.
      *
      * @arg flags IFile.READONLY, IFile.READWRITE, IFile.READVOLATILE, IFile.NOCACHE
      */
-    IFile getFile(String path, IFile.Flags flags) throws IOException;
+    IFile getFile(String path, int flags) throws IllegalArgumentException, IOException;
 
     /**
      * Get random access to an IFile.
@@ -84,28 +97,12 @@ public interface IFilesystem extends ILoggable {
     InputStream getInputStream(String path) throws IllegalArgumentException, IOException;
 
     /**
-     * Hazard a guess for the parent path of the specified pattern. Returns null if indeterminate.
+     * Write to a file.
      */
-    String guessParent(Pattern p);
+    OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException;
 
     /**
-     * List the mounts on this filesystem, whose types do not match the specified typeFilter. Typically, for example,
-     * a type filter might be used to exclude network mounts.
+     * Optionally, append to a file.
      */
-    Collection<IMount> getMounts(Pattern typeFilter) throws IOException;
-
-    /**
-     * An interface describing a filesystem mount point.
-     */
-    public interface IMount {
-	/**
-	 * Get the path of the mount.
-	 */
-	String getPath();
-
-	/**
-	 * Get the type of the mount.
-	 */
-	String getType();
-    }
+    OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException;
 }

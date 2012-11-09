@@ -37,15 +37,17 @@ import org.joval.util.tree.TreeHash;
 
 /**
  * An abstract hierarchy that is intended to serve as a base class for ITree implementations whose access operations are too
- * expensive for direct, repeated use.  The CachingHierarchy stores search results in a JDBM-backed cache for better
+ * expensive for direct, repeated use in searches.  The CachingHierarchy stores search results in an in-memory cache for better
  * performance.
  *
- * The CachingHierarchy provides abstract methods to access underlying resources that must be implemented by subclasses.
+ * The CachingHierarchy provides abstract methods that must be implemented by subclasses to populate the cache in bulk, and it
+ * also provides internal methods that convert regular expression searches into progressive tree node searches, which are used
+ * when the preload methods return false.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public abstract class CachingHierarchy<T extends ICacheable> {
+public abstract class CachingHierarchy<T extends ICacheable> implements ISearchable {
     /**
      * Convenience method to create a new JDBM database instance.
      */
@@ -67,6 +69,8 @@ public abstract class CachingHierarchy<T extends ICacheable> {
 	return maker.make();
     }
 
+    private String ESCAPED_DELIM;
+    private String DELIM;
     private String name;
     private TreeHash<T> cache;
     private Hashtable<String, Exception> irretrievable;
@@ -74,8 +78,6 @@ public abstract class CachingHierarchy<T extends ICacheable> {
     protected DB db;
     protected Serializer<T> ser;
     protected LocLogger logger;
-    protected final String ESCAPED_DELIM;
-    protected final String DELIM;
 
     /**
      * Instantiate a cache.
@@ -275,6 +277,12 @@ public abstract class CachingHierarchy<T extends ICacheable> {
      */
     protected abstract String[] listChildren(String path) throws Exception;
 
+    /**
+     * Subclasses should load data into the cache in bulk using addToCache(path, item).  The method should return
+     * true if the load is successful, or if the cache has already been successfully loaded.
+     */
+    protected abstract boolean loadCache();
+
     // Implement ILogger
 
     public LocLogger getLogger() {
@@ -284,5 +292,334 @@ public abstract class CachingHierarchy<T extends ICacheable> {
     public void setLogger(LocLogger logger) {
 	this.logger = logger;
 	cache.getRoot().setLogger(logger);
+    }
+
+    // Implement ISearchable
+
+    /**
+     * Search the cache, or interpret the pattern and crawl the access layer, caching results along the way.
+     */
+    public Collection<String> search(Pattern p, int flags) {
+	boolean followLinks = (ISearchable.FOLLOW_LINKS == (ISearchable.FOLLOW_LINKS & flags));
+	try {
+	    String pattern = p.pattern();
+	    if (loadCache()) {
+		logger.debug(JOVALMsg.STATUS_CACHE_SEARCH, pattern);
+		return cache.getRoot().search(p, followLinks);
+	    } else {
+		//
+		// DAS: treeSearch link support is TBD
+		//
+		logger.debug(JOVALMsg.STATUS_TREESEARCH, pattern);
+		return treeSearch(p);
+	    }
+	} catch (PatternSyntaxException e) {
+	    getLogger().warn(JOVALMsg.ERROR_PATTERN, p.pattern());
+	    getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (IllegalArgumentException e) {
+	    getLogger().warn(JOVALMsg.ERROR_TREESEARCH, p.pattern());
+	}
+	return null;
+    }
+
+    // Private
+
+    private static final String[] OPEN = {"{", "(", "["};
+    private static final String[] CLOSE = {"}", ")", "]"};
+
+    /**
+     * Get the first token from the given path.
+     *
+     * If the next delimiter is contained by a regex group, then the token is the whole path.
+     */
+    private final String getToken(String path) {
+	if (path.startsWith(ESCAPED_DELIM)) { // special case
+	    return ESCAPED_DELIM;
+	}
+
+	int ptr = path.indexOf(ESCAPED_DELIM);
+	if (ptr == -1) {
+	    return path;
+	}
+
+	int groupPtr = -1;
+	for (String s : OPEN) {
+	    int candidate = path.indexOf(s);
+	    if (candidate > ptr) {
+		continue;
+	    } else if (candidate < groupPtr) {
+		groupPtr = candidate;
+	    }
+	}
+
+	if (-1 < groupPtr && groupPtr < ptr) {
+	    return path;
+	} else {
+	    return path.substring(0, ptr);
+	}
+    }
+
+    /**
+     * Strip the first token from the given path.
+     */
+    private final String trimToken(String path) {
+	String token = getToken(path);
+	if (token.equals(ESCAPED_DELIM)) {
+	    return path.substring(token.length());
+	} else if (token.equals(path)) {
+	    return null;
+	} else {
+	    if (path.substring(token.length()).startsWith(ESCAPED_DELIM)) {
+		return path.substring(token.length() + ESCAPED_DELIM.length());
+	    } else {
+		getLogger().warn(JOVALMsg.ERROR_TREESEARCH_TOKEN, token, path);
+		return null;
+	    }
+	}
+    }
+
+    /**
+     * Search for a path.
+     */
+    private Collection<String> treeSearch(Pattern p) throws IllegalArgumentException {
+	Collection<String> result = new HashSet<String>();
+	try {
+	    String path = p.pattern();
+	    if (path.startsWith("^")) {
+		for (String s : treeSearch(null, path.substring(1))) {
+		    if (p.matcher(s).find()) {
+			result.add(s);
+		    }
+		}
+	    } else {
+		throw new IllegalArgumentException(path);
+	    }
+	} catch (Exception e) {
+	    getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	}
+	return result;
+    }
+
+    /**
+     * Search for a path on the tree, relative to the given parent path.  All the other search methods ultimately invoke
+     * this one.  For the sake of efficiency, this class maintains a map of all the files and directories that it encounters
+     * when searching for a path.  That way, it can resolve similar path searches very quickly without having to access the
+     * underlying implementation.
+     *
+     * @arg parent	The parent path, which is a fully-resolved portion of the path (regex-free).
+     * @arg path	The search pattern, consisting of ESCAPED_DELIM-delimited tokens for matching node names.
+     *
+     * @returns a list of matching local paths
+     *
+     * @throws FileNotFoundException if a match cannot be found.
+     */
+    private Collection<String> treeSearch(String parent, String path) throws Exception {
+	if (path == null || path.length() < 1) {
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_TREESEARCH_PATH));
+	}
+	logger.trace(JOVALMsg.STATUS_FS_SEARCH, parent == null ? "[root]" : parent, path);
+
+	//
+	// Advance to the starting position, which is either a root node or the node whose path is specified by parent.
+	//
+	INode node = null;
+	if (parent == null) {
+	    parent = getToken(path);
+	    path = trimToken(path);
+	}
+	try {
+	    node = cache.getRoot().lookup(parent);
+	} catch (NoSuchElementException e) {
+	    //
+	    // The parent node has never been accessed before, so make sure a matching resource actually exists,
+	    // or let an exception exit us from this method.
+	    //
+	    T item = getResource(parent);
+	    node = cache.getRoot().lookup(parent);
+	}
+
+	HashSet<String> results = new HashSet<String>();
+
+	//
+	// Make sure we're still going someplace...
+	//
+	if (path == null) {
+	    return results;
+	}
+
+	//
+	// Determine whether the children of the node are already in the cache
+	//
+	boolean useAccessor = true;
+	switch(node.getType()) {
+	  case LINK:
+	    useAccessor = false; //DAS: we handle this inside the tree, right?
+	    break;
+	  case BRANCH:
+	    useAccessor = null == cache.getData(node.getPath());
+	    break;
+	  case TREE:
+	    useAccessor = null == cache.getData(node.getName());
+	    break;
+	  case LEAF:
+	    if (null != cache.getData(node.getPath())) {
+		//
+		// If we've made it here, there is data in the cache for this node, so we know it's a bona-fide
+		// leaf, so return.
+		//
+		return results;
+	    }
+	    break;
+	}
+	if (useAccessor) {
+	    //
+	    // ... they aren't, so add the node's children to the cache
+	    //
+	    try {
+		String listPath = null;
+		if (node instanceof ITree) {
+		    listPath = node.getName();
+		} else {
+		    listPath = node.getPath();
+		}
+		String[] children = listChildren(listPath);
+		if (children == null || children.length == 0) {
+		    //
+		    // This node has no children, so stop searching it!
+		    //
+		    return results;
+		} else {
+		    for (String child : children) {
+			try {
+			    getResource(node.getPath() + DELIM + child);
+			} catch (Exception e) {
+			}
+		    }
+		}
+	    } catch (UnsupportedOperationException e) {
+		return results; // accessor is a leaf
+	    } catch (NoSuchElementException e) {
+		// TBD (DAS): the node has disappeared since being discovered?
+	    }
+	}
+
+	//
+	// Search the node's children for the next token in the search path.
+	//
+	Collection<INode> children = node.getChildren();
+	String token = getToken(path);
+	path = trimToken(path);
+	if (StringTools.containsUnescapedRegex(token)) {
+	    //
+	    // If there is no path remaining, only the current regular expression token matters.
+	    //
+	    if (path == null) {
+		if (".*".equals(token)) {
+		    for (INode child : children) {
+			results.add(child.getPath());
+			results.addAll(treeSearch(child.getPath(), ".*"));
+		    }
+		    return results;
+		} else if (token.endsWith(".*") || token.endsWith(".*$") ||
+			   token.endsWith(".+") || token.endsWith(".+$")) {
+    
+		    StringBuffer sb = new StringBuffer(node.getPath()).append(DELIM);
+		    if (token.endsWith("$")) {
+			sb.append(token.substring(0, token.length() - 3));
+		    } else {
+			sb.append(token.substring(0, token.length() - 2));
+		    }
+		    String prefix = sb.toString();
+		    if (!StringTools.containsUnescapedRegex(prefix)) {
+			for (INode child : children) {
+			    if (child.getPath().startsWith(prefix)) {
+				if (token.endsWith(".*")) {
+				    results.add(child.getPath());
+				} else if (token.endsWith(".+") && child.getPath().length() > prefix.length()) {
+				    results.add(child.getPath());
+				}
+				results.addAll(treeSearch(child.getPath(), ".*"));
+			    }
+			}
+			return results;
+		    }
+		}
+	    }
+
+	    //
+	    // General-purpose algorithm: recursively gather all children, to be filtered upon return.
+	    //
+	    for (INode child : children) {
+		if (!results.contains(child.getPath())) {
+		    results.add(child.getPath());
+		}
+		results.addAll(treeSearch(child.getPath(), ".*"));
+	    }
+	} else {
+	    //
+	    // The token contains only simple regex that can be matched against the children
+	    //
+	    Pattern p = Pattern.compile(token);
+	    for (INode child : children) {
+	 	if (p.matcher(child.getName()).matches()) {
+		    if (path == null) {
+			results.add(child.getPath());
+		    } else {
+			results.addAll(treeSearch(child.getPath(), path));
+		    }
+		}
+	    }
+	}
+
+	return results;
+    }
+
+    protected void save(File f) {
+	try {
+	    PrintStream out = new PrintStream(f);
+	    for (ITree tree : cache.getRoot()) {
+		out.println("# New Tree: " + tree.getName());
+		save(tree, out);
+	    }
+	    out.close();
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
+    }
+
+    private void save(INode node, PrintStream out) {
+	switch(node.getType()) {
+	  case LEAF:
+	    out.print("-");
+	    break;
+	  case TREE:
+	  case BRANCH:
+	  case FOREST:
+	    out.print("d");
+	    break;
+	  case LINK:
+	    out.print("l");
+	    break;
+	}
+	if (cache.getData(node.getCanonicalPath()) != null) {
+	    out.print(" [data]  ");
+	} else {
+	    out.print(" [empty] ");
+	}
+	out.print(node.getPath());
+	if (node.getType() == INode.Type.LINK) {
+	    out.print(" -> ");
+	    out.print(node.getCanonicalPath());
+	}
+	out.println("");
+	try {
+	    if (node.hasChildren()) {
+		for (INode child : node.getChildren()) {
+		    save(child, out);
+		}
+	    }
+	} catch (NoSuchElementException e) {
+	    System.out.println("Dead link: " + node.getPath());
+	}
     }
 }

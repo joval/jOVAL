@@ -24,6 +24,7 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WindowsFilesystem;
+import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.powershell.RunspacePool;
 import org.joval.os.windows.registry.Registry;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
@@ -153,18 +154,8 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	if (env == null) {
 	    env = reg.getEnvironment();
 	}
-	if (runspaces == null) {
-	    runspaces = new RunspacePool(this, 100);
-	}
 	if (fs == null) {
-	    try {
-		fs = new WindowsFilesystem(this);
-	    } catch (Exception e) {
-//DAS
-e.printStackTrace();
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		return false;
-	    }
+	    fs = new WindowsFilesystem(this, env, null, "winfs.db");
 	}
 	is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
 	if (is64bit) {
@@ -177,12 +168,7 @@ e.printStackTrace();
 		reg32 = new Registry(new WOW3264RegistryRedirector(flavor), this);
 	    }
 	    if (fs32 == null) {
-		try {
-		    fs32 = new WindowsFilesystem(this, View._32BIT);
-		} catch (Exception e) {
-		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    return false;
-		}
+		fs32 = new WindowsFilesystem(this, env, new WOW3264FilesystemRedirector(env), "winfs32.db");
 	    }
 	} else {
 	    logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
@@ -199,6 +185,9 @@ e.printStackTrace();
 		directory = new Directory(this);
 	    }
 	    directory.setWmiProvider(wmi);
+	    if (runspaces == null) {
+		runspaces = new RunspacePool(this, 100);
+	    }
 	    return true;
 	} else {
 	    return false;

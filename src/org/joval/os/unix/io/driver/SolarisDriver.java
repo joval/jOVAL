@@ -20,10 +20,10 @@ import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.io.IUnixFilesystemDriver;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.util.ISearchable;
-import org.joval.io.AbstractFilesystem.FileInfo;
+import org.joval.intf.util.IProperty;
+import org.joval.io.fs.FileInfo;
 import org.joval.io.PerishableReader;
-import org.joval.os.unix.io.UnixFilesystem.UnixFileInfo;
+import org.joval.os.unix.io.UnixFileInfo;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
@@ -34,17 +34,23 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SolarisDriver extends AbstractDriver {
-    public SolarisDriver(IUnixSession session) {
-	super(session);
+public class SolarisDriver implements IUnixFilesystemDriver {
+    private IUnixSession us;
+    private IProperty props;
+    private LocLogger logger;
+
+    public SolarisDriver(IUnixSession us) {
+	this.us = us;
+	props = us.getProperties();
+	logger = us.getLogger();
     }
 
     // Implement IUnixFilesystemDriver
 
-    public Collection<IFilesystem.IMount> getMounts(Pattern typeFilter) throws Exception {
-	Collection<IFilesystem.IMount> mounts = new Vector<IFilesystem.IMount>();
-	IFile f = session.getFilesystem().getFile("/etc/vfstab");
-	IReader reader = PerishableReader.newInstance(f.getInputStream(), session.getTimeout(IUnixSession.Timeout.S));
+    public Collection<String> getMounts(Pattern typeFilter) throws Exception {
+	Collection<String> mounts = new Vector<String>();
+	IFile f = us.getFilesystem().getFile("/etc/vfstab");
+	IReader reader = PerishableReader.newInstance(f.getInputStream(), us.getTimeout(IUnixSession.Timeout.S));
 	String line = null;
 	while ((line = reader.readLine()) != null) {
 	    if (!line.startsWith("#")) { // skip comments
@@ -57,35 +63,15 @@ public class SolarisDriver extends AbstractDriver {
 		    logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mountPoint, fsType);
 		} else if (mountPoint.startsWith(IUnixFilesystem.DELIM_STR)) {
 		    logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, mountPoint, fsType);
-		    mounts.add(new Mount(mountPoint, fsType));
+		    mounts.add(mountPoint);
 		}
 	    }
 	}
 	return mounts;
     }
 
-    public String getFindCommand(String from, int depth, int flags, String pattern) {
-        StringBuffer cmd = new StringBuffer("find");
-        if (isSetFlag(ISearchable.FLAG_FOLLOW_LINKS, flags)) {
-            cmd.append(" -L");
-        }
-	cmd.append(" ").append(from);
-	if (depth != ISearchable.DEPTH_UNLIMITED) {
-	    cmd.append(" \\( -type d -a -exec sh -c 'echo $1 | awk -F/ '\\''{print $(");
-	    cmd.append(Integer.toString(depth));
-	    cmd.append("+1)}'\\''|grep \"\\([^ ]\\)\" >/dev/null' {} {} \\; -prune -print \\)");
-	}
-        if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
-            cmd.append(" -type d");
-        }
-        if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
-            cmd.append(" -mount");
-        }
-	if (pattern != null) {
-	    cmd.append(" | grep \"").append(pattern).append("\"");
-	}
-        cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
-        return cmd.toString();
+    public String getFindCommand() {
+	return "find %MOUNT% -mount -exec " + getStatCommand() + " {} \\;";
     }
 
     public String getStatCommand() {
@@ -157,7 +143,7 @@ public class SolarisDriver extends AbstractDriver {
 	}
 
 	String path = null, linkPath = null;
-	int begin = line.indexOf(session.getFilesystem().getDelimiter());
+	int begin = line.indexOf(us.getFilesystem().getDelimiter());
 	if (begin > 0) {
 	    int end = line.indexOf("->");
 	    if (end == -1) {

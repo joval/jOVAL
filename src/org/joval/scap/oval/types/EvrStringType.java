@@ -93,16 +93,14 @@ public class EvrStringType extends AbstractType {
 	    if (i2 == start2) return (isNum ? 1 : -1);
 
 	    if (isNum) {
-		int int1 = Integer.parseInt(new String(b1, StringTools.ASCII).substring(start1, i1));
-		int int2 = Integer.parseInt(new String(b2, StringTools.ASCII).substring(start2, i2));
+		int int1 = Integer.parseInt(new String(b1).substring(start1, i1));
+		int int2 = Integer.parseInt(new String(b2).substring(start2, i2));
 
 		if (int1 > int2) return 1;
 		if (int2 > int1) return -1;
 	    }
 
-	    String str1 = new String(b1, StringTools.ASCII).substring(start1, i1);
-	    String str2 = new String(b2, StringTools.ASCII).substring(start2, i2);
-	    int rc = str1.compareTo(str2);
+	    int rc = new String(b1).substring(start1, i1).compareTo(new String(b2).substring(start2, i2));
 	    if (rc != 0) {
 		return (rc < 1 ? -1 : 1);
 	    }
