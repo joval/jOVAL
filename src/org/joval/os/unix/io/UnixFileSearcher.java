@@ -89,8 +89,8 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	File localTemp = null;
 	IFile remoteTemp = null;
 	try {
-	    String command = driver.getFindCommand(from, maxDepth, flags, p.pattern());
-	
+	    String command = driver.getFindCommand(from, maxDepth, flags, p == null ? null : p.pattern());
+
 	    //
 	    // Run the command on the remote host, storing the results in a temporary file, then tranfer the file
 	    // locally and read it.
@@ -191,7 +191,7 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	er1.join();
 	er2.join();
 
-	return session.getFilesystem().getFile(tempPath);
+	return session.getFilesystem().getFile(tempPath, IFile.Flags.READWRITE);
     }
 
     class ReaderIterator implements Iterator<String> {
