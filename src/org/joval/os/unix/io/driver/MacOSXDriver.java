@@ -91,7 +91,7 @@ public class MacOSXDriver extends AbstractDriver {
 	    cmd.append(" -mount");
 	}
 	if (pattern != null) {
-	    cmd.append(" | grep \"").append(pattern).append("\"");
+	    cmd.append(" | grep -E \"").append(pattern).append("\"");
 	}
 	cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
 	return cmd.toString();

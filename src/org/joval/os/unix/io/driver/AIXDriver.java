@@ -92,7 +92,7 @@ public class AIXDriver extends AbstractDriver {
 	    cmd.append(" -xdev");
 	}
 	if (pattern != null) {
-	    cmd.append(" | grep \"").append(pattern).append("\"");
+	    cmd.append(" | grep -E \"").append(pattern).append("\"");
 	}
 	cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
 	return cmd.toString();

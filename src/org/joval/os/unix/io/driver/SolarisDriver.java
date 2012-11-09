@@ -82,7 +82,7 @@ public class SolarisDriver extends AbstractDriver {
             cmd.append(" -mount");
         }
 	if (pattern != null) {
-	    cmd.append(" | grep \"").append(pattern).append("\"");
+	    cmd.append(" | /usr/xpg4/bin/grep -E \"").append(pattern).append("\"");
 	}
         cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
         return cmd.toString();
