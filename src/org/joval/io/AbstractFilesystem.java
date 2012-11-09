@@ -341,6 +341,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    switch(flags) {
 	      case READWRITE:
 		getAccessor().delete();
+		break;
 	      default:
 		throw new AccessControlException("Method: delete, Flags: " + flags);
 	    }
