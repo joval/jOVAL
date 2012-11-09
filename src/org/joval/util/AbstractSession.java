@@ -182,6 +182,7 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	 * simplistic, we invoke the native shell to interpret the command string.
 	 */
 	public void start() throws Exception {
+	    logger.debug(JOVALMsg.STATUS_PROCESS_START, getCommand());
 	    List<String>args = new Vector<String>();
 	    if (System.getProperty("os.name").toLowerCase().indexOf("windows") == -1) {
 		args.add("/bin/sh");
@@ -269,7 +270,9 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	}
 
 	public int exitValue() throws IllegalThreadStateException {
-	    return p.exitValue();
+	    int ec = p.exitValue();
+	    logger.debug(JOVALMsg.STATUS_PROCESS_END, getCommand(), ec);
+	    return ec;
 	}
 
 	public void destroy() {

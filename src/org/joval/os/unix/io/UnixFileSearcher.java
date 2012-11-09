@@ -183,7 +183,9 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	    long len = session.getFilesystem().getFile(tempPath, IFile.Flags.READVOLATILE).length();
 	    logger.info(JOVALMsg.STATUS_FS_SEARCH_CACHE_PROGRESS, len);
 	}
-	if (!done) {
+	if (done) {
+	    p.exitValue();
+	} else {
 	    p.destroy();
 	}
 	er1.close();
