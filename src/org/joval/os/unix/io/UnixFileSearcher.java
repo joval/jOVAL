@@ -117,7 +117,7 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 		results.add(file);
 	    }
 
-	    logger.info(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), p.pattern(), from);
+	    logger.info(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), p == null ? "[none]" : p.pattern(), from);
 	} catch (Exception e) {
 	    logger.warn(JOVALMsg.ERROR_FS_SEARCH);
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
