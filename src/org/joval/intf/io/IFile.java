@@ -8,8 +8,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.regex.Pattern;
 
-import org.joval.intf.util.tree.ICacheable;
-
 /**
  * A platform-independent abstraction of a File.
  *
@@ -17,22 +15,40 @@ import org.joval.intf.util.tree.ICacheable;
  * @version %I% %G%
  */
 public interface IFile {
+    /**
+     * Flags, used to specify the behavior of the IFile when it is initially retrieved.
+     */
     enum Flags {
+	/**
+	 * Flag indicating that this IFile's information should never be cached.
+	 */
 	NOCACHE,
+
+	/**
+	 * Read-only access to a file that can be expected to change continuously (i.e., be growing in size).
+	 */
 	READVOLATILE,
+
+	/**
+	 * Simple read-only access to the IFile. Prohibits mkdir, getOutputStream, delete, and getRandomAccess("rw").
+	 */
 	READONLY,
+
+	/**
+	 * Read-write access to the IFile. Allows mkdir, getOutputStream, delete, and getRandomAccess("rw").
+	 */
 	READWRITE;
     }
 
     long UNKNOWN_TIME = -1L;
 
     /**
-     * Returns whether the ICacheable should be cached (non-existent objects should not be cached).
+     * Returns whether the IFile exists.
      */
     boolean exists();
 
     /**
-     * Returns whether the ICacheable represents a link to another ICacheable.
+     * Returns whether the IFile represents a link to another IFile.
      */
     boolean isLink() throws IOException;
 
@@ -98,17 +114,17 @@ public interface IFile {
     public String[] list() throws IOException;
 
     /**
-     * For a directory, lists all the child files (READONLY mode).
+     * For a directory, lists all the child files (Flags inherited).
      */
     public IFile[] listFiles() throws IOException;
 
     /**
-     * For a directory, lists all the child files (READONLY mode) whose names match the specified pattern.
+     * For a directory, lists all the child files (Flags inherited) whose names match the specified pattern.
      */
     public IFile[] listFiles(Pattern p) throws IOException;
 
     /**
-     * For a directory, retrieves a READONLY IFile for the child file with the specified name.
+     * For a directory, retrieves an IFile for the child file with the specified name. Flags are inherited.
      */
     public IFile getChild(String name) throws IOException;
 

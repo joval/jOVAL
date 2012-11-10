@@ -18,7 +18,6 @@ CLASSES=\
 	org.joval.intf.util.IPathRedirector						\
 	org.joval.intf.util.IPerishable							\
 	org.joval.intf.util.ISearchable							\
-	org.joval.intf.util.tree.ICacheable						\
 	org.joval.intf.util.tree.IForest						\
 	org.joval.intf.util.tree.INode							\
 	org.joval.intf.util.tree.ITree							\
@@ -192,7 +191,6 @@ CLASSES=\
 	org.joval.util.AbstractSession							\
 	org.joval.util.Base64								\
 	org.joval.util.Configurator							\
-	org.joval.util.CachingHierarchy							\
 	org.joval.util.Environment							\
 	org.joval.util.PropertyHierarchy						\
 	org.joval.util.SafeCLI								\

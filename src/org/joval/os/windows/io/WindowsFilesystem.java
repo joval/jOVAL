@@ -52,6 +52,9 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	searcher = new WindowsFileSearcher(session, view);
     }
 
+    public void dispose() {
+    }
+
     public ISearchable<IFile> getSearcher() {
 	return searcher;
     }

@@ -22,6 +22,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.AbstractFilesystem;
 import org.joval.io.StreamLogger;
 
 /**
@@ -90,8 +91,8 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
     @Override
     public void dispose() {
 	super.dispose();
-	if (fs instanceof CachingHierarchy) {
-	    ((CachingHierarchy)fs).dispose();
+	if (fs instanceof AbstractFilesystem) {
+	    ((AbstractFilesystem)fs).dispose();
 	}
     }
 

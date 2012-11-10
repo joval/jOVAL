@@ -59,6 +59,8 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	env = session.getEnvironment();
     }
 
+    public abstract void dispose();
+
     public void setAutoExpand(boolean autoExpand) {
 	this.autoExpand = autoExpand;
     }

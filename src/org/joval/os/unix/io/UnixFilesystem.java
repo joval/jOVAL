@@ -51,6 +51,9 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	XL= session.getTimeout(IUnixSession.Timeout.XL);
     }
 
+    public void dispose() {
+    }
+
     public ISearchable<IFile> getSearcher() {
 	if (searcher == null) {
 	    searcher = new UnixFileSearcher((IUnixSession)session, getDriver());
