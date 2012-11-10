@@ -93,7 +93,19 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	}
     }
 
+    @Override
+    public IFile createFileFromInfo(String path, FileInfo info) {
+	if (info instanceof WindowsFileInfo) {
+	    return new WindowsFile(path, (WindowsFileInfo)info);
+	} else {
+	    return super.createFileFromInfo(path, info);
+	}
+    }
+
     public final IFile getFile(String path, IFile.Flags flags) {
+	if (autoExpand) {
+	    path = env.expand(path);
+	}
 	return new WindowsFile(new File(path), flags);
     }
 
@@ -116,39 +128,6 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	    this.path = path;
 	    this.info = info;
 	    flags = getDefaultFlags();
-	}
-    }
-
-    /**
-     * Implements extended attributes of a file on Windows.
-     */
-    public static class WindowsFileInfo extends FileInfo implements IWindowsFileInfo {
-	private int winType;
-	private IACE[] aces;
-
-	public WindowsFileInfo(long ctime, long mtime, long atime, Type type, long length, int winType, IACE[] aces) {
-	    super(ctime, mtime, atime, type, length);
-	    this.winType = winType;
-	    this.aces = aces;
-	}
-
-	WindowsFileInfo(long ctime, long mtime, long atime, Type type, long length, IWindowsFileInfo info) throws IOException {
-	    super(ctime, mtime, atime, type, length);
-	    this.winType = info.getWindowsFileType();
-	    this.aces = info.getSecurity();
-	}
-
-	// Implement IWindowsFileInfo
-
-	/**
-	 * Returns one of the FILE_TYPE_ constants.
-	 */
-	public final int getWindowsFileType() {
-	    return winType;
-	}
-
-	public final IACE[] getSecurity() {
-	    return aces;
 	}
     }
 

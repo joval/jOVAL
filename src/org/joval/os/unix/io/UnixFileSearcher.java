@@ -27,6 +27,7 @@ import org.joval.intf.unix.io.IUnixFilesystemDriver;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.ISearchable;
+import org.joval.io.AbstractFilesystem;
 import org.joval.io.BufferedReader;
 import org.joval.io.PerishableReader;
 import org.joval.io.StreamTool;
@@ -67,7 +68,7 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
     }
 
     public IFile createObject(Iterator<String> input) {
-	UnixFilesystem.UnixFileInfo info = (UnixFilesystem.UnixFileInfo)driver.nextFileInfo(input);
+	UnixFileInfo info = (UnixFileInfo)driver.nextFileInfo(input);
 	if (info == null) {
 	    return null;
 	} else if (info.getPath() == null) {
@@ -76,7 +77,7 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	    //
 	    return createObject(input);
 	} else {
-	    return ((UnixFilesystem)session.getFilesystem()).new UnixFile(info);
+	    return ((AbstractFilesystem)session.getFilesystem()).createFileFromInfo(info.getPath(), info);
 	}
     }
 

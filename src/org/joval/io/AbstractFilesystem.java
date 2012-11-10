@@ -79,6 +79,13 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	return logger;
     }
 
+    /**
+     * For use by the ISearchable.ISearchPlugin.
+     */
+    public IFile createFileFromInfo(String path, FileInfo info) {
+	return new DefaultFile(path, info);
+    }
+
     // Implement IFilesystem
 
     public String guessParent(Pattern p) {
@@ -113,7 +120,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
     }
 
     public String getDelimiter() {
-	return File.separator;
+	return DELIM;
     }
 
     public final IFile getFile(String path) throws IOException {
@@ -233,7 +240,11 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
 	public boolean exists() {
 	    if (info == null) {
-		return getAccessor().exists();
+		try {
+		    return getAccessor().exists();
+		} catch (Exception e) {
+		    return false;
+		}
 	    } else {
 		return true;
 	    }
@@ -261,7 +272,11 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	public final boolean mkdir() {
 	    switch(flags) {
 	      case READWRITE:
-		return getAccessor().mkdir();
+		try {
+		    return getAccessor().mkdir();
+		} catch (IOException e) {
+		    return false;
+		}
 	      default:
 		return false;
 	    }
@@ -383,7 +398,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
 	// Internal
 
-	protected FileAccessor getAccessor() {
+	protected FileAccessor getAccessor() throws IOException {
 	    if (accessor == null) {
 		accessor = new DefaultAccessor(new File(path));
 	    }

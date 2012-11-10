@@ -118,7 +118,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
     static final String END	= "}";
 
     public IFile createObject(Iterator<String> input) {
-	WindowsFilesystem.WindowsFile file = null;
+	IFile file = null;
 	boolean start = false;
 	while(input.hasNext()) {
 	    if (input.next().trim().equals(START)) {
@@ -169,9 +169,8 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 		    }
 		}
 	    }
-	    WindowsFilesystem.WindowsFileInfo info =
-		new WindowsFilesystem.WindowsFileInfo(ctime, mtime, atime, type, length, winType, aces.toArray(new IACE[0]));
-	    file = ((WindowsFilesystem)session.getFilesystem()).new WindowsFile(path, info);
+	    WindowsFileInfo info = new WindowsFileInfo(ctime, mtime, atime, type, length, winType, aces.toArray(new IACE[0]));
+	    file = ((AbstractFilesystem)session.getFilesystem()).createFileFromInfo(path, info);
 	}
 	return file;
     }

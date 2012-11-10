@@ -23,7 +23,7 @@ import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.ISearchable;
 import org.joval.io.AbstractFilesystem.FileInfo;
 import org.joval.io.PerishableReader;
-import org.joval.os.unix.io.UnixFilesystem.UnixFileInfo;
+import org.joval.os.unix.io.UnixFileInfo;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 import org.joval.util.StringTools;
