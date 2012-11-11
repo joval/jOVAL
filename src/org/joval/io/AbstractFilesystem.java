@@ -176,7 +176,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	protected long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, length=-1L;
 	protected Type type = null;
 
-	public FileInfo() {}
+	protected FileInfo() {}
 
 	public FileInfo(FileAccessor access, Type type) throws IOException {
 	    this.type = type;
@@ -417,7 +417,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
      * FileAccessor implementation for Java (local) Files.
      */
     public class DefaultAccessor extends FileAccessor {
-	private File file;
+	protected File file;
 
 	protected DefaultAccessor(File file) {
 	    this.file = file;

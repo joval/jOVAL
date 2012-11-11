@@ -160,8 +160,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	    try {
 		fs = new WindowsFilesystem(this);
 	    } catch (Exception e) {
-//DAS
-e.printStackTrace();
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		return false;
 	    }

@@ -101,7 +101,7 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
     @Override
     public IFile createFileFromInfo(String path, FileInfo info) {
 	if (info instanceof UnixFileInfo) {
-            return new UnixFile((UnixFileInfo)info);
+	    return new UnixFile((UnixFileInfo)info);
 	} else {
 	    return super.createFileFromInfo(path, info);
 	}
@@ -140,6 +140,8 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
     }
 
     public class UnixFile extends DefaultFile {
+	protected UnixFile() {}
+
 	UnixFile(File file, IFile.Flags flags) throws IOException {
 	    path = file.getPath();
 	    this.flags = flags;
@@ -178,6 +180,29 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 
     // Protected
 
+    protected UnixFileInfo getUnixFileInfo(String path) throws IOException {
+	try {
+	    String cmd = new StringBuffer(getDriver().getStatCommand()).append(" ").append(path).toString();
+	    List<String> lines = SafeCLI.multiLine(cmd, session, IUnixSession.Timeout.S);
+	    UnixFileInfo ufi = null;
+	    if (lines.size() > 0) {
+		ufi = (UnixFileInfo)getDriver().nextFileInfo(lines.iterator());
+		if (ufi == null) {
+		    throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNIXFILEINFO, path, lines.get(0)));
+		}
+	    } else {
+		logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, "''");
+	    }
+	    return ufi;
+	} catch (Exception e) {
+	    if (e instanceof IOException) {
+		throw (IOException)e;
+	    } else {
+		throw new IOException(e);
+	    }
+	}
+    }
+
     class UnixAccessor extends DefaultAccessor {
 	private String path;
 
@@ -188,29 +213,11 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 
 	@Override
 	public FileInfo getInfo() throws IOException {
-	    try {
-		String cmd = new StringBuffer(getDriver().getStatCommand()).append(" ").append(path).toString();
-		List<String> lines = SafeCLI.multiLine(cmd, session, IUnixSession.Timeout.S);
-		UnixFileInfo ufi = null;
-		if (lines.size() > 0) {
-		    ufi = (UnixFileInfo)getDriver().nextFileInfo(lines.iterator());
-		    if (ufi == null) {
-			throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNIXFILEINFO, path, lines.get(0)));
-		    }
-		} else {
-		    logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, "''");
-		}
-		if (ufi == null) {
-		    ufi = new UnixFileInfo(super.getInfo(), path);
-		}
-		return ufi;
-	    } catch (Exception e) {
-		if (e instanceof IOException) {
-		    throw (IOException)e;
-		} else {
-		    throw new IOException(e);
-		}
+	    FileInfo result = getUnixFileInfo(path);
+	    if (result == null) {
+		result = super.getInfo();
 	    }
+	    return result;
 	}
     }
 }

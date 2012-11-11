@@ -70,8 +70,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		File[] roots = File.listRoots();
 		for (int i=0; i < roots.length; i++) {
 		    String path = roots[i].getPath();
-		    String type = FsType.typeOf(Kernel32Util.getDriveType(path)).value();
-		    mounts.add(new Mount(path, type));
+		    mounts.add(new Mount(path, FsType.typeOf(Kernel32Util.getDriveType(path))));
 		}
 	    } catch (Win32Exception e) {
 		throw new IOException(e);
@@ -143,8 +142,8 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 
 	@Override
 	public FileInfo getInfo() throws IOException {
-	    FileInfo fi = super.getInfo();
-	    return new WindowsFileInfo(fi.getCtime(), fi.getMtime(), fi.getAtime(), fi.getType(), fi.getLength(), this);
+	    FileInfo.Type type = file.isDirectory() ? FileInfo.Type.DIRECTORY : FileInfo.Type.FILE;
+	    return new WindowsFileInfo(getCtime(), getMtime(), getAtime(), type, getLength(), this);
 	}
 
 	// Implement IWindowsFileInfo
@@ -177,9 +176,10 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     }
 
     class Mount implements IMount {
-	private String path, type;
+	private String path;
+	private FsType type;
 
-	public Mount(String path, String type) {
+	public Mount(String path, FsType type) {
 	    this.path = path;
 	    this.type = type;
 	}
@@ -191,7 +191,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	}
 
 	public String getType() {
-	    return type;
+	    return type.value();
 	}
     }
 }

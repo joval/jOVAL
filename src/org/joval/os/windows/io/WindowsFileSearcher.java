@@ -128,7 +128,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	}
 	if (start) {
 	    long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, length=-1L;
-	    WindowsFilesystem.FileInfo.Type type = WindowsFilesystem.FileInfo.Type.FILE;
+	    AbstractFilesystem.FileInfo.Type type = AbstractFilesystem.FileInfo.Type.FILE;
 	    int winType = IWindowsFileInfo.FILE_TYPE_UNKNOWN;
 	    Collection<IACE> aces = new ArrayList<IACE>();
 	    String path = null;
