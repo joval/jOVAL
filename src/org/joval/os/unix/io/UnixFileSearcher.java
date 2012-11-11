@@ -86,6 +86,7 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
     public Collection<IFile> search(String from, Pattern p, int maxDepth, int flags, ISearchPlugin<IFile> plugin)
 		throws Exception {
 
+	logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, p == null ? "null" : p.pattern(), from, flags);
 	Collection<IFile> results = new ArrayList<IFile>();
 	File localTemp = null;
 	IFile remoteTemp = null;
@@ -115,6 +116,7 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	    IFile file = null;
 	    Iterator<String> iter = new ReaderIterator(reader);
 	    while ((file = plugin.createObject(iter)) != null) {
+		logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, file.getPath());
 		results.add(file);
 	    }
 

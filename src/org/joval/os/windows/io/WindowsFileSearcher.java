@@ -78,6 +78,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
     public Collection<IFile> search(String from, Pattern p, int maxDepth, int flags, ISearchPlugin<IFile> plugin)
 		throws Exception {
 
+	logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, p == null ? "null" : p.pattern(), from, flags);
 	StringBuffer command;
 	switch(flags) {
 	  case ISearchable.FLAG_CONTAINERS:
@@ -104,6 +105,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	IFile f = null;
 	while ((f = plugin.createObject(iter)) != null) {
 	    results.add(f);
+	    logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, f.getPath());
 	}
 	return results;
     }

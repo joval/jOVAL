@@ -320,7 +320,12 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
 	public String[] list() throws IOException {
 	    if (isDirectory()) {
-		return getAccessor().list();
+		String[] list = getAccessor().list();
+		if (list == null) {
+		    return new String[0];
+		} else {
+		    return list;
+		}
 	    } else {
 		return null;
 	    }
