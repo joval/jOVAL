@@ -42,6 +42,8 @@ import org.joval.util.StringTools;
 public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFilesystem {
     private Collection<IMount> mounts;
     private WindowsFileSearcher searcher;
+    private WOW3264FilesystemRedirector redirector;
+    private IWindowsSession.View view;
 
     public WindowsFilesystem(IWindowsSession session) throws Exception {
 	this(session, null);
@@ -49,6 +51,10 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 
     public WindowsFilesystem(IWindowsSession session, IWindowsSession.View view) throws Exception {
 	super(session, "\\");
+	this.view = view;
+	if (view == IWindowsSession.View._32BIT) {
+	    redirector = new WOW3264FilesystemRedirector(session.getEnvironment());
+	}
 	searcher = new WindowsFileSearcher(session, view);
     }
 
@@ -105,7 +111,14 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	if (autoExpand) {
 	    path = env.expand(path);
 	}
-	return new WindowsFile(new File(path), flags);
+	String realPath = path;
+	if (redirector != null) {
+	    String alt = redirector.getRedirect(path);
+	    if (alt != null) {
+		realPath = alt;
+	    }
+	}
+	return new WindowsFile(realPath, new File(path), flags);
     }
 
     @Override
@@ -117,8 +130,8 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     }
 
     public class WindowsFile extends DefaultFile {
-	WindowsFile(File file, IFile.Flags flags) {
-	    path = file.getPath();
+	WindowsFile(String path, File file, IFile.Flags flags) {
+	    this.path = path;
 	    this.flags = flags;
 	    accessor = new WindowsAccessor(file);
 	}
@@ -127,6 +140,21 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	    this.path = path;
 	    this.info = info;
 	    flags = getDefaultFlags();
+	}
+
+	@Override
+	protected FileAccessor getAccessor() {
+	    if (accessor == null) {
+		String realPath = path;
+		if (redirector != null) {
+		    String alt = redirector.getRedirect(path);
+		    if (alt != null) {
+			realPath = alt;
+		    }
+		}
+		accessor = new WindowsAccessor(new File(realPath));
+	    }
+	    return accessor;
 	}
     }
 

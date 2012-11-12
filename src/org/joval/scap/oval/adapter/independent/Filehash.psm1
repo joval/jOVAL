@@ -33,52 +33,42 @@ using System.Security.Cryptography;
 
 namespace Mono.Security.Cryptography {
     internal sealed class SHAConstants {
-
-	private SHAConstants () {
+	private SHAConstants() {
 	    // Never instantiated.
 	}
 
 	// SHA-224/256 Constants
-	// Represent the first 32 bits of the fractional parts of the
-	// cube roots of the first sixty-four prime numbers
+	// Represent the first 32 bits of the fractional parts of the cube roots of the first sixty-four prime numbers
 	public readonly static uint[] K1 = {
-	    0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5,
-	    0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
-	    0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3,
-	    0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
-	    0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC,
-	    0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
-	    0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7,
-	    0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
-	    0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13,
-	    0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
-	    0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3,
-	    0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
-	    0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5,
-	    0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
-	    0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208,
-	    0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
+	    0x428A2F98, 0x71374491, 0xB5C0FBCF, 0xE9B5DBA5, 0x3956C25B, 0x59F111F1, 0x923F82A4, 0xAB1C5ED5,
+	    0xD807AA98, 0x12835B01, 0x243185BE, 0x550C7DC3, 0x72BE5D74, 0x80DEB1FE, 0x9BDC06A7, 0xC19BF174,
+	    0xE49B69C1, 0xEFBE4786, 0x0FC19DC6, 0x240CA1CC, 0x2DE92C6F, 0x4A7484AA, 0x5CB0A9DC, 0x76F988DA,
+	    0x983E5152, 0xA831C66D, 0xB00327C8, 0xBF597FC7, 0xC6E00BF3, 0xD5A79147, 0x06CA6351, 0x14292967,
+	    0x27B70A85, 0x2E1B2138, 0x4D2C6DFC, 0x53380D13, 0x650A7354, 0x766A0ABB, 0x81C2C92E, 0x92722C85,
+	    0xA2BFE8A1, 0xA81A664B, 0xC24B8B70, 0xC76C51A3, 0xD192E819, 0xD6990624, 0xF40E3585, 0x106AA070,
+	    0x19A4C116, 0x1E376C08, 0x2748774C, 0x34B0BCB5, 0x391C0CB3, 0x4ED8AA4A, 0x5B9CCA4F, 0x682E6FF3,
+	    0x748F82EE, 0x78A5636F, 0x84C87814, 0x8CC70208, 0x90BEFFFA, 0xA4506CEB, 0xBEF9A3F7, 0xC67178F2
 	};
     }
 
     public abstract class SHA224 : HashAlgorithm {
-	public SHA224 () {
+	public SHA224() {
 	    // SHA-224 hash length are 224 bits long
 	    HashSizeValue = 224;
 	}
 
-	public static new SHA224 Create () {
+	public static new SHA224 Create() {
 	    // for this to work we must register ourself with CryptoConfig
-	    return Create ("SHA224");
+	    return Create("SHA224");
 	}
 
-	public static new SHA224 Create (string hashName) {
+	public static new SHA224 Create(string hashName) {
 	    object o = CryptoConfig.CreateFromName (hashName);
 	    // in case machine.config isn't configured to use any SHA224 implementation
 	    if (o == null) {
 		o = new SHA224Managed ();
 	    }
-	    return (SHA224) o;
+	    return (SHA224)o;
 	}
     }
 
@@ -92,46 +82,38 @@ namespace Mono.Security.Cryptography {
 	private int _ProcessingBufferCount; // Counts how much data we have stored that still needs processed.
 	private uint[] buff;
 
-	public SHA224Managed () {
+	public SHA224Managed() {
 	    _H = new uint [8];
 	    _ProcessingBuffer = new byte [BLOCK_SIZE_BYTES];
 	    buff = new uint[64];
 	    Initialize ();
 	}
 
-	private uint Ch (uint u, uint v, uint w) {
+	private uint Ch(uint u, uint v, uint w) {
 	    return (u&v) ^ (~u&w);
 	}
 
-	private uint Maj (uint u, uint v, uint w) {
+	private uint Maj(uint u, uint v, uint w) {
 	    return (u&v) ^ (u&w) ^ (v&w);
 	}
 
-	private uint Ro0 (uint x) {
-	    return ((x >> 7) | (x << 25))
-		^ ((x >> 18) | (x << 14))
-		^ (x >> 3);
+	private uint Ro0(uint x) {
+	    return ((x >> 7) | (x << 25)) ^ ((x >> 18) | (x << 14)) ^ (x >> 3);
 	}
 
-	private uint Ro1 (uint x) {
-	    return ((x >> 17) | (x << 15))
-		^ ((x >> 19) | (x << 13))
-		^ (x >> 10);
+	private uint Ro1(uint x) {
+	    return ((x >> 17) | (x << 15)) ^ ((x >> 19) | (x << 13)) ^ (x >> 10);
 	}
 
-	private uint Sig0 (uint x) {
-	    return ((x >> 2) | (x << 30))
-		^ ((x >> 13) | (x << 19))
-		^ ((x >> 22) | (x << 10));
+	private uint Sig0(uint x) {
+	    return ((x >> 2) | (x << 30)) ^ ((x >> 13) | (x << 19)) ^ ((x >> 22) | (x << 10));
 	}
 
-	private uint Sig1 (uint x) {
-	    return ((x >> 6) | (x << 26))
-		^ ((x >> 11) | (x << 21))
-		^ ((x >> 25) | (x << 7));
+	private uint Sig1(uint x) {
+	    return ((x >> 6) | (x << 26)) ^ ((x >> 11) | (x << 21)) ^ ((x >> 25) | (x << 7));
 	}
 
-	protected override void HashCore (byte[] rgb, int start, int size) {
+	protected override void HashCore(byte[] rgb, int start, int size) {
 	    int i;
 	    State = 1;
 
@@ -140,8 +122,7 @@ namespace Mono.Security.Cryptography {
 		    System.Buffer.BlockCopy (rgb, start, _ProcessingBuffer, _ProcessingBufferCount, size);
 		    _ProcessingBufferCount += size;
 		    return;
-		}
-		else {
+		} else {
 		    i = (BLOCK_SIZE_BYTES - _ProcessingBufferCount);
 		    System.Buffer.BlockCopy (rgb, start, _ProcessingBuffer, _ProcessingBufferCount, i);
 		    ProcessBlock (_ProcessingBuffer, 0);
@@ -151,21 +132,21 @@ namespace Mono.Security.Cryptography {
 		}
 	    }
 
-	    for (i=0; i<size-size%BLOCK_SIZE_BYTES; i += BLOCK_SIZE_BYTES) {
-		ProcessBlock (rgb, start+i);
+	    for (i=0; i < (size - (size % BLOCK_SIZE_BYTES); i += BLOCK_SIZE_BYTES) {
+		ProcessBlock(rgb, start+i);
 	    }
 
 	    if (size%BLOCK_SIZE_BYTES != 0) {
-		System.Buffer.BlockCopy (rgb, size-size%BLOCK_SIZE_BYTES+start, _ProcessingBuffer, 0, size%BLOCK_SIZE_BYTES);
-		_ProcessingBufferCount = size%BLOCK_SIZE_BYTES;
+		System.Buffer.BlockCopy(rgb, size - (size % BLOCK_SIZE_BYTES) + start, _ProcessingBuffer, 0, size % BLOCK_SIZE_BYTES);
+		_ProcessingBufferCount = size % BLOCK_SIZE_BYTES;
 	    }
 	}
     
-	protected override byte[] HashFinal () {
+	protected override byte[] HashFinal() {
 	    byte[] hash = new byte[28];
 	    int i, j;
 
-	    ProcessFinalBlock (_ProcessingBuffer, 0, _ProcessingBufferCount);
+	    ProcessFinalBlock(_ProcessingBuffer, 0, _ProcessingBufferCount);
 
 	    for (i=0; i<7; i++) {
 		for (j=0; j<4; j++) {
@@ -177,7 +158,7 @@ namespace Mono.Security.Cryptography {
 	    return hash;
 	}
 
-	public override void Initialize () {
+	public override void Initialize() {
 	    count = 0;
 	    _ProcessingBufferCount = 0;
 	
@@ -191,7 +172,7 @@ namespace Mono.Security.Cryptography {
 	    _H[7] = 0xBEFA4FA4;
 	}
 
-	private void ProcessBlock (byte[] inputBuffer, int inputOffset) {
+	private void ProcessBlock(byte[] inputBuffer, int inputOffset) {
 	    uint a, b, c, d, e, f, g, h;
 	    uint t1, t2;
 	    int i;
@@ -226,7 +207,7 @@ namespace Mono.Security.Cryptography {
 	    g = _H[6];
 	    h = _H[7];
 
-	    for (i=0; i<64; i++) {
+	    for (i=0; i < 64; i++) {
 		t1 = h + (((e >> 6) | (e << 26)) ^ ((e >> 11) | (e << 21)) ^ ((e >> 25) | (e << 7))) + ((e & f) ^ (~e & g)) + K1[i] + buff[i];
 
 		t2 = (((a >> 2) | (a << 30)) ^ ((a >> 13) | (a << 19)) ^ ((a >> 22) | (a << 10)));
@@ -251,13 +232,10 @@ namespace Mono.Security.Cryptography {
 	    _H[7] += h;
 	}
     
-	private void ProcessFinalBlock (byte[] inputBuffer, int inputOffset, int inputCount) {
+	private void ProcessFinalBlock(byte[] inputBuffer, int inputOffset, int inputCount) {
 	    ulong total = count + (ulong)inputCount;
 	    int paddingSize = (56 - (int)(total % BLOCK_SIZE_BYTES));
-
-	    if (paddingSize < 1)
-		paddingSize += BLOCK_SIZE_BYTES;
-
+	    if (paddingSize < 1) paddingSize += BLOCK_SIZE_BYTES;
 	    byte[] fooBuffer = new byte[inputCount+paddingSize+8];
 
 	    for (int i=0; i<inputCount; i++) {
@@ -271,23 +249,23 @@ namespace Mono.Security.Cryptography {
 
 	    // I deal in bytes. The algorithm deals in bits.
 	    ulong size = total << 3;
-	    AddLength (size, fooBuffer, inputCount+paddingSize);
-	    ProcessBlock (fooBuffer, 0);
+	    AddLength(size, fooBuffer, inputCount+paddingSize);
+	    ProcessBlock(fooBuffer, 0);
 
 	    if (inputCount+paddingSize+8 == 128) {
 		ProcessBlock(fooBuffer, 64);
 	    }
 	}
 
-	internal void AddLength (ulong length, byte[] buffer, int position) {
-	    buffer [position++] = (byte)(length >> 56);
-	    buffer [position++] = (byte)(length >> 48);
-	    buffer [position++] = (byte)(length >> 40);
-	    buffer [position++] = (byte)(length >> 32);
-	    buffer [position++] = (byte)(length >> 24);
-	    buffer [position++] = (byte)(length >> 16);
-	    buffer [position++] = (byte)(length >>  8);
-	    buffer [position]   = (byte)(length);
+	internal void AddLength(ulong len, byte[] buff, int i) {
+	    buff[i++] = (byte)(len >> 56);
+	    buff[i++] = (byte)(len >> 48);
+	    buff[i++] = (byte)(len >> 40);
+	    buff[i++] = (byte)(len >> 32);
+	    buff[i++] = (byte)(len >> 24);
+	    buff[i++] = (byte)(len >> 16);
+	    buff[i++] = (byte)(len >>  8);
+	    buff[i]   = (byte)(len);
 	}
     }
 }
