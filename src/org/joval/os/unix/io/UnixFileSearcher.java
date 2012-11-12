@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
@@ -44,11 +45,13 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
     private IUnixSession session;
     private IUnixFilesystemDriver driver;
     private LocLogger logger;
+    private HashMap<String, Collection<IFile>> searchMap;
 
     public UnixFileSearcher(IUnixSession session, IUnixFilesystemDriver driver) {
 	this.session = session;
 	this.driver = driver;
 	logger = session.getLogger();
+	searchMap = new HashMap<String, Collection<IFile>>();
     }
 
     // Implement ILogger
@@ -86,60 +89,64 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
     public Collection<IFile> search(String from, Pattern p, int maxDepth, int flags, ISearchPlugin<IFile> plugin)
 		throws Exception {
 
-	logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, p == null ? "null" : p.pattern(), from, flags);
-	Collection<IFile> results = new ArrayList<IFile>();
-	File localTemp = null;
-	IFile remoteTemp = null;
-	try {
-	    String command = driver.getFindCommand(from, maxDepth, flags, p == null ? null : p.pattern());
+	String command = driver.getFindCommand(from, maxDepth, flags, p == null ? null : p.pattern());
+	if (searchMap.containsKey(command)) {
+	    return searchMap.get(command);
+	} else {
+	    logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, p == null ? "null" : p.pattern(), from, flags);
+	    File localTemp = null;
+	    IFile remoteTemp = null;
+	    Collection<IFile> results = new ArrayList<IFile>();
+	    try {
+		//
+		// Run the command on the remote host, storing the results in a temporary file, then tranfer the file
+		// locally and read it.
+		//
+		IReader reader = null;
+		remoteTemp = execToFile(command);
+		if(session.getWorkspace() == null) {
+		    //
+		    // State cannot be saved locally, so the result will have to be buffered into memory
+		    //
+		    reader = new BufferedReader(new GZIPInputStream(remoteTemp.getInputStream()));
+		} else {
+		    //
+		    // Read from the local state file, or create one while reading from the remote state file.
+		    //
+		    localTemp = File.createTempFile("search", null, session.getWorkspace());
+		    StreamTool.copy(remoteTemp.getInputStream(), new FileOutputStream(localTemp), true);
+		    reader = new BufferedReader(new GZIPInputStream(new FileInputStream(localTemp)));
+		}
 
-	    //
-	    // Run the command on the remote host, storing the results in a temporary file, then tranfer the file
-	    // locally and read it.
-	    //
-	    IReader reader = null;
-	    remoteTemp = execToFile(command);
-	    if(session.getWorkspace() == null) {
-		//
-		// State cannot be saved locally, so the result will have to be buffered into memory
-		//
-		reader = new BufferedReader(new GZIPInputStream(remoteTemp.getInputStream()));
-	    } else {
-		//
-		// Read from the local state file, or create one while reading from the remote state file.
-		//
-		localTemp = File.createTempFile("search", null, session.getWorkspace());
-		StreamTool.copy(remoteTemp.getInputStream(), new FileOutputStream(localTemp), true);
-		reader = new BufferedReader(new GZIPInputStream(new FileInputStream(localTemp)));
-	    }
+		IFile file = null;
+		Iterator<String> iter = new ReaderIterator(reader);
+		while ((file = plugin.createObject(iter)) != null) {
+		    logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, file.getPath());
+		    results.add(file);
+		}
 
-	    IFile file = null;
-	    Iterator<String> iter = new ReaderIterator(reader);
-	    while ((file = plugin.createObject(iter)) != null) {
-		logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, file.getPath());
-		results.add(file);
-	    }
-
-	    logger.info(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), p == null ? "[none]" : p.pattern(), from);
-	} catch (Exception e) {
-	    logger.warn(JOVALMsg.ERROR_FS_SEARCH);
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} finally {
-	    if (localTemp != null) {
-		localTemp.delete();
-	    }
-	    if (remoteTemp != null) {
-		try {
-		    remoteTemp.delete();
-		    if (remoteTemp.exists()) {
-			SafeCLI.exec("rm -f " + remoteTemp.getPath(), session, IUnixSession.Timeout.S);
+		logger.info(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), p == null ? "[none]" : p.pattern(), from);
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.ERROR_FS_SEARCH);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    } finally {
+		if (localTemp != null) {
+		    localTemp.delete();
+		}
+		if (remoteTemp != null) {
+		    try {
+			remoteTemp.delete();
+			if (remoteTemp.exists()) {
+			    SafeCLI.exec("rm -f " + remoteTemp.getPath(), session, IUnixSession.Timeout.S);
+			}
+		    } catch (Exception e) {
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
-		} catch (Exception e) {
-		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }
+	    searchMap.put(command, results);
+	    return results;
 	}
-	return results;
     }
 
     // Private

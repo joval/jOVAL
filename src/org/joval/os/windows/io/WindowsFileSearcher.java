@@ -6,6 +6,7 @@ package org.joval.os.windows.io;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
@@ -35,6 +36,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
     private IWindowsSession session;
     private IRunspace runspace;
     private LocLogger logger;
+    private HashMap<String, Collection<IFile>> searchMap;
 
     public WindowsFileSearcher(IWindowsSession session) throws Exception {
 	this(session, null);
@@ -53,6 +55,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	}
 	runspace.loadModule(getClass().getResourceAsStream("WindowsFileSearcher.psm1"));
 	logger = session.getLogger();
+	searchMap = new HashMap<String, Collection<IFile>>();
     }
 
     // Implement ILogger
@@ -99,15 +102,21 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	}
 	command.append(" ");
 	command.append(plugin.getSubcommand());
-	Iterator<String> iter = new StringTokenIterator(runspace.invoke(command.toString()), "\r\n");
+	String cmd = command.toString();
 
-	Collection<IFile> results = new ArrayList<IFile>();
-	IFile f = null;
-	while ((f = plugin.createObject(iter)) != null) {
-	    results.add(f);
-	    logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, f.getPath());
+	if (searchMap.containsKey(cmd)) {
+	    return searchMap.get(cmd);
+	} else {
+	    Iterator<String> iter = new StringTokenIterator(runspace.invoke(command.toString()), "\r\n");
+	    Collection<IFile> results = new ArrayList<IFile>();
+	    IFile f = null;
+	    while ((f = plugin.createObject(iter)) != null) {
+		results.add(f);
+		logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, f.getPath());
+	    }
+	    searchMap.put(cmd, results);
+	    return results;
 	}
-	return results;
     }
 
     // Implement ISearchPlugin<IFile>
