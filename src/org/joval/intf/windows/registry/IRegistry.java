@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
-import org.joval.intf.system.IEnvironment;
 import org.joval.intf.util.ILoggable;
 
 /**
@@ -26,11 +25,6 @@ public interface IRegistry extends ILoggable {
     String HKCR		= "HKEY_CLASSES_ROOT";
     String DELIM_STR	= "\\";
     char   DELIM_CH	= '\\';
-
-    /**
-     * Get an environment based on this registry view.
-     */
-    public IEnvironment getEnvironment();
 
     /**
      * Get Windows license data from the registry.

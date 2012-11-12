@@ -5,6 +5,7 @@ package org.joval.os.windows.registry;
 
 import org.joval.intf.windows.registry.IExpandStringValue;
 import org.joval.intf.windows.registry.IKey;
+import org.joval.intf.system.IEnvironment;
 
 /**
  * Representation of a Windows registry expand-string value.
@@ -13,14 +14,13 @@ import org.joval.intf.windows.registry.IKey;
  * @version %I% %G%
  */
 public class ExpandStringValue extends Value implements IExpandStringValue {
-    private String data, expandedData;
+    private String data;
 
-    public ExpandStringValue(IKey parent, String name, String data, String expandedData) {
+    public ExpandStringValue(IKey parent, String name, String data) {
 	type = REG_EXPAND_SZ;
 	this.parent = parent;
 	this.name = name;
 	this.data = data;
-	this.expandedData = expandedData;
     }
 
     public String getData() {
@@ -30,8 +30,8 @@ public class ExpandStringValue extends Value implements IExpandStringValue {
     /**
      * Get the value with environment variables filled out from the system environment.
      */
-    public String getExpandedData() {
-	return expandedData;
+    public String getExpandedData(IEnvironment env) {
+	return env.expand(data);
     }
 
     public String toString() {

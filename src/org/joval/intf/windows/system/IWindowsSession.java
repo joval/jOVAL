@@ -38,11 +38,14 @@ public interface IWindowsSession extends ISession {
     String VAL_WINRM = "winrm";
 
     String ENV_ARCH = "PROCESSOR_ARCHITECTURE";
+    String ENV_AR32 = "PROCESSOR_ARCHITEW6432";
 
     public enum View {
 	_32BIT,
 	_64BIT;
     }
+
+    View getNativeView();
 
     IRegistry getRegistry(View view);
 

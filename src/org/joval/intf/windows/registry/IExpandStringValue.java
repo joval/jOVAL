@@ -3,6 +3,8 @@
 
 package org.joval.intf.windows.registry;
 
+import org.joval.intf.system.IEnvironment;
+
 /**
  * Interface to a Windows registry REG_EXPAND_SZ value.
  *
@@ -18,5 +20,5 @@ public interface IExpandStringValue extends IValue {
     /**
      * Get the fully-expanded version of the data.
      */
-    public String getExpandedData();
+    public String getExpandedData(IEnvironment env);
 }

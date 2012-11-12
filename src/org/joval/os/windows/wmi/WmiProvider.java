@@ -35,16 +35,6 @@ public class WmiProvider implements IWmiProvider {
 	map = new Hashtable<String, Dispatch>();
     }
 
-    // Implement ILoggable
-
-    public LocLogger getLogger() {
-	return logger;
-    }
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
-    }
-
     public boolean register() {
 	try {
 	    if (locator == null) {
@@ -65,6 +55,16 @@ public class WmiProvider implements IWmiProvider {
 	    locator = null;
 	}
 	map.clear();
+    }
+
+    // Implement ILoggable
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
     }
 
     // Implement ISWbemProvider
