@@ -154,7 +154,7 @@ public class LinuxDriver extends AbstractDriver {
 	    String parsable = new StringBuffer(dateStr.substring(0, 23)).append(dateStr.substring(29)).toString();
 	    mtime = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS Z").parse(parsable).getTime();
 	} catch (ParseException e) {
-	    e.printStackTrace();
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	String path = null, linkPath = null;

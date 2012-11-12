@@ -48,7 +48,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     }
 
     public WindowsFilesystem(IWindowsSession session, IWindowsSession.View view) throws Exception {
-	super(session, File.separator);
+	super(session, "\\");
 	searcher = new WindowsFileSearcher(session, view);
     }
 

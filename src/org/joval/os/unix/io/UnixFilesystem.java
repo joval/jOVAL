@@ -42,7 +42,7 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
     private Collection<IMount> mounts;
 
     public UnixFilesystem(IUnixSession session) {
-	super(session, File.separator);
+	super(session, "/");
 	S = session.getTimeout(IUnixSession.Timeout.S);
 	M = session.getTimeout(IUnixSession.Timeout.M);
 	L = session.getTimeout(IUnixSession.Timeout.L);
@@ -151,7 +151,7 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	/**
 	 * Create a UnixFile using information.
 	 */
-	UnixFile(UnixFileInfo info) {
+	protected UnixFile(UnixFileInfo info) {
 	    super(info.getPath(), info);
 	}
 
@@ -176,6 +176,14 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	public String toString() {
 	    return getPath();
 	}
+
+	@Override
+        protected FileAccessor getAccessor() throws IOException {
+            if (accessor == null) {
+                accessor = new UnixAccessor(new File(path));
+            }
+            return accessor;
+        }
     }
 
     // Protected
@@ -198,7 +206,8 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	    if (e instanceof IOException) {
 		throw (IOException)e;
 	    } else {
-		throw new IOException(e);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new IOException(e.getMessage());
 	    }
 	}
     }

@@ -102,9 +102,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    String path = f.getPath();
 	    try {
 		String dirPath = null;
-		//
-		// DAS: if DH says don't follow links, then add a test for isLink.
-		//
 		boolean isDirectory = f.isDirectory();
 		if (isDirectory) {
 		    dirPath = path;
@@ -412,9 +409,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, id));
 	    }
 	} catch (FileNotFoundException e) {
-session.getLogger().warn("DAS basefileadapter/notfound: " + e.getMessage());
 	} catch (Exception e) {
-session.getLogger().warn("DAS " + JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());

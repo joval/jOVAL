@@ -342,9 +342,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    }
 	    List<IFile> result = new ArrayList<IFile>();
 	    for (String fname : fnames) {
-		if (p == null) {
-		    result.add(getFile(path + DELIM + fname, flags));
-		} else if (p.matcher(fname).find()) {
+		if (p == null || p.matcher(fname).find()) {
 		    result.add(getFile(path + DELIM + fname, flags));
 		}
 	    }
