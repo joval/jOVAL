@@ -198,6 +198,59 @@ public class AccesstokenAdapter implements IAdapter {
 	    item.getMessage().add(msg);
 	    item.setStatus(StatusEnumeration.ERROR);
 	}
+
+	//
+	// Set defaults
+	//
+	item.setSeassignprimarytokenprivilege(FALSE);
+	item.setSeauditprivilege(FALSE);
+	item.setSebackupprivilege(FALSE);
+	item.setSechangenotifyprivilege(FALSE);
+	item.setSecreateglobalprivilege(FALSE);
+	item.setSecreatepagefileprivilege(FALSE);
+	item.setSecreatepermanentprivilege(FALSE);
+	item.setSecreatesymboliclinkprivilege(FALSE);
+	item.setSecreatetokenprivilege(FALSE);
+	item.setSedebugprivilege(FALSE);
+	item.setSeenabledelegationprivilege(FALSE);
+	item.setSeimpersonateprivilege(FALSE);
+	item.setSeincreasebasepriorityprivilege(FALSE);
+	item.setSeincreasequotaprivilege(FALSE);
+	item.setSeincreaseworkingsetprivilege(FALSE);
+	item.setSeloaddriverprivilege(FALSE);
+	item.setSelockmemoryprivilege(FALSE);
+	item.setSemachineaccountprivilege(FALSE);
+	item.setSemanagevolumeprivilege(FALSE);
+	item.setSeprofilesingleprocessprivilege(FALSE);
+	item.setSerelabelprivilege(FALSE);
+	item.setSeremoteshutdownprivilege(FALSE);
+	item.setSerestoreprivilege(FALSE);
+	item.setSesecurityprivilege(FALSE);
+	item.setSeshutdownprivilege(FALSE);
+	item.setSesyncagentprivilege(FALSE);
+	item.setSesystemenvironmentprivilege(FALSE);
+	item.setSesystemprofileprivilege(FALSE);
+	item.setSesystemtimeprivilege(FALSE);
+	item.setSetakeownershipprivilege(FALSE);
+	item.setSetcbprivilege(FALSE);
+	item.setSetimezoneprivilege(FALSE);
+	item.setSeundockprivilege(FALSE);
+	item.setSeunsolicitedinputprivilege(FALSE);
+	item.setSebatchlogonright(FALSE);
+	item.setSeinteractivelogonright(FALSE);
+	item.setSenetworklogonright(FALSE);
+	item.setSeremoteinteractivelogonright(FALSE);
+	item.setSeservicelogonright(FALSE);
+	item.setSedenybatchLogonright(FALSE);
+	item.setSedenyinteractivelogonright(FALSE);
+	item.setSedenynetworklogonright(FALSE);
+	item.setSedenyremoteInteractivelogonright(FALSE);
+	item.setSedenyservicelogonright(FALSE);
+	item.setSetrustedcredmanaccessnameright(FALSE);
+
+	//
+	// Set discoverd tokens to TRUE
+	//
 	if (data != null) {
 	    for (String line : data.split("\n")) {
 		String privilege = line.trim();
@@ -285,11 +338,11 @@ public class AccesstokenAdapter implements IAdapter {
 		    item.setSedenyinteractivelogonright(TRUE);
 		} else if ("sedenynetworklogonright".equalsIgnoreCase(privilege)) {
 		    item.setSedenynetworklogonright(TRUE);
-		} else if ("sedenyremoteInteractivelogonright".equalsIgnoreCase(privilege)) {
+		} else if ("sedenyremoteinteractivelogonright".equalsIgnoreCase(privilege)) {
 		    item.setSedenyremoteInteractivelogonright(TRUE);
 		} else if ("sedenyservicelogonright".equalsIgnoreCase(privilege)) {
 		    item.setSedenyservicelogonright(TRUE);
-		} else if ("setrustedcredmanaccessnameright".equalsIgnoreCase(privilege)) {
+		} else if ("setrustedcredmanaccessprivilege".equalsIgnoreCase(privilege)) {
 		    item.setSetrustedcredmanaccessnameright(TRUE);
 		} else {
 		    session.getLogger().warn(JOVALMsg.ERROR_WIN_ACCESSTOKEN_TOKEN, privilege);
