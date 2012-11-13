@@ -15,7 +15,6 @@ import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
 
-import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IProperty;
 
 /**

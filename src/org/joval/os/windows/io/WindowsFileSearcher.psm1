@@ -108,3 +108,26 @@ function Print-FileInfo {
     }
   }
 }
+
+function Gzip-File {
+  param (
+    [String]$in = $(throw "Mandatory parameter -in missing."),
+    [String]$out = $($in + ".gz")
+  )
+ 
+  if (Test-Path $in) {
+    $input = New-Object System.IO.FileStream $in, ([IO.FileMode]::Open), ([IO.FileAccess]::Read), ([IO.FileShare]::Read)
+    $output = New-Object System.IO.FileStream $out, ([IO.FileMode]::Create), ([IO.FileAccess]::Write), ([IO.FileShare]::None)
+    $gzipStream = New-Object System.IO.Compression.GzipStream $output, ([IO.Compression.CompressionMode]::Compress)
+
+    $buffer = New-Object byte[](512)
+    $len = 0
+    while(($len = $input.Read($buffer, 0, $buffer.Length)) -gt 0) {
+      $gzipStream.Write($buffer, 0, $len)
+    }
+    $input.Close()
+    $gzipStream.Close()
+    $output.Close()
+    Remove-Item $in
+  }
+}

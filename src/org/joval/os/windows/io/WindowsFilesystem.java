@@ -185,6 +185,8 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		    return Kernel32Util.getFileType(path);
 		}
 	    } catch (Win32Exception e) {
+		logger.warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+e.printStackTrace();
 		throw new IOException(e);
 	    }
 	}

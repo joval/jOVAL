@@ -16,19 +16,16 @@ import org.joval.intf.windows.io.IWindowsFileInfo;
  * @version %I% %G%
  */
 public class WindowsFileInfo extends AbstractFilesystem.FileInfo implements IWindowsFileInfo {
-    private int winType;
-    private IACE[] aces;
+    private IWindowsFileInfo accessor;
 
     public WindowsFileInfo(long ctime, long mtime, long atime, Type type, long length, int winType, IACE[] aces) {
 	super(ctime, mtime, atime, type, length);
-	this.winType = winType;
-	this.aces = aces;
+	accessor = new InternalAccessor(winType, aces);
     }
 
-    public WindowsFileInfo(long ctime, long mtime, long atime, Type type, long length, IWindowsFileInfo info)
-		throws IOException {
-
-	this(ctime, mtime, atime, type, length, info.getWindowsFileType(), info.getSecurity());
+    public WindowsFileInfo(long ctime, long mtime, long atime, Type type, long length, IWindowsFileInfo info) {
+	super(ctime, mtime, atime, type, length);
+	accessor = info;
     }
 
     // Implement IWindowsFileInfo
@@ -36,11 +33,33 @@ public class WindowsFileInfo extends AbstractFilesystem.FileInfo implements IWin
     /**
      * Returns one of the FILE_TYPE_ constants.
      */
-    public int getWindowsFileType() {
-	return winType;
+    public int getWindowsFileType() throws IOException {
+	return accessor.getWindowsFileType();
     }
 
-    public IACE[] getSecurity() {
-	return aces;
+    public IACE[] getSecurity() throws IOException {
+	return accessor.getSecurity();
+    }
+
+    // Private
+
+    class InternalAccessor implements IWindowsFileInfo {
+	private int winType;
+	private IACE[] aces;
+
+	InternalAccessor(int winType, IACE[] aces) {
+	    this.winType = winType;
+	    this.aces = aces;
+	}
+
+	// Implement IWindowsFileInfo
+
+	public int getWindowsFileType() {
+	    return winType;
+	}
+
+	public IACE[] getSecurity() {
+	    return aces;
+	}
     }
 }

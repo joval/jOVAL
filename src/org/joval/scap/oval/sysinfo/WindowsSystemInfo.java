@@ -55,7 +55,7 @@ class WindowsSystemInfo {
 	info.setPrimaryHostName(session.getHostname());
 
 	try {
-	    IEnvironment environment = registry.getEnvironment();
+	    IEnvironment environment = session.getEnvironment();
 	    info.setArchitecture(environment.getenv(ARCHITECTURE));
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_ARCH);

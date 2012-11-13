@@ -70,6 +70,7 @@ CLASSES=\
 	org.joval.os.windows.identity.LocalDirectory					\
 	org.joval.os.windows.identity.Principal						\
 	org.joval.os.windows.identity.User						\
+	org.joval.os.windows.io.WindowsFileInfo						\
 	org.joval.os.windows.io.WindowsFileSearcher					\
 	org.joval.os.windows.io.WindowsFilesystem					\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector				\

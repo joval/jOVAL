@@ -3,6 +3,12 @@
 
 package org.joval.os.windows.io;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,6 +17,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPInputStream;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -23,8 +30,10 @@ import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.AbstractFilesystem;
+import org.joval.io.StreamTool;
 import org.joval.os.windows.Timestamp;
 import org.joval.util.JOVALMsg;
+import org.joval.util.StringTools;
 
 /**
  * An interface for searching a Windows filesystem.
@@ -82,37 +91,58 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 		throws Exception {
 
 	logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, p == null ? "null" : p.pattern(), from, flags);
-	StringBuffer command;
-	switch(flags) {
-	  case ISearchable.FLAG_CONTAINERS:
-	    command = new StringBuffer("Find-Directories");
-	    break;
-	  default:
-	    command = new StringBuffer("Find-Files");
-	    break;
-	}
-	command.append(" -Path \"");
-	command.append(from);
-	command.append("\" -Depth ");
-	command.append(Integer.toString(maxDepth));
-	if (p != null) {
-	    command.append(" -Pattern \"");
-	    command.append(p.pattern());
-	    command.append("\"");
-	}
-	command.append(" ");
-	command.append(plugin.getSubcommand());
-	String cmd = command.toString();
-
+	String cmd = getFindCommand(from, maxDepth, flags, p == null ? null : p.pattern());
 	if (searchMap.containsKey(cmd)) {
 	    return searchMap.get(cmd);
 	} else {
-	    Iterator<String> iter = new StringTokenIterator(runspace.invoke(command.toString()), "\r\n");
+	    logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, p == null ? "null" : p.pattern(), from, flags);
+	    File localTemp = null;
+	    IFile remoteTemp = null;
 	    Collection<IFile> results = new ArrayList<IFile>();
-	    IFile f = null;
-	    while ((f = plugin.createObject(iter)) != null) {
-		results.add(f);
-		logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, f.getPath());
+	    try {
+		//
+		// Run the command on the remote host, storing the results in a temporary file, then tranfer the file
+		// locally and read it.
+		//
+		BufferedReader reader = null;
+		remoteTemp = execToFile(cmd);
+		if(session.getWorkspace() == null) {
+		    //
+		    // State cannot be saved locally, so the result will have to be buffered into memory
+		    //
+		    reader = new BufferedReader(new InputStreamReader(
+			new GZIPInputStream(remoteTemp.getInputStream()), StringTools.UTF16LE));
+		} else {
+		    //
+		    // Read from the local state file, or create one while reading from the remote state file.
+		    //
+		    localTemp = File.createTempFile("search", null, session.getWorkspace());
+		    StreamTool.copy(remoteTemp.getInputStream(), new FileOutputStream(localTemp), true);
+		    reader = new BufferedReader(new InputStreamReader(
+			new GZIPInputStream(new FileInputStream(localTemp)), StringTools.UTF16LE));
+		}
+
+		IFile file = null;
+		Iterator<String> iter = new ReaderIterator(reader);
+		while ((file = plugin.createObject(iter)) != null) {
+		    logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, file.getPath());
+		    results.add(file);
+		}
+		logger.info(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), p == null ? "[none]" : p.pattern(), from);
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.ERROR_FS_SEARCH);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    } finally {
+		if (localTemp != null) {
+		    localTemp.delete();
+		}
+		if (remoteTemp != null) {
+		    try {
+			remoteTemp.delete();
+		    } catch (Exception e) {
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    }
+		}
 	    }
 	    searchMap.put(cmd, results);
 	    return results;
@@ -188,25 +218,141 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 
     // Internal
 
-    class StringTokenIterator implements Iterator<String> {
-	private StringTokenizer tok;
+    String getFindCommand(String from, int maxDepth, int flags, String pattern) {
+	StringBuffer command;
+	switch(flags) {
+	  case ISearchable.FLAG_CONTAINERS:
+	    command = new StringBuffer("Find-Directories");
+	    break;
+	  default:
+	    command = new StringBuffer("Find-Files");
+	    break;
+	}
+	command.append(" -Path \"");
+	command.append(from);
+	command.append("\" -Depth ");
+	command.append(Integer.toString(maxDepth));
+	if (pattern != null) {
+	    command.append(" -Pattern \"");
+	    command.append(pattern);
+	    command.append("\"");
+	}
+	command.append(" ");
+	command.append(getSubcommand());
+	return command.toString();
+    }
 
-	StringTokenIterator(String data, String delimiter) {
-	    tok = new StringTokenizer(data, delimiter);
+    /**
+     * Run the command, sending its output to a temporary file, and return the temporary file.
+     */
+    private IFile execToFile(String command) throws Exception {
+	String unique = null;
+	synchronized(this) {
+	    unique = Long.toString(System.currentTimeMillis());
+	    Thread.sleep(1);
+	}
+	String tempPath = session.getTempDir();
+	if (!tempPath.endsWith(IWindowsFilesystem.DELIM_STR)) {
+	    tempPath = tempPath + IWindowsFilesystem.DELIM_STR;
+	}
+	tempPath = tempPath + "find." + unique + ".out";
+	tempPath = session.getEnvironment().expand(tempPath);
+	logger.info(JOVALMsg.STATUS_FS_SEARCH_CACHE_TEMP, tempPath);
+
+	String cmd = new StringBuffer(command).append(" | Out-File ").append(tempPath).toString();
+	FileWatcher fw = new FileWatcher(tempPath);
+	fw.start();
+	runspace.invoke(cmd);
+	fw.interrupt();
+	runspace.invoke("Gzip-File " + tempPath);
+	return session.getFilesystem().getFile(tempPath + ".gz", IFile.Flags.READWRITE);
+    }
+
+    class ReaderIterator implements Iterator<String> {
+	BufferedReader reader;
+	String next = null;
+
+	ReaderIterator(BufferedReader reader) {
+	    this.reader = reader;
 	}
 
-	// Implement Iterator
+	// Implement Iterator<String>
 
 	public boolean hasNext() {
-	    return tok.hasMoreTokens();
+	    if (next == null) {
+		try {
+		    next = next();
+		    return true;
+		} catch (NoSuchElementException e) {
+		    return false;
+		}
+	    } else {
+		return true;
+	    }
 	}
 
 	public String next() throws NoSuchElementException {
-	    return tok.nextToken();
+	    if (next == null) {
+		try {
+		    if ((next = reader.readLine()) == null) {
+			try {
+			    reader.close();
+			} catch (IOException e) {
+			}
+			throw new NoSuchElementException();
+		    }
+		} catch (IOException e) {
+		    throw new NoSuchElementException(e.getMessage());
+		}
+	    }
+	    String temp = next;
+	    next = null;
+	    return temp;
 	}
 
-	public void remove() throws UnsupportedOperationException {
-	    throw new UnsupportedOperationException("remove");
+	public void remove() {
+	    throw new UnsupportedOperationException();
+	}
+    }
+
+    class FileWatcher implements Runnable {
+	private String path;
+	private Thread thread;
+	private boolean cancel = false;
+
+	FileWatcher(String path) {
+	    this.path = path;
+	}
+
+	void start() {
+	    thread = new Thread(this);
+	    thread.start();
+	}
+
+	void interrupt() {
+	    cancel = true;
+	    thread.interrupt();
+	}
+
+	// Implement Runnable
+
+	public void run() {
+	    while(!cancel) {
+		try {
+		    Thread.sleep(15000);
+		    IFile f = session.getFilesystem().getFile(path, IFile.Flags.READVOLATILE);
+		    if (f.exists()) {
+			logger.info(JOVALMsg.STATUS_FS_SEARCH_CACHE_PROGRESS, f.length());
+		    } else {
+			cancel = true;
+		    }
+	        } catch (IOException e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    cancel = true;
+	        } catch (InterruptedException e) {
+		    cancel = true;
+	        }
+	    }
 	}
     }
 
