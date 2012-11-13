@@ -10,10 +10,12 @@ import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Vector;
 
 import org.joval.util.JOVALMsg;
+import org.joval.util.StringTools;
 
 /**
  * Some stream utilities.
@@ -94,6 +96,30 @@ public class StreamTool {
 		}
 	    }
 	}
+    }
+
+    /**
+     * Read the BOM (Byte-Order marker) from a stream.
+     */
+    public static Charset detectEncoding(InputStream in) throws IOException {
+	switch(in.read()) {
+	  case 0xEF:
+	    if (in.read() == 0xBB && in.read() == 0xBF) {
+		return StringTools.UTF8;
+	    }
+	    break;
+	  case 0xFE:
+	    if (in.read() == 0xFF) {
+		return StringTools.UTF16;
+	    }
+	    break;
+	  case 0xFF:
+	    if (in.read() == 0xFE) {
+		return StringTools.UTF16LE;
+	    }
+	    break;
+	}
+	throw new java.nio.charset.CharacterCodingException();
     }
 
     // Private

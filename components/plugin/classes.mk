@@ -73,6 +73,7 @@ CLASSES=\
 	org.joval.os.windows.io.WindowsFileInfo						\
 	org.joval.os.windows.io.WindowsFileSearcher					\
 	org.joval.os.windows.io.WindowsFilesystem					\
+	org.joval.os.windows.io.WindowsMount						\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector				\
 	org.joval.os.windows.powershell.PowershellException				\
 	org.joval.os.windows.powershell.Runspace					\

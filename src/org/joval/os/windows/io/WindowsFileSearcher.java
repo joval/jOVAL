@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -32,6 +33,7 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.AbstractFilesystem;
 import org.joval.io.StreamTool;
 import org.joval.os.windows.Timestamp;
+import org.joval.os.windows.powershell.PowershellException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -90,7 +92,6 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
     public Collection<IFile> search(String from, Pattern p, int maxDepth, int flags, ISearchPlugin<IFile> plugin)
 		throws Exception {
 
-	logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, p == null ? "null" : p.pattern(), from, flags);
 	String cmd = getFindCommand(from, maxDepth, flags, p == null ? null : p.pattern());
 	if (searchMap.containsKey(cmd)) {
 	    return searchMap.get(cmd);
@@ -99,31 +100,29 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	    File localTemp = null;
 	    IFile remoteTemp = null;
 	    Collection<IFile> results = new ArrayList<IFile>();
+	    InputStream in = null;
 	    try {
 		//
 		// Run the command on the remote host, storing the results in a temporary file, then tranfer the file
 		// locally and read it.
 		//
-		BufferedReader reader = null;
 		remoteTemp = execToFile(cmd);
 		if(session.getWorkspace() == null) {
 		    //
 		    // State cannot be saved locally, so the result will have to be buffered into memory
 		    //
-		    reader = new BufferedReader(new InputStreamReader(
-			new GZIPInputStream(remoteTemp.getInputStream()), StringTools.UTF16LE));
+		    in = new GZIPInputStream(remoteTemp.getInputStream());
 		} else {
 		    //
 		    // Read from the local state file, or create one while reading from the remote state file.
 		    //
 		    localTemp = File.createTempFile("search", null, session.getWorkspace());
 		    StreamTool.copy(remoteTemp.getInputStream(), new FileOutputStream(localTemp), true);
-		    reader = new BufferedReader(new InputStreamReader(
-			new GZIPInputStream(new FileInputStream(localTemp)), StringTools.UTF16LE));
+		    in = new GZIPInputStream(remoteTemp.getInputStream());
 		}
-
-		IFile file = null;
+		BufferedReader reader = new BufferedReader(new InputStreamReader(in, StreamTool.detectEncoding(in)));
 		Iterator<String> iter = new ReaderIterator(reader);
+		IFile file = null;
 		while ((file = plugin.createObject(iter)) != null) {
 		    logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, file.getPath());
 		    results.add(file);
@@ -133,6 +132,12 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 		logger.warn(JOVALMsg.ERROR_FS_SEARCH);
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
+		if (in != null) {
+		    try {
+			in.close();
+		    } catch (IOException e) {
+		    }
+		}
 		if (localTemp != null) {
 		    localTemp.delete();
 		}
@@ -162,7 +167,8 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	IFile file = null;
 	boolean start = false;
 	while(input.hasNext()) {
-	    if (input.next().trim().equals(START)) {
+	    String line = input.next();
+	    if (line.trim().equals(START)) {
 		start = true;
 		break;
 	    }

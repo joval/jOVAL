@@ -7,20 +7,24 @@ function Find-Directories {
     [String]$Pattern = ".*",
     [int]$Depth = 1 
   )
-  $CurrentItem = Get-Item -literalPath $Path
-  if ($CurrentItem.PSIsContainer) {
-    $NextDepth = $Depth - 1
-    if ($Path -match $Pattern) {
-      $CurrentItem
-    }
-    if ($Depth -ne 0) {
-      foreach ($ChildItem in Get-ChildItem -literalPath $Path) {
-        if ($ChildItem.PSIsContainer) {
-          Find-Directories -Path $ChildItem.FullName -Pattern $Pattern -Depth $NextDepth
+
+  try {
+    $CurrentItem = Get-Item -literalPath $Path
+    if (($CurrentItem -ne $null) -and $CurrentItem.PSIsContainer) {
+      $NextDepth = $Depth - 1
+      if ($Path -match $Pattern) {
+        $CurrentItem
+      }
+      if ($Depth -ne 0) {
+        $ErrorActionPreference = "SilentlyContinue"
+        foreach ($ChildItem in Get-ChildItem $CurrentItem) {
+          if ($ChildItem.PSIsContainer) {
+            Find-Directories -Path $ChildItem.FullName -Pattern $Pattern -Depth $NextDepth
+          }
         }
       }
     }
-  }
+  } catch {}
 }
 
 function Find-Files {
@@ -29,18 +33,21 @@ function Find-Files {
     [String]$Pattern = ".*",
     [int]$Depth = 1 
   )
-  $CurrentItem = Get-Item -literalPath $Path
-  if ($Path -match $Pattern) {
-    $CurrentItem
-  }
-  if ($CurrentItem.PSIsContainer) {
-    $NextDepth = $Depth - 1
-    if ($Depth -ne 0) {
-      foreach ($ChildItem in Get-ChildItem -literalPath $Path) {
-        Find-Files -Path $ChildItem.FullName -Pattern $Pattern -Depth $NextDepth
+  try {
+    $CurrentItem = Get-Item -literalPath $Path
+    if ($Path -match $Pattern) {
+      $CurrentItem
+    }
+    if ($CurrentItem.PSIsContainer) {
+      $NextDepth = $Depth - 1
+      if ($Depth -ne 0) {
+        $ErrorActionPreference = "SilentlyContinue"
+        foreach ($ChildItem in Get-ChildItem $CurrentItem) {
+          Find-Files -Path $ChildItem.FullName -Pattern $Pattern -Depth $NextDepth
+        }
       }
     }
-  }
+  } catch {}
 }
 
 function Print-FileACEInfo {

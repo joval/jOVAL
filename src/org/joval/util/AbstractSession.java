@@ -162,6 +162,8 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	protected String command;
 	protected String[] env;
 
+	private Integer ec = null;
+
 	protected JavaProcess(String command, String[] env) {
 	    this.command = command;
 	    this.env = env;
@@ -271,9 +273,11 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	}
 
 	public int exitValue() throws IllegalThreadStateException {
-	    int ec = p.exitValue();
-	    logger.debug(JOVALMsg.STATUS_PROCESS_END, getCommand(), ec);
-	    return ec;
+	    if (ec == null) {
+		ec = new Integer(p.exitValue());
+		logger.debug(JOVALMsg.STATUS_PROCESS_END, getCommand(), ec);
+	    }
+	    return ec.intValue();
 	}
 
 	public void destroy() {

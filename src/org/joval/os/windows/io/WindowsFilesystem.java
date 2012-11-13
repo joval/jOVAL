@@ -69,6 +69,15 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	return searcher;
     }
 
+    @Override
+    public String guessParent(Pattern p) {
+	String guess = super.guessParent(p);
+	if (WindowsMount.isDrive(guess)) {
+	    guess = guess + DELIM_STR;
+	}
+	return guess;
+    }
+
     public Collection<IMount> getMounts(Pattern filter) throws IOException {
 	if (mounts == null) {
 	    try {
@@ -76,9 +85,9 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		File[] roots = File.listRoots();
 		for (int i=0; i < roots.length; i++) {
 		    String path = roots[i].getPath();
-		    mounts.add(new Mount(path, FsType.typeOf(Kernel32Util.getDriveType(path))));
+		    mounts.add(new WindowsMount(path, FsType.typeOf(Kernel32Util.getDriveType(path))));
 		}
-	    } catch (Win32Exception e) {
+	    } catch (Exception e) {
 		throw new IOException(e);
 	    }
 	}
@@ -186,7 +195,6 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		}
 	    } catch (Win32Exception e) {
 		logger.warn(JOVALMsg.ERROR_IO, path, e.getMessage());
-e.printStackTrace();
 		throw new IOException(e);
 	    }
 	}
@@ -202,26 +210,6 @@ e.printStackTrace();
 	    } catch (Win32Exception e) {
 		throw new IOException(e);
 	    }
-	}
-    }
-
-    class Mount implements IMount {
-	private String path;
-	private FsType type;
-
-	public Mount(String path, FsType type) {
-	    this.path = path;
-	    this.type = type;
-	}
-
-	// Implement IFilesystem.IMount
-
-	public String getPath() {
-	    return path;
-	}
-
-	public String getType() {
-	    return type.value();
 	}
     }
 }
