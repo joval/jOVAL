@@ -63,7 +63,6 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
     private AbstractFilesystem fs;
     private IRunspace runspace;
     private LocLogger logger;
-    private String dbKey;
     private DB db;
     private Map<String, Collection<String>> searchMap;
     private Map<String, IFile> infoCache;
@@ -88,7 +87,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	logger = session.getLogger();
 
 	if (session.getProperties().getBooleanProperty(IFilesystem.PROP_CACHE_JDBM)) {
-	    dbKey = IWindowsSession.View._32BIT == view ? "fs32" : "fs";
+	    String dbKey = IWindowsSession.View._32BIT == view ? "fs32" : "fs";
 	    for (File f : session.getWorkspace().listFiles()) {
 		if (f.getName().startsWith(dbKey)) {
 		    f.delete();
@@ -458,6 +457,10 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
      * JDBM Serilizer implementation for Windows IFiles
      */
     static class FileSerializer implements Serializer<IFile>, Serializable {
+	static final int SER_FILE = 0;
+	static final int SER_DIRECTORY = 1;
+	static final int SER_LINK = 2;
+
 	Integer instanceKey;
 	transient AbstractFilesystem fs;
 
@@ -478,10 +481,10 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	    long atime = in.readLong();
 	    AbstractFilesystem.FileInfo.Type type = AbstractFilesystem.FileInfo.Type.FILE;
 	    switch(in.readInt()) {
-	      case 0:
+	      case SER_DIRECTORY:
 		type = AbstractFilesystem.FileInfo.Type.DIRECTORY;
 		break;
-	      case 1:
+	      case SER_LINK:
 		type = AbstractFilesystem.FileInfo.Type.LINK;
 		break;
 	    }
@@ -504,11 +507,11 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	    out.writeLong(f.lastModified());
 	    out.writeLong(f.accessTime());
 	    if (f.isLink()) {
-		out.writeInt(1);
+		out.writeInt(SER_LINK);
 	    } else if (f.isDirectory()) {
-		out.writeInt(0);
+		out.writeInt(SER_DIRECTORY);
 	    } else {
-		out.writeInt(2);
+		out.writeInt(SER_FILE);
 	    }
 	    out.writeLong(f.length());
 	    IWindowsFileInfo info = (IWindowsFileInfo)f.getExtended();

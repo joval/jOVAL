@@ -57,6 +57,7 @@ CLASSES=\
 	org.joval.os.unix.io.driver.LinuxDriver						\
 	org.joval.os.unix.io.driver.MacOSXDriver					\
 	org.joval.os.unix.io.driver.SolarisDriver					\
+	org.joval.os.unix.io.UnixFileInfo						\
 	org.joval.os.unix.io.UnixFileSearcher						\
 	org.joval.os.unix.io.UnixFilesystem						\
 	org.joval.os.unix.macos.DsclTool						\

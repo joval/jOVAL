@@ -54,7 +54,8 @@ public class UnixFileInfo extends AbstractFilesystem.FileInfo implements IUnixFi
 	this.extended = extended; // extended data
     }
 
-    UnixFileInfo(AbstractFilesystem.FileInfo info, String path) {
+/*
+    UnixFileInfo(String path, AbstractFilesystem.FileInfo info) {
 	ctime = info.getCtime();
 	mtime = info.getMtime();
 	atime = info.getAtime();
@@ -65,6 +66,7 @@ public class UnixFileInfo extends AbstractFilesystem.FileInfo implements IUnixFi
 	uid = -1;
 	gid = -1;
     }
+*/
 
     public String getPath() {
 	return path;
@@ -106,6 +108,10 @@ public class UnixFileInfo extends AbstractFilesystem.FileInfo implements IUnixFi
 
     public int getGroupId() {
 	return gid;
+    }
+
+    public String getPermissions() {
+	return permissions;
     }
 
     public boolean uRead() {
@@ -158,6 +164,14 @@ public class UnixFileInfo extends AbstractFilesystem.FileInfo implements IUnixFi
 
     public boolean hasExtendedAcl() {
 	return hasExtendedAcl;
+    }
+
+    public String[] getExtendedKeys() {
+	if (extended == null) {
+	    return null;
+	} else {
+	    return extended.stringPropertyNames().toArray(new String[0]);
+	}
     }
 
     public String getExtendedData(String key) throws NoSuchElementException {
