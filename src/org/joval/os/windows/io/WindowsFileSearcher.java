@@ -32,6 +32,7 @@ import org.apache.jdbm.DBMaker;
 import org.apache.jdbm.Serializer;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFilesystem;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.identity.IACE;
@@ -86,29 +87,33 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	runspace.loadModule(getClass().getResourceAsStream("WindowsFileSearcher.psm1"));
 	logger = session.getLogger();
 
-	dbKey = IWindowsSession.View._32BIT == view ? "fs32" : "fs";
-	close();
-	DBMaker dbm = DBMaker.openFile(new File(session.getWorkspace(), dbKey).toString());
-	dbm.disableTransactions();
-	dbm.closeOnExit();
-	dbm.deleteFilesAfterClose();
-	db = dbm.make();
-	Integer instanceKey = new Integer(fs.hashCode());
-	if (!fsInstances.containsKey(instanceKey)) {
-	    fsInstances.put(instanceKey, fs);
+	if (session.getProperties().getBooleanProperty(IFilesystem.PROP_CACHE_JDBM)) {
+	    dbKey = IWindowsSession.View._32BIT == view ? "fs32" : "fs";
+	    for (File f : session.getWorkspace().listFiles()) {
+		if (f.getName().startsWith(dbKey)) {
+		    f.delete();
+		}
+	    }
+	    DBMaker dbm = DBMaker.openFile(new File(session.getWorkspace(), dbKey).toString());
+	    dbm.disableTransactions();
+	    dbm.closeOnExit();
+	    dbm.deleteFilesAfterClose();
+	    db = dbm.make();
+	    Integer instanceKey = new Integer(fs.hashCode());
+	    if (!fsInstances.containsKey(instanceKey)) {
+		fsInstances.put(instanceKey, fs);
+	    }
+	    infoCache = db.createHashMap("info", null, new FileSerializer(instanceKey));
+	    searchMap = db.createHashMap("searches");
+	} else {
+	    infoCache = new HashMap<String, IFile>();
+	    searchMap = new HashMap<String, Collection<String>>();
 	}
-	infoCache = db.createHashMap("info", null, new FileSerializer(instanceKey));
-	searchMap = db.createHashMap("searches");
     }
 
     public void close() {
 	if (db != null) {
 	    db.close();
-	}
-	for (File f : session.getWorkspace().listFiles()) {
-	    if (f.getName().startsWith(dbKey)) {
-		f.delete();
-	    }
 	}
     }
 
@@ -320,7 +325,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	runspace.invoke(cmd, session.getTimeout(IWindowsSession.Timeout.L));
 	fw.interrupt();
 	runspace.invoke("Gzip-File " + tempPath);
-	return session.getFilesystem().getFile(tempPath + ".gz", IFile.Flags.READWRITE);
+	return fs.getFile(tempPath + ".gz", IFile.Flags.READWRITE);
     }
 
     class ReaderIterator implements Iterator<String> {
@@ -370,6 +375,10 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	}
     }
 
+    /**
+     * Periodically checks the length of a file, in a background thread. This gives us a clue as to whether very long
+     * searches are really doing anything, or if they've died.
+     */
     class FileWatcher implements Runnable {
 	private String path;
 	private Thread thread;
@@ -395,7 +404,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	    while(!cancel) {
 		try {
 		    Thread.sleep(15000);
-		    IFile f = session.getFilesystem().getFile(path, IFile.Flags.READVOLATILE);
+		    IFile f = fs.getFile(path, IFile.Flags.READVOLATILE);
 		    if (f.exists()) {
 			logger.info(JOVALMsg.STATUS_FS_SEARCH_CACHE_PROGRESS, f.length());
 		    } else {
@@ -446,16 +455,21 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
     }
 
     /**
-     * JDBM Serilizer implementation for Windows IFiles. Uses an AbstractFilesystem instance number as a "trick"
-     * to make self-serialization work.
+     * JDBM Serilizer implementation for Windows IFiles
      */
     static class FileSerializer implements Serializer<IFile>, Serializable {
 	Integer instanceKey;
 	transient AbstractFilesystem fs;
 
+	/**
+	 * The serializer relies on an active IFilesystem, which cannot be serialized, so we serialize the hashcode
+	 * of the IFilesystem, and maintain a static Map in the parent class. 
+	 */
 	public FileSerializer(Integer instanceKey) {
 	    this.instanceKey = instanceKey;
 	}
+
+	// Implement Serializer<IFile>
 
 	public IFile deserialize(DataInput in) throws IOException {
 	    String path = in.readUTF();
