@@ -262,7 +262,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	String cmd = new StringBuffer(command).append(" | Out-File ").append(tempPath).toString();
 	FileWatcher fw = new FileWatcher(tempPath);
 	fw.start();
-	runspace.invoke(cmd);
+	runspace.invoke(cmd, session.getTimeout(IWindowsSession.Timeout.L));
 	fw.interrupt();
 	runspace.invoke("Gzip-File " + tempPath);
 	return session.getFilesystem().getFile(tempPath + ".gz", IFile.Flags.READWRITE);
