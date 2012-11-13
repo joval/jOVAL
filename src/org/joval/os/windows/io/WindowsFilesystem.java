@@ -3,7 +3,6 @@
 
 package org.joval.os.windows.io;
 
-import java.io.DataInput;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
@@ -49,19 +48,34 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	this(session, null);
     }
 
-    public WindowsFilesystem(IWindowsSession session, IWindowsSession.View view) throws Exception {
+    public WindowsFilesystem(IWindowsSession session, IWindowsSession.View view) {
 	super(session, "\\");
+	if (view == null) {
+	    view = session.getNativeView();
+	}
 	this.view = view;
 	if (view == IWindowsSession.View._32BIT) {
 	    redirector = new WOW3264FilesystemRedirector(session.getEnvironment());
 	}
-	searcher = new WindowsFileSearcher(session, view);
     }
 
     public void dispose() {
+	if (searcher == null) {
+	    searcher.close();
+	}
     }
 
-    public ISearchable<IFile> getSearcher() {
+    public synchronized ISearchable<IFile> getSearcher() throws IOException {
+	if (searcher == null) {
+	    try {
+		searcher = new WindowsFileSearcher((IWindowsSession)session, view);
+	    } catch (IOException e) {
+		throw e;
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new IOException(e);
+	    }
+	}
 	return searcher;
     }
 

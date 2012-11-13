@@ -28,6 +28,11 @@ public interface IWindowsSession extends ISession {
     String PROP_WSMAN_ENCRYPT = "remote.wsman.encryption";
 
     /**
+     * Property governing the desired maximum memory per shell on remote machines.
+     */
+    String PROP_WINRS_MEM = "remote.winrs.shellMemoryMB";
+
+    /**
      * Specifies a remote execution implementation based on WMI-over-DCOM.
      */
     String VAL_WMI = "wmi";

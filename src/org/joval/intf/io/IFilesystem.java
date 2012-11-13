@@ -49,7 +49,7 @@ public interface IFilesystem extends ILoggable {
     /**
      * Access an ISearchable for the filesystem.
      */
-    ISearchable<IFile> getSearcher();
+    ISearchable<IFile> getSearcher() throws IOException;
 
     /**
      * Get the default search plugin.
