@@ -262,11 +262,11 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	}
 
 	public long accessTime() throws IOException {
-	    return getAccessor().getAtime();
+	    return getInfo().getAtime();
 	}
 
 	public long createTime() throws IOException {
-	    return getAccessor().getCtime();
+	    return getInfo().getCtime();
 	}
 
 	public final boolean mkdir() {

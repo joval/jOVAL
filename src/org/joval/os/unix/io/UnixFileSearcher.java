@@ -357,6 +357,9 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	    }
 	    UnixFileInfo info = new UnixFileInfo(ctime, mtime, atime, type, len, path, linkTarget, unixType,
 						 permissions, uid, gid, hasExtendedAcl, extended);
+	    if (fs == null) {
+		fs = UnixFileSearcher.fsInstances.get(instanceKey);
+	    }
 	    return fs.createFileFromInfo(path, info);
 	}
 
