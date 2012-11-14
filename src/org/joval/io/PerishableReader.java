@@ -77,6 +77,10 @@ public class PerishableReader extends InputStream implements IReader, IPerishabl
 
     // Implement IReader
 
+    public InputStream getStream() {
+	return this;
+    }
+
     @Override
     public synchronized void close() throws IOException {
 	if (!closed)  {

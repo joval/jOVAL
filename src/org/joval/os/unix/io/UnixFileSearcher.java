@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import java.util.TimerTask;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
@@ -30,6 +31,7 @@ import org.apache.jdbm.Serializer;
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IReader;
+import org.joval.intf.io.IReaderGobbler;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.io.IUnixFileInfo;
@@ -43,6 +45,7 @@ import org.joval.io.BufferedReader;
 import org.joval.io.PerishableReader;
 import org.joval.io.StreamTool;
 import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
@@ -213,46 +216,15 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	IEnvironment env = session.getEnvironment();
 	String tempPath = env.expand("%HOME%" + IUnixFilesystem.DELIM_STR + ".jOVAL.find" + unique + ".gz");
 	logger.info(JOVALMsg.STATUS_FS_SEARCH_CACHE_TEMP, tempPath);
-
 	String cmd = new StringBuffer(command).append(" | gzip > ").append(env.expand(tempPath)).toString();
-	IProcess p = session.createProcess(cmd, null);
-	p.start();
 
-	//
-	// We have redirected stdout to the file, but we don't know which stream stderr can be read from, so
-	// we'll try reading from both!
-	//
-	long XL = session.getTimeout(IUnixSession.Timeout.XL);
-	ErrorReader er1 = new ErrorReader(PerishableReader.newInstance(p.getInputStream(), XL));
-	er1.start();
-	ErrorReader er2 = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), XL));
-	er2.start();
-
-	//
-	// Log a status update every 15 seconds while we wait, but wait for no more than an hour.
-	//
-	boolean done = false;
-	for (int i=0; !done && i < 240; i++) {
-	    for (int j=0; !done && j < 15; j++) {
-		if (p.isRunning()) {
-		    Thread.sleep(1000);
-		} else {
-		    done = true;
-		}
-	    }
-	    long len = fs.getFile(tempPath, IFile.Flags.READVOLATILE).length();
-	    logger.info(JOVALMsg.STATUS_FS_SEARCH_CACHE_PROGRESS, len);
-	}
-	if (done) {
-	    p.exitValue();
-	} else {
-	    p.destroy();
-	}
-	er1.close();
-	er2.close();
-	er1.join();
-	er2.join();
-
+	FileMonitor mon = new FileMonitor(tempPath);
+	JOVALSystem.getTimer().schedule(mon, 15000, 15000);
+//DAS
+	SafeCLI.exec(cmd, null, session, session.getTimeout(IUnixSession.Timeout.XL), new ErrorReader(), new ErrorReader());
+//	SafeCLI.exec(cmd, null, session, session.getTimeout(IUnixSession.Timeout.XL));
+	mon.cancel();
+	JOVALSystem.getTimer().purge();
 	return fs.getFile(tempPath, IFile.Flags.READWRITE);
     }
 
@@ -303,48 +275,35 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	}
     }
 
-    class ErrorReader implements Runnable {
-	IReader err;
-	Thread t;
+    class FileMonitor extends TimerTask {
+	private String path;
 
-	ErrorReader(IReader err) {
-	    err.setLogger(logger);
-	    this.err = err;
-	}
-
-	void start() {
-	    t = new Thread(this);
-	    t.start();
-	}
-
-	void join() throws InterruptedException {
-	    t.join();
-	}
-
-	void close() {
-	    if (t.isAlive()) {
-		t.interrupt();
-	    }
+	FileMonitor(String path) {
+	    this.path = path;
 	}
 
 	public void run() {
 	    try {
-		String line = null;
-		while((line = err.readLine()) != null) {
-		    logger.warn(JOVALMsg.ERROR_FS_SEARCH_LINE, line);
-		}
-	    } catch (InterruptedIOException e) {
-		// ignore
+		long len = fs.getFile(path, IFile.Flags.READVOLATILE).length();
+		logger.info(JOVALMsg.STATUS_FS_SEARCH_CACHE_PROGRESS, len);
 	    } catch (IOException e) {
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    } finally {
-		try {
-		    err.close();
-		} catch (IOException e) {
+	    }
+	}
+    }
+
+    class ErrorReader implements IReaderGobbler {
+	ErrorReader() {}
+
+	public void gobble(IReader err) throws IOException {
+	    String line = null;
+	    while((line = err.readLine()) != null) {
+		if (line.trim().length() > 0) {
+		    logger.warn(JOVALMsg.ERROR_FS_SEARCH_LINE, line);
 		}
 	    }
 	}
     }
+
     /**
      * JDBM Serilizer implementation for Unix IFiles
      */

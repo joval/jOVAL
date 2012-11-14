@@ -14,6 +14,8 @@ import java.io.InterruptedIOException;
 import java.util.List;
 import java.util.Vector;
 
+import org.joval.intf.io.IReader;
+import org.joval.intf.io.IReaderGobbler;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
@@ -99,7 +101,63 @@ public class SafeCLI {
     public static final ExecData execData(String cmd, String[] env, IBaseSession session, long readTimeout)
 		throws Exception {
 
-	return new SafeCLI(cmd, env, session, readTimeout).result();
+	SafeCLI cli = new SafeCLI(cmd, env, session, readTimeout);
+	cli.exec(session.echo());
+	return cli.getResult();
+    }
+
+    /**
+     * Run a command, using the specified output processor ("gobbler").
+     *
+     * When the command is run, an IReader to the output is passed to the gobbler using the gobble method. If the command
+     * hangs (signaled to SafeCLI by an InterruptedIOException or SessionException), the SafeCLI will kill the old command,
+     * start a new command instance (up the the session's configured number of retries), and call gobbler.gobble again.
+     *
+     * Hence, the gobbler should initialize itself completely when gobble is invoked, and not perform permanent output
+     * processing until the reader has reached the end of the process output.
+     */
+    public static final void exec(String cmd, String[] env, IBaseSession session, long readTimeout,
+				  IReaderGobbler out, IReaderGobbler err) throws Exception {
+
+	new SafeCLI(cmd, env, session, readTimeout).exec(out, err);
+    }
+
+    /**
+     * A container for information resulting from the execution of a process.
+     */
+    public class ExecData {
+	int exitCode;
+	byte[] data;
+
+	ExecData() {
+	    exitCode = -1;
+	    data = null;
+	}
+
+	public int getExitCode() {
+	    return exitCode;
+	}
+
+	public byte[] getData() {
+	    return data;
+	}
+
+	/**
+	 * Guaranteed to have at least one entry.
+	 */
+	public List<String> getLines() throws IOException {
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)));
+	    List<String> lines = new Vector<String>();
+	    String line = null;
+	    while((line = reader.readLine()) != null) {
+		lines.add(line);
+	    }
+	    if (lines.size() == 0) {
+		session.getLogger().warn(JOVALMsg.WARNING_MISSING_OUTPUT, cmd, exitCode, data.length);
+		lines.add("");
+	    }
+	    return lines;
+	}
     }
 
     // Private
@@ -117,19 +175,15 @@ public class SafeCLI {
 	this.session = session;
 	this.readTimeout = readTimeout;
 	execRetries = session.getProperties().getIntProperty(IBaseSession.PROP_EXEC_RETRIES);
+	result = new ExecData();
     }
 
-    private ExecData result() throws Exception {
-	if (result == null) {
-	    exec();
-	}
+    private ExecData getResult() {
 	return result;
     }
 
-    public void exec() throws Exception {
+    private void exec(IReaderGobbler outputGobbler, IReaderGobbler errorGobbler) throws Exception {
 	boolean success = false;
-	result = new ExecData();
-
 	for (int attempt=0; !success; attempt++) {
 	    IProcess p = null;
 	    PerishableReader reader = null;
@@ -138,20 +192,10 @@ public class SafeCLI {
 		p.start();
 		reader = PerishableReader.newInstance(p.getInputStream(), readTimeout);
 		reader.setLogger(session.getLogger());
-		if (session.echo()) {
-		    //
-		    // For sessions that ignore the terminal mode bytes and echo anyway, discard the first line
-		    // of output, as it's always the echo of the issued command.
-		    //
-		    reader.readLine();
+		if (errorGobbler != null) {
+		    new GobblerThread(errorGobbler).start(PerishableReader.newInstance(p.getErrorStream(), readTimeout));
 		}
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		byte[] buff = new byte[512];
-		int len = 0;
-		while((len = reader.read(buff)) > 0) {
-		    out.write(buff, 0, len);
-		}
-		result.data = out.toByteArray();
+		outputGobbler.gobble(reader);
 		try {
 		    p.waitFor(session.getTimeout(IBaseSession.Timeout.M));
 		    result.exitCode = p.exitValue();
@@ -204,38 +248,65 @@ public class SafeCLI {
 	}
     }
 
-    public class ExecData {
-	int exitCode;
-	byte[] data;
+    private void exec(boolean skipFirstLine) throws Exception {
+	exec(new InnerGobbler(skipFirstLine), null);
+    }
 
-	ExecData() {
-	    exitCode = -1;
-	    data = null;
+    /**
+     * An IReaderGobbler that reads data into an ExecData. This internal implementation sets the ExecData result for the
+     * class.
+     */
+    class InnerGobbler implements IReaderGobbler {
+	//
+	// For sessions that ignore the terminal mode bytes and echo anyway, discard the first line
+	// of output, as it's always the echo of the issued command.
+	//
+	private boolean skipFirstLine;
+
+	InnerGobbler(boolean skipFirstLine) {
+	    this.skipFirstLine = skipFirstLine;
 	}
 
-	public int getExitCode() {
-	    return exitCode;
-	}
-
-	public byte[] getData() {
-	    return data;
-	}
-
-	/**
-	 * Guaranteed to have at least one entry.
-	 */
-	public List<String> getLines() throws IOException {
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)));
-	    List<String> lines = new Vector<String>();
-	    String line = null;
-	    while((line = reader.readLine()) != null) {
-		lines.add(line);
+	public void gobble(IReader reader) throws IOException {
+	    if (skipFirstLine) {
+		reader.readLine();
 	    }
-	    if (lines.size() == 0) {
-		session.getLogger().warn(JOVALMsg.WARNING_MISSING_OUTPUT, cmd, exitCode, data.length);
-		lines.add("");
+	    ByteArrayOutputStream out = new ByteArrayOutputStream();
+	    byte[] buff = new byte[512];
+	    int len = 0;
+	    while((len = reader.getStream().read(buff)) > 0) {
+		out.write(buff, 0, len);
 	    }
-	    return lines;
+	    result.data = out.toByteArray();
+	}
+    }
+
+    class GobblerThread implements Runnable {
+	Thread thread;
+	IReader reader;
+	IReaderGobbler gobbler;
+
+	GobblerThread(IReaderGobbler gobbler) {
+	    this.gobbler = gobbler;
+	}
+
+	void start(IReader reader) throws IllegalStateException {
+	    if (thread == null || !thread.isAlive()) {
+		this.reader = reader;
+		thread = new Thread(this);
+		thread.start();
+	    } else {
+		throw new IllegalStateException("running");
+	    }
+	}
+
+	// Implement Runnable
+
+	public void run() {
+	    try {
+		gobbler.gobble(reader);
+	    } catch (IOException e) {
+	    }
 	}
     }
 }

@@ -3,6 +3,7 @@
 
 package org.joval.intf.io;
 
+import java.io.InputStream;
 import java.io.IOException;
 
 import org.joval.intf.util.ILoggable;
@@ -18,6 +19,11 @@ public interface IReader extends ILoggable {
      * Read a byte.
      */
     int read() throws IOException;
+
+    /**
+     * Get the underlying InputStream.
+     */
+    InputStream getStream();
 
     /**
      * Read a line of text, or read up until the end of the underlying stream.  Returns null if the stream is closed

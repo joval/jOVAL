@@ -23,10 +23,12 @@ import org.joval.util.StringTools;
 public class BufferedReader implements IReader {
     private java.io.BufferedReader reader;
     private boolean open, eof;
+    private InputStream in;
 
     public BufferedReader(InputStream in) throws IOException {
 	open = true;
 	eof = false;
+	this.in = in;
 	// Use ASCII encoding so that a char is a byte
 	this.reader = new java.io.BufferedReader(new InputStreamReader(in, StringTools.ASCII));
     }
@@ -35,6 +37,10 @@ public class BufferedReader implements IReader {
 
     public int read() throws IOException {
 	return reader.read();
+    }
+
+    public InputStream getStream() {
+	return in;
     }
 
     public String readLine() throws IOException {
