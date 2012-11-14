@@ -236,11 +236,10 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     private Collection<IFile> getFiles(ReflectedFileObject fObj, ReflectedFileBehaviors fb, IRequestContext rc,
 		IFilesystem fs) throws CollectException {
 
-	String id = fObj.getId();
-	ISearchable<IFile> searcher = fs.getSearcher();
-	ISearchable.ISearchPlugin<IFile> plugin = fs.getDefaultPlugin();
 	Collection<IFile> files = new ArrayList<IFile>();
 	try {
+	    ISearchable<IFile> searcher = fs.getSearcher();
+	    ISearchable.ISearchPlugin<IFile> plugin = fs.getDefaultPlugin();
 	    if (fObj.isSetFilepath()) {
 		//
 		// Windows view is already handled, and FileBehaviors recursion is ignored in the Filepath case, so
@@ -406,7 +405,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		//
 		// This has probably happened because one or more variables resolves to nothing.
 		//
-		session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, id));
+		session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, fObj.getId()));
 	    }
 	} catch (FileNotFoundException e) {
 	} catch (Exception e) {

@@ -4,6 +4,7 @@ CLASSES=\
 	org.joval.intf.io.IFileEx							\
 	org.joval.intf.io.IFilesystem							\
 	org.joval.intf.io.IReader							\
+	org.joval.intf.io.IReaderGobbler						\
 	org.joval.intf.plugin.IAdapter							\
 	org.joval.intf.system.IBaseSession						\
 	org.joval.intf.system.IEnvironment						\
