@@ -75,27 +75,35 @@ public class AIXDriver extends AbstractDriver {
     }
 
     public String getFindCommand(String from, int depth, int flags, String pattern) {
-	StringBuffer cmd = new StringBuffer("find");
-	if (isSetFlag(ISearchable.FLAG_FOLLOW_LINKS, flags)) {
-	    cmd.append(" -L");
-	}
-	cmd.append(" ").append(from);
-	if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
-	    cmd.append(" -xdev");
-	}
-	if (depth != ISearchable.DEPTH_UNLIMITED) {
-	    cmd.append("\\( -type d -a -exec sh -c 'echo $1 | awk -F/ '\\''{print $(");
-	    cmd.append(Integer.toString(depth));
-	    cmd.append("+1)}'\\''|grep \"\\([^ ]\\)\" >/dev/null' {} {} \\; -prune -print \\)");
-	}
-	if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
-	    cmd.append(" -type d");
-	}
-	if (pattern != null) {
-	    cmd.append(" | grep -E \"").append(pattern).append("\"");
-	}
-	cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
-	return cmd.toString();
+        StringBuffer cmd = new StringBuffer("find");
+        if (isSetFlag(ISearchable.FLAG_FOLLOW_LINKS, flags)) {
+            cmd.append(" -L");
+        }
+        cmd.append(" ").append(from);
+        if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
+            cmd.append(" -xdev");
+        }
+        if (depth != ISearchable.DEPTH_UNLIMITED) {
+            cmd.append(" \\( -type d -a -exec sh -c 'echo $1 | awk -F/ '\\''{print $(");
+            cmd.append(Integer.toString(depth));
+            cmd.append("+1)}'\\''|grep \"\\([^ ]\\)\" >/dev/null' {} {} \\; -prune -print \\)");
+        }
+        if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
+            cmd.append(" -type d");
+            if (pattern != null) {
+                cmd.append(" | grep -E \"").append(pattern).append("\"");
+            }
+        } else if (pattern != null) {
+            if (isSetFlag(ISearchable.FLAG_CONTAINER_PATTERN, flags)) {
+                cmd.append(" -type d");
+                cmd.append(" | grep -E \"").append(pattern).append("\"");
+                cmd.append(" | xargs -i find '{}' \\( ! -name `basename '$(1)'` -o -type f \\) -prune -type f");
+            } else {
+                cmd.append(" | grep -E \"").append(pattern).append("\"");
+            }
+        }
+        cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
+        return cmd.toString();
     }
 
     public String getStatCommand() {

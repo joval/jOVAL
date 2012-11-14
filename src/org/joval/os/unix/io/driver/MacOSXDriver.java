@@ -89,11 +89,19 @@ public class MacOSXDriver extends AbstractDriver {
 	}
 	if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
 	    cmd.append(" -type d");
+	    if (pattern != null) {
+		cmd.append(" | grep -E \"").append(pattern).append("\"");
+	    }
+	} else if (pattern != null) {
+	    if (isSetFlag(ISearchable.FLAG_CONTAINER_PATTERN, flags)) {
+		cmd.append(" -type d");
+		cmd.append(" | grep -E \"").append(pattern).append("\"");
+		cmd.append(" | xargs -I{} find '{}' -maxdepth 1");
+	    } else {
+		cmd.append(" | grep -E \"").append(pattern).append("\"");
+	    }
 	}
-	if (pattern != null) {
-	    cmd.append(" | grep -E \"").append(pattern).append("\"");
-	}
-	cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
+	cmd.append(" | xargs -I{} ").append(getStatCommand()).append(" '{}'");
 	return cmd.toString();
     }
 

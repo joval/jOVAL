@@ -65,27 +65,35 @@ public class SolarisDriver extends AbstractDriver {
     }
 
     public String getFindCommand(String from, int depth, int flags, String pattern) {
-        StringBuffer cmd = new StringBuffer("find");
-        if (isSetFlag(ISearchable.FLAG_FOLLOW_LINKS, flags)) {
-            cmd.append(" -L");
-        }
+	StringBuffer cmd = new StringBuffer("find");
+	if (isSetFlag(ISearchable.FLAG_FOLLOW_LINKS, flags)) {
+	    cmd.append(" -L");
+	}
 	cmd.append(" ").append(from);
-        if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
-            cmd.append(" -mount");
-        }
+	if (isSetFlag(IUnixFilesystem.FLAG_XDEV, flags)) {
+	    cmd.append(" -mount");
+	}
 	if (depth != ISearchable.DEPTH_UNLIMITED) {
 	    cmd.append(" \\( -type d -a -exec sh -c 'echo $1 | awk -F/ '\\''{print $(");
 	    cmd.append(Integer.toString(depth));
 	    cmd.append("+1)}'\\''|grep \"\\([^ ]\\)\" >/dev/null' {} {} \\; -prune -print \\)");
 	}
-        if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
-            cmd.append(" -type d");
-        }
-	if (pattern != null) {
-	    cmd.append(" | /usr/xpg4/bin/grep -E \"").append(pattern).append("\"");
+	if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
+	    cmd.append(" -type d");
+	    if (pattern != null) {
+		cmd.append(" | /usr/xpg4/bin/grep -E \"").append(pattern).append("\"");
+	    }
+	} else if (pattern != null) {
+	    if (isSetFlag(ISearchable.FLAG_CONTAINER_PATTERN, flags)) {
+		cmd.append(" -type d");
+		cmd.append(" | /usr/xpg4/bin/grep -E \"").append(pattern).append("\"");
+		cmd.append(" | xargs -i find '{}' \\( ! -name `basename '$(1)'` -o -type f \\) -prune -type f");
+	    } else {
+		cmd.append(" | /usr/xpg4/bin/grep -E \"").append(pattern).append("\"");
+	    }
 	}
-        cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
-        return cmd.toString();
+	cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
+	return cmd.toString();
     }
 
     public String getStatCommand() {
@@ -161,9 +169,9 @@ public class SolarisDriver extends AbstractDriver {
 	if (begin > 0) {
 	    int end = line.indexOf("->");
 	    if (end == -1) {
-	        path = line.substring(begin).trim();
+		path = line.substring(begin).trim();
 	    } else if (end > begin) {
-	        path = line.substring(begin, end).trim();
+		path = line.substring(begin, end).trim();
 		linkPath = line.substring(end+2).trim();
 	    }
 	}

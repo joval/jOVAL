@@ -28,26 +28,33 @@ function Find-Directories {
 }
 
 function Find-Files {
+  [CmdletBinding(DefaultParameterSetName="User")]
   param(
-    [String]$Path = $PWD,
+    [Parameter(ParameterSetName="Pipe", Position=0, ValueFromPipeline=$true)][PSObject]$CurrentItem,
+    [Parameter(ParameterSetName="User")][String]$Path = $PWD,
     [String]$Pattern = ".*",
-    [int]$Depth = 1 
+    [int]$Depth = 1
   )
-  try {
-    $CurrentItem = Get-Item -literalPath $Path
-    if ($Path -match $Pattern) {
-      $CurrentItem
+
+  PROCESS {
+    if ($PsCmdlet.ParameterSetName -eq "User") {
+      $CurrentItem = Get-Item -literalPath $Path
     }
-    if ($CurrentItem.PSIsContainer) {
-      $NextDepth = $Depth - 1
-      if ($Depth -ne 0) {
-        $ErrorActionPreference = "SilentlyContinue"
-        foreach ($ChildItem in Get-ChildItem $CurrentItem) {
-          Find-Files -Path $ChildItem.FullName -Pattern $Pattern -Depth $NextDepth
+    try {
+      if ($Path -match $Pattern) {
+        $CurrentItem
+      }
+      if ($CurrentItem.PSIsContainer) {
+        $NextDepth = $Depth - 1
+        if ($Depth -ne 0) {
+          $ErrorActionPreference = "SilentlyContinue"
+          foreach ($ChildItem in Get-ChildItem $CurrentItem) {
+            Find-Files -Path $ChildItem.FullName -Pattern $Pattern -Depth $NextDepth
+          }
         }
       }
-    }
-  } catch {}
+    } catch {}
+  }
 }
 
 function Print-FileACEInfo {

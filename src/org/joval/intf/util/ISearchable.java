@@ -30,6 +30,11 @@ public interface ISearchable<T> {
     int FLAG_CONTAINERS		= 2;
 
     /**
+     * Flag indicating that the specified pattern applies only to containers. (No effect if combined with FLAG_CONTAINERS).
+     */
+    int FLAG_CONTAINER_PATTERN	= 4;
+
+    /**
      * Unlimited depth argument for recursive searches.
      */
     int DEPTH_UNLIMITED		= -1;

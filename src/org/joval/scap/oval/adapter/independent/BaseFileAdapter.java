@@ -9,7 +9,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -262,16 +264,16 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    int depth = ISearchable.DEPTH_UNLIMITED;
 		    int flags = ISearchable.FLAG_NONE;
 		    if (parentPath == null) {
+			//
+			// The filesystem couldn't determine where to start searching based on the pattern, so we'll
+			// search every "local" mount on the machine.
+			//
 			for (IFilesystem.IMount mount : fs.getMounts(localFilter)) {
 			    String from = mount.getPath();
-			    for (IFile match : searcher.search(from, p, depth, flags, plugin)) {
-				files.add(match);
-			    }
+			    files.addAll(searcher.search(mount.getPath(), p, depth, flags, plugin));
 			}
 		    } else {
-			for (IFile match : searcher.search(parentPath, p, depth, flags, plugin)) {
-			    files.add(match);
-			}
+			files.addAll(searcher.search(parentPath, p, depth, flags, plugin));
 		    }
 		    break;
 		  }
@@ -280,47 +282,66 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
-	    } else if (fObj.isSetPath()) {
+	    } else if (fObj.isSetPath() && fObj.getPath().getValue() != null) {
+		String path = (String)fObj.getPath().getValue();
+		String filename = null;
+		int flags = ISearchable.FLAG_CONTAINER_PATTERN;
+		if (fObj.isSetFilename() && fObj.getFilename().getValue() != null) {
+		    filename = (String)fObj.getFilename().getValue();
+		} else {
+		    //
+		    // If there is a search, we will only want directories.
+		    //
+		    flags |= ISearchable.FLAG_CONTAINERS;
+		}
+
 		//
-		// First, collect all possible matching paths (i.e., dirs)
+		// If there is a filename spec, build a list of all the files that could possible match (and this
+		// will be filtered below). Otherwise, create a list of all the matching directories for the path spec.
 		//
-		EntityObjectStringType path = fObj.getPath();
-		String value = (String)path.getValue();
-		OperationEnumeration op = path.getOperation();
-		switch(op) {
+		OperationEnumeration pathOp = fObj.getPath().getOperation();
+		switch(pathOp) {
 		  case EQUALS:
-		    IFile file = fs.getFile(value);
+		    IFile file = fs.getFile(path);
 		    if (file.isDirectory()) {
 			files.add(file);
-		    }
-		    if (fb != null) {
-			//
-			// Recursive search File Behaviors always only apply exclusively to well-defined paths, never
-			// patterns.
-			//
-			int depth = fb.getDepth();
-			if (fb.getRecurse().indexOf("directories") == -1) {
-			    depth = 0;
-			}
-			if (depth == ISearchable.DEPTH_UNLIMITED || depth > 0) {
-			    if ("up".equals(fb.getRecurseDirection())) {
-				for (int i=depth; i != 0; i--) {
-				    String parentPath = file.getParent();
-				    if (parentPath.equals(file.getName())) {
-					// this means we've reached the top already
-					break;
-				    } else {
-					file = fs.getFile(parentPath);
-					files.add(file);
+			if (fb == null) {
+			    if (filename != null) {
+				files.addAll(Arrays.asList(file.listFiles()));
+			    }
+			} else {
+			    int depth = fb.getDepth();
+			    if (fb.getRecurse().indexOf("directories") == -1) {
+				depth = 0;
+			    }
+			    if (depth == 0 && filename != null) {
+				files.addAll(Arrays.asList(file.listFiles()));
+			    } else if (depth != 0) {
+				if ("up".equals(fb.getRecurseDirection())) {
+				    for (int i=depth; i != 0; i--) {
+					String parentPath = file.getParent();
+					if (parentPath.equals(file.getName())) {
+					    // this means we've reached the top
+					    break;
+					} else {
+					    String lastFilename = file.getName();
+					    file = fs.getFile(parentPath);
+					    if (ISearchable.FLAG_CONTAINERS == (ISearchable.FLAG_CONTAINERS & flags)) {
+						files.add(file);
+					    } else {
+						for (String fname : file.list()) {
+						    if (!fname.equals(lastFilename)) {
+							files.add(fs.getFile(parentPath + fs.getDelimiter() + fname));
+						    }
+						}
+					    }
+					}
 				    }
-				}
-			    } else {
-				int flags = ISearchable.FLAG_CONTAINERS;
-				if (fb.getRecurse().indexOf("symlinks") != -1) {
-				    flags |= ISearchable.FLAG_FOLLOW_LINKS;
-				}
-				for (IFile match : searcher.search(value, null, depth, flags, plugin)) {
-				    files.add(match);
+				} else {
+				    if (fb.getRecurse().indexOf("symlinks") != -1) {
+					flags |= ISearchable.FLAG_FOLLOW_LINKS;
+				    }
+				    files.addAll(searcher.search(path, null, depth, flags, plugin));
 				}
 			    }
 			}
@@ -328,77 +349,78 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    break;
 
 		  case PATTERN_MATCH: {
-		    Pattern p = Pattern.compile(value);
+		    Pattern p = Pattern.compile(path);
 		    String parentPath = fs.guessParent(p);
 		    int depth = ISearchable.DEPTH_UNLIMITED;
-		    int flags = ISearchable.FLAG_CONTAINERS;
 		    if (parentPath == null) {
+			//
+			// The filesystem couldn't determine where to start searching based on the pattern, so we'll
+			// search every "local" mount on the machine.
+			//
 			for (IFilesystem.IMount mount : fs.getMounts(localFilter)) {
-			    String from = mount.getPath();
-			    for (IFile match : searcher.search(from, p, depth, flags, plugin)) {
-				files.add(match);
-			    }
+			    files.addAll(searcher.search(mount.getPath(), p, depth, flags, plugin));
 			}
 		    } else {
-			for (IFile match : searcher.search(parentPath, p, depth, flags, plugin)) {
-			    files.add(match);
-			}
+			files.addAll(searcher.search(parentPath, p, depth, flags, plugin));
 		    }
 		    break;
 		  }
 
+
 		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pathOp);
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
 
 		//
-		// Next, for each possible directory match, look for the file(s) if specified.
+		// At this point, the collection "files" will contain every IFile that matches the path spec.
+		// So, if there is a filename spec, we use it to filter down the list.
 		//
-		if (fObj.isSetFilename()) {
-		    EntityObjectStringType filename = fObj.getFilename();
-		    String fname = (String)filename.getValue();
-		    Collection<IFile> dirs = files;
-		    files = new ArrayList<IFile>();
-		    for (IFile dir : dirs) {
-			op = filename.getOperation();
-			switch(op) {
-			  case PATTERN_MATCH: {
-			    if (dir.isDirectory()) {
-				for (IFile file : dir.listFiles(Pattern.compile(fname))) {
-				    if (file.isFile()) {
-					files.add(file);
-				    }
-				}
+		if (filename != null) {
+		    Iterator<IFile> iter = files.iterator();
+		    OperationEnumeration filenameOp = fObj.getFilename().getOperation();
+		    switch(filenameOp) {
+		      case NOT_EQUAL:
+			while(iter.hasNext()) {
+			    IFile file = iter.next();
+			    if (filename.equals(file.getName())) {
+				iter.remove();
 			    }
-			    break;
-			  }
- 
-			  case EQUALS: {
-			    if (dir.isDirectory()) {
-				IFile file = dir.getChild(fname);
-				if (file.exists()) {
-				    files.add(file);
-				}
-			    }
-			    break;
-			  }
-
-			  case NOT_EQUAL: {
-			    if (dir.isDirectory()) {
-				for (IFile file : dir.listFiles()) {
-				    if (file.isFile() && !fname.equals(file.getName())) {
-					files.add(file);
-				    }
-				}
-			    }
-			    break;
-			  }
- 
-			  default:
-			    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-			    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 			}
+			break;
+
+		      case EQUALS:
+			while(iter.hasNext()) {
+			    IFile file = iter.next();
+			    if (!filename.equals(file.getName())) {
+				iter.remove();
+			    }
+			}
+			break;
+
+		      case CASE_INSENSITIVE_EQUALS:
+			while(iter.hasNext()) {
+			    IFile file = iter.next();
+			    if (!filename.equalsIgnoreCase(file.getName())) {
+				iter.remove();
+			    }
+			}
+			break;
+
+		      case PATTERN_MATCH: {
+			Pattern p = Pattern.compile(filename);
+			while(iter.hasNext()) {
+			    IFile file = iter.next();
+			    if (!p.matcher(file.getName()).find()) {
+				iter.remove();
+			    }
+			}
+			break;
+		      }
+
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, filenameOp);
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		    }
 		}
 	    } else {

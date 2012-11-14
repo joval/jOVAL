@@ -215,14 +215,12 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	}
 	IEnvironment env = session.getEnvironment();
 	String tempPath = env.expand("%HOME%" + IUnixFilesystem.DELIM_STR + ".jOVAL.find" + unique + ".gz");
-	logger.info(JOVALMsg.STATUS_FS_SEARCH_CACHE_TEMP, tempPath);
+	logger.debug(JOVALMsg.STATUS_FS_SEARCH_CACHE_TEMP, tempPath);
 	String cmd = new StringBuffer(command).append(" | gzip > ").append(env.expand(tempPath)).toString();
 
 	FileMonitor mon = new FileMonitor(tempPath);
 	JOVALSystem.getTimer().schedule(mon, 15000, 15000);
-//DAS
 	SafeCLI.exec(cmd, null, session, session.getTimeout(IUnixSession.Timeout.XL), new ErrorReader(), new ErrorReader());
-//	SafeCLI.exec(cmd, null, session, session.getTimeout(IUnixSession.Timeout.XL));
 	mon.cancel();
 	JOVALSystem.getTimer().purge();
 	return fs.getFile(tempPath, IFile.Flags.READWRITE);
@@ -298,7 +296,7 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	    String line = null;
 	    while((line = err.readLine()) != null) {
 		if (line.trim().length() > 0) {
-		    logger.warn(JOVALMsg.ERROR_FS_SEARCH_LINE, line);
+		    logger.debug(JOVALMsg.ERROR_FS_SEARCH_LINE, line);
 		}
 	    }
 	}
@@ -371,7 +369,8 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	    IUnixFileInfo info = (IUnixFileInfo)f.getExtended();
 	    if (f.isLink()) {
 		out.writeInt(SER_LINK);
-		out.writeUTF(info.getLinkPath());
+		String s = info.getLinkPath();
+		out.writeUTF(s == null ? "" : s);
 	    } else if (f.isDirectory()) {
 		out.writeInt(SER_DIRECTORY);
 	    } else {

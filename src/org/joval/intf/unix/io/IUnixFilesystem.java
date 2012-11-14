@@ -17,12 +17,12 @@ public interface IUnixFilesystem extends IFilesystem {
     /**
      * Flag for the ISearchable specifying that links should be traversed while searching.
      */
-    int FLAG_FOLLOW_LINKS = 4;
+    int FLAG_FOLLOW_LINKS = 8;
 
     /**
      * Don't search outside the filesystem of the starting point.
      */
-    int FLAG_XDEV = 8;
+    int FLAG_XDEV = 16;
 
     String DELIM_STR = "/";
     char DELIM_CH = '/';

@@ -210,7 +210,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
     // Implement ISearchPlugin<IFile>
 
     public String getSubcommand() {
-	return "| Print-FileInfo";
+	return " | Print-FileInfo";
     }
 
     static final String START	= "{";
@@ -279,13 +279,10 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 
     String getFindCommand(String from, int maxDepth, int flags, String pattern) {
 	StringBuffer command;
-	switch(flags) {
-	  case ISearchable.FLAG_CONTAINERS:
+	if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags) || isSetFlag(ISearchable.FLAG_CONTAINER_PATTERN, flags)) {
 	    command = new StringBuffer("Find-Directories");
-	    break;
-	  default:
+	} else {
 	    command = new StringBuffer("Find-Files");
-	    break;
 	}
 	command.append(" -Path \"");
 	command.append(from);
@@ -296,9 +293,15 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	    command.append(pattern);
 	    command.append("\"");
 	}
-	command.append(" ");
+	if (isSetFlag(ISearchable.FLAG_CONTAINER_PATTERN, flags) && !isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
+	    command.append(" | Find-Files");
+	}
 	command.append(getSubcommand());
 	return command.toString();
+    }
+
+    boolean isSetFlag(int flag, int flags) {
+	return flag == (flag & flags);
     }
 
     /**
@@ -316,12 +319,12 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	}
 	tempPath = tempPath + "find." + unique + ".out";
 	tempPath = session.getEnvironment().expand(tempPath);
-	logger.info(JOVALMsg.STATUS_FS_SEARCH_CACHE_TEMP, tempPath);
+	logger.debug(JOVALMsg.STATUS_FS_SEARCH_CACHE_TEMP, tempPath);
 
 	String cmd = new StringBuffer(command).append(" | Out-File ").append(tempPath).toString();
 	FileWatcher fw = new FileWatcher(tempPath);
 	fw.start();
-	runspace.invoke(cmd, session.getTimeout(IWindowsSession.Timeout.L));
+	runspace.invoke(cmd, session.getTimeout(IWindowsSession.Timeout.XL));
 	fw.interrupt();
 	runspace.invoke("Gzip-File " + tempPath);
 	return fs.getFile(tempPath + ".gz", IFile.Flags.READWRITE);
