@@ -117,8 +117,8 @@ public class StringTools {
      */
     public static String escapeRegex(String s) {
 	Stack<String> delims = new Stack<String>();
-	for (int i=0; i < REGEX_CHARS.length; i++) {
-	    delims.add(REGEX_CHARS[i]);
+	for (int i=0; i < REGEX_STRS.length; i++) {
+	    delims.add(REGEX_STRS[i]);
 	}
 	return safeEscape(delims, s);
     }
@@ -127,7 +127,7 @@ public class StringTools {
      * Returns true if the specified String contains any regular expression syntax.
      */
     public static boolean containsRegex(String s) {
-	for (String ch : REGEX_CHARS) {
+	for (String ch : REGEX_STRS) {
 	    if (s.indexOf(ch) != -1) {
 		return true;
 	    }
@@ -139,9 +139,9 @@ public class StringTools {
      * Returns true if the specified String contains any regular expression syntax that is not escaped.
      */
     public static boolean containsUnescapedRegex(String s) {
-	for (int i=1; i < REGEX_CHARS.length; i++) { // skip ESCAPE
+	for (int i=1; i < REGEX_STRS.length; i++) { // skip ESCAPE
 	    int ptr = -1;
-	    while ((ptr = s.indexOf(REGEX_CHARS[i], ptr+1)) != -1) {
+	    while ((ptr = s.indexOf(REGEX_STRS[i], ptr+1)) != -1) {
 		int escapes = 0, ptr2 = ptr;
 		while (ptr2-- > 0) {
 		    if ('\\' == s.charAt(ptr2)) {
@@ -211,7 +211,8 @@ public class StringTools {
     }
 
     private static final String ESCAPE = "\\";
-    private static final String[] REGEX_CHARS = {ESCAPE, "^", ".", "$", "|", "(", ")", "[", "]", "{", "}", "*", "+", "?"};
+    public static final char[] REGEX_CHARS = {'\\', '^', '.', '$', '|', '(', ')', '[', ']', '{', '}', '*', '+', '?'};
+    private static final String[] REGEX_STRS = {ESCAPE, "^", ".", "$", "|", "(", ")", "[", "]", "{", "}", "*", "+", "?"};
 
     private static String safeEscape(Stack<String> delims, String s) {
 	if (delims.empty()) {

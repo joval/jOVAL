@@ -13,6 +13,7 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.security.AccessControlException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -88,7 +89,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
     // Implement IFilesystem
 
-    public String guessParent(Pattern p) {
+    public String[] guessParent(Pattern p) {
 	String path = p.pattern();
 	if (!path.startsWith("^")) {
 	    return null;
@@ -97,7 +98,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
 	int ptr = path.indexOf(ESCAPED_DELIM);
 	if (ptr == -1) {
-	    return path;
+	    return Arrays.asList(path).toArray(new String[1]);
 	}
 
 	ptr += ESCAPED_DELIM.length();
@@ -106,7 +107,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	while((next = path.indexOf(ESCAPED_DELIM, ptr)) != -1) {
 	    String token = path.substring(ptr, next);
 	    if (StringTools.containsRegex(token)) {
-		return sb.toString();
+		break;
 	    } else {
 		sb.append(token).append(DELIM);
 		ptr = next + ESCAPED_DELIM.length();
@@ -115,7 +116,40 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	if (sb.length() == 0) {
 	    return null;
 	} else {
-	    return sb.toString();
+	    String parent = sb.toString();
+
+	    // One of the children of parent should match...
+	    StringBuffer prefix = new StringBuffer("^");
+	    String token = path.substring(ptr);
+	    for (int i=0; i < token.length(); i++) {
+		char c = token.charAt(i);
+		boolean isRegexChar = false;
+		for (char ch : StringTools.REGEX_CHARS) {
+		    if (c == ch) {
+			isRegexChar = true;
+			break;
+		    }
+		}
+		if (isRegexChar) {
+		    break;
+		} else {
+		    prefix.append(c);
+		}
+	    }
+	    try {
+		if (prefix.length() > 1) {
+		    IFile base = getFile(parent);
+		    IFile[] fa = base.listFiles(Pattern.compile(prefix.toString()));
+		    String[] sa = new String[fa.length];
+		    for (int i=0; i < sa.length; i++) {
+			sa[i] = fa[i].getPath();
+		    }
+		    return sa;
+		}
+	    } catch (Exception e) {
+	    }
+
+	    return Arrays.asList(parent).toArray(new String[1]);
 	}
     }
 
@@ -343,7 +377,11 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    List<IFile> result = new ArrayList<IFile>();
 	    for (String fname : fnames) {
 		if (p == null || p.matcher(fname).find()) {
-		    result.add(getFile(path + DELIM + fname, flags));
+		    if (path.endsWith(DELIM)) {
+			result.add(getFile(path + fname, flags));
+		    } else {
+			result.add(getFile(path + DELIM + fname, flags));
+		    }
 		}
 	    }
 	    return result.toArray(new IFile[result.size()]);

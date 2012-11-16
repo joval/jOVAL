@@ -254,6 +254,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    boolean search = false;
 	    boolean local = false;
 	    boolean followLinks = true; // follow links by default
+	    String[] from = null;
 	    ISearchable<IFile> searcher = fs.getSearcher();
 	    List<ICondition> conditions = new ArrayList<ICondition>();
 
@@ -274,10 +275,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
 		  case PATTERN_MATCH: {
 		    Pattern p = Pattern.compile(filepath);
-		    String from = fs.guessParent(p);
-		    if (from != null) {
-			conditions.add(searcher.condition(FIELD_FROM, TYPE_EQUALITY, from));
-		    }
+		    from = fs.guessParent(p);
 		    conditions.add(searcher.condition(FIELD_PATH, TYPE_PATTERN, p));
 		    conditions.add(ISearchable.RECURSE);
 		    search = true;
@@ -360,7 +358,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 				    }
 				}
 			    } else {
-				conditions.add(searcher.condition(FIELD_FROM, TYPE_EQUALITY, path));
+				from = Arrays.asList(path).toArray(new String[1]);
 				search = true;
 			    }
 			}
@@ -369,10 +367,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
 		  case PATTERN_MATCH: {
 		    Pattern p = Pattern.compile(path);
-		    String from = fs.guessParent(p);
-		    if (from != null) {
-			conditions.add(searcher.condition(FIELD_FROM, TYPE_EQUALITY, from));
-		    }
+		    from = fs.guessParent(p);
 		    conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));
 		    search = true;
 		    break;
@@ -435,28 +430,19 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		if (followLinks) {
 		    conditions.add(IUnixFilesystem.FOLLOW_LINKS);
 		}
-		boolean rooted = false;
-		for (ICondition condition : conditions) {
-		    switch(condition.getField()) {
-		      case FIELD_FROM:
-			rooted = true;
-			break;
+		if (from == null) {
+		    Collection<IFilesystem.IMount> mounts = fs.getMounts(local ? localFilter : null);
+		    from = new String[mounts.size()];
+		    int i=0;
+		    for (IFilesystem.IMount mount : mounts) {
+			from[i++] = mount.getPath();
 		    }
-		    if (rooted) break;
 		}
-		if (rooted) {
-		    files.addAll(searcher.search(conditions));
-		} else {
-		    //
-		    // In this case, we failed to guess the starting point for the search from a pattern, so
-		    // we search every mount on the machine (filtering out network mounts, if applicable).
-		    //
-		    for (IFilesystem.IMount mount : fs.getMounts(local ? localFilter : null)) {
-			List<ICondition> c = new ArrayList<ICondition>();
-			c.addAll(conditions);
-			c.add(searcher.condition(FIELD_FROM, TYPE_EQUALITY, mount.getPath()));
-			files.addAll(searcher.search(c));
-		    }
+		for (String s : from) {
+		    List<ICondition> c = new ArrayList<ICondition>();
+		    c.addAll(conditions);
+		    c.add(searcher.condition(FIELD_FROM, TYPE_EQUALITY, s));
+		    files.addAll(searcher.search(c));
 		}
 	    }
 	} catch (FileNotFoundException e) {

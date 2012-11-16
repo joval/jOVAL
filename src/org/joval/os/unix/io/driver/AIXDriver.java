@@ -130,36 +130,47 @@ public class AIXDriver extends AbstractDriver {
 	if (xdev) {
 	    cmd.append(" -xdev");
 	}
-	if (depth != ISearchable.DEPTH_UNLIMITED) {
-	    cmd.append(" \\( -type d -a -exec sh -c 'echo $1 | awk -F/ '\\''{print $(");
-	    cmd.append(Integer.toString(depth + 1));
-	    cmd.append(")}'\\''|grep \"\\([^ ]\\)\" >/dev/null' {} {} \\; -prune -print \\)");
-	}
-	if (dirOnly) {
-	    cmd.append(" -type d");
-	    if (dirname != null) {
-		cmd.append(" | grep -E \"").append(dirname.pattern()).append("\"");
+	if (path == null) {
+	    if (dirname == null) {
+		if (dirOnly && depth != ISearchable.DEPTH_UNLIMITED) {
+		    cmd.append(" -type d");
+		    int currDepth = new StringTokenizer(from, "/").countTokens();
+		    if (!from.endsWith("/")) currDepth++;
+		    cmd.append(" | awk -F/ 'NF == ").append(Integer.toString(currDepth + depth)).append("'");
+		} else if (!dirOnly) {
+		    cmd.append(" -type f");
+		    if (literalBasename != null) {
+			cmd.append(" -name ").append(literalBasename);
+		    }
+		    if (depth != ISearchable.DEPTH_UNLIMITED) {
+			int currDepth = new StringTokenizer(from, "/").countTokens();
+			if (!from.endsWith("/")) currDepth++;
+			cmd.append(" | awk -F/ 'NF == ").append(Integer.toString(currDepth + depth)).append("'");
+		    }
+		    if (basename != null) {
+			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
+		    }
+		}
+	    } else {
+		cmd.append(" -type d");
+		cmd.append(" | grep -E '").append(dirname.pattern()).append("'");
+		if (!dirOnly) {
+		    cmd.append(" | xargs -I[] find '[]'");
+		    if (depth != ISearchable.DEPTH_UNLIMITED) {
+			cmd.append(" -exec test (`echo \"[]\" | awk -F/ '{print NF}'` + ");
+			cmd.append(Integer.toString(depth));
+			cmd.append(") > `echo \"{}\" | awk -F/ '{print NF}'` \\;");
+		    }
+		    if (basename != null) {
+			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
+		    } else if (literalBasename != null) {
+			cmd.append(" -name ").append(literalBasename);
+		    }
+		}
 	    }
 	} else {
-	    if (path != null) {
-		cmd.append(" | grep -E \"").append(path.pattern()).append("\"");
-	    } else {
-		if (dirname == null) {
-		    cmd.append(" -type d");
-		    cmd.append(" | grep -E \"").append(dirname.pattern()).append("\"");
-		    cmd.append(" | xargs -i sh -c \"ls -Ap '{}' | sed 's:^:{}/:'\""); // list files
-		    cmd.append(" | grep -v \"/$\""); // exclude directories
-		} else {
-		    cmd.append(" -type f");
-		}
-		if (basename != null) {
-		    cmd.append(" | awk -F/ '$NF ~ \"");
-		    cmd.append(basename.pattern());
-		    cmd.append("\"'");
-		} else if (literalBasename != null) {
-		    cmd.append(" -name \"").append(literalBasename).append("\"");
-		}
-	    }
+	    cmd.append(" -type f");
+	    cmd.append(" | grep -E '").append(path.pattern()).append("'");
 	}
 	cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
 	return cmd.toString();

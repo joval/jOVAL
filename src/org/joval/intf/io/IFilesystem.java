@@ -104,7 +104,7 @@ public interface IFilesystem extends ILoggable {
     /**
      * Hazard a guess for the parent path of the specified pattern. Returns null if indeterminate.
      */
-    String guessParent(Pattern p);
+    String[] guessParent(Pattern p);
 
     /**
      * List the mounts on this filesystem, whose types do not match the specified typeFilter. Typically, for example,

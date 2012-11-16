@@ -42,23 +42,23 @@ public class FS {
 		Pattern pattern = Pattern.compile(path);
 		Collection<IFile> list = new ArrayList<IFile>();
 		ISearchable<IFile> searcher = fs.getSearcher();
-		String from = fs.guessParent(pattern);
+		String[] from = fs.guessParent(pattern);
 		if (from == null) {
 		    Pattern filter = null;
 		    String s = session.getProperties().getProperty(IFilesystem.PROP_MOUNT_FSTYPE_FILTER);
 		    if (s != null) {
 			filter = Pattern.compile(s);
 		    }
-		    for (IFilesystem.IMount mount : fs.getMounts(filter)) {
-			List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
-			conditions.add(searcher.condition(ISearchable.FIELD_FROM, ISearchable.TYPE_EQUALITY, mount.getPath()));
-			conditions.add(searcher.condition(IFilesystem.FIELD_PATH, ISearchable.TYPE_PATTERN, pattern));
-			conditions.add(ISearchable.RECURSE);
-			list.addAll(searcher.search(conditions));
+		    Collection<IFilesystem.IMount> mounts = fs.getMounts(filter);
+		    from = new String[mounts.size()];
+		    int i=0;
+		    for (IFilesystem.IMount mount : mounts) {
+			from[i++] = mount.getPath();
 		    }
-		} else {
+		}
+		for (String s : from) {
 		    List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
-		    conditions.add(searcher.condition(ISearchable.FIELD_FROM, ISearchable.TYPE_EQUALITY, from));
+		    conditions.add(searcher.condition(ISearchable.FIELD_FROM, ISearchable.TYPE_EQUALITY, s));
 		    conditions.add(searcher.condition(IFilesystem.FIELD_PATH, ISearchable.TYPE_PATTERN, pattern));
 		    conditions.add(ISearchable.RECURSE);
 		    list.addAll(searcher.search(conditions));
