@@ -53,7 +53,7 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISearchPlugin<IFile>, ILoggable {
+public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
     /**
      * Static map of filesystem instances indexed by hashcode for reference by deserialized serializers.
      */
@@ -128,25 +128,57 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 
     // Implement ISearchable<IFile>
 
-    /**
-     * Recursively search for elements matching the given pattern.
-     *
-     * @param from starting point for the search (search happens below this path)
-     * @param maxDepth the maximum number of hierarchies to traverse while searching. DEPTH_UNLIMITED for unlimited.
-     * @param flags application-specific flags.
-     * @param plugin @see ISearchable.ISearchPlugin
-     */
-    public Collection<IFile> search(String from, Pattern p, int maxDepth, int flags, ISearchPlugin<IFile> plugin)
-		throws Exception {
+    public ICondition condition(int field, int type, Object value) {
+	return new GenericCondition(field, type, value);
+    }
 
-	String cmd = getFindCommand(from, maxDepth, flags, p == null ? null : p.pattern());
+    public Collection<IFile> search(List<ISearchable.ICondition> conditions) throws Exception {
+	String from = null;
+	Pattern pathPattern = null, dirPattern = null, basenamePattern = null;
+	String basename = null;
+	int maxDepth = DEPTH_UNLIMITED;
+	boolean dirOnly = false;
+	for (ISearchable.ICondition condition : conditions) {
+	    switch(condition.getField()) {
+	      case FIELD_DEPTH:
+		maxDepth = ((Integer)condition.getValue()).intValue();
+		break;
+	      case FIELD_FROM:
+		from = (String)condition.getValue();
+		break;
+	      case IFilesystem.FIELD_PATH:
+		pathPattern = (Pattern)condition.getValue();
+		break;
+	      case IFilesystem.FIELD_DIRNAME:
+		dirPattern = (Pattern)condition.getValue();
+		break;
+	      case IFilesystem.FIELD_BASENAME:
+		switch(condition.getType()) {
+		  case ISearchable.TYPE_EQUALITY:
+		    basename = (String)condition.getValue();
+		    break;
+		  case ISearchable.TYPE_PATTERN:
+		    basenamePattern = (Pattern)condition.getValue();
+		    break;
+		}
+		break;
+	      case IFilesystem.FIELD_FILETYPE:
+		if (IFilesystem.FILETYPE_DIR.equals(condition.getValue())) {
+		    dirOnly = true;
+		}
+		break;
+	    }
+	}
+
+	Object bnObj = basename == null ? basenamePattern : basename;
+	String cmd = getFindCommand(from, maxDepth, dirOnly, pathPattern, dirPattern, bnObj);
 	Collection<IFile> results = new ArrayList<IFile>();
 	if (searchMap.containsKey(cmd)) {
 	    for (String path : searchMap.get(cmd)) {
 		results.add(infoCache.get(path));
 	    }
 	} else {
-	    logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, p == null ? "null" : p.pattern(), from, flags);
+	    logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, cmd);
 	    File localTemp = null;
 	    IFile remoteTemp = null;
 	    InputStream in = null;
@@ -173,14 +205,14 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in, StreamTool.detectEncoding(in)));
 		Iterator<String> iter = new ReaderIterator(reader);
 		IFile file = null;
-		while ((file = plugin.createObject(iter)) != null) {
+		while ((file = createObject(iter)) != null) {
 		    String path = file.getPath();
 		    logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, path);
 		    results.add(file);
 		    paths.add(path);
 		    infoCache.put(path, file);
 		}
-		logger.info(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), p == null ? "[none]" : p.pattern(), from);
+		logger.info(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), cmd);
 	    } catch (Exception e) {
 		logger.warn(JOVALMsg.ERROR_FS_SEARCH);
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -207,16 +239,12 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	return results;
     }
 
-    // Implement ISearchPlugin<IFile>
-
-    public String getSubcommand() {
-	return " | Print-FileInfo";
-    }
+    // Internal
 
     static final String START	= "{";
     static final String END	= "}";
 
-    public IFile createObject(Iterator<String> input) {
+    IFile createObject(Iterator<String> input) {
 	IFile file = null;
 	boolean start = false;
 	while(input.hasNext()) {
@@ -275,11 +303,9 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	return file;
     }
 
-    // Internal
-
-    String getFindCommand(String from, int maxDepth, int flags, String pattern) {
+    String getFindCommand(String from, int maxDepth, boolean dirOnly, Pattern path, Pattern dirname, Object bn) {
 	StringBuffer command;
-	if (isSetFlag(ISearchable.FLAG_CONTAINERS, flags) || isSetFlag(ISearchable.FLAG_CONTAINER_PATTERN, flags)) {
+	if (dirOnly || dirname != null || bn != null) {
 	    command = new StringBuffer("Find-Directories");
 	} else {
 	    command = new StringBuffer("Find-Files");
@@ -288,15 +314,31 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ISearchable.ISea
 	command.append(from);
 	command.append("\" -Depth ");
 	command.append(Integer.toString(maxDepth));
-	if (pattern != null) {
+	if (dirname != null || bn != null) {
+	    if (dirname != null) {
+		command.append(" -Pattern \"");
+		command.append(dirname.pattern());
+		command.append("\"");
+	    }
+	    if (!dirOnly) {
+		command.append(" | Find-Files");
+	    }
+	    if (bn != null) {
+		if (bn instanceof Pattern) {
+		    command.append(" -Filename \"");
+		    command.append(((Pattern)bn).pattern());
+		} else if (bn instanceof String) {
+		    command.append(" -LiteralFilename \"");
+		    command.append((String)bn);
+		}
+		command.append("\"");
+	    }
+	} else if (path != null) {
 	    command.append(" -Pattern \"");
-	    command.append(pattern);
+	    command.append(path.pattern());
 	    command.append("\"");
 	}
-	if (isSetFlag(ISearchable.FLAG_CONTAINER_PATTERN, flags) && !isSetFlag(ISearchable.FLAG_CONTAINERS, flags)) {
-	    command.append(" | Find-Files");
-	}
-	command.append(getSubcommand());
+	command.append(" | Print-FileInfo");
 	return command.toString();
     }
 

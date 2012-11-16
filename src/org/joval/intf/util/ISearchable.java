@@ -4,65 +4,94 @@
 package org.joval.intf.util;
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.regex.Pattern;
+import java.util.List;
 
 /**
- * An interface for searching a hierarchy.
+ * An interface for searching something.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public interface ISearchable<T> {
-    /**
-     * Value of flags with no settings at all.
-     */
-    int FLAG_NONE		= 0;
+    int TYPE_EQUALITY	= 0;
+    int TYPE_INEQUALITY	= 1;
+    int TYPE_PATTERN	= 2;
 
     /**
-     * Flag indicating that links should be followed when searching.
+     * Depth condition field ID for recursive searches.
      */
-    int FLAG_FOLLOW_LINKS	= 1;
+    int FIELD_DEPTH	= 0;
 
     /**
-     * Flag indicating that only containers should be returned (i.e., branches, not leaves).
+     * Starting point condition field ID for recursive searches.
      */
-    int FLAG_CONTAINERS		= 2;
+    int FIELD_FROM	= 1;
 
     /**
-     * Flag indicating that the specified pattern applies only to containers. (No effect if combined with FLAG_CONTAINERS).
+     * Unlimited depth condition value for recursive searches.
      */
-    int FLAG_CONTAINER_PATTERN	= 4;
-
-    /**
-     * Unlimited depth argument for recursive searches.
-     */
-    int DEPTH_UNLIMITED		= -1;
+    int DEPTH_UNLIMITED = -1;
+    Object DEPTH_UNLIMITED_VALUE = new Integer(DEPTH_UNLIMITED);
 
     /**
      * Recursively search for elements matching the given pattern.
      *
-     * @param from starting point for the search (search happens below this path)
-     * @param maxDepth the maximum number of hierarchies to traverse while searching. DEPTH_UNLIMITED for unlimited.
-     * @param flags application-specific flags.
-     * @param plugin @see ISearchable.ISearchPlugin
+     * @param conditions a list of search conditions.
      */
-    Collection<T> search(String from, Pattern p, int maxDepth, int flags, ISearchPlugin<T> plugin) throws Exception;
+    Collection<T> search(List<ICondition> conditions) throws Exception;
 
     /**
-     * An interface specifying a command plug-in for a search.
+     * A search condition interface.
      */
-    public interface ISearchPlugin<T> {
+    public interface ICondition {
 	/**
-	 * Get the plugin subcommand string.
+	 * The type of assertion made by the condition.
 	 */
-	String getSubcommand();
+	int getType();
 
 	/**
-	 * Generate an object of the specified type, given Iterator<String> input (generally, lines from a character stream).
-	 *
-	 * @return null when no more objects can be created from the input.
+	 * The scope of assertion made by the condition.
 	 */
-	T createObject(Iterator<String> input);
+	int getField();
+
+	/**
+	 * The value of assertion made by the condition.
+	 */
+	Object getValue();
+    }
+
+    /**
+     * A condition for unlimited recursion.
+     */
+    ICondition RECURSE = new GenericCondition(FIELD_DEPTH, TYPE_EQUALITY, DEPTH_UNLIMITED_VALUE);
+
+    /**
+     * Implement as: return new GenericCondition(field, type, value)
+     */
+    ISearchable.ICondition condition(int field, int type, Object value);
+
+    // Class definitions for implementors
+
+    static class GenericCondition implements ISearchable.ICondition {
+	private int field, type;
+	private Object value;
+
+	public GenericCondition(int field, int type, Object value) {
+	    this.field = field;
+	    this.type = type;
+	    this.value = value;
+	}
+
+	public int getType() {
+	    return type;
+	}
+
+	public int getField() {
+	    return field;
+	}
+
+	public Object getValue() {
+	    return value;
+	}
     }
 }

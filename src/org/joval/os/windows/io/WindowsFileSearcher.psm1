@@ -12,46 +12,77 @@ function Find-Directories {
     $CurrentItem = Get-Item -literalPath $Path
     if (($CurrentItem -ne $null) -and $CurrentItem.PSIsContainer) {
       $NextDepth = $Depth - 1
-      if ($Path -match $Pattern) {
-        $CurrentItem
+      if ($Path -cmatch $Pattern) {
+	$CurrentItem
       }
       if ($Depth -ne 0) {
-        $ErrorActionPreference = "SilentlyContinue"
-        foreach ($ChildItem in Get-ChildItem $CurrentItem) {
-          if ($ChildItem.PSIsContainer) {
-            Find-Directories -Path $ChildItem.FullName -Pattern $Pattern -Depth $NextDepth
-          }
-        }
+	$ErrorActionPreference = "SilentlyContinue"
+	foreach ($ChildItem in Get-ChildItem $CurrentItem) {
+	  if ($ChildItem.PSIsContainer) {
+	    Find-Directories -Path $ChildItem.FullName -Pattern $Pattern -Depth $NextDepth
+	  }
+	}
       }
     }
   } catch {}
 }
 
 function Find-Files {
-  [CmdletBinding(DefaultParameterSetName="User")]
+  [CmdletBinding(DefaultParameterSetName="Pattern")]
   param(
-    [Parameter(ParameterSetName="Pipe", Position=0, ValueFromPipeline=$true)][PSObject]$CurrentItem,
-    [Parameter(ParameterSetName="User")][String]$Path = $PWD,
+    [Parameter(ValueFromPipeline=$true)][PSObject]$CurrentItem,
+    [String]$Path = $PWD,
     [String]$Pattern = ".*",
-    [int]$Depth = 1
+    [int]$Depth = 1,
+    [Parameter(ParameterSetName="Pattern")][String]$Filename = ".*",
+    [Parameter(ParameterSetName="Literal")][String]$LiteralFilename = ".*"
   )
 
   PROCESS {
-    if ($PsCmdlet.ParameterSetName -eq "User") {
+    if ($CurrentItem -eq $null) {
       $CurrentItem = Get-Item -literalPath $Path
     }
     try {
-      if ($Path -match $Pattern) {
-        $CurrentItem
+      if ($Pattern -eq ".*") {
+	if ($PsCmdlet.ParameterSetName -eq "Pattern") {
+	  if ($Filename -eq ".*") {
+	    $CurrentItem
+	  } else {
+	    if (!$CurrentItem.PSIsContainer -and ($CurrentItem.Name -cmatch $Filename)) {
+	      $CurrentItem
+	    }
+	  }
+	} else {
+	  $Name = $CurrentItem.Name
+	  if (!$CurrentItem.PSIsContainer -and ($Name -eq $LiteralFilename)) {
+	    $CurrentItem
+	  }
+	}
+      } else {
+	if ($Path -cmatch $Pattern) {
+	  $CurrentItem
+	}
       }
       if ($CurrentItem.PSIsContainer) {
-        $NextDepth = $Depth - 1
-        if ($Depth -ne 0) {
-          $ErrorActionPreference = "SilentlyContinue"
-          foreach ($ChildItem in Get-ChildItem $CurrentItem) {
-            Find-Files -Path $ChildItem.FullName -Pattern $Pattern -Depth $NextDepth
-          }
-        }
+	$NextDepth = $Depth - 1
+	if ($Depth -ne 0) {
+	  $ErrorActionPreference = "SilentlyContinue"
+	  foreach ($ChildItem in Get-ChildItem $CurrentItem) {
+	    if ($Pattern -eq ".*") {
+	      if ($PsCmdlet.ParameterSetName -eq "Pattern") {
+		if ($Filename -eq ".*") {
+		  Find-Files -Path $ChildItem.FullName -Depth $NextDepth
+		} else {
+		  Find-Files -Path $ChildItem.FullName -Filename $Filename -Depth $NextDepth
+		}
+	      } else {
+		  Find-Files -Path $ChildItem.FullName -LiteralFilename $LiteralFilename -Depth $NextDepth
+	      }
+	    } else {
+	      Find-Files -Path $ChildItem.FullName -Pattern $Pattern -Depth $NextDepth
+	    }
+	  }
+	}
       }
     } catch {}
   }
@@ -67,13 +98,13 @@ function Print-FileACEInfo {
     if (!($inputObject -eq $null)) {
       $type = $inputObject | Get-Member | %{$_.TypeName}
       if (($type -eq "System.IO.DirectoryInfo") -or ($type -eq "System.IO.FileInfo")) {
-        $acl = Get-ACL $inputObject.FullName
-        $aces = $acl.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])
-        foreach ($ace in $aces) {
-          $accessMask = $ace.FileSystemRights.value__
-          $sid = $ace.IdentityReference.Value
-          Write-Output "ACE: mask=$accessMask,sid=$sid"
-        }
+	$acl = Get-ACL $inputObject.FullName
+	$aces = $acl.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])
+	foreach ($ace in $aces) {
+	  $accessMask = $ace.FileSystemRights.value__
+	  $sid = $ace.IdentityReference.Value
+	  Write-Output "ACE: mask=$accessMask,sid=$sid"
+	}
       }
     }
   }
@@ -89,35 +120,35 @@ function Print-FileInfo {
     if (!($inputObject -eq $null)) {
       $type = $inputObject | Get-Member | %{$_.TypeName}
       if ($type -eq "System.IO.DirectoryInfo") {
-        Write-Output "{"
-        Write-Output "Type: Directory"
+	Write-Output "{"
+	Write-Output "Type: Directory"
 	$path = $inputObject.FullName
-        Write-Output "Path: $path"
-        $ctime = $inputObject.CreationTimeUtc.toFileTimeUtc()
-        $mtime = $inputObject.LastWriteTimeUtc.toFileTimeUtc()
-        $atime = $inputObject.LastAccessTimeUtc.toFileTimeUtc()
-        Write-Output "Ctime: $ctime"
-        Write-Output "Mtime: $mtime"
-        Write-Output "Atime: $atime"
-        Print-FileACEInfo $inputObject
-        Write-Output "}"
+	Write-Output "Path: $path"
+	$ctime = $inputObject.CreationTimeUtc.toFileTimeUtc()
+	$mtime = $inputObject.LastWriteTimeUtc.toFileTimeUtc()
+	$atime = $inputObject.LastAccessTimeUtc.toFileTimeUtc()
+	Write-Output "Ctime: $ctime"
+	Write-Output "Mtime: $mtime"
+	Write-Output "Atime: $atime"
+	Print-FileACEInfo $inputObject
+	Write-Output "}"
       } else {
-        if ($type -eq "System.IO.FileInfo") {
-          Write-Output "{"
-          Write-Output "Type: File"
+	if ($type -eq "System.IO.FileInfo") {
+	  Write-Output "{"
+	  Write-Output "Type: File"
 	  $path = $inputObject.FullName
-          Write-Output "Path: $path"
-          $ctime = $inputObject.CreationTimeUtc.toFileTimeUtc()
-          $mtime = $inputObject.LastWriteTimeUtc.toFileTimeUtc()
-          $atime = $inputObject.LastAccessTimeUtc.toFileTimeUtc()
-          Write-Output "Ctime: $ctime"
-          Write-Output "Mtime: $mtime"
-          Write-Output "Atime: $atime"
-          $length = $inputObject.Length
-          Write-Output "Length: $length"
-          Print-FileACEInfo $inputObject
-          Write-Output "}"
-        }
+	  Write-Output "Path: $path"
+	  $ctime = $inputObject.CreationTimeUtc.toFileTimeUtc()
+	  $mtime = $inputObject.LastWriteTimeUtc.toFileTimeUtc()
+	  $atime = $inputObject.LastAccessTimeUtc.toFileTimeUtc()
+	  Write-Output "Ctime: $ctime"
+	  Write-Output "Mtime: $mtime"
+	  Write-Output "Atime: $atime"
+	  $length = $inputObject.Length
+	  Write-Output "Length: $length"
+	  Print-FileACEInfo $inputObject
+	  Write-Output "}"
+	}
       }
     }
   }

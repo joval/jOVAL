@@ -59,10 +59,6 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	return searcher;
     }
 
-    public ISearchable.ISearchPlugin<IFile> getDefaultPlugin() {
-	return searcher;
-    }
-
     public Collection<IMount> getMounts(Pattern filter) throws IOException {
 	if (mounts == null) {
 	    try {
@@ -184,6 +180,15 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
             }
             return accessor;
         }
+
+	@Override
+	public boolean isDirectory() throws IOException {
+	    if (isLink()) {
+		return getFile(getCanonicalPath()).isDirectory();
+	    } else {
+		return super.isDirectory();
+	    }
+	}
     }
 
     // Protected

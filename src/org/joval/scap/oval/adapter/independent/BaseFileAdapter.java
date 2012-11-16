@@ -35,6 +35,8 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.ISession;
 import org.joval.intf.util.ISearchable;
+import org.joval.intf.util.ISearchable.ICondition;
+import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
@@ -49,6 +51,17 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
+    protected static final int TYPE_EQUALITY		= ISearchable.TYPE_EQUALITY;
+    protected static final int TYPE_PATTERN		= ISearchable.TYPE_PATTERN;
+    protected static final int FIELD_PATH		= IFilesystem.FIELD_PATH;
+    protected static final int FIELD_DIRNAME		= IFilesystem.FIELD_DIRNAME;
+    protected static final int FIELD_BASENAME		= IFilesystem.FIELD_BASENAME;
+    protected static final int FIELD_FILETYPE		= IFilesystem.FIELD_FILETYPE;
+    protected static final int FIELD_FROM		= ISearchable.FIELD_FROM;
+    protected static final int FIELD_DEPTH		= ISearchable.FIELD_DEPTH;
+    protected static final int FIELD_FOLLOW_LINKS	= IUnixFilesystem.FIELD_FOLLOW_LINKS;
+    protected static final int FIELD_XDEV		= IUnixFilesystem.FIELD_XDEV;
+
     private Pattern localFilter;
 
     protected ISession session;
@@ -240,41 +253,35 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
 	Collection<IFile> files = new ArrayList<IFile>();
 	try {
+	    boolean search = false;
+	    boolean local = false;
 	    ISearchable<IFile> searcher = fs.getSearcher();
-	    ISearchable.ISearchPlugin<IFile> plugin = fs.getDefaultPlugin();
-	    if (fObj.isSetFilepath()) {
+	    List<ICondition> conditions = new ArrayList<ICondition>();
+
+	    if (fObj.isSetFilepath() && fObj.getFilepath().getValue() != null) {
 		//
 		// Windows view is already handled, and FileBehaviors recursion is ignored in the Filepath case, so
 		// all we need to do is add the discovered paths to the return list.
 		//
-		EntityObjectStringType filepath = fObj.getFilepath();
-		String value = (String)filepath.getValue();
-		OperationEnumeration op = filepath.getOperation();
+		String filepath = (String)fObj.getFilepath().getValue();
+		OperationEnumeration op = fObj.getFilepath().getOperation();
 		switch(op) {
 		  case EQUALS:
-		    IFile file = fs.getFile((String)filepath.getValue());
+		    IFile file = fs.getFile(filepath);
 		    if (file.isFile()) {
 			files.add(file);
 		    }
 		    break;
 
 		  case PATTERN_MATCH: {
-		    Pattern p = Pattern.compile(value);
-		    String parentPath = fs.guessParent(p);
-		    int depth = ISearchable.DEPTH_UNLIMITED;
-		    int flags = ISearchable.FLAG_NONE;
-		    if (parentPath == null) {
-			//
-			// The filesystem couldn't determine where to start searching based on the pattern, so we'll
-			// search every "local" mount on the machine.
-			//
-			for (IFilesystem.IMount mount : fs.getMounts(localFilter)) {
-			    String from = mount.getPath();
-			    files.addAll(searcher.search(mount.getPath(), p, depth, flags, plugin));
-			}
-		    } else {
-			files.addAll(searcher.search(parentPath, p, depth, flags, plugin));
+		    Pattern p = Pattern.compile(filepath);
+		    String from = fs.guessParent(p);
+		    if (from != null) {
+			conditions.add(searcher.condition(FIELD_FROM, TYPE_EQUALITY, from));
 		    }
+		    conditions.add(searcher.condition(FIELD_PATH, TYPE_PATTERN, p));
+		    conditions.add(ISearchable.RECURSE);
+		    search = true;
 		    break;
 		  }
 
@@ -285,64 +292,77 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    } else if (fObj.isSetPath() && fObj.getPath().getValue() != null) {
 		String path = (String)fObj.getPath().getValue();
 		String filename = null;
-		int flags = ISearchable.FLAG_CONTAINER_PATTERN;
 		if (fObj.isSetFilename() && fObj.getFilename().getValue() != null) {
 		    filename = (String)fObj.getFilename().getValue();
 		} else {
 		    //
 		    // If there is a search, we will only want directories.
 		    //
-		    flags |= ISearchable.FLAG_CONTAINERS;
+		    conditions.add(IFilesystem.DIRECTORIES);
 		}
 
 		//
-		// If there is a filename spec, build a list of all the files that could possible match (and this
-		// will be filtered below). Otherwise, create a list of all the matching directories for the path spec.
+		// Convert behaviors into flags and search conditions.
+		//
+		int depth = ISearchable.DEPTH_UNLIMITED;
+		if (fb == null) {
+		    conditions.add(ISearchable.RECURSE);
+		} else {
+		    if (fb.getRecurse().indexOf("directories") == -1) {
+			depth = 0;
+		    } else {
+			depth = fb.getDepth();
+		    }
+		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth)));
+		    if (fb.getRecurse().indexOf("symlinks") != -1) {
+			conditions.add(searcher.condition(FIELD_FOLLOW_LINKS, 0, null));
+		    }
+		    if ("defined".equals(fb.getRecurseFileSystem())) {
+			conditions.add(searcher.condition(FIELD_XDEV, 0, null));
+		    } else if ("local".equals(fb.getRecurseFileSystem())) {
+			local = true;
+		    }
+		}
+
+		//
+		// Add candidate files to the list (for later filtering, below) unless a search will be executed.
 		//
 		OperationEnumeration pathOp = fObj.getPath().getOperation();
 		switch(pathOp) {
 		  case EQUALS:
 		    IFile file = fs.getFile(path);
 		    if (file.isDirectory()) {
-			files.add(file);
 			if (fb == null) {
+			    files.add(file);
 			    if (filename != null) {
 				files.addAll(Arrays.asList(file.listFiles()));
 			    }
-			} else {
-			    int depth = fb.getDepth();
-			    if (fb.getRecurse().indexOf("directories") == -1) {
-				depth = 0;
-			    }
-			    if (depth == 0 && filename != null) {
-				files.addAll(Arrays.asList(file.listFiles()));
-			    } else if (depth != 0) {
-				if ("up".equals(fb.getRecurseDirection())) {
-				    for (int i=depth; i != 0; i--) {
-					String parentPath = file.getParent();
-					if (parentPath.equals(file.getName())) {
-					    // this means we've reached the top
-					    break;
+			} else if (depth == 0 && filename != null) {
+			    files.addAll(Arrays.asList(file.listFiles()));
+			} else if (depth != 0) {
+			    if ("up".equals(fb.getRecurseDirection())) {
+				for (int i=depth; i != 0; i--) {
+				    String parentPath = file.getParent();
+				    if (parentPath.equals(file.getName())) {
+					// this means we've reached the top
+					break;
+				    } else {
+					String lastFilename = file.getName();
+					file = fs.getFile(parentPath);
+					if (filename == null) {
+					    files.add(file); // directories only
 					} else {
-					    String lastFilename = file.getName();
-					    file = fs.getFile(parentPath);
-					    if (ISearchable.FLAG_CONTAINERS == (ISearchable.FLAG_CONTAINERS & flags)) {
-						files.add(file);
-					    } else {
-						for (String fname : file.list()) {
-						    if (!fname.equals(lastFilename)) {
-							files.add(fs.getFile(parentPath + fs.getDelimiter() + fname));
-						    }
+					    for (String fname : file.list()) {
+						if (!fname.equals(lastFilename)) {
+						    files.add(fs.getFile(parentPath + fs.getDelimiter() + fname));
 						}
 					    }
 					}
 				    }
-				} else {
-				    if (fb.getRecurse().indexOf("symlinks") != -1) {
-					flags |= ISearchable.FLAG_FOLLOW_LINKS;
-				    }
-				    files.addAll(searcher.search(path, null, depth, flags, plugin));
 				}
+			    } else {
+				conditions.add(searcher.condition(FIELD_FROM, TYPE_EQUALITY, path));
+				search = true;
 			    }
 			}
 		    }
@@ -350,22 +370,14 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
 		  case PATTERN_MATCH: {
 		    Pattern p = Pattern.compile(path);
-		    String parentPath = fs.guessParent(p);
-		    int depth = ISearchable.DEPTH_UNLIMITED;
-		    if (parentPath == null) {
-			//
-			// The filesystem couldn't determine where to start searching based on the pattern, so we'll
-			// search every "local" mount on the machine.
-			//
-			for (IFilesystem.IMount mount : fs.getMounts(localFilter)) {
-			    files.addAll(searcher.search(mount.getPath(), p, depth, flags, plugin));
-			}
-		    } else {
-			files.addAll(searcher.search(parentPath, p, depth, flags, plugin));
+		    String from = fs.guessParent(p);
+		    if (from != null) {
+			conditions.add(searcher.condition(FIELD_FROM, TYPE_EQUALITY, from));
 		    }
+		    conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));
+		    search = true;
 		    break;
 		  }
-
 
 		  default:
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pathOp);
@@ -373,46 +385,36 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		}
 
 		//
-		// At this point, the collection "files" will contain every IFile that matches the path spec.
-		// So, if there is a filename spec, we use it to filter down the list.
+		// At this point, except for searches, the collection "files" will contain every IFile that matches
+		// the path spec. So, if there is a filename spec, we use it to filter down the list.
 		//
 		if (filename != null) {
 		    Iterator<IFile> iter = files.iterator();
 		    OperationEnumeration filenameOp = fObj.getFilename().getOperation();
 		    switch(filenameOp) {
-		      case NOT_EQUAL:
-			while(iter.hasNext()) {
-			    IFile file = iter.next();
-			    if (filename.equals(file.getName())) {
-				iter.remove();
-			    }
-			}
-			break;
-
 		      case EQUALS:
-			while(iter.hasNext()) {
-			    IFile file = iter.next();
-			    if (!filename.equals(file.getName())) {
-				iter.remove();
-			    }
-			}
-			break;
-
-		      case CASE_INSENSITIVE_EQUALS:
-			while(iter.hasNext()) {
-			    IFile file = iter.next();
-			    if (!filename.equalsIgnoreCase(file.getName())) {
-				iter.remove();
+			if (search) {
+			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_EQUALITY, filename));
+			} else {
+			    while(iter.hasNext()) {
+				IFile file = iter.next();
+				if (!filename.equals(file.getName())) {
+				    iter.remove();
+				}
 			    }
 			}
 			break;
 
 		      case PATTERN_MATCH: {
 			Pattern p = Pattern.compile(filename);
-			while(iter.hasNext()) {
-			    IFile file = iter.next();
-			    if (!p.matcher(file.getName()).find()) {
-				iter.remove();
+			if (search) {
+			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
+			} else {
+			    while(iter.hasNext()) {
+				IFile file = iter.next();
+				if (!p.matcher(file.getName()).find()) {
+				    iter.remove();
+				}
 			    }
 			}
 			break;
@@ -429,12 +431,39 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		//
 		session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, fObj.getId()));
 	    }
+
+	    if (search) {
+		boolean rooted = false;
+		for (ICondition condition : conditions) {
+		    switch(condition.getField()) {
+		      case FIELD_FROM:
+			rooted = true;
+			break;
+		    }
+		    if (rooted) break;
+		}
+		if (rooted) {
+		    files.addAll(searcher.search(conditions));
+		} else {
+		    //
+		    // In this case, we failed to guess the starting point for the search from a pattern, so
+		    // we search every mount on the machine (filtering out network mounts, if applicable).
+		    //
+		    for (IFilesystem.IMount mount : fs.getMounts(local ? localFilter : null)) {
+			List<ICondition> c = new ArrayList<ICondition>();
+			c.addAll(conditions);
+			c.add(searcher.condition(FIELD_FROM, TYPE_EQUALITY, mount.getPath()));
+			files.addAll(searcher.search(c));
+		    }
+		}
+	    }
 	} catch (FileNotFoundException e) {
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return files;
     }

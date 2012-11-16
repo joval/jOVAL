@@ -79,10 +79,6 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	return searcher;
     }
 
-    public ISearchable.ISearchPlugin<IFile> getDefaultPlugin() {
-	return searcher;
-    }
-
     @Override
     public String guessParent(Pattern p) {
 	String guess = super.guessParent(p);

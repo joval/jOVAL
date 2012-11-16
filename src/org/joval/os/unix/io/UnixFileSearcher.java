@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
@@ -54,7 +55,7 @@ import org.joval.util.SafeCLI;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearchPlugin<IFile>, ILoggable {
+public class UnixFileSearcher implements ISearchable<IFile>, ILoggable {
     /**
      * Static map of filesystem instances indexed by hashcode for reference by deserialized serializers.
      */
@@ -114,17 +115,19 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 
     // Implement ISearchable<IFile>
 
-    public Collection<IFile> search(String from, Pattern p, int maxDepth, int flags, ISearchPlugin<IFile> plugin)
-		throws Exception {
+    public ICondition condition(int field, int type, Object value) {
+	return new GenericCondition(field, type, value);
+    }
 
-	String cmd = driver.getFindCommand(from, maxDepth, flags, p == null ? null : p.pattern());
+    public Collection<IFile> search(List<ISearchable.ICondition> conditions) throws Exception {
+	String cmd = driver.getFindCommand(conditions);
 	Collection<IFile> results = new ArrayList<IFile>();
 	if (searchMap.containsKey(cmd)) {
 	    for (String path : searchMap.get(cmd)) {
 		results.add(infoCache.get(path));
 	    }
 	} else {
-	    logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, p == null ? "null" : p.pattern(), from, flags);
+	    logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, cmd);
 	    File localTemp = null;
 	    IFile remoteTemp = null;
 	    Collection<String> paths = new ArrayList<String>();
@@ -151,14 +154,14 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 
 		IFile file = null;
 		Iterator<String> iter = new ReaderIterator(reader);
-		while ((file = plugin.createObject(iter)) != null) {
+		while ((file = createObject(iter)) != null) {
 		    String path = file.getPath();
 		    logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, path);
 		    results.add(file);
 		    paths.add(path);
 		    infoCache.put(path, file);
 		}
-		logger.info(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), p == null ? "[none]" : p.pattern(), from);
+		logger.info(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), cmd);
 	    } catch (Exception e) {
 		logger.warn(JOVALMsg.ERROR_FS_SEARCH);
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -182,13 +185,9 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	return results;
     }
 
-    // Implement ISearchable.ISearchPlugin<IFile>
+    // Private
 
-    public String getSubcommand() {
-	return driver.getStatCommand();
-    }
-
-    public IFile createObject(Iterator<String> input) {
+    private IFile createObject(Iterator<String> input) {
 	UnixFileInfo info = (UnixFileInfo)driver.nextFileInfo(input);
 	if (info == null) {
 	    return null;
@@ -201,8 +200,6 @@ public class UnixFileSearcher implements ISearchable<IFile>, ISearchable.ISearch
 	    return fs.createFileFromInfo(info.getPath(), info);
 	}
     }
-
-    // Private
 
     /**
      * Run the command, sending its output to a temporary file, and return the temporary file.

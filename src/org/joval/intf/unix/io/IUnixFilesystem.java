@@ -15,14 +15,14 @@ import org.joval.intf.io.IFilesystem;
  */
 public interface IUnixFilesystem extends IFilesystem {
     /**
-     * Flag for the ISearchable specifying that links should be traversed while searching.
+     * Condition field for the link-following flag.
      */
-    int FLAG_FOLLOW_LINKS = 8;
+    int FIELD_FOLLOW_LINKS = 100;
 
     /**
-     * Don't search outside the filesystem of the starting point.
+     * Condition field for the xdev flag (remain on filesystem).
      */
-    int FLAG_XDEV = 16;
+    int FIELD_XDEV = 101;
 
     String DELIM_STR = "/";
     char DELIM_CH = '/';

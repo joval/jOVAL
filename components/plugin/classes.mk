@@ -2,6 +2,7 @@ CLASSES=\
 	org.joval.discovery.Local							\
 	org.joval.intf.io.IFile								\
 	org.joval.intf.io.IFileEx							\
+	org.joval.intf.io.IFileMetadata							\
 	org.joval.intf.io.IFilesystem							\
 	org.joval.intf.io.IReader							\
 	org.joval.intf.io.IReaderGobbler						\

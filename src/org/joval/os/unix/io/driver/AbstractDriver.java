@@ -38,10 +38,6 @@ abstract class AbstractDriver implements IUnixFilesystemDriver {
 	}
     }
 
-    static boolean isSetFlag(int flag, int flags) {
-	return flag == (flag & flags);
-    }
-
     // Implement ILoggable
 
     public void setLogger(LocLogger logger) {

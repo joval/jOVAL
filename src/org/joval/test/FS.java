@@ -11,7 +11,7 @@ import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.joval.intf.io.IFile;
@@ -42,21 +42,26 @@ public class FS {
 		Pattern pattern = Pattern.compile(path);
 		Collection<IFile> list = new ArrayList<IFile>();
 		ISearchable<IFile> searcher = fs.getSearcher();
-		ISearchable.ISearchPlugin<IFile> plugin = fs.getDefaultPlugin();
-		Pattern filter = null;
-		String s = session.getProperties().getProperty(IFilesystem.PROP_MOUNT_FSTYPE_FILTER);
-		if (s != null) {
-		    filter = Pattern.compile(s);
-		}
-		int depth = ISearchable.DEPTH_UNLIMITED;
-		int flags = ISearchable.FLAG_FOLLOW_LINKS;
 		String from = fs.guessParent(pattern);
 		if (from == null) {
+		    Pattern filter = null;
+		    String s = session.getProperties().getProperty(IFilesystem.PROP_MOUNT_FSTYPE_FILTER);
+		    if (s != null) {
+			filter = Pattern.compile(s);
+		    }
 		    for (IFilesystem.IMount mount : fs.getMounts(filter)) {
-			list.addAll(fs.getSearcher().search(mount.getPath(), pattern, depth, flags, plugin));
+			List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
+			conditions.add(searcher.condition(ISearchable.FIELD_FROM, ISearchable.TYPE_EQUALITY, mount.getPath()));
+			conditions.add(searcher.condition(IFilesystem.FIELD_PATH, ISearchable.TYPE_PATTERN, pattern));
+			conditions.add(ISearchable.RECURSE);
+			list.addAll(searcher.search(conditions));
 		    }
 		} else {
-		    list.addAll(fs.getSearcher().search(from, pattern, depth, flags, plugin));
+		    List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
+		    conditions.add(searcher.condition(ISearchable.FIELD_FROM, ISearchable.TYPE_EQUALITY, from));
+		    conditions.add(searcher.condition(IFilesystem.FIELD_PATH, ISearchable.TYPE_PATTERN, pattern));
+		    conditions.add(ISearchable.RECURSE);
+		    list.addAll(searcher.search(conditions));
 		}
 		System.out.println("Found " + list.size() + " matches");
 		for (IFile file : list) {
