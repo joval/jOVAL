@@ -161,7 +161,7 @@ public class UnixFileSearcher implements ISearchable<IFile>, ILoggable {
 		    paths.add(path);
 		    infoCache.put(path, file);
 		}
-		logger.info(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), cmd);
+		logger.debug(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), cmd);
 	    } catch (Exception e) {
 		logger.warn(JOVALMsg.ERROR_FS_SEARCH);
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

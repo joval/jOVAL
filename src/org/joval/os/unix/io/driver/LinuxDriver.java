@@ -136,13 +136,12 @@ public class LinuxDriver extends AbstractDriver {
 		    cmd.append(" | grep -E '").append(dirname.pattern()).append("'");
 		    cmd.append(" | xargs -I{} find '{}' -maxdepth 1");
 		}
+		cmd.append(" -type f");
 		if (basename != null) {
-		    cmd.append(" -type f");
 		    cmd.append(" | awk -F/ '$NF ~ /");
 		    cmd.append(basename.pattern());
 		    cmd.append("/'");
 		} else if (literalBasename != null) {
-		    cmd.append(" -type f");
 		    cmd.append(" -name '").append(literalBasename).append("'");
 		}
 	    }

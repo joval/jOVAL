@@ -59,8 +59,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     protected static final int FIELD_FILETYPE		= IFilesystem.FIELD_FILETYPE;
     protected static final int FIELD_FROM		= ISearchable.FIELD_FROM;
     protected static final int FIELD_DEPTH		= ISearchable.FIELD_DEPTH;
-    protected static final int FIELD_FOLLOW_LINKS	= IUnixFilesystem.FIELD_FOLLOW_LINKS;
-    protected static final int FIELD_XDEV		= IUnixFilesystem.FIELD_XDEV;
 
     private Pattern localFilter;
 
@@ -255,6 +253,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	try {
 	    boolean search = false;
 	    boolean local = false;
+	    boolean followLinks = true; // follow links by default
 	    ISearchable<IFile> searcher = fs.getSearcher();
 	    List<ICondition> conditions = new ArrayList<ICondition>();
 
@@ -314,11 +313,11 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 			depth = fb.getDepth();
 		    }
 		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth)));
-		    if (fb.getRecurse().indexOf("symlinks") != -1) {
-			conditions.add(searcher.condition(FIELD_FOLLOW_LINKS, 0, null));
+		    if (fb.getRecurse().indexOf("symlinks") == -1) {
+			followLinks = false;
 		    }
 		    if ("defined".equals(fb.getRecurseFileSystem())) {
-			conditions.add(searcher.condition(FIELD_XDEV, 0, null));
+			conditions.add(IUnixFilesystem.XDEV);
 		    } else if ("local".equals(fb.getRecurseFileSystem())) {
 			local = true;
 		    }
@@ -433,6 +432,9 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    }
 
 	    if (search) {
+		if (followLinks) {
+		    conditions.add(IUnixFilesystem.FOLLOW_LINKS);
+		}
 		boolean rooted = false;
 		for (ICondition condition : conditions) {
 		    switch(condition.getField()) {

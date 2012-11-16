@@ -132,8 +132,8 @@ public class AIXDriver extends AbstractDriver {
 	}
 	if (depth != ISearchable.DEPTH_UNLIMITED) {
 	    cmd.append(" \\( -type d -a -exec sh -c 'echo $1 | awk -F/ '\\''{print $(");
-	    cmd.append(Integer.toString(depth));
-	    cmd.append("+1)}'\\''|grep \"\\([^ ]\\)\" >/dev/null' {} {} \\; -prune -print \\)");
+	    cmd.append(Integer.toString(depth + 1));
+	    cmd.append(")}'\\''|grep \"\\([^ ]\\)\" >/dev/null' {} {} \\; -prune -print \\)");
 	}
 	if (dirOnly) {
 	    cmd.append(" -type d");
@@ -144,18 +144,19 @@ public class AIXDriver extends AbstractDriver {
 	    if (path != null) {
 		cmd.append(" | grep -E \"").append(path.pattern()).append("\"");
 	    } else {
-		if (dirname != null) {
+		if (dirname == null) {
 		    cmd.append(" -type d");
 		    cmd.append(" | grep -E \"").append(dirname.pattern()).append("\"");
-		    cmd.append(" | xargs -i find '{}' \\( ! -name `basename '$(1)'` -o -type f \\) -prune -type f");
+		    cmd.append(" | xargs -i sh -c \"ls -Ap '{}' | sed 's:^:{}/:'\""); // list files
+		    cmd.append(" | grep -v \"/$\""); // exclude directories
+		} else {
+		    cmd.append(" -type f");
 		}
 		if (basename != null) {
-		    cmd.append(" -type f");
 		    cmd.append(" | awk -F/ '$NF ~ \"");
 		    cmd.append(basename.pattern());
 		    cmd.append("\"'");
-		}
-		if (literalBasename != null) {
+		} else if (literalBasename != null) {
 		    cmd.append(" -name \"").append(literalBasename).append("\"");
 		}
 	    }

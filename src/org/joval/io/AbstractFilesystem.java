@@ -100,16 +100,16 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    return path;
 	}
 
+	ptr += ESCAPED_DELIM.length();
 	StringBuffer sb = new StringBuffer(path.substring(0,ptr));
-	int edl = ESCAPED_DELIM.length();
 	int next = ptr;
-	while((next = path.indexOf(ESCAPED_DELIM, ptr + edl)) != -1) {
-	    String token = path.substring(ptr + edl, next);
+	while((next = path.indexOf(ESCAPED_DELIM, ptr)) != -1) {
+	    String token = path.substring(ptr, next);
 	    if (StringTools.containsRegex(token)) {
 		return sb.toString();
 	    } else {
-		sb.append(DELIM).append(token);
-		ptr = next;
+		sb.append(token).append(DELIM);
+		ptr = next + ESCAPED_DELIM.length();
 	    }
 	}
 	if (sb.length() == 0) {
