@@ -79,15 +79,6 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	return searcher;
     }
 
-    @Override
-    public String guessParent(Pattern p) {
-	String guess = super.guessParent(p);
-	if (WindowsMount.isDrive(guess)) {
-	    guess = guess + DELIM_STR;
-	}
-	return guess;
-    }
-
     public Collection<IMount> getMounts(Pattern filter) throws IOException {
 	if (mounts == null) {
 	    try {

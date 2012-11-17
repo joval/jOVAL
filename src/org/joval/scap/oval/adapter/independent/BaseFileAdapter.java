@@ -310,7 +310,10 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    } else {
 			depth = fb.getDepth();
 		    }
-		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth)));
+		    //
+		    // Note - OVAL's idea of depth=1 is everyone else's idea of depth=2.
+		    //
+		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth > 0 ? depth+1 : depth)));
 		    if (fb.getRecurse().indexOf("symlinks") == -1) {
 			followLinks = false;
 		    }

@@ -101,8 +101,8 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    return Arrays.asList(path).toArray(new String[1]);
 	}
 
+	StringBuffer sb = new StringBuffer(path.substring(0,ptr)).append(DELIM);
 	ptr += ESCAPED_DELIM.length();
-	StringBuffer sb = new StringBuffer(path.substring(0,ptr));
 	int next = ptr;
 	while((next = path.indexOf(ESCAPED_DELIM, ptr)) != -1) {
 	    String token = path.substring(ptr, next);
