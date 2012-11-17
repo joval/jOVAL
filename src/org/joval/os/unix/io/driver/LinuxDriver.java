@@ -125,7 +125,7 @@ public class LinuxDriver extends AbstractDriver {
 	if (dirOnly) {
 	    cmd.append(" -type d");
 	    if (dirname != null) {
-		cmd.append(" -regex '").append(dirname.pattern()).append("'");
+		cmd.append(" | grep -E \"").append(dirname.pattern()).append("\"");
 	    }
 	} else {
 	    if (path != null) {
