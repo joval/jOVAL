@@ -3,58 +3,29 @@
 
 package org.joval.os.unix.io;
 
-import java.io.DataInput;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.io.InterruptedIOException;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.RandomAccessFile;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.cal10n.LocLogger;
 
-import org.apache.jdbm.Serializer;
-
 import org.joval.intf.io.IFile;
-import org.joval.intf.io.IReader;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.IEnvironment;
-import org.joval.intf.system.IProcess;
 import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.io.IUnixFilesystemDriver;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.util.IProperty;
-import org.joval.intf.util.tree.INode;
-import org.joval.io.fs.CacheFile;
-import org.joval.io.fs.CacheFilesystem;
-import org.joval.io.fs.DefaultFile;
-import org.joval.io.fs.FileInfo;
-import org.joval.io.BufferedReader;
-import org.joval.io.PerishableReader;
-import org.joval.io.StreamTool;
+import org.joval.intf.util.ISearchable;
+import org.joval.io.AbstractFilesystem;
 import org.joval.os.unix.io.driver.AIXDriver;
 import org.joval.os.unix.io.driver.LinuxDriver;
 import org.joval.os.unix.io.driver.MacOSXDriver;
 import org.joval.os.unix.io.driver.SolarisDriver;
-import org.joval.util.tree.Tree;
-import org.joval.util.tree.Node;
 import org.joval.util.JOVALMsg;
-import org.joval.util.PropertyUtil;
 import org.joval.util.SafeCLI;
 
 /**
@@ -63,21 +34,10 @@ import org.joval.util.SafeCLI;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
-    protected final static String LOCAL_INDEX		= "fs.index.gz";
-    protected final static String INDEX_PROPS		= "fs.index.properties";
-    protected final static String INDEX_PROP_COMMAND	= "command";
-    protected final static String INDEX_PROP_USER	= "user";
-    protected final static String INDEX_PROP_FLAVOR	= "flavor";
-    protected final static String INDEX_PROP_MOUNTS	= "mounts";
-    protected final static String INDEX_PROP_LEN	= "length";
-    protected final static String DELIM_STR		= "/";
-    protected final static char   DELIM_CH		= '/';
-
+public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesystem {
     protected long S, M, L, XL;
-    protected boolean preloaded = false;
-    protected IUnixSession us;
 
+    private UnixFileSearcher searcher;
     private IUnixFilesystemDriver driver;
     private Collection<IMount> mounts;
 
@@ -103,129 +63,34 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	if (mounts == null) {
 	    try {
 		mounts = getDriver().getMounts(null);
-	    } else {
-		mounts = getDriver().getMounts(Pattern.compile(fsTypeFilter));
+	    } catch (Exception e) {
+		throw new IOException(e);
 	    }
-	    for (String mount : mounts) {
-		addRoot(mount);
-	    }
-
-	    String command = getDriver().getFindCommand();
-
-	    if (VAL_FILE_METHOD.equals(props.getProperty(PROP_PRELOAD_METHOD))) {
-		//
-		// The file method stores the output of the find command in a file...
-		//
-		IReader reader = null;
-		File wsdir = session.getWorkspace();
-		IFile remoteCache = null, propsFile = null;
-		boolean cleanRemoteCache = true;
-		if(wsdir == null) {
-		    //
-		    // State cannot be saved locally, so create the file on the remote machine.
-		    //
-		    cleanRemoteCache = false;
-		    remoteCache = getRemoteCache(command, mounts);
-		    propsFile = getRemoteCacheProps();
-		    reader = new BufferedReader(new GZIPInputStream(remoteCache.getInputStream()));
+	}
+	if (filter == null) {
+	    return mounts;
+	} else {
+	    Collection<IMount> results = new ArrayList<IMount>();
+	    for (IMount mount : mounts) {
+		if (filter.matcher(mount.getType()).find()) {
+		    logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mount.getPath(), mount.getType());
 		} else {
-		    //
-		    // Read from the local state file, or create one while reading from the remote state file.
-		    //
-		    File local = new File(wsdir, LOCAL_INDEX);
-		    IFile localCache = new DefaultFile(this, local, local.getAbsolutePath());
-		    File localProps = new File(wsdir, INDEX_PROPS);
-		    propsFile = new DefaultFile(this, localProps, localProps.getAbsolutePath());
-		    Properties cacheProps = new Properties();
-		    if (propsFile.exists()) {
-			cacheProps.load(propsFile.getInputStream());
-		    }
-		    if (isValidCache(localCache, new PropertyUtil(cacheProps), command, mounts)) {
-			reader = new BufferedReader(new GZIPInputStream(localCache.getInputStream()));
-			cleanRemoteCache = false;
-		    } else {
-			remoteCache = getRemoteCache(command, mounts);
-			OutputStream out = localCache.getOutputStream(false);
-			StreamTool.copy(remoteCache.getInputStream(), out);
-			out.close();
-			reader = new BufferedReader(new GZIPInputStream(localCache.getInputStream()));
-		    }
-		}
-
-		//
-		// Store properties about the remote cache file.  If there is none, then we're using the verified local
-		// cache file, so there's no new data to store.
-		//
-		if (remoteCache != null) {
-		    Properties cacheProps = new Properties();
-		    cacheProps.setProperty(INDEX_PROP_COMMAND, command);
-		    cacheProps.setProperty(INDEX_PROP_USER, us.getEnvironment().getenv("LOGNAME"));
-		    cacheProps.setProperty(INDEX_PROP_FLAVOR, us.getFlavor().value());
-		    cacheProps.setProperty(INDEX_PROP_MOUNTS, alphabetize(mounts));
-		    cacheProps.setProperty(INDEX_PROP_LEN, Long.toString(remoteCache.length()));
-		    cacheProps.store(propsFile.getOutputStream(false), null);
-		}
-
-		addEntries(reader);
-		if (cleanRemoteCache) {
-		    remoteCache.delete();
-		    if (remoteCache.exists()) {
-			SafeCLI.exec("rm -f " + remoteCache.getPath(), session, IUnixSession.Timeout.S);
-		    }
-		}
-	    } else {
-		//
-		// The stream method (default) reads directly from the stdout of the find command on the remote host.
-		//
-		for (String mount : mounts) {
-		    IProcess p = null;
-		    ErrorReader er = null;
-		    IReader reader = null;
-		    try {
-			p = session.createProcess(command.replace("%MOUNT%", mount), null);
-			p.start();
-			reader = PerishableReader.newInstance(p.getInputStream(), S);
-			er = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), XL));
-			er.start();
-			addEntries(reader);
-		    } finally {
-			//
-			// Clean-up
-			//
-			if (p != null) {
-			    p.waitFor(0);
-			}
-			if (er != null) {
-			    er.join();
-			}
-		    }
+		    logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, mount.getPath(), mount.getType());
+		    results.add(mount);
 		}
 	    }
-	    preloaded = true;
-	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_DONE, cacheSize());
-	    return true;
-	} catch (PreloadOverflowException e) {
-	    logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
-	    preloaded = true;
-	    return true;
-	} catch (Exception e) {
-	    logger.warn(JOVALMsg.ERROR_PRELOAD);
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    return false;
+	    return results;
 	}
     }
 
-    /**
-     * This is really just an ersatz local test -- it merely checks whether the path is in the cache -- but it's
-     * close enough for the purpose of avoiding performance-intensive probing of remote filesystems.
-     */
-    public boolean isLocalPath(String path) {
-	loadCache();
-	try {
-	    peek(path);
-	    return true;
-	} catch (NoSuchElementException e) {
-	    return false;
+    @Override
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
+	if (searcher != null) {
+	    searcher.setLogger(logger);
+	}
+	if (driver != null) {
+	    driver.setLogger(logger);
 	}
     }
 
@@ -249,6 +114,7 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 
     public IUnixFilesystemDriver getDriver() {
 	if (driver == null) {
+	    IUnixSession us = (IUnixSession)session;
 	    switch(us.getFlavor()) {
 	      case AIX:
 		driver = new AIXDriver(us);
@@ -284,45 +150,21 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	protected UnixFile(UnixFileInfo info) {
 	    super(info.getPath(), info);
 	}
-    }
 
-    /**
-     * Create a UnixFile from the output line of the stat command.
-     */
-    protected UnixFileInfo getUnixFileInfo(String path) throws Exception {
-	String cmd = new StringBuffer(getDriver().getStatCommand()).append(" ").append(path).toString();
-	List<String> lines = SafeCLI.multiLine(cmd, us, IUnixSession.Timeout.S);
-	UnixFileInfo ufi = null;
-	if (lines.size() > 0) {
-	    ufi = (UnixFileInfo)getDriver().nextFileInfo(lines.iterator());
-	    if (ufi == null) {
-		throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNIXFILEINFO, path, lines.get(0)));
+	@Override
+	public String getLinkPath() throws IllegalStateException, IOException {
+	    if (getInfo().getType() != AbstractFilesystem.FileInfo.Type.LINK) {
+		throw new IllegalStateException(getInfo().getType().toString());
 	    }
-	} else {
-	    logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, "''");
+	    return ((UnixFileInfo)getInfo()).getLinkPath();
 	}
-	return ufi;
-    }
 
-    // Private
-
-    /**
-     * Read entries from the cache file.
-     */
-    private void addEntries(IReader reader) throws PreloadOverflowException, IOException {
-	UnixFileInfo ufi = null;
-	ReaderIterator iter = new ReaderIterator(reader);
-	while((ufi = (UnixFileInfo)getDriver().nextFileInfo(iter)) != null) {
-	    if (ufi.path == null) {
-		// bad entry -- skip it!
-	    } else if (entries++ < maxEntries) {
-		if (entries % 20000 == 0) {
-		    logger.info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, entries);
-		}
-		addToCache(ufi.path, new UnixFile(this, ufi, ufi.path));
+	@Override
+	public String getCanonicalPath() throws IOException {
+	    if (info == null) {
+		return getAccessor().getCanonicalPath();
 	    } else {
-		logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
-		throw new PreloadOverflowException();
+		return ((UnixFileInfo)info).getCanonicalPath();
 	    }
 	}
 
@@ -346,7 +188,6 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	    } else {
 		return super.isDirectory();
 	    }
-	} catch (FileNotFoundException e) {
 	}
     }
 

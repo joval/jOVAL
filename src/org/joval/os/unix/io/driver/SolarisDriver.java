@@ -21,8 +21,8 @@ import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.io.IUnixFilesystemDriver;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.util.IProperty;
-import org.joval.io.fs.FileInfo;
+import org.joval.intf.util.ISearchable;
+import org.joval.io.AbstractFilesystem.FileInfo;
 import org.joval.io.PerishableReader;
 import org.joval.os.unix.io.UnixFileInfo;
 import org.joval.util.JOVALMsg;
@@ -35,15 +35,9 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SolarisDriver implements IUnixFilesystemDriver {
-    private IUnixSession us;
-    private IProperty props;
-    private LocLogger logger;
-
-    public SolarisDriver(IUnixSession us) {
-	this.us = us;
-	props = us.getProperties();
-	logger = us.getLogger();
+public class SolarisDriver extends AbstractDriver {
+    public SolarisDriver(IUnixSession session) {
+	super(session);
     }
 
     // Implement IUnixFilesystemDriver
@@ -64,7 +58,7 @@ public class SolarisDriver implements IUnixFilesystemDriver {
 		    logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mountPoint, fsType);
 		} else if (mountPoint.startsWith(IUnixFilesystem.DELIM_STR)) {
 		    logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, mountPoint, fsType);
-		    mounts.add(mountPoint);
+		    mounts.add(new Mount(mountPoint, fsType));
 		}
 	    }
 	}
@@ -241,7 +235,7 @@ public class SolarisDriver implements IUnixFilesystemDriver {
 	}
 
 	String path = null, linkPath = null;
-	int begin = line.indexOf(us.getFilesystem().getDelimiter());
+	int begin = line.indexOf(session.getFilesystem().getDelimiter());
 	if (begin > 0) {
 	    int end = line.indexOf("->");
 	    if (end == -1) {

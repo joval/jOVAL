@@ -43,9 +43,16 @@ public class Runspace implements IRunspace {
     private HashSet<String> modules;
 
     /**
-     * Create a new Runspace, based on a process.
+     * Create a new Runspace, based on the default architecture.
      */
     public Runspace(String id, IWindowsSession session) throws Exception {
+	this(id, session, session.supports(IWindowsSession.View._64BIT) ? IWindowsSession.View._64BIT : null);
+    }
+
+    /**
+     * Create a new Runspace, using the specified architecture (null for default).
+     */
+    public Runspace(String id, IWindowsSession session, IWindowsSession.View view) throws Exception {
 	this.id = id;
 	this.timeout = session.getTimeout(IWindowsSession.Timeout.M);
 	this.logger = session.getLogger();
@@ -146,6 +153,10 @@ public class Runspace implements IRunspace {
 
     public String getPrompt() {
 	return prompt;
+    }
+
+    public IWindowsSession.View getView() {
+	return view;
     }
 
     // Internal

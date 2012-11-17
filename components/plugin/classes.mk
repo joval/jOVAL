@@ -50,15 +50,11 @@ CLASSES=\
 	org.joval.intf.windows.wmi.ISWbemProperty					\
 	org.joval.intf.windows.wmi.ISWbemPropertySet					\
 	org.joval.intf.windows.wmi.IWmiProvider						\
+	org.joval.io.AbstractFilesystem							\
 	org.joval.io.BufferedReader							\
 	org.joval.io.PerishableReader							\
 	org.joval.io.StreamLogger							\
-	org.joval.io.fs.CacheFile							\
-	org.joval.io.fs.CacheFileSerializer						\
-	org.joval.io.fs.CacheFilesystem							\
-	org.joval.io.fs.DefaultFile							\
-	org.joval.io.fs.FileAccessor							\
-	org.joval.io.fs.FileInfo							\
+	org.joval.os.unix.io.driver.AbstractDriver					\
 	org.joval.os.unix.io.driver.AIXDriver						\
 	org.joval.os.unix.io.driver.LinuxDriver						\
 	org.joval.os.unix.io.driver.MacOSXDriver					\

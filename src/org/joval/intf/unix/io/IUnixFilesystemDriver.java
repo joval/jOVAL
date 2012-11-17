@@ -18,18 +18,17 @@ import org.joval.intf.util.ISearchable;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IUnixFilesystemDriver {
+public interface IUnixFilesystemDriver extends ILoggable {
     /**
      * Get a list of mount points.
      *
      * @arg typeFilter A regex pattern indicating the /types/ of filesystems to /exclude/ from the result.  Use null for
      *                 an unfiltered list of mount points.
      */
-    public Collection<String> getMounts(Pattern typeFilter) throws Exception;
+    public Collection<IFilesystem.IMount> getMounts(Pattern typeFilter) throws Exception;
 
     /**
-     * Returns a string containing the correct find command for the Unix flavor.  The command contains the String "%MOUNT%"
-     * where the actual path of the mount should be substituted.
+     * Returns a string containing the correct find command for the Unix flavor.
      *
      * The resulting command will follow links, but restrict results to the originating filesystem.
      */

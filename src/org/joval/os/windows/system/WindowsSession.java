@@ -25,7 +25,6 @@ import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.io.AbstractFilesystem;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WindowsFilesystem;
-import org.joval.os.windows.io.WOW3264FilesystemRedirector;
 import org.joval.os.windows.powershell.RunspacePool;
 import org.joval.os.windows.registry.Registry;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
@@ -218,9 +217,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 		directory = new Directory(this);
 	    }
 	    directory.setWmiProvider(wmi);
-	    if (runspaces == null) {
-		runspaces = new RunspacePool(this, 100);
-	    }
 	    return true;
 	} else {
 	    return false;

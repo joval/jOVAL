@@ -8,30 +8,29 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Pattern;
 
+import org.slf4j.cal10n.LocLogger;
+
+import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.Kernel32Util;
 import com.sun.jna.platform.win32.Win32Exception;
-
-import org.apache.jdbm.Serializer;
+import com.sun.jna.platform.win32.WinNT;
 
 import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.ILoggable;
-import org.joval.intf.util.IPathRedirector;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.IEnvironment;
+import org.joval.intf.util.ISearchable;
+import org.joval.intf.windows.identity.IACE;
+import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.io.IWindowsFilesystem;
-import org.joval.io.fs.CacheFile;
-import org.joval.io.fs.CacheFilesystem;
+import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.io.AbstractFilesystem;
+import org.joval.os.windows.identity.LocalACE;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
-import org.joval.util.tree.Node;
-import org.joval.util.tree.TreeHash;
 
 /**
  * The local IFilesystem implementation for Windows.
@@ -80,8 +79,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	return searcher;
     }
 
-    public WindowsFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector, String dbKey) {
-	super(session, env, redirector, File.separator, dbKey);
+    public Collection<IMount> getMounts(Pattern filter) throws IOException {
 	if (mounts == null) {
 	    try {
 		mounts = new ArrayList<IMount>();
@@ -102,12 +100,11 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		if (filter.matcher(mount.getType()).find()) {
 		    logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mount.getPath(), mount.getType());
 		} else {
-		    mounts = getMounts(Pattern.compile(filterStr));
-		}
-	    } catch (Exception e) {
-		logger.warn(JOVALMsg.ERROR_MOUNT);
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, mount.getPath(), mount.getType());
+		    results.add(mount);
+		} 
 	    }
+	    return results;
 	}
     }
 
@@ -135,8 +132,11 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     }
 
     @Override
-    protected Serializer<IFile> getSerializer() {
-	return new WindowsCacheFileSerializer(this);
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
+	if (searcher != null) {
+	    searcher.setLogger(logger);
+	}
     }
 
     public class WindowsFile extends DefaultFile {
@@ -146,10 +146,10 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	    accessor = new WindowsAccessor(file);
 	}
 
-	if (isValidPath(realPath)) {
-	    return new WindowsFile(this, new File(realPath), path);
-	} else if (isDrive(realPath)) {
-	    return new WindowsFile(this, new File(realPath + DELIM_STR), path);
+	WindowsFile(String path, WindowsFileInfo info) {
+	    this.path = path;
+	    this.info = info;
+	    flags = getDefaultFlags();
 	}
 
 	@Override
@@ -207,9 +207,10 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		for (int i=0; i < aces.length; i++) {
 		    acl[i] = new LocalACE(aces[i]);
 		}
+		return acl;
+	    } catch (Win32Exception e) {
+		throw new IOException(e);
 	    }
-	} else {
-	    throw new PreloadOverflowException();
 	}
     }
 }

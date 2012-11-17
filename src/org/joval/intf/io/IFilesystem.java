@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.regex.Pattern;
 
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.ISearchable;
@@ -79,11 +80,11 @@ public interface IFilesystem extends ILoggable {
     IFile getFile(String path) throws IOException;
 
     /**
-     * An interface with all the methods of java.io.File and jcifs.smb.SmbFile.
+     * Retrieve an IFile with the specified flags.
      *
      * @arg flags IFile.READONLY, IFile.READWRITE, IFile.READVOLATILE, IFile.NOCACHE
      */
-    IFile getFile(String path, int flags) throws IllegalArgumentException, IOException;
+    IFile getFile(String path, IFile.Flags flags) throws IOException;
 
     /**
      * Get random access to an IFile.
@@ -101,7 +102,7 @@ public interface IFilesystem extends ILoggable {
     InputStream getInputStream(String path) throws IllegalArgumentException, IOException;
 
     /**
-     * Write to a file.
+     * Hazard a guess for the parent path of the specified pattern. Returns null if indeterminate.
      */
     String[] guessParent(Pattern p);
 
@@ -109,5 +110,20 @@ public interface IFilesystem extends ILoggable {
      * List the mounts on this filesystem, whose types do not match the specified typeFilter. Typically, for example,
      * a type filter might be used to exclude network mounts. Use null for no filtering.
      */
-    OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException;
+    Collection<IMount> getMounts(Pattern typeFilter) throws IOException;
+
+    /**
+     * An interface describing a filesystem mount point.
+     */
+    public interface IMount {
+	/**
+	 * Get the path of the mount.
+	 */
+	String getPath();
+
+	/**
+	 * Get the type of the mount.
+	 */
+	String getType();
+    }
 }

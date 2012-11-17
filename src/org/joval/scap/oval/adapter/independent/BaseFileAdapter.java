@@ -5,16 +5,14 @@ package org.joval.scap.oval.adapter.independent;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Stack;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -68,10 +66,15 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
     protected void init(ISession session) {
 	this.session = session;
-	if (session.getProperties().getBooleanProperty(IFilesystem.PROP_SEARCH_FOLLOW_LINKS)) {
-	    searchFlags = ISearchable.FOLLOW_LINKS;
-	} else {
-	    searchFlags = ISearchable.NONE;
+	try {
+	    String pattern = session.getProperties().getProperty(IFilesystem.PROP_MOUNT_FSTYPE_FILTER);
+	    if (pattern == null) {
+		localFilter = null;
+	    } else {
+		localFilter = Pattern.compile(pattern);
+	    }
+	} catch (PatternSyntaxException e) {
+	    session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
 	}
     }
 
@@ -93,7 +96,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	if (fObj.isSetBehaviors()) {
 	    behaviors = fObj.getBehaviors();
 	}
-	IFilesystem fs = null;
+	IFilesystem fs = session.getFilesystem();
 	int winView = 0;
 	if (session instanceof IWindowsSession) {
 	    if (behaviors != null) {
@@ -106,15 +109,11 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		winView = 64;
 	    }
 	}
-	if (fs == null) {
-	    fs = session.getFilesystem();
-	}
 
-	Collection<T> items = new Vector<T>();
-	for (String path : getPathList(fObj, rc, fs)) {
-	    IFile f = null;
+	Collection<T> items = new ArrayList<T>();
+	for (IFile f : getFiles(fObj, behaviors, rc, fs)) {
+	    String path = f.getPath();
 	    try {
-		f = fs.getFile(path);
 		String dirPath = null;
 		boolean isDirectory = f.isDirectory();
 		if (isDirectory) {
@@ -132,12 +131,12 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    } else {
 			EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
 			filepathType.setValue(path);
+			fItem.setFilepath(filepathType);
 			EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
-			pathType.setValue(getPath(path, f));
+			pathType.setValue(f.getParent());
+			fItem.setPath(pathType);
 			EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
 			filenameType.setValue(f.getName());
-			fItem.setFilepath(filepathType);
-			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
 		    }
 		} else if (fObj.isSetFilename() && fObj.getFilename().getValue() != null) {
@@ -149,12 +148,12 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    } else {
 			EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
 			filepathType.setValue(path);
+			fItem.setFilepath(filepathType);
 			EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
-			pathType.setValue(getPath(path, f));
+			pathType.setValue(f.getParent());
+			fItem.setPath(pathType);
 			EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
 			filenameType.setValue(f.getName());
-			fItem.setFilepath(filepathType);
-			fItem.setPath(pathType);
 			fItem.setFilename(filenameType);
 		    }
 		} else if (fObj.isSetPath()) {
@@ -247,8 +246,8 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
      * match operations), singletons (from equals operations) and handles recursive searches specified by FileBehaviors.
      * The resulting collection only contains matches that exist.
      */
-    private Collection<String> getPathList(ReflectedFileObject fObj, IRequestContext rc, IFilesystem fs)
-		throws CollectException {
+    private Collection<IFile> getFiles(ReflectedFileObject fObj, ReflectedFileBehaviors fb, IRequestContext rc,
+		IFilesystem fs) throws CollectException {
 
 	Collection<IFile> files = new ArrayList<IFile>();
 	try {
@@ -281,6 +280,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    conditions.add(ISearchable.RECURSE);
 		    search = true;
 		    break;
+		  }
 
 		  default:
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
@@ -368,6 +368,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));
 		    search = true;
 		    break;
+		  }
 
 		  default:
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pathOp);
@@ -428,7 +429,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, filenameOp);
 			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		    }
-		    list = files;
 		}
 	    } else {
 		//
@@ -645,8 +645,15 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    }
 	}
 
+	/**
+	 * @see http://oval.mitre.org/language/version5.10.1/ovaldefinition/documentation/independent-definitions-schema.html#FileBehaviors
+	 */
 	public String getRecurse() {
-	    return recurse;
+	    if (session instanceof IWindowsSession) {
+		return "directories";
+	    } else {
+		return recurse;
+	    }
 	}
 
 	public String getRecurseDirection() {

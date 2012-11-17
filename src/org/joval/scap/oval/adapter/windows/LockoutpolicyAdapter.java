@@ -34,7 +34,6 @@ import org.joval.util.JOVALMsg;
  */
 public class LockoutpolicyAdapter implements IAdapter {
     private IWindowsSession session;
-    private String runspaceId;
     private Collection<LockoutpolicyItem> items = null;
     private CollectException error = null;
 

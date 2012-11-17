@@ -80,9 +80,13 @@ public class RunspacePool implements IRunspacePool {
     }
 
     public synchronized IRunspace spawn() throws Exception {
+	return spawn(session.supports(IWindowsSession.View._64BIT) ? IWindowsSession.View._64BIT : null);
+    }
+
+    public synchronized IRunspace spawn(IWindowsSession.View view) throws Exception {
 	if (pool.size() < capacity()) {
 	    String id = Integer.toString(pool.size());
-	    Runspace runspace = new Runspace(id, session);
+	    Runspace runspace = new Runspace(id, session, view);
 	    logger.debug(JOVALMsg.STATUS_POWERSHELL_SPAWN, id);
 	    pool.put(id, runspace);
 	    runspace.invoke("$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(512,2000)");

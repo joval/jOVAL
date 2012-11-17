@@ -287,7 +287,7 @@ public class XinetdAdapter implements IAdapter {
 	services = new HashMap<String, Service>();
 	try {
 	    IFilesystem fs = session.getFilesystem();
-	    IFile config = fs.getFile(CONFIG, IFile.NOCACHE);
+	    IFile config = fs.getFile(CONFIG, IFile.Flags.NOCACHE);
 	    if (config.exists()) {
 		try {
 		    parseConfigFile(config);
@@ -331,7 +331,7 @@ public class XinetdAdapter implements IAdapter {
 			services.put(name, new Service(name, parseConfigBlock(reader)));
 		    } else if (line.startsWith("includefile")) {
 			String path = line.substring(11).trim();
-			IFile file = session.getFilesystem().getFile(path, IFile.NOCACHE);
+			IFile file = session.getFilesystem().getFile(path, IFile.Flags.NOCACHE);
 			if (file.exists() && file.isFile()) {
 			    try {
 				parseConfigFile(file);
@@ -343,7 +343,7 @@ public class XinetdAdapter implements IAdapter {
 			}
 		    } else if (line.startsWith("includedir")) {
 			String path = line.substring(10).trim();
-			IFile dir = session.getFilesystem().getFile(path, IFile.NOCACHE);
+			IFile dir = session.getFilesystem().getFile(path, IFile.Flags.NOCACHE);
 			if (dir.exists() && dir.isDirectory()) {
 			    for (IFile file : dir.listFiles()) {
 				try {
