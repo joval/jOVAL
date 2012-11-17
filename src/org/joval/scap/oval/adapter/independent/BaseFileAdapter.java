@@ -402,6 +402,20 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 			}
 			break;
 
+		      case NOT_EQUAL:
+			if (search) {
+			    Pattern p = Pattern.compile("^{?!" + filename + ")$");
+			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
+			} else {
+			    while(iter.hasNext()) {
+				IFile file = iter.next();
+				if (filename.equals(file.getName())) {
+				    iter.remove();
+				}
+			    }
+			}
+			break;
+
 		      case PATTERN_MATCH: {
 			Pattern p = Pattern.compile(filename);
 			if (search) {
