@@ -72,7 +72,7 @@ public class SolarisDriver extends AbstractDriver {
 	boolean xdev = false;
 	Pattern path = null, dirname = null, basename = null;
 	String literalBasename = null;
-	int depth = ISearchable.DEPTH_UNLIMITED;
+	int depth = 1;
 
 	for (ISearchable.ICondition condition : conditions) {
 	    switch(condition.getField()) {
@@ -135,7 +135,7 @@ public class SolarisDriver extends AbstractDriver {
 		    if (depth != ISearchable.DEPTH_UNLIMITED) {
 			int currDepth = new StringTokenizer(from, "/").countTokens();
 			if (!from.endsWith("/")) currDepth++;
-			cmd.append(" | awk -F/ 'NF == ").append(Integer.toString(currDepth + depth)).append("'");
+			cmd.append(" | awk -F/ 'NF <= ").append(Integer.toString(currDepth + depth)).append("'");
 		    }
 		    if (basename != null) {
 			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
@@ -145,16 +145,16 @@ public class SolarisDriver extends AbstractDriver {
 		cmd.append(" -type d");
 		cmd.append(" | /usr/xpg4/bin/grep -E '").append(dirname.pattern()).append("'");
 		if (!dirOnly) {
-		    cmd.append(" | xargs -I[] find '[]'");
+		    cmd.append(" | xargs -I[] find '[]' -type f");
 		    if (depth != ISearchable.DEPTH_UNLIMITED) {
-			cmd.append(" -exec test (`echo \"[]\" | awk -F/ '{print NF}'` + ");
+			cmd.append(" -exec echo []: {} \\; | awk -F: 'split($1,a,\"/\")+");
 			cmd.append(Integer.toString(depth));
-			cmd.append(") > `echo \"{}\" | awk -F/ '{print NF}'` \\;");
+			cmd.append(" >= split($2,b,\"/\"){print substr($2,2)}'");
 		    }
 		    if (basename != null) {
 			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
 		    } else if (literalBasename != null) {
-			cmd.append(" -name ").append(literalBasename);
+			cmd.append(" | awk -F/ '$NF ~ /^").append(literalBasename).append("$/'");
 		    }
 		}
 	    }

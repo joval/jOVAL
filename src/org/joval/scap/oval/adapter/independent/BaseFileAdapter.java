@@ -268,7 +268,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		switch(op) {
 		  case EQUALS:
 		    IFile file = fs.getFile(filepath);
-		    if (file.isFile()) {
+		    if (file.exists()) {
 			files.add(file);
 		    }
 		    break;
@@ -302,17 +302,13 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		// Convert behaviors into flags and search conditions.
 		//
 		int depth = ISearchable.DEPTH_UNLIMITED;
-		if (fb == null) {
-		    conditions.add(ISearchable.RECURSE);
-		} else {
+		if (fb != null && !"none".equals(fb.getRecurseDirection())) {
 		    if (fb.getRecurse().indexOf("directories") == -1) {
 			depth = 0;
 		    } else {
 			depth = fb.getDepth();
 		    }
-		    //
 		    // Note - OVAL's idea of depth=1 is everyone else's idea of depth=2.
-		    //
 		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth > 0 ? depth+1 : depth)));
 		    if (fb.getRecurse().indexOf("symlinks") == -1) {
 			followLinks = false;
@@ -324,22 +320,20 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    }
 		}
 
-		//
-		// Add candidate files to the list (for later filtering, below) unless a search will be executed.
-		//
 		OperationEnumeration pathOp = fObj.getPath().getOperation();
 		switch(pathOp) {
 		  case EQUALS:
 		    IFile file = fs.getFile(path);
 		    if (file.isDirectory()) {
 			if (fb == null) {
+			    //
+			    // Add candidate files to the list (for later filtering, below)
+			    //
 			    files.add(file);
 			    if (filename != null) {
 				files.addAll(Arrays.asList(file.listFiles()));
 			    }
-			} else if (depth == 0 && filename != null) {
-			    files.addAll(Arrays.asList(file.listFiles()));
-			} else if (depth != 0) {
+			} else {
 			    if ("up".equals(fb.getRecurseDirection())) {
 				for (int i=depth; i != 0; i--) {
 				    String parentPath = file.getParent();
