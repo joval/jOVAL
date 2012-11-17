@@ -33,7 +33,6 @@ import org.joval.intf.io.IReader;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.util.ISearchable;
 import org.joval.io.BufferedReader;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;

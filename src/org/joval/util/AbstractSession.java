@@ -22,6 +22,7 @@ import org.joval.intf.system.IEnvironment;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.intf.unix.system.IUnixSession;
+import org.joval.io.AbstractFilesystem;
 import org.joval.io.StreamLogger;
 
 /**
@@ -90,8 +91,8 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
     @Override
     public void dispose() {
 	super.dispose();
-	if (fs instanceof CachingHierarchy) {
-	    ((CachingHierarchy)fs).dispose();
+	if (fs instanceof AbstractFilesystem) {
+	    ((AbstractFilesystem)fs).dispose();
 	}
     }
 
@@ -161,6 +162,8 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	protected String command;
 	protected String[] env;
 
+	private Integer ec = null;
+
 	protected JavaProcess(String command, String[] env) {
 	    this.command = command;
 	    this.env = env;
@@ -182,6 +185,7 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	 * simplistic, we invoke the native shell to interpret the command string.
 	 */
 	public void start() throws Exception {
+	    logger.debug(JOVALMsg.STATUS_PROCESS_START, getCommand());
 	    List<String>args = new Vector<String>();
 	    if (System.getProperty("os.name").toLowerCase().indexOf("windows") == -1) {
 		args.add("/bin/sh");
@@ -269,7 +273,11 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 	}
 
 	public int exitValue() throws IllegalThreadStateException {
-	    return p.exitValue();
+	    if (ec == null) {
+		ec = new Integer(p.exitValue());
+		logger.debug(JOVALMsg.STATUS_PROCESS_END, getCommand(), ec);
+	    }
+	    return ec.intValue();
 	}
 
 	public void destroy() {

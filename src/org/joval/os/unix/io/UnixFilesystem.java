@@ -21,8 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
-import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -58,8 +56,6 @@ import org.joval.util.tree.Node;
 import org.joval.util.JOVALMsg;
 import org.joval.util.PropertyUtil;
 import org.joval.util.SafeCLI;
-import org.joval.util.StringTools;
-import org.joval.util.tree.TreeHash;
 
 /**
  * A local IFilesystem implementation for Unix.
@@ -83,59 +79,29 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
     protected IUnixSession us;
 
     private IUnixFilesystemDriver driver;
-    private int entries, maxEntries;
+    private Collection<IMount> mounts;
 
-    public UnixFilesystem(IBaseSession session, IEnvironment env) {
-	super(session, env, null, DELIM_STR, "fs.db");
-	us = (IUnixSession)session;
-	S = us.getTimeout(IUnixSession.Timeout.S);
-	M = us.getTimeout(IUnixSession.Timeout.M);
-	L = us.getTimeout(IUnixSession.Timeout.L);
-	XL= us.getTimeout(IUnixSession.Timeout.XL);
+    public UnixFilesystem(IUnixSession session) {
+	super(session, "/");
+	S = session.getTimeout(IUnixSession.Timeout.S);
+	M = session.getTimeout(IUnixSession.Timeout.M);
+	L = session.getTimeout(IUnixSession.Timeout.L);
+	XL= session.getTimeout(IUnixSession.Timeout.XL);
     }
 
-    /**
-     * Non-local subclasses should override this method.
-     */
-    protected String getPreloadPropertyKey() {
-	return PROP_PRELOAD_LOCAL;
+    public void dispose() {
     }
 
-    @Override
-    protected int getDefaultFlags() {
-	return super.getDefaultFlags();
-    }
-
-    @Override
-    protected Serializer<IFile> getSerializer() {
-	return new UnixCacheFileSerializer(this);
-    }
-
-    @Override
-    protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
-	return new UnixFile(this, (CacheFile)super.accessResource(path, flags), path);
-    }
-
-    @Override
-    protected boolean loadCache() {
-	if (!props.getBooleanProperty(getPreloadPropertyKey())) {
-	    return false;
-	} else if (preloaded) {
-	    return true;
-	} else if (session.getType() != IBaseSession.Type.UNIX) {
-	    return false;
+    public ISearchable<IFile> getSearcher() {
+	if (searcher == null) {
+	    searcher = new UnixFileSearcher((IUnixSession)session, getDriver());
 	}
+	return searcher;
+    }
 
-	//
-	// Start from a clean cache.
-	//
-	reset();
-	entries = 0;
-	maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
-	try {
-	    Collection<String> mounts = null;
-	    String fsTypeFilter = props.getProperty(PROP_MOUNT_FSTYPE_FILTER);
-	    if (fsTypeFilter == null) {
+    public Collection<IMount> getMounts(Pattern filter) throws IOException {
+	if (mounts == null) {
+	    try {
 		mounts = getDriver().getMounts(null);
 	    } else {
 		mounts = getDriver().getMounts(Pattern.compile(fsTypeFilter));
@@ -263,8 +229,20 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	}
     }
 
-    public String getDelimiter() {
-	return DELIM_STR;
+    @Override
+    public IFile createFileFromInfo(String path, FileInfo info) {
+	if (info instanceof UnixFileInfo) {
+	    return new UnixFile((UnixFileInfo)info);
+	} else {
+	    return super.createFileFromInfo(path, info);
+	}
+    }
+
+    public IFile getFile(String path, IFile.Flags flags) throws IllegalArgumentException, IOException {
+	if (autoExpand) {
+	    path = env.expand(path);
+	}
+	return new UnixFile(new File(path), flags);
     }
 
     // Implement IUnixFilesystem
@@ -291,7 +269,22 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 	return driver;
     }
 
-    // Protected
+    public class UnixFile extends DefaultFile {
+	protected UnixFile() {}
+
+	UnixFile(File file, IFile.Flags flags) throws IOException {
+	    path = file.getPath();
+	    this.flags = flags;
+	    accessor = new UnixAccessor(file);
+	}
+
+	/**
+	 * Create a UnixFile using information.
+	 */
+	protected UnixFile(UnixFileInfo info) {
+	    super(info.getPath(), info);
+	}
+    }
 
     /**
      * Create a UnixFile from the output line of the stat command.
@@ -332,264 +325,72 @@ public class UnixFilesystem extends CacheFilesystem implements IUnixFilesystem {
 		throw new PreloadOverflowException();
 	    }
 	}
-    }
 
-    /**
-     * Check to see if the IFile represents a valid cache of the preload data.  This works on either a local or remote
-     * copy of the cache.  The lastModified date is compared against the expiration, and if stale, the IFile is deleted.
-     *
-     * After the date is checked, the properties are used to validate the length of the file and the list of filesystem
-     * mounts to be indexed.
-     */
-    private boolean isValidCache(IFile f, IProperty cacheProps, String command, Collection<String> mounts) throws IOException {
-	try {
-	    test(f.exists() && f.isFile(), "isFile");
-
-	    //
-	    // Check the expiration date
-	    //
-	    String s = PROP_PRELOAD_MAXAGE;
-	    test(System.currentTimeMillis() < (f.lastModified() + props.getLongProperty(s)), s);
-
-	    //
-	    // Check the command
-	    //
-	    s = INDEX_PROP_COMMAND;
-	    test(command.equals(cacheProps.getProperty(s)), s);
-
-	    //
-	    // Check the username
-	    //
-	    s = INDEX_PROP_USER;
-	    test(us.getEnvironment().getenv("LOGNAME").equals(cacheProps.getProperty(s)), s);
-
-	    //
-	    // Check the Unix flavor
-	    //
-	    s = INDEX_PROP_FLAVOR;
-	    test(us.getFlavor().value().equals(cacheProps.getProperty(s)), s);
-
-	    //
-	    // Check the length
-	    //
-	    s = INDEX_PROP_LEN;
-	    test(f.length() == cacheProps.getLongProperty(s), s);
-
-	    //
-	    // Check the mounts
-	    //
-	    s = INDEX_PROP_MOUNTS;
-	    test(alphabetize(mounts).equals(cacheProps.getProperty(s)), s);
-
-	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_REUSE, f.getPath());
-	    return true;
-	} catch (AssertionError e) {
-	    logger.warn(JOVALMsg.STATUS_FS_PRELOAD_CACHE_MISMATCH, f.getPath(), e.getMessage());
-	    try {
-		f.delete();
-	    } catch (IOException ioe) {
-	    }
-	    return false;
-	}
-    }
-
-    private static final String CACHE_DIR = "%HOME%";
-    private static final String CACHE_TEMP = ".jOVAL.find.gz~";
-    private static final String CACHE_FILE = ".jOVAL.find.gz";
-    private static final String CACHE_PROPS = ".jOVAL.find.properties";
-
-    private IFile getRemoteCacheProps() throws IOException {
-	return getFile(env.expand(CACHE_DIR + DELIM_STR + CACHE_PROPS), IFile.READWRITE);
-    }
-
-    /**
-     * Return a valid cache file on the remote machine, if available, or create a new one and return it.
-     */
-    private IFile getRemoteCache(String command, Collection<String> mounts) throws Exception {
-	String tempPath = env.expand(CACHE_DIR + DELIM_STR + CACHE_TEMP);
-	String destPath = env.expand(CACHE_DIR + DELIM_STR + CACHE_FILE);
-
-	Properties cacheProps = new Properties();
-	IFile propsFile = getRemoteCacheProps();
-	if (propsFile.exists()) {
-	    cacheProps.load(propsFile.getInputStream());
+	@Override
+	public String toString() {
+	    return getPath();
 	}
 
-	try {
-	    IFile temp = getFile(destPath, IFile.READVOLATILE);
-	    if (isValidCache(temp, new PropertyUtil(cacheProps), command, mounts)) {
-		return temp;
+	@Override
+        protected FileAccessor getAccessor() throws IOException {
+            if (accessor == null) {
+                accessor = new UnixAccessor(new File(path));
+            }
+            return accessor;
+        }
+
+	@Override
+	public boolean isDirectory() throws IOException {
+	    if (isLink()) {
+		return getFile(getCanonicalPath()).isDirectory();
+	    } else {
+		return super.isDirectory();
 	    }
 	} catch (FileNotFoundException e) {
 	}
-
-	logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_TEMP, tempPath);
-	boolean first = true;
-	for (String mount : mounts) {
-	    StringBuffer sb = new StringBuffer(command.replace("%MOUNT%", mount));
-	    sb.append(" | gzip ");
-	    if (first) {
-		sb.append("> ");  // over-write
-		first = false;
-	    } else {
-		sb.append(">> "); // append
-	    }
-	    sb.append(env.expand(tempPath)).toString();
-
-	    IProcess p = session.createProcess(sb.toString(), null);
-	    p.start();
-
-	    //
-	    // We have redirected stdout to the file, but we don't know which stream stderr can be read from, so
-	    // we'll try reading from both!
-	    //
-	    ErrorReader er1 = new ErrorReader(PerishableReader.newInstance(p.getInputStream(), XL));
-	    er1.start();
-	    ErrorReader er2 = new ErrorReader(PerishableReader.newInstance(p.getErrorStream(), XL));
-	    er2.start();
-
-	    //
-	    // Log a status update every 15 seconds while we wait, but wait for no more than an hour.
-	    //
-	    boolean done = false;
-	    for (int i=0; !done && i < 240; i++) {
-		for (int j=0; !done && j < 15; j++) {
-		    if (p.isRunning()) {
-			Thread.sleep(1000);
-		    } else {
-			done = true;
-		    }
-		}
-		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_PROGRESS, getFile(tempPath, IFile.READVOLATILE).length());
-	    }
-	    if (!done) {
-		p.destroy();
-	    }
-	    er1.close();
-	    er2.close();
-	    er1.join();
-	    er2.join();
-	}
-
-	//
-	// Move the temp file; retry once if the attempt fails for some reason.
-	//
-	for (int i=0; i < 2; i++) {
-	    if (SafeCLI.execData("mv " + tempPath + " " + destPath, null, session, S).getExitCode() == 0) {
-		logger.info(JOVALMsg.STATUS_FS_PRELOAD_CACHE_CREATE, destPath);
-		break;
-	    }
-	}
-	return getFile(destPath);
     }
 
-    /**
-     * Pretty much exactly the same as an "assert" statement.
-     */
-    private void test(boolean val, String msg) throws AssertionError {
-	if (!val) throw new AssertionError(msg);
-    }
+    // Protected
 
-    private String alphabetize(Collection<String> sc) {
-	String[] sa = sc.toArray(new String[sc.size()]);
-	Arrays.sort(sa);
-	StringBuffer sb = new StringBuffer();
-	for (String s : sa) {
-	    if (sb.length() > 0) {
-		sb.append(":");
-	    }
-	    sb.append(s);
-	}
-	return sb.toString();
-    }
-
-    private class ReaderIterator implements Iterator<String> {
-	IReader reader;
-	String next = null;
-
-	ReaderIterator(IReader reader) {
-	    this.reader = reader;
-	}
-
-	// Implement Iterator<String>
-
-	public boolean hasNext() {
-	    if (next == null) {
-		try {
-		    next = next();
-		    return true;
-		} catch (NoSuchElementException e) {
-		    return false;
+    protected UnixFileInfo getUnixFileInfo(String path) throws IOException {
+	try {
+	    String cmd = new StringBuffer(getDriver().getStatCommand()).append(" ").append(path).toString();
+	    List<String> lines = SafeCLI.multiLine(cmd, session, IUnixSession.Timeout.S);
+	    UnixFileInfo ufi = null;
+	    if (lines.size() > 0) {
+		ufi = (UnixFileInfo)getDriver().nextFileInfo(lines.iterator());
+		if (ufi == null) {
+		    throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNIXFILEINFO, path, lines.get(0)));
 		}
 	    } else {
-		return true;
+		logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, "''");
 	    }
-	}
-
-	public String next() throws NoSuchElementException {
-	    if (next == null) {
-		try {
-		    if ((next = reader.readLine()) == null) {
-			try {
-			    reader.close();
-			} catch (IOException e) {
-			}
-			throw new NoSuchElementException();
-		    }
-		} catch (IOException e) {
-		    throw new NoSuchElementException(e.getMessage());
-		}
-	    }
-	    String temp = next;
-	    next = null;
-	    return temp;
-	}
-
-	public void remove() {
-	    throw new UnsupportedOperationException();
-	}
-    }
-
-    private class ErrorReader implements Runnable {
-	IReader err;
-	Thread t;
-
-	ErrorReader(IReader err) {
-	    err.setLogger(logger);
-	    this.err = err;
-	}
-
-	void start() {
-	    t = new Thread(this);
-	    t.start();
-	}
-
-	void join() throws InterruptedException {
-	    t.join();
-	}
-
-	void close() {
-	    if (t.isAlive()) {
-		t.interrupt();
-	    }
-	}
-
-	public void run() {
-	    try {
-		String line = null;
-		while((line = err.readLine()) != null) {
-		    logger.warn(JOVALMsg.ERROR_PRELOAD_LINE, line);
-		}
-	    } catch (InterruptedIOException e) {
-		// ignore
-	    } catch (IOException e) {
+	    return ufi;
+	} catch (Exception e) {
+	    if (e instanceof IOException) {
+		throw (IOException)e;
+	    } else {
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    } finally {
-		try {
-		    err.close();
-		} catch (IOException e) {
-		}
+		throw new IOException(e.getMessage());
 	    }
+	}
+    }
+
+    class UnixAccessor extends DefaultAccessor {
+	private String path;
+
+	UnixAccessor(File file) {
+	    super(file);
+	    path = file.getPath();
+	}
+
+	@Override
+	public FileInfo getInfo() throws IOException {
+	    FileInfo result = getUnixFileInfo(path);
+	    if (result == null) {
+		result = super.getInfo();
+	    }
+	    return result;
 	}
     }
 }

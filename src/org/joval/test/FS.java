@@ -9,8 +9,9 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -39,7 +40,30 @@ public class FS {
 	    IEnvironment env = session.getEnvironment();
 	    if (path.startsWith("search:")) {
 		path = path.substring(7);
-		Collection<String> list = fs.getSearcher().search(Pattern.compile(path), ISearchable.FOLLOW_LINKS);
+		Pattern pattern = Pattern.compile(path);
+		Collection<IFile> list = new ArrayList<IFile>();
+		ISearchable<IFile> searcher = fs.getSearcher();
+		String[] from = fs.guessParent(pattern);
+		if (from == null) {
+		    Pattern filter = null;
+		    String s = session.getProperties().getProperty(IFilesystem.PROP_MOUNT_FSTYPE_FILTER);
+		    if (s != null) {
+			filter = Pattern.compile(s);
+		    }
+		    Collection<IFilesystem.IMount> mounts = fs.getMounts(filter);
+		    from = new String[mounts.size()];
+		    int i=0;
+		    for (IFilesystem.IMount mount : mounts) {
+			from[i++] = mount.getPath();
+		    }
+		}
+		for (String s : from) {
+		    List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
+		    conditions.add(searcher.condition(ISearchable.FIELD_FROM, ISearchable.TYPE_EQUALITY, s));
+		    conditions.add(searcher.condition(IFilesystem.FIELD_PATH, ISearchable.TYPE_PATTERN, pattern));
+		    conditions.add(ISearchable.RECURSE);
+		    list.addAll(searcher.search(conditions));
+		}
 		System.out.println("Found " + list.size() + " matches");
 		for (String item : list) {
 		    System.out.println("Match: " + item);

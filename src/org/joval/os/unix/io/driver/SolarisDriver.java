@@ -5,10 +5,11 @@ package org.joval.os.unix.io.driver;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Pattern;
 
 import org.slf4j.cal10n.LocLogger;
@@ -47,10 +48,10 @@ public class SolarisDriver implements IUnixFilesystemDriver {
 
     // Implement IUnixFilesystemDriver
 
-    public Collection<String> getMounts(Pattern typeFilter) throws Exception {
-	Collection<String> mounts = new Vector<String>();
-	IFile f = us.getFilesystem().getFile("/etc/vfstab");
-	IReader reader = PerishableReader.newInstance(f.getInputStream(), us.getTimeout(IUnixSession.Timeout.S));
+    public Collection<IFilesystem.IMount> getMounts(Pattern typeFilter) throws Exception {
+	Collection<IFilesystem.IMount> mounts = new ArrayList<IFilesystem.IMount>();
+	IFile f = session.getFilesystem().getFile("/etc/vfstab");
+	IReader reader = PerishableReader.newInstance(f.getInputStream(), session.getTimeout(IUnixSession.Timeout.S));
 	String line = null;
 	while ((line = reader.readLine()) != null) {
 	    if (!line.startsWith("#")) { // skip comments
@@ -70,8 +71,105 @@ public class SolarisDriver implements IUnixFilesystemDriver {
 	return mounts;
     }
 
-    public String getFindCommand() {
-	return "find %MOUNT% -mount -exec " + getStatCommand() + " {} \\;";
+    public String getFindCommand(List<ISearchable.ICondition> conditions) {
+	String from = null;
+	boolean dirOnly = false;
+	boolean followLinks = false;
+	boolean xdev = false;
+	Pattern path = null, dirname = null, basename = null;
+	String literalBasename = null;
+	int depth = 1;
+
+	for (ISearchable.ICondition condition : conditions) {
+	    switch(condition.getField()) {
+	      case IUnixFilesystem.FIELD_FOLLOW_LINKS:
+		followLinks = true;
+		break;
+	      case IUnixFilesystem.FIELD_XDEV:
+		xdev = true;
+		break;
+	      case IFilesystem.FIELD_FILETYPE:
+		if (IFilesystem.FILETYPE_DIR.equals(condition.getValue())) {
+		    dirOnly = true;
+		}
+		break;
+	      case IFilesystem.FIELD_PATH:
+		path = (Pattern)condition.getValue();
+		break;
+	      case IFilesystem.FIELD_DIRNAME:
+		dirname = (Pattern)condition.getValue();
+		break;
+	      case IFilesystem.FIELD_BASENAME:
+		switch(condition.getType()) {
+		  case ISearchable.TYPE_EQUALITY:
+		    literalBasename = (String)condition.getValue();
+		    break;
+		  case ISearchable.TYPE_PATTERN:
+		    basename = (Pattern)condition.getValue();
+		    break;
+		}
+		break;
+	      case ISearchable.FIELD_DEPTH:
+		depth = ((Integer)condition.getValue()).intValue();
+		break;
+	      case ISearchable.FIELD_FROM:
+		from = (String)condition.getValue();
+		break;
+	    }
+	}
+
+	StringBuffer cmd = new StringBuffer("find");
+	if (followLinks) {
+	    cmd.append(" -L");
+	}
+	cmd.append(" ").append(from);
+	if (xdev) {
+	    cmd.append(" -mount");
+	}
+	if (path == null) {
+	    if (dirname == null) {
+		if (dirOnly && depth != ISearchable.DEPTH_UNLIMITED) {
+		    cmd.append(" -type d");
+		    int currDepth = new StringTokenizer(from, "/").countTokens();
+		    if (!from.endsWith("/")) currDepth++;
+		    cmd.append(" | awk -F/ 'NF == ").append(Integer.toString(currDepth + depth)).append("'");
+		} else if (!dirOnly) {
+		    cmd.append(" -type f");
+		    if (literalBasename != null) {
+			cmd.append(" -name ").append(literalBasename);
+		    }
+		    if (depth != ISearchable.DEPTH_UNLIMITED) {
+			int currDepth = new StringTokenizer(from, "/").countTokens();
+			if (!from.endsWith("/")) currDepth++;
+			cmd.append(" | awk -F/ 'NF <= ").append(Integer.toString(currDepth + depth)).append("'");
+		    }
+		    if (basename != null) {
+			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
+		    }
+		}
+	    } else {
+		cmd.append(" -type d");
+		cmd.append(" | /usr/xpg4/bin/grep -E '").append(dirname.pattern()).append("'");
+		if (!dirOnly) {
+		    cmd.append(" | xargs -I[] find '[]' -type f");
+		    if (depth != ISearchable.DEPTH_UNLIMITED) {
+			cmd.append(" -exec echo []: {} \\; | awk -F: 'split($1,a,\"/\")+");
+			cmd.append(Integer.toString(depth));
+			cmd.append(" >= split($2,b,\"/\"){print substr($2,2)}'");
+		    }
+		    if (basename != null) {
+			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
+		    } else if (literalBasename != null) {
+			cmd.append(" | awk -F/ '$NF ~ /^").append(literalBasename).append("$/'");
+		    }
+		}
+	    }
+	} else {
+	    cmd.append(" -type f");
+	    cmd.append(" | /usr/xpg4/bin/grep -E '").append(path.pattern()).append("'");
+	}
+	cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
+	return cmd.toString();
     }
 
     public String getStatCommand() {
@@ -147,9 +245,9 @@ public class SolarisDriver implements IUnixFilesystemDriver {
 	if (begin > 0) {
 	    int end = line.indexOf("->");
 	    if (end == -1) {
-	        path = line.substring(begin).trim();
+		path = line.substring(begin).trim();
 	    } else if (end > begin) {
-	        path = line.substring(begin, end).trim();
+		path = line.substring(begin, end).trim();
 		linkPath = line.substring(end+2).trim();
 	    }
 	}

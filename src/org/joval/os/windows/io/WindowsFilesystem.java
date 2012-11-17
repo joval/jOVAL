@@ -3,7 +3,6 @@
 
 package org.joval.os.windows.io;
 
-import java.io.DataInput;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
@@ -40,19 +39,68 @@ import org.joval.util.tree.TreeHash;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesystem {
-    private static Collection<String> mounts;
+public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFilesystem {
+    private Collection<IMount> mounts;
+    private WindowsFileSearcher searcher;
+    private WOW3264FilesystemRedirector redirector;
+    private IWindowsSession.View view;
 
-    private int entries = 0, maxEntries = 0;
-    private boolean preloaded = false;
+    public WindowsFilesystem(IWindowsSession session) throws Exception {
+	this(session, null);
+    }
+
+    public WindowsFilesystem(IWindowsSession session, IWindowsSession.View view) {
+	super(session, "\\");
+	if (view == null) {
+	    view = session.getNativeView();
+	}
+	this.view = view;
+	if (view == IWindowsSession.View._32BIT) {
+	    redirector = new WOW3264FilesystemRedirector(session.getEnvironment());
+	}
+    }
+
+    public void dispose() {
+	if (searcher == null) {
+	    searcher.close();
+	}
+    }
+
+    public synchronized ISearchable<IFile> getSearcher() throws IOException {
+	if (searcher == null) {
+	    try {
+		searcher = new WindowsFileSearcher((IWindowsSession)session, view);
+	    } catch (IOException e) {
+		throw e;
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		throw new IOException(e);
+	    }
+	}
+	return searcher;
+    }
 
     public WindowsFilesystem(IBaseSession session, IEnvironment env, IPathRedirector redirector, String dbKey) {
 	super(session, env, redirector, File.separator, dbKey);
 	if (mounts == null) {
 	    try {
-		String filterStr = props.getProperty(PROP_MOUNT_FSTYPE_FILTER);
-		if (filterStr == null) {
-		    mounts = getMounts(null);
+		mounts = new ArrayList<IMount>();
+		File[] roots = File.listRoots();
+		for (int i=0; i < roots.length; i++) {
+		    String path = roots[i].getPath();
+		    mounts.add(new WindowsMount(path, FsType.typeOf(Kernel32Util.getDriveType(path))));
+		}
+	    } catch (Exception e) {
+		throw new IOException(e);
+	    }
+	}
+	if (filter == null) {
+	    return mounts;
+	} else {
+	    Collection<IMount> results = new ArrayList<IMount>();
+	    for (IMount mount : mounts) {
+		if (filter.matcher(mount.getType()).find()) {
+		    logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mount.getPath(), mount.getType());
 		} else {
 		    mounts = getMounts(Pattern.compile(filterStr));
 		}
@@ -64,12 +112,15 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
     }
 
     @Override
-    protected Serializer<IFile> getSerializer() {
-	return new WindowsCacheFileSerializer(this);
+    public IFile createFileFromInfo(String path, FileInfo info) {
+	if (info instanceof WindowsFileInfo) {
+	    return new WindowsFile(path, (WindowsFileInfo)info);
+	} else {
+	    return super.createFileFromInfo(path, info);
+	}
     }
 
-    @Override
-    protected IFile accessResource(String path, int flags) throws IllegalArgumentException, IOException {
+    public final IFile getFile(String path, IFile.Flags flags) {
 	if (autoExpand) {
 	    path = env.expand(path);
 	}
@@ -80,117 +131,85 @@ public class WindowsFilesystem extends CacheFilesystem implements IWindowsFilesy
 		realPath = alt;
 	    }
 	}
+	return new WindowsFile(realPath, new File(path), flags);
+    }
+
+    @Override
+    protected Serializer<IFile> getSerializer() {
+	return new WindowsCacheFileSerializer(this);
+    }
+
+    public class WindowsFile extends DefaultFile {
+	WindowsFile(String path, File file, IFile.Flags flags) {
+	    this.path = path;
+	    this.flags = flags;
+	    accessor = new WindowsAccessor(file);
+	}
 
 	if (isValidPath(realPath)) {
 	    return new WindowsFile(this, new File(realPath), path);
 	} else if (isDrive(realPath)) {
 	    return new WindowsFile(this, new File(realPath + DELIM_STR), path);
 	}
-	throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_FS_LOCALPATH, realPath));
-    }
 
-    @Override
-    public boolean loadCache() {
-	if (!props.getBooleanProperty(PROP_PRELOAD_LOCAL)) {
-	    return false;
-	} else if (preloaded) {
-	    return true;
-	} else if (mounts == null) {
-	    return false;
-	}
-
-	//
-	// Wipe out any existing cache contents before starting.
-	//
-	reset();
-	entries = 0;
-	maxEntries = props.getIntProperty(PROP_PRELOAD_MAXENTRIES);
-	try {
-	    for (String mount : mounts) {
-		addRecursive(new File(mount));
+	@Override
+	protected FileAccessor getAccessor() {
+	    if (accessor == null) {
+		String realPath = path;
+		if (redirector != null) {
+		    String alt = redirector.getRedirect(path);
+		    if (alt != null) {
+			realPath = alt;
+		    }
+		}
+		accessor = new WindowsAccessor(new File(realPath));
 	    }
-	    preloaded = true;
-	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_DONE, cacheSize());
-	    return true;
-	} catch (PreloadOverflowException e) {
-	    logger.warn(JOVALMsg.ERROR_PRELOAD_OVERFLOW, maxEntries);
-	    preloaded = true;
-	    return true;
-	} catch (Exception e) {
-	    logger.warn(JOVALMsg.ERROR_PRELOAD);
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    return false;
-	}
-    }
-
-    @Override
-    public String getDelimiter() {
-	return DELIM_STR;
-    }
-
-    public boolean isLocalPath(String path) {
-	if (isValidPath(path)) {
-	    return mounts.contains(path.substring(0, 3));
-	} else {
-	    return false;
+	    return accessor;
 	}
     }
 
     // Private
 
-    private int count = 0;
+    class WindowsAccessor extends DefaultAccessor implements IWindowsFileInfo {
+	private String path;
 
-    private void addRecursive(File f) throws PreloadOverflowException, IOException {
-	if (++count % 20000 == 0) {
-	    logger.info(JOVALMsg.STATUS_FS_PRELOAD_FILE_PROGRESS, count);
+	WindowsAccessor(File file) {
+	    super(file);
+	    path = file.getPath();
 	}
-	if (entries++ < maxEntries) {
-	    String path = f.getCanonicalPath();
-	    if (!path.equals(f.getPath())) {
-		logger.warn(JOVALMsg.ERROR_PRELOAD_LINE, path); // skip links
-	    } else {
-		addToCache(path, new WindowsFile(this, f, path));
-		if (f.isDirectory()) {
-		    File[] children = f.listFiles();
-		    if (children != null) {
-			for (File child : f.listFiles()) {
-			    addRecursive(child);
-			}
-		    }
+
+	@Override
+	public FileInfo getInfo() throws IOException {
+	    FileInfo.Type type = file.isDirectory() ? FileInfo.Type.DIRECTORY : FileInfo.Type.FILE;
+	    return new WindowsFileInfo(getCtime(), getMtime(), getAtime(), type, getLength(), this);
+	}
+
+	// Implement IWindowsFileInfo
+
+	public int getWindowsFileType() throws IOException {
+	    try {
+		int dirAttr = IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY & Kernel32Util.getFileAttributes(path);
+		if (IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY == dirAttr) {
+		    return IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY;
+		} else {
+		    return Kernel32Util.getFileType(path);
+		}
+	    } catch (Win32Exception e) {
+		logger.warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+		throw new IOException(e);
+	    }
+	}
+
+	public IACE[] getSecurity() throws IOException {
+	    try {
+		WinNT.ACCESS_ACEStructure[] aces = Advapi32Util.getFileSecurity(path, false);
+		IACE[] acl = new IACE[aces.length];
+		for (int i=0; i < aces.length; i++) {
+		    acl[i] = new LocalACE(aces[i]);
 		}
 	    }
 	} else {
 	    throw new PreloadOverflowException();
 	}
-    }
-
-    private boolean isValidPath(String s) {
-	if (s.length() >= 3) {
-	    return StringTools.isLetter(s.charAt(0)) && s.charAt(1) == ':' && s.charAt(2) == DELIM_CH;
-	}
-	return false;
-    }
-
-    private boolean isDrive(String s) {
-	if (s.length() == 2) {
-	    return StringTools.isLetter(s.charAt(0)) && s.charAt(1) == ':';
-	}
-	return false;
-    }
-
-    private Collection<String> getMounts(Pattern filter) throws Win32Exception {
-	Collection<String> mounts = new Vector<String>();
-	File[] roots = File.listRoots();
-	for (int i=0; i < roots.length; i++) {
-	    String name = roots[i].getPath();
-	    FsType type = FsType.typeOf(Kernel32Util.getDriveType(name));
-	    if (filter != null && filter.matcher(type.value()).find()) {
-		logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, name, type.value());
-	    } else {
-		logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, name, type.value());
-		mounts.add(name);
-	    }
-	}
-	return mounts;
     }
 }

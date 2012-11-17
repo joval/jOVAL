@@ -17,32 +17,15 @@ import org.joval.intf.windows.wmi.IWmiProvider;
  * @version %I% %G%
  */
 public interface IWindowsSession extends ISession {
-    /**
-     * Property governing whether any pre-existing remote shells should be closed upon connecting to a host.
-     */
-    String PROP_SHELL_CLEANUP = "remote.shell.cleanup";
-
-    /**
-     * Property governing whether or not to encrypt WS-Management SOAP envelopes.
-     */
-    String PROP_WSMAN_ENCRYPT = "remote.wsman.encryption";
-
-    /**
-     * Specifies a remote execution implementation based on WMI-over-DCOM.
-     */
-    String VAL_WMI = "wmi";
-
-    /**
-     * Specifies a remote execution implementation based on Windows Remote Management Web Services (MS-WSMV).
-     */
-    String VAL_WINRM = "winrm";
-
     String ENV_ARCH = "PROCESSOR_ARCHITECTURE";
+    String ENV_AR32 = "PROCESSOR_ARCHITEW6432";
 
     public enum View {
 	_32BIT,
 	_64BIT;
     }
+
+    View getNativeView();
 
     IRegistry getRegistry(View view);
 

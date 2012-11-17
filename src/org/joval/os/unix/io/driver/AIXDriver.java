@@ -7,6 +7,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Pattern;
@@ -77,8 +78,105 @@ public class AIXDriver implements IUnixFilesystemDriver {
 	return mounts;
     }
 
-    public String getFindCommand() {
-	return "find %MOUNT% -xdev -exec " + getStatCommand() + " {} \\;";
+    public String getFindCommand(List<ISearchable.ICondition> conditions) {
+	String from = null;
+	boolean dirOnly = false;
+	boolean followLinks = false;
+	boolean xdev = false;
+	Pattern path = null, dirname = null, basename = null;
+	String literalBasename = null;
+	int depth = ISearchable.DEPTH_UNLIMITED;
+
+	for (ISearchable.ICondition condition : conditions) {
+	    switch(condition.getField()) {
+	      case IUnixFilesystem.FIELD_FOLLOW_LINKS:
+		followLinks = true;
+		break;
+	      case IUnixFilesystem.FIELD_XDEV:
+		xdev = true;
+		break;
+	      case IFilesystem.FIELD_FILETYPE:
+		if (IFilesystem.FILETYPE_DIR.equals(condition.getValue())) {
+		    dirOnly = true;
+		}
+		break;
+	      case IFilesystem.FIELD_PATH:
+		path = (Pattern)condition.getValue();
+		break;
+	      case IFilesystem.FIELD_DIRNAME:
+		dirname = (Pattern)condition.getValue();
+		break;
+	      case IFilesystem.FIELD_BASENAME:
+		switch(condition.getType()) {
+		  case ISearchable.TYPE_EQUALITY:
+		    literalBasename = (String)condition.getValue();
+		    break;
+		  case ISearchable.TYPE_PATTERN:
+		    basename = (Pattern)condition.getValue();
+		    break;
+		}
+		break;
+	      case ISearchable.FIELD_DEPTH:
+		depth = ((Integer)condition.getValue()).intValue();
+		break;
+	      case ISearchable.FIELD_FROM:
+		from = (String)condition.getValue();
+		break;
+	    }
+	}
+
+	StringBuffer cmd = new StringBuffer("find");
+	if (followLinks) {
+	    cmd.append(" -L");
+	}
+	cmd.append(" ").append(from);
+	if (xdev) {
+	    cmd.append(" -xdev");
+	}
+	if (path == null) {
+	    if (dirname == null) {
+		if (dirOnly && depth != ISearchable.DEPTH_UNLIMITED) {
+		    cmd.append(" -type d");
+		    int currDepth = new StringTokenizer(from, "/").countTokens();
+		    if (!from.endsWith("/")) currDepth++;
+		    cmd.append(" | awk -F/ 'NF == ").append(Integer.toString(currDepth + depth)).append("'");
+		} else if (!dirOnly) {
+		    cmd.append(" -type f");
+		    if (literalBasename != null) {
+			cmd.append(" -name ").append(literalBasename);
+		    }
+		    if (depth != ISearchable.DEPTH_UNLIMITED) {
+			int currDepth = new StringTokenizer(from, "/").countTokens();
+			if (!from.endsWith("/")) currDepth++;
+			cmd.append(" | awk -F/ 'NF == ").append(Integer.toString(currDepth + depth)).append("'");
+		    }
+		    if (basename != null) {
+			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
+		    }
+		}
+	    } else {
+		cmd.append(" -type d");
+		cmd.append(" | grep -E '").append(dirname.pattern()).append("'");
+		if (!dirOnly) {
+		    cmd.append(" | xargs -I[] find '[]'");
+		    if (depth != ISearchable.DEPTH_UNLIMITED) {
+			cmd.append(" -exec test (`echo \"[]\" | awk -F/ '{print NF}'` + ");
+			cmd.append(Integer.toString(depth));
+			cmd.append(") > `echo \"{}\" | awk -F/ '{print NF}'` \\;");
+		    }
+		    if (basename != null) {
+			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
+		    } else if (literalBasename != null) {
+			cmd.append(" -name ").append(literalBasename);
+		    }
+		}
+	    }
+	} else {
+	    cmd.append(" -type f");
+	    cmd.append(" | grep -E '").append(path.pattern()).append("'");
+	}
+	cmd.append(" | xargs -i ").append(getStatCommand()).append(" '{}'");
+	return cmd.toString();
     }
 
     public String getStatCommand() {

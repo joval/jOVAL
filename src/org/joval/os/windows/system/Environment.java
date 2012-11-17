@@ -3,6 +3,8 @@
 
 package org.joval.os.windows.system;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.Enumeration;
 import java.util.NoSuchElementException;
 import java.util.Iterator;
@@ -12,187 +14,55 @@ import java.util.regex.Matcher;
 
 import org.slf4j.cal10n.LocLogger;
 
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IEnvironment;
-import org.joval.intf.windows.registry.IKey;
-import org.joval.intf.windows.registry.IRegistry;
-import org.joval.intf.windows.registry.IValue;
-import org.joval.intf.windows.registry.IStringValue;
-import org.joval.intf.windows.registry.IExpandStringValue;
+import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.util.AbstractEnvironment;
 import org.joval.util.JOVALMsg;
 
 /**
- * A representation of the Windows SYSTEM environment, retrieved from the registry.
+ * A representation of the Windows SYSTEM environment, retrieved from the set command.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
 public class Environment extends AbstractEnvironment {
-    static final String PROGRAMFILES		= "PROGRAMFILES";
-    static final String PROGRAMFILESX86		= "PROGRAMFILES(X86)";
-    static final String COMMONPROGRAMFILES	= "COMMONPROGRAMFILES";
-    static final String COMMONPROGRAMFILESX86	= "COMMONPROGRAMFILES(X86)";
-    static final String COMMONPROGRAMW6432	= "COMMONPROGRAMW6432";
-    static final String SYSTEMROOT		= "SYSTEMROOT";
-    static final String WINDIR			= "WINDIR";
-    static final String PATH			= "PATH";
-
-    static final String[] SYSROOT_ENV	= {IRegistry.HKLM, "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"};
-    static final String[] SYSTEM_ENV	= {IRegistry.HKLM, "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"};
-    static final String[] COMMON_ENV	= {IRegistry.HKLM, "SOFTWARE\\Microsoft\\Windows\\CurrentVersion"};
-    static final String[] USER_ENV	= {IRegistry.HKCU, "Environment"};
-    static final String[] VOLATILE_ENV	= {IRegistry.HKCU, "Volatile Environment"};
-
-    public Environment(IRegistry registry) {
+    public Environment(IBaseSession session) throws Exception {
 	super();
-	LocLogger logger = registry.getLogger();
-	props = new Properties();
-	Vector <String>toExpand = new Vector <String>();
-
-	IKey cv = null, common = null, env = null;
-	try {
-	    cv = registry.fetchKey(SYSROOT_ENV[0], SYSROOT_ENV[1]);
-	    IValue sysRootValue = cv.getValue("SystemRoot");
-	    if (sysRootValue.getType() == IValue.REG_SZ) {
-		String sysRoot = ((IStringValue)sysRootValue).getData();
-		props.setProperty(SYSTEMROOT, sysRoot);
-		props.setProperty(WINDIR, sysRoot);
-	    } else {
-		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_SYSROOT));
-	    }
-
-	    env = registry.fetchKey(SYSTEM_ENV[0], SYSTEM_ENV[1]);
-	    for (Iterator <IValue> i = env.values(); i.hasNext(); ) {
-		IValue val = i.next();
-		String name = val.getName().toUpperCase();
-		if (val.getType() == IValue.REG_SZ) {
-		    props.setProperty(name,  ((IStringValue)val).getData());
-		} else if (val.getType() == IValue.REG_EXPAND_SZ) {
-		    toExpand.addElement(name);
-		    props.setProperty(name, ((IExpandStringValue)val).getData());
-		} else {
-		    logger.warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
-		}
-	    }
-
-	    common = registry.fetchKey(COMMON_ENV[0], COMMON_ENV[1]);
-	    IValue programFilesValue = common.getValue("ProgramFilesDir");
-	    if (programFilesValue.getType() == IValue.REG_SZ) {
-		String programFiles = ((IStringValue)programFilesValue).getData();
-		props.setProperty(PROGRAMFILES, programFiles);
-	    } else {
-		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILES));
-	    }
-	    IValue commonFilesValue = common.getValue("CommonFilesDir");
-	    if (commonFilesValue.getType() == IValue.REG_SZ) {
-		String commonFiles = ((IStringValue)commonFilesValue).getData();
-		props.setProperty(COMMONPROGRAMFILES, commonFiles);
-	    } else {
-		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILES));
-	    }
-
-	    if (props.getProperty(IWindowsSession.ENV_ARCH).indexOf("64") != -1) {
-		IValue programFilesX86Value = common.getValue("ProgramFilesDir (x86)");
-		if (programFilesX86Value.getType() == IValue.REG_SZ) {
-		    String programFilesX86 = ((IStringValue)programFilesX86Value).getData();
-		    props.setProperty(PROGRAMFILESX86, programFilesX86);
-		} else {
-		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
-		}
-		IValue commonFilesX86Value = common.getValue("CommonFilesDir (x86)");
-		if (commonFilesX86Value.getType() == IValue.REG_SZ) {
-		    String commonFilesX86 = ((IStringValue)commonFilesX86Value).getData();
-		    props.setProperty(COMMONPROGRAMFILESX86, commonFilesX86);
-		} else {
-		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
-		}
-		IValue commonFilesW6432Value = common.getValue("CommonW6432Dir");
-		if (commonFilesW6432Value.getType() == IValue.REG_SZ) {
-		    String commonFilesW6432 = ((IStringValue)commonFilesW6432Value).getData();
-		    props.setProperty(COMMONPROGRAMW6432, commonFilesW6432);
-		} else {
-		    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINENV_PROGRAMFILESX86));
-		}
-	    }
-	} catch (NoSuchElementException e) {
-	    logger.warn(JOVALMsg.ERROR_WINENV_SYSENV);
-	} finally {
-	    if (cv != null) {
-		cv.closeAll();
-	    }
-	    if (common != null) {
-		common.closeAll();
-	    }
-	    if (env != null) {
-		env.closeAll();
+	IProcess p = session.createProcess("set", null);
+	p.start();
+	String line = null;
+	BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+	String lastKey = null;
+	while((line = reader.readLine()) != null) {
+	    int ptr = line.indexOf("=");
+	    if (ptr > 0) {
+		String key = line.substring(0,ptr);
+		lastKey = key;
+		String val = line.substring(ptr+1);
+		props.setProperty(key.toUpperCase(), val);
+	    } else if (lastKey != null) {
+		String val = new StringBuffer(props.getProperty(lastKey.toUpperCase())).append(line).toString();
+		props.setProperty(lastKey.toUpperCase(), val);
 	    }
 	}
+    }
 
-	IKey userEnv = null;
-	try {
-	    userEnv = registry.fetchKey(USER_ENV[0], USER_ENV[1]);
-	    for (Iterator <IValue> i = userEnv.values(); i.hasNext(); ) {
-		IValue val = i.next();
-		String name = val.getName().toUpperCase();
-		if (val.getType() == IValue.REG_SZ) {
-		    props.setProperty(name, ((IStringValue)val).getData());
-		} else if (val.getType() == IValue.REG_EXPAND_SZ) {
-		    String s = ((IExpandStringValue)val).getData();
-
-		    //
-		    // Special case of a user-defined PATH, which must be expanded immediately so as to include the
-		    // SYSTEM-defined PATH.
-		    //
-		    if (name.equals(PATH)) {
-			props.setProperty(name, s.replaceAll("(?i)%PATH%", Matcher.quoteReplacement(props.getProperty(PATH))));
-		    } else {
-			if (!toExpand.contains(name)) {
-			    toExpand.addElement(name);
-			}
-			props.setProperty(name, s);
-		    }
-		} else {
-		    logger.warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
-		}
-	    }
-	} catch (NoSuchElementException e) {
-	    logger.warn(JOVALMsg.ERROR_WINENV_USRENV);
-	} finally {
-	    if (userEnv != null) {
-		userEnv.closeAll();
+    /**
+     * Determine whether this environment was sourced from a 64-bit Windows OS.
+     */
+    public boolean is64bit() {
+	if (getenv(IWindowsSession.ENV_ARCH).indexOf("64") != -1) {
+	    return true;
+	} else {
+	    String ar32 = getenv(IWindowsSession.ENV_AR32);
+	    if (ar32 == null) {
+		return false;
+	    } else if (ar32.indexOf("64") != -1) {
+		return true;
 	    }
 	}
-
-	IKey volatileEnv = null;
-	try {
-	    volatileEnv = registry.fetchKey(VOLATILE_ENV[0], VOLATILE_ENV[1]);
-	    for (Iterator <IValue> i = volatileEnv.values(); i.hasNext(); ) {
-		IValue val = i.next();
-		String name = val.getName().toUpperCase();
-		if (val.getType() == IValue.REG_SZ) {
-		    props.setProperty(name, ((IStringValue)val).getData());
-		} else if (val.getType() == IValue.REG_EXPAND_SZ) {
-		    if (!toExpand.contains(name)) {
-			toExpand.addElement(name);
-		    }
-		    props.setProperty(name, ((IExpandStringValue)val).getData());
-		} else {
-		    logger.warn(JOVALMsg.ERROR_WINENV_NONSTR, val.getName());
-		}
-	    }
-	} catch (NoSuchElementException e) {
-	    logger.debug(JOVALMsg.ERROR_WINENV_VOLENV);
-	} finally {
-	    if (volatileEnv != null) {
-		volatileEnv.closeAll();
-	    }
-	}
-
-	Enumeration <String>list = toExpand.elements();
-	while (list.hasMoreElements()) {
-	    String name = list.nextElement();
-	    props.setProperty(name, expand(props.getProperty(name)));
-	}
+	return false;
     }
 }

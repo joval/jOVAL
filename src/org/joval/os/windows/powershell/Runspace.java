@@ -4,17 +4,22 @@
 package org.joval.os.windows.powershell;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.StringTokenizer;
+import java.util.HashSet;
 
 import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.powershell.IRunspace;
+import org.joval.io.StreamLogger;
+import org.joval.util.Checksum;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -27,13 +32,15 @@ import org.joval.util.StringTools;
 public class Runspace implements IRunspace {
     public static final String INIT_COMMAND = "powershell -NoProfile -File -";
 
-    protected long timeout;			// contains default timeout
-    protected String id, prompt;
-    protected StringBuffer err;
-    protected LocLogger logger;
-    protected IProcess p;
-    protected InputStream stdout, stderr;	// Output from the powershell process
-    protected OutputStream stdin;		// Input to the powershell process
+    private long timeout;		// contains default timeout
+    private String id, prompt;
+    private StringBuffer err;
+    private LocLogger logger;
+    private IWindowsSession.View view;
+    private IProcess p;
+    private InputStream stdout, stderr;	// Output from the powershell process
+    private OutputStream stdin;		// Input to the powershell process
+    private HashSet<String> modules;
 
     /**
      * Create a new Runspace, based on a process.
@@ -42,7 +49,14 @@ public class Runspace implements IRunspace {
 	this.id = id;
 	this.timeout = session.getTimeout(IWindowsSession.Timeout.M);
 	this.logger = session.getLogger();
-	p = session.createProcess(INIT_COMMAND, null);
+	this.view = view;
+	modules = new HashSet<String>();
+	if (view == IWindowsSession.View._32BIT) {
+	    String cmd = new StringBuffer("%SystemRoot%\\SysWOW64\\cmd.exe /c ").append(INIT_COMMAND).toString();
+	    p = session.createProcess(cmd, null);
+	} else {
+	    p = session.createProcess(INIT_COMMAND, null);
+	}
 	p.start();
 	stdout = p.getInputStream();
 	stderr = p.getErrorStream();
@@ -67,21 +81,33 @@ public class Runspace implements IRunspace {
 
     public synchronized void loadModule(InputStream in, long millis) throws IOException, PowershellException {
 	try {
-	    StringBuffer buffer = new StringBuffer();
-	    String line = null;
-	    int lines = 0;
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(in, StringTools.ASCII));
-	    while((line = reader.readLine()) != null) {
-		stdin.write(line.getBytes());
-		stdin.write("\r\n".getBytes());
-		lines++;
-	    }
-	    stdin.flush();
-	    for (int i=0; i < lines; i++) {
-		readPrompt(millis);
-	    }
-	    if (">> ".equals(getPrompt())) {
-		invoke("");
+	    ByteArrayOutputStream buff = new ByteArrayOutputStream();
+	    StreamLogger input = new StreamLogger(null, in, buff);
+	    String cs = Checksum.getChecksum(input, Checksum.Algorithm.MD5);
+	    input.close();
+	    in = null;
+	    if (modules.contains(cs)) {
+		logger.debug(JOVALMsg.STATUS_POWERSHELL_MODULE_SKIP, cs);
+	    } else {
+		logger.info(JOVALMsg.STATUS_POWERSHELL_MODULE_LOAD, cs);
+		in = new ByteArrayInputStream(buff.toByteArray());
+		String line = null;
+		int lines = 0;
+		BufferedReader reader = new BufferedReader(new InputStreamReader(in, StringTools.ASCII));
+		while((line = reader.readLine()) != null) {
+		    stdin.write(line.getBytes());
+		    stdin.write("\r\n".getBytes());
+		    lines++;
+		}
+		stdin.flush();
+		for (int i=0; i < lines; i++) {
+		    readPrompt(millis);
+		}
+		if (">> ".equals(getPrompt())) {
+		    invoke("");
+		}
+		// DAS: add only if there was no error?
+		modules.add(cs);
 	    }
 	} finally {
 	    if (in != null) {

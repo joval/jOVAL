@@ -17,12 +17,11 @@ import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.util.ILoggable;
-import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.ILicenseData;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
-import org.joval.os.windows.system.Environment;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -33,18 +32,16 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public abstract class BaseRegistry implements IRegistry {
-    protected IPathRedirector redirector;
+    protected WOW3264RegistryRedirector redirector = null;
     protected ILoggable log;
-    protected Environment env = null;
     protected LicenseData license = null;
     protected Hashtable<String, List<IKey>> searchMap;
 
     /**
      * Create a new Registry, connected to the specified host using the specified Credential.
      */
-    protected BaseRegistry(IPathRedirector redirector, ILoggable log) {
-	this.redirector = redirector;
-	this.log = log;
+    protected BaseRegistry(IWindowsSession session) {
+	this.log = session;
 	searchMap = new Hashtable<String, List<IKey>>();
     }
 
@@ -59,17 +56,6 @@ public abstract class BaseRegistry implements IRegistry {
     }
 
     // Implement IRegistry (sparsely)
-
-    /**
-     * Retrieve the remote machine's environment.  This is a combination of the SYSTEM environment and the logged-in
-     * USER environment (that is, the user in the the Credential that was provided to the constructor).
-     */
-    public IEnvironment getEnvironment() throws IllegalStateException {
-	if (env == null) {
-	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_STATE));
-	}
-	return env;
-    }
 
     public ILicenseData getLicenseData() throws Exception {
 	if (license == null) {

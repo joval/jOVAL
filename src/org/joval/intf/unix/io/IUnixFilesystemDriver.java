@@ -5,7 +5,12 @@ package org.joval.intf.unix.io;
 
 import java.util.Iterator;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Pattern;
+
+import org.joval.intf.io.IFilesystem;
+import org.joval.intf.util.ILoggable;
+import org.joval.intf.util.ISearchable;
 
 /**
  * An interface describing the platform-specific requirements for a UnixFilesystem driver.
@@ -28,7 +33,7 @@ public interface IUnixFilesystemDriver {
      *
      * The resulting command will follow links, but restrict results to the originating filesystem.
      */
-    public String getFindCommand();
+    public String getFindCommand(List<ISearchable.ICondition> conditions);
 
     /**
      * Returns some variation of the ls or stat command.  The final argument (not included) should be the escaped path of

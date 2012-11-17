@@ -107,13 +107,13 @@ public class CmdletAdapter implements IAdapter {
 	// and GUID.
 	//
 	String moduleName=null, moduleId=null, moduleVersion=null;
-	if (cObj.isSetModuleName()) {
+	if (cObj.isSetModuleName() && cObj.getModuleName().getValue() != null) {
 	    moduleName = (String)cObj.getModuleName().getValue().getValue();
 	}
-	if (cObj.isSetModuleId()) {
+	if (cObj.isSetModuleId() && cObj.getModuleId().getValue() != null) {
 	    moduleId = (String)cObj.getModuleId().getValue().getValue();
 	}
-	if (cObj.isSetModuleVersion()) {
+	if (cObj.isSetModuleVersion() && cObj.getModuleVersion().getValue() != null) {
 	    moduleVersion = (String)cObj.getModuleVersion().getValue().getValue();
 	}
 	ModuleInfo info = null;
@@ -285,15 +285,15 @@ public class CmdletAdapter implements IAdapter {
     void validateOperation(CmdletObject cObj) throws CollectException {
 	OperationEnumeration op = OperationEnumeration.EQUALS;
 	do {
-	    if (cObj.isSetModuleName() &&
+	    if (cObj.isSetModuleName() && cObj.getModuleName().getValue() != null &&
 		(op = cObj.getModuleName().getValue().getOperation()) != OperationEnumeration.EQUALS) {
 		break;
 	    }
-	    if (cObj.isSetModuleId() &&
+	    if (cObj.isSetModuleId() && cObj.getModuleId().getValue() != null &&
 		(op = cObj.getModuleId().getValue().getOperation()) != OperationEnumeration.EQUALS) {
 		break;
 	    }
-	    if (cObj.isSetModuleVersion() &&
+	    if (cObj.isSetModuleVersion() && cObj.getModuleVersion().getValue() != null &&
 		(op = cObj.getModuleVersion().getValue().getOperation()) != OperationEnumeration.EQUALS) {
 		break;
 	    }

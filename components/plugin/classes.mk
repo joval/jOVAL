@@ -2,8 +2,10 @@ CLASSES=\
 	org.joval.discovery.Local							\
 	org.joval.intf.io.IFile								\
 	org.joval.intf.io.IFileEx							\
+	org.joval.intf.io.IFileMetadata							\
 	org.joval.intf.io.IFilesystem							\
 	org.joval.intf.io.IReader							\
+	org.joval.intf.io.IReaderGobbler						\
 	org.joval.intf.plugin.IAdapter							\
 	org.joval.intf.system.IBaseSession						\
 	org.joval.intf.system.IEnvironment						\
@@ -18,7 +20,6 @@ CLASSES=\
 	org.joval.intf.util.IPathRedirector						\
 	org.joval.intf.util.IPerishable							\
 	org.joval.intf.util.ISearchable							\
-	org.joval.intf.util.tree.ICacheable						\
 	org.joval.intf.util.tree.IForest						\
 	org.joval.intf.util.tree.INode							\
 	org.joval.intf.util.tree.ITree							\
@@ -62,9 +63,8 @@ CLASSES=\
 	org.joval.os.unix.io.driver.LinuxDriver						\
 	org.joval.os.unix.io.driver.MacOSXDriver					\
 	org.joval.os.unix.io.driver.SolarisDriver					\
-	org.joval.os.unix.io.UnixCacheFileSerializer					\
-	org.joval.os.unix.io.UnixFile							\
 	org.joval.os.unix.io.UnixFileInfo						\
+	org.joval.os.unix.io.UnixFileSearcher						\
 	org.joval.os.unix.io.UnixFilesystem						\
 	org.joval.os.unix.macos.DsclTool						\
 	org.joval.os.unix.system.BaseUnixSession					\
@@ -77,10 +77,10 @@ CLASSES=\
 	org.joval.os.windows.identity.LocalDirectory					\
 	org.joval.os.windows.identity.Principal						\
 	org.joval.os.windows.identity.User						\
-	org.joval.os.windows.io.WindowsCacheFileSerializer				\
-	org.joval.os.windows.io.WindowsFile						\
 	org.joval.os.windows.io.WindowsFileInfo						\
+	org.joval.os.windows.io.WindowsFileSearcher					\
 	org.joval.os.windows.io.WindowsFilesystem					\
+	org.joval.os.windows.io.WindowsMount						\
 	org.joval.os.windows.io.WOW3264FilesystemRedirector				\
 	org.joval.os.windows.powershell.PowershellException				\
 	org.joval.os.windows.powershell.Runspace					\
@@ -201,7 +201,6 @@ CLASSES=\
 	org.joval.util.AbstractSession							\
 	org.joval.util.Base64								\
 	org.joval.util.Configurator							\
-	org.joval.util.CachingHierarchy							\
 	org.joval.util.Environment							\
 	org.joval.util.PropertyHierarchy						\
 	org.joval.util.SafeCLI								\

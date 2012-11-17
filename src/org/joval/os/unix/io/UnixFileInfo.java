@@ -1,19 +1,14 @@
-// Copyright (C) 2011 jOVAL.org.  All rights reserved.
+// Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
 package org.joval.os.unix.io;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.util.NoSuchElementException;
 import java.util.Properties;
-import java.util.Set;
 import java.util.Stack;
 
+import org.joval.io.AbstractFilesystem;
 import org.joval.intf.unix.io.IUnixFileInfo;
-import org.joval.intf.unix.io.IUnixFilesystem;
-import org.joval.io.fs.FileInfo;
 import org.joval.util.StringTools;
 
 /**
@@ -22,19 +17,17 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
-    protected boolean hasExtendedAcl = false;
-    protected String permissions = null;
-    protected int uid, gid;
-    protected char unixType = FILE_TYPE;
-    protected String path;
-    protected String canonicalPath;
-    protected Properties extended;
+public class UnixFileInfo extends AbstractFilesystem.FileInfo implements IUnixFileInfo {
+    static final String DELIM = "/";
 
-    /**
-     * Create an empty UnixFileInfo.
-     */
-    protected UnixFileInfo(){}
+    private String path;
+    private String linkTarget;
+    private String canonicalPath;
+    private boolean hasExtendedAcl = false;
+    private String permissions = null;
+    private int uid, gid;
+    private char unixType = FILE_TYPE;
+    private Properties extended;
 
     public UnixFileInfo(long ctime, long mtime, long atime, Type type, long length, String path, String linkTarget,
 			char unixType, String permissions, int uid, int gid, boolean hasExtendedAcl) {
@@ -50,6 +43,7 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	super(ctime, mtime, atime, type, length);
 
 	this.path = path;
+	this.linkTarget = linkTarget;
 	this.canonicalPath = resolvePath(linkTarget);
 
 	this.unixType = unixType;
@@ -60,7 +54,8 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	this.extended = extended; // extended data
     }
 
-    public UnixFileInfo(FileInfo info, String path) {
+/*
+    UnixFileInfo(String path, AbstractFilesystem.FileInfo info) {
 	ctime = info.getCtime();
 	mtime = info.getMtime();
 	atime = info.getAtime();
@@ -71,54 +66,18 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	uid = -1;
 	gid = -1;
     }
+*/
 
-    public UnixFileInfo(DataInput in) throws IOException {
-	super(in);
-	path = in.readUTF();
-	String temp = in.readUTF();
-	if ("".equals(temp)) {
-	    canonicalPath = null;
-	} else {
-	    canonicalPath = temp;
-	}
-	unixType = in.readChar();
-	permissions = in.readUTF();
-	uid = in.readInt();
-	gid = in.readInt();
-	hasExtendedAcl = in.readBoolean();
-	if (in.readBoolean()) {
-	    extended = new Properties();
-	    int pairs = in.readInt();
-	    for (int i=0; i < pairs; i++) {
-		extended.setProperty(in.readUTF(), in.readUTF());
-	    }
-	}
+    public String getPath() {
+	return path;
     }
 
-    public void write(DataOutput out) throws IOException {
-	super.write(out);
-	out.writeUTF(path);
-	if (canonicalPath == null) {
-	    out.writeUTF("");
-	} else {
-	    out.writeUTF(canonicalPath);
-	}
-	out.writeChar(unixType);
-	out.writeUTF(permissions);
-	out.writeInt(uid);
-	out.writeInt(gid);
-	out.writeBoolean(hasExtendedAcl);
-	if (extended == null) {
-	    out.writeBoolean(false);
-	} else {
-	    out.writeBoolean(true);
-	    Set<String> propertyNames = extended.stringPropertyNames();
-	    out.writeInt(propertyNames.size());
-	    for (String key : propertyNames) {
-		out.writeUTF(key);
-		out.writeUTF(extended.getProperty(key));
-	    }
-	}
+    public String getLinkPath() {
+	return linkTarget;
+    }
+
+    public String getCanonicalPath() {
+	return canonicalPath;
     }
 
     // Implement IUnixFileInfo
@@ -149,6 +108,10 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 
     public int getGroupId() {
 	return gid;
+    }
+
+    public String getPermissions() {
+	return permissions;
     }
 
     public boolean uRead() {
@@ -203,6 +166,14 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	return hasExtendedAcl;
     }
 
+    public String[] getExtendedKeys() {
+	if (extended == null) {
+	    return null;
+	} else {
+	    return extended.stringPropertyNames().toArray(new String[0]);
+	}
+    }
+
     public String getExtendedData(String key) throws NoSuchElementException {
 	if (extended != null && extended.containsKey(key)) {
 	    return extended.getProperty(key);
@@ -223,17 +194,17 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
     private String resolvePath(String target) throws UnsupportedOperationException {
 	if (target == null) {
 	    return null;
-	} else if (target.startsWith(IUnixFilesystem.DELIM_STR)) {
+	} else if (target.startsWith(DELIM)) {
 	    return target;
 	} else {
 	    Stack<String> stack = new Stack<String>();
-	    for (String s : StringTools.toList(StringTools.tokenize(path, IUnixFilesystem.DELIM_STR))) {
+	    for (String s : StringTools.toList(StringTools.tokenize(path, DELIM))) {
 		stack.push(s);
 	    }
 	    if (!stack.empty()) {
 		stack.pop();
 	    }
-	    for (String next : StringTools.toList(StringTools.tokenize(target, IUnixFilesystem.DELIM_STR))) {
+	    for (String next : StringTools.toList(StringTools.tokenize(target, DELIM))) {
 		if (next.equals(".")) {
 		    // stay in the same place
 		} else if (next.equals("..")) {
@@ -248,11 +219,11 @@ public class UnixFileInfo extends FileInfo implements IUnixFileInfo {
 	    }
 	    StringBuffer sb = new StringBuffer();
 	    while(!stack.empty()) {
-		StringBuffer elt = new StringBuffer(IUnixFilesystem.DELIM_STR);
+		StringBuffer elt = new StringBuffer(DELIM);
 		sb.insert(0, elt.append(stack.pop()).toString());
 	    }
 	    if (sb.length() == 0) {
-		return IUnixFilesystem.DELIM_STR;
+		return DELIM;
 	    } else {
 		return sb.toString();
 	    }

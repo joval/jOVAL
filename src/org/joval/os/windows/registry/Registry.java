@@ -14,17 +14,14 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import com.sun.jna.Platform;
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.WinReg;
 
-import org.joval.intf.system.IEnvironment;
 import org.joval.intf.util.ILoggable;
-import org.joval.intf.util.IPathRedirector;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
-import org.joval.os.windows.system.Environment;
+import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -41,18 +38,19 @@ public class Registry extends BaseRegistry {
     private static boolean libLoaded = false;
 
     /**
-     * Create a new Registry, connected to the specified host using the specified Credential.
+     * Create a new Registry, connected to the default view.
      */
-    public Registry(IPathRedirector redirector, ILoggable log) {
-	super(redirector, log);
-	if (Platform.isWindows()) {
-	    try {
-		loadingEnv = true;
-		env = new Environment(this);
-		loadingEnv = false;
-	    } catch (Exception e) {
-		log.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
+    public Registry(IWindowsSession session) {
+	this(session, session.getNativeView());
+    }
+
+    /**
+     * Create a new Registry, connected to the specified view.
+     */
+    public Registry(IWindowsSession session, IWindowsSession.View view) {
+	super(session);
+	if (view == IWindowsSession.View._32BIT && view != session.getNativeView()) {
+	    redirector = new WOW3264RegistryRedirector(WOW3264RegistryRedirector.getFlavor(this));
 	}
     }
 
@@ -146,7 +144,7 @@ public class Registry extends BaseRegistry {
 		}
 	    }
 	    if (appearances > 0 && (appearances % 2) == 0 && !loadingEnv) {
-		val = new ExpandStringValue(key, name, value, env.expand(value));
+		val = new ExpandStringValue(key, name, value);
 	    } else {
 		val = new StringValue(key, name, value);
 	    }

@@ -22,6 +22,7 @@ import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
+import org.joval.io.AbstractFilesystem;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WindowsFilesystem;
 import org.joval.os.windows.io.WOW3264FilesystemRedirector;
@@ -30,7 +31,6 @@ import org.joval.os.windows.registry.Registry;
 import org.joval.os.windows.registry.WOW3264RegistryRedirector;
 import org.joval.os.windows.wmi.WmiProvider;
 import org.joval.util.AbstractSession;
-import org.joval.util.CachingHierarchy;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -73,12 +73,8 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	return directory;
     }
 
-    public IRegistry getRegistry(View view) {
-	switch(view) {
-	  case _32BIT:
-	    return reg32;
-	}
-	return reg;
+    public View getNativeView() {
+	return is64bit ? View._64BIT : View._32BIT;
     }
 
     public boolean supports(View view) {
@@ -91,12 +87,42 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	}
     }
 
+    public IRegistry getRegistry(View view) {
+	switch(view) {
+	  case _32BIT:
+	    if (reg32 == null) {
+		if (getNativeView() == View._32BIT) {
+		    reg32 = reg;
+		} else {
+		    reg32 = new Registry(this, View._32BIT);
+		}
+	    }
+	    return reg32;
+
+	  default:
+	    return reg;
+	}
+    }
+
     public IWindowsFilesystem getFilesystem(View view) {
 	switch(view) {
 	  case _32BIT:
+	    if (fs32 == null) {
+		if (getNativeView() == View._32BIT) {
+		    fs32 = (IWindowsFilesystem)fs;
+		} else {
+		    try {
+			fs32 = new WindowsFilesystem(this, View._32BIT);
+		    } catch (Exception e) {
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    }
+		}
+	    }
 	    return fs32;
+
+	  default:
+	    return (IWindowsFilesystem)fs;
 	}
-	return (IWindowsFilesystem)fs;
     }
 
     public IWmiProvider getWmiProvider() {
@@ -124,8 +150,8 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     @Override
     public void dispose() {
 	super.dispose();
-	if (fs32 instanceof CachingHierarchy) {
-	    ((CachingHierarchy)fs32).dispose();
+	if (fs32 instanceof AbstractFilesystem) {
+	    ((AbstractFilesystem)fs32).dispose();
 	}
     }
 
@@ -148,32 +174,39 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     }
 
     public boolean connect() {
-	if (reg == null) {
-	    reg = new Registry(null, this);
-	}
 	if (env == null) {
-	    env = reg.getEnvironment();
+	    try {
+		env = new Environment(this);
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		return false;
+	    }
 	}
-	if (fs == null) {
-	    fs = new WindowsFilesystem(this, env, null, "winfs.db");
-	}
-	is64bit = env.getenv(ENV_ARCH).indexOf("64") != -1;
+	is64bit = ((Environment)env).is64bit();
 	if (is64bit) {
 	    if (!"64".equals(System.getProperty("sun.arch.data.model"))) {
 		throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINDOWS_BITNESS_INCOMPATIBLE));
 	    }
 	    logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "64");
-	    WOW3264RegistryRedirector.Flavor flavor = WOW3264RegistryRedirector.getFlavor(reg);
-	    if (reg32 == null) {
-		reg32 = new Registry(new WOW3264RegistryRedirector(flavor), this);
-	    }
-	    if (fs32 == null) {
-		fs32 = new WindowsFilesystem(this, env, new WOW3264FilesystemRedirector(env), "winfs32.db");
-	    }
 	} else {
 	    logger.trace(JOVALMsg.STATUS_WINDOWS_BITNESS, "32");
-	    reg32 = reg;
-	    fs32 = (IWindowsFilesystem)fs;
+	}
+
+	if (runspaces == null) {
+	    runspaces = new RunspacePool(this, 100);
+	}
+	if (reg == null) {
+	    reg = new Registry(this);
+	    if (!is64bit) reg32 = reg;
+	}
+	if (fs == null) {
+	    try {
+		fs = new WindowsFilesystem(this);
+		if (!is64bit) fs32 = (IWindowsFilesystem)fs;
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		return false;
+	    }
 	}
 	cwd = new File(env.expand("%SystemRoot%"));
 	if (wmi == null) {

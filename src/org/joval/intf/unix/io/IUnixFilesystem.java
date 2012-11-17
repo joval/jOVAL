@@ -6,6 +6,9 @@ package org.joval.intf.unix.io;
 import java.io.IOException;
 
 import org.joval.intf.io.IFilesystem;
+import org.joval.intf.util.ISearchable;
+import org.joval.intf.util.ISearchable.GenericCondition;
+import org.joval.intf.util.ISearchable.ICondition;
 
 /**
  * Defines extended attributes of a filesystem on Unix.
@@ -18,15 +21,26 @@ public interface IUnixFilesystem extends IFilesystem {
     char DELIM_CH = '/';
 
     /**
-     * Property governing the method used when preloading the cache.  Valid methods are FILE_METHOD and STREAM_METHOD.
+     * Condition field for the link-following flag.
      */
-    String PROP_PRELOAD_METHOD = "fs.preload.method";
+    int FIELD_FOLLOW_LINKS = 100;
 
     /**
-     * Property governing the threshold used to automatically preload the cache for remote IUnixFilesystem implementations.
-     * Set to 0 to always preload the cache, -1 to never preload.  A "good" value is around 100.
+     * The ICondition signifying that links should be followed in filesystem searches. The default behavior, if this
+     * condition is not present, is to not follow links.
      */
-    String PROP_PRELOAD_TRIGGER = "fs.preload.remote.threshold";
+    ICondition FOLLOW_LINKS = new GenericCondition(FIELD_FOLLOW_LINKS, ISearchable.TYPE_EQUALITY, Boolean.TRUE);
+
+    /**
+     * Condition field for the xdev flag (remain on filesystem).
+     */
+    int FIELD_XDEV = 101;
+
+    /**
+     * The ICondition signifying that the search should be confined to the filesystem of the FROM condition. If this
+     * condition is not present, the search can include results that reside in linked filesystems.
+     */
+    ICondition XDEV = new GenericCondition(FIELD_XDEV, ISearchable.TYPE_EQUALITY, Boolean.TRUE);
 
     /**
      * Specifies a preload method wherein the output of the find command is staged in a file on the remote system.  If

@@ -19,35 +19,10 @@ import org.joval.intf.util.ISearchable;
  */
 public interface IFilesystem extends ILoggable {
     /**
-     * Property governing whether a PATTERN_MATCH search of the filesystem will traverse symbolic links in order to
-     * find matches. The OVAL specification is ambiguous about what the behavior should be.
-     */
-    String PROP_SEARCH_FOLLOW_LINKS = "fs.search.followLinks";
-
-    /**
-     * Property governing the maximum number of paths to pre-load into the filesystem map cache.
-     */
-    String PROP_PRELOAD_MAXENTRIES = "fs.preload.maxEntries";
-
-    /**
      * Property specifying a list of filesystem types that should not be preloaded by an IFilesystem implementation.
      * Delimiter is the ':' character.
      */
     String PROP_MOUNT_FSTYPE_FILTER = "fs.localMount.filter";
-
-    /**
-     * Property governing the map cache pre-load behavior for local filesystems (true/false).
-     *
-     * If false, a local IFilesystem implementation will use the tree-search algorithm to resolve searches.  If true, it
-     * will scan (and cache) all file paths on the entire filesystem, and then subsequently perform regular expression
-     * matching directly on the paths.
-     */
-    String PROP_PRELOAD_LOCAL = "fs.preload.local";
-
-    /**
-     * Property governing the map cacle pre-load behavior for remotely-accessed filesystems (true/false).
-     */
-    String PROP_PRELOAD_REMOTE = "fs.preload.remote";
 
     /**
      * Property governing whether the filesystem cache layer should be JDBM-backed (true) or memory-backed (false).
@@ -55,9 +30,38 @@ public interface IFilesystem extends ILoggable {
     String PROP_CACHE_JDBM = "fs.cache.useJDBM";
 
     /**
-     * Return whether or not the path points to a file on the local machine.
+     * Condition field for a type (i.e., file/directory/link).
      */
-    boolean isLocalPath(String path);
+    int FIELD_FILETYPE = 50;
+
+    /**
+     * Condition field for a file path pattern.
+     */
+    int FIELD_PATH = 51;
+
+    /**
+     * Condition field for a file dirname (directory path) pattern. For files of type FILETYPE_DIR, the dirname is
+     * the same as the path.
+     */
+    int FIELD_DIRNAME = 52;
+
+    /**
+     * Condition field for a file basename (filename) pattern. Files of type FILETYPE_DIR have no basename.
+     */
+    int FIELD_BASENAME = 53;
+
+    String FILETYPE_FILE = "f";
+    String FILETYPE_DIR = "d";
+    String FILETYPE_LINK = "l";
+
+    /**
+     * A search condition for only matching directories.
+     */
+    ISearchable.ICondition DIRECTORIES = new ISearchable.ICondition() {
+	public int getType() { return ISearchable.TYPE_EQUALITY; }
+	public int getField() { return FIELD_FILETYPE; }
+	public Object getValue() { return FILETYPE_DIR; }
+    };
 
     /**
      * Get the path delimiter character used by this filesystem.
@@ -67,7 +71,7 @@ public interface IFilesystem extends ILoggable {
     /**
      * Access an ISearchable for the filesystem.
      */
-    ISearchable getSearcher();
+    ISearchable<IFile> getSearcher() throws IOException;
 
     /**
      * Retrieve an IFile with default (IFile.READONLY) access.
@@ -99,10 +103,11 @@ public interface IFilesystem extends ILoggable {
     /**
      * Write to a file.
      */
-    OutputStream getOutputStream(String path) throws IllegalArgumentException, IOException;
+    String[] guessParent(Pattern p);
 
     /**
-     * Optionally, append to a file.
+     * List the mounts on this filesystem, whose types do not match the specified typeFilter. Typically, for example,
+     * a type filter might be used to exclude network mounts. Use null for no filtering.
      */
     OutputStream getOutputStream(String path, boolean append) throws IllegalArgumentException, IOException;
 }

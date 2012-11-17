@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.Vector;
@@ -37,6 +37,8 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.ISession;
 import org.joval.intf.util.ISearchable;
+import org.joval.intf.util.ISearchable.ICondition;
+import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
@@ -51,7 +53,16 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
-    private int searchFlags;
+    protected static final int TYPE_EQUALITY		= ISearchable.TYPE_EQUALITY;
+    protected static final int TYPE_PATTERN		= ISearchable.TYPE_PATTERN;
+    protected static final int FIELD_PATH		= IFilesystem.FIELD_PATH;
+    protected static final int FIELD_DIRNAME		= IFilesystem.FIELD_DIRNAME;
+    protected static final int FIELD_BASENAME		= IFilesystem.FIELD_BASENAME;
+    protected static final int FIELD_FILETYPE		= IFilesystem.FIELD_FILETYPE;
+    protected static final int FIELD_FROM		= ISearchable.FIELD_FROM;
+    protected static final int FIELD_DEPTH		= ISearchable.FIELD_DEPTH;
+
+    private Pattern localFilter;
 
     protected ISession session;
 
@@ -105,9 +116,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    try {
 		f = fs.getFile(path);
 		String dirPath = null;
-		//
-		// DAS: if DH says don't follow links, then add a test for isLink.
-		//
 		boolean isDirectory = f.isDirectory();
 		if (isDirectory) {
 		    dirPath = path;
@@ -242,157 +250,183 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     private Collection<String> getPathList(ReflectedFileObject fObj, IRequestContext rc, IFilesystem fs)
 		throws CollectException {
 
-	String id = fObj.getId();
-	ReflectedFileBehaviors fb = fObj.getBehaviors();
-	Collection<String> list = new HashSet<String>();
+	Collection<IFile> files = new ArrayList<IFile>();
 	try {
-	    if (fObj.isSetFilepath()) {
+	    boolean search = false;
+	    boolean local = false;
+	    boolean followLinks = true; // follow links by default
+	    String[] from = null;
+	    ISearchable<IFile> searcher = fs.getSearcher();
+	    List<ICondition> conditions = new ArrayList<ICondition>();
+
+	    if (fObj.isSetFilepath() && fObj.getFilepath().getValue() != null) {
 		//
 		// Windows view is already handled, and FileBehaviors recursion is ignored in the Filepath case, so
 		// all we need to do is add the discovered paths to the return list.
 		//
-		EntityObjectStringType filepath = fObj.getFilepath();
-		String value = (String)filepath.getValue();
-		OperationEnumeration op = filepath.getOperation();
+		String filepath = (String)fObj.getFilepath().getValue();
+		OperationEnumeration op = fObj.getFilepath().getOperation();
 		switch(op) {
 		  case EQUALS:
-		    try {
-			if (fs.getFile((String)filepath.getValue()).isFile()) {
-			    list.add(value);
-			}
-		    } catch (FileNotFoundException e) {
-		    } catch (IOException e) {
-			session.getLogger().warn(JOVALMsg.ERROR_IO, value, e.getMessage());
-			session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    IFile file = fs.getFile(filepath);
+		    if (file.exists()) {
+			files.add(file);
 		    }
 		    break;
 
-		  case PATTERN_MATCH:
-		    for (String match : fs.getSearcher().search(Pattern.compile(value), searchFlags)) {
-			try {
-			    if ((fs.getFile(match)).isFile()) {
-				list.add(match);
-			    }
-			} catch (FileNotFoundException e) {
-			    session.getLogger().debug(JOVALMsg.ERROR_NODE_LINK, match);
-			} catch (IOException e) {
-			    session.getLogger().warn(JOVALMsg.ERROR_IO, match, e.getMessage());
-			    session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			}
-		    }
+		  case PATTERN_MATCH: {
+		    Pattern p = Pattern.compile(filepath);
+		    from = fs.guessParent(p);
+		    conditions.add(searcher.condition(FIELD_PATH, TYPE_PATTERN, p));
+		    conditions.add(ISearchable.RECURSE);
+		    search = true;
 		    break;
 
 		  default:
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
-	    } else if (fObj.isSetPath()) {
+	    } else if (fObj.isSetPath() && fObj.getPath().getValue() != null) {
+		String path = (String)fObj.getPath().getValue();
+		String filename = null;
+		if (fObj.isSetFilename() && fObj.getFilename().getValue() != null) {
+		    filename = (String)fObj.getFilename().getValue();
+		} else {
+		    //
+		    // If there is a search, we will only want directories.
+		    //
+		    conditions.add(IFilesystem.DIRECTORIES);
+		}
+
 		//
-		// First, collect all possible matching paths (i.e., dirs)
+		// Convert behaviors into flags and search conditions.
 		//
-		Collection<String> paths = new HashSet<String>();
-		EntityObjectStringType path = fObj.getPath();
-		String value = (String)path.getValue();
-		OperationEnumeration op = path.getOperation();
-		switch(op) {
-		  case EQUALS:
-		    try {
-			if ((fs.getFile(value)).isDirectory()) {
-			    list.add(value);
-			}
-		    } catch (FileNotFoundException e) {
-		    } catch (IOException e) {
-			session.getLogger().warn(JOVALMsg.ERROR_IO, value, e.getMessage());
-			session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		int depth = ISearchable.DEPTH_UNLIMITED;
+		if (fb != null && !"none".equals(fb.getRecurseDirection())) {
+		    if (fb.getRecurse().indexOf("directories") == -1) {
+			depth = 0;
+		    } else {
+			depth = fb.getDepth();
 		    }
-		    if (fb != null) {
-			//
-			// Recursive search File Behaviors always only apply exclusively to well-defined paths, never
-			// patterns.
-			//
-			list = getDirs(list, fb.getDepth(), fb, fs, null);
+		    // Note - OVAL's idea of depth=1 is everyone else's idea of depth=2.
+		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth > 0 ? depth+1 : depth)));
+		    if (fb.getRecurse().indexOf("symlinks") == -1) {
+			followLinks = false;
+		    }
+		    if ("defined".equals(fb.getRecurseFileSystem())) {
+			conditions.add(IUnixFilesystem.XDEV);
+		    } else if ("local".equals(fb.getRecurseFileSystem())) {
+			local = true;
+		    }
+		}
+
+		OperationEnumeration pathOp = fObj.getPath().getOperation();
+		switch(pathOp) {
+		  case EQUALS:
+		    IFile file = fs.getFile(path);
+		    if (file.isDirectory()) {
+			if (fb == null) {
+			    //
+			    // Add candidate files to the list (for later filtering, below)
+			    //
+			    files.add(file);
+			    if (filename != null) {
+				files.addAll(Arrays.asList(file.listFiles()));
+			    }
+			} else {
+			    if ("up".equals(fb.getRecurseDirection())) {
+				for (int i=depth; i != 0; i--) {
+				    String parentPath = file.getParent();
+				    if (parentPath.equals(file.getName())) {
+					// this means we've reached the top
+					break;
+				    } else {
+					String lastFilename = file.getName();
+					file = fs.getFile(parentPath);
+					if (filename == null) {
+					    files.add(file); // directories only
+					} else {
+					    for (String fname : file.list()) {
+						if (!fname.equals(lastFilename)) {
+						    files.add(fs.getFile(parentPath + fs.getDelimiter() + fname));
+						}
+					    }
+					}
+				    }
+				}
+			    } else {
+				from = Arrays.asList(path).toArray(new String[1]);
+				search = true;
+			    }
+			}
 		    }
 		    break;
 
-		  case PATTERN_MATCH:
-		    for (String match : fs.getSearcher().search(Pattern.compile(value), searchFlags)) {
-			try {
-			    //
-			    // Filter search results for directories
-			    //
-			    if ((fs.getFile(match)).isDirectory()) {
-				list.add(match);
-			    }
-			} catch (FileNotFoundException e) {
-			    session.getLogger().debug(JOVALMsg.ERROR_NODE_LINK, match);
-			} catch (IOException e) {
-			    session.getLogger().warn(JOVALMsg.ERROR_IO, match, e.getMessage());
-			    session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			}
-		    }
+		  case PATTERN_MATCH: {
+		    Pattern p = Pattern.compile(path);
+		    from = fs.guessParent(p);
+		    conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));
+		    search = true;
 		    break;
 
 		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, pathOp);
 		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
 
 		//
-		// Next, for each possible directory match, look for the file(s) if specified.
+		// At this point, except for searches, the collection "files" will contain every IFile that matches
+		// the path spec. So, if there is a filename spec, we use it to filter down the list.
 		//
-		if (fObj.isSetFilename()) {
-		    EntityObjectStringType filename = fObj.getFilename();
-		    String fname = (String)filename.getValue();
-		    Collection<String> files = new Vector<String>();
-		    for (String pathString : list) {
-			try {
-			    op = filename.getOperation();
-			    switch(op) {
-			      case PATTERN_MATCH: {
-				IFile f = fs.getFile(pathString);
-				if (f.isDirectory()) {
-				    for (IFile child : f.listFiles(Pattern.compile(fname))) {
-					if (child.isFile()) {
-					    files.add(child.getPath());
-					}
-				    }
+		if (filename != null) {
+		    Iterator<IFile> iter = files.iterator();
+		    OperationEnumeration filenameOp = fObj.getFilename().getOperation();
+		    switch(filenameOp) {
+		      case EQUALS:
+			if (search) {
+			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_EQUALITY, filename));
+			} else {
+			    while(iter.hasNext()) {
+				IFile file = iter.next();
+				if (!filename.equals(file.getName())) {
+				    iter.remove();
 				}
-				break;
-			      }
- 
-			      case EQUALS: {
-				IFile f = fs.getFile(pathString).getChild(fname);
-				if (f.exists()) {
-				    files.add(f.getPath());
-				}
-				break;
-			      }
-
-			      case NOT_EQUAL: {
-				IFile f = fs.getFile(pathString);
-				if (f.isDirectory()) {
-				    for (IFile child : f.listFiles()) {
-					if (child.isFile() && !fname.equals(child.getName())) {
-					    files.add(child.getPath());
-					}
-				    }
-				}
-				break;
-			      }
- 
-			      default:
-				String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-				throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 			    }
-			} catch (FileNotFoundException e) {
-			} catch (IllegalArgumentException e) {
-			    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			} catch (IOException e) {
-			    MessageType msg = Factories.common.createMessageType();
-			    msg.setLevel(MessageLevelEnumeration.ERROR);
-			    msg.setValue(e.getMessage());
-			    rc.addMessage(msg);
 			}
+			break;
+
+		      case NOT_EQUAL:
+			if (search) {
+			    Pattern p = Pattern.compile("^{?!" + filename + ")$");
+			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
+			} else {
+			    while(iter.hasNext()) {
+				IFile file = iter.next();
+				if (filename.equals(file.getName())) {
+				    iter.remove();
+				}
+			    }
+			}
+			break;
+
+		      case PATTERN_MATCH: {
+			Pattern p = Pattern.compile(filename);
+			if (search) {
+			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
+			} else {
+			    while(iter.hasNext()) {
+				IFile file = iter.next();
+				if (!p.matcher(file.getName()).find()) {
+				    iter.remove();
+				}
+			    }
+			}
+			break;
+		      }
+
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, filenameOp);
+			throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		    }
 		    list = files;
 		}
@@ -400,122 +434,37 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		//
 		// This has probably happened because one or more variables resolves to nothing.
 		//
-		session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, id));
+		session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_BAD_FILE_OBJECT, fObj.getId()));
 	    }
-	} catch (PatternSyntaxException e) {
-       	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	return list;
-    }
 
-    /**
-     * Finds directories recursively based on FileBahaviors.
-     */
-    private Collection<String> getDirs(Collection<String> list, int depth, ReflectedFileBehaviors behaviors, IFilesystem fs,
-		Stack<String> ancestors) {
-
-	if ("none".equals(behaviors.getRecurseDirection()) || depth == 0) {
-	    return list;
-	} else {
-	    Collection<String> results = new HashSet<String>();
-	    for (String path : list) {
-		if (ancestors == null) {
-		    ancestors = new Stack<String>();
+	    if (search) {
+		if (followLinks) {
+		    conditions.add(IUnixFilesystem.FOLLOW_LINKS);
 		}
-		session.getLogger().trace(JOVALMsg.STATUS_FS_RECURSE, path);
-		try {
-		    String recurse = behaviors.getRecurse();
-		    String recurseFs = behaviors.getRecurseFileSystem();
-		    IFile f = fs.getFile(path);
-		    if (f == null) {
-			// skip permission denied (or other access error)
-		    } else if (!f.exists()) {
-			// skip non-existent files
-		    } else if (recurse != null && recurse.indexOf("symlinks") == -1 && f.isLink()) {
-			// skip the symlink
-		    } else if (recurse != null && recurse.indexOf("directories") == -1 && f.isDirectory()) {
-			// skip the directory
-		    } else if (f.isLink() && ancestors.contains(f.getCanonicalPath())) {
-			// Skip the loop back to an ancestor!
-			// NB: This point is only reached if symlinks are being followed
-			session.getLogger().warn(JOVALMsg.STATUS_FS_LOOP, f.getPath());
-		    } else if (f.isDirectory()) {
-			results.add(path);
-			ancestors.push(f.getCanonicalPath());
-			if ("up".equals(behaviors.getRecurseDirection())) {
-			    String parent = f.getParent();
-			    if (parent.equals(f.getPath())) {
-				// reached root
-			    } else if (checkRecurse(recurseFs, f, fs.getFile(parent))) {
-				Collection<String> c = new HashSet<String>();
-				c.add(parent);
-				results.addAll(getDirs(c, depth - 1, behaviors, fs, cloneStack(ancestors)));
-			    }
-			} else { // recurse down
-			    Collection<String> c = new HashSet<String>();
-			    for (IFile child : f.listFiles()) {
-				if (checkRecurse(recurseFs, f, child)) {
-				    c.add(child.getPath());
-				}
-			    }
-			    results.addAll(getDirs(c, depth - 1, behaviors, fs, cloneStack(ancestors)));
-			}
+		if (from == null) {
+		    Collection<IFilesystem.IMount> mounts = fs.getMounts(local ? localFilter : null);
+		    from = new String[mounts.size()];
+		    int i=0;
+		    for (IFilesystem.IMount mount : mounts) {
+			from[i++] = mount.getPath();
 		    }
-		} catch (UnsupportedOperationException e) {	
-		    // ignore -- not a directory
-		} catch (FileNotFoundException e) {
-		    // link is not a link to a directory
-		} catch (IOException e) {
-		    session.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
-		    session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+		for (String s : from) {
+		    List<ICondition> c = new ArrayList<ICondition>();
+		    c.addAll(conditions);
+		    c.add(searcher.condition(FIELD_FROM, TYPE_EQUALITY, s));
+		    files.addAll(searcher.search(c));
 		}
 	    }
-	    return results;
+	} catch (FileNotFoundException e) {
+	} catch (Exception e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
-    }
-
-    private boolean warnedRecurse = false;
-
-    private boolean checkRecurse(String recurseFs, IFile origin, IFile destination) throws IOException {
-	if (!destination.isDirectory()) {
-	    return false;
-	} else if (!origin.isLink() && !destination.isLink()) {
-	    return true;
-	} else if ("defined".equals(recurseFs)) {
-	    if (!origin.getFSName().equals(destination.getFSName())) {
-		session.getLogger().info(JOVALMsg.STATUS_FS_SKIP, destination.getPath(), recurseFs);
-		return false;
-	    }
-	} else if ("local".equals(recurseFs)) {
-	    try {
-		if (!session.getFilesystem().isLocalPath(destination.getPath())) {
-		    session.getLogger().info(JOVALMsg.STATUS_FS_SKIP, destination.getPath(), recurseFs);
-		    return false;
-		}
-	    } catch (UnsupportedOperationException e) {
-		if (!warnedRecurse) {
-		    session.getLogger().error(JOVALMsg.ERROR_UNSUPPORTED_BEHAVIOR, recurseFs);
-		    warnedRecurse = true;
-		}
-	    }
-	}
-	return true;
-    }
-
-    private String getPath(String path, IFile f) {
-	String name = f.getName();
-	int len = path.length();
-	if (len > 1) {
-	    return path.substring(0, len - name.length() - 1);
-	} else {
-	    return path;
-	}
-    }
-
-    private Stack<String> cloneStack(Stack<String> source) {
-	Stack<String> newStack = new Stack<String>();
-	newStack.addAll(source);
-	return newStack;
+	return files;
     }
 
     /**

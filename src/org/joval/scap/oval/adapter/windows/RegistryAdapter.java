@@ -161,7 +161,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 
 	      case IValue.REG_EXPAND_SZ: {
 		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-		valueType.setValue(((IExpandStringValue)val).getExpandedData());
+		valueType.setValue(((IExpandStringValue)val).getExpandedData(session.getEnvironment()));
 		valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		values.add(valueType);
 		typeType.setValue("reg_expand_sz");

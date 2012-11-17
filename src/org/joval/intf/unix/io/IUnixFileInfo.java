@@ -44,6 +44,16 @@ public interface IUnixFileInfo extends IFileEx {
 
     String getUnixFileType();
 
+    /**
+     * If the file is a link, returns the link path (possibly relative, and hence, different from the canon path).
+     */
+    String getLinkPath();
+
+    /**
+     * Get the whole permissions string, e.g., "rwxrwxrwx".
+     */
+    String getPermissions();
+
     int getUserId();
 
     int getGroupId();
@@ -73,6 +83,11 @@ public interface IUnixFileInfo extends IFileEx {
     boolean sticky();
 
     boolean hasExtendedAcl();
+
+    /**
+     * Get all the keys for extended data about the file, or null if there is none.
+     */
+    String[] getExtendedKeys();
 
     /**
      * Get extended data about the file, such as SELINUX_DATA.
