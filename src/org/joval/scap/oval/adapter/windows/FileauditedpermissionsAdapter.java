@@ -322,6 +322,31 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	item.setFilepath(base.getFilepath());
 	item.setWindowsView(base.getWindowsView());
 
+	//
+	// By default, set all the permissions to none.
+	//
+	EntityItemAuditType audit_none = Factories.sc.windows.createEntityItemAuditType();
+	audit_none.setValue("AUDIT_NONE");
+	item.setAccessSystemSecurity(audit_none);
+	item.setFileAppendData(audit_none);
+	item.setFileDeleteChild(audit_none);
+	item.setFileExecute(audit_none);
+	item.setFileReadAttributes(audit_none);
+	item.setFileReadData(audit_none);
+	item.setFileReadEa(audit_none);
+	item.setFileWriteAttributes(audit_none);
+	item.setFileWriteData(audit_none);
+	item.setFileWriteEa(audit_none);
+	item.setGenericAll(audit_none);
+	item.setGenericExecute(audit_none);
+	item.setGenericRead(audit_none);
+	item.setGenericWrite(audit_none);
+	item.setStandardDelete(audit_none);
+	item.setStandardReadControl(audit_none);
+	item.setStandardSynchronize(audit_none);
+	item.setStandardWriteDac(audit_none);
+	item.setStandardWriteOwner(audit_none);
+
 	if (aces != null) {
 	    for (IACE ace : aces) {
 		if (IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY & ace.getAccessMask())) {
