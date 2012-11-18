@@ -17,6 +17,7 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -29,7 +30,6 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Stack;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
 import java.util.regex.Pattern;
@@ -196,7 +196,7 @@ public class Engine implements IEngine, IProvider {
     public Collection<? extends ItemType> getItems(ObjectType obj, IProvider.IRequestContext rc) throws CollectException {
 	if (obj instanceof VariableObject) {
 	    VariableObject vObj = (VariableObject)obj;
-	    Collection<VariableItem> items = new Vector<VariableItem>();
+	    Collection<VariableItem> items = new ArrayList<VariableItem>();
 	    try {
 		Collection<IType> values = resolveVariable((String)vObj.getVarRef().getValue(), (RequestContext)rc);
 		if (values.size() > 0) {
@@ -413,8 +413,8 @@ public class Engine implements IEngine, IProvider {
 	    // definitions, then go through the disallowed definitions.  This makes it possible to cache both test and
 	    // definition results without having to double-check if they were previously intentionally skipped.
 	    //
-	    Collection<DefinitionType>allowed = new Vector<DefinitionType>();
-	    Collection<DefinitionType>disallowed = new Vector<DefinitionType>();
+	    Collection<DefinitionType>allowed = new ArrayList<DefinitionType>();
+	    Collection<DefinitionType>disallowed = new ArrayList<DefinitionType>();
 	    definitions.filterDefinitions(filter, allowed, disallowed);
 
 	    evalEnabled = true;
@@ -469,11 +469,11 @@ public class Engine implements IEngine, IProvider {
 	String objectId = obj.getId();
 	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
 	producer.sendNotify(MESSAGE_OBJECT, objectId);
-	Collection<ItemType> items = new Vector<ItemType>();
+	Collection<ItemType> items = new ArrayList<ItemType>();
 	try {
 	    Set s = getObjectSet(obj);
 	    if (s == null) {
-		List<MessageType> messages = new Vector<MessageType>();
+		List<MessageType> messages = new ArrayList<MessageType>();
 		FlagData flags = new FlagData();
 		try {
 		    items = new ObjectGroup(rc).getItems(flags);
@@ -665,7 +665,7 @@ public class Engine implements IEngine, IProvider {
 		    CheckEnumeration check = varChecks.get(methodName);
 
 		    List<Object> values = entities.get(methodName);
-		    Vector<ItemSet<ItemType>> sets = new Vector<ItemSet<ItemType>>(values.size());
+		    ArrayList<ItemSet<ItemType>> sets = new ArrayList<ItemSet<ItemType>>(values.size());
 		    for (Object value : values) {
 			for (ObjectType obj : getPermutations(methodName, value)) {
 			    sets.add(new ItemSet<ItemType>(getItems(obj, flags)));
@@ -760,7 +760,7 @@ public class Engine implements IEngine, IProvider {
 		Collection<ObjectType> empty = (Collection<ObjectType>)Collections.EMPTY_LIST;
 	    }
 	    int numPermutations = size / entities.get(getter).size();
-	    Vector<Hashtable<String, Object>> valList = new Vector<Hashtable<String, Object>>(numPermutations);
+	    ArrayList<Hashtable<String, Object>> valList = new ArrayList<Hashtable<String, Object>>(numPermutations);
 	    for (int i=0; i < numPermutations; i++) {
 		Hashtable<String, Object> values = new Hashtable<String, Object>();
 		values.put(getter, value);
@@ -778,7 +778,7 @@ public class Engine implements IEngine, IProvider {
 		    }
 		}
 	    }
-	    Vector<ObjectType> objects = new Vector<ObjectType>();
+	    ArrayList<ObjectType> objects = new ArrayList<ObjectType>();
 	    try {
 		for (Hashtable<String, Object> values : valList) {
 		    objects.add(newObject(values));
@@ -926,7 +926,7 @@ public class Engine implements IEngine, IProvider {
 		throws OvalException, ResolveException, InstantiationException, ClassNotFoundException,
 		NoSuchMethodException, IllegalAccessException, InvocationTargetException {
 
-	List<Object> result = new Vector<Object>();
+	List<Object> result = new ArrayList<Object>();
 	//
 	// JAXBElement-wrapped entities are unwrapped, resolved, and re-wrapped using introspection.
 	//
@@ -1027,7 +1027,7 @@ public class Engine implements IEngine, IProvider {
 		// Resolve any var_refs in the fields, and return a permutation list of the resulting record types.
 		//
 		int numPermutations = 1;
-		List<List<EntityObjectFieldType>> lists = new Vector<List<EntityObjectFieldType>>();
+		List<List<EntityObjectFieldType>> lists = new ArrayList<List<EntityObjectFieldType>>();
 		for (EntityObjectFieldType field : record.getField()) {
 		    List<EntityObjectFieldType> resolved = resolveField(field, rc);
 		    if (resolved.size() == 0) {
@@ -1051,7 +1051,7 @@ public class Engine implements IEngine, IProvider {
 		    }
 		}
 		if (numPermutations > 0) {
-		    List<EntityObjectRecordType> records = new Vector<EntityObjectRecordType>();
+		    List<EntityObjectRecordType> records = new ArrayList<EntityObjectRecordType>();
 		    for (int i=0; i < numPermutations; i++) {
 			EntityObjectRecordType base = Factories.definitions.core.createEntityObjectRecordType();
 			base.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
@@ -1086,7 +1086,7 @@ public class Engine implements IEngine, IProvider {
     private List<EntityObjectFieldType> resolveField(EntityObjectFieldType field, RequestContext rc)
 		throws ResolveException, OvalException {
 
-	List<EntityObjectFieldType> result = new Vector<EntityObjectFieldType>();
+	List<EntityObjectFieldType> result = new ArrayList<EntityObjectFieldType>();
 	if (field.isSetVarRef()) {
 	    try {
 		IType.Type t = TypeFactory.convertType(TypeFactory.getSimpleDatatype(field.getDatatype()));
@@ -1135,7 +1135,7 @@ public class Engine implements IEngine, IProvider {
      * If getFilter() were a method of ObjectType (instead of only some of its subclasses), this is what it would return.
      */
     private List<Filter> getObjectFilters(ObjectType obj) {
-	List<Filter> filters = new Vector<Filter>();
+	List<Filter> filters = new ArrayList<Filter>();
 	Object oFilters = safeInvokeMethod(obj, "getFilter");
 	if (oFilters != null && oFilters instanceof List) {
 	    for (Object oFilter : (List)oFilters) {
@@ -1195,7 +1195,7 @@ public class Engine implements IEngine, IProvider {
 	//
 	// First, retrieve the filtered list of items in the Set, recursively.
 	//
-	Collection<Collection<ItemType>> lists = new Vector<Collection<ItemType>>();
+	Collection<Collection<ItemType>> lists = new ArrayList<Collection<ItemType>>();
 	if (s.isSetSet()) {
 	    for (Set set : s.getSet()) {
 		lists.add(getSetItems(set, rc));
@@ -1594,7 +1594,7 @@ public class Engine implements IEngine, IProvider {
      * If getState() were a method of TestType (instead of only some of its subclasses), this is what it would return.
      */
     private List<String> getStateRef(oval.schemas.definitions.core.TestType test) {
-	List<String> refs = new Vector<String>();
+	List<String> refs = new ArrayList<String>();
 	try {
 	    Method getObject = test.getClass().getMethod("getState");
 	    Object o = getObject.invoke(test);
@@ -2052,12 +2052,26 @@ public class Engine implements IEngine, IProvider {
 		variableValueType.setVariableId(localVariable.getId());
 		rc.addVar(variableValueType);
 	    } else {
+		Collection<IType> convertedValues = new ArrayList<IType>();
 		for (IType value : values) {
-		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
-		    variableValueType.setVariableId(localVariable.getId());
-		    variableValueType.setValue(value.getString());
-		    rc.addVar(variableValueType);
+		    try {
+			//
+			// Convert values from the originating type to the variable's defined datatype
+			//
+			convertedValues.add(value.cast(localVariable.getDatatype()));
+
+			VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
+			variableValueType.setVariableId(localVariable.getId());
+			variableValueType.setValue(value.getString());
+			rc.addVar(variableValueType);
+		    } catch (TypeConversionException e) {
+			MessageType message = Factories.common.createMessageType();
+			message.setLevel(MessageLevelEnumeration.ERROR);
+			message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage()));
+			rc.addMessage(message);
+		    }
 		}
+		values = convertedValues;
 	    }
 	    return values;
 
@@ -2070,9 +2084,16 @@ public class Engine implements IEngine, IProvider {
 	    if (externalVariables == null) {
 		throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_EXTERNAL_VARIABLE_SOURCE, id));
 	    } else {
-		Collection<IType> values = new Vector<IType>();
+		Collection<IType> values = new ArrayList<IType>();
 		for (IType value : externalVariables.getValue(id)) {
-		    values.add(value);
+		    try {
+			values.add(value.cast(externalVariable.getDatatype()));
+		    } catch (TypeConversionException e) {
+			MessageType message = Factories.common.createMessageType();
+			message.setLevel(MessageLevelEnumeration.ERROR);
+			message.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_TYPE_CONVERSION, e.getMessage()));
+			rc.addMessage(message);
+		    }
 		}
 		if (values.size() == 0) {
 		    VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
@@ -2095,7 +2116,7 @@ public class Engine implements IEngine, IProvider {
 	} else if (object instanceof ConstantVariable) {
 	    ConstantVariable constantVariable = (ConstantVariable)object;
 	    String id = constantVariable.getId();
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    List<ValueType> valueTypes = constantVariable.getValue();
 	    if (valueTypes.size() == 0) {
 		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
@@ -2108,7 +2129,7 @@ public class Engine implements IEngine, IProvider {
 		    String s = (String)value.getValue();
 		    variableValueType.setValue(s);
 		    rc.addVar(variableValueType);
-		    values.add(TypeFactory.createType(IType.Type.STRING, s));
+		    values.add(TypeFactory.createType(constantVariable.getDatatype(), s));
 		}
 	    }
 	    return values;
@@ -2118,7 +2139,7 @@ public class Engine implements IEngine, IProvider {
 	//
 	} else if (object instanceof LiteralComponentType) {
 	    LiteralComponentType literal = (LiteralComponentType)object;
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    values.add(TypeFactory.createType(literal.getDatatype(), (String)literal.getValue()));
 	    return values;
 
@@ -2154,7 +2175,7 @@ public class Engine implements IEngine, IProvider {
 	// Resolve and concatenate child components.
 	//
 	} else if (object instanceof ConcatFunctionType) {
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    ConcatFunctionType concat = (ConcatFunctionType)object;
 	    for (Object child : concat.getObjectComponentOrVariableComponentOrLiteralComponent()) {
 		Collection<IType> next = resolveComponent(child, rc);
@@ -2165,7 +2186,7 @@ public class Engine implements IEngine, IProvider {
 		} else if (values.size() == 0) {
 		    values.addAll(next);
 		} else {
-		    Collection<IType> newValues = new Vector<IType>();
+		    Collection<IType> newValues = new ArrayList<IType>();
 		    for (IType base : values) {
 			for (IType val : next) {
 			    newValues.add(TypeFactory.createType(IType.Type.STRING, base.getString() + val.getString()));
@@ -2180,7 +2201,7 @@ public class Engine implements IEngine, IProvider {
 	// Escape anything that could be pattern-matched.
 	//
 	} else if (object instanceof EscapeRegexFunctionType) {
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    for (IType value : resolveComponent(getComponent((EscapeRegexFunctionType)object), rc)) {
 		values.add(TypeFactory.createType(IType.Type.STRING, StringTools.escapeRegex(value.getString())));
 	    }
@@ -2191,7 +2212,7 @@ public class Engine implements IEngine, IProvider {
 	//
 	} else if (object instanceof SplitFunctionType) {
 	    SplitFunctionType split = (SplitFunctionType)object;
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    for (IType value : resolveComponent(getComponent(split), rc)) {
 		for (String s : StringTools.toList(StringTools.tokenize(value.getString(), split.getDelimiter(), false))) {
 		    values.add(TypeFactory.createType(IType.Type.STRING, s));
@@ -2206,7 +2227,7 @@ public class Engine implements IEngine, IProvider {
 	} else if (object instanceof RegexCaptureFunctionType) {
 	    RegexCaptureFunctionType regexCapture = (RegexCaptureFunctionType)object;
 	    Pattern p = Pattern.compile(regexCapture.getPattern());
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    for (IType value : resolveComponent(getComponent(regexCapture), rc)) {
 		Matcher m = p.matcher(value.getString());
 		if (m.groupCount() > 0) {
@@ -2230,7 +2251,7 @@ public class Engine implements IEngine, IProvider {
 	    start = Math.max(1, start); // a start index < 1 means start at 1
 	    start--;			// OVAL counter begins at 1 instead of 0
 	    int len = st.getSubstringLength();
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    for (IType value : resolveComponent(getComponent(st), rc)) {
 		String str = value.getString();
 
@@ -2260,7 +2281,7 @@ public class Engine implements IEngine, IProvider {
 	} else if (object instanceof BeginFunctionType) {
 	    BeginFunctionType bt = (BeginFunctionType)object;
 	    String s = bt.getCharacter();
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    for (IType value : resolveComponent(getComponent(bt), rc)) {
 		String str = value.getString();
 		if (str.startsWith(s)) {
@@ -2277,7 +2298,7 @@ public class Engine implements IEngine, IProvider {
 	} else if (object instanceof EndFunctionType) {
 	    EndFunctionType et = (EndFunctionType)object;
 	    String s = et.getCharacter();
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    for (IType value : resolveComponent(getComponent(et), rc)) {
 		String str = value.getString();
 		if (str.endsWith(s)) {
@@ -2293,13 +2314,13 @@ public class Engine implements IEngine, IProvider {
 	//
 	} else if (object instanceof TimeDifferenceFunctionType) {
 	    TimeDifferenceFunctionType tt = (TimeDifferenceFunctionType)object;
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    List<Object> children = tt.getObjectComponentOrVariableComponentOrLiteralComponent();
 	    Collection<IType> ts1;
 	    Collection<IType> ts2;
 	    if (children.size() == 1) {
 		tt.setFormat1(DateTimeFormatEnumeration.SECONDS_SINCE_EPOCH);
-		ts1 = new Vector<IType>();
+		ts1 = new ArrayList<IType>();
 		try {
 		    String val = Long.toString(plugin.getTime() / 1000L);
 		    ts1.add(TypeFactory.createType(IType.Type.INT, val));
@@ -2338,7 +2359,7 @@ public class Engine implements IEngine, IProvider {
 	    Stack<Collection<IType>> rows = new Stack<Collection<IType>>();
 	    ArithmeticEnumeration op = at.getArithmeticOperation();
 	    for (Object child : at.getObjectComponentOrVariableComponentOrLiteralComponent()) {
-		Collection<IType> row = new Vector<IType>();
+		Collection<IType> row = new ArrayList<IType>();
 		for (IType cell : resolveComponent(child, rc)) {
 		    row.add(cell);
 		}
@@ -2351,11 +2372,11 @@ public class Engine implements IEngine, IProvider {
 	//
 	} else if (object instanceof CountFunctionType) {
 	    CountFunctionType ct = (CountFunctionType)object;
-	    Collection<IType> children = new Vector<IType>();
+	    Collection<IType> children = new ArrayList<IType>();
 	    for (Object child : ct.getObjectComponentOrVariableComponentOrLiteralComponent()) {
 		children.addAll(resolveComponent(child, rc));
 	    }
-	    Collection<IType> values = new Vector<IType>();
+	    Collection<IType> values = new ArrayList<IType>();
 	    values.add(TypeFactory.createType(IType.Type.INT, Integer.toString(children.size())));
 	    return values;
 
@@ -2381,7 +2402,7 @@ public class Engine implements IEngine, IProvider {
     private List<IType> computeProduct(ArithmeticEnumeration op, Stack<Collection<IType>> rows)
 		throws IllegalArgumentException {
 
-	List<IType> results = new Vector<IType>();
+	List<IType> results = new ArrayList<IType>();
 	if (rows.empty()) {
 	    switch(op) {
 		case ADD:
@@ -2432,7 +2453,7 @@ public class Engine implements IEngine, IProvider {
     private List<IType> extractItemData(String objectId, ObjectComponentType oc, Collection list)
 		throws OvalException, ResolveException, NoSuchElementException, IllegalArgumentException {
 
-	List<IType> values = new Vector<IType>();
+	List<IType> values = new ArrayList<IType>();
 	for (Object o : list) {
 	    if (o instanceof ItemType) {
 		String fieldName = oc.getItemField();

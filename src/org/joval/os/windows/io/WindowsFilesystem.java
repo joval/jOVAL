@@ -60,7 +60,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     }
 
     public void dispose() {
-	if (searcher == null) {
+	if (searcher != null) {
 	    searcher.close();
 	}
     }
