@@ -22,13 +22,6 @@ public interface ISession extends IBaseSession {
      */
     public String getTempDir() throws IOException;
 
-    /**
-     * Configure the session to delete the specified file when it is disconnected.
-     *
-     * @throws IllegalStateException if the session is not connected.
-     */
-    public void deleteOnDisconnect(IFile file) throws IllegalStateException;
-
     public IFilesystem getFilesystem();
 
     public IEnvironment getEnvironment();

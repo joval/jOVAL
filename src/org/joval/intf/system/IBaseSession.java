@@ -92,7 +92,7 @@ public interface IBaseSession extends ILoggable {
     void disconnect();
 
     /**
-     * Get the name of the host to which the session is connected.
+     * Get the name of the host to which the session is connected.  This name must be safe for a DNS lookup.
      */
     String getHostname();
 

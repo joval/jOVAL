@@ -33,6 +33,7 @@ import org.apache.jdbm.Serializer;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFilesystem;
+import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.identity.IACE;
@@ -189,18 +190,12 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 		// locally and read it.
 		//
 		remoteTemp = execToFile(cmd);
-		if(session.getWorkspace() == null) {
-		    //
-		    // State cannot be saved locally, so the result will have to be buffered into memory
-		    //
+		if (session.getWorkspace() == null || IBaseSession.LOCALHOST.equals(session.getHostname())) {
 		    in = new GZIPInputStream(remoteTemp.getInputStream());
 		} else {
-		    //
-		    // Read from the local state file, or create one while reading from the remote state file.
-		    //
 		    localTemp = File.createTempFile("search", null, session.getWorkspace());
 		    StreamTool.copy(remoteTemp.getInputStream(), new FileOutputStream(localTemp), true);
-		    in = new GZIPInputStream(remoteTemp.getInputStream());
+		    in = new GZIPInputStream(new FileInputStream(localTemp));
 		}
 		BufferedReader reader = new BufferedReader(new InputStreamReader(in, StreamTool.detectEncoding(in)));
 		Iterator<String> iter = new ReaderIterator(reader);

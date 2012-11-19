@@ -72,6 +72,24 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	return directory;
     }
 
+    public String getMachineName() {
+	if (isConnected()) {
+	    try {
+		IKey key = reg.fetchKey(IRegistry.HKLM, IRegistry.COMPUTERNAME_KEY);
+		IValue val = key.getValue(IRegistry.COMPUTERNAME_VAL);
+		if (val.getType() == IValue.REG_SZ) {
+		    return ((IStringValue)val).getData();
+		} else {
+		    logger.warn(JOVALMsg.ERROR_SYSINFO_HOSTNAME);
+		}
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.ERROR_SYSINFO_HOSTNAME);
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	}
+	return getHostname();
+    }
+
     public View getNativeView() {
 	return is64bit ? View._64BIT : View._32BIT;
     }
@@ -154,24 +172,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	}
     }
 
-    public String getHostname() {
-	if (isConnected()) {
-	    try {
-		IKey key = reg.fetchKey(IRegistry.HKLM, IRegistry.COMPUTERNAME_KEY);
-		IValue val = key.getValue(IRegistry.COMPUTERNAME_VAL);
-		if (val.getType() == IValue.REG_SZ) {
-		    return ((IStringValue)val).getData();
-		} else {
-		    logger.warn(JOVALMsg.ERROR_SYSINFO_HOSTNAME);
-		}
-	    } catch (Exception e) {
-		logger.warn(JOVALMsg.ERROR_SYSINFO_HOSTNAME);
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	}
-	return LOCALHOST;
-    }
-
     public boolean connect() {
 	if (env == null) {
 	    try {
@@ -224,7 +224,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     }
 
     public void disconnect() {
-	deleteFiles();
 	runspaces.shutdown();
 	wmi.deregister();
 	connected = false;

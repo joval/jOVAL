@@ -36,7 +36,7 @@ public class Directory implements IDirectory {
 	this.session = session;
 	logger = session.getLogger();
 	ad = new ActiveDirectory(this);
-	local = new LocalDirectory(session.getHostname(), this);
+	local = new LocalDirectory(session.getMachineName(), this);
 	setWmiProvider(session.getWmiProvider());
     }
 

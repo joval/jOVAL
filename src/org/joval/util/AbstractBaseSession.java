@@ -111,13 +111,15 @@ public abstract class AbstractBaseSession implements IConfigurable, IBaseSession
 	return false;
     }
 
+    public String getHostname() {
+	return LOCALHOST;
+    }
+
     // All the abstract methods, for reference
 
     public abstract boolean connect();
 
     public abstract void disconnect();
-
-    public abstract String getHostname();
 
     public abstract long getTime() throws Exception;
 

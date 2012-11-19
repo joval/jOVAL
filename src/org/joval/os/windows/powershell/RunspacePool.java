@@ -80,7 +80,7 @@ public class RunspacePool implements IRunspacePool {
     }
 
     public synchronized IRunspace spawn() throws Exception {
-	return spawn(session.supports(IWindowsSession.View._64BIT) ? IWindowsSession.View._64BIT : null);
+	return spawn(session.getNativeView());
     }
 
     public synchronized IRunspace spawn(IWindowsSession.View view) throws Exception {

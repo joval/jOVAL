@@ -24,10 +24,6 @@ public class UnixSession extends BaseUnixSession {
 
     // Implement IBaseSession
 
-    public String getHostname() {
-	return LOCALHOST;
-    }
-
     public boolean connect() {
 	if (env == null) {
 	    env = new Environment(this);
@@ -42,7 +38,6 @@ public class UnixSession extends BaseUnixSession {
     }
 
     public void disconnect() {
-	deleteFiles();
 	connected = false;
     }
 }

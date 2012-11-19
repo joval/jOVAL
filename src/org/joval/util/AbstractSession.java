@@ -35,7 +35,6 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
     protected File cwd;
     protected IEnvironment env;
     protected IFilesystem fs;
-    protected HashSet<String> toDelete;
 
     /**
      * Create an ISession with no workspace to store state information, i.e., for a local ISession.
@@ -61,17 +60,6 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 
     public void setWorkingDir(String path) {
 	cwd = new File(path);
-    }
-
-    public void deleteOnDisconnect(IFile file) throws IllegalStateException {
-	if (connected) {
-	    if (toDelete == null) {
-		toDelete = new HashSet<String>();
-	    }
-	    toDelete.add(file.getPath());
-	} else {
-	    throw new IllegalStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_NOT_CONNECTED));
-	}
     }
 
     public String getTempDir() throws IOException {
@@ -123,29 +111,9 @@ public abstract class AbstractSession extends AbstractBaseSession implements ISe
 
     public abstract void disconnect();
 
-    public abstract String getHostname();
-
     public abstract Type getType();
 
     // Internal
-
-    /**
-     * Delete all the files that have been registered for deletion on disconnect.  Subclasses should call this.
-     */
-    protected void deleteFiles() {
-	if (toDelete != null) {
-	    for (String fname : toDelete) {
-		try {
-		    IFile f = fs.getFile(fname, IFile.Flags.READWRITE);
-		    if (f.isFile()) {
-			f.delete();
-		    }
-		} catch (IOException e) {
-		    logger.warn(JOVALMsg.ERROR_FILE_DELETE, fname);
-		}
-	    }
-	}
-    }
 
     private static final char NULL = (char)0;
     private static final char SQ = '\'';

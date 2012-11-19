@@ -52,7 +52,7 @@ class WindowsSystemInfo {
 	IRegistry registry = session.getRegistry(IWindowsSession.View._64BIT);
 	IWmiProvider wmi = session.getWmiProvider();
 	SystemInfoType info = Factories.sc.core.createSystemInfoType();
-	info.setPrimaryHostName(session.getHostname());
+	info.setPrimaryHostName(session.getMachineName());
 
 	try {
 	    IEnvironment environment = session.getEnvironment();

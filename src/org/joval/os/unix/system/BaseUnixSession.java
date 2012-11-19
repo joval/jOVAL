@@ -46,12 +46,4 @@ public abstract class BaseUnixSession extends AbstractSession implements IUnixSe
     public Type getType() {
 	return Type.UNIX;
     }
-
-    // Abstract
-
-    public abstract String getHostname();
-
-    public abstract boolean connect();
-
-    public abstract void disconnect();
 }

@@ -27,6 +27,11 @@ public interface IWindowsSession extends ISession {
 
     View getNativeView();
 
+    /**
+     * Get the machine name. NOTE: This name might not be meaningful to DNS.
+     */
+    String getMachineName();
+
     IRegistry getRegistry(View view);
 
     boolean supports(View view);

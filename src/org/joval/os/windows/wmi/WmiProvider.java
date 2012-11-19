@@ -70,6 +70,7 @@ public class WmiProvider implements IWmiProvider {
     // Implement ISWbemProvider
 
     public ISWbemObjectSet execQuery(String ns, String wql) throws WmiException {
+	logger.debug(JOVALMsg.STATUS_WMI_QUERY, ns, wql);
 	Dispatch services = map.get(ns);
 	if (services == null) {
 	    services = locator.invoke("ConnectServer", Variant.DEFAULT, new Variant(ns)).toDispatch();
