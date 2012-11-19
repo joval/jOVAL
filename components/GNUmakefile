@@ -17,13 +17,9 @@ trim:
 	@$(MAKE) --keep-going --directory=jovaldi clean
 	@$(MAKE) --keep-going --directory=engine clean
 
-clean:
+clean: trim
 	@$(MAKE) --keep-going --directory=scap clean
 	@$(MAKE) --keep-going --directory=schematron clean
-	@$(MAKE) --keep-going --directory=plugin clean
-	@$(MAKE) --keep-going --directory=xpert clean
-	@$(MAKE) --keep-going --directory=jovaldi dist-clean
-	@$(MAKE) --keep-going --directory=engine clean
 
 _jovaldi: _engine _plugin _schematron _xpert
 	@$(MAKE) --keep-going --directory=jovaldi dist
