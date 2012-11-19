@@ -11,7 +11,6 @@ CLASSES=\
 	org.joval.intf.system.IEnvironment						\
 	org.joval.intf.system.IProcess							\
 	org.joval.intf.system.ISession							\
-	org.joval.intf.system.ISessionProvider						\
 	org.joval.intf.unix.io.IUnixFileInfo						\
 	org.joval.intf.unix.io.IUnixFilesystem						\
 	org.joval.intf.unix.io.IUnixFilesystemDriver					\
