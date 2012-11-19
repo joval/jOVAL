@@ -8,6 +8,8 @@ CLASSES=\
 	org.joval.intf.oval.ISystemCharacteristics		\
 	org.joval.intf.oval.IType				\
 	org.joval.intf.oval.IVariables				\
+	org.joval.intf.plugin.IPlugin				\
+	org.joval.intf.sce.IProvider				\
 	org.joval.intf.util.ILoggable				\
 	org.joval.intf.util.IObserver				\
 	org.joval.intf.util.IPerishable				\

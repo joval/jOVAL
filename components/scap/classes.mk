@@ -217,6 +217,10 @@ CLASSES=\
 	org.oasis.name.PersonName	\
 	org.oasis.name.PersonNameType	\
 	org.oasis.name.XNL	\
+	org.openscap.sce.result.EnvironmentType	\
+	org.openscap.sce.result.ObjectFactory	\
+	org.openscap.sce.result.package-info	\
+	org.openscap.sce.result.SceResultsType	\
 	org.openscap.sce.xccdf.LangEnumeration	\
 	org.openscap.sce.xccdf.ObjectFactory	\
 	org.openscap.sce.xccdf.package-info	\

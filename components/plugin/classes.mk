@@ -185,6 +185,7 @@ CLASSES=\
 	org.joval.scap.oval.sysinfo.UnixNetworkInterface				\
 	org.joval.scap.oval.sysinfo.UnixSystemInfo					\
 	org.joval.scap.oval.sysinfo.WindowsSystemInfo					\
+	org.joval.scap.sce.SCEScript							\
 	org.joval.test.AD								\
 	org.joval.test.Default								\
 	org.joval.test.Exec								\

@@ -15,9 +15,12 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 
+import org.openscap.sce.result.SceResultsType;
+import org.openscap.sce.xccdf.ScriptDataType;
 import oval.schemas.definitions.core.ObjectType;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
@@ -28,13 +31,14 @@ import org.slf4j.cal10n.LocLogger;
 import org.joval.discovery.Local;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.sce.IProvider;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
-import org.joval.intf.system.ISessionProvider;
 import org.joval.intf.util.ILoggable;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.sysinfo.SysinfoFactory;
+import org.joval.scap.sce.SCEScript;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -43,7 +47,7 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class LocalPlugin implements IPlugin, ILoggable, ISessionProvider {
+public class LocalPlugin implements IPlugin, IProvider, ILoggable {
     private static final String ADAPTERS_RESOURCE = "adapters.txt";
 
     /**
@@ -179,7 +183,11 @@ public class LocalPlugin implements IPlugin, ILoggable, ISessionProvider {
 	}
     }
 
-    // Implement IProvider
+    public String getUsername() {
+	return session.getUsername();
+    }
+
+    // Implement org.joval.intf.oval.IProvider
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	if (adapters.containsKey(obj.getClass())) {
@@ -190,10 +198,10 @@ public class LocalPlugin implements IPlugin, ILoggable, ISessionProvider {
 	}
     }
 
-    // Implement ISessionProvider
+    // Implement org.joval.intf.sce.IProvider
 
-    public IBaseSession getSession() {
-	return session;
+    public SceResultsType exec(Map<String, String> exports, ScriptDataType source) throws Exception {
+	return new SCEScript(exports, source, session).exec();
     }
 
     // Private

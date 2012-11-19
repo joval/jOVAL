@@ -530,6 +530,11 @@
       <jxb:package name="org.openscap.sce.xccdf"/>
     </jxb:schemaBindings>
   </jxb:bindings>
+  <jxb:bindings schemaLocation="sce-1.0/sce-result-schema.xsd" node="/xs:schema">
+    <jxb:schemaBindings>
+      <jxb:package name="org.openscap.sce.result"/>
+    </jxb:schemaBindings>
+  </jxb:bindings>
 
   <!-- ++++++++++++++ -->
   <!-- XCCDF Bindings -->

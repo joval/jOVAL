@@ -1,6 +1,4 @@
 CLASSES=\
-	org.joval.plugin.PluginConfigurationException			\
-	org.joval.plugin.PluginFactory					\
 	org.joval.scap.Datastream					\
 	org.joval.scap.ScapException					\
 	org.joval.scap.arf.ArfException					\
@@ -15,7 +13,6 @@ CLASSES=\
 	org.joval.scap.ocil.OcilException				\
 	org.joval.scap.ocil.OcilFactory					\
 	org.joval.scap.ocil.Variables					\
-	org.joval.scap.sce.SCEScript					\
 	org.joval.scap.xccdf.Benchmark					\
 	org.joval.scap.xccdf.Profile					\
 	org.joval.scap.xccdf.TestResult					\
@@ -25,6 +22,4 @@ CLASSES=\
 	org.joval.scap.xccdf.engine.XPERT				\
 	org.joval.scap.xccdf.handler.OCILHandler			\
 	org.joval.scap.xccdf.handler.OVALHandler			\
-	org.joval.scap.xccdf.handler.SCEHandler				\
-	org.joval.util.LogFormatter					\
-	org.joval.xml.SchemaValidator
+	org.joval.scap.xccdf.handler.SCEHandler

@@ -55,6 +55,7 @@ SCHEMAS=\
 	oval-5.10.1/windows-definitions-schema.xsd	\
 	oval-5.10.1/windows-system-characteristics-schema.xsd	\
 	sce-1.0/sce-1.0-xccdf-extended-component.xsd	\
+	sce-1.0/sce-result-schema.xsd	\
 	xccdf-1.2/xccdf_1.2.xsd	\
 	xml/xlink.xsd	\
 	xml/xmldsig-core-schema.xsd

@@ -89,12 +89,12 @@ public interface IPlugin extends IProvider {
     void configure(Properties props) throws Exception;
 
     /**
-     * Connect the plugin.
+     * Connect the plugin to the target.
      */
     boolean connect();
 
     /**
-     * Disconnect the plugin.
+     * Disconnect the plugin from the target.
      */
     void disconnect();
 
@@ -104,13 +104,27 @@ public interface IPlugin extends IProvider {
     void dispose();
 
     /**
-     * Returns whether or not the plugin is connected.
+     * Returns whether or not the plugin is connected to the target.
      */
     boolean isConnected();
 
+    /**
+     * Returns information about the target.
+     */
     SystemInfoType getSystemInfo() throws OvalException;
 
+    /**
+     * Returns the logging facade for the target.
+     */
     LocLogger getLogger();
 
+    /**
+     * Returns the system time on the target.
+     */
     long getTime();
+
+    /**
+     * Returns the name of the user logged in to scan the target.
+     */
+    String getUsername();
 }

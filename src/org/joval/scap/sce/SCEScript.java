@@ -11,10 +11,13 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import xccdf.schemas.core.ResultEnumType;
+import org.openscap.sce.result.EnvironmentType;
+import org.openscap.sce.result.ObjectFactory;
+import org.openscap.sce.result.SceResultsType;
 import org.openscap.sce.xccdf.LangEnumeration;
 import org.openscap.sce.xccdf.ScriptDataType;
 
@@ -49,25 +52,20 @@ public class SCEScript {
     private static final String ENV_TYPE_PREFIX		= "XCCDF_TYPE_";
     private static final String ENV_OPERATOR_PREFIX	= "XCCDF_OPERATOR_";
 
-    private String id;
+    private static final ObjectFactory FACTORY = new ObjectFactory();
+
     private ScriptDataType source;
     private ISession session;
     private String commandPrefix;
     private String extension;
     private Properties environment;
-    private Date runtime;
-    private String stdout;
-    private int exitCode = -1;
-    private ResultEnumType result;
 
     /**
      * Create a new SCE script specifying the URL of its source.
      */
-    public SCEScript(String id, ScriptDataType source, ISession session) throws IllegalArgumentException {
-	this.id = id;
+    public SCEScript(Map<String, String> exports, ScriptDataType source, ISession session) throws IllegalArgumentException {
 	this.source = source;
 	this.session = session;
-	result = ResultEnumType.NOTCHECKED;
 
 	//
 	// Determine the appropriate command prefix to run the script, based on the ISession type and script
@@ -151,7 +149,6 @@ public class SCEScript {
 	    throw new IllegalArgumentException(s);
 	}
 
-	runtime = null;
 	environment = new Properties();
 	setenv( "XCCDF_RESULT_PASS",		Integer.toString(XCCDF_RESULT_PASS));
 	setenv( "XCCDF_RESULT_FAIL",		Integer.toString(XCCDF_RESULT_FAIL));
@@ -162,35 +159,23 @@ public class SCEScript {
 	setenv( "XCCDF_RESULT_NOT_SELECTED",	Integer.toString(XCCDF_RESULT_NOT_SELECTED));
 	setenv( "XCCDF_RESULT_INFORMATIONAL",	Integer.toString(XCCDF_RESULT_INFORMATIONAL));
 	setenv( "XCCDF_RESULT_FIXED",		Integer.toString(XCCDF_RESULT_FIXED));
-    }
 
-    public String getId() {
-	return id;
-    }
-
-    /**
-     * Set a variable export for SCE script execution. Use a null value to unset a variable.
-     */
-    public void setExport(String name, String value) {
-	setenv(new StringBuffer("XCCDF_VALUE_").append(name).toString(), value);
+	if (exports != null) {
+	    for (Map.Entry<String, String> entry : exports.entrySet()) {
+		setenv(new StringBuffer("XCCDF_VALUE_").append(entry.getKey()).toString(), entry.getValue());
+	    }
+	}
     }
 
     /**
      * Execute the script.
-     *
-     * @returns true if data was successfully collected using the script -- which is different from passing the test!
-     *
-     * @throws IllegalStateException if the script was already executed.
      */
-    public boolean exec() throws IllegalStateException {
-	if (runtime != null) {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_RAN, id, session.getHostname(), runtime);
-	    throw new IllegalStateException(msg);
-	}
-	result = ResultEnumType.ERROR;
+    public SceResultsType exec() throws Exception {
 	OutputStream out = null;
 	IFile script = null;
 	try {
+	    SceResultsType result = FACTORY.createSceResultsType();
+
 	    //
 	    // Find an appropriate temp filename and copy the script to the target machine
 	    //
@@ -210,59 +195,62 @@ public class SCEScript {
 		    in.close();
 		    out.close();
 		    out = null;
+		    result.setScriptPath(script.getPath());
 		}
 	    }
 
 	    //
-	    // Prepare the environment and run the script.
+	    // Prepare the environment
 	    //
+	    EnvironmentType environmentType = FACTORY.createEnvironmentType();
 	    String[] env = new String[environment.size()];
 	    int i=0;
 	    for (String var : environment.stringPropertyNames()) {
-		env[i++] = var + "=" + environment.getProperty(var);
+		String variable = new StringBuffer(var).append("=").append(environment.getProperty(var)).toString();
+		env[i++] = variable;
+		environmentType.getEntry().add(variable);
 	    }
-	    runtime = new Date();
+	    result.setEnvironment(environmentType);
+
+	    //
+	    // Run the script and populate the result
+	    //
 	    long to = session.getTimeout(ISession.Timeout.M);
 	    SafeCLI.ExecData data = SafeCLI.execData(commandPrefix + script.getPath(), env, session, to);
-	    if (data != null) {
-		exitCode = data.getExitCode();
-		switch(exitCode) {
-		  case XCCDF_RESULT_PASS:
-		    result = ResultEnumType.PASS;
-		    break;
-		  case XCCDF_RESULT_FAIL:
-		    result = ResultEnumType.FAIL;
-		    break;
-		  case XCCDF_RESULT_ERROR:
-		    result = ResultEnumType.ERROR;
-		    break;
-		  case XCCDF_RESULT_NOT_APPLICABLE:
-		    result = ResultEnumType.NOTAPPLICABLE;
-		    break;
-		  case XCCDF_RESULT_NOT_CHECKED:
-		    result = ResultEnumType.NOTCHECKED;
-		    break;
-		  case XCCDF_RESULT_NOT_SELECTED:
-		    result = ResultEnumType.NOTSELECTED;
-		    break;
-		  case XCCDF_RESULT_INFORMATIONAL:
-		    result = ResultEnumType.INFORMATIONAL;
-		    break;
-		  case XCCDF_RESULT_FIXED:
-		    result = ResultEnumType.FIXED;
-		    break;
-		  case XCCDF_RESULT_UNKNOWN:
-		  default:
-		    result = ResultEnumType.UNKNOWN;
-		    break;
-		}
-		stdout = new String(data.getData(), StringTools.UTF8);
-		return true;
+	    int exitCode = data.getExitCode();
+	    switch(exitCode) {
+	      case XCCDF_RESULT_PASS:
+		result.setResult(ResultEnumType.PASS);
+		break;
+	      case XCCDF_RESULT_FAIL:
+		result.setResult(ResultEnumType.FAIL);
+		break;
+	      case XCCDF_RESULT_ERROR:
+		result.setResult(ResultEnumType.ERROR);
+		break;
+	      case XCCDF_RESULT_NOT_APPLICABLE:
+		result.setResult(ResultEnumType.NOTAPPLICABLE);
+		break;
+	      case XCCDF_RESULT_NOT_CHECKED:
+		result.setResult(ResultEnumType.NOTCHECKED);
+		break;
+	      case XCCDF_RESULT_NOT_SELECTED:
+		result.setResult(ResultEnumType.NOTSELECTED);
+		break;
+	      case XCCDF_RESULT_INFORMATIONAL:
+		result.setResult(ResultEnumType.INFORMATIONAL);
+		break;
+	      case XCCDF_RESULT_FIXED:
+		result.setResult(ResultEnumType.FIXED);
+		break;
+	      case XCCDF_RESULT_UNKNOWN:
+	      default:
+		result.setResult(ResultEnumType.UNKNOWN);
+		break;
 	    }
-	} catch (IOException e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_IO, script, e.getMessage());
-	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    result.setExitCode(exitCode);
+	    result.setStdout(new String(data.getData(), StringTools.UTF8));
+	    return result;
 	} finally {
 	    if (out != null) {
 		try {
@@ -277,33 +265,6 @@ public class SCEScript {
 		}
 	    }
 	}
-	return false;
-    }
-
-    /**
-     * Obtain the output from the script execution.
-     *
-     * @throws IllegalStateException if the script has not been executed.
-     */
-    public String getStdout() throws IllegalStateException {
-	if (runtime == null) {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, id, session.getHostname());
-	    throw new IllegalStateException(msg);
-	} else {
-	    return stdout;
-	}
-    }
-
-    /**
-     * Get the script execution XCCDF result.
-     */
-    public ResultEnumType getResult() throws IllegalStateException {
-	if (runtime == null) {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_NOTRUN, id, session.getHostname());
-	    throw new IllegalStateException(msg);
-	} else {
-	    return result;
-	}
     }
 
     // Private
@@ -315,5 +276,4 @@ public class SCEScript {
 	    environment.setProperty(name, value);
 	}
     }
-
 }
