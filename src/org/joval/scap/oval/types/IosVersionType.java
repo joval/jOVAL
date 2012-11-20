@@ -143,18 +143,22 @@ public class IosVersionType extends AbstractType {
 	sb.append(Integer.toString(majorVersion));
 	sb.append(".");
 	sb.append(Integer.toString(minorVersion));
-	sb.append(OPEN_PEREN);
-	sb.append(Integer.toString(release));
-	if (mainlineRebuild != null) {
-	    sb.append(mainlineRebuild);
-	}
-	sb.append(CLOSE_PEREN);
-	if (trainId != null) {
-	    sb.append(trainId);
-	    if (rebuild > 0) {
-		sb.append(Integer.toString(rebuild));
-		if (subrebuild != null) {
-		    sb.append(subrebuild);
+	if (release == 0 && mainlineRebuild == null) {
+	    sb.append(".").append(rebuild);
+	} else {
+	    sb.append(OPEN_PEREN);
+	    sb.append(Integer.toString(release));
+	    if (mainlineRebuild != null) {
+		sb.append(mainlineRebuild);
+	    }
+	    sb.append(CLOSE_PEREN);
+	    if (trainId != null) {
+		sb.append(trainId);
+		if (rebuild > 0) {
+		    sb.append(Integer.toString(rebuild));
+		    if (subrebuild != null) {
+			sb.append(subrebuild);
+		    }
 		}
 	    }
 	}
