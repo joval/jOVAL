@@ -14,7 +14,6 @@ import java.util.Vector;
 import java.util.logging.Level;
 
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.system.IBaseSession;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.util.JOVALSystem;

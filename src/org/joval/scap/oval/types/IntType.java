@@ -17,7 +17,14 @@ public class IntType extends AbstractType {
     private BigInteger data;
 
     public IntType(String data) throws NumberFormatException {
-	this(new BigInteger(data));
+	int ptr = data.indexOf(".");
+	if (ptr == -1) {
+	    this.data = new BigInteger(data);
+	} else if (BigInteger.ZERO.equals(new BigInteger(data.substring(ptr+1)))) {
+	    this.data = new BigInteger(data.substring(0,ptr));
+	} else {
+	    throw new NumberFormatException(data);
+	}
     }
 
     public IntType(BigInteger data) {

@@ -3,6 +3,8 @@
 
 package org.joval.scap.oval.types;
 
+import java.math.BigDecimal;
+
 import org.joval.intf.oval.IType;
 
 /**
@@ -17,16 +19,18 @@ public class BooleanType extends AbstractType {
     public BooleanType(String data) {
 	if (data == null) {
 	    this.data = false;
-	} else if (data.equalsIgnoreCase("true")) {
-	    this.data = true;
-	} else if (data.equals("0")) {
-	    this.data = false;
-	} else if (data.equalsIgnoreCase("false")) {
-	    this.data = false;
 	} else if (data.length() == 0) {
 	    this.data = false;
-	} else {
+	} else if (data.equalsIgnoreCase("true")) {
 	    this.data = true;
+	} else if (data.equalsIgnoreCase("false")) {
+	    this.data = false;
+	} else {
+	    try {
+		this.data = !BigDecimal.ZERO.equals(new BigDecimal(data));
+	    } catch (NumberFormatException e) {
+		this.data = true;
+	    }
 	}
     }
 
