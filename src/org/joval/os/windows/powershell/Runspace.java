@@ -96,7 +96,7 @@ public class Runspace implements IRunspace {
 	    if (modules.contains(cs)) {
 		logger.debug(JOVALMsg.STATUS_POWERSHELL_MODULE_SKIP, cs);
 	    } else {
-		logger.info(JOVALMsg.STATUS_POWERSHELL_MODULE_LOAD, cs);
+		logger.debug(JOVALMsg.STATUS_POWERSHELL_MODULE_LOAD, cs);
 		in = new ByteArrayInputStream(buff.toByteArray());
 		String line = null;
 		int lines = 0;
