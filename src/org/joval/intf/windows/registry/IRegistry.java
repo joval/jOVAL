@@ -4,10 +4,10 @@
 package org.joval.intf.windows.registry;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
 import org.joval.intf.util.ILoggable;
+import org.joval.intf.util.ISearchable;
 
 /**
  * An interface for accessing a Windows registry.
@@ -16,55 +16,70 @@ import org.joval.intf.util.ILoggable;
  * @version %I% %G%
  */
 public interface IRegistry extends ILoggable {
-    String COMPUTERNAME_KEY = "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
-    String COMPUTERNAME_VAL = "ComputerName";
+    /**
+     * Search condition field for the hive.
+     */
+    int FIELD_HIVE = 100;
 
-    String HKLM		= "HKEY_LOCAL_MACHINE";
-    String HKU		= "HKEY_USERS";
-    String HKCU		= "HKEY_CURRENT_USER";
-    String HKCR		= "HKEY_CLASSES_ROOT";
-    String DELIM_STR	= "\\";
-    char   DELIM_CH	= '\\';
+    /**
+     * Search condition field for the key path or pattern.
+     */
+    int FIELD_KEY = 101;
+
+    /**
+     * Search condition field for the value name or pattern.
+     */
+    int FIELD_VALUE = 102;
+
+    String COMPUTERNAME_KEY	= "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
+    String COMPUTERNAME_VAL	= "ComputerName";
+    String HKLM			= "HKEY_LOCAL_MACHINE";
+    String HKU			= "HKEY_USERS";
+    String HKCU			= "HKEY_CURRENT_USER";
+    String HKCR			= "HKEY_CLASSES_ROOT";
+    String DELIM_STR		= "\\";
+    char   DELIM_CH		= '\\';
+    String ESCAPED_DELIM	= "\\\\";
 
     /**
      * Get Windows license data from the registry.
      *
      * @throws Exception if there was a problem retrieving the license information.
      */
-    public ILicenseData getLicenseData() throws Exception;
+    ILicenseData getLicenseData() throws Exception;
 
     /**
      * Get a particular hive.  Accepts the HK constants.
      */
-    public IKey getHive(String name) throws IllegalArgumentException;
+    IKey getHive(String name) throws IllegalArgumentException;
 
     /**
-     * Search for a key in the registry.
+     * Get an ISearchable for the registry.
      */
-    public List<IKey> search(String hive, String path) throws NoSuchElementException;
+    ISearchable<IKey> getSearcher();
 
     /**
      * Return a key given its full path (including the name of the hive).
      */
-    public IKey fetchKey(String fullPath) throws IllegalArgumentException, NoSuchElementException;
+    IKey fetchKey(String fullPath) throws Exception;
 
     /**
      * Return a key from a hive using the specified redirection mode.
      */
-    public IKey fetchKey(String hive, String path) throws NoSuchElementException;
+    IKey fetchKey(String hive, String path) throws Exception;
 
     /**
      * Return a subkey of a key using the specified redirection mode.
      */
-    public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException;
+    IKey fetchSubkey(IKey parent, String name) throws Exception;
 
     /**
      * Return a value of a key, whose name matches a pattern.
      */
-    public IValue[] fetchValues(IKey key, Pattern p) throws NoSuchElementException;
+    IValue[] fetchValues(IKey key, Pattern p) throws Exception;
 
     /**
      * Return a value of a key, given its name.
      */
-    public IValue fetchValue(IKey key, String name) throws NoSuchElementException;
+    IValue fetchValue(IKey key, String name) throws Exception;
 }

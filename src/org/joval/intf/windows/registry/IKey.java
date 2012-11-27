@@ -3,7 +3,6 @@
 
 package org.joval.intf.windows.registry;
 
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
@@ -45,11 +44,6 @@ public interface IKey {
     public String getPath();
 
     /**
-     * Iterate over this key's values.
-     */
-    public Iterator <IValue> values() throws IllegalStateException;
-
-    /**
      * Indicates whether this key has a subkey with the given name.
      */
     public boolean hasSubkey(String name);
@@ -57,22 +51,17 @@ public interface IKey {
     /**
      * Returns an array of subkey names.
      */
-    public String[] listSubkeys() throws IllegalStateException;
+    public String[] listSubkeys() throws Exception;
 
     /**
      * Returns an array of subkey names matching (filtered by) the given Pattern.
      */
-    public String[] listSubkeys(Pattern p) throws IllegalStateException;
-
-    /**
-     * Get the name of the nth subkey.
-     */
-    public String getSubkeyName(int n) throws NoSuchElementException, IllegalStateException;
+    public String[] listSubkeys(Pattern p) throws Exception;
 
     /**
      * Get a value of this key.
      */
-    public IValue getValue(String name) throws NoSuchElementException, IllegalStateException;
+    public IValue getValue(String name) throws Exception;
 
     /**
      * Test if this key has a value with the given name.
@@ -82,15 +71,10 @@ public interface IKey {
     /**
      * Returns an array of the names of this key's values.
      */
-    public String[] listValues() throws IllegalStateException;
+    public String[] listValues() throws Exception;
 
     /**
      * Returns an array of the names of this key's values matching (filtered by) the given Pattern.
      */
-    public String[] listValues(Pattern p) throws IllegalStateException;
-
-    /**
-     * Get the name of the nth value of this key.
-     */
-    public String getValueName(int n) throws NoSuchElementException, IllegalStateException;
+    public String[] listValues(Pattern p) throws Exception;
 }

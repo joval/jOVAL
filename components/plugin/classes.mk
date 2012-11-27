@@ -80,18 +80,16 @@ CLASSES=\
 	org.joval.os.windows.powershell.PowershellException				\
 	org.joval.os.windows.powershell.Runspace					\
 	org.joval.os.windows.powershell.RunspacePool					\
-	org.joval.os.windows.registry.BaseRegistry					\
 	org.joval.os.windows.registry.BinaryValue					\
 	org.joval.os.windows.registry.DwordValue					\
 	org.joval.os.windows.registry.ExpandStringValue					\
-	org.joval.os.windows.registry.Key						\
+	org.joval.os.windows.registry.PSKey						\
 	org.joval.os.windows.registry.LicenseData					\
 	org.joval.os.windows.registry.MultiStringValue					\
 	org.joval.os.windows.registry.QwordValue					\
-	org.joval.os.windows.registry.Registry						\
+	org.joval.os.windows.registry.PSRegistry					\
 	org.joval.os.windows.registry.StringValue					\
 	org.joval.os.windows.registry.Value						\
-	org.joval.os.windows.registry.WOW3264RegistryRedirector				\
 	org.joval.os.windows.system.Environment						\
 	org.joval.os.windows.system.WindowsSession					\
 	org.joval.os.windows.wmi.WmiException						\

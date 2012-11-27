@@ -5,6 +5,7 @@ package org.joval.intf.util;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Pattern;
 
 /**
  * An interface for searching something.
@@ -32,6 +33,12 @@ public interface ISearchable<T> {
      */
     int DEPTH_UNLIMITED = -1;
     Object DEPTH_UNLIMITED_VALUE = new Integer(DEPTH_UNLIMITED);
+
+    /**
+     * Hazard a guess for the parent path of the specified pattern. Returns null if indeterminate. This method is
+     * useful when building "from" conditions.
+     */
+    String[] guessParent(Pattern p, Object... args);
 
     /**
      * Recursively search for elements matching the given pattern.

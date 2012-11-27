@@ -275,7 +275,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
 		  case PATTERN_MATCH: {
 		    Pattern p = Pattern.compile(filepath);
-		    from = fs.guessParent(p);
+		    from = searcher.guessParent(p);
 		    conditions.add(searcher.condition(FIELD_PATH, TYPE_PATTERN, p));
 		    conditions.add(ISearchable.RECURSE);
 		    search = true;
@@ -364,7 +364,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
 		  case PATTERN_MATCH: {
 		    Pattern p = Pattern.compile(path);
-		    from = fs.guessParent(p);
+		    from = searcher.guessParent(p);
 		    conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));
 		    search = true;
 		    break;

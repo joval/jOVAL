@@ -3,11 +3,10 @@
 
 package org.joval.scap.oval.adapter.windows;
 
-import java.util.Hashtable;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.HashSet;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -32,6 +31,7 @@ import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.IBaseSession;
+import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.registry.IBinaryValue;
 import org.joval.intf.windows.registry.IDwordValue;
 import org.joval.intf.windows.registry.IExpandStringValue;
@@ -57,7 +57,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
-	Collection<Class> classes = new Vector<Class>();
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((IWindowsSession)session);
 	    classes.add(RegistryObject.class);
@@ -71,11 +71,33 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	return RegistryItem.class;
     }
 
+    @Override
+    protected List<ISearchable.ICondition> getConditions(ObjectType obj) throws CollectException, PatternSyntaxException {
+	List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
+	RegistryObject rObj = (RegistryObject)obj;
+	if (rObj.isSetName() && rObj.getName().getValue() != null && rObj.getName().getValue().getValue() != null) {
+	    String name = (String)rObj.getName().getValue().getValue();
+	    OperationEnumeration op = rObj.getName().getValue().getOperation();
+	    switch(op) {
+	      case EQUALS:
+		conditions.add(new ISearchable.GenericCondition(FIELD_VALUE, TYPE_EQUALITY, name));
+		break;
+	      case PATTERN_MATCH:
+		conditions.add(new ISearchable.GenericCondition(FIELD_VALUE, TYPE_PATTERN, Pattern.compile(name)));
+		break;
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
+	}
+	return conditions;
+    }
+
     protected Collection<RegistryItem> getItems(ObjectType obj, ItemType it, IKey key, IRequestContext rc) throws Exception {
 	if (it instanceof RegistryItem) {
 	    RegistryItem base = (RegistryItem)it;
 	    RegistryObject rObj = (RegistryObject)obj;
-	    Collection<RegistryItem> items = new Vector<RegistryItem>();
+	    Collection<RegistryItem> items = new ArrayList<RegistryItem>();
 
 	    if (rObj.getName() == null || rObj.getName().getValue() == null) {
 		items.add(getItem(base, key, null));
@@ -118,7 +140,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
     /**
      * Get an item given an IKey and name.
      */
-    private RegistryItem getItem(RegistryItem base, IKey key, String name) throws NoSuchElementException, CollectException {
+    private RegistryItem getItem(RegistryItem base, IKey key, String name) throws Exception {
 	RegistryItem item = Factories.sc.windows.createRegistryItem();
 	item.setHive(base.getHive());
 	boolean win32 = false;
@@ -147,7 +169,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	if (name != null && !"".equals(name)) {
 	    IValue val = (win32 ? reg32 : reg).fetchValue(key, name);
 
-	    Collection<EntityItemAnySimpleType> values = new Vector<EntityItemAnySimpleType>();
+	    Collection<EntityItemAnySimpleType> values = new ArrayList<EntityItemAnySimpleType>();
 	    EntityItemRegistryTypeType typeType = Factories.sc.windows.createEntityItemRegistryTypeType();
 	    switch (val.getType()) {
 	      case IValue.REG_SZ: {

@@ -133,6 +133,10 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 	return new GenericCondition(field, type, value);
     }
 
+    public String[] guessParent(Pattern p, Object... args) {
+	return fs.guessParent(p);
+    }
+
     public Collection<IFile> search(List<ISearchable.ICondition> conditions) throws Exception {
 	String from = null;
 	Pattern pathPattern = null, dirPattern = null, basenamePattern = null;

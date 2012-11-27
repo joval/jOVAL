@@ -26,8 +26,7 @@ import org.joval.io.AbstractFilesystem;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WindowsFilesystem;
 import org.joval.os.windows.powershell.RunspacePool;
-import org.joval.os.windows.registry.Registry;
-import org.joval.os.windows.registry.WOW3264RegistryRedirector;
+import org.joval.os.windows.registry.PSRegistry;
 import org.joval.os.windows.wmi.WmiProvider;
 import org.joval.util.AbstractSession;
 import org.joval.util.JOVALMsg;
@@ -41,7 +40,7 @@ import org.joval.util.JOVALMsg;
 public class WindowsSession extends AbstractSession implements IWindowsSession {
     private WmiProvider wmi;
     private boolean is64bit = false;
-    private Registry reg32, reg;
+    private PSRegistry reg32, reg;
     private IWindowsFilesystem fs32;
     private Directory directory = null;
     private RunspacePool runspaces = null;
@@ -111,7 +110,11 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 		if (getNativeView() == View._32BIT) {
 		    reg32 = reg;
 		} else {
-		    reg32 = new Registry(this, View._32BIT);
+		    try {
+			reg32 = new PSRegistry(this, View._32BIT);
+		    } catch (Exception e) {
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    }
 		}
 	    }
 	    return reg32;
@@ -195,7 +198,12 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	    runspaces = new RunspacePool(this, 100);
 	}
 	if (reg == null) {
-	    reg = new Registry(this);
+	    try {
+		reg = new PSRegistry(this);
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		return false;
+	    }
 	    if (!is64bit) reg32 = reg;
 	}
 	if (fs == null) {

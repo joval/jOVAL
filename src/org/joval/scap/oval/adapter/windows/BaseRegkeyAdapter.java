@@ -6,11 +6,11 @@ package org.joval.scap.oval.adapter.windows;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
-import java.util.Hashtable;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.HashSet;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -32,6 +32,7 @@ import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
 import oval.schemas.results.core.ResultEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
+import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
@@ -47,6 +48,14 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter {
+    protected static final int TYPE_EQUALITY		= ISearchable.TYPE_EQUALITY;
+    protected static final int TYPE_PATTERN		= ISearchable.TYPE_PATTERN;
+    protected static final int FIELD_FROM		= ISearchable.FIELD_FROM;
+    protected static final int FIELD_DEPTH		= ISearchable.FIELD_DEPTH;
+    protected static final int FIELD_HIVE		= IRegistry.FIELD_HIVE;
+    protected static final int FIELD_KEY		= IRegistry.FIELD_KEY;
+    protected static final int FIELD_VALUE		= IRegistry.FIELD_VALUE;
+
     protected IWindowsSession session;
     protected IRegistry reg32, reg;
 
@@ -61,7 +70,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 
     public final Collection<T> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	init();
-	Collection<T> items = new Vector<T>();
+	Collection<T> items = new ArrayList<T>();
 	ReflectedRegistryObject rObj = new ReflectedRegistryObject(obj);
 	int winView = 0;
 	if (rObj.isSetBehaviors()) {
@@ -73,18 +82,8 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	    winView = 64;
 	}
 	String hive = (String)rObj.getHive().getValue();
-	for (String path : getPathList(rObj, hive, rc)) {
+	for (IKey key : getKeys(rObj, hive, rc)) {
 	    try {
-		//
-		// Fetch the IKey for the path
-		//
-		IKey key = null;
-		if (path == null || path.length() == 0) {
-		    key = (winView == 32 ? reg32 : reg).getHive(hive);
-		} else {
-		    key = (winView == 32 ? reg32 : reg).fetchKey(hive, path);
-		}
-
 		//
 		// Create the base ItemType for the path
 		//
@@ -93,7 +92,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 		hiveType.setValue(hive);
 		rItem.setHive(hiveType);
 		EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
-		keyType.setValue(path);
+		keyType.setValue(key.getPath());
 		rItem.setKey(keyType);
 		switch(winView) {
 		  case 32:
@@ -130,6 +129,12 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
      */
     protected abstract Class getItemClass();
 
+    protected List<ISearchable.ICondition> getConditions(ObjectType obj) throws PatternSyntaxException, CollectException {
+	@SuppressWarnings("unchecked")
+	List<ISearchable.ICondition> empty = (List<ISearchable.ICondition>)Collections.EMPTY_LIST;
+	return empty;
+    }
+
     /**
      * Return a list of items to associate with the given ObjectType, based on information gathered from the IKey.
      *
@@ -160,39 +165,33 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
      * Return the list of all registry key paths corresponding to the given RegistryObject.  Handles searches (from
      * pattern match operations), singletons (from equals operations), and searches based on RegistryBehaviors.
      */
-    private Collection<String> getPathList(ReflectedRegistryObject rObj, String hive, IRequestContext rc)
-		throws CollectException {
-
+    private List<IKey> getKeys(ReflectedRegistryObject rObj, String hive, IRequestContext rc) throws CollectException {
 	boolean win32 = false;
+	RegistryBehaviors behaviors = null;
 	if (rObj.isSetBehaviors()) {
-	    RegistryBehaviors behaviors = rObj.getBehaviors();
+	    behaviors = rObj.getBehaviors();
 	    win32 = "32_bit".equals(behaviors.getWindowsView());
 	}
 
-	Collection<String> list = new HashSet<String>();
-	boolean patternMatch = false;
-	if (rObj.getKey() == null || rObj.getKey().getValue() == null) {
-	    list.add(""); // special case
-	} else {
-	    String keypath = (String)rObj.getKey().getValue();
+	IRegistry registry = win32 ? reg32 : reg;
+	ISearchable<IKey> searcher = registry.getSearcher();
+	List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
+	conditions.add(searcher.condition(FIELD_HIVE, TYPE_EQUALITY, hive));
+
+	boolean search = false;
+	String keypath = null;
+	if (rObj.getKey() != null && rObj.getKey().getValue() != null) {
+	    keypath = (String)rObj.getKey().getValue();
 	    OperationEnumeration op = rObj.getKey().getOperation();
 	    switch(op) {
 	      case EQUALS:
-		list.add(keypath);
+		conditions.add(searcher.condition(FIELD_KEY, TYPE_EQUALITY, keypath));
 		break;
 
-	      case PATTERN_MATCH: {
-		patternMatch = true;
-		try {
-		    for (IKey key : (win32 ? reg32 : reg).search(hive, keypath)) {
-			if (!list.contains(key.getPath())) {
-			    list.add(key.getPath());
-			}
-		    }
-		} catch (NoSuchElementException e) {
-		}
+	      case PATTERN_MATCH:
+		search = true;
+		conditions.add(searcher.condition(FIELD_KEY, TYPE_PATTERN, Pattern.compile(keypath)));
 		break;
-	      }
 
 	      default:
 		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
@@ -200,79 +199,60 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	    }
 	}
 
-	if (rObj.isSetBehaviors()) {
-	    RegistryBehaviors behaviors = rObj.getBehaviors();
-	    list = getPaths(hive, list, behaviors.getMaxDepth().intValue(), behaviors.getRecurseDirection(), win32);
-	} else if (patternMatch) {
-	    //
-	    // Wildcard pattern matches are really supposed to be recursive searches, unfortunately
-	    //
-	    Collection<String> newList = new Vector<String>();
-	    for (String value : list) {
-		String keypath = (String)rObj.getKey().getValue();
-		if (keypath.indexOf(".*") != -1 || keypath.indexOf(".+") != -1) {
-		    Collection<String> l = new Vector<String>();
-		    l.add(value);
-		    newList.addAll(getPaths(hive, l, -1, "down", win32));
-		}
-	    }
-	    for (String value : newList) {
-		if (!list.contains(value)) {
-		    list.add(value);
-		}
+	//
+	// If the subclass has any search conditions to add, go ahead and add them
+	//
+	conditions.addAll(getConditions(rObj.getObject()));
+
+	int maxDepth = ISearchable.DEPTH_UNLIMITED;
+	if (behaviors != null) {
+	    maxDepth = behaviors.getMaxDepth().intValue();
+	    if (maxDepth != 0 && "down".equals(behaviors.getRecurseDirection())) {
+		search = true;
+		conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(maxDepth)));
 	    }
 	}
 
-	return list;
-    }
-
-    /**
-     * Recursively searchies for matches based on RegistryBehaviors.
-     */
-    private Collection<String> getPaths(String hive, Collection<String> list, int depth, String direction, boolean win32) {
-	if ("none".equals(direction) || depth == 0) {
-	    return list;
-	} else {
-	    Collection<String> results = new Vector<String>();
-	    for (String path : list) {
-		try {
-		    IKey key = null;
-		    if (path.length() > 0) {
-			key = (win32 ? reg32 : reg).fetchKey(hive, path);
-			results.add(path);
+	List<IKey> results = new ArrayList<IKey>();
+	try {
+	    if (search) {
+		results.addAll(searcher.search(conditions));
+	    } else if (behaviors != null && "up".equals(behaviors.getRecurseDirection())) {
+		IKey key = null;
+		if (keypath == null) {
+		    key = registry.fetchKey(hive);
+		} else {
+		    key = registry.fetchKey(hive, keypath);
+		}
+		do {
+		    results.add(key);
+		    String path = key.getPath();
+		    int ptr = path.lastIndexOf(IRegistry.DELIM_STR);
+		    if (ptr == -1) {
+			break;
 		    } else {
-			key = (win32 ? reg32 : reg).fetchKey(hive);
+			key = registry.fetchKey(hive, path.substring(0, ptr));
 		    }
-		    if ("up".equals(direction)) {
-			int ptr = 0;
-			if (path.endsWith(IRegistry.DELIM_STR)) {
-			    path = path.substring(0, path.lastIndexOf(IRegistry.DELIM_STR));
-			}
-			ptr = path.lastIndexOf(IRegistry.DELIM_STR);
-			if (ptr != -1) {
-			    Vector<String> v = new Vector<String>();
-			    v.add(path.substring(0, ptr));
-			    results.addAll(getPaths(hive, v, --depth, direction, win32));
-			}
-		    } else { // recurse down
-			String[] children = key.listSubkeys();
-			if (children != null) {
-			    Vector<String> v = new Vector<String>();
-			    for (int i=0; i < children.length; i++) {
-				if (path.length() == 0) {
-				    v.add(children[i]);
-				} else {
-				    v.add(path + IRegistry.DELIM_STR + children[i]);
-				}
-			    }
-			    results.addAll(getPaths(hive, v, --depth, direction, win32));
-			}
-		    }
-		} catch (NoSuchElementException e) {
+		} while(maxDepth-- > 0);
+	    } else {
+		if (keypath == null) {
+		    results.add(registry.fetchKey(hive));
+		} else {
+		    results.add(registry.fetchKey(hive, keypath));
 		}
 	    }
-	    return results;
+	} catch (NoSuchElementException e) {
+	    // ignore
+	} catch (CollectException e) {
+	    throw e;
+	} catch (Exception e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
+	    session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
+	return results;
     }
 
     /**
@@ -286,7 +266,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	String id = null;
 	boolean keyNil = false;
 	EntityObjectRegistryHiveType hive = null;
-	EntityObjectStringType key = null;
+	EntityObjectStringType key = null, name = null;
 	RegistryBehaviors behaviors = null;
 
 	ReflectedRegistryObject(ObjectType obj) throws CollectException {

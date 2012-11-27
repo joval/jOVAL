@@ -120,6 +120,10 @@ public class UnixFileSearcher implements ISearchable<IFile>, ILoggable {
 	return new GenericCondition(field, type, value);
     }
 
+    public String[] guessParent(Pattern p, Object... args) {
+	return fs.guessParent(p);
+    }
+
     public Collection<IFile> search(List<ISearchable.ICondition> conditions) throws Exception {
 	String cmd = driver.getFindCommand(conditions);
 	Collection<IFile> results = new ArrayList<IFile>();

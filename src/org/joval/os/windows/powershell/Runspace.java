@@ -191,7 +191,7 @@ public class Runspace implements IRunspace {
 	//
 	// Poll the streams for no more than timeout millis if there is no data.
 	//
-	int interval = 250;
+	int interval = 25;
 	int max_iterations = (int)(millis / interval);
 	for (int i=0; i < max_iterations; i++) {
 	    int avail = 0;

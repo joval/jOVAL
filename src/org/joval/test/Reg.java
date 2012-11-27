@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.logging.*;
 
@@ -86,11 +85,11 @@ public class Reg {
 		  }
 
 		  case IValue.REG_SZ:
-		    System.out.println("String: " + ((IDwordValue)value).getData());
+		    System.out.println("String: " + ((IStringValue)value).getData());
 		    break;
 
 		  case IValue.REG_EXPAND_SZ:
-		    System.out.println("Expand String: " + ((IDwordValue)value).getData());
+		    System.out.println("Expand String: " + ((IExpandStringValue)value).getData());
 		    break;
 
 		  case IValue.REG_MULTI_SZ: {
@@ -109,7 +108,7 @@ public class Reg {
 	    }
 
 	    key.closeAll();
-	} catch (NoSuchElementException e) {
+	} catch (Exception e) {
 	    e.printStackTrace();
 	}
     }

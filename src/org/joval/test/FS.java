@@ -42,7 +42,7 @@ public class FS {
 		Pattern pattern = Pattern.compile(path);
 		Collection<IFile> list = new ArrayList<IFile>();
 		ISearchable<IFile> searcher = fs.getSearcher();
-		String[] from = fs.guessParent(pattern);
+		String[] from = searcher.guessParent(pattern);
 		if (from == null) {
 		    Pattern filter = null;
 		    String s = session.getProperties().getProperty(IFilesystem.PROP_MOUNT_FSTYPE_FILTER);

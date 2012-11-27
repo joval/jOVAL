@@ -81,14 +81,15 @@ public abstract class AbstractFilesystem implements IFilesystem {
     }
 
     /**
-     * For use by the ISearchable.ISearchPlugin.
+     * For use by the ISearchable.
      */
     public IFile createFileFromInfo(String path, FileInfo info) {
 	return new DefaultFile(path, info);
     }
 
-    // Implement IFilesystem
-
+    /**
+     * For use by the ISearchable.
+     */
     public String[] guessParent(Pattern p) {
 	String path = p.pattern();
 	if (!path.startsWith("^")) {
@@ -152,6 +153,8 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    return Arrays.asList(parent).toArray(new String[1]);
 	}
     }
+
+    // Implement IFilesystem
 
     public String getDelimiter() {
 	return DELIM;
