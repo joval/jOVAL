@@ -3,6 +3,7 @@
 
 package org.joval.scap.oval.adapter.independent;
 
+import java.lang.management.ManagementFactory;
 import java.math.BigDecimal;
 import java.io.InputStream;
 import java.io.IOException;
@@ -148,11 +149,29 @@ public class Environmentvariable58Adapter implements IAdapter {
 		rc.addMessage(msg);
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
-	} else {
+	} else if (session.getHostname().equals(IBaseSession.LOCALHOST)) {
 	    //
-	    // With no PID specified, use the session's environment.
+	    // In this case, we're supposed to use the tool's PID, and by extension, the tool's environment.
+	    // To get the PID, we use a hack to obtain it from the name of the RuntimeMXBean.
 	    //
-	    environments.put("", session.getEnvironment());
+	    String name = ManagementFactory.getRuntimeMXBean().getName();
+	    int ptr = name.indexOf("@");
+	    if (ptr != -1) {
+		Properties props = new Properties();
+		for (Map.Entry<String, String>entry : System.getenv().entrySet()) {
+		    props.setProperty(entry.getKey(), entry.getValue());
+		}
+		environments.put(name.substring(0,ptr), new Environment(props));
+	    }
+	}
+
+	//
+	// If no environments were found, then just quit now.
+	//
+	if (environments.size() == 0) {
+	    @SuppressWarnings("unchecked")
+	    Collection<Environmentvariable50Item> empty = (Collection<Environmentvariable50Item>)Collections.EMPTY_LIST;
+	    return empty;
 	}
 
 	//
