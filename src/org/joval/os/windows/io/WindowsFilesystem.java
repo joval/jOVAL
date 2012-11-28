@@ -10,10 +10,14 @@ import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
 import org.slf4j.cal10n.LocLogger;
+
+import org.apache.jdbm.Serializer;
 
 import com.sun.jna.platform.win32.Advapi32Util;
 import com.sun.jna.platform.win32.Kernel32Util;
@@ -21,13 +25,16 @@ import com.sun.jna.platform.win32.Win32Exception;
 import com.sun.jna.platform.win32.WinNT;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFileMetadata;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.io.AbstractFilesystem;
+import org.joval.io.fs.AbstractFilesystem;
+import org.joval.io.fs.DefaultMetadata;
+import org.joval.io.fs.IAccessor;
 import org.joval.os.windows.identity.LocalACE;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
@@ -49,7 +56,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     }
 
     public WindowsFilesystem(IWindowsSession session, IWindowsSession.View view) {
-	super(session, "\\");
+	super(session, DELIM_STR, IWindowsSession.View._32BIT == view ? "fs32" : "fs");
 	if (view == null) {
 	    view = session.getNativeView();
 	}
@@ -59,16 +66,24 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	}
     }
 
-    public void dispose() {
+    @Override
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
 	if (searcher != null) {
-	    searcher.close();
+	    searcher.setLogger(logger);
 	}
     }
 
     public synchronized ISearchable<IFile> getSearcher() throws IOException {
 	if (searcher == null) {
 	    try {
-		searcher = new WindowsFileSearcher((IWindowsSession)session, view);
+		Map<String, Collection<String>> searchMap;
+		if (db == null) {
+		    searchMap = new HashMap<String, Collection<String>>();
+		} else {
+		    searchMap = db.createHashMap("searches");
+		}
+		searcher = new WindowsFileSearcher((IWindowsSession)session, view, searchMap);
 	    } catch (IOException e) {
 		throw e;
 	    } catch (Exception e) {
@@ -108,12 +123,18 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	}
     }
 
+    public Serializer<IFile> getFileSerializer(Integer instanceKey) {
+	return new WindowsFileSerializer(instanceKey);
+    }
+
     @Override
-    public IFile createFileFromInfo(String path, FileInfo info) {
+    public IFile createFileFromInfo(IFileMetadata info) {
 	if (info instanceof WindowsFileInfo) {
-	    return new WindowsFile(path, (WindowsFileInfo)info);
+	    IFile f = new WindowsFile((WindowsFileInfo)info);
+	    cache.put(info.getPath(), f);
+	    return f;
 	} else {
-	    return super.createFileFromInfo(path, info);
+	    return super.createFileFromInfo(info);
 	}
     }
 
@@ -128,32 +149,32 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		realPath = alt;
 	    }
 	}
-	return new WindowsFile(realPath, new File(path), flags);
-    }
+	switch(flags) {
+	  case READONLY:
+	    if (!cache.containsKey(realPath)) {
+		IFile f = new WindowsFile(realPath, new File(path), flags);
+		cache.put(realPath, f);
+	    }
+	    return cache.get(realPath);
 
-    @Override
-    public void setLogger(LocLogger logger) {
-	super.setLogger(logger);
-	if (searcher != null) {
-	    searcher.setLogger(logger);
+	  default:
+	    return new WindowsFile(realPath, new File(path), flags);
 	}
     }
 
-    public class WindowsFile extends DefaultFile {
+    // Private
+
+    class WindowsFile extends DefaultFile {
 	WindowsFile(String path, File file, IFile.Flags flags) {
-	    this.path = path;
-	    this.flags = flags;
-	    accessor = new WindowsAccessor(file);
+	    super(path, new WindowsAccessor(path, file), flags);
 	}
 
-	WindowsFile(String path, WindowsFileInfo info) {
-	    this.path = path;
-	    this.info = info;
-	    flags = getDefaultFlags();
+	WindowsFile(WindowsFileInfo info) {
+	    super(info, Flags.READONLY);
 	}
 
 	@Override
-	protected FileAccessor getAccessor() {
+	protected IAccessor getAccessor() {
 	    if (accessor == null) {
 		String realPath = path;
 		if (redirector != null) {
@@ -162,26 +183,27 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 			realPath = alt;
 		    }
 		}
-		accessor = new WindowsAccessor(new File(realPath));
+		accessor = new WindowsAccessor(path, new File(realPath));
 	    }
 	    return accessor;
 	}
     }
 
-    // Private
-
     class WindowsAccessor extends DefaultAccessor implements IWindowsFileInfo {
+	/**
+	 * Due to 32-bit redirection, the path can differ from the underlying File's path.
+	 */
 	private String path;
 
-	WindowsAccessor(File file) {
+	WindowsAccessor(String path, File file) {
 	    super(file);
-	    path = file.getPath();
+	    this.path = path;
 	}
 
 	@Override
-	public FileInfo getInfo() throws IOException {
-	    FileInfo.Type type = file.isDirectory() ? FileInfo.Type.DIRECTORY : FileInfo.Type.FILE;
-	    return new WindowsFileInfo(getCtime(), getMtime(), getAtime(), type, getLength(), this);
+	public DefaultMetadata getInfo() throws IOException {
+	    return new WindowsFileInfo(file.isDirectory() ? IFileMetadata.Type.DIRECTORY : IFileMetadata.Type.FILE, path,
+				       file.getCanonicalPath(), getCtime(), getMtime(), getAtime(), getLength(), this);
 	}
 
 	// Implement IWindowsFileInfo

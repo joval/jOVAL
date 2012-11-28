@@ -22,7 +22,7 @@ import org.joval.intf.windows.registry.IStringValue;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.io.AbstractFilesystem;
+import org.joval.io.fs.AbstractFilesystem;
 import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.io.WindowsFilesystem;
 import org.joval.os.windows.powershell.RunspacePool;

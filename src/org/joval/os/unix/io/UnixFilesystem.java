@@ -7,20 +7,27 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
 import org.slf4j.cal10n.LocLogger;
 
+import org.apache.jdbm.Serializer;
+
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFileMetadata;
 import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.io.IUnixFilesystemDriver;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.ISearchable;
-import org.joval.io.AbstractFilesystem;
+import org.joval.io.fs.AbstractFilesystem;
+import org.joval.io.fs.DefaultMetadata;
+import org.joval.io.fs.IAccessor;
 import org.joval.os.unix.io.driver.AIXDriver;
 import org.joval.os.unix.io.driver.LinuxDriver;
 import org.joval.os.unix.io.driver.MacOSXDriver;
@@ -42,21 +49,35 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
     private Collection<IMount> mounts;
 
     public UnixFilesystem(IUnixSession session) {
-	super(session, "/");
+	super(session, DELIM_STR, "fs");
 	S = session.getTimeout(IUnixSession.Timeout.S);
 	M = session.getTimeout(IUnixSession.Timeout.M);
 	L = session.getTimeout(IUnixSession.Timeout.L);
 	XL= session.getTimeout(IUnixSession.Timeout.XL);
     }
 
-    public void dispose() {
-    }
-
     public ISearchable<IFile> getSearcher() {
 	if (searcher == null) {
-	    searcher = new UnixFileSearcher((IUnixSession)session, getDriver());
+	    Map<String, Collection<String>> searchMap;
+	    if (db == null) {
+		searchMap = new HashMap<String, Collection<String>>();
+	    } else {
+		searchMap = db.createHashMap("searches");
+	    }
+	    searcher = new UnixFileSearcher((IUnixSession)session, getDriver(), searchMap);
 	}
 	return searcher;
+    }
+
+    @Override
+    public void setLogger(LocLogger logger) {
+	super.setLogger(logger);
+	if (searcher != null) {
+	    searcher.setLogger(logger);
+	}
+	if (driver != null) {
+	    driver.setLogger(logger);
+	}
     }
 
     public Collection<IMount> getMounts(Pattern filter) throws IOException {
@@ -83,23 +104,18 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	}
     }
 
-    @Override
-    public void setLogger(LocLogger logger) {
-	super.setLogger(logger);
-	if (searcher != null) {
-	    searcher.setLogger(logger);
-	}
-	if (driver != null) {
-	    driver.setLogger(logger);
-	}
+    public Serializer<IFile> getFileSerializer(Integer instanceKey) {
+	return new UnixFileSerializer(instanceKey);
     }
 
     @Override
-    public IFile createFileFromInfo(String path, FileInfo info) {
+    public IFile createFileFromInfo(IFileMetadata info) {
 	if (info instanceof UnixFileInfo) {
-	    return new UnixFile((UnixFileInfo)info);
+	    IFile f = new UnixFile((UnixFileInfo)info);
+	    cache.put(info.getPath(), f);
+	    return f;
 	} else {
-	    return super.createFileFromInfo(path, info);
+	    return super.createFileFromInfo(info);
 	}
     }
 
@@ -107,7 +123,17 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	if (autoExpand) {
 	    path = env.expand(path);
 	}
-	return new UnixFile(new File(path), flags);
+	switch(flags) {
+	  case READONLY:
+	    if (!cache.containsKey(path)) {
+		IFile f = new UnixFile(new File(path), flags);
+		cache.put(path, f);
+	    }
+	    return cache.get(path);
+
+	  default:
+	    return new UnixFile(new File(path), flags);
+	}
     }
 
     // Implement IUnixFilesystem
@@ -135,63 +161,7 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	return driver;
     }
 
-    public class UnixFile extends DefaultFile {
-	protected UnixFile() {}
-
-	UnixFile(File file, IFile.Flags flags) throws IOException {
-	    path = file.getPath();
-	    this.flags = flags;
-	    accessor = new UnixAccessor(file);
-	}
-
-	/**
-	 * Create a UnixFile using information.
-	 */
-	protected UnixFile(UnixFileInfo info) {
-	    super(info.getPath(), info);
-	}
-
-	@Override
-	public String getLinkPath() throws IllegalStateException, IOException {
-	    if (getInfo().getType() != AbstractFilesystem.FileInfo.Type.LINK) {
-		throw new IllegalStateException(getInfo().getType().toString());
-	    }
-	    return ((UnixFileInfo)getInfo()).getLinkPath();
-	}
-
-	@Override
-	public String getCanonicalPath() throws IOException {
-	    if (info == null) {
-		return getAccessor().getCanonicalPath();
-	    } else {
-		return ((UnixFileInfo)info).getCanonicalPath();
-	    }
-	}
-
-	@Override
-	public String toString() {
-	    return getPath();
-	}
-
-	@Override
-        protected FileAccessor getAccessor() throws IOException {
-            if (accessor == null) {
-                accessor = new UnixAccessor(new File(path));
-            }
-            return accessor;
-        }
-
-	@Override
-	public boolean isDirectory() throws IOException {
-	    if (isLink()) {
-		return getFile(getCanonicalPath()).isDirectory();
-	    } else {
-		return super.isDirectory();
-	    }
-	}
-    }
-
-    // Protected
+    // Internal
 
     protected UnixFileInfo getUnixFileInfo(String path) throws IOException {
 	try {
@@ -207,12 +177,47 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 		logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, "''");
 	    }
 	    return ufi;
+	} catch (IOException e) {
+	    throw e;
 	} catch (Exception e) {
-	    if (e instanceof IOException) {
-		throw (IOException)e;
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new IOException(e.getMessage());
+	}
+    }
+
+    protected class UnixFile extends DefaultFile {
+	UnixFile(File file, IFile.Flags flags) throws IOException {
+	    super(file.getPath(), new UnixAccessor(file), flags);
+	}
+
+	protected UnixFile(String path, IAccessor accessor, IFile.Flags flags) {
+	    super(path, accessor, flags);
+	}
+
+	/**
+	 * Create a UnixFile using information.
+	 */
+	protected UnixFile(UnixFileInfo info) {
+	    super(info, IFile.Flags.READONLY);
+	}
+
+	@Override
+        protected IAccessor getAccessor() throws IOException {
+            if (accessor == null) {
+                accessor = new UnixAccessor(new File(path));
+            }
+            return accessor;
+        }
+
+	/**
+	 * If this file is a link to a directory, we want this to return true.
+	 */
+	@Override
+	public boolean isDirectory() throws IOException {
+	    if (isLink()) {
+		return getFile(getCanonicalPath()).isDirectory();
 	    } else {
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		throw new IOException(e.getMessage());
+		return super.isDirectory();
 	    }
 	}
     }
@@ -226,8 +231,8 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	}
 
 	@Override
-	public FileInfo getInfo() throws IOException {
-	    FileInfo result = getUnixFileInfo(path);
+	public DefaultMetadata getInfo() throws IOException {
+	    DefaultMetadata result = getUnixFileInfo(path);
 	    if (result == null) {
 		result = super.getInfo();
 	    }

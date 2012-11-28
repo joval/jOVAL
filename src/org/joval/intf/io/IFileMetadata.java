@@ -15,17 +15,15 @@ import java.util.regex.Pattern;
  * @version %I% %G%
  */
 public interface IFileMetadata {
+    enum Type {
+	FILE,
+	DIRECTORY,
+	LINK;
+    }
+
     long UNKNOWN_TIME = -1L;
 
-    /**
-     * Returns whether the IFile exists.
-     */
-    boolean exists();
-
-    /**
-     * Returns whether the IFile represents a link to another IFile.
-     */
-    boolean isLink() throws IOException;
+    Type getType() throws IOException;
 
     /**
      * If the IFile represents a link, returns a path to the link target.
@@ -41,17 +39,6 @@ public interface IFileMetadata {
      * Get the time that the file was created.
      */
     public long createTime() throws IOException;
-
-    /**
-     * Does this file represent a directory?  Note, if this file is a link to a directory, this method is intended to
-     * return true.
-     */
-    public boolean isDirectory() throws IOException;
-
-    /**
-     * Does this file represent a regular file (i.e., not a directory)?
-     */
-    public boolean isFile() throws IOException;
 
     /**
      * Get the time this file was last modified.
@@ -72,16 +59,6 @@ public interface IFileMetadata {
      * Returns the canonical path representation of the IFile (i.e., linkless path).
      */
     public String getCanonicalPath() throws IOException;
-
-    /**
-     * Get the name of the file.
-     */
-    public String getName();
-
-    /**
-     * Get the name of this file's parent directory.  If this is the root directory, its name is returned.
-     */
-    public String getParent();
 
     /**
      * Get a platform-specific extended attributes API, if any.

@@ -45,11 +45,6 @@ public interface IUnixFileInfo extends IFileEx {
     String getUnixFileType();
 
     /**
-     * If the file is a link, returns the link path (possibly relative, and hence, different from the canon path).
-     */
-    String getLinkPath();
-
-    /**
      * Get the whole permissions string, e.g., "rwxrwxrwx".
      */
     String getPermissions();

@@ -7,7 +7,7 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Stack;
 
-import org.joval.io.AbstractFilesystem;
+import org.joval.io.fs.DefaultMetadata;
 import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.util.StringTools;
 
@@ -17,7 +17,7 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class UnixFileInfo extends AbstractFilesystem.FileInfo implements IUnixFileInfo {
+public class UnixFileInfo extends DefaultMetadata implements IUnixFileInfo {
     static final String DELIM = "/";
 
     private String path;
@@ -29,55 +29,16 @@ public class UnixFileInfo extends AbstractFilesystem.FileInfo implements IUnixFi
     private char unixType = FILE_TYPE;
     private Properties extended;
 
-    public UnixFileInfo(long ctime, long mtime, long atime, Type type, long length, String path, String linkTarget,
-			char unixType, String permissions, int uid, int gid, boolean hasExtendedAcl) {
-	this(ctime, mtime, atime, type, length, path, linkTarget, unixType, permissions, uid, gid, hasExtendedAcl, null);
-    }
-
-    /**
-     * Create a UnixFile with a live IFile accessor.
-     */
-    public UnixFileInfo(long ctime, long mtime, long atime, Type type, long length, String path, String linkTarget,
+    public UnixFileInfo(Type type, String path, String linkTarget, long ctime, long mtime, long atime, long length,
 			char unixType, String permissions, int uid, int gid, boolean hasExtendedAcl, Properties extended) {
 
-	super(ctime, mtime, atime, type, length);
-
-	this.path = path;
-	this.linkTarget = linkTarget;
-	this.canonicalPath = resolvePath(linkTarget);
-
+	super(type, path, linkTarget, linkTarget == null ? path : resolvePath(path, linkTarget), ctime, mtime, atime, length);
 	this.unixType = unixType;
 	this.permissions = permissions;
 	this.uid = uid;
 	this.gid = gid;
 	this.hasExtendedAcl = hasExtendedAcl;
 	this.extended = extended; // extended data
-    }
-
-/*
-    UnixFileInfo(String path, AbstractFilesystem.FileInfo info) {
-	ctime = info.getCtime();
-	mtime = info.getMtime();
-	atime = info.getAtime();
-	type = info.getType();
-	length = info.getLength();
-	this.path = path;
-	permissions = "-rwxrwxrwx";
-	uid = -1;
-	gid = -1;
-    }
-*/
-
-    public String getPath() {
-	return path;
-    }
-
-    public String getLinkPath() {
-	return linkTarget;
-    }
-
-    public String getCanonicalPath() {
-	return canonicalPath;
     }
 
     // Implement IUnixFileInfo
@@ -182,7 +143,7 @@ public class UnixFileInfo extends AbstractFilesystem.FileInfo implements IUnixFi
 	}
     }
 
-    // Private
+    // Internal
 
     /**
      * Resolve an absolute path from a relative path from a base file path.
@@ -191,7 +152,7 @@ public class UnixFileInfo extends AbstractFilesystem.FileInfo implements IUnixFi
      *
      * @returns an absolute path to the target
      */
-    private String resolvePath(String target) throws UnsupportedOperationException {
+    static String resolvePath(String path, String target) throws UnsupportedOperationException {
 	if (target == null) {
 	    return null;
 	} else if (target.startsWith(DELIM)) {

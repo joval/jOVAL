@@ -1,7 +1,7 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.io;
+package org.joval.io.fs;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -15,14 +15,21 @@ import java.security.AccessControlException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.cal10n.LocLogger;
 
+import org.apache.jdbm.DB;
+import org.apache.jdbm.DBMaker;
+import org.apache.jdbm.Serializer;
+
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFileEx;
+import org.joval.intf.io.IFileMetadata;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IRandomAccess;
 import org.joval.intf.util.ILoggable;
@@ -34,7 +41,7 @@ import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
 /**
- * An abstract IFilesystem implementation with some convenience methods.
+ * An abstract IFilesystem implementation with caching and convenience methods.
  *
  * All IFilesystem implementations extend this base class.
  *
@@ -42,49 +49,90 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public abstract class AbstractFilesystem implements IFilesystem {
+    /**
+     * Static map of filesystem instances indexed by hashcode for reference by deserialized serializers.
+     */
+    public static Map<Integer, AbstractFilesystem> instances = new HashMap<Integer, AbstractFilesystem>();
+
     protected boolean autoExpand = true;
     protected IProperty props;
     protected ISession session;
     protected IEnvironment env;
     protected LocLogger logger;
+    protected DB db;
+    protected Map<String, IFile> cache;
 
     protected final String ESCAPED_DELIM;
     protected final String DELIM;
 
-    protected AbstractFilesystem(ISession session, String delim) {
+    protected AbstractFilesystem(ISession session, String delim, String dbkey) {
 	ESCAPED_DELIM = Matcher.quoteReplacement(delim);
 	DELIM = delim;
 	this.session = session;
 	logger = session.getLogger();
 	props = session.getProperties();
 	env = session.getEnvironment();
-    }
 
-    public abstract void dispose();
+	if (session.getProperties().getBooleanProperty(IFilesystem.PROP_CACHE_JDBM)) {
+	    for (File f : session.getWorkspace().listFiles()) {
+		if (f.getName().startsWith(dbkey)) {
+		    f.delete();
+		}
+	    }
+	    DBMaker dbm = DBMaker.openFile(new File(session.getWorkspace(), dbkey).toString());
+	    dbm.disableTransactions();
+	    dbm.closeOnExit();
+	    dbm.deleteFilesAfterClose();
+	    db = dbm.make();
+	    Integer instanceKey = new Integer(hashCode());
+	    instances.put(instanceKey, this);
+	    cache = db.createHashMap("files", null, getFileSerializer(instanceKey));
+	} else {
+	    cache = new HashMap<String, IFile>();
+	}
+    }
 
     public void setAutoExpand(boolean autoExpand) {
 	this.autoExpand = autoExpand;
     }
 
-    public IFile.Flags getDefaultFlags() {
-	return IFile.Flags.READONLY;
-    }
-
-    // Implement ILoggable
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
-    }
-
-    public LocLogger getLogger() {
-	return logger;
+    public void dispose() {
+	if (db != null) {
+	    db.close();
+	    db = null;
+	}
+	instances.remove(new Integer(hashCode()));
     }
 
     /**
-     * For use by the ISearchable.
+     * Create a hash-map. If JDBM caching is enabled, the map will be backed by a b-tree file.
      */
-    public IFile createFileFromInfo(String path, FileInfo info) {
-	return new DefaultFile(path, info);
+    public <J, K> Map<J, K> createHashMap(String name, Serializer<J> keySerializer, Serializer<K> valueSerializer) {
+	if (db == null) {
+	    return new HashMap<J, K>();
+	} else if (valueSerializer == null) {
+	    return db.createHashMap(name);
+	} else {
+	    return db.createHashMap(name, keySerializer, valueSerializer);
+	}
+    }
+
+    /**
+     * Return an implementation-specific IFile serializer for JDBM. The instanceKey is used to re-associate
+     * deserialized IFile instances back with this AbstractFilesystem instance.
+     */
+    public abstract Serializer<IFile> getFileSerializer(Integer instanceKey);
+
+    /**
+     * For use during deserialization.  A serialized IFile will only consist of metadata.  So, to reconstitute an IFile
+     * capable of accessing the underlying file, use:
+     *
+     * <code>AbstractFilesystem.instances.get(instanceKey).createFileFromInfo(...)</code>
+     */
+    public IFile createFileFromInfo(IFileMetadata info) {
+	IFile f = new DefaultFile(info, IFile.Flags.READONLY);
+	cache.put(info.getPath(), f);
+	return f;
     }
 
     /**
@@ -154,14 +202,24 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	}
     }
 
-    // Implement IFilesystem
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
+    // Implement IFilesystem (partially)
 
     public String getDelimiter() {
 	return DELIM;
     }
 
     public final IFile getFile(String path) throws IOException {
-	return getFile(path, getDefaultFlags());
+	return getFile(path, IFile.Flags.READONLY);
     }
 
     public final IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
@@ -177,103 +235,112 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	return getFile(path).getInputStream();
     }
 
-    /**
-     * File access layer implementation base class. Every IFile is backed by a FileAccessor, which is responsible for
-     * interacting with the file.
-     */
-    public abstract class FileAccessor {
-	public FileAccessor() {}
-	public abstract boolean exists();
-	public abstract FileInfo getInfo() throws IOException;
-	public abstract long getCtime() throws IOException;
-	public abstract long getMtime() throws IOException;
-	public abstract long getAtime() throws IOException;
-	public abstract long getLength() throws IOException;
-	public abstract IRandomAccess getRandomAccess(String mode) throws IOException;
-	public abstract InputStream getInputStream() throws IOException;
-	public abstract OutputStream getOutputStream(boolean append) throws IOException;
-	public abstract String getCanonicalPath() throws IOException;
-	public abstract String[] list() throws IOException;
-	public abstract boolean mkdir();
-	public abstract void delete() throws IOException;
-    }
+    // Inner Classes
 
     /**
-     * A FileInfo object contains information about a file. It can be constructed from a FileAccessor, or directly from
-     * data gathered through other means (i.e., cached data). Subclasses are used to store platform-specific file
-     * information.  Sublcasses should implement whatever extension of IFileEx is appropriate.
-     */
-    public static class FileInfo implements IFileEx {
-	public enum Type {
-	    FILE,
-	    DIRECTORY,
-	    LINK;
-	}
-
-	protected long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, length=-1L;
-	protected Type type = null;
-
-	protected FileInfo() {}
-
-	public FileInfo(FileAccessor access, Type type) throws IOException {
-	    this.type = type;
-	    ctime = access.getCtime();
-	    mtime = access.getMtime();
-	    atime = access.getAtime();
-	    length = access.getLength();
-	}
-
-	public FileInfo(long ctime, long mtime, long atime, Type type, long length) {
-	    this.ctime = ctime;
-	    this.mtime = mtime;
-	    this.atime = atime;
-	    this.type = type;
-	    this.length = length;
-	}
-
-	public long getCtime() {
-	    return ctime;
-	}
-
-	public long getMtime() {
-	    return mtime;
-	}
-
-	public long getAtime() {
-	    return atime;
-	}
-
-	public long getLength() {
-	    return length;
-	}
-
-	public Type getType() {
-	    return type;
-	}
-    }
-
-    /**
-     * Default implementation of an IFile -- works with Java (local) Files.
+     * The default implementation of an IFile -- works with Java (local) Files.
      */
     public class DefaultFile implements IFile {
 	protected String path;
-	protected FileAccessor accessor;
-	protected FileInfo info;
+	protected IAccessor accessor;
+	protected IFileMetadata info;
 	protected Flags flags;
 
-	public DefaultFile(File f, Flags flags) {
-	    path = f.getPath();
-	    this.flags = flags;
-	    this.accessor = new DefaultAccessor(f);
-	}
-
-	public DefaultFile(String path, FileInfo info) {
+	/**
+	 * Create a file from an accessor.
+	 */
+	public DefaultFile(String path, IAccessor accessor, Flags flags) {
 	    this.path = path;
-	    this.info = info;
-	    flags = getDefaultFlags();
+	    this.accessor = accessor;
+	    this.flags = flags;
 	}
 
-	protected DefaultFile() {}
+	/**
+	 * Create a file from metadata.
+	 */
+	public DefaultFile(IFileMetadata info, Flags flags) {
+	    path = info.getPath();
+	    this.info = info;
+	    this.flags = flags;
+	}
+
+	// Implement IFileMetadata
+
+	public Type getType() throws IOException {
+	    return getInfo().getType();
+	}
+
+	public String getLinkPath() throws IllegalStateException, IOException {
+	    return getInfo().getLinkPath();
+	}
+
+	public long accessTime() throws IOException {
+	    return getInfo().accessTime();
+	}
+
+	public long createTime() throws IOException {
+	    return getInfo().createTime();
+	}
+
+	public long lastModified() throws IOException {
+	    return getInfo().lastModified();
+	}
+
+	public long length() throws IOException {
+	    return getInfo().length();
+	}
+
+	public String getPath() {
+	    return path;
+	}
+
+	public String getCanonicalPath() throws IOException {
+	    return getInfo().getCanonicalPath();
+	}
+
+	public IFileEx getExtended() throws IOException {
+	    return getInfo().getExtended();
+	}
+
+	// Implement IFile
+
+	public String getName() {
+	    if (path.equals(DELIM)) {
+		return path;
+	    } else {
+		int ptr = path.lastIndexOf(DELIM);
+		if (ptr == -1) {
+		    return path;
+		} else {
+		    return path.substring(ptr + DELIM.length());
+		}
+	    }
+	}
+
+	public String getParent() {
+	    if (path.equals(DELIM)) {
+		return path;
+	    } else {
+		int ptr = path.lastIndexOf(DELIM);
+		if (ptr == -1) {
+		    return path;
+		} else {
+		    return path.substring(0, ptr);
+		}
+	    }
+	}
+
+	public boolean isDirectory() throws IOException {
+	    return getInfo().getType() == Type.DIRECTORY;
+	}
+
+	public boolean isFile() throws IOException {
+	    return getInfo().getType() == Type.FILE;
+	}
+
+	public boolean isLink() throws IOException {
+	    return getInfo().getType() == Type.LINK;
+	}
 
 	public boolean exists() {
 	    if (info == null) {
@@ -285,25 +352,6 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    } else {
 		return true;
 	    }
-	}
-
-	public boolean isLink() throws IOException {
-	    return getInfo().getType() == FileInfo.Type.LINK;
-	}
-
-	public String getLinkPath() throws IllegalStateException, IOException {
-	    if (getInfo().getType() != FileInfo.Type.LINK) {
-		throw new IllegalStateException(getInfo().getType().toString());
-	    }
-	    return getAccessor().getCanonicalPath();
-	}
-
-	public long accessTime() throws IOException {
-	    return getInfo().getAtime();
-	}
-
-	public long createTime() throws IOException {
-	    return getInfo().getCtime();
 	}
 
 	public final boolean mkdir() {
@@ -337,22 +385,6 @@ public abstract class AbstractFilesystem implements IFilesystem {
 		throw new AccessControlException("Method: getRandomAccess, Mode: " + mode + ", Flags: " + flags);
 	    }
 	    return getAccessor().getRandomAccess(mode);
-	}
-
-	public boolean isDirectory() throws IOException {
-	    return getInfo().getType() == FileInfo.Type.DIRECTORY;
-	}
-
-	public boolean isFile() throws IOException {
-	    return getInfo().getType() == FileInfo.Type.FILE;
-	}
-
-	public long lastModified() throws IOException {
-	    return getInfo().getMtime();
-	}
-
-	public long length() throws IOException {
-	    return getInfo().getLength();
 	}
 
 	public String[] list() throws IOException {
@@ -408,49 +440,19 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    }
 	}
 
-	public String getPath() {
-	    return path;
-	}
-
-	public String getCanonicalPath() throws IOException {
-	    return getAccessor().getCanonicalPath();
-	}
-
-	public String getName() {
-	    int ptr = path.lastIndexOf(DELIM);
-	    if (ptr == -1) {
-		return path;
-	    } else {
-		return path.substring(ptr+1);
-	    }
-	}
-
-	public String getParent() {
-	    int ptr = path.lastIndexOf(DELIM);
-	    if (ptr == -1) {
-		return path;
-	    } else if (ptr == 0) {
-		return DELIM;
-	    } else {
-		return path.substring(0,ptr);
-	    }
-	}
-
-	public IFileEx getExtended() throws IOException {
-	    return getInfo();
-	}
-
 	// Internal
 
-	protected FileAccessor getAccessor() throws IOException {
+	protected IAccessor getAccessor() throws IOException {
 	    if (accessor == null) {
-		accessor = new DefaultAccessor(new File(path));
+		// Info must not be null
+		accessor = new DefaultAccessor(new File(info.getPath()));
 	    }
 	    return accessor;
 	}
 
-	protected FileInfo getInfo() throws IOException {
+	protected IFileMetadata getInfo() throws IOException {
 	    if (info == null) {
+		// Accessor must not be null
 		info = getAccessor().getInfo();
 	    }
 	    return info;
@@ -458,9 +460,9 @@ public abstract class AbstractFilesystem implements IFilesystem {
     }
 
     /**
-     * FileAccessor implementation for Java (local) Files.
+     * A FileAccessor implementation for Java (local) Files.
      */
-    public class DefaultAccessor extends FileAccessor {
+    public class DefaultAccessor implements IAccessor {
 	protected File file;
 
 	protected DefaultAccessor(File file) {
@@ -471,7 +473,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    return file.toString();
 	}
 
-	// Implement abstract methods from FileAccessor
+	// Implement IAccessor
 
 	public boolean exists() {
 	    return file.exists();
@@ -481,7 +483,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    file.delete();
 	}
 
-	public FileInfo getInfo() throws IOException {
+	public DefaultMetadata getInfo() throws IOException {
 	    if (exists()) {
 		long ctime = getCtime();
 		long mtime = getMtime();
@@ -490,7 +492,10 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
 		// Determine the file type...
 
-		FileInfo.Type type = FileInfo.Type.FILE;
+		IFileMetadata.Type type = IFileMetadata.Type.FILE;
+		String path = file.getPath();
+		String canonicalPath = file.getCanonicalPath();
+		String linkPath = null;
 
 		File canon;
 		if (file.getParent() == null) {
@@ -501,12 +506,13 @@ public abstract class AbstractFilesystem implements IFilesystem {
 		}
 
 		if (!canon.getCanonicalFile().equals(canon.getAbsoluteFile())) {
-		    type = FileInfo.Type.LINK;
+		    type = IFileMetadata.Type.LINK;
+		    linkPath = canonicalPath;
 		} else if (file.isDirectory()) {
-		    type = FileInfo.Type.DIRECTORY;
+		    type = IFileMetadata.Type.DIRECTORY;
 		}
 
-		return new FileInfo(ctime, mtime, atime, type, length);
+		return new DefaultMetadata(type, path, linkPath, canonicalPath, this);
 	    } else {
 		throw new FileNotFoundException(file.getPath());
 	    }
@@ -551,52 +557,52 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	public boolean mkdir() {
 	    return file.mkdir();
 	}
-    }
 
-    // Internal
+	// Internal
 
-    /**
-     * Implementation of IRandomAccess for the DefaultFile.
-     */
-    class RandomAccessImpl implements IRandomAccess {
-	private RandomAccessFile raf;
+	/**
+	 * Default implementation of IRandomAccess
+	 */
+	class RandomAccessImpl implements IRandomAccess {
+	    private RandomAccessFile raf;
 
-	public RandomAccessImpl(RandomAccessFile raf) {
-	    this.raf = raf;
-	}
+	    public RandomAccessImpl(RandomAccessFile raf) {
+		this.raf = raf;
+	    }
 
-	// Implement IRandomAccess
+	    // Implement IRandomAccess
 
-	public void readFully(byte[] buff) throws IOException {
-	    raf.readFully(buff);
-	}
+	    public void readFully(byte[] buff) throws IOException {
+		raf.readFully(buff);
+	    }
 
-	public void close() throws IOException {
-	    raf.close();
-	}
+	    public void close() throws IOException {
+		raf.close();
+	    }
 
-	public void seek(long pos) throws IOException {
-	    raf.seek(pos);
-	}
+	    public void seek(long pos) throws IOException {
+		raf.seek(pos);
+	    }
 
-	public int read() throws IOException {
-	    return raf.read();
-	}
+	    public int read() throws IOException {
+		return raf.read();
+	    }
 
-	public int read(byte[] buff) throws IOException {
-	    return raf.read(buff);
-	}
+	    public int read(byte[] buff) throws IOException {
+		return raf.read(buff);
+	    }
 
-	public int read(byte[] buff, int offset, int len) throws IOException {
-	    return raf.read(buff, offset, len);
-	}
+	    public int read(byte[] buff, int offset, int len) throws IOException {
+		return raf.read(buff, offset, len);
+	    }
 
-	public long length() throws IOException {
-	    return raf.length();
-	}
+	    public long length() throws IOException {
+		return raf.length();
+	    }
 
-	public long getFilePointer() throws IOException {
-	    return raf.getFilePointer();
+	    public long getFilePointer() throws IOException {
+		return raf.getFilePointer();
+	    }
 	}
     }
 }

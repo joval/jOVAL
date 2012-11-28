@@ -41,6 +41,37 @@ public interface IFile extends IFileMetadata {
     }
 
     /**
+     * Convenience method to get the part of the path following the last separator char.
+     */
+    public String getName();
+
+    /**
+     * Convenience method to get the part of the path preceding the last separator char.
+     */
+    public String getParent();
+
+    /**
+     * Returns whether the IFile exists.
+     */
+    boolean exists();
+
+    /**
+     * Returns whether the IFile represents a link to another IFile.
+     */
+    boolean isLink() throws IOException;
+
+    /**
+     * Does this file represent a directory?  Note, if this file is a link to a directory, this method is intended to
+     * return true.
+     */
+    public boolean isDirectory() throws IOException;
+
+    /**
+     * Does this file represent a regular file (i.e., not a directory)?
+     */
+    public boolean isFile() throws IOException;
+
+    /**
      * Create a directory at this IFile's path.
      */
     public boolean mkdir();

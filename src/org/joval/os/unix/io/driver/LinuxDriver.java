@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFileMetadata;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.io.IReader;
 import org.joval.intf.unix.io.IUnixFileInfo;
@@ -23,7 +24,6 @@ import org.joval.intf.unix.io.IUnixFilesystem;
 import org.joval.intf.unix.io.IUnixFilesystemDriver;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.util.ISearchable;
-import org.joval.io.AbstractFilesystem.FileInfo;
 import org.joval.io.PerishableReader;
 import org.joval.os.unix.io.UnixFileInfo;
 import org.joval.util.JOVALMsg;
@@ -188,14 +188,14 @@ public class LinuxDriver extends AbstractDriver {
 	    //DAS -- could be, e.g., 4294967294 (illegal "nobody" value)
 	}
 
-	FileInfo.Type type = FileInfo.Type.FILE;
+	IFileMetadata.Type type = IFileMetadata.Type.FILE;
 	switch(unixType) {
 	  case IUnixFileInfo.DIR_TYPE:
-	    type = FileInfo.Type.DIRECTORY;
+	    type = IFileMetadata.Type.DIRECTORY;
 	    break;
 
 	  case IUnixFileInfo.LINK_TYPE:
-	    type = FileInfo.Type.LINK;
+	    type = IFileMetadata.Type.LINK;
 	    break;
 
 	  case IUnixFileInfo.CHAR_TYPE:
@@ -237,7 +237,7 @@ public class LinuxDriver extends AbstractDriver {
 	Properties extended = new Properties();
 	extended.setProperty(IUnixFileInfo.SELINUX_DATA, selinux);
 
-	return new UnixFileInfo(IFile.UNKNOWN_TIME, mtime, IFile.UNKNOWN_TIME, type, length, path, linkPath,
+	return new UnixFileInfo(type, path, linkPath, IFile.UNKNOWN_TIME, mtime, IFile.UNKNOWN_TIME, length,
 				unixType, permissions, uid, gid, hasExtendedAcl, extended);
     }
 }

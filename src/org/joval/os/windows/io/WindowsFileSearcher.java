@@ -27,11 +27,8 @@ import java.util.zip.GZIPInputStream;
 
 import org.slf4j.cal10n.LocLogger;
 
-import org.apache.jdbm.DB;
-import org.apache.jdbm.DBMaker;
-import org.apache.jdbm.Serializer;
-
 import org.joval.intf.io.IFile;
+import org.joval.intf.io.IFileMetadata;
 import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.ILoggable;
@@ -41,8 +38,8 @@ import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.io.AbstractFilesystem;
 import org.joval.io.StreamTool;
+import org.joval.io.fs.AbstractFilesystem;
 import org.joval.os.windows.Timestamp;
 import org.joval.os.windows.powershell.PowershellException;
 import org.joval.util.JOVALMsg;
@@ -55,26 +52,18 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
-    /**
-     * Static map of filesystem instances indexed by hashcode for reference by deserialized serializers.
-     */
-    private static Map<Integer, AbstractFilesystem> fsInstances = new HashMap<Integer, AbstractFilesystem>();
-
     private IWindowsSession session;
     private AbstractFilesystem fs;
     private IRunspace runspace;
     private LocLogger logger;
-    private DB db;
     private Map<String, Collection<String>> searchMap;
-    private Map<String, IFile> infoCache;
 
-    public WindowsFileSearcher(IWindowsSession session) throws Exception {
-	this(session, null);
-    }
+    public WindowsFileSearcher(IWindowsSession session, IWindowsSession.View view, Map<String, Collection<String>> searchMap)
+		throws Exception {
 
-    public WindowsFileSearcher(IWindowsSession session, IWindowsSession.View view) throws Exception {
 	this.session = session;
-	fs = (AbstractFilesystem)session.getFilesystem(view);
+	this.searchMap = searchMap;
+	logger = session.getLogger();
 	for (IRunspace runspace : session.getRunspacePool().enumerate()) {
 	    if (runspace.getView() == view) {
 		this.runspace = runspace;
@@ -85,36 +74,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 	    runspace = session.getRunspacePool().spawn(view);
 	}
 	runspace.loadModule(getClass().getResourceAsStream("WindowsFileSearcher.psm1"));
-	logger = session.getLogger();
-
-	if (session.getProperties().getBooleanProperty(IFilesystem.PROP_CACHE_JDBM)) {
-	    String dbKey = IWindowsSession.View._32BIT == view ? "fs32" : "fs";
-	    for (File f : session.getWorkspace().listFiles()) {
-		if (f.getName().startsWith(dbKey)) {
-		    f.delete();
-		}
-	    }
-	    DBMaker dbm = DBMaker.openFile(new File(session.getWorkspace(), dbKey).toString());
-	    dbm.disableTransactions();
-	    dbm.closeOnExit();
-	    dbm.deleteFilesAfterClose();
-	    db = dbm.make();
-	    Integer instanceKey = new Integer(fs.hashCode());
-	    if (!fsInstances.containsKey(instanceKey)) {
-		fsInstances.put(instanceKey, fs);
-	    }
-	    infoCache = db.createHashMap("info", null, new FileSerializer(instanceKey));
-	    searchMap = db.createHashMap("searches");
-	} else {
-	    infoCache = new HashMap<String, IFile>();
-	    searchMap = new HashMap<String, Collection<String>>();
-	}
-    }
-
-    public void close() {
-	if (db != null) {
-	    db.close();
-	}
+	fs = (AbstractFilesystem)session.getFilesystem(view);
     }
 
     // Implement ILogger
@@ -180,7 +140,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 	Collection<IFile> results = new ArrayList<IFile>();
 	if (searchMap.containsKey(cmd)) {
 	    for (String path : searchMap.get(cmd)) {
-		results.add(infoCache.get(path));
+		results.add(fs.getFile(path));
 	    }
 	} else {
 	    logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, cmd);
@@ -209,7 +169,6 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 		    logger.debug(JOVALMsg.STATUS_FS_SEARCH_MATCH, path);
 		    results.add(file);
 		    paths.add(path);
-		    infoCache.put(path, file);
 		}
 		logger.debug(JOVALMsg.STATUS_FS_SEARCH_DONE, results.size(), cmd);
 	    } catch (Exception e) {
@@ -255,7 +214,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 	}
 	if (start) {
 	    long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, len=-1L;
-	    AbstractFilesystem.FileInfo.Type type = AbstractFilesystem.FileInfo.Type.FILE;
+	    IFileMetadata.Type type = IFileMetadata.Type.FILE;
 	    int winType = IWindowsFileInfo.FILE_TYPE_UNKNOWN;
 	    Collection<IACE> aces = new ArrayList<IACE>();
 	    String path = null;
@@ -267,7 +226,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 		} else if (line.equals("Type: File")) {
 		    winType = IWindowsFileInfo.FILE_TYPE_DISK;
 		} else if (line.equals("Type: Directory")) {
-		    type = AbstractFilesystem.FileInfo.Type.DIRECTORY;
+		    type = IFileMetadata.Type.DIRECTORY;
 		    winType = IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY;
 		} else {
 		    int ptr = line.indexOf(":");
@@ -296,8 +255,9 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 		    }
 		}
 	    }
-	    WindowsFileInfo info = new WindowsFileInfo(ctime, mtime, atime, type, len, winType, aces.toArray(new IACE[0]));
-	    file = fs.createFileFromInfo(path, info);
+	    WindowsFileInfo info = new WindowsFileInfo(type, path, path, ctime, mtime, atime, len,
+						       winType, aces.toArray(new IACE[0]));
+	    file = fs.createFileFromInfo(info);
 	}
 	return file;
     }
@@ -479,11 +439,6 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 	    }
 	}
 
-	public InternalACE(int mask, String sid) {
-	    this.mask = mask;
-	    this.sid = sid;
-	}
-
 	public int getFlags() {
 	    return 0;
 	}
@@ -494,82 +449,6 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 
 	public String getSid() {
 	    return sid;
-	}
-    }
-
-    /**
-     * JDBM Serilizer implementation for Windows IFiles
-     */
-    static class FileSerializer implements Serializer<IFile>, Serializable {
-	static final int SER_FILE = 0;
-	static final int SER_DIRECTORY = 1;
-	static final int SER_LINK = 2;
-
-	Integer instanceKey;
-	transient AbstractFilesystem fs;
-
-	/**
-	 * The serializer relies on an active IFilesystem, which cannot be serialized, so we serialize the hashcode
-	 * of the IFilesystem, and maintain a static Map in the parent class. 
-	 */
-	public FileSerializer(Integer instanceKey) {
-	    this.instanceKey = instanceKey;
-	}
-
-	// Implement Serializer<IFile>
-
-	public IFile deserialize(DataInput in) throws IOException {
-	    String path = in.readUTF();
-	    long ctime = in.readLong();
-	    long mtime = in.readLong();
-	    long atime = in.readLong();
-	    AbstractFilesystem.FileInfo.Type type = AbstractFilesystem.FileInfo.Type.FILE;
-	    switch(in.readInt()) {
-	      case SER_DIRECTORY:
-		type = AbstractFilesystem.FileInfo.Type.DIRECTORY;
-		break;
-	      case SER_LINK:
-		type = AbstractFilesystem.FileInfo.Type.LINK;
-		break;
-	    }
-	    long len = in.readLong();
-	    int winType = in.readInt();
-	    IACE[] aces = new IACE[in.readInt()];
-	    for (int i=0; i < aces.length; i++) {
-		aces[i] = new InternalACE(in.readInt(), in.readUTF());
-	    }
-	    WindowsFileInfo info = new WindowsFileInfo(ctime, mtime, atime, type, len, winType, aces);
-	    if (fs == null) {
-		fs = WindowsFileSearcher.fsInstances.get(instanceKey);
-	    }
-	    return fs.createFileFromInfo(path, info);
-	}
-
-	public void serialize(DataOutput out, IFile f) throws IOException {
-	    out.writeUTF(f.getPath());
-	    out.writeLong(f.createTime());
-	    out.writeLong(f.lastModified());
-	    out.writeLong(f.accessTime());
-	    if (f.isLink()) {
-		out.writeInt(SER_LINK);
-	    } else if (f.isDirectory()) {
-		out.writeInt(SER_DIRECTORY);
-	    } else {
-		out.writeInt(SER_FILE);
-	    }
-	    out.writeLong(f.length());
-	    IWindowsFileInfo info = (IWindowsFileInfo)f.getExtended();
-	    out.writeInt(info.getWindowsFileType());
-	    IACE[] aces = info.getSecurity();
-	    if (aces == null) {
-		out.writeInt(0);
-	    } else {
-		out.writeInt(aces.length);
-		for (IACE ace : aces) {
-		    out.writeInt(ace.getAccessMask());
-		    out.writeUTF(ace.getSid());
-		}
-	    }
 	}
     }
 }

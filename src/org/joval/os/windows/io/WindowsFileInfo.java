@@ -5,8 +5,9 @@ package org.joval.os.windows.io;
 
 import java.io.IOException;
 
-import org.joval.io.AbstractFilesystem;
+import org.joval.io.fs.DefaultMetadata;
 import org.joval.intf.windows.identity.IACE;
+import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.intf.windows.io.IWindowsFileInfo;
 
 /**
@@ -15,17 +16,20 @@ import org.joval.intf.windows.io.IWindowsFileInfo;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class WindowsFileInfo extends AbstractFilesystem.FileInfo implements IWindowsFileInfo {
-    private IWindowsFileInfo accessor;
+public class WindowsFileInfo extends DefaultMetadata implements IWindowsFileInfo {
+    private IWindowsFileInfo extended;
 
-    public WindowsFileInfo(long ctime, long mtime, long atime, Type type, long length, int winType, IACE[] aces) {
-	super(ctime, mtime, atime, type, length);
-	accessor = new InternalAccessor(winType, aces);
+    public WindowsFileInfo(Type type, String path, String canonicalPath, long ctime, long mtime, long atime, long length,	
+		int winType, IACE[] aces) {
+
+	this(type, path, canonicalPath, ctime, mtime, atime, length, new ExtendedImpl(winType, aces));
     }
 
-    public WindowsFileInfo(long ctime, long mtime, long atime, Type type, long length, IWindowsFileInfo info) {
-	super(ctime, mtime, atime, type, length);
-	accessor = info;
+    public WindowsFileInfo(Type type, String path, String canonicalPath, long ctime, long mtime, long atime, long length,
+		IWindowsFileInfo info) {
+
+	super(type, path, null, canonicalPath, ctime, mtime, atime, length);
+	extended = info;
     }
 
     // Implement IWindowsFileInfo
@@ -34,20 +38,20 @@ public class WindowsFileInfo extends AbstractFilesystem.FileInfo implements IWin
      * Returns one of the FILE_TYPE_ constants.
      */
     public int getWindowsFileType() throws IOException {
-	return accessor.getWindowsFileType();
+	return extended.getWindowsFileType();
     }
 
     public IACE[] getSecurity() throws IOException {
-	return accessor.getSecurity();
+	return extended.getSecurity();
     }
 
     // Private
 
-    class InternalAccessor implements IWindowsFileInfo {
+    static class ExtendedImpl implements IWindowsFileInfo {
 	private int winType;
 	private IACE[] aces;
 
-	InternalAccessor(int winType, IACE[] aces) {
+	ExtendedImpl(int winType, IACE[] aces) {
 	    this.winType = winType;
 	    this.aces = aces;
 	}
