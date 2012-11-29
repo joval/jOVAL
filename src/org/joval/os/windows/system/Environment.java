@@ -20,6 +20,7 @@ import org.joval.intf.system.IProcess;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.util.AbstractEnvironment;
 import org.joval.util.JOVALMsg;
+import org.joval.util.SafeCLI;
 
 /**
  * A representation of the Windows SYSTEM environment, retrieved from the set command.
@@ -30,12 +31,8 @@ import org.joval.util.JOVALMsg;
 public class Environment extends AbstractEnvironment {
     public Environment(IBaseSession session) throws Exception {
 	super();
-	IProcess p = session.createProcess("set", null);
-	p.start();
-	String line = null;
-	BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
 	String lastKey = null;
-	while((line = reader.readLine()) != null) {
+	for (String line : SafeCLI.multiLine("set", session, IBaseSession.Timeout.M)) {
 	    int ptr = line.indexOf("=");
 	    if (ptr > 0) {
 		String key = line.substring(0,ptr);
