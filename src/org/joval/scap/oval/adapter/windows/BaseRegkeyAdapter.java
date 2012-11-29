@@ -3,6 +3,7 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigInteger;
@@ -35,6 +36,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
+import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
@@ -59,6 +61,8 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
     protected IWindowsSession session;
     protected IRegistry reg32, reg;
 
+    private IRunspace rs, rs32;
+
     /**
      * Subclasses can call this method to initialize the session variable.
      */
@@ -72,52 +76,51 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	init();
 	Collection<T> items = new ArrayList<T>();
 	ReflectedRegistryObject rObj = new ReflectedRegistryObject(obj);
-	int winView = 0;
-	if (rObj.isSetBehaviors()) {
-	    if ("32_bit".equals(rObj.getBehaviors().getWindowsView())) {
-		winView = 32;
-	    }
-	}
-	if (winView == 0 && session.supports(IWindowsSession.View._64BIT)) {
-	    winView = 64;
-	}
-	String hive = (String)rObj.getHive().getValue();
-	for (IKey key : getKeys(rObj, hive, rc)) {
-	    try {
-		//
-		// Create the base ItemType for the path
-		//
-		ReflectedRegkeyItem rItem = new ReflectedRegkeyItem();
-		EntityItemRegistryHiveType hiveType = Factories.sc.windows.createEntityItemRegistryHiveType();
-		hiveType.setValue(hive);
-		rItem.setHive(hiveType);
-		EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
-		keyType.setValue(key.getPath());
-		rItem.setKey(keyType);
-		switch(winView) {
-		  case 32:
-		    rItem.setWindowsView("32_bit");
-		    break;
-		  case 64:
-		    rItem.setWindowsView("64_bit");
-		    break;
-		}
+	IWindowsSession.View view = getView(rObj.getBehaviors());
+	if (session.supports(view)) {
+	    String hive = (String)rObj.getHive().getValue();
+	    for (IKey key : getKeys(rObj, hive, rc)) {
+		try {
+		    //
+		    // Create the base ItemType for the path
+		    //
+		    ReflectedRegkeyItem rItem = new ReflectedRegkeyItem();
+		    EntityItemRegistryHiveType hiveType = Factories.sc.windows.createEntityItemRegistryHiveType();
+		    hiveType.setValue(hive);
+		    rItem.setHive(hiveType);
+		    EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
+		    keyType.setValue(key.getPath());
+		    rItem.setKey(keyType);
+		    switch(view) {
+		      case _32BIT:
+			rItem.setWindowsView("32_bit");
+			break;
+		      case _64BIT:
+			rItem.setWindowsView("64_bit");
+			break;
+		    }
 
-		//
-		// Add items retrieved by the subclass
-		//
-		items.addAll(getItems(obj, rItem.it, key, rc));
-	    } catch (NoSuchElementException e) {
-		// No match.
-	    } catch (CollectException e) {
-		throw e;
-	    } catch (Exception e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(e.getMessage());
-		rc.addMessage(msg);
-		session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    //
+		    // Add items retrieved by the subclass
+		    //
+		    items.addAll(getItems(obj, rItem.it, key, rc));
+		} catch (NoSuchElementException e) {
+		    // No match.
+		} catch (CollectException e) {
+		    throw e;
+		} catch (Exception e) {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(e.getMessage());
+		    rc.addMessage(msg);
+		    session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
 	    }
+	} else {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.INFO);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.WARNING_WINREG_VIEW, view.toString()));
+	    rc.addMessage(msg);
 	}
 	return items;
     }
@@ -144,6 +147,88 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
      * @throws CollectException collection cannot take place and should be halted
      */
     protected abstract Collection<T> getItems(ObjectType obj, ItemType it, IKey key, IRequestContext rc) throws Exception;
+
+    /**
+     * Subclasses should override by supplying streams to any modules that must be loaded into requested runspaces using
+     * the getRunspace method, below.
+     */
+    protected List<InputStream> getPowershellModules() {
+	@SuppressWarnings("unchecked")
+	List<InputStream> empty = (List<InputStream>)Collections.EMPTY_LIST;
+	return empty;
+    }
+
+    /**
+     * Get a runspace, with the specified view. Modules supplied by getPowershellModules() will be auto-loaded before
+     * the runspace is returned.
+     */
+    protected IRunspace getRunspace(IWindowsSession.View view) throws Exception {
+	if (view == IWindowsSession.View._32BIT && rs32 != null) {
+	    return rs32;
+	} else if (rs != null) {
+	    return rs;
+	}
+
+	IRunspace result = null;
+	// See if an existing runspace matches the desired view
+	for (IRunspace runspace : session.getRunspacePool().enumerate()) {
+	    if (runspace.getView() == view) {
+		switch(view) {
+		  case _32BIT:
+		    if (session.getNativeView() == view) {
+			rs = runspace;
+			rs32 = runspace;
+		    } else {
+			rs32 = runspace;
+		    }
+		    result = rs32;
+		    break;
+
+		  default:
+		    rs = runspace;
+		    result = rs;
+		    break;
+		}
+	    }
+	}
+	if (result == null) {
+	    // If a match was not found, spawn a new runspace from the pool with the desired view
+	    switch(view) {
+	      case _32BIT:
+		rs32 = session.getRunspacePool().spawn(view);
+		if (session.getNativeView() == view) {
+		    rs = rs32;
+		}
+		result = rs32;
+		break;
+
+	      default:
+		rs = session.getRunspacePool().spawn(view);
+		result = rs;
+		return result;
+	    }
+	}
+	// Load the modules, if any.
+	for (InputStream in : getPowershellModules()) {
+	    result.loadModule(in);
+	}
+	return result;
+    }
+
+    /**
+     * Returns the view suggested by the RegistryBehaviors.
+     */
+    protected IWindowsSession.View getView(RegistryBehaviors behaviors) {
+	if (behaviors != null && behaviors.isSetWindowsView()) {
+	    String s = behaviors.getWindowsView();
+	    if ("32_bit".equals(s)) {
+		return IWindowsSession.View._32BIT;
+	    } else if ("64_bit".equals(s)) {
+		return IWindowsSession.View._64BIT;
+	    }
+	}
+	return session.getNativeView();
+    }
 
     // Private
 
@@ -413,7 +498,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 		    Class[] types = setWindowsView.getParameterTypes();
 		    if (types.length == 1) {
 			Class type = types[0];
-			Object instance = Class.forName(type.getName());
+			Object instance = Class.forName(type.getName()).newInstance();
 			@SuppressWarnings("unchecked")
 			Method setValue = type.getMethod("setValue", Object.class);
 			setValue.invoke(instance, view);
@@ -424,6 +509,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	    } catch (IllegalAccessException e) {
 	    } catch (IllegalArgumentException e) {
 	    } catch (InvocationTargetException e) {
+	    } catch (InstantiationException e) {
 	    } catch (ClassNotFoundException e) {
 	    }
 	}

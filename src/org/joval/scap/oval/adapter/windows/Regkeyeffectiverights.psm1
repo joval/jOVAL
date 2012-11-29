@@ -3,14 +3,14 @@
 #
 function Get-RegkeyEffectiveRights {
   param(
-    [string]$Path=$(throw "Mandatory parameter -Path missing.")
+    [string]$literalPath=$(throw "Mandatory parameter -literalPath missing.")
   )
 
   $ErrorActionPreference = "Continue"
-  $key = Get-Item -literalPath "Registry::$($Path)"
-  $security = $key.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Access)
-  foreach($ace in $security.GetAccessRules($True, $True, [System.Security.Principal.SecurityIdentifier])) {
-    $rights = [Convert]::ToInt32($ace.RegistryRights)
-    Write-Output "$($ace.IdentityReference): $($rights)"
+  $Key = Get-Item -literalPath $literalPath
+  $Security = $Key.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Access)
+  foreach($ACE in $Security.GetAccessRules($True, $True, [System.Security.Principal.SecurityIdentifier])) {
+    $Rights = [Convert]::ToInt32($ACE.RegistryRights)
+    Write-Output "$($ACE.IdentityReference): $($Rights)"
   }
 }

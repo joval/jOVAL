@@ -303,7 +303,7 @@ public class PSKey implements IKey {
     }
 
     private StringBuffer getItemCommand() {
-	StringBuffer sb = new StringBuffer("Get-Item \"Registry::").append(hive);
+	StringBuffer sb = new StringBuffer("Get-Item -literalPath \"Registry::").append(hive);
 	String path = getPath();
 	if (path != null) {
 	    sb.append(IRegistry.DELIM_STR).append(path);

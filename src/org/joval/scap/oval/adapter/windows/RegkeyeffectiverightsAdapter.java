@@ -3,15 +3,16 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -56,13 +57,12 @@ import org.joval.util.Version;
  */
 public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<RegkeyeffectiverightsItem> {
     private IDirectory directory;
-    private IRunspace runspace;
     private Map<String, List<IACE>> acls;
 
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
-	Collection<Class> classes = new Vector<Class>();
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((IWindowsSession)session);
 	    classes.add(Regkeyeffectiverights53Object.class);
@@ -81,7 +81,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 		throws Exception {
 
 	initialize();
-	Collection<RegkeyeffectiverightsItem> items = new Vector<RegkeyeffectiverightsItem>();
+	Collection<RegkeyeffectiverightsItem> items = new ArrayList<RegkeyeffectiverightsItem>();
 	RegkeyeffectiverightsItem baseItem = null;
 	if (base instanceof RegkeyeffectiverightsItem) {
 	    baseItem = (RegkeyeffectiverightsItem)base;
@@ -93,11 +93,13 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	String pSid = null, pName = null;
 	boolean includeGroups = true;
 	boolean resolveGroups = false;
+	IWindowsSession.View view = null;
 	OperationEnumeration op = OperationEnumeration.EQUALS;
 	if (obj instanceof Regkeyeffectiverights53Object) {
 	    Regkeyeffectiverights53Object rObj = (Regkeyeffectiverights53Object)obj;
 	    op = rObj.getTrusteeSid().getOperation();
 	    pSid = (String)rObj.getTrusteeSid().getValue();
+	    view = getView(rObj.getBehaviors());
 	    if (rObj.isSetBehaviors()) {
 		includeGroups = rObj.getBehaviors().getIncludeGroup();
 		resolveGroups = rObj.getBehaviors().getResolveGroup();
@@ -106,6 +108,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	    RegkeyeffectiverightsObject rObj = (RegkeyeffectiverightsObject)obj;
 	    op = rObj.getTrusteeName().getOperation();
 	    pName = (String)rObj.getTrusteeName().getValue();
+	    view = getView(rObj.getBehaviors());
 	    if (rObj.isSetBehaviors()) {
 		includeGroups = rObj.getBehaviors().getIncludeGroup();
 		resolveGroups = rObj.getBehaviors().getResolveGroup();
@@ -116,7 +119,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	}
 
 	try {
-	    List<IACE> aces = getSecurity(key);
+	    List<IACE> aces = getSecurity(key, view);
 	    switch(op) {
 	      case PATTERN_MATCH:
 		Pattern p = null;
@@ -204,13 +207,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
 	    rc.addMessage(msg);
-	} catch (IOException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_REGDACL, key.toString(), e.getMessage()));
-	    rc.addMessage(msg);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (PowershellException e) {
+	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_REGDACL, key.toString(), e.getMessage()));
@@ -218,6 +215,11 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
+    }
+
+    @Override
+    protected List<InputStream> getPowershellModules() {
+	return Arrays.asList(getClass().getResourceAsStream("Regkeyeffectiverights.psm1"));
     }
 
     // Private
@@ -375,47 +377,25 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 
 	if (acls == null) {
 	    acls = new HashMap<String, List<IACE>>();
-	} else {
-	    return; // previously initialized
-	}
-
-	//
-	// Get a runspace if there are any in the pool, or create a new one, and load the Cmdlet utilities
-	// Powershell module code.
-	//
-	for (IRunspace rs : session.getRunspacePool().enumerate()) {
-	    runspace = rs;
-	    break;
-	}
-	try {
-	    if (runspace == null) {
-		runspace = session.getRunspacePool().spawn();
-	    }
-	    if (runspace != null) {
-		runspace.loadModule(getClass().getResourceAsStream("Regkeyeffectiverights.psm1"));
-	    }
-	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
     /**
      * Retrieve the access entries for the file.
      */
-    private List<IACE> getSecurity(IKey key) throws IOException, NoSuchElementException, PowershellException {
+    private List<IACE> getSecurity(IKey key, IWindowsSession.View view) throws Exception {
 	String path = key.toString().toUpperCase();
 	if (acls.containsKey(path)) {
 	    return acls.get(path);
 	} else {
 	    acls.put(path, new ArrayList<IACE>());
 	    HashMap<String, IACE> aces = new HashMap<String, IACE>();
-	    String pathArg = key.toString();
+	    String pathArg = new StringBuffer("Registry::").append(key.toString()).toString();
 	    if (path.indexOf(" ") != -1) {
-		if (!path.startsWith("\"") && !path.endsWith("\"")) {
-		    pathArg = new StringBuffer("\"").append(pathArg).append("\"").toString();
-		}
+		pathArg = new StringBuffer("\"").append(pathArg).append("\"").toString();
 	    }
-	    String data = runspace.invoke("Get-RegkeyEffectiveRights " + pathArg);
+	    IRunspace runspace = getRunspace(view);
+	    String data = runspace.invoke("Get-RegkeyEffectiveRights -literalPath " + pathArg);
 	    if (data != null) {
 		for (String entry : data.split("\r\n")) {
 		    int ptr = entry.indexOf(":");

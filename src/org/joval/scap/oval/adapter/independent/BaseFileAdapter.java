@@ -724,7 +724,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    Class[] types = setWindowsView.getParameterTypes();
 		    if (types.length == 1) {
 			Class type = types[0];
-			Object instance = Class.forName(type.getName());
+			Object instance = Class.forName(type.getName()).newInstance();
 			@SuppressWarnings("unchecked")
 			Method setValue = type.getMethod("setValue", Object.class);
 			setValue.invoke(instance, view);
@@ -734,6 +734,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    } catch (NoSuchMethodException e) {
 	    } catch (IllegalAccessException e) {
 	    } catch (IllegalArgumentException e) {
+	    } catch (InstantiationException e) {
 	    } catch (InvocationTargetException e) {
 	    } catch (ClassNotFoundException e) {
 	    }
