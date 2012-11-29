@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -157,12 +158,22 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    String name = ManagementFactory.getRuntimeMXBean().getName();
 	    int ptr = name.indexOf("@");
 	    if (ptr != -1) {
-		Properties props = new Properties();
-		for (Map.Entry<String, String>entry : System.getenv().entrySet()) {
-		    props.setProperty(entry.getKey(), entry.getValue());
+		try {
+		int pid = Integer.parseInt(name.substring(0,ptr));
+		    environments.put(Integer.toString(pid), builder.getProcessEnvironment(pid));
+		} catch (Exception e) {
+		    MessageType msg = Factories.common.createMessageType();
+		    msg.setLevel(MessageLevelEnumeration.ERROR);
+		    msg.setValue(e.getMessage());
+		    rc.addMessage(msg);
+		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
-		environments.put(name.substring(0,ptr), new Environment(props));
 	    }
+	} else {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.INFO);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_NO_PROCESS, session.getHostname()));
+	    rc.addMessage(msg);
 	}
 
 	//
@@ -170,7 +181,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	//
 	if (environments.size() == 0) {
 	    @SuppressWarnings("unchecked")
-	    Collection<Environmentvariable50Item> empty = (Collection<Environmentvariable50Item>)Collections.EMPTY_LIST;
+	    Collection<Environmentvariable58Item> empty = (Collection<Environmentvariable58Item>)Collections.EMPTY_LIST;
 	    return empty;
 	}
 
