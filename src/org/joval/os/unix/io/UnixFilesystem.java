@@ -34,6 +34,7 @@ import org.joval.os.unix.io.driver.MacOSXDriver;
 import org.joval.os.unix.io.driver.SolarisDriver;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
+import org.joval.util.StringTools;
 
 /**
  * A local IFilesystem implementation for Unix.
@@ -111,29 +112,14 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
     @Override
     public IFile createFileFromInfo(IFileMetadata info) {
 	if (info instanceof UnixFileInfo) {
-	    IFile f = new UnixFile((UnixFileInfo)info);
-	    cache.put(info.getPath(), f);
-	    return f;
+	    return new UnixFile((UnixFileInfo)info);
 	} else {
 	    return super.createFileFromInfo(info);
 	}
     }
 
-    public IFile getFile(String path, IFile.Flags flags) throws IllegalArgumentException, IOException {
-	if (autoExpand) {
-	    path = env.expand(path);
-	}
-	switch(flags) {
-	  case READONLY:
-	    if (!cache.containsKey(path)) {
-		IFile f = new UnixFile(new File(path), flags);
-		cache.put(path, f);
-	    }
-	    return cache.get(path);
-
-	  default:
-	    return new UnixFile(new File(path), flags);
-	}
+    protected IFile getPlatformFile(String path, IFile.Flags flags) throws IOException {
+	return new UnixFile(new File(path), flags);
     }
 
     // Implement IUnixFilesystem
@@ -166,17 +152,23 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
     protected UnixFileInfo getUnixFileInfo(String path) throws IOException {
 	try {
 	    String cmd = new StringBuffer(getDriver().getStatCommand()).append(" ").append(path).toString();
-	    List<String> lines = SafeCLI.multiLine(cmd, session, IUnixSession.Timeout.S);
-	    UnixFileInfo ufi = null;
-	    if (lines.size() > 0) {
-		ufi = (UnixFileInfo)getDriver().nextFileInfo(lines.iterator());
-		if (ufi == null) {
-		    throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNIXFILEINFO, path, lines.get(0)));
+	    SafeCLI.ExecData ed = SafeCLI.execData(cmd, null, session, S);
+	    if (ed.getExitCode() == 0) {
+		List<String> lines = ed.getLines();
+		UnixFileInfo ufi = null;
+		if (lines.size() > 0) {
+		    ufi = (UnixFileInfo)getDriver().nextFileInfo(lines.iterator());
+		    if (ufi == null) {
+			throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNIXFILEINFO, path, lines.get(0)));
+		    }
+		} else {
+		    logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, "''");
 		}
+		return ufi;
 	    } else {
-		logger.warn(JOVALMsg.ERROR_UNIXFILEINFO, path, "''");
+		String message = new String(ed.getData(), StringTools.ASCII);
+		throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_FS_LSTAT, path, message));
 	    }
-	    return ufi;
 	} catch (IOException e) {
 	    throw e;
 	} catch (Exception e) {

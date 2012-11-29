@@ -130,18 +130,13 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     @Override
     public IFile createFileFromInfo(IFileMetadata info) {
 	if (info instanceof WindowsFileInfo) {
-	    IFile f = new WindowsFile((WindowsFileInfo)info);
-	    cache.put(info.getPath(), f);
-	    return f;
+	    return new WindowsFile((WindowsFileInfo)info);
 	} else {
 	    return super.createFileFromInfo(info);
 	}
     }
 
-    public final IFile getFile(String path, IFile.Flags flags) {
-	if (autoExpand) {
-	    path = env.expand(path);
-	}
+    protected IFile getPlatformFile(String path, IFile.Flags flags) throws IOException {
 	String realPath = path;
 	if (redirector != null) {
 	    String alt = redirector.getRedirect(path);
@@ -149,17 +144,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		realPath = alt;
 	    }
 	}
-	switch(flags) {
-	  case READONLY:
-	    if (!cache.containsKey(realPath)) {
-		IFile f = new WindowsFile(realPath, new File(path), flags);
-		cache.put(realPath, f);
-	    }
-	    return cache.get(realPath);
-
-	  default:
-	    return new WindowsFile(realPath, new File(path), flags);
-	}
+	return new WindowsFile(path, new File(realPath), flags);
     }
 
     // Private

@@ -18,6 +18,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,7 +61,6 @@ public abstract class AbstractFilesystem implements IFilesystem {
     protected IEnvironment env;
     protected LocLogger logger;
     protected DB db;
-    protected Map<String, IFile> cache;
 
     protected final String ESCAPED_DELIM;
     protected final String DELIM;
@@ -98,7 +98,11 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
     public void dispose() {
 	if (db != null) {
-	    db.close();
+	    try {
+		db.close();
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
 	    db = null;
 	}
 	instances.remove(new Integer(hashCode()));
@@ -115,24 +119,6 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	} else {
 	    return db.createHashMap(name, keySerializer, valueSerializer);
 	}
-    }
-
-    /**
-     * Return an implementation-specific IFile serializer for JDBM. The instanceKey is used to re-associate
-     * deserialized IFile instances back with this AbstractFilesystem instance.
-     */
-    public abstract Serializer<IFile> getFileSerializer(Integer instanceKey);
-
-    /**
-     * For use during deserialization.  A serialized IFile will only consist of metadata.  So, to reconstitute an IFile
-     * capable of accessing the underlying file, use:
-     *
-     * <code>AbstractFilesystem.instances.get(instanceKey).createFileFromInfo(...)</code>
-     */
-    public IFile createFileFromInfo(IFileMetadata info) {
-	IFile f = new DefaultFile(info, IFile.Flags.READONLY);
-	cache.put(info.getPath(), f);
-	return f;
     }
 
     /**
@@ -202,6 +188,29 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	}
     }
 
+    /**
+     * Return an implementation-specific IFile serializer for JDBM. The instanceKey is used to re-associate
+     * deserialized IFile instances back with this AbstractFilesystem instance.
+     */
+    public abstract Serializer<IFile> getFileSerializer(Integer instanceKey);
+
+    /**
+     * Return an implementation-specific IFile instance based on an IAccessor. The AbstractFilesystem base class invokes
+     * this method if it cannot return the file from the cache.
+     */
+    protected abstract IFile getPlatformFile(String path, IFile.Flags flags) throws IllegalArgumentException, IOException;
+
+    /**
+     * For use during deserialization.  A serialized IFile will only consist of metadata.  So, to reconstitute an IFile
+     * capable of accessing the underlying file, use:
+     *
+     * <code>AbstractFilesystem.instances.get(instanceKey).createFileFromInfo(...)</code>
+     */
+    public IFile createFileFromInfo(IFileMetadata info) {
+	IFile f = new DefaultFile(info, IFile.Flags.READONLY);
+	return f;
+    }
+
     // Implement ILoggable
 
     public void setLogger(LocLogger logger) {
@@ -220,6 +229,23 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
     public final IFile getFile(String path) throws IOException {
 	return getFile(path, IFile.Flags.READONLY);
+    }
+
+    public final IFile getFile(String path, IFile.Flags flags) throws IOException {
+        if (autoExpand) {
+            path = env.expand(path);
+        }
+        switch(flags) {
+          case READONLY:
+	    try {
+                return getCache(path);
+	    } catch (NoSuchElementException e) {
+	    }
+	    // fall-thru
+
+	  default:
+	    return getPlatformFile(path, flags);
+	}
     }
 
     public final IRandomAccess getRandomAccess(IFile file, String mode) throws IllegalArgumentException, IOException {
@@ -256,12 +282,20 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	}
 
 	/**
-	 * Create a file from metadata.
+	 * Create a file from metadata. Note that subclasses must ALWAYS delegate to this constructor when initializing
+	 * from IFileMetadata, or else the metadata will not be cached.
 	 */
 	public DefaultFile(IFileMetadata info, Flags flags) {
 	    path = info.getPath();
 	    this.info = info;
 	    this.flags = flags;
+
+	    //
+	    // Place in the cache if READONLY
+	    //
+	    if (flags == IFile.Flags.READONLY) {
+		putCache(this);
+	    }
 	}
 
 	// Implement IFileMetadata
@@ -450,10 +484,17 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    return accessor;
 	}
 
-	protected IFileMetadata getInfo() throws IOException {
+	protected final IFileMetadata getInfo() throws IOException {
 	    if (info == null) {
 		// Accessor must not be null
 		info = getAccessor().getInfo();
+
+		//
+		// Now that we have info, cache it if this is a READONLY IFile
+		//
+		if (flags == IFile.Flags.READONLY) {
+		    putCache(this);
+		}
 	    }
 	    return info;
 	}
@@ -603,6 +644,36 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    public long getFilePointer() throws IOException {
 		return raf.getFilePointer();
 	    }
+	}
+    }
+
+    // Private
+
+    private Map<String, IFile> cache;
+
+    /**
+     * Attempt to retrieve an IFile from the cache.
+     *
+     * TBD: expire objects that get too old
+     */
+    private IFile getCache(String path) throws NoSuchElementException {
+        if (cache.containsKey(path)) {
+	    logger.trace(JOVALMsg.STATUS_FS_CACHE_RETRIEVE, path);
+            return cache.get(path);
+	}
+	throw new NoSuchElementException(path);
+    }
+
+    /**
+     * Put an IFile in the cache.
+     *
+     * TBD: see if the data is newer than what's already in the cache?
+     */
+    private void putCache(IFile file) {
+	String path = file.getPath();
+	if (!cache.containsKey(path)) {
+	    logger.trace(JOVALMsg.STATUS_FS_CACHE_STORE, path);
+	    cache.put(path, file);
 	}
     }
 }
