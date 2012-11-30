@@ -3,7 +3,9 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.io.InputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -11,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -42,6 +43,7 @@ import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.os.windows.identity.ACE;
 import org.joval.os.windows.powershell.PowershellException;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.scap.oval.CollectException;
@@ -58,15 +60,17 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class FileauditedpermissionsAdapter extends BaseFileAdapter<FileauditedpermissionsItem> {
+    public static final int SUCCESSFUL_ACCESS_ACE_FLAG	= 64;
+    public static final int FAILED_ACCESS_ACE_FLAG	= 128;
+
     private IWindowsSession ws;
     private IDirectory directory;
-    private IRunspace runspace;
-    private Map<String, Map<String, List<IACE>>> acls;
+    private Map<String, Map<String, List<AuditRule>>> rules;
 
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
-	Collection<Class> classes = new Vector<Class>();
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((ISession)session);
 	    this.ws = (IWindowsSession)session;
@@ -82,20 +86,22 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	return FileauditedpermissionsItem.class;
     }
 
+    @Override
+    protected List<InputStream> getPowershellModules() {
+	return Arrays.asList(getClass().getResourceAsStream("Fileauditedpermissions.psm1"));
+    }
+
     protected Collection<FileauditedpermissionsItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws IOException, CollectException {
 
 	initialize();
-	if (runspace == null) {
-	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL), FlagEnumeration.NOT_COLLECTED);
-	}
 
 	//
 	// Grab a fresh directory in case there's been a reconnect since initialization.
 	//
 	directory = ws.getDirectory();
 
-	Collection<FileauditedpermissionsItem> items = new Vector<FileauditedpermissionsItem>();
+	Collection<FileauditedpermissionsItem> items = new ArrayList<FileauditedpermissionsItem>();
 
 	FileauditedpermissionsItem baseItem = null;
 	if (base instanceof FileauditedpermissionsItem) {
@@ -109,11 +115,13 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	boolean includeGroups = true;
 	boolean resolveGroups = false;
 	OperationEnumeration op = OperationEnumeration.EQUALS;
+	IWindowsSession.View view = ws.getNativeView();
 	if (obj instanceof Fileauditedpermissions53Object) {
 	    Fileauditedpermissions53Object fObj = (Fileauditedpermissions53Object)obj;
 	    op = fObj.getTrusteeSid().getOperation();
 	    pSid = (String)fObj.getTrusteeSid().getValue();
 	    if (fObj.isSetBehaviors()) {
+		view = getView(fObj.getBehaviors());
 		includeGroups = fObj.getBehaviors().getIncludeGroup();
 		resolveGroups = fObj.getBehaviors().getResolveGroup();
 	    }
@@ -122,6 +130,7 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	    op = fObj.getTrusteeName().getOperation();
 	    pName = (String)fObj.getTrusteeName().getValue();
 	    if (fObj.isSetBehaviors()) {
+		view = getView(fObj.getBehaviors());
 		includeGroups = fObj.getBehaviors().getIncludeGroup();
 		resolveGroups = fObj.getBehaviors().getResolveGroup();
 	    }
@@ -143,7 +152,7 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		// Note: per the specification, the scope is limited to the trustees referenced by the security
 		// descriptor, as opposed to the full scope of all known trustees.
 		//
-		for (Map.Entry<String, List<IACE>> entry : getAccessEntries(f.getPath()).entrySet()) {
+		for (Map.Entry<String, List<AuditRule>> entry : getAuditRules(f.getPath(), view).entrySet()) {
 		    IPrincipal principal = null;
 		    try {
 			if (pSid == null) {
@@ -184,15 +193,15 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		} else {
 		    principals = directory.getAllPrincipals(directory.queryPrincipalBySid(pSid), includeGroups, resolveGroups);
 		}
-		Map<String, List<IACE>> aces = getAccessEntries(f.getPath());
+		Map<String, List<AuditRule>> auditRules = getAuditRules(f.getPath(), view);
 		for (IPrincipal principal : principals) {
 		    switch(op) {
 		      case EQUALS:
 		      case CASE_INSENSITIVE_EQUALS:
-			items.add(makeItem(baseItem, principal, aces.get(principal.getSid())));
+			items.add(makeItem(baseItem, principal, auditRules.get(principal.getSid())));
 			break;
 		      case NOT_EQUAL:
-			items.add(makeItem(baseItem, principal, aces.get(principal.getSid())));
+			items.add(makeItem(baseItem, principal, auditRules.get(principal.getSid())));
 			break;
 		    }
 		}
@@ -223,6 +232,12 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_FILESACL, obj.getId(), e.getMessage()));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (Exception e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
     }
@@ -233,43 +248,22 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
      * Idempotent
      */
     private void initialize() {
-	if (acls == null) {
-	    acls = new HashMap<String, Map<String, List<IACE>>>();
+	if (rules == null) {
+	    rules = new HashMap<String, Map<String, List<AuditRule>>>();
 	} else {
 	    return; // previously initialized
-	}
-
-	//
-	// Get a runspace if there are any in the pool, or create a new one, and load the Cmdlet utilities
-	// Powershell module code.
-	//
-	for (IRunspace rs : ws.getRunspacePool().enumerate()) {
-	    runspace = rs;
-	    break;
-	}
-	try {
-	    if (runspace == null) {
-		runspace = ws.getRunspacePool().spawn();
-	    }
-	    if (runspace != null) {
-		runspace.loadModule(getClass().getResourceAsStream("Fileauditedpermissions.psm1"));
-	    }
-	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
     }
 
     /**
      * Retrieve the access entries for the file.
      */
-    private Map<String, List<IACE>> getAccessEntries(String path)
-		throws IOException, NoSuchElementException, PowershellException {
-
-	if (acls.containsKey(path)) {
-	    return acls.get(path);
+    private Map<String, List<AuditRule>> getAuditRules(String path, IWindowsSession.View view) throws Exception {
+	if (rules.containsKey(path)) {
+	    return rules.get(path);
 	} else {
-	    Map<String, List<IACE>> aces = new HashMap<String, List<IACE>>();
-	    acls.put(path, aces);
+	    Map<String, List<AuditRule>> fileAuditRules = new HashMap<String, List<AuditRule>>();
+	    rules.put(path, fileAuditRules);
 
 	    String pathArg = path.replace("\\", "\\\\");
 	    if (path.indexOf(" ") != -1) {
@@ -277,7 +271,7 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		    pathArg = new StringBuffer("\"").append(pathArg).append("\"").toString();
 		}
 	    }
-	    String data = runspace.invoke("Get-FileAuditedPermissions " + pathArg);
+	    String data = getRunspace(view).invoke("Get-FileAuditedPermissions -Path " + pathArg);
 	    if (data != null) {
 		for (String entry : data.split("\r\n")) {
 		    int ptr1 = entry.indexOf(":");
@@ -286,20 +280,20 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		    int mask = Integer.valueOf(entry.substring(ptr1+1,ptr2).trim());
 		    int flags = Integer.valueOf(entry.substring(ptr2+1).trim());
 
-		    if (!aces.containsKey(sid)) {
-			aces.put(sid, new ArrayList<IACE>());
+		    if (!fileAuditRules.containsKey(sid)) {
+			fileAuditRules.put(sid, new ArrayList<AuditRule>());
 		    }
 
-		    aces.get(sid).add(new ACE(sid, mask, flags));
+		    fileAuditRules.get(sid).add(new AuditRule(sid, mask, flags));
 		}
 	    }
-	    return aces;
+	    return fileAuditRules;
 	}
     }
 
-    private String toAuditValue(IACE ace) {
-	boolean success = IACE.SUCCESSFUL_ACCESS_ACE_FLAG == (IACE.SUCCESSFUL_ACCESS_ACE_FLAG | ace.getFlags());
-	boolean fail = IACE.FAILED_ACCESS_ACE_FLAG == (IACE.FAILED_ACCESS_ACE_FLAG | ace.getFlags());
+    private String toAuditValue(AuditRule rule) {
+	boolean success = SUCCESSFUL_ACCESS_ACE_FLAG == (SUCCESSFUL_ACCESS_ACE_FLAG | rule.getFlags());
+	boolean fail = FAILED_ACCESS_ACE_FLAG == (FAILED_ACCESS_ACE_FLAG | rule.getFlags());
 
 	if (success && fail) {
 	    return "AUDIT_SUCCESS_FAILURE";
@@ -315,7 +309,7 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
     /**
      * Create a new wrapped FileauditedpermissionsItem based on the base FileauditedpermissionsItem, IPrincipal and mask.
      */
-    private FileauditedpermissionsItem makeItem(FileauditedpermissionsItem base, IPrincipal p, List<IACE> aces) {
+    private FileauditedpermissionsItem makeItem(FileauditedpermissionsItem base, IPrincipal p, List<AuditRule> rules) {
 	FileauditedpermissionsItem item = Factories.sc.windows.createFileauditedpermissionsItem();
 	item.setPath(base.getPath());
 	item.setFilename(base.getFilename());
@@ -347,101 +341,101 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	item.setStandardWriteDac(audit_none);
 	item.setStandardWriteOwner(audit_none);
 
-	if (aces != null) {
-	    for (IACE ace : aces) {
-		if (IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY & ace.getAccessMask())) {
+	if (rules != null) {
+	    for (AuditRule rule : rules) {
+		if (IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY & rule.getAccessMask())) {
 		    EntityItemAuditType accessSystemSecurity = Factories.sc.windows.createEntityItemAuditType();
-		    accessSystemSecurity.setValue(toAuditValue(ace));
+		    accessSystemSecurity.setValue(toAuditValue(rule));
 		    item.setAccessSystemSecurity(accessSystemSecurity);
 		}
-		if (IACE.FILE_APPEND_DATA == (IACE.FILE_APPEND_DATA & ace.getAccessMask())) {
+		if (IACE.FILE_APPEND_DATA == (IACE.FILE_APPEND_DATA & rule.getAccessMask())) {
 		    EntityItemAuditType fileAppendData = Factories.sc.windows.createEntityItemAuditType();
-		    fileAppendData.setValue(toAuditValue(ace));
+		    fileAppendData.setValue(toAuditValue(rule));
 		    item.setFileAppendData(fileAppendData);
 		}
-		if (IACE.FILE_DELETE == (IACE.FILE_DELETE & ace.getAccessMask())) {
+		if (IACE.FILE_DELETE == (IACE.FILE_DELETE & rule.getAccessMask())) {
 		    EntityItemAuditType fileDeleteChild = Factories.sc.windows.createEntityItemAuditType();
-		    fileDeleteChild.setValue(toAuditValue(ace));
+		    fileDeleteChild.setValue(toAuditValue(rule));
 		    item.setFileDeleteChild(fileDeleteChild);
 		}
-		if (IACE.FILE_EXECUTE == (IACE.FILE_EXECUTE & ace.getAccessMask())) {
+		if (IACE.FILE_EXECUTE == (IACE.FILE_EXECUTE & rule.getAccessMask())) {
 		    EntityItemAuditType fileExecute = Factories.sc.windows.createEntityItemAuditType();
-		    fileExecute.setValue(toAuditValue(ace));
+		    fileExecute.setValue(toAuditValue(rule));
 		    item.setFileExecute(fileExecute);
 		}
-		if (IACE.FILE_READ_ATTRIBUTES == (IACE.FILE_READ_ATTRIBUTES & ace.getAccessMask())) {
+		if (IACE.FILE_READ_ATTRIBUTES == (IACE.FILE_READ_ATTRIBUTES & rule.getAccessMask())) {
 		    EntityItemAuditType fileReadAttributes = Factories.sc.windows.createEntityItemAuditType();
-		    fileReadAttributes.setValue(toAuditValue(ace));
+		    fileReadAttributes.setValue(toAuditValue(rule));
 		    item.setFileReadAttributes(fileReadAttributes);
 		}
-		if (IACE.FILE_READ_DATA == (IACE.FILE_READ_DATA & ace.getAccessMask())) {
+		if (IACE.FILE_READ_DATA == (IACE.FILE_READ_DATA & rule.getAccessMask())) {
 		    EntityItemAuditType fileReadData = Factories.sc.windows.createEntityItemAuditType();
-		    fileReadData.setValue(toAuditValue(ace));
+		    fileReadData.setValue(toAuditValue(rule));
 		    item.setFileReadData(fileReadData);
 		}
-		if (IACE.FILE_READ_EA == (IACE.FILE_READ_EA & ace.getAccessMask())) {
+		if (IACE.FILE_READ_EA == (IACE.FILE_READ_EA & rule.getAccessMask())) {
 		    EntityItemAuditType fileReadEa = Factories.sc.windows.createEntityItemAuditType();
-		    fileReadEa.setValue(toAuditValue(ace));
+		    fileReadEa.setValue(toAuditValue(rule));
 		    item.setFileReadEa(fileReadEa);
 		}
-		if (IACE.FILE_WRITE_ATTRIBUTES == (IACE.FILE_WRITE_ATTRIBUTES & ace.getAccessMask())) {
+		if (IACE.FILE_WRITE_ATTRIBUTES == (IACE.FILE_WRITE_ATTRIBUTES & rule.getAccessMask())) {
 		    EntityItemAuditType fileWriteAttributes = Factories.sc.windows.createEntityItemAuditType();
-		    fileWriteAttributes.setValue(toAuditValue(ace));
+		    fileWriteAttributes.setValue(toAuditValue(rule));
 		    item.setFileWriteAttributes(fileWriteAttributes);
 		}
-		if (IACE.FILE_WRITE_DATA == (IACE.FILE_WRITE_DATA & ace.getAccessMask())) {
+		if (IACE.FILE_WRITE_DATA == (IACE.FILE_WRITE_DATA & rule.getAccessMask())) {
 		    EntityItemAuditType fileWriteData = Factories.sc.windows.createEntityItemAuditType();
-		    fileWriteData.setValue(toAuditValue(ace));
+		    fileWriteData.setValue(toAuditValue(rule));
 		    item.setFileWriteData(fileWriteData);
 		}
-		if (IACE.FILE_WRITE_EA == (IACE.FILE_WRITE_EA & ace.getAccessMask())) {
+		if (IACE.FILE_WRITE_EA == (IACE.FILE_WRITE_EA & rule.getAccessMask())) {
 		    EntityItemAuditType fileWriteEa = Factories.sc.windows.createEntityItemAuditType();
-		    fileWriteEa.setValue(toAuditValue(ace));
+		    fileWriteEa.setValue(toAuditValue(rule));
 		    item.setFileWriteEa(fileWriteEa);
 		}
-		if (IACE.GENERIC_ALL == (IACE.GENERIC_ALL & ace.getAccessMask())) {
+		if (IACE.GENERIC_ALL == (IACE.GENERIC_ALL & rule.getAccessMask())) {
 		    EntityItemAuditType genericAll = Factories.sc.windows.createEntityItemAuditType();
-		    genericAll.setValue(toAuditValue(ace));
+		    genericAll.setValue(toAuditValue(rule));
 		    item.setGenericAll(genericAll);
 		}
-		if (IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE & ace.getAccessMask())) {
+		if (IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE & rule.getAccessMask())) {
 		    EntityItemAuditType genericExecute = Factories.sc.windows.createEntityItemAuditType();
-		    genericExecute.setValue(toAuditValue(ace));
+		    genericExecute.setValue(toAuditValue(rule));
 		    item.setGenericExecute(genericExecute);
 		}
-		if (IACE.GENERIC_READ == (IACE.GENERIC_READ & ace.getAccessMask())) {
+		if (IACE.GENERIC_READ == (IACE.GENERIC_READ & rule.getAccessMask())) {
 		    EntityItemAuditType genericRead = Factories.sc.windows.createEntityItemAuditType();
-		    genericRead.setValue(toAuditValue(ace));
+		    genericRead.setValue(toAuditValue(rule));
 		    item.setGenericRead(genericRead);
 		}
-		if (IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE & ace.getAccessMask())) {
+		if (IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE & rule.getAccessMask())) {
 		    EntityItemAuditType genericWrite = Factories.sc.windows.createEntityItemAuditType();
-		    genericWrite.setValue(toAuditValue(ace));
+		    genericWrite.setValue(toAuditValue(rule));
 		    item.setGenericWrite(genericWrite);
 		}
-		if (IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE & ace.getAccessMask())) {
+		if (IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE & rule.getAccessMask())) {
 		    EntityItemAuditType standardDelete = Factories.sc.windows.createEntityItemAuditType();
-		    standardDelete.setValue(toAuditValue(ace));
+		    standardDelete.setValue(toAuditValue(rule));
 		    item.setStandardDelete(standardDelete);
 		}
-		if (IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL & ace.getAccessMask())) {
+		if (IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL & rule.getAccessMask())) {
 		    EntityItemAuditType standardReadControl = Factories.sc.windows.createEntityItemAuditType();
-		    standardReadControl.setValue(toAuditValue(ace));
+		    standardReadControl.setValue(toAuditValue(rule));
 		    item.setStandardReadControl(standardReadControl);
 		}
-		if (IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE & ace.getAccessMask())) {
+		if (IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE & rule.getAccessMask())) {
 		    EntityItemAuditType standardSynchronize = Factories.sc.windows.createEntityItemAuditType();
-		    standardSynchronize.setValue(toAuditValue(ace));
+		    standardSynchronize.setValue(toAuditValue(rule));
 		    item.setStandardSynchronize(standardSynchronize);
 		}
-		if (IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC & ace.getAccessMask())) {
+		if (IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC & rule.getAccessMask())) {
 		    EntityItemAuditType standardWriteDac = Factories.sc.windows.createEntityItemAuditType();
-		    standardWriteDac.setValue(toAuditValue(ace));
+		    standardWriteDac.setValue(toAuditValue(rule));
 		    item.setStandardWriteDac(standardWriteDac);
 		}
-		if (IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER & ace.getAccessMask())) {
+		if (IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER & rule.getAccessMask())) {
 		    EntityItemAuditType standardWriteOwner = Factories.sc.windows.createEntityItemAuditType();
-		    standardWriteOwner.setValue(toAuditValue(ace));
+		    standardWriteOwner.setValue(toAuditValue(rule));
 		    item.setStandardWriteOwner(standardWriteOwner);
 		}
 	    }
@@ -462,26 +456,16 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	return item;
     }
 
-    class ACE implements IACE {
-	private String sid;
-	private int mask, flags;
+    class AuditRule extends ACE {
+	private int flags;
 
-	ACE(String sid, int mask, int flags) {
-	    this.sid = sid;
-	    this.mask = mask;
+	AuditRule(String sid, int mask, int flags) {
+	    super(sid, mask);
 	    this.flags = flags;
 	}
 
 	public int getFlags() {
 	    return flags;
-	}
-
-	public int getAccessMask() {
-	    return mask;
-	}
-
-	public String getSid() {
-	    return sid;
 	}
     }
 }

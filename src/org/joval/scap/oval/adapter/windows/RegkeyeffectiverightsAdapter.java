@@ -41,6 +41,7 @@ import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.os.windows.identity.ACE;
 import org.joval.os.windows.powershell.PowershellException;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.scap.oval.CollectException;
@@ -57,7 +58,7 @@ import org.joval.util.Version;
  */
 public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<RegkeyeffectiverightsItem> {
     private IDirectory directory;
-    private Map<String, List<IACE>> acls;
+    private Map<String, Collection<IACE>> acls;
 
     // Implement IAdapter
 
@@ -119,7 +120,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	}
 
 	try {
-	    List<IACE> aces = getSecurity(key, view);
+	    Collection<IACE> aces = getSecurity(key, view);
 	    switch(op) {
 	      case PATTERN_MATCH:
 		Pattern p = null;
@@ -376,62 +377,37 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	directory = session.getDirectory();
 
 	if (acls == null) {
-	    acls = new HashMap<String, List<IACE>>();
+	    acls = new HashMap<String, Collection<IACE>>();
 	}
     }
 
     /**
      * Retrieve the access entries for the file.
      */
-    private List<IACE> getSecurity(IKey key, IWindowsSession.View view) throws Exception {
+    private Collection<IACE> getSecurity(IKey key, IWindowsSession.View view) throws Exception {
 	String path = key.toString().toUpperCase();
-	if (acls.containsKey(path)) {
-	    return acls.get(path);
-	} else {
-	    acls.put(path, new ArrayList<IACE>());
-	    HashMap<String, IACE> aces = new HashMap<String, IACE>();
+	if (!acls.containsKey(path)) {
 	    String pathArg = new StringBuffer("Registry::").append(key.toString()).toString();
 	    if (path.indexOf(" ") != -1) {
 		pathArg = new StringBuffer("\"").append(pathArg).append("\"").toString();
 	    }
 	    IRunspace runspace = getRunspace(view);
-	    String data = runspace.invoke("Get-RegkeyEffectiveRights -literalPath " + pathArg);
+	    String data = runspace.invoke("Get-Item -literalPath " + pathArg + " | Print-RegkeyAccess");
+	    Map<String, IACE> userACEMap = new HashMap<String, IACE>();
 	    if (data != null) {
 		for (String entry : data.split("\r\n")) {
-		    int ptr = entry.indexOf(":");
-		    String sid = entry.substring(0,ptr).trim();
-		    int mask = Integer.valueOf(entry.substring(ptr+1).trim());
-		    if (aces.containsKey(sid)) {
-			aces.put(sid, new ACE(sid, aces.get(sid).getAccessMask() | mask));
+		    IACE ace = new ACE(entry);
+		    String sid = ace.getSid();
+		    if (userACEMap.containsKey(sid)) {
+			// combine access masks
+			userACEMap.put(sid, new ACE(sid, userACEMap.get(sid).getAccessMask() | ace.getAccessMask()));
 		    } else {
-			aces.put(sid, new ACE(sid, mask));
+			userACEMap.put(sid, ace);
 		    }
 		}
 	    }
-	    acls.get(path).addAll(aces.values());
-	    return acls.get(path);
+	    acls.put(path, userACEMap.values());
 	}
-    }
-
-    class ACE implements IACE {
-	private String sid;
-	private int mask;
-
-	ACE(String sid, int mask) {
-	    this.sid = sid;
-	    this.mask = mask;
-	}
-
-	public int getFlags() {
-	    return 0;
-	}
-
-	public int getAccessMask() {
-	    return mask;
-	}
-
-	public String getSid() {
-	    return sid;
-	}
+	return acls.get(path);
     }
 }

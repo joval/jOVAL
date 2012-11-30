@@ -78,42 +78,91 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	ReflectedRegistryObject rObj = new ReflectedRegistryObject(obj);
 	IWindowsSession.View view = getView(rObj.getBehaviors());
 	if (session.supports(view)) {
-	    String hive = (String)rObj.getHive().getValue();
-	    for (IKey key : getKeys(rObj, hive, rc)) {
-		try {
-		    //
-		    // Create the base ItemType for the path
-		    //
-		    ReflectedRegkeyItem rItem = new ReflectedRegkeyItem();
-		    EntityItemRegistryHiveType hiveType = Factories.sc.windows.createEntityItemRegistryHiveType();
-		    hiveType.setValue(hive);
-		    rItem.setHive(hiveType);
-		    EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
-		    keyType.setValue(key.getPath());
-		    rItem.setKey(keyType);
-		    switch(view) {
-		      case _32BIT:
-			rItem.setWindowsView("32_bit");
-			break;
-		      case _64BIT:
-			rItem.setWindowsView("64_bit");
+	    //
+	    // Find all the matching top-level hives
+	    //
+	    List<String> hives = new ArrayList<String>();
+	    OperationEnumeration op = rObj.getHive().getOperation();
+	    String name = (String)rObj.getHive().getValue();
+	    switch(op) {
+	      case EQUALS:
+		for (String hive : IRegistry.HIVES) {
+		    if (name.equals(hive)) {
+			hives.add(hive);
 			break;
 		    }
+		}
+		break;
+	      case CASE_INSENSITIVE_EQUALS:
+		for (String hive : IRegistry.HIVES) {
+		    if (name.equalsIgnoreCase(hive)) {
+			hives.add(hive);
+			break;
+		    }
+		}
+		break;
+	      case NOT_EQUAL:
+		for (String hive : IRegistry.HIVES) {
+		    if (!name.equals(hive)) {
+			hives.add(hive);
+			break;
+		    }
+		}
+		break;
+	      case PATTERN_MATCH: {
+		Pattern p = Pattern.compile(name);
+		for (String hive : IRegistry.HIVES) {
+		    if (p.matcher(hive).find()) {
+			hives.add(hive);
+		    }
+		}
+		break;
+	      }
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	    }
 
-		    //
-		    // Add items retrieved by the subclass
-		    //
-		    items.addAll(getItems(obj, rItem.it, key, rc));
-		} catch (NoSuchElementException e) {
-		    // No match.
-		} catch (CollectException e) {
-		    throw e;
-		} catch (Exception e) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(e.getMessage());
-		    rc.addMessage(msg);
-		    session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    //
+	    // For each matching top-level hive, get items.
+	    //
+	    for (String hive : hives) {
+		for (IKey key : getKeys(rObj, hive, rc)) {
+		    try {
+			//
+			// Create the base ItemType for the path
+			//
+			ReflectedRegkeyItem rItem = new ReflectedRegkeyItem();
+			EntityItemRegistryHiveType hiveType = Factories.sc.windows.createEntityItemRegistryHiveType();
+			hiveType.setValue(hive);
+			rItem.setHive(hiveType);
+			EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
+			keyType.setValue(key.getPath());
+			rItem.setKey(keyType);
+			switch(view) {
+			  case _32BIT:
+			    rItem.setWindowsView("32_bit");
+			    break;
+			  case _64BIT:
+			    rItem.setWindowsView("64_bit");
+			    break;
+			}
+
+			//
+			// Add items retrieved by the subclass
+			//
+			items.addAll(getItems(obj, rItem.it, key, rc));
+		    } catch (NoSuchElementException e) {
+			// No match.
+		    } catch (CollectException e) {
+			throw e;
+		    } catch (Exception e) {
+			MessageType msg = Factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.ERROR);
+			msg.setValue(e.getMessage());
+			rc.addMessage(msg);
+			session.getLogger().debug(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    }
 		}
 	    }
 	} else {
@@ -132,6 +181,10 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
      */
     protected abstract Class getItemClass();
 
+    /**
+     * Subclasses can use this method to apply additional search conditions. This base class only applies conditions related
+     * to keys (so, for instance, it doesn't create any FIELD_VALUE conditions).
+     */
     protected List<ISearchable.ICondition> getConditions(ObjectType obj) throws PatternSyntaxException, CollectException {
 	@SuppressWarnings("unchecked")
 	List<ISearchable.ICondition> empty = (List<ISearchable.ICondition>)Collections.EMPTY_LIST;
@@ -168,7 +221,6 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	} else if (rs != null) {
 	    return rs;
 	}
-
 	IRunspace result = null;
 	// See if an existing runspace matches the desired view
 	for (IRunspace runspace : session.getRunspacePool().enumerate()) {
@@ -247,7 +299,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
     }
 
     /**
-     * Return the list of all registry key paths corresponding to the given RegistryObject.  Handles searches (from
+     * Return the list of all registry IKeys corresponding to the given RegistryObject.  Handles searches (from
      * pattern match operations), singletons (from equals operations), and searches based on RegistryBehaviors.
      */
     private List<IKey> getKeys(ReflectedRegistryObject rObj, String hive, IRequestContext rc) throws CollectException {

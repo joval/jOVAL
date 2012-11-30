@@ -35,7 +35,8 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.fs.AbstractFilesystem;
 import org.joval.io.fs.DefaultMetadata;
 import org.joval.io.fs.IAccessor;
-import org.joval.os.windows.identity.LocalACE;
+import org.joval.os.windows.identity.ACE;
+import org.joval.os.windows.identity.Directory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -212,7 +213,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		WinNT.ACCESS_ACEStructure[] aces = Advapi32Util.getFileSecurity(path, false);
 		IACE[] acl = new IACE[aces.length];
 		for (int i=0; i < aces.length; i++) {
-		    acl[i] = new LocalACE(aces[i]);
+		    acl[i] = new ACE(Directory.toSid(aces[i].getSID().getBytes()), aces[i].Mask);
 		}
 		return acl;
 	    } catch (Win32Exception e) {

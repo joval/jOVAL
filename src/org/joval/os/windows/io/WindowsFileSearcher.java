@@ -41,6 +41,7 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.StreamTool;
 import org.joval.io.fs.AbstractFilesystem;
 import org.joval.os.windows.Timestamp;
+import org.joval.os.windows.identity.ACE;
 import org.joval.os.windows.powershell.PowershellException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
@@ -246,7 +247,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 				} else if ("Length".equals(key)) {
 				    len = Long.parseLong(val);
 				} else if ("ACE".equals(key)) {
-				    aces.add(new InternalACE(val));
+				    aces.add(new ACE(val));
 				}
 			    } catch (IllegalArgumentException e) {
 				logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -420,35 +421,6 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 		    cancel = true;
 	        }
 	    }
-	}
-    }
-
-    static class InternalACE implements IACE {
-	private int flags, mask;
-	private String sid;
-
-	public InternalACE(String s) throws IllegalArgumentException {
-	    int begin = s.indexOf("mask=") + 5;
-	    int end = s.indexOf(",sid=");
-	    if (begin < 0 || end < 0) {
-		throw new IllegalArgumentException(s);
-	    } else {
-		mask = Integer.parseInt(s.substring(begin, end));
-		begin = end + 5;
-		sid = s.substring(begin);
-	    }
-	}
-
-	public int getFlags() {
-	    return 0;
-	}
-
-	public int getAccessMask() {
-	    return mask;
-	}
-
-	public String getSid() {
-	    return sid;
 	}
     }
 }

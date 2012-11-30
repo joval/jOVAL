@@ -43,7 +43,7 @@ public class PSRegistry implements IRegistry, ISearchable<IKey> {
     private Map<String, List<String>> searchMap;
 
     Map<String, IKey> keyMap;
-    PSKey hklm, hku, hkcu, hkcr;
+    PSKey hklm, hku, hkcu, hkcr, hkcc;
     IRunspace runspace;
 
     /**
@@ -286,6 +286,8 @@ public class PSRegistry implements IRegistry, ISearchable<IKey> {
 	    hive = getHKCU();
 	} else if (HKCR.equals(name)) {
 	    hive = getHKCR();
+	} else if (HKCC.equals(name)) {
+	    hive = getHKCC();
 	} else {
 	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, name));
 	}
@@ -380,5 +382,20 @@ public class PSRegistry implements IRegistry, ISearchable<IKey> {
 	    hkcr = new PSKey(this, HKCR);
 	}
 	return hkcr;
+    }
+
+    /**
+     * Get the HKEY_CURRENT_CONFIG key.
+     */
+    private PSKey getHKCC() {
+	if (hkcc == null) {
+	    try {
+		runspace.invoke("New-PSDrive -PSProvider registry -Root HKEY_CURRENT_CONFIG -Name HKCC");
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	    hkcc = new PSKey(this, HKCC);
+	}
+	return hkcc;
     }
 }

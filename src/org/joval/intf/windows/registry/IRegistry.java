@@ -33,10 +33,14 @@ public interface IRegistry extends ILoggable {
 
     String COMPUTERNAME_KEY	= "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
     String COMPUTERNAME_VAL	= "ComputerName";
+
     String HKLM			= "HKEY_LOCAL_MACHINE";
     String HKU			= "HKEY_USERS";
+    String HKCC			= "HKEY_CURRENT_CONFIG";
     String HKCU			= "HKEY_CURRENT_USER";
     String HKCR			= "HKEY_CLASSES_ROOT";
+    String[] HIVES		= {HKLM, HKU, HKCC, HKCR, HKCU};
+
     String DELIM_STR		= "\\";
     char   DELIM_CH		= '\\';
     String ESCAPED_DELIM	= "\\\\";

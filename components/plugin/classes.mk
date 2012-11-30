@@ -68,10 +68,10 @@ CLASSES=\
 	org.joval.os.unix.system.BaseUnixSession					\
 	org.joval.os.unix.system.Environment						\
 	org.joval.os.unix.system.UnixSession						\
+	org.joval.os.windows.identity.ACE						\
 	org.joval.os.windows.identity.ActiveDirectory					\
 	org.joval.os.windows.identity.Directory						\
 	org.joval.os.windows.identity.Group						\
-	org.joval.os.windows.identity.LocalACE						\
 	org.joval.os.windows.identity.LocalDirectory					\
 	org.joval.os.windows.identity.Principal						\
 	org.joval.os.windows.identity.User						\

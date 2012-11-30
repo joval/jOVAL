@@ -4,6 +4,7 @@
 package org.joval.scap.oval.adapter.independent;
 
 import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -11,6 +12,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -22,6 +24,7 @@ import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.ObjectType;
+import oval.schemas.definitions.windows.FileBehaviors;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -37,6 +40,7 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.util.ISearchable;
 import org.joval.intf.util.ISearchable.ICondition;
 import org.joval.intf.unix.io.IUnixFilesystem;
+import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
@@ -61,6 +65,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     protected static final int FIELD_DEPTH		= ISearchable.FIELD_DEPTH;
 
     private Pattern localFilter;
+    private IRunspace rs, rs32;
 
     protected ISession session;
 
@@ -97,16 +102,24 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    behaviors = fObj.getBehaviors();
 	}
 	IFilesystem fs = session.getFilesystem();
-	int winView = 0;
+	IWindowsSession.View view = null;
 	if (session instanceof IWindowsSession) {
-	    if (behaviors != null) {
+	    IWindowsSession ws = (IWindowsSession)session;
+	    if (behaviors == null) {
+		view = ws.getNativeView();
+	    } else {
 		if ("32_bit".equals(behaviors.getWindowsView())) {
-		    fs = ((IWindowsSession)session).getFilesystem(IWindowsSession.View._32BIT);
-		    winView = 32;
+		    view = IWindowsSession.View._32BIT;
+		} else if ("64_bit".equals(behaviors.getWindowsView())) {
+	    	    view = IWindowsSession.View._64BIT;
 		}
 	    }
-	    if (winView == 0 && ((IWindowsSession)session).supports(IWindowsSession.View._64BIT)) {
-		winView = 64;
+	    if (ws.supports(view)) {
+		fs = ws.getFilesystem(view);
+	    } else {
+		@SuppressWarnings("unchecked")
+		List<T> empty = (List<T>)Collections.EMPTY_LIST;
+		return empty;
 	    }
 	}
 
@@ -180,11 +193,11 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    throw new CollectException(msg, FlagEnumeration.ERROR);
 		}
 
-		switch(winView) {
-		  case 32:
+		switch(view) {
+		  case _32BIT:
 		    fItem.setWindowsView("32_bit");
 		    break;
-		  case 64:
+		  case _64BIT:
 		    fItem.setWindowsView("64_bit");
 		    break;
 		}
@@ -232,12 +245,112 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     protected abstract Class getItemClass();
 
     /**
+     * Subclasses can override this method to apply additional search conditions. This can make searches for filtered
+     * objects vastly more efficient.
+     */
+    protected List<ISearchable.ICondition> getConditions(ObjectType obj) throws PatternSyntaxException, CollectException {
+	@SuppressWarnings("unchecked")
+	List<ISearchable.ICondition> empty = (List<ISearchable.ICondition>)Collections.EMPTY_LIST;
+	return empty;
+    }
+
+    /**
      * Return a list of items to associate with the given ObjectType, based on information gathered from the IFile.
      *
      * @arg it the base ItemType containing filepath, path and filename information already populated
      */
     protected abstract Collection<T> getItems(ObjectType obj, ItemType it, IFile f, IRequestContext rc)
 	throws IOException, CollectException;
+
+    /**
+     * Windows-specific object type subclasses should override by supplying streams to any Powershell modules that must be
+     * loaded into requested runspaces using the getRunspace convenience method, below.
+     */
+    protected List<InputStream> getPowershellModules() {
+	@SuppressWarnings("unchecked")
+	List<InputStream> empty = (List<InputStream>)Collections.EMPTY_LIST;
+	return empty;
+    }
+
+    /**
+     * Windows convenience method to get a runspace, with the specified view. Modules supplied by getPowershellModules()
+     * will be auto-loaded before the runspace is returned.
+     */
+    protected IRunspace getRunspace(IWindowsSession.View view) throws Exception {
+	if (session instanceof IWindowsSession) {
+	    IWindowsSession ws = (IWindowsSession)session;
+	    if (view == IWindowsSession.View._32BIT && rs32 != null) {
+		return rs32;
+	    } else if (rs != null) {
+		return rs;
+	    }
+	    IRunspace result = null;
+	    // See if an existing runspace matches the desired view
+	    for (IRunspace runspace : ws.getRunspacePool().enumerate()) {
+		if (runspace.getView() == view) {
+		    switch(view) {
+		      case _32BIT:
+			if (ws.getNativeView() == view) {
+			    rs = runspace;
+			    rs32 = runspace;
+			} else {
+			    rs32 = runspace;
+			}
+			result = rs32;
+			break;
+
+		      default:
+			rs = runspace;
+			result = rs;
+			break;
+		    }
+		}
+	    }
+	    if (result == null) {
+		// If a match was not found, spawn a new runspace from the pool with the desired view
+		switch(view) {
+		  case _32BIT:
+		    rs32 = ws.getRunspacePool().spawn(view);
+		    if (ws.getNativeView() == view) {
+			rs = rs32;
+		    }
+		    result = rs32;
+		    break;
+
+		  default:
+		    rs = ws.getRunspacePool().spawn(view);
+		    result = rs;
+		    return result;
+		}
+	    }
+	    // Load the modules, if any.
+	    for (InputStream in : getPowershellModules()) {
+		result.loadModule(in);
+	    }
+	    return result;
+	} else {
+	    return null;
+	}
+    }
+
+    /**
+     * Returns the view suggested by the oval.schemas.definitions.windows.FileBehaviors.
+     */
+    protected IWindowsSession.View getView(FileBehaviors behaviors) {
+	if (session instanceof IWindowsSession) {
+	    if (behaviors != null && behaviors.isSetWindowsView()) {
+		String s = behaviors.getWindowsView();
+		if ("32_bit".equals(s)) {
+		    return IWindowsSession.View._32BIT;
+		} else if ("64_bit".equals(s)) {
+		    return IWindowsSession.View._64BIT;
+		}
+	    }
+	    return ((IWindowsSession)session).getNativeView();
+	} else {
+	    return null;
+	}
+    }
 
     // Private
 
@@ -441,6 +554,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		if (followLinks) {
 		    conditions.add(IUnixFilesystem.FOLLOW_LINKS);
 		}
+		conditions.addAll(getConditions(fObj.getObject()));
 		if (from == null) {
 		    Collection<IFilesystem.IMount> mounts = fs.getMounts(local ? localFilter : null);
 		    from = new String[mounts.size()];

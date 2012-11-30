@@ -106,7 +106,7 @@ class ActiveDirectory implements ILoggable {
 		ISWbemPropertySet props = os.iterator().next().getProperties();
 		String name = parent.getName(netbiosName);
 		String domain = getDomain(netbiosName);
-		String sid = Principal.toSid(props.getItem("DS_objectSid").getValueAsString());
+		String sid = Directory.toSid(props.getItem("DS_objectSid").getValueAsString());
 		Collection<String> groupNetbiosNames = parseGroups(props.getItem("DS_memberOf").getValueAsArray());
 		int uac = props.getItem("DS_userAccountControl").getValueAsInteger().intValue();
 		boolean enabled = 0x00000002 != (uac & 0x00000002); //0x02 flag indicates disabled
@@ -184,7 +184,7 @@ class ActiveDirectory implements ILoggable {
 				    logger.warn(JOVALMsg.ERROR_AD_BAD_OU, members[i]);
 				}
 			    }
-			    String sid = Principal.toSid(columns.getItem("DS_objectSid").getValueAsString());
+			    String sid = Directory.toSid(columns.getItem("DS_objectSid").getValueAsString());
 			    group = new Group(domain, cn, sid, userNetbiosNames, groupNetbiosNames);
 			    groupsByNetbiosName.put(netbiosName.toUpperCase(), group);
 			    groupsBySid.put(sid, group);

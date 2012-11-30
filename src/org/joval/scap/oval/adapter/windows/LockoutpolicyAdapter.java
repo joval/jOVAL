@@ -66,12 +66,15 @@ public class LockoutpolicyAdapter implements IAdapter {
 	    // Powershell module code.
 	    //
 	    IRunspace runspace = null;
+	    IWindowsSession.View view = session.getNativeView();
 	    for (IRunspace rs : session.getRunspacePool().enumerate()) {
-		runspace = rs;
-		break;
+		if (rs.getView() == view) {
+		    runspace = rs;
+		    break;
+		}
 	    }
 	    if (runspace == null) {
-		runspace = session.getRunspacePool().spawn();
+		runspace = session.getRunspacePool().spawn(view);
 	    }
 	    runspace.loadModule(getClass().getResourceAsStream("Lockoutpolicy.psm1"));
 

@@ -444,13 +444,16 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    // Get a runspace if there are any in the pool, or create a new one, and load the Get-Environmentvariable58
 	    // Powershell module code.
 	    //
+	    IWindowsSession.View view = session.getNativeView();
 	    for (IRunspace rs : session.getRunspacePool().enumerate()) {
-		runspace = rs;
-		break;
+		if (rs.getView() == view) {
+		    runspace = rs;
+		    break;
+		}
 	    }
 	    try {
 		if (runspace == null) {
-		    runspace = session.getRunspacePool().spawn();
+		    runspace = session.getRunspacePool().spawn(view);
 		}
 		if (runspace != null) {
 		    runspace.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));

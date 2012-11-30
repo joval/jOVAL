@@ -55,11 +55,6 @@ public interface IACE {
 
     int ACCESS_SYSTEM_SECURITY	= 0x1000000;
 
-    // for SACL ACEs only
-    int SUCCESSFUL_ACCESS_ACE_FLAG	= 64;
-    int FAILED_ACCESS_ACE_FLAG		= 128;
-
-    int getFlags();
     int getAccessMask();
     String getSid();
 }

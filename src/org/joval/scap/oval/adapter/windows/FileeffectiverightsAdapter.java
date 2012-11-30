@@ -4,12 +4,13 @@
 package org.joval.scap.oval.adapter.windows;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -39,6 +40,7 @@ import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.os.windows.identity.ACE;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
@@ -60,7 +62,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
-	Collection<Class> classes = new Vector<Class>();
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((ISession)session);
 	    this.ws = (IWindowsSession)session;
@@ -83,7 +85,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	//
 	directory = ws.getDirectory();
 
-	Collection<FileeffectiverightsItem> items = new Vector<FileeffectiverightsItem>();
+	Collection<FileeffectiverightsItem> items = new ArrayList<FileeffectiverightsItem>();
 
 	FileeffectiverightsItem baseItem = null;
 	if (base instanceof FileeffectiverightsItem) {
@@ -126,7 +128,18 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName());
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
+
+	// Combine together access masks for SIDs with multiple ACEs.
 	IACE[] aces = wfi.getSecurity();
+	Map<String, IACE> userACEMap = new HashMap<String, IACE>();
+	for (IACE ace : aces) {
+	    String sid = ace.getSid();
+	    if (userACEMap.containsKey(sid)) {
+		userACEMap.put(sid, new ACE(sid, userACEMap.get(sid).getAccessMask() | ace.getAccessMask()));
+	    } else {
+		userACEMap.put(sid, ace);
+	    }
+	}
 
 	switch(op) {
 	  case PATTERN_MATCH:
@@ -137,8 +150,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 		} else {
 		    p = Pattern.compile(pSid);
 		}
-		for (int i=0; i < aces.length; i++) {
-		    IACE ace = aces[i];
+		for (IACE ace : userACEMap.values()) {
 		    IPrincipal principal = null;
 		    try {
 			if (pSid == null) {
@@ -193,17 +205,17 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 		    principals = directory.getAllPrincipals(directory.queryPrincipalBySid(pSid), includeGroups, resolveGroups);
 		}
 		for (IPrincipal principal : principals) {
-		    for (int i=0; i < aces.length; i++) {
+		    for (IACE ace : userACEMap.values()) {
 			switch(op) {
 			  case EQUALS:
 			  case CASE_INSENSITIVE_EQUALS:
-			    if (directory.isApplicable(principal, aces[i])) {
-				items.add(makeItem(baseItem, principal, aces[i]));
+			    if (directory.isApplicable(principal, ace)) {
+				items.add(makeItem(baseItem, principal, ace));
 			    }
 			    break;
 			  case NOT_EQUAL:
-			    if (!directory.isApplicable(principal, aces[i])) {
-				items.add(makeItem(baseItem, principal, aces[i]));
+			    if (!directory.isApplicable(principal, ace)) {
+				items.add(makeItem(baseItem, principal, ace));
 			    }
 			    break;
 			}
