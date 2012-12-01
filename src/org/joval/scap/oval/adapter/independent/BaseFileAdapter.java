@@ -135,6 +135,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    dirPath = f.getParent();
 		}
 		ReflectedFileItem fItem = new ReflectedFileItem();
+		fItem.setWindowsView(view);
 		if (fObj.isSetFilepath()) {
 		    if (isDirectory) {
 			//
@@ -191,15 +192,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		} else {
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_FILE_SPEC, obj.getClass().getName(), id);
 		    throw new CollectException(msg, FlagEnumeration.ERROR);
-		}
-
-		switch(view) {
-		  case _32BIT:
-		    fItem.setWindowsView("32_bit");
-		    break;
-		  case _64BIT:
-		    fItem.setWindowsView("64_bit");
-		    break;
 		}
 
 		items.addAll(getItems(obj, fItem.it, f, rc));
@@ -832,25 +824,36 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    }
 	}
 
-	void setWindowsView(String view) {
-	    try {
-		if (setWindowsView != null) {
-		    Class[] types = setWindowsView.getParameterTypes();
-		    if (types.length == 1) {
-			Class type = types[0];
-			Object instance = Class.forName(type.getName()).newInstance();
-			@SuppressWarnings("unchecked")
-			Method setValue = type.getMethod("setValue", Object.class);
-			setValue.invoke(instance, view);
-			setWindowsView.invoke(it, instance);
-		    }
+	void setWindowsView(IWindowsSession.View view) {
+	    if (view != null) {
+		String viewString = null;
+		switch(view) {
+		  case _32BIT:
+		    viewString = "32_bit";
+		    break;
+		  case _64BIT:
+		    viewString = "64_bit";
+		    break;
 		}
-	    } catch (NoSuchMethodException e) {
-	    } catch (IllegalAccessException e) {
-	    } catch (IllegalArgumentException e) {
-	    } catch (InstantiationException e) {
-	    } catch (InvocationTargetException e) {
-	    } catch (ClassNotFoundException e) {
+		try {
+		    if (setWindowsView != null) {
+			Class[] types = setWindowsView.getParameterTypes();
+			if (types.length == 1) {
+			    Class type = types[0];
+			    Object instance = Class.forName(type.getName()).newInstance();
+			    @SuppressWarnings("unchecked")
+			    Method setValue = type.getMethod("setValue", Object.class);
+			    setValue.invoke(instance, viewString);
+			    setWindowsView.invoke(it, instance);
+			}
+		    }
+		} catch (NoSuchMethodException e) {
+		} catch (IllegalAccessException e) {
+		} catch (IllegalArgumentException e) {
+		} catch (InstantiationException e) {
+		} catch (InvocationTargetException e) {
+		} catch (ClassNotFoundException e) {
+		}
 	    }
 	}
 
