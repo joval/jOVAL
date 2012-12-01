@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,8 +88,10 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    Integer instanceKey = new Integer(hashCode());
 	    instances.put(instanceKey, this);
 	    cache = db.createHashMap("files", null, getFileSerializer(instanceKey));
+	    index = db.createHashSet("index");
 	} else {
 	    cache = new HashMap<String, IFile>();
+	    index = cache.keySet();
 	}
     }
 
@@ -650,6 +653,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
     // Private
 
     private Map<String, IFile> cache;
+    private Set<String> index;
 
     /**
      * Attempt to retrieve an IFile from the cache.
@@ -667,13 +671,18 @@ public abstract class AbstractFilesystem implements IFilesystem {
     /**
      * Put an IFile in the cache.
      *
-     * TBD: see if the data is newer than what's already in the cache?
      */
     private void putCache(IFile file) {
 	String path = file.getPath();
-	if (!cache.containsKey(path)) {
+
+	//
+	// Check the index rather than the cache, to avoid a potential infinite loop in JDBM deserialization.
+	// TBD: see if the data is newer than what's already in the cache?
+	//
+	if (!index.contains(path)) {
 	    logger.trace(JOVALMsg.STATUS_FS_CACHE_STORE, path);
 	    cache.put(path, file);
+	    index.add(path);
 	}
     }
 }
