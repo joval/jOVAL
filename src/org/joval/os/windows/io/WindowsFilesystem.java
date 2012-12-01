@@ -49,8 +49,9 @@ import org.joval.util.StringTools;
 public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFilesystem {
     private Collection<IMount> mounts;
     private WindowsFileSearcher searcher;
-    private WOW3264FilesystemRedirector redirector;
-    private IWindowsSession.View view;
+    private final IWindowsSession.View view;
+    private String system32, sysWOW64, sysNative;
+    private boolean redirect3264;
 
     public WindowsFilesystem(IWindowsSession session) throws Exception {
 	this(session, null);
@@ -62,9 +63,22 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	    view = session.getNativeView();
 	}
 	this.view = view;
-	if (view == IWindowsSession.View._32BIT) {
-	    redirector = new WOW3264FilesystemRedirector(session.getEnvironment());
+	redirect3264 = view == IWindowsSession.View._32BIT && session.getNativeView() == IWindowsSession.View._64BIT;
+	String sysRoot	= session.getEnvironment().getenv("SystemRoot");
+	system32	= sysRoot + DELIM_STR + "System32"  + DELIM_STR;
+	sysNative	= sysRoot + DELIM_STR + "Sysnative" + DELIM_STR;
+	sysWOW64	= sysRoot + DELIM_STR + "SysWOW64"  + DELIM_STR;
+    }
+
+    protected String getRealPath(String path) {
+	if (redirect3264) {
+	    if (path.toUpperCase().startsWith(system32.toUpperCase())) {
+		return sysWOW64 + path.substring(system32.length());
+	    } else if (path.toUpperCase().startsWith(sysNative.toUpperCase())) {
+		return system32 + path.substring(system32.length());
+	    }
 	}
+	return path;
     }
 
     @Override
@@ -138,14 +152,11 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     }
 
     protected IFile getPlatformFile(String path, IFile.Flags flags) throws IOException {
-	String realPath = path;
-	if (redirector != null) {
-	    String alt = redirector.getRedirect(path);
-	    if (alt != null) {
-		realPath = alt;
-	    }
+	if (redirect3264) {
+	    return new WindowsFile(path, new File(getRealPath(path)), flags);
+	} else {
+	    return new WindowsFile(path, new File(path), flags);
 	}
-	return new WindowsFile(path, new File(realPath), flags);
     }
 
     // Private
@@ -163,13 +174,11 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	protected IAccessor getAccessor() {
 	    if (accessor == null) {
 		String realPath = path;
-		if (redirector != null) {
-		    String alt = redirector.getRedirect(path);
-		    if (alt != null) {
-			realPath = alt;
-		    }
+		if (redirect3264) {
+		    accessor = new WindowsAccessor(path, new File(getRealPath(path)));
+		} else {
+		    accessor = new WindowsAccessor(path, new File(path));
 		}
-		accessor = new WindowsAccessor(path, new File(realPath));
 	    }
 	    return accessor;
 	}

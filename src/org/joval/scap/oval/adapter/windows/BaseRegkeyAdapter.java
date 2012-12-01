@@ -168,7 +168,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	} else {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.INFO);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.WARNING_WINREG_VIEW, view.toString()));
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.WARNING_WINDOWS_VIEW, view.toString()));
 	    rc.addMessage(msg);
 	}
 	return items;

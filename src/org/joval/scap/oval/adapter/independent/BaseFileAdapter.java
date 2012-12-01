@@ -117,6 +117,11 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    if (ws.supports(view)) {
 		fs = ws.getFilesystem(view);
 	    } else {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.WARNING_WINDOWS_VIEW, view.toString()));
+		rc.addMessage(msg);
+
 		@SuppressWarnings("unchecked")
 		List<T> empty = (List<T>)Collections.EMPTY_LIST;
 		return empty;

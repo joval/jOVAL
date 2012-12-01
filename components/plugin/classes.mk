@@ -80,7 +80,6 @@ CLASSES=\
 	org.joval.os.windows.io.WindowsFileSerializer					\
 	org.joval.os.windows.io.WindowsFilesystem					\
 	org.joval.os.windows.io.WindowsMount						\
-	org.joval.os.windows.io.WOW3264FilesystemRedirector				\
 	org.joval.os.windows.powershell.PowershellException				\
 	org.joval.os.windows.powershell.Runspace					\
 	org.joval.os.windows.powershell.RunspacePool					\
