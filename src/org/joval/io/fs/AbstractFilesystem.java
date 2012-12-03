@@ -321,9 +321,9 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
 	public long lastModified() throws IOException {
 	    if (info == null) {
-		return info.lastModified();
-	    } else {
 		return accessor.getMtime();
+	    } else {
+		return info.lastModified();
 	    }
 	}
 
@@ -341,9 +341,9 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
 	public String getCanonicalPath() throws IOException {
 	    if (info == null) {
-		return info.getCanonicalPath();
-	    } else {
 		return accessor.getCanonicalPath();
+	    } else {
+		return info.getCanonicalPath();
 	    }
 	}
 
