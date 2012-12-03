@@ -33,16 +33,12 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.ISearchable;
-import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.StreamTool;
 import org.joval.io.fs.AbstractFilesystem;
-import org.joval.os.windows.Timestamp;
-import org.joval.os.windows.identity.ACE;
-import org.joval.os.windows.powershell.PowershellException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -59,23 +55,15 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
     private LocLogger logger;
     private Map<String, Collection<String>> searchMap;
 
-    public WindowsFileSearcher(IWindowsSession session, IWindowsSession.View view, Map<String, Collection<String>> searchMap)
+    public WindowsFileSearcher(IWindowsSession session, IRunspace runspace, Map<String, Collection<String>> searchMap)
 		throws Exception {
 
 	this.session = session;
 	this.searchMap = searchMap;
 	logger = session.getLogger();
-	for (IRunspace runspace : session.getRunspacePool().enumerate()) {
-	    if (runspace.getView() == view) {
-		this.runspace = runspace;
-		break;
-	    }
-	}
-	if (runspace == null) {
-	    runspace = session.getRunspacePool().spawn(view);
-	}
+	this.runspace = runspace;
 	runspace.loadModule(getClass().getResourceAsStream("WindowsFileSearcher.psm1"));
-	fs = (AbstractFilesystem)session.getFilesystem(view);
+	fs = (AbstractFilesystem)session.getFilesystem(runspace.getView());
     }
 
     // Implement ILogger
@@ -200,67 +188,13 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 
     // Internal
 
-    static final String START	= "{";
-    static final String END	= "}";
-
     IFile createObject(Iterator<String> input) {
-	IFile file = null;
-	boolean start = false;
-	while(input.hasNext()) {
-	    String line = input.next();
-	    if (line.trim().equals(START)) {
-		start = true;
-		break;
-	    }
+	WindowsFileInfo info = (WindowsFileInfo)((WindowsFilesystem)fs).getDriver().nextFileInfo(input);
+	if (info == null) {
+	    return null;
+	} else {
+	    return fs.createFileFromInfo(info);
 	}
-	if (start) {
-	    long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, len=-1L;
-	    IFileMetadata.Type type = IFileMetadata.Type.FILE;
-	    int winType = IWindowsFileInfo.FILE_TYPE_UNKNOWN;
-	    Collection<IACE> aces = new ArrayList<IACE>();
-	    String path = null;
-
-	    while(input.hasNext()) {
-		String line = input.next().trim();
-		if (line.equals(END)) {
-		    break;
-		} else if (line.equals("Type: File")) {
-		    winType = IWindowsFileInfo.FILE_TYPE_DISK;
-		} else if (line.equals("Type: Directory")) {
-		    type = IFileMetadata.Type.DIRECTORY;
-		    winType = IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY;
-		} else {
-		    int ptr = line.indexOf(":");
-		    if (ptr > 0) {
-			String key = line.substring(0,ptr).trim();
-			String val = line.substring(ptr+1).trim();
-			if ("Path".equals(key)) {
-			    path = val;
-			} else {
-			    try {
-				if ("Ctime".equals(key)) {
-				    ctime = Timestamp.getTime(new BigInteger(val));
-				} else if ("Mtime".equals(key)) {
-				    mtime = Timestamp.getTime(new BigInteger(val));
-				} else if ("Atime".equals(key)) {
-				    atime = Timestamp.getTime(new BigInteger(val));
-				} else if ("Length".equals(key)) {
-				    len = Long.parseLong(val);
-				} else if ("ACE".equals(key)) {
-				    aces.add(new ACE(val));
-				}
-			    } catch (IllegalArgumentException e) {
-				logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			    }
-			}
-		    }
-		}
-	    }
-	    WindowsFileInfo info = new WindowsFileInfo(type, path, path, ctime, mtime, atime, len,
-						       winType, aces.toArray(new IACE[0]));
-	    file = fs.createFileFromInfo(info);
-	}
-	return file;
     }
 
     String getFindCommand(String from, int maxDepth, boolean dirOnly, Pattern path, Pattern dirname, Object bn) {
@@ -399,11 +333,18 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 
 	void interrupt() {
 	    cancel = true;
-	    thread.interrupt();
+	    if (thread.isAlive()) {
+		thread.interrupt();
+	    }
 	}
 
 	// Implement Runnable
 
+	/**
+	 * NB: This runs asynchronously during a search which takes place in Powershell, so we need to be careful not
+	 *     to perform a file operation that requires the parent filesystem's Powershell instance (such as
+	 *     IFile.isDirectory).
+	 */
 	public void run() {
 	    while(!cancel) {
 		try {
@@ -415,7 +356,6 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 			cancel = true;
 		    }
 	        } catch (IOException e) {
-		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    cancel = true;
 	        } catch (InterruptedException e) {
 		    cancel = true;

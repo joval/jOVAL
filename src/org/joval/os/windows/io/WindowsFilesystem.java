@@ -8,9 +8,11 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
@@ -19,11 +21,6 @@ import org.slf4j.cal10n.LocLogger;
 
 import org.apache.jdbm.Serializer;
 
-import com.sun.jna.platform.win32.Advapi32Util;
-import com.sun.jna.platform.win32.Kernel32Util;
-import com.sun.jna.platform.win32.Win32Exception;
-import com.sun.jna.platform.win32.WinNT;
-
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFileMetadata;
 import org.joval.intf.util.ILoggable;
@@ -31,10 +28,13 @@ import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.io.IWindowsFilesystem;
+import org.joval.intf.windows.io.IWindowsFilesystemDriver;
+import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.fs.AbstractFilesystem;
 import org.joval.io.fs.DefaultMetadata;
 import org.joval.io.fs.IAccessor;
+import org.joval.os.windows.Timestamp;
 import org.joval.os.windows.identity.ACE;
 import org.joval.os.windows.identity.Directory;
 import org.joval.util.JOVALMsg;
@@ -47,22 +47,36 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFilesystem {
-    private Collection<IMount> mounts;
     private WindowsFileSearcher searcher;
     private final IWindowsSession.View view;
+    private IRunspace runspace;
+    private IWindowsFilesystemDriver driver;
+    private Collection<IMount> mounts;
     private String system32, sysWOW64, sysNative;
     private boolean redirect3264;
 
-    public WindowsFilesystem(IWindowsSession session) throws Exception {
-	this(session, null);
+    public WindowsFilesystem(IWindowsSession session, IWindowsFilesystemDriver driver) throws Exception {
+	this(session, driver, session.getNativeView());
     }
 
-    public WindowsFilesystem(IWindowsSession session, IWindowsSession.View view) {
+    public WindowsFilesystem(IWindowsSession session, IWindowsFilesystemDriver driver, IWindowsSession.View view)
+		throws Exception {
+
 	super(session, DELIM_STR, IWindowsSession.View._32BIT == view ? "fs32" : "fs");
 	if (view == null) {
 	    view = session.getNativeView();
 	}
 	this.view = view;
+	this.driver = driver;
+	for (IRunspace runspace : session.getRunspacePool().enumerate()) {
+	    if (runspace.getView() == view) {
+		this.runspace = runspace;
+	    }
+	}
+	if (runspace == null) {
+	    runspace = session.getRunspacePool().spawn(view);
+	}
+	runspace.loadModule(getClass().getResourceAsStream("WindowsFilesystem.psm1"));
 	redirect3264 = view == IWindowsSession.View._32BIT && session.getNativeView() == IWindowsSession.View._64BIT;
 	String sysRoot	= session.getEnvironment().getenv("SystemRoot");
 	system32	= sysRoot + DELIM_STR + "System32"  + DELIM_STR;
@@ -84,6 +98,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     @Override
     public void setLogger(LocLogger logger) {
 	super.setLogger(logger);
+	driver.setLogger(logger);
 	if (searcher != null) {
 	    searcher.setLogger(logger);
 	}
@@ -98,7 +113,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		} else {
 		    searchMap = db.createHashMap("searches");
 		}
-		searcher = new WindowsFileSearcher((IWindowsSession)session, view, searchMap);
+		searcher = new WindowsFileSearcher((IWindowsSession)session, runspace, searchMap);
 	    } catch (IOException e) {
 		throw e;
 	    } catch (Exception e) {
@@ -110,36 +125,38 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     }
 
     public Collection<IMount> getMounts(Pattern filter) throws IOException {
-	if (mounts == null) {
-	    try {
-		mounts = new ArrayList<IMount>();
-		File[] roots = File.listRoots();
-		for (int i=0; i < roots.length; i++) {
-		    String path = roots[i].getPath();
-		    mounts.add(new WindowsMount(path, FsType.typeOf(Kernel32Util.getDriveType(path))));
+	try {
+	    if (mounts == null) {
+		mounts = driver.getMounts(null);
+	    }
+	    if (filter == null) {
+		return mounts;
+	    } else {
+		Collection<IMount> results = new ArrayList<IMount>();
+		for (IMount mount : mounts) {
+		    if (filter.matcher(mount.getType()).find()) {
+			logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mount.getPath(), mount.getType());
+		    } else {
+			logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, mount.getPath(), mount.getType());
+			results.add(mount);
+		    } 
 		}
-	    } catch (Exception e) {
-		throw new IOException(e);
+		return results;
 	    }
-	}
-	if (filter == null) {
-	    return mounts;
-	} else {
-	    Collection<IMount> results = new ArrayList<IMount>();
-	    for (IMount mount : mounts) {
-		if (filter.matcher(mount.getType()).find()) {
-		    logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mount.getPath(), mount.getType());
-		} else {
-		    logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, mount.getPath(), mount.getType());
-		    results.add(mount);
-		} 
-	    }
-	    return results;
+	} catch (IOException e) {
+	    throw e;
+	} catch (Exception e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new IOException(e.getMessage());
 	}
     }
 
     public Serializer<IFile> getFileSerializer(Integer instanceKey) {
 	return new WindowsFileSerializer(instanceKey);
+    }
+
+    public IWindowsFilesystemDriver getDriver() {
+	return driver;
     }
 
     @Override
@@ -152,10 +169,18 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     }
 
     protected IFile getPlatformFile(String path, IFile.Flags flags) throws IOException {
-	if (redirect3264) {
-	    return new WindowsFile(path, new File(getRealPath(path)), flags);
-	} else {
-	    return new WindowsFile(path, new File(path), flags);
+	return new WindowsFile(path, new File(getRealPath(path)), flags);
+    }
+
+    protected WindowsFileInfo getWindowsFileInfo(String path) throws IOException {
+	try {
+	    String data = runspace.invoke("Get-Item -literalPath \"" + path + "\" | Print-FileInfo");
+	    return (WindowsFileInfo)driver.nextFileInfo(StringTools.toList(data.split("\r\n")).iterator());
+	} catch (IOException e) {
+	    throw e;
+	} catch (Exception e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new IOException(e.getMessage());
 	}
     }
 
@@ -173,18 +198,13 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	@Override
 	protected IAccessor getAccessor() {
 	    if (accessor == null) {
-		String realPath = path;
-		if (redirect3264) {
-		    accessor = new WindowsAccessor(path, new File(getRealPath(path)));
-		} else {
-		    accessor = new WindowsAccessor(path, new File(path));
-		}
+		accessor = new WindowsAccessor(path, new File(getRealPath(path)));
 	    }
 	    return accessor;
 	}
     }
 
-    class WindowsAccessor extends DefaultAccessor implements IWindowsFileInfo {
+    class WindowsAccessor extends DefaultAccessor {
 	/**
 	 * Due to 32-bit redirection, the path can differ from the underlying File's path.
 	 */
@@ -197,37 +217,11 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 
 	@Override
 	public DefaultMetadata getInfo() throws IOException {
-	    return new WindowsFileInfo(file.isDirectory() ? IFileMetadata.Type.DIRECTORY : IFileMetadata.Type.FILE, path,
-				       file.getCanonicalPath(), getCtime(), getMtime(), getAtime(), getLength(), this);
-	}
-
-	// Implement IWindowsFileInfo
-
-	public int getWindowsFileType() throws IOException {
-	    try {
-		int dirAttr = IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY & Kernel32Util.getFileAttributes(path);
-		if (IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY == dirAttr) {
-		    return IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY;
-		} else {
-		    return Kernel32Util.getFileType(path);
-		}
-	    } catch (Win32Exception e) {
-		logger.warn(JOVALMsg.ERROR_IO, path, e.getMessage());
-		throw new IOException(e);
+	    DefaultMetadata result = getWindowsFileInfo(path);
+	    if (result == null) {
+		result = super.getInfo();
 	    }
-	}
-
-	public IACE[] getSecurity() throws IOException {
-	    try {
-		WinNT.ACCESS_ACEStructure[] aces = Advapi32Util.getFileSecurity(path, false);
-		IACE[] acl = new IACE[aces.length];
-		for (int i=0; i < aces.length; i++) {
-		    acl[i] = new ACE(Directory.toSid(aces[i].getSID().getBytes()), aces[i].Mask);
-		}
-		return acl;
-	    } catch (Win32Exception e) {
-		throw new IOException(e);
-	    }
+	    return result;
 	}
     }
 }

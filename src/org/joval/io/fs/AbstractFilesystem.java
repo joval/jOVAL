@@ -320,11 +320,19 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	}
 
 	public long lastModified() throws IOException {
-	    return getInfo().lastModified();
+	    if (info == null) {
+		return info.lastModified();
+	    } else {
+		return accessor.getMtime();
+	    }
 	}
 
 	public long length() throws IOException {
-	    return getInfo().length();
+	    if (info == null) {
+		return accessor.getLength();
+	    } else {
+		return info.length();
+	    }
 	}
 
 	public String getPath() {
@@ -332,7 +340,11 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	}
 
 	public String getCanonicalPath() throws IOException {
-	    return getInfo().getCanonicalPath();
+	    if (info == null) {
+		return info.getCanonicalPath();
+	    } else {
+		return accessor.getCanonicalPath();
+	    }
 	}
 
 	public IFileEx getExtended() throws IOException {
@@ -382,7 +394,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	public boolean exists() {
 	    if (info == null) {
 		try {
-		    return getAccessor().exists();
+		    return accessor.exists();
 		} catch (Exception e) {
 		    return false;
 		}
@@ -566,12 +578,12 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    return IFile.UNKNOWN_TIME;
 	}
 
-	public long getMtime() throws IOException {
-	    return file.lastModified();
-	}
-
 	public long getAtime() throws IOException {
 	    return IFile.UNKNOWN_TIME;
+	}
+
+	public long getMtime() throws IOException {
+	    return file.lastModified();
 	}
 
 	public long getLength() throws IOException {

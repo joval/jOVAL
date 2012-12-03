@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.StringTokenizer;
@@ -108,7 +109,10 @@ public class Runspace implements IRunspace {
 		}
 		stdin.flush();
 		for (int i=0; i < lines; i++) {
-		    readPrompt(millis);
+		    try {
+			readPrompt(2000);
+		    } catch (InterruptedIOException e) {
+		    }
 		}
 		if (">> ".equals(getPrompt())) {
 		    invoke("");
@@ -243,6 +247,7 @@ public class Runspace implements IRunspace {
 		try {
 		    Thread.sleep(interval);
 		} catch (InterruptedException e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    throw new IOException(e);
 		}
 	    } else {
@@ -295,7 +300,7 @@ public class Runspace implements IRunspace {
 		}
 	    }
 	}
-	throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL_TIMEOUT));
+	throw new InterruptedIOException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL_TIMEOUT));
     }
 
     private boolean isPrompt(String str) {

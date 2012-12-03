@@ -89,4 +89,6 @@ public interface IWindowsFilesystem extends IFilesystem {
      * The drive is a RAM disk.
      */
     int DRIVE_RAMDISK = 6;
+
+    IWindowsFilesystemDriver getDriver();
 }
