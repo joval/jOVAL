@@ -276,55 +276,55 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	accessSystemSecurity.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setAccessSystemSecurity(accessSystemSecurity);
 
-	test = IACE.GENERIC_ALL == (IACE.GENERIC_ALL & mask);
+	test = IACE.FILE_GENERIC_ALL == (IACE.FILE_GENERIC_ALL & mask);
 	EntityItemBoolType genericAll = Factories.sc.core.createEntityItemBoolType();
 	genericAll.setValue(Boolean.toString(test));
 	genericAll.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericAll(genericAll);
 
-	test = IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE & mask);
+	test = IACE.FILE_GENERIC_EXECUTE == (IACE.FILE_GENERIC_EXECUTE & mask);
 	EntityItemBoolType genericExecute = Factories.sc.core.createEntityItemBoolType();
 	genericExecute.setValue(Boolean.toString(test));
 	genericExecute.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericExecute(genericExecute);
 
-	test = IACE.GENERIC_READ == (IACE.GENERIC_READ & mask);
+	test = IACE.FILE_GENERIC_READ == (IACE.FILE_GENERIC_READ & mask);
 	EntityItemBoolType genericRead = Factories.sc.core.createEntityItemBoolType();
 	genericRead.setValue(Boolean.toString(test));
 	genericRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericRead(genericRead);
 
-	test = IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE & mask);
+	test = IACE.FILE_GENERIC_WRITE == (IACE.FILE_GENERIC_WRITE & mask);
 	EntityItemBoolType genericWrite = Factories.sc.core.createEntityItemBoolType();
 	genericWrite.setValue(Boolean.toString(test));
 	genericWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericWrite(genericWrite);
 
-	test = IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE & mask);
+	test = IACE.DELETE == (IACE.DELETE & mask);
 	EntityItemBoolType standardDelete = Factories.sc.core.createEntityItemBoolType();
 	standardDelete.setValue(Boolean.toString(test));
 	standardDelete.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardDelete(standardDelete);
 
-	test = IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL & mask);
+	test = IACE.READ_CONTROL == (IACE.READ_CONTROL & mask);
 	EntityItemBoolType standardReadControl = Factories.sc.core.createEntityItemBoolType();
 	standardReadControl.setValue(Boolean.toString(test));
 	standardReadControl.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardReadControl(standardReadControl);
 
-	test = IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE & mask);
+	test = IACE.SYNCHRONIZE == (IACE.SYNCHRONIZE & mask);
 	EntityItemBoolType standardSynchronize = Factories.sc.core.createEntityItemBoolType();
 	standardSynchronize.setValue(Boolean.toString(test));
 	standardSynchronize.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardSynchronize(standardSynchronize);
 
-	test = IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC & mask);
+	test = IACE.WRITE_DAC == (IACE.WRITE_DAC & mask);
 	EntityItemBoolType standardWriteDac = Factories.sc.core.createEntityItemBoolType();
 	standardWriteDac.setValue(Boolean.toString(test));
 	standardWriteDac.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardWriteDac(standardWriteDac);
 
-	test = IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER & mask);
+	test = IACE.WRITE_OWNER == (IACE.WRITE_OWNER & mask);
 	EntityItemBoolType standardWriteOwner = Factories.sc.core.createEntityItemBoolType();
 	standardWriteOwner.setValue(Boolean.toString(test));
 	standardWriteOwner.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
