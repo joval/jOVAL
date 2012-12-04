@@ -131,7 +131,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 	    for (String path : searchMap.get(cmd)) {
 		results.add(fs.getFile(path));
 	    }
-	} else {
+	} else if (fs.getFile(from).isDirectory()) {
 	    logger.debug(JOVALMsg.STATUS_FS_SEARCH_START, cmd);
 	    File localTemp = null;
 	    IFile remoteTemp = null;

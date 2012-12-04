@@ -393,47 +393,47 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		    fileWriteEa.setValue(toAuditValue(rule));
 		    item.setFileWriteEa(fileWriteEa);
 		}
-		if (IACE.GENERIC_ALL == (IACE.GENERIC_ALL & rule.getAccessMask())) {
+		if (IACE.FILE_GENERIC_ALL == (IACE.FILE_GENERIC_ALL & rule.getAccessMask())) {
 		    EntityItemAuditType genericAll = Factories.sc.windows.createEntityItemAuditType();
 		    genericAll.setValue(toAuditValue(rule));
 		    item.setGenericAll(genericAll);
 		}
-		if (IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE & rule.getAccessMask())) {
+		if (IACE.FILE_GENERIC_EXECUTE == (IACE.FILE_GENERIC_EXECUTE & rule.getAccessMask())) {
 		    EntityItemAuditType genericExecute = Factories.sc.windows.createEntityItemAuditType();
 		    genericExecute.setValue(toAuditValue(rule));
 		    item.setGenericExecute(genericExecute);
 		}
-		if (IACE.GENERIC_READ == (IACE.GENERIC_READ & rule.getAccessMask())) {
+		if (IACE.FILE_GENERIC_READ == (IACE.FILE_GENERIC_READ & rule.getAccessMask())) {
 		    EntityItemAuditType genericRead = Factories.sc.windows.createEntityItemAuditType();
 		    genericRead.setValue(toAuditValue(rule));
 		    item.setGenericRead(genericRead);
 		}
-		if (IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE & rule.getAccessMask())) {
+		if (IACE.FILE_GENERIC_WRITE == (IACE.FILE_GENERIC_WRITE & rule.getAccessMask())) {
 		    EntityItemAuditType genericWrite = Factories.sc.windows.createEntityItemAuditType();
 		    genericWrite.setValue(toAuditValue(rule));
 		    item.setGenericWrite(genericWrite);
 		}
-		if (IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE & rule.getAccessMask())) {
+		if (IACE.DELETE == (IACE.DELETE & rule.getAccessMask())) {
 		    EntityItemAuditType standardDelete = Factories.sc.windows.createEntityItemAuditType();
 		    standardDelete.setValue(toAuditValue(rule));
 		    item.setStandardDelete(standardDelete);
 		}
-		if (IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL & rule.getAccessMask())) {
+		if (IACE.READ_CONTROL == (IACE.READ_CONTROL & rule.getAccessMask())) {
 		    EntityItemAuditType standardReadControl = Factories.sc.windows.createEntityItemAuditType();
 		    standardReadControl.setValue(toAuditValue(rule));
 		    item.setStandardReadControl(standardReadControl);
 		}
-		if (IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE & rule.getAccessMask())) {
+		if (IACE.SYNCHRONIZE == (IACE.SYNCHRONIZE & rule.getAccessMask())) {
 		    EntityItemAuditType standardSynchronize = Factories.sc.windows.createEntityItemAuditType();
 		    standardSynchronize.setValue(toAuditValue(rule));
 		    item.setStandardSynchronize(standardSynchronize);
 		}
-		if (IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC & rule.getAccessMask())) {
+		if (IACE.WRITE_DAC == (IACE.WRITE_DAC & rule.getAccessMask())) {
 		    EntityItemAuditType standardWriteDac = Factories.sc.windows.createEntityItemAuditType();
 		    standardWriteDac.setValue(toAuditValue(rule));
 		    item.setStandardWriteDac(standardWriteDac);
 		}
-		if (IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER & rule.getAccessMask())) {
+		if (IACE.WRITE_OWNER == (IACE.WRITE_OWNER & rule.getAccessMask())) {
 		    EntityItemAuditType standardWriteOwner = Factories.sc.windows.createEntityItemAuditType();
 		    standardWriteOwner.setValue(toAuditValue(rule));
 		    item.setStandardWriteOwner(standardWriteOwner);

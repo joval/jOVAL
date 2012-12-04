@@ -136,14 +136,24 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
 	int ptr = path.indexOf(ESCAPED_DELIM);
 	if (ptr == -1) {
-	    return Arrays.asList(path).toArray(new String[1]);
+	    if (StringTools.containsRegex(path)) {
+		// give up
+		return null;
+	    } else {
+		return Arrays.asList(path).toArray(new String[1]);
+	    }
 	}
 
-	StringBuffer sb = new StringBuffer(path.substring(0,ptr)).append(DELIM);
-	ptr += ESCAPED_DELIM.length();
+	String token = path.substring(0, ptr);
+	if (StringTools.containsRegex(token)) {
+	    // give up
+	    return null;
+	}
+
+	StringBuffer sb = new StringBuffer(token);
 	int next = ptr;
 	while((next = path.indexOf(ESCAPED_DELIM, ptr)) != -1) {
-	    String token = path.substring(ptr, next);
+	    token = path.substring(ptr, next);
 	    if (StringTools.containsRegex(token)) {
 		break;
 	    } else {
@@ -161,7 +171,7 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
 	    // One of the children of parent should match...
 	    StringBuffer prefix = new StringBuffer("^");
-	    String token = path.substring(ptr);
+	    token = path.substring(ptr);
 	    for (int i=0; i < token.length(); i++) {
 		char c = token.charAt(i);
 		boolean isRegexChar = false;

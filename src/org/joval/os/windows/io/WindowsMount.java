@@ -18,8 +18,8 @@ public class WindowsMount implements IFilesystem.IMount {
      * Determine whether or not the string represents a drive.
      */
     public static boolean isDrive(String s) {
-        if (s.length() == 2) {
-            return StringTools.isLetter(s.charAt(0)) && s.charAt(1) == ':';
+        if (s.length() == 3) {
+            return StringTools.isLetter(s.charAt(0)) && s.charAt(1) == ':' && s.charAt(2) == IWindowsFilesystem.DELIM_CH;
         }
         return false;
     }
@@ -31,10 +31,15 @@ public class WindowsMount implements IFilesystem.IMount {
      * Create a new mount given a drive string and a type.
      */
     public WindowsMount(String path, IWindowsFilesystem.FsType type) throws IllegalArgumentException {
-	if (isDrive(path)) {
-            this.path = path + IWindowsFilesystem.DELIM_STR;
+	if (!path.endsWith(IWindowsFilesystem.DELIM_STR)) {
+	    path = path + IWindowsFilesystem.DELIM_STR;
 	}
-        this.type = type;
+	if (isDrive(path)) {
+            this.path = path;
+            this.type = type;
+	} else {
+	    throw new IllegalArgumentException(path);
+	}
     }
 
     // Implement IFilesystem.IMount
