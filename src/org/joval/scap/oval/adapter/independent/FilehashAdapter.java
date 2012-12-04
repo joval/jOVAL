@@ -7,12 +7,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -40,9 +42,12 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.io.IWindowsFileInfo;
+import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.io.LittleEndian;
 import org.joval.io.StreamTool;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
+import org.joval.util.Base64;
 import org.joval.util.Checksum;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
@@ -54,15 +59,15 @@ import org.joval.util.SafeCLI;
  * @version %I% %G%
  */
 public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
-    private Hashtable<String, String[]> checksumMap;
+    private Map<String, String[]> checksumMap;
 
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
-	Collection<Class> classes = new Vector<Class>();
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof ISession) {
 	    super.init((ISession)session);
-	    checksumMap = new Hashtable<String, String[]>();
+	    checksumMap = new HashMap<String, String[]>();
 	    classes.add(FilehashObject.class);
 	}
 	return classes;
@@ -80,16 +85,10 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
     protected Collection<FilehashItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws IOException, CollectException {
 
-	FilehashItem baseItem = null;
-	if (base instanceof FilehashItem) {
-	    baseItem = (FilehashItem)base;
-	} else {
-	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
-	    throw new CollectException(message, FlagEnumeration.ERROR);
-	}
-
+	FilehashObject fObj = (FilehashObject)obj;
+	FilehashItem baseItem = (FilehashItem)base;
 	try {
-	    String[] checksums = computeChecksums(f);
+	    String[] checksums = computeChecksums(f, getView(fObj.getBehaviors()));
 	    return Arrays.asList(getItem(baseItem, checksums[MD5], checksums[SHA1]));
 	} catch (IllegalArgumentException e) {
 	    session.getLogger().warn(JOVALMsg.STATUS_NOT_FILE, f.getPath(), e.getMessage()); 
@@ -104,6 +103,11 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	@SuppressWarnings("unchecked")
 	Collection<FilehashItem> empty = (Collection<FilehashItem>)Collections.EMPTY_LIST;
 	return empty;
+    }
+
+    @Override
+    protected List<InputStream> getPowershellModules() {
+	return Arrays.asList(getClass().getResourceAsStream("Filehash.psm1"));
     }
 
     // Internal
@@ -137,31 +141,23 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
     private static final int MD5	= 0;
     private static final int SHA1	= 1;
 
-    private String[] computeChecksums(IFile f) throws Exception {
+    private String[] computeChecksums(IFile f, IWindowsSession.View view) throws Exception {
 	IFileEx ext = f.getExtended();
 	if (ext instanceof IWindowsFileInfo) {
-	    String type = null;
+	    //
+	    // Only IWindiwsFileInfo.FILE_TYPE_DISK gets through
+	    //
 	    switch(((IWindowsFileInfo)ext).getWindowsFileType()) {
-	      case IWindowsFileInfo.FILE_TYPE_DISK:
-		break;
 	      case IWindowsFileInfo.FILE_TYPE_UNKNOWN:
-		type = "unknown";
-		break;
+		throw new IllegalArgumentException("unknown");
 	      case IWindowsFileInfo.FILE_TYPE_CHAR:
-		type = "char";
-		break;
+		throw new IllegalArgumentException("char");
 	      case IWindowsFileInfo.FILE_TYPE_PIPE:
-		type = "pipe";
-		break;
+		throw new IllegalArgumentException("pipe");
 	      case IWindowsFileInfo.FILE_TYPE_REMOTE:
-		type = "remote";
-		break;
+		throw new IllegalArgumentException("remote");
 	      case IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY:
-		type = "directory";
-		break;
-	    }
-	    if (type != null) {
-		throw new IllegalArgumentException(type);
+		throw new IllegalArgumentException("directory");
 	    }
 	} else if (ext instanceof IUnixFileInfo) {
 	    String type = ((IUnixFileInfo)ext).getUnixFileType();
@@ -215,18 +211,11 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    break;
 	  }
 
-	  //
-	  // No tools on the local OS to perform checksumming, so copy the file locally and hash it.
-	  //
-	  default: {
-	    File temp = File.createTempFile("cksum", "dat", session.getWorkspace());
-	    try {
-		StreamTool.copy(f.getInputStream(), new FileOutputStream(temp), true);
-		checksums[MD5] = Checksum.getChecksum(temp, Checksum.Algorithm.MD5);
-		checksums[SHA1] = Checksum.getChecksum(temp, Checksum.Algorithm.SHA1);
-	    } finally {
-		temp.delete();
-	    }
+	  case WINDOWS: {
+	    String encoded = getRunspace(view).invoke("Get-FileHash -Algorithm MD5 -Path \"" + f.getPath() + "\"");
+	    checksums[MD5] = LittleEndian.toHexString(Base64.decode(encoded));
+	    encoded = getRunspace(view).invoke("Get-FileHash -Algorithm SHA1 -Path \"" + f.getPath() + "\"");
+	    checksums[SHA1] = LittleEndian.toHexString(Base64.decode(encoded));
 	    break;
 	  }
 	}

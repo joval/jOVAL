@@ -24,7 +24,6 @@ import oval.schemas.common.MessageType;
 import oval.schemas.common.OperationEnumeration;
 import oval.schemas.definitions.core.EntityObjectStringType;
 import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.FileBehaviors;
 import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
 import oval.schemas.systemcharacteristics.core.EntityItemIntType;
 import oval.schemas.systemcharacteristics.core.EntityItemStringType;
@@ -330,10 +329,23 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	}
     }
 
-    /**
-     * Returns the view suggested by the oval.schemas.definitions.windows.FileBehaviors.
-     */
-    protected IWindowsSession.View getView(FileBehaviors behaviors) {
+    protected IWindowsSession.View getView(oval.schemas.definitions.independent.FileBehaviors behaviors) {
+	if (session instanceof IWindowsSession) {
+	    if (behaviors != null && behaviors.isSetWindowsView()) {
+		String s = behaviors.getWindowsView();
+		if ("32_bit".equals(s)) {
+		    return IWindowsSession.View._32BIT;
+		} else if ("64_bit".equals(s)) {
+		    return IWindowsSession.View._64BIT;
+		}
+	    }
+	    return ((IWindowsSession)session).getNativeView();
+	} else {
+	    return null;
+	}
+    }
+
+    protected IWindowsSession.View getView(oval.schemas.definitions.windows.FileBehaviors behaviors) {
 	if (session instanceof IWindowsSession) {
 	    if (behaviors != null && behaviors.isSetWindowsView()) {
 		String s = behaviors.getWindowsView();

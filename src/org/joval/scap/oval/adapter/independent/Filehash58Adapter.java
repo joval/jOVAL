@@ -8,11 +8,13 @@ import java.io.InputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 import java.util.regex.Matcher;
@@ -42,10 +44,12 @@ import org.joval.intf.system.ISession;
 import org.joval.intf.unix.io.IUnixFileInfo;
 import org.joval.intf.unix.system.IUnixSession;
 import org.joval.intf.windows.io.IWindowsFileInfo;
+import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.io.LittleEndian;
 import org.joval.io.StreamTool;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
-import org.joval.util.Checksum;
+import org.joval.util.Base64;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 
@@ -104,14 +108,9 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
     protected Collection<Filehash58Item> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws IOException, CollectException {
 
-	Filehash58Item baseItem = null;
-	if (base instanceof Filehash58Item) {
-	    baseItem = (Filehash58Item)base;
-	} else {
-	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
-	    throw new CollectException(message, FlagEnumeration.ERROR);
-	}
-
+	//
+	// First, determine the appropriate set of checksum algorithms to use
+	//
 	HashSet<Algorithm> algorithms = new HashSet<Algorithm>();
 	EntityObjectHashTypeType hashType = ((Filehash58Object)obj).getHashType();
 	String hash = (String)hashType.getValue();
@@ -156,37 +155,32 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
 
+	Filehash58Item baseItem = (Filehash58Item)base;
+	Filehash58Object fObj = (Filehash58Object)obj;
+	IWindowsSession.View view = getView(fObj.getBehaviors());
 	Collection<Filehash58Item> items = new Vector<Filehash58Item>();
-	File temp = null;
-	try {
-	    //
-	    // If the file is remote and we're not on Unix, then create a temporary local copy.
-	    //
-	    if (session.getType() != IBaseSession.Type.UNIX && !IBaseSession.LOCALHOST.equals(session.getHostname())) {
-		temp = File.createTempFile("cksum", "dat", session.getWorkspace());
-		StreamTool.copy(f.getInputStream(), new FileOutputStream(temp), true);
-	    }
-	    for (Algorithm alg : algorithms) {
-		try {
-		    if (temp == null) {
-			items.add(getItem(baseItem, alg, computeChecksum(f, alg)));
-		    } else {
-			items.add(getItem(baseItem, alg, computeChecksum(new FileInputStream(temp), alg)));
-		    }
-		} catch (Exception e) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.ERROR);
-		    msg.setValue(e.getMessage());
-		    rc.addMessage(msg);
-		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		}
-	    }
-	} finally {
-	    if (temp != null) {
-		temp.delete();
+	for (Algorithm alg : algorithms) {
+	    try {
+		items.add(getItem(baseItem, alg, computeChecksum(f, alg, view)));
+	    } catch (NoSuchAlgorithmException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.WARNING);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_CHECKSUM_ALGORITHM, e.getMessage()));
+		rc.addMessage(msg);
+	    } catch (Exception e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.ERROR);
+		msg.setValue(e.getMessage());
+		rc.addMessage(msg);
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	return items;
+    }
+
+    @Override
+    protected List<InputStream> getPowershellModules() {
+	return Arrays.asList(getClass().getResourceAsStream("Filehash.psm1"));
     }
 
     // Internal
@@ -209,7 +203,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	return item;
     }
 
-    private String computeChecksum(IFile f, Algorithm alg) throws Exception {
+    private String computeChecksum(IFile f, Algorithm alg, IWindowsSession.View view) throws Exception {
 	IFileEx ext = f.getExtended();
 	boolean typecheck = false;
 	if (ext instanceof IWindowsFileInfo) {
@@ -245,35 +239,15 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	    }
 	    break;
 
-	  default:
-	    checksum = computeChecksum(f.getInputStream(), alg);
+	  case WINDOWS: {
+	    if (alg == Algorithm.SHA224) {
+		throw new NoSuchAlgorithmException(alg.osId);
+	    }
+	    String enc = getRunspace(view).invoke("Get-FileHash -Algorithm " + alg.osId + " -Path \"" + f.getPath() + "\"");
+	    checksum = LittleEndian.toHexString(Base64.decode(enc));
 	    break;
+	  }
 	}
 	return checksum;
-    }
-
-    private String computeChecksum(InputStream in, Algorithm alg) throws Exception {
-	Checksum.Algorithm ca = null;
-	switch(alg) {
-	  case MD5:
-	    ca = Checksum.Algorithm.MD5;
-	    break;
-	  case SHA1:
-	    ca = Checksum.Algorithm.SHA1;
-	    break;
-	  case SHA224:
-	    ca = Checksum.Algorithm.SHA224;
-	    break;
-	  case SHA256:
-	    ca = Checksum.Algorithm.SHA256;
-	    break;
-	  case SHA384:
-	    ca = Checksum.Algorithm.SHA384;
-	    break;
-	  case SHA512:
-	    ca = Checksum.Algorithm.SHA512;
-	    break;
-	}
-	return Checksum.getChecksum(in, ca);
     }
 }
