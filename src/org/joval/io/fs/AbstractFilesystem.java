@@ -386,15 +386,27 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	}
 
 	public boolean isDirectory() throws IOException {
-	    return getInfo().getType() == Type.DIRECTORY;
+	    try {
+		return getInfo().getType() == Type.DIRECTORY;
+	    } catch (FileNotFoundException e) {
+		return false;
+	    }
 	}
 
 	public boolean isFile() throws IOException {
-	    return getInfo().getType() == Type.FILE;
+	    try {
+		return getInfo().getType() == Type.FILE;
+	    } catch (FileNotFoundException e) {
+		return false;
+	    }
 	}
 
 	public boolean isLink() throws IOException {
-	    return getInfo().getType() == Type.LINK;
+	    try {
+		return getInfo().getType() == Type.LINK;
+	    } catch (FileNotFoundException e) {
+		return false;
+	    }
 	}
 
 	public boolean exists() {

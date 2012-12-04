@@ -4,6 +4,7 @@
 package org.joval.os.windows.io;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -217,11 +218,15 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 
 	@Override
 	public DefaultMetadata getInfo() throws IOException {
-	    DefaultMetadata result = getWindowsFileInfo(path);
-	    if (result == null) {
-		result = super.getInfo();
+	    if (exists()) {
+		DefaultMetadata result = getWindowsFileInfo(path);
+		if (result == null) {
+		    result = super.getInfo();
+		}
+		return result;
+	    } else {
+		throw new FileNotFoundException(path);
 	    }
-	    return result;
 	}
     }
 }
