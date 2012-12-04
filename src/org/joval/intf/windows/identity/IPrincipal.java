@@ -23,4 +23,6 @@ public interface IPrincipal {
     public String getSid();
 
     public Type getType();
+
+    public boolean isBuiltin();
 }

@@ -40,6 +40,7 @@ import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IPrincipal;
 import org.joval.intf.windows.powershell.IRunspace;
+import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.identity.ACE;
 import org.joval.os.windows.powershell.PowershellException;
@@ -58,7 +59,6 @@ import org.joval.util.Version;
  */
 public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<RegkeyeffectiverightsItem> {
     private IDirectory directory;
-    private Map<String, Collection<IACE>> acls;
 
     // Implement IAdapter
 
@@ -66,6 +66,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((IWindowsSession)session);
+	    directory = this.session.getDirectory();
 	    classes.add(Regkeyeffectiverights53Object.class);
 	    classes.add(RegkeyeffectiverightsObject.class);
 	}
@@ -80,138 +81,171 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 
     protected Collection<RegkeyeffectiverightsItem> getItems(ObjectType obj, ItemType base, IKey key, IRequestContext rc)
 		throws Exception {
+	//
+	// Map the Key's hive to one of the names supported by the GetNamedSecurityInfo method.
+	//
+	// See: http://msdn.microsoft.com/en-us/library/windows/desktop/aa379593%28v=vs.85%29.aspx
+	//
+	String hive = null;
+	if (IRegistry.HKLM.equals(key.getHive())) {
+	    hive = "MACHINE";
+	} else if (IRegistry.HKU.equals(key.getHive())) {
+	    hive = "USERS";
+	} else if (IRegistry.HKCU.equals(key.getHive())) {
+	    hive = "CURRENT_USER";
+	} else if (IRegistry.HKCR.equals(key.getHive())) {
+	    hive = "CLASSES_ROOT";
+	} else {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, key.getHive());
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	}
 
-	initialize();
 	Collection<RegkeyeffectiverightsItem> items = new ArrayList<RegkeyeffectiverightsItem>();
-	RegkeyeffectiverightsItem baseItem = null;
-	if (base instanceof RegkeyeffectiverightsItem) {
-	    baseItem = (RegkeyeffectiverightsItem)base;
-	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
-	    throw new CollectException(msg, FlagEnumeration.ERROR);
-	}
-
-	String pSid = null, pName = null;
-	boolean includeGroups = true;
-	boolean resolveGroups = false;
-	IWindowsSession.View view = null;
-	OperationEnumeration op = OperationEnumeration.EQUALS;
-	if (obj instanceof Regkeyeffectiverights53Object) {
-	    Regkeyeffectiverights53Object rObj = (Regkeyeffectiverights53Object)obj;
-	    op = rObj.getTrusteeSid().getOperation();
-	    pSid = (String)rObj.getTrusteeSid().getValue();
-	    view = getView(rObj.getBehaviors());
-	    if (rObj.isSetBehaviors()) {
-		includeGroups = rObj.getBehaviors().getIncludeGroup();
-		resolveGroups = rObj.getBehaviors().getResolveGroup();
-	    }
-	} else if (obj instanceof RegkeyeffectiverightsObject) {
-	    RegkeyeffectiverightsObject rObj = (RegkeyeffectiverightsObject)obj;
-	    op = rObj.getTrusteeName().getOperation();
-	    pName = (String)rObj.getTrusteeName().getValue();
-	    view = getView(rObj.getBehaviors());
-	    if (rObj.isSetBehaviors()) {
-		includeGroups = rObj.getBehaviors().getIncludeGroup();
-		resolveGroups = rObj.getBehaviors().getResolveGroup();
-	    }
-	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
-	    throw new CollectException(msg, FlagEnumeration.ERROR);
-	}
-
+	RegkeyeffectiverightsItem baseItem = (RegkeyeffectiverightsItem)base;
 	try {
-	    Collection<IACE> aces = getSecurity(key, view);
-	    switch(op) {
-	      case PATTERN_MATCH:
-		Pattern p = null;
-		if (pSid == null) {
-		    p = Pattern.compile(pName);
-		} else {
-		    p = Pattern.compile(pSid);
+	    List<IPrincipal> principals = new ArrayList<IPrincipal>();
+	    IWindowsSession.View view = null;
+	    boolean includeGroups = true;
+	    boolean resolveGroups = false;
+	    if (obj instanceof Regkeyeffectiverights53Object) {
+		Regkeyeffectiverights53Object rObj = (Regkeyeffectiverights53Object)obj;
+		view = getView(rObj.getBehaviors());
+		if (rObj.isSetBehaviors()) {
+		    includeGroups = rObj.getBehaviors().getIncludeGroup();
+		    resolveGroups = rObj.getBehaviors().getResolveGroup();
 		}
-		for (IACE ace : aces) {
-		    IPrincipal principal = null;
-		    try {
-			if (pSid == null) {
-			    IPrincipal temp = directory.queryPrincipalBySid(ace.getSid());
-			    if (directory.isBuiltinUser(temp.getNetbiosName()) ||
-				directory.isBuiltinGroup(temp.getNetbiosName())) {
-				if (p.matcher(temp.getName()).find()) {
-				    principal = temp;
-				}
-			    } else {
-				if (p.matcher(temp.getNetbiosName()).find()) {
-				    principal = temp;
-				}
-			    }
-			} else {
-			    if (p.matcher(ace.getSid()).find()) {
-				principal = directory.queryPrincipalBySid(ace.getSid());
-			    }
-			}
-			if (principal != null) {
-			    items.add(makeItem(baseItem, principal, ace));
-			}
-		    } catch (NoSuchElementException e) {
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.WARNING);
-			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
-			rc.addMessage(msg);
-		    }
-		}
-		break;
-
-	      case CASE_INSENSITIVE_EQUALS:
-	      case EQUALS:
-	      case NOT_EQUAL:
-		Collection<IPrincipal> principals = null;
-		if (pSid == null) {
-		    principals = directory.getAllPrincipals(directory.queryPrincipal(pName), includeGroups, resolveGroups);
-		} else {
-		    principals = directory.getAllPrincipals(directory.queryPrincipalBySid(pSid), includeGroups, resolveGroups);
-		}
-		for (IPrincipal principal : principals) {
-		    for (IACE ace : aces) {
-			switch(op) {
-			  case EQUALS:
-			  case CASE_INSENSITIVE_EQUALS:
-			    if (directory.isApplicable(principal, ace)) {
-				items.add(makeItem(baseItem, principal, ace));
-			    }
-			    break;
-			  case NOT_EQUAL:
-			    if (!directory.isApplicable(principal, ace)) {
-				items.add(makeItem(baseItem, principal, ace));
-			    }
-			    break;
+		String pSid = (String)rObj.getTrusteeSid().getValue();
+		OperationEnumeration op = rObj.getTrusteeSid().getOperation();
+		switch(op) {
+		  case PATTERN_MATCH: {
+		    Pattern p = Pattern.compile(pSid);
+		    for (IPrincipal principal : directory.queryAllPrincipals()) {
+			if (p.matcher(principal.getSid()).find()) {
+			    principals.add(principal);
 			}
 		    }
-		}
-		break;
+		    break;
+		  }
 
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		  case NOT_EQUAL:
+		    for (IPrincipal principal : directory.queryAllPrincipals()) {
+			if (!pSid.equals(principal.getSid())) {
+			    principals.add(principal);
+			}
+		    }
+		    break;
+
+		  case CASE_INSENSITIVE_EQUALS:
+		  case EQUALS: {
+		    principals.add(directory.queryPrincipalBySid(pSid));
+		    break;
+		  }
+
+		  default:
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		}
+	    } else if (obj instanceof RegkeyeffectiverightsObject) {
+		RegkeyeffectiverightsObject rObj = (RegkeyeffectiverightsObject)obj;
+		view = getView(rObj.getBehaviors());
+		if (rObj.isSetBehaviors()) {
+		    includeGroups = rObj.getBehaviors().getIncludeGroup();
+		    resolveGroups = rObj.getBehaviors().getResolveGroup();
+		}
+		String pName = (String)rObj.getTrusteeName().getValue();
+		OperationEnumeration op = rObj.getTrusteeName().getOperation();
+		switch(op) {
+		  case PATTERN_MATCH: {
+		    Pattern p = Pattern.compile(pName);
+		    for (IPrincipal principal : directory.queryAllPrincipals()) {
+			if (principal.isBuiltin() && p.matcher(principal.getName()).find()) {
+			    principals.add(principal);
+			} else if (p.matcher(principal.getNetbiosName()).find()) {
+			    principals.add(principal);
+			}
+		    }
+		    break;
+		  }
+
+		  case NOT_EQUAL:
+		    for (IPrincipal principal : directory.queryAllPrincipals()) {
+			if (principal.isBuiltin() && !pName.equals(principal.getName())) {
+			    principals.add(principal);
+			} else if (!pName.equals(principal.getNetbiosName())) {
+			    principals.add(principal);
+			}
+		    }
+		    break;
+
+		  case CASE_INSENSITIVE_EQUALS:
+		  case EQUALS: {
+		    principals.add(directory.queryPrincipal(pName));
+		    break;
+		  }
+
+		  default:
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		}
+	    } else {
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
+		throw new CollectException(msg, FlagEnumeration.ERROR);
 	    }
-	} catch (PatternSyntaxException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-	    rc.addMessage(msg);
+
+	    //
+	    // Filter out any duplicate IPrincipals
+	    //
+	    Map<String, IPrincipal> principalMap = new HashMap<String, IPrincipal>();
+	    for (IPrincipal principal : principals) {
+		principalMap.put(principal.getSid(), principal);
+	    }
+
+	    //
+	    // Create items
+	    //
+	    for (IPrincipal principal : principalMap.values()) {
+		switch(principal.getType()) {
+		  case USER: {
+		    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType RegKey -Path ");
+		    cmd.append("\"").append(hive).append("\\").append(key.getPath()).append("\"");
+		    cmd.append(" -SID ").append(principal.getSid());
+		    int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
+		    items.add(makeItem(baseItem, principal, mask));
+		    break;
+		  }
+		  case GROUP:
+		    for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
+			StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType RegKey -Path ");
+			cmd.append("\"").append(hive).append("\\").append(key.getPath()).append("\"");
+			cmd.append(" -SID ").append(principal.getSid());
+			int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
+			items.add(makeItem(baseItem, p, mask));
+		    }
+		    break;
+		}
+	    }
 	} catch (NoSuchElementException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.INFO);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
 	    rc.addMessage(msg);
+	} catch (PatternSyntaxException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (WmiException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
 	    rc.addMessage(msg);
+	} catch (CollectException e) {
+	    throw e;
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_REGDACL, key.toString(), e.getMessage()));
+	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
@@ -220,15 +254,15 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 
     @Override
     protected List<InputStream> getPowershellModules() {
-	return Arrays.asList(getClass().getResourceAsStream("Regkeyeffectiverights.psm1"));
+	return Arrays.asList(getClass().getResourceAsStream("Effectiverights.psm1"));
     }
 
     // Private
 
     /**
-     * Create a new RegkeyeffectiverightsItem based on the base RegkeyeffectiverightsItem, IPrincipal and IACE.
+     * Create a new RegkeyeffectiverightsItem based on the base RegkeyeffectiverightsItem, IPrincipal and mask.
      */
-    private RegkeyeffectiverightsItem makeItem(RegkeyeffectiverightsItem base, IPrincipal p, IACE ace) {
+    private RegkeyeffectiverightsItem makeItem(RegkeyeffectiverightsItem base, IPrincipal p, int mask) {
 	RegkeyeffectiverightsItem item = Factories.sc.windows.createRegkeyeffectiverightsItem();
 	item.setHive(base.getHive());
 	item.setKey(base.getKey());
@@ -236,118 +270,115 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	    item.setWindowsView(base.getWindowsView());
 	}
 
-	int accessMask = ace.getAccessMask();
-	boolean test = false;
-
-	test = IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY & accessMask);
+	boolean test = IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY & mask);
 	EntityItemBoolType accessSystemSecurity = Factories.sc.core.createEntityItemBoolType();
 	accessSystemSecurity.setValue(Boolean.toString(test));
 	accessSystemSecurity.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setAccessSystemSecurity(accessSystemSecurity);
 
-	test = IACE.GENERIC_ALL == (IACE.GENERIC_ALL & accessMask);
+	test = IACE.GENERIC_ALL == (IACE.GENERIC_ALL & mask);
 	EntityItemBoolType genericAll = Factories.sc.core.createEntityItemBoolType();
 	genericAll.setValue(Boolean.toString(test));
 	genericAll.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericAll(genericAll);
 
-	test = IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE & accessMask);
+	test = IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE & mask);
 	EntityItemBoolType genericExecute = Factories.sc.core.createEntityItemBoolType();
 	genericExecute.setValue(Boolean.toString(test));
 	genericExecute.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericExecute(genericExecute);
 
-	test = IACE.GENERIC_READ == (IACE.GENERIC_READ & accessMask);
+	test = IACE.GENERIC_READ == (IACE.GENERIC_READ & mask);
 	EntityItemBoolType genericRead = Factories.sc.core.createEntityItemBoolType();
 	genericRead.setValue(Boolean.toString(test));
 	genericRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericRead(genericRead);
 
-	test = IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE & accessMask);
+	test = IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE & mask);
 	EntityItemBoolType genericWrite = Factories.sc.core.createEntityItemBoolType();
 	genericWrite.setValue(Boolean.toString(test));
 	genericWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericWrite(genericWrite);
 
-	test = IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE & accessMask);
+	test = IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE & mask);
 	EntityItemBoolType standardDelete = Factories.sc.core.createEntityItemBoolType();
 	standardDelete.setValue(Boolean.toString(test));
 	standardDelete.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardDelete(standardDelete);
 
-	test = IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL & accessMask);
+	test = IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL & mask);
 	EntityItemBoolType standardReadControl = Factories.sc.core.createEntityItemBoolType();
 	standardReadControl.setValue(Boolean.toString(test));
 	standardReadControl.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardReadControl(standardReadControl);
 
-	test = IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE & accessMask);
+	test = IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE & mask);
 	EntityItemBoolType standardSynchronize = Factories.sc.core.createEntityItemBoolType();
 	standardSynchronize.setValue(Boolean.toString(test));
 	standardSynchronize.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardSynchronize(standardSynchronize);
 
-	test = IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC & accessMask);
+	test = IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC & mask);
 	EntityItemBoolType standardWriteDac = Factories.sc.core.createEntityItemBoolType();
 	standardWriteDac.setValue(Boolean.toString(test));
 	standardWriteDac.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardWriteDac(standardWriteDac);
 
-	test = IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER & accessMask);
+	test = IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER & mask);
 	EntityItemBoolType standardWriteOwner = Factories.sc.core.createEntityItemBoolType();
 	standardWriteOwner.setValue(Boolean.toString(test));
 	standardWriteOwner.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardWriteOwner(standardWriteOwner);
 
-	test = IACE.KEY_CREATE_LINK == (IACE.KEY_CREATE_LINK & accessMask);
+	test = IACE.KEY_CREATE_LINK == (IACE.KEY_CREATE_LINK & mask);
 	EntityItemBoolType keyCreateLink = Factories.sc.core.createEntityItemBoolType();
 	keyCreateLink.setValue(Boolean.toString(test));
 	keyCreateLink.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyCreateLink(keyCreateLink);
 
-	test = IACE.KEY_CREATE_SUB_KEY == (IACE.KEY_CREATE_SUB_KEY & accessMask);
+	test = IACE.KEY_CREATE_SUB_KEY == (IACE.KEY_CREATE_SUB_KEY & mask);
 	EntityItemBoolType keyCreateSubKey = Factories.sc.core.createEntityItemBoolType();
 	keyCreateSubKey.setValue(Boolean.toString(test));
 	keyCreateSubKey.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyCreateSubKey(keyCreateSubKey);
 
-	test = IACE.KEY_ENUMERATE_SUB_KEYS == (IACE.KEY_ENUMERATE_SUB_KEYS & accessMask);
+	test = IACE.KEY_ENUMERATE_SUB_KEYS == (IACE.KEY_ENUMERATE_SUB_KEYS & mask);
 	EntityItemBoolType keyEnumerateSubKeys = Factories.sc.core.createEntityItemBoolType();
 	keyEnumerateSubKeys.setValue(Boolean.toString(test));
 	keyEnumerateSubKeys.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyEnumerateSubKeys(keyEnumerateSubKeys);
 
-	test = IACE.KEY_NOTIFY == (IACE.KEY_NOTIFY & accessMask);
+	test = IACE.KEY_NOTIFY == (IACE.KEY_NOTIFY & mask);
 	EntityItemBoolType keyNotify = Factories.sc.core.createEntityItemBoolType();
 	keyNotify.setValue(Boolean.toString(test));
 	keyNotify.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyNotify(keyNotify);
 
-	test = IACE.KEY_QUERY_VALUE == (IACE.KEY_QUERY_VALUE & accessMask);
+	test = IACE.KEY_QUERY_VALUE == (IACE.KEY_QUERY_VALUE & mask);
 	EntityItemBoolType keyQueryValue = Factories.sc.core.createEntityItemBoolType();
 	keyQueryValue.setValue(Boolean.toString(test));
 	keyQueryValue.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyQueryValue(keyQueryValue);
 
-	test = IACE.KEY_SET_VALUE == (IACE.KEY_SET_VALUE & accessMask);
+	test = IACE.KEY_SET_VALUE == (IACE.KEY_SET_VALUE & mask);
 	EntityItemBoolType keySetValue = Factories.sc.core.createEntityItemBoolType();
 	keySetValue.setValue(Boolean.toString(test));
 	keySetValue.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeySetValue(keySetValue);
 
-	test = IACE.KEY_WOW64_32_KEY == (IACE.KEY_WOW64_32_KEY & accessMask);
+	test = IACE.KEY_WOW64_32_KEY == (IACE.KEY_WOW64_32_KEY & mask);
 	EntityItemBoolType keyWow6432Key = Factories.sc.core.createEntityItemBoolType();
 	keyWow6432Key.setValue(Boolean.toString(test));
 	keyWow6432Key.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyWow6432Key(keyWow6432Key);
 
-	test = IACE.KEY_WOW64_64_KEY == (IACE.KEY_WOW64_64_KEY & accessMask);
+	test = IACE.KEY_WOW64_64_KEY == (IACE.KEY_WOW64_64_KEY & mask);
 	EntityItemBoolType keyWow6464Key = Factories.sc.core.createEntityItemBoolType();
 	keyWow6464Key.setValue(Boolean.toString(test));
 	keyWow6464Key.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setKeyWow6464Key(keyWow6464Key);
 
-	test = IACE.KEY_WOW64_RES == (IACE.KEY_WOW64_RES & accessMask);
+	test = IACE.KEY_WOW64_RES == (IACE.KEY_WOW64_RES & mask);
 	EntityItemBoolType keyWow64Res = Factories.sc.core.createEntityItemBoolType();
 	keyWow64Res.setValue(Boolean.toString(test));
 	keyWow64Res.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
@@ -365,49 +396,5 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	trusteeSid.setValue(p.getSid());
 	item.setTrusteeSid(trusteeSid);
 	return item;
-    }
-
-    /**
-     * Idempotent (well, harmless anyway)
-     */
-    private void initialize() {
-	//
-	// Always grab a fresh directory in case there's been a reconnect since initialization.
-	//
-	directory = session.getDirectory();
-
-	if (acls == null) {
-	    acls = new HashMap<String, Collection<IACE>>();
-	}
-    }
-
-    /**
-     * Retrieve the access entries for the file.
-     */
-    private Collection<IACE> getSecurity(IKey key, IWindowsSession.View view) throws Exception {
-	String path = key.toString().toUpperCase();
-	if (!acls.containsKey(path)) {
-	    String pathArg = new StringBuffer("Registry::").append(key.toString()).toString();
-	    if (path.indexOf(" ") != -1) {
-		pathArg = new StringBuffer("\"").append(pathArg).append("\"").toString();
-	    }
-	    IRunspace runspace = getRunspace(view);
-	    String data = runspace.invoke("Get-Item -literalPath " + pathArg + " | Print-RegkeyAccess");
-	    Map<String, IACE> userACEMap = new HashMap<String, IACE>();
-	    if (data != null) {
-		for (String entry : data.split("\r\n")) {
-		    IACE ace = new ACE(entry);
-		    String sid = ace.getSid();
-		    if (userACEMap.containsKey(sid)) {
-			// combine access masks
-			userACEMap.put(sid, new ACE(sid, userACEMap.get(sid).getAccessMask() | ace.getAccessMask()));
-		    } else {
-			userACEMap.put(sid, ace);
-		    }
-		}
-	    }
-	    acls.put(path, userACEMap.values());
-	}
-	return acls.get(path);
     }
 }

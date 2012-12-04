@@ -3,7 +3,9 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.io.InputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -56,7 +58,6 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class FileeffectiverightsAdapter extends BaseFileAdapter<FileeffectiverightsItem> {
-    private IWindowsSession ws;
     private IDirectory directory;
 
     // Implement IAdapter
@@ -65,7 +66,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((ISession)session);
-	    this.ws = (IWindowsSession)session;
+	    directory = ((IWindowsSession)session).getDirectory();
 	    classes.add(Fileeffectiverights53Object.class);
 	    classes.add(FileeffectiverightsObject.class);
 	}
@@ -80,169 +81,162 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 
     protected Collection<FileeffectiverightsItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws IOException, CollectException {
-	//
-	// Grab a fresh directory in case there's been a reconnect since initialization.
-	//
-	directory = ws.getDirectory();
 
 	Collection<FileeffectiverightsItem> items = new ArrayList<FileeffectiverightsItem>();
+	FileeffectiverightsItem baseItem = (FileeffectiverightsItem)base;
+	try {
+	    List<IPrincipal> principals = new ArrayList<IPrincipal>();
+	    IWindowsSession.View view = null;
+	    boolean includeGroups = true;
+	    boolean resolveGroups = false;
+	    if (obj instanceof Fileeffectiverights53Object) {
+		Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)obj;
+		view = getView(fObj.getBehaviors());
+		if (fObj.isSetBehaviors()) {
+		    includeGroups = fObj.getBehaviors().getIncludeGroup();
+		    resolveGroups = fObj.getBehaviors().getResolveGroup();
+		}
+		String pSid = (String)fObj.getTrusteeSid().getValue();
+		OperationEnumeration op = fObj.getTrusteeSid().getOperation();
+		switch(op) {
+		  case PATTERN_MATCH: {
+		    Pattern p = Pattern.compile(pSid);
+		    for (IPrincipal principal : directory.queryAllPrincipals()) {
+			if (p.matcher(principal.getSid()).find()) {
+			    principals.add(principal);
+			}
+		    }
+		    break;
+		  }
 
-	FileeffectiverightsItem baseItem = null;
-	if (base instanceof FileeffectiverightsItem) {
-	    baseItem = (FileeffectiverightsItem)base;
-	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
-	    throw new CollectException(msg, FlagEnumeration.ERROR);
-	}
+		  case NOT_EQUAL:
+		    for (IPrincipal principal : directory.queryAllPrincipals()) {
+			if (!pSid.equals(principal.getSid())) {
+			    principals.add(principal);
+			}
+		    }
+		    break;
 
-	String pSid = null, pName = null;
-	boolean includeGroups = true;
-	boolean resolveGroups = false;
-	OperationEnumeration op = OperationEnumeration.EQUALS;
-	if (obj instanceof Fileeffectiverights53Object) {
-	    Fileeffectiverights53Object fObj = (Fileeffectiverights53Object)obj;
-	    op = fObj.getTrusteeSid().getOperation();
-	    pSid = (String)fObj.getTrusteeSid().getValue();
-	    if (fObj.isSetBehaviors()) {
-		includeGroups = fObj.getBehaviors().getIncludeGroup();
-		resolveGroups = fObj.getBehaviors().getResolveGroup();
-	    }
-	} else if (obj instanceof FileeffectiverightsObject) {
-	    FileeffectiverightsObject fObj = (FileeffectiverightsObject)obj;
-	    op = fObj.getTrusteeName().getOperation();
-	    pName = (String)fObj.getTrusteeName().getValue();
-	    if (fObj.isSetBehaviors()) {
-		includeGroups = fObj.getBehaviors().getIncludeGroup();
-		resolveGroups = fObj.getBehaviors().getResolveGroup();
-	    }
-	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
-	    throw new CollectException(msg, FlagEnumeration.ERROR);
-	}
+		  case CASE_INSENSITIVE_EQUALS:
+		  case EQUALS: {
+		    principals.add(directory.queryPrincipalBySid(pSid));
+		    break;
+		  }
 
-	IFileEx info = f.getExtended();
-	IWindowsFileInfo wfi = null;
-	if (info instanceof IWindowsFileInfo) {
-	    wfi = (IWindowsFileInfo)info;
-	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName());
-	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	}
+		  default:
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		}
+	    } else if (obj instanceof FileeffectiverightsObject) {
+		FileeffectiverightsObject fObj = (FileeffectiverightsObject)obj;
+		view = getView(fObj.getBehaviors());
+		if (fObj.isSetBehaviors()) {
+		    includeGroups = fObj.getBehaviors().getIncludeGroup();
+		    resolveGroups = fObj.getBehaviors().getResolveGroup();
+		}
+		String pName = (String)fObj.getTrusteeName().getValue();
+		OperationEnumeration op = fObj.getTrusteeName().getOperation();
+		switch(op) {
+		  case PATTERN_MATCH: {
+		    Pattern p = Pattern.compile(pName);
+		    for (IPrincipal principal : directory.queryAllPrincipals()) {
+			if (principal.isBuiltin() && p.matcher(principal.getName()).find()) {
+			    principals.add(principal);
+			} else if (p.matcher(principal.getNetbiosName()).find()) {
+			    principals.add(principal);
+			}
+		    }
+		    break;
+		  }
 
-	// Combine together access masks for SIDs with multiple ACEs.
-	IACE[] aces = wfi.getSecurity();
-	Map<String, IACE> userACEMap = new HashMap<String, IACE>();
-	for (IACE ace : aces) {
-	    String sid = ace.getSid();
-	    if (userACEMap.containsKey(sid)) {
-		userACEMap.put(sid, new ACE(sid, userACEMap.get(sid).getAccessMask() | ace.getAccessMask()));
+		  case NOT_EQUAL:
+		    for (IPrincipal principal : directory.queryAllPrincipals()) {
+			if (principal.isBuiltin() && !pName.equals(principal.getName())) {
+			    principals.add(principal);
+			} else if (!pName.equals(principal.getNetbiosName())) {
+			    principals.add(principal);
+			}
+		    }
+		    break;
+
+		  case CASE_INSENSITIVE_EQUALS:
+		  case EQUALS: {
+		    principals.add(directory.queryPrincipal(pName));
+		    break;
+		  }
+
+		  default:
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		}
 	    } else {
-		userACEMap.put(sid, ace);
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName(), obj.getId());
+		throw new CollectException(msg, FlagEnumeration.ERROR);
 	    }
-	}
 
-	switch(op) {
-	  case PATTERN_MATCH:
-	    try {
-		Pattern p = null;
-		if (pSid == null) {
-		    p = Pattern.compile(pName);
-		} else {
-		    p = Pattern.compile(pSid);
-		}
-		for (IACE ace : userACEMap.values()) {
-		    IPrincipal principal = null;
-		    try {
-			if (pSid == null) {
-			    IPrincipal temp = directory.queryPrincipalBySid(ace.getSid());
-			    if (directory.isBuiltinUser(temp.getNetbiosName()) ||
-				directory.isBuiltinGroup(temp.getNetbiosName())) {
-				if (p.matcher(temp.getName()).find()) {
-				    principal = temp;
-				}
-			    } else {
-				if (p.matcher(temp.getNetbiosName()).find()) {
-				    principal = temp;
-				}
-			    }
-			} else {
-			    if (p.matcher(ace.getSid()).find()) {
-				principal = directory.queryPrincipalBySid(ace.getSid());
-			    }
-			}
-			if (principal != null) {
-			    items.add(makeItem(baseItem, principal, ace));
-			}
-		    } catch (NoSuchElementException e) {
-			MessageType msg = Factories.common.createMessageType();
-			msg.setLevel(MessageLevelEnumeration.WARNING);
-			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
-			rc.addMessage(msg);
+	    //
+	    // Filter out any duplicate IPrincipals
+	    //
+	    Map<String, IPrincipal> principalMap = new HashMap<String, IPrincipal>();
+	    for (IPrincipal principal : principals) {
+		principalMap.put(principal.getSid(), principal);
+	    }
+
+	    //
+	    // Create items
+	    //
+	    for (IPrincipal principal : principalMap.values()) {
+		switch(principal.getType()) {
+		  case USER: {
+		    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Path ");
+		    cmd.append("\"").append(f.getPath()).append("\"");
+		    cmd.append(" -SID ").append(principal.getSid());
+		    int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
+		    items.add(makeItem(baseItem, principal, mask));
+		    break;
+		  }
+		  case GROUP:
+		    for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
+			StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Path ");
+			cmd.append("\"").append(f.getPath()).append("\"");
+			cmd.append(" -SID ").append(principal.getSid());
+			int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
+			items.add(makeItem(baseItem, p, mask));
 		    }
+		    break;
 		}
-	    } catch (PatternSyntaxException e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
-		rc.addMessage(msg);
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    } catch (WmiException e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
-		rc.addMessage(msg);
 	    }
-	    break;
-
-	  case CASE_INSENSITIVE_EQUALS:
-	  case EQUALS:
-	  case NOT_EQUAL:
-	    try {
-		Collection<IPrincipal> principals = null;
-		if (pSid == null) {
-		    principals = directory.getAllPrincipals(directory.queryPrincipal(pName), includeGroups, resolveGroups);
-		} else {
-		    principals = directory.getAllPrincipals(directory.queryPrincipalBySid(pSid), includeGroups, resolveGroups);
-		}
-		for (IPrincipal principal : principals) {
-		    for (IACE ace : userACEMap.values()) {
-			switch(op) {
-			  case EQUALS:
-			  case CASE_INSENSITIVE_EQUALS:
-			    if (directory.isApplicable(principal, ace)) {
-				items.add(makeItem(baseItem, principal, ace));
-			    }
-			    break;
-			  case NOT_EQUAL:
-			    if (!directory.isApplicable(principal, ace)) {
-				items.add(makeItem(baseItem, principal, ace));
-			    }
-			    break;
-			}
-		    }
-		}
-	    } catch (NoSuchElementException e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.INFO);
-		if (pSid == null) {
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, pName));
-		} else {
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, pSid));
-		}
-		rc.addMessage(msg);
-	    } catch (WmiException e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
-		rc.addMessage(msg);
-	    }
-	    break;
-
-	  default:
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	} catch (NoSuchElementException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.INFO);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_NOPRINCIPAL, e.getMessage()));
+	    rc.addMessage(msg);
+	} catch (PatternSyntaxException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PATTERN, e.getMessage()));
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (WmiException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
+	    rc.addMessage(msg);
+	} catch (CollectException e) {
+	    throw e;
+	} catch (Exception e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items;
+    }
+
+    @Override
+    protected List<InputStream> getPowershellModules() {
+	return Arrays.asList(getClass().getResourceAsStream("Effectiverights.psm1"));
     }
 
     // Private
@@ -250,125 +244,122 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
     /**
      * Create a new wrapped FileeffectiverightsItem based on the base FileeffectiverightsItem, IPrincipal and IACE.
      */
-    private FileeffectiverightsItem makeItem(FileeffectiverightsItem base, IPrincipal p, IACE ace) throws IOException {
+    private FileeffectiverightsItem makeItem(FileeffectiverightsItem base, IPrincipal p, int mask) throws IOException {
 	FileeffectiverightsItem item = Factories.sc.windows.createFileeffectiverightsItem();
 	item.setPath(base.getPath());
 	item.setFilename(base.getFilename());
 	item.setFilepath(base.getFilepath());
 	item.setWindowsView(base.getWindowsView());
 
-	int accessMask = ace.getAccessMask();
-	boolean test = false;
-
-	test = IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY & accessMask);
+	boolean test = IACE.ACCESS_SYSTEM_SECURITY == (IACE.ACCESS_SYSTEM_SECURITY & mask);
 	EntityItemBoolType accessSystemSecurity = Factories.sc.core.createEntityItemBoolType();
 	accessSystemSecurity.setValue(Boolean.toString(test));
 	accessSystemSecurity.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setAccessSystemSecurity(accessSystemSecurity);
 
-	test = IACE.FILE_APPEND_DATA == (IACE.FILE_APPEND_DATA & accessMask);
+	test = IACE.FILE_APPEND_DATA == (IACE.FILE_APPEND_DATA & mask);
 	EntityItemBoolType fileAppendData = Factories.sc.core.createEntityItemBoolType();
 	fileAppendData.setValue(Boolean.toString(test));
 	fileAppendData.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setFileAppendData(fileAppendData);
 
-	test = IACE.FILE_DELETE == (IACE.FILE_DELETE & accessMask);
+	test = IACE.FILE_DELETE == (IACE.FILE_DELETE & mask);
 	EntityItemBoolType fileDeleteChild = Factories.sc.core.createEntityItemBoolType();
 	fileDeleteChild.setValue(Boolean.toString(test));
 	fileDeleteChild.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setFileDeleteChild(fileDeleteChild);
 
-	test = IACE.FILE_EXECUTE == (IACE.FILE_EXECUTE & accessMask);
+	test = IACE.FILE_EXECUTE == (IACE.FILE_EXECUTE & mask);
 	EntityItemBoolType fileExecute = Factories.sc.core.createEntityItemBoolType();
 	fileExecute.setValue(Boolean.toString(test));
 	fileExecute.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setFileExecute(fileExecute);
 
-	test = IACE.FILE_READ_ATTRIBUTES == (IACE.FILE_READ_ATTRIBUTES & accessMask);
+	test = IACE.FILE_READ_ATTRIBUTES == (IACE.FILE_READ_ATTRIBUTES & mask);
 	EntityItemBoolType fileReadAttributes = Factories.sc.core.createEntityItemBoolType();
 	fileReadAttributes.setValue(Boolean.toString(test));
 	fileReadAttributes.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setFileReadAttributes(fileReadAttributes);
 
-	test = IACE.FILE_READ_DATA == (IACE.FILE_READ_DATA & accessMask);
+	test = IACE.FILE_READ_DATA == (IACE.FILE_READ_DATA & mask);
 	EntityItemBoolType fileReadData = Factories.sc.core.createEntityItemBoolType();
 	fileReadData.setValue(Boolean.toString(test));
 	fileReadData.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setFileReadData(fileReadData);
 
-	test = IACE.FILE_READ_EA == (IACE.FILE_READ_EA & accessMask);
+	test = IACE.FILE_READ_EA == (IACE.FILE_READ_EA & mask);
 	EntityItemBoolType fileReadEa = Factories.sc.core.createEntityItemBoolType();
 	fileReadEa.setValue(Boolean.toString(test));
 	fileReadEa.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setFileReadEa(fileReadEa);
 
-	test = IACE.FILE_WRITE_ATTRIBUTES == (IACE.FILE_WRITE_ATTRIBUTES & accessMask);
+	test = IACE.FILE_WRITE_ATTRIBUTES == (IACE.FILE_WRITE_ATTRIBUTES & mask);
 	EntityItemBoolType fileWriteAttributes = Factories.sc.core.createEntityItemBoolType();
 	fileWriteAttributes.setValue(Boolean.toString(test));
 	fileWriteAttributes.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setFileWriteAttributes(fileWriteAttributes);
 
-	test = IACE.FILE_WRITE_DATA == (IACE.FILE_WRITE_DATA & accessMask);
+	test = IACE.FILE_WRITE_DATA == (IACE.FILE_WRITE_DATA & mask);
 	EntityItemBoolType fileWriteData = Factories.sc.core.createEntityItemBoolType();
 	fileWriteData.setValue(Boolean.toString(test));
 	fileWriteData.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setFileWriteData(fileWriteData);
 
-	test = IACE.FILE_WRITE_EA == (IACE.FILE_WRITE_EA & accessMask);
+	test = IACE.FILE_WRITE_EA == (IACE.FILE_WRITE_EA & mask);
 	EntityItemBoolType fileWriteEa = Factories.sc.core.createEntityItemBoolType();
 	fileWriteEa.setValue(Boolean.toString(test));
 	fileWriteEa.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setFileWriteEa(fileWriteEa);
 
-	test = IACE.GENERIC_ALL == (IACE.GENERIC_ALL & accessMask);
+	test = IACE.GENERIC_ALL == (IACE.GENERIC_ALL & mask);
 	EntityItemBoolType genericAll = Factories.sc.core.createEntityItemBoolType();
 	genericAll.setValue(Boolean.toString(test));
 	genericAll.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericAll(genericAll);
 
-	test = IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE & accessMask);
+	test = IACE.GENERIC_EXECUTE == (IACE.GENERIC_EXECUTE & mask);
 	EntityItemBoolType genericExecute = Factories.sc.core.createEntityItemBoolType();
 	genericExecute.setValue(Boolean.toString(test));
 	genericExecute.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericExecute(genericExecute);
 
-	test = IACE.GENERIC_READ == (IACE.GENERIC_READ & accessMask);
+	test = IACE.GENERIC_READ == (IACE.GENERIC_READ & mask);
 	EntityItemBoolType genericRead = Factories.sc.core.createEntityItemBoolType();
 	genericRead.setValue(Boolean.toString(test));
 	genericRead.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericRead(genericRead);
 
-	test = IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE & accessMask);
+	test = IACE.GENERIC_WRITE == (IACE.GENERIC_WRITE & mask);
 	EntityItemBoolType genericWrite = Factories.sc.core.createEntityItemBoolType();
 	genericWrite.setValue(Boolean.toString(test));
 	genericWrite.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setGenericWrite(genericWrite);
 
-	test = IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE & accessMask);
+	test = IACE.STANDARD_DELETE == (IACE.STANDARD_DELETE & mask);
 	EntityItemBoolType standardDelete = Factories.sc.core.createEntityItemBoolType();
 	standardDelete.setValue(Boolean.toString(test));
 	standardDelete.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardDelete(standardDelete);
 
-	test = IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL & accessMask);
+	test = IACE.STANDARD_READ_CONTROL == (IACE.STANDARD_READ_CONTROL & mask);
 	EntityItemBoolType standardReadControl = Factories.sc.core.createEntityItemBoolType();
 	standardReadControl.setValue(Boolean.toString(test));
 	standardReadControl.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardReadControl(standardReadControl);
 
-	test = IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE & accessMask);
+	test = IACE.STANDARD_SYNCHRONIZE == (IACE.STANDARD_SYNCHRONIZE & mask);
 	EntityItemBoolType standardSynchronize = Factories.sc.core.createEntityItemBoolType();
 	standardSynchronize.setValue(Boolean.toString(test));
 	standardSynchronize.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardSynchronize(standardSynchronize);
 
-	test = IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC & accessMask);
+	test = IACE.STANDARD_WRITE_DAC == (IACE.STANDARD_WRITE_DAC & mask);
 	EntityItemBoolType standardWriteDac = Factories.sc.core.createEntityItemBoolType();
 	standardWriteDac.setValue(Boolean.toString(test));
 	standardWriteDac.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setStandardWriteDac(standardWriteDac);
 
-	test = IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER & accessMask);
+	test = IACE.STANDARD_WRITE_OWNER == (IACE.STANDARD_WRITE_OWNER & mask);
 	EntityItemBoolType standardWriteOwner = Factories.sc.core.createEntityItemBoolType();
 	standardWriteOwner.setValue(Boolean.toString(test));
 	standardWriteOwner.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
