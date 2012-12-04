@@ -122,9 +122,4 @@ public interface IDirectory extends ILoggable {
      */
     public Collection<IPrincipal> getAllPrincipals(IPrincipal principal, boolean includeGroups, boolean resolveGroups)
 	throws WmiException;
-
-    /**
-     * Test whether the specified ACE applies to the specified principal.
-     */
-    public boolean isApplicable(IPrincipal principal, IACE entry) throws WmiException;
 }

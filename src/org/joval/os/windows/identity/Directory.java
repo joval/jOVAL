@@ -4,9 +4,10 @@
 package org.joval.os.windows.identity;
 
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
 
@@ -214,17 +215,29 @@ public class Directory implements IDirectory {
     public Collection<IPrincipal> getAllPrincipals(IPrincipal principal, boolean includeGroups, boolean resolveGroups)
 		throws WmiException {
 
-	Hashtable<String, IPrincipal> principals = new Hashtable<String, IPrincipal>();
-	getAllPrincipalsInternal(principal, resolveGroups, principals);
-	Collection<IPrincipal> results = new Vector<IPrincipal>();
-	for (IPrincipal p : principals.values()) {
+	//
+	// Resolve group members if resolveGroups == true
+	//
+	Collection<IPrincipal> principals = new ArrayList<IPrincipal>();
+	if (resolveGroups) {
+	    Map<String, IPrincipal> map = new HashMap<String, IPrincipal>();
+	    queryAllMemebrs(principal, map);
+	    principals = map.values();
+	} else {
+	    principals.add(principal);
+	}
+
+	//
+	// Filter out group-type IPrincipals if includeGroups == false
+	//
+	Collection<IPrincipal> results = new ArrayList<IPrincipal>();
+	for (IPrincipal p : principals) {
 	    switch(p.getType()) {
 	      case GROUP:
 		if (includeGroups) {
 		    results.add(p);
 		}
 		break;
-
 	      case USER:
 		results.add(p);
 		break;
@@ -233,50 +246,40 @@ public class Directory implements IDirectory {
 	return results;
     }
 
-    public boolean isApplicable(IPrincipal principal, IACE entry) throws WmiException {
-	if (principal.getSid().equals(entry.getSid())) {
-	    return true;
-	} else {
-	    try {
-		return getAllPrincipals(queryPrincipalBySid(entry.getSid()), true, true).contains(principal);
-	    } catch (NoSuchElementException e) {
-	    }
-	    return false;
-	}
-    }
-
     // Private
 
     /**
-     * Won't get stuck in a loop because it adds the groups themselves to the Hashtable as it goes.
+     * Won't get stuck in a loop because it adds the groups themselves to the Map as it goes.
      */
-    private void getAllPrincipalsInternal(IPrincipal principal, boolean resolve, Hashtable<String, IPrincipal> principals)
-		throws WmiException {
-
+    private void queryAllMemebrs(IPrincipal principal, Map<String, IPrincipal> principals) throws WmiException {
 	if (!principals.containsKey(principal.getSid())) {
 	    principals.put(principal.getSid(), principal);
 	    switch(principal.getType()) {
 	      case GROUP:
-		if (resolve) {
-		    principals.put(principal.getSid(), principal);
-		    IGroup g = (IGroup)principal;
-		    for (String netbiosName : g.getMemberUserNetbiosNames()) {
-			try {
-			    getAllPrincipalsInternal(queryUser(netbiosName), resolve, principals);
-			} catch (IllegalArgumentException e) {
-			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			} catch (NoSuchElementException e) {
-			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			}
+		principals.put(principal.getSid(), principal);
+		IGroup g = (IGroup)principal;
+		//
+		// Add users
+		//
+		for (String netbiosName : g.getMemberUserNetbiosNames()) {
+		    try {
+			queryAllMemebrs(queryUser(netbiosName), principals);
+		    } catch (IllegalArgumentException e) {
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    } catch (NoSuchElementException e) {
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
-		    for (String netbiosName : g.getMemberGroupNetbiosNames()) {
-			try {
-			    getAllPrincipalsInternal(queryGroup(netbiosName), resolve, principals);
-			} catch (IllegalArgumentException e) {
-			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			} catch (NoSuchElementException e) {
-			    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			}
+		}
+		//
+		// Add subgroups
+		//
+		for (String netbiosName : g.getMemberGroupNetbiosNames()) {
+		    try {
+			queryAllMemebrs(queryGroup(netbiosName), principals);
+		    } catch (IllegalArgumentException e) {
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		    } catch (NoSuchElementException e) {
+			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
 		}
 		break;
