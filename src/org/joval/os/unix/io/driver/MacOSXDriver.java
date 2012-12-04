@@ -123,11 +123,12 @@ public class MacOSXDriver extends AbstractDriver {
 	    }
 	}
 
-	StringBuffer cmd = new StringBuffer("find");
+	StringBuffer sb = new StringBuffer("find");
 	if (followLinks) {
-	    cmd.append(" -L");
+	    sb.append(" -L");
 	}
-	cmd.append(" ").append(from);
+	String FIND = sb.toString();
+	StringBuffer cmd = new StringBuffer(FIND).append(" ").append(from);
 	if (xdev) {
 	    cmd.append(" -mount");
 	}
@@ -146,7 +147,7 @@ public class MacOSXDriver extends AbstractDriver {
 		if (dirname != null) {
 		    cmd.append(" -type d");
 		    cmd.append(" | grep -E \"").append(dirname.pattern()).append("\"");
-		    cmd.append(" | xargs -I{} find '{}' -maxdepth 1");
+		    cmd.append(" | xargs -I{} ").append(FIND).append(" '{}' -maxdepth 1");
 		}
 		cmd.append(" -type f");
 		if (basename != null) {

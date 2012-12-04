@@ -122,11 +122,12 @@ public class AIXDriver extends AbstractDriver {
 	    }
 	}
 
-	StringBuffer cmd = new StringBuffer("find");
+	StringBuffer sb = new StringBuffer("find");
 	if (followLinks) {
-	    cmd.append(" -L");
+	    sb.append(" -L");
 	}
-	cmd.append(" ").append(from);
+	String FIND = sb.toString();
+	StringBuffer cmd = new StringBuffer(FIND).append(" ").append(from);
 	if (xdev) {
 	    cmd.append(" -xdev");
 	}
@@ -134,18 +135,16 @@ public class AIXDriver extends AbstractDriver {
 	    if (dirname == null) {
 		if (dirOnly && depth != ISearchable.DEPTH_UNLIMITED) {
 		    cmd.append(" -type d");
-		    int currDepth = new StringTokenizer(from, "/").countTokens();
-		    if (!from.endsWith("/")) currDepth++;
-		    cmd.append(" | awk -F/ 'NF == ").append(Integer.toString(currDepth + depth)).append("'");
+		    int currDepth = getAwkDepth(from);
+		    cmd.append(" | awk -F/ 'NF <= ").append(Integer.toString(currDepth + depth)).append("'");
 		} else if (!dirOnly) {
 		    cmd.append(" -type f");
 		    if (literalBasename != null) {
 			cmd.append(" -name ").append(literalBasename);
 		    }
 		    if (depth != ISearchable.DEPTH_UNLIMITED) {
-			int currDepth = new StringTokenizer(from, "/").countTokens();
-			if (!from.endsWith("/")) currDepth++;
-			cmd.append(" | awk -F/ 'NF == ").append(Integer.toString(currDepth + depth)).append("'");
+			int currDepth = getAwkDepth(from);
+			cmd.append(" | awk -F/ 'NF <= ").append(Integer.toString(currDepth + depth)).append("'");
 		    }
 		    if (basename != null) {
 			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
@@ -155,7 +154,7 @@ public class AIXDriver extends AbstractDriver {
 		cmd.append(" -type d");
 		cmd.append(" | grep -E '").append(dirname.pattern()).append("'");
 		if (!dirOnly) {
-		    cmd.append(" | xargs -I[] find '[]'");
+		    cmd.append(" | xargs -I[] ").append(FIND).append(" '[]' -type f");
 		    if (depth != ISearchable.DEPTH_UNLIMITED) {
 			cmd.append(" -exec test (`echo \"[]\" | awk -F/ '{print NF}'` + ");
 			cmd.append(Integer.toString(depth));

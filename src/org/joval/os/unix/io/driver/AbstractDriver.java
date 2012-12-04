@@ -47,4 +47,19 @@ abstract class AbstractDriver implements IUnixFilesystemDriver {
     public LocLogger getLogger() {
 	return logger;
     }
+
+    // Internal
+
+    /**
+     * Get the number of tokens in path, according to awk.
+     */
+    int getAwkDepth(String path) {
+	int depth = 1;
+	int ptr = 0;
+	while((ptr = path.indexOf("/", ptr)) != -1) {
+	    ptr++;
+	    depth++;
+	}
+	return depth;
+    }
 }

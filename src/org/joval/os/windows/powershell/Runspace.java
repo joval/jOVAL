@@ -109,10 +109,7 @@ public class Runspace implements IRunspace {
 		}
 		stdin.flush();
 		for (int i=0; i < lines; i++) {
-		    try {
-			readPrompt(2000);
-		    } catch (InterruptedIOException e) {
-		    }
+		    readPrompt(millis);
 		}
 		if (">> ".equals(getPrompt())) {
 		    invoke("");

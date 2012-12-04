@@ -147,7 +147,10 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    if (StringTools.containsRegex(token)) {
 		break;
 	    } else {
-		sb.append(token).append(DELIM);
+		if (!sb.toString().endsWith(DELIM)) {
+		    sb.append(DELIM);
+		}
+		sb.append(token);
 		ptr = next + ESCAPED_DELIM.length();
 	    }
 	}
@@ -177,12 +180,15 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    try {
 		if (prefix.length() > 1) {
 		    IFile base = getFile(parent);
-		    IFile[] fa = base.listFiles(Pattern.compile(prefix.toString()));
-		    String[] sa = new String[fa.length];
-		    for (int i=0; i < sa.length; i++) {
-			sa[i] = fa[i].getPath();
+		    List<String> candidates = new ArrayList<String>();
+		    for (IFile f : base.listFiles(Pattern.compile(prefix.toString()))) {
+			if (f.isDirectory()) {
+			    candidates.add(f.getPath());
+			}
 		    }
-		    return sa;
+		    if (candidates.size() > 0) {
+			return candidates.toArray(new String[candidates.size()]);
+		    }
 		}
 	    } catch (Exception e) {
 	    }
