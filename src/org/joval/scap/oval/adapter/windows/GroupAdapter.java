@@ -29,6 +29,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.identity.IGroup;
+import org.joval.intf.windows.identity.IUser;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.scap.oval.CollectException;
@@ -123,10 +124,10 @@ public class GroupAdapter extends UserAdapter {
 
     // Private
 
-    private GroupItem makeItem(IGroup group) {
+    private GroupItem makeItem(IGroup group) throws WmiException {
 	GroupItem item = Factories.sc.windows.createGroupItem();
 	EntityItemStringType groupType = Factories.sc.core.createEntityItemStringType();
-	if (directory.isBuiltinGroup(group.getNetbiosName())) {
+	if (group.isBuiltin()) {
 	    groupType.setValue(group.getName());
 	} else {
 	    groupType.setValue(group.getNetbiosName());
@@ -139,9 +140,10 @@ public class GroupAdapter extends UserAdapter {
 	    item.getUser().add(userType);
 	} else {
 	    for (String userNetbiosName : userNetbiosNames) {
+		IUser user = directory.queryUser(userNetbiosName);
 		EntityItemStringType userType = Factories.sc.core.createEntityItemStringType();
-		if (directory.isBuiltinUser(userNetbiosName)) {
-		    userType.setValue(directory.getName(userNetbiosName));
+		if (user.isBuiltin()) {
+		    userType.setValue(user.getName());
 		} else {
 		    userType.setValue(userNetbiosName);
 		}
@@ -155,9 +157,10 @@ public class GroupAdapter extends UserAdapter {
 	    item.getSubgroup().add(subgroupType);
 	} else {
 	    for (String groupNetbiosName : groupNetbiosNames) {
+		IGroup subgroup = directory.queryGroup(groupNetbiosName);
 		EntityItemStringType subgroupType = Factories.sc.core.createEntityItemStringType();
-		if (directory.isBuiltinGroup(groupNetbiosName)) {
-		    subgroupType.setValue(directory.getName(groupNetbiosName));
+		if (subgroup.isBuiltin()) {
+		    subgroupType.setValue(subgroup.getName());
 		} else {
 		    subgroupType.setValue(groupNetbiosName);
 		}

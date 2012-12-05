@@ -32,9 +32,6 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 class LocalDirectory implements ILoggable {
-    static final User TRUSTED_INSTALLER = new User("NT SERVICE", "TrustedInstaller",
-	"S-1-5-80-956008885-3418522649-1831038044-1853292631-2271478464", null, true);
-
     static final String USER_WQL		= "SELECT SID, Name, Domain, Disabled FROM Win32_UserAccount";
     static final String SYSUSER_WQL		= "SELECT SID, Name, Domain FROM Win32_SystemAccount";
     static final String GROUP_WQL		= "SELECT SID, Name, Domain FROM Win32_Group";
@@ -53,8 +50,6 @@ class LocalDirectory implements ILoggable {
     private Hashtable<String, IUser> usersByNetbiosName;
     private Hashtable<String, IGroup> groupsBySid;
     private Hashtable<String, IGroup> groupsByNetbiosName;
-    private Collection<String> builtinUsers;
-    private Collection<String> builtinGroups;
 
     private String hostname;
     private Directory parent;
@@ -71,36 +66,10 @@ class LocalDirectory implements ILoggable {
 	usersBySid = new Hashtable<String, IUser>();
 	groupsByNetbiosName = new Hashtable<String, IGroup>();
 	groupsBySid = new Hashtable<String, IGroup>();
-
-	builtinUsers = new HashSet<String>();
-	builtinUsers.add("Administrator".toUpperCase());
-	builtinUsers.add("Guest".toUpperCase());
-	builtinUsers.add("HomeGroupUser$".toUpperCase());
-	builtinUsers.add("TrustedInstaller".toUpperCase());
-
+/*
 	usersByNetbiosName.put(TRUSTED_INSTALLER.getNetbiosName(), TRUSTED_INSTALLER);
 	usersBySid.put(TRUSTED_INSTALLER.getSid(), TRUSTED_INSTALLER);
-
-	builtinGroups = new HashSet<String>();
-	builtinGroups.add("Account Operators".toUpperCase());
-	builtinGroups.add("Administrators".toUpperCase());
-	builtinGroups.add("Backup Operators".toUpperCase());
-	builtinGroups.add("Cryptographic Operators".toUpperCase());
-	builtinGroups.add("Distributed COM Users".toUpperCase());
-	builtinGroups.add("Event Log Readers".toUpperCase());
-	builtinGroups.add("Guests".toUpperCase());
-	builtinGroups.add("HelpLibraryUpdaters".toUpperCase());
-	builtinGroups.add("HomeUsers".toUpperCase());
-	builtinGroups.add("IIS_IUSRS".toUpperCase());
-	builtinGroups.add("Network Configuration Operators".toUpperCase());
-	builtinGroups.add("Performance Log Users".toUpperCase());
-	builtinGroups.add("Performance Monitor Users".toUpperCase());
-	builtinGroups.add("Power Users".toUpperCase());
-	builtinGroups.add("Print Operators".toUpperCase());
-	builtinGroups.add("Remote Desktop Users".toUpperCase());
-	builtinGroups.add("Replicator".toUpperCase());
-	builtinGroups.add("Server Operators".toUpperCase());
-	builtinGroups.add("Users".toUpperCase());
+*/
     }
 
     void setWmiProvider(IWmiProvider wmi) {
@@ -114,19 +83,16 @@ class LocalDirectory implements ILoggable {
 		throw new NoSuchElementException(sid);
 	    }
 
-	    boolean system = false;
 	    StringBuffer conditions = new StringBuffer(" WHERE ");
 	    conditions.append(SID_CONDITION.replaceAll("(?i)\\$sid", Matcher.quoteReplacement(sid)));
 	    ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, USER_WQL + conditions.toString());
 	    if (os.getSize() == 0) {
-		system = true;
 		os = wmi.execQuery(IWmiProvider.CIMv2, SYSUSER_WQL + conditions.toString());
 	    }
 	    if (os.getSize() == 0) {
 		throw new NoSuchElementException(sid);
-	    } else {
-		user = preloadUser(os.iterator().next().getProperties(), system);
 	    }
+	    user = preloadUser(os.iterator().next().getProperties());
 	}
 	return user;
     }
@@ -148,21 +114,18 @@ class LocalDirectory implements ILoggable {
 		throw new NoSuchElementException(netbiosName);
 	    }
 
-	    boolean system = false;
 	    StringBuffer conditions = new StringBuffer(" WHERE ");
 	    conditions.append(NAME_CONDITION.replaceAll("(?i)\\$name", Matcher.quoteReplacement(name)));
 	    conditions.append(" AND ");
 	    conditions.append(DOMAIN_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(domain)));
 	    ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, USER_WQL + conditions.toString());
 	    if (os.getSize() == 0) {
-		system = true;
 		os = wmi.execQuery(IWmiProvider.CIMv2, SYSUSER_WQL + conditions.toString());
 	    }
 	    if (os.getSize() == 0) {
 		throw new NoSuchElementException(netbiosName);
-	    } else {
-		user = preloadUser(os.iterator().next().getProperties(), system);
 	    }
+	    user = preloadUser(os.iterator().next().getProperties());
 	}
 	return user;
     }
@@ -175,10 +138,10 @@ class LocalDirectory implements ILoggable {
 	    StringBuffer conditions = new StringBuffer(" WHERE ");
 	    conditions.append(DOMAIN_CONDITION.replaceAll("(?i)\\$domain", Matcher.quoteReplacement(hostname)));
 	    for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, USER_WQL + conditions.toString())) {
-		preloadUser(row.getProperties(), false);
+		preloadUser(row.getProperties());
 	    }
 	    for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, SYSUSER_WQL + conditions.toString())) {
-		preloadUser(row.getProperties(), true);
+		preloadUser(row.getProperties());
 	    }
 	    preloadedUsers = true;
 	}
@@ -306,26 +269,6 @@ class LocalDirectory implements ILoggable {
     }
 
     /**
-     * Returns true of the supplied NetBios username String represents a built-in account on the local machine.
-     */
-    boolean isBuiltinUser(String netbiosName) {
-	if (isMember(netbiosName)) {
-	    return builtinUsers.contains(parent.getName(netbiosName).toUpperCase());
-	}
-	return false;
-    }
-
-    /**
-     * Returns true if the supplied NetBios group name String represents a built-in group on the local machine.
-     */
-    boolean isBuiltinGroup(String netbiosName) {
-	if (isMember(netbiosName)) {
-	    return builtinGroups.contains(parent.getName(netbiosName).toUpperCase());
-	}
-	return false;
-    }
-
-    /**
      * Returns whether or not the specified netbiosName is a member of this directory, meaning that the domain matches
      * the local hostname.
      */
@@ -368,24 +311,21 @@ class LocalDirectory implements ILoggable {
 
     // Private
 
-    private IUser preloadUser(ISWbemPropertySet columns, boolean builtin) throws WmiException {
+    private IUser preloadUser(ISWbemPropertySet columns) throws WmiException {
 	String domain = columns.getItem("Domain").getValueAsString();
 	String name = columns.getItem("Name").getValueAsString();
-	if (builtin) {
-	    builtinUsers.add(name.toUpperCase());
-	}
 	String netbiosName = domain + "\\" + name;
 	String sid = columns.getItem("SID").getValueAsString();
 	boolean enabled = true;
 	if (columns.getItem("Disabled") != null) {
 	    enabled = !columns.getItem("Disabled").getValueAsBoolean().booleanValue();
 	}
-	IUser user = usersByNetbiosName.get(netbiosName.toUpperCase());
-	if (user == null) {
-	    user = makeUser(domain, name, sid, enabled);
-	    usersByNetbiosName.put(netbiosName.toUpperCase(), user);
-	    usersBySid.put(sid, user);
+	if (usersBySid.containsKey(sid)) {
+	    return usersBySid.get(sid);
 	}
+	IUser user = makeUser(domain, name, sid, enabled);
+	usersByNetbiosName.put(netbiosName.toUpperCase(), user);
+	usersBySid.put(sid, user);
 	return user;
     }
 
@@ -409,7 +349,6 @@ class LocalDirectory implements ILoggable {
 	conditions.append(USER_NAME_CONDITION.replaceAll("(?i)\\$username", Matcher.quoteReplacement(name)));
 	String wql = USER_GROUP_WQL.replaceAll("(?i)\\$conditions", Matcher.quoteReplacement(conditions.toString()));
 
-	ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, wql);
 	Collection<String> groupNetbiosNames = new Vector<String>();
 	for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, wql)) {
 	    ISWbemPropertySet columns = row.getProperties();
@@ -427,9 +366,8 @@ class LocalDirectory implements ILoggable {
 	conditions.append(NAME_CONDITION.replaceAll("(?i)\\$name", Matcher.quoteReplacement(name)));
 	String wql = GROUP_USER_WQL.replaceAll("(?i)\\$conditions", Matcher.quoteReplacement(conditions.toString()));
 
-	ISWbemObjectSet os = wmi.execQuery(IWmiProvider.CIMv2, wql);
 	Collection<String> groupNetbiosNames = new Vector<String>(), userNetbiosNames = new Vector<String>();
-	for (ISWbemObject row : os) {
+	for (ISWbemObject row : wmi.execQuery(IWmiProvider.CIMv2, wql)) {
 	    ISWbemPropertySet columns = row.getProperties();
 	    String partComponent = columns.getItem("PartComponent").getValueAsString();
 	    int begin = partComponent.indexOf("Domain=\"") + 8;

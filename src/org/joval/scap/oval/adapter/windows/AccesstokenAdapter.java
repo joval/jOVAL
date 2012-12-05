@@ -388,14 +388,14 @@ public class AccesstokenAdapter implements IAdapter {
     private String getCanonicalizedPrincipalName(IPrincipal p) {
 	switch(p.getType()) {
 	  case USER:
-	    if (directory.isBuiltinUser(p.getNetbiosName())) {
+	    if (p.isBuiltin()) {
 		return p.getName();
 	    } else {
 		return p.getNetbiosName();
 	    }
 	  case GROUP:
 	  default:
-	    if (directory.isBuiltinGroup(p.getNetbiosName())) {
+	    if (p.isBuiltin()) {
 		return p.getName();
 	    } else {
 		return p.getNetbiosName();

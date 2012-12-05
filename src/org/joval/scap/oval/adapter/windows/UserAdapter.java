@@ -33,6 +33,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.identity.IUser;
+import org.joval.intf.windows.identity.IGroup;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemProperty;
@@ -185,7 +186,7 @@ public class UserAdapter implements IAdapter {
     private UserItem makeItem(IUser user) throws WmiException, ParseException {
 	UserItem item = Factories.sc.windows.createUserItem();
 	EntityItemStringType userType = Factories.sc.core.createEntityItemStringType();
-	if (directory.isBuiltinUser(user.getNetbiosName())) {
+	if (user.isBuiltin()) {
 	    userType.setValue(user.getName());
 	} else {
 	    userType.setValue(user.getNetbiosName());
@@ -202,9 +203,10 @@ public class UserAdapter implements IAdapter {
 	    item.getGroup().add(groupType);
 	} else {
 	    for (String groupName : groupNetbiosNames) {
+		IGroup group = directory.queryGroup(groupName);
 		EntityItemStringType groupType = Factories.sc.core.createEntityItemStringType();
-		if (directory.isBuiltinGroup(groupName)) {
-		    groupType.setValue(directory.getName(groupName));
+		if (group.isBuiltin()) {
+		    groupType.setValue(group.getName());
 		} else {
 		    groupType.setValue(groupName);
 		}

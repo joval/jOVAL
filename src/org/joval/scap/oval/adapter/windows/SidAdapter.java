@@ -117,21 +117,8 @@ public class SidAdapter extends UserAdapter {
 	trusteeSidType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	item.setTrusteeSid(trusteeSidType);
 
-	boolean builtin = false;
-	switch(principal.getType()) {
-	  case USER:
-	    if (directory.isBuiltinUser(principal.getNetbiosName())) {
-		builtin = true;
- 	    }
-	    break;
-	  case GROUP:
-	    if (directory.isBuiltinGroup(principal.getNetbiosName())) {
-		builtin = true;
- 	    }
-	    break;
-	}
 	EntityItemStringType trusteeNameType = Factories.sc.core.createEntityItemStringType();
-	if (builtin) {
+	if (principal.isBuiltin()) {
 	    trusteeNameType.setValue(principal.getName());
 	} else {
 	    trusteeNameType.setValue(principal.getNetbiosName());

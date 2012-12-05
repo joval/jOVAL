@@ -184,14 +184,6 @@ public class Directory implements IDirectory {
 	return local.queryAllPrincipals();
     }
 
-    public boolean isBuiltinUser(String netbiosName) {
-	return local.isBuiltinUser(netbiosName);
-    }
-
-    public boolean isBuiltinGroup(String netbiosName) {
-	return local.isBuiltinGroup(netbiosName);
-    }
-
     public boolean isLocal(String netbiosName) {
 	return local.isMember(netbiosName);
     }

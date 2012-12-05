@@ -157,15 +157,12 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		    try {
 			if (pSid == null) {
 			    IPrincipal temp = directory.queryPrincipalBySid(entry.getKey());
-			    if (directory.isBuiltinUser(temp.getNetbiosName()) ||
-				directory.isBuiltinGroup(temp.getNetbiosName())) {
+			    if (temp.isBuiltin()) {
 				if (p.matcher(temp.getName()).find()) {
 				    principal = temp;
 				}
-			    } else {
-				if (p.matcher(temp.getNetbiosName()).find()) {
-				    principal = temp;
-				}
+			    } else if (p.matcher(temp.getNetbiosName()).find()) {
+				principal = temp;
 			    }
 			} else {
 			    if (p.matcher(entry.getKey()).find()) {
@@ -442,7 +439,7 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	}
 
 	EntityItemStringType trusteeName = Factories.sc.core.createEntityItemStringType();
-	if (directory.isBuiltinUser(p.getNetbiosName()) || directory.isBuiltinGroup(p.getNetbiosName())) {
+	if (p.isBuiltin()) {
 	    trusteeName.setValue(p.getName());
 	} else {
 	    trusteeName.setValue(p.getNetbiosName());

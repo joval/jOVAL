@@ -366,7 +366,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	item.setStandardWriteOwner(standardWriteOwner);
 
 	EntityItemStringType trusteeName = Factories.sc.core.createEntityItemStringType();
-	if (directory.isBuiltinUser(p.getNetbiosName()) || directory.isBuiltinGroup(p.getNetbiosName())) {
+	if (p.isBuiltin()) {
 	    trusteeName.setValue(p.getName());
 	} else {
 	    trusteeName.setValue(p.getNetbiosName());

@@ -83,16 +83,6 @@ public interface IDirectory extends ILoggable {
     public Collection<IPrincipal> queryAllPrincipals() throws WmiException;
 
     /**
-     * Returns true of the supplied NetBios username String represents a built-in account on the local machine.
-     */
-    public boolean isBuiltinUser(String netbiosName);
-
-    /**
-     * Returns true if the supplied NetBios group name String represents a built-in group on the local machine.
-     */
-    public boolean isBuiltinGroup(String netbiosName);
-
-    /**
      * Does the local machine recognize this principal?
      */
     public boolean isLocal(String netbiosName);
