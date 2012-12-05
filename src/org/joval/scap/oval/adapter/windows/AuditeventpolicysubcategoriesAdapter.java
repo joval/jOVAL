@@ -234,7 +234,7 @@ public class AuditeventpolicysubcategoriesAdapter implements IAdapter {
 		throw new Exception(msg);
 	    }
 	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_PROCESS_CREATE, e.getMessage());
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e.getMessage());
 	    error = new CollectException(e.getMessage(), FlagEnumeration.ERROR);
 	    throw error;
 	}
