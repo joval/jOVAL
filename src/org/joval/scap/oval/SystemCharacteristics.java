@@ -223,32 +223,29 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    Adler32 adler = new Adler32();
 	    adler.update(data);
 	    String cs = Long.toString(adler.getValue());
-	    Collection<BigInteger> matches = itemChecksums.get(cs);
-	    if (matches == null) {
-		itemId = new BigInteger(Integer.toString(itemCounter++));
-		matches = new HashSet<BigInteger>();
-		matches.add(itemId);
-		itemTable.put(itemId, item);
-		itemChecksums.put(cs, matches);
-	    } else {
+	    if (itemChecksums.containsKey(cs)) {
 		//
-		// If the Adler32 checksums are the same, that doesn't assert anything about whether the item
-		// has been previously stored.  So, we compare it to all the previously-stored items with the
+		// If another item with the same Adler32 checksum has been stored previously, that doesn't mean
+		// it contains the same data.  So, we compare it to all the previously-stored items with the
 		// same checksum.
 		//
-		boolean match = false;
-		for (BigInteger id : matches) {
+		boolean match = true;
+		for (BigInteger id : itemChecksums.get(cs)) {
 		    byte[] candidate = toCanonicalBytes(itemTable.get(id));
 		    if (candidate.length == data.length) {
+			match = true;
 			for (int i=0; i < data.length; i++) {
 			    if (candidate[i] != data[i]) {
-				match = true;
+				match = false;
 				break;
 			    }
 			}
+		    } else {
+			match = false;
 		    }
 		    if (match) {
 			itemId = id;
+			item.setId(itemId);
 			break;
 		    }
 		}
@@ -261,6 +258,13 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 		    itemTable.put(itemId, item);
 		    itemChecksums.get(cs).add(itemId);
 		}
+	    } else {
+		itemId = new BigInteger(Integer.toString(itemCounter++));
+		item.setId(itemId);
+		itemTable.put(itemId, item);
+		Collection<BigInteger> set = new HashSet<BigInteger>();
+		set.add(itemId);
+		itemChecksums.put(cs, set);
 	    }
 	}
 	return itemId;
