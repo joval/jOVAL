@@ -220,7 +220,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		session.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
 	    } catch (IOException e) {
-		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		session.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		if (f == null) {

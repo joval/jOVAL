@@ -86,6 +86,7 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	    try {
 		mounts = getDriver().getMounts(null);
 	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		throw new IOException(e);
 	    }
 	}

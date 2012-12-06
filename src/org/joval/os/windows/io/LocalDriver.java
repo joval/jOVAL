@@ -57,6 +57,7 @@ public class LocalDriver extends BaseDriver {
 		return results;
 	    }
 	} catch (Exception e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new IOException(e);
 	}
     }
