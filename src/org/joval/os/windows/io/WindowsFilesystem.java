@@ -29,15 +29,18 @@ import org.joval.intf.util.ISearchable;
 import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.io.IWindowsFilesystem;
-import org.joval.intf.windows.io.IWindowsFilesystemDriver;
 import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.intf.windows.wmi.ISWbemObject;
+import org.joval.intf.windows.wmi.ISWbemPropertySet;
+import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.io.fs.AbstractFilesystem;
 import org.joval.io.fs.DefaultMetadata;
 import org.joval.io.fs.IAccessor;
 import org.joval.os.windows.Timestamp;
 import org.joval.os.windows.identity.ACE;
 import org.joval.os.windows.identity.Directory;
+import org.joval.os.windows.wmi.WmiException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -48,27 +51,27 @@ import org.joval.util.StringTools;
  * @version %I% %G%
  */
 public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFilesystem {
+    private static final String DRIVE_QUERY = "Select Name, DriveType from Win32_LogicalDisk";
+    private static final String START = "{";
+    private static final String END = "}";
+
     private WindowsFileSearcher searcher;
     private final IWindowsSession.View view;
     private IRunspace runspace;
-    private IWindowsFilesystemDriver driver;
     private Collection<IMount> mounts;
     private String system32, sysWOW64, sysNative;
     private boolean redirect3264;
 
-    public WindowsFilesystem(IWindowsSession session, IWindowsFilesystemDriver driver) throws Exception {
-	this(session, driver, session.getNativeView());
+    public WindowsFilesystem(IWindowsSession session) throws Exception {
+	this(session, session.getNativeView());
     }
 
-    public WindowsFilesystem(IWindowsSession session, IWindowsFilesystemDriver driver, IWindowsSession.View view)
-		throws Exception {
-
+    public WindowsFilesystem(IWindowsSession session, IWindowsSession.View view) throws Exception {
 	super(session, DELIM_STR, IWindowsSession.View._32BIT == view ? "fs32" : "fs");
 	if (view == null) {
 	    view = session.getNativeView();
 	}
 	this.view = view;
-	this.driver = driver;
 	for (IRunspace runspace : session.getRunspacePool().enumerate()) {
 	    if (runspace.getView() == view) {
 		this.runspace = runspace;
@@ -99,7 +102,6 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     @Override
     public void setLogger(LocLogger logger) {
 	super.setLogger(logger);
-	driver.setLogger(logger);
 	if (searcher != null) {
 	    searcher.setLogger(logger);
 	}
@@ -128,7 +130,13 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     public Collection<IMount> getMounts(Pattern filter) throws IOException {
 	try {
 	    if (mounts == null) {
-		mounts = driver.getMounts(null);
+		mounts = new ArrayList<IMount>();
+		IWmiProvider wmi = ((IWindowsSession)session).getWmiProvider();
+		for (ISWbemObject obj : wmi.execQuery(IWmiProvider.CIMv2, DRIVE_QUERY)) {
+		    IMount mount = new WindowsMount(obj);
+		    logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, mount.getPath(), mount.getType());
+		    mounts.add(mount);
+		}
 	    }
 	    if (filter == null) {
 		return mounts;
@@ -138,14 +146,11 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		    if (filter.matcher(mount.getType()).find()) {
 			logger.info(JOVALMsg.STATUS_FS_MOUNT_SKIP, mount.getPath(), mount.getType());
 		    } else {
-			logger.info(JOVALMsg.STATUS_FS_MOUNT_ADD, mount.getPath(), mount.getType());
 			results.add(mount);
 		    } 
 		}
 		return results;
 	    }
-	} catch (IOException e) {
-	    throw e;
 	} catch (Exception e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new IOException(e.getMessage());
@@ -154,10 +159,6 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 
     public Serializer<IFile> getFileSerializer(Integer instanceKey) {
 	return new WindowsFileSerializer(instanceKey);
-    }
-
-    public IWindowsFilesystemDriver getDriver() {
-	return driver;
     }
 
     @Override
@@ -176,7 +177,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
     protected WindowsFileInfo getWindowsFileInfo(String path) throws IOException {
 	try {
 	    String data = runspace.invoke("Get-Item -literalPath \"" + path + "\" | Print-FileInfo");
-	    return (WindowsFileInfo)driver.nextFileInfo(StringTools.toList(data.split("\r\n")).iterator());
+	    return (WindowsFileInfo)nextFileInfo(StringTools.toList(data.split("\r\n")).iterator());
 	} catch (IOException e) {
 	    throw e;
 	} catch (Exception e) {
@@ -185,7 +186,90 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	}
     }
 
+    protected IWindowsFileInfo nextFileInfo(Iterator<String> input) {
+	boolean start = false;
+	while(input.hasNext()) {
+	    String line = input.next();
+	    if (line.trim().equals(START)) {
+		start = true;
+		break;
+	    }
+	}
+	if (start) {
+	    long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, len=-1L;
+	    IFileMetadata.Type type = IFileMetadata.Type.FILE;
+	    int winType = IWindowsFileInfo.FILE_TYPE_UNKNOWN;
+	    Collection<IACE> aces = new ArrayList<IACE>();
+	    String path = null;
+
+	    while(input.hasNext()) {
+		String line = input.next().trim();
+		if (line.equals(END)) {
+		    break;
+		} else if (line.equals("Type: File")) {
+		    winType = IWindowsFileInfo.FILE_TYPE_DISK;
+		} else if (line.equals("Type: Directory")) {
+		    type = IFileMetadata.Type.DIRECTORY;
+		    winType = IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY;
+		} else {
+		    int ptr = line.indexOf(":");
+		    if (ptr > 0) {
+			String key = line.substring(0,ptr).trim();
+			String val = line.substring(ptr+1).trim();
+			if ("Path".equals(key)) {
+			    path = val;
+			} else {
+			    try {
+				if ("Ctime".equals(key)) {
+				    ctime = Timestamp.getTime(new BigInteger(val));
+				} else if ("Mtime".equals(key)) {
+				    mtime = Timestamp.getTime(new BigInteger(val));
+				} else if ("Atime".equals(key)) {
+				    atime = Timestamp.getTime(new BigInteger(val));
+				} else if ("Length".equals(key)) {
+				    len = Long.parseLong(val);
+				} else if ("ACE".equals(key)) {
+				    aces.add(new ACE(val));
+				} else if ("WinType".equals(key)) {
+				    winType = Integer.parseInt(val);
+				}
+			    } catch (IllegalArgumentException e) {
+				logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			    }
+			}
+		    }
+		}
+	    }
+	    return new WindowsFileInfo(type, path, path, ctime, mtime, atime, len, winType, aces.toArray(new IACE[0]));
+	}
+	return null;
+    }
+
     // Private
+
+    class WindowsMount implements IMount {
+	private String path;
+	private FsType type;
+
+	/**
+	 * Create a new mount given a drive string and a type.
+	 */
+	public WindowsMount(ISWbemObject obj) throws WmiException {
+	    ISWbemPropertySet props = obj.getProperties();
+	    path = props.getItem("Name").getValueAsString() + DELIM_STR;
+	    type = FsType.typeOf(props.getItem("DriveType").getValueAsInteger().intValue());
+	}
+
+	// Implement IMount
+
+	public String getPath() {
+	    return path;
+	}
+
+	public String getType() {
+	    return type.value();
+	}
+    }
 
     class WindowsFile extends DefaultFile {
 	WindowsFile(String path, File file, IFile.Flags flags) {

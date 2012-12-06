@@ -11,13 +11,13 @@ rebuild:
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
 # Target to delete everything but the data models
-trim:
+logic-clean:
 	@$(MAKE) --keep-going --directory=plugin clean
 	@$(MAKE) --keep-going --directory=xpert clean
 	@$(MAKE) --keep-going --directory=jovaldi clean
 	@$(MAKE) --keep-going --directory=engine clean
 
-clean: trim
+clean: logic-clean
 	@$(MAKE) --keep-going --directory=scap clean
 	@$(MAKE) --keep-going --directory=schematron clean
 

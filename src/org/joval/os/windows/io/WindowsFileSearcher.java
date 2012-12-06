@@ -189,7 +189,7 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
     // Internal
 
     IFile createObject(Iterator<String> input) {
-	WindowsFileInfo info = (WindowsFileInfo)((WindowsFilesystem)fs).getDriver().nextFileInfo(input);
+	WindowsFileInfo info = (WindowsFileInfo)((WindowsFilesystem)fs).nextFileInfo(input);
 	if (info == null) {
 	    return null;
 	} else {

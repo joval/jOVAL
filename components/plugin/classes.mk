@@ -29,7 +29,6 @@ CLASSES=\
 	org.joval.intf.windows.identity.IUser						\
 	org.joval.intf.windows.io.IWindowsFileInfo					\
 	org.joval.intf.windows.io.IWindowsFilesystem					\
-	org.joval.intf.windows.io.IWindowsFilesystemDriver				\
 	org.joval.intf.windows.registry.IBinaryValue					\
 	org.joval.intf.windows.registry.IDwordValue					\
 	org.joval.intf.windows.registry.IExpandStringValue				\
@@ -76,8 +75,6 @@ CLASSES=\
 	org.joval.os.windows.identity.LocalDirectory					\
 	org.joval.os.windows.identity.Principal						\
 	org.joval.os.windows.identity.User						\
-	org.joval.os.windows.io.BaseDriver						\
-	org.joval.os.windows.io.LocalDriver						\
 	org.joval.os.windows.io.WindowsFileInfo						\
 	org.joval.os.windows.io.WindowsFileSearcher					\
 	org.joval.os.windows.io.WindowsFileSerializer					\

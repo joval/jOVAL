@@ -15,7 +15,6 @@ import org.joval.intf.io.IFilesystem;
 import org.joval.intf.system.IEnvironment;
 import org.joval.intf.windows.identity.IDirectory;
 import org.joval.intf.windows.io.IWindowsFilesystem;
-import org.joval.intf.windows.io.IWindowsFilesystemDriver;
 import org.joval.intf.windows.powershell.IRunspacePool;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IRegistry;
@@ -25,7 +24,6 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.io.fs.AbstractFilesystem;
 import org.joval.os.windows.identity.Directory;
-import org.joval.os.windows.io.LocalDriver;
 import org.joval.os.windows.io.WindowsFilesystem;
 import org.joval.os.windows.powershell.RunspacePool;
 import org.joval.os.windows.registry.PSRegistry;
@@ -43,7 +41,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     private WmiProvider wmi;
     private boolean is64bit = false;
     private PSRegistry reg32, reg;
-    private IWindowsFilesystemDriver driver;
     private IWindowsFilesystem fs32;
     private Directory directory = null;
     private RunspacePool runspaces = null;
@@ -62,7 +59,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
     public WindowsSession(File wsdir) {
 	super();
 	this.wsdir = wsdir;
-	driver = new LocalDriver(getLogger());
     }
 
     // Implement IWindowsSession extensions
@@ -136,7 +132,7 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 		    fs32 = (IWindowsFilesystem)fs;
 		} else {
 		    try {
-			fs32 = new WindowsFilesystem(this, driver, View._32BIT);
+			fs32 = new WindowsFilesystem(this, View._32BIT);
 		    } catch (Exception e) {
 			logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		    }
@@ -210,9 +206,12 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	    }
 	    if (!is64bit) reg32 = reg;
 	}
+	if (wmi == null) {
+	    wmi = new WmiProvider(this);
+	}
 	if (fs == null) {
 	    try {
-		fs = new WindowsFilesystem(this, driver);
+		fs = new WindowsFilesystem(this);
 		if (!is64bit) fs32 = (IWindowsFilesystem)fs;
 	    } catch (Exception e) {
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -220,9 +219,6 @@ public class WindowsSession extends AbstractSession implements IWindowsSession {
 	    }
 	}
 	cwd = new File(env.expand("%SystemRoot%"));
-	if (wmi == null) {
-	    wmi = new WmiProvider(this);
-	}
 	if (wmi.register()) {
 	    connected = true;
 	    if (directory == null) {
