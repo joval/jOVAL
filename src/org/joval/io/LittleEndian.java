@@ -20,6 +20,10 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class LittleEndian {
+    /**
+     * Get a string representation of a byte array, where each byte is converted into a [0-F] hex character pair.
+     * This is just a utility method that has nothing in particular to do with byte ordering.
+     */
     public static final String toHexString(byte[] b) {
 	StringBuffer sb = new StringBuffer();
 	for (int i=0; i < b.length; i++) {
@@ -28,12 +32,11 @@ public class LittleEndian {
 	return sb.toString();
     }
 
+    /**
+     * Get a string representation of a byte, as a [0-F] hex character pair.
+     */
     public static final String toHexString(byte b) {
-	String s = Integer.toHexString(b & 0xFF);
-	if (s.length() == 1) {
-	    s = "0" + s;
-	}
-	return s;
+	return Integer.toString((b&0xff) + 0x100, 16).substring(1);
     }
 
     public static final String toHexString(short s) {

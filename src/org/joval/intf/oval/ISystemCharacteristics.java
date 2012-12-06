@@ -6,7 +6,6 @@ package org.joval.intf.oval;
 import java.io.File;
 import java.math.BigInteger;
 import java.util.Collection;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import oval.schemas.common.MessageType;
@@ -38,6 +37,10 @@ public interface ISystemCharacteristics extends ITransformable {
 
     /**
      * Store the ItemType in the itemTable and return the ID used to store it.
+     *
+     * Note, the items you store in a given ISystemCharacteristics should either never have an ID (in which case one
+     * will be assigned when it's stored), or they should always have an ID (in which case they should guarantee the
+     * uniqueness of each item). Otherwise, ID collisions can result.
      */
     BigInteger storeItem(ItemType item) throws OvalException;
 
@@ -67,9 +70,9 @@ public interface ISystemCharacteristics extends ITransformable {
 
     FlagEnumeration getObjectFlag(String id) throws NoSuchElementException;
 
-    List<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException;
+    Collection<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException;
 
-    List<ItemType> getItemsByObjectId(String id) throws NoSuchElementException;
+    Collection<ItemType> getItemsByObjectId(String id) throws NoSuchElementException;
 
     /**
      * Serialize the OVAL system characteristics to the specified file.

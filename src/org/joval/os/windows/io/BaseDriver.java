@@ -12,11 +12,9 @@ import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFileMetadata;
-import org.joval.intf.io.IFilesystem;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFileInfo;
-import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.intf.windows.io.IWindowsFilesystemDriver;
 import org.joval.os.windows.Timestamp;
 import org.joval.os.windows.identity.ACE;

@@ -98,10 +98,13 @@ public class Checksum {
 
     // Private
 
+    /**
+     * Use the BouncyCastle JCE implementation for algorithms not supplied by the default JCE (e.g., SHA-224).
+     */
     private static final String ALT_PROVIDER_NAME = "org.bouncycastle.jce.provider.BouncyCastleProvider";
     private static Provider ALT_PROVIDER;
 
-    private static MessageDigest getDigest(Algorithm algorithm) throws RuntimeException {
+    private static MessageDigest getDigest(Algorithm algorithm) {
         MessageDigest digest = null;
 	try {
             digest = MessageDigest.getInstance(algorithm.value());

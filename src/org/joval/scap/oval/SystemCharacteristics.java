@@ -12,12 +12,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Method;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.Vector;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.zip.Adler32;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -47,7 +48,6 @@ import oval.schemas.systemcharacteristics.core.VariableValueType;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.util.ILoggable;
 import org.joval.scap.oval.xml.OvalNamespacePrefixMapper;
-import org.joval.util.Checksum;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
@@ -91,25 +91,26 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 
     private LocLogger logger = JOVALMsg.getLogger();
     private SystemInfoType systemInfo;
-    private Hashtable<String, ObjectData> objectTable;
-    private Hashtable<BigInteger, ItemType> itemTable;
-    private Hashtable<String, List<VariableValueType>> variableTable;
-    private Hashtable<String, HashSet<BigInteger>> objectItemTable;
-    private Hashtable<String, HashSet<String>> objectVariableTable;
-    private Hashtable<String, BigInteger> itemChecksums;
+    private Map<String, ObjectData> objectTable;
+    private Map<BigInteger, ItemType> itemTable;
+    private Map<String, Collection<VariableValueType>> variableTable;
+    private Map<String, Collection<BigInteger>> objectItemTable;
+    private Map<String, Collection<String>> objectVariableTable;
+    private Map<String, Collection<BigInteger>> itemChecksums;
+    private int itemCounter = 0;
     private JAXBContext ctx;
-    private Marshaller csMarshaller = null;
+    private Marshaller marshaller = null;
 
     /**
      * Create an empty SystemCharacteristics.
      */
     SystemCharacteristics() {
-	objectTable = new Hashtable<String, ObjectData>();
-	itemTable = new Hashtable<BigInteger, ItemType>();
-	variableTable = new Hashtable<String, List<VariableValueType>>();
-	objectItemTable = new Hashtable<String, HashSet<BigInteger>>();
-	objectVariableTable = new Hashtable<String, HashSet<String>>();
-	variableTable = new Hashtable<String, List<VariableValueType>>();
+	objectTable = new HashMap<String, ObjectData>();
+	itemTable = new HashMap<BigInteger, ItemType>();
+	variableTable = new HashMap<String, Collection<VariableValueType>>();
+	objectItemTable = new HashMap<String, Collection<BigInteger>>();
+	objectVariableTable = new HashMap<String, Collection<String>>();
+	variableTable = new HashMap<String, Collection<VariableValueType>>();
     }
 
     /**
@@ -125,12 +126,12 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public SystemCharacteristics(SystemInfoType systemInfo) {
 	this();
 	this.systemInfo = systemInfo;
-	itemChecksums = new Hashtable<String, BigInteger>();
+	itemChecksums = new HashMap<String, Collection<BigInteger>>();
 	try {
 	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS);
 	    ctx = JAXBContext.newInstance(packages);
-	    csMarshaller = ctx.createMarshaller();
-	    OvalNamespacePrefixMapper.configure(csMarshaller, OvalNamespacePrefixMapper.URI.SC);
+	    marshaller = ctx.createMarshaller();
+	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
 	} catch (JAXBException e) {
 	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} catch (FactoryConfigurationError e) {
@@ -218,22 +219,57 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    itemId = item.getId();
 	    itemTable.put(itemId, item);
 	} else {
-	    String cs = getChecksum(item);
-	    itemId = itemChecksums.get(cs);
-	    if (itemId == null) {
-		itemId = new BigInteger(Integer.toString(itemTable.size()));
+	    byte[] data = toCanonicalBytes(item);
+	    Adler32 adler = new Adler32();
+	    adler.update(data);
+	    String cs = Long.toString(adler.getValue());
+	    Collection<BigInteger> matches = itemChecksums.get(cs);
+	    if (matches == null) {
+		itemId = new BigInteger(Integer.toString(itemCounter++));
+		matches = new HashSet<BigInteger>();
+		matches.add(itemId);
 		itemTable.put(itemId, item);
-		itemChecksums.put(cs, itemId);
+		itemChecksums.put(cs, matches);
+	    } else {
+		//
+		// If the Adler32 checksums are the same, that doesn't assert anything about whether the item
+		// has been previously stored.  So, we compare it to all the previously-stored items with the
+		// same checksum.
+		//
+		boolean match = false;
+		for (BigInteger id : matches) {
+		    byte[] candidate = toCanonicalBytes(itemTable.get(id));
+		    if (candidate.length == data.length) {
+			for (int i=0; i < data.length; i++) {
+			    if (candidate[i] != data[i]) {
+				match = true;
+				break;
+			    }
+			}
+		    }
+		    if (match) {
+			itemId = id;
+			break;
+		    }
+		}
+		//
+		// Having determined that the item is indeed new, we store it.
+		//
+		if (!match) {
+		    itemId = new BigInteger(Integer.toString(itemCounter++));
+		    item.setId(itemId);
+		    itemTable.put(itemId, item);
+		    itemChecksums.get(cs).add(itemId);
+		}
 	    }
-	    item.setId(itemId);
 	}
 	return itemId;
     }
 
     public void storeVariable(VariableValueType var) {
-	List<VariableValueType> vars = variableTable.get(var.getVariableId());
+	Collection<VariableValueType> vars = variableTable.get(var.getVariableId());
 	if (vars == null) {
-	    vars = new Vector<VariableValueType>();
+	    vars = new ArrayList<VariableValueType>();
 	    variableTable.put(var.getVariableId(), vars);
 	}
 	for (VariableValueType existingType : vars) {
@@ -275,7 +311,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	if (!itemTable.containsKey(itemId)) {
 	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_ITEM, itemId.toString()));
 	}
-	HashSet<BigInteger> items = objectItemTable.get(objectId);
+	Collection<BigInteger> items = objectItemTable.get(objectId);
 	if (items == null) {
 	    items = new HashSet<BigInteger>();
 	    objectItemTable.put(objectId, items);
@@ -290,7 +326,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	if (!variableTable.containsKey(variableId)) {
 	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_VARIABLE, variableId));
 	}
-	HashSet<String> variables = objectVariableTable.get(objectId);
+	Collection<String> variables = objectVariableTable.get(objectId);
 	if (variables == null) {
 	    variables = new HashSet<String>();
 	    objectVariableTable.put(objectId, variables);
@@ -309,11 +345,11 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	return objectTable.get(id).flag;
     }
 
-    public List<ItemType> getItemsByObjectId(String id) throws NoSuchElementException {
+    public Collection<ItemType> getItemsByObjectId(String id) throws NoSuchElementException {
 	if (!objectTable.containsKey(id)) {
 	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
-	List <ItemType>items = new Vector<ItemType>();
+	Collection <ItemType>items = new ArrayList<ItemType>();
 	if (objectItemTable.containsKey(id)) {
 	    for (BigInteger itemId : objectItemTable.get(id)) {
 		if (itemTable.containsKey(itemId)) {
@@ -326,11 +362,11 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	return items;
     }
 
-    public List<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
+    public Collection<VariableValueType> getVariablesByObjectId(String id) throws NoSuchElementException {
 	if (!objectTable.containsKey(id)) {
 	    throw new NoSuchElementException(JOVALMsg.getMessage(JOVALMsg.ERROR_REF_OBJECT, id));
 	}
-	List<VariableValueType> variables = new Vector<VariableValueType>();
+	Collection<VariableValueType> variables = new ArrayList<VariableValueType>();
 	if (objectVariableTable.containsKey(id)) {
 	    for (String variableId : objectVariableTable.get(id)) {
 		if (variableTable.containsKey(variableId)) {
@@ -404,35 +440,27 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     }
 
     /**
-     * Get the checksum of an ItemType by:
-     * 1) Temporarily setting the ID to null
-     * 2) Wrapping it in a JAXBElement
-     * 3) Marshalling it to a stream in memory
-     * 4) Taking the checkum of the stream
-     * 5) Setting the ID back to the original value
-     * 6) Returning the checksum
+     * Canonicalize the item by stripping out its ID (if any) marshalling it to XML, and returning the bytes.
      */
-    private String getChecksum(ItemType item) throws OvalException {
-	String checksum = null;
+    private byte[] toCanonicalBytes(ItemType item) throws OvalException {
+	ByteArrayOutputStream out = new ByteArrayOutputStream();
 	synchronized(item) {
 	    BigInteger itemId = item.getId();
 	    item.setId(null);
 	    JAXBElement elt = wrapItem(item);
-	    ByteArrayOutputStream out = new ByteArrayOutputStream();
 	    try {
-		csMarshaller.marshal(elt, out);
-		checksum = Checksum.getChecksum(out.toByteArray(), Checksum.Algorithm.MD5);
+		marshaller.marshal(elt, out);
 	    } catch (JAXBException e) {
 		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    } finally {
 		item.setId(itemId);
 	    }
 	}
-	return checksum;
+	return out.toByteArray();
     }
 
-    private Hashtable<Class, Object> wrapperFactories = new Hashtable<Class, Object>();
-    private Hashtable<Class, Method> wrapperMethods = new Hashtable<Class, Method>();
+    private Map<Class, Object> wrapperFactories = new HashMap<Class, Object>();
+    private Map<Class, Method> wrapperMethods = new HashMap<Class, Method>();
 
     private JAXBElement<? extends ItemType> wrapItem(ItemType item) throws OvalException {
 	try {
@@ -462,12 +490,12 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	String comment;
 	BigInteger version;
 	FlagEnumeration flag;
-	List<MessageType> messages;
+	Collection<MessageType> messages;
 
 	ObjectData(String id) {
 	    this.id = id;
 	    flag = FlagEnumeration.INCOMPLETE;
-	    messages = new Vector<MessageType>();
+	    messages = new ArrayList<MessageType>();
 	}
     }
 }

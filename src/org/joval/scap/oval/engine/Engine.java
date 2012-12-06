@@ -519,15 +519,6 @@ public class Engine implements IEngine, IProvider {
 	    for (ItemType item : items) {
 		sc.relateItem(objectId, sc.storeItem(item));
 	    }
-/*
-//DAS -- unnecessary, I think?
-	} catch (CollectException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.WARNING);
-	    String err = JOVALMsg.getMessage(JOVALMsg.STATUS_ADAPTER_COLLECTION, e.getMessage());
-	    msg.setValue(err);
-	    sc.setObject(objectId, obj.getComment(), obj.getVersion(), e.getFlag(), msg);
-*/
 	} catch (OvalException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -1787,10 +1778,6 @@ public class Engine implements IEngine, IProvider {
 		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, reason));
 	    } catch (ResolveException e) {
 		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, e.getMessage()));
-//DASDAS	    } catch (OvalException e) {
-//		throw e;
-//	    } catch (Exception e) {
-//		throw new TestException(JOVALMsg.getMessage(JOVALMsg.ERROR_RESOLVE_VAR, ref, e.getMessage()));
 	    }
 	    return cd.getResult(base.getVarCheck());
 	} else {
