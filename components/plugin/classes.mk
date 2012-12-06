@@ -16,7 +16,6 @@ CLASSES=\
 	org.joval.intf.unix.io.IUnixFilesystemDriver					\
 	org.joval.intf.unix.system.IUnixSession						\
 	org.joval.intf.util.IConfigurable						\
-	org.joval.intf.util.IPathRedirector						\
 	org.joval.intf.util.IPerishable							\
 	org.joval.intf.util.ISearchable							\
 	org.joval.intf.util.tree.IForest						\
@@ -79,8 +78,6 @@ CLASSES=\
 	org.joval.os.windows.io.WindowsFileSearcher					\
 	org.joval.os.windows.io.WindowsFileSerializer					\
 	org.joval.os.windows.io.WindowsFilesystem					\
-	org.joval.os.windows.io.WindowsFilesystemDriver					\
-	org.joval.os.windows.io.WindowsMount						\
 	org.joval.os.windows.powershell.PowershellException				\
 	org.joval.os.windows.powershell.Runspace					\
 	org.joval.os.windows.powershell.RunspacePool					\
