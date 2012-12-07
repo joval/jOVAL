@@ -23,7 +23,7 @@ import org.joval.util.JOVALMsg;
  */
 public class PSKey implements IKey {
     private PSKey parent;
-    private PSRegistry registry;
+    private Registry registry;
     private String hive, path, name;
     private String[] subkeyNames, valueNames;
     private Map<String, IValue> values;
@@ -31,7 +31,7 @@ public class PSKey implements IKey {
     /**
      * Create a root-level key.
      */
-    PSKey(PSRegistry registry, String name) {
+    PSKey(Registry registry, String name) {
 	parent = null;
 	this.registry = registry;
 	this.name = name;

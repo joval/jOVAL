@@ -88,7 +88,7 @@ CLASSES=\
 	org.joval.os.windows.registry.LicenseData					\
 	org.joval.os.windows.registry.MultiStringValue					\
 	org.joval.os.windows.registry.QwordValue					\
-	org.joval.os.windows.registry.PSRegistry					\
+	org.joval.os.windows.registry.Registry						\
 	org.joval.os.windows.registry.StringValue					\
 	org.joval.os.windows.registry.Value						\
 	org.joval.os.windows.system.Environment						\

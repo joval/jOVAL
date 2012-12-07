@@ -35,7 +35,7 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class PSRegistry implements IRegistry, ISearchable<IKey> {
+public class Registry implements IRegistry, ISearchable<IKey> {
     private IWindowsSession session;
     private IWindowsSession.View view;
     private ILicenseData license = null;
@@ -49,14 +49,14 @@ public class PSRegistry implements IRegistry, ISearchable<IKey> {
     /**
      * Create a new Registry, connected to the default view.
      */
-    public PSRegistry(IWindowsSession session) throws Exception {
+    public Registry(IWindowsSession session) throws Exception {
 	this(session, session.getNativeView());
     }
 
     /**
      * Create a new Registry, connected to the specified view.
      */
-    public PSRegistry(IWindowsSession session, IWindowsSession.View view) throws Exception {
+    public Registry(IWindowsSession session, IWindowsSession.View view) throws Exception {
 	this.session = session;
 	logger = session.getLogger();
 	this.view = view;
