@@ -12,7 +12,6 @@ import org.apache.jdbm.Serializer;
 
 import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFileMetadata;
-import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.io.fs.AbstractFilesystem;
 
@@ -54,11 +53,7 @@ public class WindowsFileSerializer implements Serializer<IFile>, Serializable {
 	}
 	long len = in.readLong();
 	int winType = in.readInt();
-	IACE[] aces = new IACE[in.readInt()];
-	for (int i=0; i < aces.length; i++) {
-	    aces[i] = new InternalACE(in.readInt(), in.readUTF());
-	}
-	WindowsFileInfo info = new WindowsFileInfo(type, path, canonicalPath, ctime, mtime, atime, len, winType, aces);
+	WindowsFileInfo info = new WindowsFileInfo(type, path, canonicalPath, ctime, mtime, atime, len, winType);
 	if (fs == null) {
 	    fs = AbstractFilesystem.instances.get(instanceKey);
 	}
@@ -81,39 +76,5 @@ public class WindowsFileSerializer implements Serializer<IFile>, Serializable {
 	out.writeLong(f.length());
 	IWindowsFileInfo info = (IWindowsFileInfo)f.getExtended();
 	out.writeInt(info.getWindowsFileType());
-	IACE[] aces = info.getSecurity();
-	if (aces == null) {
-	    out.writeInt(0);
-	} else {
-	    out.writeInt(aces.length);
-	    for (IACE ace : aces) {
-		out.writeInt(ace.getAccessMask());
-		out.writeUTF(ace.getSid());
-	    }
-	}
-    }
-
-    // Internal
-
-    static class InternalACE implements IACE {
-	private int flags, mask;
-	private String sid;
-
-	public InternalACE(int mask, String sid) {
-	    this.mask = mask;
-	    this.sid = sid;
-	}
-
-	public int getFlags() {
-	    return 0;
-	}
-
-	public int getAccessMask() {
-	    return mask;
-	}
-
-	public String getSid() {
-	    return sid;
-	}
     }
 }

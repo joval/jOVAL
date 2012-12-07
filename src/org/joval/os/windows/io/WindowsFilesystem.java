@@ -26,7 +26,6 @@ import org.joval.intf.io.IFile;
 import org.joval.intf.io.IFileMetadata;
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.ISearchable;
-import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFileInfo;
 import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.intf.windows.powershell.IRunspace;
@@ -38,8 +37,6 @@ import org.joval.io.fs.AbstractFilesystem;
 import org.joval.io.fs.DefaultMetadata;
 import org.joval.io.fs.IAccessor;
 import org.joval.os.windows.Timestamp;
-import org.joval.os.windows.identity.ACE;
-import org.joval.os.windows.identity.Directory;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
@@ -199,7 +196,6 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	    long ctime=IFile.UNKNOWN_TIME, mtime=IFile.UNKNOWN_TIME, atime=IFile.UNKNOWN_TIME, len=-1L;
 	    IFileMetadata.Type type = IFileMetadata.Type.FILE;
 	    int winType = IWindowsFileInfo.FILE_TYPE_UNKNOWN;
-	    Collection<IACE> aces = new ArrayList<IACE>();
 	    String path = null;
 
 	    while(input.hasNext()) {
@@ -228,8 +224,6 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 				    atime = Timestamp.getTime(new BigInteger(val));
 				} else if ("Length".equals(key)) {
 				    len = Long.parseLong(val);
-				} else if ("ACE".equals(key)) {
-				    aces.add(new ACE(val));
 				} else if ("WinType".equals(key)) {
 				    winType = Integer.parseInt(val);
 				}
@@ -240,7 +234,7 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 		    }
 		}
 	    }
-	    return new WindowsFileInfo(type, path, path, ctime, mtime, atime, len, winType, aces.toArray(new IACE[0]));
+	    return new WindowsFileInfo(type, path, path, ctime, mtime, atime, len, winType);
 	}
 	return null;
     }

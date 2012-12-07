@@ -6,7 +6,6 @@ package org.joval.os.windows.io;
 import java.io.IOException;
 
 import org.joval.io.fs.DefaultMetadata;
-import org.joval.intf.windows.identity.IACE;
 import org.joval.intf.windows.io.IWindowsFilesystem;
 import org.joval.intf.windows.io.IWindowsFileInfo;
 
@@ -17,19 +16,13 @@ import org.joval.intf.windows.io.IWindowsFileInfo;
  * @version %I% %G%
  */
 public class WindowsFileInfo extends DefaultMetadata implements IWindowsFileInfo {
-    private IWindowsFileInfo extended;
+    private int winType;
 
     public WindowsFileInfo(Type type, String path, String canonicalPath, long ctime, long mtime, long atime, long length,	
-		int winType, IACE[] aces) {
-
-	this(type, path, canonicalPath, ctime, mtime, atime, length, new ExtendedImpl(winType, aces));
-    }
-
-    public WindowsFileInfo(Type type, String path, String canonicalPath, long ctime, long mtime, long atime, long length,
-		IWindowsFileInfo info) {
+		int winType) {
 
 	super(type, path, null, canonicalPath, ctime, mtime, atime, length);
-	extended = info;
+	this.winType = winType;
     }
 
     // Implement IWindowsFileInfo
@@ -38,32 +31,6 @@ public class WindowsFileInfo extends DefaultMetadata implements IWindowsFileInfo
      * Returns one of the FILE_TYPE_ constants.
      */
     public int getWindowsFileType() throws IOException {
-	return extended.getWindowsFileType();
-    }
-
-    public IACE[] getSecurity() throws IOException {
-	return extended.getSecurity();
-    }
-
-    // Private
-
-    static class ExtendedImpl implements IWindowsFileInfo {
-	private int winType;
-	private IACE[] aces;
-
-	ExtendedImpl(int winType, IACE[] aces) {
-	    this.winType = winType;
-	    this.aces = aces;
-	}
-
-	// Implement IWindowsFileInfo
-
-	public int getWindowsFileType() {
-	    return winType;
-	}
-
-	public IACE[] getSecurity() {
-	    return aces;
-	}
+	return winType;
     }
 }

@@ -1,27 +1,6 @@
 # Copyright (C) 2012 jOVAL.org.  All rights reserved.
 # This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 #
-function Print-FileAccess {
-  param(
-    [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)]
-    [PSObject]$inputObject
-  )
-
-  PROCESS {
-    if (!($inputObject -eq $null)) {
-      $type = $inputObject | Get-Member | %{$_.TypeName}
-      if (($type -eq "System.IO.DirectoryInfo") -or ($type -eq "System.IO.FileInfo")) {
-	$acl = $inputObject.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Access)
-	foreach ($ace in $acl.GetAccessRules($true, $true, [System.Security.Principal.SecurityIdentifier])) {
-	  $accessMask = $ace.FileSystemRights.value__
-	  $sid = $ace.IdentityReference.Value
-	  Write-Output "ACE: mask=$accessMask,sid=$sid"
-	}
-      }
-    }
-  }
-}
-
 function Print-FileInfo {
   param(
     [Parameter(Mandatory=$true, Position=0, ValueFromPipeline=$true)]
@@ -133,7 +112,6 @@ namespace jOVAL.File {
 	Write-Output "Ctime: $ctime"
 	Write-Output "Mtime: $mtime"
 	Write-Output "Atime: $atime"
-	Print-FileAccess $inputObject
 	Write-Output "}"
       } else {
 	if ($type -eq "System.IO.FileInfo") {
@@ -151,7 +129,6 @@ namespace jOVAL.File {
 	  Write-Output "Atime: $atime"
 	  $length = $inputObject.Length
 	  Write-Output "Length: $length"
-	  Print-FileAccess $inputObject
 	  Write-Output "}"
 	}
       }
