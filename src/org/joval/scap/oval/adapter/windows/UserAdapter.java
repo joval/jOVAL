@@ -3,8 +3,7 @@
 
 package org.joval.scap.oval.adapter.windows;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
@@ -39,6 +38,7 @@ import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
+import org.joval.os.windows.Timestamp;
 import org.joval.os.windows.wmi.WmiException;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
@@ -133,11 +133,6 @@ public class UserAdapter implements IAdapter {
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
 	    rc.addMessage(msg);
-	} catch (ParseException e) {
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(e.getMessage());
-	    rc.addMessage(msg);
 	}
 	return items;
     }
@@ -149,33 +144,11 @@ public class UserAdapter implements IAdapter {
 	try {
 	    String wql = "select * from Win32_NetworkLoginProfile";
 	    for (ISWbemObject obj : session.getWmiProvider().execQuery(IWmiProvider.CIMv2, wql)) {
-		String s = null;
-		try {
-		    ISWbemPropertySet props = obj.getProperties();
-		    String name = props.getItem("Name").getValueAsString();
-		    //
-		    // Convert LastLogon string to number of seconds since 1970
-		    //
-		    s = props.getItem("LastLogon").getValueAsString();
-		    if (s != null && s.length() > 21) {
-			String tz = s.substring(21).trim();
-			char sign = tz.charAt(0);
-			int min = Integer.parseInt(tz.substring(1));
-			int tzHr = min / 60;
-			int tzMm = min % 60;
-			tz = String.format("%c%02d%02d", sign, tzHr, tzMm);
-			Date date = null;
-			if (tz.length() == 5) {
-			    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss.SSSZ");
-			    date = sdf.parse(s.substring(0, 18) + tz);
-			} else {
-			    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss.SSS");
-			    date = sdf.parse(s.substring(0, 18));
-			}
-			logons.put(name, date);
-		    }
-		} catch (ParseException e) {
-		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		ISWbemPropertySet props = obj.getProperties();
+		String name = props.getItem("Name").getValueAsString();
+		BigInteger timestamp = props.getItem("LastLogon").getValueAsTimestamp();
+		if (timestamp != null) {
+		    logons.put(name, new Date(Timestamp.getTime(timestamp)));
 		}
 	    }
 	} catch (Exception e) {
@@ -183,7 +156,7 @@ public class UserAdapter implements IAdapter {
 	}
     }
 
-    private UserItem makeItem(IUser user) throws WmiException, ParseException {
+    private UserItem makeItem(IUser user) throws WmiException {
 	UserItem item = Factories.sc.windows.createUserItem();
 	EntityItemStringType userType = Factories.sc.core.createEntityItemStringType();
 	if (user.isBuiltin()) {

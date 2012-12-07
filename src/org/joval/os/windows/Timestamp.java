@@ -33,7 +33,7 @@ public class Timestamp {
      * Given a WBEM timestamp of the form yyyyMMddHHmmss.SSSSSSsutc, return a Windows-style decimal timestamp.  The last
      * digit will always be a 0, as there is only enough information to express the time in microseconds.
      */
-    public static String toWindowsTimestamp(String wmistr) throws NumberFormatException, ParseException {
+    public static BigInteger toWindowsTimestamp(String wmistr) throws NumberFormatException, ParseException {
 	StringBuffer sb = new StringBuffer(wmistr.substring(0,14));
 	sb.append(wmistr.substring(21,22));
 	int utcMinOffset = Integer.parseInt(wmistr.substring(22));
@@ -44,7 +44,7 @@ public class Timestamp {
 	long secondsSince1970 = WMIDATEFORMAT.parse(sb.toString()).getTime()/1000L;
 	StringBuffer sb2 = new StringBuffer(Long.toString(secondsSince1970));
 	BigInteger tm = new BigInteger(sb2.append(wmistr.substring(15, 21)).append("0").toString()); //cnanos
-	return tm.add(CNANOS_1601to1970).toString();
+	return tm.add(CNANOS_1601to1970);
     }
 
     /**

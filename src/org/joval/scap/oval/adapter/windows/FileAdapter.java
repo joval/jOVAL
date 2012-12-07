@@ -171,7 +171,7 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	    if (at == IFile.UNKNOWN_TIME) {
 		aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    } else {
-		aTimeType.setValue(Timestamp.toWindowsTimestamp(at));
+		aTimeType.setValue(Timestamp.toWindowsTimestamp(at).toString());
 	    }
 	    fItem.setATime(aTimeType);
 
@@ -179,7 +179,7 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	    if (ct == IFile.UNKNOWN_TIME) {
 		cTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    } else {
-		cTimeType.setValue(Timestamp.toWindowsTimestamp(ct));
+		cTimeType.setValue(Timestamp.toWindowsTimestamp(ct).toString());
 	    }
 	    fItem.setCTime(cTimeType);
 
@@ -187,7 +187,7 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	    if (lm == IFile.UNKNOWN_TIME) {
 		mTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
 	    } else {
-		mTimeType.setValue(Timestamp.toWindowsTimestamp(lm));
+		mTimeType.setValue(Timestamp.toWindowsTimestamp(lm).toString());
 	    }
 	    fItem.setMTime(mTimeType);
 	} else {
@@ -224,13 +224,13 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 		    ISWbemObject fileObj = objSet.iterator().next();
 		    ISWbemPropertySet filePropSet = fileObj.getProperties();
 		    ISWbemProperty aTimeProp = filePropSet.getItem("LastAccessed");
-		    aTimeType.setValue(Timestamp.toWindowsTimestamp(aTimeProp.getValueAsString()));
+		    aTimeType.setValue(Timestamp.toWindowsTimestamp(aTimeProp.getValueAsString()).toString());
 		    fItem.setATime(aTimeType);
 		    ISWbemProperty cTimeProp = filePropSet.getItem("InstallDate");
-		    cTimeType.setValue(Timestamp.toWindowsTimestamp(cTimeProp.getValueAsString()));
+		    cTimeType.setValue(Timestamp.toWindowsTimestamp(cTimeProp.getValueAsString()).toString());
 		    fItem.setCTime(cTimeType);
 		    ISWbemProperty mTimeProp = filePropSet.getItem("LastModified");
-		    mTimeType.setValue(Timestamp.toWindowsTimestamp(mTimeProp.getValueAsString()));
+		    mTimeType.setValue(Timestamp.toWindowsTimestamp(mTimeProp.getValueAsString()).toString());
 		    fItem.setMTime(mTimeType);
 		}
 	    } catch (Exception e) {

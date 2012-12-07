@@ -3,6 +3,7 @@
 
 package org.joval.os.windows.wmi.scripting;
 
+import java.math.BigInteger;
 import java.util.Iterator;
 
 import com.jacob.com.Dispatch;
@@ -12,6 +13,7 @@ import com.jacob.com.VariantUtilities;
 
 import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.io.LittleEndian;
+import org.joval.os.windows.Timestamp;
 import org.joval.os.windows.wmi.WmiException;
 
 /**
@@ -47,6 +49,19 @@ public class SWbemProperty implements ISWbemProperty {
     
     public Long getValueAsLong() throws WmiException {
 	return value.getLong();
+    }
+
+    public BigInteger getValueAsTimestamp() throws WmiException {
+	String s = getValueAsString();
+	if (s == null) {
+	    return null;
+	} else {
+	    try {
+		return Timestamp.toWindowsTimestamp(s);
+	    } catch (Exception e) {
+		throw new WmiException(e);
+	    }
+	}
     }
 
     public Boolean getValueAsBoolean() throws WmiException {

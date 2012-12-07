@@ -3,6 +3,8 @@
 
 package org.joval.intf.windows.wmi;
 
+import java.math.BigInteger;
+
 import org.joval.os.windows.wmi.WmiException;
 
 /**
@@ -30,6 +32,13 @@ public interface ISWbemProperty {
      * Get the value of the property as a Long.
      */
     public Long getValueAsLong() throws WmiException;
+
+    /**
+     * Get the value of the proeprty as a Windows Timestamp, which is the number of 100-nanosecond 'clicks' since 1601AD.
+     *
+     * @see org.joval.os.windows.Timestamp
+     */
+    public BigInteger getValueAsTimestamp() throws WmiException;
 
     /**
      * Get the value of the property as a Boolean.

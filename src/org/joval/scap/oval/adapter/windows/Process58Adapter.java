@@ -5,7 +5,6 @@ package org.joval.scap.oval.adapter.windows;
 
 import java.io.ByteArrayInputStream;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Vector;
@@ -32,6 +31,7 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.util.IProperty;
 import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.os.windows.Timestamp;
 import org.joval.os.windows.powershell.PowershellException;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
@@ -198,30 +198,13 @@ public class Process58Adapter implements IAdapter {
 		    item.setCurrentDir(currentDir);
 		}
 	    } else if ("creation_time".equals(key)) {
-		String timeVal = prop.getProperty(key);
-		if (timeVal.length() >= 24) {
-		    String cnanos = timeVal.substring(18,20);
-		    String tz = timeVal.substring(21).trim();
-		    char c = tz.charAt(0);
-		    SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss.SSSZ");
-		    try {
-		        if (c == '-' || c == '+') {
-			    int mins = Integer.parseInt(tz.substring(1));
-			    int hr = mins / 60;
-			    int min = mins % 60;
-        		    StringBuffer sb = new StringBuffer();
-        		    sb.append(c);
-			    sb.append(String.format("%02d%02d", hr, min));
-        		    tz = sb.toString();
-		        }
-			long millis = sdf.parse(timeVal.substring(0, 18) + tz).getTime();
-			EntityItemIntType creationTime = Factories.sc.core.createEntityItemIntType();
-			creationTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			creationTime.setValue(Long.toString(millis) + cnanos);
-			item.setCreationTime(creationTime);
-		    } catch (Exception e) {
-			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		    }
+		try {
+		    EntityItemIntType creationTime = Factories.sc.core.createEntityItemIntType();
+		    creationTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    creationTime.setValue(Timestamp.toWindowsTimestamp(prop.getProperty(key)).toString());
+		    item.setCreationTime(creationTime);
+		} catch (Exception e) {
+		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    } else if ("dep_enabled".equals(key)) {
 		EntityItemBoolType depEnabled = Factories.sc.core.createEntityItemBoolType();
