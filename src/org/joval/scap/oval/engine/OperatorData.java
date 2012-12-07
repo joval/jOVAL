@@ -95,7 +95,7 @@ class OperatorData {
 		return ResultEnumeration.UNKNOWN;
 	    } else if (t == 0	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
 		return ResultEnumeration.NOT_EVALUATED;
-	    } else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na == 0) {
+	    } else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
 		return ResultEnumeration.NOT_APPLICABLE;
 	    }
 	    break;
@@ -111,7 +111,7 @@ class OperatorData {
 		return ResultEnumeration.UNKNOWN;
 	    } else if (t >= 0	&& f >= 0	&& e == 0	&& u == 0	&& ne > 0	&& na >= 0) {
 		return ResultEnumeration.NOT_EVALUATED;
-	    } else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na == 0) {
+	    } else if (t == 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na > 0) {
 		return ResultEnumeration.NOT_APPLICABLE;
 	    }
 	    break;
