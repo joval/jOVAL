@@ -54,10 +54,11 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 
     private WindowsFileSearcher searcher;
     private final IWindowsSession.View view;
-    private IRunspace runspace;
     private Collection<IMount> mounts;
     private String system32, sysWOW64, sysNative;
     private boolean redirect3264;
+
+    protected IRunspace runspace;
 
     public WindowsFilesystem(IWindowsSession session) throws Exception {
 	this(session, session.getNativeView());

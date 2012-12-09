@@ -23,9 +23,4 @@ public interface ISWbemObjectSet extends Iterable <ISWbemObject> {
      * Get the number of objects in the set.
      */
     public int getSize();
-
-    /**
-     * Get a named item from the set.
-     */
-    public ISWbemObject getItem(String itemName) throws WmiException;
 }

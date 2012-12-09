@@ -73,7 +73,6 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
     private static final String CIMV2		= "root\\cimv2";
     private static final String OWNER_WQL	= "ASSOCIATORS OF {Win32_LogicalFileSecuritySetting='$path'} " +
 						  "WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
-    private static final String TIME_WQL	= "SELECT * FROM CIM_DataFile WHERE Name='$path'";
 
     private IWindowsSession ws;
     private IWmiProvider wmi;
@@ -154,42 +153,27 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	}
 	fItem.setType(typeType);
 
-	//
-	// If possible, use WMI to retrieve owner, aTime, cTime and mTime values
-	//
-	EntityItemStringType ownerType = Factories.sc.core.createEntityItemStringType();
 	EntityItemIntType aTimeType = Factories.sc.core.createEntityItemIntType();
 	aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	aTimeType.setValue(Timestamp.toWindowsTimestamp(file.accessTime()));
+	fItem.setATime(aTimeType);
+
 	EntityItemIntType cTimeType = Factories.sc.core.createEntityItemIntType();
 	cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	cTimeType.setValue(Timestamp.toWindowsTimestamp(file.createTime()));
+	fItem.setCTime(cTimeType);
+
 	EntityItemIntType mTimeType = Factories.sc.core.createEntityItemIntType();
 	mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	mTimeType.setValue(Timestamp.toWindowsTimestamp(file.lastModified()));
+	fItem.setMTime(mTimeType);
+
+	//
+	// If possible, use WMI to retrieve owner information for the file
+	//
+	EntityItemStringType ownerType = Factories.sc.core.createEntityItemStringType();
 	if (wmi == null) {
 	    ownerType.setStatus(StatusEnumeration.NOT_COLLECTED);
-
-	    long at = file.accessTime();
-	    if (at == IFile.UNKNOWN_TIME) {
-		aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    } else {
-		aTimeType.setValue(Timestamp.toWindowsTimestamp(at).toString());
-	    }
-	    fItem.setATime(aTimeType);
-
-	    long ct = file.createTime();
-	    if (ct == IFile.UNKNOWN_TIME) {
-		cTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    } else {
-		cTimeType.setValue(Timestamp.toWindowsTimestamp(ct).toString());
-	    }
-	    fItem.setCTime(cTimeType);
-
-	    long lm = file.lastModified();
-	    if (lm == IFile.UNKNOWN_TIME) {
-		mTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    } else {
-		mTimeType.setValue(Timestamp.toWindowsTimestamp(lm).toString());
-	    }
-	    fItem.setMTime(mTimeType);
 	} else {
 	    try {
 		String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(file.getPath()));
@@ -216,28 +200,6 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 		msg.setValue(e.getMessage());
 		fItem.getMessage().add(msg);
 		ownerType.setStatus(StatusEnumeration.ERROR);
-	    }
-	    try {
-		String wql = TIME_WQL.replaceAll("(?i)\\$path", escapePath(Matcher.quoteReplacement(file.getPath())));
-		ISWbemObjectSet objSet = wmi.execQuery(CIMV2, wql);
-		if (objSet.getSize() == 1) {
-		    ISWbemObject fileObj = objSet.iterator().next();
-		    ISWbemPropertySet filePropSet = fileObj.getProperties();
-		    ISWbemProperty aTimeProp = filePropSet.getItem("LastAccessed");
-		    aTimeType.setValue(Timestamp.toWindowsTimestamp(aTimeProp.getValueAsString()).toString());
-		    fItem.setATime(aTimeType);
-		    ISWbemProperty cTimeProp = filePropSet.getItem("InstallDate");
-		    cTimeType.setValue(Timestamp.toWindowsTimestamp(cTimeProp.getValueAsString()).toString());
-		    fItem.setCTime(cTimeType);
-		    ISWbemProperty mTimeProp = filePropSet.getItem("LastModified");
-		    mTimeType.setValue(Timestamp.toWindowsTimestamp(mTimeProp.getValueAsString()).toString());
-		    fItem.setMTime(mTimeType);
-		}
-	    } catch (Exception e) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue(e.getMessage());
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 	fItem.setOwner(ownerType);

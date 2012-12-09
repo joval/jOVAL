@@ -44,8 +44,4 @@ public class SWbemObjectSet implements ISWbemObjectSet {
     public int getSize() {
 	return objects.size();
     }
-
-    public ISWbemObject getItem(String itemName) throws WmiException {
-	throw new WmiException("Not implemented");
-    }
 }
