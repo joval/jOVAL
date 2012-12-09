@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Vector;
 
@@ -20,6 +21,7 @@ import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.IProcess;
 import org.joval.intf.system.ISession;
 import org.joval.io.PerishableReader;
+import org.joval.io.StreamTool;
 import org.joval.util.JOVALMsg;
 
 /**
@@ -146,7 +148,16 @@ public class SafeCLI {
 	 * Guaranteed to have at least one entry.
 	 */
 	public List<String> getLines() throws IOException {
-	    BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)));
+	    Charset encoding = null;
+	    ByteArrayInputStream in = new ByteArrayInputStream(data);
+	    in.mark(data.length);
+	    try {
+		encoding = StreamTool.detectEncoding(in);
+	    } catch (IOException e) {
+		in.reset();
+		encoding = StringTools.ASCII;
+	    }
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(in, encoding));
 	    List<String> lines = new Vector<String>();
 	    String line = null;
 	    while((line = reader.readLine()) != null) {

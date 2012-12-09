@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.util.StringTokenizer;
 import java.util.HashSet;
 
@@ -42,6 +43,7 @@ public class Runspace implements IRunspace {
     private InputStream stdout, stderr;	// Output from the powershell process
     private OutputStream stdin;		// Input to the powershell process
     private HashSet<String> modules;
+    private Charset encoding = null;
 
     /**
      * Create a new Runspace, based on the default architecture.
@@ -54,10 +56,18 @@ public class Runspace implements IRunspace {
      * Create a new Runspace, using the specified architecture (null for default).
      */
     public Runspace(String id, IWindowsSession session, IWindowsSession.View view) throws Exception {
+	this(id, session, view, StringTools.ASCII);
+    }
+
+    /**
+     * Create a new Runspace, using the specified architecture (null for default) and encoding.
+     */
+    public Runspace(String id, IWindowsSession session, IWindowsSession.View view, Charset encoding) throws Exception {
 	this.id = id;
 	this.timeout = session.getTimeout(IWindowsSession.Timeout.M);
 	this.logger = session.getLogger();
 	this.view = view;
+	this.encoding = encoding;
 	modules = new HashSet<String>();
 	if (view == IWindowsSession.View._32BIT) {
 	    String cmd = new StringBuffer("%SystemRoot%\\SysWOW64\\cmd.exe /c ").append(INIT_COMMAND).toString();
@@ -70,6 +80,7 @@ public class Runspace implements IRunspace {
 	stderr = p.getErrorStream();
 	stdin = p.getOutputStream();
 	err = null;
+	readBOM();
 	read(timeout);
     }
 
@@ -101,7 +112,7 @@ public class Runspace implements IRunspace {
 		in = new ByteArrayInputStream(buff.toByteArray());
 		String line = null;
 		int lines = 0;
-		BufferedReader reader = new BufferedReader(new InputStreamReader(in, StringTools.ASCII));
+		BufferedReader reader = new BufferedReader(new InputStreamReader(in, encoding));
 		while((line = reader.readLine()) != null) {
 		    stdin.write(line.getBytes());
 		    stdin.write("\r\n".getBytes());
@@ -202,7 +213,7 @@ public class Runspace implements IRunspace {
 		}
 		byte[] buff = new byte[avail];
 		stderr.read(buff);
-		err.append(new String(buff, StringTools.ASCII));
+		err.append(new String(buff, encoding));
 	    }
 	    if ((avail = stdout.available()) > 0) {
 		boolean cr = false;
@@ -276,7 +287,7 @@ public class Runspace implements IRunspace {
 		}
 		byte[] buff = new byte[avail];
 		stderr.read(buff);
-		err.append(new String(buff, StringTools.ASCII));
+		err.append(new String(buff, encoding));
 	    }
 	    if ((avail = stdout.available()) > 0) {
 		boolean cr = false;
@@ -302,5 +313,18 @@ public class Runspace implements IRunspace {
 
     private boolean isPrompt(String str) {
 	return (str.startsWith("PS") && str.endsWith("> ")) || str.equals(">> ");
+    }
+
+    private void readBOM() throws IOException {
+	if (encoding == StringTools.UTF8) {
+	    // EE BB BF
+	    stdout.read();
+	    stdout.read();
+	    stdout.read();
+	} else if (encoding == StringTools.UTF16 || encoding == StringTools.UTF16LE) {
+	    // FE FF (big) or FF FE (little)
+	    stdout.read();
+	    stdout.read();
+	}
     }
 }

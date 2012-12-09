@@ -3,6 +3,7 @@
 
 package org.joval.os.windows.powershell;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
@@ -15,6 +16,7 @@ import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.powershell.IRunspacePool;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.util.JOVALMsg;
+import org.joval.util.StringTools;
 
 /**
  * An implementation of a runspace pool based on a generic IWindowsSession.
@@ -25,13 +27,19 @@ import org.joval.util.JOVALMsg;
 public class RunspacePool implements IRunspacePool {
     private LocLogger logger;
     private IWindowsSession session;
+    private Charset encoding;
     private HashMap<String, Runspace> pool;
     private int capacity;
 
     public RunspacePool(IWindowsSession session, int capacity) {
+	this(session, capacity, StringTools.ASCII);
+    }
+
+    public RunspacePool(IWindowsSession session, int capacity, Charset encoding) {
 	this.session = session;
 	logger = session.getLogger();
 	this.capacity = capacity;
+	this.encoding = encoding;
 	pool = new HashMap<String, Runspace>();
     }
 
@@ -86,7 +94,7 @@ public class RunspacePool implements IRunspacePool {
     public synchronized IRunspace spawn(IWindowsSession.View view) throws Exception {
 	if (pool.size() < capacity()) {
 	    String id = Integer.toString(pool.size());
-	    Runspace runspace = new Runspace(id, session, view);
+	    Runspace runspace = new Runspace(id, session, view, encoding);
 	    logger.debug(JOVALMsg.STATUS_POWERSHELL_SPAWN, id);
 	    pool.put(id, runspace);
 	    runspace.invoke("$host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size(512,2000)");
