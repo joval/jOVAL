@@ -58,9 +58,6 @@ public class Default {
 		if ("true".equals(props.getProperty("test.wmi"))) {
 		    new WMI(session).test(props.getProperty("wmi.namespace"), props.getProperty("wmi.query"));
 		}
-		if ("true".equals(props.getProperty("test.pe"))) {
-		    new PE(session).test(props.getProperty("pe.file"));
-		}
 		session.disconnect();
 	    }
 	    session.dispose();

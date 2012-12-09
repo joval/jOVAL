@@ -18,9 +18,6 @@ CLASSES=\
 	org.joval.intf.util.IConfigurable						\
 	org.joval.intf.util.IPerishable							\
 	org.joval.intf.util.ISearchable							\
-	org.joval.intf.util.tree.IForest						\
-	org.joval.intf.util.tree.INode							\
-	org.joval.intf.util.tree.ITree							\
 	org.joval.intf.windows.identity.IACE						\
 	org.joval.intf.windows.identity.IDirectory					\
 	org.joval.intf.windows.identity.IGroup						\
@@ -99,29 +96,6 @@ CLASSES=\
 	org.joval.os.windows.wmi.scripting.SWbemProperty				\
 	org.joval.os.windows.wmi.scripting.SWbemPropertySet				\
 	org.joval.os.windows.wmi.WmiProvider						\
-	org.joval.os.windows.pe.Characteristics						\
-	org.joval.os.windows.pe.DLLCharacteristics					\
-	org.joval.os.windows.pe.Header							\
-	org.joval.os.windows.pe.ImageDataDirectory					\
-	org.joval.os.windows.pe.ImageDOSHeader						\
-	org.joval.os.windows.pe.ImageFileHeader						\
-	org.joval.os.windows.pe.ImageNTHeaders						\
-	org.joval.os.windows.pe.ImageOptionalHeader					\
-	org.joval.os.windows.pe.ImageOptionalHeader32					\
-	org.joval.os.windows.pe.ImageOptionalHeader64					\
-	org.joval.os.windows.pe.ImageSectionHeader					\
-	org.joval.os.windows.pe.LanguageConstants					\
-	org.joval.os.windows.pe.resource.ImageResourceDataEntry				\
-	org.joval.os.windows.pe.resource.ImageResourceDirectory				\
-	org.joval.os.windows.pe.resource.ImageResourceDirectoryEntry			\
-	org.joval.os.windows.pe.resource.Types						\
-	org.joval.os.windows.pe.resource.version.StringFileInfo				\
-	org.joval.os.windows.pe.resource.version.StringStructure			\
-	org.joval.os.windows.pe.resource.version.StringTable				\
-	org.joval.os.windows.pe.resource.version.Var					\
-	org.joval.os.windows.pe.resource.version.VarFileInfo				\
-	org.joval.os.windows.pe.resource.version.VsFixedFileInfo			\
-	org.joval.os.windows.pe.resource.version.VsVersionInfo				\
 	org.joval.plugin.LocalPlugin							\
 	org.joval.scap.oval.adapter.aix.FilesetAdapter					\
 	org.joval.scap.oval.adapter.aix.FixAdapter					\
@@ -197,11 +171,5 @@ CLASSES=\
 	org.joval.util.Base64								\
 	org.joval.util.Configurator							\
 	org.joval.util.Environment							\
-	org.joval.util.PropertyHierarchy						\
 	org.joval.util.SafeCLI								\
-	org.joval.util.SessionException							\
-	org.joval.util.tree.Forest							\
-	org.joval.util.tree.Node							\
-	org.joval.util.tree.NodeSerializer						\
-	org.joval.util.tree.Tree							\
-	org.joval.util.tree.TreeHash
+	org.joval.util.SessionException

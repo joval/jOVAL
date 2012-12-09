@@ -4,11 +4,13 @@
 package org.joval.scap.oval.adapter.windows;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Vector;
+import java.util.Map;
 import java.util.regex.Matcher;
 
 import oval.schemas.common.MessageLevelEnumeration;
@@ -33,6 +35,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.system.IBaseSession;
 import org.joval.intf.system.ISession;
 import org.joval.intf.windows.io.IWindowsFileInfo;
+import org.joval.intf.windows.powershell.IRunspace;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.intf.windows.wmi.ISWbemObject;
 import org.joval.intf.windows.wmi.ISWbemObjectSet;
@@ -40,22 +43,6 @@ import org.joval.intf.windows.wmi.ISWbemProperty;
 import org.joval.intf.windows.wmi.ISWbemPropertySet;
 import org.joval.intf.windows.wmi.IWmiProvider;
 import org.joval.os.windows.Timestamp;
-import org.joval.os.windows.pe.Header;
-import org.joval.os.windows.pe.ImageDOSHeader;
-import org.joval.os.windows.pe.ImageNTHeaders;
-import org.joval.os.windows.pe.ImageDataDirectory;
-import org.joval.os.windows.pe.LanguageConstants;
-import org.joval.os.windows.pe.resource.ImageResourceDirectory;
-import org.joval.os.windows.pe.resource.ImageResourceDirectoryEntry;
-import org.joval.os.windows.pe.resource.ImageResourceDataEntry;
-import org.joval.os.windows.pe.resource.Types;
-import org.joval.os.windows.pe.resource.version.Var;
-import org.joval.os.windows.pe.resource.version.VarFileInfo;
-import org.joval.os.windows.pe.resource.version.VsFixedFileInfo;
-import org.joval.os.windows.pe.resource.version.VsVersionInfo;
-import org.joval.os.windows.pe.resource.version.StringFileInfo;
-import org.joval.os.windows.pe.resource.version.StringTable;
-import org.joval.os.windows.pe.resource.version.StringStructure;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.adapter.independent.BaseFileAdapter;
@@ -70,17 +57,15 @@ import org.joval.util.Version;
  * @version %I% %G%
  */
 public class FileAdapter extends BaseFileAdapter<FileItem> {
-    private static final String CIMV2		= "root\\cimv2";
-    private static final String OWNER_WQL	= "ASSOCIATORS OF {Win32_LogicalFileSecuritySetting='$path'} " +
-						  "WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
+    private static final String OWNER_WQL = "ASSOCIATORS OF {Win32_LogicalFileSecuritySetting='$path'} " +
+					    "WHERE AssocClass=Win32_LogicalFileOwner ResultRole=Owner";
 
     private IWindowsSession ws;
-    private IWmiProvider wmi;
 
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
-	Collection<Class> classes = new Vector<Class>();
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((ISession)session);
 	    ws = (IWindowsSession)session;
@@ -97,41 +82,21 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 
     protected Collection<FileItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws IOException, CollectException {
-	//
-	// Always grab a fresh WMI provider in case there's been a reconnection since initialization.
-	//
-	wmi = ws.getWmiProvider();
 
-	if (base instanceof FileItem) {
-	    Collection<FileItem> items = new Vector<FileItem>();
-	    IFileEx info = f.getExtended();
-	    IWindowsFileInfo wfi;
-	    if (info instanceof IWindowsFileInfo) {
-		wfi = (IWindowsFileInfo)info;
-	    } else {
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_TYPE, f.getClass().getName());
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	    }
-	    items.add(setItem((FileItem)base, f, wfi));
-	    return items;
-	} else {
-	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_ITEM, base.getClass().getName());
-	    throw new CollectException(msg, FlagEnumeration.ERROR);
-	}
-    }
+	FileObject fObj = (FileObject)obj;
+	FileItem baseItem = (FileItem)base;
+	FileItem item = Factories.sc.windows.createFileItem();
+	item.setPath(baseItem.getPath());
+	item.setFilename(baseItem.getFilename());
+	item.setFilepath(baseItem.getFilepath());
+	item.setWindowsView(baseItem.getWindowsView());
 
-    // Private
-
-    /**
-     * Populate the FileItem with everything except the path, filename and filepath. 
-     */
-    private FileItem setItem(FileItem fItem, IFile file, IWindowsFileInfo info) throws IOException {
 	//
 	// Get some information from the IFile
 	//
-	fItem.setStatus(StatusEnumeration.EXISTS);
+	item.setStatus(StatusEnumeration.EXISTS);
 	EntityItemFileTypeType typeType = Factories.sc.windows.createEntityItemFileTypeType();
-	switch(info.getWindowsFileType()) {
+	switch(((IWindowsFileInfo)f.getExtended()).getWindowsFileType()) {
 	  case IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY:
 	    typeType.setValue("FILE_ATTRIBUTE_DIRECTORY");
 	    break;
@@ -151,265 +116,194 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	    typeType.setValue("FILE_TYPE_UNKNOWN");
 	    break;
 	}
-	fItem.setType(typeType);
+	item.setType(typeType);
 
 	EntityItemIntType aTimeType = Factories.sc.core.createEntityItemIntType();
 	aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	aTimeType.setValue(Timestamp.toWindowsTimestamp(file.accessTime()));
-	fItem.setATime(aTimeType);
+	aTimeType.setValue(Timestamp.toWindowsTimestamp(f.accessTime()));
+	item.setATime(aTimeType);
 
 	EntityItemIntType cTimeType = Factories.sc.core.createEntityItemIntType();
 	cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	cTimeType.setValue(Timestamp.toWindowsTimestamp(file.createTime()));
-	fItem.setCTime(cTimeType);
+	cTimeType.setValue(Timestamp.toWindowsTimestamp(f.createTime()));
+	item.setCTime(cTimeType);
 
 	EntityItemIntType mTimeType = Factories.sc.core.createEntityItemIntType();
 	mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	mTimeType.setValue(Timestamp.toWindowsTimestamp(file.lastModified()));
-	fItem.setMTime(mTimeType);
+	mTimeType.setValue(Timestamp.toWindowsTimestamp(f.lastModified()));
+	item.setMTime(mTimeType);
 
 	//
-	// If possible, use WMI to retrieve owner information for the file
+	// Use WMI to retrieve owner information for the file
 	//
 	EntityItemStringType ownerType = Factories.sc.core.createEntityItemStringType();
-	if (wmi == null) {
-	    ownerType.setStatus(StatusEnumeration.NOT_COLLECTED);
-	} else {
-	    try {
-		String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(file.getPath()));
-		ISWbemObjectSet objSet = wmi.execQuery(CIMV2, wql);
-		if (objSet.getSize() == 1) {
-		    ISWbemObject ownerObj = objSet.iterator().next();
-		    ISWbemPropertySet ownerPropSet = ownerObj.getProperties();
-		    ISWbemProperty usernameProp = ownerPropSet.getItem("AccountName");
-		    String username = usernameProp.getValueAsString();
-		    ISWbemProperty domainProp = ownerPropSet.getItem("ReferencedDomainName"); 
-		    String domain = domainProp.getValueAsString();
-		    String ownerAccount = new StringBuffer(domain).append("\\").append(username).toString();
-		    ownerType.setValue(ownerAccount);
-		} else {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_OWNER, objSet.getSize()));
-		    fItem.getMessage().add(msg);
-		    ownerType.setStatus(StatusEnumeration.ERROR);
-		}
-	    } catch (Exception e) {
+	IWmiProvider wmi = ws.getWmiProvider();
+	try {
+	    String wql = OWNER_WQL.replaceAll("(?i)\\$path", Matcher.quoteReplacement(f.getPath()));
+	    ISWbemObjectSet objSet = wmi.execQuery(IWmiProvider.CIMv2, wql);
+	    if (objSet.getSize() == 1) {
+		ISWbemObject ownerObj = objSet.iterator().next();
+		ISWbemPropertySet ownerPropSet = ownerObj.getProperties();
+		ISWbemProperty usernameProp = ownerPropSet.getItem("AccountName");
+		String username = usernameProp.getValueAsString();
+		ISWbemProperty domainProp = ownerPropSet.getItem("ReferencedDomainName"); 
+		String domain = domainProp.getValueAsString();
+		String ownerAccount = new StringBuffer(domain).append("\\").append(username).toString();
+		ownerType.setValue(ownerAccount);
+	    } else {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue(e.getMessage());
-		fItem.getMessage().add(msg);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_OWNER, objSet.getSize()));
+		item.getMessage().add(msg);
 		ownerType.setStatus(StatusEnumeration.ERROR);
 	    }
+	} catch (Exception e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.INFO);
+	    msg.setValue(e.getMessage());
+	    item.getMessage().add(msg);
+	    ownerType.setStatus(StatusEnumeration.ERROR);
 	}
-	fItem.setOwner(ownerType);
+	item.setOwner(ownerType);
 
 	//
 	// If possible, read the PE header information
 	//
-	if (file.isFile()) {
+	if (f.isFile()) {
 	    EntityItemIntType sizeType = Factories.sc.core.createEntityItemIntType();
-	    sizeType.setValue(new Long(file.length()).toString());
+	    sizeType.setValue(new Long(f.length()).toString());
 	    sizeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	    fItem.setSize(sizeType);
-	    if (file.length() > 0) {
-		readPEHeader(file, fItem);
+	    item.setSize(sizeType);
+	    if (f.length() > 0) {
+		addHeaderInfo(fObj, f, item);
 	    } else {
-		session.getLogger().info(JOVALMsg.STATUS_EMPTY_FILE, file.toString());
+		session.getLogger().info(JOVALMsg.STATUS_EMPTY_FILE, f.toString());
 
 		EntityItemVersionType versionType = Factories.sc.core.createEntityItemVersionType();
 		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 		versionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-		fItem.setFileVersion(versionType);
+		item.setFileVersion(versionType);
 
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
 		msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_PE_EMPTY));
-		fItem.getMessage().add(msg);
+		item.getMessage().add(msg);
 	    }
 	}
 
-	return fItem;
+	return Arrays.asList(item);
     }
+
+    @Override
+    protected List<InputStream> getPowershellModules() {
+	return Arrays.asList(getClass().getResourceAsStream("File.psm1"));
+    }
+
+    // Private
 
     /**
      * Read the Portable Execution format header information and extract data from it.
      */
-    private void readPEHeader(IFile file, FileItem fItem) throws IOException {
+    private void addHeaderInfo(FileObject fObj, IFile file, FileItem item) throws IOException {
 	session.getLogger().trace(JOVALMsg.STATUS_PE_READ, file.toString());
 	String error = null;
 	try {
-	    Header header = new Header(file, session.getLogger());
-
-	    //
-	    // Get the MS Checksum from the NT headers
-	    //
-	    EntityItemStringType msChecksumType = Factories.sc.core.createEntityItemStringType();
-	    msChecksumType.setValue(new Integer(header.getNTHeader().getImageOptionalHeader().getChecksum()).toString());
-	    fItem.setMsChecksum(msChecksumType);
-
-	    String key = VsVersionInfo.LANGID_KEY;
-	    VsVersionInfo versionInfo = header.getVersionInfo();
-	    VsFixedFileInfo value = null;
-	    Hashtable<String, String> stringTable = null;
-	    if (versionInfo != null) {
-		value = versionInfo.getValue();
-		key = versionInfo.getDefaultTranslation();
-	    }
-	    stringTable = versionInfo.getStringTable(key);
-
-	    //
-	    // Get the language from the key
-	    //
-	    EntityItemStringType languageType = Factories.sc.core.createEntityItemStringType();
-	    String locale = LanguageConstants.getLocaleString(key);
-	    if (locale == null) {
-		languageType.setStatus(StatusEnumeration.ERROR);
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_LANGUAGE, key));
-		fItem.getMessage().add(msg);
-	    } else {
-		languageType.setValue(LanguageConstants.getLocaleString(key));
-	    }
-	    fItem.setLanguage(languageType);
-
-	    //
-	    // Get the file version from the VsFixedFileInfo structure
-	    //
-	    EntityItemVersionType versionType = Factories.sc.core.createEntityItemVersionType();
-	    if (value == null) {
-		versionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		versionType.setValue(versionInfo.getValue().getFileVersion().toString());
-		versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-	    }
-	    fItem.setFileVersion(versionType);
-
-	    //
-	    // Get remaining file information from the StringTable
-	    //
-	    String companyName = null;
-	    String internalName = null;
-	    String productName = null;
-	    String originalFilename = null;
-	    String productVersion = null;
-	    String fileVersion = null;
-	    if (stringTable != null) {
-		companyName	= stringTable.get("CompanyName");
-		internalName	= stringTable.get("InternalName");
-		productName	= stringTable.get("ProductName");
-		originalFilename= stringTable.get("OriginalFilename");
-		productVersion	= stringTable.get("ProductVersion");
-		fileVersion	= stringTable.get("FileVersion");
-	    }
-
-	    EntityItemStringType companyType = Factories.sc.core.createEntityItemStringType();
-	    if (companyName == null) {
-		companyType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		companyType.setValue(companyName);
-	    }
-	    fItem.setCompany(companyType);
-
-	    EntityItemStringType internalNameType = Factories.sc.core.createEntityItemStringType();
-	    if (internalName == null) {
-		internalNameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		internalNameType.setValue(internalName);
-	    }
-	    fItem.setInternalName(internalNameType);
-
-	    EntityItemStringType productNameType = Factories.sc.core.createEntityItemStringType();
-	    if (productName == null) {
-		productNameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		productNameType.setValue(productName);
-	    }
-	    fItem.setProductName(productNameType);
-
-	    EntityItemStringType originalFilenameType = Factories.sc.core.createEntityItemStringType();
-	    if (originalFilename == null) {
-		originalFilenameType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		originalFilenameType.setValue(originalFilename);
-	    }
-	    fItem.setOriginalFilename(originalFilenameType);
-
-	    EntityItemVersionType productVersionType = Factories.sc.core.createEntityItemVersionType();
-	    if (productVersion == null) {
-		productVersionType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		productVersionType.setValue(productVersion);
-	    }
-	    productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
-	    fItem.setProductVersion(productVersionType);
-
-	    EntityItemStringType developmentClassType = Factories.sc.core.createEntityItemStringType();
-	    if (fileVersion == null) {
-		developmentClassType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
-	    } else {
-		try {
-		    developmentClassType.setValue(getDevelopmentClass(fileVersion));
-		} catch (IllegalArgumentException e) {
-		    MessageType msg = Factories.common.createMessageType();
-		    msg.setLevel(MessageLevelEnumeration.INFO);
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINFILE_DEVCLASS, e.getMessage()));
-		    fItem.getMessage().add(msg);
-		    developmentClassType.setStatus(StatusEnumeration.ERROR);
+	    Map<String, String> props = new HashMap<String, String>();
+	    IRunspace runspace = getRunspace(getView(fObj.getBehaviors()));
+	    String data = runspace.invoke("Print-FileInfoEx -Path \"" + file.getPath() + "\"");
+	    for (String line : data.split("\n")) {
+		line = line.trim();
+		int ptr = line.indexOf(":");
+		if (ptr > 1) {
+		    String key = line.substring(0,ptr);
+		    String val = line.substring(ptr+1).trim();
+		    if (val.length() > 0) {
+			props.put(key, val);
+		    }
 		}
 	    }
-	    fItem.setDevelopmentClass(developmentClassType);
-	} catch (IllegalArgumentException e) {
-	    error = e.getMessage();
-	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getPath(), error);
+
+	    if (props.containsKey("MSChecksum")) {
+		EntityItemStringType msChecksumType = Factories.sc.core.createEntityItemStringType();
+		msChecksumType.setValue(props.get("MSChecksum"));
+		item.setMsChecksum(msChecksumType);
+	    }
+
+	    if (props.containsKey("Language")) {
+		EntityItemStringType languageType = Factories.sc.core.createEntityItemStringType();
+		languageType.setValue(props.get("Language"));
+		item.setLanguage(languageType);
+	    }
+
+	    if (props.containsKey("FileMajorPart")) {
+		int major = Integer.parseInt(props.get("FileMajorPart"));
+		int minor = 0, build = 0, priv = 0;
+		if (props.containsKey("FileMinorPart")) {
+		    minor = Integer.parseInt(props.get("FileMinorPart"));
+		}
+		if (props.containsKey("FileBuildPart")) {
+		    build = Integer.parseInt(props.get("FileBuildPart"));
+		}
+		if (props.containsKey("FilePrivatePart")) {
+		    priv = Integer.parseInt(props.get("FilePrivatePart"));
+		}
+		if (major != 0 || minor != 0 || build != 0 || priv != 0) {
+		    EntityItemVersionType versionType = Factories.sc.core.createEntityItemVersionType();
+		    versionType.setValue(new Version(major, minor, build, priv).toString());
+		    versionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+		    item.setFileVersion(versionType);
+		}
+	    }
+
+	    if (props.containsKey("Company Name")) {
+		EntityItemStringType companyType = Factories.sc.core.createEntityItemStringType();
+		companyType.setValue(props.get("Company Name"));
+		item.setCompany(companyType);
+	    }
+
+	    if (props.containsKey("Internal Name")) {
+		EntityItemStringType internalNameType = Factories.sc.core.createEntityItemStringType();
+		internalNameType.setValue(props.get("Internal Name"));
+		item.setInternalName(internalNameType);
+	    }
+
+	    if (props.containsKey("Product Name")) {
+	 	EntityItemStringType productNameType = Factories.sc.core.createEntityItemStringType();
+		productNameType.setValue(props.get("Product Name"));
+		item.setProductName(productNameType);
+	    }
+
+	    if (props.containsKey("Original Filename")) {
+		EntityItemStringType originalFilenameType = Factories.sc.core.createEntityItemStringType();
+		originalFilenameType.setValue(props.get("Original Filename"));
+		item.setOriginalFilename(originalFilenameType);
+	    }
+
+	    if (props.containsKey("Product Version")) {
+		EntityItemVersionType productVersionType = Factories.sc.core.createEntityItemVersionType();
+		productVersionType.setValue(props.get("Product Version"));
+		productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
+		item.setProductVersion(productVersionType);
+	    }
+
+	    if (props.containsKey("File Version")) {
+		try {
+		    EntityItemStringType developmentClassType = Factories.sc.core.createEntityItemStringType();
+		    developmentClassType.setValue(getDevelopmentClass(props.get("File Version")));
+		    item.setDevelopmentClass(developmentClassType);
+		} catch (IllegalArgumentException e) {
+		}
+	    }
 	} catch (Exception e) {
 	    error = e.getMessage();
 	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getPath(), error);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
-	if (error != null) {
-	    boolean reported = false;
-	    for (MessageType msg : fItem.getMessage()) {
-		if (((String)msg.getValue()).equals(error)) {
-		    reported = true;
-		    break;
-		}
-	    }
-	    if (!reported) {
-		MessageType msg = Factories.common.createMessageType();
-		msg.setLevel(MessageLevelEnumeration.INFO);
-		msg.setValue(error);
-		fItem.getMessage().add(msg);
-	    }
-	}
-    }
 
-    /**
-     * Retrieves the first leaf node associated with the specified type in a PE-format file.
-     *
-     * @param type the constant from the Types class indicating the resource to retrieve.
-     * @param ra the PE file
-     * @param rba the position in the PE file to the start of the RESOURCE image directory.
-     */
-    private ImageResourceDirectoryEntry getDirectoryEntry(int type, ImageResourceDirectory dir,
-							  int level, IRandomAccess ra, long rba) throws IOException {
-	ImageResourceDirectoryEntry[] entries = dir.getChildEntries();
-	for (int i=0; i < entries.length; i++) {
-	    ImageResourceDirectoryEntry entry = entries[i];
-	    if (entry.isDir()) {
-		if (level == 1 && type != entries[i].getType()) {
-		    continue;
-		} else {
-		    ra.seek(rba + entry.getOffset());
-		    ImageResourceDirectory subdir = new ImageResourceDirectory(ra);
-		    return getDirectoryEntry(type, subdir, level+1, ra, rba);
-		}
-	    } else {
-		return entry;
-	    }
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.WARNING);
+	    msg.setValue(e.getMessage());
+	    item.getMessage().add(msg);
 	}
-	return null;
     }
 
     /**
@@ -429,20 +323,5 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	    }
 	}
 	throw new IllegalArgumentException(fileVersion);
-    }
-
-    /**
-     * Escape '\' characters for use as a path in a WQL query.
-     */
-    private String escapePath(String path) {
-	Iterator iter = StringTools.tokenize(path, "\\");
-	StringBuffer sb = new StringBuffer();
-	while (iter.hasNext()) {
-	    sb.append(iter.next());
-	    if (iter.hasNext()) {
-		sb.append("\\\\");
-	    }
-	}
-	return sb.toString();
     }
 }

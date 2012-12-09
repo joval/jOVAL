@@ -33,7 +33,6 @@ resources:
 	cp $(RSRC)/adapters.txt $(BUILD)
 	cp $(RSRC)/plugin.resources.properties $(BUILD)
 	echo version=$(JOVAL_VERSION) >> $(BUILD)/plugin.resources.properties
-	cp $(RSRC)/windows.locales.properties $(BUILD)
 	rm -f $(BUILD)/org/joval/os/windows/io/*.psm1
 	cp $(SRC)/org/joval/os/windows/io/*.psm1 $(BUILD)/org/joval/os/windows/io/
 	rm -f $(BUILD)/org/joval/os/windows/registry/*.psm1
