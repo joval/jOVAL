@@ -71,7 +71,7 @@ public class SolarisDriver extends AbstractDriver {
 	boolean followLinks = false;
 	boolean xdev = false;
 	Pattern path = null, dirname = null, basename = null;
-	String literalBasename = null;
+	String literalBasename = null, antiBasename = null;
 	int depth = 1;
 
 	for (ISearchable.ICondition condition : conditions) {
@@ -97,6 +97,9 @@ public class SolarisDriver extends AbstractDriver {
 		switch(condition.getType()) {
 		  case ISearchable.TYPE_EQUALITY:
 		    literalBasename = (String)condition.getValue();
+		    break;
+		  case ISearchable.TYPE_INEQUALITY:
+		    antiBasename = (String)condition.getValue();
 		    break;
 		  case ISearchable.TYPE_PATTERN:
 		    basename = (Pattern)condition.getValue();
@@ -130,14 +133,16 @@ public class SolarisDriver extends AbstractDriver {
 		} else if (!dirOnly) {
 		    cmd.append(" -type f");
 		    if (literalBasename != null) {
-			cmd.append(" -name ").append(literalBasename);
+			cmd.append(" -name '").append(literalBasename).append("'");
+		    } else if (antiBasename != null) {
+			cmd.append(" ! -name '").append(antiBasename).append("'");
 		    }
 		    if (depth != ISearchable.DEPTH_UNLIMITED) {
 			int currDepth = getAwkDepth(from);
 			cmd.append(" | awk -F/ 'NF <= ").append(Integer.toString(currDepth + depth)).append("'");
 		    }
 		    if (basename != null) {
-			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
+			cmd.append(" | /usr/xpg4/bin/awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
 		    }
 		}
 	    } else {
@@ -145,15 +150,18 @@ public class SolarisDriver extends AbstractDriver {
 		cmd.append(" | /usr/xpg4/bin/grep -E '").append(dirname.pattern()).append("'");
 		if (!dirOnly) {
 		    cmd.append(" | xargs -I[] ").append(FIND).append(" '[]' -type f");
+		    if (antiBasename != null) {
+			cmd.append(" ! -name '").append(antiBasename).append("'");
+		    } else if (literalBasename != null) {
+			cmd.append(" -name '").append(literalBasename).append("'");
+		    }
 		    if (depth != ISearchable.DEPTH_UNLIMITED) {
 			cmd.append(" -exec echo []: {} \\; | awk -F: 'split($1,a,\"/\")+");
 			cmd.append(Integer.toString(depth));
 			cmd.append(" >= split($2,b,\"/\"){print substr($2,2)}'");
 		    }
 		    if (basename != null) {
-			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
-		    } else if (literalBasename != null) {
-			cmd.append(" | awk -F/ '$NF ~ /^").append(literalBasename).append("$/'");
+			cmd.append(" | /usr/xpg4/bin/awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
 		    }
 		}
 	    }

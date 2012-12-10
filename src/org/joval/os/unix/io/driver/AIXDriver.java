@@ -81,7 +81,7 @@ public class AIXDriver extends AbstractDriver {
 	boolean followLinks = false;
 	boolean xdev = false;
 	Pattern path = null, dirname = null, basename = null;
-	String literalBasename = null;
+	String literalBasename = null, antiBasename = null;
 	int depth = ISearchable.DEPTH_UNLIMITED;
 
 	for (ISearchable.ICondition condition : conditions) {
@@ -107,6 +107,9 @@ public class AIXDriver extends AbstractDriver {
 		switch(condition.getType()) {
 		  case ISearchable.TYPE_EQUALITY:
 		    literalBasename = (String)condition.getValue();
+		    break;
+		  case ISearchable.TYPE_INEQUALITY:
+		    antiBasename = (String)condition.getValue();
 		    break;
 		  case ISearchable.TYPE_PATTERN:
 		    basename = (Pattern)condition.getValue();
@@ -140,7 +143,9 @@ public class AIXDriver extends AbstractDriver {
 		} else if (!dirOnly) {
 		    cmd.append(" -type f");
 		    if (literalBasename != null) {
-			cmd.append(" -name ").append(literalBasename);
+			cmd.append(" -name '").append(literalBasename).append("'");
+		    } else if (antiBasename != null) {
+			cmd.append(" ! -name '").append(antiBasename).append("'");
 		    }
 		    if (depth != ISearchable.DEPTH_UNLIMITED) {
 			int currDepth = getAwkDepth(from);
@@ -155,6 +160,11 @@ public class AIXDriver extends AbstractDriver {
 		cmd.append(" | grep -E '").append(dirname.pattern()).append("'");
 		if (!dirOnly) {
 		    cmd.append(" | xargs -I[] ").append(FIND).append(" '[]' -type f");
+		    if (antiBasename != null) {
+			cmd.append(" ! -name ").append(antiBasename);
+		    } else if (literalBasename != null) {
+			cmd.append(" -name ").append(literalBasename);
+		    }
 		    if (depth != ISearchable.DEPTH_UNLIMITED) {
 			cmd.append(" -exec test (`echo \"[]\" | awk -F/ '{print NF}'` + ");
 			cmd.append(Integer.toString(depth));
@@ -162,8 +172,6 @@ public class AIXDriver extends AbstractDriver {
 		    }
 		    if (basename != null) {
 			cmd.append(" | awk -F/ '$NF ~ /").append(basename.pattern()).append("/'");
-		    } else if (literalBasename != null) {
-			cmd.append(" -name ").append(literalBasename);
 		    }
 		}
 	    }

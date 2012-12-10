@@ -56,6 +56,7 @@ import org.joval.util.Version;
  */
 public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     protected static final int TYPE_EQUALITY		= ISearchable.TYPE_EQUALITY;
+    protected static final int TYPE_INEQUALITY		= ISearchable.TYPE_INEQUALITY;
     protected static final int TYPE_PATTERN		= ISearchable.TYPE_PATTERN;
     protected static final int FIELD_PATH		= IFilesystem.FIELD_PATH;
     protected static final int FIELD_DIRNAME		= IFilesystem.FIELD_DIRNAME;
@@ -531,8 +532,8 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 			}
 			break;
 
-		      case CASE_INSENSITIVE_EQUALS:
 		      case NOT_EQUAL:
+		      case CASE_INSENSITIVE_EQUALS:
 		      case PATTERN_MATCH: {
 			if (!search) {
 			    //
@@ -547,15 +548,15 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 			    from = paths.toArray(new String[paths.size()]);
 			    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(1)));
 			}
-			Pattern p = null;
 			if (filenameOp == OperationEnumeration.CASE_INSENSITIVE_EQUALS) {
-			    p = Pattern.compile("^(?i)" + Matcher.quoteReplacement(filename) + "$");
-			} else if (filenameOp == OperationEnumeration.NOT_EQUAL) {
-			    p = Pattern.compile("^(?!" + Matcher.quoteReplacement(filename) + ")$");
+			    Pattern p = Pattern.compile("^(?i)" + Matcher.quoteReplacement(filename) + "$");
+			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
+			} else if (filenameOp == OperationEnumeration.PATTERN_MATCH) {
+			    Pattern p = Pattern.compile(filename);
+			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
 			} else {
-			    p = Pattern.compile(filename);
+			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_INEQUALITY, filename));
 			}
-			conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
 			break;
 		      }
 

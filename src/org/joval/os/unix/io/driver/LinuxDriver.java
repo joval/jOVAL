@@ -70,7 +70,7 @@ public class LinuxDriver extends AbstractDriver {
 	boolean followLinks = false;
 	boolean xdev = false;
 	Pattern path = null, dirname = null, basename = null;
-	String literalBasename = null;
+	String literalBasename = null, antiBasename = null;
 	int depth = ISearchable.DEPTH_UNLIMITED;
 
 	for (ISearchable.ICondition condition : conditions) {
@@ -96,6 +96,9 @@ public class LinuxDriver extends AbstractDriver {
 		switch(condition.getType()) {
 		  case ISearchable.TYPE_EQUALITY:
 		    literalBasename = (String)condition.getValue();
+		    break;
+		  case ISearchable.TYPE_INEQUALITY:
+		    antiBasename = (String)condition.getValue();
 		    break;
 		  case ISearchable.TYPE_PATTERN:
 		    basename = (Pattern)condition.getValue();
@@ -139,9 +142,11 @@ public class LinuxDriver extends AbstractDriver {
 		}
 		cmd.append(" -type f");
 		if (basename != null) {
-		    cmd.append(" | awk -F/ '$NF ~ /");
+		    cmd.append(" | awk --posix -F/ '$NF ~ /");
 		    cmd.append(basename.pattern());
 		    cmd.append("/'");
+		} else if (antiBasename != null) {
+		    cmd.append(" ! -name '").append(antiBasename).append("'");
 		} else if (literalBasename != null) {
 		    cmd.append(" -name '").append(literalBasename).append("'");
 		}

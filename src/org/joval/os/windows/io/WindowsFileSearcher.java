@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.GZIPInputStream;
 
@@ -117,6 +118,10 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 		break;
 	      case IFilesystem.FIELD_BASENAME:
 		switch(condition.getType()) {
+		  case ISearchable.TYPE_INEQUALITY:
+		    String anti = Matcher.quoteReplacement((String)condition.getValue());
+		    basenamePattern = Pattern.compile("(?!^" + anti + "$)(^.*$)");
+		    break;
 		  case ISearchable.TYPE_EQUALITY:
 		    basename = (String)condition.getValue();
 		    break;
@@ -132,9 +137,28 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 		break;
 	    }
 	}
+	StringBuffer command = null;
+	if (dirOnly) {
+	    command = new StringBuffer("Find-Directories -Path \"").append(from).append("\"");
+	    if (dirPattern != null) {
+		command.append(" -Pattern \"").append(dirPattern.pattern()).append("\"");
+	    }
+	} else {
+	    command = new StringBuffer("Find-Files -Path \"").append(from).append("\"");
+	    if (pathPattern != null) {
+		command.append(" -Pattern \"").append(pathPattern.pattern()).append("\"");
+	    }
+	    if (basename != null) {
+		command.append(" -LiteralFilename \"").append(basename).append("\"");
+	    }
+	    if (basenamePattern != null) {
+		command.append(" -Filename \"").append(basenamePattern.pattern()).append("\"");
+	    }
+	}
+	command.append(" -Depth ").append(Integer.toString(maxDepth));
+	command.append(" | Print-FileInfo");
+	String cmd = command.toString();
 
-	Object bnObj = basename == null ? basenamePattern : basename;
-	String cmd = getFindCommand(from, maxDepth, dirOnly, pathPattern, dirPattern, bnObj);
 	Collection<IFile> results = new ArrayList<IFile>();
 	if (searchMap.containsKey(cmd)) {
 	    for (String path : searchMap.get(cmd)) {
@@ -204,45 +228,6 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
 	} else {
 	    return fs.createFileFromInfo(info);
 	}
-    }
-
-    String getFindCommand(String from, int maxDepth, boolean dirOnly, Pattern path, Pattern dirname, Object bn) {
-	StringBuffer command;
-	if (dirOnly || dirname != null || bn != null) {
-	    command = new StringBuffer("Find-Directories");
-	} else {
-	    command = new StringBuffer("Find-Files");
-	}
-	command.append(" -Path \"");
-	command.append(from);
-	command.append("\" -Depth ");
-	command.append(Integer.toString(maxDepth));
-	if (dirname != null || bn != null) {
-	    if (dirname != null) {
-		command.append(" -Pattern \"");
-		command.append(dirname.pattern());
-		command.append("\"");
-	    }
-	    if (!dirOnly) {
-		command.append(" | Find-Files");
-	    }
-	    if (bn != null) {
-		if (bn instanceof Pattern) {
-		    command.append(" -Filename \"");
-		    command.append(((Pattern)bn).pattern());
-		} else if (bn instanceof String) {
-		    command.append(" -LiteralFilename \"");
-		    command.append((String)bn);
-		}
-		command.append("\"");
-	    }
-	} else if (path != null) {
-	    command.append(" -Pattern \"");
-	    command.append(path.pattern());
-	    command.append("\"");
-	}
-	command.append(" | Print-FileInfo");
-	return command.toString();
     }
 
     boolean isSetFlag(int flag, int flags) {
