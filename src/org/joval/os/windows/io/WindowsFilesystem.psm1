@@ -11,6 +11,7 @@ function Print-FileInfo {
     $code = @"
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 using Microsoft.Win32.SafeHandles;
 
 namespace jOVAL.File {
@@ -74,6 +75,12 @@ namespace jOVAL.File {
 	[DllImport("kernel32.dll")]
 	public extern static FileType GetFileType(SafeFileHandle hFile);
 
+	[DllImport("kernel32.dll", SetLastError=true, CharSet=CharSet.Auto)]
+	static extern uint GetLongPathName(string ShortPath, StringBuilder sb, int buffer);
+
+	[DllImport("kernel32.dll")]
+	static extern uint GetShortPathName(string longpath, StringBuilder sb, int buffer); 
+
 	public static int GetFileType(string Path) {
 	    IntPtr hSecurityAttributes = IntPtr.Zero;
 	    IntPtr hTemplate = IntPtr.Zero;
@@ -84,6 +91,35 @@ namespace jOVAL.File {
 	    }
 	    hFile.Close();
 	    return (int)type;
+	}
+
+	public static string GetWindowsPhysicalPath(string path) {
+	    StringBuilder builder = new StringBuilder(255);
+
+	    // names with long extension can cause the short name to be actually larger than
+	    // the long name.
+	    GetShortPathName(path, builder, builder.Capacity);
+
+	    path = builder.ToString();
+
+	    uint result = GetLongPathName(path, builder, builder.Capacity);
+
+	    if (result > 0 && result < builder.Capacity) {
+		//Success retrieved long file name
+		builder[0] = char.ToUpper(builder[0]);
+		return builder.ToString(0, (int)result);
+	    }
+
+	    if (result > 0) {
+		//Need more capacity in the buffer
+		//specified in the result variable
+		builder = new StringBuilder((int)result);
+		result = GetLongPathName(path, builder, builder.Capacity);
+		builder[0] = char.ToUpper(builder[0]);
+		return builder.ToString(0, (int)result);
+	    }
+
+	    return null;
 	}
     }
 }
@@ -104,7 +140,7 @@ namespace jOVAL.File {
       if ($type -eq "System.IO.DirectoryInfo") {
 	Write-Output "{"
 	Write-Output "Type: Directory"
-	$path = $inputObject.FullName
+	$path = [jOVAL.File.Probe]::GetWindowsPhysicalPath($inputObject.FullName)
 	Write-Output "Path: $path"
 	$ctime = $inputObject.CreationTimeUtc.toFileTimeUtc()
 	$mtime = $inputObject.LastWriteTimeUtc.toFileTimeUtc()
@@ -117,7 +153,7 @@ namespace jOVAL.File {
 	if ($type -eq "System.IO.FileInfo") {
 	  Write-Output "{"
 	  Write-Output "Type: File"
-	  $path = $inputObject.FullName
+	  $path = [jOVAL.File.Probe]::GetWindowsPhysicalPath($inputObject.FullName)
 	  $winType = [jOVAL.File.Probe]::GetFileType($path)
 	  Write-Output "WinType: $winType"
 	  Write-Output "Path: $path"

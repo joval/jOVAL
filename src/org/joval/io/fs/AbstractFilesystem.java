@@ -194,17 +194,21 @@ public abstract class AbstractFilesystem implements IFilesystem {
 		    IFile base = getFile(parent);
 		    if (base.exists()) {
 			List<String> candidates = new ArrayList<String>();
-			for (IFile f : base.listFiles(Pattern.compile(prefix.toString()))) {
+			Pattern pattern = null;
+			switch(session.getType()) {
+			  case WINDOWS:
+			    pattern = Pattern.compile(prefix.toString(), Pattern.CASE_INSENSITIVE);
+			    break;
+			  default:
+			    pattern = Pattern.compile(prefix.toString());
+			    break;
+			}
+			for (IFile f : base.listFiles(pattern)) {
 			    if (f.isDirectory()) {
 				candidates.add(f.getPath());
 			    }
 			}
-			if (candidates.size() == 0) {
-			    // Don't give up hope - maybe the searcher will find a real match
-			    return Arrays.asList(base).toArray(new String[1]);
-			} else {
-			    return candidates.toArray(new String[candidates.size()]);
-			}
+			return candidates.toArray(new String[candidates.size()]);
 		    } else {
 			return new String[0];
 		    }
