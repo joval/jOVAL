@@ -93,12 +93,16 @@ public class PasswordpolicyAdapter implements IAdapter {
 			if ("MaximumPasswordAge".equals(key)) {
 			    EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
 			    type.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			    type.setValue(prop.getProperty(key));
+			    long days = Long.parseLong(prop.getProperty(key));
+			    long secs = days * 86400;
+			    type.setValue(Long.toString(secs));
 			    item.setMaxPasswdAge(type);
 			} else if ("MinimumPasswordAge".equals(key)) {
 			    EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
 			    type.setDatatype(SimpleDatatypeEnumeration.INT.value());
-			    type.setValue(prop.getProperty(key));
+			    long days = Long.parseLong(prop.getProperty(key));
+			    long secs = days * 86400;
+			    type.setValue(Long.toString(secs));
 			    item.setMinPasswdAge(type);
 			} else if ("MinimumPasswordLength".equals(key)) {
 			    EntityItemIntType type = Factories.sc.core.createEntityItemIntType();
