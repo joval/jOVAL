@@ -151,19 +151,22 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
     // Internal
 
     protected UnixFileInfo getUnixFileInfo(String path) throws IOException {
+	int exitCode = -1;
+	String data = null;
 	try {
 	    String cmd = new StringBuffer(getDriver().getStatCommand()).append(" ").append(path).toString();
 	    SafeCLI.ExecData ed = SafeCLI.execData(cmd, null, session, S);
+	    exitCode = ed.getExitCode();
+	    data = new String(ed.getData(), StringTools.ASCII);
 	    List<String> lines = ed.getLines();
 	    UnixFileInfo ufi = null;
 	    if (lines.size() > 0) {
 		ufi = (UnixFileInfo)getDriver().nextFileInfo(lines.iterator());
 		if (ufi == null) {
-		    if (ed.getExitCode() == 0) {
-			throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNIXFILEINFO, path, lines.get(0)));
+		    if (exitCode == 0) {
+			throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNIXFILEINFO, path, data));
 		    } else {
-			String message = new String(ed.getData(), StringTools.ASCII);
-			throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_FS_LSTAT, path, ed.getExitCode(), message));
+			throw new IOException(JOVALMsg.getMessage(JOVALMsg.ERROR_FS_LSTAT, path, exitCode, data));
 		    }
 		}
 	    } else {
@@ -173,6 +176,7 @@ public class UnixFilesystem extends AbstractFilesystem implements IUnixFilesyste
 	} catch (IOException e) {
 	    throw e;
 	} catch (Exception e) {
+	    logger.warn(JOVALMsg.ERROR_FS_LSTAT, path, exitCode, data);
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new IOException(e.getMessage());
 	}

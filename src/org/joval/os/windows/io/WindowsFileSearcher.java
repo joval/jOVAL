@@ -83,7 +83,16 @@ public class WindowsFileSearcher implements ISearchable<IFile>, ILoggable {
     }
 
     public String[] guessParent(Pattern p, Object... args) {
-	return fs.guessParent(p);
+	int index = 0;
+	for (Object arg : args) {
+	    if (index == 0) {
+		if (arg instanceof Boolean) {
+		    return fs.guessParent(p, ((Boolean)arg).booleanValue());
+		}
+	    }
+	    index++;
+	}
+	return fs.guessParent(p, false);
     }
 
     public Collection<IFile> search(List<ISearchable.ICondition> conditions) throws Exception {

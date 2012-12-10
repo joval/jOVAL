@@ -126,8 +126,10 @@ public abstract class AbstractFilesystem implements IFilesystem {
 
     /**
      * For use by the ISearchable.
+     *
+     * @param file indicates if the pattern represents a file (or if false, a directory).
      */
-    public String[] guessParent(Pattern p) {
+    public String[] guessParent(Pattern p, boolean file) {
 	String path = p.pattern();
 	if (!path.startsWith("^")) {
 	    return null;
@@ -188,16 +190,18 @@ public abstract class AbstractFilesystem implements IFilesystem {
 		}
 	    }
 	    try {
-		if (prefix.length() > 1) {
+		if (!file && prefix.length() > 1) {
 		    IFile base = getFile(parent);
-		    List<String> candidates = new ArrayList<String>();
-		    for (IFile f : base.listFiles(Pattern.compile(prefix.toString()))) {
-			if (f.isDirectory()) {
-			    candidates.add(f.getPath());
+		    if (base.exists()) {
+			List<String> candidates = new ArrayList<String>();
+			for (IFile f : base.listFiles(Pattern.compile(prefix.toString()))) {
+			    if (f.isDirectory()) {
+				candidates.add(f.getPath());
+			    }
 			}
-		    }
-		    if (candidates.size() > 0) {
 			return candidates.toArray(new String[candidates.size()]);
+		    } else {
+			return new String[0];
 		    }
 		}
 	    } catch (Exception e) {

@@ -164,7 +164,7 @@ public class SafeCLI {
 		lines.add(line);
 	    }
 	    if (lines.size() == 0) {
-		session.getLogger().warn(JOVALMsg.WARNING_MISSING_OUTPUT, cmd, exitCode, data.length);
+		session.getLogger().debug(JOVALMsg.WARNING_MISSING_OUTPUT, cmd, exitCode, data.length);
 		lines.add("");
 	    }
 	    return lines;

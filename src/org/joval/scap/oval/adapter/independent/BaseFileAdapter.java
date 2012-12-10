@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
@@ -396,9 +397,18 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    }
 		    break;
 
+		  case CASE_INSENSITIVE_EQUALS: {
+		    Pattern p = Pattern.compile("^(?i)" + Matcher.quoteReplacement(filepath) + "$");
+		    from = searcher.guessParent(p, Boolean.TRUE);
+		    conditions.add(searcher.condition(FIELD_PATH, TYPE_PATTERN, p));
+		    conditions.add(ISearchable.RECURSE);
+		    search = true;
+		    break;
+		  }
+
 		  case PATTERN_MATCH: {
 		    Pattern p = Pattern.compile(filepath);
-		    from = searcher.guessParent(p);
+		    from = searcher.guessParent(p, Boolean.TRUE);
 		    conditions.add(searcher.condition(FIELD_PATH, TYPE_PATTERN, p));
 		    conditions.add(ISearchable.RECURSE);
 		    search = true;
@@ -447,15 +457,12 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		switch(pathOp) {
 		  case EQUALS:
 		    IFile file = fs.getFile(path);
-		    if (file.isDirectory()) {
+		    if (file.exists() && file.isDirectory()) {
 			if (fb == null) {
 			    //
-			    // Add candidate files to the list (for later filtering, below)
+			    // Add candidate dirs, which will be handled below
 			    //
 			    files.add(file);
-			    if (filename != null) {
-				files.addAll(Arrays.asList(file.listFiles()));
-			    }
 			} else {
 			    if ("up".equals(fb.getRecurseDirection())) {
 				for (int i=depth; i != 0; i--) {
@@ -466,24 +473,25 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 				    } else {
 					String lastFilename = file.getName();
 					file = fs.getFile(parentPath);
-					if (filename == null) {
-					    files.add(file); // directories only
-					} else {
-					    for (String fname : file.list()) {
-						if (!fname.equals(lastFilename)) {
-						    files.add(fs.getFile(parentPath + fs.getDelimiter() + fname));
-						}
-					    }
-					}
+					files.add(file);
 				    }
 				}
 			    } else {
-				from = Arrays.asList(path).toArray(new String[1]);
+				from = new String[1];
+				from[0] = path;
 				search = true;
 			    }
 			}
 		    }
 		    break;
+
+		  case CASE_INSENSITIVE_EQUALS: {
+		    Pattern p = Pattern.compile("^(?i)" + Matcher.quoteReplacement(path) + "$");
+		    from = searcher.guessParent(p);
+		    conditions.add(searcher.condition(FIELD_DIRNAME, TYPE_PATTERN, p));
+		    search = true;
+		    break;
+		  }
 
 		  case PATTERN_MATCH: {
 		    Pattern p = Pattern.compile(path);
@@ -499,8 +507,9 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		}
 
 		//
-		// At this point, except for searches, the collection "files" will contain every IFile that matches
-		// the path spec. So, if there is a filename spec, we use it to filter down the list.
+		// At this point, except for searches, the collection "files" will contain every directory IFile
+		// that matches the path spec. So, if there is a filename spec, we replace it with matches, or convert
+		// to a search.
 		//
 		if (filename != null) {
 		    Iterator<IFile> iter = files.iterator();
@@ -510,41 +519,43 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 			if (search) {
 			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_EQUALITY, filename));
 			} else {
+			    Collection<IFile> results = new ArrayList<IFile>();
 			    while(iter.hasNext()) {
-				IFile file = iter.next();
-				if (!filename.equals(file.getName())) {
-				    iter.remove();
+				IFile dir = iter.next();
+				IFile file = dir.getChild(filename);
+				if (file.exists()) {
+				    results.add(file);
 				}
 			    }
+			    files = results;
 			}
 			break;
 
+		      case CASE_INSENSITIVE_EQUALS:
 		      case NOT_EQUAL:
-			if (search) {
-			    Pattern p = Pattern.compile("^(?!" + filename + ")$");
-			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
-			} else {
-			    while(iter.hasNext()) {
-				IFile file = iter.next();
-				if (filename.equals(file.getName())) {
-				    iter.remove();
-				}
-			    }
-			}
-			break;
-
 		      case PATTERN_MATCH: {
-			Pattern p = Pattern.compile(filename);
-			if (search) {
-			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
-			} else {
+			if (!search) {
+			    //
+			    // Convert to a depth-1 search of basenames from the matching directories found above
+			    //
+			    Collection<String> paths = new ArrayList<String>();
 			    while(iter.hasNext()) {
-				IFile file = iter.next();
-				if (!p.matcher(file.getName()).find()) {
-				    iter.remove();
-				}
+				paths.add(iter.next().getPath());
 			    }
+			    files = new ArrayList<IFile>();
+			    search = true;
+			    from = paths.toArray(new String[paths.size()]);
+			    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(1)));
 			}
+			Pattern p = null;
+			if (filenameOp == OperationEnumeration.CASE_INSENSITIVE_EQUALS) {
+			    p = Pattern.compile("^(?i)" + Matcher.quoteReplacement(filename) + "$");
+			} else if (filenameOp == OperationEnumeration.NOT_EQUAL) {
+			    p = Pattern.compile("^(?!" + Matcher.quoteReplacement(filename) + ")$");
+			} else {
+			    p = Pattern.compile(filename);
+			}
+			conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
 			break;
 		      }
 
