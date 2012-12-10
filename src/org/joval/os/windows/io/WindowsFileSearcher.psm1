@@ -12,7 +12,7 @@ function Find-Directories {
     $CurrentItem = Get-Item -literalPath $Path
     if (($CurrentItem -ne $null) -and $CurrentItem.PSIsContainer) {
       $NextDepth = $Depth - 1
-      if ($Path -cmatch $Pattern) {
+      if ($Path -imatch $Pattern) {
 	$CurrentItem
       }
       if ($Depth -ne 0) {
@@ -48,7 +48,7 @@ function Find-Files {
 	  if ($Filename -eq ".*") {
 	    $CurrentItem
 	  } else {
-	    if (!$CurrentItem.PSIsContainer -and ($CurrentItem.Name -cmatch $Filename)) {
+	    if (!$CurrentItem.PSIsContainer -and ($CurrentItem.Name -imatch $Filename)) {
 	      $CurrentItem
 	    }
 	  }
@@ -59,7 +59,7 @@ function Find-Files {
 	  }
 	}
       } else {
-	if ($Path -cmatch $Pattern) {
+	if ($Path -imatch $Pattern) {
 	  $CurrentItem
 	}
       }

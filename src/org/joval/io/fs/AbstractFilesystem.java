@@ -199,7 +199,12 @@ public abstract class AbstractFilesystem implements IFilesystem {
 				candidates.add(f.getPath());
 			    }
 			}
-			return candidates.toArray(new String[candidates.size()]);
+			if (candidates.size() == 0) {
+			    // Don't give up hope - maybe the searcher will find a real match
+			    return Arrays.asList(base).toArray(new String[1]);
+			} else {
+			    return candidates.toArray(new String[candidates.size()]);
+			}
 		    } else {
 			return new String[0];
 		    }
@@ -535,6 +540,8 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    if (info == null) {
 		// Accessor must not be null
 		info = getAccessor().getInfo();
+
+		path = info.getPath();
 
 		//
 		// Now that we have info, cache it if this is a READONLY IFile
