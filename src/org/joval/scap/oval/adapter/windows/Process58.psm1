@@ -109,28 +109,34 @@ namespace jOVAL.WindowsProcess {
   }
 
   $ErrorActionPreference = "Continue" 
-  $processes = Get-WmiObject -query "Select * from Win32_Process"
-  foreach ($process in $processes) {
-    if ($process.Path -ne $null) {
-      Write-Output "[$($process.ProcessId)]"
-      # path is the current_dir + image_path
-      Write-Output "command_line=$($process.CommandLine)"
-      Write-Output "path=$($process.Path)"
-      Write-Output "pid=$($process.ProcessId)"
-      Write-Output "ppid=$($process.ParentProcessId)"
-      Write-Output "priority=$($process.Priority)"
-      Write-Output "creation_time=$($process.CreationDate)"
+  $Processes = Get-WmiObject -query "Select * from Win32_Process"
+  foreach ($Process in $Processes) {
+    if ($Process.Path -ne $null) {
+      Write-Output "[$($Process.ProcessId)]"
+      Write-Output "PPID=$($Process.ParentProcessId)"
+      Write-Output "Priority=$($Process.Priority)"
 
-      $dep = [jOVAL.WindowsProcess.Probe]::IsDepEnabled($process.ProcessId);
-      if ($dep -eq 0) {
-	Write-Output "dep_enabled=false"
-      } elseif ($dep -eq 1) {
-	Write-Output "dep_enabled=true"
+      if ($Process.CommandLine -ne $null) {
+        Write-Output "CommandLine=$($Process.CommandLine)"
+      }
+      # path is the current_dir + image_path
+      if ($Process.CommandLine -ne $null) {
+        Write-Output "Path=$($Process.Path)"
+      }
+      if ($Process.CreationDate -ne $null) {
+        Write-Output "CreationDate=$($Process.CreationDate)"
       }
 
-      $title = [jOVAL.WindowsProcess.Probe]::GetWindowText($process.ProcessId);
+      $dep = [jOVAL.WindowsProcess.Probe]::IsDepEnabled($Process.ProcessId);
+      if ($dep -eq 0) {
+	Write-Output "DepEnabled=false"
+      } elseif ($dep -eq 1) {
+	Write-Output "DepEnabled=true"
+      }
+
+      $title = [jOVAL.WindowsProcess.Probe]::GetWindowText($Process.ProcessId);
       if ($title -ne $null) {
-	Write-Output "primary_window_text=$($title)"
+	Write-Output "PrimaryWindowText=$($title)"
       }
     }
   }

@@ -69,7 +69,7 @@ public class Process58Adapter implements IAdapter {
 	}
 
 	//
-	// First, create a map of processes based on the command_line
+	// First, create a map of processes based on the CommandLine
 	//
 	Process58Object pObj = (Process58Object)obj;
 	HashMap<String, IProperty> map = new HashMap<String, IProperty>();
@@ -81,12 +81,18 @@ public class Process58Adapter implements IAdapter {
 	  case NOT_EQUAL:
 	    for (String pid : processes.listSections()) {
 		IProperty props = processes.getSection(pid);
-		if (op == OperationEnumeration.EQUALS && commandLine.equals(props.getProperty("command_line"))) {
-		    map.put(pid, props);
+		if (op == OperationEnumeration.EQUALS) {
+		    if (commandLine == null) {
+			if (props.getProperty("CommandLine") == null) {
+			    map.put(pid, props);
+			}
+		    } else if (commandLine.equals(props.getProperty("CommandLine"))) {
+			map.put(pid, props);
+		    }
 		} else if (op == OperationEnumeration.CASE_INSENSITIVE_EQUALS &&
-			   commandLine.equalsIgnoreCase(props.getProperty("command_line"))) {
+			   commandLine.equalsIgnoreCase(props.getProperty("CommandLine"))) {
 		    map.put(pid, props);
-		} else if (op == OperationEnumeration.NOT_EQUAL && !commandLine.equals(props.getProperty("command_line"))) {
+		} else if (op == OperationEnumeration.NOT_EQUAL && !commandLine.equals(props.getProperty("CommandLine"))) {
 		    map.put(pid, props);
 		}
 	    }
@@ -97,7 +103,7 @@ public class Process58Adapter implements IAdapter {
 		Pattern pattern = Pattern.compile(commandLine);
 		for (String pid : processes.listSections()) {
 		    IProperty props = processes.getSection(pid);
-		    Matcher m = pattern.matcher(props.getProperty("command_line"));
+		    Matcher m = pattern.matcher(props.getProperty("CommandLine"));
 		    if (m.find()) {
 			map.put(pid, props);
 		    }
@@ -119,40 +125,41 @@ public class Process58Adapter implements IAdapter {
 	//
 	// Then, filter the map based on the pid value
 	//
-	String pid = (String)pObj.getPid().getValue();
+	int pid = Integer.parseInt((String)pObj.getPid().getValue());
 	op = pObj.getPid().getOperation();
 	Collection<ProcessItem> items = new Vector<ProcessItem>();
 	for (String key : map.keySet()) {
+	    int processId = Integer.parseInt(key);
 	    IProperty props = map.get(key);
 	    switch(op) {
 	      case EQUALS:
-		if (key.equals(pid)) {
-		    items.add(makeItem(props));
+		if (processId == pid) {
+		    items.add(makeItem(processId, props));
 		}
 		break;
 	      case NOT_EQUAL:
-		if (!key.equals(pid)) {
-		    items.add(makeItem(props));
+		if (processId != pid) {
+		    items.add(makeItem(processId, props));
 		}
 		break;
 	      case LESS_THAN:
-		if (new Integer(key).compareTo(new Integer(pid)) < 0) {
-		    items.add(makeItem(props));
+		if (processId < pid) {
+		    items.add(makeItem(processId, props));
 		}
 		break;
 	      case LESS_THAN_OR_EQUAL:
-		if (new Integer(key).compareTo(new Integer(pid)) <= 0) {
-		    items.add(makeItem(props));
+		if (processId <= pid) {
+		    items.add(makeItem(processId, props));
 		}
 		break;
 	      case GREATER_THAN:
-		if (new Integer(key).compareTo(new Integer(pid)) > 0) {
-		    items.add(makeItem(props));
+		if (processId > pid) {
+		    items.add(makeItem(processId, props));
 		}
 		break;
 	      case GREATER_THAN_OR_EQUAL:
-		if (new Integer(key).compareTo(new Integer(pid)) >= 0) {
-		    items.add(makeItem(props));
+		if (processId >= pid) {
+		    items.add(makeItem(processId, props));
 		}
 		break;
 	      default:
@@ -165,28 +172,28 @@ public class Process58Adapter implements IAdapter {
 
     // Private
 
-    private ProcessItem makeItem(IProperty prop) {
+    private ProcessItem makeItem(int pid, IProperty prop) {
 	ProcessItem item = Factories.sc.windows.createProcessItem();
+	EntityItemIntType pidType = Factories.sc.core.createEntityItemIntType();
+	pidType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	pidType.setValue(Integer.toString(pid));
+	item.setPid(pidType);
+
 	for (String key : prop) {
-	    if ("command_line".equals(key)) {
+	    if ("CommandLine".equals(key)) {
 		EntityItemStringType commandLine = Factories.sc.core.createEntityItemStringType();
 		commandLine.setValue(prop.getProperty(key));
 		item.setCommandLine(commandLine);
-	    } else if ("pid".equals(key)) {
-		EntityItemIntType pid = Factories.sc.core.createEntityItemIntType();
-		pid.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		pid.setValue(prop.getProperty(key));
-		item.setPid(pid);
-	    } else if ("ppid".equals(key)) {
+	    } else if ("PPID".equals(key)) {
 		EntityItemIntType ppid = Factories.sc.core.createEntityItemIntType();
 		ppid.setDatatype(SimpleDatatypeEnumeration.INT.value());
 		ppid.setValue(prop.getProperty(key));
 		item.setPpid(ppid);
-	    } else if ("priority".equals(key)) {
+	    } else if ("Priority".equals(key)) {
 		EntityItemStringType priority = Factories.sc.core.createEntityItemStringType();
 		priority.setValue(prop.getProperty(key));
 		item.setPriority(priority);
-	    } else if ("path".equals(key)) {
+	    } else if ("Path".equals(key)) {
 		int ptr = prop.getProperty(key).lastIndexOf("\\");
 		if (ptr != -1) {
 		    EntityItemStringType imagePath = Factories.sc.core.createEntityItemStringType();
@@ -197,7 +204,7 @@ public class Process58Adapter implements IAdapter {
 		    currentDir.setValue(prop.getProperty(key).substring(0,ptr));
 		    item.setCurrentDir(currentDir);
 		}
-	    } else if ("creation_time".equals(key)) {
+	    } else if ("CreationDate".equals(key)) {
 		try {
 		    EntityItemIntType creationTime = Factories.sc.core.createEntityItemIntType();
 		    creationTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
@@ -206,12 +213,12 @@ public class Process58Adapter implements IAdapter {
 		} catch (Exception e) {
 		    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
-	    } else if ("dep_enabled".equals(key)) {
+	    } else if ("DepEnabled".equals(key)) {
 		EntityItemBoolType depEnabled = Factories.sc.core.createEntityItemBoolType();
 		depEnabled.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 		depEnabled.setValue(prop.getProperty(key));
 		item.setDepEnabled(depEnabled);
-	    } else if ("primary_window_text".equals(key)) {
+	    } else if ("PrimaryWindowText".equals(key)) {
 		EntityItemStringType primaryWindowText = Factories.sc.core.createEntityItemStringType();
 		primaryWindowText.setValue(prop.getProperty(key));
 		item.setPrimaryWindowText(primaryWindowText);
