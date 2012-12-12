@@ -11,19 +11,20 @@ package org.joval.intf.windows.registry;
  */
 public interface IValue {
     enum Type {
-	REG_NONE("REG_NONE", 0),
-	REG_DWORD("REG_DWORD", 1),
-	REG_BINARY("REG_BINARY", 2),
-	REG_SZ("REG_SZ", 3),
-	REG_EXPAND_SZ("REG_EXPAND_SZ", 4),
-	REG_MULTI_SZ("REG_MULTI_SZ", 5),
-	REG_QWORD("REG_QWORD", 6);
+	REG_NONE      ("REG_NONE",	"None",		0),
+	REG_DWORD     ("REG_DWORD",	"DWord",	1),
+	REG_BINARY    ("REG_BINARY",	"Binary",	2),
+	REG_SZ	      ("REG_SZ",	"String",	3),
+	REG_EXPAND_SZ ("REG_EXPAND_SZ",	"ExpandString",	4),
+	REG_MULTI_SZ  ("REG_MULTI_SZ",	"MultiString",	5),
+	REG_QWORD     ("REG_QWORD",	"QuadWord",	6);
 
-	private String name;
+	private String name, kind;
 	private int id;
 
-	private Type(String name, int id) {
+	private Type(String name, String kind, int id) {
 	    this.name = name;
+	    this.kind = kind;
 	    this.id = id;
 	}
 
@@ -31,17 +32,33 @@ public interface IValue {
 	    return name;
 	}
 
+	/**
+	 * The "Kind" as returned by C# Microsoft.Win32.RegistryKey::GetValueKind
+	 */
+	public String getKind() {
+	    return kind;
+	}
+
 	public int getId() {	
 	    return id;
 	}
 
-	public static Type typeOf(String name) throws IllegalArgumentException {
+	public static Type fromName(String name) throws IllegalArgumentException {
 	    for (Type type : values()) {
 		if (type.getName().equals(name)) {
 		    return type;
 		}
 	    }
 	    throw new IllegalArgumentException(name);
+	}
+
+	public static Type fromKind(String kind) throws IllegalArgumentException {
+	    for (Type type : values()) {
+		if (type.getKind().equals(kind)) {
+		    return type;
+		}
+	    }
+	    throw new IllegalArgumentException(kind);
 	}
     }
 

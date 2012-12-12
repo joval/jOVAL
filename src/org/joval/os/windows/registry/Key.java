@@ -25,7 +25,7 @@ public class Key implements IKey {
     private String path;
     private IValue[] values;
 
-    public Key (IRegistry registry, IRegistry.Hive hive, String path) {
+    protected Key (IRegistry registry, IRegistry.Hive hive, String path) {
 	this.registry = registry;
 	this.hive = hive;
 	this.path = path;

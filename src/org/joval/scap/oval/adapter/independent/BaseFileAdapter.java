@@ -319,7 +319,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		  default:
 		    rs = ws.getRunspacePool().spawn(view);
 		    result = rs;
-		    return result;
+		    break;
 		}
 	    }
 	    // Load the modules, if any.

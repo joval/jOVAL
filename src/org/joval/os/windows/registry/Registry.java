@@ -5,10 +5,12 @@ package org.joval.os.windows.registry;
 
 import java.net.UnknownHostException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -27,6 +29,7 @@ import org.joval.intf.windows.registry.ILicenseData;
 import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.system.IWindowsSession;
+import org.joval.util.Base64;
 import org.joval.util.JOVALMsg;
 import org.joval.util.StringTools;
 
@@ -70,6 +73,7 @@ public class Registry implements IRegistry {
 	if (runspace == null) {
 	    runspace = session.getRunspacePool().spawn(view);
 	}
+	runspace.loadModule(getClass().getResourceAsStream("Registry.psm1"));
 	keyMap = new HashMap<String, IKey>();
 	valueMap = new HashMap<String, IValue[]>();
     }
@@ -165,24 +169,22 @@ public class Registry implements IRegistry {
     }
 
     public IKey getKey(Hive hive, String path) throws NoSuchElementException, RegistryException {
+	IKey key = new Key(this, hive, path);
+	if (keyMap.containsKey(key.toString())) {
+	    return keyMap.get(key.toString());
+	}
+	getHive(hive); // idempotent hive initialization
+	String result = null;
 	try {
-	    IKey key = new Key(this, hive, path);
-	    if (keyMap.containsKey(key.toString())) {
-		return keyMap.get(key.toString());
-	    }
-
-	    StringBuffer sb = new StringBuffer("Test-Path -LiteralPath ").append(getItemPath(key));
-	    String data = runspace.invoke(sb.toString());
-	    if ("True".equalsIgnoreCase(data)) {
-		keyMap.put(key.toString(), key);
-		return key;
-	    } else {
-		throw new NoSuchElementException(key.toString());
-	    }
-	} catch (NoSuchElementException e) {
-	    throw e;
+	    result = runspace.invoke("Test-Path -LiteralPath " + getItemPath(key));
 	} catch (Exception e) {
 	    throw new RegistryException(e);
+	}
+	if ("True".equalsIgnoreCase(result)) {
+	    keyMap.put(key.toString(), key);
+	    return key;
+	} else {
+	    throw new NoSuchElementException(key.toString());
 	}
     }
 
@@ -222,85 +224,25 @@ public class Registry implements IRegistry {
 	    return valueMap.get(key.toString());
 	}
 	try {
-	    StringBuffer sb = new StringBuffer("& reg query \"");
-	    sb.append(key.getHive().getShortName());
+	    StringBuffer sb = new StringBuffer("Print-RegValues -Hive ");
+	    sb.append(key.getHive().getName());
 	    String path = key.getPath();
 	    if (path != null) {
-		sb.append(IRegistry.DELIM_STR).append(path);
+		sb.append(" -Key \"").append(path).append("\"");
 	    }
-	    sb.append("\" /v *");
-
-	    Map<String, Tuple> tuples = new HashMap<String, Tuple>();
-	    String regData = runspace.invoke(sb.toString());
-	    int startIndex = regData.indexOf("\r\n", regData.indexOf(key.toString())) + 2;
-	    int ptr = -1;
-	    String name = null;
-	    for (String line : regData.substring(startIndex).split("\r\n")) {
-		if (line.length() == 0) {
-		    name = null;
-		} else if (line.startsWith("    ") && (ptr = line.indexOf("    REG_")) != -1) {
-		    name = line.substring(4, ptr);
-		    int end = line.indexOf("    ", ptr+1);
-		    IValue.Type type = IValue.Type.typeOf(line.substring(ptr, end).trim());
-		    StringBuffer data = new StringBuffer(line.substring(end+4));
-		    if (name.equals("(Default)")) {
-			if (!"(value not set)".equals(data.toString())) {
-			    name = "";
-			    tuples.put("", new Tuple(type, data));
-			}
-		    } else {
-			tuples.put(name, new Tuple(type, data));
-		    }
-		} else if (name != null) {
-		    // Continuation of data from the previous value
-		    Tuple tuple = tuples.get(name);
-		    tuples.put(name, new Tuple(tuple.type, tuple.data.append(line)));
-		}
-	    }
-
 	    ArrayList<IValue> values = new ArrayList<IValue>();
-	    for (Map.Entry<String, Tuple> entry : tuples.entrySet()) {
-		IValue value = null;
-		name = entry.getKey();
-		String data = entry.getValue().data.toString();
-		switch(entry.getValue().type) {
-		  case REG_NONE:
-		    value = new NoneValue(key, name);
-		    break;
-		  case REG_SZ:
-		    value = new StringValue(key, name, data);
-		    break;
-		  case REG_EXPAND_SZ:
-		    value = new ExpandStringValue(key, name, data);
-		    break;
-		  case REG_MULTI_SZ:
-		    value = new MultiStringValue(key, name, data.split(Matcher.quoteReplacement("\\0")));
-		    break;
-		  case REG_DWORD:
-		    if (data.startsWith("0x")) {
-			value = new DwordValue(key, name, Integer.parseInt(data.substring(2), 16));
+	    Iterator<String> iter = StringTools.toList(runspace.invoke(sb.toString()).split("\r\n")).iterator();
+	    while(true) {
+		try {
+		    IValue value = nextValue(key, iter);
+		    if (value == null) {
+			break;
 		    } else {
-			value = new DwordValue(key, name, Integer.parseInt(data));
+			values.add(value);
 		    }
-		    break;
-		  case REG_QWORD:
-		    if (data.startsWith("0x")) {
-			value = new QwordValue(key, name, Long.parseLong(data.substring(2), 16));
-		    } else {
-			value = new QwordValue(key, name, Long.parseLong(data));
-		    }
-		    break;
-		  case REG_BINARY:
-		    byte[] buff = new byte[data.length()/2];
-		    for (int i=0; i < buff.length; i++) {
-			int index = i*2;
-			buff[i] = (byte)(Integer.parseInt(data.substring(index, index+2), 16) & 0xFF);
-		    }
-		    value = new BinaryValue(key, name, buff);
-		    break;
+		} catch (IOException e) {
+		    throw new RegistryException(e);
 		}
-		logger.trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, value.toString());
-		values.add(value);
 	    }
 	    IValue[] result = values.toArray(new IValue[values.size()]);
 	    valueMap.put(key.toString(), result);
@@ -308,16 +250,6 @@ public class Registry implements IRegistry {
 	} catch (Exception e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new RegistryException(e);
-	}
-    }
-
-    class Tuple {
-	IValue.Type type;
-	StringBuffer data;
-
-	Tuple(IValue.Type type, StringBuffer data) {
-	    this.type = type;
-	    this.data = data;
 	}
     }
 
@@ -334,5 +266,83 @@ public class Registry implements IRegistry {
 	}
 	sb.append("\"");
 	return sb.toString();
+    }
+
+    static final String START = "{";
+    static final String END = "}";
+
+    /**
+     * Generate the next value for the key from the input.
+     */
+    private IValue nextValue(IKey key, Iterator<String> input) throws IOException {
+        boolean start = false;
+        while(input.hasNext()) {
+            String line = input.next();
+            if (line.trim().equals(START)) {
+                start = true;
+                break;
+            }
+        }
+        if (start) {
+	    String name = null;
+	    IValue.Type type = null;
+	    String data = null;
+	    List<String> multiData = null;
+            while(input.hasNext()) {
+                String line = input.next();
+                if (line.equals(END)) {
+                    break;
+                } else if (line.startsWith("Kind: ")) {
+                    type = IValue.Type.fromKind(line.substring(6));
+                } else if (line.startsWith("Name: ")) {
+		    name = line.substring(6);
+                } else if (line.startsWith("Data: ")) {
+		    if (type == IValue.Type.REG_MULTI_SZ) {
+			if (multiData == null) {
+			    multiData = new ArrayList<String>();
+			} else {
+			    multiData.add(line.substring(6));
+			}
+		    } else {
+			data = line.substring(6);
+		    }
+                } else if (data != null) {
+		    // continuation of data beyond a line-break
+		    data = data + line;
+		} else if (multiData != null) {
+		    // continuation of last data entry beyond a line-break
+		    multiData.add(new StringBuffer(multiData.remove(multiData.size() - 1)).append(line).toString());
+		}
+            }
+	    if (type != null) {
+		IValue value = null;
+		switch(type) {
+		  case REG_NONE:
+		    value = new NoneValue(key, name);
+		    break;
+		  case REG_SZ:
+		    value = new StringValue(key, name, data);
+		    break;
+		  case REG_EXPAND_SZ:
+		    value = new ExpandStringValue(key, name, data);
+		    break;
+		  case REG_MULTI_SZ:
+		    value = new MultiStringValue(key, name, multiData == null ? null : multiData.toArray(new String[0]));
+		    break;
+		  case REG_DWORD:
+		    value = new DwordValue(key, name, Integer.parseInt(data));
+		    break;
+		  case REG_QWORD:
+		    value = new QwordValue(key, name, Long.parseLong(data));
+		    break;
+		  case REG_BINARY:
+		    value = new BinaryValue(key, name, Base64.decode(data));
+		    break;
+		}
+		logger.trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, value.toString());
+		return value;
+	    }
+        }
+        return null;
     }
 }

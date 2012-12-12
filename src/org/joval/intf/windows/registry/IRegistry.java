@@ -38,24 +38,19 @@ public interface IRegistry extends ILoggable {
      * An enumeration of the registry hives.
      */
     enum Hive {
-	HKCR("HKCR", "HKEY_CLASSES_ROOT", 0x80000000L),
-	HKCU("HKCU", "HKEY_CURRENT_USER", 0x80000001L),
-	HKLM("HKLM", "HKEY_LOCAL_MACHINE", 0x80000002L),
-	HKU("HKU", "HKEY_USERS", 0x80000003L),
-	HKCC("HKCC", "HKEY_CURRENT_CONFIG", 0x80000005L),
-	HKDD(null, "HKEY_DYN_DATA", 0x80000006L);
+	HKCR ("HKEY_CLASSES_ROOT",	0x80000000L),
+	HKCU ("HKEY_CURRENT_USER",	0x80000001L),
+	HKLM ("HKEY_LOCAL_MACHINE",	0x80000002L),
+	HKU  ("HKEY_USERS",		0x80000003L),
+	HKCC ("HKEY_CURRENT_CONFIG",	0x80000005L),
+	HKDD ("HKEY_DYN_DATA",		0x80000006L);
 
-	private String shortName, name;
+	private String name;
 	private long id;
 
-	private Hive(String shortName, String name, long id) {
-	    this.shortName = shortName;
+	private Hive(String name, long id) {
 	    this.name = name;
 	    this.id = id;
-	}
-
-	public String getShortName() {
-	    return shortName;
 	}
 
 	public String getName() {
@@ -108,7 +103,7 @@ public interface IRegistry extends ILoggable {
     IKey getKey(Hive hive, String path) throws NoSuchElementException, RegistryException;
 
     /**
-     * Return the names of the subkeys of the specified key.
+     * Return the child subkeys of the specified key.
      */
     IKey[] enumSubkeys(IKey key) throws RegistryException;
 

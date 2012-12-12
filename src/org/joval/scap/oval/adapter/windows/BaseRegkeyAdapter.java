@@ -255,7 +255,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	      default:
 		rs = session.getRunspacePool().spawn(view);
 		result = rs;
-		return result;
+		break;
 	    }
 	}
 	// Load the modules, if any.
