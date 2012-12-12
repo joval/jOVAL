@@ -231,17 +231,20 @@ public class Registry implements IRegistry {
 		sb.append(" -Key \"").append(path).append("\"");
 	    }
 	    ArrayList<IValue> values = new ArrayList<IValue>();
-	    Iterator<String> iter = StringTools.toList(runspace.invoke(sb.toString()).split("\r\n")).iterator();
-	    while(true) {
-		try {
-		    IValue value = nextValue(key, iter);
-		    if (value == null) {
-			break;
-		    } else {
-			values.add(value);
+	    String data = runspace.invoke(sb.toString());
+	    if (data != null) {
+		Iterator<String> iter = StringTools.toList(data.split("\r\n")).iterator();
+		while(true) {
+		    try {
+			IValue value = nextValue(key, iter);
+			if (value == null) {
+			    break;
+			} else {
+			    values.add(value);
+			}
+		    } catch (IOException e) {
+			throw new RegistryException(e);
 		    }
-		} catch (IOException e) {
-		    throw new RegistryException(e);
 		}
 	    }
 	    IValue[] result = values.toArray(new IValue[values.size()]);
