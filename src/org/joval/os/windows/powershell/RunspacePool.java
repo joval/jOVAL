@@ -46,9 +46,8 @@ public class RunspacePool implements IRunspacePool {
     public void shutdown() {
 	for (Runspace runspace : pool.values()) {
 	    try {
-		runspace.invoke("exit");
+		runspace.invoke("exit", 2000L);
 		IProcess p = runspace.getProcess();
-		p.waitFor(10000L);
 		if (p.isRunning()) {
 		    p.destroy();
 		}

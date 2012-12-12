@@ -179,6 +179,8 @@ public class Registry implements IRegistry {
 	    } else {
 		throw new NoSuchElementException(key.toString());
 	    }
+	} catch (NoSuchElementException e) {
+	    throw e;
 	} catch (Exception e) {
 	    throw new RegistryException(e);
 	}
@@ -220,7 +222,7 @@ public class Registry implements IRegistry {
 	    return valueMap.get(key.toString());
 	}
 	try {
-	    StringBuffer sb = new StringBuffer("reg query \"");
+	    StringBuffer sb = new StringBuffer("& reg query \"");
 	    sb.append(key.getHive().getShortName());
 	    String path = key.getPath();
 	    if (path != null) {
