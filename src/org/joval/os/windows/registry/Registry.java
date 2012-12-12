@@ -223,37 +223,37 @@ public class Registry implements IRegistry {
 	if (valueMap.containsKey(key.toString())) {
 	    return valueMap.get(key.toString());
 	}
+	StringBuffer sb = new StringBuffer("Print-RegValues -Hive ");
+	sb.append(key.getHive().getName());
+	String path = key.getPath();
+	if (path != null) {
+	    sb.append(" -Key \"").append(path).append("\"");
+	}
+	ArrayList<IValue> values = new ArrayList<IValue>();
+	String data = null;
 	try {
-	    StringBuffer sb = new StringBuffer("Print-RegValues -Hive ");
-	    sb.append(key.getHive().getName());
-	    String path = key.getPath();
-	    if (path != null) {
-		sb.append(" -Key \"").append(path).append("\"");
-	    }
-	    ArrayList<IValue> values = new ArrayList<IValue>();
-	    String data = runspace.invoke(sb.toString());
-	    if (data != null) {
-		Iterator<String> iter = StringTools.toList(data.split("\r\n")).iterator();
-		while(true) {
-		    try {
-			IValue value = nextValue(key, iter);
-			if (value == null) {
-			    break;
-			} else {
-			    values.add(value);
-			}
-		    } catch (IOException e) {
-			throw new RegistryException(e);
-		    }
-		}
-	    }
-	    IValue[] result = values.toArray(new IValue[values.size()]);
-	    valueMap.put(key.toString(), result);
-	    return result;
+	    data = runspace.invoke(sb.toString());
 	} catch (Exception e) {
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw new RegistryException(e);
 	}
+	if (data != null) {
+	    Iterator<String> iter = StringTools.toList(data.split("\r\n")).iterator();
+	    while(true) {
+		try {
+		    IValue value = nextValue(key, iter);
+		    if (value == null) {
+			break;
+		    } else {
+			values.add(value);
+		    }
+		} catch (Exception e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+	    }
+	}
+	IValue[] result = values.toArray(new IValue[values.size()]);
+	valueMap.put(key.toString(), result);
+	return result;
     }
 
     // Private
@@ -277,7 +277,7 @@ public class Registry implements IRegistry {
     /**
      * Generate the next value for the key from the input.
      */
-    private IValue nextValue(IKey key, Iterator<String> input) throws IOException {
+    private IValue nextValue(IKey key, Iterator<String> input) throws Exception {
         boolean start = false;
         while(input.hasNext()) {
             String line = input.next();
@@ -332,10 +332,10 @@ public class Registry implements IRegistry {
 		    value = new MultiStringValue(key, name, multiData == null ? null : multiData.toArray(new String[0]));
 		    break;
 		  case REG_DWORD:
-		    value = new DwordValue(key, name, Integer.parseInt(data));
+		    value = new DwordValue(key, name, Integer.parseInt(data, 16));
 		    break;
 		  case REG_QWORD:
-		    value = new QwordValue(key, name, Long.parseLong(data));
+		    value = new QwordValue(key, name, Long.parseLong(data, 16));
 		    break;
 		  case REG_BINARY:
 		    value = new BinaryValue(key, name, Base64.decode(data));

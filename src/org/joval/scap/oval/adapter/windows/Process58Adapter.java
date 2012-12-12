@@ -82,11 +82,7 @@ public class Process58Adapter implements IAdapter {
 	    for (String pid : processes.listSections()) {
 		IProperty props = processes.getSection(pid);
 		if (op == OperationEnumeration.EQUALS) {
-		    if (commandLine == null) {
-			if (props.getProperty("CommandLine") == null) {
-			    map.put(pid, props);
-			}
-		    } else if (commandLine.equals(props.getProperty("CommandLine"))) {
+		    if (commandLine.equals(props.getProperty("CommandLine"))) {
 			map.put(pid, props);
 		    }
 		} else if (op == OperationEnumeration.CASE_INSENSITIVE_EQUALS &&

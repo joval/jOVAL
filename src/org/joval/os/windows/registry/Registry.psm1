@@ -29,7 +29,15 @@ function Print-RegValues {
             Write-Output "Data: $($Val)"
           }
         } else {
-          Write-Output "Data: $($CurrentKey.GetValue($Name))"
+          if ("DWord" -eq $Kind) {
+            Write-Output "Data: $("{0:X8}" -f $CurrentKey.GetValue($Name))"
+          } else {
+            if ("QWord" -eq $Kind) {
+               Write-Output "Data: $("{0:X16}" -f $CurrentKey.GetValue($Name))"
+            } else {
+              Write-Output "Data: $($CurrentKey.GetValue($Name))"
+            }
+          }
         }
       }
     }

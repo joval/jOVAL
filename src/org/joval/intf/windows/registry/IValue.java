@@ -11,13 +11,13 @@ package org.joval.intf.windows.registry;
  */
 public interface IValue {
     enum Type {
-	REG_NONE      ("REG_NONE",	"None",		0),
+	REG_NONE      ("REG_NONE",	"Unknown",	0),
 	REG_DWORD     ("REG_DWORD",	"DWord",	1),
 	REG_BINARY    ("REG_BINARY",	"Binary",	2),
 	REG_SZ	      ("REG_SZ",	"String",	3),
 	REG_EXPAND_SZ ("REG_EXPAND_SZ",	"ExpandString",	4),
 	REG_MULTI_SZ  ("REG_MULTI_SZ",	"MultiString",	5),
-	REG_QWORD     ("REG_QWORD",	"QuadWord",	6);
+	REG_QWORD     ("REG_QWORD",	"QWord",	6);
 
 	private String name, kind;
 	private int id;
