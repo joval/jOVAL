@@ -10,18 +10,45 @@ package org.joval.intf.windows.registry;
  * @version %I% %G%
  */
 public interface IValue {
-    int REG_NONE	= 0;
-    int REG_DWORD	= 1;
-    int REG_BINARY	= 2;
-    int REG_SZ		= 3;
-    int REG_EXPAND_SZ	= 4;
-    int REG_MULTI_SZ	= 5;
-    int REG_QWORD	= 6;
+    enum Type {
+	REG_NONE("REG_NONE", 0),
+	REG_DWORD("REG_DWORD", 1),
+	REG_BINARY("REG_BINARY", 2),
+	REG_SZ("REG_SZ", 3),
+	REG_EXPAND_SZ("REG_EXPAND_SZ", 4),
+	REG_MULTI_SZ("REG_MULTI_SZ", 5),
+	REG_QWORD("REG_QWORD", 6);
+
+	private String name;
+	private int id;
+
+	private Type(String name, int id) {
+	    this.name = name;
+	    this.id = id;
+	}
+
+	public String getName() {
+	    return name;
+	}
+
+	public int getId() {	
+	    return id;
+	}
+
+	public static Type typeOf(String name) throws IllegalArgumentException {
+	    for (Type type : values()) {
+		if (type.getName().equals(name)) {
+		    return type;
+		}
+	    }
+	    throw new IllegalArgumentException(name);
+	}
+    }
 
     /**
      * Returns the corresponding REG_ constant.
      */
-    public int getType();
+    public Type getType();
 
     /**
      * Return the Key under which this Value lies.

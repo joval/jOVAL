@@ -16,7 +16,7 @@ public class MultiStringValue extends Value implements IMultiStringValue {
     String[] data;
 
     public MultiStringValue(IKey parent, String name, String[] data) {
-	type = REG_MULTI_SZ;
+	type = Type.REG_MULTI_SZ;
 	this.parent = parent;
 	this.name = name;
 	this.data = data;

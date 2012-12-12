@@ -59,7 +59,6 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
     protected static final int FIELD_VALUE		= IRegistry.FIELD_VALUE;
 
     protected IWindowsSession session;
-    protected IRegistry reg32, reg;
 
     private IRunspace rs, rs32;
 
@@ -73,7 +72,6 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
     // Implement IAdapter
 
     public final Collection<T> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	init();
 	Collection<T> items = new ArrayList<T>();
 	ReflectedRegistryObject rObj = new ReflectedRegistryObject(obj);
 	IWindowsSession.View view = getView(rObj.getBehaviors());
@@ -81,29 +79,29 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	    //
 	    // Find all the matching top-level hives
 	    //
-	    List<String> hives = new ArrayList<String>();
+	    List<IRegistry.Hive> hives = new ArrayList<IRegistry.Hive>();
 	    OperationEnumeration op = rObj.getHive().getOperation();
 	    String name = (String)rObj.getHive().getValue();
 	    switch(op) {
 	      case EQUALS:
-		for (String hive : IRegistry.HIVES) {
-		    if (name.equals(hive)) {
+		for (IRegistry.Hive hive : IRegistry.Hive.values()) {
+		    if (name.equals(hive.getName())) {
 			hives.add(hive);
 			break;
 		    }
 		}
 		break;
 	      case CASE_INSENSITIVE_EQUALS:
-		for (String hive : IRegistry.HIVES) {
-		    if (name.equalsIgnoreCase(hive)) {
+		for (IRegistry.Hive hive : IRegistry.Hive.values()) {
+		    if (name.equalsIgnoreCase(hive.getName())) {
 			hives.add(hive);
 			break;
 		    }
 		}
 		break;
 	      case NOT_EQUAL:
-		for (String hive : IRegistry.HIVES) {
-		    if (!name.equals(hive)) {
+		for (IRegistry.Hive hive : IRegistry.Hive.values()) {
+		    if (!name.equals(hive.getName())) {
 			hives.add(hive);
 			break;
 		    }
@@ -111,8 +109,8 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 		break;
 	      case PATTERN_MATCH: {
 		Pattern p = Pattern.compile(name);
-		for (String hive : IRegistry.HIVES) {
-		    if (p.matcher(hive).find()) {
+		for (IRegistry.Hive hive : IRegistry.Hive.values()) {
+		    if (p.matcher(hive.getName()).find()) {
 			hives.add(hive);
 		    }
 		}
@@ -126,7 +124,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	    //
 	    // For each matching top-level hive, get items.
 	    //
-	    for (String hive : hives) {
+	    for (IRegistry.Hive hive : hives) {
 		for (IKey key : getKeys(rObj, hive, rc)) {
 		    try {
 			//
@@ -134,7 +132,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 			//
 			ReflectedRegkeyItem rItem = new ReflectedRegkeyItem();
 			EntityItemRegistryHiveType hiveType = Factories.sc.windows.createEntityItemRegistryHiveType();
-			hiveType.setValue(hive);
+			hiveType.setValue(hive.getName());
 			rItem.setHive(hiveType);
 			EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
 			keyType.setValue(key.getPath());
@@ -285,32 +283,12 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
     // Private
 
     /**
-     * Idempotent initialization.
-     */
-    private void init() {
-	if (reg32 == null) {
-	    reg32 = session.getRegistry(IWindowsSession.View._32BIT);
-	    if (session.supports(IWindowsSession.View._64BIT)) {
-		reg = session.getRegistry(IWindowsSession.View._64BIT);
-	    } else {
-		reg = reg32;
-	    }
-	}
-    }
-
-    /**
      * Return the list of all registry IKeys corresponding to the given RegistryObject.  Handles searches (from
      * pattern match operations), singletons (from equals operations), and searches based on RegistryBehaviors.
      */
-    private List<IKey> getKeys(ReflectedRegistryObject rObj, String hive, IRequestContext rc) throws CollectException {
-	boolean win32 = false;
-	RegistryBehaviors behaviors = null;
-	if (rObj.isSetBehaviors()) {
-	    behaviors = rObj.getBehaviors();
-	    win32 = "32_bit".equals(behaviors.getWindowsView());
-	}
-
-	IRegistry registry = win32 ? reg32 : reg;
+    private List<IKey> getKeys(ReflectedRegistryObject rObj, IRegistry.Hive hive, IRequestContext rc) throws CollectException {
+	RegistryBehaviors behaviors = rObj.getBehaviors();
+	IRegistry registry = session.getRegistry(getView(behaviors));
 	ISearchable<IKey> searcher = registry.getSearcher();
 	List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
 	conditions.add(searcher.condition(FIELD_HIVE, TYPE_EQUALITY, hive));
@@ -357,9 +335,9 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	    } else if (behaviors != null && "up".equals(behaviors.getRecurseDirection())) {
 		IKey key = null;
 		if (keypath == null) {
-		    key = registry.fetchKey(hive);
+		    key = registry.getHive(hive);
 		} else {
-		    key = registry.fetchKey(hive, keypath);
+		    key = registry.getKey(hive, keypath);
 		}
 		do {
 		    results.add(key);
@@ -368,14 +346,14 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 		    if (ptr == -1) {
 			break;
 		    } else {
-			key = registry.fetchKey(hive, path.substring(0, ptr));
+			key = registry.getKey(hive, path.substring(0, ptr));
 		    }
 		} while(maxDepth-- > 0);
 	    } else {
 		if (keypath == null) {
-		    results.add(registry.fetchKey(hive));
+		    results.add(registry.getHive(hive));
 		} else {
-		    results.add(registry.fetchKey(hive, keypath));
+		    results.add(registry.getKey(hive, keypath));
 		}
 	    }
 	} catch (NoSuchElementException e) {

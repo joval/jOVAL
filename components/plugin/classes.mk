@@ -81,11 +81,12 @@ CLASSES=\
 	org.joval.os.windows.registry.BinaryValue					\
 	org.joval.os.windows.registry.DwordValue					\
 	org.joval.os.windows.registry.ExpandStringValue					\
-	org.joval.os.windows.registry.PSKey						\
+	org.joval.os.windows.registry.Key						\
 	org.joval.os.windows.registry.LicenseData					\
 	org.joval.os.windows.registry.MultiStringValue					\
 	org.joval.os.windows.registry.QwordValue					\
 	org.joval.os.windows.registry.Registry						\
+	org.joval.os.windows.registry.RegistrySearcher					\
 	org.joval.os.windows.registry.StringValue					\
 	org.joval.os.windows.registry.Value						\
 	org.joval.os.windows.system.Environment						\

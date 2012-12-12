@@ -50,7 +50,7 @@ public class Reg {
     public void test(String keyName, String valueName) {
 	try {
 	    IRegistry r = session.getRegistry(IWindowsSession.View._64BIT);
-	    IKey key = r.fetchKey(keyName);
+	    IKey key = r.getKey(keyName);
 
 	    if (valueName == null) {
 		String[] sa = key.listSubkeys();
@@ -58,19 +58,19 @@ public class Reg {
 		for (int i=0; i < sa.length; i++) {
 		    System.out.println("  Subkey name: " + sa[i]);
 		}
-		sa = key.listValues();
-		System.out.println("Values: " + sa.length);
-		for (int i=0; i < sa.length; i++) {
-		    System.out.println("  Value name: " + sa[i] + " val: " + key.getValue(sa[i]).toString());
+		IValue[] values = key.listValues();
+		System.out.println("Values: " + values.length);
+		for (int i=0; i < values.length; i++) {
+		    System.out.println("  Value: " + values[i].toString());
 		}
 	    } else {
-		IValue value = r.fetchValue(key, valueName);
+		IValue value = key.getValue(valueName);
 		switch(value.getType()) {
-		  case IValue.REG_DWORD:
+		  case REG_DWORD:
 		    System.out.println("Dword: " + ((IDwordValue)value).getData());
 		    break;
 
-		  case IValue.REG_BINARY: {
+		  case REG_BINARY: {
 		    byte[] buff = ((IBinaryValue)value).getData();
 		    StringBuffer sb = new StringBuffer();
 		    System.out.println("Binary:");
@@ -84,15 +84,15 @@ public class Reg {
 		    break;
 		  }
 
-		  case IValue.REG_SZ:
+		  case REG_SZ:
 		    System.out.println("String: " + ((IStringValue)value).getData());
 		    break;
 
-		  case IValue.REG_EXPAND_SZ:
+		  case REG_EXPAND_SZ:
 		    System.out.println("Expand String: " + ((IExpandStringValue)value).getData());
 		    break;
 
-		  case IValue.REG_MULTI_SZ: {
+		  case REG_MULTI_SZ: {
 		    String[] sa = ((IMultiStringValue)value).getData();
 		    System.out.println("Multi String: (len " + sa.length + ")");
 		    for (int i=0; i < sa.length; i++) {
@@ -106,8 +106,6 @@ public class Reg {
 		    break;
 		}
 	    }
-
-	    key.closeAll();
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}

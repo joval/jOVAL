@@ -27,7 +27,7 @@ public class DwordValue extends Value implements IDwordValue {
     }
 
     public DwordValue(IKey parent, String name, int data) {
-	type = REG_DWORD;
+	type = Type.REG_DWORD;
 	this.parent = parent;
 	this.name = name;
 	this.data = data;

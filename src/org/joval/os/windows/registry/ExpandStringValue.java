@@ -17,7 +17,7 @@ public class ExpandStringValue extends Value implements IExpandStringValue {
     private String data;
 
     public ExpandStringValue(IKey parent, String name, String data) {
-	type = REG_EXPAND_SZ;
+	type = Type.REG_EXPAND_SZ;
 	this.parent = parent;
 	this.name = name;
 	this.data = data;

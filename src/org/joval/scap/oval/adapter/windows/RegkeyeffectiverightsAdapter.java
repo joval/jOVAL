@@ -87,15 +87,20 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	// See: http://msdn.microsoft.com/en-us/library/windows/desktop/aa379593%28v=vs.85%29.aspx
 	//
 	String hive = null;
-	if (IRegistry.HKLM.equals(key.getHive())) {
+	switch(key.getHive()) {
+	  case HKLM:
 	    hive = "MACHINE";
-	} else if (IRegistry.HKU.equals(key.getHive())) {
+	    break;
+	  case HKU:
 	    hive = "USERS";
-	} else if (IRegistry.HKCU.equals(key.getHive())) {
+	    break;
+	  case HKCU:
 	    hive = "CURRENT_USER";
-	} else if (IRegistry.HKCR.equals(key.getHive())) {
+	    break;
+	  case HKCR:
 	    hive = "CLASSES_ROOT";
-	} else {
+	    break;
+	  default:
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, key.getHive());
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}

@@ -16,7 +16,7 @@ public class StringValue extends Value implements IStringValue {
     private String data;
 
     public StringValue(IKey parent, String name, String data) {
-	type = REG_SZ;
+	type = Type.REG_SZ;
 	this.parent = parent;
 	this.name = name;
 	this.data = data;

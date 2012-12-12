@@ -3,11 +3,11 @@
 
 package org.joval.intf.windows.registry;
 
-import java.util.List;
-import java.util.regex.Pattern;
+import java.util.NoSuchElementException;
 
 import org.joval.intf.util.ILoggable;
 import org.joval.intf.util.ISearchable;
+import org.joval.os.windows.registry.RegistryException;
 
 /**
  * An interface for accessing a Windows registry.
@@ -34,12 +34,47 @@ public interface IRegistry extends ILoggable {
     String COMPUTERNAME_KEY	= "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
     String COMPUTERNAME_VAL	= "ComputerName";
 
-    String HKLM			= "HKEY_LOCAL_MACHINE";
-    String HKU			= "HKEY_USERS";
-    String HKCC			= "HKEY_CURRENT_CONFIG";
-    String HKCU			= "HKEY_CURRENT_USER";
-    String HKCR			= "HKEY_CLASSES_ROOT";
-    String[] HIVES		= {HKLM, HKU, HKCC, HKCR, HKCU};
+    /**
+     * An enumeration of the registry hives.
+     */
+    enum Hive {
+	HKCR("HKCR", "HKEY_CLASSES_ROOT", 0x80000000L),
+	HKCU("HKCU", "HKEY_CURRENT_USER", 0x80000001L),
+	HKLM("HKLM", "HKEY_LOCAL_MACHINE", 0x80000002L),
+	HKU("HKU", "HKEY_USERS", 0x80000003L),
+	HKCC("HKCC", "HKEY_CURRENT_CONFIG", 0x80000005L),
+	HKDD(null, "HKEY_DYN_DATA", 0x80000006L);
+
+	private String shortName, name;
+	private long id;
+
+	private Hive(String shortName, String name, long id) {
+	    this.shortName = shortName;
+	    this.name = name;
+	    this.id = id;
+	}
+
+	public String getShortName() {
+	    return shortName;
+	}
+
+	public String getName() {
+	    return name;
+	}
+
+	public long getId() {
+	    return id;
+	}
+
+	public static Hive fromName(String name) {
+	    for (Hive hive : values()) {
+		if (hive.getName().equals(name.toUpperCase())) {
+		    return hive;
+		}
+	    }
+	    return Hive.HKLM;
+	}
+    }
 
     String DELIM_STR		= "\\";
     char   DELIM_CH		= '\\';
@@ -53,37 +88,39 @@ public interface IRegistry extends ILoggable {
     ILicenseData getLicenseData() throws Exception;
 
     /**
-     * Get a particular hive.  Accepts the HK constants.
-     */
-    IKey getHive(String name) throws IllegalArgumentException;
-
-    /**
      * Get an ISearchable for the registry.
      */
     ISearchable<IKey> getSearcher();
 
     /**
-     * Return a key given its full path (including the name of the hive).
+     * Get a particular hive.
      */
-    IKey fetchKey(String fullPath) throws Exception;
+    IKey getHive(Hive hive);
+
+    /**
+     * Return a key using its full path (including hive name).
+     */
+    IKey getKey(String fullPath) throws NoSuchElementException, RegistryException;
 
     /**
      * Return a key from a hive using the specified redirection mode.
      */
-    IKey fetchKey(String hive, String path) throws Exception;
+    IKey getKey(Hive hive, String path) throws NoSuchElementException, RegistryException;
 
     /**
-     * Return a subkey of a key using the specified redirection mode.
+     * Return the names of the subkeys of the specified key.
      */
-    IKey fetchSubkey(IKey parent, String name) throws Exception;
+    IKey[] enumSubkeys(IKey key) throws RegistryException;
 
     /**
-     * Return a value of a key, whose name matches a pattern.
+     * Return a particular value of a key, given its name.
+     *
+     * @param name use null to retrieve the default value
      */
-    IValue[] fetchValues(IKey key, Pattern p) throws Exception;
+    IValue getValue(IKey key, String name) throws NoSuchElementException, RegistryException;
 
     /**
-     * Return a value of a key, given its name.
+     * Return all the values of a key.
      */
-    IValue fetchValue(IKey key, String name) throws Exception;
+    IValue[] enumValues(IKey key) throws RegistryException;
 }

@@ -17,7 +17,7 @@ public class BinaryValue extends Value implements IBinaryValue {
     private byte[] data;
 
     public BinaryValue(IKey parent, String name, byte[] data) {
-	type = REG_BINARY;
+	type = Type.REG_BINARY;
 	this.parent = parent;
 	this.name = name;
 	this.data = data;

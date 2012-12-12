@@ -63,9 +63,9 @@ class WindowsSystemInfo {
 	}
 
 	try {
-	    IKey key = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
+	    IKey key = registry.getKey(IRegistry.Hive.HKLM, CURRENTVERSION_KEY);
 	    IValue val = key.getValue(CURRENTVERSION_VAL);
-	    if (val.getType() == IValue.REG_SZ) {
+	    if (val.getType() == IValue.Type.REG_SZ) {
 		info.setOsVersion(((IStringValue)val).getData());
 	    }
 	} catch (Exception e) {
@@ -74,9 +74,9 @@ class WindowsSystemInfo {
 	}
 
 	try {
-	    IKey key = registry.fetchKey(IRegistry.HKLM, CURRENTVERSION_KEY);
+	    IKey key = registry.getKey(IRegistry.Hive.HKLM, CURRENTVERSION_KEY);
 	    IValue val = key.getValue(PRODUCTNAME_VAL);
-	    if (val.getType() == IValue.REG_SZ) {
+	    if (val.getType() == IValue.Type.REG_SZ) {
 		info.setOsName(((IStringValue)val).getData());
 	    }
 	} catch (Exception e) {

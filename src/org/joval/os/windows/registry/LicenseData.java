@@ -29,10 +29,10 @@ public class LicenseData implements ILicenseData {
 
     public LicenseData(IRegistry reg) throws Exception {
 	entries = new Hashtable<String, IEntry>();
-	IKey key = reg.fetchKey(IRegistry.HKLM + "\\SYSTEM\\CurrentControlSet\\Control\\ProductOptions");
-	IValue value = reg.fetchValue(key, "ProductPolicy");
+	IKey key = reg.getKey(IRegistry.Hive.HKLM, "SYSTEM\\CurrentControlSet\\Control\\ProductOptions");
+	IValue value = key.getValue("ProductPolicy");
 	switch(value.getType()) {
-	  case IValue.REG_BINARY: {
+	  case REG_BINARY: {
 	    byte[] buff = ((IBinaryValue)value).getData();
 	    //
 	    // Read the header

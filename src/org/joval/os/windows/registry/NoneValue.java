@@ -14,7 +14,7 @@ import org.joval.intf.windows.registry.IKey;
  */
 public class NoneValue extends Value implements INoneValue {
     public NoneValue(IKey parent, String name) {
-	type = REG_NONE;
+	type = Type.REG_NONE;
 	this.parent = parent;
 	this.name = name;
     }

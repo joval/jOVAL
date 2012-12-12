@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -35,16 +36,16 @@ import org.joval.util.StringTools;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Registry implements IRegistry, ISearchable<IKey> {
-    private IWindowsSession session;
-    private IWindowsSession.View view;
-    private ILicenseData license = null;
-    private LocLogger logger;
-    private Map<String, List<String>> searchMap;
-
-    Map<String, IKey> keyMap;
-    PSKey hklm, hku, hkcu, hkcr, hkcc;
-    IRunspace runspace;
+public class Registry implements IRegistry {
+    protected IWindowsSession.View view;
+    protected IWindowsSession session;
+    protected IRunspace runspace;
+    protected RegistrySearcher searcher;
+    protected ILicenseData license = null;
+    protected LocLogger logger;
+    protected IKey hklm, hku, hkcu, hkcr, hkcc;
+    protected Map<String, IKey> keyMap;
+    protected Map<String, IValue[]> valueMap;
 
     /**
      * Create a new Registry, connected to the default view.
@@ -69,9 +70,8 @@ public class Registry implements IRegistry, ISearchable<IKey> {
 	if (runspace == null) {
 	    runspace = session.getRunspacePool().spawn(view);
 	}
-	runspace.loadModule(getClass().getResourceAsStream("Registry.psm1"));
-	searchMap = new HashMap<String, List<String>>();
 	keyMap = new HashMap<String, IKey>();
+	valueMap = new HashMap<String, IValue[]>();
     }
 
     // Implement ILoggable
@@ -84,185 +84,6 @@ public class Registry implements IRegistry, ISearchable<IKey> {
 	this.logger = logger;
     }
 
-    // Implement ISearchable<IKey>
- 
-    public ISearchable.ICondition condition(int field, int type, Object value) {
-	return new GenericCondition(field, type, value);
-    }
-
-    public List<IKey> search(List<ISearchable.ICondition> conditions) throws Exception {
-	String hive = null, keyPath = null, fullKeyPath = null, valName = null;
-	Pattern keyPattern = null, valPattern = null;
-	int maxDepth = DEPTH_UNLIMITED;
-	boolean keyOnly = false;
-	for (ISearchable.ICondition condition : conditions) {
-	    switch(condition.getField()) {
-	      case FIELD_DEPTH:
-		maxDepth = ((Integer)condition.getValue()).intValue();
-		break;
-	      case FIELD_FROM:
-		fullKeyPath = (String)condition.getValue();
-		break;
-	      case FIELD_HIVE:
-		hive = (String)condition.getValue();
-		break;
-	      case FIELD_KEY:
-		switch(condition.getType()) {
-		  case TYPE_EQUALITY:
-		    keyPath = (String)condition.getValue();
-		    break;
-		  case TYPE_PATTERN:
-		    keyPattern = (Pattern)condition.getValue();
-		    break;
-		}
-		break;
-	      case FIELD_VALUE:
-		switch(condition.getType()) {
-		  case TYPE_EQUALITY:
-		    valName = (String)condition.getValue();
-		    break;
-		  case TYPE_PATTERN:
-		    valPattern = (Pattern)condition.getValue();
-		    break;
-		}
-		break;
-	    }
-	}
-
-	String[] keys = null;
-	if (fullKeyPath == null) {
-	    if (hive == null) {
-		throw new IllegalArgumentException("Required search condition FIELD_HIVE is missing");
-	    }
-	    if (keyPath == null) {
-		if (keyPattern != null) {
-	 	    keys = guessParent(keyPattern, hive);
-		}
-		if (keys == null) {
-		    keys = new String[]{null};
-		}
-	    } else {
-		keys = new String[]{keyPath};
-	    }
-	} else {
-	    IKey key = fetchKey(fullKeyPath);
-	    hive = key.getHive();
-	    keys = new String[]{key.getPath()};
-	}
-
-	List<IKey> results = new ArrayList<IKey>();
-	for (String from : keys) {
-	    StringBuffer sb = new StringBuffer("Find-RegKeys -Hive \"").append(hive).append("\"");
-	    if (from != null) {
-		sb.append(" -Key \"").append(from).append("\"");
-	    }
-	    if (keyPattern != null) {
-		sb.append(" -Pattern \"").append(keyPattern.pattern()).append("\"");
-	    }
-	    if (valName != null) {
-		sb.append(" -WithLiteralVal \"").append(valName).append("\"");
-	    } else if (valPattern != null) {
-		sb.append(" -WithValPattern \"").append(valPattern.pattern()).append("\"");
-	    }
-	    sb.append(" -Depth ").append(Integer.toString(maxDepth));
-	    sb.append(" | %{$_.Name}");
-
-	    String command = sb.toString();
-	    if (searchMap.containsKey(command)) {
-		for (String fullPath : searchMap.get(command)) {
-		    results.add(fetchKey(fullPath));
-		}
-	    } else {
-		String paths = runspace.invoke(sb.toString(), session.getTimeout(IWindowsSession.Timeout.XL));
-		if (paths == null) {
-		    searchMap.put(command, new ArrayList<String>());
-		} else {
-		    List<String> result = new ArrayList<String>();
-		    searchMap.put(command, result);
-		    for (String fullPath : paths.split("\r\n")) {
-			result.add(fullPath);
-			results.add(fetchKey(fullPath));
-		    }
-		}
-	    }
-	}
-	return results;
-    }
-
-    /**
-     * Return a list of Key paths containing potential matches for the specified pattern.
-     */
-    public String[] guessParent(Pattern p, Object... args) {
-	String hive = null;
-	for (Object arg : args) {
-	    if (arg instanceof String) {
-		hive = (String)arg;
-		break;
-	    }
-	}
-
-	String path = p.pattern();
-	if (!path.startsWith("^")) {
-	    return null;
-	}
-	path = path.substring(1);
-
-	int ptr = path.indexOf(ESCAPED_DELIM);
-	if (ptr == -1) {
-	    return Arrays.asList(path).toArray(new String[1]);
-	}
-
-	StringBuffer sb = new StringBuffer(path.substring(0,ptr));
-	ptr += ESCAPED_DELIM.length();
-	int next = ptr;
-	while((next = path.indexOf(ESCAPED_DELIM, ptr)) != -1) {
-	    String token = path.substring(ptr, next);
-	    if (StringTools.containsRegex(token)) {
-		break;
-	    } else {
-		sb.append(DELIM_STR).append(token);
-		ptr = next + ESCAPED_DELIM.length();
-	    }
-	}
-	if (sb.length() == 0) {
-	    return null;
-	} else {
-	    String parent = sb.toString();
-
-	    // One of the children of parent should match...
-	    StringBuffer prefix = new StringBuffer("^");
-	    String token = path.substring(ptr);
-	    for (int i=0; i < token.length(); i++) {
-		char c = token.charAt(i);
-		boolean isRegexChar = false;
-		for (char ch : StringTools.REGEX_CHARS) {
-		    if (c == ch) {
-			isRegexChar = true;
-			break;
-		    }
-		}
-		if (isRegexChar) {
-		    break;
-		} else {
-		    prefix.append(c);
-		}
-	    }
-	    try {
-		if (prefix.length() > 1) {
-		    IKey base = fetchKey(hive, parent);
-		    ArrayList<String> paths = new ArrayList<String>();
-		    for (String subkeyName : base.listSubkeys(Pattern.compile(prefix.toString()))) {
-			paths.add(base.getPath() + IRegistry.DELIM_STR + subkeyName);
-		    }
-		    return paths.toArray(new String[paths.size()]);
-		}
-	    } catch (Exception e) {
-	    }
-
-	    return Arrays.asList(parent).toArray(new String[1]);
-	}
-    }
-
     // Implement IRegistry
 
     public ILicenseData getLicenseData() throws Exception {
@@ -273,129 +94,243 @@ public class Registry implements IRegistry, ISearchable<IKey> {
     }
 
     public ISearchable<IKey> getSearcher() {
-	return this;
+	if (searcher == null) {
+	    try {
+		searcher = new RegistrySearcher(session, runspace);
+	    } catch (Exception e) {
+		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    }
+	}
+	return searcher;
     }
 
-    public IKey getHive(String name) throws IllegalArgumentException {
-	PSKey hive = null;
-	if (HKLM.equals(name)) {
-	    hive = getHKLM();
-	} else if (HKU.equals(name)) {
-	    hive = getHKU();
-	} else if (HKCU.equals(name)) {
-	    hive = getHKCU();
-	} else if (HKCR.equals(name)) {
-	    hive = getHKCR();
-	} else if (HKCC.equals(name)) {
-	    hive = getHKCC();
-	} else {
-	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, name));
-	}
+    public IKey getHive(Hive hive) {
+	switch(hive) {
+	  case HKLM:
+	    if (hklm == null) {
+		hklm = new Key(this, Hive.HKLM, null);
+	    }
+	    return hklm;
 
-	if (hive == null) {
-	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE, name));
+	  case HKU:
+	    if (hku == null) {
+		hku = new Key(this, Hive.HKU, null);
+	    }
+	    return hku;
+
+	  case HKCU:
+	    if (hkcu == null) {
+		hkcu = new Key(this, Hive.HKCU, null);
+	    }
+	    return hkcu;
+
+	  case HKCR:
+	    if (hkcr == null) {
+		try {
+		    runspace.invoke("New-PSDrive -PSProvider registry -Root HKEY_CLASSES_ROOT -Name HKCR");
+		} catch (Exception e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+		hkcr = new Key(this, Hive.HKCR, null);
+	    }
+	    return hkcr;
+
+	  case HKCC:
+	    if (hkcc == null) {
+		try {
+		    runspace.invoke("New-PSDrive -PSProvider registry -Root HKEY_CURRENT_CONFIG -Name HKCC");
+		} catch (Exception e) {
+		    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
+		hkcc = new Key(this, Hive.HKCC, null);
+	    }
+	    return hkcc;
+
+	  default:
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE, hive.getName()));
 	}
-	return hive;
     }
 
-    public IKey fetchKey(String fullPath) throws Exception {
+    public IKey getKey(String fullPath) throws NoSuchElementException, RegistryException {
+	Hive hive = null;
+	String path = null;
 	int ptr = fullPath.indexOf(DELIM_STR);
 	if (ptr == -1) {
-	    return getHive(fullPath);
+	    hive = Hive.fromName(fullPath);
 	} else {
-	    String hive = fullPath.substring(0, ptr);
-	    String path = fullPath.substring(ptr + 1);
-	    return fetchKey(hive, path);
+	    hive = Hive.fromName(fullPath.substring(0, ptr));
+	    path = fullPath.substring(ptr+1);
 	}
+	return getKey(hive, path);
     }
 
-    public IKey fetchKey(String hive, String path) throws Exception {
-	return fetchSubkey(getHive(hive), path);
-    }
-
-    public IKey fetchSubkey(IKey parent, String name) throws NoSuchElementException {
-	String fullPath = new StringBuffer(parent.toString()).append(DELIM_CH).append(name).toString();
-	if (keyMap.containsKey(fullPath)) {
-	    return keyMap.get(fullPath);
-	} else {
-	    IKey key = ((PSKey)parent).getSubkey(name);
-	    keyMap.put(fullPath, key);
-	    return key;
-	}
-    }
-
-    public IValue[] fetchValues(IKey key, Pattern p) throws Exception {
-	String[] sa = key.listValues(p);
-	IValue[] values = new IValue[sa.length];
-	for (int i=0; i < sa.length; i++) {
-	    values[i] = fetchValue(key, sa[i]);
-	}
-	return values;
-    }
-
-    public IValue fetchValue(IKey key, String name) throws Exception {
-	return key.getValue(name);
-    }
-
-    // Private 
-
-    /**
-     * Get the HKEY_LOCAL_MACHINE key.
-     */
-    private PSKey getHKLM() {
-	if (hklm == null) {
-	    hklm = new PSKey(this, HKLM);
-	}
-	return hklm;
-    }
-
-    /**
-     * Get the HKEY_USERS key.
-     */
-    private PSKey getHKU() {
-	if (hku == null) {
-	    hku = new PSKey(this, HKU);
-	}
-	return hku;
-    }
-
-    /**
-     * Get the HKEY_CURRENT_USER key.
-     */
-    private PSKey getHKCU() {
-	if (hkcu == null) {
-	    hkcu = new PSKey(this, HKCU);
-	}
-	return hkcu;
-    }
-
-    /**
-     * Get the HKEY_CLASSES_ROOT key.
-     */
-    private PSKey getHKCR() {
-	if (hkcr == null) {
-	    try {
-		runspace.invoke("New-PSDrive -PSProvider registry -Root HKEY_CLASSES_ROOT -Name HKCR");
-	    } catch (Exception e) {
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+    public IKey getKey(Hive hive, String path) throws NoSuchElementException, RegistryException {
+	try {
+	    IKey key = new Key(this, hive, path);
+	    if (keyMap.containsKey(key.toString())) {
+		return keyMap.get(key.toString());
 	    }
-	    hkcr = new PSKey(this, HKCR);
+
+	    StringBuffer sb = new StringBuffer("Test-Path -LiteralPath ").append(getItemPath(key));
+	    String data = runspace.invoke(sb.toString());
+	    if ("True".equalsIgnoreCase(data)) {
+		keyMap.put(key.toString(), key);
+		return key;
+	    } else {
+		throw new NoSuchElementException(key.toString());
+	    }
+	} catch (Exception e) {
+	    throw new RegistryException(e);
 	}
-	return hkcr;
     }
 
-    /**
-     * Get the HKEY_CURRENT_CONFIG key.
-     */
-    private PSKey getHKCC() {
-	if (hkcc == null) {
-	    try {
-		runspace.invoke("New-PSDrive -PSProvider registry -Root HKEY_CURRENT_CONFIG -Name HKCC");
-	    } catch (Exception e) {
-		logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+    public IKey[] enumSubkeys(IKey key) throws RegistryException {
+	try {
+	    StringBuffer sb = new StringBuffer("Get-Item -LiteralPath ").append(getItemPath(key));
+	    sb.append(" | %{$_.GetSubKeyNames()}");
+	    String data = runspace.invoke(sb.toString());
+	    if (data == null) {
+		return new IKey[0];
+	    } else {
+		String[] names = data.split("\r\n");
+		IKey[] subkeys = new IKey[names.length];
+		Hive hive = key.getHive();
+		String path = key.getPath();
+		for (int i=0; i < subkeys.length; i++) {
+		    subkeys[i] = new Key(this, hive, path == null ? names[i] : path + DELIM_STR + names[i]);
+		}
+		return subkeys;
 	    }
-	    hkcc = new PSKey(this, HKCC);
+	} catch (Exception e) {
+	    throw new RegistryException(e);
 	}
-	return hkcc;
+    }
+
+    public IValue getValue(IKey key, String name) throws NoSuchElementException, RegistryException {
+	for (IValue value : enumValues(key)) {
+	    if (value.getName().equalsIgnoreCase(name)) {
+		return value;
+	    }
+	}
+	throw new NoSuchElementException(name);
+    }
+
+    public IValue[] enumValues(IKey key) throws RegistryException {
+	if (valueMap.containsKey(key.toString())) {
+	    return valueMap.get(key.toString());
+	}
+	try {
+	    StringBuffer sb = new StringBuffer("reg query \"");
+	    sb.append(key.getHive().getShortName());
+	    String path = key.getPath();
+	    if (path != null) {
+		sb.append(IRegistry.DELIM_STR).append(path);
+	    }
+	    sb.append("\" /v *");
+
+	    Map<String, Tuple> tuples = new HashMap<String, Tuple>();
+	    String regData = runspace.invoke(sb.toString());
+	    int startIndex = regData.indexOf("\r\n", regData.indexOf(key.toString())) + 2;
+	    int ptr = -1;
+	    String name = null;
+	    for (String line : regData.substring(startIndex).split("\r\n")) {
+		if (line.length() == 0) {
+		    name = null;
+		} else if (line.startsWith("    ") && (ptr = line.indexOf("    REG_")) != -1) {
+		    name = line.substring(4, ptr);
+		    int end = line.indexOf("    ", ptr+1);
+		    IValue.Type type = IValue.Type.typeOf(line.substring(ptr, end).trim());
+		    StringBuffer data = new StringBuffer(line.substring(end+4));
+		    if (name.equals("(Default)")) {
+			if (!"(value not set)".equals(data.toString())) {
+			    name = "";
+			    tuples.put("", new Tuple(type, data));
+			}
+		    } else {
+			tuples.put(name, new Tuple(type, data));
+		    }
+		} else if (name != null) {
+		    // Continuation of data from the previous value
+		    Tuple tuple = tuples.get(name);
+		    tuples.put(name, new Tuple(tuple.type, tuple.data.append(line)));
+		}
+	    }
+
+	    ArrayList<IValue> values = new ArrayList<IValue>();
+	    for (Map.Entry<String, Tuple> entry : tuples.entrySet()) {
+		IValue value = null;
+		name = entry.getKey();
+		String data = entry.getValue().data.toString();
+		switch(entry.getValue().type) {
+		  case REG_NONE:
+		    value = new NoneValue(key, name);
+		    break;
+		  case REG_SZ:
+		    value = new StringValue(key, name, data);
+		    break;
+		  case REG_EXPAND_SZ:
+		    value = new ExpandStringValue(key, name, data);
+		    break;
+		  case REG_MULTI_SZ:
+		    value = new MultiStringValue(key, name, data.split(Matcher.quoteReplacement("\\0")));
+		    break;
+		  case REG_DWORD:
+		    if (data.startsWith("0x")) {
+			value = new DwordValue(key, name, Integer.parseInt(data.substring(2), 16));
+		    } else {
+			value = new DwordValue(key, name, Integer.parseInt(data));
+		    }
+		    break;
+		  case REG_QWORD:
+		    if (data.startsWith("0x")) {
+			value = new QwordValue(key, name, Long.parseLong(data.substring(2), 16));
+		    } else {
+			value = new QwordValue(key, name, Long.parseLong(data));
+		    }
+		    break;
+		  case REG_BINARY:
+		    byte[] buff = new byte[data.length()/2];
+		    for (int i=0; i < buff.length; i++) {
+			int index = i*2;
+			buff[i] = (byte)(Integer.parseInt(data.substring(index, index+2), 16) & 0xFF);
+		    }
+		    value = new BinaryValue(key, name, buff);
+		    break;
+		}
+		logger.trace(JOVALMsg.STATUS_WINREG_VALINSTANCE, value.toString());
+		values.add(value);
+	    }
+	    IValue[] result = values.toArray(new IValue[values.size()]);
+	    valueMap.put(key.toString(), result);
+	    return result;
+	} catch (Exception e) {
+	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    throw new RegistryException(e);
+	}
+    }
+
+    class Tuple {
+	IValue.Type type;
+	StringBuffer data;
+
+	Tuple(IValue.Type type, StringBuffer data) {
+	    this.type = type;
+	    this.data = data;
+	}
+    }
+
+    // Private
+
+    /**
+     * Returns the quoted String suitable for passing as a -LiteralPath to Test-Path or Get-Item.
+     */
+    private String getItemPath(IKey key) {
+	StringBuffer sb = new StringBuffer("\"Registry::").append(key.getHive().getName());
+	String path = key.getPath();
+	if (path != null) {
+	    sb.append(IRegistry.DELIM_STR).append(path);
+	}
+	sb.append("\"");
+	return sb.toString();
     }
 }

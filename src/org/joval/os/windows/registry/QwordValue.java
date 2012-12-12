@@ -27,7 +27,7 @@ public class QwordValue extends Value implements IQwordValue {
     }
 
     public QwordValue(IKey parent, String name, long data) {
-	type = REG_QWORD;
+	type = Type.REG_QWORD;
 	this.parent = parent;
 	this.name = name;
 	this.data = data;

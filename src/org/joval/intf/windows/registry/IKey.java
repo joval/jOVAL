@@ -6,6 +6,8 @@ package org.joval.intf.windows.registry;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 
+import org.joval.os.windows.registry.RegistryException;
+
 /**
  * Interface for a Windows registry key.  Can be used in conjunction with an IRegistry to browse child keys and values.
  *
@@ -14,21 +16,6 @@ import java.util.regex.Pattern;
  */
 public interface IKey {
     /**
-     * Close any underlying resources associated with this key.
-     */
-    public boolean close();
-
-    /**
-     * Close any underlying resources associated with this key, and do the same for all of its <i>ancestor</i> keys.
-     */
-    public boolean closeAll();
-
-    /**
-     * Get this key's name (the last element of its path).
-     */
-    public String getName();
-
-    /**
      * Get a string representation of this key.  Corresponds to getHive() + \\ + getPath().
      */
     public String toString();
@@ -36,12 +23,17 @@ public interface IKey {
     /**
      * Get the hive for this key.
      */
-    public String getHive();
+    public IRegistry.Hive getHive();
 
     /**
-     * Get the path for this key underneath its hive.
+     * Get the full path for this key underneath its hive.
      */
     public String getPath();
+
+    /**
+     * Get this key's name (the last element of its path).
+     */
+    public String getName();
 
     /**
      * Indicates whether this key has a subkey with the given name.
@@ -51,17 +43,17 @@ public interface IKey {
     /**
      * Returns an array of subkey names.
      */
-    public String[] listSubkeys() throws Exception;
+    public String[] listSubkeys() throws RegistryException;
 
     /**
      * Returns an array of subkey names matching (filtered by) the given Pattern.
      */
-    public String[] listSubkeys(Pattern p) throws Exception;
+    public String[] listSubkeys(Pattern p) throws RegistryException;
 
     /**
-     * Get a value of this key.
+     * Return a child of this key.
      */
-    public IValue getValue(String name) throws Exception;
+    public IKey getSubkey(String name) throws NoSuchElementException, RegistryException;
 
     /**
      * Test if this key has a value with the given name.
@@ -71,10 +63,15 @@ public interface IKey {
     /**
      * Returns an array of the names of this key's values.
      */
-    public String[] listValues() throws Exception;
+    public IValue[] listValues() throws RegistryException;
 
     /**
      * Returns an array of the names of this key's values matching (filtered by) the given Pattern.
      */
-    public String[] listValues(Pattern p) throws Exception;
+    public IValue[] listValues(Pattern p) throws RegistryException;
+
+    /**
+     * Get a value of this key.
+     */
+    public IValue getValue(String name) throws NoSuchElementException, RegistryException;
 }

@@ -39,7 +39,6 @@ import org.joval.intf.windows.registry.IKey;
 import org.joval.intf.windows.registry.IMultiStringValue;
 import org.joval.intf.windows.registry.IQwordValue;
 import org.joval.intf.windows.registry.IStringValue;
-import org.joval.intf.windows.registry.IRegistry;
 import org.joval.intf.windows.registry.IValue;
 import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.LittleEndian;
@@ -100,20 +99,19 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	    Collection<RegistryItem> items = new ArrayList<RegistryItem>();
 
 	    if (rObj.getName() == null || rObj.getName().getValue() == null) {
-		items.add(getItem(base, key, null));
+		items.add(getItem(base, key));
 	    } else {
 		OperationEnumeration op = rObj.getName().getValue().getOperation();
 		switch(op) {
 		  case EQUALS:
-		    items.add(getItem(base, key, (String)rObj.getName().getValue().getValue()));
+		    items.add(getItem(base, key.getValue((String)rObj.getName().getValue().getValue())));
 		    break;
 
 		  case PATTERN_MATCH:
 		    try {
 			Pattern p = Pattern.compile((String)rObj.getName().getValue().getValue());
-			String[] valueNames = key.listValues(p);
-			for (int i=0; i < valueNames.length; i++) {
-			    items.add(getItem(base, key, valueNames[i]));
+			for (IValue value : key.listValues(p)) {
+			    items.add(getItem(base, value));
 			}
 		    } catch (PatternSyntaxException e) {
 			MessageType msg = Factories.common.createMessageType();
@@ -137,10 +135,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 
     // Private
 
-    /**
-     * Get an item given an IKey and name.
-     */
-    private RegistryItem getItem(RegistryItem base, IKey key, String name) throws Exception {
+    private RegistryItem getItem(RegistryItem base, IKey key) throws Exception {
 	RegistryItem item = Factories.sc.windows.createRegistryItem();
 	item.setHive(base.getHive());
 	boolean win32 = false;
@@ -159,97 +154,98 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	    return item;
 	}
 	item.setKey(base.getKey());
-
-	if (name != null) {
-	    EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
-	    nameType.setValue(name);
-	    item.setName(Factories.sc.windows.createRegistryItemName(nameType));
-	}
-
-	if (name != null && !"".equals(name)) {
-	    IValue val = (win32 ? reg32 : reg).fetchValue(key, name);
-
-	    Collection<EntityItemAnySimpleType> values = new ArrayList<EntityItemAnySimpleType>();
-	    EntityItemRegistryTypeType typeType = Factories.sc.windows.createEntityItemRegistryTypeType();
-	    switch (val.getType()) {
-	      case IValue.REG_SZ: {
-		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-		valueType.setValue(((IStringValue)val).getData());
-		valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-		values.add(valueType);
-		typeType.setValue("reg_sz");
-		break;
-	      }
-
-	      case IValue.REG_EXPAND_SZ: {
-		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-		valueType.setValue(((IExpandStringValue)val).getExpandedData(session.getEnvironment()));
-		valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-		values.add(valueType);
-		typeType.setValue("reg_expand_sz");
-		break;
-	      }
-
-	      case IValue.REG_DWORD: {
-		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-		valueType.setValue(Integer.toString(((IDwordValue)val).getData()));
-		valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		values.add(valueType);
-		typeType.setValue("reg_dword");
-		break;
-	      }
-
-	      case IValue.REG_QWORD: {
-		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-		valueType.setValue(Long.toString(((IQwordValue)val).getData()));
-		valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-		values.add(valueType);
-		typeType.setValue("reg_qword");
-		break;
-	      }
-
-	      case IValue.REG_BINARY: {
-		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-		byte[] data = ((IBinaryValue)val).getData();
-		StringBuffer sb = new StringBuffer();
-		for (int i=0; i < data.length; i++) {
-		    sb.append(LittleEndian.toHexString(data[i]));
-		}
-		valueType.setValue(sb.toString());
-		valueType.setDatatype(SimpleDatatypeEnumeration.BINARY.value());
-		values.add(valueType);
-		typeType.setValue("reg_binary");
-		break;
-	      }
-
-	      case IValue.REG_MULTI_SZ: {
-		String[] sVals = ((IMultiStringValue)val).getData();
-		for (int i=0; i < sVals.length; i++) {
-		    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-		    valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-		    valueType.setValue(sVals[i]);
-		    values.add(valueType);
-		}
-		typeType.setValue("reg_multi_sz");
-		break;
-	      }
-
-	      case IValue.REG_NONE:
-		typeType.setValue("reg_none");
-		break;
-
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_VALUETOSTR,
-						    key.toString(), name, val.getClass().getName());
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
-	    }
-	    item.setType(typeType);
-	    if (values.size() > 0) {
-		item.getValue().addAll(values);
-	    }
-	}
-
 	item.setStatus(StatusEnumeration.EXISTS);
+	return item;
+    }
+
+    /**
+     * Get an item given an IKey and name.
+     */
+    private RegistryItem getItem(RegistryItem base, IValue value) throws Exception {
+	RegistryItem item = getItem(base, value.getKey());
+
+	EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
+	nameType.setValue(value.getName());
+	item.setName(Factories.sc.windows.createRegistryItemName(nameType));
+
+	Collection<EntityItemAnySimpleType> values = new ArrayList<EntityItemAnySimpleType>();
+	EntityItemRegistryTypeType typeType = Factories.sc.windows.createEntityItemRegistryTypeType();
+	switch (value.getType()) {
+	  case REG_SZ: {
+	    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+	    valueType.setValue(((IStringValue)value).getData());
+	    valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+	    values.add(valueType);
+	    typeType.setValue("reg_sz");
+	    break;
+	  }
+
+	  case REG_EXPAND_SZ: {
+	    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+	    valueType.setValue(((IExpandStringValue)value).getExpandedData(session.getEnvironment()));
+	    valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+	    values.add(valueType);
+	    typeType.setValue("reg_expand_sz");
+	    break;
+	  }
+
+	  case REG_DWORD: {
+	    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+	    valueType.setValue(Integer.toString(((IDwordValue)value).getData()));
+	    valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	    values.add(valueType);
+	    typeType.setValue("reg_dword");
+	    break;
+	  }
+
+	  case REG_QWORD: {
+	    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+	    valueType.setValue(Long.toString(((IQwordValue)value).getData()));
+	    valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	    values.add(valueType);
+	    typeType.setValue("reg_qword");
+	    break;
+	  }
+
+	  case REG_BINARY: {
+	    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+	    byte[] data = ((IBinaryValue)value).getData();
+	    StringBuffer sb = new StringBuffer();
+	    for (int i=0; i < data.length; i++) {
+			sb.append(LittleEndian.toHexString(data[i]));
+	    }
+	    valueType.setValue(sb.toString());
+	    valueType.setDatatype(SimpleDatatypeEnumeration.BINARY.value());
+	    values.add(valueType);
+	    typeType.setValue("reg_binary");
+	    break;
+	  }
+
+	  case REG_MULTI_SZ: {
+	    String[] sVals = ((IMultiStringValue)value).getData();
+	    for (int i=0; i < sVals.length; i++) {
+		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+		valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+		valueType.setValue(sVals[i]);
+		values.add(valueType);
+	    }
+	    typeType.setValue("reg_multi_sz");
+	    break;
+	  }
+
+	  case REG_NONE:
+	    typeType.setValue("reg_none");
+	    break;
+
+	  default:
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_VALUETOSTR, value.getKey().toString(),
+					     value.getName(), value.getClass().getName());
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	}
+	item.setType(typeType);
+	if (values.size() > 0) {
+	    item.getValue().addAll(values);
+	}
 	return item;
     }
 }

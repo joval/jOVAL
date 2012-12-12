@@ -13,13 +13,13 @@ import org.joval.intf.windows.registry.IValue;
  * @version %I% %G%
  */
 public abstract class Value implements IValue {
-    protected int type = REG_NONE;
+    protected Type type = Type.REG_NONE;
     protected String name = null;
     protected IKey parent = null;
 
     // Implement IValue
 
-    public final int getType() {
+    public final Type getType() {
 	return type;
     }
 
