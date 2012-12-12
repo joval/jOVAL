@@ -3,6 +3,8 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.io.InputStream;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -133,6 +135,11 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	throw new CollectException(msg, FlagEnumeration.ERROR);
     }
 
+    @Override
+    protected List<InputStream> getPowershellModules() {
+	return Arrays.asList(getClass().getResourceAsStream("Registry.psm1"));
+    }
+
     // Private
 
     private RegistryItem getItem(RegistryItem base, IKey key) throws Exception {
@@ -144,10 +151,20 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	    item.setWindowsView(base.getWindowsView());
 	}
 
-	// REMIND (DAS): lastWriteTime implementation is TBD
 	EntityItemIntType lastWriteTimeType = Factories.sc.core.createEntityItemIntType();
-	lastWriteTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
 	lastWriteTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	try {
+	    StringBuffer sb = new StringBuffer("Get-RegKeyLastWriteTime -Hive ").append(key.getHive().getName());
+	    if (key.getPath() != null) {
+		sb.append(" -Subkey \"").append(key.getPath()).append("\"");
+	    }
+	    sb.append(" | %{$_.ToFileTimeUtc()}");
+	    IWindowsSession.View view = win32 ? IWindowsSession.View._32BIT : session.getNativeView();
+	    lastWriteTimeType.setValue(getRunspace(view).invoke(sb.toString()));
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    lastWriteTimeType.setStatus(StatusEnumeration.ERROR);
+	}
 	item.setLastWriteTime(lastWriteTimeType);
 
 	if (key.getPath() == null) {
@@ -223,11 +240,18 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 
 	  case REG_MULTI_SZ: {
 	    String[] sVals = ((IMultiStringValue)value).getData();
-	    for (int i=0; i < sVals.length; i++) {
+	    if (sVals == null) {
 		EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
 		valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-		valueType.setValue(sVals[i]);
+		valueType.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 		values.add(valueType);
+	    } else {
+		for (int i=0; i < sVals.length; i++) {
+		    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+		    valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+		    valueType.setValue(sVals[i]);
+		    values.add(valueType);
+		}
 	    }
 	    typeType.setValue("reg_multi_sz");
 	    break;

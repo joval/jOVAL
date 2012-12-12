@@ -26,7 +26,7 @@ function Print-RegValues {
       } else {
         if ("MultiString" -eq $Kind) {
           foreach ($Val in $CurrentKey.GetValue($Name)) {
-            Write-Output "Value: $($Val)"
+            Write-Output "Data: $($Val)"
           }
         } else {
           Write-Output "Data: $($CurrentKey.GetValue($Name))"

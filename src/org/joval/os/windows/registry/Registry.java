@@ -303,9 +303,8 @@ public class Registry implements IRegistry {
 		    if (type == IValue.Type.REG_MULTI_SZ) {
 			if (multiData == null) {
 			    multiData = new ArrayList<String>();
-			} else {
-			    multiData.add(line.substring(6));
 			}
+			multiData.add(line.substring(6));
 		    } else {
 			data = line.substring(6);
 		    }
