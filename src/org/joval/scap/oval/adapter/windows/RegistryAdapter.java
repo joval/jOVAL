@@ -208,7 +208,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 
 	  case REG_DWORD: {
 	    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-	    valueType.setValue(Integer.toString(((IDwordValue)value).getData()));
+	    valueType.setValue(((IDwordValue)value).getData().toString());
 	    valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    values.add(valueType);
 	    typeType.setValue("reg_dword");
@@ -217,7 +217,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 
 	  case REG_QWORD: {
 	    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-	    valueType.setValue(Long.toString(((IQwordValue)value).getData()));
+	    valueType.setValue(((IQwordValue)value).getData().toString());
 	    valueType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	    values.add(valueType);
 	    typeType.setValue("reg_qword");

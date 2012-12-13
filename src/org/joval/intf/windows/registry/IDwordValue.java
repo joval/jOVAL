@@ -3,6 +3,8 @@
 
 package org.joval.intf.windows.registry;
 
+import java.math.BigInteger;
+
 /**
  * Interface to a Windows registry DWORD value.
  *
@@ -13,5 +15,5 @@ public interface IDwordValue extends IValue {
     /**
      * Get the data.
      */
-    public int getData();
+    public BigInteger getData();
 }

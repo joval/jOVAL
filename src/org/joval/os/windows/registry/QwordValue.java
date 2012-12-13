@@ -3,6 +3,8 @@
 
 package org.joval.os.windows.registry;
 
+import java.math.BigInteger;
+
 import org.joval.intf.windows.registry.IQwordValue;
 import org.joval.intf.windows.registry.IKey;
 import org.joval.io.LittleEndian;
@@ -14,30 +16,20 @@ import org.joval.io.LittleEndian;
  * @version %I% %G%
  */
 public class QwordValue extends Value implements IQwordValue {
-    private long data;
+    private BigInteger data;
 
-    /**
-     * Conversion of a little-endian 8-byte QWORD to an int.
-     */
-    public static final long byteArrayToLong(byte[] b) throws IllegalArgumentException {
-	if (b == null || b.length != 8) {
-	    throw new IllegalArgumentException("buffer should be 8 bytes");
-	}
-	return LittleEndian.getULong(b);
-    }
-
-    public QwordValue(IKey parent, String name, long data) {
+    public QwordValue(IKey parent, String name, BigInteger data) {
 	type = Type.REG_QWORD;
 	this.parent = parent;
 	this.name = name;
 	this.data = data;
     }
 
-    public long getData() {
+    public BigInteger getData() {
 	return data;
     }
 
     public String toString() {
-	return "QwordValue [Name=\"" + name + "\", Value=0x" + String.format("%016x", data) + "]";
+	return "QwordValue [Name=\"" + name + "\", Value=0x" + String.format("%016x", data.longValue()) + "]";
     }
 }

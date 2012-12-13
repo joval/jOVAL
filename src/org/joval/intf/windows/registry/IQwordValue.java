@@ -3,6 +3,8 @@
 
 package org.joval.intf.windows.registry;
 
+import java.math.BigInteger;
+
 /**
  * Interface to a Windows registry QWORD value.
  *
@@ -13,5 +15,5 @@ public interface IQwordValue extends IValue {
     /**
      * Get the data.
      */
-    public long getData();
+    public BigInteger getData();
 }

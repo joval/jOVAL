@@ -6,6 +6,7 @@ package org.joval.os.windows.registry;
 import java.net.UnknownHostException;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -332,10 +333,10 @@ public class Registry implements IRegistry {
 		    value = new MultiStringValue(key, name, multiData == null ? null : multiData.toArray(new String[0]));
 		    break;
 		  case REG_DWORD:
-		    value = new DwordValue(key, name, Integer.parseInt(data, 16));
+		    value = new DwordValue(key, name, new BigInteger(data, 16));
 		    break;
 		  case REG_QWORD:
-		    value = new QwordValue(key, name, Long.parseLong(data, 16));
+		    value = new QwordValue(key, name, new BigInteger(data, 16));
 		    break;
 		  case REG_BINARY:
 		    value = new BinaryValue(key, name, Base64.decode(data));
