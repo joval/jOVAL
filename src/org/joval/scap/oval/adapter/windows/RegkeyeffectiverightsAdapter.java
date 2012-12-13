@@ -100,6 +100,9 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	  case HKCR:
 	    hive = "CLASSES_ROOT";
 	    break;
+	  case HKCC:
+	    hive = "CONFIG";
+	    break;
 	  default:
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_WINREG_HIVE_NAME, key.getHive());
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
