@@ -91,6 +91,14 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 		    }
 		}
 		break;
+	      case NOT_EQUAL:
+		for (IRegistry.Hive hive : IRegistry.Hive.values()) {
+		    if (!name.equals(hive.getName())) {
+			hives.add(hive);
+			break;
+		    }
+		}
+		break;
 	      case CASE_INSENSITIVE_EQUALS:
 		for (IRegistry.Hive hive : IRegistry.Hive.values()) {
 		    if (name.equalsIgnoreCase(hive.getName())) {
@@ -99,9 +107,9 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 		    }
 		}
 		break;
-	      case NOT_EQUAL:
+	      case CASE_INSENSITIVE_NOT_EQUAL:
 		for (IRegistry.Hive hive : IRegistry.Hive.values()) {
-		    if (!name.equals(hive.getName())) {
+		    if (!name.equalsIgnoreCase(hive.getName())) {
 			hives.add(hive);
 			break;
 		    }
