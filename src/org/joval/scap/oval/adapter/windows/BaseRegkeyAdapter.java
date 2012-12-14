@@ -295,7 +295,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 
 	boolean search = false;
 	String keypath = null;
-	if (rObj.getKey() != null && rObj.getKey().getValue() != null) {
+	if (!rObj.isKeyNil()) {
 	    keypath = (String)rObj.getKey().getValue();
 	    OperationEnumeration op = rObj.getKey().getOperation();
 	    switch(op) {

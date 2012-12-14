@@ -177,13 +177,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 			fItem.setFilename(filenameType);
 		    }
 		} else if (fObj.isSetPath()) {
-		    if (!isDirectory && fObj.isSetFilename() && fObj.getFilename().getValue() == null) {
-			//
-			// If xsi:nil is set for the filename element, we only want directories...
-			//
-			continue;
-		    }
-
 		    EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
 		    pathType.setValue(dirPath);
 		    fItem.setPath(pathType);
@@ -367,8 +360,8 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     // Private
 
     /**
-     * Get a list of String paths corresponding to this object's specifications. This accommodates searches (from pattern
-     * match operations), singletons (from equals operations) and handles recursive searches specified by FileBehaviors.
+     * Get all the IFiles corresponding to this object's specifications. This accommodates searches (from pattern
+     * match operations), singletons (from equals operations) and handles recursive crawling specified by FileBehaviors.
      * The resulting collection only contains matches that exist.
      */
     private Collection<IFile> getFiles(ReflectedFileObject fObj, ReflectedFileBehaviors fb, IRequestContext rc,
@@ -423,13 +416,11 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    } else if (fObj.isSetPath() && fObj.getPath().getValue() != null) {
 		String path = (String)fObj.getPath().getValue();
 		String filename = null;
-		if (fObj.isSetFilename() && fObj.getFilename().getValue() != null) {
-		    filename = (String)fObj.getFilename().getValue();
-		} else {
-		    //
+		if (fObj.isFilenameNil()) {
 		    // If there is a search, we will only want directories.
-		    //
 		    conditions.add(IFilesystem.DIRECTORIES);
+		} else {
+		    filename = (String)fObj.getFilename().getValue();
 		}
 
 		//

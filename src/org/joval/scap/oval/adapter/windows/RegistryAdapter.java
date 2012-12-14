@@ -4,10 +4,13 @@
 package org.joval.scap.oval.adapter.windows;
 
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -55,12 +58,15 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
+    private Map<String, BigInteger> writeTimes;
+
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((IWindowsSession)session);
+	    writeTimes = new HashMap<String, BigInteger>();
 	    classes.add(RegistryObject.class);
 	}
 	return classes;
@@ -76,7 +82,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
     protected List<ISearchable.ICondition> getConditions(ObjectType obj) throws CollectException, PatternSyntaxException {
 	List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
 	RegistryObject rObj = (RegistryObject)obj;
-	if (rObj.isSetName() && rObj.getName().getValue() != null && rObj.getName().getValue().getValue() != null) {
+	if (!rObj.getName().isNil()) {
 	    String name = (String)rObj.getName().getValue().getValue();
 	    OperationEnumeration op = rObj.getName().getValue().getOperation();
 	    switch(op) {
@@ -100,7 +106,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	    RegistryObject rObj = (RegistryObject)obj;
 	    Collection<RegistryItem> items = new ArrayList<RegistryItem>();
 
-	    if (rObj.getName() == null || rObj.getName().getValue() == null) {
+	    if (rObj.getName().isNil()) {
 		items.add(getItem(base, key));
 	    } else {
 		OperationEnumeration op = rObj.getName().getValue().getOperation();
@@ -154,13 +160,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	EntityItemIntType lastWriteTimeType = Factories.sc.core.createEntityItemIntType();
 	lastWriteTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	try {
-	    StringBuffer sb = new StringBuffer("Get-RegKeyLastWriteTime -Hive ").append(key.getHive().getName());
-	    if (key.getPath() != null) {
-		sb.append(" -Subkey \"").append(key.getPath()).append("\"");
-	    }
-	    sb.append(" | %{$_.ToFileTimeUtc()}");
-	    IWindowsSession.View view = win32 ? IWindowsSession.View._32BIT : session.getNativeView();
-	    lastWriteTimeType.setValue(getRunspace(view).invoke(sb.toString()));
+	    lastWriteTimeType.setValue(getLastWriteTime(key, win32).toString());
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    lastWriteTimeType.setStatus(StatusEnumeration.ERROR);
@@ -199,7 +199,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 
 	  case REG_EXPAND_SZ: {
 	    EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
-	    valueType.setValue(((IExpandStringValue)value).getExpandedData(session.getEnvironment()));
+	    valueType.setValue(((IExpandStringValue)value).getData());
 	    valueType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 	    values.add(valueType);
 	    typeType.setValue("reg_expand_sz");
@@ -271,5 +271,19 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	    item.getValue().addAll(values);
 	}
 	return item;
+    }
+
+    private BigInteger getLastWriteTime(IKey key, boolean win32) throws Exception {
+	String fullPath = key.toString();
+	if (!writeTimes.containsKey(fullPath)) {
+	    StringBuffer sb = new StringBuffer("Get-RegKeyLastWriteTime -Hive ").append(key.getHive().getName());
+	    if (key.getPath() != null) {
+		sb.append(" -Subkey \"").append(key.getPath()).append("\"");
+	    }
+	    sb.append(" | %{$_.ToFileTimeUtc()}");
+	    IWindowsSession.View view = win32 ? IWindowsSession.View._32BIT : session.getNativeView();
+	    writeTimes.put(fullPath, new BigInteger(getRunspace(view).invoke(sb.toString())));
+	}
+	return writeTimes.get(fullPath);
     }
 }
