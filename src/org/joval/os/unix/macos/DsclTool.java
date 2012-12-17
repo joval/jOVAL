@@ -54,7 +54,7 @@ public class DsclTool {
     private void initUsers() {
 	try {
 	    users = new HashSet<String>();
-	    for (String username : SafeCLI.multiLine("dscl . -list Users", session, IUnixSession.Timeout.S)) {
+	    for (String username : SafeCLI.multiLine("dscl localhost -list Search/Users", session, IUnixSession.Timeout.S)) {
 		users.add(username.trim());
 	    }
 	} catch (Exception e) {
