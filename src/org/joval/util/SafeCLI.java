@@ -33,6 +33,33 @@ import org.joval.util.JOVALMsg;
  */
 public class SafeCLI {
     /**
+     * On occasion, it is necessary to incorporate a String that originates from an un-trusted source into a command-line
+     * statement.  This method verifies that the untrusted string cannot have any unintended side-effects by injecting
+     * additional commands into the statement (potentially maliciously). Primarily, this is accomplished by insuring that
+     * the string contains no quotes, so that it cannot terminate any enclosing quites and obtain access to the shell.
+     *
+     * @returns the input String (if no exception is thrown)
+     *
+     * @throws IllegalArgumentException if a potentially-malicious pattern has been detected.
+     */
+    public static String checkArgument(String arg, IBaseSession session) throws IllegalArgumentException {
+	switch(session.getType()) {
+	  case WINDOWS:
+            if (arg.indexOf("'") != -1 || arg.indexOf("\"") != -1) {
+        	throw new IllegalArgumentException(arg);
+	    }
+	    break;
+
+	  case UNIX:
+            if (arg.indexOf("'") != -1 || arg.indexOf("\"") != -1 || arg.indexOf("`") != -1) {
+        	throw new IllegalArgumentException(arg);
+            }
+	    break;
+	}
+	return arg;
+    }
+
+    /**
      * Run a command and get the first (non-empty) line of output.
      */
     public static final String exec(String cmd, IBaseSession session, IBaseSession.Timeout to) throws Exception {

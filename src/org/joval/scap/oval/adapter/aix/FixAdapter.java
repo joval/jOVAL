@@ -60,7 +60,7 @@ public class FixAdapter implements IAdapter {
 	switch(fObj.getAparNumber().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(getItem((String)fObj.getAparNumber().getValue()));
+		items.add(getItem(SafeCLI.checkArgument((String)fObj.getAparNumber().getValue(), session)));
 	    } catch (NoSuchElementException e) {
 		// we'll return an empty list
 	    } catch (Exception e) {
@@ -96,7 +96,7 @@ public class FixAdapter implements IAdapter {
 	aparNumber.setValue(apar);
 	item.setAparNumber(aparNumber);
 
-	List<String> lines = SafeCLI.multiLine("/usr/sbin/instfix -iavk " + apar, session, IUnixSession.Timeout.M);
+	List<String> lines = SafeCLI.multiLine("/usr/sbin/instfix -iavk '" + apar + "'", session, IUnixSession.Timeout.M);
 	Iterator<String> iter = lines.iterator();
 
 	String line = null;

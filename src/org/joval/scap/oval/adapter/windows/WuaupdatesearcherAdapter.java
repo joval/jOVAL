@@ -34,6 +34,7 @@ import org.joval.os.windows.powershell.PowershellException;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
+import org.joval.util.SafeCLI;
 
 /**
  * Retrieves windows:wuaupdatesearcher_items.
@@ -73,10 +74,10 @@ public class WuaupdatesearcherAdapter implements IAdapter {
 	}
 
 	Collection<WuaupdatesearcherItem> items = new Vector<WuaupdatesearcherItem>();
-	String searchCriteria = (String)wObj.getSearchCriteria().getValue();
 	OperationEnumeration op = wObj.getSearchCriteria().getOperation();
 	switch(op) {
 	  case EQUALS:
+	    String searchCriteria = SafeCLI.checkArgument((String)wObj.getSearchCriteria().getValue(), session);
 	    String key = searchCriteria + includeSuperseded;
 	    if (!itemCache.containsKey(key)) {
 		WuaupdatesearcherItem item = makeItem(searchCriteria, includeSuperseded);

@@ -50,6 +50,7 @@ import org.joval.io.LittleEndian;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
+import org.joval.util.SafeCLI;
 
 /**
  * Evaluates RegistryTest OVAL tests.
@@ -83,7 +84,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
 	RegistryObject rObj = (RegistryObject)obj;
 	if (!rObj.getName().isNil()) {
-	    String name = (String)rObj.getName().getValue().getValue();
+	    String name = SafeCLI.checkArgument((String)rObj.getName().getValue().getValue(), session);
 	    OperationEnumeration op = rObj.getName().getValue().getOperation();
 	    switch(op) {
 	      case EQUALS:

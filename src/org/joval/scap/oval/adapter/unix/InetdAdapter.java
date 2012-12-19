@@ -37,7 +37,6 @@ import org.joval.io.BufferedReader;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 import org.joval.util.Version;
 
 /**

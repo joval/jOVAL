@@ -60,9 +60,9 @@ public class FilesetAdapter implements IAdapter {
 	switch(fObj.getFlstinst().getOperation()) {
 	  case EQUALS:
 	    try {
-		String fileset = (String)fObj.getFlstinst().getValue();
+		String fileset = SafeCLI.checkArgument((String)fObj.getFlstinst().getValue(), session);
 		session.getLogger().trace(JOVALMsg.STATUS_AIX_FILESET, fileset);
-		for (String line : SafeCLI.multiLine("lslpp -lac " + fileset, session, IUnixSession.Timeout.M)) {
+		for (String line : SafeCLI.multiLine("lslpp -lac '" + fileset + "'", session, IUnixSession.Timeout.M)) {
 		    if (!line.startsWith("#")) {
 			List<String> info = StringTools.toList(StringTools.tokenize(line, ":"));
 			if (info.get(0).equals("/etc/objrepos")) {

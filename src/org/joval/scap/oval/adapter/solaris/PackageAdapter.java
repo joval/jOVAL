@@ -63,7 +63,7 @@ public class PackageAdapter implements IAdapter {
 	switch(pObj.getPkginst().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(getItem((String)pObj.getPkginst().getValue()));
+		items.add(getItem(SafeCLI.checkArgument((String)pObj.getPkginst().getValue(), session)));
 	    } catch (NoSuchElementException e) {
 		// package is not installed
 	    } catch (Exception e) {
@@ -178,7 +178,7 @@ public class PackageAdapter implements IAdapter {
 	session.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
 	item = Factories.sc.solaris.createPackageItem();
 	boolean isInstalled = false;
-	for (String line : SafeCLI.multiLine("/usr/bin/pkginfo -l " + pkginst, session, IUnixSession.Timeout.S)) {
+	for (String line : SafeCLI.multiLine("/usr/bin/pkginfo -l '" + pkginst + "'", session, IUnixSession.Timeout.S)) {
 	    line = line.trim();
 	    if (line.length() == 0) {
 		break;

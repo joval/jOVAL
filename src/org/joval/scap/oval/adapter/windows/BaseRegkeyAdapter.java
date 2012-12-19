@@ -41,6 +41,7 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
+import org.joval.util.SafeCLI;
 
 /**
  * Base class for IRegistry/IKey-based IAdapters. Subclasses need only implement getItemClass and getItems
@@ -304,7 +305,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 	boolean search = false;
 	String keypath = null;
 	if (!rObj.isKeyNil()) {
-	    keypath = (String)rObj.getKey().getValue();
+	    keypath = SafeCLI.checkArgument((String)rObj.getKey().getValue(), session);
 	    OperationEnumeration op = rObj.getKey().getOperation();
 	    switch(op) {
 	      case EQUALS:

@@ -64,7 +64,7 @@ public class SelinuxbooleanAdapter implements IAdapter {
 	switch(bObj.getName().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(getItem((String)bObj.getName().getValue()));
+		items.add(getItem(SafeCLI.checkArgument((String)bObj.getName().getValue(), session)));
 	    } catch (NoSuchElementException e) {
 		// there is no such boolean; don't add to the item list
 	    } catch (Exception e) {
@@ -120,7 +120,7 @@ public class SelinuxbooleanAdapter implements IAdapter {
     private SelinuxbooleanItem getItem(String name) throws Exception {
 	SelinuxbooleanItem item = booleanMap.get(name);
 	if (item == null) {
-	    item = parseBoolean(SafeCLI.exec("/usr/sbin/getsebool " + name, session, IUnixSession.Timeout.S));
+	    item = parseBoolean(SafeCLI.exec("/usr/sbin/getsebool '" + name + "'", session, IUnixSession.Timeout.S));
 	    if (item != null) {
 		booleanMap.put(name, item);
 	    }

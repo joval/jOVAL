@@ -103,8 +103,8 @@ public class Pwpolicy59Adapter implements IAdapter {
 	if (!pObj.getUsername().isNil()) {
 	    OperationEnumeration op = pObj.getUsername().getValue().getOperation();
 	    if (op == OperationEnumeration.EQUALS) {
-		String value = (String)pObj.getUsername().getValue().getValue();
-		sb.append(" -a ").append(value);
+		String value = SafeCLI.checkArgument((String)pObj.getUsername().getValue().getValue(), session);
+		sb.append(" -a '").append(value).append("'");
 		EntityItemStringType username = Factories.sc.core.createEntityItemStringType();
 		username.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		username.setValue(value);
@@ -117,8 +117,8 @@ public class Pwpolicy59Adapter implements IAdapter {
 	if (!pObj.getUserpass().isNil()) {
 	    OperationEnumeration op = pObj.getUserpass().getValue().getOperation();
 	    if (op == OperationEnumeration.EQUALS) {
-		String value = (String)pObj.getUserpass().getValue().getValue();
-		sb.append(" -p ").append(value);
+		String value = SafeCLI.checkArgument((String)pObj.getUserpass().getValue().getValue(), session);
+		sb.append(" -p '").append(value).append("'");
 		EntityItemStringType userpass = Factories.sc.core.createEntityItemStringType();
 		userpass.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		userpass.setValue(value);
@@ -131,8 +131,8 @@ public class Pwpolicy59Adapter implements IAdapter {
 	if (!pObj.getDirectoryNode().isNil()) {
 	    OperationEnumeration op = pObj.getDirectoryNode().getValue().getOperation();
 	    if (op == OperationEnumeration.EQUALS) {
-		String value = (String)pObj.getDirectoryNode().getValue().getValue();
-		sb.append(" -n ").append(value);
+		String value = SafeCLI.checkArgument((String)pObj.getDirectoryNode().getValue().getValue(), session);
+		sb.append(" -n '").append(value).append("'");
 		EntityItemStringType directoryNode = Factories.sc.core.createEntityItemStringType();
 		directoryNode.setDatatype(SimpleDatatypeEnumeration.STRING.value());
 		directoryNode.setValue(value);

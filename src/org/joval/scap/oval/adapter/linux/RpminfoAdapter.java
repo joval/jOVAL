@@ -66,7 +66,7 @@ public class RpminfoAdapter implements IAdapter {
 	switch(rObj.getName().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(getItem((String)rObj.getName().getValue()));
+		items.add(getItem(SafeCLI.checkArgument((String)rObj.getName().getValue(), session)));
 	    } catch (NoSuchElementException e) {
 		// the package is not installed; don't add to the item list
 	    } catch (Exception e) {
@@ -155,7 +155,7 @@ public class RpminfoAdapter implements IAdapter {
 	item = Factories.sc.linux.createRpminfoItem();
 
 	String pkgArch = null, pkgEpoch = null, pkgVersion = null, pkgRelease = null;
-	StringBuffer command = new StringBuffer("rpm -q --qf \'");
+	StringBuffer command = new StringBuffer("rpm -q --qf '");
 	command.append("%{NAME}\\n");
 	command.append("%{ARCH}\\n");
 	command.append("%{VERSION}\\n");
@@ -166,7 +166,7 @@ public class RpminfoAdapter implements IAdapter {
 	    command.append("%{RSAHEADER:pgpsig}\\n");
 	    break;
 	}
-	command.append("\' ").append(packageName);
+	command.append("' '").append(packageName).append("'");
 	List<String> lines = SafeCLI.multiLine(command.toString(), session, IUnixSession.Timeout.S);
 
 	boolean isInstalled = lines.size() > 0;

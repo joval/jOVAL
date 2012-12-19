@@ -40,6 +40,7 @@ import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.SystemCharacteristics;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
+import org.joval.util.SafeCLI;
 
 /**
  * Retrieves windows:cmdlet_items.
@@ -109,6 +110,7 @@ public class CmdletAdapter implements IAdapter {
 	String moduleName=null, moduleId=null, moduleVersion=null;
 	if (cObj.isSetModuleName() && cObj.getModuleName().getValue() != null) {
 	    moduleName = (String)cObj.getModuleName().getValue().getValue();
+	    checkParameter(moduleName);
 	}
 	if (cObj.isSetModuleId() && cObj.getModuleId().getValue() != null) {
 	    moduleId = (String)cObj.getModuleId().getValue().getValue();
@@ -283,6 +285,26 @@ public class CmdletAdapter implements IAdapter {
     }
 
     /**
+     * Check to see that arg contains only characters that are safe to pass, unquoted, as a parameter to a cmdlet.
+     */
+    private String checkParameter(String arg) throws IllegalArgumentException {
+	for (int i=0; i < arg.length(); i++) {
+	    switch(arg.charAt(i)) {
+	      case '|':
+	      case ';':
+	      case ' ':
+	      case '\t':
+	      case '\n':
+		throw new IllegalArgumentException(arg);
+
+	      default:
+		break;
+	    }
+	}
+	return arg;
+    }
+
+    /**
      * The CmdletObject only makes sense if all its entities use the EQUALS OperationEnumeration member.
      */
     void validateOperation(CmdletObject cObj) throws CollectException {
@@ -331,21 +353,13 @@ public class CmdletAdapter implements IAdapter {
 	StringBuffer sb = new StringBuffer();
 	for (EntityObjectFieldType field : record.getField()) {
 	    if (field.getName().indexOf(" ") == -1) {
-		sb.append(" ").append(field.getName());
+		sb.append(" ").append(checkParameter(field.getName()));
 	    } else {
 		throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_CMDLET_FIELD, field.getName()));
 	    }
 	    if (field.isSetValue()) {
-		String val = (String)field.getValue();
 		// TBD: validate the datatype using the type classes?
-
-		//
-		// quote the value if it contains a space, unless it's already quoted
-		//
-		if (val.indexOf(" ") != -1 && !(val.startsWith("\"") && val.endsWith("\""))) {
-		    val = new StringBuffer("\"").append(val).append("\"").toString();
-		}
-		sb.append(" ").append(val);
+		sb.append(" \"").append(SafeCLI.checkArgument((String)field.getValue(), session)).append("\"");
 	    }
 	}
 	return sb.toString();
@@ -366,7 +380,7 @@ public class CmdletAdapter implements IAdapter {
 		} else {
 		    sb.append(",");
 		}
-		sb.append(field.getName());
+		sb.append(checkParameter(field.getName()));
 	    }
 	}
 	return sb.toString();

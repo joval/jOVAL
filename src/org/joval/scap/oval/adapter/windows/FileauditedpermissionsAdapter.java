@@ -152,7 +152,7 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		// Note: per the specification, the scope is limited to the trustees referenced by the security
 		// descriptor, as opposed to the full scope of all known trustees.
 		//
-		for (Map.Entry<String, List<AuditRule>> entry : getAuditRules(f.getPath(), view).entrySet()) {
+		for (Map.Entry<String, List<AuditRule>> entry : getAuditRules(f, view).entrySet()) {
 		    IPrincipal principal = null;
 		    try {
 			if (pSid == null) {
@@ -190,7 +190,7 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 		} else {
 		    principals = directory.getAllPrincipals(directory.queryPrincipalBySid(pSid), includeGroups, resolveGroups);
 		}
-		Map<String, List<AuditRule>> auditRules = getAuditRules(f.getPath(), view);
+		Map<String, List<AuditRule>> auditRules = getAuditRules(f, view);
 		for (IPrincipal principal : principals) {
 		    switch(op) {
 		      case EQUALS:
@@ -255,20 +255,15 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
     /**
      * Retrieve the access entries for the file.
      */
-    private Map<String, List<AuditRule>> getAuditRules(String path, IWindowsSession.View view) throws Exception {
+    private Map<String, List<AuditRule>> getAuditRules(IFile f, IWindowsSession.View view) throws Exception {
+	String path = f.getPath();
 	if (rules.containsKey(path)) {
 	    return rules.get(path);
 	} else {
 	    Map<String, List<AuditRule>> fileAuditRules = new HashMap<String, List<AuditRule>>();
 	    rules.put(path, fileAuditRules);
 
-	    String pathArg = path.replace("\\", "\\\\");
-	    if (path.indexOf(" ") != -1) {
-		if (!path.startsWith("\"") && !path.endsWith("\"")) {
-		    pathArg = new StringBuffer("\"").append(pathArg).append("\"").toString();
-		}
-	    }
-	    String data = getRunspace(view).invoke("Get-FileAuditedPermissions -Path " + pathArg);
+	    String data = getRunspace(view).invoke("Get-FileAuditedPermissions -Path \"" + path + "\"");
 	    if (data != null) {
 		for (String entry : data.split("\r\n")) {
 		    int ptr1 = entry.indexOf(":");
