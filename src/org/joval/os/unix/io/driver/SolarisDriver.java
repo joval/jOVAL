@@ -156,7 +156,8 @@ public class SolarisDriver extends AbstractDriver {
 			cmd.append(" -name '").append(literalBasename).append("'");
 		    }
 		    if (depth != ISearchable.DEPTH_UNLIMITED) {
-			cmd.append(" -exec echo []: {} \\; | awk -F: 'split($1,a,\"/\")+");
+			// It's impossible for a filename to ever contain the \0 character, so that's our token
+			cmd.append(" -exec echo []\\0 {} \\; | awk -F\\0 'split($1,a,\"/\")+");
 			cmd.append(Integer.toString(depth));
 			cmd.append(" >= split($2,b,\"/\"){print substr($2,2)}'");
 		    }

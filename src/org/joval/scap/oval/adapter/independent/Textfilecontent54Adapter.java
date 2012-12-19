@@ -83,7 +83,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	    } else {
 		flags = Pattern.MULTILINE;
 	    }
-	    Pattern pattern = Pattern.compile(StringTools.regexPerl2Java((String)tfcObj.getPattern().getValue()), flags);
+	    Pattern pattern = Pattern.compile(StringTools.regexPosix2Java((String)tfcObj.getPattern().getValue()), flags);
 
 	    //
 	    // Read the whole file into a String buffer for searching

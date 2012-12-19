@@ -509,6 +509,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    switch(filenameOp) {
 		      case EQUALS:
 			if (search) {
+			    validateFilename(filename);
 			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_EQUALITY, filename));
 			} else {
 			    Collection<IFile> results = new ArrayList<IFile>();
@@ -546,6 +547,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 			    Pattern p = Pattern.compile(filename);
 			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_PATTERN, p));
 			} else {
+			    validateFilename(filename);
 			    conditions.add(searcher.condition(FIELD_BASENAME, TYPE_INEQUALITY, filename));
 			}
 			break;
@@ -592,6 +594,17 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return files;
+    }
+
+    /**
+     * Prevent the possibility of command injection via the find command by checking for dangerous characters
+     * that should not be found in filenames, but that could be used to mess up the command-line generated for
+     * a Unix find command, potentially for malicious purposes.
+     */
+    private void validateFilename(String filename) throws IllegalArgumentException {
+	if (filename.indexOf("'") != -1 || filename.indexOf("`") != -1) {
+	    throw new IllegalArgumentException(filename);
+	}
     }
 
     /**

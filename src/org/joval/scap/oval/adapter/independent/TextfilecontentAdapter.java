@@ -87,7 +87,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 	    OperationEnumeration op = tfcObj.getLine().getOperation();
 	    switch (op) {
 	      case PATTERN_MATCH: {
-		Pattern p = Pattern.compile(StringTools.regexPerl2Java((String)tfcObj.getLine().getValue()));
+		Pattern p = Pattern.compile(StringTools.regexPosix2Java((String)tfcObj.getLine().getValue()));
 		items.addAll(getItems(p, baseItem, lines));
 		break;
 	      }

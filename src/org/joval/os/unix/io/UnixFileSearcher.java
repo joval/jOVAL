@@ -47,7 +47,7 @@ import org.joval.util.JOVALSystem;
 import org.joval.util.SafeCLI;
 
 /**
- * An interface for searching a hierarchy.
+ * ISearchable implementation for files on Unix machines.
  *
  * @author David A. Solin
  * @version %I% %G%

@@ -161,9 +161,9 @@ public class AIXDriver extends AbstractDriver {
 		if (!dirOnly) {
 		    cmd.append(" | xargs -I[] ").append(FIND).append(" '[]' -type f");
 		    if (antiBasename != null) {
-			cmd.append(" ! -name ").append(antiBasename);
+			cmd.append(" ! -name '").append(antiBasename).append("'");
 		    } else if (literalBasename != null) {
-			cmd.append(" -name ").append(literalBasename);
+			cmd.append(" -name '").append(literalBasename).append("'");
 		    }
 		    if (depth != ISearchable.DEPTH_UNLIMITED) {
 			cmd.append(" -exec test (`echo \"[]\" | awk -F/ '{print NF}'` + ");

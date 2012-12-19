@@ -165,7 +165,7 @@ public class StringTools {
     /**
      * Perform a very basic substitution of POSIX character classes to Java character classes...
      */
-    public static String regexPerl2Java(String perlExpression) {
+    public static String regexPosix2Java(String perlExpression) {
 	String javaExpression = perlExpression;
 	javaExpression = javaExpression.replace("[:digit:]", "\\p{Digit}");
 	javaExpression = javaExpression.replace("[:alnum:]", "\\p{Alnum}");
