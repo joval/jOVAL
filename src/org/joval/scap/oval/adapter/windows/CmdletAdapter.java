@@ -359,7 +359,10 @@ public class CmdletAdapter implements IAdapter {
 	    }
 	    if (field.isSetValue()) {
 		// TBD: validate the datatype using the type classes?
-		sb.append(" \"").append(SafeCLI.checkArgument((String)field.getValue(), session)).append("\"");
+		String val = SafeCLI.checkArgument((String)field.getValue(), session);
+		if (val.length() > 0) {
+		    sb.append(" \"").append(val).append("\"");
+		}
 	    }
 	}
 	return sb.toString();
