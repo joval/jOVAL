@@ -219,59 +219,22 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
     }
 
     /**
-     * Get a runspace, with the specified view. Modules supplied by getPowershellModules() will be auto-loaded before
-     * the runspace is returned.
+     * Get a runspace with the specified view, or create it if there isn't one yet.
      */
     protected IRunspace getRunspace(IWindowsSession.View view) throws Exception {
-	if (view == IWindowsSession.View._32BIT && rs32 != null) {
+	switch(view) {
+	  case _32BIT:
+	    if (rs32 == null) {
+		rs32 = createRunspace(view);
+	    }
 	    return rs32;
-	} else if (rs != null) {
+
+	  default:
+	    if (rs == null) {
+		rs = createRunspace(view);
+	    }
 	    return rs;
 	}
-	IRunspace result = null;
-	// See if an existing runspace matches the desired view
-	for (IRunspace runspace : session.getRunspacePool().enumerate()) {
-	    if (runspace.getView() == view) {
-		switch(view) {
-		  case _32BIT:
-		    if (session.getNativeView() == view) {
-			rs = runspace;
-			rs32 = runspace;
-		    } else {
-			rs32 = runspace;
-		    }
-		    result = rs32;
-		    break;
-
-		  default:
-		    rs = runspace;
-		    result = rs;
-		    break;
-		}
-	    }
-	}
-	if (result == null) {
-	    // If a match was not found, spawn a new runspace from the pool with the desired view
-	    switch(view) {
-	      case _32BIT:
-		rs32 = session.getRunspacePool().spawn(view);
-		if (session.getNativeView() == view) {
-		    rs = rs32;
-		}
-		result = rs32;
-		break;
-
-	      default:
-		rs = session.getRunspacePool().spawn(view);
-		result = rs;
-		break;
-	    }
-	}
-	// Load the modules, if any.
-	for (InputStream in : getPowershellModules()) {
-	    result.loadModule(in);
-	}
-	return result;
     }
 
     /**
@@ -290,6 +253,27 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
     }
 
     // Private
+
+    /**
+     * Create a runspace with the specified view. Modules supplied by getPowershellModules() will be auto-loaded before
+     * the runspace is returned.
+     */
+    private IRunspace createRunspace(IWindowsSession.View view) throws Exception {
+	IRunspace result = null;
+	for (IRunspace runspace : session.getRunspacePool().enumerate()) {
+	    if (view == runspace.getView()) {
+		result = runspace;
+		break;
+	    }
+	}
+	if (result == null) {
+	    result = session.getRunspacePool().spawn(view);
+	}
+	for (InputStream in : getPowershellModules()) {
+	    result.loadModule(in);
+	}
+	return result;
+    }
 
     /**
      * Return the list of all registry IKeys corresponding to the given RegistryObject.  Handles searches (from

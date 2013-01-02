@@ -14,8 +14,13 @@
 JAVA_HOME=$(TOP)/../../tools/jdk1.7.0_03
 
 #
-# ARCH defines the default distribution target architecture.  It should correspond to your
-# platform architecture. Left unset, it will be determined automatically.
+# JAXB_HOME is where you've installed JAXB
+#
+JAXB_HOME=$(TOP)/../../tools/jaxb-ri-2.2.6
+
+#
+# ARCH defines the distribution target architecture.  It should correspond to your platform
+# architecture. Left unset, it will be determined automatically.
 #
 #ARCH=x86
 #ARCH=AMD64
@@ -24,6 +29,6 @@ JAVA_HOME=$(TOP)/../../tools/jdk1.7.0_03
 #
 # JRE_HOME is the install path for the JRE that will be bundled with the distribution. Left
 # unset, the JRE included with the JDK will be used. If you are overriding ARCH, you will
-# want to set this to a JRE of the desired architecture.
+# need to set this to a JRE of the desired architecture.
 #
 #JRE_HOME=$(TOP)/../../tools/jre170_03_x86

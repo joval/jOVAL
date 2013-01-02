@@ -276,6 +276,11 @@ public class WindowsFilesystem extends AbstractFilesystem implements IWindowsFil
 	}
 
 	@Override
+	public String toString() {
+	    return getRealPath(path);
+	}
+
+	@Override
 	protected IAccessor getAccessor() {
 	    if (accessor == null) {
 		accessor = new WindowsAccessor(path, new File(getRealPath(path)));

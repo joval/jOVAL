@@ -330,6 +330,11 @@ public abstract class AbstractFilesystem implements IFilesystem {
 	    }
 	}
 
+	@Override
+	public String toString() {
+	    return path;
+	}
+
 	// Implement IFileMetadata
 
 	public Type getType() throws IOException {

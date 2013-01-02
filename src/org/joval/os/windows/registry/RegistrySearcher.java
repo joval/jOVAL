@@ -212,15 +212,18 @@ public class RegistrySearcher implements ISearchable<IKey> {
 		}
 	    }
 	    try {
+		IKey base = registry.getKey(hive, parent);
 		if (prefix.length() > 1) {
-		    IKey base = registry.getKey(hive, parent);
 		    ArrayList<String> paths = new ArrayList<String>();
 		    for (String subkeyName : base.listSubkeys(Pattern.compile(prefix.toString()))) {
 			paths.add(base.getPath() + IRegistry.DELIM_STR + subkeyName);
 		    }
 		    return paths.toArray(new String[paths.size()]);
 		}
+	    } catch (NoSuchElementException e) {
+		return new String[0];
 	    } catch (Exception e) {
+		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 
 	    return Arrays.asList(parent).toArray(new String[1]);

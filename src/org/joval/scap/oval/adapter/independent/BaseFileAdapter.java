@@ -266,63 +266,21 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     }
 
     /**
-     * Windows convenience method to get a runspace, with the specified view. Modules supplied by getPowershellModules()
-     * will be auto-loaded before the runspace is returned.
+     * Get a runspace with the specified view, or create it if there isn't one yet.
      */
     protected IRunspace getRunspace(IWindowsSession.View view) throws Exception {
-	if (session instanceof IWindowsSession) {
-	    IWindowsSession ws = (IWindowsSession)session;
-	    if (view == IWindowsSession.View._32BIT && rs32 != null) {
-		return rs32;
-	    } else if (rs != null) {
-		return rs;
+	switch(view) {
+	  case _32BIT:
+	    if (rs32 == null) {
+		rs32 = createRunspace(view);
 	    }
-	    IRunspace result = null;
-	    // See if an existing runspace matches the desired view
-	    for (IRunspace runspace : ws.getRunspacePool().enumerate()) {
-		if (runspace.getView() == view) {
-		    switch(view) {
-		      case _32BIT:
-			if (ws.getNativeView() == view) {
-			    rs = runspace;
-			    rs32 = runspace;
-			} else {
-			    rs32 = runspace;
-			}
-			result = rs32;
-			break;
+	    return rs32;
 
-		      default:
-			rs = runspace;
-			result = rs;
-			break;
-		    }
-		}
+	  default:
+	    if (rs == null) {
+		rs = createRunspace(view);
 	    }
-	    if (result == null) {
-		// If a match was not found, spawn a new runspace from the pool with the desired view
-		switch(view) {
-		  case _32BIT:
-		    rs32 = ws.getRunspacePool().spawn(view);
-		    if (ws.getNativeView() == view) {
-			rs = rs32;
-		    }
-		    result = rs32;
-		    break;
-
-		  default:
-		    rs = ws.getRunspacePool().spawn(view);
-		    result = rs;
-		    break;
-		}
-	    }
-	    // Load the modules, if any.
-	    for (InputStream in : getPowershellModules()) {
-		result.loadModule(in);
-	    }
-	    return result;
-	} else {
-	    return null;
+	    return rs;
 	}
     }
 
@@ -359,6 +317,30 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     }
 
     // Private
+
+    /**
+     * Create a runspace with the specified view. Modules supplied by getPowershellModules() will be auto-loaded before
+     * the runspace is returned.  Returns null for non-Windows sessions.
+     */
+    private IRunspace createRunspace(IWindowsSession.View view) throws Exception {
+	IRunspace result = null;
+	if (session instanceof IWindowsSession) {
+	    IWindowsSession ws = (IWindowsSession)session;
+	    for (IRunspace runspace : ws.getRunspacePool().enumerate()) {
+		if (view == runspace.getView()) {
+		    result = runspace;
+		    break;
+		} 
+	    }
+	    if (result == null) {
+		result = ws.getRunspacePool().spawn(view);
+	    }
+	    for (InputStream in : getPowershellModules()) {
+		result.loadModule(in);
+	    }
+	}
+	return result;
+    }
 
     /**
      * Get all the IFiles corresponding to this object's specifications. This accommodates searches (from pattern

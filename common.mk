@@ -16,7 +16,11 @@ ifeq (Windows, $(findstring Windows,$(OS)))
     CLN=;
     JAVACFLAGS=-Xlint:unchecked
     ifeq (x, x$(ARCH))
-        ARCH=$(PROCESSOR_ARCHITECTURE)
+        ifeq (x, x$(PROCESSOR_ARCHITEW6432))
+            ARCH=$(PROCESSOR_ARCHITECTURE)
+        else
+            ARCH=$(PROCESSOR_ARCHITEW6432)
+        endif
     endif
 else
     OS=$(shell uname)
@@ -44,7 +48,6 @@ ifeq (x, x$(JRE_HOME))
 endif
 JRE=$(JRE_HOME)/bin/java
 
-JAXB_HOME=$(TOP)/tools/jaxb-ri-2.2.6
 XJC=$(JAVA) -jar $(JAXB_HOME)/lib/jaxb-xjc.jar
 XJCFLAGS=-enableIntrospection
 JAVAC=$(JAVA_HOME)/bin/javac

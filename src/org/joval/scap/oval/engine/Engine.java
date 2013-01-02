@@ -2466,7 +2466,9 @@ public class Engine implements IEngine, IProvider {
 	    if (o instanceof JAXBElement) {
 		o = ((JAXBElement)o).getValue();
 	    }
-	    if (o instanceof EntityItemSimpleBaseType) {
+	    if (o == null) {
+		// skip nulls
+	    } else if (o instanceof EntityItemSimpleBaseType) {
 		try {
 		    EntityItemSimpleBaseType base = (EntityItemSimpleBaseType)o;
 		    SimpleDatatypeEnumeration type = TypeFactory.getSimpleDatatype(base.getDatatype());
