@@ -58,6 +58,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
     protected static final int FIELD_HIVE		= IRegistry.FIELD_HIVE;
     protected static final int FIELD_KEY		= IRegistry.FIELD_KEY;
     protected static final int FIELD_VALUE		= IRegistry.FIELD_VALUE;
+    protected static final int FIELD_VALUE_BASE64	= IRegistry.FIELD_VALUE_BASE64;
 
     protected IWindowsSession session;
 

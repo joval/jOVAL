@@ -7,6 +7,7 @@ function Find-RegKeys {
     [String]$Key = "",
     [String]$Pattern = ".*",
     [String]$WithLiteralVal = "",
+    [String]$WithEncodedVal = "",
     [String]$WithValPattern = "",
     [int]$Depth = 1 
   )
@@ -37,7 +38,17 @@ function Find-RegKeys {
               }
             }
           } else {
-            $CurrentKey
+            if ($WithEncodedVal -ne "") {
+              $DecodedVal = [System.Convert]::FromBase64String($WithEncodedVal)
+              foreach ($ValName in $CurrentKey.GetValueNames()) {
+                if ($ValName -eq $DecodedVal) {
+                  $CurrentKey
+                  break
+                }
+              }
+            } else {
+              $CurrentKey
+            }
           }
         }
       }
@@ -49,7 +60,7 @@ function Find-RegKeys {
           } else {
             $SubKeyPath = $Key + "\" + $SubKeyName
           }
-          Find-RegKeys -Hive $Hive -Key $SubKeyPath -Pattern $Pattern -WithLiteralVal $WithLiteralVal -WithValPattern $WithValPattern -Depth $NextDepth
+          Find-RegKeys -Hive $Hive -Key $SubKeyPath -Pattern $Pattern -WithLiteralVal $WithLiteralVal -WithValPattern $WithValPattern -WithEncodedVal $WithEncodedVal -Depth $NextDepth
         }
       }
     }

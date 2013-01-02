@@ -49,6 +49,7 @@ import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.io.LittleEndian;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
+import org.joval.util.Base64;
 import org.joval.util.JOVALMsg;
 import org.joval.util.SafeCLI;
 
@@ -84,11 +85,21 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
 	RegistryObject rObj = (RegistryObject)obj;
 	if (!rObj.getName().isNil()) {
-	    String name = SafeCLI.checkArgument((String)rObj.getName().getValue().getValue(), session);
+	    String name = (String)rObj.getName().getValue().getValue();
 	    OperationEnumeration op = rObj.getName().getValue().getOperation();
 	    switch(op) {
 	      case EQUALS:
-		conditions.add(new ISearchable.GenericCondition(FIELD_VALUE, TYPE_EQUALITY, name));
+		try {
+		    SafeCLI.checkArgument(name, session);
+		    conditions.add(new ISearchable.GenericCondition(FIELD_VALUE, TYPE_EQUALITY, name));
+		} catch (IllegalArgumentException e) {
+		    //
+		    // The name is unsafe to pass directly into a search because it contains dangerous characters, so
+		    // we pass it in as a Base-64 encoded value.
+		    //
+		    String encoded = Base64.encodeBytes(name.getBytes());
+		    conditions.add(new ISearchable.GenericCondition(FIELD_VALUE_BASE64, TYPE_EQUALITY, encoded));
+		}
 		break;
 	      case PATTERN_MATCH:
 		conditions.add(new ISearchable.GenericCondition(FIELD_VALUE, TYPE_PATTERN, Pattern.compile(name)));

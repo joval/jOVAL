@@ -31,6 +31,11 @@ public interface IRegistry extends ILoggable {
      */
     int FIELD_VALUE = 102;
 
+    /**
+     * Search condition field for a base-64 encoded value name.
+     */
+    int FIELD_VALUE_BASE64 = 103;
+
     String COMPUTERNAME_KEY	= "System\\CurrentControlSet\\Control\\ComputerName\\ComputerName";
     String COMPUTERNAME_VAL	= "ComputerName";
 

@@ -55,7 +55,7 @@ public class RegistrySearcher implements ISearchable<IKey> {
 
     public List<IKey> search(List<ISearchable.ICondition> conditions) throws Exception {
 	IRegistry.Hive hive = null;
-	String keyPath = null, fullKeyPath = null, valName = null;
+	String keyPath = null, fullKeyPath = null, valName = null, valNameB64 = null;
 	Pattern keyPattern = null, valPattern = null;
 	int maxDepth = DEPTH_UNLIMITED;
 	boolean keyOnly = false;
@@ -87,6 +87,13 @@ public class RegistrySearcher implements ISearchable<IKey> {
 		    break;
 		  case TYPE_PATTERN:
 		    valPattern = (Pattern)condition.getValue();
+		    break;
+		}
+		break;
+	      case IRegistry.FIELD_VALUE_BASE64:
+		switch(condition.getType()) {
+		  case TYPE_EQUALITY:
+		    valNameB64 = (String)condition.getValue();
 		    break;
 		}
 		break;
@@ -125,6 +132,8 @@ public class RegistrySearcher implements ISearchable<IKey> {
 	    }
 	    if (valName != null) {
 		sb.append(" -WithLiteralVal \"").append(valName).append("\"");
+	    } else if (valNameB64 != null) {
+		sb.append(" -WithEncodedVal ").append(valNameB64);
 	    } else if (valPattern != null) {
 		sb.append(" -WithValPattern \"").append(valPattern.pattern()).append("\"");
 	    }
