@@ -1,15 +1,16 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.os.unix.macos;
+package org.joval.macos;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.regex.Pattern;
 
-import org.joval.intf.unix.system.IUnixSession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.SafeCLI;
+
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Utility class that uses the dscl command-line utility on MacOS X.

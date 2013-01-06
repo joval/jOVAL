@@ -23,14 +23,14 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.linux.SelinuxbooleanItem;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.SafeCLI;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.unix.system.IUnixSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
-import org.joval.util.Version;
 
 /**
  * Collects Selinuxboolean OVAL items.

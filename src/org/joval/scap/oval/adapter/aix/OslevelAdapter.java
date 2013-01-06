@@ -21,13 +21,13 @@ import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
 import oval.schemas.systemcharacteristics.aix.OslevelItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.SafeCLI;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.PerishableReader;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Provides the AIX OS Level OVAL item.

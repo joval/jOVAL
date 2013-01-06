@@ -19,12 +19,12 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
 import oval.schemas.evaluation.id.EvaluationDefinitionIds;
 
 import org.joval.intf.oval.IDefinitionFilter;
-import org.joval.intf.util.ILoggable;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 

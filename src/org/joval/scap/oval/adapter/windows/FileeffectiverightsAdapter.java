@@ -32,24 +32,23 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.FileeffectiverightsItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFileEx;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFileEx;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
+import jsaf.intf.windows.identity.IACE;
+import jsaf.intf.windows.identity.IDirectory;
+import jsaf.intf.windows.identity.IPrincipal;
+import jsaf.intf.windows.io.IWindowsFileInfo;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.provider.windows.wmi.WmiException;
+import jsaf.util.StringTools;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
-import org.joval.intf.windows.identity.IACE;
-import org.joval.intf.windows.identity.IDirectory;
-import org.joval.intf.windows.identity.IPrincipal;
-import org.joval.intf.windows.io.IWindowsFileInfo;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.os.windows.identity.ACE;
-import org.joval.os.windows.wmi.WmiException;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
-import org.joval.util.StringTools;
-import org.joval.util.Version;
 
 /**
  * Collects items for Fileeffectiverights and Fileeffectiverights53 objects.

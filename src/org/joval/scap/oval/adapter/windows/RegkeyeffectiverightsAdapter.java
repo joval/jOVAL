@@ -34,22 +34,21 @@ import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
 import oval.schemas.systemcharacteristics.windows.RegkeyeffectiverightsItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.windows.registry.IKey;
-import org.joval.intf.windows.identity.IACE;
-import org.joval.intf.windows.identity.IDirectory;
-import org.joval.intf.windows.identity.IPrincipal;
-import org.joval.intf.windows.powershell.IRunspace;
-import org.joval.intf.windows.registry.IRegistry;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.os.windows.identity.ACE;
-import org.joval.os.windows.powershell.PowershellException;
-import org.joval.os.windows.wmi.WmiException;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.windows.registry.IKey;
+import jsaf.intf.windows.identity.IACE;
+import jsaf.intf.windows.identity.IDirectory;
+import jsaf.intf.windows.identity.IPrincipal;
+import jsaf.intf.windows.powershell.IRunspace;
+import jsaf.intf.windows.registry.IRegistry;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.provider.windows.powershell.PowershellException;
+import jsaf.provider.windows.wmi.WmiException;
+import jsaf.util.StringTools;
+
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.StringTools;
-import org.joval.util.Version;
 
 /**
  * Collects items for Regkeyeffectiverights and Regkeyeffectiverights53 objects.

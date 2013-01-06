@@ -37,12 +37,13 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.macos.PlistItem;
 import oval.schemas.systemcharacteristics.macos.EntityItemPlistTypeType;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFilesystem;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
+import jsaf.intf.unix.system.IUnixSession;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
-import org.joval.intf.unix.system.IUnixSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.adapter.independent.BaseFileAdapter;

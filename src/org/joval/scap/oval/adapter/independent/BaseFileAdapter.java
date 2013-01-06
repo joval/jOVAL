@@ -33,19 +33,20 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFilesystem;
+import jsaf.intf.system.ISession;
+import jsaf.intf.util.ISearchable;
+import jsaf.intf.util.ISearchable.ICondition;
+import jsaf.intf.unix.io.IUnixFilesystem;
+import jsaf.intf.windows.powershell.IRunspace;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.util.SafeCLI;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.ISession;
-import org.joval.intf.util.ISearchable;
-import org.joval.intf.util.ISearchable.ICondition;
-import org.joval.intf.unix.io.IUnixFilesystem;
-import org.joval.intf.windows.powershell.IRunspace;
-import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 import org.joval.util.Version;
 
 /**

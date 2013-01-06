@@ -33,22 +33,23 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.independent.Environmentvariable58Item;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IReader;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IReader;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.IEnvironment;
+import jsaf.intf.system.ISession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.intf.windows.powershell.IRunspace;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.provider.windows.powershell.PowershellException;
+import jsaf.util.Environment;
+import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.IEnvironment;
-import org.joval.intf.system.ISession;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.windows.powershell.IRunspace;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.io.PerishableReader;
-import org.joval.os.windows.powershell.PowershellException;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
-import org.joval.util.Environment;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Evaluates Environmentvariable OVAL tests.
@@ -382,10 +383,10 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    if (proc.exists()) {
 		Properties processEnv = new Properties();
 		long timeout = session.getTimeout(IUnixSession.Timeout.M);
-		reader = PerishableReader.newInstance(proc.getInputStream(), timeout);
-		reader.setLogger(session.getLogger());
-		String pair;
-		while ((pair = new String(reader.readUntil(127))) != null) { // 127 == delimiter char
+		byte[] bytes = SafeCLI.execData("cat " + path, null, session, timeout).getData();
+		String data = new String(bytes, StringTools.ASCII);
+		String delim = new StringBuffer().append((char)127).toString(); // 127 == delimiter char
+		for (String pair : data.split(delim)) {
 		    int ptr = pair.indexOf("=");
 		    if (ptr > 0) {
 			String key = pair.substring(0,ptr);

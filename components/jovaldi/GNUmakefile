@@ -9,7 +9,7 @@ PRODUCTNAME=jovaldi
 DIST_DIR=$(DIST)/$(ARCH)
 BIN_DIR=$(RSRC)/bin/$(PLATFORM)-$(ARCH)
 
-API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCAP_LIB)$(CLN)$(SVRL)
+API=$(JSAF_CORE_LIB)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCAP_LIB)$(CLN)$(SVRL)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(API)$(CLN)$(SRC)"
 
 include classes.mk
@@ -64,10 +64,13 @@ dist: all $(DIST_DIR)/jre
 	cp $(JOVAL_CORE_LIB) $(DIST_DIR)/lib
 	cp $(JOVAL_CORE)/$(LIBDIR)/*.jar $(DIST_DIR)/lib
 	cp $(XPERT_LIB) $(DIST_DIR)/lib
+	cp $(JSAF_CORE_LIB) $(DIST_DIR)/lib
 	mkdir -p $(DIST_DIR)/security
 	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST_DIR)/security
 	rm -rf $(DIST_DIR)/plugin/default
 	mkdir -p $(DIST_DIR)/plugin/default/lib
+	cp -R $(JSAF_PROVIDER)/$(LIBDIR)/* $(DIST_DIR)/plugin/default/lib
+	cp $(JSAF_PROVIDER_LIB) $(DIST_DIR)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(RSRC)/plugin.properties $(DIST_DIR)/plugin/default/plugin.properties
-	cp -R $(PLUGIN_LOCAL_LIB) $(DIST_DIR)/plugin/default/lib
 	cp -R $(PLUGIN_LOCAL)/$(LIBDIR)/* $(DIST_DIR)/plugin/default/lib
+	cp $(PLUGIN_LOCAL_LIB) $(DIST_DIR)/plugin/default/lib

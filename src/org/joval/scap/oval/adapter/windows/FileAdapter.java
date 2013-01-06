@@ -28,26 +28,27 @@ import oval.schemas.systemcharacteristics.windows.EntityItemFileTypeType;
 import oval.schemas.systemcharacteristics.windows.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFileEx;
-import org.joval.intf.io.IRandomAccess;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFileEx;
+import jsaf.intf.io.IRandomAccess;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
+import jsaf.intf.windows.io.IWindowsFileInfo;
+import jsaf.intf.windows.powershell.IRunspace;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.intf.windows.wmi.ISWbemObject;
+import jsaf.intf.windows.wmi.ISWbemObjectSet;
+import jsaf.intf.windows.wmi.ISWbemProperty;
+import jsaf.intf.windows.wmi.ISWbemPropertySet;
+import jsaf.intf.windows.wmi.IWmiProvider;
+import jsaf.provider.windows.Timestamp;
+import jsaf.util.StringTools;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
-import org.joval.intf.windows.io.IWindowsFileInfo;
-import org.joval.intf.windows.powershell.IRunspace;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.intf.windows.wmi.ISWbemObject;
-import org.joval.intf.windows.wmi.ISWbemObjectSet;
-import org.joval.intf.windows.wmi.ISWbemProperty;
-import org.joval.intf.windows.wmi.ISWbemPropertySet;
-import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.Timestamp;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
-import org.joval.util.StringTools;
 import org.joval.util.Version;
 
 /**

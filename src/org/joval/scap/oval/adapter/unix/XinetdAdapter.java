@@ -3,6 +3,8 @@
 
 package org.joval.scap.oval.adapter.unix;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,17 +34,16 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.unix.EntityItemXinetdTypeStatusType;
 import oval.schemas.systemcharacteristics.unix.XinetdItem;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IReader;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFilesystem;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.StringTools;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.BufferedReader;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.Version;
 
 /**
  * Resolves Xinetd OVAL objects.
@@ -310,10 +311,10 @@ public class XinetdAdapter implements IAdapter {
      */
     private void parseConfigFile(IFile config) throws IOException, IllegalArgumentException {
 	session.getLogger().info(JOVALMsg.STATUS_XINETD_FILE, config.getPath());
-	IReader reader = null;
+	BufferedReader reader = null;
 	try {
 	    String line = null;
-	    reader = new BufferedReader(config.getInputStream());
+	    reader = new BufferedReader(new InputStreamReader(config.getInputStream(), StringTools.ASCII));
 	    while ((line = reader.readLine()) != null) {
 		line = line.trim();
 		if (line.length() == 0 || line.startsWith("#")) {
@@ -370,7 +371,7 @@ public class XinetdAdapter implements IAdapter {
     /**
      * Parses properties between { and }.  Leaves the reader open.  Throws an exception if no brackets were found.
      */
-    private HashMap<String, List<String>> parseConfigBlock(IReader reader) throws IOException, IllegalArgumentException {
+    private HashMap<String, List<String>> parseConfigBlock(BufferedReader reader) throws IOException, IllegalArgumentException {
 	String line = null;
 	boolean open = false;
 	HashMap<String, List<String>> props = null;

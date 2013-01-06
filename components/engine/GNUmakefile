@@ -5,7 +5,7 @@ TOP=../..
 
 include $(TOP)/common.mk
 
-API=$(SCAP_LIB)
+API=$(JSAF_CORE_LIB)$(CLN)$(SCAP_LIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(LIB)$(CLN)$(SRC)$(CLN)$(API)"
 
 include classes.mk

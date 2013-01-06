@@ -12,8 +12,9 @@ import javax.xml.bind.PropertyException;
 
 import com.sun.xml.internal.bind.marshaller.NamespacePrefixMapper;
 
-import org.joval.intf.util.IProperty;
-import org.joval.util.IniFile;
+import jsaf.intf.util.IProperty;
+import jsaf.util.IniFile;
+
 import org.joval.util.JOVALMsg;
 
 /**

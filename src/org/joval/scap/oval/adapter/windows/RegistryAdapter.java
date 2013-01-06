@@ -34,24 +34,25 @@ import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
 import oval.schemas.systemcharacteristics.windows.RegistryItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.util.ISearchable;
+import jsaf.intf.windows.registry.IBinaryValue;
+import jsaf.intf.windows.registry.IDwordValue;
+import jsaf.intf.windows.registry.IExpandStringValue;
+import jsaf.intf.windows.registry.IKey;
+import jsaf.intf.windows.registry.IMultiStringValue;
+import jsaf.intf.windows.registry.IQwordValue;
+import jsaf.intf.windows.registry.IStringValue;
+import jsaf.intf.windows.registry.IValue;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.io.LittleEndian;
+import jsaf.util.Base64;
+import jsaf.util.SafeCLI;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.util.ISearchable;
-import org.joval.intf.windows.registry.IBinaryValue;
-import org.joval.intf.windows.registry.IDwordValue;
-import org.joval.intf.windows.registry.IExpandStringValue;
-import org.joval.intf.windows.registry.IKey;
-import org.joval.intf.windows.registry.IMultiStringValue;
-import org.joval.intf.windows.registry.IQwordValue;
-import org.joval.intf.windows.registry.IStringValue;
-import org.joval.intf.windows.registry.IValue;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.io.LittleEndian;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
-import org.joval.util.Base64;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Evaluates RegistryTest OVAL tests.

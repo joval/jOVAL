@@ -25,14 +25,15 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.macos.AccountinfoItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.SafeCLI;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.os.unix.macos.DsclTool;
+import org.joval.macos.DsclTool;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Retrieves AccountinfoItems.

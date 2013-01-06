@@ -21,10 +21,11 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.independent.EnvironmentvariableItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.IEnvironment;
+import jsaf.intf.system.ISession;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.IEnvironment;
-import org.joval.intf.system.ISession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;

@@ -23,12 +23,13 @@ import oval.schemas.systemcharacteristics.core.EntityItemStringType;
 import oval.schemas.systemcharacteristics.windows.EntityItemRegistryTypeType;
 import oval.schemas.systemcharacteristics.windows.LicenseItem;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.windows.registry.ILicenseData;
+import jsaf.intf.windows.registry.IRegistry;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.io.LittleEndian;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.windows.registry.ILicenseData;
-import org.joval.intf.windows.registry.IRegistry;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.io.LittleEndian;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.CollectException;
 import org.joval.util.JOVALMsg;

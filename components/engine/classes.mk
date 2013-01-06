@@ -10,15 +10,9 @@ CLASSES=\
 	org.joval.intf.oval.IVariables				\
 	org.joval.intf.plugin.IPlugin				\
 	org.joval.intf.sce.IProvider				\
-	org.joval.intf.util.ILoggable				\
 	org.joval.intf.util.IObserver				\
-	org.joval.intf.util.IPerishable				\
 	org.joval.intf.util.IProducer				\
-	org.joval.intf.util.IProperty				\
 	org.joval.intf.xml.ITransformable			\
-	org.joval.io.LittleEndian				\
-	org.joval.io.StreamTool					\
-	org.joval.os.windows.Timestamp				\
 	org.joval.plugin.PluginConfigurationException		\
 	org.joval.scap.ScapException				\
 	org.joval.scap.oval.CollectException			\
@@ -57,13 +51,9 @@ CLASSES=\
 	org.joval.scap.oval.types.TypeFactory			\
 	org.joval.scap.oval.types.VersionType			\
 	org.joval.scap.oval.xml.OvalNamespacePrefixMapper	\
-	org.joval.util.Checksum					\
-	org.joval.util.IniFile					\
 	org.joval.util.JOVALMsg					\
 	org.joval.util.JOVALSystem				\
 	org.joval.util.Producer					\
-	org.joval.util.PropertyUtil				\
-	org.joval.util.StringTools				\
 	org.joval.util.Version					\
 	org.joval.xml.DOMTools					\
 	org.joval.xml.SchemaRegistry				\

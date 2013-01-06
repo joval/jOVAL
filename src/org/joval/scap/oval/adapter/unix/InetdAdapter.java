@@ -4,6 +4,8 @@
 package org.joval.scap.oval.adapter.unix;
 
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -27,17 +29,17 @@ import oval.schemas.systemcharacteristics.unix.EntityItemEndpointType;
 import oval.schemas.systemcharacteristics.unix.EntityItemWaitStatusType;
 import oval.schemas.systemcharacteristics.unix.InetdItem;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IReader;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFilesystem;
+import jsaf.intf.io.IReader;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.StringTools;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.BufferedReader;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.Version;
 
 /**
  * Resolves Inetd OVAL objects.
@@ -194,11 +196,11 @@ public class InetdAdapter implements IAdapter {
 	    return;
 	}
 	services = new HashSet<Service>();
-	IReader reader = null;
+	BufferedReader reader = null;
 	try {
 	    IFile f = session.getFilesystem().getFile(CONFIG, IFile.Flags.NOCACHE);
 	    if (f.exists()) {
-		reader = new BufferedReader(f.getInputStream());
+		reader = new BufferedReader(new InputStreamReader(f.getInputStream(), StringTools.ASCII));
 		String line = null;
 		while ((line = reader.readLine()) != null) {
 		    line = line.trim();

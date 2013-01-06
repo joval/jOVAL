@@ -13,8 +13,9 @@ import oval.schemas.systemcharacteristics.independent.EntityItemFamilyType;
 import oval.schemas.systemcharacteristics.independent.FamilyItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import jsaf.intf.system.IBaseSession;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.sysinfo.SysinfoFactory;
 

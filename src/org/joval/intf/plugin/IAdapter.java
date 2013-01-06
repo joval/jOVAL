@@ -5,8 +5,9 @@ package org.joval.intf.plugin;
 
 import java.util.Collection;
 
+import jsaf.intf.system.IBaseSession;
+
 import org.joval.intf.oval.IProvider;
-import org.joval.intf.system.IBaseSession;
 import org.joval.scap.oval.CollectException;
 
 /**
@@ -18,8 +19,8 @@ import org.joval.scap.oval.CollectException;
  */
 public interface IAdapter extends IProvider {
     /**
-     * The adapter is initialized by being provided with an active (connected) session object. Implementors should assume
-     * that this method will only be called once for any instance of the adapter.
+     * The adapter is initialized by being provided with an active (connected) jSAF session object. Implementors should
+     * assume that this method will only be called once for any instance of the adapter.
      *
      * @return The object classes for which this adapter knows how to retrieve item data, for the supplied session.
      */

@@ -5,7 +5,7 @@ TOP=../..
 
 include $(TOP)/common.mk
 
-API=$(JOVAL_CORE_LIB)$(CLN)$(JOVAL_CORE_DEPS)$(CLN)$(SCAP_LIB)
+API=$(JOVAL_CORE_DEPS)$(CLN)$(JOVAL_CORE_LIB)$(CLN)$(SCAP_LIB)$(CLN)$(JSAF_CORE_LIB)
 CLASSPATH="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(SRC)"
 RUNTIMECP="$(CLASSLIB)$(CLN)$(API)$(CLN)$(LIB)$(CLN)$(PLUGIN_LOCAL_LIB)"
 
@@ -28,17 +28,13 @@ clean:
 	rm -f $(PLUGIN_LOCAL_LIB)
 
 resources:
-	rm -f $(BUILD)/*.ini $(BUILD)/*.txt $(BUILD)/*.properties
-	cp $(RSRC)/defaults.ini $(BUILD)
+	rm -f $(BUILD)/*.txt $(BUILD)/*.properties
 	cp $(RSRC)/adapters.txt $(BUILD)
 	cp $(RSRC)/plugin.resources.properties $(BUILD)
 	echo version=$(JOVAL_VERSION) >> $(BUILD)/plugin.resources.properties
-	rm -f $(BUILD)/org/joval/os/windows/io/*.psm1
-	cp $(SRC)/org/joval/os/windows/io/*.psm1 $(BUILD)/org/joval/os/windows/io/
-	rm -f $(BUILD)/org/joval/os/windows/registry/*.psm1
-	cp $(SRC)/org/joval/os/windows/registry/*.psm1 $(BUILD)/org/joval/os/windows/registry/
 	rm -f $(BUILD)/org/joval/scap/oval/adapter/windows/*.psm1
 	cp $(SRC)/org/joval/scap/oval/adapter/windows/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/windows/
+	rm -f $(BUILD)/org/joval/scap/oval/adapter/independent/*.psm1
 	cp $(SRC)/org/joval/scap/oval/adapter/independent/*.psm1 $(BUILD)/org/joval/scap/oval/adapter/independent/
 
 classes: classdirs $(CLASS_FILES)

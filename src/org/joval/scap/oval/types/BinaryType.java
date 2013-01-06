@@ -3,8 +3,9 @@
 
 package org.joval.scap.oval.types;
 
+import jsaf.io.LittleEndian;
+
 import org.joval.intf.oval.IType;
-import org.joval.io.LittleEndian;
 import org.joval.util.JOVALMsg;
 
 /**

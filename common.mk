@@ -61,6 +61,16 @@ SRC=$(TOP)/src
 COMPONENTS=$(TOP)/components
 LIBDIR=$(RSRC)/lib
 LIB=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(LIBDIR)/*)))
+
+JSAF_SRC=$(JSAF_HOME)/src
+JSAF_COMPONENTS=$(JSAF_HOME)/components
+JSAF_CORE=$(JSAF_COMPONENTS)/facade
+JSAF_CORE_LIB=$(JSAF_CORE)/jSAF.jar
+JSAF_CORE_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(JSAF_CORE)/$(LIBDIR)/*)))
+JSAF_PROVIDER=$(JSAF_COMPONENTS)/provider
+JSAF_PROVIDER_LIB=$(JSAF_PROVIDER)/jSAF-LocalProvider.jar
+JSAF_PROVIDER_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(JSAF_PROVIDER)/$(LIBDIR)/*)))
+
 SVRL=$(COMPONENTS)/schematron/schema/svrl.jar
 SCAP=$(COMPONENTS)/scap
 SCAP_LIB=$(SCAP)/scap-schema-$(SCAP_VERSION).jar
@@ -68,7 +78,7 @@ JOVAL_CORE=$(COMPONENTS)/engine
 JOVAL_CORE_LIB=$(JOVAL_CORE)/jOVALCore.jar
 JOVAL_CORE_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(JOVAL_CORE)/$(LIBDIR)/*)))
 PLUGIN_LOCAL=$(COMPONENTS)/plugin
-PLUGIN_LOCAL_LIB=$(PLUGIN_LOCAL)/jOVALPluginLocal.jar
+PLUGIN_LOCAL_LIB=$(PLUGIN_LOCAL)/jOVAL-LocalPlugin.jar
 PLUGIN_LOCAL_DEPS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(PLUGIN_LOCAL)/$(LIBDIR)/*)))
 XPERT=$(COMPONENTS)/xpert
 XPERT_LIB=$(XPERT)/XPERT.jar

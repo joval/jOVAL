@@ -26,6 +26,7 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
 import scap.datastream.Component;
@@ -42,7 +43,6 @@ import org.openscap.sce.xccdf.ScriptDataType;
 import xccdf.schemas.core.BenchmarkType;
 
 import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.util.ILoggable;
 import org.joval.scap.ScapException;
 import org.joval.scap.cpe.CpeException;
 import org.joval.scap.cpe.Dictionary;

@@ -26,14 +26,15 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.independent.TextfilecontentItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IFile;
+import jsaf.intf.io.IFile;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
+import jsaf.util.StringTools;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.StringTools;
 
 /**
  * Retrieves Textfilecontent54Test OVAL items.

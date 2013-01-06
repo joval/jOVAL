@@ -33,16 +33,17 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.unix.PasswordItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IFile;
+import jsaf.intf.io.IFile;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.os.unix.macos.DsclTool;
+import org.joval.macos.DsclTool;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
-import org.joval.util.StringTools;
 
 /**
  * Collects items for unix:password_objects.

@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.util.SafeCLI;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.SafeCLI;
 
 /**
  * Tool for creating a SystemInfoType from an IUnixSession implementation.

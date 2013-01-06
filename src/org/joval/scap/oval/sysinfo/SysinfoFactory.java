@@ -6,9 +6,10 @@ package org.joval.scap.oval.sysinfo;
 import oval.schemas.common.FamilyEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.windows.system.IWindowsSession;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.intf.windows.system.IWindowsSession;
+
 import org.joval.scap.oval.OvalException;
 import org.joval.util.JOVALMsg;
 

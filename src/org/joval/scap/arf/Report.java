@@ -20,6 +20,7 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
 import org.w3c.dom.Element;
 
+import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
 import ai.schemas.core.AssetType;
@@ -34,7 +35,6 @@ import arf.schemas.reporting.RelationshipType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.util.ILoggable;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.oval.types.Ip4AddressType;
 import org.joval.scap.oval.types.Ip6AddressType;

@@ -25,11 +25,12 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.SidSidItem;
 
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.windows.identity.IGroup;
-import org.joval.intf.windows.identity.IPrincipal;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.os.windows.wmi.WmiException;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.windows.identity.IGroup;
+import jsaf.intf.windows.identity.IPrincipal;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.provider.windows.wmi.WmiException;
+
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;

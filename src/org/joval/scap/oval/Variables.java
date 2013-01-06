@@ -24,6 +24,7 @@ import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 import org.w3c.dom.Node;
 
+import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
 import oval.schemas.common.SimpleDatatypeEnumeration;
@@ -33,7 +34,6 @@ import oval.schemas.variables.core.VariableType;
 
 import org.joval.intf.oval.IType;
 import org.joval.intf.oval.IVariables;
-import org.joval.intf.util.ILoggable;
 import org.joval.scap.oval.types.TypeFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;

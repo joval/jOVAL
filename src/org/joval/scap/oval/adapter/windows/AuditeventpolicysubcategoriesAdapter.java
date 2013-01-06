@@ -17,13 +17,14 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.AuditeventpolicysubcategoriesItem;
 import oval.schemas.systemcharacteristics.windows.EntityItemAuditType;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.util.SafeCLI;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Retrieves the unary windows:auditeventpolicysubcategories_item.

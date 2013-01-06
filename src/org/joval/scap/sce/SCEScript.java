@@ -21,15 +21,16 @@ import org.openscap.sce.result.SceResultsType;
 import org.openscap.sce.xccdf.LangEnumeration;
 import org.openscap.sce.xccdf.ScriptDataType;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.windows.system.IWindowsSession;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFilesystem;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
+
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
-import org.joval.util.StringTools;
 
 /**
  * A representation of a script.

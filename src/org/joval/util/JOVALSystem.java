@@ -15,7 +15,7 @@ import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
 
-import org.joval.intf.util.IProperty;
+import jsaf.intf.util.IProperty;
 
 /**
  * This class is used to retrieve JOVAL-wide resources, like jOVAL properties and the jOVAL event system timer.

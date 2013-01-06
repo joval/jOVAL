@@ -27,6 +27,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
 import xccdf.schemas.core.BenchmarkType;
@@ -34,7 +35,6 @@ import xccdf.schemas.core.ProfileType;
 import org.openscap.sce.xccdf.ScriptDataType;
 
 import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.util.ILoggable;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.Datastream;
 import org.joval.scap.cpe.CpeException;

@@ -32,16 +32,17 @@ import oval.schemas.systemcharacteristics.windows.EntityItemRegistryHiveType;
 import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
 import oval.schemas.results.core.ResultEnumeration;
 
+import jsaf.intf.util.ISearchable;
+import jsaf.intf.windows.registry.IKey;
+import jsaf.intf.windows.registry.IRegistry;
+import jsaf.intf.windows.powershell.IRunspace;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.util.SafeCLI;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.util.ISearchable;
-import org.joval.intf.windows.registry.IKey;
-import org.joval.intf.windows.registry.IRegistry;
-import org.joval.intf.windows.powershell.IRunspace;
-import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Base class for IRegistry/IKey-based IAdapters. Subclasses need only implement getItemClass and getItems

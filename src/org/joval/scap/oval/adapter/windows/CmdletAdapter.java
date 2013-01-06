@@ -31,16 +31,17 @@ import oval.schemas.systemcharacteristics.windows.CmdletItem;
 import oval.schemas.systemcharacteristics.windows.EntityItemGUIDType;
 import oval.schemas.results.core.ResultEnumeration;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.windows.powershell.IRunspace;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.provider.windows.powershell.PowershellException;
+import jsaf.util.SafeCLI;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.windows.powershell.IRunspace;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.os.windows.powershell.PowershellException;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.SystemCharacteristics;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Retrieves windows:cmdlet_items.

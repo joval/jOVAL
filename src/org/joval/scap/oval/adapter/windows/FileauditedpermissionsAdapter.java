@@ -32,26 +32,25 @@ import oval.schemas.systemcharacteristics.windows.EntityItemAuditType;
 import oval.schemas.systemcharacteristics.windows.FileauditedpermissionsItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFileEx;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFileEx;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
+import jsaf.intf.windows.identity.IACE;
+import jsaf.intf.windows.identity.IDirectory;
+import jsaf.intf.windows.identity.IPrincipal;
+import jsaf.intf.windows.io.IWindowsFileInfo;
+import jsaf.intf.windows.powershell.IRunspace;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.provider.windows.powershell.PowershellException;
+import jsaf.provider.windows.wmi.WmiException;
+import jsaf.util.StringTools;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
-import org.joval.intf.windows.identity.IACE;
-import org.joval.intf.windows.identity.IDirectory;
-import org.joval.intf.windows.identity.IPrincipal;
-import org.joval.intf.windows.io.IWindowsFileInfo;
-import org.joval.intf.windows.powershell.IRunspace;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.os.windows.identity.ACE;
-import org.joval.os.windows.powershell.PowershellException;
-import org.joval.os.windows.wmi.WmiException;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
-import org.joval.util.StringTools;
-import org.joval.util.Version;
 
 /**
  * Collects items for Fileauditedpermissions and Fileauditedpermissions53 objects.
@@ -448,16 +447,28 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 	return item;
     }
 
-    class AuditRule extends ACE {
-	private int flags;
+    class AuditRule implements IACE {
+	private int mask, flags;
+	private String sid;
 
 	AuditRule(String sid, int mask, int flags) {
-	    super(sid, mask);
+	    this.sid = sid;
+	    this.mask = mask;
 	    this.flags = flags;
 	}
 
 	public int getFlags() {
 	    return flags;
+	}
+
+	// Implement IACE
+
+	public int getAccessMask() {
+	    return mask;
+	}
+
+	public String getSid() {
+	    return sid;
 	}
     }
 }

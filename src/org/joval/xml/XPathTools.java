@@ -29,7 +29,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import org.joval.util.StringTools;
+import jsaf.util.StringTools;
 
 /**
  * Useful methods for XPath evaluation.

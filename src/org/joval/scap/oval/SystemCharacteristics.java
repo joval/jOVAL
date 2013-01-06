@@ -31,6 +31,7 @@ import javax.xml.stream.XMLStreamWriter;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
 import oval.schemas.common.MessageType;
@@ -46,7 +47,6 @@ import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 
 import org.joval.intf.oval.ISystemCharacteristics;
-import org.joval.intf.util.ILoggable;
 import org.joval.scap.oval.xml.OvalNamespacePrefixMapper;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;

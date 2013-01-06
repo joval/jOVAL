@@ -26,18 +26,19 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.ProcessItem;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.util.IProperty;
+import jsaf.intf.windows.powershell.IRunspace;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.provider.windows.Timestamp;
+import jsaf.provider.windows.powershell.PowershellException;
+import jsaf.util.IniFile;
+import jsaf.util.StringTools;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.util.IProperty;
-import org.joval.intf.windows.powershell.IRunspace;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.os.windows.Timestamp;
-import org.joval.os.windows.powershell.PowershellException;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
-import org.joval.util.IniFile;
 import org.joval.util.JOVALMsg;
-import org.joval.util.StringTools;
 
 /**
  * Retrieves windows:process58_items.

@@ -36,6 +36,8 @@ import java.util.logging.LogManager;
 import java.util.logging.LogRecord;
 import org.xml.sax.SAXException;
 
+import jsaf.util.Checksum;
+
 import oval.schemas.definitions.core.OvalDefinitions;
 import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
 import oval.schemas.results.core.DefinitionType;
@@ -51,7 +53,6 @@ import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
-import org.joval.util.Checksum;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Version;

@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
+import jsaf.util.StringTools;
 import org.slf4j.cal10n.LocLogger;
 
 import oval.schemas.common.CheckEnumeration;
@@ -143,7 +144,6 @@ import org.joval.scap.oval.types.TypeFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
-import org.joval.util.StringTools;
 import org.joval.util.Version;
 
 /**

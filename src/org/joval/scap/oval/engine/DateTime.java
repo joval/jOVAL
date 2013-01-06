@@ -10,9 +10,10 @@ import java.util.Date;
 import java.util.Date;
 import java.util.TimeZone;
 
+import jsaf.provider.windows.Timestamp;
+
 import oval.schemas.definitions.core.DateTimeFormatEnumeration;
 
-import org.joval.os.windows.Timestamp;
 import org.joval.util.JOVALMsg;
 
 /**

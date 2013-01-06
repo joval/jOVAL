@@ -26,15 +26,16 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
+import jsaf.intf.util.ILoggable;
+import jsaf.provider.SessionFactory;
+
 import org.slf4j.cal10n.LocLogger;
 
-import org.joval.discovery.Local;
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.sce.IProvider;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
-import org.joval.intf.util.ILoggable;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.sysinfo.SysinfoFactory;
@@ -143,7 +144,8 @@ public class LocalPlugin implements IPlugin, IProvider, ILoggable {
     }
 
     public void configure(Properties props) {
-	session = Local.createSession(dir);
+	SessionFactory sf = SessionFactory.newInstance(SessionFactory.DEFAULT_FACTORY, getClass().getClassLoader(), dir);
+	session = (ISession)sf.createSession();
     }
 
     public boolean isConnected() {

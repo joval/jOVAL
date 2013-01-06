@@ -11,14 +11,15 @@ import oval.schemas.systemcharacteristics.core.InterfacesType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
-import org.joval.intf.io.IReader;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.unix.system.IUnixSession;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFilesystem;
+import jsaf.intf.io.IReader;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.SafeCLI;
+
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Tool for creating a SystemInfoType from a Unix ISession implementation.

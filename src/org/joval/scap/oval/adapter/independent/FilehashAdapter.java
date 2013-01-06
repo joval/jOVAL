@@ -34,23 +34,24 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.independent.FilehashItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFileEx;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFileEx;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
+import jsaf.intf.unix.io.IUnixFileInfo;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.intf.windows.io.IWindowsFileInfo;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.io.LittleEndian;
+import jsaf.io.StreamTool;
+import jsaf.util.Base64;
+import jsaf.util.Checksum;
+import jsaf.util.SafeCLI;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
-import org.joval.intf.unix.io.IUnixFileInfo;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.intf.windows.io.IWindowsFileInfo;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.io.LittleEndian;
-import org.joval.io.StreamTool;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
-import org.joval.util.Base64;
-import org.joval.util.Checksum;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Collects items for filehash OVAL objects.

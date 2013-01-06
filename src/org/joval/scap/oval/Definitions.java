@@ -21,6 +21,7 @@ import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
+import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
 import oval.schemas.definitions.core.DefinitionType;
@@ -37,7 +38,6 @@ import oval.schemas.definitions.core.VariablesType;
 
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.util.ILoggable;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 

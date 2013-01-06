@@ -15,18 +15,19 @@ import oval.schemas.systemcharacteristics.core.InterfacesType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
-import org.joval.intf.system.IEnvironment;
-import org.joval.intf.windows.registry.IKey;
-import org.joval.intf.windows.registry.IStringValue;
-import org.joval.intf.windows.registry.IValue;
-import org.joval.intf.windows.registry.IRegistry;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.intf.windows.wmi.ISWbemObject;
-import org.joval.intf.windows.wmi.ISWbemObjectSet;
-import org.joval.intf.windows.wmi.ISWbemProperty;
-import org.joval.intf.windows.wmi.ISWbemPropertySet;
-import org.joval.intf.windows.wmi.IWmiProvider;
-import org.joval.os.windows.wmi.WmiException;
+import jsaf.intf.system.IEnvironment;
+import jsaf.intf.windows.registry.IKey;
+import jsaf.intf.windows.registry.IStringValue;
+import jsaf.intf.windows.registry.IValue;
+import jsaf.intf.windows.registry.IRegistry;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.intf.windows.wmi.ISWbemObject;
+import jsaf.intf.windows.wmi.ISWbemObjectSet;
+import jsaf.intf.windows.wmi.ISWbemProperty;
+import jsaf.intf.windows.wmi.ISWbemPropertySet;
+import jsaf.intf.windows.wmi.IWmiProvider;
+import jsaf.provider.windows.wmi.WmiException;
+
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
 

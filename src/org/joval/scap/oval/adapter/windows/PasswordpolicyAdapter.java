@@ -21,18 +21,19 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.PasswordpolicyItem;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFilesystem;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFilesystem;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.util.IProperty;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.util.IniFile;
+import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.util.IProperty;
-import org.joval.intf.windows.system.IWindowsSession;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
-import org.joval.util.IniFile;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
-import org.joval.util.StringTools;
 
 /**
  * Retrieves the unary windows:passwordpolicy_item.

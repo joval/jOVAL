@@ -37,15 +37,16 @@ import oval.schemas.systemcharacteristics.unix.EntityItemCapabilityType;
 import oval.schemas.systemcharacteristics.unix.Process58Item;
 import oval.schemas.systemcharacteristics.unix.ProcessItem;
 
-import org.joval.intf.io.IFile;
+import jsaf.intf.io.IFile;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.SafeCLI;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.unix.system.IUnixSession;
 import org.joval.scap.oval.ItemSet;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.SafeCLI;
 
 /**
  * Scans for items associated with ProcessObject and Process58Object OVAL objects.

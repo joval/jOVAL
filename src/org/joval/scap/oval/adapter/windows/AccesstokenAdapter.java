@@ -29,16 +29,17 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.AccesstokenItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.windows.identity.IDirectory;
+import jsaf.intf.windows.identity.IGroup;
+import jsaf.intf.windows.identity.IPrincipal;
+import jsaf.intf.windows.identity.IUser;
+import jsaf.intf.windows.powershell.IRunspace;
+import jsaf.intf.windows.system.IWindowsSession;
+import jsaf.provider.windows.powershell.PowershellException;
+import jsaf.provider.windows.wmi.WmiException;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.windows.identity.IDirectory;
-import org.joval.intf.windows.identity.IGroup;
-import org.joval.intf.windows.identity.IPrincipal;
-import org.joval.intf.windows.identity.IUser;
-import org.joval.intf.windows.powershell.IRunspace;
-import org.joval.intf.windows.system.IWindowsSession;
-import org.joval.os.windows.powershell.PowershellException;
-import org.joval.os.windows.wmi.WmiException;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;

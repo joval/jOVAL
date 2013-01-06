@@ -31,15 +31,16 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.unix.FileItem;
 import oval.schemas.results.core.ResultEnumeration;
 
-import org.joval.intf.io.IFile;
-import org.joval.intf.io.IFileEx;
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFileEx;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
+import jsaf.intf.unix.io.IUnixFileInfo;
+import jsaf.intf.unix.io.IUnixFilesystem;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.io.StreamTool;
+
 import org.joval.intf.plugin.IAdapter;
-import org.joval.intf.system.IBaseSession;
-import org.joval.intf.system.ISession;
-import org.joval.intf.unix.io.IUnixFileInfo;
-import org.joval.intf.unix.io.IUnixFilesystem;
-import org.joval.intf.unix.system.IUnixSession;
-import org.joval.io.StreamTool;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.adapter.independent.BaseFileAdapter;
