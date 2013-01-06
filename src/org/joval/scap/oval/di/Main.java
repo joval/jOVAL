@@ -133,7 +133,6 @@ public class Main implements IObserver {
 
     static void configureLogging(File logfile, Level logLevel) {
 	try {
-	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
 	    Logger jSysLogger = Logger.getLogger(JOVALMsg.getLogger().getName());
 	    Handler logHandler = new FileHandler(logfile.getPath(), false);
 	    logHandler.setFormatter(new LogfileFormatter());

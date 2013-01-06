@@ -31,6 +31,7 @@ import jsaf.intf.system.ISession;
 import jsaf.intf.util.ILoggable;
 import jsaf.provider.SessionFactory;
 
+import ch.qos.cal10n.IMessageConveyor;
 import org.slf4j.cal10n.LocLogger;
 
 import org.joval.intf.plugin.IAdapter;
@@ -49,6 +50,12 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class LocalPlugin implements IPlugin, IProvider, ILoggable {
+    static {
+	for (Map.Entry<Class, IMessageConveyor> entry : jsaf.Message.getConveyors()) {
+	    JOVALMsg.extend(entry.getKey(), entry.getValue());
+	}
+    }
+
     private static final String ADAPTERS_RESOURCE = "adapters.txt";
 
     /**
@@ -146,6 +153,7 @@ public class LocalPlugin implements IPlugin, IProvider, ILoggable {
     public void configure(Properties props) {
 	SessionFactory sf = SessionFactory.newInstance(SessionFactory.DEFAULT_FACTORY, getClass().getClassLoader(), dir);
 	session = (ISession)sf.createSession();
+	session.setLogger(logger);
     }
 
     public boolean isConnected() {
