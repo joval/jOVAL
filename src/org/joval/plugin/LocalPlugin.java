@@ -51,7 +51,7 @@ import org.joval.util.JOVALMsg;
  */
 public class LocalPlugin implements IPlugin, IProvider, ILoggable {
     static {
-	for (Map.Entry<Class, IMessageConveyor> entry : jsaf.Message.getConveyors()) {
+	for (Map.Entry<Class<? extends Enum<?>>, IMessageConveyor> entry : jsaf.Message.getConveyors()) {
 	    JOVALMsg.extend(entry.getKey(), entry.getValue());
 	}
     }
@@ -150,7 +150,7 @@ public class LocalPlugin implements IPlugin, IProvider, ILoggable {
 	this.dir = dir;
     }
 
-    public void configure(Properties props) {
+    public void configure(Properties props) throws Exception {
 	SessionFactory sf = SessionFactory.newInstance(SessionFactory.DEFAULT_FACTORY, getClass().getClassLoader(), dir);
 	session = (ISession)sf.createSession();
 	session.setLogger(logger);
