@@ -94,7 +94,6 @@ public class LocalPlugin implements IPlugin, IProvider, ILoggable {
     private LocLogger logger;
     private ISession session;
     private PropertyResourceBundle resources;
-    private File dir;
     private Hashtable<Class, IAdapter> adapters;
 
     /**
@@ -147,13 +146,12 @@ public class LocalPlugin implements IPlugin, IProvider, ILoggable {
     }
 
     public void setDataDirectory(File dir) throws IOException {
-	this.dir = dir;
-    }
-
-    public void configure(Properties props) throws Exception {
 	SessionFactory sf = SessionFactory.newInstance(SessionFactory.DEFAULT_FACTORY, getClass().getClassLoader(), dir);
 	session = (ISession)sf.createSession();
 	session.setLogger(logger);
+    }
+
+    public void configure(Properties props) throws Exception {
     }
 
     public boolean isConnected() {

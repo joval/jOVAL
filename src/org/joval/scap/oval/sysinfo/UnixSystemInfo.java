@@ -33,12 +33,7 @@ class UnixSystemInfo {
 	// Hostname
 	//
 	SystemInfoType info = Factories.sc.core.createSystemInfoType();
-	try {
-	    info.setPrimaryHostName(SafeCLI.exec("hostname", session, IUnixSession.Timeout.S));
-	} catch (Exception e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_HOSTNAME);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
+	info.setPrimaryHostName(session.getMachineName());
 
 	//
 	// OS Version
