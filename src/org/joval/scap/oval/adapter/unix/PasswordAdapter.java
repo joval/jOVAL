@@ -33,6 +33,7 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.unix.PasswordItem;
 import oval.schemas.results.core.ResultEnumeration;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.unix.system.IUnixSession;
@@ -217,7 +218,7 @@ public class PasswordAdapter implements IAdapter {
 			lines.add(line);
 		    }
 		} catch (IOException e) {
-		    session.getLogger().warn(JOVALMsg.ERROR_IO, "/etc/passwd", e.getMessage());
+		    session.getLogger().warn(Message.ERROR_IO, "/etc/passwd", e.getMessage());
 		    errorMessages.add(e.getMessage());
 		}
 		break;

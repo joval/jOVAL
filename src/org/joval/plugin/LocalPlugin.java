@@ -50,6 +50,10 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class LocalPlugin implements IPlugin, IProvider, ILoggable {
+    //
+    // Extend the JOVALMsg logging enumeration with the jsaf.Message logging enumeration. This makes it possible
+    // for the LocalPlugin to route jSAF log messages to a JOVALMsg-provided logger.
+    //
     static {
 	for (Map.Entry<Class<? extends Enum<?>>, IMessageConveyor> entry : jsaf.Message.getConveyors()) {
 	    JOVALMsg.extend(entry.getKey(), entry.getValue());

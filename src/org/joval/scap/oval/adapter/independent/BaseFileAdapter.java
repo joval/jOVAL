@@ -33,6 +33,7 @@ import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.system.ISession;
@@ -215,15 +216,15 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		session.getLogger().warn(JOVALMsg.ERROR_REFLECTION, e.getMessage(), id);
 	    } catch (IllegalArgumentException e) {
 		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		session.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+		session.getLogger().warn(Message.ERROR_IO, path, e.getMessage());
 	    } catch (IOException e) {
-		session.getLogger().warn(JOVALMsg.ERROR_IO, path, e.getMessage());
+		session.getLogger().warn(Message.ERROR_IO, path, e.getMessage());
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
 		if (f == null) {
 		    msg.setValue(e.getMessage());
 		} else {
-		    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_IO, path, e.getMessage()));
+		    msg.setValue(JOVALMsg.getMessage(Message.ERROR_IO, path, e.getMessage()));
 		}
 		rc.addMessage(msg);
 	    }

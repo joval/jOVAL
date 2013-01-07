@@ -34,6 +34,7 @@ import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.unix.EntityItemXinetdTypeStatusType;
 import oval.schemas.systemcharacteristics.unix.XinetdItem;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.system.IBaseSession;
@@ -302,7 +303,7 @@ public class XinetdAdapter implements IAdapter {
 		throw new CollectException(errmsg, FlagEnumeration.NOT_APPLICABLE);
 	    }
 	} catch (IOException e) {
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_IO, CONFIG, e.getMessage()));
+	    session.getLogger().warn(JOVALMsg.getMessage(Message.ERROR_IO, CONFIG, e.getMessage()));
 	}
     }
 

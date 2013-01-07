@@ -37,6 +37,7 @@ import oval.schemas.systemcharacteristics.unix.EntityItemCapabilityType;
 import oval.schemas.systemcharacteristics.unix.Process58Item;
 import oval.schemas.systemcharacteristics.unix.ProcessItem;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.unix.system.IUnixSession;
@@ -448,8 +449,8 @@ public class ProcessAdapter implements IAdapter {
 			    }
 			}
 		    } catch (FileNotFoundException e) {
-			String reason = JOVALMsg.getMessage(JOVALMsg.ERROR_IO_NOT_FILE);
-			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_IO, luidPath, reason));
+			String reason = JOVALMsg.getMessage(Message.ERROR_IO_NOT_FILE);
+			session.getLogger().warn(JOVALMsg.getMessage(Message.ERROR_IO, luidPath, reason));
 			process.loginuid.setStatus(StatusEnumeration.NOT_COLLECTED);
 		    }
 		} else {

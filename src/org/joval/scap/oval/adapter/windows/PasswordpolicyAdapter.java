@@ -21,6 +21,7 @@ import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
 import oval.schemas.systemcharacteristics.windows.PasswordpolicyItem;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.system.IBaseSession;
@@ -132,7 +133,7 @@ public class PasswordpolicyAdapter implements IAdapter {
 		    error = new CollectException(e.getMessage(), FlagEnumeration.NOT_APPLICABLE);
 		    throw error;
 		} catch (IOException e) {
-		    session.getLogger().warn(JOVALMsg.ERROR_IO, secpol, e.getMessage());
+		    session.getLogger().warn(Message.ERROR_IO, secpol, e.getMessage());
 		} finally {
 		    if (file != null) {
 			file.delete();

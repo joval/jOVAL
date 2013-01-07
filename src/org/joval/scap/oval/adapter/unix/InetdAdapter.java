@@ -29,6 +29,7 @@ import oval.schemas.systemcharacteristics.unix.EntityItemEndpointType;
 import oval.schemas.systemcharacteristics.unix.EntityItemWaitStatusType;
 import oval.schemas.systemcharacteristics.unix.InetdItem;
 
+import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.io.IReader;
@@ -218,7 +219,7 @@ public class InetdAdapter implements IAdapter {
 		throw new CollectException(errmsg, FlagEnumeration.NOT_APPLICABLE);
 	    }
 	} catch (IOException e) {
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_IO, CONFIG, e.getMessage()));
+	    session.getLogger().warn(JOVALMsg.getMessage(Message.ERROR_IO, CONFIG, e.getMessage()));
 	} finally {
 	    if (reader != null) {
 		try {
