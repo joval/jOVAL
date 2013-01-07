@@ -1,7 +1,7 @@
 BUILD INSTRUCTIONS FOR jOVAL:
 
-jOVAL is easily built from source code using GNU make. But, you must first
-modify the file "customize.mk" to tailor the build to your environment. Simply
+jOVAL can be built from source code using GNU make, but you must first modify
+the "customize.mk" file to tailor the build to your environment. Simply
 follow the instructions documented in the file.
 
 After editing the customization file, simply build the default target from the

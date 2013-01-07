@@ -10,16 +10,18 @@
 #
 # JAVA_HOME is where you've installed your JDK.
 #
-#JAVA_HOME=$(TOP)/../../tools/jdk1.6.0_25
+#JAVA_HOME=$(TOP)/../../tools/jdk1.6.0_26
 JAVA_HOME=$(TOP)/../../tools/jdk1.7.0_03
 
 #
 # JSAF_HOME is the location of the jSAF FOSS git repository
+# See http://github.org/joval/jSAF
 #
 JSAF_HOME=$(TOP)/../jSAF
 
 #
 # JAXB_HOME is where you've installed JAXB
+# See http://jaxb.java.net
 #
 JAXB_HOME=$(TOP)/../../tools/jaxb-ri-2.2.6
 

@@ -1,6 +1,10 @@
 # Copyright (C) 2011 jOVAL.org.  All rights reserved.
 # This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
+TOP=..
+
+include $(TOP)/common.mk
+
 all: _jovaldi
 
 # Target to build everything but the data models
@@ -24,11 +28,14 @@ clean: logic-clean
 _jovaldi: _engine _plugin _schematron _xpert
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
-_engine: _scap
+_engine: _jsaf _scap
 	@$(MAKE) --keep-going --directory=engine all
 
 _plugin: _engine
 	@$(MAKE) --keep-going --directory=plugin all
+
+_jsaf:
+	@$(MAKE) --keep-going --directory=$(JSAF_HOME)/components/facade all
 
 _scap:
 	@$(MAKE) --keep-going --directory=scap all

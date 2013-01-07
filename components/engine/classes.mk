@@ -1,5 +1,4 @@
 CLASSES=\
-	org.joval.intf.io.IRandomAccess				\
 	org.joval.intf.oval.IDefinitionFilter			\
 	org.joval.intf.oval.IDefinitions			\
 	org.joval.intf.oval.IEngine				\
