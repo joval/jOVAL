@@ -57,12 +57,13 @@ import xccdf.schemas.core.ScoreType;
 import xccdf.schemas.core.SelectableItemType;
 import xccdf.schemas.core.TestResultType;
 
+import jsaf.intf.system.ISession;
+
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.sce.IProvider;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.plugin.PluginFactory;
@@ -73,6 +74,7 @@ import org.joval.scap.ocil.Checklist;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
+import org.joval.scap.oval.sysinfo.SysinfoFactory;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.Profile;
 import org.joval.scap.xccdf.TestResult;
@@ -321,8 +323,8 @@ public class Engine implements Runnable, IObserver {
 	//
 	// Run the SCE scripts
 	//
-	if (plugin instanceof IProvider) {
-	    SCEHandler handler = new SCEHandler(xccdf, profile, (IProvider)plugin, plugin.getLogger());
+	if (plugin.getSession() instanceof ISession) {
+	    SCEHandler handler = new SCEHandler(xccdf, profile, (ISession)plugin.getSession(), plugin.getLogger());
 	    if (handler.ruleCount() > 0) {
 		logger.info("Evaluating SCE rules");
 		handler.integrateResults(testResult);
@@ -392,7 +394,7 @@ public class Engine implements Runnable, IObserver {
 	    profileRef.setIdref(profile.getName());
 	    testResult.setProfile(profileRef);
 	}
-	String user = plugin.getUsername();
+	String user = plugin.getSession().getUsername();
 	if (user != null) {
 	    IdentityType identity = factory.createIdentityType();
 	    identity.setValue(user);
@@ -408,7 +410,7 @@ public class Engine implements Runnable, IObserver {
 	    testResult.getPlatform().add(cpeRef);
 	}
 	try {
-	    sysinfo = plugin.getSystemInfo();
+	    sysinfo = SysinfoFactory.createSystemInfo(plugin.getSession());
 	    if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
 		testResult.getTarget().add(sysinfo.getPrimaryHostName());
 	    }

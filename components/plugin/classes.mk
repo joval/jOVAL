@@ -1,6 +1,7 @@
 CLASSES=\
 	org.joval.intf.plugin.IAdapter							\
 	org.joval.macos.DsclTool							\
+	org.joval.plugin.BasePlugin							\
 	org.joval.plugin.LocalPlugin							\
 	org.joval.scap.oval.adapter.aix.FilesetAdapter					\
 	org.joval.scap.oval.adapter.aix.FixAdapter					\

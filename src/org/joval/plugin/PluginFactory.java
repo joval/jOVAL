@@ -18,7 +18,6 @@ import java.util.StringTokenizer;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
 
 /**
@@ -36,8 +35,7 @@ public class PluginFactory {
     }
 
     /**
-     * Create the specified plugin.  The plugin's data directory will be set to the JOVALSystem data
-     * directory.
+     * Create the specified plugin using its default (no-args) constructor.
      *
      * @throws PluginConfigurationException if there was a problem with the factory configuration of the container
      * @throws NoSuchElementException if the factory could not find the container in its base directory
@@ -76,13 +74,7 @@ public class PluginFactory {
 				Class clazz = loader.loadClass(main);
 				Object obj = clazz.newInstance();
 				if (obj instanceof IPlugin) {
-				    IPlugin plugin = (IPlugin)obj;
-				    File dataDir = JOVALSystem.getDataDirectory();
-				    if (!dataDir.exists()) {
-					dataDir.mkdirs();
-				    }
-				    plugin.setDataDirectory(dataDir);
-				    return plugin;
+				    return (IPlugin)obj;
 				} else {
 				    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PLUGIN_INTERFACE);
 				    throw new PluginConfigurationException(msg);

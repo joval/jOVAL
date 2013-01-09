@@ -24,7 +24,9 @@ import xccdf.schemas.core.RuleResultType;
 import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.TestResultType;
 
-import org.joval.intf.sce.IProvider;
+import jsaf.intf.system.ISession;
+
+import org.joval.scap.sce.SCEScript;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.Profile;
 import org.joval.scap.xccdf.XccdfException;
@@ -45,17 +47,17 @@ public class SCEHandler {
 
     private Benchmark xccdf;
     private Profile profile;
-    private IProvider provider;
+    private ISession session;
     private LocLogger logger;
     private Map<String, Map<String, Script>> scriptTable;
 
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
      */
-    public SCEHandler(Benchmark xccdf, Profile profile, IProvider provider, LocLogger logger) {
+    public SCEHandler(Benchmark xccdf, Profile profile, ISession session, LocLogger logger) {
 	this.xccdf = xccdf;
 	this.profile = profile;
-	this.provider = provider;
+	this.session = session;
 	this.logger = logger;
 	loadScripts();
     }
@@ -96,10 +98,10 @@ public class SCEHandler {
 				for (CheckContentRefType ref : check.getCheckContentRef()) {
 				    checkResult.getCheckContentRef().add(ref);
 				    if (ruleScripts.containsKey(ref.getHref())) {
-					Script script = ruleScripts.get(ref.getHref());
+					Script rs = ruleScripts.get(ref.getHref());
 					try {
 					    logger.info("Running SCE script " + ref.getHref());
-					    SceResultsType srt = provider.exec(script.getExports(), script.getData());
+					    SceResultsType srt = new SCEScript(rs.getExports(), rs.getData(), session).exec();
 					    result.add(srt.getResult());
 					    if (importStdout) {
 						CheckImportType cit = FACTORY.createCheckImportType();

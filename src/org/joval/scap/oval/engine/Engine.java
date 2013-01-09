@@ -106,8 +106,6 @@ import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
 import oval.schemas.systemcharacteristics.core.FlagEnumeration;
 import oval.schemas.systemcharacteristics.core.ItemType;
 import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.SystemDataType;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
 import oval.schemas.systemcharacteristics.core.VariableValueType;
 import oval.schemas.systemcharacteristics.independent.EntityItemVariableRefType;
 import oval.schemas.systemcharacteristics.independent.VariableItem;
@@ -221,7 +219,7 @@ public class Engine implements IEngine, IProvider {
 	    }
 	    return items;
 	} else {
-	    return plugin.getItems(obj, rc);
+	    return plugin.getOvalProvider().getItems(obj, rc);
 	}
     }
 
@@ -2308,7 +2306,7 @@ public class Engine implements IEngine, IProvider {
 		tt.setFormat1(DateTimeFormatEnumeration.SECONDS_SINCE_EPOCH);
 		ts1 = new ArrayList<IType>();
 		try {
-		    String val = Long.toString(plugin.getTime() / 1000L);
+		    String val = Long.toString(plugin.getSession().getTime() / 1000L);
 		    ts1.add(TypeFactory.createType(IType.Type.INT, val));
 		} catch (Exception e) {
 		    throw new ResolveException(e);

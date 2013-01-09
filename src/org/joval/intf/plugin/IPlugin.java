@@ -11,6 +11,9 @@ import org.slf4j.cal10n.LocLogger;
 
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.util.ILoggable;
+
 import org.joval.intf.oval.IProvider;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.scap.oval.OvalException;
@@ -21,11 +24,11 @@ import org.joval.scap.oval.OvalException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IPlugin extends IProvider {
+public interface IPlugin extends ILoggable {
     /**
-     * The default filename for a plugin configuration.
+     * Default filename for plugin configuration.
      */
-    String DEFAULT_FILE		= "config.properties";
+    String DEFAULT_FILE = "config.properties";
 
     /**
      * An enumeration containing property keys that are used by the ContainerFactory.
@@ -78,12 +81,6 @@ public interface IPlugin extends IProvider {
     public String getMessage(String key, Object... arguments);
 
     /**
-     * If applicable, set the directory where the IPlugin can persist state information.  This must be set
-     * prior to the configure method, or it will not be applied.
-     */
-    void setDataDirectory(File dir) throws IOException;
-
-    /**
      * Configure the IPlugin using the specified Properties.
      */
     void configure(Properties props) throws Exception;
@@ -94,37 +91,32 @@ public interface IPlugin extends IProvider {
     boolean connect();
 
     /**
-     * Disconnect the plugin from the target.
-     */
-    void disconnect();
-
-    /**
-     * When you're completely finished using the plugin, call this method to clean up caches and other resources.
-     */
-    void dispose();
-
-    /**
      * Returns whether or not the plugin is connected to the target.
      */
     boolean isConnected();
 
     /**
-     * Returns information about the target.
+     * Disconnect the plugin from the target.
+     */
+    void disconnect();
+
+    /**
+     * Returns the jSAF session used to interact with the target machine.
+     */
+    IBaseSession getSession();
+
+    /**
+     * Get the org.joval.intf.oval.IProvider
+     */
+    IProvider getOvalProvider();
+
+    /**
+     * Get OVAL SystemInfoType information about the host.
      */
     SystemInfoType getSystemInfo() throws OvalException;
 
     /**
-     * Returns the logging facade for the target.
+     * When you're completely finished using the plugin, call this method to clean up caches and other resources.
      */
-    LocLogger getLogger();
-
-    /**
-     * Returns the system time on the target.
-     */
-    long getTime();
-
-    /**
-     * Returns the name of the user logged in to scan the target.
-     */
-    String getUsername();
+    void dispose();
 }
