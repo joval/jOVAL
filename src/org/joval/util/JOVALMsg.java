@@ -187,6 +187,7 @@ public enum JOVALMsg {
     STATUS_XINETD_NOCONFIG,
     STATUS_XINETD_SERVICE,
     WARNING_FIELD_STATUS,
+    WARNING_SYSCTL,
     WARNING_WINDOWS_VIEW;
 
     private static IMessageConveyor baseConveyor;

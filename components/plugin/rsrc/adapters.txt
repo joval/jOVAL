@@ -32,6 +32,7 @@ org.joval.scap.oval.adapter.unix.PasswordAdapter
 org.joval.scap.oval.adapter.unix.ProcessAdapter
 org.joval.scap.oval.adapter.unix.RunlevelAdapter
 org.joval.scap.oval.adapter.unix.ShadowAdapter
+org.joval.scap.oval.adapter.unix.SysctlAdapter
 org.joval.scap.oval.adapter.unix.UnameAdapter
 org.joval.scap.oval.adapter.unix.XinetdAdapter
 org.joval.scap.oval.adapter.windows.AccesstokenAdapter
