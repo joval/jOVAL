@@ -418,7 +418,11 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    } else {
 			depth = fb.getDepth();
 		    }
-		    // Note - OVAL's idea of depth=1 is everyone else's idea of depth=2.
+		    //
+		    // OVAL's definition of depth=1 means "step up/down 1 directory level". For a Unix find, however,
+		    // that is the equivalent of maxdepth=2.  So, for non-zero depths, we add 1 to the FIELD_DEPTH passed
+		    // to the IFilesystem.search method.
+		    //
 		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth > 0 ? depth+1 : depth)));
 		    if (fb.getRecurse().indexOf("symlinks") == -1) {
 			followLinks = false;
@@ -454,8 +458,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 				    }
 				}
 			    } else {
-				from = new String[1];
-				from[0] = path;
+				from = new String[] {path};
 				search = true;
 			    }
 			}

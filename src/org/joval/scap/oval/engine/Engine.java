@@ -1168,7 +1168,7 @@ public class Engine implements IEngine, IProvider {
 			break;
 		    }
 		} catch (TestException e) {
-		    logger.debug(JOVALMsg.getMessage(JOVALMsg.ERROR_COMPONENT_FILTER), e.getMessage());
+		    logger.debug(JOVALMsg.ERROR_COMPONENT_FILTER, e.getMessage());
 		    logger.trace(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 		}
 	    }

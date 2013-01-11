@@ -3,14 +3,17 @@
 
 package org.joval.scap.oval.adapter.independent;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Vector;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.zip.GZIPInputStream;
 
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
@@ -29,6 +32,9 @@ import oval.schemas.results.core.ResultEnumeration;
 import jsaf.intf.io.IFile;
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
+import jsaf.intf.unix.system.IUnixSession;
+import jsaf.util.Base64;
+import jsaf.util.SafeCLI;
 import jsaf.util.StringTools;
 
 import org.joval.intf.plugin.IAdapter;
@@ -48,7 +54,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
     // Implement IAdapter
 
     public Collection<Class> init(IBaseSession session) {
-	Collection<Class> classes = new Vector<Class>();
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof ISession) {
 	    super.init((ISession)session);
 	    classes.add(Textfilecontent54Object.class);
@@ -68,7 +74,6 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	Collection<TextfilecontentItem> items = new HashSet<TextfilecontentItem>();
 	TextfilecontentItem baseItem = (TextfilecontentItem)base;
 	Textfilecontent54Object tfcObj = (Textfilecontent54Object)obj;
-	InputStream in = null;
 	try {
 	    int flags = 0;
 	    if (tfcObj.isSetBehaviors()) {
@@ -86,22 +91,61 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	    }
 	    Pattern pattern = Pattern.compile(StringTools.regexPosix2Java((String)tfcObj.getPattern().getValue()), flags);
 
-	    //
-	    // Read the whole file into a String buffer for searching
-	    //
-	    byte[] buff = new byte[256];
-	    int len = 0;
-	    StringBuffer sb = new StringBuffer();
-	    in = f.getInputStream();
-	    while ((len = in.read(buff)) > 0) {
-		sb.append(StringTools.toASCIICharArray(buff), 0, len);
+	    String s = null;
+	    switch(session.getType()) {
+	      //
+	      // On Unix, leverage cat, gzip and uuencode or base64 to read the file contents from the command-line. This
+	      // makes it possible to leverage elevated privileges, if they're set.
+	      //
+	      case UNIX: {
+		IUnixSession us = (IUnixSession)session;
+		StringBuffer sb = new StringBuffer();
+		StringBuffer cmd = new StringBuffer("cat ").append(f.getPath().replace(" ", "\\ ")).append(" | gzip -c");
+		List<String> lines = null;
+		switch(us.getFlavor()) {
+		  //
+		  // Use entire output of base64
+		  //
+		  case LINUX:
+		    cmd.append(" | base64 -");
+		    for (String line : SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M)) {
+			sb.append(line);
+		    }
+		    break;
+
+		  //
+		  // Skip first and last line of uuencode output
+		  //
+		  case AIX:
+		  case MACOSX:
+		  case SOLARIS:
+		    cmd.append(" | uuencode -m -");
+		    List<String> output = SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M);
+		    int end = output.size() - 1;
+		    for (int i=1; i < end; i++) {
+			sb.append(output.get(i));
+		    }
+		    break;
+		}
+		if (sb.length() > 0) {
+		    s = readASCIIString(new GZIPInputStream(new ByteArrayInputStream(Base64.decode(sb.toString()))));
+		    break;
+		}
+		// else fall-thru
+	      }
+
+	      //
+	      // By default, use the IFile to read the contents into the String.
+	      //
+	      default:
+		s = readASCIIString(f.getInputStream());
+		break;
 	    }
-	    String s = sb.toString();
 
 	    //
 	    // Find all the matching items
 	    //
-	    Collection<TextfilecontentItem> allItems = new Vector<TextfilecontentItem>();
+	    Collection<TextfilecontentItem> allItems = new ArrayList<TextfilecontentItem>();
 	    OperationEnumeration op = tfcObj.getPattern().getOperation();
 	    switch(op) {
 	      case PATTERN_MATCH:
@@ -184,19 +228,13 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	} catch (PatternSyntaxException e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
 	    throw new IOException(e);
-	} catch (IllegalArgumentException e) {
+	} catch (IOException e) {
+	    throw e;
+	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
-	} finally {
-	    if (in != null) {
-		try {
-		    in.close();
-		} catch (IOException e) {
-		    session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
-		}
-	    }
 	}
 	return items;
     }
@@ -208,7 +246,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
      */
     private Collection<TextfilecontentItem> getItems(Pattern p, TextfilecontentItem baseItem, String s) {
 	Matcher m = p.matcher(s);
-	Collection<TextfilecontentItem> items = new Vector<TextfilecontentItem>();
+	Collection<TextfilecontentItem> items = new ArrayList<TextfilecontentItem>();
 	for (int instanceNum=1; m.find(); instanceNum++) {
 	    TextfilecontentItem item = Factories.sc.independent.createTextfilecontentItem();
 	    item.setPath(baseItem.getPath());
@@ -250,5 +288,27 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	    }
 	}
 	return items;
+    }
+
+    /**
+     * Read the contents of an InputStream as ASCII into a single String.
+     */
+    private String readASCIIString(InputStream in) throws IOException {
+	try {
+	    byte[] buff = new byte[256];
+	    int len = 0;
+	    StringBuffer sb = new StringBuffer();
+	    while ((len = in.read(buff)) > 0) {
+		sb.append(StringTools.toASCIICharArray(buff), 0, len);
+	    }
+	    return sb.toString();
+	} finally {
+	    if (in != null) {
+		try {
+		    in.close();
+		} catch (IOException e) {
+		}
+	    }
+	}
     }
 }

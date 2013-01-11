@@ -4,9 +4,9 @@
 package org.joval.scap.oval.adapter.independent;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +31,9 @@ import oval.schemas.results.core.ResultEnumeration;
 import jsaf.intf.io.IFile;
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
+import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.StringTools;
+import jsaf.util.SafeCLI;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
@@ -73,16 +75,66 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 	TextfilecontentItem baseItem = (TextfilecontentItem)base;
 	TextfilecontentObject tfcObj = (TextfilecontentObject)obj;
 	Collection<TextfilecontentItem> items = new ArrayList<TextfilecontentItem>();
-	BufferedReader reader = null;
 	try {
 	    //
-	    // Buffer the whole file into a List of lines
+	    // Retrieve matching lines
 	    //
 	    List<String> lines = new ArrayList<String>();
-	    reader = new BufferedReader(new InputStreamReader(f.getInputStream(), StringTools.ASCII));
-	    String line = null;
-	    while ((line = reader.readLine()) != null) {
-		lines.add(line);
+	    switch(session.getType()) {
+	      //
+	      // Leverage grep on known flavors of Unix
+	      //
+	      case UNIX:
+		IUnixSession us = (IUnixSession)session;
+		StringBuffer sb = new StringBuffer("cat ").append(f.getPath().replace(" ", "\\ ")).append(" | ");
+		boolean handled = false;
+		switch(us.getFlavor()) {
+		  case SOLARIS:
+		    sb.append("/usr/xpg4/bin/grep -E" );
+		    handled = true;
+		    break;
+
+		  case AIX:
+		  case LINUX:
+		  case MACOSX:
+		    sb.append("grep ");
+		    handled = true;
+		    break;
+		}
+		if (handled) {
+		    Pattern p = Pattern.compile((String)tfcObj.getLine().getValue());
+		    sb.append(" \"").append(p.pattern().replace("\"","\\\"")).append("\"");
+		    try {
+			lines = SafeCLI.multiLine(sb.toString(), session, IUnixSession.Timeout.M);
+		    } catch (Exception e) {
+			session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+			throw new CollectException(e.getMessage(), FlagEnumeration.ERROR);
+		    }
+		    break;
+		}
+		// else fall-thru
+
+	      //
+	      // Use the IFilesystem by default
+	      //
+	      default:
+		BufferedReader reader = null;
+		try {
+		    reader = new BufferedReader(new InputStreamReader(f.getInputStream(), StringTools.ASCII));
+		    String line = null;
+		    while ((line = reader.readLine()) != null) {
+			lines.add(line);
+		    }
+		} finally {
+		    if (reader != null) {
+			try {
+			    reader.close();
+			} catch (IOException e) {
+			    session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
+			}
+		    }
+		}
+		break;
 	    }
 
 	    OperationEnumeration op = tfcObj.getLine().getOperation();
@@ -105,14 +157,6 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(e.getMessage());
 	    rc.addMessage(msg);
-	} finally {
-	    if (reader != null) {
-		try {
-		    reader.close();
-		} catch (IOException e) {
-		    session.getLogger().warn(JOVALMsg.ERROR_FILE_STREAM_CLOSE, f.toString());
-		}
-	    }
 	}
 	return items;
     }
