@@ -9,22 +9,14 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Stack;
-import java.util.Vector;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.util.JAXBSource;
-import javax.xml.stream.FactoryConfigurationError;
-import javax.xml.transform.Source;
-import javax.xml.transform.stream.StreamSource;
 
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
@@ -41,16 +33,23 @@ import org.oasis.catalog.Catalog;
 import org.oasis.catalog.Uri;
 import org.openscap.sce.xccdf.ScriptDataType;
 import xccdf.schemas.core.BenchmarkType;
+import xccdf.schemas.core.ProfileType;
 
+import org.joval.intf.cpe.IDictionary;
+import org.joval.intf.ocil.IChecklist;
 import org.joval.intf.oval.IDefinitions;
+import org.joval.intf.scap.IDatastream;
+import org.joval.intf.scap.IView;
+import org.joval.intf.xccdf.IBenchmark;
 import org.joval.scap.ScapException;
-import org.joval.scap.cpe.CpeException;
 import org.joval.scap.cpe.Dictionary;
 import org.joval.scap.ocil.Checklist;
 import org.joval.scap.ocil.OcilException;
-import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.Definitions;
+import org.joval.scap.oval.OvalException;
+import org.joval.scap.sce.SceException;
 import org.joval.scap.xccdf.Benchmark;
+import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
@@ -60,177 +59,220 @@ import org.joval.xml.SchemaRegistry;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Datastream implements ILoggable {
-    public static final DataStreamCollection getDSCollection(File f) throws ScapException {
-	return getDSCollection(new StreamSource(f));
-    }
-
-    public static final DataStreamCollection getDSCollection(InputStream in) throws ScapException {
-	return getDSCollection(new StreamSource(in));
-    }
-
-    public static final DataStreamCollection getDSCollection(Source source) throws ScapException {
-	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.DS);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
-	    Object rootObj = unmarshaller.unmarshal(source);
-	    if (rootObj instanceof DataStreamCollection) {
-		return (DataStreamCollection)rootObj;
-	    } else if (rootObj instanceof JAXBElement) {
-		JAXBElement root = (JAXBElement)rootObj;
-		if (root.getValue() instanceof DataStreamCollection) {
-		    return (DataStreamCollection)root.getValue();
-		} else {
-		    throw new ScapException("Bad Data Stream source: " + source.getSystemId());
-		}
-	    } else {
-		throw new ScapException("Bad Data Stream source: " + source.getSystemId());
-	    }
-	} catch (JAXBException e) {
-	    throw new ScapException(e);
-	}
-    }
-
+public class Datastream implements IDatastream, ILoggable {
     private LocLogger logger;
-    private JAXBContext ctx;
-    private DataStreamCollection dsc;
-    private Hashtable<String, DataStream> streams;
-    private Hashtable<String, StreamResolver> resolvers;
-    private Hashtable<String, Component> components;
-    private Hashtable<String, ExtendedComponent> extendedComponents;
-    private Hashtable<String, Dictionary> dictionaries;
+    private DataStream stream;
+    private String streamId;
+    private Dictionary dictionary;
+    private Map<String, Object> hrefMap;
+    private Map<String, Component> components;
+    private Map<String, ExtendedComponent> extendedComponents;
 
     /**
-     * Create a Datastream based on the contents of a checklist file.
+     * Create a Datastream.
      */
-    public Datastream(File f) throws ScapException {
-	this(getDSCollection(f));
-    }
-
-    public Datastream(InputStream in) throws ScapException {
-	this(getDSCollection(in));
-    }
-
-    public Datastream(Source src) throws ScapException {
-	this(getDSCollection(src));
-    }
-
-    /**
-     * Create a Datastream from unmarshalled XML.
-     */
-    public Datastream(DataStreamCollection dsc) throws ScapException {
-	this();
-	this.dsc = dsc;
+    Datastream(DataStream stream, DataStreamCollection dsc) throws ScapException {
+	this.stream = stream;
+	streamId  = stream.getId();
+	logger = JOVALMsg.getLogger();
+	//
+	// Index all the components available in the Datastream collection
+	//
+	components = new HashMap<String, Component>();
 	for (Component component : dsc.getComponent()) {
 	    components.put(component.getId(), component);
 	}
+	extendedComponents = new HashMap<String, ExtendedComponent>();
 	for (ExtendedComponent component : dsc.getExtendedComponent()) {
 	    extendedComponents.put(component.getId(), component);
 	}
-	for (DataStream stream : dsc.getDataStream()) {
-	    streams.put(stream.getId(), stream);
-	    resolvers.put(stream.getId(), new StreamResolver(stream));
-	} 
+
+	//
+	// Discover the dictionary
+	//
+	if (stream.isSetDictionaries() && stream.getDictionaries().getComponentRef().size() > 0) {
+	    RefListType refs = stream.getDictionaries();
+	    if (refs.getComponentRef().size() == 1) {
+		String dictionaryId = refs.getComponentRef().get(0).getHref();
+		if (dictionaryId.startsWith("#")) {
+		    dictionaryId = dictionaryId.substring(1);
+		}
+		if (components.containsKey(dictionaryId)) {
+		    dictionary = new Dictionary(components.get(dictionaryId).getCpeList());
+		} else {
+		    throw new ScapException("No dictionary: " + dictionaryId);
+		}
+	    } else if (refs.getComponentRef().size() > 1) {
+		logger.warn("ERROR: Multiple dictionaries specified in stream " + streamId);
+	    }
+	} else {
+	    logger.warn("WARNING: No dictionaries defined in stream " + streamId);
+	}
+
+	//
+	// Index component mappings for this Datastream
+	//
+	Map<String, String> checks = new HashMap<String, String>();
+	for (ComponentRef ref : stream.getChecks().getComponentRef()) {
+	    String href = ref.getHref();
+	    if (href.startsWith("#")) {
+		href = href.substring(1);
+	    }
+	    checks.put(ref.getId(), href);
+	}
+	hrefMap = new HashMap<String, Object>();
+	if (stream.isSetDictionaries()) {
+	    for (ComponentRef ref : stream.getDictionaries().getComponentRef()) {
+		if (ref.isSetCatalog()) {
+		    addCatalog(ref.getCatalog(), checks);
+		}
+	    }
+	}
+	for (ComponentRef ref : stream.getChecklists().getComponentRef()) {
+	    if (ref.isSetCatalog()) {
+		addCatalog(ref.getCatalog(), checks);
+	    }
+	}
     }
 
-    public DataStreamCollection getDSCollection() {
-	return dsc;
-    }
+    // Implement IDatastream
 
-    /**
-     * Return a collection of the DataStream IDs in the source document.
-     */
-    public Collection<String> getStreamIds() {
-	return streams.keySet();
+    public IDictionary getDictionary() {
+	return dictionary;
     }
 
     /**
      * Return a collection of Benchmark component IDs, for the given stream ID.
      */
-    public Collection<String> getBenchmarkIds(String streamId) throws NoSuchElementException {
-	if (streams.containsKey(streamId)) {
-	    Collection<String> benchmarkIds = new Vector<String>();
-	    for (ComponentRef ref : streams.get(streamId).getChecklists().getComponentRef()) {
-		String href = ref.getHref();
-		if (href.startsWith("#")) {
-		    href = href.substring(1);
-		}
-		benchmarkIds.add(href);
+    public Collection<String> getBenchmarkIds() {
+	Collection<String> benchmarkIds = new ArrayList<String>();
+	for (ComponentRef ref : stream.getChecklists().getComponentRef()) {
+	    String href = ref.getHref();
+	    if (href.startsWith("#")) {
+		href = href.substring(1);
 	    }
-	    return benchmarkIds; 
-	} else {
-	    throw new NoSuchElementException(streamId);
+	    benchmarkIds.add(href);
 	}
+	return benchmarkIds; 
     }
 
-    public Benchmark getBenchmark(String streamId, String benchmarkId) throws NoSuchElementException, ScapException {
-	if (streams.containsKey(streamId)) {
-	    if (components.containsKey(benchmarkId)) {
-		Component comp = components.get(benchmarkId);
-		if (comp.isSetBenchmark()) {
-		    Dictionary dictionary = null;
-		    if (streams.get(streamId).isSetDictionaries()) {
-			dictionary = getDictionary(streamId);
-		    }
-		    return new Benchmark(streamId, comp.getId(), this, comp.getBenchmark(), dictionary);
-		} else {
-		    throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
-		}
+    public IBenchmark getBenchmark(String benchmarkId) throws NoSuchElementException, XccdfException {
+	Component comp = getComponent(benchmarkId);
+	if (comp.isSetBenchmark()) {
+	    return new Benchmark(comp);
+	}
+	throw new NoSuchElementException(benchmarkId);
+    }
+
+    public Collection<String> getProfileIds(String benchmarkId) throws NoSuchElementException {
+	Component comp = getComponent(benchmarkId);
+	if (comp.isSetBenchmark()) {
+	    Collection<String> result = new ArrayList<String>();
+	    for (ProfileType profile : comp.getBenchmark().getProfile()) {
+		result.add(profile.getProfileId());
+	    }
+	    return result;
+	}
+	throw new NoSuchElementException(benchmarkId);
+    }
+
+    public IView view(String benchmarkId, String profileId) throws NoSuchElementException, ScapException {
+	if (components.containsKey(benchmarkId)) {
+	    Component comp = components.get(benchmarkId);
+	    if (comp.isSetBenchmark()) {
+		return new View(benchmarkId, profileId, this, comp.getBenchmark());
 	    } else {
-		throw new NoSuchElementException(benchmarkId);
+		throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
 	    }
 	} else {
-	    throw new NoSuchElementException(streamId);
+	    throw new NoSuchElementException(benchmarkId);
 	}
     }
 
-    public IDefinitions getDefinitions(String streamId, String href) throws NoSuchElementException, OvalException {
-	if (resolvers.containsKey(streamId)) {
-	    Object obj = resolvers.get(streamId).resolve(href);
-	    if (obj instanceof Component) {
-		Component component = (Component)obj;
-		if (component.isSetOvalDefinitions()) {
-		    return new Definitions(component.getOvalDefinitions());
-		}
-	    }
-	    throw new NoSuchElementException(href);
+    /**
+     * Get the component corresponding to the specified href in this stream.
+     */
+    public Object resolve(String href) throws NoSuchElementException {
+	if (hrefMap.containsKey(href)) {
+	    return hrefMap.get(href);
 	} else {
-	    throw new NoSuchElementException(streamId);
+	    throw new NoSuchElementException(href);
 	}
     }
 
-    public Checklist getChecklist(String streamId, String href) throws NoSuchElementException, OcilException {
-	if (resolvers.containsKey(streamId)) {
-	    Object obj = resolvers.get(streamId).resolve(href);
-	    if (obj instanceof Component) {
-		Component component = (Component)obj;
-		if (component.isSetOcil()) {
-		    return new Checklist(component.getOcil());
-		}
+    /**
+     * Given a component href, get the IDatastream.System enum type of the component.
+     */
+    public System getSystem(String href) throws NoSuchElementException {
+	Object obj = resolve(href);
+	if (obj instanceof Component) {
+	    Component component = (Component)obj;
+	    if (component.isSetOvalDefinitions()) {
+		return System.OVAL;
+	    } else if (component.isSetOcil()) {
+		return System.OCIL;
+	    } else {
+		return System.UNSUPPORTED;
 	    }
-	    throw new NoSuchElementException(href);
+	} else if (obj instanceof ExtendedComponent) {
+	    ExtendedComponent component = (ExtendedComponent)obj;
+	    Object data = component.getAny();
+	    if (data instanceof JAXBElement) {
+		data = ((JAXBElement)data).getValue();
+	    }
+	    if (data instanceof ScriptDataType) {
+		return System.SCE;
+	    } else {
+		return System.UNSUPPORTED;
+	    }
 	} else {
-	    throw new NoSuchElementException(streamId);
+	    throw new NoSuchElementException(href);
 	}
     }
 
-    public ScriptDataType getScript(String streamId, String href) throws NoSuchElementException {
-	if (resolvers.containsKey(streamId)) {
-	    Object obj = resolvers.get(streamId).resolve(href);
-	    if (obj instanceof ExtendedComponent) {
-		ExtendedComponent component = (ExtendedComponent)obj;
-		Object data = component.getAny();
-		if (data instanceof JAXBElement) {
-		    JAXBElement elt = (JAXBElement)data;
-		    if (elt.getValue() instanceof ScriptDataType) {
-			return (ScriptDataType)elt.getValue();
-		    }
-		}
+    public IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
+	Object obj = resolve(href);
+	if (obj instanceof Component) {
+	    Component comp = (Component)obj;
+	    if (comp.isSetOcil()) {
+		return new Checklist(comp.getOcil());
+	    } else {
+		throw new OcilException("Not an OCIL component: " + href);
 	    }
-	    throw new NoSuchElementException(href);
 	} else {
-	    throw new NoSuchElementException(streamId);
+	    throw new OcilException("Not a component: " + href);
+	}
+    }
+
+    public IDefinitions getOval(String href) throws NoSuchElementException, OvalException {
+	Object obj = resolve(href);
+	if (obj instanceof Component) {
+	    Component comp = (Component)obj;
+	    if (comp.isSetOvalDefinitions()) {
+		return new Definitions(comp.getOvalDefinitions());
+	    } else {
+		throw new OvalException("Not an OVAL component: " + href);
+	    }
+	} else {
+	    throw new OvalException("Not a component: " + href);
+	}
+    }
+
+    public ScriptDataType getSce(String href) throws NoSuchElementException, SceException {
+	Object obj = resolve(href);
+	if (obj instanceof ExtendedComponent) {
+	    ExtendedComponent comp = (ExtendedComponent)obj;
+	    Object data = comp.getAny();
+	    if (data instanceof JAXBElement) {
+		data = ((JAXBElement)data).getValue();
+	    }
+	    if (data instanceof ScriptDataType) {
+		return (ScriptDataType)data;
+	    } else {
+		throw new SceException("Not an SCE component: " + href);
+	    }
+	} else {
+	    throw new SceException("Not a component: " + href);
 	}
     }
 
@@ -246,133 +288,57 @@ public class Datastream implements ILoggable {
 
     // Private
 
-    /**
-     * Create an empty Datastream.
-     */
-    private Datastream() throws ScapException {
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OCIL));
-	} catch (JAXBException e) {
-	    throw new ScapException(e);
+    private Component getComponent(String componentId) throws NoSuchElementException {
+	if (components.containsKey(componentId)) {
+	    return components.get(componentId);
 	}
-	components = new Hashtable<String, Component>();
-	extendedComponents = new Hashtable<String, ExtendedComponent>();
-	resolvers = new Hashtable<String, StreamResolver>();
-	streams = new Hashtable<String, DataStream>();
-	dictionaries = new Hashtable<String, Dictionary>();
-	logger = JOVALMsg.getLogger();
+	throw new NoSuchElementException(componentId);
     }
 
-    private Dictionary getDictionary(String streamId) throws NoSuchElementException, CpeException {
-	if (dictionaries.containsKey(streamId)) {
-	    return dictionaries.get(streamId);
-	} else if (streams.containsKey(streamId)) {
-	    if (streams.get(streamId).isSetDictionaries() &&
-		streams.get(streamId).getDictionaries().getComponentRef().size() > 0) {
-
-		RefListType refs = streams.get(streamId).getDictionaries();
-		if (refs.getComponentRef().size() == 1) {
-		    String dictionaryId = refs.getComponentRef().get(0).getHref();
-		    if (dictionaryId.startsWith("#")) {
-			dictionaryId = dictionaryId.substring(1);
-		    }
-		    if (components.containsKey(dictionaryId)) {
-			Dictionary d = new Dictionary(components.get(dictionaryId).getCpeList());
-			dictionaries.put(streamId, d);
-			return d;
-		    } else {
-			throw new NoSuchElementException(dictionaryId);
-		    }
-		} else if (refs.getComponentRef().size() > 1) {
-		    logger.warn("ERROR: Multiple dictionaries specified in stream " + streamId);
-		}
-	    } else {
-		logger.warn("WARNING: No dictionaries defined in stream " + streamId);
-	    }
+    private ExtendedComponent getExtendedComponent(String componentId) throws NoSuchElementException {
+	if (extendedComponents.containsKey(componentId)) {
+	    return extendedComponents.get(componentId);
 	}
-	throw new NoSuchElementException(streamId);
+	throw new NoSuchElementException(componentId);
     }
 
     /**
-     * A class that relates XCCDF check hrefs to Components.
+     * Add a catalog, which maps hrefs to component IDs.
      */
-    class StreamResolver {
-	private Hashtable<String, Object> map;
-
-	StreamResolver(DataStream stream) {
-	    String id = stream.getId();
-	    Hashtable<String, String> checks = new Hashtable<String, String>();
-	    for (ComponentRef ref : stream.getChecks().getComponentRef()) {
-		String href = ref.getHref();
-		if (href.startsWith("#")) {
-		    href = href.substring(1);
-		}
-		checks.put(ref.getId(), href);
-	    }
-	    map = new Hashtable<String, Object>();
-	    if (stream.isSetDictionaries()) {
-		for (ComponentRef ref : stream.getDictionaries().getComponentRef()) {
-		    if (ref.isSetCatalog()) {
-			addCatalog(ref.getCatalog(), checks);
+    private void addCatalog(Catalog catalog, Map<String, String> checks) {
+	for (Object obj : catalog.getPublicOrSystemOrUri()) {
+	    if (obj instanceof JAXBElement) {
+		JAXBElement elt = (JAXBElement)obj;
+		if (elt.getValue() instanceof Uri) {
+		    Uri u = (Uri)elt.getValue();
+		    String uri = u.getUri();
+		    if (uri.startsWith("#")) {
+			uri = uri.substring(1);
 		    }
-		}
-	    }
-	    for (ComponentRef ref : stream.getChecklists().getComponentRef()) {
-		if (ref.isSetCatalog()) {
-		    addCatalog(ref.getCatalog(), checks);
-		}
-	    }
-	}
-
-	/**
-	 * Get the component corresponding to the specified href in this stream.
-	 */
-	Object resolve(String href) throws NoSuchElementException {
-	    if (map.containsKey(href)) {
-		return map.get(href);
-	    } else {
-		throw new NoSuchElementException(href);
-	    }
-	}
-
-	/**
-	 * Add a catalog to the resolver.
-	 */
-	private void addCatalog(Catalog catalog, Hashtable<String, String> checks) {
-	    for (Object obj : catalog.getPublicOrSystemOrUri()) {
-		if (obj instanceof JAXBElement) {
-		    JAXBElement elt = (JAXBElement)obj;
-		    if (elt.getValue() instanceof Uri) {
-			Uri u = (Uri)elt.getValue();
-			String uri = u.getUri();
-			if (uri.startsWith("#")) {
-			    uri = uri.substring(1);
-			}
-			if (checks.containsKey(uri)) {
-			    String componentId = checks.get(uri);
-			    if (components.containsKey(componentId)) {
-				if (map.containsKey(u.getName())) {
-				    logger.warn("ERROR: Duplicate URI name: " + u.getName());
-				} else {
-				    map.put(u.getName(), components.get(componentId));
-				}
-			    } else if (extendedComponents.containsKey(u.getName())) {
-				if (map.containsKey(u.getName())) {
-				    logger.warn("ERROR: Duplicate URI name: " + u.getName());
-				} else {
-				    map.put(u.getName(), extendedComponents.get(componentId));
-				}
+		    if (checks.containsKey(uri)) {
+			String componentId = checks.get(uri);
+			if (components.containsKey(componentId)) {
+			    if (hrefMap.containsKey(u.getName())) {
+				logger.warn("ERROR: Duplicate URI name: " + u.getName());
 			    } else {
-				logger.warn("ERROR: No component found for id " + componentId);
+				hrefMap.put(u.getName(), components.get(componentId));
+			    }
+			} else if (extendedComponents.containsKey(u.getName())) {
+			    if (hrefMap.containsKey(u.getName())) {
+				logger.warn("ERROR: Duplicate URI name: " + u.getName());
+			    } else {
+				hrefMap.put(u.getName(), extendedComponents.get(componentId));
 			    }
 			} else {
-			    logger.warn("ERROR: No check found for catalog URI " + uri);
+			    logger.warn("ERROR: No component found for id " + componentId);
 			}
-		    } else if (elt.isNil()) {
-			logger.warn("ERROR: Nil element");
 		    } else {
-			logger.warn("ERROR: Not a Uri: " + elt.getValue().getClass().getName());
+			logger.warn("ERROR: No check found for catalog URI " + uri);
 		    }
+		} else if (elt.isNil()) {
+		    logger.warn("ERROR: Nil element");
+		} else {
+		    logger.warn("ERROR: Not a Uri: " + elt.getValue().getClass().getName());
 		}
 	    }
 	}

@@ -5,10 +5,10 @@ package org.joval.scap.xccdf.handler;
 
 import java.net.MalformedURLException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 
 import oval.schemas.common.GeneratorType;
 import oval.schemas.definitions.core.OvalDefinitions;
@@ -34,10 +34,9 @@ import org.joval.intf.oval.IEngine;
 import org.joval.intf.oval.IResults;
 import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.scap.IView;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
-import org.joval.scap.xccdf.Benchmark;
-import org.joval.scap.xccdf.Profile;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.scap.xccdf.engine.XPERT;
 import org.joval.scap.xccdf.engine.RuleResult;
@@ -51,23 +50,21 @@ import org.joval.scap.xccdf.engine.RuleResult;
 public class OVALHandler {
     public static final String NAMESPACE = "http://oval.mitre.org/XMLSchema/oval-definitions-5";
 
-    private Benchmark xccdf;
-    private Profile profile;
+    private IView view;
     private ObjectFactory factory;
-    private Hashtable<String, IVariables> variables;
-    private Hashtable<String, IEngine> engines;
+    private Map<String, IVariables> variables;
+    private Map<String, IEngine> engines;
 
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile. An OVAL engine will be created for every
      * discrete OVAL href referenced by a profile-selected check in the XCCDF document.
      */
-    public OVALHandler(Benchmark xccdf, Profile profile, IPlugin plugin) throws Exception {
-	this.xccdf = xccdf;
-	this.profile = profile;
+    public OVALHandler(IView view, IPlugin plugin) throws Exception {
+	this.view = view;
 	factory = new ObjectFactory();
-	variables = new Hashtable<String, IVariables>();
-	engines = new Hashtable<String, IEngine>();
-	for (RuleType rule : profile.getSelectedRules()) {
+	variables = new HashMap<String, IVariables>();
+	engines = new HashMap<String, IEngine>();
+	for (RuleType rule : view.getSelectedRules()) {
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {
 		    if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
@@ -77,7 +74,7 @@ public class OVALHandler {
 				if (!engines.containsKey(href)) {
 				    plugin.getLogger().info("Creating engine for href " + href);
 				    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin);
-				    engine.setDefinitions(xccdf.getDefinitions(href));
+				    engine.setDefinitions(view.getStream().getOval(href));
 				    engine.setExternalVariables(getVariables(href));
 				    engine.setDefinitionFilter(getDefinitionFilter(href));
 				    engines.put(href, engine);
@@ -121,11 +118,11 @@ public class OVALHandler {
     }
 
     /**
-     * Get all the definition IDs for a given Href based on the checks selected in the profile.
+     * Get all the definition IDs for a given Href based on the checks selected in the view.
      */
     public IDefinitionFilter getDefinitionFilter(String href) {
 	IDefinitionFilter filter = OvalFactory.createDefinitionFilter();
-	for (RuleType rule : profile.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules()) {
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {
 		    if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
@@ -144,15 +141,15 @@ public class OVALHandler {
     }
 
     /**
-     * Gather all the variable exports for OVAL checks from the selected rules in the profile, and create an OVAL
+     * Gather all the variable exports for OVAL checks from the selected rules in the view, and create an OVAL
      * variables structure containing their values.
      */
     public IVariables getVariables(String href) {
 	if (!variables.containsKey(href)) {
 	    IVariables vars = OvalFactory.createVariables();
 	    variables.put(href, vars);
-	    Collection<RuleType> rules = profile.getSelectedRules();
-	    Hashtable<String, String> values = profile.getValues();
+	    Collection<RuleType> rules = view.getSelectedRules();
+	    Map<String, String> values = view.getValues();
 	    for (RuleType rule : rules) {
 		for (CheckType check : rule.getCheck()) {
 		    if (check.getSystem().equals(NAMESPACE)) {
@@ -182,13 +179,13 @@ public class OVALHandler {
 
     /**
      * Integrate the OVAL results with the XCCDF results, assuming the OVAL results contain information pertaining to
-     * the selected rules in the profile.
+     * the selected rules in the view.
      */
     private void integrateResults(String href, IResults ovalResult, TestResultType xccdfResult) throws OvalException {
 	//
 	// Iterate through the rules and record the results
 	//
-	for (RuleType rule : profile.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules()) {
 	    String ruleId = rule.getId();
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {

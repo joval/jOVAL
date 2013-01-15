@@ -1,6 +1,17 @@
 CLASSES=\
+	org.joval.intf.arf.IReport					\
+	org.joval.intf.cpe.IDictionary					\
+	org.joval.intf.ocil.IChecklist					\
+	org.joval.intf.ocil.IVariables					\
+	org.joval.intf.scap.IDatastream					\
+	org.joval.intf.scap.IDatastreamCollection			\
+	org.joval.intf.scap.IView					\
+	org.joval.intf.xccdf.IBenchmark					\
+	org.joval.intf.xccdf.IEngine					\
+	org.joval.scap.Datastream					\
 	org.joval.scap.Datastream					\
 	org.joval.scap.ScapException					\
+	org.joval.scap.ScapFactory					\
 	org.joval.scap.arf.ArfException					\
 	org.joval.scap.arf.Factories					\
 	org.joval.scap.arf.Report					\
@@ -13,8 +24,9 @@ CLASSES=\
 	org.joval.scap.ocil.OcilException				\
 	org.joval.scap.ocil.OcilFactory					\
 	org.joval.scap.ocil.Variables					\
+	org.joval.scap.sce.SceException					\
+	org.joval.scap.sce.SCEScript					\
 	org.joval.scap.xccdf.Benchmark					\
-	org.joval.scap.xccdf.Profile					\
 	org.joval.scap.xccdf.TestResult					\
 	org.joval.scap.xccdf.XccdfException				\
 	org.joval.scap.xccdf.engine.Engine				\

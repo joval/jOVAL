@@ -35,6 +35,7 @@ import arf.schemas.reporting.RelationshipType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
 
+import org.joval.intf.arf.IReport;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.oval.types.Ip4AddressType;
 import org.joval.scap.oval.types.Ip6AddressType;
@@ -47,7 +48,7 @@ import org.joval.xml.SchemaRegistry;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Report implements ILoggable, ITransformable {
+public class Report implements IReport, ILoggable {
     private LocLogger logger;
     private JAXBContext ctx;
     private AssetReportCollection arc;
@@ -72,11 +73,12 @@ public class Report implements ILoggable, ITransformable {
 	logger = JOVALMsg.getLogger();
     }
 
-    /**
-     * Add an XCCDF result to the report.
-     *
-     * @returns the ID generated for the request
-     */
+    // Implement IReport
+
+    public AssetReportCollection getAssetReportCollection() {
+	return arc;
+    }
+
     public synchronized String addRequest(Element request) {
 	String requestId = new StringBuffer("request_").append(Integer.toString(requests.size())).toString();
 	requests.put(requestId, request);
@@ -93,11 +95,6 @@ public class Report implements ILoggable, ITransformable {
 	return requestId;
     }
 
-    /**
-     * Add an asset based on a SystemInfoType
-     *
-     * @returns the ID generated for the asset
-     */
     public synchronized String addAsset(SystemInfoType info) {
 	ComputingDeviceType cdt = Factories.asset.createComputingDeviceType();
 	ComputingDeviceType.Hostname hostname = Factories.asset.createComputingDeviceTypeHostname();
@@ -164,14 +161,7 @@ public class Report implements ILoggable, ITransformable {
 	return assetId;
     }
 
-    /**
-     * Add an XCCDF result related to the specified request and asset.
-     *
-     * @returns the ID generated for the report
-     */
-    public synchronized String addReport(String requestId, String assetId, Element report)
-		throws NoSuchElementException {
-
+    public synchronized String addReport(String requestId, String assetId, Element report) throws NoSuchElementException {
 	if (!requests.containsKey(requestId)) {
 	    throw new NoSuchElementException(requestId);
 	}
@@ -213,13 +203,6 @@ public class Report implements ILoggable, ITransformable {
 	rt.setContent(content);
 	arc.getReports().getReport().add(rt);
 	return reportId;
-    }
-
-    /**
-     * Get the underlying JAXB BenchmarkType.
-     */
-    public AssetReportCollection getAssetReportCollection() {
-	return arc;
     }
 
     public void writeXML(File f) throws IOException {

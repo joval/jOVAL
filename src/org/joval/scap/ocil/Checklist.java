@@ -10,8 +10,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 import java.util.Vector;
 import java.util.NoSuchElementException;
@@ -54,7 +55,7 @@ import ocil.schemas.core.TestActionConditionType;
 import ocil.schemas.core.TestActionRefType;
 import ocil.schemas.core.VariableType;
 
-import org.joval.intf.xml.ITransformable;
+import org.joval.intf.ocil.IChecklist;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -63,7 +64,7 @@ import org.joval.xml.SchemaRegistry;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Checklist implements ITransformable {
+public class Checklist implements IChecklist {
     public static final OCILType getOCILType(File f) throws OcilException {
 	return getOCILType(new StreamSource(f));
     }
@@ -107,13 +108,13 @@ public class Checklist implements ITransformable {
 
     private JAXBContext ctx;
     private OCILType ocil;
-    private Hashtable<String, QuestionnaireType> questionnaires;
-    private Hashtable<String, QuestionType> questions;
-    private Hashtable<String, VariableType> variables;
-    private Hashtable<String, ArtifactType> artifacts;
-    private Hashtable<String, QuestionTestActionType> questionTestActions;
-    private Hashtable<String, List<ChoiceType>> choiceGroups;
-    private Hashtable<String, ChoiceType> choices;
+    private Map<String, QuestionnaireType> questionnaires;
+    private Map<String, QuestionType> questions;
+    private Map<String, VariableType> variables;
+    private Map<String, ArtifactType> artifacts;
+    private Map<String, QuestionTestActionType> questionTestActions;
+    private Map<String, List<ChoiceType>> choiceGroups;
+    private Map<String, ChoiceType> choices;
 
     /**
      * Create a Checklist based on the contents of a checklist file.
@@ -185,6 +186,8 @@ public class Checklist implements ITransformable {
 	    }
 	}
     }
+
+    // Implement IChecklist
 
     public OCILType getOCILType() {
 	return ocil;
@@ -283,14 +286,14 @@ public class Checklist implements ITransformable {
      * Given a list of questionnaire IDs, return a table of lists of all the test actions that refer to individual questions,
      * indexed by the question ID.
      */
-    public Hashtable<String, Collection<String>> getQuestionActions(List<String> questionnaireIds)
+    public Map<String, Collection<String>> getQuestionActions(List<String> questionnaireIds)
 		throws NoSuchElementException {
 
 	HashSet<String> expandedQuestionnaireIds = new HashSet<String>();
 	for (String id : questionnaireIds) {
 	    crawlQuestionnaires(getQuestionnaire(id), expandedQuestionnaireIds);
 	}
-	Hashtable<String, Collection<String>> questionActions = new Hashtable<String, Collection<String>>();
+	Map<String, Collection<String>> questionActions = new HashMap<String, Collection<String>>();
 	for (String id : expandedQuestionnaireIds) {
 	    crawlQuestionActions(getQuestionnaire(id), questionActions);
 	}
@@ -546,13 +549,13 @@ public class Checklist implements ITransformable {
 	} catch (JAXBException e) {
 	    throw new OcilException(e);
 	}
-	artifacts = new Hashtable<String, ArtifactType>();
-	questionnaires = new Hashtable<String, QuestionnaireType>();
-	questions = new Hashtable<String, QuestionType>();
-	variables = new Hashtable<String, VariableType>();
-	questionTestActions = new Hashtable<String, QuestionTestActionType>();
-	choiceGroups = new Hashtable<String, List<ChoiceType>>();
-	choices = new Hashtable<String, ChoiceType>();
+	artifacts = new HashMap<String, ArtifactType>();
+	questionnaires = new HashMap<String, QuestionnaireType>();
+	questions = new HashMap<String, QuestionType>();
+	variables = new HashMap<String, VariableType>();
+	questionTestActions = new HashMap<String, QuestionTestActionType>();
+	choiceGroups = new HashMap<String, List<ChoiceType>>();
+	choices = new HashMap<String, ChoiceType>();
     }
 
     private void crawlQuestions(QuestionnaireType questionnaire, HashSet<String> questionIds) throws NoSuchElementException {
@@ -579,7 +582,7 @@ public class Checklist implements ITransformable {
 	}
     }
 
-    private void crawlQuestionActions(ItemBaseType item, Hashtable<String, Collection<String>> questionActions)
+    private void crawlQuestionActions(ItemBaseType item, Map<String, Collection<String>> questionActions)
 		throws NoSuchElementException {
 
 	if (item instanceof QuestionnaireType) {

@@ -1,20 +1,22 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.scap.xccdf;
+package org.joval.scap;
 
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 
 import cpe.schemas.dictionary.CheckType;
 import cpe.schemas.dictionary.ItemType;
 import cpe.schemas.dictionary.ListType;
 
+import xccdf.schemas.core.BenchmarkType;
 import xccdf.schemas.core.CPE2IdrefType;
 import xccdf.schemas.core.GroupType;
 import xccdf.schemas.core.OverrideableCPE2IdrefType;
@@ -30,68 +32,68 @@ import xccdf.schemas.core.SelComplexValueType;
 import xccdf.schemas.core.SelStringType;
 import xccdf.schemas.core.ValueType;
 
-import org.joval.intf.oval.IDefinitions;
-import org.joval.scap.cpe.CpeException;
-import org.joval.scap.cpe.Dictionary;
-import org.joval.scap.oval.OvalException;
-import org.joval.scap.xccdf.Benchmark;
-import org.joval.scap.xccdf.handler.OVALHandler;
+import org.joval.intf.cpe.IDictionary;
+import org.joval.intf.oval.IDefinitionFilter;
+import org.joval.intf.scap.IDatastream;
+import org.joval.intf.scap.IView;
+import org.joval.scap.oval.DefinitionFilter;
 
 /**
- * Convenience class for an XCCDF Profile, which is like a view on an XCCDF Benchmark.
+ * Implementation of an IView.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Profile {
-    private Benchmark xccdf;
-    private String name;
+public class View implements IView {
+    private String benchmarkId, profileId;
+    private Datastream stream;
+    private BenchmarkType bt;
     private HashSet<RuleType> rules;
-    private Hashtable<String, List<String>> platforms;
-    private List<String> cpePlatforms;
-    private Hashtable<String, String> values = null;
+    private Map<String, Map<String, Collection<String>>> platforms;
+    private Map<String, String> values = null;
 
     /**
-     * Create an XCCDF profile. If name == null, then defaults are selected. If there is no profile with the given name,
-     * a NoSuchElementException is thrown.
+     * Create an XCCDF profile view. If profileId == null, then defaults are selected. If there is no profile with the given
+     * name, a NoSuchElementException is thrown.
      */
-    public Profile(Benchmark xccdf, String name) throws NoSuchElementException {
-	this.xccdf = xccdf;
-	this.name = name;
-	platforms = new Hashtable<String, List<String>>();
-	cpePlatforms = new Vector<String>();
-	values = new Hashtable<String, String>();
+    View(String benchmarkId, String profileId, Datastream stream, BenchmarkType bt) throws NoSuchElementException {
+	this.benchmarkId = benchmarkId;
+	this.profileId = profileId;
+	this.stream = stream;
+	this.bt = bt;
+	platforms = new HashMap<String, Map<String, Collection<String>>>();
+	values = new HashMap<String, String>();
 	rules = new HashSet<RuleType>();
 
 	//
 	// Set Benchmark-wide platforms
 	//
-	for (CPE2IdrefType platform : xccdf.getBenchmark().getPlatform()) {
+	for (CPE2IdrefType platform : bt.getPlatform()) {
 	    addPlatform(platform.getIdref());
 	}
 
 	//
 	// If a named profile is specified, then gather all the selections and values associated with it.
 	//
-	Hashtable<String, Boolean> selections = null;
-	Hashtable<String, String> refinements = null;
-	if (name != null) {
+	Map<String, Boolean> selections = null;
+	Map<String, String> refinements = null;
+	if (profileId != null) {
 	    ProfileType prof = null;
-	    for (ProfileType pt : xccdf.getBenchmark().getProfile()) {
-		if (name.equals(pt.getProfileId())) {
+	    for (ProfileType pt : bt.getProfile()) {
+		if (profileId.equals(pt.getProfileId())) {
 		    prof = pt;
 		    break;
 		}
 	    }
 	    if (prof == null) {
-		throw new NoSuchElementException(name);
+		throw new NoSuchElementException(profileId);
 	    } else {
 		for (OverrideableCPE2IdrefType platform : prof.getPlatform()) {
 		    addPlatform(platform.getIdref());
 		}
 
-		selections = new Hashtable<String, Boolean>();
-		refinements = new Hashtable<String, String>();
+		selections = new HashMap<String, Boolean>();
+		refinements = new HashMap<String, String>();
 		for (Object obj : prof.getSelectOrSetComplexValueOrSetValue()) {
 		    if (obj instanceof ProfileSelectType) {
 			ProfileSelectType select = (ProfileSelectType)obj;
@@ -121,8 +123,8 @@ public class Profile {
 	// Discover all the selected rules and values
 	//
 	HashSet<ValueType> vals = new HashSet<ValueType>();
-	vals.addAll(xccdf.getBenchmark().getValue());
-	for (SelectableItemType item : getSelected(xccdf.getBenchmark().getGroupOrRule(), selections)) {
+	vals.addAll(bt.getValue());
+	for (SelectableItemType item : getSelected(bt.getGroupOrRule(), selections)) {
 	    if (item instanceof GroupType) {
 		vals.addAll(((GroupType)item).getValue());
 	    } else if (item instanceof RuleType) {
@@ -153,48 +155,39 @@ public class Profile {
 	}
     }
 
-    /**
-     * Returns the profile Idref.
-     */
-    public String getName() {
-	return name;
+    // Implement IView
+
+    public String getBenchmark() {
+	return benchmarkId;
     }
 
-    /**
-     * Return the hrefs to all the checks relevant to the profile.
-     */
-    public Collection<String> getPlatformDefinitionHrefs() {
+    public String getProfile() {
+	return profileId;
+    }
+
+    public IDatastream getStream() {
+	return stream;
+    }
+
+    public Collection<String> getCpePlatforms() {
 	return platforms.keySet();
     }
 
-    public IDefinitions getDefinitions(String href) throws NoSuchElementException, OvalException {
-	return xccdf.getDefinitions(href);
+    public Map<String, IDefinitionFilter> getCpeOval(String cpeId) throws NoSuchElementException {
+	if (platforms.containsKey(cpeId)) {
+	    Map<String, IDefinitionFilter> result = new HashMap<String, IDefinitionFilter>();
+	    for (Map.Entry<String, Collection<String>> entry : platforms.get(cpeId).entrySet()) {
+		result.put(entry.getKey(), new DefinitionFilter(entry.getValue()));
+	    }
+	    return result;
+	}
+	throw new NoSuchElementException(cpeId);
     }
 
-    /**
-     * Return a list of all the CPE platform IDs for this profile.
-     */
-    public List<String> getCpePlatforms() {
-	return cpePlatforms;
-    }
-
-    /**
-     * Return all of the OVAL definition IDs associated with the specified href.
-     */
-    public List<String> getPlatformDefinitionIds(String href) {
-	return platforms.get(href);
-    }
-
-    /**
-     * Return a Hashtable of all the values selected/defined by this Profile.
-     */
-    public Hashtable<String, String> getValues() {
+    public Map<String, String> getValues() {
 	return values;
     }
 
-    /**
-     * Return a list of all the rules selected by this Profile.
-     */
     public Collection<RuleType> getSelectedRules() {
 	return rules;
     }
@@ -204,7 +197,7 @@ public class Profile {
     /**
      * Recursively find all the selected items, using selections gathered from a Profile (or null for defaults).
      */
-    private Collection<SelectableItemType> getSelected(List<SelectableItemType> items, Hashtable<String, Boolean> selections) {
+    private Collection<SelectableItemType> getSelected(List<SelectableItemType> items, Map<String, Boolean> selections) {
 	Collection<SelectableItemType> results = new HashSet<SelectableItemType>();
 	for (SelectableItemType item : items) {
 	    String id = null;
@@ -234,21 +227,29 @@ public class Profile {
 
     /**
      * Given a CPE platform name, add the corresponding OVAL definition IDs to the platforms list.
+     *
+     * @throws NoSuchElementException if no OVAL definitions corresponding to the CPE name were found in the stream.
      */
-    private void addPlatform(String cpeName) throws IllegalStateException, NoSuchElementException {
-	cpePlatforms.add(cpeName);
-	Dictionary dictionary = xccdf.getDictionary();
+    private void addPlatform(String cpeName) throws NoSuchElementException {
+	Map<String, Collection<String>> ovalMap = null;
+	if (platforms.containsKey(cpeName)) {
+	    ovalMap = platforms.get(cpeName);
+	} else {
+	    ovalMap = new HashMap<String, Collection<String>>();
+	    platforms.put(cpeName, ovalMap);
+	}
+	IDictionary dictionary = stream.getDictionary();
 	boolean found = false;
 	if (dictionary != null) {
-	    ItemType cpeItem = xccdf.getDictionary().getItem(cpeName);
+	    ItemType cpeItem = dictionary.getItem(cpeName);
 	    if (cpeItem != null && cpeItem.isSetCheck()) {
 		for (CheckType check : cpeItem.getCheck()) {
-		    if (OVALHandler.NAMESPACE.equals(check.getSystem()) && check.isSetHref()) {
+		    if (IDatastream.System.OVAL.namespace().equals(check.getSystem()) && check.isSetHref()) {
 			String href = check.getHref();
-			if (!platforms.containsKey(href)) {
-			    platforms.put(href, new Vector<String>());
+			if (!ovalMap.containsKey(href)) {
+			    ovalMap.put(href, new ArrayList<String>());
 			}
-			platforms.get(href).add(check.getValue());
+			ovalMap.get(href).add(check.getValue());
 			found = true;
 		    }
 		}

@@ -24,7 +24,7 @@ import ocil.schemas.variables.OcilVariables;
 import ocil.schemas.variables.VariablesType;
 import ocil.schemas.variables.VariableType;
 
-import org.joval.intf.xml.ITransformable;
+import org.joval.intf.ocil.IVariables;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -33,7 +33,7 @@ import org.joval.xml.SchemaRegistry;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Variables implements ITransformable {
+public class Variables implements IVariables {
     /**
      * Unmarshal an XML file and return the OcilVariables root object.
      */

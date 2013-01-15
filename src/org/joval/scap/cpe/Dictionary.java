@@ -17,6 +17,7 @@ import cpe.schemas.dictionary.CheckType;
 import cpe.schemas.dictionary.ItemType;
 import cpe.schemas.dictionary.ListType;
 
+import org.joval.intf.cpe.IDictionary;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
@@ -26,7 +27,7 @@ import org.joval.xml.SchemaRegistry;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Dictionary {
+public class Dictionary implements IDictionary {
     public static final ListType getCpeList(File f) throws CpeException {
 	return getCpeList(new StreamSource(f));
     }
@@ -89,6 +90,8 @@ public class Dictionary {
     public Dictionary() {
 	ovalMapping = new Hashtable<String, ItemType>();
     }
+
+    // Implement IDictionary
 
     public ListType getCpeList() {
 	return list;

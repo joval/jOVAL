@@ -4,13 +4,11 @@
 package org.joval.scap.xccdf.handler;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import ocil.schemas.core.ExceptionalResultType;
@@ -27,15 +25,17 @@ import xccdf.schemas.core.RuleResultType;
 import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.TestResultType;
 
-import org.joval.scap.ocil.Checklist;
+import org.joval.intf.scap.IView;
+import org.joval.intf.ocil.IChecklist;
+import org.joval.intf.ocil.IVariables;
+import org.joval.intf.xccdf.IEngine;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.ocil.Variables;
-import org.joval.scap.xccdf.Benchmark;
-import org.joval.scap.xccdf.Profile;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.scap.xccdf.engine.RuleResult;
 import org.joval.scap.xccdf.engine.XPERT;
 import org.joval.util.JOVALMsg;
+import org.joval.util.Producer;
 
 /**
  * XCCDF helper class for OCIL processing.
@@ -46,26 +46,22 @@ import org.joval.util.JOVALMsg;
 public class OCILHandler {
     public static final String NAMESPACE = "http://scap.nist.gov/schema/ocil/2";
 
-    private Benchmark xccdf;
-    private Profile profile;
+    private IView view;
     private XMLGregorianCalendar startTime;
-    private Hashtable<String, Hashtable<String, String>> results;
-    private Hashtable<String, Variables> variables;
+    private Map<String, Map<String, String>> results;
+    private Map<String, Variables> variables;
     private ObjectFactory factory;
 
     /**
      * Create an OCIL handler utility for the given XCCDF, Profile and href-indexed Checklists (results).
      */
-    public OCILHandler(Benchmark xccdf, Profile profile, Hashtable<String, Checklist> checklists)
-		throws IllegalArgumentException {
-
-	this.xccdf = xccdf;
-	this.profile = profile;
+    public OCILHandler(IView view, Map<String, IChecklist> checklists) throws IllegalArgumentException {
+	this.view = view;
 	factory = new ObjectFactory();
-	results = new Hashtable<String, Hashtable<String, String>>();
+	results = new HashMap<String, Map<String, String>>();
 
 	for (String href : checklists.keySet()) {
-	    Checklist checklist = checklists.get(href);
+	    IChecklist checklist = checklists.get(href);
 
 	    //
 	    // If the HREF was not specified, then discover the singleton HREF, or throw an error.
@@ -95,7 +91,7 @@ public class OCILHandler {
 		}
 
 		if (rt.isSetQuestionnaireResults()) {
-		    Hashtable<String, String> result = new Hashtable<String, String>();
+		    Map<String, String> result = new HashMap<String, String>();
 		    for (QuestionnaireResultType qr : rt.getQuestionnaireResults().getQuestionnaireResult()) {
 			result.put(qr.getQuestionnaireRef(), qr.getResult());
 		    }
@@ -108,44 +104,32 @@ public class OCILHandler {
     /**
      * Create an OCIL handler utility for the given XCCDF, Profile and OCIL export directory.
      */
-    public OCILHandler(Benchmark xccdf, Profile profile) {
-	this.xccdf = xccdf;
-	this.profile = profile;
-	variables = new Hashtable<String, Variables>();
+    public OCILHandler(IView view) {
+	this.view = view;
+	variables = new HashMap<String, Variables>();
     }
 
     /**
-     * Export relevant OCIL files to the specified directory. Returns false if there are no OCIL checks in the profile.
+     * Export relevant OCIL files to the specified directory. Returns false if there are no OCIL checks in the view.
      */
-    public boolean exportFiles(File exportDir) {
+    public boolean exportFiles(Producer producer) {
 	HashSet<String> ocilHrefs = getOcilHrefs();
 	if (ocilHrefs.size() == 0) {
 	    //
 	    // There are no OCIL files to export
 	    //
 	    return false;
-	} else if (!exportDir.exists()) {
-	    exportDir.mkdirs();
 	}
 
 	//
-	// Export variables and OCIL XML for each HREF in the profile.
+	// Export variables and OCIL XML for each HREF in the view.
 	//
 	for (String href : ocilHrefs) {
 	    try {
-		Checklist c = xccdf.getChecklist(href);
-		Variables vars = getVariables(href);
-		String fbase = href;
-		if (fbase.toLowerCase().endsWith(".xml")) {
-		    fbase = fbase.substring(0, fbase.length() - 4);
-		}
-		if (vars.getOcilVariables().getVariables().getVariable().size() > 0) {
-		    vars.writeXML(new File(exportDir, fbase + "-variables.xml"));
-		}
-		c.writeXML(new File(exportDir, fbase + ".xml"));
+		IChecklist checklist = view.getStream().getOcil(href);
+		IVariables variables = getVariables(href);
+		producer.sendNotify(IEngine.MESSAGE_OCIL, new Argument(href, checklist, variables));
 	    } catch (NoSuchElementException e) {
-		e.printStackTrace();
-	    } catch (IOException e) {
 		e.printStackTrace();
 	    } catch (OcilException e) {
 		e.printStackTrace();
@@ -178,7 +162,7 @@ public class OCILHandler {
 	//
 	// Iterate through the rules and record the results
 	//
-	for (RuleType rule : profile.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules()) {
 	    String ruleId = rule.getId();
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {
@@ -222,17 +206,45 @@ public class OCILHandler {
 	}
     }
 
+    // Internal
+
+    class Argument implements IEngine.OcilMessageArgument {
+	private String href;
+	private IChecklist checklist;
+	private IVariables variables;
+
+	Argument(String href, IChecklist checklist, IVariables variables) {
+	    this.href = href;
+	    this.checklist = checklist;
+	    this.variables = variables;
+	}
+
+	// Implement IEngine.OcilMessageArgument
+
+	public String getHref() {
+	    return href;
+	}
+
+	public IChecklist getChecklist() {
+	    return checklist;
+	}
+
+	public IVariables getVariables() {
+	    return variables;
+	}
+    }
+
     // Private
 
     /**
-     * Gather all the variable exports for OCIL checks for the specified href from the selected rules in the profile,
+     * Gather all the variable exports for OCIL checks for the specified href from the selected rules in the view,
      * and create an OCIL variables structure containing their values.
      */
     private Variables getVariables(String href) throws OcilException {
 	if (!variables.containsKey(href)) {
 	    Variables vars = new Variables();
-	    Collection<RuleType> rules = profile.getSelectedRules();
-	    Hashtable<String, String> values = profile.getValues();
+	    Collection<RuleType> rules = view.getSelectedRules();
+	    Map<String, String> values = view.getValues();
 	    for (RuleType rule : rules) {
 		for (CheckType check : rule.getCheck()) {
 		    if (check.getSystem().equals(NAMESPACE)) {
@@ -266,7 +278,7 @@ public class OCILHandler {
      */
     private HashSet<String> getOcilHrefs() {
 	HashSet<String> hrefs = new HashSet<String>();
-	for (RuleType rule : profile.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules()) {
 	    for (CheckType check : rule.getCheck()) {
 		if (NAMESPACE.equals(check.getSystem())) {
 		    for (CheckContentRefType ref : check.getCheckContentRef()) {

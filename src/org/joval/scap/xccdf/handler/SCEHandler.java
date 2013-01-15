@@ -3,10 +3,8 @@
 
 package org.joval.scap.xccdf.handler;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -25,10 +23,11 @@ import xccdf.schemas.core.RuleType;
 import xccdf.schemas.core.TestResultType;
 
 import jsaf.intf.system.ISession;
+import jsaf.intf.util.ILoggable;
 
+import org.joval.intf.scap.IView;
+import org.joval.scap.sce.SceException;
 import org.joval.scap.sce.SCEScript;
-import org.joval.scap.xccdf.Benchmark;
-import org.joval.scap.xccdf.Profile;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.scap.xccdf.engine.RuleResult;
 import org.joval.scap.xccdf.engine.XPERT;
@@ -40,13 +39,12 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SCEHandler {
+public class SCEHandler implements ILoggable {
     public static final String NAMESPACE = "http://open-scap.org/page/SCE";
 
     private static final ObjectFactory FACTORY = new ObjectFactory();
 
-    private Benchmark xccdf;
-    private Profile profile;
+    private IView view;
     private ISession session;
     private LocLogger logger;
     private Map<String, Map<String, Script>> scriptTable;
@@ -54,9 +52,8 @@ public class SCEHandler {
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
      */
-    public SCEHandler(Benchmark xccdf, Profile profile, ISession session, LocLogger logger) {
-	this.xccdf = xccdf;
-	this.profile = profile;
+    public SCEHandler(IView view, ISession session, LocLogger logger) {
+	this.view = view;
 	this.session = session;
 	this.logger = logger;
 	loadScripts();
@@ -73,7 +70,7 @@ public class SCEHandler {
 	//
 	// Iterate through the rules and record the results
 	//
-	for (RuleType rule : profile.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules()) {
 	    String ruleId = rule.getId();
 	    if (scriptTable.containsKey(ruleId)) {
 		RuleResultType ruleResult = FACTORY.createRuleResultType();
@@ -131,15 +128,25 @@ public class SCEHandler {
 	}
     }
 
+    // Implement ILoggable
+
+    public void setLogger(LocLogger logger) {
+	this.logger = logger;
+    }
+
+    public LocLogger getLogger() {
+	return logger;
+    }
+
     // Private
 
     /**
-     * Create a list of SCE scripts that should be executed based on the profile.
+     * Create a list of SCE scripts that should be executed based on the view.
      */
     private void loadScripts() {
-	scriptTable = new Hashtable<String, Map<String, Script>>();
-	Hashtable<String, String> values = profile.getValues();
-	for (RuleType rule : profile.getSelectedRules()) {
+	scriptTable = new HashMap<String, Map<String, Script>>();
+	Map<String, String> values = view.getValues();
+	for (RuleType rule : view.getSelectedRules()) {
 	    String ruleId = rule.getId();
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {
@@ -148,19 +155,21 @@ public class SCEHandler {
 			    if (ref.isSetHref()) {
 				String scriptId = ref.getHref();
 				try {
-				    Map<String, String> exports = new Hashtable<String, String>();
+				    Map<String, String> exports = new HashMap<String, String>();
 				    for (CheckExportType export : check.getCheckExport()) {
 					exports.put(export.getExportName(), values.get(export.getValueId()));
 				    }
 				    if (!scriptTable.containsKey(ruleId)) {
-					scriptTable.put(ruleId, new Hashtable<String, Script>());
+					scriptTable.put(ruleId, new HashMap<String, Script>());
 				    }
 				    scriptTable.get(ruleId).put(scriptId, new Script(scriptId, exports));
 				} catch (IllegalArgumentException e) {
-				    xccdf.getLogger().warn(e.getMessage());
+				    logger.warn(e.getMessage());
+				} catch (SceException e) {
+				    logger.warn(e.getMessage());
 				} catch (NoSuchElementException e) {
 				    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, scriptId);
-				    xccdf.getLogger().warn(s);
+				    logger.warn(s);
 				}
 			    }
 			}
@@ -175,9 +184,9 @@ public class SCEHandler {
 	Map<String, String> exports;
 	ScriptDataType data;
 
-	Script(String id, Map<String, String> exports) throws NoSuchElementException {
+	Script(String id, Map<String, String> exports) throws NoSuchElementException, SceException {
 	    this.id = id;
-	    data = xccdf.getScript(id);
+	    data = view.getStream().getSce(id);
 	    this.exports = exports;
 	}
 

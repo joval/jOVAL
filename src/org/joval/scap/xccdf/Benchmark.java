@@ -9,10 +9,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Collection;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -30,86 +26,48 @@ import javax.xml.transform.stream.StreamSource;
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
+import scap.datastream.Component;
 import xccdf.schemas.core.BenchmarkType;
-import xccdf.schemas.core.ProfileType;
-import org.openscap.sce.xccdf.ScriptDataType;
 
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.xml.ITransformable;
-import org.joval.scap.Datastream;
-import org.joval.scap.cpe.CpeException;
-import org.joval.scap.cpe.Dictionary;
-import org.joval.scap.ocil.Checklist;
-import org.joval.scap.ocil.OcilException;
-import org.joval.scap.oval.OvalException;
+import org.joval.intf.xccdf.IBenchmark;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
 /**
- * A representation of a single XCCDF 1.2 benchmark sourced from an SCAP 1.2 DataStreamCollection.
+ * A representation of an XCCDF 1.2 benchmark.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Benchmark implements ILoggable, ITransformable {
-    private String streamId, componentId;
-    private Datastream ds;
+public class Benchmark implements IBenchmark, ILoggable {
     private LocLogger logger;
     private JAXBContext ctx;
     private BenchmarkType bt;
-    private Dictionary dictionary;
-    private Hashtable<String, ProfileType> profiles;
+    private String href;
 
-    public Benchmark(String streamId, String componentId, Datastream ds, BenchmarkType bt, Dictionary dictionary)
-		throws XccdfException {
-
-	this.streamId = streamId;
-	this.componentId = componentId;
-	this.ds = ds;
-	this.bt = bt;
-	this.dictionary = dictionary;
-
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.XCCDF));
-	} catch (JAXBException e) {
-	    throw new XccdfException(e);
-	}
-	logger = ds.getLogger();
-	profiles = new Hashtable<String, ProfileType>();
-	for (ProfileType profile : bt.getProfile()) {
-	    profiles.put(profile.getProfileId(), profile);
+    public Benchmark(Component component) throws XccdfException {
+	if (component.isSetBenchmark()) {
+	    bt = component.getBenchmark();
+	    href = "#" + component.getId();
+	    try {
+		ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.XCCDF));
+	    } catch (JAXBException e) {
+		throw new XccdfException(e);
+	    }
+	    logger = JOVALMsg.getLogger();
+	} else {
+	    throw new XccdfException("Not a benchmark component: " + component.getId());
 	}
     }
 
-    /**
-     * Get the underlying JAXB BenchmarkType.
-     */
+    // Implement IBenchmark
+
     public BenchmarkType getBenchmark() {
 	return bt;
     }
 
     public String getHref() {
-	return "#" + componentId;
-    }
-
-    public Collection<String> getProfileIds() {
-	return profiles.keySet();
-    }
-
-    public Dictionary getDictionary() {
-	return dictionary;
-    }
-
-    public IDefinitions getDefinitions(String href) throws OvalException, NoSuchElementException {
-	return ds.getDefinitions(streamId, href);
-    }
-
-    public Checklist getChecklist(String href) throws OcilException, NoSuchElementException {
-	return ds.getChecklist(streamId, href);
-    }
-
-    public ScriptDataType getScript(String href) throws NoSuchElementException {
-	return ds.getScript(streamId, href);
+	return href;
     }
 
     public void writeXML(File f) throws IOException {
@@ -133,9 +91,6 @@ public class Benchmark implements ILoggable, ITransformable {
 	}
     }
 
-    /**
-     * Transform using the specified template, and serialize to the specified file.
-     */
     public void writeTransform(File transform, File output) {
 	try {
 	    TransformerFactory xf = TransformerFactory.newInstance();
