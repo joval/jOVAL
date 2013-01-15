@@ -25,17 +25,17 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
 import org.w3c.dom.Element;
 
+import org.slf4j.cal10n.LocLogger;
+import jsaf.intf.system.ISession;
+
 import cpe.schemas.dictionary.ListType;
 import oval.schemas.common.GeneratorType;
 import oval.schemas.definitions.core.OvalDefinitions;
-import oval.schemas.results.core.ResultEnumeration;
 import oval.schemas.results.core.DefinitionType;
 import oval.schemas.systemcharacteristics.core.InterfaceType;
 import oval.schemas.systemcharacteristics.core.SystemInfoType;
@@ -60,8 +60,6 @@ import xccdf.schemas.core.ScoreType;
 import xccdf.schemas.core.SelectableItemType;
 import xccdf.schemas.core.TestResultType;
 
-import jsaf.intf.system.ISession;
-
 import org.joval.intf.arf.IReport;
 import org.joval.intf.ocil.IChecklist;
 import org.joval.intf.oval.IDefinitionFilter;
@@ -72,13 +70,17 @@ import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IDatastream;
 import org.joval.intf.scap.IView;
+import org.joval.intf.scap.SystemEnumeration;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.intf.xccdf.IBenchmark;
+import org.joval.intf.xml.ITransformable;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
+import org.joval.scap.arf.ArfException;
 import org.joval.scap.arf.Report;
 import org.joval.scap.cpe.CpeException;
+import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.oval.sysinfo.SysinfoFactory;
@@ -90,7 +92,6 @@ import org.joval.scap.xccdf.handler.OVALHandler;
 import org.joval.scap.xccdf.handler.SCEHandler;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
-import org.joval.util.LogFormatter;
 import org.joval.util.Producer;
 import org.joval.xml.DOMTools;
 
@@ -127,9 +128,8 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
     private List<RuleType> rules = null;
     private List<GroupType> groups = null;
     private String phase = null;
-    private Logger logger;
-    private boolean verbose;
-    private Report report;
+    private LocLogger logger;
+    private List<ITransformable> reports;
     private ObjectFactory factory;
     private Exception error;
     private State state = State.CONFIGURE;
@@ -139,10 +139,9 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL plugin.
      */
-    protected Engine(IPlugin plugin, boolean verbose) {
+    protected Engine(IPlugin plugin) {
 	this.plugin = plugin;
-	this.verbose = verbose;
-	logger = XPERT.logger;
+	logger = plugin.getLogger();
 	factory = new ObjectFactory();
 	producer = new Producer();
 	reset();
@@ -209,10 +208,34 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	}
     }
 
-    public IReport getReport() throws IllegalThreadStateException {
+    public IReport getReport(SystemEnumeration... systems) throws IllegalThreadStateException, ArfException {
 	switch(state) {
 	  case COMPLETE_OK:
-	    return report;
+	    try {
+		Report report = new Report();
+		String requestId = report.addRequest(DOMTools.toElement(benchmark));
+		String assetId = report.addAsset(sysinfo);
+		for (ITransformable subreport : reports) {
+		    Element elt = DOMTools.toElement(subreport);
+		    String ns = elt.getNamespaceURI();
+		    if (SystemEnumeration.XCCDF.namespace().equals(ns)) {
+			//
+			// Always include the XCCDF report
+			//
+			report.addReport(requestId, assetId, elt);
+		    } else {
+			for (SystemEnumeration system : systems) {
+			    if (system == SystemEnumeration.ANY || system.namespace().equals(ns)) {
+				report.addReport(requestId, assetId, elt);
+				break;
+			    }
+			}
+		    }
+		}
+		return report;
+	    } catch (Exception e) {
+		throw new ArfException(e);
+	    }
 
 	  case COMPLETE_ERR:
 	  case CONFIGURE:
@@ -243,95 +266,89 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
      */
     public void run() {
 	state = State.RUNNING;
+	boolean doDisconnect = false;
 	try {
 	    Collection<RuleType> rules = view.getSelectedRules();
 	    if (rules.size() == 0) {
-		logger.severe("No rules are selected!");
-		if (view.getProfile() == null) {
-		    Collection<String> profiles = stream.getProfileIds(view.getBenchmark());
-		    if (profiles.size() > 0) {
-			logger.info("Try selecting a profile:");
-			for (String id : profiles) {
-			    logger.info("  " + id);
-			}
-		    }
-		}
+		logger.warn(JOVALMsg.WARNING_XCCDF_RULES);
 	    } else {
-		logger.info("There are " + rules.size() + " rules to process for the selected profile");
-    
+		logger.info(JOVALMsg.STATUS_XCCDF_RULES, rules.size(), view.getProfile());
 		HashSet<String> selectedIds = new HashSet<String>();
 		for (RuleType rule : rules) {
 		    selectedIds.add(rule.getId());
 		}
-    
 		boolean ocilExports = false;
 		if (checklists.size() == 0) {
 		    OCILHandler oh = new OCILHandler(view);
 		    ocilExports = oh.exportFiles(producer);
 		}
 		if (ocilExports) {
-		    logger.info(  "\n  ***************** ATTENTION *****************\n\n" +
-				    "  This XCCDF content requires OCIL result data.\n" +
-				    "	   Content has been exported.\n");
-		} else if (plugin.connect()) {
-		    List<Element> reports = new ArrayList<Element>();
-		    TestResultType testResult = initializeResult();
-    
-		    //
-		    // Perform the applicability tests, and if applicable, the automated checks
-		    //
-		    if (isApplicable(reports)) {
-			logger.info("The target system is applicable to the specified XCCDF");
-			processXccdf(testResult, reports);
-		    } else {
-			logger.info("The target system is not applicable to the specified XCCDF");
-		    }
-		    plugin.disconnect();
-    
-		    //
-		    // Print results to the console, and add them to the ARF report
-		    //
-		    HashMap<String, RuleResultType> resultIndex = new HashMap<String, RuleResultType>();
-		    for (RuleResultType rrt : testResult.getRuleResult()) {
-			resultIndex.put(rrt.getIdref(), rrt);
-		    }
-		    for (RuleType rule : listAllRules()) {
-			String ruleId = rule.getId();
-			if (resultIndex.containsKey(ruleId)) {
-			    logger.info(ruleId + ": " + resultIndex.get(ruleId).getResult());
-			} else {
-			    //
-			    // Record unselected/unchecked rules
-			    //
-			    RuleResultType rrt = factory.createRuleResultType();
-			    rrt.setIdref(rule.getId());
-			    if (selectedIds.contains(ruleId)) {
-				rrt.setResult(ResultEnumType.NOTCHECKED);
-			    } else {
-				rrt.setResult(ResultEnumType.NOTSELECTED);
-			    }
-			    if (rule.isSetCheck()) {
-				for (CheckType check : rule.getCheck()) {
-				    rrt.getCheck().add(check);
-				}
-			    }
-			    testResult.getRuleResult().add(rrt);
-			}
-		    }
-		    reports.add(DOMTools.toElement(new TestResult(testResult)));
-		    makeArfReport(reports);
-		    benchmark.getBenchmark().getTestResult().add(testResult);
-		} else {
-		    logger.info("Failed to connect to the target system");
+		    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_REQUIRED));
 		}
+		if (!plugin.isConnected()) {
+		    if (plugin.connect()) {
+			doDisconnect = true;
+		    } else {
+			throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_SESSION_CONNECT));
+		    }
+		}
+		TestResultType testResult = initializeResult();
+
+		//
+		// Perform the applicability tests, and if applicable, the automated checks
+		//
+		producer.sendNotify(MESSAGE_PLATFORM_PHASE_START, null);
+		if (isApplicable()) {
+		    producer.sendNotify(MESSAGE_PLATFORM_PHASE_END, Boolean.TRUE);
+		    processXccdf(testResult);
+		} else {
+		    producer.sendNotify(MESSAGE_PLATFORM_PHASE_END, Boolean.FALSE);
+		    logger.info(JOVALMsg.WARNING_CPE_TARGET, plugin.getSession().getHostname());
+		}
+		plugin.disconnect();
+
+		//
+		// Print results to the console, and add them to the ARF report
+		//
+		HashMap<String, RuleResultType> resultIndex = new HashMap<String, RuleResultType>();
+		for (RuleResultType rrt : testResult.getRuleResult()) {
+		    resultIndex.put(rrt.getIdref(), rrt);
+		}
+		for (RuleType rule : listAllRules()) {
+		    String ruleId = rule.getId();
+		    if (resultIndex.containsKey(ruleId)) {
+			logger.info(JOVALMsg.STATUS_XCCDF_RULE, ruleId, resultIndex.get(ruleId).getResult());
+		    } else {
+			//
+			// Record unselected/unchecked rules
+			//
+			RuleResultType rrt = factory.createRuleResultType();
+			rrt.setIdref(rule.getId());
+			if (selectedIds.contains(ruleId)) {
+			    rrt.setResult(ResultEnumType.NOTCHECKED);
+			} else {
+			    rrt.setResult(ResultEnumType.NOTSELECTED);
+			}
+			if (rule.isSetCheck()) {
+			    for (CheckType check : rule.getCheck()) {
+				rrt.getCheck().add(check);
+			    }
+			}
+			testResult.getRuleResult().add(rrt);
+		    }
+		}
+		reports.add(new TestResult(testResult));
+		benchmark.getBenchmark().getTestResult().add(testResult);
 	    }
 	    state = State.COMPLETE_OK;
 	} catch (Exception e) {
 	    state = State.COMPLETE_ERR;
 	    error = e;
-//logger.severe(LogFormatter.toString(e));
+	} finally {
+	    if (doDisconnect) {
+		plugin.disconnect();
+	    }
 	}
-	logger.info("XCCDF processing complete.");
     }
 
     // Private
@@ -339,7 +356,8 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
     private void reset() {
 	ocilDir = new File("ocil-export");
 	checklists = new HashMap<String, IChecklist>();
-	report = null;
+//DAS
+	reports = new ArrayList<ITransformable>();
 	state = State.CONFIGURE;
 	error = null;
     }
@@ -347,7 +365,8 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
     /**
      * This is the main routine, from which the selected checks are executed and compiled into the result.
      */
-    private void processXccdf(TestResultType testResult, List<Element> reports) {
+    private void processXccdf(TestResultType testResult) throws Exception {
+	producer.sendNotify(MESSAGE_RULES_PHASE_START, null);
 	testResult.setStartTime(getTimestamp());
 	phase = "evaluation";
 
@@ -357,52 +376,28 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	if (checklists != null) {
 	    OCILHandler ocilHandler = new OCILHandler(view, checklists);
 	    ocilHandler.integrateResults(testResult);
-	    if (verbose) {
-		for (IChecklist checklist : checklists.values()) {
-		    try {
-			reports.add(DOMTools.toElement(checklist));
-		    } catch (Exception e) {
-			logger.severe(LogFormatter.toString(e));
-		    }
-		}
+	    for (IChecklist checklist : checklists.values()) {
+		reports.add(checklist);
 	    }
 	}
 
 	//
 	// Run the OVAL engines
 	//
-	OVALHandler ovalHandler = null;
-	try {
-	    ovalHandler = new OVALHandler(view, plugin);
-	} catch (Exception e) {
-	    logger.severe(LogFormatter.toString(e));
-	    return;
-	}
+	OVALHandler ovalHandler = new OVALHandler(view, plugin);
 	for (String href : ovalHandler.getHrefs()) {
 	    IEngine engine = ovalHandler.getEngine(href);
-	    producer.sendNotify(MESSAGE_OVAL, engine);
-	    logger.info("Evaluating OVAL rules");
+	    producer.sendNotify(MESSAGE_OVAL_ENGINE, engine);
 	    engine.run();
 	    switch(engine.getResult()) {
 	      case OK:
-		if (verbose) {
-		    try {
-			reports.add(DOMTools.toElement(engine.getResults()));
-		    } catch (Exception e) {
-			logger.severe(LogFormatter.toString(e));
-		    }
-		}
+		reports.add(engine.getResults());
 		break;
 	      case ERR:
-		logger.severe(LogFormatter.toString(engine.getError()));
-		return;
+		throw engine.getError();
 	    }
 	}
-	try {
-	    ovalHandler.integrateResults(testResult);
-	} catch (OvalException e) {
-	    logger.severe(LogFormatter.toString(e));
-	}
+	ovalHandler.integrateResults(testResult);
 
 	//
 	// Run the SCE scripts
@@ -410,16 +405,15 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	if (plugin.getSession() instanceof ISession) {
 	    SCEHandler handler = new SCEHandler(view, (ISession)plugin.getSession(), plugin.getLogger());
 	    if (handler.ruleCount() > 0) {
-		logger.info("Evaluating SCE rules");
-		handler.integrateResults(testResult);
+		handler.integrateResults(testResult, producer);
 	    }
 	}
 	testResult.setEndTime(getTimestamp());
+	producer.sendNotify(MESSAGE_RULES_PHASE_END, null);
 
 	//
 	// Compute scores
 	//
-	logger.info("Computing scores...");
 	HashMap<String, RuleResultType> resultMap = new HashMap<String, RuleResultType>();
 	for (RuleResultType rrt : testResult.getRuleResult()) {
 	    resultMap.put(rrt.getIdref(), rrt);
@@ -427,35 +421,23 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	// Note - only selected rules will be in the resultMap at this point
 	BenchmarkType bt = benchmark.getBenchmark();
 	for (Model model : bt.getModel()) {
-	    logger.info("Scoring method: " + model.getSystem());
 	    ScoreKeeper sk = computeScore(resultMap, bt.getGroupOrRule(), ScoringModel.fromModel(model));
 	    ScoreType scoreType = factory.createScoreType();
 	    scoreType.setSystem(model.getSystem());
-	    scoreType.setValue(new BigDecimal(Float.toString(sk.getScore())));
+	    String score = Float.toString(sk.getScore());
+	    scoreType.setValue(new BigDecimal(score));
 	    if (sk instanceof FlatScoreKeeper) {
 		scoreType.setMaximum(new BigDecimal(Float.toString(((FlatScoreKeeper)sk).getMaxScore())));
 	    }
 	    testResult.getScore().add(scoreType);
-	}
-    }
-
-    private void makeArfReport(List<Element> reports) {
-	try {
-	    report = new Report();
-	    String requestId = report.addRequest(DOMTools.toElement(benchmark));
-	    String assetId = report.addAsset(sysinfo);
-	    for (Element elt : reports) {
-		report.addReport(requestId, assetId, elt);
-	    }
-	} catch (Exception e) {
-	    logger.severe(LogFormatter.toString(e));
+	    logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.getSystem(), score);
 	}
     }
 
     /**
      * Create a Benchmark.TestResult node, initialized with information gathered from the view and plugin.
      */
-    private TestResultType initializeResult() {
+    private TestResultType initializeResult() throws OvalException {
 	TestResultType testResult = factory.createTestResultType();
 	String id = view.getBenchmark();
 	String name = "unknown";
@@ -495,54 +477,50 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	    cpeRef.setIdref(href);
 	    testResult.getPlatform().add(cpeRef);
 	}
-	try {
-	    sysinfo = SysinfoFactory.createSystemInfo(plugin.getSession());
-	    if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
-		testResult.getTarget().add(sysinfo.getPrimaryHostName());
+	sysinfo = SysinfoFactory.createSystemInfo(plugin.getSession());
+	if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
+	    testResult.getTarget().add(sysinfo.getPrimaryHostName());
+	}
+	for (InterfaceType intf : sysinfo.getInterfaces().getInterface()) {
+	    if (!testResult.getTargetAddress().contains(intf.getIpAddress())) {
+		testResult.getTargetAddress().add(intf.getIpAddress());
 	    }
-	    for (InterfaceType intf : sysinfo.getInterfaces().getInterface()) {
-		if (!testResult.getTargetAddress().contains(intf.getIpAddress())) {
-		    testResult.getTargetAddress().add(intf.getIpAddress());
-		}
-	    }
-	} catch (OvalException e) {
-	    logger.severe(LogFormatter.toString(e));
 	}
 	return testResult;
     }
 
     /**
-     * Test whether the XCCDF bundle's applicability rules are satisfied.
+     * Test whether the XCCDF bundle's applicability rules are satisfied, i.e., at least one platform is applicable.
      */
-    private boolean isApplicable(List<Element> reports) {
+    private boolean isApplicable() throws Exception {
 	phase = "discovery";
-	logger.info("Determining system applicability...");
-
 	Collection<String> platforms = view.getCpePlatforms();
 	if (platforms.size() == 0) {
 	    logger.info("No platforms specified, skipping applicability checks...");
 	    return true;
 	}
-
+	boolean applicable = false;
 	for (String platform : platforms) {
+	    producer.sendNotify(MESSAGE_PLATFORM_CPE, platform);
 	    try {
-		if (isApplicable(view.getCpeOval(platform), reports)) {
-		    return true;
+		if (isApplicable(view.getCpeOval(platform))) {
+		    logger.info(JOVALMsg.STATUS_CPE_TARGET, plugin.getSession().getHostname(), platform);
+		    applicable = true;
 		}
 	    } catch (NoSuchElementException e) {
-		logger.severe("Cannot perform applicability checks: CPE OVAL definitions " + e.getMessage() +
-			      " were not found in the XCCDF datastream!");
+		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, e.getMessage()));
 	    }
 	}
-	return false;
+	return applicable;
     }
 
     /**
-     * Check for applicability for a single platform.
+     * Check for applicability for a single platform, i.e., all the OVAL definitions in cpeOval evaluate to TRUE.
      */
-    private boolean isApplicable(Map<String, IDefinitionFilter> cpeOval, List<Element> reports) {
+    private boolean isApplicable(Map<String, IDefinitionFilter> cpeOval) throws Exception {
 	for (Map.Entry<String, IDefinitionFilter> entry : cpeOval.entrySet()) {
 	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin);
+	    producer.sendNotify(MESSAGE_OVAL_ENGINE, engine);
 	    DefinitionMonitor monitor = new DefinitionMonitor();
 	    engine.getNotificationProducer().addObserver(monitor, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
 	    try {
@@ -552,18 +530,13 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 		switch(engine.getResult()) {
 		  case OK:
 		    IResults results = engine.getResults();
-		    if (verbose) {
-			reports.add(DOMTools.toElement(engine.getResults()));
-		    }
+		    reports.add(results);
 		    for (String definition : monitor.definitions()) {
-			ResultEnumeration result = results.getDefinitionResult(definition);
-			switch(result) {
+			switch(results.getDefinitionResult(definition)) {
 			  case TRUE:
-			    logger.info("Passed def " + definition);
 			    break;
 
 			  default:
-			    logger.warning("Bad result " + result + " for definition " + definition);
 			    return false;
 			}
 		    }
@@ -572,8 +545,6 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 		  case ERR:
 		    throw engine.getError();
 		}
-	    } catch (Exception e) {
-		logger.severe(LogFormatter.toString(e));
 	    } finally {
 		engine.getNotificationProducer().removeObserver(monitor);
 	    }
@@ -582,7 +553,7 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
     }
 
     /**
-     * Recursively get all rules within the XCCDF document.
+     * Recursively get all of the rules within the XCCDF document.
      */
     private List<RuleType> listAllRules() {
 	List<RuleType> rules = new Vector<RuleType>();
@@ -593,7 +564,7 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
     }
 
     /**
-     * Recursively list all selected rules within the SelectableItem.
+     * Recursively list all of the selected rules within the SelectableItem.
      */
     private List<RuleType> getRules(SelectableItemType item) {
 	List<RuleType> rules = new Vector<RuleType>();
@@ -607,10 +578,6 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	return rules;
     }
 
-    private String encode(String s) {
-	return s.replace(System.getProperty("file.separator"), "~");
-    }
-
     private XMLGregorianCalendar getTimestamp() {
 	XMLGregorianCalendar tm = null;
 	if (datatypeFactory != null) {
@@ -619,6 +586,9 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	return tm;
     }
 
+    /**
+     * An IObserver for an OVAL IEngine, that tracks all the definitions that are evaluated.
+     */
     class DefinitionMonitor implements IObserver {
 	private HashSet<String> defs;
 
@@ -639,7 +609,9 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	}
     }
 
-
+    /**
+     * Enumeration of the XCCDF scoring models.
+     */
     enum ScoringModel {
 	DEFAULT("urn:xccdf:scoring:default"),
 	FLAT("urn:xccdf:scoring:flat"),
@@ -688,6 +660,9 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	}
     }
 
+    /**
+     * The base class for ScoreKeepers.
+     */
     abstract static class ScoreKeeper {
 	HashMap<String, RuleResultType> results;
 	float score, count;
@@ -703,6 +678,9 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	}
     }
 
+    /**
+     * ScoreKeeper implementation for ScoringModel.DEFAULT.
+     */
     static class DefaultScoreKeeper extends ScoreKeeper {
 	static DefaultScoreKeeper compute(HashMap<String, RuleResultType> results, List<SelectableItemType> items)
 		throws IllegalArgumentException {
@@ -772,6 +750,9 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	}
     }
 
+    /**
+     * ScoreKeeper implementation for ScoringModel.FLAT and FLAT_UNWEIGHTED.
+     */
     static class FlatScoreKeeper extends ScoreKeeper {
 	static FlatScoreKeeper compute(boolean weighted, HashMap<String, RuleResultType> results,
 		List<SelectableItemType> items) throws IllegalArgumentException {
@@ -840,6 +821,9 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	}
     }
 
+    /**
+     * ScoreKeeper implementation for ScoringModel.ABSOLUTE.
+     */
     static class AbsoluteScoreKeeper extends FlatScoreKeeper {
 	static AbsoluteScoreKeeper compute(HashMap<String, RuleResultType> results, List<SelectableItemType> items)
 		throws IllegalArgumentException {

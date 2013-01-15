@@ -3,8 +3,10 @@
 
 package org.joval.util;
 
-import java.util.Hashtable;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
@@ -16,16 +18,20 @@ import org.joval.intf.util.IProducer;
  * @version %I% %G%
  */
 public class Producer implements IProducer {
-    Hashtable<IObserver, ObserverContext> observers;
+    Map<IObserver, ObserverContext> observers;
 
     public Producer() {
-	observers = new Hashtable<IObserver, ObserverContext>();
+	observers = new HashMap<IObserver, ObserverContext>();
     }
 
     public void sendNotify(int msg, Object arg) {
-	Iterator<ObserverContext> observerIter = observers.values().iterator();
-	while(observerIter.hasNext()) {
-	    observerIter.next().sendNotify(this, msg, arg);
+	//
+	// Create a method-local copy of the observers so that an IObserver can remove itself if desired. 
+	//
+	List<ObserverContext> local = new ArrayList<ObserverContext>();
+	local.addAll(observers.values());
+	for (ObserverContext ctx : local) {
+	     ctx.sendNotify(this, msg, arg);
 	}
     }
 

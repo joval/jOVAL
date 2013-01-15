@@ -29,26 +29,6 @@ import org.joval.scap.xccdf.XccdfException;
  */
 public interface IDatastream {
     /**
-     * An enumeration of supported check systems.
-     */
-    enum System {
-	OCIL("http://scap.nist.gov/schema/ocil/2"),
-	OVAL("http://oval.mitre.org/XMLSchema/oval-definitions-5"),
-	SCE("http://open-scap.org/page/SCE"),
-	UNSUPPORTED(null);
-
-	private String ns;
-
-	private System(String ns) {
-	    this.ns = ns;
-	}
-
-	public String namespace() {
-	    return ns;
-	}
-    }
-
-    /**
      * Get the CPE dictionary for this stream.
      */
     IDictionary getDictionary();
@@ -85,11 +65,11 @@ public interface IDatastream {
     Object resolve(String href) throws NoSuchElementException;
 
     /**
-     * Returns the System enum corresponding to the component href.
+     * Returns the SystemEnumeration corresponding to the component href.
      *
      * @throws NoSuchElementException if there is no component with the specified href in the stream
      */
-    System getSystem(String href) throws NoSuchElementException;
+    SystemEnumeration getSystem(String href) throws NoSuchElementException;
 
     IChecklist getOcil(String href) throws NoSuchElementException, OcilException;
     IDefinitions getOval(String href) throws NoSuchElementException, OvalException;

@@ -128,7 +128,7 @@ public class OCILHandler {
 	    try {
 		IChecklist checklist = view.getStream().getOcil(href);
 		IVariables variables = getVariables(href);
-		producer.sendNotify(IEngine.MESSAGE_OCIL, new Argument(href, checklist, variables));
+		producer.sendNotify(IEngine.MESSAGE_OCIL_MISSING, new Argument(href, checklist, variables));
 	    } catch (NoSuchElementException e) {
 		e.printStackTrace();
 	    } catch (OcilException e) {

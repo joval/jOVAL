@@ -40,6 +40,7 @@ import org.joval.intf.ocil.IChecklist;
 import org.joval.intf.oval.IDefinitions;
 import org.joval.intf.scap.IDatastream;
 import org.joval.intf.scap.IView;
+import org.joval.intf.scap.SystemEnumeration;
 import org.joval.intf.xccdf.IBenchmark;
 import org.joval.scap.ScapException;
 import org.joval.scap.cpe.Dictionary;
@@ -201,18 +202,18 @@ public class Datastream implements IDatastream, ILoggable {
     }
 
     /**
-     * Given a component href, get the IDatastream.System enum type of the component.
+     * Given a component href, get the SystemEnumeration type of the component.
      */
-    public System getSystem(String href) throws NoSuchElementException {
+    public SystemEnumeration getSystem(String href) throws NoSuchElementException {
 	Object obj = resolve(href);
 	if (obj instanceof Component) {
 	    Component component = (Component)obj;
 	    if (component.isSetOvalDefinitions()) {
-		return System.OVAL;
+		return SystemEnumeration.OVAL;
 	    } else if (component.isSetOcil()) {
-		return System.OCIL;
+		return SystemEnumeration.OCIL;
 	    } else {
-		return System.UNSUPPORTED;
+		return SystemEnumeration.UNSUPPORTED;
 	    }
 	} else if (obj instanceof ExtendedComponent) {
 	    ExtendedComponent component = (ExtendedComponent)obj;
@@ -221,9 +222,9 @@ public class Datastream implements IDatastream, ILoggable {
 		data = ((JAXBElement)data).getValue();
 	    }
 	    if (data instanceof ScriptDataType) {
-		return System.SCE;
+		return SystemEnumeration.SCE;
 	    } else {
-		return System.UNSUPPORTED;
+		return SystemEnumeration.UNSUPPORTED;
 	    }
 	} else {
 	    throw new NoSuchElementException(href);

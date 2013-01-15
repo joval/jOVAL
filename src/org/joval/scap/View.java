@@ -35,6 +35,7 @@ import xccdf.schemas.core.ValueType;
 import org.joval.intf.cpe.IDictionary;
 import org.joval.intf.oval.IDefinitionFilter;
 import org.joval.intf.scap.IDatastream;
+import org.joval.intf.scap.SystemEnumeration;
 import org.joval.intf.scap.IView;
 import org.joval.scap.oval.DefinitionFilter;
 
@@ -244,7 +245,7 @@ public class View implements IView {
 	    ItemType cpeItem = dictionary.getItem(cpeName);
 	    if (cpeItem != null && cpeItem.isSetCheck()) {
 		for (CheckType check : cpeItem.getCheck()) {
-		    if (IDatastream.System.OVAL.namespace().equals(check.getSystem()) && check.isSetHref()) {
+		    if (SystemEnumeration.OVAL.namespace().equals(check.getSystem()) && check.isSetHref()) {
 			String href = check.getHref();
 			if (!ovalMap.containsKey(href)) {
 			    ovalMap.put(href, new ArrayList<String>());

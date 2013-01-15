@@ -33,15 +33,15 @@ public class ScapFactory {
 	return new DatastreamCollection(DatastreamCollection.getDSCollection(f));
     }
 
-    public static IEngine createEngine(IPlugin plugin, boolean verbose) {
-	return new OEMEngine(plugin, verbose);
+    public static IEngine createEngine(IPlugin plugin) {
+	return new OEMEngine(plugin);
     }
 
     // Private
 
     private static class OEMEngine extends Engine {
-	OEMEngine(IPlugin plugin, boolean verbose) {
-	    super(plugin, verbose);
+	OEMEngine(IPlugin plugin) {
+	    super(plugin);
 	}
     }
 }

@@ -10,7 +10,9 @@ import org.joval.intf.arf.IReport;
 import org.joval.intf.ocil.IChecklist;
 import org.joval.intf.ocil.IVariables;
 import org.joval.intf.scap.IView;
+import org.joval.intf.scap.SystemEnumeration;
 import org.joval.intf.util.IProducer;
+import org.joval.scap.arf.ArfException;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.Version;
 
@@ -54,12 +56,22 @@ public interface IEngine extends Runnable {
     int MESSAGE_PLATFORM_PHASE_END		= 230;
 
     /**
+     * Message ID indicating that the engine is beginning to evaluate selected XCCDF rules.
+     */
+    int MESSAGE_RULES_PHASE_START		= 240;
+
+    /**
+     * Message ID indicating that the engine has finished evaluating selected XCCDF rules.
+     */
+    int MESSAGE_RULES_PHASE_END			= 250;
+
+    /**
      * Message ID indicating that the engine has created an OVAL engine instance and is about to run it. The argument
      * is the OVAL IEngine instance.
      *
      * @see org.joval.intf.oval.IEngine
      */
-    int MESSAGE_OVAL				= 240;
+    int MESSAGE_OVAL_ENGINE			= 260;
 
     /**
      * Message ID indicating that the engine is missing information about an OCIL checklist result. The argument is
@@ -67,12 +79,12 @@ public interface IEngine extends Runnable {
      *
      * @see org.joval.intf.ocil.IChecklist
      */
-    int MESSAGE_OCIL				= 250;
+    int MESSAGE_OCIL_MISSING			= 270;
 
     /**
-     * Message ID indicating that the engine is about to run an SCE script. The argument is the String href for the script.
+     * Message ID indicating that the engine is about to run an SCE script. The argument is the script href (String).
      */
-    int MESSAGE_SCE				= 260;
+    int MESSAGE_SCE_SCRIPT			= 280;
 
     /**
      * Specification for the argument accompanying a MESSAGE_OCIL notification message.
@@ -129,11 +141,13 @@ public interface IEngine extends Runnable {
     Result getResult() throws IllegalThreadStateException;
 
     /**
-     * Return the ARF report (valid if getResult returned Result.OK).  Only valid after the run() method has finished.
+     * Generate an ARF report. Only valid after the run() method has finished (if getResult returned Result.OK).
+     * The XCCDF report is always included (even when called without arguments). Additional subreports can be
+     * specified by check system using the SystemEnumeration.
      *
      * @throws IllegalThreadStateException if the engine hasn't run, or is running.
      */
-    IReport getReport() throws IllegalThreadStateException;
+    IReport getReport(SystemEnumeration... systems) throws IllegalThreadStateException, ArfException;
 
     /**
      * Return the error (valid if getResult returned Result.ERR).  Only valid after the run() method has finished.

@@ -6,6 +6,7 @@ CLASSES=\
 	org.joval.intf.scap.IDatastream					\
 	org.joval.intf.scap.IDatastreamCollection			\
 	org.joval.intf.scap.IView					\
+	org.joval.intf.scap.SystemEnumeration				\
 	org.joval.intf.xccdf.IBenchmark					\
 	org.joval.intf.xccdf.IEngine					\
 	org.joval.scap.Datastream					\

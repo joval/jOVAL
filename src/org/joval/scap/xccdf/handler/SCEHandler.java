@@ -26,12 +26,14 @@ import jsaf.intf.system.ISession;
 import jsaf.intf.util.ILoggable;
 
 import org.joval.intf.scap.IView;
+import org.joval.intf.xccdf.IEngine;
 import org.joval.scap.sce.SceException;
 import org.joval.scap.sce.SCEScript;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.scap.xccdf.engine.RuleResult;
 import org.joval.scap.xccdf.engine.XPERT;
 import org.joval.util.JOVALMsg;
+import org.joval.util.Producer;
 
 /**
  * XCCDF helper class for SCE processing.
@@ -66,7 +68,7 @@ public class SCEHandler implements ILoggable {
     /**
      * Run all the SCE scripts and integrate the results with the XCCDF results in one step.
      */
-    public void integrateResults(TestResultType xccdfResult) {
+    public void integrateResults(TestResultType xccdfResult, Producer producer) {
 	//
 	// Iterate through the rules and record the results
 	//
@@ -97,7 +99,7 @@ public class SCEHandler implements ILoggable {
 				    if (ruleScripts.containsKey(ref.getHref())) {
 					Script rs = ruleScripts.get(ref.getHref());
 					try {
-					    logger.info("Running SCE script " + ref.getHref());
+					    producer.sendNotify(IEngine.MESSAGE_SCE_SCRIPT, ref.getHref());
 					    SceResultsType srt = new SCEScript(rs.getExports(), rs.getData(), session).exec();
 					    result.add(srt.getResult());
 					    if (importStdout) {
@@ -107,8 +109,7 @@ public class SCEHandler implements ILoggable {
 						checkResult.getCheckImport().add(cit);
 					    }
 					} catch (Exception e) {
-					    logger.warn("Error: " + e.getMessage());
-					    e.printStackTrace();
+					    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 					    result.add(ResultEnumType.ERROR);
 					}
 				    }
@@ -164,12 +165,11 @@ public class SCEHandler implements ILoggable {
 				    }
 				    scriptTable.get(ruleId).put(scriptId, new Script(scriptId, exports));
 				} catch (IllegalArgumentException e) {
-				    logger.warn(e.getMessage());
+				    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 				} catch (SceException e) {
-				    logger.warn(e.getMessage());
+				    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 				} catch (NoSuchElementException e) {
-				    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, scriptId);
-				    logger.warn(s);
+				    logger.warn(JOVALMsg.ERROR_XCCDF_MISSING_PART, scriptId);
 				}
 			    }
 			}

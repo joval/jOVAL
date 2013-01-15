@@ -13,6 +13,7 @@ import java.net.ConnectException;
 import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.text.MessageFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -28,6 +29,7 @@ import org.joval.intf.ocil.IChecklist;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IDatastream;
 import org.joval.intf.scap.IView;
+import org.joval.intf.scap.SystemEnumeration;
 import org.joval.intf.xccdf.IEngine.OcilMessageArgument;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
@@ -128,7 +130,7 @@ public class XPERT {
 	File ocilDir = new File("ocil-export");
 
 	Level level = Level.INFO;
-	boolean query = false, verify = false, verbose = false;
+	boolean query = false, verify = true, verbose = false;
 	File logFile = new File(CWD, "xpert.log");
 	String pluginName = "default";
 	File configFile = new File(CWD, IPlugin.DEFAULT_FILE);
@@ -141,19 +143,19 @@ public class XPERT {
 	    } else if (argv[i].equals("-q")) {
 		query = true;
 	    } else if (argv[i].equals("-s")) {
-		verify = true;
+		verify = false;
 	    } else if (argv[i].equals("-v")) {
 		verbose = true;
 	    } else if ((i + 1) < argv.length) {
 		if (argv[i].equals("-d")) {
 		    streamFile = new File(argv[++i]);
-		} else if (argv[i].equals("-s")) {
+		} else if (argv[i].equals("-i")) {
 		    streamId = argv[++i];
 		} else if (argv[i].equals("-b")) {
 		    benchmarkId = argv[++i];
 		} else if (argv[i].equals("-p")) {
 		    profileId = argv[++i];
-		} else if (argv[i].equals("-i")) {
+		} else if (argv[i].equals("-o")) {
 		    String pair = argv[++i];
 		    int ptr = pair.indexOf("=");
 		    String key, val;
@@ -298,7 +300,12 @@ public class XPERT {
 			}
 		    }
 
-		    IDatastream ds = dsc.getDatastream(streamId);
+		    IDatastream ds = null;
+		    try {
+			ds = dsc.getDatastream(streamId);
+		    } catch (NoSuchElementException e) {
+			throw new XPERTException("ERROR: Invalid stream ID \"" + streamId + "\"");
+		    }
 		    if (benchmarkId == null) {
 			if (ds.getBenchmarkIds().size() == 1) {
 			    benchmarkId = ds.getBenchmarkIds().iterator().next();
@@ -320,33 +327,48 @@ public class XPERT {
 
 		    try {
 			IView view = ds.view(benchmarkId, profileId);
-			Engine engine = new Engine(plugin, verbose);
-			engine.setView(view);
-			for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
-			    engine.addChecklist(entry.getKey(), entry.getValue());
-			}
-			int min = org.joval.intf.xccdf.IEngine.MESSAGE_MIN;
-			int max = org.joval.intf.xccdf.IEngine.MESSAGE_MAX;
-			IObserver observer = new XccdfObserver(ocilDir);
-			engine.getNotificationProducer().addObserver(observer, min, max);
-			engine.run();
-			engine.getNotificationProducer().removeObserver(observer);
-			switch(engine.getResult()) {
-			  case OK:
-			    IReport report = engine.getReport();
-			    if (report.getAssetReportCollection().isSetReports()) {
-				logger.info("Saving ARF report: " + resultsFile.toString());
-				report.writeXML(resultsFile);
-				logger.info("Transforming to HTML report: " + reportFile.toString());
-				view.getStream().getBenchmark(benchmarkId).writeTransform(transformFile, reportFile);
+			if (profileId == null && view.getSelectedRules().size() == 0) {
+			    Collection<String> profiles = ds.getProfileIds(view.getBenchmark());
+			    if (profiles.size() > 0) {
+			        logger.info("Try selecting a profile:");
+			        for (String id : profiles) {
+			            logger.info("  " + id);
+			        }
 			    }
-			    logger.info("Finished processing XCCDF bundle");
-			    exitCode = 0;
-			    break;
-
-			  case ERR:
-			    throw engine.getError();
+			} else {
+			    Engine engine = new Engine(plugin);
+			    engine.setView(view);
+			    for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
+				engine.addChecklist(entry.getKey(), entry.getValue());
+			    }
+			    int min = org.joval.intf.xccdf.IEngine.MESSAGE_MIN;
+			    int max = org.joval.intf.xccdf.IEngine.MESSAGE_MAX;
+			    IObserver observer = new XccdfObserver(ocilDir);
+			    engine.getNotificationProducer().addObserver(observer, min, max);
+			    engine.run();
+			    engine.getNotificationProducer().removeObserver(observer);
+			    switch(engine.getResult()) {
+			      case OK:
+				IReport report = engine.getReport(verbose ? SystemEnumeration.ANY : SystemEnumeration.XCCDF);
+				if (report == null) {
+				    logger.info("No report was generated.");
+				} else if (report.getAssetReportCollection().isSetReports()) {
+				    logger.info("Saving ARF report: " + resultsFile.toString());
+				    report.writeXML(resultsFile);
+				    logger.info("Transforming to HTML report: " + reportFile.toString());
+				    view.getStream().getBenchmark(benchmarkId).writeTransform(transformFile, reportFile);
+				}
+				logger.info("Finished processing XCCDF bundle");
+				exitCode = 0;
+				break;
+    
+			      case ERR:
+				throw engine.getError();
+			    }
 			}
+		    } catch (OcilException e) {
+			logger.severe(">>> ERROR - " + e.getMessage());
+			logger.info("Check " + ocilDir.toString() + " for exported OCIL documents");
 		    } catch (UnknownHostException e) {
 			logger.severe(">>> ERROR - No such host: " + e.getMessage());
 		    } catch (ConnectException e) {
@@ -413,13 +435,14 @@ public class XPERT {
 		    logger.info("Host is not applicable");
 		}
 		break;
-	      case org.joval.intf.xccdf.IEngine.MESSAGE_OVAL:
+	      case org.joval.intf.xccdf.IEngine.MESSAGE_OVAL_ENGINE:
 		logger.info("Executing OVAL tests");
 		int min = org.joval.intf.oval.IEngine.MESSAGE_MIN;
 		int max = org.joval.intf.oval.IEngine.MESSAGE_MAX;
-		((org.joval.intf.oval.IEngine)arg).getNotificationProducer().addObserver(new OvalObserver(), min, max);
+		org.joval.intf.oval.IEngine oe = (org.joval.intf.oval.IEngine)arg;
+		oe.getNotificationProducer().addObserver(new OvalObserver(oe.getNotificationProducer()), min, max);
 		break;
-	      case org.joval.intf.xccdf.IEngine.MESSAGE_OCIL:
+	      case org.joval.intf.xccdf.IEngine.MESSAGE_OCIL_MISSING:
 		OcilMessageArgument oma = (OcilMessageArgument)arg;
 		String base = oma.getHref();
 		if (base.endsWith(".xml")) {
@@ -436,7 +459,7 @@ public class XPERT {
 		    e.printStackTrace();
 		}
 		break;
-	      case org.joval.intf.xccdf.IEngine.MESSAGE_SCE:
+	      case org.joval.intf.xccdf.IEngine.MESSAGE_SCE_SCRIPT:
 		logger.warning("Running SCE script " + (String)arg);
 		break;
 	    }
@@ -444,7 +467,11 @@ public class XPERT {
     }
 
     static class OvalObserver implements IObserver {
-	OvalObserver() {}
+	private IProducer producer;
+
+	OvalObserver(IProducer producer) {
+	    this.producer = producer;
+	}
 
 	public void notify(IProducer sender, int msg, Object arg) {
 	    switch(msg) {
@@ -458,13 +485,14 @@ public class XPERT {
 		logger.info("Scan complete");
 		break;
 	      case org.joval.intf.oval.IEngine.MESSAGE_DEFINITION_PHASE_START:
-		logger.info("Evaluating definitions");
+		logger.info("Evaluating OVAL definitions");
 		break;
 	      case org.joval.intf.oval.IEngine.MESSAGE_DEFINITION:
 		logger.info("Evaluating " + (String)arg);
 		break;
 	      case org.joval.intf.oval.IEngine.MESSAGE_DEFINITION_PHASE_END:
-		logger.info("Completed evaluating definitions");
+		logger.info("Finished evaluating OVAL definitions");
+		producer.removeObserver(this);
 		break;
 	      case org.joval.intf.oval.IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
 		// no-op
