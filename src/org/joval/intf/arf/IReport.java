@@ -36,21 +36,21 @@ public interface IReport extends ITransformable {
     /**
      * Add a report request.
      *
-     * @returns the ID generated for the request
+     * @return the ID generated for the request
      */
     String addRequest(Element request);
 
     /**
      * Add an asset based on a SystemInfoType
      *
-     * @returns the ID generated for the asset
+     * @return the ID generated for the asset
      */
     String addAsset(SystemInfoType info);
 
     /**
      * Add an XCCDF result related to the specified request and asset.
      *
-     * @returns the ID generated for the report
+     * @return the ID generated for the report
      */
     String addReport(String requestId, String assetId, Element report) throws NoSuchElementException;
 

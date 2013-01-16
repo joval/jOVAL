@@ -147,7 +147,7 @@ public interface IChecklist extends ITransformable {
     /**
      * Return a list of all the language values in TextType entities throughout the OCIL document.
      *
-     * @see http://www.ietf.org/rfc/rfc4646.txt
+     * @see <a href="http://www.ietf.org/rfc/rfc4646.txt">RFC4646</a> for information about permissible values.
      */
     Collection<String> getLanguages();
 

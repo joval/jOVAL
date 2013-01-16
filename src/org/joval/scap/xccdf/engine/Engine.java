@@ -102,8 +102,11 @@ import org.joval.xml.DOMTools;
  * @version %I% %G%
  */
 public class Engine implements org.joval.intf.xccdf.IEngine {
+    private static final String PRODUCT_NAME;
     private static DatatypeFactory datatypeFactory = null;
     static {
+	PRODUCT_NAME = JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_PRODUCT) + " " +
+		       JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION);
 	try {
 	    datatypeFactory = DatatypeFactory.newInstance();
 	} catch (DatatypeConfigurationException e) {
@@ -356,7 +359,6 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
     private void reset() {
 	ocilDir = new File("ocil-export");
 	checklists = new HashMap<String, IChecklist>();
-//DAS
 	reports = new ArrayList<ITransformable>();
 	state = State.CONFIGURE;
 	error = null;
@@ -452,7 +454,8 @@ public class Engine implements org.joval.intf.xccdf.IEngine {
 	}
 	testResult.setTestResultId("xccdf_" + namespace + "_testresult_" + name);
 	testResult.setVersion(benchmark.getBenchmark().getVersion().getValue());
-	testResult.setTestSystem(XPERT.getMessage("product.name"));
+	testResult.setTestSystem(PRODUCT_NAME);
+
 	TestResultType.Benchmark trb = factory.createTestResultTypeBenchmark();
 	trb.setId(benchmark.getBenchmark().getBenchmarkId());
 	trb.setHref(benchmark.getHref());

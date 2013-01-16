@@ -73,6 +73,7 @@ public class XPERT {
 		url = cl.getResource("xpert.resources.properties");
 	    }
 	    resources = new PropertyResourceBundle(url.openStream());
+	    JOVALSystem.setSystemProperty(JOVALSystem.SYSTEM_PROP_PRODUCT, getMessage("product.name"));
 	} catch (IOException e) {
 	    e.printStackTrace();
 	    System.exit(-1);

@@ -65,6 +65,23 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Checklist implements IChecklist {
+    /**
+     * An empty IChecklist.
+     */
+    public static final IChecklist EMPTY;
+    static {
+	try {
+	    OCILType root = Factories.core.createOCILType();
+	    root.setQuestionnaires(Factories.core.createQuestionnairesType());
+	    root.setQuestions(Factories.core.createQuestionsType());
+	    root.setTestActions(Factories.core.createTestActionsType());
+	    root.setVariables(Factories.core.createVariablesType());
+	    EMPTY = new Checklist(root);
+	} catch (OcilException e) {
+	    throw new RuntimeException(e);
+	}
+    }
+
     public static final OCILType getOCILType(File f) throws OcilException {
 	return getOCILType(new StreamSource(f));
     }

@@ -1,4 +1,8 @@
 CLASSES=\
+	org.joval.intf.arf.IReport				\
+	org.joval.intf.cpe.IDictionary				\
+	org.joval.intf.ocil.IChecklist				\
+	org.joval.intf.ocil.IVariables				\
 	org.joval.intf.oval.IDefinitionFilter			\
 	org.joval.intf.oval.IDefinitions			\
 	org.joval.intf.oval.IEngine				\
@@ -8,11 +12,32 @@ CLASSES=\
 	org.joval.intf.oval.IType				\
 	org.joval.intf.oval.IVariables				\
 	org.joval.intf.plugin.IPlugin				\
+	org.joval.intf.scap.IDatastream				\
+	org.joval.intf.scap.IDatastreamCollection		\
+	org.joval.intf.scap.IView				\
+	org.joval.intf.scap.SystemEnumeration			\
+	org.joval.intf.xccdf.IBenchmark				\
+	org.joval.intf.xccdf.IEngine				\
 	org.joval.intf.util.IObserver				\
 	org.joval.intf.util.IProducer				\
 	org.joval.intf.xml.ITransformable			\
 	org.joval.plugin.PluginConfigurationException		\
+	org.joval.scap.Datastream				\
+	org.joval.scap.DatastreamCollection			\
 	org.joval.scap.ScapException				\
+	org.joval.scap.ScapFactory				\
+	org.joval.scap.arf.ArfException				\
+	org.joval.scap.arf.Factories				\
+	org.joval.scap.arf.Report				\
+	org.joval.scap.cpe.CpeException				\
+	org.joval.scap.cpe.Dictionary				\
+	org.joval.scap.ocil.BooleanTestActionConditionType	\
+	org.joval.scap.ocil.Checklist				\
+	org.joval.scap.ocil.ChecklistResults			\
+	org.joval.scap.ocil.Factories				\
+	org.joval.scap.ocil.OcilException			\
+	org.joval.scap.ocil.OcilFactory				\
+	org.joval.scap.ocil.Variables				\
 	org.joval.scap.oval.CollectException			\
 	org.joval.scap.oval.DefinitionFilter			\
 	org.joval.scap.oval.Definitions				\
@@ -49,6 +74,16 @@ CLASSES=\
 	org.joval.scap.oval.types.TypeFactory			\
 	org.joval.scap.oval.types.VersionType			\
 	org.joval.scap.oval.xml.OvalNamespacePrefixMapper	\
+	org.joval.scap.sce.SceException				\
+	org.joval.scap.sce.SCEScript				\
+	org.joval.scap.xccdf.Benchmark				\
+	org.joval.scap.xccdf.TestResult				\
+	org.joval.scap.xccdf.XccdfException			\
+	org.joval.scap.xccdf.engine.Engine			\
+	org.joval.scap.xccdf.engine.RuleResult			\
+	org.joval.scap.xccdf.handler.OCILHandler		\
+	org.joval.scap.xccdf.handler.OVALHandler		\
+	org.joval.scap.xccdf.handler.SCEHandler			\
 	org.joval.util.JOVALMsg					\
 	org.joval.util.JOVALSystem				\
 	org.joval.util.Producer					\

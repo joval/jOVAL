@@ -100,4 +100,8 @@ public class JOVALSystem {
     public static String getSystemProperty(String key) {
 	return sysProps.getProperty(key);
     }
+
+    public static void setSystemProperty(String key, String value) {
+	sysProps.setProperty(key, value);
+    }
 }

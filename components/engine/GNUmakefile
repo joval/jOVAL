@@ -24,7 +24,8 @@ resources:
 	cp $(RSRC)/*.ini $(BUILD)
 	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/*.properties $(BUILD)
-	echo -e "version=$(JOVAL_VERSION)\r\n" >> $(BUILD)/joval.system.properties
+	echo "productName=jOVAL(tm) SDK" >> $(BUILD)/joval.system.properties
+	echo "version=$(JOVAL_VERSION)" >> $(BUILD)/joval.system.properties
 	echo "build.date=`date`" >> $(BUILD)/joval.system.properties
 
 clean:

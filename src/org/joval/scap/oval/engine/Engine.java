@@ -41,7 +41,6 @@ import org.slf4j.cal10n.LocLogger;
 import oval.schemas.common.CheckEnumeration;
 import oval.schemas.common.ComplexDatatypeEnumeration;
 import oval.schemas.common.ExistenceEnumeration;
-import oval.schemas.common.GeneratorType;
 import oval.schemas.common.MessageLevelEnumeration;
 import oval.schemas.common.MessageType;
 import oval.schemas.common.OperatorEnumeration;

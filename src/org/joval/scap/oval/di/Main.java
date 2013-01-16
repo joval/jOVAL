@@ -92,6 +92,7 @@ public class Main implements IObserver {
 		url = cl.getResource("jovaldi.resources.properties");
 	    }
 	    resources = new PropertyResourceBundle(url.openStream());
+	    JOVALSystem.setSystemProperty(JOVALSystem.SYSTEM_PROP_PRODUCT, getMessage("product.name"));
 	} catch (IOException e) {
 	    e.printStackTrace();
 	    System.exit(-1);
@@ -245,7 +246,7 @@ public class Main implements IObserver {
     private static void printHeader() {
 	print("");
 	print(getMessage("MESSAGE_DIVIDER"));
-	print(getMessage("MESSAGE_PRODUCT"));
+	print(getMessage("MESSAGE_PRODUCT", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_PRODUCT)));
 	print(getMessage("MESSAGE_VERSION", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_VERSION)));
 	print(getMessage("MESSAGE_BUILD_DATE", JOVALSystem.getSystemProperty(JOVALSystem.SYSTEM_PROP_BUILD_DATE)));
 	print(getMessage("MESSAGE_COPYRIGHT"));
