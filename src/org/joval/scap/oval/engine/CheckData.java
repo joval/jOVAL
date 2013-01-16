@@ -3,9 +3,9 @@
 
 package org.joval.scap.oval.engine;
 
-import oval.schemas.common.CheckEnumeration;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.results.core.ResultEnumeration;
+import scap.oval.common.CheckEnumeration;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.results.ResultEnumeration;
 
 import org.joval.scap.oval.OvalException;
 import org.joval.util.JOVALMsg;

@@ -11,24 +11,25 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import ocil.schemas.core.ExceptionalResultType;
-import ocil.schemas.core.ResultsType;
-import ocil.schemas.core.QuestionnaireResultType;
-import ocil.schemas.variables.OcilVariables;
-import xccdf.schemas.core.CheckContentRefType;
-import xccdf.schemas.core.CheckExportType;
-import xccdf.schemas.core.CheckImportType;
-import xccdf.schemas.core.CheckType;
-import xccdf.schemas.core.ObjectFactory;
-import xccdf.schemas.core.ResultEnumType;
-import xccdf.schemas.core.RuleResultType;
-import xccdf.schemas.core.RuleType;
-import xccdf.schemas.core.TestResultType;
+import scap.ocil.core.ExceptionalResultType;
+import scap.ocil.core.ResultsType;
+import scap.ocil.core.QuestionnaireResultType;
+import scap.ocil.variables.OcilVariables;
+import scap.xccdf.CheckContentRefType;
+import scap.xccdf.CheckExportType;
+import scap.xccdf.CheckImportType;
+import scap.xccdf.CheckType;
+import scap.xccdf.ObjectFactory;
+import scap.xccdf.ResultEnumType;
+import scap.xccdf.RuleResultType;
+import scap.xccdf.RuleType;
+import scap.xccdf.TestResultType;
 
-import org.joval.intf.scap.IView;
-import org.joval.intf.ocil.IChecklist;
-import org.joval.intf.ocil.IVariables;
-import org.joval.intf.xccdf.IEngine;
+import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.ocil.IVariables;
+import org.joval.intf.scap.xccdf.IEngine;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.ocil.Variables;
 import org.joval.scap.xccdf.XccdfException;
@@ -44,7 +45,7 @@ import org.joval.util.Producer;
  * @version %I% %G%
  */
 public class OCILHandler {
-    public static final String NAMESPACE = "http://scap.nist.gov/schema/ocil/2";
+    public static final String NAMESPACE = SystemEnumeration.OCIL.namespace();
 
     private IView view;
     private XMLGregorianCalendar startTime;

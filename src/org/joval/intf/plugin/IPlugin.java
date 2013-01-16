@@ -9,12 +9,12 @@ import java.util.Properties;
 
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.util.ILoggable;
 
-import org.joval.intf.oval.IProvider;
+import scap.oval.systemcharacteristics.core.SystemInfoType;
+
+import org.joval.intf.scap.oval.IProvider;
 import org.joval.plugin.PluginConfigurationException;
 import org.joval.scap.oval.OvalException;
 

@@ -1,13 +1,13 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.oval;
+package org.joval.intf.scap.oval;
 
 import java.util.Collection;
 
-import oval.schemas.common.MessageType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.systemcharacteristics.core.ItemType;
+import scap.oval.common.MessageType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.systemcharacteristics.core.ItemType;
 
 import org.joval.scap.oval.CollectException;
 

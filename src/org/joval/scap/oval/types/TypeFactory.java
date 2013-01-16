@@ -3,13 +3,13 @@
 
 package org.joval.scap.oval.types;
 
-import oval.schemas.common.ComplexDatatypeEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.EntitySimpleBaseType;
-import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
-import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
+import scap.oval.common.ComplexDatatypeEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.EntitySimpleBaseType;
+import scap.oval.systemcharacteristics.core.EntityItemFieldType;
+import scap.oval.systemcharacteristics.core.EntityItemSimpleBaseType;
 
-import org.joval.intf.oval.IType;
+import org.joval.intf.scap.oval.IType;
 import org.joval.util.JOVALMsg;
 
 /**

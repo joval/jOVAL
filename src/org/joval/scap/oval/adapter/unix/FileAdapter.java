@@ -19,18 +19,6 @@ import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.MatchResult;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.unix.FileObject;
-import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
-import oval.schemas.systemcharacteristics.core.EntityItemIntType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.unix.FileItem;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
 import jsaf.intf.system.IBaseSession;
@@ -39,6 +27,17 @@ import jsaf.intf.unix.io.IUnixFileInfo;
 import jsaf.intf.unix.io.IUnixFilesystem;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.io.StreamTool;
+
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.unix.FileObject;
+import scap.oval.systemcharacteristics.core.EntityItemBoolType;
+import scap.oval.systemcharacteristics.core.EntityItemIntType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.unix.FileItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;

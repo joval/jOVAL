@@ -38,17 +38,17 @@ import org.xml.sax.SAXException;
 
 import jsaf.util.Checksum;
 
-import oval.schemas.definitions.core.OvalDefinitions;
-import oval.schemas.systemcharacteristics.core.OvalSystemCharacteristics;
-import oval.schemas.results.core.DefinitionType;
+import scap.oval.definitions.core.OvalDefinitions;
+import scap.oval.systemcharacteristics.core.OvalSystemCharacteristics;
+import scap.oval.results.DefinitionType;
 
-import org.joval.intf.oval.IDefinitionFilter;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.IEngine;
-import org.joval.intf.oval.IResults;
-import org.joval.intf.oval.ISystemCharacteristics;
-import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.scap.oval.IDefinitionFilter;
+import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.intf.scap.oval.IEngine;
+import org.joval.intf.scap.oval.IResults;
+import org.joval.intf.scap.oval.ISystemCharacteristics;
+import org.joval.intf.scap.oval.IVariables;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.scap.oval.OvalException;

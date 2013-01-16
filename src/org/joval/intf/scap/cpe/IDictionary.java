@@ -1,10 +1,10 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.cpe;
+package org.joval.intf.scap.cpe;
 
-import cpe.schemas.dictionary.ItemType;
-import cpe.schemas.dictionary.ListType;
+import scap.cpe.dictionary.ItemType;
+import scap.cpe.dictionary.ListType;
 
 /**
  * Interface defining a CPE dictionary document.

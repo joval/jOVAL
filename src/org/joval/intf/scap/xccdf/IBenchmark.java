@@ -1,12 +1,12 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.xccdf;
+package org.joval.intf.scap.xccdf;
 
 import java.io.File;
 import java.io.IOException;
 
-import xccdf.schemas.core.BenchmarkType;
+import scap.xccdf.BenchmarkType;
 
 import org.joval.intf.xml.ITransformable;
 

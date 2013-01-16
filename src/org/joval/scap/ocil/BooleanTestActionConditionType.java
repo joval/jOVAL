@@ -3,7 +3,7 @@
 
 package org.joval.scap.ocil;
 
-import ocil.schemas.core.TestActionConditionType;
+import scap.ocil.core.TestActionConditionType;
 
 /**
  * A TestActionConditionType that makes it possible to determine whether a boolean test action condition is a when_true,

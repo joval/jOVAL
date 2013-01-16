@@ -3,9 +3,9 @@
 
 package org.joval.scap.oval.types;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
 
-import org.joval.intf.oval.IType;
+import org.joval.intf.scap.oval.IType;
 import org.joval.util.JOVALMsg;
 
 /**

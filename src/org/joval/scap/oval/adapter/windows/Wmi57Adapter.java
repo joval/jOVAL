@@ -9,19 +9,6 @@ import java.util.Collection;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import oval.schemas.common.ComplexDatatypeEnumeration;
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.Wmi57Object;
-import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
-import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.windows.Wmi57Item;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.intf.windows.wmi.ISWbemObject;
@@ -30,6 +17,18 @@ import jsaf.intf.windows.wmi.ISWbemProperty;
 import jsaf.intf.windows.wmi.ISWbemPropertySet;
 import jsaf.intf.windows.wmi.IWmiProvider;
 import jsaf.provider.windows.wmi.WmiException;
+
+import scap.oval.common.ComplexDatatypeEnumeration;
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.MessageType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.windows.Wmi57Object;
+import scap.oval.systemcharacteristics.core.EntityItemFieldType;
+import scap.oval.systemcharacteristics.core.EntityItemRecordType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.windows.Wmi57Item;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.Factories;

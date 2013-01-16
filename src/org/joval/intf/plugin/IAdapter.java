@@ -7,7 +7,7 @@ import java.util.Collection;
 
 import jsaf.intf.system.IBaseSession;
 
-import org.joval.intf.oval.IProvider;
+import org.joval.intf.scap.oval.IProvider;
 import org.joval.scap.oval.CollectException;
 
 /**

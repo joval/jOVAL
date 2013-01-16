@@ -14,21 +14,6 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import oval.schemas.common.MessageType;
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.unix.InetdObject;
-import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.unix.EntityItemEndpointType;
-import oval.schemas.systemcharacteristics.unix.EntityItemWaitStatusType;
-import oval.schemas.systemcharacteristics.unix.InetdItem;
-
 import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
@@ -36,6 +21,20 @@ import jsaf.intf.io.IReader;
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.StringTools;
+
+import scap.oval.common.MessageType;
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.unix.InetdObject;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.unix.EntityItemEndpointType;
+import scap.oval.systemcharacteristics.unix.EntityItemWaitStatusType;
+import scap.oval.systemcharacteristics.unix.InetdItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;

@@ -8,8 +8,8 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
 
-import xccdf.schemas.core.TestResultType;
-import xccdf.schemas.core.ObjectFactory;
+import scap.xccdf.TestResultType;
+import scap.xccdf.ObjectFactory;
 
 import org.joval.intf.xml.ITransformable;
 import org.joval.xml.SchemaRegistry;

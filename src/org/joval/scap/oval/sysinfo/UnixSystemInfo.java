@@ -7,16 +7,16 @@ import java.util.Collection;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import oval.schemas.systemcharacteristics.core.InterfacesType;
-import oval.schemas.systemcharacteristics.core.InterfaceType;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.io.IReader;
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
+
+import scap.oval.systemcharacteristics.core.InterfacesType;
+import scap.oval.systemcharacteristics.core.InterfaceType;
+import scap.oval.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;

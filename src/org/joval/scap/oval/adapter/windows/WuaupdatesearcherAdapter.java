@@ -12,25 +12,24 @@ import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
-import oval.schemas.common.MessageType;
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.WuaUpdateSearcherBehaviors;
-import oval.schemas.definitions.windows.WuaupdatesearcherObject;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.windows.WuaupdatesearcherItem;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.powershell.PowershellException;
 import jsaf.util.SafeCLI;
+
+import scap.oval.common.MessageType;
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.windows.WuaUpdateSearcherBehaviors;
+import scap.oval.definitions.windows.WuaupdatesearcherObject;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.windows.WuaupdatesearcherItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;

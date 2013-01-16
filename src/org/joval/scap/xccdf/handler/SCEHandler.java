@@ -10,23 +10,24 @@ import java.util.NoSuchElementException;
 
 import org.slf4j.cal10n.LocLogger;
 
-import org.openscap.sce.xccdf.ScriptDataType;
-import org.openscap.sce.result.SceResultsType;
-import xccdf.schemas.core.CheckContentRefType;
-import xccdf.schemas.core.CheckExportType;
-import xccdf.schemas.core.CheckImportType;
-import xccdf.schemas.core.CheckType;
-import xccdf.schemas.core.ObjectFactory;
-import xccdf.schemas.core.ResultEnumType;
-import xccdf.schemas.core.RuleResultType;
-import xccdf.schemas.core.RuleType;
-import xccdf.schemas.core.TestResultType;
-
 import jsaf.intf.system.ISession;
 import jsaf.intf.util.ILoggable;
 
-import org.joval.intf.scap.IView;
-import org.joval.intf.xccdf.IEngine;
+import org.openscap.sce.xccdf.ScriptDataType;
+import org.openscap.sce.results.SceResultsType;
+import scap.xccdf.CheckContentRefType;
+import scap.xccdf.CheckExportType;
+import scap.xccdf.CheckImportType;
+import scap.xccdf.CheckType;
+import scap.xccdf.ObjectFactory;
+import scap.xccdf.ResultEnumType;
+import scap.xccdf.RuleResultType;
+import scap.xccdf.RuleType;
+import scap.xccdf.TestResultType;
+
+import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.xccdf.IEngine;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.scap.sce.SceException;
 import org.joval.scap.sce.SCEScript;
 import org.joval.scap.xccdf.XccdfException;
@@ -42,7 +43,7 @@ import org.joval.util.Producer;
  * @version %I% %G%
  */
 public class SCEHandler implements ILoggable {
-    public static final String NAMESPACE = "http://open-scap.org/page/SCE";
+    public static final String NAMESPACE = SystemEnumeration.SCE.namespace();
 
     private static final ObjectFactory FACTORY = new ObjectFactory();
 

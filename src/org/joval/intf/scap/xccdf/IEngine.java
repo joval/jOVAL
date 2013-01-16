@@ -1,16 +1,16 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.xccdf;
+package org.joval.intf.scap.xccdf;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
-import org.joval.intf.arf.IReport;
-import org.joval.intf.ocil.IChecklist;
-import org.joval.intf.ocil.IVariables;
-import org.joval.intf.scap.IView;
-import org.joval.intf.scap.SystemEnumeration;
+import org.joval.intf.scap.arf.IReport;
+import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.ocil.IVariables;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.util.IProducer;
 import org.joval.scap.arf.ArfException;
 import org.joval.scap.xccdf.XccdfException;
@@ -69,7 +69,7 @@ public interface IEngine extends Runnable {
      * Message ID indicating that the engine has created an OVAL engine instance and is about to run it. The argument
      * is the OVAL IEngine instance.
      *
-     * @see org.joval.intf.oval.IEngine
+     * @see org.joval.intf.scap.oval.IEngine
      */
     int MESSAGE_OVAL_ENGINE			= 260;
 
@@ -77,7 +77,7 @@ public interface IEngine extends Runnable {
      * Message ID indicating that the engine is missing information about an OCIL checklist result. The argument is
      * an OcilMessageArgument.
      *
-     * @see org.joval.intf.ocil.IChecklist
+     * @see org.joval.intf.scap.ocil.IChecklist
      */
     int MESSAGE_OCIL_MISSING			= 270;
 

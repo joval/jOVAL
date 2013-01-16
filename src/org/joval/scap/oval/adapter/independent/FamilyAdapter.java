@@ -6,14 +6,13 @@ package org.joval.scap.oval.adapter.independent;
 import java.util.Collection;
 import java.util.Vector;
 
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.independent.FamilyObject;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.independent.EntityItemFamilyType;
-import oval.schemas.systemcharacteristics.independent.FamilyItem;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.system.IBaseSession;
+
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.independent.FamilyObject;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.independent.EntityItemFamilyType;
+import scap.oval.systemcharacteristics.independent.FamilyItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.Factories;

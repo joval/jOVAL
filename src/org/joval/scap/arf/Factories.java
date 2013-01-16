@@ -20,15 +20,15 @@ public class Factories {
     /**
      * Facilitates access to the ARF core schema ObjectFactory.
      */
-    public static arf.schemas.core.ObjectFactory core = new arf.schemas.core.ObjectFactory();
+    public static scap.arf.core.ObjectFactory core = new scap.arf.core.ObjectFactory();
 
     /**
      * Facilitates access to the ARF reporting schema ObjectFactory.
      */
-    public static arf.schemas.reporting.ObjectFactory reporting = new arf.schemas.reporting.ObjectFactory();
+    public static scap.arf.reporting.ObjectFactory reporting = new scap.arf.reporting.ObjectFactory();
 
     /**
      * Facilitates access to the AI variables schema ObjectFactory.
      */
-    public static ai.schemas.core.ObjectFactory asset = new ai.schemas.core.ObjectFactory();
+    public static scap.ai.ObjectFactory asset = new scap.ai.ObjectFactory();
 }

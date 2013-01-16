@@ -7,14 +7,14 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
-import oval.schemas.common.MessageType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.UserSid55Object;
-import oval.schemas.definitions.windows.UserSidObject;
-import oval.schemas.systemcharacteristics.core.ItemType;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.windows.system.IWindowsSession;
+
+import scap.oval.common.MessageType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.windows.UserSid55Object;
+import scap.oval.definitions.windows.UserSidObject;
+import scap.oval.systemcharacteristics.core.ItemType;
 
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;

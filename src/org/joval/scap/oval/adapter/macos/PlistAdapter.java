@@ -11,6 +11,12 @@ import java.util.Collections;
 import java.util.Stack;
 import java.util.Vector;
 
+import jsaf.intf.io.IFile;
+import jsaf.intf.io.IFilesystem;
+import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
+import jsaf.intf.unix.system.IUnixSession;
+
 import com.dd.plist.NSArray;
 import com.dd.plist.NSData;
 import com.dd.plist.NSDate;
@@ -21,27 +27,21 @@ import com.dd.plist.NSSet;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.EntityObjectStringType;
-import oval.schemas.definitions.macos.PlistObject;
-import oval.schemas.definitions.macos.Plist510Object;
-import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
-import oval.schemas.systemcharacteristics.core.EntityItemIntType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.macos.PlistItem;
-import oval.schemas.systemcharacteristics.macos.EntityItemPlistTypeType;
-
-import jsaf.intf.io.IFile;
-import jsaf.intf.io.IFilesystem;
-import jsaf.intf.system.IBaseSession;
-import jsaf.intf.system.ISession;
-import jsaf.intf.unix.system.IUnixSession;
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.MessageType;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.core.EntityObjectStringType;
+import scap.oval.definitions.macos.PlistObject;
+import scap.oval.definitions.macos.Plist510Object;
+import scap.oval.systemcharacteristics.core.EntityItemAnySimpleType;
+import scap.oval.systemcharacteristics.core.EntityItemIntType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.macos.PlistItem;
+import scap.oval.systemcharacteristics.macos.EntityItemPlistTypeType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;

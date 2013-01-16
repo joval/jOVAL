@@ -3,8 +3,8 @@
 
 package org.joval.scap.oval.engine;
 
-import oval.schemas.common.OperatorEnumeration;
-import oval.schemas.results.core.ResultEnumeration;
+import scap.oval.common.OperatorEnumeration;
+import scap.oval.results.ResultEnumeration;
 
 import org.joval.scap.oval.OvalException;
 import org.joval.util.JOVALMsg;

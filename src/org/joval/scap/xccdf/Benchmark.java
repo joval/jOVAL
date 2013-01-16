@@ -27,9 +27,9 @@ import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
 import scap.datastream.Component;
-import xccdf.schemas.core.BenchmarkType;
+import scap.xccdf.BenchmarkType;
 
-import org.joval.intf.xccdf.IBenchmark;
+import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 

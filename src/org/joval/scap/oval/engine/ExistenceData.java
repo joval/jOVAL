@@ -3,9 +3,9 @@
 
 package org.joval.scap.oval.engine;
 
-import oval.schemas.common.ExistenceEnumeration;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.results.core.ResultEnumeration;
+import scap.oval.common.ExistenceEnumeration;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.results.ResultEnumeration;
 
 import org.joval.scap.oval.OvalException;
 import org.joval.util.JOVALMsg;

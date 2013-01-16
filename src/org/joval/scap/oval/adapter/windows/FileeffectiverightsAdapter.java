@@ -17,21 +17,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.Fileeffectiverights53Object;
-import oval.schemas.definitions.windows.FileeffectiverightsObject;
-import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.windows.FileeffectiverightsItem;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
 import jsaf.intf.system.IBaseSession;
@@ -43,6 +28,20 @@ import jsaf.intf.windows.io.IWindowsFileInfo;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.wmi.WmiException;
 import jsaf.util.StringTools;
+
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.MessageType;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.windows.Fileeffectiverights53Object;
+import scap.oval.definitions.windows.FileeffectiverightsObject;
+import scap.oval.systemcharacteristics.core.EntityItemBoolType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.windows.FileeffectiverightsItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;

@@ -16,7 +16,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.namespace.QName;
 
-import oval.schemas.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.ItemType;
 
 import org.joval.xml.SchemaRegistry;
 

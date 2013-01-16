@@ -19,22 +19,22 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 
-import org.openscap.sce.result.SceResultsType;
-import org.openscap.sce.xccdf.ScriptDataType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.provider.SessionFactory;
 
 import ch.qos.cal10n.IMessageConveyor;
 import org.slf4j.cal10n.LocLogger;
 
+import org.openscap.sce.results.SceResultsType;
+import org.openscap.sce.xccdf.ScriptDataType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.SystemInfoType;
+
 import org.joval.intf.plugin.IAdapter;
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.oval.IProvider;
+import org.joval.intf.scap.oval.IProvider;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.sysinfo.SysinfoFactory;

@@ -1,29 +1,27 @@
 CLASSES=\
-	org.joval.intf.arf.IReport				\
-	org.joval.intf.cpe.IDictionary				\
-	org.joval.intf.ocil.IChecklist				\
-	org.joval.intf.ocil.IVariables				\
-	org.joval.intf.oval.IDefinitionFilter			\
-	org.joval.intf.oval.IDefinitions			\
-	org.joval.intf.oval.IEngine				\
-	org.joval.intf.oval.IProvider				\
-	org.joval.intf.oval.IResults				\
-	org.joval.intf.oval.ISystemCharacteristics		\
-	org.joval.intf.oval.IType				\
-	org.joval.intf.oval.IVariables				\
 	org.joval.intf.plugin.IPlugin				\
-	org.joval.intf.scap.IDatastream				\
-	org.joval.intf.scap.IDatastreamCollection		\
-	org.joval.intf.scap.IView				\
-	org.joval.intf.scap.SystemEnumeration			\
-	org.joval.intf.xccdf.IBenchmark				\
-	org.joval.intf.xccdf.IEngine				\
+	org.joval.intf.scap.arf.IReport				\
+	org.joval.intf.scap.cpe.IDictionary			\
+	org.joval.intf.scap.datastream.IDatastream		\
+	org.joval.intf.scap.datastream.IDatastreamCollection	\
+	org.joval.intf.scap.datastream.IView			\
+	org.joval.intf.scap.ocil.IChecklist			\
+	org.joval.intf.scap.ocil.IVariables			\
+	org.joval.intf.scap.oval.IDefinitionFilter		\
+	org.joval.intf.scap.oval.IDefinitions			\
+	org.joval.intf.scap.oval.IEngine			\
+	org.joval.intf.scap.oval.IProvider			\
+	org.joval.intf.scap.oval.IResults			\
+	org.joval.intf.scap.oval.ISystemCharacteristics		\
+	org.joval.intf.scap.oval.IType				\
+	org.joval.intf.scap.oval.IVariables			\
+	org.joval.intf.scap.xccdf.SystemEnumeration		\
+	org.joval.intf.scap.xccdf.IBenchmark			\
+	org.joval.intf.scap.xccdf.IEngine			\
 	org.joval.intf.util.IObserver				\
 	org.joval.intf.util.IProducer				\
 	org.joval.intf.xml.ITransformable			\
 	org.joval.plugin.PluginConfigurationException		\
-	org.joval.scap.Datastream				\
-	org.joval.scap.DatastreamCollection			\
 	org.joval.scap.ScapException				\
 	org.joval.scap.ScapFactory				\
 	org.joval.scap.arf.ArfException				\
@@ -31,6 +29,9 @@ CLASSES=\
 	org.joval.scap.arf.Report				\
 	org.joval.scap.cpe.CpeException				\
 	org.joval.scap.cpe.Dictionary				\
+	org.joval.scap.datastream.Datastream			\
+	org.joval.scap.datastream.DatastreamCollection		\
+	org.joval.scap.datastream.View				\
 	org.joval.scap.ocil.BooleanTestActionConditionType	\
 	org.joval.scap.ocil.Checklist				\
 	org.joval.scap.ocil.ChecklistResults			\

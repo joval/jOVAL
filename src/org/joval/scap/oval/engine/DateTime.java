@@ -12,7 +12,7 @@ import java.util.TimeZone;
 
 import jsaf.provider.windows.Timestamp;
 
-import oval.schemas.definitions.core.DateTimeFormatEnumeration;
+import scap.oval.definitions.core.DateTimeFormatEnumeration;
 
 import org.joval.util.JOVALMsg;
 

@@ -7,20 +7,20 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Vector;
 
-import oval.schemas.common.MessageType;
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.LockoutpolicyObject;
-import oval.schemas.systemcharacteristics.core.EntityItemIntType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.windows.LockoutpolicyItem;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
+
+import scap.oval.common.MessageType;
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.windows.LockoutpolicyObject;
+import scap.oval.systemcharacteristics.core.EntityItemIntType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.windows.LockoutpolicyItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;

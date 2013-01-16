@@ -3,12 +3,12 @@
 
 package org.joval.scap.oval.sysinfo;
 
-import oval.schemas.common.FamilyEnumeration;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.intf.windows.system.IWindowsSession;
+
+import scap.oval.common.FamilyEnumeration;
+import scap.oval.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.scap.oval.OvalException;
 import org.joval.util.JOVALMsg;

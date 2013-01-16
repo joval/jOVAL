@@ -9,26 +9,25 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.EntityObjectStringType;
-import oval.schemas.definitions.macos.Pwpolicy59Object;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
-import oval.schemas.systemcharacteristics.core.EntityItemIntType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.macos.Pwpolicy59Item;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
 import jsaf.util.StringTools;
+
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.MessageType;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.core.EntityObjectStringType;
+import scap.oval.definitions.macos.Pwpolicy59Object;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.EntityItemBoolType;
+import scap.oval.systemcharacteristics.core.EntityItemIntType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.macos.Pwpolicy59Item;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.macos.DsclTool;

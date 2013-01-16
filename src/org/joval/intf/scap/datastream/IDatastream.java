@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.scap;
+package org.joval.intf.scap.datastream;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;
@@ -10,11 +10,11 @@ import org.openscap.sce.xccdf.ScriptDataType;
 import scap.datastream.Component;
 import scap.datastream.ExtendedComponent;
 
-import org.joval.intf.cpe.IDictionary;
-import org.joval.intf.ocil.IChecklist;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.scap.IDatastream;
-import org.joval.intf.xccdf.IBenchmark;
+import org.joval.intf.scap.cpe.IDictionary;
+import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.intf.scap.xccdf.IBenchmark;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.scap.ScapException;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.OvalException;
@@ -71,7 +71,18 @@ public interface IDatastream {
      */
     SystemEnumeration getSystem(String href) throws NoSuchElementException;
 
+    /**
+     * Get an OCIL checklist document with the specified component href.
+     */
     IChecklist getOcil(String href) throws NoSuchElementException, OcilException;
+
+    /**
+     * Get an OVAL definitions document with the specified component href.
+     */
     IDefinitions getOval(String href) throws NoSuchElementException, OvalException;
+
+    /**
+     * Get SCE script data with the specified component href.
+     */
     ScriptDataType getSce(String href) throws NoSuchElementException, SceException;
 }

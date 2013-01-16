@@ -10,31 +10,31 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import oval.schemas.common.GeneratorType;
-import oval.schemas.definitions.core.OvalDefinitions;
-import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.DefinitionType;
-import oval.schemas.variables.core.VariableType;
+import scap.oval.common.GeneratorType;
+import scap.oval.definitions.core.OvalDefinitions;
+import scap.oval.results.ResultEnumeration;
+import scap.oval.results.DefinitionType;
+import scap.oval.variables.VariableType;
+import scap.xccdf.CheckContentRefType;
+import scap.xccdf.CheckType;
+import scap.xccdf.CheckExportType;
+import scap.xccdf.GroupType;
+import scap.xccdf.InstanceResultType;
+import scap.xccdf.ObjectFactory;
+import scap.xccdf.ProfileSetValueType;
+import scap.xccdf.RuleResultType;
+import scap.xccdf.RuleType;
+import scap.xccdf.ResultEnumType;
+import scap.xccdf.SelectableItemType;
+import scap.xccdf.TestResultType;
 
-import xccdf.schemas.core.CheckContentRefType;
-import xccdf.schemas.core.CheckType;
-import xccdf.schemas.core.CheckExportType;
-import xccdf.schemas.core.GroupType;
-import xccdf.schemas.core.InstanceResultType;
-import xccdf.schemas.core.ObjectFactory;
-import xccdf.schemas.core.ProfileSetValueType;
-import xccdf.schemas.core.RuleResultType;
-import xccdf.schemas.core.RuleType;
-import xccdf.schemas.core.ResultEnumType;
-import xccdf.schemas.core.SelectableItemType;
-import xccdf.schemas.core.TestResultType;
-
-import org.joval.intf.oval.IDefinitionFilter;
-import org.joval.intf.oval.IEngine;
-import org.joval.intf.oval.IResults;
-import org.joval.intf.oval.IVariables;
+import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.oval.IDefinitionFilter;
+import org.joval.intf.scap.oval.IEngine;
+import org.joval.intf.scap.oval.IResults;
+import org.joval.intf.scap.oval.IVariables;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.scap.IView;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.xccdf.XccdfException;
@@ -48,7 +48,7 @@ import org.joval.scap.xccdf.engine.RuleResult;
  * @version %I% %G%
  */
 public class OVALHandler {
-    public static final String NAMESPACE = "http://oval.mitre.org/XMLSchema/oval-definitions-5";
+    public static final String NAMESPACE = SystemEnumeration.OVAL.namespace();
 
     private IView view;
     private ObjectFactory factory;

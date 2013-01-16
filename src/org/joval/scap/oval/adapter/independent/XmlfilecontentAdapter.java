@@ -14,21 +14,20 @@ import javax.xml.xpath.XPathExpressionException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.independent.XmlfilecontentObject;
-import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.independent.XmlfilecontentItem;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.io.IFile;
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
 import jsaf.util.StringTools;
+
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.MessageType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.independent.XmlfilecontentObject;
+import scap.oval.systemcharacteristics.core.EntityItemAnySimpleType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.independent.XmlfilecontentItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.Factories;

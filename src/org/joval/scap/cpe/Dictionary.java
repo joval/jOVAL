@@ -13,11 +13,11 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
-import cpe.schemas.dictionary.CheckType;
-import cpe.schemas.dictionary.ItemType;
-import cpe.schemas.dictionary.ListType;
+import scap.cpe.dictionary.CheckType;
+import scap.cpe.dictionary.ItemType;
+import scap.cpe.dictionary.ListType;
 
-import org.joval.intf.cpe.IDictionary;
+import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 

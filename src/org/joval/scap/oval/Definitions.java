@@ -24,20 +24,20 @@ import javax.xml.transform.stream.StreamSource;
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.definitions.core.DefinitionType;
-import oval.schemas.definitions.core.DefinitionsType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.ObjectsType;
-import oval.schemas.definitions.core.OvalDefinitions;
-import oval.schemas.definitions.core.StateType;
-import oval.schemas.definitions.core.StatesType;
-import oval.schemas.definitions.core.TestType;
-import oval.schemas.definitions.core.TestsType;
-import oval.schemas.definitions.core.VariableType;
-import oval.schemas.definitions.core.VariablesType;
+import scap.oval.definitions.core.DefinitionType;
+import scap.oval.definitions.core.DefinitionsType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.core.ObjectsType;
+import scap.oval.definitions.core.OvalDefinitions;
+import scap.oval.definitions.core.StateType;
+import scap.oval.definitions.core.StatesType;
+import scap.oval.definitions.core.TestType;
+import scap.oval.definitions.core.TestsType;
+import scap.oval.definitions.core.VariableType;
+import scap.oval.definitions.core.VariablesType;
 
-import org.joval.intf.oval.IDefinitionFilter;
-import org.joval.intf.oval.IDefinitions;
+import org.joval.intf.scap.oval.IDefinitionFilter;
+import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 

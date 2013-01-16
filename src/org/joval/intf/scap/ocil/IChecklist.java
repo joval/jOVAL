@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.ocil;
+package org.joval.intf.scap.ocil;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,15 +10,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import ocil.schemas.core.ArtifactType;
-import ocil.schemas.core.ChoiceType;
-import ocil.schemas.core.ItemBaseType;
-import ocil.schemas.core.OCILType;
-import ocil.schemas.core.QuestionType;
-import ocil.schemas.core.QuestionnaireType;
-import ocil.schemas.core.QuestionTestActionType;
-import ocil.schemas.core.TestActionConditionType;
-import ocil.schemas.core.VariableType;
+import scap.ocil.core.ArtifactType;
+import scap.ocil.core.ChoiceType;
+import scap.ocil.core.ItemBaseType;
+import scap.ocil.core.OCILType;
+import scap.ocil.core.QuestionType;
+import scap.ocil.core.QuestionnaireType;
+import scap.ocil.core.QuestionTestActionType;
+import scap.ocil.core.TestActionConditionType;
+import scap.ocil.core.VariableType;
 
 import org.joval.intf.xml.ITransformable;
 

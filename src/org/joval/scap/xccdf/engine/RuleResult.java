@@ -3,7 +3,7 @@
 
 package org.joval.scap.xccdf.engine;
 
-import xccdf.schemas.core.ResultEnumType;
+import scap.xccdf.ResultEnumType;
 
 /**
  * DAS: This is just my unofficial guess at how to roll-up multiple results.

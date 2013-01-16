@@ -20,19 +20,6 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.definitions.core.EntityObjectStringType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
-import oval.schemas.systemcharacteristics.core.EntityItemIntType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-
 import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
@@ -43,6 +30,19 @@ import jsaf.intf.unix.io.IUnixFilesystem;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.SafeCLI;
+
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.MessageType;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.definitions.core.EntityObjectStringType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.systemcharacteristics.core.EntityItemAnySimpleType;
+import scap.oval.systemcharacteristics.core.EntityItemIntType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.EntityItemVersionType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
@@ -286,7 +286,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	}
     }
 
-    protected IWindowsSession.View getView(oval.schemas.definitions.independent.FileBehaviors behaviors) {
+    protected IWindowsSession.View getView(scap.oval.definitions.independent.FileBehaviors behaviors) {
 	if (session instanceof IWindowsSession) {
 	    if (behaviors != null && behaviors.isSetWindowsView()) {
 		String s = behaviors.getWindowsView();
@@ -302,7 +302,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	}
     }
 
-    protected IWindowsSession.View getView(oval.schemas.definitions.windows.FileBehaviors behaviors) {
+    protected IWindowsSession.View getView(scap.oval.definitions.windows.FileBehaviors behaviors) {
 	if (session instanceof IWindowsSession) {
 	    if (behaviors != null && behaviors.isSetWindowsView()) {
 		String s = behaviors.getWindowsView();
@@ -586,10 +586,10 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
     /**
      * A reflection proxy for:
-     *     oval.schemas.definitions.independent.Textfilecontent54Object
-     *     oval.schemas.definitions.independent.TextfilecontentObject
-     *     oval.schemas.definitions.unix.FileObject
-     *     oval.schemas.definitions.windows.FileObject
+     *     scap.oval.definitions.independent.Textfilecontent54Object
+     *     scap.oval.definitions.independent.TextfilecontentObject
+     *     scap.oval.definitions.unix.FileObject
+     *     scap.oval.definitions.windows.FileObject
      */
     class ReflectedFileObject {
 	ObjectType obj;
@@ -714,9 +714,9 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
     /**
      * A reflection proxy for:
-     *     oval.schemas.definitions.independent.FileBehaviors
-     *     oval.schemas.definitions.unix.FileBehaviors
-     *     oval.schemas.definitions.windows.FileBehaviors
+     *     scap.oval.definitions.independent.FileBehaviors
+     *     scap.oval.definitions.unix.FileBehaviors
+     *     scap.oval.definitions.windows.FileBehaviors
      */
     class ReflectedFileBehaviors {
 	BigInteger maxDepth = new BigInteger("-1");
@@ -792,9 +792,9 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
     /**
      * A reflection proxy for:
-     *     oval.schemas.systemcharacteristics.independent.TextfilecontentItem
-     *     oval.schemas.systemcharacteristics.unix.FileItem
-     *     oval.schemas.systemcharacteristics.windows.FileItem
+     *     scap.oval.systemcharacteristics.independent.TextfilecontentItem
+     *     scap.oval.systemcharacteristics.unix.FileItem
+     *     scap.oval.systemcharacteristics.windows.FileItem
      */
     class ReflectedFileItem {
 	ItemType it;

@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.scap;
+package org.joval.scap.datastream;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -32,16 +32,16 @@ import scap.datastream.UseCaseType;
 import org.oasis.catalog.Catalog;
 import org.oasis.catalog.Uri;
 import org.openscap.sce.xccdf.ScriptDataType;
-import xccdf.schemas.core.BenchmarkType;
-import xccdf.schemas.core.ProfileType;
+import scap.xccdf.BenchmarkType;
+import scap.xccdf.ProfileType;
 
-import org.joval.intf.cpe.IDictionary;
-import org.joval.intf.ocil.IChecklist;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.scap.IDatastream;
-import org.joval.intf.scap.IView;
-import org.joval.intf.scap.SystemEnumeration;
-import org.joval.intf.xccdf.IBenchmark;
+import org.joval.intf.scap.cpe.IDictionary;
+import org.joval.intf.scap.datastream.IDatastream;
+import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.intf.scap.xccdf.IBenchmark;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.scap.ScapException;
 import org.joval.scap.cpe.Dictionary;
 import org.joval.scap.ocil.Checklist;

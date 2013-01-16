@@ -1,16 +1,16 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.oval;
+package org.joval.intf.scap.oval;
 
 import java.io.File;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-import oval.schemas.results.core.DefinitionType;
-import oval.schemas.results.core.OvalResults;
-import oval.schemas.results.core.ResultEnumeration;
+import scap.oval.systemcharacteristics.core.SystemInfoType;
+import scap.oval.results.DefinitionType;
+import scap.oval.results.OvalResults;
+import scap.oval.results.ResultEnumeration;
 
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.oval.OvalException;

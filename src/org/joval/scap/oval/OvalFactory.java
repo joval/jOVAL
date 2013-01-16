@@ -12,14 +12,14 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
 
-import oval.schemas.common.GeneratorType;
+import scap.oval.common.GeneratorType;
 
-import org.joval.intf.oval.IDefinitionFilter;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.IEngine;
-import org.joval.intf.oval.ISystemCharacteristics;
-import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.scap.oval.IDefinitionFilter;
+import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.intf.scap.oval.IEngine;
+import org.joval.intf.scap.oval.ISystemCharacteristics;
+import org.joval.intf.scap.oval.IVariables;
 import org.joval.scap.oval.engine.Engine;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;

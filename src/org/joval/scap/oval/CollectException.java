@@ -3,7 +3,7 @@
 
 package org.joval.scap.oval;
 
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
 
 /**
  * An exception class for OVAL item collection.  This is used by implementations of IAdapter to signify that, for some

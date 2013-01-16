@@ -1,20 +1,15 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.scap;
+package org.joval.intf.scap.datastream;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import cpe.schemas.dictionary.CheckType;
-import cpe.schemas.dictionary.ItemType;
-import cpe.schemas.dictionary.ListType;
-import xccdf.schemas.core.ProfileType;
+import scap.xccdf.RuleType;
 
-import xccdf.schemas.core.RuleType;
-
-import org.joval.intf.oval.IDefinitionFilter;
+import org.joval.intf.scap.oval.IDefinitionFilter;
 
 /**
  * A view of a datastream resulting from the selection of a stream, benchmark and profile.
@@ -24,22 +19,22 @@ import org.joval.intf.oval.IDefinitionFilter;
  */
 public interface IView {
     /**
-     * Get the XCCDF benchmark ID for the view.
+     * Get the XCCDF benchmark ID that was selected for the view.
      */
     String getBenchmark();
 
     /**
-     * Get the XCCDF profile ID for the view.
+     * Get the XCCDF profile ID that was selected for the view.
      */
     String getProfile();
 
     /**
-     * Get the containing Datastream.
+     * Get the parent Datastream document.
      */
     IDatastream getStream();
 
     /**
-     * Return a list of all the applicable CPE platform IDs for this view.
+     * Return all the applicable CPE platform IDs for this view.
      */
     Collection<String> getCpePlatforms();
 
@@ -56,7 +51,7 @@ public interface IView {
     Map<String, String> getValues();
 
     /**
-     * Return a list of all the rules selected by this Profile.
+     * Get all the rules selected by this Profile.
      */
     Collection<RuleType> getSelectedRules();
 }

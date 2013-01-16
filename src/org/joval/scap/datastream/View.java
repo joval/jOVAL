@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.scap;
+package org.joval.scap.datastream;
 
 import java.net.MalformedURLException;
 import java.util.ArrayList;
@@ -12,31 +12,30 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import cpe.schemas.dictionary.CheckType;
-import cpe.schemas.dictionary.ItemType;
-import cpe.schemas.dictionary.ListType;
+import scap.cpe.dictionary.CheckType;
+import scap.cpe.dictionary.ItemType;
+import scap.cpe.dictionary.ListType;
+import scap.xccdf.BenchmarkType;
+import scap.xccdf.CPE2IdrefType;
+import scap.xccdf.GroupType;
+import scap.xccdf.OverrideableCPE2IdrefType;
+import scap.xccdf.ProfileType;
+import scap.xccdf.ProfileRefineRuleType;
+import scap.xccdf.ProfileRefineValueType;
+import scap.xccdf.ProfileSetComplexValueType;
+import scap.xccdf.ProfileSetValueType;
+import scap.xccdf.ProfileSelectType;
+import scap.xccdf.RuleType;
+import scap.xccdf.SelectableItemType;
+import scap.xccdf.SelComplexValueType;
+import scap.xccdf.SelStringType;
+import scap.xccdf.ValueType;
 
-import xccdf.schemas.core.BenchmarkType;
-import xccdf.schemas.core.CPE2IdrefType;
-import xccdf.schemas.core.GroupType;
-import xccdf.schemas.core.OverrideableCPE2IdrefType;
-import xccdf.schemas.core.ProfileType;
-import xccdf.schemas.core.ProfileRefineRuleType;
-import xccdf.schemas.core.ProfileRefineValueType;
-import xccdf.schemas.core.ProfileSetComplexValueType;
-import xccdf.schemas.core.ProfileSetValueType;
-import xccdf.schemas.core.ProfileSelectType;
-import xccdf.schemas.core.RuleType;
-import xccdf.schemas.core.SelectableItemType;
-import xccdf.schemas.core.SelComplexValueType;
-import xccdf.schemas.core.SelStringType;
-import xccdf.schemas.core.ValueType;
-
-import org.joval.intf.cpe.IDictionary;
-import org.joval.intf.oval.IDefinitionFilter;
-import org.joval.intf.scap.IDatastream;
-import org.joval.intf.scap.SystemEnumeration;
-import org.joval.intf.scap.IView;
+import org.joval.intf.scap.cpe.IDictionary;
+import org.joval.intf.scap.oval.IDefinitionFilter;
+import org.joval.intf.scap.datastream.IDatastream;
+import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.scap.oval.DefinitionFilter;
 
 /**

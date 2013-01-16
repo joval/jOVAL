@@ -9,7 +9,7 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
 
-import ocil.schemas.core.GeneratorType;
+import scap.ocil.core.GeneratorType;
 
 /**
  * This class provides a consolidated access point for accessing all of the OCIL schema JAXB object factories.

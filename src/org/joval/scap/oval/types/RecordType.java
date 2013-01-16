@@ -3,14 +3,14 @@
 
 package org.joval.scap.oval.types;
 
-import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
-import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
+import scap.oval.systemcharacteristics.core.EntityItemFieldType;
+import scap.oval.systemcharacteristics.core.EntityItemRecordType;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 
-import org.joval.intf.oval.IType;
+import org.joval.intf.scap.oval.IType;
 
 /**
  * Complex type.

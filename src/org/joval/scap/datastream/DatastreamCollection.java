@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.scap;
+package org.joval.scap.datastream;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -30,8 +30,8 @@ import javax.xml.transform.stream.StreamSource;
 import scap.datastream.DataStream;
 import scap.datastream.DataStreamCollection;
 
-import org.joval.intf.scap.IDatastream;
-import org.joval.intf.scap.IDatastreamCollection;
+import org.joval.intf.scap.datastream.IDatastream;
+import org.joval.intf.scap.datastream.IDatastreamCollection;
 import org.joval.scap.ScapException;
 import org.joval.xml.SchemaRegistry;
 

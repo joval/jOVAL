@@ -1,14 +1,13 @@
 // Copyright (C) 2011 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.oval;
+package org.joval.intf.scap.oval;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
-import oval.schemas.results.core.ResultEnumeration;
+import scap.oval.results.ResultEnumeration;
 
-import org.joval.intf.oval.ISystemCharacteristics;
 import org.joval.intf.util.IProducer;
 import org.joval.scap.oval.OvalException;
 import org.joval.util.Version;
@@ -55,7 +54,7 @@ public interface IEngine extends Runnable {
      * Message ID indicating that the engine has collected a complete set of system characteristics.  The argument is the
      * ISystemCharacteristics containing the data.
      *
-     * @see org.joval.intf.oval.ISystemCharacteristics
+     * @see org.joval.intf.scap.oval.ISystemCharacteristics
      */
     int MESSAGE_SYSTEMCHARACTERISTICS		= 140;
 

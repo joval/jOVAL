@@ -27,13 +27,13 @@ import org.w3c.dom.Node;
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.variables.core.OvalVariables;
-import oval.schemas.variables.core.VariablesType;
-import oval.schemas.variables.core.VariableType;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.variables.OvalVariables;
+import scap.oval.variables.VariablesType;
+import scap.oval.variables.VariableType;
 
-import org.joval.intf.oval.IType;
-import org.joval.intf.oval.IVariables;
+import org.joval.intf.scap.oval.IType;
+import org.joval.intf.scap.oval.IVariables;
 import org.joval.scap.oval.types.TypeFactory;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;

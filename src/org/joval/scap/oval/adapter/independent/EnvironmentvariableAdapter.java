@@ -9,21 +9,20 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import oval.schemas.common.MessageType;
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.independent.EnvironmentvariableObject;
-import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.independent.EnvironmentvariableItem;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.IEnvironment;
 import jsaf.intf.system.ISession;
+
+import scap.oval.common.MessageType;
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.independent.EnvironmentvariableObject;
+import scap.oval.systemcharacteristics.core.EntityItemAnySimpleType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.independent.EnvironmentvariableItem;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;

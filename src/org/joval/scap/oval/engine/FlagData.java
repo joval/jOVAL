@@ -3,7 +3,7 @@
 
 package org.joval.scap.oval.engine;
 
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
 
 import org.joval.scap.oval.OvalException;
 import org.joval.util.JOVALMsg;

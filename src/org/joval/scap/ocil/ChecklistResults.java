@@ -8,7 +8,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.transform.Source;
 
-import ocil.schemas.core.ResultsType;
+import scap.ocil.core.ResultsType;
 
 import org.joval.intf.xml.ITransformable;
 import org.joval.xml.SchemaRegistry;

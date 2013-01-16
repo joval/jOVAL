@@ -17,23 +17,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.Regkeyeffectiverights53Object;
-import oval.schemas.definitions.windows.RegkeyeffectiverightsObject;
-import oval.schemas.systemcharacteristics.core.EntityItemBoolType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.windows.EntityItemRegistryHiveType;
-import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
-import oval.schemas.systemcharacteristics.windows.RegkeyeffectiverightsItem;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.windows.registry.IKey;
 import jsaf.intf.windows.identity.IACE;
@@ -45,6 +28,22 @@ import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.powershell.PowershellException;
 import jsaf.provider.windows.wmi.WmiException;
 import jsaf.util.StringTools;
+
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.MessageType;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.windows.Regkeyeffectiverights53Object;
+import scap.oval.definitions.windows.RegkeyeffectiverightsObject;
+import scap.oval.systemcharacteristics.core.EntityItemBoolType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.windows.EntityItemRegistryHiveType;
+import scap.oval.systemcharacteristics.windows.EntityItemWindowsViewType;
+import scap.oval.systemcharacteristics.windows.RegkeyeffectiverightsItem;
 
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;

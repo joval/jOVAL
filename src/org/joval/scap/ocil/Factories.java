@@ -13,10 +13,10 @@ public class Factories {
     /**
      * Facilitates access to the OCIL core schema ObjectFactory.
      */
-    public static ocil.schemas.core.ObjectFactory core = new ocil.schemas.core.ObjectFactory();
+    public static scap.ocil.core.ObjectFactory core = new scap.ocil.core.ObjectFactory();
 
     /**
      * Facilitates access to the OCIL variables schema ObjectFactory.
      */
-    public static ocil.schemas.variables.ObjectFactory variables = new ocil.schemas.variables.ObjectFactory();
+    public static scap.ocil.variables.ObjectFactory variables = new scap.ocil.variables.ObjectFactory();
 }

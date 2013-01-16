@@ -12,30 +12,29 @@ import java.util.HashSet;
 import java.util.Properties;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.MessageType;
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.EntityObjectFieldType;
-import oval.schemas.definitions.core.EntityObjectRecordType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.CmdletObject;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
-import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.EntityItemVersionType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.windows.CmdletItem;
-import oval.schemas.systemcharacteristics.windows.EntityItemGUIDType;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.system.IBaseSession;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.powershell.PowershellException;
 import jsaf.util.SafeCLI;
+
+import scap.oval.common.MessageType;
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.EntityObjectFieldType;
+import scap.oval.definitions.core.EntityObjectRecordType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.windows.CmdletObject;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.EntityItemFieldType;
+import scap.oval.systemcharacteristics.core.EntityItemRecordType;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.EntityItemVersionType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.windows.CmdletItem;
+import scap.oval.systemcharacteristics.windows.EntityItemGUIDType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;

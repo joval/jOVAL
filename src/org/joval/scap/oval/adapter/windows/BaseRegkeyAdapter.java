@@ -16,28 +16,27 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import javax.xml.bind.JAXBElement;
 
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.EntityObjectStringType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.windows.EntityObjectRegistryHiveType;
-import oval.schemas.definitions.windows.RegistryBehaviors;
-import oval.schemas.systemcharacteristics.core.EntityItemStringType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.windows.EntityItemRegistryHiveType;
-import oval.schemas.systemcharacteristics.windows.EntityItemWindowsViewType;
-import oval.schemas.results.core.ResultEnumeration;
-
 import jsaf.intf.util.ISearchable;
 import jsaf.intf.windows.registry.IKey;
 import jsaf.intf.windows.registry.IRegistry;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.SafeCLI;
+
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.MessageType;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.EntityObjectStringType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.windows.EntityObjectRegistryHiveType;
+import scap.oval.definitions.windows.RegistryBehaviors;
+import scap.oval.systemcharacteristics.core.EntityItemStringType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.windows.EntityItemRegistryHiveType;
+import scap.oval.systemcharacteristics.windows.EntityItemWindowsViewType;
 
 import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
@@ -367,9 +366,9 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 
     /**
      * A reflection proxy for:
-     *     oval.schemas.definitions.windows.RegistryObject
-     *     oval.schemas.definitions.windows.RegkeyEffectiverights53Object
-     *     oval.schemas.definitions.windows.RegkeyEffectiverightsObject
+     *     scap.oval.definitions.windows.RegistryObject
+     *     scap.oval.definitions.windows.RegkeyEffectiverights53Object
+     *     scap.oval.definitions.windows.RegkeyEffectiverightsObject
      */
     class ReflectedRegistryObject {
 	ObjectType obj;
@@ -477,8 +476,8 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 
     /**
      * A reflection proxy for:
-     *     oval.schemas.systemcharacteristics.windows.RegistryItem
-     *     oval.schemas.systemcharacteristics.windows.RegkeyEffectiverightsItem
+     *     scap.oval.systemcharacteristics.windows.RegistryItem
+     *     scap.oval.systemcharacteristics.windows.RegkeyEffectiverightsItem
      */
     class ReflectedRegkeyItem {
 	ItemType it;

@@ -14,13 +14,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 
-import xccdf.schemas.core.ResultEnumType;
-import org.openscap.sce.result.EnvironmentType;
-import org.openscap.sce.result.ObjectFactory;
-import org.openscap.sce.result.SceResultsType;
-import org.openscap.sce.xccdf.LangEnumeration;
-import org.openscap.sce.xccdf.ScriptDataType;
-
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.system.IBaseSession;
@@ -29,6 +22,13 @@ import jsaf.intf.unix.system.IUnixSession;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.SafeCLI;
 import jsaf.util.StringTools;
+
+import scap.xccdf.ResultEnumType;
+import org.openscap.sce.results.EnvironmentType;
+import org.openscap.sce.results.ObjectFactory;
+import org.openscap.sce.results.SceResultsType;
+import org.openscap.sce.xccdf.LangEnumeration;
+import org.openscap.sce.xccdf.ScriptDataType;
 
 import org.joval.util.JOVALMsg;
 

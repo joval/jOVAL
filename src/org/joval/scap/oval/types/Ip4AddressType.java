@@ -6,7 +6,7 @@ package org.joval.scap.oval.types;
 import java.math.BigInteger;
 import java.util.StringTokenizer;
 
-import org.joval.intf.oval.IType;
+import org.joval.intf.scap.oval.IType;
 
 /**
  * A type class for dealing with individual addresses or CIDR ranges for IPv4.

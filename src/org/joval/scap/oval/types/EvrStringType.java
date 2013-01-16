@@ -3,9 +3,9 @@
 
 package org.joval.scap.oval.types;
 
-import org.joval.intf.oval.IType;
-
 import jsaf.util.StringTools;
+
+import org.joval.intf.scap.oval.IType;
 
 /**
  * A utility class for handling EVR Strings.  See:

@@ -7,11 +7,11 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
-import org.joval.intf.scap.IDatastreamCollection;
+import org.joval.intf.scap.datastream.IDatastreamCollection;
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.xccdf.IEngine;
-import org.joval.scap.DatastreamCollection;
+import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.scap.ScapException;
+import org.joval.scap.datastream.DatastreamCollection;
 import org.joval.scap.xccdf.engine.Engine;
 
 /**

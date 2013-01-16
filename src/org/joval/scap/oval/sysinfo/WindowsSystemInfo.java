@@ -9,12 +9,6 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.Vector;
 
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.systemcharacteristics.core.EntityItemIPAddressStringType;
-import oval.schemas.systemcharacteristics.core.InterfacesType;
-import oval.schemas.systemcharacteristics.core.InterfaceType;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
-
 import jsaf.intf.system.IEnvironment;
 import jsaf.intf.windows.registry.IKey;
 import jsaf.intf.windows.registry.IStringValue;
@@ -27,6 +21,12 @@ import jsaf.intf.windows.wmi.ISWbemProperty;
 import jsaf.intf.windows.wmi.ISWbemPropertySet;
 import jsaf.intf.windows.wmi.IWmiProvider;
 import jsaf.provider.windows.wmi.WmiException;
+
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.systemcharacteristics.core.EntityItemIPAddressStringType;
+import scap.oval.systemcharacteristics.core.InterfacesType;
+import scap.oval.systemcharacteristics.core.InterfaceType;
+import scap.oval.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;

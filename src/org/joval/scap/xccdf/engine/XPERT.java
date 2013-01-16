@@ -24,20 +24,20 @@ import java.util.PropertyResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.joval.intf.arf.IReport;
-import org.joval.intf.ocil.IChecklist;
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.scap.IDatastream;
-import org.joval.intf.scap.IView;
-import org.joval.intf.scap.SystemEnumeration;
-import org.joval.intf.xccdf.IEngine.OcilMessageArgument;
+import org.joval.intf.scap.arf.IReport;
+import org.joval.intf.scap.datastream.IDatastream;
+import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.scap.xccdf.IEngine.OcilMessageArgument;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.plugin.PluginFactory;
 import org.joval.plugin.PluginConfigurationException;
-import org.joval.scap.DatastreamCollection;
 import org.joval.scap.ScapException;
 import org.joval.scap.cpe.CpeException;
+import org.joval.scap.datastream.DatastreamCollection;
 import org.joval.scap.ocil.Checklist;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.OvalException;
@@ -342,8 +342,8 @@ public class XPERT {
 			    for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
 				engine.addChecklist(entry.getKey(), entry.getValue());
 			    }
-			    int min = org.joval.intf.xccdf.IEngine.MESSAGE_MIN;
-			    int max = org.joval.intf.xccdf.IEngine.MESSAGE_MAX;
+			    int min = org.joval.intf.scap.xccdf.IEngine.MESSAGE_MIN;
+			    int max = org.joval.intf.scap.xccdf.IEngine.MESSAGE_MAX;
 			    IObserver observer = new XccdfObserver(ocilDir);
 			    engine.getNotificationProducer().addObserver(observer, min, max);
 			    engine.run();
@@ -423,27 +423,27 @@ public class XPERT {
 
 	public void notify(IProducer sender, int msg, Object arg) {
 	    switch(msg) {
-	      case org.joval.intf.xccdf.IEngine.MESSAGE_PLATFORM_PHASE_START:
+	      case org.joval.intf.scap.xccdf.IEngine.MESSAGE_PLATFORM_PHASE_START:
 		logger.info("Beginning platform applicability scan");
 		break;
-	      case org.joval.intf.xccdf.IEngine.MESSAGE_PLATFORM_CPE:
+	      case org.joval.intf.scap.xccdf.IEngine.MESSAGE_PLATFORM_CPE:
 		logger.info("Testing platform " + (String)arg);
 		break;
-	      case org.joval.intf.xccdf.IEngine.MESSAGE_PLATFORM_PHASE_END:
+	      case org.joval.intf.scap.xccdf.IEngine.MESSAGE_PLATFORM_PHASE_END:
 		if (((Boolean)arg).booleanValue()) {
 		    logger.info("Host is applicable");
 		} else {
 		    logger.info("Host is not applicable");
 		}
 		break;
-	      case org.joval.intf.xccdf.IEngine.MESSAGE_OVAL_ENGINE:
+	      case org.joval.intf.scap.xccdf.IEngine.MESSAGE_OVAL_ENGINE:
 		logger.info("Executing OVAL tests");
-		int min = org.joval.intf.oval.IEngine.MESSAGE_MIN;
-		int max = org.joval.intf.oval.IEngine.MESSAGE_MAX;
-		org.joval.intf.oval.IEngine oe = (org.joval.intf.oval.IEngine)arg;
+		int min = org.joval.intf.scap.oval.IEngine.MESSAGE_MIN;
+		int max = org.joval.intf.scap.oval.IEngine.MESSAGE_MAX;
+		org.joval.intf.scap.oval.IEngine oe = (org.joval.intf.scap.oval.IEngine)arg;
 		oe.getNotificationProducer().addObserver(new OvalObserver(oe.getNotificationProducer()), min, max);
 		break;
-	      case org.joval.intf.xccdf.IEngine.MESSAGE_OCIL_MISSING:
+	      case org.joval.intf.scap.xccdf.IEngine.MESSAGE_OCIL_MISSING:
 		OcilMessageArgument oma = (OcilMessageArgument)arg;
 		String base = oma.getHref();
 		if (base.endsWith(".xml")) {
@@ -460,7 +460,7 @@ public class XPERT {
 		    e.printStackTrace();
 		}
 		break;
-	      case org.joval.intf.xccdf.IEngine.MESSAGE_SCE_SCRIPT:
+	      case org.joval.intf.scap.xccdf.IEngine.MESSAGE_SCE_SCRIPT:
 		logger.warning("Running SCE script " + (String)arg);
 		break;
 	    }
@@ -476,26 +476,26 @@ public class XPERT {
 
 	public void notify(IProducer sender, int msg, Object arg) {
 	    switch(msg) {
-	      case org.joval.intf.oval.IEngine.MESSAGE_OBJECT_PHASE_START:
+	      case org.joval.intf.scap.oval.IEngine.MESSAGE_OBJECT_PHASE_START:
 		logger.info("Beginning scan");
 		break;
-	      case org.joval.intf.oval.IEngine.MESSAGE_OBJECT:
+	      case org.joval.intf.scap.oval.IEngine.MESSAGE_OBJECT:
 		logger.info("Scanning object " + (String)arg);
 		break;
-	      case org.joval.intf.oval.IEngine.MESSAGE_OBJECT_PHASE_END:
+	      case org.joval.intf.scap.oval.IEngine.MESSAGE_OBJECT_PHASE_END:
 		logger.info("Scan complete");
 		break;
-	      case org.joval.intf.oval.IEngine.MESSAGE_DEFINITION_PHASE_START:
+	      case org.joval.intf.scap.oval.IEngine.MESSAGE_DEFINITION_PHASE_START:
 		logger.info("Evaluating OVAL definitions");
 		break;
-	      case org.joval.intf.oval.IEngine.MESSAGE_DEFINITION:
+	      case org.joval.intf.scap.oval.IEngine.MESSAGE_DEFINITION:
 		logger.info("Evaluating " + (String)arg);
 		break;
-	      case org.joval.intf.oval.IEngine.MESSAGE_DEFINITION_PHASE_END:
+	      case org.joval.intf.scap.oval.IEngine.MESSAGE_DEFINITION_PHASE_END:
 		logger.info("Finished evaluating OVAL definitions");
 		producer.removeObserver(this);
 		break;
-	      case org.joval.intf.oval.IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
+	      case org.joval.intf.scap.oval.IEngine.MESSAGE_SYSTEMCHARACTERISTICS:
 		// no-op
 		break;
 	    }

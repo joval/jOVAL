@@ -11,12 +11,12 @@ import java.util.HashSet;
 import java.util.Stack;
 import java.util.Vector;
 
-import oval.schemas.common.MessageType;
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
+import scap.oval.common.MessageType;
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.systemcharacteristics.core.VariableValueType;
 
-import org.joval.intf.oval.IProvider;
+import org.joval.intf.scap.oval.IProvider;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.OvalException;
 import org.joval.util.JOVALMsg;

@@ -3,7 +3,7 @@
 
 package org.joval.scap.oval.types;
 
-import org.joval.intf.oval.IType;
+import org.joval.intf.scap.oval.IType;
 
 /**
  * Fileset revision type implementation.

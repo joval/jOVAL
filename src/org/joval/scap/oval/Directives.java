@@ -12,15 +12,15 @@ import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
-import oval.schemas.common.ClassEnumeration;
-import oval.schemas.directives.core.OvalDirectives;
-import oval.schemas.results.core.ClassDirectivesType;
-import oval.schemas.results.core.ContentEnumeration;
-import oval.schemas.results.core.DefaultDirectivesType;
-import oval.schemas.results.core.DefinitionType;
-import oval.schemas.results.core.DirectivesType;
-import oval.schemas.results.core.DirectiveType;
-import oval.schemas.results.core.ResultEnumeration;
+import scap.oval.common.ClassEnumeration;
+import scap.oval.directives.OvalDirectives;
+import scap.oval.results.ClassDirectivesType;
+import scap.oval.results.ContentEnumeration;
+import scap.oval.results.DefaultDirectivesType;
+import scap.oval.results.DefinitionType;
+import scap.oval.results.DirectivesType;
+import scap.oval.results.DirectiveType;
+import scap.oval.results.ResultEnumeration;
 
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;

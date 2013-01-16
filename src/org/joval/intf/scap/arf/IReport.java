@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.arf;
+package org.joval.intf.scap.arf;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,15 +9,8 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import org.w3c.dom.Element;
 
-import ai.schemas.core.AssetType;
-import ai.schemas.core.ComputingDeviceType;
-import ai.schemas.core.IpAddressType;
-import ai.schemas.core.NetworkInterfaceType;
-import arf.schemas.core.AssetReportCollection;
-import arf.schemas.core.ReportRequestType;
-import arf.schemas.core.ReportType;
-import oval.schemas.systemcharacteristics.core.InterfaceType;
-import oval.schemas.systemcharacteristics.core.SystemInfoType;
+import scap.arf.core.AssetReportCollection;
+import scap.oval.systemcharacteristics.core.SystemInfoType;
 
 import org.joval.intf.xml.ITransformable;
 

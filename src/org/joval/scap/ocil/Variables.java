@@ -19,12 +19,12 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
 import javax.xml.transform.stream.StreamSource;
 
-import ocil.schemas.core.VariableDataType;
-import ocil.schemas.variables.OcilVariables;
-import ocil.schemas.variables.VariablesType;
-import ocil.schemas.variables.VariableType;
+import scap.ocil.core.VariableDataType;
+import scap.ocil.variables.OcilVariables;
+import scap.ocil.variables.VariablesType;
+import scap.ocil.variables.VariableType;
 
-import org.joval.intf.ocil.IVariables;
+import org.joval.intf.scap.ocil.IVariables;
 import org.joval.xml.SchemaRegistry;
 
 /**

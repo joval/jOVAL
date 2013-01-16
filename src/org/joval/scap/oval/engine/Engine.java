@@ -38,87 +38,87 @@ import javax.xml.bind.JAXBElement;
 import jsaf.util.StringTools;
 import org.slf4j.cal10n.LocLogger;
 
-import oval.schemas.common.CheckEnumeration;
-import oval.schemas.common.ComplexDatatypeEnumeration;
-import oval.schemas.common.ExistenceEnumeration;
-import oval.schemas.common.MessageLevelEnumeration;
-import oval.schemas.common.MessageType;
-import oval.schemas.common.OperatorEnumeration;
-import oval.schemas.common.OperationEnumeration;
-import oval.schemas.common.SimpleDatatypeEnumeration;
-import oval.schemas.definitions.core.ArithmeticEnumeration;
-import oval.schemas.definitions.core.ArithmeticFunctionType;
-import oval.schemas.definitions.core.BeginFunctionType;
-import oval.schemas.definitions.core.ConcatFunctionType;
-import oval.schemas.definitions.core.ConstantVariable;
-import oval.schemas.definitions.core.CountFunctionType;
-import oval.schemas.definitions.core.CriteriaType;
-import oval.schemas.definitions.core.CriterionType;
-import oval.schemas.definitions.core.DateTimeFormatEnumeration;
-import oval.schemas.definitions.core.DefinitionType;
-import oval.schemas.definitions.core.DefinitionsType;
-import oval.schemas.definitions.core.EndFunctionType;
-import oval.schemas.definitions.core.EntityObjectFieldType;
-import oval.schemas.definitions.core.EntityObjectRecordType;
-import oval.schemas.definitions.core.EntityObjectStringType;
-import oval.schemas.definitions.core.EntitySimpleBaseType;
-import oval.schemas.definitions.core.EntityStateFieldType;
-import oval.schemas.definitions.core.EntityStateRecordType;
-import oval.schemas.definitions.core.EntityStateSimpleBaseType;
-import oval.schemas.definitions.core.EscapeRegexFunctionType;
-import oval.schemas.definitions.core.ExtendDefinitionType;
-import oval.schemas.definitions.core.ExternalVariable;
-import oval.schemas.definitions.core.Filter;
-import oval.schemas.definitions.core.LiteralComponentType;
-import oval.schemas.definitions.core.LocalVariable;
-import oval.schemas.definitions.core.ObjectComponentType;
-import oval.schemas.definitions.core.ObjectRefType;
-import oval.schemas.definitions.core.ObjectType;
-import oval.schemas.definitions.core.ObjectsType;
-import oval.schemas.definitions.core.OvalDefinitions;
-import oval.schemas.definitions.core.RegexCaptureFunctionType;
-import oval.schemas.definitions.core.Set;
-import oval.schemas.definitions.core.SetOperatorEnumeration;
-import oval.schemas.definitions.core.SplitFunctionType;
-import oval.schemas.definitions.core.StateRefType;
-import oval.schemas.definitions.core.StateType;
-import oval.schemas.definitions.core.StatesType;
-import oval.schemas.definitions.core.SubstringFunctionType;
-import oval.schemas.definitions.core.TestsType;
-import oval.schemas.definitions.core.TimeDifferenceFunctionType;
-import oval.schemas.definitions.core.UniqueFunctionType;
-import oval.schemas.definitions.core.ValueType;
-import oval.schemas.definitions.core.VariableComponentType;
-import oval.schemas.definitions.core.VariableType;
-import oval.schemas.definitions.core.VariablesType;
-import oval.schemas.definitions.independent.EntityObjectVariableRefType;
-import oval.schemas.definitions.independent.UnknownTest;
-import oval.schemas.definitions.independent.VariableObject;
-import oval.schemas.results.core.ResultEnumeration;
-import oval.schemas.results.core.TestedItemType;
-import oval.schemas.results.core.TestedVariableType;
-import oval.schemas.results.core.TestType;
-import oval.schemas.systemcharacteristics.core.EntityItemAnySimpleType;
-import oval.schemas.systemcharacteristics.core.EntityItemFieldType;
-import oval.schemas.systemcharacteristics.core.EntityItemRecordType;
-import oval.schemas.systemcharacteristics.core.EntityItemSimpleBaseType;
-import oval.schemas.systemcharacteristics.core.FlagEnumeration;
-import oval.schemas.systemcharacteristics.core.ItemType;
-import oval.schemas.systemcharacteristics.core.StatusEnumeration;
-import oval.schemas.systemcharacteristics.core.VariableValueType;
-import oval.schemas.systemcharacteristics.independent.EntityItemVariableRefType;
-import oval.schemas.systemcharacteristics.independent.VariableItem;
-import oval.schemas.variables.core.OvalVariables;
+import scap.oval.common.CheckEnumeration;
+import scap.oval.common.ComplexDatatypeEnumeration;
+import scap.oval.common.ExistenceEnumeration;
+import scap.oval.common.MessageLevelEnumeration;
+import scap.oval.common.MessageType;
+import scap.oval.common.OperatorEnumeration;
+import scap.oval.common.OperationEnumeration;
+import scap.oval.common.SimpleDatatypeEnumeration;
+import scap.oval.definitions.core.ArithmeticEnumeration;
+import scap.oval.definitions.core.ArithmeticFunctionType;
+import scap.oval.definitions.core.BeginFunctionType;
+import scap.oval.definitions.core.ConcatFunctionType;
+import scap.oval.definitions.core.ConstantVariable;
+import scap.oval.definitions.core.CountFunctionType;
+import scap.oval.definitions.core.CriteriaType;
+import scap.oval.definitions.core.CriterionType;
+import scap.oval.definitions.core.DateTimeFormatEnumeration;
+import scap.oval.definitions.core.DefinitionType;
+import scap.oval.definitions.core.DefinitionsType;
+import scap.oval.definitions.core.EndFunctionType;
+import scap.oval.definitions.core.EntityObjectFieldType;
+import scap.oval.definitions.core.EntityObjectRecordType;
+import scap.oval.definitions.core.EntityObjectStringType;
+import scap.oval.definitions.core.EntitySimpleBaseType;
+import scap.oval.definitions.core.EntityStateFieldType;
+import scap.oval.definitions.core.EntityStateRecordType;
+import scap.oval.definitions.core.EntityStateSimpleBaseType;
+import scap.oval.definitions.core.EscapeRegexFunctionType;
+import scap.oval.definitions.core.ExtendDefinitionType;
+import scap.oval.definitions.core.ExternalVariable;
+import scap.oval.definitions.core.Filter;
+import scap.oval.definitions.core.LiteralComponentType;
+import scap.oval.definitions.core.LocalVariable;
+import scap.oval.definitions.core.ObjectComponentType;
+import scap.oval.definitions.core.ObjectRefType;
+import scap.oval.definitions.core.ObjectType;
+import scap.oval.definitions.core.ObjectsType;
+import scap.oval.definitions.core.OvalDefinitions;
+import scap.oval.definitions.core.RegexCaptureFunctionType;
+import scap.oval.definitions.core.Set;
+import scap.oval.definitions.core.SetOperatorEnumeration;
+import scap.oval.definitions.core.SplitFunctionType;
+import scap.oval.definitions.core.StateRefType;
+import scap.oval.definitions.core.StateType;
+import scap.oval.definitions.core.StatesType;
+import scap.oval.definitions.core.SubstringFunctionType;
+import scap.oval.definitions.core.TestsType;
+import scap.oval.definitions.core.TimeDifferenceFunctionType;
+import scap.oval.definitions.core.UniqueFunctionType;
+import scap.oval.definitions.core.ValueType;
+import scap.oval.definitions.core.VariableComponentType;
+import scap.oval.definitions.core.VariableType;
+import scap.oval.definitions.core.VariablesType;
+import scap.oval.definitions.independent.EntityObjectVariableRefType;
+import scap.oval.definitions.independent.UnknownTest;
+import scap.oval.definitions.independent.VariableObject;
+import scap.oval.results.ResultEnumeration;
+import scap.oval.results.TestedItemType;
+import scap.oval.results.TestedVariableType;
+import scap.oval.results.TestType;
+import scap.oval.systemcharacteristics.core.EntityItemAnySimpleType;
+import scap.oval.systemcharacteristics.core.EntityItemFieldType;
+import scap.oval.systemcharacteristics.core.EntityItemRecordType;
+import scap.oval.systemcharacteristics.core.EntityItemSimpleBaseType;
+import scap.oval.systemcharacteristics.core.FlagEnumeration;
+import scap.oval.systemcharacteristics.core.ItemType;
+import scap.oval.systemcharacteristics.core.StatusEnumeration;
+import scap.oval.systemcharacteristics.core.VariableValueType;
+import scap.oval.systemcharacteristics.independent.EntityItemVariableRefType;
+import scap.oval.systemcharacteristics.independent.VariableItem;
+import scap.oval.variables.OvalVariables;
 
-import org.joval.intf.oval.IDefinitionFilter;
-import org.joval.intf.oval.IDefinitions;
-import org.joval.intf.oval.IEngine;
-import org.joval.intf.oval.IProvider;
-import org.joval.intf.oval.IResults;
-import org.joval.intf.oval.ISystemCharacteristics;
-import org.joval.intf.oval.IType;
-import org.joval.intf.oval.IVariables;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.scap.oval.IDefinitionFilter;
+import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.intf.scap.oval.IEngine;
+import org.joval.intf.scap.oval.IProvider;
+import org.joval.intf.scap.oval.IResults;
+import org.joval.intf.scap.oval.ISystemCharacteristics;
+import org.joval.intf.scap.oval.IType;
+import org.joval.intf.scap.oval.IVariables;
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
 import org.joval.scap.oval.CollectException;
@@ -1266,9 +1266,9 @@ public class Engine implements IEngine, IProvider {
     /**
      * Evaluate a DefinitionType.
      */
-    private oval.schemas.results.core.DefinitionType evaluateDefinition(DefinitionType definition) throws OvalException {
+    private scap.oval.results.DefinitionType evaluateDefinition(DefinitionType definition) throws OvalException {
 	String id = definition.getId();
-	oval.schemas.results.core.DefinitionType result = results.getDefinition(id);
+	scap.oval.results.DefinitionType result = results.getDefinition(id);
 	if (result == null) {
 	    result = Factories.results.createDefinitionType();
 	    logger.debug(JOVALMsg.STATUS_DEFINITION, id);
@@ -1277,7 +1277,7 @@ public class Engine implements IEngine, IProvider {
 	    result.setVersion(definition.getVersion());
 	    result.setClazz(definition.getClazz());
 	    try {
-		oval.schemas.results.core.CriteriaType criteriaResult = evaluateCriteria(definition.getCriteria());
+		scap.oval.results.CriteriaType criteriaResult = evaluateCriteria(definition.getCriteria());
 		result.setResult(criteriaResult.getResult());
 		result.setCriteria(criteriaResult);
 	    } catch (NoSuchElementException e) {
@@ -1292,30 +1292,30 @@ public class Engine implements IEngine, IProvider {
 	return result;
     }
 
-    private oval.schemas.results.core.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition)
+    private scap.oval.results.CriteriaType evaluateCriteria(CriteriaType criteriaDefinition)
 		throws NoSuchElementException, OvalException {
 
-	oval.schemas.results.core.CriteriaType criteriaResult = Factories.results.createCriteriaType();
+	scap.oval.results.CriteriaType criteriaResult = Factories.results.createCriteriaType();
 	criteriaResult.setOperator(criteriaDefinition.getOperator());
 	OperatorData operator = new OperatorData();
 	for (Object child : criteriaDefinition.getCriteriaOrCriterionOrExtendDefinition()) {
 	    Object resultObject = null;
 	    if (child instanceof CriteriaType) {
 		CriteriaType ctDefinition = (CriteriaType)child;
-		oval.schemas.results.core.CriteriaType ctResult = evaluateCriteria(ctDefinition);
+		scap.oval.results.CriteriaType ctResult = evaluateCriteria(ctDefinition);
 		operator.addResult(ctResult.getResult());
 		resultObject = ctResult;
 	    } else if (child instanceof CriterionType) {
 		CriterionType ctDefinition = (CriterionType)child;
-		oval.schemas.results.core.CriterionType ctResult = evaluateCriterion(ctDefinition);
+		scap.oval.results.CriterionType ctResult = evaluateCriterion(ctDefinition);
 		operator.addResult(ctResult.getResult());
 		resultObject = ctResult;
 	    } else if (child instanceof ExtendDefinitionType) {
 		ExtendDefinitionType edtDefinition = (ExtendDefinitionType)child;
 		String defId = edtDefinition.getDefinitionRef();
 		DefinitionType defDefinition = definitions.getDefinition(defId);
-		oval.schemas.results.core.DefinitionType defResult = evaluateDefinition(defDefinition);
-		oval.schemas.results.core.ExtendDefinitionType edtResult;
+		scap.oval.results.DefinitionType defResult = evaluateDefinition(defDefinition);
+		scap.oval.results.ExtendDefinitionType edtResult;
 		edtResult = Factories.results.createExtendDefinitionType();
 		edtResult.setDefinitionRef(defId);
 		edtResult.setVersion(defDefinition.getVersion());
@@ -1354,13 +1354,13 @@ public class Engine implements IEngine, IProvider {
 	return criteriaResult;
     }
 
-    private oval.schemas.results.core.CriterionType evaluateCriterion(CriterionType criterionDefinition)
+    private scap.oval.results.CriterionType evaluateCriterion(CriterionType criterionDefinition)
 		throws NoSuchElementException, OvalException {
 
 	String testId = criterionDefinition.getTestRef();
 	TestType testResult = results.getTest(testId);
 	if (testResult == null) {
-	    oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
+	    scap.oval.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	    testResult = Factories.results.createTestType();
 	    testResult.setTestId(testDefinition.getId());
 	    testResult.setCheck(testDefinition.getCheck());
@@ -1380,7 +1380,7 @@ public class Engine implements IEngine, IProvider {
 	    results.storeTestResult(testResult);
 	}
 
-	oval.schemas.results.core.CriterionType criterionResult = Factories.results.createCriterionType();
+	scap.oval.results.CriterionType criterionResult = Factories.results.createCriterionType();
 	criterionResult.setTestRef(testId);
 	if (criterionDefinition.isSetNegate() && criterionDefinition.getNegate()) {
 	    criterionResult.setNegate(true);
@@ -1404,7 +1404,7 @@ public class Engine implements IEngine, IProvider {
     private void evaluateTest(TestType testResult) throws NoSuchElementException, OvalException {
 	String testId = testResult.getTestId();
 	logger.debug(JOVALMsg.STATUS_TEST, testId);
-	oval.schemas.definitions.core.TestType testDefinition = definitions.getTest(testId);
+	scap.oval.definitions.core.TestType testDefinition = definitions.getTest(testId);
 	String objectId = getObjectRef(testDefinition);
 	List<String> stateIds = getStateRef(testDefinition);
 
@@ -1556,7 +1556,7 @@ public class Engine implements IEngine, IProvider {
     /**
      * If getObject() were a method of TestType (instead of only some of its subclasses), this is what it would return.
      */
-    private String getObjectRef(oval.schemas.definitions.core.TestType test) throws OvalException {
+    private String getObjectRef(scap.oval.definitions.core.TestType test) throws OvalException {
 	try {
 	    Method getObject = test.getClass().getMethod("getObject");
 	    ObjectRefType objectRef = (ObjectRefType)getObject.invoke(test);
@@ -1580,7 +1580,7 @@ public class Engine implements IEngine, IProvider {
     /**
      * If getState() were a method of TestType (instead of only some of its subclasses), this is what it would return.
      */
-    private List<String> getStateRef(oval.schemas.definitions.core.TestType test) {
+    private List<String> getStateRef(scap.oval.definitions.core.TestType test) {
 	List<String> refs = new ArrayList<String>();
 	try {
 	    Method getObject = test.getClass().getMethod("getState");
