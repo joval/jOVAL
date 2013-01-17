@@ -36,6 +36,7 @@ import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.scap.oval.DefinitionFilter;
 
 /**
@@ -45,7 +46,8 @@ import org.joval.scap.oval.DefinitionFilter;
  * @version %I% %G%
  */
 public class View implements IView {
-    private String benchmarkId, profileId;
+    private String benchmarkId;
+    private ProfileType profile;
     private Datastream stream;
     private BenchmarkType bt;
     private HashSet<RuleType> rules;
@@ -56,9 +58,9 @@ public class View implements IView {
      * Create an XCCDF profile view. If profileId == null, then defaults are selected. If there is no profile with the given
      * name, a NoSuchElementException is thrown.
      */
-    View(String benchmarkId, String profileId, Datastream stream, BenchmarkType bt) throws NoSuchElementException {
+    View(String benchmarkId, ProfileType profile, Datastream stream, BenchmarkType bt) {
 	this.benchmarkId = benchmarkId;
-	this.profileId = profileId;
+	this.profile = profile;
 	this.stream = stream;
 	this.bt = bt;
 	platforms = new HashMap<String, Map<String, Collection<String>>>();
@@ -77,44 +79,32 @@ public class View implements IView {
 	//
 	Map<String, Boolean> selections = null;
 	Map<String, String> refinements = null;
-	if (profileId != null) {
-	    ProfileType prof = null;
-	    for (ProfileType pt : bt.getProfile()) {
-		if (profileId.equals(pt.getProfileId())) {
-		    prof = pt;
-		    break;
-		}
+	if (profile != null) {
+	    for (OverrideableCPE2IdrefType platform : profile.getPlatform()) {
+		addPlatform(platform.getIdref());
 	    }
-	    if (prof == null) {
-		throw new NoSuchElementException(profileId);
-	    } else {
-		for (OverrideableCPE2IdrefType platform : prof.getPlatform()) {
-		    addPlatform(platform.getIdref());
-		}
-
-		selections = new HashMap<String, Boolean>();
-		refinements = new HashMap<String, String>();
-		for (Object obj : prof.getSelectOrSetComplexValueOrSetValue()) {
-		    if (obj instanceof ProfileSelectType) {
-			ProfileSelectType select = (ProfileSelectType)obj;
-			if (select.isSelected()) {
-			    selections.put(select.getIdref(), Boolean.TRUE);
-			} else {
-			    selections.put(select.getIdref(), Boolean.FALSE);
-			}
-		    } else if (obj instanceof ProfileSetValueType) {
-			ProfileSetValueType set = (ProfileSetValueType)obj;
-			values.put(set.getIdref(), set.getValue());
-		    } else if (obj instanceof ProfileRefineValueType) {
-			ProfileRefineValueType refine = (ProfileRefineValueType)obj;
-			refinements.put(refine.getIdref(), refine.getSelector());
-		    } else if (obj instanceof ProfileRefineRuleType) {
-			ProfileRefineRuleType rule = (ProfileRefineRuleType)obj;
-			//TBD
-		    } else if (obj instanceof ProfileSetComplexValueType) {
-			ProfileSetComplexValueType complex = (ProfileSetComplexValueType)obj;
-			//TBD
+	    selections = new HashMap<String, Boolean>();
+	    refinements = new HashMap<String, String>();
+	    for (Object obj : profile.getSelectOrSetComplexValueOrSetValue()) {
+		if (obj instanceof ProfileSelectType) {
+		    ProfileSelectType select = (ProfileSelectType)obj;
+		    if (select.isSelected()) {
+			selections.put(select.getIdref(), Boolean.TRUE);
+		    } else {
+			selections.put(select.getIdref(), Boolean.FALSE);
 		    }
+		} else if (obj instanceof ProfileSetValueType) {
+		    ProfileSetValueType set = (ProfileSetValueType)obj;
+		    values.put(set.getIdref(), set.getValue());
+		} else if (obj instanceof ProfileRefineValueType) {
+		    ProfileRefineValueType refine = (ProfileRefineValueType)obj;
+		    refinements.put(refine.getIdref(), refine.getSelector());
+		} else if (obj instanceof ProfileRefineRuleType) {
+		    ProfileRefineRuleType rule = (ProfileRefineRuleType)obj;
+		    //TBD
+		} else if (obj instanceof ProfileSetComplexValueType) {
+		    ProfileSetComplexValueType complex = (ProfileSetComplexValueType)obj;
+		    //TBD
 		}
 	    }
 	}
@@ -161,8 +151,8 @@ public class View implements IView {
 	return benchmarkId;
     }
 
-    public String getProfile() {
-	return profileId;
+    public ProfileType getProfile() {
+	return profile;
     }
 
     public IDatastream getStream() {

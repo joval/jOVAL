@@ -7,12 +7,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
 import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.transform.Source;
@@ -40,21 +42,61 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Benchmark implements IBenchmark, ILoggable {
+    public static final BenchmarkType getBenchmarkType(File f) throws XccdfException {
+	return getBenchmarkType(new StreamSource(f));
+    }
+
+    public static final BenchmarkType getBenchmarkType(InputStream in) throws XccdfException {
+	return getBenchmarkType(new StreamSource(in));
+    }
+
+    public static final BenchmarkType getBenchmarkType(Source source) throws XccdfException {
+	try {
+	    String packages = SchemaRegistry.lookup(SchemaRegistry.XCCDF);
+	    JAXBContext ctx = JAXBContext.newInstance(packages);
+	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Object rootObj = unmarshaller.unmarshal(source);
+	    if (rootObj instanceof BenchmarkType) {
+		return (BenchmarkType)rootObj;
+	    } else if (rootObj instanceof JAXBElement) {
+		JAXBElement root = (JAXBElement)rootObj;
+		if (root.getValue() instanceof BenchmarkType) {
+		    return (BenchmarkType)root.getValue();
+		} else {
+		    throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BAD_SOURCE, source.getSystemId()));
+		}
+	    } else {
+		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BAD_SOURCE, source.getSystemId()));
+	    }
+	} catch (JAXBException e) {
+	    throw new XccdfException(e);
+	}
+    }
+
     private LocLogger logger;
     private JAXBContext ctx;
     private BenchmarkType bt;
     private String href;
 
+    Benchmark() throws XccdfException {
+	try {
+	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.XCCDF));
+	} catch (JAXBException e) {
+	    throw new XccdfException(e);
+	}
+	logger = JOVALMsg.getLogger();
+    }
+
+    public Benchmark(BenchmarkType bt) throws XccdfException {
+	this();
+	this.bt = bt;
+    }
+
     public Benchmark(Component component) throws XccdfException {
+	this();
 	if (component.isSetBenchmark()) {
 	    bt = component.getBenchmark();
 	    href = "#" + component.getId();
-	    try {
-		ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.XCCDF));
-	    } catch (JAXBException e) {
-		throw new XccdfException(e);
-	    }
-	    logger = JOVALMsg.getLogger();
 	} else {
 	    throw new XccdfException("Not a benchmark component: " + component.getId());
 	}

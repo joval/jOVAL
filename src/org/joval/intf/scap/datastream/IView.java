@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import scap.xccdf.ProfileType;
 import scap.xccdf.RuleType;
 
 import org.joval.intf.scap.oval.IDefinitionFilter;
@@ -24,9 +25,9 @@ public interface IView {
     String getBenchmark();
 
     /**
-     * Get the XCCDF profile ID that was selected for the view.
+     * Get the XCCDF profile that was selected for the view.
      */
-    String getProfile();
+    ProfileType getProfile();
 
     /**
      * Get the parent Datastream document.

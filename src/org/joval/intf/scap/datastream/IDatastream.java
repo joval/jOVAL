@@ -14,6 +14,7 @@ import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.xccdf.IBenchmark;
+import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.scap.ScapException;
 import org.joval.scap.ocil.OcilException;
@@ -56,6 +57,14 @@ public interface IDatastream {
      * @throws NoSuchElementException if there is no benchmark or profile with the specified ID
      */
     IView view(String benchmarkId, String profileId) throws NoSuchElementException, ScapException;
+
+    /**
+     * Get the view of the stream given the specified tailoring and profile ID.
+     *
+     * @throws NoSuchElementException if there is no benchmark in the stream that matches the specified tailoring, or if
+     *                                there is no profile in the tailoring that matches the specified profileId.
+     */
+    IView view(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException;
 
     /**
      * Get a component (or extended component) from the stream given its href.

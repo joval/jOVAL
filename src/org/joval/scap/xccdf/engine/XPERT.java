@@ -124,10 +124,10 @@ public class XPERT {
 	String benchmarkId = null;
 	String profileId = null;
 	Map<String, File> ocilFiles = new HashMap<String, File>();
-	File resultsFile = new File(CWD, "xpert-arf.xml");
 	File xmlDir = new File(BASE_DIR, "xml");
+	File reportFile = new File(CWD, "xpert-arf.xml");
 	File transformFile = new File(xmlDir, "xccdf_results_to_html.xsl");
-	File reportFile = new File("xpert-report.html");
+	File reportHTML = new File("xpert-report.html");
 	File ocilDir = new File("ocil-export");
 
 	Level level = Level.INFO;
@@ -172,7 +172,7 @@ public class XPERT {
 		    }
 		    ocilFiles.put(key, new File(val));
 		} else if (argv[i].equals("-r")) {
-		    resultsFile = new File(argv[++i]);
+		    reportFile = new File(argv[++i]);
 		} else if (argv[i].equals("-l")) {
 		    try {
 			switch(Integer.parseInt(argv[++i])) {
@@ -202,7 +202,7 @@ public class XPERT {
 		} else if (argv[i].equals("-t")) {
 		    transformFile = new File(argv[++i]);
 		} else if (argv[i].equals("-x")) {
-		    reportFile = new File(argv[++i]);
+		    reportHTML = new File(argv[++i]);
 		} else if (argv[i].equals("-k")) {
 		    ksFile = new File(argv[++i]);
 		} else if (argv[i].equals("-w")) {
@@ -354,10 +354,10 @@ public class XPERT {
 				if (report == null) {
 				    logger.info("No report was generated.");
 				} else if (report.getAssetReportCollection().isSetReports()) {
-				    logger.info("Saving ARF report: " + resultsFile.toString());
-				    report.writeXML(resultsFile);
-				    logger.info("Transforming to HTML report: " + reportFile.toString());
-				    view.getStream().getBenchmark(benchmarkId).writeTransform(transformFile, reportFile);
+				    logger.info("Saving ARF report: " + reportFile.toString());
+				    report.writeXML(reportFile);
+				    logger.info("Transforming to HTML report: " + reportHTML.toString());
+				    view.getStream().getBenchmark(benchmarkId).writeTransform(transformFile, reportHTML);
 				}
 				logger.info("Finished processing XCCDF bundle");
 				exitCode = 0;

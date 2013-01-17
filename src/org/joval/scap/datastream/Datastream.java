@@ -41,6 +41,7 @@ import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.xccdf.IBenchmark;
+import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.scap.ScapException;
 import org.joval.scap.cpe.Dictionary;
@@ -177,11 +178,35 @@ public class Datastream implements IDatastream, ILoggable {
 	throw new NoSuchElementException(benchmarkId);
     }
 
+    public IView view(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException {
+	String benchmarkId = tailoring.getBenchmarkId();
+	if (components.containsKey(benchmarkId)) {
+	    Component comp = components.get(benchmarkId);
+	    if (comp.isSetBenchmark()) {
+		return new View(benchmarkId, tailoring.getProfile(profileId), this, comp.getBenchmark());
+	    } else {
+		throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
+	    }
+	} else {
+	    throw new NoSuchElementException(benchmarkId);
+	}
+    }
+
     public IView view(String benchmarkId, String profileId) throws NoSuchElementException, ScapException {
 	if (components.containsKey(benchmarkId)) {
 	    Component comp = components.get(benchmarkId);
 	    if (comp.isSetBenchmark()) {
-		return new View(benchmarkId, profileId, this, comp.getBenchmark());
+		BenchmarkType bt = comp.getBenchmark();
+		if (profileId == null) {
+		    return new View(benchmarkId, null, this, bt);
+		} else {
+		    for (ProfileType profile : bt.getProfile()) {
+			if (profile.getProfileId().equals(profileId)) {
+			    return new View(benchmarkId, profile, this, bt);
+			}
+		    }
+		    throw new NoSuchElementException(profileId);
+		}
 	    } else {
 		throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
 	    }

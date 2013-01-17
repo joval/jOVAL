@@ -33,6 +33,7 @@ import scap.datastream.DataStreamCollection;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.datastream.IDatastreamCollection;
 import org.joval.scap.ScapException;
+import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
 /**
@@ -63,10 +64,10 @@ public class DatastreamCollection implements IDatastreamCollection {
 		if (root.getValue() instanceof DataStreamCollection) {
 		    return (DataStreamCollection)root.getValue();
 		} else {
-		    throw new ScapException("Bad Data Stream source: " + source.getSystemId());
+		    throw new ScapException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_BAD_SOURCE, source.getSystemId()));
 		}
 	    } else {
-		throw new ScapException("Bad Data Stream source: " + source.getSystemId());
+		throw new ScapException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_BAD_SOURCE, source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new ScapException(e);

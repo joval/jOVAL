@@ -275,7 +275,8 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    if (rules.size() == 0) {
 		logger.warn(JOVALMsg.WARNING_XCCDF_RULES);
 	    } else {
-		logger.info(JOVALMsg.STATUS_XCCDF_RULES, rules.size(), view.getProfile());
+		String profileId = view.getProfile() == null ? "[no profile selected]" : view.getProfile().getProfileId();
+		logger.info(JOVALMsg.STATUS_XCCDF_RULES, rules.size(), profileId);
 		HashSet<String> selectedIds = new HashSet<String>();
 		for (RuleType rule : rules) {
 		    selectedIds.add(rule.getId());
@@ -462,7 +463,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	testResult.setBenchmark(trb);
 	if (view.getProfile() != null) {
 	    IdrefType profileRef = factory.createIdrefType();
-	    profileRef.setIdref(view.getProfile());
+	    profileRef.setIdref(view.getProfile().getProfileId());
 	    testResult.setProfile(profileRef);
 	}
 	String user = plugin.getSession().getUsername();

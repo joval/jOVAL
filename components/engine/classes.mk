@@ -18,6 +18,7 @@ CLASSES=\
 	org.joval.intf.scap.xccdf.SystemEnumeration		\
 	org.joval.intf.scap.xccdf.IBenchmark			\
 	org.joval.intf.scap.xccdf.IEngine			\
+	org.joval.intf.scap.xccdf.ITailoring			\
 	org.joval.intf.util.IObserver				\
 	org.joval.intf.util.IProducer				\
 	org.joval.intf.xml.ITransformable			\
@@ -78,6 +79,7 @@ CLASSES=\
 	org.joval.scap.sce.SceException				\
 	org.joval.scap.sce.SCEScript				\
 	org.joval.scap.xccdf.Benchmark				\
+	org.joval.scap.xccdf.Tailoring				\
 	org.joval.scap.xccdf.TestResult				\
 	org.joval.scap.xccdf.XccdfException			\
 	org.joval.scap.xccdf.engine.Engine			\
