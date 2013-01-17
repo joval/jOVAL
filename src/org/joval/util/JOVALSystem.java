@@ -73,7 +73,7 @@ public class JOVALSystem {
      * between invocations.  This is either a directory called .jOVAL beneath the user's home directory, or on Windows,
      * it will be a directory named jOVAL in the appropriate AppData storage location.
      */
-    public static File getDataDirectory() {
+    public static synchronized File getDataDirectory() {
 	File dataDir = null;
 	if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
 	    String s = System.getenv("LOCALAPPDATA");
@@ -88,6 +88,9 @@ public class JOVALSystem {
 	if (dataDir == null) {
 	    File homeDir = new File(System.getProperty("user.home"));
 	    dataDir = new File(homeDir, ".jOVAL");
+	}
+	if (!dataDir.exists()) {
+	    dataDir.mkdirs();
 	}
 	return dataDir;
     }

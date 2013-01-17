@@ -103,10 +103,7 @@ public abstract class BasePlugin implements IPlugin, IProvider {
     /**
      * Initializes the logger and loads message resources from plugin[_locale].properties
      */
-    protected BasePlugin(File dir) throws IOException {
-	if (!dir.exists()) {
-	    dir.mkdirs();
-	}
+    protected BasePlugin() throws IOException {
 	logger = JOVALMsg.getLogger();
 	ClassLoader cl = LocalPlugin.class.getClassLoader();
 	Locale locale = Locale.getDefault();

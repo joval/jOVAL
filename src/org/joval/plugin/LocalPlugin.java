@@ -29,7 +29,7 @@ public class LocalPlugin extends BasePlugin {
      * Create a local plugin using the specified data directory.
      */
     public LocalPlugin(File dir) throws IOException {
-	super(dir);
+	super();
 	SessionFactory sf = SessionFactory.newInstance(SessionFactory.DEFAULT_FACTORY, getClass().getClassLoader(), dir);
 	session = sf.createSession();
 	session.setLogger(logger);
