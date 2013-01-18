@@ -123,7 +123,7 @@ public class AccesstokenAdapter implements IAdapter {
 
 	    for (IPrincipal principal : principals) {
 		for (IPrincipal p : directory.getAllPrincipals(principal, include, resolve)) {
-		    String sid = principal.getSid();
+		    String sid = p.getSid();
 		    if (errors.containsKey(sid)) {
 			rc.addMessage(errors.get(sid));
 		    } else if (itemCache.containsKey(sid)) {
