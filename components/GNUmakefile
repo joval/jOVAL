@@ -28,14 +28,17 @@ clean: logic-clean
 _jovaldi: _engine _plugin _schematron _xpert
 	@$(MAKE) --keep-going --directory=jovaldi dist
 
-_engine: _jsaf _scap
+_engine: _jsaf-facade _scap
 	@$(MAKE) --keep-going --directory=engine all
 
-_plugin: _engine
+_plugin: _engine _jsaf-provider
 	@$(MAKE) --keep-going --directory=plugin all
 
-_jsaf:
+_jsaf-facade:
 	@$(MAKE) --keep-going --directory=$(JSAF_HOME)/components/facade all
+
+_jsaf-provider: _jsaf-facade
+	@$(MAKE) --keep-going --directory=$(JSAF_HOME)/components/provider all
 
 _scap:
 	@$(MAKE) --keep-going --directory=scap all
