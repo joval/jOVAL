@@ -112,7 +112,7 @@ public class PluginFactory {
 	    File configFile = new File(configDir, "session.ini");
 	    if (configFile.exists()) {
 		try {
-		    Class clazz = loader.loadClass("jsaf.util.Configurator");
+		    Class clazz = loader.loadClass("jsaf.provider.Configurator");
 		    @SuppressWarnings("unchecked")
 		    Method method = clazz.getMethod("addConfiguration", File.class);
 		    method.invoke(null, configFile);
