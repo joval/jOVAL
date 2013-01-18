@@ -4,7 +4,7 @@ id_rsa
 gen-src/
 build/
 dist/
-components/engine/jOVALCore.jar
+components/engine/jOVAL.jar
 components/jovaldi/jovaldi.jar
 components/scap/docs/api/
 components/scap/scap-schema-*.jar

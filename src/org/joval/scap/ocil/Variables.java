@@ -102,7 +102,7 @@ public class Variables implements IVariables {
     public OcilVariables getOcilVariables() {
 	if (variables == null) {
 	    variables = Factories.variables.createOcilVariables();
-	    variables.setGenerator(OcilFactory.getGenerator());
+	    variables.setGenerator(Factories.getGenerator());
 	    VariablesType vars = Factories.variables.createVariablesType();
 	    for (String id : table.keySet()) {
 		vars.getVariable().add(table.get(id));

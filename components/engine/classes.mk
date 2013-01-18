@@ -38,7 +38,6 @@ CLASSES=\
 	org.joval.scap.ocil.ChecklistResults			\
 	org.joval.scap.ocil.Factories				\
 	org.joval.scap.ocil.OcilException			\
-	org.joval.scap.ocil.OcilFactory				\
 	org.joval.scap.ocil.Variables				\
 	org.joval.scap.oval.CollectException			\
 	org.joval.scap.oval.DefinitionFilter			\
