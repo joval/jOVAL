@@ -168,7 +168,7 @@ public class Engine implements IEngine, IProvider {
     private Results results;
     private State state;
     private boolean evalEnabled = true, abort = false;
-    private Producer producer;
+    private Producer<Message> producer;
     private LocLogger logger;
 
     /**
@@ -182,7 +182,7 @@ public class Engine implements IEngine, IProvider {
 	    this.plugin = plugin;
 	}
 	this.mode = mode;
-	producer = new Producer();
+	producer = new Producer<Message>();
 	filter = new DefinitionFilter();
 	reset();
     }
@@ -275,7 +275,7 @@ public class Engine implements IEngine, IProvider {
 	}
     }
 
-    public IProducer getNotificationProducer() {
+    public IProducer<Message> getNotificationProducer() {
 	return producer;
     }
 
@@ -380,29 +380,29 @@ public class Engine implements IEngine, IProvider {
 		// Perform an exhaustive scan of all objects, and disconnect if permitted
 		//
 		if (scanRequired) {
-		    producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
+		    producer.sendNotify(Message.OBJECT_PHASE_START, null);
 		    for (ObjectType obj : definitions.getObjects()) {
 			if (!sc.containsObject(obj.getId())) {
 			    scanObject(new RequestContext(definitions.getObject(obj.getId())));
 			}
 		    }
-		    producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
+		    producer.sendNotify(Message.OBJECT_PHASE_END, null);
 		    if (doDisconnect) {
 			plugin.disconnect();
 			doDisconnect = false;
 		    }
-		    producer.sendNotify(MESSAGE_SYSTEMCHARACTERISTICS, sc);
+		    producer.sendNotify(Message.SYSTEMCHARACTERISTICS, sc);
 		}
 		break;
 
 	      default:
-		producer.sendNotify(MESSAGE_OBJECT_PHASE_START, null);
+		producer.sendNotify(Message.OBJECT_PHASE_START, null);
 		break;
 	    }
 
 	    results = new Results(definitions, sc);
 	    results.setLogger(logger);
-	    producer.sendNotify(MESSAGE_DEFINITION_PHASE_START, null);
+	    producer.sendNotify(Message.DEFINITION_PHASE_START, null);
 
 	    //
 	    // Use the filter to separate the definitions into allowed and disallowed lists.  First evaluate all the allowed
@@ -425,12 +425,12 @@ public class Engine implements IEngine, IProvider {
 
 	    switch(mode) {
 	      case DIRECTED:
-		producer.sendNotify(MESSAGE_OBJECT_PHASE_END, null);
-		producer.sendNotify(MESSAGE_SYSTEMCHARACTERISTICS, sc);
+		producer.sendNotify(Message.OBJECT_PHASE_END, null);
+		producer.sendNotify(Message.SYSTEMCHARACTERISTICS, sc);
 		break;
 	    }
 
-	    producer.sendNotify(MESSAGE_DEFINITION_PHASE_END, null);
+	    producer.sendNotify(Message.DEFINITION_PHASE_END, null);
 	    state = State.COMPLETE_OK;
 	} catch (Exception e) {
 	    error = e;
@@ -464,7 +464,7 @@ public class Engine implements IEngine, IProvider {
 	ObjectType obj = rc.getObject();
 	String objectId = obj.getId();
 	logger.debug(JOVALMsg.STATUS_OBJECT, objectId);
-	producer.sendNotify(MESSAGE_OBJECT, objectId);
+	producer.sendNotify(Message.OBJECT, objectId);
 	Collection<ItemType> items = new ArrayList<ItemType>();
 	try {
 	    Set s = getObjectSet(obj);
@@ -1272,7 +1272,7 @@ public class Engine implements IEngine, IProvider {
 	if (result == null) {
 	    result = Factories.results.createDefinitionType();
 	    logger.debug(JOVALMsg.STATUS_DEFINITION, id);
-	    producer.sendNotify(MESSAGE_DEFINITION, id);
+	    producer.sendNotify(Message.DEFINITION, id);
 	    result.setDefinitionId(id);
 	    result.setVersion(definition.getVersion());
 	    result.setClazz(definition.getClazz());

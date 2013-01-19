@@ -137,7 +137,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     private Exception error;
     private State state = State.CONFIGURE;
     private boolean abort = false;
-    private Producer producer;
+    private Producer<Message> producer;
 
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL plugin.
@@ -146,7 +146,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	this.plugin = plugin;
 	logger = plugin.getLogger();
 	factory = new ObjectFactory();
-	producer = new Producer();
+	producer = new Producer<Message>();
 	reset();
     }
 
@@ -192,7 +192,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	}
     }
 
-    public IProducer getNotificationProducer() {
+    public IProducer<Message> getNotificationProducer() {
 	return producer;
     }
 
@@ -301,12 +301,12 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		//
 		// Perform the applicability tests, and if applicable, the automated checks
 		//
-		producer.sendNotify(MESSAGE_PLATFORM_PHASE_START, null);
+		producer.sendNotify(Message.PLATFORM_PHASE_START, null);
 		if (isApplicable()) {
-		    producer.sendNotify(MESSAGE_PLATFORM_PHASE_END, Boolean.TRUE);
+		    producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.TRUE);
 		    processXccdf(testResult);
 		} else {
-		    producer.sendNotify(MESSAGE_PLATFORM_PHASE_END, Boolean.FALSE);
+		    producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.FALSE);
 		    logger.info(JOVALMsg.WARNING_CPE_TARGET, plugin.getSession().getHostname());
 		}
 		plugin.disconnect();
@@ -369,7 +369,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      * This is the main routine, from which the selected checks are executed and compiled into the result.
      */
     private void processXccdf(TestResultType testResult) throws Exception {
-	producer.sendNotify(MESSAGE_RULES_PHASE_START, null);
+	producer.sendNotify(Message.RULES_PHASE_START, null);
 	testResult.setStartTime(getTimestamp());
 	phase = "evaluation";
 
@@ -390,7 +390,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	OVALHandler ovalHandler = new OVALHandler(view, plugin);
 	for (String href : ovalHandler.getHrefs()) {
 	    IEngine engine = ovalHandler.getEngine(href);
-	    producer.sendNotify(MESSAGE_OVAL_ENGINE, engine);
+	    producer.sendNotify(Message.OVAL_ENGINE, engine);
 	    engine.run();
 	    switch(engine.getResult()) {
 	      case OK:
@@ -412,7 +412,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    }
 	}
 	testResult.setEndTime(getTimestamp());
-	producer.sendNotify(MESSAGE_RULES_PHASE_END, null);
+	producer.sendNotify(Message.RULES_PHASE_END, null);
 
 	//
 	// Compute scores
@@ -505,7 +505,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	}
 	boolean applicable = false;
 	for (String platform : platforms) {
-	    producer.sendNotify(MESSAGE_PLATFORM_CPE, platform);
+	    producer.sendNotify(Message.PLATFORM_CPE, platform);
 	    try {
 		if (isApplicable(view.getCpeOval(platform))) {
 		    logger.info(JOVALMsg.STATUS_CPE_TARGET, plugin.getSession().getHostname(), platform);
@@ -524,9 +524,9 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     private boolean isApplicable(Map<String, IDefinitionFilter> cpeOval) throws Exception {
 	for (Map.Entry<String, IDefinitionFilter> entry : cpeOval.entrySet()) {
 	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin);
-	    producer.sendNotify(MESSAGE_OVAL_ENGINE, engine);
+	    producer.sendNotify(Message.OVAL_ENGINE, engine);
 	    DefinitionMonitor monitor = new DefinitionMonitor();
-	    engine.getNotificationProducer().addObserver(monitor, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
+	    engine.getNotificationProducer().addObserver(monitor);
 	    try {
 		engine.setDefinitions(stream.getOval(entry.getKey()));
 		engine.setDefinitionFilter(entry.getValue());
@@ -593,7 +593,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     /**
      * An IObserver for an OVAL IEngine, that tracks all the definitions that are evaluated.
      */
-    class DefinitionMonitor implements IObserver {
+    class DefinitionMonitor implements IObserver<org.joval.intf.scap.oval.IEngine.Message> {
 	private HashSet<String> defs;
 
 	DefinitionMonitor() {
@@ -604,9 +604,11 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    return defs;
 	}
 
-	public void notify(IProducer sender, int msg, Object arg) {
+	public void notify(IProducer<org.joval.intf.scap.oval.IEngine.Message> sender,
+			   org.joval.intf.scap.oval.IEngine.Message msg, Object arg) {
+
 	    switch(msg) {
-	      case IEngine.MESSAGE_DEFINITION:
+	      case DEFINITION:
 		defs.add((String)arg);
 		break;
 	    }

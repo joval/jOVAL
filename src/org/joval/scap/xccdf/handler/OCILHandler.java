@@ -34,7 +34,6 @@ import org.joval.scap.ocil.OcilException;
 import org.joval.scap.ocil.Variables;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.scap.xccdf.engine.RuleResult;
-import org.joval.scap.xccdf.engine.XPERT;
 import org.joval.util.JOVALMsg;
 import org.joval.util.Producer;
 
@@ -113,7 +112,7 @@ public class OCILHandler {
     /**
      * Export relevant OCIL files to the specified directory. Returns false if there are no OCIL checks in the view.
      */
-    public boolean exportFiles(Producer producer) {
+    public boolean exportFiles(Producer<IEngine.Message> producer) {
 	HashSet<String> ocilHrefs = getOcilHrefs();
 	if (ocilHrefs.size() == 0) {
 	    //
@@ -129,7 +128,7 @@ public class OCILHandler {
 	    try {
 		IChecklist checklist = view.getStream().getOcil(href);
 		IVariables variables = getVariables(href);
-		producer.sendNotify(IEngine.MESSAGE_OCIL_MISSING, new Argument(href, checklist, variables));
+		producer.sendNotify(IEngine.Message.OCIL_MISSING, new Argument(href, checklist, variables));
 	    } catch (NoSuchElementException e) {
 		e.printStackTrace();
 	    } catch (OcilException e) {

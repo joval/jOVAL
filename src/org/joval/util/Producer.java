@@ -3,10 +3,8 @@
 
 package org.joval.util;
 
+import java.util.Collection;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.joval.intf.util.IObserver;
 import org.joval.intf.util.IProducer;
@@ -17,57 +15,34 @@ import org.joval.intf.util.IProducer;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Producer implements IProducer {
-    Map<IObserver, ObserverContext> observers;
+public class Producer<T extends Enum> implements IProducer<T> {
+    private Collection<IObserver<T>> observers;
 
     public Producer() {
-	observers = new HashMap<IObserver, ObserverContext>();
+	observers = new ArrayList<IObserver<T>>();
     }
 
-    public void sendNotify(int msg, Object arg) {
+    public void sendNotify(T msg, Object arg) {
 	//
-	// Create a method-local copy of the observers so that an IObserver can remove itself if desired. 
+	// Create a method-local copy of the observers so that an IObserver can remove itself in a notification
+        // response if desired. 
 	//
-	List<ObserverContext> local = new ArrayList<ObserverContext>();
-	local.addAll(observers.values());
-	for (ObserverContext ctx : local) {
-	     ctx.sendNotify(this, msg, arg);
+	Collection<IObserver<T>> local = new ArrayList<IObserver<T>>();
+	local.addAll(observers);
+	for (IObserver<T> observer : local) {
+	     observer.notify(this, msg, arg);
 	}
     }
 
     // Implement IProducer
 
-    public void addObserver(IObserver observer, int min, int max) {
-	if (!observers.containsKey(observer)) {
-	    observers.put(observer, new ObserverContext(observer, min, max));
+    public void addObserver(IObserver<T> observer) {
+	if (!observers.contains(observer)) {
+	    observers.add(observer);
 	}
     }
 
-    public void removeObserver(IObserver observer) {
-	if (observers.containsKey(observer)) {
-	    observers.remove(observer);
-	}
-    }
-
-    // Private
-
-    private class ObserverContext {
-	private int min, max;
-	private IObserver observer;
-
-	private ObserverContext(IObserver observer, int min, int max) {
-	    this.observer = observer;
-	    this.min = min;
-	    this.max = max;
-	}
-
-	private boolean sendNotify(IProducer producer, int msg, Object arg) {
-	    if (msg >= min && msg <= max) {
-		observer.notify(producer, msg, arg);
-		return true;
-	    } else {
-		return false;
-	    }
-	}
+    public void removeObserver(IObserver<T> observer) {
+	observers.remove(observer);
     }
 }

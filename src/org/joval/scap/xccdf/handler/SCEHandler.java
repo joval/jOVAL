@@ -32,7 +32,6 @@ import org.joval.scap.sce.SceException;
 import org.joval.scap.sce.SCEScript;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.scap.xccdf.engine.RuleResult;
-import org.joval.scap.xccdf.engine.XPERT;
 import org.joval.util.JOVALMsg;
 import org.joval.util.Producer;
 
@@ -69,7 +68,7 @@ public class SCEHandler implements ILoggable {
     /**
      * Run all the SCE scripts and integrate the results with the XCCDF results in one step.
      */
-    public void integrateResults(TestResultType xccdfResult, Producer producer) {
+    public void integrateResults(TestResultType xccdfResult, Producer<IEngine.Message> producer) {
 	//
 	// Iterate through the rules and record the results
 	//
@@ -100,7 +99,7 @@ public class SCEHandler implements ILoggable {
 				    if (ruleScripts.containsKey(ref.getHref())) {
 					Script rs = ruleScripts.get(ref.getHref());
 					try {
-					    producer.sendNotify(IEngine.MESSAGE_SCE_SCRIPT, ref.getHref());
+					    producer.sendNotify(IEngine.Message.SCE_SCRIPT, ref.getHref());
 					    SceResultsType srt = new SCEScript(rs.getExports(), rs.getData(), session).exec();
 					    result.add(srt.getResult());
 					    if (importStdout) {

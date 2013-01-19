@@ -24,55 +24,47 @@ public interface IEngine extends Runnable {
      */
     Version SCHEMA_VERSION = new Version("5.10.1");
 
-    /**
-     * The minimum message value that will be produced by the engine's IProducer.
-     */
-    int MESSAGE_MIN				= 100;
+    enum Message {
+	/**
+	 * Message indicating that the engine has begun probing for object items.
+	 */
+	OBJECT_PHASE_START,
 
-    /**
-     * The maximum message value that will be produced by the engine's IProducer.
-     */
-    int MESSAGE_MAX				= 199;
+	/**
+	 * Message indicating that the engine has started collecting items for an object.  The argument is the String value
+	 * of the object ID.
+	 */
+	OBJECT,
 
-    /**
-     * Message ID indicating that the engine has begun probing for object items.
-     */
-    int MESSAGE_OBJECT_PHASE_START		= 110;
+	/**
+	 * Message indicating that the engine has finished probing for object items.
+	 */
+	OBJECT_PHASE_END,
 
-    /**
-     * Message ID indicating that the engine has started collecting items for an object.  The argument is the String value
-     * of the object ID.
-     */
-    int MESSAGE_OBJECT				= 120;
+	/**
+	 * Message indicating that the engine has collected a complete set of system characteristics.  The argument is the
+	 * ISystemCharacteristics containing the data.
+	 *
+	 * @see org.joval.intf.scap.oval.ISystemCharacteristics
+	 */
+	SYSTEMCHARACTERISTICS,
 
-    /**
-     * Message ID indicating that the engine has finished probing for object items.
-     */
-    int MESSAGE_OBJECT_PHASE_END		= 130;
+	/**
+	 * Message indicating that the engine has started evaluating the logical values of the OVAL definitions.
+	 */
+	DEFINITION_PHASE_START,
 
-    /**
-     * Message ID indicating that the engine has collected a complete set of system characteristics.  The argument is the
-     * ISystemCharacteristics containing the data.
-     *
-     * @see org.joval.intf.scap.oval.ISystemCharacteristics
-     */
-    int MESSAGE_SYSTEMCHARACTERISTICS		= 140;
+	/**
+	 * Message indicating that the engine is evaluating an OVAL definition.  The argument is the String value of the
+	 * definition ID.
+	 */
+	DEFINITION,
 
-    /**
-     * Message ID indicating that the engine has started evaluating the logical values of the OVAL definitions.
-     */
-    int MESSAGE_DEFINITION_PHASE_START		= 150;
-
-    /**
-     * Message ID indicating that the engine is evaluating an OVAL definition.  The argument is the String value of the
-     * definition ID.
-     */
-    int MESSAGE_DEFINITION			= 160;
-
-    /**
-     * Message ID indicating that the engine has finished evaluating the logical values of the OVAL definitions.
-     */
-    int MESSAGE_DEFINITION_PHASE_END		= 170;
+	/**
+	 * Message indicating that the engine has finished evaluating the logical values of the OVAL definitions.
+	 */
+	DEFINITION_PHASE_END;
+    }
 
     enum Mode {
 	/**
@@ -136,10 +128,10 @@ public interface IEngine extends Runnable {
     void setSystemCharacteristics(ISystemCharacteristics sc) throws IllegalThreadStateException, OvalException;
 
     /**
-     * Get an IProducer associated with the IEngine.  This IProducer can be observed for MESSAGE_ notifications while the
+     * Get an IProducer associated with the IEngine.  This IProducer can be observed for notifications while the
      * engine is running.
      */
-    IProducer getNotificationProducer();
+    IProducer<Message> getNotificationProducer();
 
     /**
      * Returns Result.OK or Result.ERR

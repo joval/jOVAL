@@ -38,7 +38,6 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.xccdf.XccdfException;
-import org.joval.scap.xccdf.engine.XPERT;
 import org.joval.scap.xccdf.engine.RuleResult;
 
 /**

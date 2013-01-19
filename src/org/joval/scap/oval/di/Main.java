@@ -67,7 +67,7 @@ import org.joval.xml.schematron.Validator;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Main implements IObserver {
+public class Main implements IObserver<IEngine.Message> {
     private static final String LF			= System.getProperty("line.separator");
     private static final String JAVA_VERSION		= System.getProperty("java.specification.version");
     private static final String MIN_JAVA_VERSION	= "1.5";
@@ -262,32 +262,38 @@ public class Main implements IObserver {
 	print("");
     }
 
-    // Implement IObserver
+    // Implement IObserver<IEngine.Message>
 
-    public void notify(IProducer source, int msg, Object arg) {
+    public void notify(IProducer<IEngine.Message> source, IEngine.Message msg, Object arg) {
 	switch(msg) {
-	  case IEngine.MESSAGE_OBJECT_PHASE_START:
+	  case OBJECT_PHASE_START:
 	    print(getMessage("MESSAGE_OBJECT_PHASE"));
 	    break;
-	  case IEngine.MESSAGE_OBJECT:
+
+	  case OBJECT:
 	    printStatus(getMessage("MESSAGE_OBJECT", (String)arg));
 	    logger.log(Level.INFO, getMessage("MESSAGE_OBJECT_LOG", (String)arg).trim());
 	    break;
-	  case IEngine.MESSAGE_OBJECT_PHASE_END:
+
+	  case OBJECT_PHASE_END:
 	    printStatus(getMessage("MESSAGE_OBJECTS_DONE"));
 	    clearStatus();
 	    break;
-	  case IEngine.MESSAGE_DEFINITION_PHASE_START:
+
+	  case DEFINITION_PHASE_START:
 	    print(getMessage("MESSAGE_DEFINITION_PHASE"));
 	    break;
-	  case IEngine.MESSAGE_DEFINITION:
+
+	  case DEFINITION:
 	    printStatus(getMessage("MESSAGE_DEFINITION", (String)arg));
 	    break;
-	  case IEngine.MESSAGE_DEFINITION_PHASE_END:
+
+	  case DEFINITION_PHASE_END:
 	    printStatus(getMessage("MESSAGE_DEFINITIONS_DONE"));
 	    clearStatus();
 	    break;
-	  case IEngine.MESSAGE_SYSTEMCHARACTERISTICS: {
+
+	  case SYSTEMCHARACTERISTICS: {
 	    ISystemCharacteristics sc = (ISystemCharacteristics)arg;
 	    print(getMessage("MESSAGE_SAVING_SYSTEMCHARACTERISTICS", state.getPath(state.dataFile)));
 	    sc.writeXML(state.dataFile);
@@ -438,7 +444,7 @@ public class Main implements IObserver {
 	    if (variables != null) {
 		engine.setExternalVariables(variables);
 	    }
-	    engine.getNotificationProducer().addObserver(this, IEngine.MESSAGE_MIN, IEngine.MESSAGE_MAX);
+	    engine.getNotificationProducer().addObserver(this);
 	    engine.run();
 	    switch(engine.getResult()) {
 	      case ERR:

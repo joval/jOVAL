@@ -9,9 +9,9 @@ package org.joval.intf.util;
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IObserver {
+public interface IObserver<T extends Enum> {
     /**
      * An observed IProducer has generated a message.
      */
-    public void notify(IProducer source, int msg, Object arg);
+    public void notify(IProducer<T> source, T msg, Object arg);
 }

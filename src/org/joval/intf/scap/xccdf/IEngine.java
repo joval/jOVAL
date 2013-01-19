@@ -28,63 +28,55 @@ public interface IEngine extends Runnable {
      */
     Version SCHEMA_VERSION = new Version("1.2");
 
-    /**
-     * The minimum message value that will be produced by the engine's IProducer.
-     */
-    int MESSAGE_MIN				= 200;
+    enum Message {
+	/**
+	 * Message indicating that the engine has begun probing for platform applicability.
+	 */
+	PLATFORM_PHASE_START,
 
-    /**
-     * The maximum message value that will be produced by the engine's IProducer.
-     */
-    int MESSAGE_MAX				= 299;
+	/**
+	 * Message indicating that the engine is probing for platform applicability. Argument is the String CPE ID of
+	 * the platform that is about to be tested.
+	 */
+	PLATFORM_CPE,
 
-    /**
-     * Message ID indicating that the engine has begun probing for platform applicability.
-     */
-    int MESSAGE_PLATFORM_PHASE_START		= 210;
+	/**
+	 * Message indicating that the engine has finished probing for object items. Argument is Boolean.TRUE if the
+	 * target is applicable, or Boolean.FALSE if not.
+	 */
+	PLATFORM_PHASE_END,
 
-    /**
-     * Message ID indicating that the engine is probing for platform applicability. Argument is the String CPE ID of
-     * the platform that is about to be tested.
-     */
-    int MESSAGE_PLATFORM_CPE			= 220;
+	/**
+	 * Message indicating that the engine is beginning to evaluate selected XCCDF rules.
+	 */
+	RULES_PHASE_START,
 
-    /**
-     * Message ID indicating that the engine has finished probing for object items. Argument is Boolean.TRUE if the
-     * target is applicable, or Boolean.FALSE if not.
-     */
-    int MESSAGE_PLATFORM_PHASE_END		= 230;
+	/**
+	 * Message indicating that the engine has finished evaluating selected XCCDF rules.
+	 */
+	RULES_PHASE_END,
 
-    /**
-     * Message ID indicating that the engine is beginning to evaluate selected XCCDF rules.
-     */
-    int MESSAGE_RULES_PHASE_START		= 240;
+	/**
+	 * Message indicating that the engine has created an OVAL engine instance and is about to run it. The argument
+	 * is the OVAL IEngine instance.
+	 *
+	 * @see org.joval.intf.scap.oval.IEngine
+	 */
+	OVAL_ENGINE,
 
-    /**
-     * Message ID indicating that the engine has finished evaluating selected XCCDF rules.
-     */
-    int MESSAGE_RULES_PHASE_END			= 250;
+	/**
+	 * Message indicating that the engine is missing information about an OCIL checklist result. The argument is
+	 * an OcilMessageArgument.
+	 *
+	 * @see org.joval.intf.scap.ocil.IChecklist
+	 */
+	OCIL_MISSING,
 
-    /**
-     * Message ID indicating that the engine has created an OVAL engine instance and is about to run it. The argument
-     * is the OVAL IEngine instance.
-     *
-     * @see org.joval.intf.scap.oval.IEngine
-     */
-    int MESSAGE_OVAL_ENGINE			= 260;
-
-    /**
-     * Message ID indicating that the engine is missing information about an OCIL checklist result. The argument is
-     * an OcilMessageArgument.
-     *
-     * @see org.joval.intf.scap.ocil.IChecklist
-     */
-    int MESSAGE_OCIL_MISSING			= 270;
-
-    /**
-     * Message ID indicating that the engine is about to run an SCE script. The argument is the script href (String).
-     */
-    int MESSAGE_SCE_SCRIPT			= 280;
+	/**
+	 * Message indicating that the engine is about to run an SCE script. The argument is the script href (String).
+	 */
+	SCE_SCRIPT;
+    }
 
     /**
      * Specification for the argument accompanying a MESSAGE_OCIL notification message.
@@ -131,7 +123,7 @@ public interface IEngine extends Runnable {
      * Get an IProducer associated with the IEngine.  This IProducer can be observed for MESSAGE_ notifications while the
      * engine is running.
      */
-    IProducer getNotificationProducer();
+    IProducer<Message> getNotificationProducer();
 
     /**
      * Returns Result.OK or Result.ERR
