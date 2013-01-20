@@ -83,7 +83,6 @@ import org.joval.scap.cpe.CpeException;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
-import org.joval.scap.oval.sysinfo.SysinfoFactory;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.TestResult;
 import org.joval.scap.xccdf.XccdfException;
@@ -481,7 +480,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    cpeRef.setIdref(href);
 	    testResult.getPlatform().add(cpeRef);
 	}
-	sysinfo = SysinfoFactory.createSystemInfo(plugin.getSession());
+	sysinfo = plugin.getSystemInfo();
 	if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
 	    testResult.getTarget().add(sysinfo.getPrimaryHostName());
 	}
