@@ -235,7 +235,15 @@ public class Report implements IReport, ILoggable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, arc);
+	return new JAXBSource(ctx, getRootObject());
+    }
+
+    public Object getRootObject() {
+	return arc;
+    }
+
+    public JAXBContext getJAXBContext() {
+	return ctx;
     }
 
     // Implement ILoggable

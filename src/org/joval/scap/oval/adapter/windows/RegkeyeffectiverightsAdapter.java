@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.windows.registry.IKey;
 import jsaf.intf.windows.identity.IACE;
 import jsaf.intf.windows.identity.IDirectory;
@@ -60,7 +60,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((IWindowsSession)session);

@@ -33,7 +33,7 @@ public interface ISystemCharacteristics extends ITransformable {
      *
      * @param mask Set to true to apply mask attributes from the EntityAttributeGroup to the result.
      */
-    OvalSystemCharacteristics getOvalSystemCharacteristics(boolean mask) throws OvalException;
+    OvalSystemCharacteristics getOvalSystemCharacteristics(boolean mask);
 
     /**
      * Store the ItemType in the itemTable and return the ID used to store it.

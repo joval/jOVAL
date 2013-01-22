@@ -13,7 +13,6 @@ import java.util.Vector;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 
@@ -59,12 +58,12 @@ import org.joval.util.JOVALMsg;
 public class PlistAdapter extends BaseFileAdapter<PlistItem> {
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IUnixSession) {
 	    switch(((IUnixSession)session).getFlavor()) {
 	      case MACOSX:
-		super.init((ISession)session);
+		baseInit(session);
 		classes.add(PlistObject.class);
 		classes.add(Plist510Object.class);
 		break;

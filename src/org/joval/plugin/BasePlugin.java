@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.provider.SessionFactory;
 
 import ch.qos.cal10n.IMessageConveyor;
@@ -98,7 +98,7 @@ public abstract class BasePlugin implements IPlugin, IProvider {
     private Hashtable<Class, IAdapter> adapters;
 
     protected LocLogger logger;
-    protected IBaseSession session;
+    protected ISession session;
 
     /**
      * Initializes the logger and loads message resources from plugin[_locale].properties
@@ -166,7 +166,7 @@ public abstract class BasePlugin implements IPlugin, IProvider {
 	session.dispose();
     }
 
-    public IBaseSession getSession() {
+    public ISession getSession() {
 	return session;
     }
 

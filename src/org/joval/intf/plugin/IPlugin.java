@@ -9,7 +9,7 @@ import java.util.Properties;
 
 import org.slf4j.cal10n.LocLogger;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.util.ILoggable;
 
 import scap.oval.systemcharacteristics.core.SystemInfoType;
@@ -103,7 +103,7 @@ public interface IPlugin extends ILoggable {
     /**
      * Returns the jSAF session used to interact with the target machine.
      */
-    IBaseSession getSession();
+    ISession getSession();
 
     /**
      * Get the org.joval.intf.oval.IProvider

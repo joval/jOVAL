@@ -12,7 +12,7 @@ import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.Vector;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.powershell.PowershellException;
@@ -50,7 +50,7 @@ public class WuaupdatesearcherAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;

@@ -21,7 +21,6 @@ import java.util.regex.PatternSyntaxException;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.io.IUnixFileInfo;
 import jsaf.intf.unix.system.IUnixSession;
@@ -63,12 +62,14 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new ArrayList<Class>();
-	if (session instanceof ISession) {
-	    super.init((ISession)session);
+	try {
+	    baseInit(session);
 	    checksumMap = new HashMap<String, String[]>();
 	    classes.add(FilehashObject.class);
+	} catch (UnsupportedOperationException e) {
+	    // doesn't support ISession.getFilesystem()
 	}
 	return classes;
     }

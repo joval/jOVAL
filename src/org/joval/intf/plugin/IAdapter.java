@@ -5,7 +5,7 @@ package org.joval.intf.plugin;
 
 import java.util.Collection;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 
 import org.joval.intf.scap.oval.IProvider;
 import org.joval.scap.oval.CollectException;
@@ -24,5 +24,5 @@ public interface IAdapter extends IProvider {
      *
      * @return The object classes for which this adapter knows how to retrieve item data, for the supplied session.
      */
-    public Collection<Class> init(IBaseSession session);
+    public Collection<Class> init(ISession session);
 }

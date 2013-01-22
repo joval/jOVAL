@@ -20,7 +20,7 @@ import java.util.regex.PatternSyntaxException;
 
 import jsaf.Message;
 import jsaf.intf.io.IFile;
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
 
@@ -63,7 +63,7 @@ public class ProcessAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;

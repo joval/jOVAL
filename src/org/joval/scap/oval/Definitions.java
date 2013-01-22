@@ -72,6 +72,7 @@ public class Definitions implements IDefinitions, ILoggable {
 	}
     }
 
+    private JAXBContext ctx;
     private OvalDefinitions defs;
     private LocLogger logger;
     private Hashtable<String, DefinitionType> definitions;
@@ -91,9 +92,15 @@ public class Definitions implements IDefinitions, ILoggable {
 	this(getOvalDefinitions(in));
     }
 
-    public Definitions(OvalDefinitions defs) {
+    public Definitions(OvalDefinitions defs) throws OvalException {
 	this.defs = defs;
 	this.logger = JOVALMsg.getLogger();
+
+	try {
+	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_DEFINITIONS));
+	} catch (JAXBException e) {
+	    throw new OvalException(e);
+	}
 
 	objects = new Hashtable <String, ObjectType>();
 	if (defs.getObjects() != null) {
@@ -148,8 +155,15 @@ public class Definitions implements IDefinitions, ILoggable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_DEFINITIONS);
-	return new JAXBSource(JAXBContext.newInstance(packages), getOvalDefinitions());
+	return new JAXBSource(ctx, getOvalDefinitions());
+    }
+
+    public Object getRootObject() {
+	return getOvalDefinitions(); 
+    }
+
+    public JAXBContext getJAXBContext() {
+	return ctx;
     }
 
     // Implement IDefinitions

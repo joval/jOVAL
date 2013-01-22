@@ -184,6 +184,14 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	return new JAXBSource(ctx, getOvalSystemCharacteristics(false));
     }
 
+    public Object getRootObject() {
+	return getOvalSystemCharacteristics(false);
+    }
+
+    public JAXBContext getJAXBContext() {
+	return ctx;
+    }
+
     // Implement ISystemCharacteristics
 
     public SystemInfoType getSystemInfo() {
@@ -193,7 +201,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     //
     // DAS mask support is TBD
     //
-    public OvalSystemCharacteristics getOvalSystemCharacteristics(boolean mask) throws OvalException {
+    public OvalSystemCharacteristics getOvalSystemCharacteristics(boolean mask) {
 	OvalSystemCharacteristics sc = Factories.sc.core.createOvalSystemCharacteristics();
 	sc.setGenerator(OvalFactory.getGenerator());
 	sc.setSystemInfo(systemInfo);
@@ -399,9 +407,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	} catch (FileNotFoundException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	} catch (OvalException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	} finally {
 	    if (out != null) {
 		try {
@@ -466,7 +471,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     private Map<Class, Object> wrapperFactories = new HashMap<Class, Object>();
     private Map<Class, Method> wrapperMethods = new HashMap<Class, Method>();
 
-    private JAXBElement<? extends ItemType> wrapItem(ItemType item) throws OvalException {
+    private JAXBElement<? extends ItemType> wrapItem(ItemType item) {
 	try {
 	    Class clazz = item.getClass();
 	    Method method = wrapperMethods.get(clazz);
@@ -485,7 +490,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	    return wrapped;
 	} catch (Exception e) {
 	    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), item.getId()));
+	    throw new RuntimeException(JOVALMsg.getMessage(JOVALMsg.ERROR_REFLECTION, e.getMessage(), item.getId()));
 	}
     }
 

@@ -155,6 +155,14 @@ public class Benchmark implements IBenchmark, ILoggable {
 	return new JAXBSource(ctx, bt);
     }
 
+    public Object getRootObject() {
+	return bt;
+    }
+
+    public JAXBContext getJAXBContext() {
+	return ctx;
+    }
+
     // Implement ILoggable
 
     public void setLogger(LocLogger logger) {

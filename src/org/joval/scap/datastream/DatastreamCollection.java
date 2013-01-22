@@ -110,6 +110,10 @@ public class DatastreamCollection implements IDatastreamCollection {
         return new JAXBSource(JAXBContext.newInstance(packages), getDSCollection());
     }
 
+    public Object getRootObject() {
+	return getDSCollection();
+    }
+
     // Implement IDatastream
 
     public DataStreamCollection getDSCollection() {

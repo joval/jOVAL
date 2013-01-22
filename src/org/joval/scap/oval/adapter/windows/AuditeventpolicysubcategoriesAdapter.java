@@ -6,7 +6,7 @@ package org.joval.scap.oval.adapter.windows;
 import java.util.Collection;
 import java.util.Vector;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.SafeCLI;
 
@@ -39,7 +39,7 @@ public class AuditeventpolicysubcategoriesAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
@@ -96,7 +96,7 @@ public class AuditeventpolicysubcategoriesAdapter implements IAdapter {
 
     private void makeItem() throws CollectException {
 	try {
-	    long timeout = session.getTimeout(IBaseSession.Timeout.M);
+	    long timeout = session.getTimeout(ISession.Timeout.M);
 	    String[] env = session.getEnvironment().toArray();
 	    SafeCLI.ExecData data = SafeCLI.execData("AuditPol /get /category:*", env, session, timeout);
 	    int code = data.getExitCode();

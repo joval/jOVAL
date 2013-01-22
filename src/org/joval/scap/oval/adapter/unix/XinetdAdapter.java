@@ -20,7 +20,7 @@ import java.util.regex.PatternSyntaxException;
 import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.StringTools;
 
@@ -61,7 +61,7 @@ public class XinetdAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;

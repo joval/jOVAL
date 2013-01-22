@@ -3,7 +3,7 @@
 
 package org.joval.scap.oval.sysinfo;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.intf.windows.system.IWindowsSession;
 
@@ -21,9 +21,9 @@ import org.joval.util.JOVALMsg;
  */
 public class SysinfoFactory {
     /**
-     * Map the IBaseSession to the correct FamilyEnumeration.
+     * Map the ISession to the correct FamilyEnumeration.
      */
-    public static FamilyEnumeration getFamily(IBaseSession session) {
+    public static FamilyEnumeration getFamily(ISession session) {
 	switch(session.getType()) {
 	  case WINDOWS:
 	    return FamilyEnumeration.WINDOWS;
@@ -44,7 +44,7 @@ public class SysinfoFactory {
     /**
      * Create OVAL system information from the supplied session.
      */
-    public static SystemInfoType createSystemInfo(IBaseSession session) throws OvalException {
+    public static SystemInfoType createSystemInfo(ISession session) throws OvalException {
 	switch(session.getType()) {
 	  case WINDOWS:
 	    return WindowsSystemInfo.getSystemInfo((IWindowsSession)session);

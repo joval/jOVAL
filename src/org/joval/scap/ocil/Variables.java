@@ -171,7 +171,14 @@ public class Variables implements IVariables {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	JAXBContext ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OCIL));
 	return new JAXBSource(ctx, getOcilVariables());
+    }
+
+    public Object getRootObject() {
+	return getOcilVariables();
+    }
+
+    public JAXBContext getJAXBContext() {
+	return ctx;
     }
 }

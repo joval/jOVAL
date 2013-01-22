@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.Vector;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
 
@@ -37,7 +37,7 @@ public class IsainfoAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;

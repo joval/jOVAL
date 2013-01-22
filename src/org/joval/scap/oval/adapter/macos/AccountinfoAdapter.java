@@ -11,7 +11,7 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
 
@@ -46,7 +46,7 @@ public class AccountinfoAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IUnixSession) {
 	    if (((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {

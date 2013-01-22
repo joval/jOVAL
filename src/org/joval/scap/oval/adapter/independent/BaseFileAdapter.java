@@ -73,8 +73,14 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 
     protected ISession session;
 
-    protected void init(ISession session) {
+    /**
+     * All subclasses should invoke this method inside their IAdapter.init implementations.
+     *
+     * @throws UnsupportedOperationException if the ISession doesn't support getFilesystem().
+     */
+    protected void baseInit(ISession session) {
 	this.session = session;
+	session.getFilesystem(); // test to see this operation is supported
 	try {
 	    String pattern = session.getProperties().getProperty(IFilesystem.PROP_MOUNT_FSTYPE_FILTER);
 	    if (pattern == null) {

@@ -9,7 +9,6 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.IEnvironment;
 import jsaf.intf.system.ISession;
 
@@ -41,12 +40,14 @@ public class EnvironmentvariableAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof ISession) {
-	    this.session = (ISession)session;
-	    environment = this.session.getEnvironment();
+	try {
+	    this.session = session;
+	    environment = session.getEnvironment();
 	    classes.add(EnvironmentvariableObject.class);
+	} catch (UnsupportedOperationException e) {
+	    // ISession.getEnvironment not supported
 	}
 	return classes;
     }

@@ -12,7 +12,7 @@ import java.util.HashSet;
 import java.util.Properties;
 import javax.xml.bind.JAXBElement;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.powershell.PowershellException;
@@ -77,7 +77,7 @@ public class CmdletAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;

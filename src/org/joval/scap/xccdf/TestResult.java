@@ -45,6 +45,14 @@ public class TestResult implements ITransformable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, factory.createTestResult(result));
+	return new JAXBSource(ctx, getRootObject());
+    }
+
+    public Object getRootObject() {
+	return factory.createTestResult(result);
+    }
+
+    public JAXBContext getJAXBContext() {
+	return ctx;
     }
 }

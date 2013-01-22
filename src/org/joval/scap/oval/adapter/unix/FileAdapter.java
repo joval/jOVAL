@@ -21,7 +21,6 @@ import java.util.regex.MatchResult;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.io.IUnixFileInfo;
 import jsaf.intf.unix.io.IUnixFilesystem;
@@ -56,10 +55,10 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IUnixSession) {
-	    super.init((ISession)session);
+	    baseInit(session);
 	    us = (IUnixSession)session;
 	    classes.add(FileObject.class);
 	}

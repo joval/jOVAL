@@ -35,7 +35,6 @@ CLASSES=\
 	org.joval.scap.datastream.View				\
 	org.joval.scap.ocil.BooleanTestActionConditionType	\
 	org.joval.scap.ocil.Checklist				\
-	org.joval.scap.ocil.ChecklistResults			\
 	org.joval.scap.ocil.Factories				\
 	org.joval.scap.ocil.OcilException			\
 	org.joval.scap.ocil.Variables				\

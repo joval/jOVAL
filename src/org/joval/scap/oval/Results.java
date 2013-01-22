@@ -153,6 +153,14 @@ public class Results implements IResults, ILoggable {
 	return new JAXBSource(ctx, getOvalResults());
     }
 
+    public Object getRootObject() {
+	return getOvalResults();
+    }
+
+    public JAXBContext getJAXBContext() {
+	return ctx;
+    }
+
     // Implement IResults
 
     public ResultEnumeration getDefinitionResult(String definitionId) throws NoSuchElementException {
@@ -191,8 +199,6 @@ public class Results implements IResults, ILoggable {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	} catch (FileNotFoundException e) {
 	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
-	} catch (OvalException e) {
-	    logger.warn(JOVALMsg.ERROR_FILE_GENERATE, f.toString());
 	} finally {
 	    if (out != null) {
 		try {
@@ -229,7 +235,7 @@ public class Results implements IResults, ILoggable {
 	return sc;
     }
 
-    public OvalResults getOvalResults() throws OvalException {
+    public OvalResults getOvalResults() {
 	OvalResults or = Factories.results.createOvalResults();
 	or.setGenerator(OvalFactory.getGenerator());
 	OvalDirectives od = directives.getOvalDirectives();

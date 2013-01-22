@@ -11,7 +11,7 @@ import java.util.Vector;
 import jsaf.Message;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.util.IProperty;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.IniFile;
@@ -48,7 +48,7 @@ public class AuditeventpolicyAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
@@ -70,7 +70,7 @@ public class AuditeventpolicyAdapter implements IAdapter {
 
     private void makeItem() throws CollectException {
 	try {
-	    long timeout = session.getTimeout(IBaseSession.Timeout.M);
+	    long timeout = session.getTimeout(ISession.Timeout.M);
 	    String tempDir = session.getTempDir();
 	    StringBuffer sb = new StringBuffer(tempDir);
 	    if (!tempDir.endsWith(session.getFilesystem().getDelimiter())) {

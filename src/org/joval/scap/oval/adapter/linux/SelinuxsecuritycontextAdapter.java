@@ -17,7 +17,6 @@ import javax.xml.bind.JAXBElement;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.io.IUnixFileInfo;
 import jsaf.intf.unix.system.IUnixSession;
@@ -56,13 +55,13 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IUnixSession) {
 	    switch(((IUnixSession)session).getFlavor()) {
 	      case LINUX:
+		baseInit(session);
 		us = (IUnixSession)session;
-		super.init(us);
 		processMap = new Hashtable<Integer, SelinuxsecuritycontextItem>();
 		classes.add(SelinuxsecuritycontextObject.class);
 		break;

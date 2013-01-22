@@ -22,7 +22,7 @@ import java.util.zip.GZIPInputStream;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IReader;
 import jsaf.intf.io.IReaderGobbler;
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.system.IEnvironment;
 import jsaf.intf.unix.io.IUnixFilesystem;
 import jsaf.intf.unix.system.IUnixSession;
@@ -58,7 +58,7 @@ public class SysctlAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
@@ -163,10 +163,10 @@ public class SysctlAdapter implements IAdapter {
 	    // Run the command on the remote host, storing the results in a temporary file, then tranfer the file
 	    // locally and read it.
 	    //
-	    SafeCLI.exec(sb.toString(), null, session, session.getTimeout(IUnixSession.Timeout.M), new RG(), new RG());
+	    SafeCLI.exec(sb.toString(), null, null, session, session.getTimeout(IUnixSession.Timeout.M), new RG(), new RG());
 	    remoteTemp =  session.getFilesystem().getFile(tempPath, IFile.Flags.READWRITE);
 	    GZIPInputStream gzin = null;
-	    if (session.getWorkspace() == null || IBaseSession.LOCALHOST.equals(session.getHostname())) {
+	    if (session.getWorkspace() == null || ISession.LOCALHOST.equals(session.getHostname())) {
 		gzin = new GZIPInputStream(remoteTemp.getInputStream());
 	    } else {
 		localTemp = File.createTempFile("search", null, session.getWorkspace());

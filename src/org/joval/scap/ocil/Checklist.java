@@ -552,7 +552,15 @@ public class Checklist implements IChecklist {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, Factories.core.createOcil(getOCILType()));
+	return new JAXBSource(ctx, getRootObject());
+    }
+
+    public Object getRootObject() {
+	return Factories.core.createOcil(getOCILType());
+    }
+
+    public JAXBContext getJAXBContext() {
+	return ctx;
     }
 
     // Private

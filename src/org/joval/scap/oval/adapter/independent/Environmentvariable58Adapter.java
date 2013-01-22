@@ -22,7 +22,6 @@ import java.util.regex.PatternSyntaxException;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IReader;
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.IEnvironment;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
@@ -59,33 +58,25 @@ import org.joval.util.JOVALMsg;
 public class Environmentvariable58Adapter implements IAdapter {
     private ISession session;
     private IEnvironmentBuilder builder;
-    private String error;
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new ArrayList<Class>();
-	if (session instanceof ISession) {
-	    this.session = (ISession)session;
-	    classes.add(Environmentvariable58Object.class);
-	}
+	this.session = session;
+	classes.add(Environmentvariable58Object.class);
 	return classes;
     }
 
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	if (error != null) {
-	    throw new CollectException(error, FlagEnumeration.NOT_COLLECTED);
-	} else if (builder == null) {
+	if (builder == null) {
 	    try {
 		builder = getEnvironmentBuilder();
+	    } catch (CollectException e) {
+		throw e;
 	    } catch (Exception e) {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		if (e.getMessage() == null) {
-		    error = e.getClass().getName();
-		} else {
-		    error = e.getMessage();
-		}
-		throw new CollectException(error, FlagEnumeration.NOT_COLLECTED);
+		throw new CollectException(e, FlagEnumeration.ERROR);
 	    }
 	}
 
@@ -150,7 +141,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 		rc.addMessage(msg);
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
-	} else if (session.getHostname().equals(IBaseSession.LOCALHOST)) {
+	} else if (session.getHostname().equals(ISession.LOCALHOST)) {
 	    //
 	    // In this case, we're supposed to use the tool's PID, and by extension, the tool's environment.
 	    // To get the PID, we use a hack to obtain it from the name of the RuntimeMXBean.
@@ -305,7 +296,8 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    return new WindowsEnvironmentBuilder((IWindowsSession)session);
 
 	  default:
-	    throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_SESSION_TYPE, session.getType()));
+	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_SESSION_TYPE, session.getType());
+	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	}
     }
 

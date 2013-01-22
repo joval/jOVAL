@@ -16,7 +16,6 @@ import java.util.regex.Matcher;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
 import jsaf.intf.io.IRandomAccess;
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.io.IWindowsFileInfo;
 import jsaf.intf.windows.powershell.IRunspace;
@@ -64,10 +63,10 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
-	    super.init((ISession)session);
+	    baseInit(session);
 	    ws = (IWindowsSession)session;
 	    classes.add(FileObject.class);
 	}

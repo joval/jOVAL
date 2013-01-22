@@ -19,7 +19,6 @@ import java.util.regex.PatternSyntaxException;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFileEx;
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.identity.IACE;
 import jsaf.intf.windows.identity.IDirectory;
@@ -60,10 +59,10 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
-	    super.init((ISession)session);
+	    baseInit(session);
 	    directory = ((IWindowsSession)session).getDirectory();
 	    classes.add(Fileeffectiverights53Object.class);
 	    classes.add(FileeffectiverightsObject.class);

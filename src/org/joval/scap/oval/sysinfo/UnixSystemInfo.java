@@ -10,7 +10,6 @@ import java.util.regex.Pattern;
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
 import jsaf.intf.io.IReader;
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
 

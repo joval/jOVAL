@@ -4,6 +4,7 @@
 package org.joval.intf.xml;
 
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.JAXBContext;
 import javax.xml.transform.Source;
 
 import org.joval.scap.ScapException;
@@ -19,5 +20,15 @@ public interface ITransformable {
      * Get a source that can be used for performing transforms.
      */
     public Source getSource() throws JAXBException, ScapException;
+
+    /**
+     * Get the JAXB root element.
+     */
+    public Object getRootObject();
+
+    /**
+     * Get a JAXBContext for the document.
+     */
+    public JAXBContext getJAXBContext();
 }
 

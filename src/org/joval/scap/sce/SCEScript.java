@@ -16,7 +16,6 @@ import java.util.Properties;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.intf.windows.system.IWindowsSession;

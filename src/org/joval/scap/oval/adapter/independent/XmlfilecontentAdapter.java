@@ -15,7 +15,6 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import jsaf.intf.io.IFile;
-import jsaf.intf.system.IBaseSession;
 import jsaf.intf.system.ISession;
 import jsaf.util.StringTools;
 
@@ -45,11 +44,13 @@ import org.joval.xml.XPathTools;
 public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof ISession) {
-	    super.init((ISession)session);
+	try {
+	    baseInit(session);
 	    classes.add(XmlfilecontentObject.class);
+	} catch (UnsupportedOperationException e) {
+	    // doesn't support ISession.getFilesystem()
 	}
 	return classes;
     }

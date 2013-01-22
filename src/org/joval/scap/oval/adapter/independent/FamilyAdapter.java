@@ -6,7 +6,7 @@ package org.joval.scap.oval.adapter.independent;
 import java.util.Collection;
 import java.util.Vector;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 
 import scap.oval.definitions.core.ObjectType;
 import scap.oval.definitions.independent.FamilyObject;
@@ -25,12 +25,12 @@ import org.joval.scap.oval.sysinfo.SysinfoFactory;
  * @version %I% %G%
  */
 public class FamilyAdapter implements IAdapter {
-    private IBaseSession session;
+    private ISession session;
     private FamilyItem fItem = null;
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	this.session = session;
 	Collection<Class> classes = new Vector<Class>();
 	classes.add(FamilyObject.class);

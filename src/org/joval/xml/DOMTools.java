@@ -3,6 +3,7 @@
 
 package org.joval.xml;
 
+import javax.xml.bind.JAXBIntrospector;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMResult;
@@ -28,5 +29,10 @@ public class DOMTools {
 	DOMResult result = new DOMResult();
 	transformer.transform(source.getSource(), result);
 	return ((Document)result.getNode()).getDocumentElement();
+    }
+
+    public static String getNamespace(ITransformable source) {
+	JAXBIntrospector ji = source.getJAXBContext().createJAXBIntrospector();
+	return ji.getElementName(source.getRootObject()).getNamespaceURI();
     }
 }

@@ -10,7 +10,7 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.windows.registry.ILicenseData;
 import jsaf.intf.windows.registry.IRegistry;
 import jsaf.intf.windows.system.IWindowsSession;
@@ -45,7 +45,7 @@ public class LicenseAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;

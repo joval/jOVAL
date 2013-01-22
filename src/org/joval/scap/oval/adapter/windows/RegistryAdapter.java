@@ -15,7 +15,7 @@ import java.util.NoSuchElementException;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.util.ISearchable;
 import jsaf.intf.windows.registry.IBinaryValue;
 import jsaf.intf.windows.registry.IDwordValue;
@@ -64,7 +64,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((IWindowsSession)session);

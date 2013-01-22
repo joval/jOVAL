@@ -11,7 +11,7 @@ import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.intf.windows.wmi.ISWbemObject;
 import jsaf.intf.windows.wmi.ISWbemObjectSet;
@@ -46,7 +46,7 @@ public class WmiAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;

@@ -204,6 +204,14 @@ public class Variables implements IVariables {
 	return new JAXBSource(ctx, getOvalVariables());
     }
 
+    public Object getRootObject() {
+	return getOvalVariables();
+    }
+
+    public JAXBContext getJAXBContext() {
+	return ctx;
+    }
+
     // Implement ILogger
 
     public void setLogger(LocLogger logger) {

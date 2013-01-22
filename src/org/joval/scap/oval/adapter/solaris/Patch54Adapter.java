@@ -11,7 +11,7 @@ import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import jsaf.intf.system.IBaseSession;
+import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
 
 import scap.oval.common.MessageType;
@@ -40,7 +40,7 @@ import org.joval.util.JOVALMsg;
 public class Patch54Adapter extends PatchAdapter {
     // Implement IAdapter
 
-    public Collection<Class> init(IBaseSession session) {
+    public Collection<Class> init(ISession session) {
 	Collection<Class> classes = new Vector<Class>();
 	if (session instanceof IUnixSession) {
 	    super.init(session);

@@ -28,7 +28,6 @@ import java.util.Vector;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
-import org.w3c.dom.Element;
 
 import org.slf4j.cal10n.LocLogger;
 import jsaf.intf.system.ISession;
@@ -218,17 +217,16 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		String requestId = report.addRequest(DOMTools.toElement(benchmark));
 		String assetId = report.addAsset(sysinfo);
 		for (ITransformable subreport : reports) {
-		    Element elt = DOMTools.toElement(subreport);
-		    String ns = elt.getNamespaceURI();
+		    String ns = DOMTools.getNamespace(subreport);
 		    if (SystemEnumeration.XCCDF.namespace().equals(ns)) {
 			//
 			// Always include the XCCDF report
 			//
-			report.addReport(requestId, assetId, elt);
+			report.addReport(requestId, assetId, DOMTools.toElement(subreport));
 		    } else {
 			for (SystemEnumeration system : systems) {
 			    if (system == SystemEnumeration.ANY || system.namespace().equals(ns)) {
-				report.addReport(requestId, assetId, elt);
+				report.addReport(requestId, assetId, DOMTools.toElement(subreport));
 				break;
 			    }
 			}
