@@ -60,7 +60,7 @@ DOCS=docs/api
 SRC=$(TOP)/src
 COMPONENTS=$(TOP)/components
 LIBDIR=$(RSRC)/lib
-LIB=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(LIBDIR)/*)))
+LIBS=$(subst $(SPACE),$(CLN),$(filter %.jar %.zip, $(wildcard $(LIBDIR)/*)))
 
 JSAF_SRC=$(JSAF_HOME)/src
 JSAF_COMPONENTS=$(JSAF_HOME)/components
