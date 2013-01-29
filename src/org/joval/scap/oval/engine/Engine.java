@@ -1321,7 +1321,6 @@ public class Engine implements IEngine, IProvider {
 		edtResult.setVersion(defDefinition.getVersion());
 		if (edtDefinition.isSetNegate() && edtDefinition.getNegate()) {
 		    edtResult.setNegate(true);
-		    edtResult.setResult(defResult.getResult()); // Overridden for true and false, below
 		    switch(defResult.getResult()) {
 		      case TRUE:
 			edtResult.setResult(ResultEnumeration.FALSE);
@@ -1329,9 +1328,19 @@ public class Engine implements IEngine, IProvider {
 		      case FALSE:
 			edtResult.setResult(ResultEnumeration.TRUE);
 			break;
+		      default:
+			edtResult.setResult(defResult.getResult());
+			break;
 		    }
 		} else {
 		    edtResult.setResult(defResult.getResult());
+		}
+		if (edtDefinition.isSetApplicabilityCheck() && edtDefinition.getApplicabilityCheck()) {
+		    switch(edtResult.getResult()) {
+		      case FALSE:
+			edtResult.setResult(ResultEnumeration.NOT_APPLICABLE);
+			break;
+		    }
 		}
 		operator.addResult(edtResult.getResult());
 		resultObject = edtResult;
@@ -1348,6 +1357,13 @@ public class Engine implements IEngine, IProvider {
 		result = ResultEnumeration.FALSE;
 	    } else if (result == ResultEnumeration.FALSE) {
 		result = ResultEnumeration.TRUE;
+	    }
+	}
+	if (criteriaDefinition.isSetApplicabilityCheck() && criteriaDefinition.getApplicabilityCheck()) {
+	    switch(result) {
+	      case FALSE:
+		result = ResultEnumeration.NOT_APPLICABLE;
+		break;
 	    }
 	}
 	criteriaResult.setResult(result);
@@ -1384,7 +1400,7 @@ public class Engine implements IEngine, IProvider {
 	criterionResult.setTestRef(testId);
 	if (criterionDefinition.isSetNegate() && criterionDefinition.getNegate()) {
 	    criterionResult.setNegate(true);
-	    switch (testResult.getResult()) {
+	    switch(testResult.getResult()) {
 	      case TRUE:
 		criterionResult.setResult(ResultEnumeration.FALSE);
 		break;
@@ -1397,6 +1413,13 @@ public class Engine implements IEngine, IProvider {
 	    }
 	} else {
 	    criterionResult.setResult(testResult.getResult());
+	}
+	if (criterionDefinition.isSetApplicabilityCheck() && criterionDefinition.getApplicabilityCheck()) {
+	    switch(criterionResult.getResult()) {
+	      case FALSE:
+		criterionResult.setResult(ResultEnumeration.NOT_APPLICABLE);
+		break;
+	    }
 	}
 	return criterionResult;
     }

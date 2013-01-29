@@ -162,8 +162,14 @@ public abstract class BasePlugin implements IPlugin, IProvider {
     }
 
     public void dispose() {
-	adapters.clear();
-	session.dispose();
+	if (adapters != null) {
+	    adapters.clear();
+	    adapters = null;
+	}
+	if (session != null) {
+	    session.dispose();
+	    session = null;
+	}
     }
 
     public ISession getSession() {
