@@ -52,6 +52,7 @@ org.joval.scap.oval.adapter.windows.RegistryAdapter
 org.joval.scap.oval.adapter.windows.RegkeyeffectiverightsAdapter
 org.joval.scap.oval.adapter.windows.SidAdapter
 org.joval.scap.oval.adapter.windows.SidSidAdapter
+org.joval.scap.oval.adapter.windows.SystemmetricAdapter
 org.joval.scap.oval.adapter.windows.UserAdapter
 org.joval.scap.oval.adapter.windows.UserSid55Adapter
 org.joval.scap.oval.adapter.windows.UserSidAdapter

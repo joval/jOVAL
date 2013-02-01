@@ -66,8 +66,7 @@ public class LicenseAdapter implements IAdapter {
 	    }
 	    Hashtable<String, ILicenseData.IEntry> entries = reg.getLicenseData().getEntries();
 	    if (lObj.isSetName()) {
-		JAXBElement<EntityObjectStringType> wrapped = ((LicenseObject)obj).getName();
-		EntityObjectStringType name = wrapped.getValue();
+		EntityObjectStringType name = lObj.getName();
 		if (name != null && name.isSetValue()) {
 		    String entryName = (String)name.getValue();
 		    switch(name.getOperation()) {
@@ -121,7 +120,7 @@ public class LicenseAdapter implements IAdapter {
 	EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
 	nameType.setValue(entry.getName());
 	nameType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
-	item.setName(Factories.sc.windows.createLicenseItemName(nameType));
+	item.setName(nameType);
 
 	EntityItemRegistryTypeType registryType = Factories.sc.windows.createEntityItemRegistryTypeType();
 	EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
