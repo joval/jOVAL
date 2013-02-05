@@ -4,5 +4,4 @@ CLASSES=\
 	org.joval.scap.oval.di.Main			\
 	org.joval.util.LogFormatter			\
 	org.joval.xml.schematron.ValidationException	\
-	org.joval.xml.schematron.Validator		\
-	org.joval.xml.SchemaValidator
+	org.joval.xml.schematron.Validator

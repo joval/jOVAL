@@ -91,5 +91,6 @@ CLASSES=\
 	org.joval.util.Version					\
 	org.joval.xml.DOMTools					\
 	org.joval.xml.SchemaRegistry				\
+	org.joval.xml.SchemaValidator				\
 	org.joval.xml.SignatureValidator			\
 	org.joval.xml.XPathTools
