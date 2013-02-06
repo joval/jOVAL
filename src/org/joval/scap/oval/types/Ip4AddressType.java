@@ -20,6 +20,10 @@ public class Ip4AddressType extends AbstractType {
     private int maskVal;
 
     public Ip4AddressType(String str) throws IllegalArgumentException {
+	str = str.trim();
+	if (str.length() == 0) {
+	    throw new IllegalArgumentException(str);
+	}
 	int ptr = str.indexOf("/");
 	maskVal = 32;
 	String ipStr = null;

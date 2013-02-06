@@ -312,7 +312,7 @@ public class SignatureValidator {
 		return false;
 	    }
 	}
-    } 
+    }
 
     /**
      * A simple KeySelectorResult implementation.
