@@ -676,6 +676,10 @@ public class Engine implements IEngine, IProvider {
 				checked = checked.union(set);
 				break;
 
+			      case ONLY_ONE:
+				checked = checked.complement(set).union(set.complement(checked));
+				break;
+
 			      default:
 				throw new ResolveException(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_CHECK, check));
 			    }
