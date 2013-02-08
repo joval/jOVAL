@@ -97,8 +97,7 @@ public class AccesstokenAdapter implements IAdapter {
 	      case NOT_EQUAL:
 	      case PATTERN_MATCH:
 		Collection<IPrincipal> allPrincipals = new Vector<IPrincipal>();
-		allPrincipals.addAll(directory.queryAllUsers());
-		allPrincipals.addAll(directory.queryAllGroups());
+		allPrincipals.addAll(directory.queryAllPrincipals());
 		if (op == OperationEnumeration.NOT_EQUAL) {
 		    for (IPrincipal p : allPrincipals) {
 			if (!getCanonicalizedPrincipalName(p).equals(principalStr)) {
@@ -159,6 +158,7 @@ public class AccesstokenAdapter implements IAdapter {
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
 	    rc.addMessage(msg);
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return items.values();
     }
