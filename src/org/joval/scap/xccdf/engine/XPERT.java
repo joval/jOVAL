@@ -123,7 +123,7 @@ public class XPERT {
 	String streamId = null;
 	String benchmarkId = null;
 	String profileId = null;
-	Map<String, File> ocilFiles = new HashMap<String, File>();
+	Map<String, IChecklist> checklists = new HashMap<String, IChecklist>();
 	File xmlDir = new File(BASE_DIR, "xml");
 	File reportFile = new File(CWD, "xpert-arf.xml");
 	File transformFile = new File(xmlDir, "xccdf_results_to_html.xsl");
@@ -147,6 +147,8 @@ public class XPERT {
 		verify = false;
 	    } else if (argv[i].equals("-v")) {
 		verbose = true;
+	    } else if (argv[i].equals("-n")) {
+		checklists.put("", Checklist.EMPTY);
 	    } else if ((i + 1) < argv.length) {
 		if (argv[i].equals("-d")) {
 		    streamFile = new File(argv[++i]);
@@ -167,10 +169,15 @@ public class XPERT {
 			key = pair.substring(0,ptr);
 			val = pair.substring(ptr+1);
 		    }
-		    if (ocilFiles.containsKey(key)) {
+		    if (checklists.containsKey(key)) {
 			System.out.println("WARNING: duplicate OCIL href - " + key);
 		    }
-		    ocilFiles.put(key, new File(val));
+		    try {
+			checklists.put(key, new Checklist(new File(val)));
+		    } catch (OcilException e) {
+			logger.severe(e.getMessage());
+			System.exit(1);
+		    }
 		} else if (argv[i].equals("-r")) {
 		    reportFile = new File(argv[++i]);
 		} else if (argv[i].equals("-l")) {
@@ -313,16 +320,6 @@ public class XPERT {
 			    logger.info("Selected benchmark " + benchmarkId);
 			} else {
 			    throw new XPERTException("ERROR: A benchmark must be selected for stream " + streamId);
-			}
-		    }
-
-		    Map<String, IChecklist> checklists = new HashMap<String, IChecklist>();
-		    for (String href : ocilFiles.keySet()) {
-			try {
-			    checklists.put(href, new Checklist(ocilFiles.get(href)));
-			} catch (OcilException e) {
-			    logger.severe(e.getMessage());
-			    System.exit(1);
 			}
 		    }
 
