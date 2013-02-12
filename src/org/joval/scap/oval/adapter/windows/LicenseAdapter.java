@@ -4,9 +4,8 @@
 package org.joval.scap.oval.adapter.windows;
 
 import java.util.Collection;
-import java.util.Hashtable;
-import java.util.Collection;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
@@ -46,7 +45,7 @@ public class LicenseAdapter implements IAdapter {
     // Implement IAdapter
 
     public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(LicenseObject.class);
@@ -55,7 +54,7 @@ public class LicenseAdapter implements IAdapter {
     }
 
     public Collection<LicenseItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	Collection<LicenseItem> items = new Vector<LicenseItem>();
+	Collection<LicenseItem> items = new ArrayList<LicenseItem>();
 	try {
 	    LicenseObject lObj = (LicenseObject)obj;
 	    IRegistry reg = null;
@@ -64,7 +63,7 @@ public class LicenseAdapter implements IAdapter {
 	    } else {
 		reg = session.getRegistry(IWindowsSession.View._32BIT);
 	    }
-	    Hashtable<String, ILicenseData.IEntry> entries = reg.getLicenseData().getEntries();
+	    Map<String, ILicenseData.IEntry> entries = reg.getLicenseData().getEntries();
 	    if (lObj.isSetName()) {
 		EntityObjectStringType name = lObj.getName();
 		if (name != null && name.isSetValue()) {
