@@ -4,8 +4,10 @@
 package org.joval.scap.datastream;
 
 import java.net.MalformedURLException;
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,9 +37,12 @@ import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.datastream.IView;
-import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.ITailoring;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.scap.oval.DefinitionFilter;
+import org.joval.scap.xccdf.XccdfException;
+import org.joval.util.JOVALMsg;
 
 /**
  * Implementation of an IView.
@@ -49,22 +54,23 @@ public class View implements IView {
     private String benchmarkId;
     private ProfileType profile;
     private Datastream stream;
+    private IBenchmark benchmark;
     private BenchmarkType bt;
     private HashSet<RuleType> rules;
     private Map<String, Map<String, Collection<String>>> platforms;
-    private Map<String, String> values = null;
+    private Map<String, Collection<String>> values = null;
 
     /**
      * Create an XCCDF profile view. If profileId == null, then defaults are selected. If there is no profile with the given
      * name, a NoSuchElementException is thrown.
      */
-    View(String benchmarkId, ProfileType profile, Datastream stream, BenchmarkType bt) {
-	this.benchmarkId = benchmarkId;
-	this.profile = profile;
+    View(Datastream stream, IBenchmark benchmark, ProfileType profile) throws XccdfException {
 	this.stream = stream;
-	this.bt = bt;
+	this.benchmark = benchmark;
+	bt = benchmark.getBenchmark();
+	this.profile = profile;
 	platforms = new HashMap<String, Map<String, Collection<String>>>();
-	values = new HashMap<String, String>();
+	values = new HashMap<String, Collection<String>>();
 	rules = new HashSet<RuleType>();
 
 	//
@@ -77,14 +83,12 @@ public class View implements IView {
 	//
 	// If a named profile is specified, then gather all the selections and values associated with it.
 	//
-	Map<String, Boolean> selections = null;
-	Map<String, String> refinements = null;
+	Map<String, Boolean> selections = new HashMap<String, Boolean>();
+	Map<String, String> valueSelectors = new HashMap<String, String>();
 	if (profile != null) {
 	    for (OverrideableCPE2IdrefType platform : profile.getPlatform()) {
 		addPlatform(platform.getIdref());
 	    }
-	    selections = new HashMap<String, Boolean>();
-	    refinements = new HashMap<String, String>();
 	    for (Object obj : profile.getSelectOrSetComplexValueOrSetValue()) {
 		if (obj instanceof ProfileSelectType) {
 		    ProfileSelectType select = (ProfileSelectType)obj;
@@ -95,15 +99,15 @@ public class View implements IView {
 		    }
 		} else if (obj instanceof ProfileSetValueType) {
 		    ProfileSetValueType set = (ProfileSetValueType)obj;
-		    values.put(set.getIdref(), set.getValue());
-		} else if (obj instanceof ProfileRefineValueType) {
-		    ProfileRefineValueType refine = (ProfileRefineValueType)obj;
-		    refinements.put(refine.getIdref(), refine.getSelector());
-		} else if (obj instanceof ProfileRefineRuleType) {
-		    ProfileRefineRuleType rule = (ProfileRefineRuleType)obj;
-		    //TBD
+		    values.put(set.getIdref(), Arrays.asList(set.getValue()));
 		} else if (obj instanceof ProfileSetComplexValueType) {
 		    ProfileSetComplexValueType complex = (ProfileSetComplexValueType)obj;
+		    values.put(complex.getIdref(), complex.getItem());
+		} else if (obj instanceof ProfileRefineValueType) {
+		    ProfileRefineValueType refine = (ProfileRefineValueType)obj;
+		    valueSelectors.put(refine.getIdref(), refine.getSelector());
+		} else if (obj instanceof ProfileRefineRuleType) {
+		    ProfileRefineRuleType rule = (ProfileRefineRuleType)obj;
 		    //TBD
 		}
 	    }
@@ -126,29 +130,27 @@ public class View implements IView {
 	// Set all the selected values
 	//
 	for (ValueType val : vals) {
-	    for (Object obj : val.getValueOrComplexValue()) {
-		if (obj instanceof SelStringType) {
-		    SelStringType sel = (SelStringType)obj;
-		    if (values.containsKey(val.getId())) {
-			// already set ... DAS throw an exception?
-		    } else if (refinements == null || refinements.get(val.getId()) == null) {
-			if (!sel.isSetSelector()) {
-			    values.put(val.getId(), sel.getValue());
-			}
-		    } else if (refinements.get(val.getId()).equals(sel.getSelector())) {
-			values.put(val.getId(), sel.getValue());
+	    if (values.containsKey(val.getId())) {
+		StringBuffer sb = new StringBuffer();
+		for (String s : values.get(val.getId())) {
+		    if (sb.length() > 0) {
+			sb.append(", ");
 		    }
-		} else if (obj instanceof SelComplexValueType) {
-		    // DAS: TBD
+		    sb.append(s);
 		}
+		String selector = valueSelectors.get(val.getId());
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_VALUE, val.getId(), selector, sb.toString());
+		throw new XccdfException(msg);
+	    } else {
+		values.put(val.getId(), getValue(val, valueSelectors.get(val.getId())));
 	    }
 	}
     }
 
     // Implement IView
 
-    public String getBenchmark() {
-	return benchmarkId;
+    public IBenchmark getBenchmark() {
+	return benchmark;
     }
 
     public ProfileType getProfile() {
@@ -174,7 +176,7 @@ public class View implements IView {
 	throw new NoSuchElementException(cpeId);
     }
 
-    public Map<String, String> getValues() {
+    public Map<String, Collection<String>> getValues() {
 	return values;
     }
 
@@ -198,7 +200,7 @@ public class View implements IView {
 	    } else {
 		throw new RuntimeException("Not a group or rule: " + item.getClass().getName());
 	    }
-	    if (selections == null || selections.get(id) == null) {
+	    if (!selections.containsKey(id)) {
 		if (item.getSelected()) {
 		    results.add(item);
 		    if (item instanceof GroupType) {
@@ -248,5 +250,52 @@ public class View implements IView {
 	if (!found) {
 	    throw new NoSuchElementException(cpeName);
 	}
+    }
+
+    /**
+     * Returns the value(s) corresponding to the specified selector.
+     *
+     * If selector is null, returns the default value. The default value is the value with no selector, or if there is no
+     * value without a selector, it is the first value that appears.
+     *
+     * @throws NoSuchElementException if the selector is not null, and is not found in the ValueType.
+     */
+    private List<String> getValue(ValueType val, String selector) throws NoSuchElementException {
+	for (Object obj : val.getValueOrComplexValue()) {
+	    if (obj instanceof SelStringType) {
+		SelStringType sel = (SelStringType)obj;
+		if (selector != null) {
+		    if (selector.equals(sel.getSelector())) {
+			return Arrays.asList(sel.getValue());
+		    }
+		} else if (!sel.isSetSelector()) {
+		    return Arrays.asList(sel.getValue());
+		}
+	    } else if (obj instanceof SelComplexValueType) {
+		SelComplexValueType sel = (SelComplexValueType)obj;
+		if (selector != null) {
+		    if (selector.equals(sel.getSelector())) {
+			return sel.getItem();
+		    }
+		} else if (!sel.isSetSelector()) {
+		    return sel.getItem();
+		}
+	    }
+	}
+	if (selector != null) {
+	    throw new NoSuchElementException(selector);
+	} else if (val.getValueOrComplexValue().size() > 0) {
+	    Object obj = val.getValueOrComplexValue().get(0);
+	    if (obj instanceof SelStringType) {
+		SelStringType sel = (SelStringType)obj;
+		return Arrays.asList(sel.getValue());
+	    } else if (obj instanceof SelComplexValueType) {
+		SelComplexValueType sel = (SelComplexValueType)obj;
+		return sel.getItem();
+	    }
+	}
+	@SuppressWarnings("unchecked")
+	List<String> empty = (List<String>)Collections.EMPTY_LIST;
+	return empty;
     }
 }

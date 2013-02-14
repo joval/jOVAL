@@ -169,7 +169,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	  default:
 	    this.view = view;
 	    stream = view.getStream();
-	    benchmark = stream.getBenchmark(view.getBenchmark());
+	    benchmark = view.getBenchmark();
 	    break;
 	}
     }
@@ -257,7 +257,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
 	}
     }
-
 
     // Implement Runnable
 
@@ -439,7 +438,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      */
     private TestResultType initializeResult() throws OvalException {
 	TestResultType testResult = factory.createTestResultType();
-	String id = view.getBenchmark();
+	String id = benchmark.getId();
 	String name = "unknown";
 	String namespace = "unknown";
 	if (id.startsWith("xccdf_")) {
@@ -565,7 +564,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     }
 
     /**
-     * Recursively list all of the selected rules within the SelectableItem.
+     * Recursively list all of the rules within the SelectableItem.
      */
     private List<RuleType> getRules(SelectableItemType item) {
 	List<RuleType> rules = new Vector<RuleType>();
@@ -579,6 +578,9 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	return rules;
     }
 
+    /**
+     * Get the current time as an XMLGregorianCalendar.
+     */
     private XMLGregorianCalendar getTimestamp() {
 	XMLGregorianCalendar tm = null;
 	if (datatypeFactory != null) {

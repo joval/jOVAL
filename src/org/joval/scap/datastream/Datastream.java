@@ -183,7 +183,7 @@ public class Datastream implements IDatastream, ILoggable {
 	if (components.containsKey(benchmarkId)) {
 	    Component comp = components.get(benchmarkId);
 	    if (comp.isSetBenchmark()) {
-		return new View(benchmarkId, tailoring.getProfile(profileId), this, comp.getBenchmark());
+		return new View(this, new Benchmark(comp), tailoring.getProfile(profileId));
 	    } else {
 		throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
 	    }
@@ -198,11 +198,11 @@ public class Datastream implements IDatastream, ILoggable {
 	    if (comp.isSetBenchmark()) {
 		BenchmarkType bt = comp.getBenchmark();
 		if (profileId == null) {
-		    return new View(benchmarkId, null, this, bt);
+		    return new View(this, new Benchmark(comp), null);
 		} else {
 		    for (ProfileType profile : bt.getProfile()) {
 			if (profile.getProfileId().equals(profileId)) {
-			    return new View(benchmarkId, profile, this, bt);
+			    return new View(this, new Benchmark(comp), profile);
 			}
 		    }
 		    throw new NoSuchElementException(profileId);

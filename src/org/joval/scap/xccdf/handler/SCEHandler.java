@@ -146,7 +146,7 @@ public class SCEHandler implements ILoggable {
      */
     private void loadScripts() {
 	scriptTable = new HashMap<String, Map<String, Script>>();
-	Map<String, String> values = view.getValues();
+	Map<String, Collection<String>> values = view.getValues();
 	for (RuleType rule : view.getSelectedRules()) {
 	    String ruleId = rule.getId();
 	    if (rule.isSetCheck()) {
@@ -158,7 +158,8 @@ public class SCEHandler implements ILoggable {
 				try {
 				    Map<String, String> exports = new HashMap<String, String>();
 				    for (CheckExportType export : check.getCheckExport()) {
-					exports.put(export.getExportName(), values.get(export.getValueId()));
+					String s = getSingleValue(export.getValueId(), values.get(export.getValueId()));
+					exports.put(export.getExportName(), s);
 				    }
 				    if (!scriptTable.containsKey(ruleId)) {
 					scriptTable.put(ruleId, new HashMap<String, Script>());
@@ -176,6 +177,14 @@ public class SCEHandler implements ILoggable {
 		    }
 		}
 	    }
+	}
+    }
+
+    private String getSingleValue(String id, Collection<String> values) throws SceException {
+	if (values.size() == 1) {
+	    return values.iterator().next();
+	} else {
+	    throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_SCE_VARS, id, values.size()));
 	}
     }
 

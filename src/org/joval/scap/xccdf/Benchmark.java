@@ -10,6 +10,9 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -30,6 +33,11 @@ import org.slf4j.cal10n.LocLogger;
 
 import scap.datastream.Component;
 import scap.xccdf.BenchmarkType;
+import scap.xccdf.GroupType;
+import scap.xccdf.ItemType;
+import scap.xccdf.RuleType;
+import scap.xccdf.SelectableItemType;
+import scap.xccdf.ValueType;
 
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.util.JOVALMsg;
@@ -42,14 +50,23 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Benchmark implements IBenchmark, ILoggable {
+    /**
+     * Read a benchmark file.
+     */
     public static final BenchmarkType getBenchmarkType(File f) throws XccdfException {
 	return getBenchmarkType(new StreamSource(f));
     }
 
+    /**
+     * Read a benchmark from a stream.
+     */
     public static final BenchmarkType getBenchmarkType(InputStream in) throws XccdfException {
 	return getBenchmarkType(new StreamSource(in));
     }
 
+    /**
+     * Read a benchmark from a JAXB source.
+     */
     public static final BenchmarkType getBenchmarkType(Source source) throws XccdfException {
 	try {
 	    String packages = SchemaRegistry.lookup(SchemaRegistry.XCCDF);
@@ -77,26 +94,24 @@ public class Benchmark implements IBenchmark, ILoggable {
     private JAXBContext ctx;
     private BenchmarkType bt;
     private String href;
+    private Map<String, ItemType> items;
 
-    Benchmark() throws XccdfException {
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.XCCDF));
-	} catch (JAXBException e) {
-	    throw new XccdfException(e);
-	}
-	logger = JOVALMsg.getLogger();
-    }
-
+    /**
+     * Create a benchmark document from the JAXB datatype.
+     */
     public Benchmark(BenchmarkType bt) throws XccdfException {
 	this();
-	this.bt = bt;
+	setBenchmark(bt);
     }
 
+    /**
+     * Create a benchmark document from a Datastream component.
+     */
     public Benchmark(Component component) throws XccdfException {
 	this();
 	if (component.isSetBenchmark()) {
-	    bt = component.getBenchmark();
 	    href = "#" + component.getId();
+	    setBenchmark(component.getBenchmark());
 	} else {
 	    throw new XccdfException("Not a benchmark component: " + component.getId());
 	}
@@ -108,8 +123,20 @@ public class Benchmark implements IBenchmark, ILoggable {
 	return bt;
     }
 
+    public String getId() {
+	return bt.getBenchmarkId();
+    }
+
     public String getHref() {
 	return href;
+    }
+
+    public ItemType getItem(String id) {
+	if (items.containsKey(id)) {
+	    return items.get(id);
+	} else {
+	    throw new NoSuchElementException(id);
+	}
     }
 
     public void writeXML(File f) throws IOException {
@@ -171,5 +198,49 @@ public class Benchmark implements IBenchmark, ILoggable {
 
     public LocLogger getLogger() {
 	return logger;
+    }
+
+    // Private
+
+    private Benchmark() throws XccdfException {
+	try {
+	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.XCCDF));
+	} catch (JAXBException e) {
+	    throw new XccdfException(e);
+	}
+	logger = JOVALMsg.getLogger();
+    }
+
+    /**
+     * Set bt and initialize the items map.
+     */
+    private void setBenchmark(BenchmarkType bt) {
+	this.bt = bt;
+	items = new HashMap<String, ItemType>();
+	for (ValueType value : bt.getValue()) {
+	    items.put(value.getId(), value);
+	}
+	for (SelectableItemType item : bt.getGroupOrRule()) {
+	    addSelectableItem(item);
+	}
+    }
+
+    /**
+     * Recursively add the item and its children.
+     */
+    private void addSelectableItem(SelectableItemType item) {
+	if (item instanceof RuleType) {
+	    RuleType rule = (RuleType)item;
+	    items.put(rule.getId(), rule);
+	} else if (item instanceof GroupType) {
+	    GroupType group = (GroupType)item;
+	    items.put(group.getId(), group);
+	    for (ValueType value : group.getValue()) {
+		items.put(value.getId(), value);
+	    }
+	    for (SelectableItemType sit : group.getGroupOrRule()) {
+		addSelectableItem(sit);
+	    }
+	}
     }
 }

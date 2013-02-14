@@ -11,6 +11,7 @@ import scap.xccdf.ProfileType;
 import scap.xccdf.RuleType;
 
 import org.joval.intf.scap.oval.IDefinitionFilter;
+import org.joval.intf.scap.xccdf.IBenchmark;
 
 /**
  * A view of a datastream resulting from the selection of a stream, benchmark and profile.
@@ -20,9 +21,9 @@ import org.joval.intf.scap.oval.IDefinitionFilter;
  */
 public interface IView {
     /**
-     * Get the XCCDF benchmark ID that was selected for the view.
+     * Get the benchmark document that was selected for the view.
      */
-    String getBenchmark();
+    IBenchmark getBenchmark();
 
     /**
      * Get the XCCDF profile that was selected for the view.
@@ -49,7 +50,7 @@ public interface IView {
     /**
      * Return a Map of all the values selected and defined in this view.
      */
-    Map<String, String> getValues();
+    Map<String, Collection<String>> getValues();
 
     /**
      * Get all the rules selected by this Profile.

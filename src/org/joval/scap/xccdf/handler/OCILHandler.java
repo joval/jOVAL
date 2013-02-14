@@ -244,7 +244,7 @@ public class OCILHandler {
 	if (!variables.containsKey(href)) {
 	    Variables vars = new Variables();
 	    Collection<RuleType> rules = view.getSelectedRules();
-	    Map<String, String> values = view.getValues();
+	    Map<String, Collection<String>> values = view.getValues();
 	    for (RuleType rule : rules) {
 		for (CheckType check : rule.getCheck()) {
 		    if (check.getSystem().equals(NAMESPACE)) {
@@ -260,7 +260,7 @@ public class OCILHandler {
 				for (CheckExportType export : check.getCheckExport()) {
 				    String ocilVariableId = export.getExportName();
 				    String valueId = export.getValueId();
-				    vars.addValue(ocilVariableId, values.get(valueId));
+				    vars.addValue(ocilVariableId, getSingleValue(ocilVariableId, values.get(valueId)));
 				    vars.setComment(ocilVariableId, valueId);
 				}
 			    }
@@ -290,5 +290,13 @@ public class OCILHandler {
 	    }
 	}
 	return hrefs;
+    }
+
+    private String getSingleValue(String id, Collection<String> values) throws OcilException {
+	if (values.size() == 1) {
+	    return values.iterator().next();
+	} else {
+	    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_VARS, id, values.size()));
+	}
     }
 }

@@ -148,7 +148,7 @@ public class OVALHandler {
 	    IVariables vars = OvalFactory.createVariables();
 	    variables.put(href, vars);
 	    Collection<RuleType> rules = view.getSelectedRules();
-	    Map<String, String> values = view.getValues();
+	    Map<String, Collection<String>> values = view.getValues();
 	    for (RuleType rule : rules) {
 		for (CheckType check : rule.getCheck()) {
 		    if (check.getSystem().equals(NAMESPACE)) {
@@ -163,7 +163,9 @@ public class OVALHandler {
 			    for (CheckExportType export : check.getCheckExport()) {
 				String ovalVariableId = export.getExportName();
 				String valueId = export.getValueId();
-				vars.addValue(ovalVariableId, values.get(valueId));
+				for (String s : values.get(valueId)) {
+				    vars.addValue(ovalVariableId, s);
+				}
 				vars.setComment(ovalVariableId, valueId);
 			    }
 			}

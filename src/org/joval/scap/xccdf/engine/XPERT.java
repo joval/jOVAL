@@ -326,7 +326,7 @@ public class XPERT {
 		    try {
 			IView view = ds.view(benchmarkId, profileId);
 			if (profileId == null && view.getSelectedRules().size() == 0) {
-			    Collection<String> profiles = ds.getProfileIds(view.getBenchmark());
+			    Collection<String> profiles = ds.getProfileIds(view.getBenchmark().getId());
 			    if (profiles.size() > 0) {
 			        logger.info("Try selecting a profile:");
 			        for (String id : profiles) {

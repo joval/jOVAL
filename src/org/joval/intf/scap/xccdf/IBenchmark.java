@@ -5,8 +5,10 @@ package org.joval.intf.scap.xccdf;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.NoSuchElementException;
 
 import scap.xccdf.BenchmarkType;
+import scap.xccdf.ItemType;
 
 import org.joval.intf.xml.ITransformable;
 
@@ -22,7 +24,20 @@ public interface IBenchmark extends ITransformable {
      */
     BenchmarkType getBenchmark();
 
+    /**
+     * Get the href of the datastream component source (if any).
+     */
     String getHref();
+
+    /**
+     * Shortcut for getBenchmark().getBenchmarkId().
+     */
+    String getId();
+
+    /**
+     * Get an item given its ID. (An item can be a group, rule, or value).
+     */
+    ItemType getItem(String id) throws NoSuchElementException;
 
     /**
      * Serialize the benchmark to a file.
