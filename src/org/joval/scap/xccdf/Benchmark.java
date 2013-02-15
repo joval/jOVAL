@@ -35,6 +35,7 @@ import scap.datastream.Component;
 import scap.xccdf.BenchmarkType;
 import scap.xccdf.GroupType;
 import scap.xccdf.ItemType;
+import scap.xccdf.ProfileType;
 import scap.xccdf.RuleType;
 import scap.xccdf.SelectableItemType;
 import scap.xccdf.ValueType;
@@ -94,6 +95,7 @@ public class Benchmark implements IBenchmark, ILoggable {
     private JAXBContext ctx;
     private BenchmarkType bt;
     private String href;
+    private Map<String, ProfileType> profiles;
     private Map<String, ItemType> items;
 
     /**
@@ -131,7 +133,15 @@ public class Benchmark implements IBenchmark, ILoggable {
 	return href;
     }
 
-    public ItemType getItem(String id) {
+    public ProfileType getProfile(String id) throws NoSuchElementException {
+	if (profiles.containsKey(id)) {
+	    return profiles.get(id);
+	} else {
+	    throw new NoSuchElementException(id);
+	}
+    }
+
+    public ItemType getItem(String id) throws NoSuchElementException {
 	if (items.containsKey(id)) {
 	    return items.get(id);
 	} else {
@@ -216,6 +226,11 @@ public class Benchmark implements IBenchmark, ILoggable {
      */
     private void setBenchmark(BenchmarkType bt) {
 	this.bt = bt;
+	profiles = new HashMap<String, ProfileType>();
+	for (ProfileType pt : bt.getProfile()) {
+	    profiles.put(pt.getProfileId(), pt);
+	}
+
 	items = new HashMap<String, ItemType>();
 	for (ValueType value : bt.getValue()) {
 	    items.put(value.getId(), value);

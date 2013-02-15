@@ -26,7 +26,7 @@ public interface IView {
     IBenchmark getBenchmark();
 
     /**
-     * Get the XCCDF profile that was selected for the view.
+     * Get the fully-resolved XCCDF profile that was selected for the view.
      */
     ProfileType getProfile();
 
@@ -48,12 +48,12 @@ public interface IView {
     Map<String, IDefinitionFilter> getCpeOval(String cpeId) throws NoSuchElementException;
 
     /**
-     * Return a Map of all the values selected and defined in this view.
+     * Return a Map of all the fully-resolved values selected and defined in this view.
      */
     Map<String, Collection<String>> getValues();
 
     /**
-     * Get all the rules selected by this Profile.
+     * Get all the fully-resolved rules selected by this Profile.
      */
     Collection<RuleType> getSelectedRules();
 }

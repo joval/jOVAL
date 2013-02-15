@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.scap.xccdf.handler;
+package org.joval.scap.xccdf.engine;
 
 import java.io.File;
 import java.util.Collection;
@@ -43,21 +43,19 @@ import org.joval.util.Producer;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class OCILHandler {
+public class OcilHandler {
     public static final String NAMESPACE = SystemEnumeration.OCIL.namespace();
 
     private IView view;
     private XMLGregorianCalendar startTime;
     private Map<String, Map<String, String>> results;
     private Map<String, Variables> variables;
-    private ObjectFactory factory;
 
     /**
      * Create an OCIL handler utility for the given XCCDF, Profile and href-indexed Checklists (results).
      */
-    public OCILHandler(IView view, Map<String, IChecklist> checklists) throws IllegalArgumentException {
+    public OcilHandler(IView view, Map<String, IChecklist> checklists) throws IllegalArgumentException {
 	this.view = view;
-	factory = new ObjectFactory();
 	results = new HashMap<String, Map<String, String>>();
 
 	for (String href : checklists.keySet()) {
@@ -104,7 +102,7 @@ public class OCILHandler {
     /**
      * Create an OCIL handler utility for the given XCCDF, Profile and OCIL export directory.
      */
-    public OCILHandler(IView view) {
+    public OcilHandler(IView view) {
 	this.view = view;
 	variables = new HashMap<String, Variables>();
     }
@@ -168,7 +166,7 @@ public class OCILHandler {
 		for (CheckType check : rule.getCheck()) {
 		    if (NAMESPACE.equals(check.getSystem())) {
 			if (check.isSetCheckContentRef()) {
-			    RuleResultType ruleResult = factory.createRuleResultType();
+			    RuleResultType ruleResult = Engine.FACTORY.createRuleResultType();
 			    ruleResult.setIdref(ruleId);
 			    ruleResult.setWeight(rule.getWeight());
 			    RuleResult result = new RuleResult();
@@ -246,22 +244,24 @@ public class OCILHandler {
 	    Collection<RuleType> rules = view.getSelectedRules();
 	    Map<String, Collection<String>> values = view.getValues();
 	    for (RuleType rule : rules) {
-		for (CheckType check : rule.getCheck()) {
-		    if (check.getSystem().equals(NAMESPACE)) {
-			if (check.isSetCheckContentRef()) {
-			    boolean match = false;
-			    for (CheckContentRefType ref : check.getCheckContentRef()) {
-				if (ref.getHref().equals(href)) {
-				    match = true;
-				    break;
+		if (rule.isSetCheck()) {
+		    for (CheckType check : rule.getCheck()) {
+			if (check.getSystem().equals(NAMESPACE)) {
+			    if (check.isSetCheckContentRef()) {
+				boolean match = false;
+				for (CheckContentRefType ref : check.getCheckContentRef()) {
+				    if (ref.getHref().equals(href)) {
+					match = true;
+					break;
+				    }
 				}
-			    }
-			    if (match) {
-				for (CheckExportType export : check.getCheckExport()) {
-				    String ocilVariableId = export.getExportName();
-				    String valueId = export.getValueId();
-				    vars.addValue(ocilVariableId, getSingleValue(ocilVariableId, values.get(valueId)));
-				    vars.setComment(ocilVariableId, valueId);
+				if (match) {
+				    for (CheckExportType export : check.getCheckExport()) {
+					String ocilVariableId = export.getExportName();
+					String valueId = export.getValueId();
+					vars.addValue(ocilVariableId, getSingleValue(valueId));
+					vars.setComment(ocilVariableId, valueId);
+				    }
 				}
 			    }
 			}
@@ -292,7 +292,8 @@ public class OCILHandler {
 	return hrefs;
     }
 
-    private String getSingleValue(String id, Collection<String> values) throws OcilException {
+    private String getSingleValue(String id) throws OcilException {
+	Collection<String> values = view.getValues().get(id);
 	if (values.size() == 1) {
 	    return values.iterator().next();
 	} else {

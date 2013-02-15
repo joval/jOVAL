@@ -3,6 +3,8 @@
 
 package org.joval.intf.scap.cpe;
 
+import java.util.NoSuchElementException;
+
 import scap.cpe.dictionary.ItemType;
 import scap.cpe.dictionary.ListType;
 
@@ -15,5 +17,5 @@ import scap.cpe.dictionary.ListType;
 public interface IDictionary {
     public ListType getCpeList();
 
-    public ItemType getItem(String cpeName);
+    public ItemType getItem(String cpeName) throws NoSuchElementException;
 }

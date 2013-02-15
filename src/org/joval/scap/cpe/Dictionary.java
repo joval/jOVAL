@@ -6,6 +6,7 @@ package org.joval.scap.cpe;
 import java.io.File;
 import java.io.InputStream;
 import java.util.Hashtable;
+import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -97,7 +98,11 @@ public class Dictionary implements IDictionary {
 	return list;
     }
 
-    public ItemType getItem(String cpeName) {
-	return ovalMapping.get(cpeName);
+    public ItemType getItem(String cpeName) throws NoSuchElementException {
+	if (ovalMapping.containsKey(cpeName)) {
+	    return ovalMapping.get(cpeName);
+	} else {
+	    throw new NoSuchElementException(cpeName);
+	}
     }
 }

@@ -20,6 +20,7 @@ import scap.cpe.dictionary.ListType;
 import scap.xccdf.BenchmarkType;
 import scap.xccdf.CPE2IdrefType;
 import scap.xccdf.GroupType;
+import scap.xccdf.ObjectFactory;
 import scap.xccdf.OverrideableCPE2IdrefType;
 import scap.xccdf.ProfileType;
 import scap.xccdf.ProfileRefineRuleType;
@@ -51,6 +52,8 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class View implements IView {
+    private static final ObjectFactory FACTORY = new ObjectFactory();
+
     private String benchmarkId;
     private ProfileType profile;
     private Datastream stream;
@@ -68,26 +71,27 @@ public class View implements IView {
 	this.stream = stream;
 	this.benchmark = benchmark;
 	bt = benchmark.getBenchmark();
-	this.profile = profile;
+	this.profile = resolve(profile);
+
 	platforms = new HashMap<String, Map<String, Collection<String>>>();
+	// Add Benchmark-wide platforms
+	for (CPE2IdrefType cpe : bt.getPlatform()) {
+	    addPlatform(cpe.getIdref());
+	}
+
 	values = new HashMap<String, Collection<String>>();
 	rules = new HashSet<RuleType>();
-
-	//
-	// Set Benchmark-wide platforms
-	//
-	for (CPE2IdrefType platform : bt.getPlatform()) {
-	    addPlatform(platform.getIdref());
-	}
 
 	//
 	// If a named profile is specified, then gather all the selections and values associated with it.
 	//
 	Map<String, Boolean> selections = new HashMap<String, Boolean>();
 	Map<String, String> valueSelectors = new HashMap<String, String>();
+	Map<String, ProfileRefineRuleType> refinements = new HashMap<String, ProfileRefineRuleType>();
 	if (profile != null) {
-	    for (OverrideableCPE2IdrefType platform : profile.getPlatform()) {
-		addPlatform(platform.getIdref());
+	    for (OverrideableCPE2IdrefType cpe : profile.getPlatform()) {
+		// Add profile platforms
+		addPlatform(cpe.getIdref());
 	    }
 	    for (Object obj : profile.getSelectOrSetComplexValueOrSetValue()) {
 		if (obj instanceof ProfileSelectType) {
@@ -108,7 +112,7 @@ public class View implements IView {
 		    valueSelectors.put(refine.getIdref(), refine.getSelector());
 		} else if (obj instanceof ProfileRefineRuleType) {
 		    ProfileRefineRuleType rule = (ProfileRefineRuleType)obj;
-		    //TBD
+		    refinements.put(rule.getIdref(), rule);
 		}
 	    }
 	}
@@ -120,9 +124,17 @@ public class View implements IView {
 	vals.addAll(bt.getValue());
 	for (SelectableItemType item : getSelected(bt.getGroupOrRule(), selections)) {
 	    if (item instanceof GroupType) {
-		vals.addAll(((GroupType)item).getValue());
+		for (ValueType base : ((GroupType)item).getValue()) {
+		    ValueType value = resolve(base);
+		    if (!value.getAbstract()) {
+			vals.add(value);
+		    }
+		}
 	    } else if (item instanceof RuleType) {
-		rules.add((RuleType)item);
+		RuleType rule = resolve((RuleType)item, refinements);
+		if (!rule.getAbstract()) {
+		    rules.add(rule);
+		}
 	    }
 	}
 
@@ -218,23 +230,20 @@ public class View implements IView {
     }
 
     /**
-     * Given a CPE platform name, add the corresponding OVAL definition IDs to the platforms list.
+     * Given a CPE platform name, add the corresponding OVAL definition IDs to the platforms map (idempotent).
      *
      * @throws NoSuchElementException if no OVAL definitions corresponding to the CPE name were found in the stream.
      */
     private void addPlatform(String cpeName) throws NoSuchElementException {
-	Map<String, Collection<String>> ovalMap = null;
-	if (platforms.containsKey(cpeName)) {
-	    ovalMap = platforms.get(cpeName);
-	} else {
-	    ovalMap = new HashMap<String, Collection<String>>();
-	    platforms.put(cpeName, ovalMap);
-	}
-	IDictionary dictionary = stream.getDictionary();
-	boolean found = false;
-	if (dictionary != null) {
+	if (!platforms.containsKey(cpeName)) {
+	    Map<String, Collection<String>> ovalMap = new HashMap<String, Collection<String>>();
+	    IDictionary dictionary = stream.getDictionary();
+	    boolean found = false;
+	    if (dictionary == null) {
+		throw new NoSuchElementException("CPE Dictionary");
+	    }
 	    ItemType cpeItem = dictionary.getItem(cpeName);
-	    if (cpeItem != null && cpeItem.isSetCheck()) {
+	    if (cpeItem.isSetCheck()) {
 		for (CheckType check : cpeItem.getCheck()) {
 		    if (SystemEnumeration.OVAL.namespace().equals(check.getSystem()) && check.isSetHref()) {
 			String href = check.getHref();
@@ -242,13 +251,14 @@ public class View implements IView {
 			    ovalMap.put(href, new ArrayList<String>());
 			}
 			ovalMap.get(href).add(check.getValue());
-			found = true;
 		    }
 		}
 	    }
-	}
-	if (!found) {
-	    throw new NoSuchElementException(cpeName);
+	    if (ovalMap.size() > 0) {
+		platforms.put(cpeName, ovalMap);
+	    } else {
+		throw new NoSuchElementException(cpeName);
+	    }
 	}
     }
 
@@ -297,5 +307,133 @@ public class View implements IView {
 	@SuppressWarnings("unchecked")
 	List<String> empty = (List<String>)Collections.EMPTY_LIST;
 	return empty;
+    }
+
+    /**
+     * Return a ProfileType with all inherited properties and elements incorporated therein.
+     */
+    private ProfileType resolve(ProfileType base) {
+	ProfileType profile = FACTORY.createProfileType();
+
+	//
+	// Inheritance
+	//
+	if (base.getExtends() != null) {
+	    ProfileType parent = resolve(benchmark.getProfile(base.getExtends()));
+	    profile.getPlatform().addAll(parent.getPlatform());
+	    profile.getSelectOrSetComplexValueOrSetValue().addAll(parent.getSelectOrSetComplexValueOrSetValue());
+	}
+
+	//
+	// Model: None
+	//
+	profile.setProfileId(base.getProfileId());
+	profile.setAbstract(base.getAbstract());
+
+	//
+	// Model: Append
+	//
+	profile.getPlatform().addAll(base.getPlatform());
+	profile.getSelectOrSetComplexValueOrSetValue().addAll(base.getSelectOrSetComplexValueOrSetValue());
+
+	return profile;
+    }
+
+    /**
+     * Return a RuleType with all inherited properties and refinements incorporated therein.
+     */
+    private RuleType resolve(RuleType base, Map<String, ProfileRefineRuleType> refinements) {
+	String ruleId = base.getId();
+	RuleType rule = FACTORY.createRuleType();
+
+	//
+	// Inheritance
+	//
+	if (base.isSetExtends()) {
+	    RuleType parent = resolve((RuleType)benchmark.getItem(base.getExtends()), refinements);
+	    if (parent.isSetProhibitChanges()) {
+		rule.setProhibitChanges(parent.getProhibitChanges());
+	    }
+	    rule.getCheck().addAll(parent.getCheck());
+	    rule.setComplexCheck(parent.getComplexCheck());
+	    rule.setWeight(parent.getWeight());
+	    rule.getPlatform().addAll(parent.getPlatform());
+	}
+
+	//
+	// Model: None
+	//
+	rule.setId(ruleId);
+	rule.setAbstract(base.getAbstract());
+
+	//
+	// Model: Replace
+	//
+	if (base.isSetCheck()) {
+	    rule.unsetCheck();
+	    rule.getCheck().addAll(base.getCheck());
+	}
+	if (base.isSetComplexCheck()) {
+	    rule.setComplexCheck(base.getComplexCheck());
+	}
+	if (base.isSetWeight()) {
+	    rule.setWeight(base.getWeight());
+	}
+
+	//
+	// Model: Override
+	//
+	if (base.isSetPlatform() && base.getPlatform().size() > 0) {
+	    if (base.getPlatform().get(0).getOverride()) {
+		rule.unsetPlatform();
+	    }
+	    for (OverrideableCPE2IdrefType cpe : base.getPlatform()) {
+		rule.getPlatform().add(cpe);
+		addPlatform(cpe.getIdref());
+	    }
+	}
+
+	if (!(base.isSetProhibitChanges() && base.getProhibitChanges()) &&
+	    !(rule.isSetProhibitChanges() && rule.getProhibitChanges()) &&
+	    refinements.containsKey(ruleId)) {
+
+	    ProfileRefineRuleType refinement = refinements.get(ruleId);
+	    if (refinement.isSetWeight()) {
+		rule.setWeight(refinement.getWeight());
+	    }
+	}
+
+	return rule;
+    }
+
+    /**
+     * Return a ValueType with all inherited properties and elements incorporated therein.
+     */
+    private ValueType resolve(ValueType base) {
+	ValueType value = FACTORY.createValueType();
+
+	//
+	// Inheritance
+	//
+	if (base.isSetExtends()) {
+	    ValueType parent = resolve((ValueType)benchmark.getItem(base.getExtends()));
+	    if (parent.isSetProhibitChanges()) {
+		value.setProhibitChanges(parent.getProhibitChanges());
+	    }
+	    value.getValueOrComplexValue().addAll(parent.getValueOrComplexValue());
+	}
+
+	//
+	// Model: None
+	//
+	value.setId(base.getId());
+	value.setAbstract(base.getAbstract());
+
+	//
+	// Model: Append
+	//
+	value.getValueOrComplexValue().addAll(base.getValueOrComplexValue());
+
+	return value;
     }
 }

@@ -1,7 +1,7 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.scap.xccdf.handler;
+package org.joval.scap.xccdf.engine;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -20,11 +20,13 @@ import scap.xccdf.CheckExportType;
 import scap.xccdf.CheckImportType;
 import scap.xccdf.CheckType;
 import scap.xccdf.ObjectFactory;
+import scap.xccdf.OverrideableCPE2IdrefType;
 import scap.xccdf.ResultEnumType;
 import scap.xccdf.RuleResultType;
 import scap.xccdf.RuleType;
 import scap.xccdf.TestResultType;
 
+import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
@@ -41,10 +43,8 @@ import org.joval.util.Producer;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SCEHandler implements ILoggable {
+public class SceHandler implements ILoggable {
     public static final String NAMESPACE = SystemEnumeration.SCE.namespace();
-
-    private static final ObjectFactory FACTORY = new ObjectFactory();
 
     private IView view;
     private ISession session;
@@ -54,11 +54,11 @@ public class SCEHandler implements ILoggable {
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
      */
-    public SCEHandler(IView view, ISession session, LocLogger logger) {
+    public SceHandler(IView view, IPlugin plugin, Map<String, Boolean> platforms) {
 	this.view = view;
-	this.session = session;
-	this.logger = logger;
-	loadScripts();
+	session = plugin.getSession();
+	logger = plugin.getLogger();
+	loadScripts(platforms);
     }
 
     public int ruleCount() {
@@ -75,14 +75,14 @@ public class SCEHandler implements ILoggable {
 	for (RuleType rule : view.getSelectedRules()) {
 	    String ruleId = rule.getId();
 	    if (scriptTable.containsKey(ruleId)) {
-		RuleResultType ruleResult = FACTORY.createRuleResultType();
+		RuleResultType ruleResult = Engine.FACTORY.createRuleResultType();
 		ruleResult.setIdref(ruleId);
 		ruleResult.setWeight(rule.getWeight());
 		if (rule.isSetCheck()) {
 		    for (CheckType check : rule.getCheck()) {
 			if (NAMESPACE.equals(check.getSystem()) && scriptTable.containsKey(ruleId)) {
 			    RuleResult result = new RuleResult();
-			    CheckType checkResult = FACTORY.createCheckType();
+			    CheckType checkResult = Engine.FACTORY.createCheckType();
 
 			    boolean importStdout = false;
 			    for (CheckImportType cit : check.getCheckImport()) {
@@ -103,7 +103,7 @@ public class SCEHandler implements ILoggable {
 					    SceResultsType srt = new SCEScript(rs.getExports(), rs.getData(), session).exec();
 					    result.add(srt.getResult());
 					    if (importStdout) {
-						CheckImportType cit = FACTORY.createCheckImportType();
+						CheckImportType cit = Engine.FACTORY.createCheckImportType();
 						cit.setImportName("stdout");
 						cit.getContent().add(srt.getStdout());
 						checkResult.getCheckImport().add(cit);
@@ -144,12 +144,21 @@ public class SCEHandler implements ILoggable {
     /**
      * Create a list of SCE scripts that should be executed based on the view.
      */
-    private void loadScripts() {
+    private void loadScripts(Map<String, Boolean> platforms) {
 	scriptTable = new HashMap<String, Map<String, Script>>();
-	Map<String, Collection<String>> values = view.getValues();
 	for (RuleType rule : view.getSelectedRules()) {
-	    String ruleId = rule.getId();
-	    if (rule.isSetCheck()) {
+	    //
+	    // Check that at least one platform applies to the rule
+	    //
+	    boolean platformCheck = rule.getPlatform().size() == 0;
+	    for (OverrideableCPE2IdrefType cpe : rule.getPlatform()) {
+		if (platforms.get(cpe.getIdref()).booleanValue()) {
+		    platformCheck = true;
+		    break;
+		}
+	    }
+	    if (platformCheck && rule.isSetCheck()) {
+		String ruleId = rule.getId();
 		for (CheckType check : rule.getCheck()) {
 		    if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
 			for (CheckContentRefType ref : check.getCheckContentRef()) {
@@ -158,8 +167,7 @@ public class SCEHandler implements ILoggable {
 				try {
 				    Map<String, String> exports = new HashMap<String, String>();
 				    for (CheckExportType export : check.getCheckExport()) {
-					String s = getSingleValue(export.getValueId(), values.get(export.getValueId()));
-					exports.put(export.getExportName(), s);
+					exports.put(export.getExportName(), getSingleValue(export.getValueId()));
 				    }
 				    if (!scriptTable.containsKey(ruleId)) {
 					scriptTable.put(ruleId, new HashMap<String, Script>());
@@ -180,7 +188,8 @@ public class SCEHandler implements ILoggable {
 	}
     }
 
-    private String getSingleValue(String id, Collection<String> values) throws SceException {
+    private String getSingleValue(String id) throws SceException {
+	Collection<String> values = view.getValues().get(id);
 	if (values.size() == 1) {
 	    return values.iterator().next();
 	} else {

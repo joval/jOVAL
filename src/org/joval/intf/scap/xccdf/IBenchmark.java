@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.NoSuchElementException;
 
 import scap.xccdf.BenchmarkType;
+import scap.xccdf.ProfileType;
 import scap.xccdf.ItemType;
 
 import org.joval.intf.xml.ITransformable;
@@ -33,6 +34,11 @@ public interface IBenchmark extends ITransformable {
      * Shortcut for getBenchmark().getBenchmarkId().
      */
     String getId();
+
+    /**
+     * Get a profile given its ID.
+     */
+    ProfileType getProfile(String id) throws NoSuchElementException;
 
     /**
      * Get an item given its ID. (An item can be a group, rule, or value).

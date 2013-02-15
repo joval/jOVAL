@@ -1,12 +1,13 @@
 // Copyright (C) 2012 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.scap.xccdf.handler;
+package org.joval.scap.xccdf.engine;
 
 import java.net.MalformedURLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -21,6 +22,7 @@ import scap.xccdf.CheckExportType;
 import scap.xccdf.GroupType;
 import scap.xccdf.InstanceResultType;
 import scap.xccdf.ObjectFactory;
+import scap.xccdf.OverrideableCPE2IdrefType;
 import scap.xccdf.ProfileSetValueType;
 import scap.xccdf.RuleResultType;
 import scap.xccdf.RuleType;
@@ -30,6 +32,7 @@ import scap.xccdf.TestResultType;
 
 import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.oval.IDefinitionFilter;
+import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.oval.IEngine;
 import org.joval.intf.scap.oval.IResults;
 import org.joval.intf.scap.oval.IVariables;
@@ -46,42 +49,98 @@ import org.joval.scap.xccdf.engine.RuleResult;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class OVALHandler {
+public class OvalHandler {
     public static final String NAMESPACE = SystemEnumeration.OVAL.namespace();
 
     private IView view;
-    private ObjectFactory factory;
-    private Map<String, IVariables> variables;
-    private Map<String, IEngine> engines;
+    private Map<String, EngineData> engines;
 
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile. An OVAL engine will be created for every
      * discrete OVAL href referenced by a profile-selected check in the XCCDF document.
      */
-    public OVALHandler(IView view, IPlugin plugin) throws Exception {
+    public OvalHandler(IView view, IPlugin plugin, Map<String, Boolean> platforms) throws Exception {
 	this.view = view;
-	factory = new ObjectFactory();
-	variables = new HashMap<String, IVariables>();
-	engines = new HashMap<String, IEngine>();
+
+	engines = new HashMap<String, EngineData>();
 	for (RuleType rule : view.getSelectedRules()) {
-	    if (rule.isSetCheck()) {
+	    //
+	    // Check that at least one platform applies to the rule
+	    //
+	    boolean platformCheck = rule.getPlatform().size() == 0;
+	    for (OverrideableCPE2IdrefType cpe : rule.getPlatform()) {
+		if (platforms.get(cpe.getIdref()).booleanValue()) {
+		    platformCheck = true;
+		    break;
+		}
+	    }
+	    if (platformCheck && rule.isSetCheck()) {
+		//
+		// For each checkable rule, collect the data required to build the OVAL engine that will process its
+		// referenced content.
+		//
 		for (CheckType check : rule.getCheck()) {
 		    if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
+			if (check.isSetCheckContent()) {
+			    // TBD (DAS): inline content is not supported
+			}
+
 			for (CheckContentRefType ref : check.getCheckContentRef()) {
 			    if (ref.isSetHref()) {
 				String href = ref.getHref();
-				if (!engines.containsKey(href)) {
-				    plugin.getLogger().info("Creating engine for href " + href);
-				    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin);
-				    engine.setDefinitions(view.getStream().getOval(href));
-				    engine.setExternalVariables(getVariables(href));
-				    engine.setDefinitionFilter(getDefinitionFilter(href));
-				    engines.put(href, engine);
+				EngineData ed = null;
+				if (engines.containsKey(href)) {
+				    ed = engines.get(href);
+				} else {
+				    ed = new EngineData(view.getStream().getOval(href));
+				    engines.put(href, ed);
+				}
+
+				//
+				// Add definition references to the filter
+				//
+				if (ref.isSetName()) {
+				    ed.getFilter().addDefinition(ref.getName());
+				} else {
+				    //
+				    // Add all the definitions
+				    //
+				    IDefinitions definitions = view.getStream().getOval(href);
+				    for (scap.oval.definitions.core.DefinitionType definition :
+					 definitions.getOvalDefinitions().getDefinitions().getDefinition()) {
+					ed.getFilter().addDefinition(definition.getId());
+				    }
+				}
+
+				//
+				// Add variable exports to the variables
+				//
+				for (CheckExportType export : check.getCheckExport()) {
+				    String ovalVariableId = export.getExportName();
+				    String valueId = export.getValueId();
+				    for (String s : view.getValues().get(valueId)) {
+					ed.getVariables().addValue(ovalVariableId, s);
+				    }
+				    ed.getVariables().setComment(ovalVariableId, valueId);
 				}
 			    }
 			}
 		    }
 		}
+	    }
+	}
+
+	//
+	// Create an OVAL engine to process the selected checks for each OVAL document href
+	//
+	Iterator<Map.Entry<String, EngineData>> iter = engines.entrySet().iterator();
+	while(iter.hasNext()) {
+	    Map.Entry<String, EngineData> entry = iter.next();
+	    if (entry.getValue().createEngine(plugin)) {
+		plugin.getLogger().info("Created engine for href " + entry.getKey());
+	    } else {
+		plugin.getLogger().info("No engine created for href " + entry.getKey());
+		iter.remove();
 	    }
 	}
     }
@@ -93,87 +152,32 @@ public class OVALHandler {
 	return engines.keySet();
     }
 
-    public IEngine getEngine(String href) {
-	return engines.get(href);
+    /**
+     * Return the engine used to process the document href.
+     */
+    public IEngine getEngine(String href) throws NoSuchElementException {
+	if (engines.containsKey(href)) {
+	    return engines.get(href).getEngine();
+	} else {
+	    throw new NoSuchElementException(href);
+	}
     }
 
     /**
      * Integrate all the OVAL results with the XCCDF results.
      */
     public void integrateResults(TestResultType xccdfResult) throws OvalException {
-	for (String href : variables.keySet()) {
-	    for (VariableType var : getVariables(href).getOvalVariables().getVariables().getVariable()) {
-		ProfileSetValueType val = factory.createProfileSetValueType();
+	for (String href : engines.keySet()) {
+	    for (VariableType var : engines.get(href).getVariables().getOvalVariables().getVariables().getVariable()) {
+		ProfileSetValueType val = Engine.FACTORY.createProfileSetValueType();
 		val.setIdref(var.getComment());
 		if (var.isSetValue() && var.getValue().size() > 0 && var.getValue().get(0) != null) {
 		    val.setValue(var.getValue().get(0).toString());
 		    xccdfResult.getSetValueOrSetComplexValue().add(val);
 		}
 	    }
+	    integrateResults(href, engines.get(href).getEngine().getResults(), xccdfResult);
 	}
-	for (String href : engines.keySet()) {
-	    integrateResults(href, engines.get(href).getResults(), xccdfResult);
-	}
-    }
-
-    /**
-     * Get all the definition IDs for a given Href based on the checks selected in the view.
-     */
-    public IDefinitionFilter getDefinitionFilter(String href) {
-	IDefinitionFilter filter = OvalFactory.createDefinitionFilter();
-	for (RuleType rule : view.getSelectedRules()) {
-	    if (rule.isSetCheck()) {
-		for (CheckType check : rule.getCheck()) {
-		    if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
-			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    if (ref.isSetHref() && ref.getHref().equals(href)) {
-				if (ref.isSetName()) {
-				    filter.addDefinition(ref.getName());
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	}
-	return filter;
-    }
-
-    /**
-     * Gather all the variable exports for OVAL checks from the selected rules in the view, and create an OVAL
-     * variables structure containing their values.
-     */
-    public IVariables getVariables(String href) {
-	if (!variables.containsKey(href)) {
-	    IVariables vars = OvalFactory.createVariables();
-	    variables.put(href, vars);
-	    Collection<RuleType> rules = view.getSelectedRules();
-	    Map<String, Collection<String>> values = view.getValues();
-	    for (RuleType rule : rules) {
-		for (CheckType check : rule.getCheck()) {
-		    if (check.getSystem().equals(NAMESPACE)) {
-			boolean applicable = false;
-			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    if (href.equals(ref.getHref())) {
-				applicable = true;
-				break;
-			    }
-			}
-			if (applicable) {
-			    for (CheckExportType export : check.getCheckExport()) {
-				String ovalVariableId = export.getExportName();
-				String valueId = export.getValueId();
-				for (String s : values.get(valueId)) {
-				    vars.addValue(ovalVariableId, s);
-				}
-				vars.setComment(ovalVariableId, valueId);
-			    }
-			}
-		    }
-		}
-	    }
-	}
-	return variables.get(href);
     }
 
     // Private
@@ -191,7 +195,7 @@ public class OVALHandler {
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {
 		    if (NAMESPACE.equals(check.getSystem())) {
-			RuleResultType ruleResult = factory.createRuleResultType();
+			RuleResultType ruleResult = Engine.FACTORY.createRuleResultType();
 			ruleResult.setIdref(ruleId);
 			ruleResult.setWeight(rule.getWeight());
 			ruleResult.getCheck().add(check);
@@ -211,12 +215,12 @@ public class OVALHandler {
 				    // @multicheck=true means a rule-result for each contained OVAL result
 				    //
 				    for (DefinitionType def : ovalResult.getDefinitionResults()) {
-					RuleResultType rrt = factory.createRuleResultType();
+					RuleResultType rrt = Engine.FACTORY.createRuleResultType();
 					rrt.setIdref(ruleId);
 					rrt.setWeight(rule.getWeight());
 					rrt.getCheck().add(check);
 					rrt.setResult(convertResult(def.getResult()));
-					InstanceResultType inst = factory.createInstanceResultType();
+					InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
 					inst.setValue(def.getDefinitionId());
 					rrt.getInstance().add(inst);
 					xccdfResult.getRuleResult().add(rrt);
@@ -254,6 +258,43 @@ public class OVALHandler {
 	  case UNKNOWN:
 	  default:
 	    return ResultEnumType.UNKNOWN;
+	}
+    }
+
+    class EngineData {
+	private IDefinitions definitions;
+	private IDefinitionFilter filter;
+	private IVariables variables;
+	private IEngine engine;
+
+	EngineData(IDefinitions definitions) {
+	    this.definitions = definitions;
+	    filter = OvalFactory.createDefinitionFilter();
+	    variables = OvalFactory.createVariables();
+	}
+
+	IDefinitionFilter getFilter() {
+	    return filter;
+	}
+
+	IVariables getVariables() {
+	    return variables;
+	}
+
+	boolean createEngine(IPlugin plugin) {
+	    if (filter.size() > 0) {
+		engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin);
+		engine.setDefinitions(definitions);
+		engine.setExternalVariables(variables);
+		engine.setDefinitionFilter(filter);
+		return true;
+	    } else {
+		return false;
+	    }
+	}
+
+	IEngine getEngine() {
+	    return engine;
 	}
     }
 }

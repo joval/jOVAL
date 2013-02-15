@@ -85,9 +85,6 @@ import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.TestResult;
 import org.joval.scap.xccdf.XccdfException;
-import org.joval.scap.xccdf.handler.OCILHandler;
-import org.joval.scap.xccdf.handler.OVALHandler;
-import org.joval.scap.xccdf.handler.SCEHandler;
 import org.joval.util.JOVALMsg;
 import org.joval.util.JOVALSystem;
 import org.joval.util.Producer;
@@ -100,6 +97,8 @@ import org.joval.xml.DOMTools;
  * @version %I% %G%
  */
 public class Engine implements org.joval.intf.scap.xccdf.IEngine {
+    public static final ObjectFactory FACTORY = new ObjectFactory();
+
     private static final String PRODUCT_NAME;
     private static DatatypeFactory datatypeFactory = null;
     static {
@@ -126,12 +125,12 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     private File ocilDir;
     private SystemInfoType sysinfo;
     private Map<String, IChecklist> checklists;
+    private Map<String, Boolean> platforms;
     private List<RuleType> rules = null;
     private List<GroupType> groups = null;
     private String phase = null;
     private LocLogger logger;
     private List<ITransformable> reports;
-    private ObjectFactory factory;
     private Exception error;
     private State state = State.CONFIGURE;
     private boolean abort = false;
@@ -143,12 +142,11 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     protected Engine(IPlugin plugin) {
 	this.plugin = plugin;
 	logger = plugin.getLogger();
-	factory = new ObjectFactory();
 	producer = new Producer<Message>();
 	reset();
     }
 
-    // Implement IEngine
+    // Implement org.joval.intf.scap.xccdf.IEngine
 
     public void destroy() {
 	if (state == State.RUNNING) {
@@ -277,13 +275,10 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		for (RuleType rule : rules) {
 		    selectedIds.add(rule.getId());
 		}
-		boolean ocilExports = false;
 		if (checklists.size() == 0) {
-		    OCILHandler oh = new OCILHandler(view);
-		    ocilExports = oh.exportFiles(producer);
-		}
-		if (ocilExports) {
-		    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_REQUIRED));
+		    if (new OcilHandler(view).exportFiles(producer)) {
+			throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_REQUIRED));
+		    }
 		}
 		if (!plugin.isConnected()) {
 		    if (plugin.connect()) {
@@ -295,17 +290,35 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		TestResultType testResult = initializeResult();
 
 		//
-		// Perform the applicability tests, and if applicable, the automated checks
+		// Perform the profile's platform applicability tests, and if its applicable, the selected checks
 		//
 		producer.sendNotify(Message.PLATFORM_PHASE_START, null);
-		if (isApplicable()) {
+		checkPlatforms();
+		List<CPE2IdrefType> cpes = new ArrayList<CPE2IdrefType>();
+		if (view.getProfile().getPlatform().size() > 0 && view.getProfile().getPlatform().get(0).getOverride()) {
+		    cpes.addAll(view.getProfile().getPlatform());
+		} else {
+		    cpes.addAll(benchmark.getBenchmark().getPlatform());
+		    cpes.addAll(view.getProfile().getPlatform());
+		}
+		boolean applicable = cpes.size() == 0;
+		for (CPE2IdrefType cpe : cpes) {
+		    if (platforms.get(cpe.getIdref()).booleanValue()) {
+			applicable = true;
+			break;
+		    }
+		}
+		if (applicable) {
 		    producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.TRUE);
 		    processXccdf(testResult);
 		} else {
 		    producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.FALSE);
 		    logger.info(JOVALMsg.WARNING_CPE_TARGET, plugin.getSession().getHostname());
 		}
-		plugin.disconnect();
+		if (doDisconnect) {
+		    plugin.disconnect();
+		    doDisconnect = false;
+		}
 
 		//
 		// Print results to the console, and add them to the ARF report
@@ -322,7 +335,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 			//
 			// Record unselected/unchecked rules
 			//
-			RuleResultType rrt = factory.createRuleResultType();
+			RuleResultType rrt = FACTORY.createRuleResultType();
 			rrt.setIdref(rule.getId());
 			if (selectedIds.contains(ruleId)) {
 			    rrt.setResult(ResultEnumType.NOTCHECKED);
@@ -373,7 +386,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	// Integrate OCIL results
 	//
 	if (checklists != null) {
-	    OCILHandler ocilHandler = new OCILHandler(view, checklists);
+	    OcilHandler ocilHandler = new OcilHandler(view, checklists);
 	    ocilHandler.integrateResults(testResult);
 	    for (IChecklist checklist : checklists.values()) {
 		reports.add(checklist);
@@ -383,7 +396,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	//
 	// Run the OVAL engines
 	//
-	OVALHandler ovalHandler = new OVALHandler(view, plugin);
+	OvalHandler ovalHandler = new OvalHandler(view, plugin, platforms);
 	for (String href : ovalHandler.getHrefs()) {
 	    IEngine engine = ovalHandler.getEngine(href);
 	    producer.sendNotify(Message.OVAL_ENGINE, engine);
@@ -401,11 +414,9 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	//
 	// Run the SCE scripts
 	//
-	if (plugin.getSession() instanceof ISession) {
-	    SCEHandler handler = new SCEHandler(view, (ISession)plugin.getSession(), plugin.getLogger());
-	    if (handler.ruleCount() > 0) {
-		handler.integrateResults(testResult, producer);
-	    }
+	SceHandler handler = new SceHandler(view, plugin, platforms);
+	if (handler.ruleCount() > 0) {
+	    handler.integrateResults(testResult, producer);
 	}
 	testResult.setEndTime(getTimestamp());
 	producer.sendNotify(Message.RULES_PHASE_END, null);
@@ -421,7 +432,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	BenchmarkType bt = benchmark.getBenchmark();
 	for (Model model : bt.getModel()) {
 	    ScoreKeeper sk = computeScore(resultMap, bt.getGroupOrRule(), ScoringModel.fromModel(model));
-	    ScoreType scoreType = factory.createScoreType();
+	    ScoreType scoreType = FACTORY.createScoreType();
 	    scoreType.setSystem(model.getSystem());
 	    String score = Float.toString(sk.getScore());
 	    scoreType.setValue(new BigDecimal(score));
@@ -437,7 +448,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      * Create a Benchmark.TestResult node, initialized with information gathered from the view and plugin.
      */
     private TestResultType initializeResult() throws OvalException {
-	TestResultType testResult = factory.createTestResultType();
+	TestResultType testResult = FACTORY.createTestResultType();
 	String id = benchmark.getId();
 	String name = "unknown";
 	String namespace = "unknown";
@@ -453,18 +464,18 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	testResult.setVersion(benchmark.getBenchmark().getVersion().getValue());
 	testResult.setTestSystem(PRODUCT_NAME);
 
-	TestResultType.Benchmark trb = factory.createTestResultTypeBenchmark();
+	TestResultType.Benchmark trb = FACTORY.createTestResultTypeBenchmark();
 	trb.setId(benchmark.getBenchmark().getBenchmarkId());
 	trb.setHref(benchmark.getHref());
 	testResult.setBenchmark(trb);
 	if (view.getProfile() != null) {
-	    IdrefType profileRef = factory.createIdrefType();
+	    IdrefType profileRef = FACTORY.createIdrefType();
 	    profileRef.setIdref(view.getProfile().getProfileId());
 	    testResult.setProfile(profileRef);
 	}
 	String user = plugin.getSession().getUsername();
 	if (user != null) {
-	    IdentityType identity = factory.createIdentityType();
+	    IdentityType identity = FACTORY.createIdentityType();
 	    identity.setValue(user);
 	    if ("root".equals(user) || "Administrator".equals(user)) {
 		identity.setPrivileged(true);
@@ -473,7 +484,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    testResult.setIdentity(identity);
 	}
 	for (String href : view.getCpePlatforms()) {
-	    CPE2IdrefType cpeRef = factory.createCPE2IdrefType();
+	    CPE2IdrefType cpeRef = FACTORY.createCPE2IdrefType();
 	    cpeRef.setIdref(href);
 	    testResult.getPlatform().add(cpeRef);
 	}
@@ -490,28 +501,25 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     }
 
     /**
-     * Test whether the XCCDF bundle's applicability rules are satisfied, i.e., at least one platform is applicable.
+     * Test the target against all the platforms defined in the view, and store the results indexed by CVE ID in the
+     * platforms map.
      */
-    private boolean isApplicable() throws Exception {
+    private void checkPlatforms() throws Exception {
 	phase = "discovery";
-	Collection<String> platforms = view.getCpePlatforms();
-	if (platforms.size() == 0) {
-	    logger.info("No platforms specified, skipping applicability checks...");
-	    return true;
-	}
-	boolean applicable = false;
-	for (String platform : platforms) {
-	    producer.sendNotify(Message.PLATFORM_CPE, platform);
+	platforms = new HashMap<String, Boolean>();
+	for (String cpeid : view.getCpePlatforms()) {
+	    producer.sendNotify(Message.PLATFORM_CPE, cpeid);
 	    try {
-		if (isApplicable(view.getCpeOval(platform))) {
-		    logger.info(JOVALMsg.STATUS_CPE_TARGET, plugin.getSession().getHostname(), platform);
-		    applicable = true;
+		if (isApplicable(view.getCpeOval(cpeid))) {
+		    logger.info(JOVALMsg.STATUS_CPE_TARGET, plugin.getSession().getHostname(), cpeid);
+		    platforms.put(cpeid, Boolean.TRUE);
+		} else {
+		    platforms.put(cpeid, Boolean.FALSE);
 		}
 	    } catch (NoSuchElementException e) {
 		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, e.getMessage()));
 	    }
 	}
-	return applicable;
     }
 
     /**
