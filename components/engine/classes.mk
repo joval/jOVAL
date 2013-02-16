@@ -81,6 +81,7 @@ CLASSES=\
 	org.joval.scap.xccdf.TestResult				\
 	org.joval.scap.xccdf.XccdfException			\
 	org.joval.scap.xccdf.engine.Engine			\
+	org.joval.scap.xccdf.engine.ISystem			\
 	org.joval.scap.xccdf.engine.OcilHandler			\
 	org.joval.scap.xccdf.engine.OvalHandler			\
 	org.joval.scap.xccdf.engine.RuleResult			\

@@ -3,15 +3,13 @@
 
 package org.joval.scap.xccdf.engine;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.slf4j.cal10n.LocLogger;
-
 import jsaf.intf.system.ISession;
-import jsaf.intf.util.ILoggable;
 
 import org.openscap.sce.xccdf.ScriptDataType;
 import org.openscap.sce.results.SceResultsType;
@@ -31,6 +29,7 @@ import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.xml.ITransformable;
 import org.joval.scap.sce.SceException;
 import org.joval.scap.sce.SCEScript;
 import org.joval.scap.xccdf.XccdfException;
@@ -44,160 +43,96 @@ import org.joval.util.Producer;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SceHandler implements ILoggable {
+public class SceHandler implements ISystem {
     public static final String NAMESPACE = SystemEnumeration.SCE.namespace();
 
     private IView view;
-    private ISession session;
-    private LocLogger logger;
-    private Map<String, Map<String, Script>> scriptTable;
+    private Producer<IEngine.Message> producer;
+    private Map<String, Script> scripts;
+    private Map<String, SceResultsType> results;
 
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
      */
-    public SceHandler(IView view, IPlugin plugin, Map<String, Boolean> platforms) {
+    public SceHandler(IView view, Producer<IEngine.Message> producer) {
 	this.view = view;
-	session = plugin.getSession();
-	logger = plugin.getLogger();
-	loadScripts(platforms);
+	this.producer = producer;
+	scripts = new HashMap<String, Script>();
     }
 
-    public int ruleCount() {
-	return scriptTable.size();
+    // Implement ISystem
+
+    public String getNamespace() {
+	return NAMESPACE;
     }
 
-    /**
-     * Run all the SCE scripts and integrate the results with the XCCDF results in one step.
-     */
-    public void integrateResults(TestResultType xccdfResult, Producer<IEngine.Message> producer) {
-	//
-	// Iterate through the rules and record the results
-	//
-	for (RuleType rule : view.getSelectedRules().values()) {
-	    String ruleId = rule.getId();
-	    if (scriptTable.containsKey(ruleId)) {
-		RuleResultType ruleResult = Engine.FACTORY.createRuleResultType();
-		ruleResult.setIdref(ruleId);
-		ruleResult.setWeight(rule.getWeight());
-		if (rule.isSetCheck()) {
-		    for (CheckType check : rule.getCheck()) {
-			if (NAMESPACE.equals(check.getSystem()) && scriptTable.containsKey(ruleId)) {
-			    RuleResult result = new RuleResult(check.getNegate());
-			    CheckType checkResult = Engine.FACTORY.createCheckType();
-
-			    boolean importStdout = false;
-			    for (CheckImportType cit : check.getCheckImport()) {
-				if ("stdout".equals(cit.getImportName())) {
-				    importStdout = true;
-				    break;
-				}
-			    }
-
-			    Map<String, Script> ruleScripts = scriptTable.get(ruleId);
-			    if (check.isSetCheckContentRef()) {
-				for (CheckContentRefType ref : check.getCheckContentRef()) {
-				    checkResult.getCheckContentRef().add(ref);
-				    if (ruleScripts.containsKey(ref.getHref())) {
-					Script rs = ruleScripts.get(ref.getHref());
-					try {
-					    producer.sendNotify(IEngine.Message.SCE_SCRIPT, ref.getHref());
-					    SceResultsType srt = new SCEScript(rs.getExports(), rs.getData(), session).exec();
-					    result.add(srt.getResult());
-					    if (importStdout) {
-						CheckImportType cit = Engine.FACTORY.createCheckImportType();
-						cit.setImportName("stdout");
-						cit.getContent().add(srt.getStdout());
-						checkResult.getCheckImport().add(cit);
-					    }
-					} catch (Exception e) {
-					    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-					    result.add(ResultEnumType.ERROR);
-					}
-				    }
-				}
-			    }
-			    if (check.isSetCheckExport()) {
-				checkResult.getCheckExport().addAll(check.getCheckExport());
-			    }
-			    ruleResult.getCheck().add(checkResult);
-
-			    switch(rule.getRole()) {
-			      case UNSCORED:
-				ruleResult.setResult(ResultEnumType.INFORMATIONAL);
-				break;
-			      case FULL:
-				ruleResult.setResult(result.getResult());
-				break;
-			      default:
-				throw new IllegalArgumentException(rule.getRole().toString());
-			    }
-			    xccdfResult.getRuleResult().add(ruleResult);
-			    break;
-			}
-		    }
+    public void add(CheckType check) throws Exception {
+	if (!NAMESPACE.equals(check.getSystem())) {
+	    throw new IllegalArgumentException(check.getSystem());
+	}
+	for (CheckContentRefType ref : check.getCheckContentRef()) {
+	    if (ref.isSetHref()) {
+		String scriptId = ref.getHref();
+		Map<String, String> exports = new HashMap<String, String>();
+		for (CheckExportType export : check.getCheckExport()) {
+		    exports.put(export.getExportName(), getSingleValue(export.getValueId()));
 		}
+		scripts.put(scriptId, new Script(scriptId, exports));
 	    }
 	}
     }
 
-    // Implement ILoggable
-
-    public void setLogger(LocLogger logger) {
-	this.logger = logger;
+    public Collection<ITransformable> exec(IPlugin plugin) throws Exception {
+	Collection<ITransformable> reports = new ArrayList<ITransformable>();
+	results = new HashMap<String, SceResultsType>();
+	ISession session = plugin.getSession();
+	for (Map.Entry<String, Script> entry : scripts.entrySet()) {
+	    Script rs = entry.getValue();
+	    producer.sendNotify(IEngine.Message.SCE_SCRIPT, entry.getKey());
+//DAS: TBD create an ITransformable to contain the SceResultsType...
+	    SceResultsType srt = new SCEScript(rs.getExports(), rs.getData(), session).exec();
+	    results.put(entry.getKey(), srt);
+	}
+	return reports;
     }
 
-    public LocLogger getLogger() {
-	return logger;
+    public Object getResult(CheckType check) throws Exception {
+	if (!NAMESPACE.equals(check.getSystem())) {
+	    throw new IllegalArgumentException(check.getSystem());
+	}
+
+	boolean importStdout = false;
+	for (CheckImportType cit : check.getCheckImport()) {
+	    if ("stdout".equals(cit.getImportName())) {
+		importStdout = true;
+		break;
+	    }
+	}
+
+	RuleResult result = new RuleResult(check.getNegate());
+	if (check.isSetCheckContentRef()) {
+	    for (CheckContentRefType ref : check.getCheckContentRef()) {
+		if (results.containsKey(ref.getHref())) {
+		    SceResultsType srt = results.get(ref.getHref());
+		    result.add(srt.getResult());
+
+		    // DAS: need a mechanism to return the CheckType back to the engine...
+		    CheckType checkResult = Engine.FACTORY.createCheckType();
+		    checkResult.getCheckContentRef().add(ref);
+		    checkResult.getCheckExport().addAll(check.getCheckExport());
+		    if (importStdout) {
+			CheckImportType cit = Engine.FACTORY.createCheckImportType();
+			cit.setImportName("stdout");
+			cit.getContent().add(srt.getStdout());
+			checkResult.getCheckImport().add(cit);
+		    }
+		}
+	    }
+	}
+	return result.getResult();
     }
 
     // Private
-
-    /**
-     * Create a list of SCE scripts that should be executed based on the view.
-     */
-    private void loadScripts(Map<String, Boolean> platforms) {
-	scriptTable = new HashMap<String, Map<String, Script>>();
-	for (RuleType rule : view.getSelectedRules().values()) {
-	    //
-	    // Check that at least one platform applies to the rule
-	    //
-	    boolean platformCheck = rule.getPlatform().size() == 0;
-	    for (OverrideableCPE2IdrefType cpe : rule.getPlatform()) {
-		if (platforms.get(cpe.getIdref()).booleanValue()) {
-		    platformCheck = true;
-		    break;
-		}
-	    }
-	    if (platformCheck && rule.isSetCheck() && rule.getRole() != RoleEnumType.UNCHECKED) {
-		String ruleId = rule.getId();
-		for (CheckType check : rule.getCheck()) {
-		    if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
-			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    if (ref.isSetHref()) {
-				String scriptId = ref.getHref();
-				try {
-				    Map<String, String> exports = new HashMap<String, String>();
-				    for (CheckExportType export : check.getCheckExport()) {
-					exports.put(export.getExportName(), getSingleValue(export.getValueId()));
-				    }
-				    if (!scriptTable.containsKey(ruleId)) {
-					scriptTable.put(ruleId, new HashMap<String, Script>());
-				    }
-				    scriptTable.get(ruleId).put(scriptId, new Script(scriptId, exports));
-				} catch (IllegalArgumentException e) {
-				    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-				} catch (SceException e) {
-				    logger.warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-				} catch (NoSuchElementException e) {
-				    logger.warn(JOVALMsg.ERROR_XCCDF_MISSING_PART, scriptId);
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	}
-    }
 
     private String getSingleValue(String id) throws SceException {
 	Collection<String> values = view.getValues().get(id);

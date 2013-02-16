@@ -50,8 +50,11 @@ import scap.xccdf.IdrefType;
 import scap.xccdf.IdentityType;
 import scap.xccdf.Model;
 import scap.xccdf.ObjectFactory;
+import scap.xccdf.OverrideableCPE2IdrefType;
+import scap.xccdf.ProfileSetComplexValueType;
 import scap.xccdf.ProfileSetValueType;
 import scap.xccdf.ProfileType;
+import scap.xccdf.RoleEnumType;
 import scap.xccdf.RuleResultType;
 import scap.xccdf.RuleType;
 import scap.xccdf.ResultEnumType;
@@ -272,7 +275,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		    selectedIds.add(rule.getId());
 		}
 		if (checklists.size() == 0) {
-		    if (new OcilHandler(view).exportFiles(producer)) {
+		    if (OcilHandler.exportFiles(view, producer)) {
 			throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_REQUIRED));
 		    }
 		}
@@ -377,44 +380,88 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	testResult.setStartTime(getTimestamp());
 
 	//
-	// Integrate OCIL results
+	// Add all the selected values to the results
 	//
-	if (checklists != null) {
-	    OcilHandler ocilHandler = new OcilHandler(view, checklists);
-	    ocilHandler.integrateResults(testResult);
-	    for (IChecklist checklist : checklists.values()) {
-		reports.add(checklist);
+	for (Map.Entry<String, Collection<String>> entry : view.getValues().entrySet()) {
+	    if (entry.getValue().size() == 1) {
+		ProfileSetValueType val = FACTORY.createProfileSetValueType();
+		val.setIdref(entry.getKey());
+		val.setValue(entry.getValue().iterator().next());
+		testResult.getSetValueOrSetComplexValue().add(val);
+	    } else {
+		ProfileSetComplexValueType val = FACTORY.createProfileSetComplexValueType();
+		val.setIdref(entry.getKey());
+		val.getItem().addAll(entry.getValue());
+		testResult.getSetValueOrSetComplexValue().add(val);
 	    }
 	}
 
+	Map<String, ISystem> handlers = new HashMap<String, ISystem>();
+	if (checklists.size() > 0) {
+	    OcilHandler ocil = new OcilHandler(view, checklists);
+	    ocil.setStartTime(testResult);
+	    handlers.put(ocil.getNamespace(), ocil);
+	}
+	ISystem oval = new OvalHandler(view, producer);
+	handlers.put(oval.getNamespace(), oval);
+	ISystem sce = new SceHandler(view, producer);
+	handlers.put(sce.getNamespace(), sce);
+
 	//
-	// Run the OVAL engines
+	// TBD (DAS): add complex check support
 	//
-	OvalHandler ovalHandler = new OvalHandler(view, plugin, platforms);
-	for (String href : ovalHandler.getHrefs()) {
+	for (RuleType rule : view.getSelectedRules().values()) {
+	    //
+	    // Check that at least one platform applies to the rule
+	    //
+	    boolean platformCheck = rule.getPlatform().size() == 0;
+	    for (OverrideableCPE2IdrefType cpe : rule.getPlatform()) {
+		if (platforms.get(cpe.getIdref()).booleanValue()) {
+		    platformCheck = true;
+		    break;
+		}
+	    }
+	    if (platformCheck && rule.getRole() != RoleEnumType.UNCHECKED && !rule.getAbstract()) {
+		for (CheckType check : rule.getCheck()) {
+		    if (handlers.containsKey(check.getSystem())) {
+			handlers.get(check.getSystem()).add(check);
+			break;
+		    }
+		}
+	    }
+	}
+	for (ISystem handler : handlers.values()) {
 	    if (abort) {
 		throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
 	    }
-	    IEngine engine = ovalHandler.getEngine(href);
-	    producer.sendNotify(Message.OVAL_ENGINE, engine);
-	    engine.run();
-	    switch(engine.getResult()) {
-	      case OK:
-		reports.add(engine.getResults());
-		break;
-	      case ERR:
-		throw engine.getError();
+	    reports.addAll(handler.exec(plugin));
+	}
+	for (RuleType rule : view.getSelectedRules().values()) {
+	    for (CheckType check : rule.getCheck()) {
+		if (handlers.containsKey(check.getSystem())) {
+		    Object obj = handlers.get(check.getSystem()).getResult(check);
+		    if (obj instanceof ResultEnumType) {
+			RuleResultType result = Engine.FACTORY.createRuleResultType();
+			result.setIdref(rule.getId());
+			result.setWeight(rule.getWeight());
+			result.getCheck().add(check);
+			result.setResult(getResult(rule.getRole(), (ResultEnumType)obj));
+			testResult.getRuleResult().add(result);
+		    } else {
+			@SuppressWarnings("unchecked")
+			Collection<RuleResultType> results = (Collection<RuleResultType>)obj;
+			for (RuleResultType result : results) {
+			    result.setIdref(rule.getId());
+			    result.setWeight(rule.getWeight());
+			    result.setResult(getResult(rule.getRole(), result.getResult()));
+			    testResult.getRuleResult().add(result);
+			}
+		    }
+		    break;
+		}
 	    }
 	}
-	ovalHandler.integrateResults(testResult);
 
-	//
-	// Run the SCE scripts
-	//
-	SceHandler handler = new SceHandler(view, plugin, platforms);
-	if (handler.ruleCount() > 0) {
-	    handler.integrateResults(testResult, producer);
-	}
 	testResult.setEndTime(getTimestamp());
 	producer.sendNotify(Message.RULES_PHASE_END, null);
 
@@ -439,6 +486,20 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    testResult.getScore().add(scoreType);
 	    logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.getSystem(), score);
 	}
+    }
+
+    /**
+     * Change a ResultEnumType if required by the role.
+     */
+    private ResultEnumType getResult(RoleEnumType role, ResultEnumType result) {
+        switch(role) {
+          case UNSCORED:
+            return ResultEnumType.INFORMATIONAL;
+          case FULL:
+            return result;
+          default:
+            throw new IllegalArgumentException(role.toString());
+        }
     }
 
     /**

@@ -4,6 +4,7 @@
 package org.joval.scap.xccdf.engine;
 
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -38,11 +39,14 @@ import org.joval.intf.scap.oval.IEngine;
 import org.joval.intf.scap.oval.IResults;
 import org.joval.intf.scap.oval.IVariables;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.scap.xccdf.IEngine.Message;
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.xml.ITransformable;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.scap.xccdf.engine.RuleResult;
+import org.joval.util.Producer;
 
 /**
  * XCCDF helper class for OVAL processing.
@@ -50,209 +54,147 @@ import org.joval.scap.xccdf.engine.RuleResult;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class OvalHandler {
-    public static final String NAMESPACE = SystemEnumeration.OVAL.namespace();
+public class OvalHandler implements ISystem {
+    private static final String NAMESPACE = SystemEnumeration.OVAL.namespace();
 
-    private IView view;
     private Map<String, EngineData> engines;
+    private IView view;
+    private Producer<Message> producer;
 
-    /**
-     * Create an OVAL handler utility for the given XCCDF and Profile. An OVAL engine will be created for every
-     * discrete OVAL href referenced by a profile-selected check in the XCCDF document.
-     */
-    public OvalHandler(IView view, IPlugin plugin, Map<String, Boolean> platforms) throws Exception {
+    public OvalHandler(IView view, Producer<Message> producer) {
 	this.view = view;
-
+	this.producer = producer;
 	engines = new HashMap<String, EngineData>();
-	for (RuleType rule : view.getSelectedRules().values()) {
-	    //
-	    // Check that at least one platform applies to the rule
-	    //
-	    boolean platformCheck = rule.getPlatform().size() == 0;
-	    for (OverrideableCPE2IdrefType cpe : rule.getPlatform()) {
-		if (platforms.get(cpe.getIdref()).booleanValue()) {
-		    platformCheck = true;
-		    break;
-		}
-	    }
-	    if (platformCheck && rule.isSetCheck() && rule.getRole() != RoleEnumType.UNCHECKED) {
-		//
-		// For each checkable rule, collect the data required to build the OVAL engine that will process its
-		// referenced content.
-		//
-		for (CheckType check : rule.getCheck()) {
-		    if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {
-			if (check.isSetCheckContent()) {
-			    // TBD (DAS): inline content is not supported
-			}
+    }
 
-			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    if (ref.isSetHref()) {
-				String href = ref.getHref();
-				EngineData ed = null;
-				if (engines.containsKey(href)) {
-				    ed = engines.get(href);
-				} else {
-				    ed = new EngineData(view.getStream().getOval(href));
-				    engines.put(href, ed);
-				}
+    // Implement ISystem
 
-				//
-				// Add definition references to the filter
-				//
-				if (ref.isSetName()) {
-				    ed.getFilter().addDefinition(ref.getName());
-				} else {
-				    //
-				    // Add all the definitions
-				    //
-				    IDefinitions definitions = view.getStream().getOval(href);
-				    for (scap.oval.definitions.core.DefinitionType definition :
-					 definitions.getOvalDefinitions().getDefinitions().getDefinition()) {
-					ed.getFilter().addDefinition(definition.getId());
-				    }
-				}
+    public String getNamespace() {
+	return NAMESPACE;
+    }
 
-				//
-				// Add variable exports to the variables
-				//
-				for (CheckExportType export : check.getCheckExport()) {
-				    String ovalVariableId = export.getExportName();
-				    String valueId = export.getValueId();
-				    for (String s : view.getValues().get(valueId)) {
-					ed.getVariables().addValue(ovalVariableId, s);
-				    }
-				    ed.getVariables().setComment(ovalVariableId, valueId);
-				}
-			    }
-			}
-			break;
-		    }
-		}
-	    }
+    public void add(CheckType check) throws Exception {
+	if (!NAMESPACE.equals(check.getSystem())) {
+	    throw new IllegalArgumentException(check.getSystem());
+	}
+	if (check.isSetCheckContent()) {
+	    // TBD (DAS): inline content is not supported
 	}
 
-	//
-	// Create an OVAL engine to process the selected checks for each OVAL document href
-	//
+	for (CheckContentRefType ref : check.getCheckContentRef()) {
+	    String href = ref.getHref();
+	    EngineData ed = null;
+	    if (engines.containsKey(href)) {
+		ed = engines.get(href);
+	    } else {
+		try {
+		    ed = new EngineData(view.getStream().getOval(href));
+		    engines.put(href, ed);
+		} catch (NoSuchElementException e) {
+		    continue;
+		}
+	    }
+
+	    //
+	    // Add definition references to the filter
+	    //
+	    if (ref.isSetName()) {
+		ed.getFilter().addDefinition(ref.getName());
+	    } else {
+		//
+		// Add all the definitions
+		//
+		IDefinitions definitions = view.getStream().getOval(href);
+		for (scap.oval.definitions.core.DefinitionType definition :
+		     definitions.getOvalDefinitions().getDefinitions().getDefinition()) {
+		    ed.getFilter().addDefinition(definition.getId());
+		}
+	    }
+
+	    //
+	    // Add variable exports to the variables
+	    //
+	    for (CheckExportType export : check.getCheckExport()) {
+		String ovalVariableId = export.getExportName();
+		String valueId = export.getValueId();
+		for (String s : view.getValues().get(valueId)) {
+		    ed.getVariables().addValue(ovalVariableId, s);
+		}
+		ed.getVariables().setComment(ovalVariableId, valueId);
+	    }
+	}
+    }
+
+    public Collection<ITransformable> exec(IPlugin plugin) throws Exception {
+	Collection<ITransformable> reports = new ArrayList<ITransformable>();
 	Iterator<Map.Entry<String, EngineData>> iter = engines.entrySet().iterator();
 	while(iter.hasNext()) {
 	    Map.Entry<String, EngineData> entry = iter.next();
 	    if (entry.getValue().createEngine(plugin)) {
 		plugin.getLogger().info("Created engine for href " + entry.getKey());
+		IEngine engine = entry.getValue().getEngine();
+		producer.sendNotify(Message.OVAL_ENGINE, engine);
+		engine.run();
+		switch(engine.getResult()) {
+	  	  case OK:
+		    reports.add(engine.getResults());
+		    break;
+	  	  case ERR:
+		    throw engine.getError();
+		}
 	    } else {
 		plugin.getLogger().info("No engine created for href " + entry.getKey());
 		iter.remove();
 	    }
 	}
+	return reports;
     }
 
-    /**
-     * Get all the engines, to observe and run them.
-     */
-    public Collection<String> getHrefs() {
-	return engines.keySet();
-    }
-
-    /**
-     * Return the engine used to process the document href.
-     */
-    public IEngine getEngine(String href) throws NoSuchElementException {
-	if (engines.containsKey(href)) {
-	    return engines.get(href).getEngine();
-	} else {
-	    throw new NoSuchElementException(href);
+    public Object getResult(CheckType check) throws Exception {
+	if (!NAMESPACE.equals(check.getSystem())) {
+	    throw new IllegalArgumentException(check.getSystem());
 	}
-    }
 
-    /**
-     * Integrate all the OVAL results with the XCCDF results.
-     */
-    public void integrateResults(TestResultType xccdfResult) throws OvalException {
-	for (String href : engines.keySet()) {
-	    for (VariableType var : engines.get(href).getVariables().getOvalVariables().getVariables().getVariable()) {
-		ProfileSetValueType val = Engine.FACTORY.createProfileSetValueType();
-		val.setIdref(var.getComment());
-		if (var.isSetValue() && var.getValue().size() > 0 && var.getValue().get(0) != null) {
-		    val.setValue(var.getValue().get(0).toString());
-		    xccdfResult.getSetValueOrSetComplexValue().add(val);
+	for (CheckContentRefType ref : check.getCheckContentRef()) {
+	    if (engines.containsKey(ref.getHref())) {
+		IResults ovalResult = engines.get(ref.getHref()).getEngine().getResults();
+		if (ref.isSetName()) {
+		    try {
+			return convertResult(ovalResult.getDefinitionResult(ref.getName()));
+		    } catch (NoSuchElementException e) {
+			return ResultEnumType.UNKNOWN;
+		    }
+		} else if (check.getMultiCheck()) {
+		    //
+		    // @multicheck=true means a rule-result for each contained OVAL result
+		    //
+		    Collection<RuleResultType> results = new ArrayList<RuleResultType>();
+		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
+			RuleResultType rrt = Engine.FACTORY.createRuleResultType();
+			rrt.getCheck().add(check);
+			rrt.setResult(convertResult(def.getResult()));
+			InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
+			inst.setValue(def.getDefinitionId());
+			rrt.getInstance().add(inst);
+			results.add(rrt);
+		    }
+		    return results;
+		} else {
+		    //
+		    // Return a single aggregated result.
+		    //
+		    RuleResult result = new RuleResult(check.getNegate());
+		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
+			result.add(convertResult(def.getResult()));
+		    }
+		    return result.getResult();
 		}
 	    }
-	    integrateResults(href, engines.get(href).getEngine().getResults(), xccdfResult);
 	}
+	return ResultEnumType.UNKNOWN;
     }
 
     // Private
-
-    /**
-     * Integrate the OVAL results with the XCCDF results, assuming the OVAL results contain information pertaining to
-     * the selected rules in the view.
-     */
-    private void integrateResults(String href, IResults ovalResult, TestResultType xccdfResult) throws OvalException {
-	//
-	// Iterate through the rules and record the results
-	//
-	for (RuleType rule : view.getSelectedRules().values()) {
-	    String ruleId = rule.getId();
-	    if (rule.isSetCheck()) {
-		for (CheckType check : rule.getCheck()) {
-		    if (NAMESPACE.equals(check.getSystem())) {
-			RuleResultType ruleResult = Engine.FACTORY.createRuleResultType();
-			ruleResult.setIdref(ruleId);
-			ruleResult.setWeight(rule.getWeight());
-			ruleResult.getCheck().add(check);
-			RuleResult result = new RuleResult(check.getNegate());
-			for (CheckContentRefType ref : check.getCheckContentRef()) {
-			    if (ref.isSetHref() && ref.getHref().equals(href)) {
-				if (ref.isSetName()) {
-				    try {
-					result.add(convertResult(ovalResult.getDefinitionResult(ref.getName())));
-				    } catch (NoSuchElementException e) {
-					result.add(ResultEnumType.UNKNOWN);
-				    }
-				    ruleResult.setResult(getResult(rule.getRole(), result.getResult()));
-				    xccdfResult.getRuleResult().add(ruleResult);
-				} else if (check.isSetMultiCheck() && check.getMultiCheck()) {
-				    //
-				    // @multicheck=true means a rule-result for each contained OVAL result
-				    //
-				    for (DefinitionType def : ovalResult.getDefinitionResults()) {
-					RuleResultType rrt = Engine.FACTORY.createRuleResultType();
-					rrt.setIdref(ruleId);
-					rrt.setWeight(rule.getWeight());
-					rrt.getCheck().add(check);
-					rrt.setResult(getResult(rule.getRole(), convertResult(def.getResult())));
-					InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
-					inst.setValue(def.getDefinitionId());
-					rrt.getInstance().add(inst);
-					xccdfResult.getRuleResult().add(rrt);
-				    }
-				} else {
-				    for (DefinitionType def : ovalResult.getDefinitionResults()) {
-					result.add(convertResult(def.getResult()));
-				    }
-				    ruleResult.setResult(getResult(rule.getRole(), result.getResult()));
-				    xccdfResult.getRuleResult().add(ruleResult);
-				}
-				break;
-			    }
-			}
-		    }
-		}
-	    }
-	}
-    }
-
-    private ResultEnumType getResult(RoleEnumType role, ResultEnumType result) {
-	switch(role) {
-	  case UNSCORED:
-	    return ResultEnumType.INFORMATIONAL;
-	  case FULL:
-	    return result;
-	  default:
-	    throw new IllegalArgumentException(role.toString());
-	}
-    }
 
     /**
      * Map an OVAL result to an XCCDF result.

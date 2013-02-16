@@ -4,6 +4,7 @@
 package org.joval.scap.xccdf.engine;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,11 +26,13 @@ import scap.xccdf.RuleResultType;
 import scap.xccdf.RuleType;
 import scap.xccdf.TestResultType;
 
+import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.ocil.IVariables;
 import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.intf.xml.ITransformable;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.ocil.Variables;
 import org.joval.scap.xccdf.XccdfException;
@@ -43,36 +46,96 @@ import org.joval.util.Producer;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class OcilHandler {
+public class OcilHandler implements ISystem {
     public static final String NAMESPACE = SystemEnumeration.OCIL.namespace();
+
+    /**
+     * Export relevant OCIL files to the specified directory. Returns false if there are no OCIL checks in the view.
+     */
+    public static boolean exportFiles(IView view, Producer<IEngine.Message> producer) throws OcilException {
+	Collection<String> hrefs = new HashSet<String>();
+	Map<String, Variables> variables = new HashMap<String, Variables>();
+	for (RuleType rule : view.getSelectedRules().values()) {
+	    for (CheckType check : rule.getCheck()) {
+		if (check.getSystem().equals(NAMESPACE)) {
+		    if (check.isSetCheckContentRef()) {
+			Variables vars = null;
+			for (CheckContentRefType ref : check.getCheckContentRef()) {
+			    hrefs.add(ref.getHref());
+			    if (variables.containsKey(ref.getHref())) {
+				vars = variables.get(ref.getHref());
+			    } else {
+				vars = new Variables();
+				variables.put(ref.getHref(), vars);
+			    }
+			    for (CheckExportType export : check.getCheckExport()) {
+				String ocilVariableId = export.getExportName();
+				String valueId = export.getValueId();
+				for (String s : view.getValues().get(valueId)) {
+				    vars.addValue(ocilVariableId, s);
+				}
+				vars.setComment(ocilVariableId, valueId);
+			    }
+			}
+		    }
+		    break;
+		}
+	    }
+	}
+
+	if (hrefs.size() == 0) {
+	    return false;
+	}
+
+	//
+	// Export variables and OCIL XML for each HREF in the view.
+	//
+	for (String href : hrefs) {
+	    try {
+		IChecklist checklist = view.getStream().getOcil(href);
+		IVariables vars = variables.get(href);
+		producer.sendNotify(IEngine.Message.OCIL_MISSING, new Argument(href, checklist, vars));
+	    } catch (NoSuchElementException e) {
+		e.printStackTrace();
+	    } catch (OcilException e) {
+		e.printStackTrace();
+	    }
+	}
+	return true;
+    }
 
     private IView view;
     private XMLGregorianCalendar startTime;
     private Map<String, Map<String, String>> results;
-    private Map<String, Variables> variables;
+    private Collection<ITransformable> reports;
 
     /**
-     * Create an OCIL handler utility for the given XCCDF, Profile and href-indexed Checklists (results).
+     * Create an OCIL handler utility for the given view and href-indexed Checklists (results).
      */
     public OcilHandler(IView view, Map<String, IChecklist> checklists) throws IllegalArgumentException {
 	this.view = view;
 	results = new HashMap<String, Map<String, String>>();
+	reports = new ArrayList<ITransformable>();
 
-	for (String href : checklists.keySet()) {
-	    IChecklist checklist = checklists.get(href);
+	if (checklists.size() == 1 && "".equals(checklists.keySet().iterator().next())) {
+	    //
+	    // If there is only one checklist, with no href specified, then use it as the checklist for all the OCIL
+	    // hrefs in the XCCDF.
+	    //
+	    IChecklist checklist = checklists.values().iterator().next();
+	    reports.add(checklist);
 
-	    //
-	    // If the HREF was not specified, then discover the singleton HREF, or throw an error.
-	    //
-	    if ("".equals(href)) {
-		Collection<String> hrefs = getOcilHrefs();
-		if (checklists.size() == 1 && hrefs.size() == 1) {
-		    href = hrefs.iterator().next();
-		} else {
-		    throw new IllegalArgumentException("href");
-		}
+	    checklists = new HashMap<String, IChecklist>();
+	    for (String href : getOcilHrefs()) {
+		checklists.put(href, checklist);
 	    }
+	} else {
+	    reports.addAll(checklists.values());
+	}
 
+	for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
+	    String href = entry.getKey();
+	    IChecklist checklist = entry.getValue();
 	    if (checklist.getOCILType().isSetResults()) {
 		ResultsType rt = checklist.getOCILType().getResults();
 
@@ -100,53 +163,9 @@ public class OcilHandler {
     }
 
     /**
-     * Create an OCIL handler utility for the given XCCDF, Profile and OCIL export directory.
+     * Set the XCCDF test start time to the lesser of the OCIL start time, or the existing XCCDF start time.
      */
-    public OcilHandler(IView view) {
-	this.view = view;
-	variables = new HashMap<String, Variables>();
-    }
-
-    /**
-     * Export relevant OCIL files to the specified directory. Returns false if there are no OCIL checks in the view.
-     */
-    public boolean exportFiles(Producer<IEngine.Message> producer) {
-	HashSet<String> ocilHrefs = getOcilHrefs();
-	if (ocilHrefs.size() == 0) {
-	    //
-	    // There are no OCIL files to export
-	    //
-	    return false;
-	}
-
-	//
-	// Export variables and OCIL XML for each HREF in the view.
-	//
-	for (String href : ocilHrefs) {
-	    try {
-		IChecklist checklist = view.getStream().getOcil(href);
-		IVariables variables = getVariables(href);
-		producer.sendNotify(IEngine.Message.OCIL_MISSING, new Argument(href, checklist, variables));
-	    } catch (NoSuchElementException e) {
-		e.printStackTrace();
-	    } catch (OcilException e) {
-		e.printStackTrace();
-	    }
-	}
-	return true;
-    }
-
-    /**
-     * Integrate all the OCIL results with the XCCDF results.
-     */
-    public void integrateResults(TestResultType xccdfResult) {
-	if (results == null) {
-	    return;
-	}
-
-	//
-	// Set the XCCDF test start time to the lesser of the OCIL start time, or the existing XCCDF start time.
-	//
+    public void setStartTime(TestResultType xccdfResult) {
 	if (startTime != null) {
 	    if (xccdfResult.isSetStartTime()) {
 		if (startTime.toGregorianCalendar().compareTo(xccdfResult.getStartTime().toGregorianCalendar()) < 0) {
@@ -156,67 +175,58 @@ public class OcilHandler {
 		xccdfResult.setStartTime(startTime);
 	    }
 	}
+    }
 
-	//
-	// Iterate through the rules and record the results
-	//
-	for (RuleType rule : view.getSelectedRules().values()) {
-	    String ruleId = rule.getId();
-	    if (rule.isSetCheck()) {
-		for (CheckType check : rule.getCheck()) {
-		    if (NAMESPACE.equals(check.getSystem())) {
-			if (check.isSetCheckContentRef()) {
-			    RuleResultType ruleResult = Engine.FACTORY.createRuleResultType();
-			    ruleResult.setIdref(ruleId);
-			    ruleResult.setWeight(rule.getWeight());
-			    RuleResult result = new RuleResult(check.getNegate());
-			    for (CheckContentRefType ref : check.getCheckContentRef()) {
-				if (ref.isSetHref() && ref.isSetName()) {
-				    String href = ref.getHref();
-				    String name = ref.getName();
-				    if (results.containsKey(href) && results.get(href).containsKey(name)) {
-					String qr = results.get(href).get(name);
-					if ("PASS".equals(qr)) {
-					    result.add(ResultEnumType.PASS);
-					} else if ("FAIL".equals(qr)) {
-					    result.add(ResultEnumType.FAIL);
-					} else if (qr.equals(ExceptionalResultType.UNKNOWN.value())) {
-					    result.add(ResultEnumType.UNKNOWN);
-					} else if (qr.equals(ExceptionalResultType.ERROR.value())) {
-					    result.add(ResultEnumType.ERROR);
-					} else if (qr.equals(ExceptionalResultType.NOT_TESTED.value())) {
-					    result.add(ResultEnumType.NOTCHECKED);
-					} else if (qr.equals(ExceptionalResultType.NOT_APPLICABLE.value())) {
-					    result.add(ResultEnumType.NOTAPPLICABLE);
-					}
-				    } else {
-					result.add(ResultEnumType.NOTCHECKED);
-				    }
-				}
-			    }
-			    ruleResult.getCheck().add(check);
-			    switch(rule.getRole()) {
-			      case UNCHECKED:
-				ruleResult.setResult(ResultEnumType.NOTCHECKED);
-				break;
-			      case UNSCORED:
-				ruleResult.setResult(ResultEnumType.INFORMATIONAL);
-				break;
-			      case FULL:
-				ruleResult.setResult(result.getResult());
-				break;
-			    }
-			    xccdfResult.getRuleResult().add(ruleResult);
-			}
+    // Implement ISystem
+
+    public String getNamespace() {
+	return NAMESPACE;
+    }
+
+    public void add(CheckType check) {
+	// No-op
+    }
+
+    public Collection<ITransformable> exec(IPlugin plugin) {
+	return reports;
+    }
+
+    public Object getResult(CheckType check) throws Exception {
+	if (!NAMESPACE.equals(check.getSystem())) {
+	    throw new IllegalArgumentException(check.getSystem());
+	}
+
+	RuleResult result = new RuleResult(check.getNegate());
+	for (CheckContentRefType ref : check.getCheckContentRef()) {
+	    if (ref.isSetHref() && ref.isSetName()) {
+		String href = ref.getHref();
+		String name = ref.getName();
+		if (results.containsKey(href) && results.get(href).containsKey(name)) {
+		    String qr = results.get(href).get(name);
+		    if ("PASS".equals(qr)) {
+			result.add(ResultEnumType.PASS);
+		    } else if ("FAIL".equals(qr)) {
+			result.add(ResultEnumType.FAIL);
+		    } else if (qr.equals(ExceptionalResultType.UNKNOWN.value())) {
+			result.add(ResultEnumType.UNKNOWN);
+		    } else if (qr.equals(ExceptionalResultType.ERROR.value())) {
+			result.add(ResultEnumType.ERROR);
+		    } else if (qr.equals(ExceptionalResultType.NOT_TESTED.value())) {
+			result.add(ResultEnumType.NOTCHECKED);
+		    } else if (qr.equals(ExceptionalResultType.NOT_APPLICABLE.value())) {
+			result.add(ResultEnumType.NOTAPPLICABLE);
 		    }
+		} else {
+		    result.add(ResultEnumType.NOTCHECKED);
 		}
 	    }
 	}
+	return result.getResult();
     }
 
     // Internal
 
-    class Argument implements IEngine.OcilMessageArgument {
+    static class Argument implements IEngine.OcilMessageArgument {
 	private String href;
 	private IChecklist checklist;
 	private IVariables variables;
@@ -245,45 +255,6 @@ public class OcilHandler {
     // Private
 
     /**
-     * Gather all the variable exports for OCIL checks for the specified href from the selected rules in the view,
-     * and create an OCIL variables structure containing their values.
-     */
-    private Variables getVariables(String href) throws OcilException {
-	if (!variables.containsKey(href)) {
-	    Variables vars = new Variables();
-	    Collection<RuleType> rules = view.getSelectedRules().values();
-	    Map<String, Collection<String>> values = view.getValues();
-	    for (RuleType rule : rules) {
-		if (rule.isSetCheck()) {
-		    for (CheckType check : rule.getCheck()) {
-			if (check.getSystem().equals(NAMESPACE)) {
-			    if (check.isSetCheckContentRef()) {
-				boolean match = false;
-				for (CheckContentRefType ref : check.getCheckContentRef()) {
-				    if (ref.getHref().equals(href)) {
-					match = true;
-					break;
-				    }
-				}
-				if (match) {
-				    for (CheckExportType export : check.getCheckExport()) {
-					String ocilVariableId = export.getExportName();
-					String valueId = export.getValueId();
-					vars.addValue(ocilVariableId, getSingleValue(valueId));
-					vars.setComment(ocilVariableId, valueId);
-				    }
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	    variables.put(href, vars);
-	}
-	return variables.get(href);
-    }
-
-    /**
      * Gather all the hrefs of all the OCIL check references.
      */
     private HashSet<String> getOcilHrefs() {
@@ -300,14 +271,5 @@ public class OcilHandler {
 	    }
 	}
 	return hrefs;
-    }
-
-    private String getSingleValue(String id) throws OcilException {
-	Collection<String> values = view.getValues().get(id);
-	if (values.size() == 1) {
-	    return values.iterator().next();
-	} else {
-	    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_VARS, id, values.size()));
-	}
     }
 }
