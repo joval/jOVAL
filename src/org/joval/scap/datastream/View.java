@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -59,7 +60,7 @@ public class View implements IView {
     private Datastream stream;
     private IBenchmark benchmark;
     private BenchmarkType bt;
-    private HashSet<RuleType> rules;
+    private Map<String, RuleType> rules;
     private Map<String, Map<String, Collection<String>>> platforms;
     private Map<String, Collection<String>> values = null;
 
@@ -80,7 +81,7 @@ public class View implements IView {
 	}
 
 	values = new HashMap<String, Collection<String>>();
-	rules = new HashSet<RuleType>();
+	rules = new HashMap<String, RuleType>();
 
 	//
 	// If a named profile is specified, then gather all the selections and values associated with it.
@@ -111,8 +112,8 @@ public class View implements IView {
 		    ProfileRefineValueType refine = (ProfileRefineValueType)obj;
 		    valueSelectors.put(refine.getIdref(), refine.getSelector());
 		} else if (obj instanceof ProfileRefineRuleType) {
-		    ProfileRefineRuleType rule = (ProfileRefineRuleType)obj;
-		    refinements.put(rule.getIdref(), rule);
+		    ProfileRefineRuleType refine = (ProfileRefineRuleType)obj;
+		    refinements.put(refine.getIdref(), refine);
 		}
 	    }
 	}
@@ -133,7 +134,7 @@ public class View implements IView {
 	    } else if (item instanceof RuleType) {
 		RuleType rule = resolve((RuleType)item, refinements);
 		if (!rule.getAbstract()) {
-		    rules.add(rule);
+		    rules.put(rule.getId(), rule);
 		}
 	    }
 	}
@@ -192,7 +193,7 @@ public class View implements IView {
 	return values;
     }
 
-    public Collection<RuleType> getSelectedRules() {
+    public Map<String, RuleType> getSelectedRules() {
 	return rules;
     }
 
@@ -346,6 +347,8 @@ public class View implements IView {
 	String ruleId = base.getId();
 	RuleType rule = FACTORY.createRuleType();
 
+//TBD (DAS) need to inherit some things from the enclosing group
+
 	//
 	// Inheritance
 	//
@@ -357,6 +360,7 @@ public class View implements IView {
 	    rule.getCheck().addAll(parent.getCheck());
 	    rule.setComplexCheck(parent.getComplexCheck());
 	    rule.setWeight(parent.getWeight());
+	    rule.setRole(parent.getRole());
 	    rule.getPlatform().addAll(parent.getPlatform());
 	}
 
@@ -379,6 +383,9 @@ public class View implements IView {
 	if (base.isSetWeight()) {
 	    rule.setWeight(base.getWeight());
 	}
+	if (base.isSetRole()) {
+	    rule.setRole(base.getRole());
+	}
 
 	//
 	// Model: Override
@@ -393,13 +400,27 @@ public class View implements IView {
 	    }
 	}
 
-	if (!(base.isSetProhibitChanges() && base.getProhibitChanges()) &&
-	    !(rule.isSetProhibitChanges() && rule.getProhibitChanges()) &&
-	    refinements.containsKey(ruleId)) {
-
+	if (refinements.containsKey(ruleId)) {
 	    ProfileRefineRuleType refinement = refinements.get(ruleId);
-	    if (refinement.isSetWeight()) {
-		rule.setWeight(refinement.getWeight());
+
+	    if (!(base.isSetProhibitChanges() && base.getProhibitChanges()) &&
+		!(rule.isSetProhibitChanges() && rule.getProhibitChanges())) {
+
+		if (refinement.isSetWeight()) {
+		    rule.setWeight(refinement.getWeight());
+		}
+	    }
+
+	    //
+	    // Remove any checks that are not selected.
+	    //
+	    if (refinement.isSetSelector()) {
+		Iterator<scap.xccdf.CheckType> iter = rule.getCheck().iterator();
+		while(iter.hasNext()) {
+		    if (!refinement.getSelector().equals(iter.next().getSelector())) {
+			iter.remove();
+		    }
+		}
 	    }
 	}
 

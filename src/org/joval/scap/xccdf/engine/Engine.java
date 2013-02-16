@@ -119,22 +119,18 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     }
 
     private IDatastream stream;
-    private IView view;
     private IBenchmark benchmark;
+    private IView view;
     private IPlugin plugin;
-    private File ocilDir;
     private SystemInfoType sysinfo;
     private Map<String, IChecklist> checklists;
     private Map<String, Boolean> platforms;
-    private List<RuleType> rules = null;
-    private List<GroupType> groups = null;
-    private String phase = null;
-    private LocLogger logger;
     private List<ITransformable> reports;
     private Exception error;
     private State state = State.CONFIGURE;
     private boolean abort = false;
     private Producer<Message> producer;
+    private LocLogger logger;
 
     /**
      * Create an XCCDF Processing Engine using the specified XCCDF document bundle and jOVAL plugin.
@@ -265,7 +261,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	state = State.RUNNING;
 	boolean doDisconnect = false;
 	try {
-	    Collection<RuleType> rules = view.getSelectedRules();
+	    Collection<RuleType> rules = view.getSelectedRules().values();
 	    if (rules.size() == 0) {
 		logger.warn(JOVALMsg.WARNING_XCCDF_RULES);
 	    } else {
@@ -367,7 +363,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     // Private
 
     private void reset() {
-	ocilDir = new File("ocil-export");
 	checklists = new HashMap<String, IChecklist>();
 	reports = new ArrayList<ITransformable>();
 	state = State.CONFIGURE;
@@ -380,7 +375,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     private void processXccdf(TestResultType testResult) throws Exception {
 	producer.sendNotify(Message.RULES_PHASE_START, null);
 	testResult.setStartTime(getTimestamp());
-	phase = "evaluation";
 
 	//
 	// Integrate OCIL results
@@ -398,6 +392,9 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	//
 	OvalHandler ovalHandler = new OvalHandler(view, plugin, platforms);
 	for (String href : ovalHandler.getHrefs()) {
+	    if (abort) {
+		throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
+	    }
 	    IEngine engine = ovalHandler.getEngine(href);
 	    producer.sendNotify(Message.OVAL_ENGINE, engine);
 	    engine.run();
@@ -431,7 +428,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	// Note - only selected rules will be in the resultMap at this point
 	BenchmarkType bt = benchmark.getBenchmark();
 	for (Model model : bt.getModel()) {
-	    ScoreKeeper sk = computeScore(resultMap, bt.getGroupOrRule(), ScoringModel.fromModel(model));
+	    ScoreKeeper sk = computeScore(resultMap, bt, ScoringModel.fromModel(model));
 	    ScoreType scoreType = FACTORY.createScoreType();
 	    scoreType.setSystem(model.getSystem());
 	    String score = Float.toString(sk.getScore());
@@ -505,7 +502,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      * platforms map.
      */
     private void checkPlatforms() throws Exception {
-	phase = "discovery";
 	platforms = new HashMap<String, Boolean>();
 	for (String cpeid : view.getCpePlatforms()) {
 	    producer.sendNotify(Message.PLATFORM_CPE, cpeid);
@@ -656,18 +652,19 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      *
      * @param results a HashMap containing the results of all (i.e., exclusively) the /selected/ rules
      */
-    ScoreKeeper computeScore(HashMap<String, RuleResultType> results, List<SelectableItemType> items, ScoringModel model)
+    ScoreKeeper computeScore(HashMap<String, RuleResultType> results, BenchmarkType bt, ScoringModel model)
 		throws IllegalArgumentException {
 
+	Collection<SelectableItemType> items = bt.getGroupOrRule();
 	switch(model) {
 	  case DEFAULT:
-	    return DefaultScoreKeeper.compute(results, items);
+	    return new DefaultScoreKeeper(new DefaultScoreKeeper(results), items);
 	  case FLAT:
-	    return FlatScoreKeeper.compute(true, results, items);
+	    return new FlatScoreKeeper(new FlatScoreKeeper(true, results), items);
 	  case FLAT_UNWEIGHTED:
-	    return FlatScoreKeeper.compute(false, results, items);
+	    return new FlatScoreKeeper(new FlatScoreKeeper(false, results), items);
 	  case ABSOLUTE:
-	    return AbsoluteScoreKeeper.compute(results, items);
+	    return new AbsoluteScoreKeeper(new AbsoluteScoreKeeper(results), items);
 	  default:
 	    throw new IllegalArgumentException(model.toString());
 	}
@@ -694,12 +691,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     /**
      * ScoreKeeper implementation for ScoringModel.DEFAULT.
      */
-    static class DefaultScoreKeeper extends ScoreKeeper {
-	static DefaultScoreKeeper compute(HashMap<String, RuleResultType> results, List<SelectableItemType> items)
-		throws IllegalArgumentException {
-	    return new DefaultScoreKeeper(new DefaultScoreKeeper(results), items);
-	}
-
+    class DefaultScoreKeeper extends ScoreKeeper {
 	private int accumulator;
 	private float weightedScore;
 
@@ -731,7 +723,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		    count = 1;
 		    score = 100 * score / count;
 		}
-		weightedScore = rule.getWeight().intValue() * score;
+		weightedScore = view.getSelectedRules().get(rule.getId()).getWeight().intValue() * score;
 	    }
 	}
 
@@ -740,12 +732,14 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    weightedScore = group.getWeight().intValue() * score;
 	}
 
-	DefaultScoreKeeper(DefaultScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
+	DefaultScoreKeeper(DefaultScoreKeeper parent, Collection<SelectableItemType> items) throws IllegalArgumentException {
 	    super(parent.results);
 	    for (SelectableItemType item : items) {
 		DefaultScoreKeeper child = null;
 		if (item instanceof RuleType) {
-		    child = new DefaultScoreKeeper(this, (RuleType)item);
+		    RuleType rule = (RuleType)item;
+		    child = new DefaultScoreKeeper(this, rule);
+		    item = view.getSelectedRules().get(rule.getId());
 		} else if (item instanceof GroupType) {
 		    child = new DefaultScoreKeeper(this, (GroupType)item);
 		} else {
@@ -766,12 +760,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     /**
      * ScoreKeeper implementation for ScoringModel.FLAT and FLAT_UNWEIGHTED.
      */
-    static class FlatScoreKeeper extends ScoreKeeper {
-	static FlatScoreKeeper compute(boolean weighted, HashMap<String, RuleResultType> results,
-		List<SelectableItemType> items) throws IllegalArgumentException {
-	    return new FlatScoreKeeper(new FlatScoreKeeper(weighted, results), items);
-	}
-
+    class FlatScoreKeeper extends ScoreKeeper {
 	private boolean weighted;
 	private float max_score;
 
@@ -798,7 +787,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		    break;
 		}
 		if (count != 0) {
-		    int weight = rule.getWeight().intValue();
+		    int weight = view.getSelectedRules().get(rule.getId()).getWeight().intValue();
 		    if (weighted) {
 			max_score += weight;
 			score = (weight * score / count);
@@ -813,7 +802,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    }
 	}
 
-	FlatScoreKeeper(FlatScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
+	FlatScoreKeeper(FlatScoreKeeper parent, Collection<SelectableItemType> items) throws IllegalArgumentException {
 	    this(parent.weighted, parent.results);
 	    for (SelectableItemType item : items) {
 		FlatScoreKeeper child = null;
@@ -837,17 +826,12 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     /**
      * ScoreKeeper implementation for ScoringModel.ABSOLUTE.
      */
-    static class AbsoluteScoreKeeper extends FlatScoreKeeper {
-	static AbsoluteScoreKeeper compute(HashMap<String, RuleResultType> results, List<SelectableItemType> items)
-		throws IllegalArgumentException {
-	    return new AbsoluteScoreKeeper(new AbsoluteScoreKeeper(results), items);
-	}
-
+    class AbsoluteScoreKeeper extends FlatScoreKeeper {
 	AbsoluteScoreKeeper(HashMap<String, RuleResultType> results) {
 	    super(true, results);
 	}
 
-	AbsoluteScoreKeeper(AbsoluteScoreKeeper parent, List<SelectableItemType> items) throws IllegalArgumentException {
+	AbsoluteScoreKeeper(AbsoluteScoreKeeper parent, Collection<SelectableItemType> items) throws IllegalArgumentException {
 	    super(parent, items);
 	}
 
@@ -858,6 +842,12 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    } else {
 		return 0;
 	    }
+	}
+    }
+
+    private class AbortException extends RuntimeException {
+	AbortException(String message) {
+	    super(message);
 	}
     }
 }

@@ -160,7 +160,7 @@ public class OcilHandler {
 	//
 	// Iterate through the rules and record the results
 	//
-	for (RuleType rule : view.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules().values()) {
 	    String ruleId = rule.getId();
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {
@@ -169,7 +169,7 @@ public class OcilHandler {
 			    RuleResultType ruleResult = Engine.FACTORY.createRuleResultType();
 			    ruleResult.setIdref(ruleId);
 			    ruleResult.setWeight(rule.getWeight());
-			    RuleResult result = new RuleResult();
+			    RuleResult result = new RuleResult(check.getNegate());
 			    for (CheckContentRefType ref : check.getCheckContentRef()) {
 				if (ref.isSetHref() && ref.isSetName()) {
 				    String href = ref.getHref();
@@ -195,7 +195,17 @@ public class OcilHandler {
 				}
 			    }
 			    ruleResult.getCheck().add(check);
-			    ruleResult.setResult(result.getResult());
+			    switch(rule.getRole()) {
+			      case UNCHECKED:
+				ruleResult.setResult(ResultEnumType.NOTCHECKED);
+				break;
+			      case UNSCORED:
+				ruleResult.setResult(ResultEnumType.INFORMATIONAL);
+				break;
+			      case FULL:
+				ruleResult.setResult(result.getResult());
+				break;
+			    }
 			    xccdfResult.getRuleResult().add(ruleResult);
 			}
 		    }
@@ -241,7 +251,7 @@ public class OcilHandler {
     private Variables getVariables(String href) throws OcilException {
 	if (!variables.containsKey(href)) {
 	    Variables vars = new Variables();
-	    Collection<RuleType> rules = view.getSelectedRules();
+	    Collection<RuleType> rules = view.getSelectedRules().values();
 	    Map<String, Collection<String>> values = view.getValues();
 	    for (RuleType rule : rules) {
 		if (rule.isSetCheck()) {
@@ -278,7 +288,7 @@ public class OcilHandler {
      */
     private HashSet<String> getOcilHrefs() {
 	HashSet<String> hrefs = new HashSet<String>();
-	for (RuleType rule : view.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules().values()) {
 	    for (CheckType check : rule.getCheck()) {
 		if (NAMESPACE.equals(check.getSystem())) {
 		    for (CheckContentRefType ref : check.getCheckContentRef()) {

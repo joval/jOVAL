@@ -53,7 +53,7 @@ public interface IView {
     Map<String, Collection<String>> getValues();
 
     /**
-     * Get all the fully-resolved rules selected by this Profile.
+     * Return a Map of all the fully-resolved rules selected by this Profile.
      */
-    Collection<RuleType> getSelectedRules();
+    Map<String, RuleType> getSelectedRules();
 }

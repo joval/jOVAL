@@ -22,6 +22,7 @@ import scap.xccdf.CheckType;
 import scap.xccdf.ObjectFactory;
 import scap.xccdf.OverrideableCPE2IdrefType;
 import scap.xccdf.ResultEnumType;
+import scap.xccdf.RoleEnumType;
 import scap.xccdf.RuleResultType;
 import scap.xccdf.RuleType;
 import scap.xccdf.TestResultType;
@@ -72,7 +73,7 @@ public class SceHandler implements ILoggable {
 	//
 	// Iterate through the rules and record the results
 	//
-	for (RuleType rule : view.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules().values()) {
 	    String ruleId = rule.getId();
 	    if (scriptTable.containsKey(ruleId)) {
 		RuleResultType ruleResult = Engine.FACTORY.createRuleResultType();
@@ -81,7 +82,7 @@ public class SceHandler implements ILoggable {
 		if (rule.isSetCheck()) {
 		    for (CheckType check : rule.getCheck()) {
 			if (NAMESPACE.equals(check.getSystem()) && scriptTable.containsKey(ruleId)) {
-			    RuleResult result = new RuleResult();
+			    RuleResult result = new RuleResult(check.getNegate());
 			    CheckType checkResult = Engine.FACTORY.createCheckType();
 
 			    boolean importStdout = false;
@@ -118,10 +119,20 @@ public class SceHandler implements ILoggable {
 			    if (check.isSetCheckExport()) {
 				checkResult.getCheckExport().addAll(check.getCheckExport());
 			    }
-
 			    ruleResult.getCheck().add(checkResult);
-			    ruleResult.setResult(result.getResult());
+
+			    switch(rule.getRole()) {
+			      case UNSCORED:
+				ruleResult.setResult(ResultEnumType.INFORMATIONAL);
+				break;
+			      case FULL:
+				ruleResult.setResult(result.getResult());
+				break;
+			      default:
+				throw new IllegalArgumentException(rule.getRole().toString());
+			    }
 			    xccdfResult.getRuleResult().add(ruleResult);
+			    break;
 			}
 		    }
 		}
@@ -146,7 +157,7 @@ public class SceHandler implements ILoggable {
      */
     private void loadScripts(Map<String, Boolean> platforms) {
 	scriptTable = new HashMap<String, Map<String, Script>>();
-	for (RuleType rule : view.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules().values()) {
 	    //
 	    // Check that at least one platform applies to the rule
 	    //
@@ -157,7 +168,7 @@ public class SceHandler implements ILoggable {
 		    break;
 		}
 	    }
-	    if (platformCheck && rule.isSetCheck()) {
+	    if (platformCheck && rule.isSetCheck() && rule.getRole() != RoleEnumType.UNCHECKED) {
 		String ruleId = rule.getId();
 		for (CheckType check : rule.getCheck()) {
 		    if (check.isSetSystem() && check.getSystem().equals(NAMESPACE)) {

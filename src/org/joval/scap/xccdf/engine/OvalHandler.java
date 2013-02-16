@@ -24,6 +24,7 @@ import scap.xccdf.InstanceResultType;
 import scap.xccdf.ObjectFactory;
 import scap.xccdf.OverrideableCPE2IdrefType;
 import scap.xccdf.ProfileSetValueType;
+import scap.xccdf.RoleEnumType;
 import scap.xccdf.RuleResultType;
 import scap.xccdf.RuleType;
 import scap.xccdf.ResultEnumType;
@@ -63,7 +64,7 @@ public class OvalHandler {
 	this.view = view;
 
 	engines = new HashMap<String, EngineData>();
-	for (RuleType rule : view.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules().values()) {
 	    //
 	    // Check that at least one platform applies to the rule
 	    //
@@ -74,7 +75,7 @@ public class OvalHandler {
 		    break;
 		}
 	    }
-	    if (platformCheck && rule.isSetCheck()) {
+	    if (platformCheck && rule.isSetCheck() && rule.getRole() != RoleEnumType.UNCHECKED) {
 		//
 		// For each checkable rule, collect the data required to build the OVAL engine that will process its
 		// referenced content.
@@ -125,6 +126,7 @@ public class OvalHandler {
 				}
 			    }
 			}
+			break;
 		    }
 		}
 	    }
@@ -190,7 +192,7 @@ public class OvalHandler {
 	//
 	// Iterate through the rules and record the results
 	//
-	for (RuleType rule : view.getSelectedRules()) {
+	for (RuleType rule : view.getSelectedRules().values()) {
 	    String ruleId = rule.getId();
 	    if (rule.isSetCheck()) {
 		for (CheckType check : rule.getCheck()) {
@@ -199,7 +201,7 @@ public class OvalHandler {
 			ruleResult.setIdref(ruleId);
 			ruleResult.setWeight(rule.getWeight());
 			ruleResult.getCheck().add(check);
-			RuleResult result = new RuleResult();
+			RuleResult result = new RuleResult(check.getNegate());
 			for (CheckContentRefType ref : check.getCheckContentRef()) {
 			    if (ref.isSetHref() && ref.getHref().equals(href)) {
 				if (ref.isSetName()) {
@@ -208,7 +210,7 @@ public class OvalHandler {
 				    } catch (NoSuchElementException e) {
 					result.add(ResultEnumType.UNKNOWN);
 				    }
-				    ruleResult.setResult(result.getResult());
+				    ruleResult.setResult(getResult(rule.getRole(), result.getResult()));
 				    xccdfResult.getRuleResult().add(ruleResult);
 				} else if (check.isSetMultiCheck() && check.getMultiCheck()) {
 				    //
@@ -219,7 +221,7 @@ public class OvalHandler {
 					rrt.setIdref(ruleId);
 					rrt.setWeight(rule.getWeight());
 					rrt.getCheck().add(check);
-					rrt.setResult(convertResult(def.getResult()));
+					rrt.setResult(getResult(rule.getRole(), convertResult(def.getResult())));
 					InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
 					inst.setValue(def.getDefinitionId());
 					rrt.getInstance().add(inst);
@@ -229,7 +231,7 @@ public class OvalHandler {
 				    for (DefinitionType def : ovalResult.getDefinitionResults()) {
 					result.add(convertResult(def.getResult()));
 				    }
-				    ruleResult.setResult(result.getResult());
+				    ruleResult.setResult(getResult(rule.getRole(), result.getResult()));
 				    xccdfResult.getRuleResult().add(ruleResult);
 				}
 				break;
@@ -238,6 +240,17 @@ public class OvalHandler {
 		    }
 		}
 	    }
+	}
+    }
+
+    private ResultEnumType getResult(RoleEnumType role, ResultEnumType result) {
+	switch(role) {
+	  case UNSCORED:
+	    return ResultEnumType.INFORMATIONAL;
+	  case FULL:
+	    return result;
+	  default:
+	    throw new IllegalArgumentException(role.toString());
 	}
     }
 

@@ -13,8 +13,11 @@ import scap.xccdf.ResultEnumType;
  */
 public class RuleResult {
     private int err=0, fail=0, inf=0, na=0, nc=0, ns=0, pass=0, unk=0;
+    private boolean negate;
 
-    public RuleResult() {}
+    public RuleResult(boolean negate) {
+	this.negate = negate;
+    }
 
     public void add(ResultEnumType result) {
 	switch(result) {
@@ -47,9 +50,17 @@ public class RuleResult {
 
     public ResultEnumType getResult() {
 	if	  (pass > 0  && fail == 0 && err == 0 && inf >= 0 && na >= 0 && nc == 0 && ns >= 0 && unk == 0) {
-	    return ResultEnumType.PASS;
+	    if (negate) {
+		return ResultEnumType.FAIL;
+	    } else {
+		return ResultEnumType.PASS;
+	    }
 	} else if (pass >= 0 && fail > 0  && err >= 0 && inf >= 0 && na >= 0 && nc >= 0 && ns >= 0 && unk >= 0) {
-	    return ResultEnumType.FAIL;
+	    if (negate) {
+		return ResultEnumType.PASS;
+	    } else {
+		return ResultEnumType.FAIL;
+	    }
 	} else if (pass >= 0 && fail == 0 && err > 0  && inf >= 0 && na >= 0 && nc >= 0 && ns >= 0 && unk >= 0) {
 	    return ResultEnumType.ERROR;
 	} else if (pass >= 0 && fail == 0 && err == 0 && inf > 0  && na >= 0 && nc == 0 && ns >= 0 && unk == 0) {
