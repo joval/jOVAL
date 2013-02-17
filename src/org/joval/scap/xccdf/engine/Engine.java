@@ -410,23 +410,31 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	//
 	// TBD (DAS): add complex check support
 	//
+	Collection<String> notApplicable = new HashSet<String>();
 	for (RuleType rule : view.getSelectedRules().values()) {
 	    //
-	    // Check that at least one platform applies to the rule
+	    // Verify that the rule should actually be checked (i.e., it's not abstract, and has a checkable role).
 	    //
-	    boolean platformCheck = rule.getPlatform().size() == 0;
-	    for (OverrideableCPE2IdrefType cpe : rule.getPlatform()) {
-		if (platforms.get(cpe.getIdref()).booleanValue()) {
-		    platformCheck = true;
-		    break;
-		}
-	    }
-	    if (platformCheck && rule.getRole() != RoleEnumType.UNCHECKED && !rule.getAbstract()) {
-		for (CheckType check : rule.getCheck()) {
-		    if (handlers.containsKey(check.getSystem())) {
-			handlers.get(check.getSystem()).add(check);
+	    if (rule.getRole() != RoleEnumType.UNCHECKED && !rule.getAbstract()) {
+		//
+		// Check that at least one platform applies to the rule
+		//
+		boolean platformCheck = rule.getPlatform().size() == 0;
+		for (OverrideableCPE2IdrefType cpe : rule.getPlatform()) {
+		    if (platforms.get(cpe.getIdref()).booleanValue()) {
+			platformCheck = true;
 			break;
 		    }
+		}
+		if (platformCheck) {
+		    for (CheckType check : rule.getCheck()) {
+			if (handlers.containsKey(check.getSystem())) {
+			    handlers.get(check.getSystem()).add(check);
+			    break;
+			}
+		    }
+		} else {
+		    notApplicable.add(rule.getId());
 		}
 	    }
 	}
@@ -437,36 +445,45 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    reports.addAll(handler.exec(plugin));
 	}
 	for (RuleType rule : view.getSelectedRules().values()) {
-	    for (CheckType check : rule.getCheck()) {
-		if (handlers.containsKey(check.getSystem())) {
-		    ISystem.IResult result = handlers.get(check.getSystem()).getResult(check);
-		    switch(result.getType()) {
-		      case SINGLE: {
-			RuleResultType rrt = Engine.FACTORY.createRuleResultType();
-			rrt.setIdref(rule.getId());
-			rrt.setWeight(rule.getWeight());
-			rrt.setRole(rule.getRole());
-			rrt.getCheck().add(result.getCheck());
-			rrt.setResult(getResult(rule.getRole(), result.getResult()));
-			testResult.getRuleResult().add(rrt);
-			break;
-		      }
-
-		      case MULTI: {
-			for (ISystem.IResult subresult : result.getResults()) {
+	    if (notApplicable.contains(rule.getId())) {
+		RuleResultType rrt = Engine.FACTORY.createRuleResultType();
+		rrt.setIdref(rule.getId());
+		rrt.setWeight(rule.getWeight());
+		rrt.setRole(rule.getRole());
+		rrt.setResult(ResultEnumType.NOTAPPLICABLE);
+		testResult.getRuleResult().add(rrt);
+	    } else {
+		for (CheckType check : rule.getCheck()) {
+		    if (handlers.containsKey(check.getSystem())) {
+			ISystem.IResult result = handlers.get(check.getSystem()).getResult(check);
+			switch(result.getType()) {
+			  case SINGLE: {
 			    RuleResultType rrt = Engine.FACTORY.createRuleResultType();
 			    rrt.setIdref(rule.getId());
 			    rrt.setWeight(rule.getWeight());
 			    rrt.setRole(rule.getRole());
-			    rrt.getCheck().add(subresult.getCheck());
-			    rrt.getInstance().add(subresult.getInstance());
-			    rrt.setResult(getResult(rule.getRole(), subresult.getResult()));
+			    rrt.getCheck().add(result.getCheck());
+			    rrt.setResult(getResult(rule.getRole(), result.getResult()));
 			    testResult.getRuleResult().add(rrt);
+			    break;
+			  }
+    
+			  case MULTI: {
+			    for (ISystem.IResult subresult : result.getResults()) {
+				RuleResultType rrt = Engine.FACTORY.createRuleResultType();
+				rrt.setIdref(rule.getId());
+				rrt.setWeight(rule.getWeight());
+				rrt.setRole(rule.getRole());
+				rrt.getCheck().add(subresult.getCheck());
+				rrt.getInstance().add(subresult.getInstance());
+				rrt.setResult(getResult(rule.getRole(), subresult.getResult()));
+				testResult.getRuleResult().add(rrt);
+			    }
+			    break;
+			  }
 			}
 			break;
-		      }
 		    }
-		    break;
 		}
 	    }
 	}
