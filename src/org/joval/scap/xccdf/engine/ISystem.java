@@ -5,27 +5,30 @@ package org.joval.scap.xccdf.engine;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import scap.xccdf.CheckType;
+import scap.xccdf.InstanceResultType;
 import scap.xccdf.ResultEnumType;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.xml.ITransformable;
 
 /**
- * XCCDF helper interface.
+ * XCCDF helper interface, which describes a "handler" that encapsulates the knowledge required to implement checks for
+ * a particular XCCDF check system. Examples of check systems are OVAL, OCIL and SCE.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface ISystem {
+interface ISystem {
     /**
      * Get the namespace processed by this ISystem.
      */
     String getNamespace();
 
     /**
-     * Add a check.
+     * Add a check, which should be processed when the exec method is called.
      */
     void add(CheckType check) throws Exception;
 
@@ -38,8 +41,38 @@ public interface ISystem {
 
     /**
      * Get the result for a rule.
-     *
-     * @return a ResultEnumType for a regular check, or a Collection<RuleResultType> if a multi-check.
      */
-    Object getResult(CheckType check) throws Exception;
+    IResult getResult(CheckType check) throws Exception;
+
+    /**
+     * Interface definition for getting check result information. Since a check can be a regular single check, or a
+     * muli-check, this interface defines two sub-types.
+     */
+    interface IResult {
+	enum Type {
+	    SINGLE, MULTI;
+	}
+
+	Type getType();
+
+	/**
+	 * For Type.SINGLE.
+	 */
+	ResultEnumType getResult() throws NoSuchElementException;
+
+	/**
+	 * For Type.SINGLE.
+	 */
+	CheckType getCheck() throws NoSuchElementException;
+
+	/**
+	 * For the children of Type.MULTI.
+	 */
+	InstanceResultType getInstance() throws NoSuchElementException;
+
+	/**
+	 * For Type.MULTI (for multi-check) - returns a list of Type.SINGLE-type IResult instances.
+	 */
+	Collection<IResult> getResults() throws NoSuchElementException;
+    }
 }

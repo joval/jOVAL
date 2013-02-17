@@ -150,48 +150,46 @@ public class OvalHandler implements ISystem {
 	return reports;
     }
 
-    public Object getResult(CheckType check) throws Exception {
+    public IResult getResult(CheckType check) throws Exception {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
 
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
 	    if (engines.containsKey(ref.getHref())) {
+		RuleResult result = new RuleResult(check.getNegate());
 		IResults ovalResult = engines.get(ref.getHref()).getEngine().getResults();
 		if (ref.isSetName()) {
 		    try {
-			return convertResult(ovalResult.getDefinitionResult(ref.getName()));
+			result.add(convertResult(ovalResult.getDefinitionResult(ref.getName())));
 		    } catch (NoSuchElementException e) {
-			return ResultEnumType.UNKNOWN;
+			result.add(ResultEnumType.UNKNOWN);
 		    }
 		} else if (check.getMultiCheck()) {
+		    CheckResult cr = new CheckResult();
+
 		    //
 		    // @multicheck=true means a rule-result for each contained OVAL result
 		    //
-		    Collection<RuleResultType> results = new ArrayList<RuleResultType>();
 		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
-			RuleResultType rrt = Engine.FACTORY.createRuleResultType();
-			rrt.getCheck().add(check);
-			rrt.setResult(convertResult(def.getResult()));
 			InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
 			inst.setValue(def.getDefinitionId());
-			rrt.getInstance().add(inst);
-			results.add(rrt);
+			cr.getResults().add(new CheckResult(convertResult(def.getResult()), check, inst));
 		    }
-		    return results;
+		    return cr;
 		} else {
 		    //
 		    // Return a single aggregated result.
 		    //
-		    RuleResult result = new RuleResult(check.getNegate());
 		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
 			result.add(convertResult(def.getResult()));
 		    }
-		    return result.getResult();
 		}
+
+		return new CheckResult(result.getResult(), check);
 	    }
 	}
-	return ResultEnumType.UNKNOWN;
+	return new CheckResult(ResultEnumType.UNKNOWN, check);
     }
 
     // Private

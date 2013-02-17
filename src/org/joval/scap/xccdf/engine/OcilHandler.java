@@ -119,8 +119,10 @@ public class OcilHandler implements ISystem {
 
 	if (checklists.size() == 1 && "".equals(checklists.keySet().iterator().next())) {
 	    //
-	    // If there is only one checklist, with no href specified, then use it as the checklist for all the OCIL
-	    // hrefs in the XCCDF.
+	    // If exactly one checklist was supplied, and without specifying an href, then treat is as a default checklist
+	    // for all the OCIL hrefs in the view.
+	    //
+	    // For reporting purposes, however, it is only added once.
 	    //
 	    IChecklist checklist = checklists.values().iterator().next();
 	    reports.add(checklist);
@@ -191,7 +193,7 @@ public class OcilHandler implements ISystem {
 	return reports;
     }
 
-    public Object getResult(CheckType check) throws Exception {
+    public IResult getResult(CheckType check) throws Exception {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
@@ -221,7 +223,7 @@ public class OcilHandler implements ISystem {
 		}
 	    }
 	}
-	return result.getResult();
+	return new CheckResult(result.getResult(), check);
     }
 
     // Internal

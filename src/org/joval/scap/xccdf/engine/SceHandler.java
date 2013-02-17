@@ -96,7 +96,7 @@ public class SceHandler implements ISystem {
 	return reports;
     }
 
-    public Object getResult(CheckType check) throws Exception {
+    public IResult getResult(CheckType check) throws Exception {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
@@ -110,26 +110,31 @@ public class SceHandler implements ISystem {
 	}
 
 	RuleResult result = new RuleResult(check.getNegate());
+	CheckType checkResult = Engine.FACTORY.createCheckType();
+	checkResult.setId(check.getId());
+	checkResult.setMultiCheck(check.getMultiCheck());
+	checkResult.setNegate(check.getNegate());
+	checkResult.setSelector(check.getSelector());
+	checkResult.setSystem(NAMESPACE);
+	checkResult.getCheckExport().addAll(check.getCheckExport());
+
 	if (check.isSetCheckContentRef()) {
 	    for (CheckContentRefType ref : check.getCheckContentRef()) {
 		if (results.containsKey(ref.getHref())) {
 		    SceResultsType srt = results.get(ref.getHref());
 		    result.add(srt.getResult());
-
-		    // DAS: need a mechanism to return the CheckType back to the engine...
-		    CheckType checkResult = Engine.FACTORY.createCheckType();
 		    checkResult.getCheckContentRef().add(ref);
-		    checkResult.getCheckExport().addAll(check.getCheckExport());
 		    if (importStdout) {
 			CheckImportType cit = Engine.FACTORY.createCheckImportType();
 			cit.setImportName("stdout");
 			cit.getContent().add(srt.getStdout());
 			checkResult.getCheckImport().add(cit);
 		    }
+		    break;
 		}
 	    }
 	}
-	return result.getResult();
+	return new CheckResult(result.getResult(), checkResult);
     }
 
     // Private

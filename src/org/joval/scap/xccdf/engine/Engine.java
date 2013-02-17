@@ -439,23 +439,32 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	for (RuleType rule : view.getSelectedRules().values()) {
 	    for (CheckType check : rule.getCheck()) {
 		if (handlers.containsKey(check.getSystem())) {
-		    Object obj = handlers.get(check.getSystem()).getResult(check);
-		    if (obj instanceof ResultEnumType) {
-			RuleResultType result = Engine.FACTORY.createRuleResultType();
-			result.setIdref(rule.getId());
-			result.setWeight(rule.getWeight());
-			result.getCheck().add(check);
-			result.setResult(getResult(rule.getRole(), (ResultEnumType)obj));
-			testResult.getRuleResult().add(result);
-		    } else {
-			@SuppressWarnings("unchecked")
-			Collection<RuleResultType> results = (Collection<RuleResultType>)obj;
-			for (RuleResultType result : results) {
-			    result.setIdref(rule.getId());
-			    result.setWeight(rule.getWeight());
-			    result.setResult(getResult(rule.getRole(), result.getResult()));
-			    testResult.getRuleResult().add(result);
+		    ISystem.IResult result = handlers.get(check.getSystem()).getResult(check);
+		    switch(result.getType()) {
+		      case SINGLE: {
+			RuleResultType rrt = Engine.FACTORY.createRuleResultType();
+			rrt.setIdref(rule.getId());
+			rrt.setWeight(rule.getWeight());
+			rrt.setRole(rule.getRole());
+			rrt.getCheck().add(result.getCheck());
+			rrt.setResult(getResult(rule.getRole(), result.getResult()));
+			testResult.getRuleResult().add(rrt);
+			break;
+		      }
+
+		      case MULTI: {
+			for (ISystem.IResult subresult : result.getResults()) {
+			    RuleResultType rrt = Engine.FACTORY.createRuleResultType();
+			    rrt.setIdref(rule.getId());
+			    rrt.setWeight(rule.getWeight());
+			    rrt.setRole(rule.getRole());
+			    rrt.getCheck().add(subresult.getCheck());
+			    rrt.getInstance().add(subresult.getInstance());
+			    rrt.setResult(getResult(rule.getRole(), subresult.getResult()));
+			    testResult.getRuleResult().add(rrt);
 			}
+			break;
+		      }
 		    }
 		    break;
 		}
