@@ -20,6 +20,7 @@ import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckExportType;
 import scap.xccdf.CheckImportType;
 import scap.xccdf.CheckType;
+import scap.xccdf.InstanceResultType;
 import scap.xccdf.ObjectFactory;
 import scap.xccdf.ResultEnumType;
 import scap.xccdf.RuleResultType;
@@ -197,33 +198,40 @@ public class OcilHandler implements ISystem {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
+	if (check.isSetCheckContent()) {
+	    // TBD (DAS): inline content is not supported
+	}
 
-	RuleResult result = new RuleResult(check.getNegate());
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
-	    if (ref.isSetHref() && ref.isSetName()) {
-		String href = ref.getHref();
-		String name = ref.getName();
-		if (results.containsKey(href) && results.get(href).containsKey(name)) {
-		    String qr = results.get(href).get(name);
-		    if ("PASS".equals(qr)) {
-			result.add(ResultEnumType.PASS);
-		    } else if ("FAIL".equals(qr)) {
-			result.add(ResultEnumType.FAIL);
-		    } else if (qr.equals(ExceptionalResultType.UNKNOWN.value())) {
-			result.add(ResultEnumType.UNKNOWN);
-		    } else if (qr.equals(ExceptionalResultType.ERROR.value())) {
-			result.add(ResultEnumType.ERROR);
-		    } else if (qr.equals(ExceptionalResultType.NOT_TESTED.value())) {
+	    if (results.containsKey(ref.getHref())) {
+		RuleResult result = new RuleResult(check.getNegate());
+		Map<String, String> ocilResults = results.get(ref.getHref());
+		if (ref.isSetName()) {
+		    String name = ref.getName();
+		    if (ocilResults.containsKey(name)) {
+			result.add(convertResult(ocilResults.get(name)));
+		    } else {
 			result.add(ResultEnumType.NOTCHECKED);
-		    } else if (qr.equals(ExceptionalResultType.NOT_APPLICABLE.value())) {
-			result.add(ResultEnumType.NOTAPPLICABLE);
 		    }
+		} else if (check.getMultiCheck()) {
+		    CheckResult cr = new CheckResult();
+		    for (Map.Entry<String, String> entry : ocilResults.entrySet()) {
+			result = new RuleResult(check.getNegate());
+			result.add(convertResult(entry.getValue()));
+			InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
+			inst.setValue(entry.getKey());
+			cr.getResults().add(new CheckResult(result.getResult(), check, inst));
+		    }
+		    return cr;
 		} else {
-		    result.add(ResultEnumType.NOTCHECKED);
+		    for (String qr : ocilResults.values()) {
+			result.add(convertResult(qr));
+		    }
 		}
+		return new CheckResult(result.getResult(), check);
 	    }
 	}
-	return new CheckResult(result.getResult(), check);
+	return new CheckResult(ResultEnumType.NOTCHECKED, check);
     }
 
     // Internal
@@ -255,6 +263,27 @@ public class OcilHandler implements ISystem {
     }
 
     // Private
+
+    /**
+     * Convert a String questionnaire result into a check result.
+     */
+    private ResultEnumType convertResult(String qr) {
+	if ("PASS".equals(qr)) {
+	    return ResultEnumType.PASS;
+	} else if ("FAIL".equals(qr)) {
+	    return ResultEnumType.FAIL;
+	} else if (qr.equals(ExceptionalResultType.UNKNOWN.value())) {
+	    return ResultEnumType.UNKNOWN;
+	} else if (qr.equals(ExceptionalResultType.ERROR.value())) {
+	    return ResultEnumType.ERROR;
+	} else if (qr.equals(ExceptionalResultType.NOT_TESTED.value())) {
+	    return ResultEnumType.NOTCHECKED;
+	} else if (qr.equals(ExceptionalResultType.NOT_APPLICABLE.value())) {
+	    return ResultEnumType.NOTAPPLICABLE;
+	} else {
+	    return ResultEnumType.UNKNOWN;
+	}
+    }
 
     /**
      * Gather all the hrefs of all the OCIL check references.

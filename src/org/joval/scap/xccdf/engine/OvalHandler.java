@@ -167,29 +167,23 @@ public class OvalHandler implements ISystem {
 		    }
 		} else if (check.getMultiCheck()) {
 		    CheckResult cr = new CheckResult();
-
-		    //
-		    // @multicheck=true means a rule-result for each contained OVAL result
-		    //
 		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
+			result = new RuleResult(check.getNegate());
+			result.add(convertResult(def.getResult()));
 			InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
 			inst.setValue(def.getDefinitionId());
-			cr.getResults().add(new CheckResult(convertResult(def.getResult()), check, inst));
+			cr.getResults().add(new CheckResult(result.getResult(), check, inst));
 		    }
 		    return cr;
 		} else {
-		    //
-		    // Return a single aggregated result.
-		    //
 		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
 			result.add(convertResult(def.getResult()));
 		    }
 		}
-
 		return new CheckResult(result.getResult(), check);
 	    }
 	}
-	return new CheckResult(ResultEnumType.UNKNOWN, check);
+	return new CheckResult(ResultEnumType.NOTCHECKED, check);
     }
 
     // Private
