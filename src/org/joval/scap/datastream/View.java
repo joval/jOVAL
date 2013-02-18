@@ -18,6 +18,8 @@ import java.util.NoSuchElementException;
 import scap.cpe.dictionary.CheckType;
 import scap.cpe.dictionary.ItemType;
 import scap.cpe.dictionary.ListType;
+import scap.cpe.language.CheckFactRefType;
+import scap.cpe.language.PlatformType;
 import scap.xccdf.BenchmarkType;
 import scap.xccdf.CPE2IdrefType;
 import scap.xccdf.GroupType;
@@ -84,7 +86,7 @@ public class View implements IView {
 	rules = new HashMap<String, RuleType>();
 
 	//
-	// If a named profile is specified, then gather all the selections and values associated with it.
+	// If a named profile is specified, then gather all the selections, values, refinements, etc. associated with it.
 	//
 	Map<String, Boolean> selections = new HashMap<String, Boolean>();
 	Map<String, String> valueSelectors = new HashMap<String, String>();
@@ -119,22 +121,43 @@ public class View implements IView {
 	}
 
 	//
-	// Discover all the selected rules and values
+	// Discover all the selected rules and values, and default platforms from groups.
 	//
+	Map<String, Collection<String>> platformDefaults = new HashMap<String, Collection<String>>();
 	HashSet<ValueType> vals = new HashSet<ValueType>();
-	vals.addAll(bt.getValue());
-	for (SelectableItemType item : getSelected(bt.getGroupOrRule(), selections)) {
-	    if (item instanceof GroupType) {
-		for (ValueType base : ((GroupType)item).getValue()) {
-		    ValueType value = resolve(base);
-		    if (!value.getAbstract()) {
-			vals.add(value);
-		    }
+	visit(selections, platformDefaults, vals);
+
+	//
+	// Tailor the selected rules according to profile refinements
+	//
+	for (RuleType rule : rules.values()) {
+	    if (rule.getPlatform().size() == 0 && platformDefaults.containsKey(rule.getId())) {
+		//
+		// Borrow platforms from the nearest platform-defining container
+		//
+		for (String idref : platformDefaults.get(rule.getId())) {
+		    OverrideableCPE2IdrefType cpe = FACTORY.createOverrideableCPE2IdrefType();
+		    cpe.setIdref(idref);
+		    rule.getPlatform().add(cpe);
 		}
-	    } else if (item instanceof RuleType) {
-		RuleType rule = resolve((RuleType)item, refinements);
-		if (!rule.getAbstract()) {
-		    rules.put(rule.getId(), rule);
+	    }
+	    if (refinements.containsKey(rule.getId())) {
+		ProfileRefineRuleType refinement = refinements.get(rule.getId());
+
+		if (refinement.isSetWeight() && !rule.getProhibitChanges()) {
+		    rule.setWeight(refinement.getWeight());
+		}
+
+		//
+		// Remove checks that are not selected.
+		//
+		if (refinement.isSetSelector()) {
+		    Iterator<scap.xccdf.CheckType> iter = rule.getCheck().iterator();
+		    while(iter.hasNext()) {
+			if (!refinement.getSelector().equals(iter.next().getSelector())) {
+			    iter.remove();
+			}
+		    }
 		}
 	    }
 	}
@@ -200,9 +223,39 @@ public class View implements IView {
     // Private
 
     /**
+     * Visit all the nodes in the benchmark, and populate the platforms map with default platforms, and the selected vals set.
+     */
+    private void visit(Map<String, Boolean> sel, Map<String, Collection<String>> platforms, HashSet<ValueType> vals) {
+	Collection<String> benchmarkPlatforms = new ArrayList<String>();
+	for (CPE2IdrefType cpe : bt.getPlatform()) {
+	    benchmarkPlatforms.add(cpe.getIdref());
+	}
+
+	vals.addAll(bt.getValue());
+	for (SelectableItemType item : getSelected(bt.getGroupOrRule(), sel, benchmarkPlatforms, platforms)) {
+	    String id = null;
+	    if (item instanceof GroupType) {
+		for (ValueType base : ((GroupType)item).getValue()) {
+		    ValueType value = resolve(base);
+		    if (!value.getAbstract()) {
+			vals.add(value);
+		    }
+		}
+	    } else if (item instanceof RuleType) {
+		RuleType rule = resolve((RuleType)item);
+		if (!rule.getAbstract()) {
+		    rules.put(rule.getId(), rule);
+		}
+	    }
+	}
+    }
+
+    /**
      * Recursively find all the selected items, using selections gathered from a Profile (or null for defaults).
      */
-    private Collection<SelectableItemType> getSelected(List<SelectableItemType> items, Map<String, Boolean> selections) {
+    private Collection<SelectableItemType> getSelected(List<SelectableItemType> items, Map<String, Boolean> selections,
+		Collection<String> parentPlatforms, Map<String, Collection<String>> platforms) {
+
 	Collection<SelectableItemType> results = new HashSet<SelectableItemType>();
 	for (SelectableItemType item : items) {
 	    String id = null;
@@ -210,20 +263,23 @@ public class View implements IView {
 		id = ((GroupType)item).getId();
 	    } else if (item instanceof RuleType) {
 		id = ((RuleType)item).getId();
-	    } else {
-		throw new RuntimeException("Not a group or rule: " + item.getClass().getName());
 	    }
-	    if (!selections.containsKey(id)) {
-		if (item.getSelected()) {
-		    results.add(item);
-		    if (item instanceof GroupType) {
-			results.addAll(getSelected(((GroupType)item).getGroupOrRule(), selections));
-		    }
-		}
-	    } else if (selections.get(id).booleanValue()) {
+	    if ((selections.containsKey(id) && selections.get(id).booleanValue()) ||
+		(!selections.containsKey(id) && item.getSelected())) {
+
 		results.add(item);
+		if (item.getPlatform().size() == 0) {
+		    platforms.put(id, parentPlatforms);
+		} else {
+		    Collection<String> p = new ArrayList<String>();
+		    for (OverrideableCPE2IdrefType cpe : item.getPlatform()) {
+			p.add(cpe.getIdref());
+			addPlatform(cpe.getIdref());
+		    }
+		    platforms.put(id, p);
+		}
 		if (item instanceof GroupType) {
-		    results.addAll(getSelected(((GroupType)item).getGroupOrRule(), selections));
+		    results.addAll(getSelected(((GroupType)item).getGroupOrRule(), selections, platforms.get(id), platforms));
 		}
 	    }
 	}
@@ -238,23 +294,47 @@ public class View implements IView {
     private void addPlatform(String cpeName) throws NoSuchElementException {
 	if (!platforms.containsKey(cpeName)) {
 	    Map<String, Collection<String>> ovalMap = new HashMap<String, Collection<String>>();
-	    IDictionary dictionary = stream.getDictionary();
-	    boolean found = false;
-	    if (dictionary == null) {
-		throw new NoSuchElementException("CPE Dictionary");
-	    }
-	    ItemType cpeItem = dictionary.getItem(cpeName);
-	    if (cpeItem.isSetCheck()) {
-		for (CheckType check : cpeItem.getCheck()) {
-		    if (SystemEnumeration.OVAL.namespace().equals(check.getSystem()) && check.isSetHref()) {
-			String href = check.getHref();
-			if (!ovalMap.containsKey(href)) {
-			    ovalMap.put(href, new ArrayList<String>());
+	    if (cpeName.startsWith("cpe:")) {
+		IDictionary dictionary = stream.getDictionary();
+		if (dictionary == null) {
+		    throw new NoSuchElementException("CPE Dictionary");
+		}
+		ItemType cpeItem = dictionary.getItem(cpeName);
+		if (cpeItem.isSetCheck()) {
+		    for (CheckType check : cpeItem.getCheck()) {
+			if (SystemEnumeration.OVAL.namespace().equals(check.getSystem()) && check.isSetHref()) {
+			    String href = check.getHref();
+			    if (!ovalMap.containsKey(href)) {
+				ovalMap.put(href, new ArrayList<String>());
+			    }
+			    ovalMap.get(href).add(check.getValue());
 			}
-			ovalMap.get(href).add(check.getValue());
+		    }
+		}
+	    } else if (cpeName.startsWith("#")) {
+		String name = cpeName.substring(1);
+		for (PlatformType pt : bt.getPlatformSpecification().getPlatform()) {
+		    if (name.equals(pt.getId())) {
+			//
+			// DAS - full implementation is TBD
+			//
+			for (CheckFactRefType cfrt : pt.getLogicalTest().getCheckFactRef()) {
+			    if (SystemEnumeration.OVAL.namespace().equals(cfrt.getSystem())) {
+				String href = cfrt.getHref();
+				if (!ovalMap.containsKey(href)) {
+				    ovalMap.put(href, new ArrayList<String>());
+				}
+				ovalMap.get(href).add(cfrt.getIdRef());
+			    }
+			}
+			break;
 		    }
 		}
 	    }
+
+	    //
+	    // Verify that the CPE name was mapped to OVAL definitions
+	    //
 	    if (ovalMap.size() > 0) {
 		platforms.put(cpeName, ovalMap);
 	    } else {
@@ -341,19 +421,17 @@ public class View implements IView {
     }
 
     /**
-     * Return a RuleType with all inherited properties and refinements incorporated therein.
+     * Return a RuleType with all inherited properties incorporated therein.
      */
-    private RuleType resolve(RuleType base, Map<String, ProfileRefineRuleType> refinements) {
+    private RuleType resolve(RuleType base) {
 	String ruleId = base.getId();
 	RuleType rule = FACTORY.createRuleType();
-
-//TBD (DAS) need to inherit some things from the enclosing group
 
 	//
 	// Inheritance
 	//
 	if (base.isSetExtends()) {
-	    RuleType parent = resolve((RuleType)benchmark.getItem(base.getExtends()), refinements);
+	    RuleType parent = resolve((RuleType)benchmark.getItem(base.getExtends()));
 	    if (parent.isSetProhibitChanges()) {
 		rule.setProhibitChanges(parent.getProhibitChanges());
 	    }
@@ -386,6 +464,9 @@ public class View implements IView {
 	if (base.isSetRole()) {
 	    rule.setRole(base.getRole());
 	}
+	if (base.isSetProhibitChanges()) {
+	    rule.setProhibitChanges(base.getProhibitChanges());
+	}
 
 	//
 	// Model: Override
@@ -397,30 +478,6 @@ public class View implements IView {
 	    for (OverrideableCPE2IdrefType cpe : base.getPlatform()) {
 		rule.getPlatform().add(cpe);
 		addPlatform(cpe.getIdref());
-	    }
-	}
-
-	if (refinements.containsKey(ruleId)) {
-	    ProfileRefineRuleType refinement = refinements.get(ruleId);
-
-	    if (!(base.isSetProhibitChanges() && base.getProhibitChanges()) &&
-		!(rule.isSetProhibitChanges() && rule.getProhibitChanges())) {
-
-		if (refinement.isSetWeight()) {
-		    rule.setWeight(refinement.getWeight());
-		}
-	    }
-
-	    //
-	    // Remove any checks that are not selected.
-	    //
-	    if (refinement.isSetSelector()) {
-		Iterator<scap.xccdf.CheckType> iter = rule.getCheck().iterator();
-		while(iter.hasNext()) {
-		    if (!refinement.getSelector().equals(iter.next().getSelector())) {
-			iter.remove();
-		    }
-		}
 	    }
 	}
 

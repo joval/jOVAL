@@ -441,7 +441,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	// Integrate check results from the handlers
 	//
 	for (RuleType rule : view.getSelectedRules().values()) {
-
 	    if (notApplicable.contains(rule.getId())) {
 		RuleResultType rrt = Engine.FACTORY.createRuleResultType();
 		rrt.setIdref(rule.getId());
