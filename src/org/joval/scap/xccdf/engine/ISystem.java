@@ -41,8 +41,10 @@ interface ISystem {
 
     /**
      * Get the result for a rule.
+     *
+     * @param multi overrides CheckType.getMultiCheck().
      */
-    IResult getResult(CheckType check) throws Exception;
+    IResult getResult(CheckType check, boolean multi) throws Exception;
 
     /**
      * Interface definition for getting check result information. Since a check can be a regular single check, or a

@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
-import java.util.Vector;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -41,9 +40,11 @@ import scap.oval.systemcharacteristics.core.InterfaceType;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
 import scap.oval.variables.VariableType;
 import scap.xccdf.BenchmarkType;
+import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckType;
 import scap.xccdf.CheckExportType;
+import scap.xccdf.ComplexCheckType;
 import scap.xccdf.CPE2IdrefType;
 import scap.xccdf.GroupType;
 import scap.xccdf.IdrefType;
@@ -161,8 +162,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	  case COMPLETE_OK:
 	  case COMPLETE_ERR:
 	    reset();
-	    // fall-through
-
+	    // fall-thru
 	  default:
 	    this.view = view;
 	    stream = view.getStream();
@@ -179,8 +179,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	  case COMPLETE_OK:
 	  case COMPLETE_ERR:
 	    reset();
-	    // fall-through
-
+	    // fall-thru
 	  default:
 	    checklists.put(href, checklist);
 	    break;
@@ -289,7 +288,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		TestResultType testResult = initializeResult();
 
 		//
-		// Perform the profile's platform applicability tests, and if its applicable, the selected checks
+		// Perform the profile's platform applicability tests, and if it's applicable, the selected checks
 		//
 		producer.sendNotify(Message.PLATFORM_PHASE_START, null);
 		checkPlatforms();
@@ -320,7 +319,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		}
 
 		//
-		// Print results to the console, and add them to the ARF report
+		// Add results for all the rules to the XCCDF results, and add that to the ARF report
 		//
 		HashMap<String, RuleResultType> resultIndex = new HashMap<String, RuleResultType>();
 		for (RuleResultType rrt : testResult.getRuleResult()) {
@@ -332,14 +331,14 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 			logger.info(JOVALMsg.STATUS_XCCDF_RULE, ruleId, resultIndex.get(ruleId).getResult());
 		    } else {
 			//
-			// Record unselected/unchecked rules
+			// Add a result record for the unselected/unchecked rule
 			//
 			RuleResultType rrt = FACTORY.createRuleResultType();
 			rrt.setIdref(rule.getId());
 			if (selectedIds.contains(ruleId)) {
-			    rrt.setResult(ResultEnumType.NOTCHECKED);
+			    rrt.setResult(getRuleResult(rule, ResultEnumType.NOTCHECKED));
 			} else {
-			    rrt.setResult(ResultEnumType.NOTSELECTED);
+			    rrt.setResult(getRuleResult(rule, ResultEnumType.NOTSELECTED));
 			}
 			if (rule.isSetCheck()) {
 			    for (CheckType check : rule.getCheck()) {
@@ -350,6 +349,10 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		    }
 		}
 		reports.add(new TestResult(testResult));
+
+		//
+		// XPERT requires the result to be added to the benchmark to create the HTML transform
+		//
 		benchmark.getBenchmark().getTestResult().add(testResult);
 	    }
 	    state = State.COMPLETE_OK;
@@ -379,23 +382,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	producer.sendNotify(Message.RULES_PHASE_START, null);
 	testResult.setStartTime(getTimestamp());
 
-	//
-	// Add all the selected values to the results
-	//
-	for (Map.Entry<String, Collection<String>> entry : view.getValues().entrySet()) {
-	    if (entry.getValue().size() == 1) {
-		ProfileSetValueType val = FACTORY.createProfileSetValueType();
-		val.setIdref(entry.getKey());
-		val.setValue(entry.getValue().iterator().next());
-		testResult.getSetValueOrSetComplexValue().add(val);
-	    } else {
-		ProfileSetComplexValueType val = FACTORY.createProfileSetComplexValueType();
-		val.setIdref(entry.getKey());
-		val.getItem().addAll(entry.getValue());
-		testResult.getSetValueOrSetComplexValue().add(val);
-	    }
-	}
-
 	Map<String, ISystem> handlers = new HashMap<String, ISystem>();
 	if (checklists.size() > 0) {
 	    OcilHandler ocil = new OcilHandler(view, checklists);
@@ -408,13 +394,10 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	handlers.put(sce.getNamespace(), sce);
 
 	//
-	// TBD (DAS): add complex check support
+	// Add all the selected rules to the handlers
 	//
 	Collection<String> notApplicable = new HashSet<String>();
 	for (RuleType rule : view.getSelectedRules().values()) {
-	    //
-	    // Verify that the rule should actually be checked (i.e., it's not abstract, and has a checkable role).
-	    //
 	    if (rule.getRole() != RoleEnumType.UNCHECKED && !rule.getAbstract()) {
 		//
 		// Check that at least one platform applies to the rule
@@ -427,10 +410,15 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		    }
 		}
 		if (platformCheck) {
-		    for (CheckType check : rule.getCheck()) {
-			if (handlers.containsKey(check.getSystem())) {
-			    handlers.get(check.getSystem()).add(check);
-			    break;
+		    if (rule.isSetComplexCheck()) {
+			// Per 7.2.3.5.1, process only the complex check if one exists
+			addAllChecks(rule.getComplexCheck(), handlers);
+		    } else {
+			for (CheckType check : rule.getCheck()) {
+			    if (handlers.containsKey(check.getSystem())) {
+				handlers.get(check.getSystem()).add(check);
+				break;
+			    }
 			}
 		    }
 		} else {
@@ -438,53 +426,31 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		}
 	    }
 	}
+
+	//
+	// Have all the handlers run their checks
+	//
 	for (ISystem handler : handlers.values()) {
 	    if (abort) {
 		throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
 	    }
 	    reports.addAll(handler.exec(plugin));
 	}
+
+	//
+	// Integrate check results from the handlers
+	//
 	for (RuleType rule : view.getSelectedRules().values()) {
+
 	    if (notApplicable.contains(rule.getId())) {
 		RuleResultType rrt = Engine.FACTORY.createRuleResultType();
 		rrt.setIdref(rule.getId());
 		rrt.setWeight(rule.getWeight());
 		rrt.setRole(rule.getRole());
-		rrt.setResult(ResultEnumType.NOTAPPLICABLE);
+		rrt.setResult(getRuleResult(rule, ResultEnumType.NOTAPPLICABLE));
 		testResult.getRuleResult().add(rrt);
 	    } else {
-		for (CheckType check : rule.getCheck()) {
-		    if (handlers.containsKey(check.getSystem())) {
-			ISystem.IResult result = handlers.get(check.getSystem()).getResult(check);
-			switch(result.getType()) {
-			  case SINGLE: {
-			    RuleResultType rrt = Engine.FACTORY.createRuleResultType();
-			    rrt.setIdref(rule.getId());
-			    rrt.setWeight(rule.getWeight());
-			    rrt.setRole(rule.getRole());
-			    rrt.getCheck().add(result.getCheck());
-			    rrt.setResult(getResult(rule.getRole(), result.getResult()));
-			    testResult.getRuleResult().add(rrt);
-			    break;
-			  }
-    
-			  case MULTI: {
-			    for (ISystem.IResult subresult : result.getResults()) {
-				RuleResultType rrt = Engine.FACTORY.createRuleResultType();
-				rrt.setIdref(rule.getId());
-				rrt.setWeight(rule.getWeight());
-				rrt.setRole(rule.getRole());
-				rrt.getCheck().add(subresult.getCheck());
-				rrt.getInstance().add(subresult.getInstance());
-				rrt.setResult(getResult(rule.getRole(), subresult.getResult()));
-				testResult.getRuleResult().add(rrt);
-			    }
-			    break;
-			  }
-			}
-			break;
-		    }
-		}
+		testResult.getRuleResult().addAll(evaluate(rule, handlers));
 	    }
 	}
 
@@ -515,17 +481,120 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     }
 
     /**
-     * Change a ResultEnumType if required by the role.
+     * Evaluate the check(s) in the rule, and return the results.
      */
-    private ResultEnumType getResult(RoleEnumType role, ResultEnumType result) {
+    private Collection<RuleResultType> evaluate(RuleType rule, Map<String, ISystem> handlers) throws Exception {
+	Collection<RuleResultType> results = new ArrayList<RuleResultType>();
+	if (rule.isSetComplexCheck()) {
+	    ComplexCheckType check = rule.getComplexCheck();
+	    ComplexCheckType checkResult = FACTORY.createComplexCheckType();
+	    checkResult.setNegate(check.getNegate());
+	    checkResult.setOperator(check.getOperator());
+
+	    RuleResultType rrt = FACTORY.createRuleResultType();
+	    rrt.setIdref(rule.getId());
+	    rrt.setWeight(rule.getWeight());
+	    rrt.setRole(rule.getRole());
+	    rrt.setComplexCheck(checkResult);
+	    rrt.setResult(getRuleResult(rule, evaluate(check, checkResult, handlers)));
+	    results.add(rrt);
+	} else {
+	    for (CheckType check : rule.getCheck()) {
+		if (handlers.containsKey(check.getSystem())) {
+		    ISystem.IResult result = handlers.get(check.getSystem()).getResult(check, check.getMultiCheck());
+		    switch(result.getType()) {
+		      case SINGLE: {
+			RuleResultType rrt = FACTORY.createRuleResultType();
+			rrt.setIdref(rule.getId());
+			rrt.setWeight(rule.getWeight());
+			rrt.setRole(rule.getRole());
+			rrt.getCheck().add(result.getCheck());
+			rrt.setResult(getRuleResult(rule, result.getResult()));
+			results.add(rrt);
+			break;
+		      }
+
+		      case MULTI:
+			for (ISystem.IResult subresult : result.getResults()) {
+			    RuleResultType rrt = Engine.FACTORY.createRuleResultType();
+			    rrt.setIdref(rule.getId());
+			    rrt.setWeight(rule.getWeight());
+			    rrt.setRole(rule.getRole());
+			    rrt.getCheck().add(subresult.getCheck());
+			    rrt.getInstance().add(subresult.getInstance());
+			    rrt.setResult(getRuleResult(rule, subresult.getResult()));
+			    results.add(rrt);
+			}
+			break;
+		    }
+		    break;
+		}
+	    }
+	}
+	return results;
+    }
+
+    /**
+     * Recursively evaluate the complex check, adding processed check information to the checkResult, and return the
+     * overall result.
+     */
+    private ResultEnumType evaluate(ComplexCheckType check, ComplexCheckType checkResult, Map<String, ISystem> handlers)
+		throws Exception {
+
+	CheckData data = new CheckData(check.getNegate());
+	for (Object obj : check.getCheckOrComplexCheck()) {
+	    if (obj instanceof CheckType) {
+		CheckType subCheck = (CheckType)obj;
+		if (handlers.containsKey(subCheck.getSystem())) {
+		    ISystem.IResult result = handlers.get(subCheck.getSystem()).getResult(subCheck, false);
+		    checkResult.getCheckOrComplexCheck().add(result.getCheck());
+		    data.add(result.getResult());
+		} else {
+		    data.add(ResultEnumType.NOTCHECKED);
+		}
+	    } else if (obj instanceof ComplexCheckType) {
+		ComplexCheckType subCheck = (ComplexCheckType)obj;
+		ComplexCheckType subCheckResult = FACTORY.createComplexCheckType();
+		subCheckResult.setNegate(subCheck.getNegate());
+		subCheckResult.setOperator(subCheck.getOperator());
+		checkResult.getCheckOrComplexCheck().add(subCheckResult);
+		data.add(evaluate(subCheck, subCheckResult, handlers));
+	    }
+	}
+	return data.getResult(check.getOperator());
+    }
+
+    /**
+     * Change the ResultEnumType returned by check(s) as required by the rule.
+     */
+    private ResultEnumType getRuleResult(RuleType rule, ResultEnumType result) {
+	RoleEnumType role = rule.getRole();
         switch(role) {
           case UNSCORED:
             return ResultEnumType.INFORMATIONAL;
+
           case FULL:
             return result;
+
           default:
             throw new IllegalArgumentException(role.toString());
         }
+    }
+
+    /**
+     * Recursively add all the checks in the ComplexCheckType to the handlers.
+     */
+    private void addAllChecks(ComplexCheckType complex, Map<String, ISystem> handlers) throws Exception {
+	for (Object obj : complex.getCheckOrComplexCheck()) {
+	    if (obj instanceof CheckType) {
+		CheckType check = (CheckType)obj;
+		if (handlers.containsKey(check.getSystem())) {
+		    handlers.get(check.getSystem()).add(check);
+		}
+	    } else if (obj instanceof ComplexCheckType) {
+		addAllChecks((ComplexCheckType)obj, handlers);
+	    }
+	}
     }
 
     /**
@@ -581,6 +650,24 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		testResult.getTargetAddress().add(intf.getIpAddress());
 	    }
 	}
+
+	//
+	// Add all the selected values to the results
+	//
+	for (Map.Entry<String, Collection<String>> entry : view.getValues().entrySet()) {
+	    if (entry.getValue().size() == 1) {
+		ProfileSetValueType val = FACTORY.createProfileSetValueType();
+		val.setIdref(entry.getKey());
+		val.setValue(entry.getValue().iterator().next());
+		testResult.getSetValueOrSetComplexValue().add(val);
+	    } else {
+		ProfileSetComplexValueType val = FACTORY.createProfileSetComplexValueType();
+		val.setIdref(entry.getKey());
+		val.getItem().addAll(entry.getValue());
+		testResult.getSetValueOrSetComplexValue().add(val);
+	    }
+	}
+
 	return testResult;
     }
 
@@ -647,7 +734,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      * Recursively get all of the rules within the XCCDF document.
      */
     private List<RuleType> listAllRules() {
-	List<RuleType> rules = new Vector<RuleType>();
+	List<RuleType> rules = new ArrayList<RuleType>();
 	for (SelectableItemType item : benchmark.getBenchmark().getGroupOrRule()) {
 	    rules.addAll(getRules(item));
 	}
@@ -658,7 +745,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      * Recursively list all of the rules within the SelectableItem.
      */
     private List<RuleType> getRules(SelectableItemType item) {
-	List<RuleType> rules = new Vector<RuleType>();
+	List<RuleType> rules = new ArrayList<RuleType>();
 	if (item instanceof RuleType) {
 	    rules.add((RuleType)item);
 	} else if (item instanceof GroupType) {

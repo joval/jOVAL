@@ -17,20 +17,13 @@ import scap.oval.definitions.core.OvalDefinitions;
 import scap.oval.results.ResultEnumeration;
 import scap.oval.results.DefinitionType;
 import scap.oval.variables.VariableType;
+import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckType;
 import scap.xccdf.CheckExportType;
-import scap.xccdf.GroupType;
 import scap.xccdf.InstanceResultType;
 import scap.xccdf.ObjectFactory;
-import scap.xccdf.OverrideableCPE2IdrefType;
-import scap.xccdf.ProfileSetValueType;
-import scap.xccdf.RoleEnumType;
-import scap.xccdf.RuleResultType;
-import scap.xccdf.RuleType;
 import scap.xccdf.ResultEnumType;
-import scap.xccdf.SelectableItemType;
-import scap.xccdf.TestResultType;
 
 import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.oval.IDefinitionFilter;
@@ -45,7 +38,6 @@ import org.joval.intf.xml.ITransformable;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
 import org.joval.scap.xccdf.XccdfException;
-import org.joval.scap.xccdf.engine.RuleResult;
 import org.joval.util.Producer;
 
 /**
@@ -150,37 +142,37 @@ public class OvalHandler implements ISystem {
 	return reports;
     }
 
-    public IResult getResult(CheckType check) throws Exception {
+    public IResult getResult(CheckType check, boolean multi) throws Exception {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
 
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
 	    if (engines.containsKey(ref.getHref())) {
-		RuleResult result = new RuleResult(check.getNegate());
+		CheckData data = new CheckData(check.getNegate());
 		IResults ovalResult = engines.get(ref.getHref()).getEngine().getResults();
 		if (ref.isSetName()) {
 		    try {
-			result.add(convertResult(ovalResult.getDefinitionResult(ref.getName())));
+			data.add(convertResult(ovalResult.getDefinitionResult(ref.getName())));
 		    } catch (NoSuchElementException e) {
-			result.add(ResultEnumType.UNKNOWN);
+			data.add(ResultEnumType.UNKNOWN);
 		    }
-		} else if (check.getMultiCheck()) {
+		} else if (multi) {
 		    CheckResult cr = new CheckResult();
 		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
-			result = new RuleResult(check.getNegate());
-			result.add(convertResult(def.getResult()));
+			data = new CheckData(check.getNegate());
+			data.add(convertResult(def.getResult()));
 			InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
 			inst.setValue(def.getDefinitionId());
-			cr.getResults().add(new CheckResult(result.getResult(), check, inst));
+			cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), check, inst));
 		    }
 		    return cr;
 		} else {
 		    for (DefinitionType def : ovalResult.getDefinitionResults()) {
-			result.add(convertResult(def.getResult()));
+			data.add(convertResult(def.getResult()));
 		    }
 		}
-		return new CheckResult(result.getResult(), check);
+		return new CheckResult(data.getResult(CcOperatorEnumType.AND), check);
 	    }
 	}
 	return new CheckResult(ResultEnumType.NOTCHECKED, check);

@@ -16,14 +16,13 @@ import scap.ocil.core.ExceptionalResultType;
 import scap.ocil.core.ResultsType;
 import scap.ocil.core.QuestionnaireResultType;
 import scap.ocil.variables.OcilVariables;
+import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckExportType;
 import scap.xccdf.CheckImportType;
 import scap.xccdf.CheckType;
 import scap.xccdf.InstanceResultType;
-import scap.xccdf.ObjectFactory;
 import scap.xccdf.ResultEnumType;
-import scap.xccdf.RuleResultType;
 import scap.xccdf.RuleType;
 import scap.xccdf.TestResultType;
 
@@ -37,7 +36,6 @@ import org.joval.intf.xml.ITransformable;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.ocil.Variables;
 import org.joval.scap.xccdf.XccdfException;
-import org.joval.scap.xccdf.engine.RuleResult;
 import org.joval.util.JOVALMsg;
 import org.joval.util.Producer;
 
@@ -194,7 +192,7 @@ public class OcilHandler implements ISystem {
 	return reports;
     }
 
-    public IResult getResult(CheckType check) throws Exception {
+    public IResult getResult(CheckType check, boolean multi) throws Exception {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
@@ -204,31 +202,31 @@ public class OcilHandler implements ISystem {
 
 	for (CheckContentRefType ref : check.getCheckContentRef()) {
 	    if (results.containsKey(ref.getHref())) {
-		RuleResult result = new RuleResult(check.getNegate());
+		CheckData data = new CheckData(check.getNegate());
 		Map<String, String> ocilResults = results.get(ref.getHref());
 		if (ref.isSetName()) {
 		    String name = ref.getName();
 		    if (ocilResults.containsKey(name)) {
-			result.add(convertResult(ocilResults.get(name)));
+			data.add(convertResult(ocilResults.get(name)));
 		    } else {
-			result.add(ResultEnumType.NOTCHECKED);
+			data.add(ResultEnumType.NOTCHECKED);
 		    }
-		} else if (check.getMultiCheck()) {
+		} else if (multi) {
 		    CheckResult cr = new CheckResult();
 		    for (Map.Entry<String, String> entry : ocilResults.entrySet()) {
-			result = new RuleResult(check.getNegate());
-			result.add(convertResult(entry.getValue()));
+			data = new CheckData(check.getNegate());
+			data.add(convertResult(entry.getValue()));
 			InstanceResultType inst = Engine.FACTORY.createInstanceResultType();
 			inst.setValue(entry.getKey());
-			cr.getResults().add(new CheckResult(result.getResult(), check, inst));
+			cr.getResults().add(new CheckResult(data.getResult(CcOperatorEnumType.AND), check, inst));
 		    }
 		    return cr;
 		} else {
 		    for (String qr : ocilResults.values()) {
-			result.add(convertResult(qr));
+			data.add(convertResult(qr));
 		    }
 		}
-		return new CheckResult(result.getResult(), check);
+		return new CheckResult(data.getResult(CcOperatorEnumType.AND), check);
 	    }
 	}
 	return new CheckResult(ResultEnumType.NOTCHECKED, check);

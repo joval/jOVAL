@@ -80,12 +80,12 @@ CLASSES=\
 	org.joval.scap.xccdf.Tailoring				\
 	org.joval.scap.xccdf.TestResult				\
 	org.joval.scap.xccdf.XccdfException			\
+	org.joval.scap.xccdf.engine.CheckData			\
 	org.joval.scap.xccdf.engine.CheckResult			\
 	org.joval.scap.xccdf.engine.Engine			\
 	org.joval.scap.xccdf.engine.ISystem			\
 	org.joval.scap.xccdf.engine.OcilHandler			\
 	org.joval.scap.xccdf.engine.OvalHandler			\
-	org.joval.scap.xccdf.engine.RuleResult			\
 	org.joval.scap.xccdf.engine.SceHandler			\
 	org.joval.util.JOVALMsg					\
 	org.joval.util.JOVALSystem				\

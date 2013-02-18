@@ -13,17 +13,12 @@ import jsaf.intf.system.ISession;
 
 import org.openscap.sce.xccdf.ScriptDataType;
 import org.openscap.sce.results.SceResultsType;
+import scap.xccdf.CcOperatorEnumType;
 import scap.xccdf.CheckContentRefType;
 import scap.xccdf.CheckExportType;
 import scap.xccdf.CheckImportType;
 import scap.xccdf.CheckType;
-import scap.xccdf.ObjectFactory;
-import scap.xccdf.OverrideableCPE2IdrefType;
 import scap.xccdf.ResultEnumType;
-import scap.xccdf.RoleEnumType;
-import scap.xccdf.RuleResultType;
-import scap.xccdf.RuleType;
-import scap.xccdf.TestResultType;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.datastream.IView;
@@ -33,7 +28,6 @@ import org.joval.intf.xml.ITransformable;
 import org.joval.scap.sce.SceException;
 import org.joval.scap.sce.SCEScript;
 import org.joval.scap.xccdf.XccdfException;
-import org.joval.scap.xccdf.engine.RuleResult;
 import org.joval.util.JOVALMsg;
 import org.joval.util.Producer;
 
@@ -96,7 +90,7 @@ public class SceHandler implements ISystem {
 	return reports;
     }
 
-    public IResult getResult(CheckType check) throws Exception {
+    public IResult getResult(CheckType check, boolean multi) throws Exception {
 	if (!NAMESPACE.equals(check.getSystem())) {
 	    throw new IllegalArgumentException(check.getSystem());
 	}
@@ -109,10 +103,10 @@ public class SceHandler implements ISystem {
 	    }
 	}
 
-	RuleResult result = new RuleResult(check.getNegate());
+	CheckData data = new CheckData(check.getNegate());
 	CheckType checkResult = Engine.FACTORY.createCheckType();
 	checkResult.setId(check.getId());
-	checkResult.setMultiCheck(check.getMultiCheck());
+	checkResult.setMultiCheck(false);
 	checkResult.setNegate(check.getNegate());
 	checkResult.setSelector(check.getSelector());
 	checkResult.setSystem(NAMESPACE);
@@ -122,7 +116,7 @@ public class SceHandler implements ISystem {
 	    for (CheckContentRefType ref : check.getCheckContentRef()) {
 		if (results.containsKey(ref.getHref())) {
 		    SceResultsType srt = results.get(ref.getHref());
-		    result.add(srt.getResult());
+		    data.add(srt.getResult());
 		    checkResult.getCheckContentRef().add(ref);
 		    if (importStdout) {
 			CheckImportType cit = Engine.FACTORY.createCheckImportType();
@@ -134,7 +128,7 @@ public class SceHandler implements ISystem {
 		}
 	    }
 	}
-	return new CheckResult(result.getResult(), checkResult);
+	return new CheckResult(data.getResult(CcOperatorEnumType.AND), checkResult);
     }
 
     // Private
