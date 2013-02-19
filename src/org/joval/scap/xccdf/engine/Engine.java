@@ -315,6 +315,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		    producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.TRUE);
 		    processXccdf(testResult);
 		} else {
+		    testResult.setEndTime(getTimestamp());
 		    producer.sendNotify(Message.PLATFORM_PHASE_END, Boolean.FALSE);
 		    logger.info(JOVALMsg.WARNING_CPE_TARGET, plugin.getSession().getHostname());
 		}
