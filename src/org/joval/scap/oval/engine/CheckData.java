@@ -15,7 +15,7 @@ import org.joval.util.JOVALMsg;
  */
 class CheckData extends OperatorData {
     CheckData() {
-	super();
+	super(false);
     }
 
     ResultEnumeration getResult(CheckEnumeration check) throws OvalException {

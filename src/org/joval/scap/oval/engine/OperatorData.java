@@ -12,10 +12,12 @@ import org.joval.util.JOVALMsg;
 /**
  * @see http://oval.mitre.org/language/version5.9/ovaldefinition/documentation/oval-common-schema.html#OperatorEnumeration
  */
-class OperatorData {
+public class OperatorData {
+    private boolean negate;
     int t, f, e, u, ne, na;
 
-    OperatorData() {
+    public OperatorData(boolean negate) {
+	this.negate = negate;
 	t = 0;
 	f = 0;
 	e = 0;
@@ -24,7 +26,7 @@ class OperatorData {
 	na = 0;
     }
 
-    void addResult(ResultEnumeration result) {
+    public void addResult(ResultEnumeration result) {
 	switch(result) {
 	  case TRUE:
 	    t++;
@@ -47,14 +49,22 @@ class OperatorData {
 	}
     }
 
-    ResultEnumeration getResult(OperatorEnumeration op) throws OvalException {
+    public ResultEnumeration getResult(OperatorEnumeration op) throws OvalException {
 	ResultEnumeration result = ResultEnumeration.UNKNOWN;
 	switch(op) {
 	  case AND:
 	    if        (t > 0	&& f == 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		return ResultEnumeration.TRUE;
+		if (negate) {
+		    return ResultEnumeration.FALSE;
+		} else {
+		    return ResultEnumeration.TRUE;
+		}
 	    } else if (t >= 0	&& f > 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		return ResultEnumeration.FALSE;
+		if (negate) {
+		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
+		}
 	    } else if (t >= 0	&& f == 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
 		return ResultEnumeration.ERROR;
 	    } else if (t >= 0	&& f == 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
@@ -68,9 +78,17 @@ class OperatorData {
 
 	  case ONE:
 	    if        (t == 1	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		return ResultEnumeration.TRUE;
+		if (negate) {
+		    return ResultEnumeration.FALSE;
+		} else {
+		    return ResultEnumeration.TRUE;
+		}
 	    } else if (t > 1	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		return ResultEnumeration.FALSE;
+		if (negate) {
+		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
+		}
 	    } else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
 		return ResultEnumeration.FALSE;
 	    } else if (t < 2	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
@@ -86,9 +104,17 @@ class OperatorData {
 
 	  case OR:
 	    if        (t > 0	&& f >= 0	&& e >= 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
-		return ResultEnumeration.TRUE;
+		if (negate) {
+		    return ResultEnumeration.FALSE;
+		} else {
+		    return ResultEnumeration.TRUE;
+		}
 	    } else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		return ResultEnumeration.FALSE;
+		if (negate) {
+		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
+		}
 	    } else if (t == 0	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
 		return ResultEnumeration.ERROR;
 	    } else if (t == 0	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
@@ -102,9 +128,17 @@ class OperatorData {
 
 	  case XOR:
 	    if        (t%2 != 0	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		return ResultEnumeration.TRUE;
+		if (negate) {
+		    return ResultEnumeration.FALSE;
+		} else {
+		    return ResultEnumeration.TRUE;
+		}
 	    } else if (t%2 == 0	&& f >= 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		return ResultEnumeration.FALSE;
+		if (negate) {
+		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
+		}
 	    } else if (t >= 0	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
 		return ResultEnumeration.ERROR;
 	    } else if (t >= 0	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {
@@ -124,7 +158,7 @@ class OperatorData {
 
     @Override
     public String toString() {
-	StringBuffer sb = new StringBuffer();
+	StringBuffer sb = new StringBuffer("negate: ").append(Boolean.toString(negate)).append(", ");
 	sb.append("t: ").append(Integer.toString(t)).append(", ");
 	sb.append("f: ").append(Integer.toString(f)).append(", ");
 	sb.append("e: ").append(Integer.toString(e)).append(", ");

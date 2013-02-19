@@ -7,10 +7,10 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import scap.cpe.language.LogicalTestType;
 import scap.xccdf.ProfileType;
 import scap.xccdf.RuleType;
 
-import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.xccdf.IBenchmark;
 
 /**
@@ -36,16 +36,9 @@ public interface IView {
     IDatastream getStream();
 
     /**
-     * Return all the applicable CPE platform IDs for this view.
+     * Get a map of CPE idrefs relevant for the view, and their corresponding CPE LogicalTestTypes.
      */
-    Collection<String> getCpePlatforms();
-
-    /**
-     * Get the Map of OVAL definition component HREFs and corresponding OVAL definition ID filters for a given CPE ID.
-     *
-     * @throws NoSuchElementException if there is no CPE dictionary entry with the specified ID.
-     */
-    Map<String, IDefinitionFilter> getCpeOval(String cpeId) throws NoSuchElementException;
+    Map<String, LogicalTestType> getCpeTests();
 
     /**
      * Return a Map of all the fully-resolved values selected and defined in this view.

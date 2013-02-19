@@ -1301,7 +1301,8 @@ public class Engine implements IEngine, IProvider {
 
 	scap.oval.results.CriteriaType criteriaResult = Factories.results.createCriteriaType();
 	criteriaResult.setOperator(criteriaDefinition.getOperator());
-	OperatorData operator = new OperatorData();
+	criteriaResult.setNegate(criteriaDefinition.getNegate());
+	OperatorData operator = new OperatorData(criteriaDefinition.getNegate());
 	for (Object child : criteriaDefinition.getCriteriaOrCriterionOrExtendDefinition()) {
 	    Object resultObject = null;
 	    if (child instanceof CriteriaType) {
@@ -1323,22 +1324,10 @@ public class Engine implements IEngine, IProvider {
 		edtResult = Factories.results.createExtendDefinitionType();
 		edtResult.setDefinitionRef(defId);
 		edtResult.setVersion(defDefinition.getVersion());
-		if (edtDefinition.isSetNegate() && edtDefinition.getNegate()) {
-		    edtResult.setNegate(true);
-		    switch(defResult.getResult()) {
-		      case TRUE:
-			edtResult.setResult(ResultEnumeration.FALSE);
-			break;
-		      case FALSE:
-			edtResult.setResult(ResultEnumeration.TRUE);
-			break;
-		      default:
-			edtResult.setResult(defResult.getResult());
-			break;
-		    }
-		} else {
-		    edtResult.setResult(defResult.getResult());
-		}
+		edtResult.setNegate(edtDefinition.getNegate());
+		OperatorData od = new OperatorData(edtDefinition.getNegate());
+		od.addResult(defResult.getResult());
+		edtResult.setResult(od.getResult(OperatorEnumeration.AND));
 		if (edtDefinition.isSetApplicabilityCheck() && edtDefinition.getApplicabilityCheck()) {
 		    switch(edtResult.getResult()) {
 		      case FALSE:
@@ -1355,14 +1344,6 @@ public class Engine implements IEngine, IProvider {
 	}
 
 	ResultEnumeration result = operator.getResult(criteriaDefinition.getOperator());
-	if (criteriaDefinition.isSetNegate() && criteriaDefinition.getNegate()) {
-	    criteriaResult.setNegate(true);
-	    if (result == ResultEnumeration.TRUE) {
-		result = ResultEnumeration.FALSE;
-	    } else if (result == ResultEnumeration.FALSE) {
-		result = ResultEnumeration.TRUE;
-	    }
-	}
 	if (criteriaDefinition.isSetApplicabilityCheck() && criteriaDefinition.getApplicabilityCheck()) {
 	    switch(result) {
 	      case FALSE:
@@ -1402,22 +1383,10 @@ public class Engine implements IEngine, IProvider {
 
 	scap.oval.results.CriterionType criterionResult = Factories.results.createCriterionType();
 	criterionResult.setTestRef(testId);
-	if (criterionDefinition.isSetNegate() && criterionDefinition.getNegate()) {
-	    criterionResult.setNegate(true);
-	    switch(testResult.getResult()) {
-	      case TRUE:
-		criterionResult.setResult(ResultEnumeration.FALSE);
-		break;
-	      case FALSE:
-		criterionResult.setResult(ResultEnumeration.TRUE);
-		break;
-	      default:
-		criterionResult.setResult(testResult.getResult());
-		break;
-	    }
-	} else {
-	    criterionResult.setResult(testResult.getResult());
-	}
+	criterionResult.setNegate(criterionDefinition.getNegate());
+	OperatorData od = new OperatorData(criterionDefinition.getNegate());
+	od.addResult(testResult.getResult());
+	criterionResult.setResult(od.getResult(OperatorEnumeration.AND));
 	if (criterionDefinition.isSetApplicabilityCheck() && criterionDefinition.getApplicabilityCheck()) {
 	    switch(criterionResult.getResult()) {
 	      case FALSE:
@@ -1484,7 +1453,7 @@ public class Engine implements IEngine, IProvider {
 		switch(item.getStatus()) {
 		  case EXISTS:
 		    if (stateIds.size() > 0) {
-			OperatorData result = new OperatorData();
+			OperatorData result = new OperatorData(false);
 			for (String stateId : stateIds) {
 			    StateType state = definitions.getState(stateId);
 			    try {
@@ -1636,7 +1605,7 @@ public class Engine implements IEngine, IProvider {
      */
     private ResultEnumeration compare(StateType state, ItemType item, RequestContext rc) throws OvalException, TestException {
 	try {
-	    OperatorData result = new OperatorData();
+	    OperatorData result = new OperatorData(false);
 	    for (Method method : getMethods(state.getClass()).values()) {
 		String methodName = method.getName();
 		if (methodName.startsWith("get") && !stateBaseMethodNames.contains(methodName)) {

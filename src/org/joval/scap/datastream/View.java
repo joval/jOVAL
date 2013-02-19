@@ -19,11 +19,12 @@ import scap.cpe.dictionary.CheckType;
 import scap.cpe.dictionary.ItemType;
 import scap.cpe.dictionary.ListType;
 import scap.cpe.language.CheckFactRefType;
+import scap.cpe.language.LogicalTestType;
+import scap.cpe.language.OperatorEnumeration;
 import scap.cpe.language.PlatformType;
 import scap.xccdf.BenchmarkType;
 import scap.xccdf.CPE2IdrefType;
 import scap.xccdf.GroupType;
-import scap.xccdf.ObjectFactory;
 import scap.xccdf.OverrideableCPE2IdrefType;
 import scap.xccdf.ProfileType;
 import scap.xccdf.ProfileRefineRuleType;
@@ -38,13 +39,11 @@ import scap.xccdf.SelStringType;
 import scap.xccdf.ValueType;
 
 import org.joval.intf.scap.cpe.IDictionary;
-import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
-import org.joval.scap.oval.DefinitionFilter;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
 
@@ -55,7 +54,8 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class View implements IView {
-    private static final ObjectFactory FACTORY = new ObjectFactory();
+    private static final scap.cpe.language.ObjectFactory CPE = new scap.cpe.language.ObjectFactory();
+    private static final scap.xccdf.ObjectFactory XCCDF = new scap.xccdf.ObjectFactory();
 
     private String benchmarkId;
     private ProfileType profile;
@@ -63,7 +63,7 @@ public class View implements IView {
     private IBenchmark benchmark;
     private BenchmarkType bt;
     private Map<String, RuleType> rules;
-    private Map<String, Map<String, Collection<String>>> platforms;
+    private Map<String, LogicalTestType> platforms;
     private Map<String, Collection<String>> values = null;
 
     /**
@@ -76,7 +76,7 @@ public class View implements IView {
 	bt = benchmark.getBenchmark();
 	this.profile = resolve(profile);
 
-	platforms = new HashMap<String, Map<String, Collection<String>>>();
+	platforms = new HashMap<String, LogicalTestType>();
 	// Add Benchmark-wide platforms
 	for (CPE2IdrefType cpe : bt.getPlatform()) {
 	    addPlatform(cpe.getIdref());
@@ -136,7 +136,7 @@ public class View implements IView {
 		// Borrow platforms from the nearest platform-defining container
 		//
 		for (String idref : platformDefaults.get(rule.getId())) {
-		    OverrideableCPE2IdrefType cpe = FACTORY.createOverrideableCPE2IdrefType();
+		    OverrideableCPE2IdrefType cpe = XCCDF.createOverrideableCPE2IdrefType();
 		    cpe.setIdref(idref);
 		    rule.getPlatform().add(cpe);
 		}
@@ -197,19 +197,8 @@ public class View implements IView {
 	return stream;
     }
 
-    public Collection<String> getCpePlatforms() {
-	return platforms.keySet();
-    }
-
-    public Map<String, IDefinitionFilter> getCpeOval(String cpeId) throws NoSuchElementException {
-	if (platforms.containsKey(cpeId)) {
-	    Map<String, IDefinitionFilter> result = new HashMap<String, IDefinitionFilter>();
-	    for (Map.Entry<String, Collection<String>> entry : platforms.get(cpeId).entrySet()) {
-		result.put(entry.getKey(), new DefinitionFilter(entry.getValue()));
-	    }
-	    return result;
-	}
-	throw new NoSuchElementException(cpeId);
+    public Map<String, LogicalTestType> getCpeTests() {
+	return platforms;
     }
 
     public Map<String, Collection<String>> getValues() {
@@ -293,7 +282,6 @@ public class View implements IView {
      */
     private void addPlatform(String cpeName) throws NoSuchElementException {
 	if (!platforms.containsKey(cpeName)) {
-	    Map<String, Collection<String>> ovalMap = new HashMap<String, Collection<String>>();
 	    if (cpeName.startsWith("cpe:")) {
 		IDictionary dictionary = stream.getDictionary();
 		if (dictionary == null) {
@@ -303,11 +291,16 @@ public class View implements IView {
 		if (cpeItem.isSetCheck()) {
 		    for (CheckType check : cpeItem.getCheck()) {
 			if (SystemEnumeration.OVAL.namespace().equals(check.getSystem()) && check.isSetHref()) {
-			    String href = check.getHref();
-			    if (!ovalMap.containsKey(href)) {
-				ovalMap.put(href, new ArrayList<String>());
-			    }
-			    ovalMap.get(href).add(check.getValue());
+			    LogicalTestType ltt = CPE.createLogicalTestType();
+			    ltt.setNegate(false);
+			    ltt.setOperator(OperatorEnumeration.AND);
+			    CheckFactRefType cfrt = CPE.createCheckFactRefType();
+			    cfrt.setSystem(check.getSystem());
+			    cfrt.setHref(check.getHref());
+			    cfrt.setIdRef(check.getValue());
+			    ltt.getCheckFactRef().add(cfrt);
+			    platforms.put(cpeName, ltt);
+			    break;
 			}
 		    }
 		}
@@ -315,29 +308,13 @@ public class View implements IView {
 		String name = cpeName.substring(1);
 		for (PlatformType pt : bt.getPlatformSpecification().getPlatform()) {
 		    if (name.equals(pt.getId())) {
-			//
-			// DAS - full implementation is TBD
-			//
-			for (CheckFactRefType cfrt : pt.getLogicalTest().getCheckFactRef()) {
-			    if (SystemEnumeration.OVAL.namespace().equals(cfrt.getSystem())) {
-				String href = cfrt.getHref();
-				if (!ovalMap.containsKey(href)) {
-				    ovalMap.put(href, new ArrayList<String>());
-				}
-				ovalMap.get(href).add(cfrt.getIdRef());
-			    }
-			}
+			platforms.put(cpeName, pt.getLogicalTest());
 			break;
 		    }
 		}
 	    }
 
-	    //
-	    // Verify that the CPE name was mapped to OVAL definitions
-	    //
-	    if (ovalMap.size() > 0) {
-		platforms.put(cpeName, ovalMap);
-	    } else {
+	    if (!platforms.containsKey(cpeName)) {
 		throw new NoSuchElementException(cpeName);
 	    }
 	}
@@ -394,7 +371,7 @@ public class View implements IView {
      * Return a ProfileType with all inherited properties and elements incorporated therein.
      */
     private ProfileType resolve(ProfileType base) {
-	ProfileType profile = FACTORY.createProfileType();
+	ProfileType profile = XCCDF.createProfileType();
 
 	//
 	// Inheritance
@@ -425,7 +402,7 @@ public class View implements IView {
      */
     private RuleType resolve(RuleType base) {
 	String ruleId = base.getId();
-	RuleType rule = FACTORY.createRuleType();
+	RuleType rule = XCCDF.createRuleType();
 
 	//
 	// Inheritance
@@ -488,7 +465,7 @@ public class View implements IView {
      * Return a ValueType with all inherited properties and elements incorporated therein.
      */
     private ValueType resolve(ValueType base) {
-	ValueType value = FACTORY.createValueType();
+	ValueType value = XCCDF.createValueType();
 
 	//
 	// Inheritance

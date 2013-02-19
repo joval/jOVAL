@@ -202,6 +202,7 @@ public enum JOVALMsg {
     WARNING_FIELD_STATUS,
     WARNING_SYSCTL,
     WARNING_WINDOWS_VIEW,
+    WARNING_XCCDF_PLATFORM,
     WARNING_XCCDF_RULES;
 
     private static IMessageConveyor baseConveyor;

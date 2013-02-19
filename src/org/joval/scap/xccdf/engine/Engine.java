@@ -32,10 +32,14 @@ import org.slf4j.cal10n.LocLogger;
 import jsaf.intf.system.ISession;
 
 import scap.cpe.dictionary.ListType;
+import scap.cpe.language.LogicalTestType;
+import scap.cpe.language.CheckFactRefType;
 import scap.datastream.Component;
 import scap.oval.common.GeneratorType;
+import scap.oval.common.OperatorEnumeration;
 import scap.oval.definitions.core.OvalDefinitions;
 import scap.oval.results.DefinitionType;
+import scap.oval.results.ResultEnumeration;
 import scap.oval.systemcharacteristics.core.InterfaceType;
 import scap.oval.systemcharacteristics.core.SystemInfoType;
 import scap.oval.variables.VariableType;
@@ -86,6 +90,7 @@ import org.joval.scap.cpe.CpeException;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.oval.OvalFactory;
+import org.joval.scap.oval.engine.OperatorData;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.TestResult;
 import org.joval.scap.xccdf.XccdfException;
@@ -291,7 +296,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		// Perform the profile's platform applicability tests, and if it's applicable, the selected checks
 		//
 		producer.sendNotify(Message.PLATFORM_PHASE_START, null);
-		checkPlatforms();
+		checkPlatforms(testResult);
 		List<CPE2IdrefType> cpes = new ArrayList<CPE2IdrefType>();
 		if (view.getProfile().getPlatform().size() > 0 && view.getProfile().getPlatform().get(0).getOverride()) {
 		    cpes.addAll(view.getProfile().getPlatform());
@@ -380,7 +385,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      */
     private void processXccdf(TestResultType testResult) throws Exception {
 	producer.sendNotify(Message.RULES_PHASE_START, null);
-	testResult.setStartTime(getTimestamp());
 
 	Map<String, ISystem> handlers = new HashMap<String, ISystem>();
 	if (checklists.size() > 0) {
@@ -635,11 +639,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    identity.setAuthenticated(true);
 	    testResult.setIdentity(identity);
 	}
-	for (String href : view.getCpePlatforms()) {
-	    CPE2IdrefType cpeRef = FACTORY.createCPE2IdrefType();
-	    cpeRef.setIdref(href);
-	    testResult.getPlatform().add(cpeRef);
-	}
 	sysinfo = plugin.getSystemInfo();
 	if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
 	    testResult.getTarget().add(sysinfo.getPrimaryHostName());
@@ -667,6 +666,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    }
 	}
 
+	testResult.setStartTime(getTimestamp());
 	return testResult;
     }
 
@@ -674,28 +674,28 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      * Test the target against all the platforms defined in the view, and store the results indexed by CVE ID in the
      * platforms map.
      */
-    private void checkPlatforms() throws Exception {
-	platforms = new HashMap<String, Boolean>();
-	for (String cpeid : view.getCpePlatforms()) {
-	    producer.sendNotify(Message.PLATFORM_CPE, cpeid);
-	    try {
-		if (isApplicable(view.getCpeOval(cpeid))) {
-		    logger.info(JOVALMsg.STATUS_CPE_TARGET, plugin.getSession().getHostname(), cpeid);
-		    platforms.put(cpeid, Boolean.TRUE);
-		} else {
-		    platforms.put(cpeid, Boolean.FALSE);
+    private void checkPlatforms(TestResultType testResult) throws Exception {
+	//
+	// Parcel up all the check definitions by href
+	//
+	Map<String, IDefinitionFilter> filters = new HashMap<String, IDefinitionFilter>();
+	for (Map.Entry<String, LogicalTestType> entry : view.getCpeTests().entrySet()) {
+	    producer.sendNotify(Message.PLATFORM_CPE, entry.getKey());
+	    for (CheckFactRefType cfrt : entry.getValue().getCheckFactRef()) {
+		if (SystemEnumeration.OVAL.namespace().equals(cfrt.getSystem())) {
+		    if (!filters.containsKey(cfrt.getHref())) {
+			filters.put(cfrt.getHref(), OvalFactory.createDefinitionFilter());
+		    }
+		    filters.get(cfrt.getHref()).addDefinition(cfrt.getIdRef());
 		}
-	    } catch (NoSuchElementException e) {
-		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, e.getMessage()));
 	    }
 	}
-    }
 
-    /**
-     * Check for applicability for a single platform, i.e., all the OVAL definitions in cpeOval evaluate to TRUE.
-     */
-    private boolean isApplicable(Map<String, IDefinitionFilter> cpeOval) throws Exception {
-	for (Map.Entry<String, IDefinitionFilter> entry : cpeOval.entrySet()) {
+	//
+	// Run an OVAL engine for each href to solve the platform definitions
+	//
+	Map<String, IResults> results = new HashMap<String, IResults>();
+	for (Map.Entry<String, IDefinitionFilter> entry : filters.entrySet()) {
 	    IEngine engine = OvalFactory.createEngine(IEngine.Mode.DIRECTED, plugin);
 	    producer.sendNotify(Message.OVAL_ENGINE, engine);
 	    DefinitionMonitor monitor = new DefinitionMonitor();
@@ -706,27 +706,64 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		engine.run();
 		switch(engine.getResult()) {
 		  case OK:
-		    IResults results = engine.getResults();
-		    reports.add(results);
-		    for (String definition : monitor.definitions()) {
-			switch(results.getDefinitionResult(definition)) {
-			  case TRUE:
-			    break;
-
-			  default:
-			    return false;
-			}
-		    }
+		    IResults ir = engine.getResults();
+		    reports.add(ir);
+		    results.put(entry.getKey(), ir);
 		    break;
 
 		  case ERR:
 		    throw engine.getError();
 		}
+	    } catch (NoSuchElementException e) {
+		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_MISSING_PART, e.getMessage()));
 	    } finally {
 		engine.getNotificationProducer().removeObserver(monitor);
 	    }
 	}
-	return true;
+
+	//
+	// Run an OVAL engine for each href to solve the platform definitions
+	//
+	platforms = new HashMap<String, Boolean>();
+	for (Map.Entry<String, LogicalTestType> entry : view.getCpeTests().entrySet()) {
+	    if (evaluate(entry.getValue(), results)) {
+		CPE2IdrefType cpeRef = FACTORY.createCPE2IdrefType();
+		cpeRef.setIdref(entry.getKey());
+		testResult.getPlatform().add(cpeRef);
+		logger.info(JOVALMsg.STATUS_CPE_TARGET, plugin.getSession().getHostname(), entry.getKey());
+		platforms.put(entry.getKey(), Boolean.TRUE);
+	    } else {
+		platforms.put(entry.getKey(), Boolean.FALSE);
+	    }
+	}
+    }
+
+    private boolean evaluate(LogicalTestType test, Map<String, IResults> results) throws Exception {
+	OperatorData data = new OperatorData(test.isNegate());
+	for (CheckFactRefType cfrt : test.getCheckFactRef()) {
+	    data.addResult(results.get(cfrt.getHref()).getDefinitionResult(cfrt.getIdRef()));
+	}
+	OperatorEnumeration op;
+	switch(test.getOperator()) {
+	  case AND:
+	    op = OperatorEnumeration.OR;
+	    break;
+	  case OR:
+	    op = OperatorEnumeration.OR;
+	    break;
+	  default:
+	    throw new Exception(JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, test.getOperator().toString()));
+	}
+	ResultEnumeration result = data.getResult(op);
+	switch(result) {
+	  case TRUE:
+	    return true;
+	  case FALSE:
+	    return false;
+	  default:
+	    logger.warn(JOVALMsg.WARNING_XCCDF_PLATFORM, result.toString());
+	    return false;
+	}
     }
 
     /**
