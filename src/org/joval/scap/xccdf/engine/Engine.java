@@ -475,9 +475,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    scoreType.setSystem(model.getSystem());
 	    String score = Float.toString(sk.getScore());
 	    scoreType.setValue(new BigDecimal(score));
-	    if (sk instanceof FlatScoreKeeper) {
-		scoreType.setMaximum(new BigDecimal(Float.toString(((FlatScoreKeeper)sk).getMaxScore())));
-	    }
+	    scoreType.setMaximum(new BigDecimal(Float.toString(sk.getMaxScore())));
 	    testResult.getScore().add(scoreType);
 	    logger.info(JOVALMsg.STATUS_XCCDF_SCORE, model.getSystem(), score);
 	}
@@ -885,16 +883,21 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      */
     abstract static class ScoreKeeper {
 	HashMap<String, RuleResultType> results;
-	float score, count;
+	float score, max_score, count;
 
 	ScoreKeeper(HashMap<String, RuleResultType> results) {
 	    this.results = results;
 	    score = 0;
+	    max_score = 0;
 	    count = 0;
 	}
 
 	float getScore() {
 	    return score;
+	}
+
+	float getMaxScore() {
+	    return max_score;
 	}
     }
 
@@ -907,6 +910,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 
 	DefaultScoreKeeper(HashMap<String, RuleResultType> results) {
 	    super(results);
+	    max_score = 100;
 	    accumulator = 0;
 	    weightedScore = 0;
 	}
@@ -972,12 +976,10 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      */
     class FlatScoreKeeper extends ScoreKeeper {
 	private boolean weighted;
-	private float max_score;
 
 	FlatScoreKeeper(boolean weighted, HashMap<String, RuleResultType> results) {
 	    super(results);
 	    this.weighted = weighted;
-	    max_score = 0;
 	}
 
 	FlatScoreKeeper(FlatScoreKeeper parent, RuleType rule) {
@@ -1027,10 +1029,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		max_score += child.max_score;
 	    }
 	}
-
-	float getMaxScore() {
-	    return max_score;
-	}
     }
 
     /**
@@ -1047,11 +1045,16 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 
 	@Override
 	float getScore() {
-	    if (super.getScore() == getMaxScore()) {
+	    if (super.getScore() == super.getMaxScore()) {
 		return 1;
 	    } else {
 		return 0;
 	    }
+	}
+
+	@Override
+	float getMaxScore() {
+	    return 1;
 	}
     }
 
