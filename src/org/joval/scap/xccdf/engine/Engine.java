@@ -910,7 +910,6 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 
 	DefaultScoreKeeper(HashMap<String, RuleResultType> results) {
 	    super(results);
-	    max_score = 100;
 	    accumulator = 0;
 	    weightedScore = 0;
 	}
@@ -968,6 +967,11 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    if (accumulator > 0) {
 		score = (score / accumulator);
 	    }
+	}
+
+	@Override
+	float getMaxScore() {
+	    return 100;
 	}
     }
 
