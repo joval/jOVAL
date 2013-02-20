@@ -42,13 +42,13 @@ import org.joval.scap.xccdf.XccdfException;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class Bundle {
+public class Bundle implements IBundle {
     private File base;
     private ZipFile zip;
     private IBenchmark benchmark;
     private IDictionary dictionary;
 
-    public Bundle(File file) throws IOException, ScapException {
+    public Bundle(File file) throws ScapException {
 	if (file.isDirectory()) {
 	    base = file;
 	    for (File f : base.listFiles()) {
@@ -61,33 +61,37 @@ public class Bundle {
 		}
 	    }
 	} else if (file.getName().toLowerCase().endsWith(".zip")) {
-	    zip = new ZipFile(file);
-	    Enumeration<? extends ZipEntry> entries = zip.entries();
-	    while(entries.hasMoreElements()) {
-		ZipEntry entry = entries.nextElement();
-		if (!entry.isDirectory() && entry.getName().toLowerCase().endsWith(".xml")) {
-		    InputStream in = null;
-		    try {
-			if (entry.getName().toLowerCase().indexOf("xccdf") != -1) {
-			    in = zip.getInputStream(entry);
-			    benchmark = new Benchmark(Benchmark.getBenchmarkType(in));
-			} else if (entry.getName().toLowerCase().indexOf("cpe-dictionary") != -1) {
-			    in = zip.getInputStream(entry);
-			    dictionary = new Dictionary(Dictionary.getCpeList(in));
-			}
-		    } finally {
-			if (in != null) {
-			    try {
-				in.close();
-			    } catch (IOException e) {
+	    try {
+		zip = new ZipFile(file);
+		Enumeration<? extends ZipEntry> entries = zip.entries();
+		while(entries.hasMoreElements()) {
+		    ZipEntry entry = entries.nextElement();
+		    if (!entry.isDirectory() && entry.getName().toLowerCase().endsWith(".xml")) {
+			InputStream in = null;
+			try {
+			    if (entry.getName().toLowerCase().indexOf("xccdf") != -1) {
+				in = zip.getInputStream(entry);
+				benchmark = new Benchmark(Benchmark.getBenchmarkType(in));
+			    } else if (entry.getName().toLowerCase().indexOf("cpe-dictionary") != -1) {
+				in = zip.getInputStream(entry);
+				dictionary = new Dictionary(Dictionary.getCpeList(in));
+			    }
+			} finally {
+			    if (in != null) {
+				try {
+				    in.close();
+				} catch (IOException e) {
+				}
 			    }
 			}
 		    }
 		}
+	    } catch (IOException e) {
+		throw new ScapException(e);
 	    }
 	} else {
 	    String msg = Message.getMessage(Message.ERROR_IO, file.toString(), Message.getMessage(Message.ERROR_IO_NOT_DIR));
-	    throw new IOException(msg);
+	    throw new ScapException(msg);
 	}
     }
 

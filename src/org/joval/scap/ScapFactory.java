@@ -10,12 +10,14 @@ import java.net.URL;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.datastream.IDatastreamCollection;
 import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.xccdf.IBundle;
 import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.scap.ScapException;
 import org.joval.scap.datastream.DatastreamCollection;
 import org.joval.scap.ocil.Checklist;
 import org.joval.scap.ocil.OcilException;
+import org.joval.scap.xccdf.Bundle;
 import org.joval.scap.xccdf.Tailoring;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.scap.xccdf.engine.Engine;
@@ -43,6 +45,13 @@ public class ScapFactory {
      */
     public static IDatastreamCollection createDatastreamCollection(File f) throws ScapException {
 	return new DatastreamCollection(DatastreamCollection.getDSCollection(f));
+    }
+
+    /**
+     * Create an scap bundle from a directory or ZIP file.
+     */
+    public static IBundle createBundle(File f) throws ScapException {
+	return new Bundle(f);
     }
 
     /**
