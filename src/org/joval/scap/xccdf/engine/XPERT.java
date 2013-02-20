@@ -316,9 +316,13 @@ public class XPERT {
 			}
 			ctx = ds.getContext(benchmarkId, profileId);
 			if (profileId == null && ctx.getSelectedRules().size() == 0) {
-			    Collection<String> profiles = ds.getProfileIds(ctx.getBenchmark().getId());
-			    if (profiles.size() > 0) {
-			        StringBuffer sb = new StringBuffer("Try selecting a profile: ").append(LogFormatter.LF);
+			    Collection<String> profiles = ds.getProfileIds(benchmarkId);
+			    if (profiles.size() == 1) {
+				profileId = profiles.iterator().next();
+				ctx = ds.getContext(benchmarkId, profileId);
+				logger.info("Selected profile " + profileId);
+			    } else if (profiles.size() > 1) {
+			        StringBuffer sb = new StringBuffer("Select a profile: ").append(LogFormatter.LF);
 			        for (String id : profiles) {
 			            sb.append("  ").append(id).append(LogFormatter.LF);
 			        }

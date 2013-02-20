@@ -81,7 +81,7 @@ public abstract class ScapContext implements IScapContext {
 	this.benchmark = benchmark;
 	this.dictionary = dictionary;
 	bt = benchmark.getBenchmark();
-	this.profile = resolve(profile);
+	this.profile = profile == null ? null : resolve(profile);
 
 	platforms = new HashMap<String, LogicalTestType>();
 	// Add Benchmark-wide platforms
