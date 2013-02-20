@@ -21,7 +21,7 @@ import scap.xccdf.CheckType;
 import scap.xccdf.ResultEnumType;
 
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.xml.ITransformable;
@@ -40,7 +40,7 @@ import org.joval.util.Producer;
 public class SceHandler implements ISystem {
     public static final String NAMESPACE = SystemEnumeration.SCE.namespace();
 
-    private IView view;
+    private IScapContext ctx;
     private Producer<IEngine.Message> producer;
     private Map<String, Script> scripts;
     private Map<String, SceResultsType> results;
@@ -48,8 +48,8 @@ public class SceHandler implements ISystem {
     /**
      * Create an OVAL handler utility for the given XCCDF and Profile.
      */
-    public SceHandler(IView view, Producer<IEngine.Message> producer) {
-	this.view = view;
+    public SceHandler(IScapContext ctx, Producer<IEngine.Message> producer) {
+	this.ctx = ctx;
 	this.producer = producer;
 	scripts = new HashMap<String, Script>();
     }
@@ -134,7 +134,7 @@ public class SceHandler implements ISystem {
     // Private
 
     private String getSingleValue(String id) throws SceException {
-	Collection<String> values = view.getValues().get(id);
+	Collection<String> values = ctx.getValues().get(id);
 	if (values.size() == 1) {
 	    return values.iterator().next();
 	} else {
@@ -149,7 +149,7 @@ public class SceHandler implements ISystem {
 
 	Script(String id, Map<String, String> exports) throws NoSuchElementException, SceException {
 	    this.id = id;
-	    data = view.getStream().getSce(id);
+	    data = ctx.getSce(id);
 	    this.exports = exports;
 	}
 

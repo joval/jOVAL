@@ -27,7 +27,7 @@ import scap.xccdf.RuleType;
 import scap.xccdf.TestResultType;
 
 import org.joval.intf.plugin.IPlugin;
-import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.ocil.IVariables;
 import org.joval.intf.scap.xccdf.IEngine;
@@ -49,12 +49,12 @@ public class OcilHandler implements ISystem {
     public static final String NAMESPACE = SystemEnumeration.OCIL.namespace();
 
     /**
-     * Export relevant OCIL files to the specified directory. Returns false if there are no OCIL checks in the view.
+     * Export relevant OCIL files to the specified directory. Returns false if there are no OCIL checks in the context.
      */
-    public static boolean exportFiles(IView view, Producer<IEngine.Message> producer) throws OcilException {
+    public static boolean exportFiles(IScapContext ctx, Producer<IEngine.Message> producer) throws OcilException {
 	Collection<String> hrefs = new HashSet<String>();
 	Map<String, Variables> variables = new HashMap<String, Variables>();
-	for (RuleType rule : view.getSelectedRules().values()) {
+	for (RuleType rule : ctx.getSelectedRules().values()) {
 	    for (CheckType check : rule.getCheck()) {
 		if (check.getSystem().equals(NAMESPACE)) {
 		    if (check.isSetCheckContentRef()) {
@@ -70,7 +70,7 @@ public class OcilHandler implements ISystem {
 			    for (CheckExportType export : check.getCheckExport()) {
 				String ocilVariableId = export.getExportName();
 				String valueId = export.getValueId();
-				for (String s : view.getValues().get(valueId)) {
+				for (String s : ctx.getValues().get(valueId)) {
 				    vars.addValue(ocilVariableId, s);
 				}
 				vars.setComment(ocilVariableId, valueId);
@@ -87,11 +87,11 @@ public class OcilHandler implements ISystem {
 	}
 
 	//
-	// Export variables and OCIL XML for each HREF in the view.
+	// Export variables and OCIL XML for each HREF in the context.
 	//
 	for (String href : hrefs) {
 	    try {
-		IChecklist checklist = view.getStream().getOcil(href);
+		IChecklist checklist = ctx.getOcil(href);
 		IVariables vars = variables.get(href);
 		producer.sendNotify(IEngine.Message.OCIL_MISSING, new Argument(href, checklist, vars));
 	    } catch (NoSuchElementException e) {
@@ -103,23 +103,23 @@ public class OcilHandler implements ISystem {
 	return true;
     }
 
-    private IView view;
+    private IScapContext ctx;
     private XMLGregorianCalendar startTime;
     private Map<String, Map<String, String>> results;
     private Collection<ITransformable> reports;
 
     /**
-     * Create an OCIL handler utility for the given view and href-indexed Checklists (results).
+     * Create an OCIL handler utility for the given context and href-indexed Checklists (results).
      */
-    public OcilHandler(IView view, Map<String, IChecklist> checklists) throws IllegalArgumentException {
-	this.view = view;
+    public OcilHandler(IScapContext ctx, Map<String, IChecklist> checklists) throws IllegalArgumentException {
+	this.ctx = ctx;
 	results = new HashMap<String, Map<String, String>>();
 	reports = new ArrayList<ITransformable>();
 
 	if (checklists.size() == 1 && "".equals(checklists.keySet().iterator().next())) {
 	    //
 	    // If exactly one checklist was supplied, and without specifying an href, then treat is as a default checklist
-	    // for all the OCIL hrefs in the view.
+	    // for all the OCIL hrefs in the context.
 	    //
 	    // For reporting purposes, however, it is only added once.
 	    //
@@ -288,7 +288,7 @@ public class OcilHandler implements ISystem {
      */
     private HashSet<String> getOcilHrefs() {
 	HashSet<String> hrefs = new HashSet<String>();
-	for (RuleType rule : view.getSelectedRules().values()) {
+	for (RuleType rule : ctx.getSelectedRules().values()) {
 	    for (CheckType check : rule.getCheck()) {
 		if (NAMESPACE.equals(check.getSystem())) {
 		    for (CheckContentRefType ref : check.getCheckContentRef()) {

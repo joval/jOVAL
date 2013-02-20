@@ -1,7 +1,7 @@
-// Copyright (C) 2012 jOVAL.org.  All rights reserved.
+// Copyright (C) 2013 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.scap.datastream;
+package org.joval.intf.scap.xccdf;
 
 import java.util.Collection;
 import java.util.NoSuchElementException;
@@ -24,43 +24,36 @@ import org.joval.scap.sce.SceException;
 import org.joval.scap.xccdf.XccdfException;
 
 /**
- * Interface defining an SCAP datastream.
+ * Interface defining an SCAP bundle.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IDatastream {
+public interface IBundle {
     /**
-     * Get the CPE dictionary for this stream.
+     * Get the CPE dictionary for this bundle.
      */
     IDictionary getDictionary();
 
     /**
-     * Get the IDs of the benchmarks defined in the stream.
+     * Get the benchmark.
      */
-    Collection<String> getBenchmarkIds();
+    IBenchmark getBenchmark();
 
     /**
-     * Get a benchmark defined in the stream.
+     * Get the IDs of the profiles defined in the benchmark.
      */
-    IBenchmark getBenchmark(String benchmarkId) throws NoSuchElementException, XccdfException;
+    Collection<String> getProfileIds();
 
     /**
-     * Get the IDs of the profiles defined in the specified benchmark.
-     *
-     * @throws NoSuchElementException if there is no benchmark with the specified ID
-     */
-    Collection<String> getProfileIds(String benchmarkId) throws NoSuchElementException;
-
-    /**
-     * Get the view of the benchmark given the specified profile.
+     * Get a context using the specified profile.
      *
      * @throws NoSuchElementException if there is no benchmark or profile with the specified ID
      */
-    IScapContext getContext(String benchmarkId, String profileId) throws NoSuchElementException, ScapException;
+    IScapContext getContext(String profileId) throws NoSuchElementException, ScapException;
 
     /**
-     * Get the view of the stream given the specified tailoring and profile ID.
+     * Get a context using the specified tailoring/profile.
      *
      * @throws NoSuchElementException if there is no benchmark in the stream that matches the specified tailoring, or if
      *                                there is no profile in the tailoring that matches the specified profileId.

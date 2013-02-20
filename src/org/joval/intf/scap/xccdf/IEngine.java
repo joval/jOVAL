@@ -6,14 +6,14 @@ package org.joval.intf.scap.xccdf;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
+import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
-import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.ocil.IVariables;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.util.IProducer;
+import org.joval.scap.ScapException;
 import org.joval.scap.arf.ArfException;
-import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.Version;
 
 /**
@@ -105,12 +105,12 @@ public interface IEngine extends Runnable {
     void destroy();
 
     /**
-     * Set the SCAP view (i.e., the selected profile of a benchmark in a datastream collection) that will be processed
+     * Set the SCAP context (e.g., the selected profile of a benchmark in a datastream collection) that will be processed
      * by the engine.
      *
      * @throws IllegalStateException if the engine has already started.
      */
-    void setView(IView view) throws IllegalStateException, XccdfException;
+    void setContext(IScapContext ctx) throws IllegalStateException, ScapException;
 
     /**
      * Add an OCIL checklist (containing result information) to the engine as input.

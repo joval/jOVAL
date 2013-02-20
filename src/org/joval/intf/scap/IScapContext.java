@@ -1,16 +1,19 @@
-// Copyright (C) 2012 jOVAL.org.  All rights reserved.
+// Copyright (C) 2013 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.intf.scap.datastream;
+package org.joval.intf.scap;
 
 import java.util.Collection;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.openscap.sce.xccdf.ScriptDataType;
+import scap.cpe.language.LogicalTestType;
 import scap.datastream.Component;
 import scap.datastream.ExtendedComponent;
+import scap.xccdf.ProfileType;
+import scap.xccdf.RuleType;
 
-import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
@@ -24,48 +27,42 @@ import org.joval.scap.sce.SceException;
 import org.joval.scap.xccdf.XccdfException;
 
 /**
- * Interface defining an SCAP datastream.
+ * Interface defining an XCCDF context, which is the combination of an XCCDF benchmark, a profile, and all the documents
+ * required to execute them.  A context can be assembled using a datastream source or a bundle source.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IDatastream {
+public interface IScapContext {
     /**
-     * Get the CPE dictionary for this stream.
+     * Get the CPE dictionary for the context.
      */
     IDictionary getDictionary();
 
     /**
-     * Get the IDs of the benchmarks defined in the stream.
+     * Get the benchmark.
      */
-    Collection<String> getBenchmarkIds();
+    IBenchmark getBenchmark();
 
     /**
-     * Get a benchmark defined in the stream.
+     * Get the fully-resolved XCCDF profile for the context.
      */
-    IBenchmark getBenchmark(String benchmarkId) throws NoSuchElementException, XccdfException;
+    ProfileType getProfile();
 
     /**
-     * Get the IDs of the profiles defined in the specified benchmark.
-     *
-     * @throws NoSuchElementException if there is no benchmark with the specified ID
+     * Get a map of CPE idrefs relevant for the view, and their corresponding CPE LogicalTestTypes.
      */
-    Collection<String> getProfileIds(String benchmarkId) throws NoSuchElementException;
+    Map<String, LogicalTestType> getCpeTests();
 
     /**
-     * Get the view of the benchmark given the specified profile.
-     *
-     * @throws NoSuchElementException if there is no benchmark or profile with the specified ID
+     * Return a Map of all the fully-resolved values selected and defined in this view.
      */
-    IScapContext getContext(String benchmarkId, String profileId) throws NoSuchElementException, ScapException;
+    Map<String, Collection<String>> getValues();
 
     /**
-     * Get the view of the stream given the specified tailoring and profile ID.
-     *
-     * @throws NoSuchElementException if there is no benchmark in the stream that matches the specified tailoring, or if
-     *                                there is no profile in the tailoring that matches the specified profileId.
+     * Return a Map of all the fully-resolved rules selected by this Profile.
      */
-    IScapContext getContext(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException;
+    Map<String, RuleType> getSelectedRules();
 
     /**
      * Get an OCIL checklist document with the specified component href.

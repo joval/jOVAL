@@ -1,10 +1,10 @@
 CLASSES=\
 	org.joval.intf.plugin.IPlugin				\
+	org.joval.intf.scap.IScapContext			\
 	org.joval.intf.scap.arf.IReport				\
 	org.joval.intf.scap.cpe.IDictionary			\
 	org.joval.intf.scap.datastream.IDatastream		\
 	org.joval.intf.scap.datastream.IDatastreamCollection	\
-	org.joval.intf.scap.datastream.IView			\
 	org.joval.intf.scap.ocil.IChecklist			\
 	org.joval.intf.scap.ocil.IVariables			\
 	org.joval.intf.scap.oval.IDefinitionFilter		\
@@ -17,12 +17,14 @@ CLASSES=\
 	org.joval.intf.scap.oval.IVariables			\
 	org.joval.intf.scap.xccdf.SystemEnumeration		\
 	org.joval.intf.scap.xccdf.IBenchmark			\
+	org.joval.intf.scap.xccdf.IBundle			\
 	org.joval.intf.scap.xccdf.IEngine			\
 	org.joval.intf.scap.xccdf.ITailoring			\
 	org.joval.intf.util.IObserver				\
 	org.joval.intf.util.IProducer				\
 	org.joval.intf.xml.ITransformable			\
 	org.joval.plugin.PluginConfigurationException		\
+	org.joval.scap.ScapContext				\
 	org.joval.scap.ScapException				\
 	org.joval.scap.ScapFactory				\
 	org.joval.scap.arf.ArfException				\
@@ -32,7 +34,6 @@ CLASSES=\
 	org.joval.scap.cpe.Dictionary				\
 	org.joval.scap.datastream.Datastream			\
 	org.joval.scap.datastream.DatastreamCollection		\
-	org.joval.scap.datastream.View				\
 	org.joval.scap.ocil.BooleanTestActionConditionType	\
 	org.joval.scap.ocil.Checklist				\
 	org.joval.scap.ocil.Factories				\
@@ -77,6 +78,7 @@ CLASSES=\
 	org.joval.scap.sce.SceException				\
 	org.joval.scap.sce.SCEScript				\
 	org.joval.scap.xccdf.Benchmark				\
+	org.joval.scap.xccdf.Bundle				\
 	org.joval.scap.xccdf.Tailoring				\
 	org.joval.scap.xccdf.TestResult				\
 	org.joval.scap.xccdf.XccdfException			\

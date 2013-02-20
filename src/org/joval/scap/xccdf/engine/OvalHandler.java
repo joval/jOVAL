@@ -25,7 +25,7 @@ import scap.xccdf.InstanceResultType;
 import scap.xccdf.ObjectFactory;
 import scap.xccdf.ResultEnumType;
 
-import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.oval.IEngine;
@@ -50,11 +50,11 @@ public class OvalHandler implements ISystem {
     private static final String NAMESPACE = SystemEnumeration.OVAL.namespace();
 
     private Map<String, EngineData> engines;
-    private IView view;
+    private IScapContext ctx;
     private Producer<Message> producer;
 
-    public OvalHandler(IView view, Producer<Message> producer) {
-	this.view = view;
+    public OvalHandler(IScapContext ctx, Producer<Message> producer) {
+	this.ctx = ctx;
 	this.producer = producer;
 	engines = new HashMap<String, EngineData>();
     }
@@ -80,7 +80,7 @@ public class OvalHandler implements ISystem {
 		ed = engines.get(href);
 	    } else {
 		try {
-		    ed = new EngineData(view.getStream().getOval(href));
+		    ed = new EngineData(ctx.getOval(href));
 		    engines.put(href, ed);
 		} catch (NoSuchElementException e) {
 		    continue;
@@ -96,7 +96,7 @@ public class OvalHandler implements ISystem {
 		//
 		// Add all the definitions
 		//
-		IDefinitions definitions = view.getStream().getOval(href);
+		IDefinitions definitions = ctx.getOval(href);
 		for (scap.oval.definitions.core.DefinitionType definition :
 		     definitions.getOvalDefinitions().getDefinitions().getDefinition()) {
 		    ed.getFilter().addDefinition(definition.getId());
@@ -109,7 +109,7 @@ public class OvalHandler implements ISystem {
 	    for (CheckExportType export : check.getCheckExport()) {
 		String ovalVariableId = export.getExportName();
 		String valueId = export.getValueId();
-		for (String s : view.getValues().get(valueId)) {
+		for (String s : ctx.getValues().get(valueId)) {
 		    ed.getVariables().addValue(ovalVariableId, s);
 		}
 		ed.getVariables().setComment(ovalVariableId, valueId);

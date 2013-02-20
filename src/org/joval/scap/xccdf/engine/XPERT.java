@@ -25,9 +25,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.joval.intf.plugin.IPlugin;
+import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
 import org.joval.intf.scap.datastream.IDatastream;
-import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.scap.xccdf.IEngine.OcilMessageArgument;
@@ -42,6 +42,7 @@ import org.joval.scap.ocil.Checklist;
 import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.xccdf.Benchmark;
+import org.joval.scap.xccdf.Bundle;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALSystem;
 import org.joval.util.LogFormatter;
@@ -119,7 +120,7 @@ public class XPERT {
      */
     public static void main(String[] argv) {
 	boolean help = false;
-	File streamFile = new File(CWD, "scap-datastream.xml");
+	File source = new File(CWD, "scap-datastream.xml");
 	String streamId = null;
 	String benchmarkId = null;
 	String profileId = null;
@@ -151,7 +152,7 @@ public class XPERT {
 		checklists.put("", Checklist.EMPTY);
 	    } else if ((i + 1) < argv.length) {
 		if (argv[i].equals("-d")) {
-		    streamFile = new File(argv[++i]);
+		    source = new File(argv[++i]);
 		} else if (argv[i].equals("-i")) {
 		    streamId = argv[++i];
 		} else if (argv[i].equals("-b")) {
@@ -240,51 +241,109 @@ public class XPERT {
 	}
 
 	printHeader(plugin);
-	if (help) {
+	if (help || plugin == null) {
 	    printHelp(plugin);
-	} else if (!streamFile.isFile()) {
-	    System.out.println("ERROR: No such file " + streamFile.toString());
-	    exitCode = 4;
-	    printHelp(plugin);
-	} else if (plugin != null) {
+	} else {
 	    exitCode = 1;
 	    try {
 		logger = LogFormatter.createDuplex(logFile, level);
-		DatastreamCollection dsc = null;
-		if (verify) {
-		    logger.info("Verifying XML digital signature: " + streamFile.toString());
-		    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-		    keyStore.load(new FileInputStream(ksFile), ksPass.toCharArray());
-		    SignatureValidator validator = new SignatureValidator(streamFile, keyStore);
-		    if (!validator.containsSignature()) {
-			throw new XPERTException("ERROR: no signature found!");
-		    } else if (validator.validate()) {
-			logger.info("Signature validated");
-			logger.info("Loading Data Stream...");
-			dsc = new DatastreamCollection(validator.getSource());
-		    } else {
-			throw new XPERTException("ERROR: signature validation failed!");
-		    }
-		} else {
-		    logger.info("Loading Data Stream: " + streamFile.toString());
-		    dsc = new DatastreamCollection(streamFile);
-		}
+		IScapContext ctx = null;
 
-		if (query) {
-		    logger.info("Querying Data Stream: " + streamFile.toString());
-		    for (String sId : dsc.getStreamIds()) {
-			logger.info("Stream ID=\"" + sId + "\"");
-			IDatastream ds = dsc.getDatastream(sId);
-			for (String bId : ds.getBenchmarkIds()) {
-			    logger.info("  Benchmark ID=\"" + bId + "\"");
-			    for (String pId : ds.getProfileIds(bId)) {
-				logger.info("    Profile Name=\"" + pId + "\"");
+		if (source.isFile() && source.getName().toLowerCase().endsWith(".xml")) {
+		    //
+		    // Process a datastream
+		    //
+		    DatastreamCollection dsc = null;
+		    if (verify) {
+			logger.info("Verifying XML digital signature: " + source.toString());
+			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+			keyStore.load(new FileInputStream(ksFile), ksPass.toCharArray());
+			SignatureValidator validator = new SignatureValidator(source, keyStore);
+			if (!validator.containsSignature()) {
+			    throw new XPERTException("ERROR: no signature found!");
+			} else if (validator.validate()) {
+			    logger.info("Signature validated");
+			    logger.info("Loading Data Stream...");
+			    dsc = new DatastreamCollection(validator.getSource());
+			} else {
+			    throw new XPERTException("ERROR: signature validation failed!");
+			}
+		    } else {
+			logger.info("Loading Data Stream: " + source.toString());
+			dsc = new DatastreamCollection(source);
+		    }
+		    if (query) {
+			logger.info("Querying Data Stream: " + source.toString());
+			for (String sId : dsc.getStreamIds()) {
+			    logger.info("Stream ID=\"" + sId + "\"");
+			    IDatastream ds = dsc.getDatastream(sId);
+			    for (String bId : ds.getBenchmarkIds()) {
+				logger.info("  Benchmark ID=\"" + bId + "\"");
+				for (String pId : ds.getProfileIds(bId)) {
+				    logger.info("    Profile Name=\"" + pId + "\"");
+				}
+			    }
+			}
+		    } else {
+			//
+			// Determine the singleton Stream ID, if none was specified
+			//
+			if (streamId == null) {
+			    if (dsc.getStreamIds().size() == 1) {
+				streamId = dsc.getStreamIds().iterator().next();
+				logger.info("Selected stream " + streamId);
+			    } else {
+				throw new XPERTException("ERROR: A stream must be selected for this stream collection");
+			    }
+			}
+
+			//
+			// Determine the singleton Benchmark ID, if none was specified
+			//
+			IDatastream ds = null;
+			try {
+			    ds = dsc.getDatastream(streamId);
+			} catch (NoSuchElementException e) {
+			    throw new XPERTException("ERROR: Invalid stream ID \"" + streamId + "\"");
+			}
+			if (benchmarkId == null) {
+			    if (ds.getBenchmarkIds().size() == 1) {
+				benchmarkId = ds.getBenchmarkIds().iterator().next();
+				logger.info("Selected benchmark " + benchmarkId);
+			    } else {
+				throw new XPERTException("ERROR: A benchmark must be selected for stream " + streamId);
+			    }
+			}
+			ctx = ds.getContext(benchmarkId, profileId);
+			if (profileId == null && ctx.getSelectedRules().size() == 0) {
+			    Collection<String> profiles = ds.getProfileIds(ctx.getBenchmark().getId());
+			    if (profiles.size() > 0) {
+			        StringBuffer sb = new StringBuffer("Try selecting a profile: ").append(LogFormatter.LF);
+			        for (String id : profiles) {
+			            sb.append("  ").append(id).append(LogFormatter.LF);
+			        }
+				throw new XPERTException(sb.toString());
 			    }
 			}
 		    }
-		} else if (plugin == null) {
-		    printHelp(null);
+		} else if (source.isDirectory() || source.getName().toLowerCase().endsWith(".zip")) {
+		    //
+		    // Process a bundle
+		    //
+		    Bundle bundle = new Bundle(source);
+		    if (query) {
+			logger.info("Querying Bundle: " + source.toString());
+			for (String pId : bundle.getProfileIds()) {
+			    logger.info("    Profile Name=\"" + pId + "\"");
+			}
+		    } else {
+			ctx = bundle.getContext(profileId);
+		    }
 		} else {
+		    throw new XPERTException("Invalid source file: " + source.toString());
+		}
+
+		if (!query) {
 		    logger.info("Start time: " + new Date().toString());
 		    try {
 			//
@@ -299,68 +358,33 @@ public class XPERT {
 			throw new XPERTException("Problem configuring the plugin:\n  " + e.getMessage());
 		    }
 
-		    if (streamId == null) {
-			if (dsc.getStreamIds().size() == 1) {
-			    streamId = dsc.getStreamIds().iterator().next();
-			    logger.info("Selected stream " + streamId);
-			} else {
-			    throw new XPERTException("ERROR: A stream must be selected for this stream collection source");
-			}
-		    }
-
-		    IDatastream ds = null;
 		    try {
-			ds = dsc.getDatastream(streamId);
-		    } catch (NoSuchElementException e) {
-			throw new XPERTException("ERROR: Invalid stream ID \"" + streamId + "\"");
-		    }
-		    if (benchmarkId == null) {
-			if (ds.getBenchmarkIds().size() == 1) {
-			    benchmarkId = ds.getBenchmarkIds().iterator().next();
-			    logger.info("Selected benchmark " + benchmarkId);
-			} else {
-			    throw new XPERTException("ERROR: A benchmark must be selected for stream " + streamId);
+			Engine engine = new Engine(plugin);
+			engine.setContext(ctx);
+			for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
+			    engine.addChecklist(entry.getKey(), entry.getValue());
 			}
-		    }
+			XccdfObserver observer = new XccdfObserver(ocilDir);
+			engine.getNotificationProducer().addObserver(observer);
+			engine.run();
+			engine.getNotificationProducer().removeObserver(observer);
+			switch(engine.getResult()) {
+			  case OK:
+			    IReport report = engine.getReport(verbose ? SystemEnumeration.ANY : SystemEnumeration.XCCDF);
+			    if (report == null) {
+				logger.info("No report was generated.");
+			    } else if (report.getAssetReportCollection().isSetReports()) {
+				logger.info("Saving ARF report: " + reportFile.toString());
+				report.writeXML(reportFile);
+				logger.info("Transforming to HTML report: " + reportHTML.toString());
+				ctx.getBenchmark().writeTransform(transformFile, reportHTML);
+			    }
+			    logger.info("Finished processing XCCDF bundle");
+			    exitCode = 0;
+			    break;
 
-		    try {
-			IView view = ds.view(benchmarkId, profileId);
-			if (profileId == null && view.getSelectedRules().size() == 0) {
-			    Collection<String> profiles = ds.getProfileIds(view.getBenchmark().getId());
-			    if (profiles.size() > 0) {
-			        logger.info("Try selecting a profile:");
-			        for (String id : profiles) {
-			            logger.info("  " + id);
-			        }
-			    }
-			} else {
-			    Engine engine = new Engine(plugin);
-			    engine.setView(view);
-			    for (Map.Entry<String, IChecklist> entry : checklists.entrySet()) {
-				engine.addChecklist(entry.getKey(), entry.getValue());
-			    }
-			    XccdfObserver observer = new XccdfObserver(ocilDir);
-			    engine.getNotificationProducer().addObserver(observer);
-			    engine.run();
-			    engine.getNotificationProducer().removeObserver(observer);
-			    switch(engine.getResult()) {
-			      case OK:
-				IReport report = engine.getReport(verbose ? SystemEnumeration.ANY : SystemEnumeration.XCCDF);
-				if (report == null) {
-				    logger.info("No report was generated.");
-				} else if (report.getAssetReportCollection().isSetReports()) {
-				    logger.info("Saving ARF report: " + reportFile.toString());
-				    report.writeXML(reportFile);
-				    logger.info("Transforming to HTML report: " + reportHTML.toString());
-				    view.getStream().getBenchmark(benchmarkId).writeTransform(transformFile, reportHTML);
-				}
-				logger.info("Finished processing XCCDF bundle");
-				exitCode = 0;
-				break;
-    
-			      case ERR:
-				throw engine.getError();
-			    }
+			  case ERR:
+			    throw engine.getError();
 			}
 		    } catch (OcilException e) {
 			logger.severe(">>> ERROR - " + e.getMessage());

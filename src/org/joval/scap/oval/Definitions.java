@@ -48,15 +48,15 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Definitions implements IDefinitions, ILoggable {
-    static final OvalDefinitions getOvalDefinitions(File f) throws OvalException {
+    public static final OvalDefinitions getOvalDefinitions(File f) throws OvalException {
 	return getOvalDefinitions(new StreamSource(f));
     }
 
-    static final OvalDefinitions getOvalDefinitions(InputStream in) throws OvalException {
+    public static final OvalDefinitions getOvalDefinitions(InputStream in) throws OvalException {
 	return getOvalDefinitions(new StreamSource(in));
     }
 
-    static final OvalDefinitions getOvalDefinitions(Source source) throws OvalException {
+    public static final OvalDefinitions getOvalDefinitions(Source source) throws OvalException {
 	try {
 	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_DEFINITIONS);
 	    JAXBContext ctx = JAXBContext.newInstance(packages);

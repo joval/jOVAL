@@ -1,7 +1,7 @@
-// Copyright (C) 2012 jOVAL.org.  All rights reserved.
+// Copyright (C) 2013 jOVAL.org.  All rights reserved.
 // This software is licensed under the AGPL 3.0 license available at http://www.joval.org/agpl_v3.txt
 
-package org.joval.scap.datastream;
+package org.joval.scap;
 
 import java.net.MalformedURLException;
 import java.util.Arrays;
@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.openscap.sce.xccdf.ScriptDataType;
 import scap.cpe.dictionary.CheckType;
 import scap.cpe.dictionary.ItemType;
 import scap.cpe.dictionary.ListType;
@@ -38,41 +39,47 @@ import scap.xccdf.SelComplexValueType;
 import scap.xccdf.SelStringType;
 import scap.xccdf.ValueType;
 
+import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.intf.scap.datastream.IDatastream;
-import org.joval.intf.scap.datastream.IView;
+import org.joval.intf.scap.ocil.IChecklist;
+import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.xccdf.IBenchmark;
-import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.scap.cpe.CpeException;
+import org.joval.scap.ocil.OcilException;
+import org.joval.scap.oval.OvalException;
+import org.joval.scap.sce.SceException;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
 
 /**
- * Implementation of an IView.
+ * Abstract base class for IScapContext implementations.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public class View implements IView {
+public abstract class ScapContext implements IScapContext {
     private static final scap.cpe.language.ObjectFactory CPE = new scap.cpe.language.ObjectFactory();
     private static final scap.xccdf.ObjectFactory XCCDF = new scap.xccdf.ObjectFactory();
 
-    private String benchmarkId;
     private ProfileType profile;
-    private Datastream stream;
     private IBenchmark benchmark;
+    private IDictionary dictionary;
     private BenchmarkType bt;
     private Map<String, RuleType> rules;
     private Map<String, LogicalTestType> platforms;
     private Map<String, Collection<String>> values = null;
 
     /**
-     * Create an XCCDF profile view. If profileId == null, then defaults are selected. If there is no profile with the given
-     * name, a NoSuchElementException is thrown.
+     * Create an IScapContext from a benchmark and profile.
+     *
+     * @param profile The selected profile (which might originate from an external tailoring) if null, then
+     *                defaults are selected
      */
-    View(Datastream stream, IBenchmark benchmark, ProfileType profile) throws XccdfException {
-	this.stream = stream;
+    protected ScapContext(IBenchmark benchmark, IDictionary dictionary, ProfileType profile) throws XccdfException {
 	this.benchmark = benchmark;
+	this.dictionary = dictionary;
 	bt = benchmark.getBenchmark();
 	this.profile = resolve(profile);
 
@@ -183,7 +190,11 @@ public class View implements IView {
 	}
     }
 
-    // Implement IView
+    // Implement IScapContext
+
+    public IDictionary getDictionary() {
+	return dictionary;
+    }
 
     public IBenchmark getBenchmark() {
 	return benchmark;
@@ -191,10 +202,6 @@ public class View implements IView {
 
     public ProfileType getProfile() {
 	return profile;
-    }
-
-    public IDatastream getStream() {
-	return stream;
     }
 
     public Map<String, LogicalTestType> getCpeTests() {
@@ -283,7 +290,6 @@ public class View implements IView {
     private void addPlatform(String cpeName) throws NoSuchElementException {
 	if (!platforms.containsKey(cpeName)) {
 	    if (cpeName.startsWith("cpe:")) {
-		IDictionary dictionary = stream.getDictionary();
 		if (dictionary == null) {
 		    throw new NoSuchElementException("CPE Dictionary");
 		}

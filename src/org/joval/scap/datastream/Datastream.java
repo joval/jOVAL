@@ -35,14 +35,15 @@ import org.openscap.sce.xccdf.ScriptDataType;
 import scap.xccdf.BenchmarkType;
 import scap.xccdf.ProfileType;
 
+import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.intf.scap.datastream.IDatastream;
-import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
+import org.joval.scap.ScapContext;
 import org.joval.scap.ScapException;
 import org.joval.scap.cpe.Dictionary;
 import org.joval.scap.ocil.Checklist;
@@ -178,12 +179,12 @@ public class Datastream implements IDatastream, ILoggable {
 	throw new NoSuchElementException(benchmarkId);
     }
 
-    public IView view(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException {
+    public IScapContext getContext(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException {
 	String benchmarkId = tailoring.getBenchmarkId();
 	if (components.containsKey(benchmarkId)) {
 	    Component comp = components.get(benchmarkId);
 	    if (comp.isSetBenchmark()) {
-		return new View(this, new Benchmark(comp), tailoring.getProfile(profileId));
+		return new Context(new Benchmark(comp), tailoring.getProfile(profileId));
 	    } else {
 		throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
 	    }
@@ -192,17 +193,17 @@ public class Datastream implements IDatastream, ILoggable {
 	}
     }
 
-    public IView view(String benchmarkId, String profileId) throws NoSuchElementException, ScapException {
+    public IScapContext getContext(String benchmarkId, String profileId) throws NoSuchElementException, ScapException {
 	if (components.containsKey(benchmarkId)) {
 	    Component comp = components.get(benchmarkId);
 	    if (comp.isSetBenchmark()) {
 		BenchmarkType bt = comp.getBenchmark();
 		if (profileId == null) {
-		    return new View(this, new Benchmark(comp), null);
+		    return new Context(new Benchmark(comp), null);
 		} else {
 		    for (ProfileType profile : bt.getProfile()) {
 			if (profile.getProfileId().equals(profileId)) {
-			    return new View(this, new Benchmark(comp), profile);
+			    return new Context(new Benchmark(comp), profile);
 			}
 		    }
 		    throw new NoSuchElementException(profileId);
@@ -212,47 +213,6 @@ public class Datastream implements IDatastream, ILoggable {
 	    }
 	} else {
 	    throw new NoSuchElementException(benchmarkId);
-	}
-    }
-
-    /**
-     * Get the component corresponding to the specified href in this stream.
-     */
-    public Object resolve(String href) throws NoSuchElementException {
-	if (hrefMap.containsKey(href)) {
-	    return hrefMap.get(href);
-	} else {
-	    throw new NoSuchElementException(href);
-	}
-    }
-
-    /**
-     * Given a component href, get the SystemEnumeration type of the component.
-     */
-    public SystemEnumeration getSystem(String href) throws NoSuchElementException {
-	Object obj = resolve(href);
-	if (obj instanceof Component) {
-	    Component component = (Component)obj;
-	    if (component.isSetOvalDefinitions()) {
-		return SystemEnumeration.OVAL;
-	    } else if (component.isSetOcil()) {
-		return SystemEnumeration.OCIL;
-	    } else {
-		return SystemEnumeration.UNSUPPORTED;
-	    }
-	} else if (obj instanceof ExtendedComponent) {
-	    ExtendedComponent component = (ExtendedComponent)obj;
-	    Object data = component.getAny();
-	    if (data instanceof JAXBElement) {
-		data = ((JAXBElement)data).getValue();
-	    }
-	    if (data instanceof ScriptDataType) {
-		return SystemEnumeration.SCE;
-	    } else {
-		return SystemEnumeration.UNSUPPORTED;
-	    }
-	} else {
-	    throw new NoSuchElementException(href);
 	}
     }
 
@@ -312,6 +272,28 @@ public class Datastream implements IDatastream, ILoggable {
 	return logger;
     }
 
+    // Internal
+
+    class Context extends ScapContext {
+	Context(IBenchmark benchmark, ProfileType profile) throws XccdfException {
+	    super(benchmark, dictionary, profile);
+	}
+
+	// Implement IScapContext
+
+	public IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
+	    return Datastream.this.getOcil(href);
+	}
+
+	public IDefinitions getOval(String href) throws NoSuchElementException, OvalException {
+	    return Datastream.this.getOval(href);
+	}
+
+	public ScriptDataType getSce(String href) throws NoSuchElementException, SceException {
+	    return Datastream.this.getSce(href);
+	}
+    }
+
     // Private
 
     private Component getComponent(String componentId) throws NoSuchElementException {
@@ -367,6 +349,17 @@ public class Datastream implements IDatastream, ILoggable {
 		    logger.warn("ERROR: Not a Uri: " + elt.getValue().getClass().getName());
 		}
 	    }
+	}
+    }
+
+    /**
+     * Get the component corresponding to the specified href in this stream.
+     */
+    private Object resolve(String href) throws NoSuchElementException {
+	if (hrefMap.containsKey(href)) {
+	    return hrefMap.get(href);
+	} else {
+	    throw new NoSuchElementException(href);
 	}
     }
 }

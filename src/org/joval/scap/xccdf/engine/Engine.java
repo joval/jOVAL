@@ -34,7 +34,6 @@ import jsaf.intf.system.ISession;
 import scap.cpe.dictionary.ListType;
 import scap.cpe.language.LogicalTestType;
 import scap.cpe.language.CheckFactRefType;
-import scap.datastream.Component;
 import scap.oval.common.GeneratorType;
 import scap.oval.common.OperatorEnumeration;
 import scap.oval.definitions.core.OvalDefinitions;
@@ -67,9 +66,8 @@ import scap.xccdf.ScoreType;
 import scap.xccdf.SelectableItemType;
 import scap.xccdf.TestResultType;
 
+import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.arf.IReport;
-import org.joval.intf.scap.datastream.IDatastream;
-import org.joval.intf.scap.datastream.IView;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitionFilter;
 import org.joval.intf.scap.oval.IDefinitions;
@@ -127,9 +125,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	COMPLETE_ERR;
     }
 
-    private IDatastream stream;
-    private IBenchmark benchmark;
-    private IView view;
+    private IScapContext ctx;
     private IPlugin plugin;
     private SystemInfoType sysinfo;
     private Map<String, IChecklist> checklists;
@@ -159,7 +155,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	}
     }
 
-    public void setView(IView view) throws IllegalStateException, XccdfException {
+    public void setContext(IScapContext ctx) throws IllegalStateException, XccdfException {
 	switch(state) {
 	  case RUNNING:
 	    throw new IllegalThreadStateException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_STATE, state));
@@ -169,9 +165,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    reset();
 	    // fall-thru
 	  default:
-	    this.view = view;
-	    stream = view.getStream();
-	    benchmark = view.getBenchmark();
+	    this.ctx = ctx;
 	    break;
 	}
     }
@@ -215,7 +209,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	  case COMPLETE_OK:
 	    try {
 		Report report = new Report();
-		String requestId = report.addRequest(DOMTools.toElement(benchmark));
+		String requestId = report.addRequest(DOMTools.toElement(ctx.getBenchmark()));
 		String assetId = report.addAsset(sysinfo);
 		for (ITransformable subreport : reports) {
 		    String ns = DOMTools.getNamespace(subreport);
@@ -268,18 +262,18 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	state = State.RUNNING;
 	boolean doDisconnect = false;
 	try {
-	    Collection<RuleType> rules = view.getSelectedRules().values();
+	    Collection<RuleType> rules = ctx.getSelectedRules().values();
 	    if (rules.size() == 0) {
 		logger.warn(JOVALMsg.WARNING_XCCDF_RULES);
 	    } else {
-		String profileId = view.getProfile() == null ? "[no profile selected]" : view.getProfile().getProfileId();
+		String profileId = ctx.getProfile() == null ? "[no profile selected]" : ctx.getProfile().getProfileId();
 		logger.info(JOVALMsg.STATUS_XCCDF_RULES, rules.size(), profileId);
 		HashSet<String> selectedIds = new HashSet<String>();
 		for (RuleType rule : rules) {
 		    selectedIds.add(rule.getId());
 		}
 		if (checklists.size() == 0) {
-		    if (OcilHandler.exportFiles(view, producer)) {
+		    if (OcilHandler.exportFiles(ctx, producer)) {
 			throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_OCIL_REQUIRED));
 		    }
 		}
@@ -298,11 +292,11 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		producer.sendNotify(Message.PLATFORM_PHASE_START, null);
 		checkPlatforms(testResult);
 		List<CPE2IdrefType> cpes = new ArrayList<CPE2IdrefType>();
-		if (view.getProfile().getPlatform().size() > 0 && view.getProfile().getPlatform().get(0).getOverride()) {
-		    cpes.addAll(view.getProfile().getPlatform());
+		if (ctx.getProfile().getPlatform().size() > 0 && ctx.getProfile().getPlatform().get(0).getOverride()) {
+		    cpes.addAll(ctx.getProfile().getPlatform());
 		} else {
-		    cpes.addAll(benchmark.getBenchmark().getPlatform());
-		    cpes.addAll(view.getProfile().getPlatform());
+		    cpes.addAll(ctx.getBenchmark().getBenchmark().getPlatform());
+		    cpes.addAll(ctx.getProfile().getPlatform());
 		}
 		boolean applicable = cpes.size() == 0;
 		for (CPE2IdrefType cpe : cpes) {
@@ -359,7 +353,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		//
 		// XPERT requires the result to be added to the benchmark to create the HTML transform
 		//
-		benchmark.getBenchmark().getTestResult().add(testResult);
+		ctx.getBenchmark().getBenchmark().getTestResult().add(testResult);
 	    }
 	    state = State.COMPLETE_OK;
 	} catch (Exception e) {
@@ -389,20 +383,20 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 
 	Map<String, ISystem> handlers = new HashMap<String, ISystem>();
 	if (checklists.size() > 0) {
-	    OcilHandler ocil = new OcilHandler(view, checklists);
+	    OcilHandler ocil = new OcilHandler(ctx, checklists);
 	    ocil.setStartTime(testResult);
 	    handlers.put(ocil.getNamespace(), ocil);
 	}
-	ISystem oval = new OvalHandler(view, producer);
+	ISystem oval = new OvalHandler(ctx, producer);
 	handlers.put(oval.getNamespace(), oval);
-	ISystem sce = new SceHandler(view, producer);
+	ISystem sce = new SceHandler(ctx, producer);
 	handlers.put(sce.getNamespace(), sce);
 
 	//
 	// Add all the selected rules to the handlers
 	//
 	Collection<String> notApplicable = new HashSet<String>();
-	for (RuleType rule : view.getSelectedRules().values()) {
+	for (RuleType rule : ctx.getSelectedRules().values()) {
 	    if (rule.getRole() != RoleEnumType.UNCHECKED && !rule.getAbstract()) {
 		//
 		// Check that at least one platform applies to the rule
@@ -445,7 +439,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	//
 	// Integrate check results from the handlers
 	//
-	for (RuleType rule : view.getSelectedRules().values()) {
+	for (RuleType rule : ctx.getSelectedRules().values()) {
 	    if (notApplicable.contains(rule.getId())) {
 		RuleResultType rrt = Engine.FACTORY.createRuleResultType();
 		rrt.setIdref(rule.getId());
@@ -469,7 +463,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    resultMap.put(rrt.getIdref(), rrt);
 	}
 	// Note - only selected rules will be in the resultMap at this point
-	BenchmarkType bt = benchmark.getBenchmark();
+	BenchmarkType bt = ctx.getBenchmark().getBenchmark();
 	for (Model model : bt.getModel()) {
 	    ScoreKeeper sk = computeScore(resultMap, bt, ScoringModel.fromModel(model));
 	    ScoreType scoreType = FACTORY.createScoreType();
@@ -600,11 +594,11 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     }
 
     /**
-     * Create a Benchmark.TestResult node, initialized with information gathered from the view and plugin.
+     * Create a Benchmark.TestResult node, initialized with information gathered from the context and plugin.
      */
     private TestResultType initializeResult() throws OvalException {
 	TestResultType testResult = FACTORY.createTestResultType();
-	String id = benchmark.getId();
+	String id = ctx.getBenchmark().getId();
 	String name = "unknown";
 	String namespace = "unknown";
 	if (id.startsWith("xccdf_")) {
@@ -616,16 +610,16 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    }
 	}
 	testResult.setTestResultId("xccdf_" + namespace + "_testresult_" + name);
-	testResult.setVersion(benchmark.getBenchmark().getVersion().getValue());
+	testResult.setVersion(ctx.getBenchmark().getBenchmark().getVersion().getValue());
 	testResult.setTestSystem(PRODUCT_NAME);
 
 	TestResultType.Benchmark trb = FACTORY.createTestResultTypeBenchmark();
-	trb.setId(benchmark.getBenchmark().getBenchmarkId());
-	trb.setHref(benchmark.getHref());
+	trb.setId(ctx.getBenchmark().getBenchmark().getBenchmarkId());
+	trb.setHref(ctx.getBenchmark().getHref());
 	testResult.setBenchmark(trb);
-	if (view.getProfile() != null) {
+	if (ctx.getProfile() != null) {
 	    IdrefType profileRef = FACTORY.createIdrefType();
-	    profileRef.setIdref(view.getProfile().getProfileId());
+	    profileRef.setIdref(ctx.getProfile().getProfileId());
 	    testResult.setProfile(profileRef);
 	}
 	String user = plugin.getSession().getUsername();
@@ -651,7 +645,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	//
 	// Add all the selected values to the results
 	//
-	for (Map.Entry<String, Collection<String>> entry : view.getValues().entrySet()) {
+	for (Map.Entry<String, Collection<String>> entry : ctx.getValues().entrySet()) {
 	    if (entry.getValue().size() == 1) {
 		ProfileSetValueType val = FACTORY.createProfileSetValueType();
 		val.setIdref(entry.getKey());
@@ -670,7 +664,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     }
 
     /**
-     * Test the target against all the platforms defined in the view, and store the results indexed by CVE ID in the
+     * Test the target against all the platforms defined in the context, and store the results indexed by CVE ID in the
      * platforms map.
      */
     private void checkPlatforms(TestResultType testResult) throws Exception {
@@ -678,7 +672,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	// Parcel up all the check definitions by href
 	//
 	Map<String, IDefinitionFilter> filters = new HashMap<String, IDefinitionFilter>();
-	for (Map.Entry<String, LogicalTestType> entry : view.getCpeTests().entrySet()) {
+	for (Map.Entry<String, LogicalTestType> entry : ctx.getCpeTests().entrySet()) {
 	    producer.sendNotify(Message.PLATFORM_CPE, entry.getKey());
 	    for (CheckFactRefType cfrt : entry.getValue().getCheckFactRef()) {
 		if (SystemEnumeration.OVAL.namespace().equals(cfrt.getSystem())) {
@@ -700,7 +694,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    DefinitionMonitor monitor = new DefinitionMonitor();
 	    engine.getNotificationProducer().addObserver(monitor);
 	    try {
-		engine.setDefinitions(stream.getOval(entry.getKey()));
+		engine.setDefinitions(ctx.getOval(entry.getKey()));
 		engine.setDefinitionFilter(entry.getValue());
 		engine.run();
 		switch(engine.getResult()) {
@@ -724,7 +718,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	// Run an OVAL engine for each href to solve the platform definitions
 	//
 	platforms = new HashMap<String, Boolean>();
-	for (Map.Entry<String, LogicalTestType> entry : view.getCpeTests().entrySet()) {
+	for (Map.Entry<String, LogicalTestType> entry : ctx.getCpeTests().entrySet()) {
 	    if (evaluate(entry.getValue(), results)) {
 		CPE2IdrefType cpeRef = FACTORY.createCPE2IdrefType();
 		cpeRef.setIdref(entry.getKey());
@@ -770,7 +764,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
      */
     private List<RuleType> listAllRules() {
 	List<RuleType> rules = new ArrayList<RuleType>();
-	for (SelectableItemType item : benchmark.getBenchmark().getGroupOrRule()) {
+	for (SelectableItemType item : ctx.getBenchmark().getBenchmark().getGroupOrRule()) {
 	    rules.addAll(getRules(item));
 	}
 	return rules;
@@ -937,7 +931,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		    count = 1;
 		    score = 100 * score / count;
 		}
-		weightedScore = view.getSelectedRules().get(rule.getId()).getWeight().intValue() * score;
+		weightedScore = ctx.getSelectedRules().get(rule.getId()).getWeight().intValue() * score;
 	    }
 	}
 
@@ -953,7 +947,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		if (item instanceof RuleType) {
 		    RuleType rule = (RuleType)item;
 		    child = new DefaultScoreKeeper(this, rule);
-		    item = view.getSelectedRules().get(rule.getId());
+		    item = ctx.getSelectedRules().get(rule.getId());
 		} else if (item instanceof GroupType) {
 		    child = new DefaultScoreKeeper(this, (GroupType)item);
 		} else {
@@ -1004,7 +998,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		    break;
 		}
 		if (count != 0) {
-		    int weight = view.getSelectedRules().get(rule.getId()).getWeight().intValue();
+		    int weight = ctx.getSelectedRules().get(rule.getId()).getWeight().intValue();
 		    if (weighted) {
 			max_score += weight;
 			score = (weight * score / count);

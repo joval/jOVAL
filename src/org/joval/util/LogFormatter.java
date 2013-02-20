@@ -29,7 +29,7 @@ import java.util.logging.Formatter;
 public class LogFormatter extends Formatter {
     public enum Type {FILE, CONSOLE;}
 
-    private static final String LF = System.getProperty("line.separator");
+    public static final String LF = System.getProperty("line.separator");
     static {
 	try {
 	    InputStream in = new ByteArrayInputStream("java.util.logging.handlers=".getBytes());
