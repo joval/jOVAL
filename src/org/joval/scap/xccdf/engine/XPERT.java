@@ -342,6 +342,20 @@ public class XPERT {
 			}
 		    } else {
 			ctx = bundle.getContext(profileId);
+			if (profileId == null && ctx.getSelectedRules().size() == 0) {
+			    Collection<String> profiles = bundle.getProfileIds();
+			    if (profiles.size() == 1) {
+				profileId = profiles.iterator().next();
+				ctx = bundle.getContext(profileId);
+				logger.info("Selected profile " + profileId);
+			    } else if (profiles.size() > 1) {
+			        StringBuffer sb = new StringBuffer("Select a profile: ").append(LogFormatter.LF);
+			        for (String id : profiles) {
+			            sb.append("  ").append(id).append(LogFormatter.LF);
+			        }
+				throw new XPERTException(sb.toString());
+			    }
+			}
 		    }
 		} else {
 		    throw new XPERTException("Invalid source file: " + source.toString());

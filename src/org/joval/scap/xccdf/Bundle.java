@@ -110,7 +110,7 @@ public class Bundle {
     }
 
     public IScapContext getContext(String profileId) throws NoSuchElementException, ScapException {
-	return new Context(benchmark.getProfile(profileId));
+	return new Context(profileId == null ? null : benchmark.getProfile(profileId));
     }
 
     public IScapContext getContext(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException {
@@ -118,7 +118,9 @@ public class Bundle {
     }
 
     public IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
-	if (base != null) {
+	if (href.startsWith("http://") || href.startsWith("https://")) {
+	    throw new NoSuchElementException(href);
+	} else if (base != null) {
 	    return new Checklist(Checklist.getOCILType(new File(base, href)));
 	} else {
 	    InputStream in = null;
@@ -138,7 +140,9 @@ public class Bundle {
     }
 
     public IDefinitions getOval(String href) throws NoSuchElementException, OvalException {
-	if (base != null) {
+	if (href.startsWith("http://")) {
+	    throw new NoSuchElementException(href);
+	} else if (base != null) {
 	    return new Definitions(Definitions.getOvalDefinitions(new File(base, href)));
 	} else {
 	    InputStream in = null;
