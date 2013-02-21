@@ -292,7 +292,9 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		producer.sendNotify(Message.PLATFORM_PHASE_START, null);
 		checkPlatforms(testResult);
 		List<CPE2IdrefType> cpes = new ArrayList<CPE2IdrefType>();
-		if (ctx.getProfile().getPlatform().size() > 0 && ctx.getProfile().getPlatform().get(0).getOverride()) {
+		if (ctx.getProfile() == null) {
+		    cpes.addAll(ctx.getBenchmark().getBenchmark().getPlatform());
+		} else if (ctx.getProfile().getPlatform().size() > 0 && ctx.getProfile().getPlatform().get(0).getOverride()) {
 		    cpes.addAll(ctx.getProfile().getPlatform());
 		} else {
 		    cpes.addAll(ctx.getBenchmark().getBenchmark().getPlatform());

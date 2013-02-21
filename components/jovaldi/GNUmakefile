@@ -63,7 +63,9 @@ dist: all $(DIST_DIR)/jre
 	cp $(SVRL) $(DIST_DIR)/lib
 	cp $(JOVAL_CORE_LIB) $(DIST_DIR)/lib
 	cp $(JOVAL_CORE)/$(LIBDIR)/*.jar $(DIST_DIR)/lib
+	cp $(XPERT)/$(LIBDIR)/*.jar $(DIST_DIR)/lib
 	cp $(XPERT_LIB) $(DIST_DIR)/lib
+	cp -R $(XPERT)/$(RSRC)/licenses/* $(DIST_DIR)/licenses
 	cp $(JSAF_CORE_LIB) $(DIST_DIR)/lib
 	mkdir -p $(DIST_DIR)/security
 	cp $(XPERT)/$(RSRC)/security/cacerts.jks $(DIST_DIR)/security

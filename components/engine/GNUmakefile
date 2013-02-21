@@ -24,6 +24,8 @@ resources:
 	cp $(RSRC)/*.ini $(BUILD)
 	rm -f $(BUILD)/*.properties
 	cp $(RSRC)/*.properties $(BUILD)
+	rm -f $(BUILD)/org/joval/scap/xccdf/*.xsl
+	cp $(SRC)/org/joval/scap/xccdf/xccdf_convert_1.1.4_to_1.2.xsl $(BUILD)/org/joval/scap/xccdf
 	echo "productName=jOVAL(tm) SDK" >> $(BUILD)/joval.system.properties
 	echo "version=$(JOVAL_VERSION)" >> $(BUILD)/joval.system.properties
 	echo "build.date=`date`" >> $(BUILD)/joval.system.properties

@@ -19,14 +19,23 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.bind.util.JAXBSource;
-import javax.xml.stream.FactoryConfigurationError;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Source;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import jsaf.intf.util.ILoggable;
 import org.slf4j.cal10n.LocLogger;
@@ -41,6 +50,7 @@ import scap.xccdf.SelectableItemType;
 import scap.xccdf.ValueType;
 
 import org.joval.intf.scap.xccdf.IBenchmark;
+import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.util.JOVALMsg;
 import org.joval.xml.SchemaRegistry;
 
@@ -51,18 +61,61 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Benchmark implements IBenchmark, ILoggable {
+    private static final String LEGACY_NS = "http://checklists.nist.gov/xccdf/1.1";
+
     /**
      * Read a benchmark file.
      */
     public static final BenchmarkType getBenchmarkType(File f) throws XccdfException {
-	return getBenchmarkType(new StreamSource(f));
+	try {
+	    return getBenchmarkType(new FileInputStream(f));
+	} catch (FileNotFoundException e) {
+	    throw new XccdfException(e);
+	}
     }
 
     /**
      * Read a benchmark from a stream.
      */
     public static final BenchmarkType getBenchmarkType(InputStream in) throws XccdfException {
-	return getBenchmarkType(new StreamSource(in));
+	try {
+	    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+	    factory.setNamespaceAware(true);
+	    DocumentBuilder builder = factory.newDocumentBuilder();
+	    Document doc = builder.parse(in);
+
+	    String ns = doc.getDocumentElement().getAttribute("xmlns");
+	    if (LEGACY_NS.equals(ns)) {
+		Class<?> clazz = Class.forName("net.sf.saxon.TransformerFactoryImpl");
+		JOVALMsg.getLogger().info("Upconverting legacy XCCDF document...");
+		TransformerFactory xf = (TransformerFactory)clazz.newInstance();
+		InputStream xsl = Benchmark.class.getResourceAsStream("xccdf_convert_1.1.4_to_1.2.xsl");
+		Transformer transformer = xf.newTransformer(new StreamSource(xsl));
+		DOMResult result = new DOMResult();
+		transformer.transform(new DOMSource(doc), result);
+		return getBenchmarkType(new DOMSource(result.getNode()));
+	    } else if (SystemEnumeration.XCCDF.namespace().equals(ns)) {
+		return getBenchmarkType(new DOMSource(doc));
+	    } else {
+		throw new XccdfException("Unsupported namespace: " + ns);
+	    }
+	} catch (TransformerException e) {
+	    throw new XccdfException(e);
+	} catch (IllegalAccessException e) {
+	    throw new XccdfException(e);
+	} catch (InstantiationException e) {
+	    throw new XccdfException(e);
+	} catch (ClassNotFoundException e) {
+	    throw new XccdfException("Legacy XCCDF bundle support requires Saxon9HE in the CLASSPATH");
+	} catch (SAXException e) {
+	    throw new XccdfException(e);
+	} catch (IOException e) {
+	    throw new XccdfException(e);
+	} catch (javax.xml.parsers.FactoryConfigurationError e) {
+	    throw new XccdfException(e.getMessage());
+	} catch (ParserConfigurationException e) {
+	    throw new XccdfException(e);
+	}
     }
 
     /**
@@ -158,7 +211,7 @@ public class Benchmark implements IBenchmark, ILoggable {
 	    marshaller.marshal(bt, out);
 	} catch (JAXBException e) {
 	    throw new IOException(e);
-	} catch (FactoryConfigurationError e) {
+	} catch (javax.xml.stream.FactoryConfigurationError e) {
 	    throw new IOException(e);
 	} finally {
 	    if (out != null) {
