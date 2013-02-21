@@ -523,7 +523,7 @@ public class XPERT {
 		break;
 
 	      case OBJECT:
-		logger.info("Scanning object " + (String)arg);
+		logger.info("Scanning " + (String)arg);
 		break;
 
 	      case OBJECT_PHASE_END:
