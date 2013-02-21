@@ -125,11 +125,21 @@ public class Bundle implements IBundle {
 	if (href.startsWith("http://") || href.startsWith("https://")) {
 	    throw new NoSuchElementException(href);
 	} else if (base != null) {
-	    return new Checklist(Checklist.getOCILType(new File(base, href)));
+	    File f = new File(base, href);
+	    if (f.exists()) {
+		return new Checklist(Checklist.getOCILType(f));
+	    } else {
+		throw new NoSuchElementException(href);
+	    }
 	} else {
 	    InputStream in = null;
 	    try {
-		return new Checklist(Checklist.getOCILType(zip.getInputStream(zip.getEntry(href))));
+		ZipEntry entry = zip.getEntry(href);
+		if (entry == null) {
+		    throw new NoSuchElementException(href);
+		} else {
+		    return new Checklist(Checklist.getOCILType(zip.getInputStream(entry)));
+		}
 	    } catch (IOException e) {
 		throw new OcilException(e);
 	    } finally {
@@ -147,12 +157,21 @@ public class Bundle implements IBundle {
 	if (href.startsWith("http://")) {
 	    throw new NoSuchElementException(href);
 	} else if (base != null) {
-	    return new Definitions(Definitions.getOvalDefinitions(new File(base, href)));
+	    File f = new File(base, href);
+	    if (f.exists()) {
+		return new Definitions(Definitions.getOvalDefinitions(f));
+	    } else {
+		throw new NoSuchElementException(href);
+	    }
 	} else {
 	    InputStream in = null;
 	    try {
-System.out.println("DAS href: " + href);
-		return new Definitions(Definitions.getOvalDefinitions(zip.getInputStream(zip.getEntry(href))));
+		ZipEntry entry = zip.getEntry(href);
+		if (entry == null) {
+		    throw new NoSuchElementException(href);
+		} else {
+		    return new Definitions(Definitions.getOvalDefinitions(zip.getInputStream(entry)));
+		}
 	    } catch (IOException e) {
 		throw new OvalException(e);
 	    } finally {
