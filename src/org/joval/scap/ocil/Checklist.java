@@ -101,10 +101,10 @@ public class Checklist implements IChecklist {
 		if (root.getValue() instanceof OCILType) {
 		    return (OCILType)root.getValue();
 		} else {
-		    throw new OcilException("Bad OCIL source: " + source.getSystemId());
+		    throw new OcilException(new IllegalArgumentException(source.getSystemId()));
 		}
 	    } else {
-		throw new OcilException("Bad OCIL source: " + source.getSystemId());
+		throw new OcilException(new IllegalArgumentException(source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    Throwable linkedEx = e.getLinkedException();

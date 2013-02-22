@@ -78,9 +78,12 @@ public abstract class ScapContext implements IScapContext {
      *                defaults are selected
      */
     protected ScapContext(IBenchmark benchmark, IDictionary dictionary, ProfileType profile) throws XccdfException {
+	if (benchmark == null) {
+	    throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_XCCDF_BENCHMARK));
+	}
+	bt = benchmark.getBenchmark();
 	this.benchmark = benchmark;
 	this.dictionary = dictionary;
-	bt = benchmark.getBenchmark();
 	this.profile = profile == null ? null : resolve(profile);
 
 	platforms = new HashMap<String, LogicalTestType>();
@@ -291,7 +294,7 @@ public abstract class ScapContext implements IScapContext {
 	if (!platforms.containsKey(cpeName)) {
 	    if (cpeName.startsWith("cpe:")) {
 		if (dictionary == null) {
-		    throw new NoSuchElementException("CPE Dictionary");
+		    throw new NoSuchElementException(cpeName);
 		}
 		ItemType cpeItem = dictionary.getItem(cpeName);
 		if (cpeItem.isSetCheck()) {

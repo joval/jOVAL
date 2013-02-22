@@ -102,13 +102,13 @@ public class Datastream implements IDatastream, ILoggable {
 		if (components.containsKey(dictionaryId)) {
 		    dictionary = new Dictionary(components.get(dictionaryId).getCpeList());
 		} else {
-		    throw new ScapException("No dictionary: " + dictionaryId);
+		    throw new ScapException(new NoSuchElementException(dictionaryId));
 		}
 	    } else if (refs.getComponentRef().size() > 1) {
-		logger.warn("ERROR: Multiple dictionaries specified in stream " + streamId);
+		logger.warn(JOVALMsg.WARNING_CPE_MULTIDICTIONARY, streamId);
 	    }
 	} else {
-	    logger.warn("WARNING: No dictionaries defined in stream " + streamId);
+	    logger.warn(JOVALMsg.WARNING_CPE_NODICTIONARY, streamId);
 	}
 
 	//
@@ -185,7 +185,7 @@ public class Datastream implements IDatastream, ILoggable {
 	    if (comp.isSetBenchmark()) {
 		return new Context(new Benchmark(comp), tailoring.getProfile(profileId));
 	    } else {
-		throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
+		throw new ScapException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, benchmarkId, "XCCDF"));
 	    }
 	} else {
 	    throw new NoSuchElementException(benchmarkId);
@@ -208,7 +208,7 @@ public class Datastream implements IDatastream, ILoggable {
 		    throw new NoSuchElementException(profileId);
 		}
 	    } else {
-		throw new NoSuchElementException("Not a benchmark component: " + benchmarkId);
+		throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, benchmarkId, "XCCDF"));
 	    }
 	} else {
 	    throw new NoSuchElementException(benchmarkId);
@@ -222,10 +222,10 @@ public class Datastream implements IDatastream, ILoggable {
 	    if (comp.isSetOcil()) {
 		return new Checklist(comp.getOcil());
 	    } else {
-		throw new OcilException("Not an OCIL component: " + href);
+		throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "OCIL"));
 	    }
 	} else {
-	    throw new OcilException("Not a component: " + href);
+	    throw new OcilException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 	}
     }
 
@@ -236,10 +236,10 @@ public class Datastream implements IDatastream, ILoggable {
 	    if (comp.isSetOvalDefinitions()) {
 		return new Definitions(comp.getOvalDefinitions());
 	    } else {
-		throw new OvalException("Not an OVAL component: " + href);
+		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "OVAL"));
 	    }
 	} else {
-	    throw new OvalException("Not a component: " + href);
+	    throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 	}
     }
 
@@ -254,10 +254,10 @@ public class Datastream implements IDatastream, ILoggable {
 	    if (data instanceof ScriptDataType) {
 		return (ScriptDataType)data;
 	    } else {
-		throw new SceException("Not an SCE component: " + href);
+		throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "SCE"));
 	    }
 	} else {
-	    throw new SceException("Not a component: " + href);
+	    throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMPONENT, href));
 	}
     }
 
@@ -326,26 +326,22 @@ public class Datastream implements IDatastream, ILoggable {
 			String componentId = checks.get(uri);
 			if (components.containsKey(componentId)) {
 			    if (hrefMap.containsKey(u.getName())) {
-				logger.warn("ERROR: Duplicate URI name: " + u.getName());
+				logger.warn(JOVALMsg.WARNING_CPE_URI, u.getName());
 			    } else {
 				hrefMap.put(u.getName(), components.get(componentId));
 			    }
 			} else if (extendedComponents.containsKey(u.getName())) {
 			    if (hrefMap.containsKey(u.getName())) {
-				logger.warn("ERROR: Duplicate URI name: " + u.getName());
+				logger.warn(JOVALMsg.WARNING_CPE_URI, u.getName());
 			    } else {
 				hrefMap.put(u.getName(), extendedComponents.get(componentId));
 			    }
 			} else {
-			    logger.warn("ERROR: No component found for id " + componentId);
+			    logger.warn(JOVALMsg.ERROR_DATASTREAM_COMPONENT, componentId);
 			}
 		    } else {
-			logger.warn("ERROR: No check found for catalog URI " + uri);
+			logger.warn(JOVALMsg.ERROR_DATASTREAM_COMPONENT, uri);
 		    }
-		} else if (elt.isNil()) {
-		    logger.warn("ERROR: Nil element");
-		} else {
-		    logger.warn("ERROR: Not a Uri: " + elt.getValue().getClass().getName());
 		}
 	    }
 	}

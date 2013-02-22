@@ -97,7 +97,7 @@ public class Benchmark implements IBenchmark, ILoggable {
 	    } else if (SystemEnumeration.XCCDF.namespace().equals(ns)) {
 		return getBenchmarkType(new DOMSource(doc));
 	    } else {
-		throw new XccdfException("Unsupported namespace: " + ns);
+		throw new XccdfException(new IllegalArgumentException(ns));
 	    }
 	} catch (TransformerException e) {
 	    throw new XccdfException(e);
@@ -165,7 +165,7 @@ public class Benchmark implements IBenchmark, ILoggable {
 	    href = "#" + component.getId();
 	    setBenchmark(component.getBenchmark());
 	} else {
-	    throw new XccdfException("Not a benchmark component: " + component.getId());
+	    throw new XccdfException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, component.getId(), "XCCDF"));
 	}
     }
 

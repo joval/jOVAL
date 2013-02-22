@@ -100,7 +100,8 @@ public class Validator {
 			throw error;
 		    }
 		} else {
-		    throw new ValidationException("Not a SchematronOutput: " + root.getClass().getName());
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCHEMATRON_TYPE, root.getClass().getName());
+		    throw new ValidationException(msg);
 		}
 	    }
 	} catch (TransformerException e) {

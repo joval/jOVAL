@@ -48,7 +48,7 @@ public class Variables implements IVariables {
 	    if (rootObj instanceof OcilVariables) {
 		return (OcilVariables)rootObj;
 	    } else {
-		throw new OcilException("Bad OCIL source: " + source.getSystemId());
+		throw new OcilException(new IllegalArgumentException(source.getSystemId()));
 	    }
 	} catch (JAXBException e) {
 	    throw new OcilException(e);

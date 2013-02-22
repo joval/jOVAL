@@ -171,7 +171,7 @@ public class XPERT {
 			val = pair.substring(ptr+1);
 		    }
 		    if (checklists.containsKey(key)) {
-			System.out.println("WARNING: duplicate OCIL href - " + key);
+			System.out.println(getMessage("warning.ocil.href", key));
 		    }
 		    try {
 			checklists.put(key, new Checklist(new File(val)));
@@ -197,11 +197,11 @@ public class XPERT {
 			    level = Level.FINEST;
 			    break;
 			  default:
-			    System.out.println("WARNING log level value not in range: " + argv[i]);
+			    System.out.println(getMessage("warning.log.level.range", argv[i]));
 			    break;
 			}
 		    } catch (NumberFormatException e) {
-			System.out.println("WARNING illegal log level value: " + argv[i]);
+			System.out.println(getMessage("warning.log.level.value", argv[i]));
 		    }
 		} else if (argv[i].equals("-y")) {
 		    logFile = new File(argv[++i]);
@@ -220,10 +220,10 @@ public class XPERT {
 		} else if (argv[i].equals("-config")) {
 		    configFile = new File(argv[++i]);
 		} else {
-		    System.out.println("WARNING unrecognized command-line argument: " + argv[i]);
+		    System.out.println(getMessage("warning.cli.arg", argv[i]));
 		}
 	    } else {
-		System.out.println("WARNING unrecognized command-line argument: " + argv[i]);
+		System.out.println(getMessage("warning.cli.arg", argv[i]));
 	    }
 	}
 
@@ -255,25 +255,25 @@ public class XPERT {
 		    //
 		    DatastreamCollection dsc = null;
 		    if (verify) {
-			logger.info("Verifying XML digital signature: " + source.toString());
+			logger.info(getMessage("message.signature.validating", source.toString()));
 			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
 			keyStore.load(new FileInputStream(ksFile), ksPass.toCharArray());
 			SignatureValidator validator = new SignatureValidator(source, keyStore);
 			if (!validator.containsSignature()) {
-			    throw new XPERTException("ERROR: no signature found!");
+			    throw new XPERTException(getMessage("error.signature.failed"));
 			} else if (validator.validate()) {
-			    logger.info("Signature validated");
-			    logger.info("Loading Data Stream...");
+			    logger.info(getMessage("message.signature.valid"));
+			    logger.info(getMessage("message.stream.loading"));
 			    dsc = new DatastreamCollection(validator.getSource());
 			} else {
-			    throw new XPERTException("ERROR: signature validation failed!");
+			    throw new XPERTException(getMessage("error.signature.missing"));
 			}
 		    } else {
-			logger.info("Loading Data Stream: " + source.toString());
+			logger.info(getMessage("message.stream.loading"));
 			dsc = new DatastreamCollection(source);
 		    }
 		    if (query) {
-			logger.info("Querying Data Stream: " + source.toString());
+			logger.info(getMessage("message.stream.query", source.toString()));
 			for (String sId : dsc.getStreamIds()) {
 			    logger.info("Stream ID=\"" + sId + "\"");
 			    IDatastream ds = dsc.getDatastream(sId);
@@ -291,9 +291,9 @@ public class XPERT {
 			if (streamId == null) {
 			    if (dsc.getStreamIds().size() == 1) {
 				streamId = dsc.getStreamIds().iterator().next();
-				logger.info("Selected stream " + streamId);
+				logger.info(getMessage("message.stream.autoselect", streamId));
 			    } else {
-				throw new XPERTException("ERROR: A stream must be selected for this stream collection");
+				throw new XPERTException(getMessage("error.stream"));
 			    }
 			}
 
@@ -304,14 +304,14 @@ public class XPERT {
 			try {
 			    ds = dsc.getDatastream(streamId);
 			} catch (NoSuchElementException e) {
-			    throw new XPERTException("ERROR: Invalid stream ID \"" + streamId + "\"");
+			    throw new XPERTException(getMessage("error.stream.id", streamId));
 			}
 			if (benchmarkId == null) {
 			    if (ds.getBenchmarkIds().size() == 1) {
 				benchmarkId = ds.getBenchmarkIds().iterator().next();
-				logger.info("Selected benchmark " + benchmarkId);
+				logger.info(getMessage("message.benchmark.autoselect", benchmarkId));
 			    } else {
-				throw new XPERTException("ERROR: A benchmark must be selected for stream " + streamId);
+				throw new XPERTException(getMessage("error.benchmark", streamId));
 			    }
 			}
 			ctx = ds.getContext(benchmarkId, profileId);
@@ -320,13 +320,13 @@ public class XPERT {
 			    if (profiles.size() == 1) {
 				profileId = profiles.iterator().next();
 				ctx = ds.getContext(benchmarkId, profileId);
-				logger.info("Selected profile " + profileId);
+				logger.info(getMessage("message.profile.autoselect", profileId));
 			    } else if (profiles.size() > 1) {
-			        StringBuffer sb = new StringBuffer("Select a profile: ").append(LogFormatter.LF);
+			        StringBuffer sb = new StringBuffer();
 			        for (String id : profiles) {
-			            sb.append("  ").append(id).append(LogFormatter.LF);
+			            sb.append(LogFormatter.LF).append("  ").append(id);
 			        }
-				throw new XPERTException(sb.toString());
+				throw new XPERTException(getMessage("error.profile", sb.toString()));
 			    }
 			}
 		    }
@@ -336,7 +336,7 @@ public class XPERT {
 		    //
 		    Bundle bundle = new Bundle(source);
 		    if (query) {
-			logger.info("Querying Bundle: " + source.toString());
+			logger.info(getMessage("message.bundle.query", source.toString()));
 			for (String pId : bundle.getProfileIds()) {
 			    logger.info("    Profile Name=\"" + pId + "\"");
 			}
@@ -349,20 +349,20 @@ public class XPERT {
 				ctx = bundle.getContext(profileId);
 				logger.info("Selected profile " + profileId);
 			    } else if (profiles.size() > 1) {
-			        StringBuffer sb = new StringBuffer("Select a profile: ").append(LogFormatter.LF);
+			        StringBuffer sb = new StringBuffer();
 			        for (String id : profiles) {
-			            sb.append("  ").append(id).append(LogFormatter.LF);
+			            sb.append(LogFormatter.LF).append("  ").append(id);
 			        }
-				throw new XPERTException(sb.toString());
+				throw new XPERTException(getMessage("error.profile", sb.toString()));
 			    }
 			}
 		    }
 		} else {
-		    throw new XPERTException("Invalid source file: " + source.toString());
+		    throw new XPERTException(getMessage("error.source", source.toString()));
 		}
 
 		if (!query) {
-		    logger.info("Start time: " + new Date().toString());
+		    logger.info(getMessage("message.start", new Date()));
 		    try {
 			//
 			// Configure the jOVAL plugin
@@ -373,7 +373,7 @@ public class XPERT {
 			}
 			plugin.configure(config);
 		    } catch (Exception e) {
-			throw new XPERTException("Problem configuring the plugin:\n  " + e.getMessage());
+			throw new XPERTException(getMessage("error.plugin", e.getMessage(), logFile));
 		    }
 
 		    try {
@@ -390,14 +390,14 @@ public class XPERT {
 			  case OK:
 			    IReport report = engine.getReport(verbose ? SystemEnumeration.ANY : SystemEnumeration.XCCDF);
 			    if (report == null) {
-				logger.info("No report was generated.");
+				logger.info(getMessage("message.report.none"));
 			    } else if (report.getAssetReportCollection().isSetReports()) {
-				logger.info("Saving ARF report: " + reportFile.toString());
+				logger.info(getMessage("message.report.save", reportFile));
 				report.writeXML(reportFile);
-				logger.info("Transforming to HTML report: " + reportHTML.toString());
+				logger.info(getMessage("message.transform", reportHTML));
 				ctx.getBenchmark().writeTransform(transformFile, reportHTML);
 			    }
-			    logger.info("Finished processing XCCDF bundle");
+			    logger.info(getMessage("message.benchmark.processed"));
 			    exitCode = 0;
 			    break;
 
@@ -405,12 +405,12 @@ public class XPERT {
 			    throw engine.getError();
 			}
 		    } catch (OcilException e) {
-			logger.severe(">>> ERROR - " + e.getMessage());
-			logger.info("Check " + ocilDir.toString() + " for exported OCIL documents");
+			logger.severe(getMessage("error.ocil", e.getMessage()));
+			logger.info(getMessage("message.ocil.export", ocilDir));
 		    } catch (UnknownHostException e) {
-			logger.severe(">>> ERROR - No such host: " + e.getMessage());
+			logger.severe(getMessage("error.host.unknown", e.getMessage()));
 		    } catch (ConnectException e) {
-			logger.severe(">>> ERROR - Failed to connect to host: " + e.getMessage());
+			logger.severe(getMessage("error.host.connect", e.getMessage()));
 		    }
 		}
 	    } catch (IOException e) {
@@ -475,6 +475,14 @@ public class XPERT {
 		} else {
 		    logger.info("Host is not applicable");
 		}
+		break;
+
+	      case RULES_PHASE_START:
+		logger.info("Starting rule processing");
+		break;
+
+	      case RULES_PHASE_END:
+		logger.info("Rule processing complete");
 		break;
 
 	      case OVAL_ENGINE:
