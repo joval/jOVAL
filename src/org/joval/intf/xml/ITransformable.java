@@ -29,6 +29,6 @@ public interface ITransformable {
     /**
      * Get a JAXBContext for the document.
      */
-    public JAXBContext getJAXBContext();
+    public JAXBContext getJAXBContext() throws JAXBException;
 }
 

@@ -43,8 +43,7 @@ public class Variables implements IVariables {
 
     public static final OcilVariables getOcilVariables(Source source) throws OcilException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OCIL));
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.OCIL.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof OcilVariables) {
 		return (OcilVariables)rootObj;
@@ -56,7 +55,6 @@ public class Variables implements IVariables {
 	}
     }
 
-    private JAXBContext ctx;
     private OcilVariables variables;
     private Hashtable<String, VariableType> table;
 
@@ -92,11 +90,6 @@ public class Variables implements IVariables {
      */
     public Variables() throws OcilException {
 	table = new Hashtable<String, VariableType>();
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OCIL));
-	} catch (JAXBException e) {
-	    throw new OcilException(e);
-	}
     }
 
     public OcilVariables getOcilVariables() {
@@ -150,7 +143,7 @@ public class Variables implements IVariables {
     public void writeXML(File f) throws IOException {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = ctx.createMarshaller();
+	    Marshaller marshaller = SchemaRegistry.OCIL.getJAXBContext().createMarshaller();
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOcilVariables(), out);
@@ -171,14 +164,14 @@ public class Variables implements IVariables {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, getOcilVariables());
+	return new JAXBSource(SchemaRegistry.OCIL.getJAXBContext(), getOcilVariables());
     }
 
     public Object getRootObject() {
 	return getOcilVariables();
     }
 
-    public JAXBContext getJAXBContext() {
-	return ctx;
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.OCIL.getJAXBContext();
     }
 }

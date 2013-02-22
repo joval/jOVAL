@@ -41,9 +41,7 @@ public class Tailoring implements ITailoring {
 
     public static final TailoringType getTailoringType(Source source) throws XccdfException {
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.XCCDF);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof TailoringType) {
 		return (TailoringType)rootObj;

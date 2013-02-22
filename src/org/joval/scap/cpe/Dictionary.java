@@ -39,9 +39,7 @@ public class Dictionary implements IDictionary {
 
     public static final ListType getCpeList(Source source) throws CpeException {
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.CPE);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.CPE.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof ListType) {
 		return (ListType)rootObj;

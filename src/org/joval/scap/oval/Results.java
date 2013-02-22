@@ -82,13 +82,10 @@ public class Results implements IResults, ILoggable {
     private ISystemCharacteristics sc;
     private Directives directives;
     private LocLogger logger;
-    private JAXBContext ctx;
 
     public static final OvalResults getOvalResults(File f) throws OvalException {
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_RESULTS);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(f);
 	    if (rootObj instanceof OvalResults) {
 		return (OvalResults)rootObj;
@@ -110,11 +107,6 @@ public class Results implements IResults, ILoggable {
 	definitionTable = new Hashtable<String, DefinitionType>();
 	testTable = new Hashtable<String, TestType>();
 	directives = new Directives();
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_RESULTS));
-	} catch (JAXBException e) {
-	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
     }
 
     public void storeTestResult(TestType test) {
@@ -150,15 +142,15 @@ public class Results implements IResults, ILoggable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException, OvalException {
-	return new JAXBSource(ctx, getOvalResults());
+	return new JAXBSource(SchemaRegistry.OVAL_RESULTS.getJAXBContext(), getOvalResults());
     }
 
     public Object getRootObject() {
 	return getOvalResults();
     }
 
-    public JAXBContext getJAXBContext() {
-	return ctx;
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.OVAL_RESULTS.getJAXBContext();
     }
 
     // Implement IResults
@@ -189,7 +181,7 @@ public class Results implements IResults, ILoggable {
     public void writeXML(File f) {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = ctx.createMarshaller();
+	    Marshaller marshaller = SchemaRegistry.OVAL_RESULTS.getJAXBContext().createMarshaller();
 	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.RES);
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOvalResults(), out);

@@ -53,9 +53,7 @@ public class DatastreamCollection implements IDatastreamCollection {
 
     public static final DataStreamCollection getDSCollection(Source source) throws ScapException {
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.DS);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.DS.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof DataStreamCollection) {
 		return (DataStreamCollection)rootObj;
@@ -106,8 +104,7 @@ public class DatastreamCollection implements IDatastreamCollection {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-        String packages = SchemaRegistry.lookup(SchemaRegistry.DS);
-        return new JAXBSource(JAXBContext.newInstance(packages), getDSCollection());
+        return new JAXBSource(SchemaRegistry.DS.getJAXBContext(), getDSCollection());
     }
 
     public Object getRootObject() {

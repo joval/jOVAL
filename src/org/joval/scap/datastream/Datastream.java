@@ -54,7 +54,6 @@ import org.joval.scap.sce.SceException;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
-import org.joval.xml.SchemaRegistry;
 
 /**
  * Representation of an SCAP 1.2 Data Stream.

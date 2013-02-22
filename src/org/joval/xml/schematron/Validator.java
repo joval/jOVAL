@@ -84,8 +84,7 @@ public class Validator {
 	    transformer.transform(source, result);
 	    Node root = result.getNode();
 	    if (root.getNodeType() == Node.DOCUMENT_NODE) {
-		JAXBContext ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.SVRL));
-		Object rootObj = ctx.createUnmarshaller().unmarshal(root);
+		Object rootObj = SchemaRegistry.SVRL.getJAXBContext().createUnmarshaller().unmarshal(root);
 		if (rootObj instanceof SchematronOutput) {
 		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_SCHEMATRON_VALIDATION);
 		    ValidationException error = new ValidationException(msg);

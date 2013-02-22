@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.NoSuchElementException;
 import java.util.Properties;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 
 import org.joval.util.JOVALMsg;
 
@@ -16,83 +18,95 @@ import org.joval.util.JOVALMsg;
  * @author David A. Solin
  * @version %I% %G%
  */
-public class SchemaRegistry {
+public enum SchemaRegistry {
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * definitions schema.
      */
-    public static final String OVAL_DEFINITIONS = "oval.definitions.packages";
+    OVAL_DEFINITIONS("oval.definitions.packages"),
 
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * results schema.
      */
-    public static final String OVAL_RESULTS = "oval.results.packages";
+    OVAL_RESULTS("oval.results.packages"),
 
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * system characteristics schema.
      */
-    public static final String OVAL_SYSTEMCHARACTERISTICS = "oval.systemcharacteristics.packages";
+    OVAL_SYSTEMCHARACTERISTICS("oval.systemcharacteristics.packages"),
 
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * variables schema.
      */
-    public static final String OVAL_VARIABLES = "oval.variables.packages";
+    OVAL_VARIABLES("oval.variables.packages"),
 
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * evaluation-id schema.
      */
-    public static final String OVAL_EVALUATION_ID = "oval.evaluation-id.packages";
+    OVAL_EVALUATION_ID("oval.evaluation-id.packages"),
 
     /**
      * Property indicating the package names for classes in the OVAL (Open Vulnerability and Assessment Language)
      * directives schema.
      */
-    public static final String OVAL_DIRECTIVES = "oval.directives.packages";
+    OVAL_DIRECTIVES("oval.directives.packages"),
 
     /**
      * Property indicating the package names for classes in the XCCDF (eXtensible Configuration Checklist Description Format)
      * schema.
      */
-    public static final String XCCDF = "xccdf.packages";
+    XCCDF("xccdf.packages"),
 
     /**
      * Property indicating the package names for classes in the CPE (Common Platform Enumeration) schema.
      */
-    public static final String OCIL = "ocil.packages";
+    OCIL("ocil.packages"),
 
     /**
      * Property indicating the package names for classes in the CPE (Common Platform Enumeration) schema.
      */
-    public static final String CPE = "cpe.packages";
+    CPE("cpe.packages"),
 
     /**
      * Property indicating the package names for classes in the DS (SCAP Data Stream) schema.
      */
-    public static final String DS = "ds.packages";
+    DS("ds.packages"),
 
     /**
      * Property indicating the package names for classes in the ARF (Asset Reporting Format) schema.
      */
-    public static final String ARF = "arf.packages";
+    ARF("arf.packages"),
 
     /**
      * Property indicating the package names for classes in the SVRL (Schematron Validation Report Language) schema.
      */
-    public static final String SVRL = "svrl.packages";
+    SVRL("svrl.packages");
 
     /**
-     * Property resource files, containing JAXB package information.
+     * Obtain the JAXBContext for the schema.
      */
-    private static final String[] RESOURCES = {	"arf.properties",
-						"ds.properties",
-						"oval.properties",
-						"cpe.properties",
-						"xccdf.properties",
-						"ocil.properties",
+    public JAXBContext getJAXBContext() throws JAXBException {
+	if (ctx == null) {
+	    ctx = JAXBContext.newInstance(schemaProps.getProperty(resource));
+	}
+	return ctx;
+    }
+
+    // Private
+
+    private JAXBContext ctx;
+    private String resource;
+
+    private SchemaRegistry(String resource) {
+	this.resource = resource;
+    }
+
+    private static final String[] RESOURCES = {	"arf.properties", "ds.properties", "oval.properties",
+						"cpe.properties", "xccdf.properties", "ocil.properties",
 						"svrl.properties" };
 
     private static Properties schemaProps;
@@ -111,14 +125,5 @@ public class SchemaRegistry {
 		}
 	    }
 	}
-    }
-
-    /**
-     * Retrieve package names from the registry.
-     *
-     * @param name specify one of the OVAL_*, CPE, XCCDF, OCIL, DS or SVRL Strings defined by this class.
-     */
-    public static String lookup(String name) throws NoSuchElementException {
-	return schemaProps.getProperty(name);
     }
 }

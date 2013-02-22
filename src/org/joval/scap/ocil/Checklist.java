@@ -92,9 +92,7 @@ public class Checklist implements IChecklist {
 
     public static final OCILType getOCILType(Source source) throws OcilException {
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OCIL);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.OCIL.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof OCILType) {
 		return (OCILType)rootObj;
@@ -123,7 +121,6 @@ public class Checklist implements IChecklist {
 	}
     }
 
-    private JAXBContext ctx;
     private OCILType ocil;
     private Map<String, QuestionnaireType> questionnaires;
     private Map<String, QuestionType> questions;
@@ -531,7 +528,7 @@ public class Checklist implements IChecklist {
     public void writeXML(File f) throws IOException {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = ctx.createMarshaller();
+	    Marshaller marshaller = SchemaRegistry.OCIL.getJAXBContext().createMarshaller();
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(Factories.core.createOcil(getOCILType()), out);
@@ -552,15 +549,15 @@ public class Checklist implements IChecklist {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, getRootObject());
+	return new JAXBSource(SchemaRegistry.OCIL.getJAXBContext(), getRootObject());
     }
 
     public Object getRootObject() {
 	return Factories.core.createOcil(getOCILType());
     }
 
-    public JAXBContext getJAXBContext() {
-	return ctx;
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.OCIL.getJAXBContext();
     }
 
     // Private
@@ -569,11 +566,6 @@ public class Checklist implements IChecklist {
      * Create an empty Checklist.
      */
     private Checklist() throws OcilException {
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OCIL));
-	} catch (JAXBException e) {
-	    throw new OcilException(e);
-	}
 	artifacts = new HashMap<String, ArtifactType>();
 	questionnaires = new HashMap<String, QuestionnaireType>();
 	questions = new HashMap<String, QuestionType>();

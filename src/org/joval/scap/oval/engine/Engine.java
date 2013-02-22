@@ -655,10 +655,10 @@ public class Engine implements IEngine, IProvider {
 		    ArrayList<ItemSet<ItemType>> sets = new ArrayList<ItemSet<ItemType>>(values.size());
 		    for (Object value : values) {
 			for (ObjectType obj : getPermutations(methodName, value)) {
-			    sets.add(new ItemSet<ItemType>(getItems(obj, flags)));
+			    Collection<ItemType> permutationItems = getItems(obj, flags);
+			    sets.add(new ItemSet<ItemType>(permutationItems));
 			}
 		    }
-
 		    ItemSet<ItemType> checked = null;
 		    for (ItemSet<ItemType> set : sets) {
 			if (checked == null) {

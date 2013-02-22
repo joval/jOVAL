@@ -67,9 +67,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 
     public static final Object parse(Source src) throws OvalException {
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createUnmarshaller();
 	    return unmarshaller.unmarshal(src);
 	} catch (JAXBException e) {
 	    throw new OvalException(e);
@@ -98,7 +96,6 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     private Map<String, Collection<String>> objectVariableTable;
     private Map<String, Collection<BigInteger>> itemChecksums;
     private int itemCounter = 0;
-    private JAXBContext ctx;
     private Marshaller marshaller = null;
 
     /**
@@ -128,9 +125,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
 	this.systemInfo = systemInfo;
 	itemChecksums = new HashMap<String, Collection<BigInteger>>();
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS);
-	    ctx = JAXBContext.newInstance(packages);
-	    marshaller = ctx.createMarshaller();
+	    marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
 	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
 	} catch (JAXBException e) {
 	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -181,15 +176,15 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     // Implement ITransformable
 
     public Source getSource() throws JAXBException, OvalException {
-	return new JAXBSource(ctx, getOvalSystemCharacteristics(false));
+	return new JAXBSource(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext(), getOvalSystemCharacteristics(false));
     }
 
     public Object getRootObject() {
 	return getOvalSystemCharacteristics(false);
     }
 
-    public JAXBContext getJAXBContext() {
-	return ctx;
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext();
     }
 
     // Implement ISystemCharacteristics
@@ -394,7 +389,7 @@ public class SystemCharacteristics implements ISystemCharacteristics, ILoggable 
     public void writeXML(File f) {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = ctx.createMarshaller();
+	    Marshaller marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
 	    OvalNamespacePrefixMapper.configure(marshaller, OvalNamespacePrefixMapper.URI.SC);
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOvalSystemCharacteristics(false), out);

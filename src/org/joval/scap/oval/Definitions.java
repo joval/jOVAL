@@ -58,9 +58,7 @@ public class Definitions implements IDefinitions, ILoggable {
 
     public static final OvalDefinitions getOvalDefinitions(Source source) throws OvalException {
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_DEFINITIONS);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.OVAL_DEFINITIONS.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof OvalDefinitions) {
 		return (OvalDefinitions)rootObj;
@@ -72,7 +70,6 @@ public class Definitions implements IDefinitions, ILoggable {
 	}
     }
 
-    private JAXBContext ctx;
     private OvalDefinitions defs;
     private LocLogger logger;
     private Hashtable<String, DefinitionType> definitions;
@@ -95,12 +92,6 @@ public class Definitions implements IDefinitions, ILoggable {
     public Definitions(OvalDefinitions defs) throws OvalException {
 	this.defs = defs;
 	this.logger = JOVALMsg.getLogger();
-
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_DEFINITIONS));
-	} catch (JAXBException e) {
-	    throw new OvalException(e);
-	}
 
 	objects = new Hashtable <String, ObjectType>();
 	if (defs.getObjects() != null) {
@@ -155,15 +146,15 @@ public class Definitions implements IDefinitions, ILoggable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, getOvalDefinitions());
+	return new JAXBSource(SchemaRegistry.OVAL_DEFINITIONS.getJAXBContext(), getOvalDefinitions());
     }
 
     public Object getRootObject() {
 	return getOvalDefinitions(); 
     }
 
-    public JAXBContext getJAXBContext() {
-	return ctx;
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.OVAL_DEFINITIONS.getJAXBContext();
     }
 
     // Implement IDefinitions

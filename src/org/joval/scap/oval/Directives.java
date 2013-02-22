@@ -41,9 +41,7 @@ public class Directives {
 
     public static final OvalDirectives getOvalDirectives(Source source) throws OvalException {
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_DIRECTIVES);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.OVAL_DIRECTIVES.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof OvalDirectives) {
 		return (OvalDirectives)rootObj;

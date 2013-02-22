@@ -46,9 +46,7 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
 
     public static final Collection<String> getEvaluationDefinitionIds(Source src) throws OvalException {
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_EVALUATION_ID);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.OVAL_EVALUATION_ID.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(src);
 	    if (rootObj instanceof EvaluationDefinitionIds) {
 		EvaluationDefinitionIds edi = (EvaluationDefinitionIds)rootObj;
@@ -117,9 +115,7 @@ public class DefinitionFilter implements IDefinitionFilter, ILoggable {
     public void writeXML(File f) {
         OutputStream out = null;
         try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_EVALUATION_ID);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-            Marshaller marshaller = ctx.createMarshaller();
+            Marshaller marshaller = SchemaRegistry.OVAL_EVALUATION_ID.getJAXBContext().createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
             out = new FileOutputStream(f);
             marshaller.marshal(getEvaluationDefinitionIds(), out);

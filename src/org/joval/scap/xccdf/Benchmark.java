@@ -123,9 +123,7 @@ public class Benchmark implements IBenchmark, ILoggable {
      */
     public static final BenchmarkType getBenchmarkType(Source source) throws XccdfException {
 	try {
-	    String packages = SchemaRegistry.lookup(SchemaRegistry.XCCDF);
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.XCCDF.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof BenchmarkType) {
 		return (BenchmarkType)rootObj;
@@ -145,7 +143,6 @@ public class Benchmark implements IBenchmark, ILoggable {
     }
 
     private LocLogger logger;
-    private JAXBContext ctx;
     private BenchmarkType bt;
     private String href;
     private Map<String, ProfileType> profiles;
@@ -205,7 +202,7 @@ public class Benchmark implements IBenchmark, ILoggable {
     public void writeXML(File f) throws IOException {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = ctx.createMarshaller();
+	    Marshaller marshaller = SchemaRegistry.XCCDF.getJAXBContext().createMarshaller();
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(bt, out);
@@ -242,15 +239,15 @@ public class Benchmark implements IBenchmark, ILoggable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, bt);
+	return new JAXBSource(SchemaRegistry.XCCDF.getJAXBContext(), bt);
     }
 
     public Object getRootObject() {
 	return bt;
     }
 
-    public JAXBContext getJAXBContext() {
-	return ctx;
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.XCCDF.getJAXBContext();
     }
 
     // Implement ILoggable
@@ -266,11 +263,6 @@ public class Benchmark implements IBenchmark, ILoggable {
     // Private
 
     private Benchmark() throws XccdfException {
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.XCCDF));
-	} catch (JAXBException e) {
-	    throw new XccdfException(e);
-	}
 	logger = JOVALMsg.getLogger();
     }
 

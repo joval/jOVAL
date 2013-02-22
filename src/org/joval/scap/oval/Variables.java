@@ -54,8 +54,7 @@ public class Variables implements IVariables {
 
     public static final OvalVariables getOvalVariables(Source source) throws OvalException {
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_VARIABLES));
-	    Unmarshaller unmarshaller = ctx.createUnmarshaller();
+	    Unmarshaller unmarshaller = SchemaRegistry.OVAL_VARIABLES.getJAXBContext().createUnmarshaller();
 	    Object rootObj = unmarshaller.unmarshal(source);
 	    if (rootObj instanceof OvalVariables) {
 		return (OvalVariables)rootObj;
@@ -68,7 +67,6 @@ public class Variables implements IVariables {
     }
 
     private LocLogger logger;
-    private JAXBContext ctx;
     private Hashtable <String, List<IType>>variables;
     private Hashtable <String, String>comments;
 
@@ -99,11 +97,6 @@ public class Variables implements IVariables {
 	logger = JOVALMsg.getLogger();
 	variables = new Hashtable<String, List<IType>>();
 	comments = new Hashtable<String, String>();
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.OVAL_VARIABLES));
-	} catch (JAXBException e) {
-	    logger.error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	}
     }
 
     // Implement IVariables
@@ -143,7 +136,7 @@ public class Variables implements IVariables {
     public void writeXML(File f) {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = ctx.createMarshaller();
+	    Marshaller marshaller = SchemaRegistry.OVAL_VARIABLES.getJAXBContext().createMarshaller();
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(getOvalVariables(), out);
@@ -201,15 +194,15 @@ public class Variables implements IVariables {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, getOvalVariables());
+	return new JAXBSource(SchemaRegistry.OVAL_VARIABLES.getJAXBContext(), getOvalVariables());
     }
 
     public Object getRootObject() {
 	return getOvalVariables();
     }
 
-    public JAXBContext getJAXBContext() {
-	return ctx;
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.OVAL_VARIABLES.getJAXBContext();
     }
 
     // Implement ILogger

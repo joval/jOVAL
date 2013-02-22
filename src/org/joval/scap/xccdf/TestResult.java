@@ -22,17 +22,11 @@ import org.joval.xml.SchemaRegistry;
  */
 public class TestResult implements ITransformable {
     private TestResultType result;
-    private JAXBContext ctx;
     private ObjectFactory factory;
 
     public TestResult(TestResultType result) throws XccdfException {
 	this.result = result;
 	factory = new ObjectFactory();
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.XCCDF));
-	} catch (JAXBException e) {
-	    throw new XccdfException(e);
-	}
     }
 
     /**
@@ -45,14 +39,14 @@ public class TestResult implements ITransformable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, getRootObject());
+	return new JAXBSource(SchemaRegistry.XCCDF.getJAXBContext(), getRootObject());
     }
 
     public Object getRootObject() {
 	return factory.createTestResult(result);
     }
 
-    public JAXBContext getJAXBContext() {
-	return ctx;
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.XCCDF.getJAXBContext();
     }
 }

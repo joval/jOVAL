@@ -5,11 +5,14 @@ package org.joval.scap.oval;
 
 import java.io.ByteArrayOutputStream;
 import java.security.MessageDigest;
+import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Vector;
+import java.util.zip.Adler32;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -27,18 +30,16 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class ItemSet<T extends ItemType> implements Iterable<T> {
-    private Hashtable<String, T> table;
+    private Map<String, Collection<T>> table;
     private Marshaller marshaller;
 
     /**
      * Construct an empty set.
      */
     public ItemSet() {
-	table = new Hashtable<String, T>();
-	String packages = SchemaRegistry.lookup(SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS);
+	table = new HashMap<String, Collection<T>>();
 	try {
-	    JAXBContext ctx = JAXBContext.newInstance(packages);
-	    marshaller = ctx.createMarshaller();
+	    marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
 	} catch (JAXBException e) {
 	    throw new RuntimeException(e);
 	}
@@ -51,42 +52,52 @@ public class ItemSet<T extends ItemType> implements Iterable<T> {
      */
     public ItemSet(Collection<T> items) {
 	this();
-	for (T item : items) {
-	    if (item.isSetId()) {
-		table.put(item.getId().toString(), item);
-	    } else {
-		table.put(getChecksum(item), item);
-	    }
-	}
+	addItems(items);
     }
 
     public String toString() {
 	StringBuffer sb = new StringBuffer("Set [");
-	for (String id : table.keySet()) {
+	for (Map.Entry<String, Collection<T>> entry : table.entrySet()) {
 	    if (sb.length() > 5) {
 		sb.append(", ");
 	    }
-	    sb.append(id);
+	    sb.append(entry.getKey()).append(":").append(Integer.toString(entry.getValue().size()));
 	}
 	return sb.append("]").toString();
     }
 
-    public ItemSet<T> union(ItemSet<? extends T> other) {
-	Hashtable<String, T> temp = new Hashtable<String, T>();
+    public ItemSet<T> union(ItemSet<T> other) {
+	Map<String, Collection<T>> temp = new HashMap<String, Collection<T>>();
 	for (String id : table.keySet()) {
 	    temp.put(id, table.get(id));
 	}
+	Collection<T> collisions = new ArrayList<T>();
 	for (String id : other.table.keySet()) {
-	    temp.put(id, other.table.get(id));
+	    if (temp.containsKey(id)) {
+		collisions.addAll(other.table.get(id));
+	    } else {
+		temp.put(id, other.table.get(id));
+	    }
 	}
-	return new ItemSet<T>(temp);
+	return new ItemSet<T>(temp).addItems(collisions);
     }
 
-    public ItemSet<T> intersection(ItemSet<? extends T> other) {
-	Hashtable<String, T> temp = new Hashtable<String, T>();
-	for (String id : table.keySet()) {
-	    if (other.table.containsKey(id)) {
-		temp.put(id, table.get(id));
+    public ItemSet<T> intersection(ItemSet<T> other) {
+	Map<String, Collection<T>> temp = new HashMap<String, Collection<T>>();
+	for (Map.Entry<String, Collection<T>> entry : table.entrySet()) {
+	    if (other.table.containsKey(entry.getKey())) {
+		for (T item : entry.getValue()) {
+		    byte[] itemData = toBytes(item);
+		    for (T otherItem : other.table.get(entry.getKey())) {
+			if (equal(itemData, toBytes(otherItem))) {
+			    if (!temp.containsKey(entry.getKey())) {
+				temp.put(entry.getKey(), new ArrayList<T>());
+			    }
+			    temp.get(entry.getKey()).add(item);
+			    break;
+			}
+		    }
+		}
 	    }
 	}
 	return new ItemSet<T>(temp);
@@ -95,60 +106,122 @@ public class ItemSet<T extends ItemType> implements Iterable<T> {
     /**
      * A.complement(B) is the set of everything in A that is not in B.
      */
-    public ItemSet<T> complement(ItemSet<? extends T> other) {
-	Hashtable<String, T> temp = new Hashtable<String, T>();
-	for (String id : table.keySet()) {
-	    if (!other.table.containsKey(id)) {
-		temp.put(id, table.get(id));
+    public ItemSet<T> complement(ItemSet<T> other) {
+	Map<String, Collection<T>> temp = new HashMap<String, Collection<T>>();
+	for (Map.Entry<String, Collection<T>> entry : table.entrySet()) {
+	    if (other.table.containsKey(entry.getKey())) {
+		for (T item : entry.getValue()) {
+		    byte[] itemData = toBytes(item);
+		    boolean match = false;
+		    for (T otherItem : other.table.get(entry.getKey())) {
+			if (equal(itemData, toBytes(otherItem))) {
+			    match = true;
+			    break;
+			}
+		    }
+		    if (!match) {
+			if (!temp.containsKey(entry.getKey())) {
+			    temp.put(entry.getKey(), new ArrayList<T>());
+			}
+			temp.get(entry.getKey()).add(item);
+		    }
+		}
+	    } else {
+		temp.put(entry.getKey(), entry.getValue());
 	    }
 	}
 	return new ItemSet<T>(temp);
     }
 
     /**
-     * Convert the HashSet to a List.
+     * Convert the ItemSet to a List.
      */
     public List<T> toList() {
-	Vector<T> v = new Vector<T>();
-	v.addAll(table.values());
-	return v;
+	List<T> list = new ArrayList<T>();
+	for (Collection<T> items : table.values()) {
+	    list.addAll(items);
+	}
+	return list;
     }
 
     // Implement Iterable
 
     public Iterator<T> iterator() {
-	return table.values().iterator();
+	return toList().iterator();
     }
 
     // Private
 
-    private ItemSet(Hashtable<String, T> table) {
+    private ItemSet(Map<String, Collection<T>> table) {
 	this.table = table;
     }
 
     private static final QName QNAME = new QName("SetItem");
 
     /**
-     * Generate a unique identifier based on the contents of the item.
+     * For items with no ID - converts to bytes.
      */
-    private String getChecksum(ItemType item) {
+    private byte[] toBytes(ItemType item) {
 	try {
 	    @SuppressWarnings("unchecked")
 	    JAXBElement<ItemType> elt = new JAXBElement(QNAME, item.getClass(), item);
 
 	    ByteArrayOutputStream out = new ByteArrayOutputStream();
 	    marshaller.marshal(elt, out);
-	    byte[] buff = out.toByteArray();
-	    MessageDigest digest = MessageDigest.getInstance("MD5");
-	    digest.update(buff, 0, buff.length);
-	    byte[] cs = digest.digest();
-	    StringBuffer sb = new StringBuffer();
-	    for (int i=0; i < cs.length; i++) {
-		sb.append(Integer.toHexString(0xFF & cs[i]));
-	    }
-	    return sb.toString();
+	    return out.toByteArray();
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
 	}
+    }
+
+    private boolean equal(byte[] b1, byte[] b2) {
+	if (b1.length == b2.length) {
+	    for (int i=0; i < b1.length; i++) {
+		if (b1[i] != b2[i]) {
+		    return false;
+		}
+	    }
+	    return true;
+	} else {
+	    return false;
+	}
+    }
+
+    private ItemSet<T> addItems(Collection<T> items) {
+	for (T item : items) {
+	    if (item.isSetId()) {
+		table.put(item.getId().toString(), Arrays.asList(item));
+	    } else {
+		byte[] data = toBytes(item);
+		Adler32 adler = new Adler32();
+		adler.update(data);
+		String cs = Long.toString(adler.getValue());
+		if (table.containsKey(cs)) {
+		    //
+		    // If another item with the same Adler32 checksum has been stored previously, that doesn't mean
+		    // it contains the same data.  So, we compare it to all the previously-stored items with the
+		    // same checksum.
+		    //
+		    boolean match = false;
+		    for (ItemType candidate : table.get(cs)) {
+			if (equal(data, toBytes(candidate))) {
+			    match = true;
+			    break;
+			}
+		    }
+		    if (!match) {
+			//
+			// The new item is unique, so add it.
+			//
+			table.get(cs).add(item);
+		    }
+		} else {
+		    Collection<T> collection = new ArrayList<T>();
+		    collection.add(item);
+		    table.put(cs, collection);
+		}
+	    }
+	}
+	return this;
     }
 }

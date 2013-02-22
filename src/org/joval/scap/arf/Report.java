@@ -50,7 +50,6 @@ import org.joval.xml.SchemaRegistry;
  */
 public class Report implements IReport, ILoggable {
     private LocLogger logger;
-    private JAXBContext ctx;
     private AssetReportCollection arc;
     private HashMap<String, Element> requests;
     private HashMap<String, AssetType> assets;
@@ -64,12 +63,6 @@ public class Report implements IReport, ILoggable {
 	requests = new HashMap<String, Element>();
 	assets = new HashMap<String, AssetType>();
 	reports = new HashMap<String, Element>();
-
-	try {
-	    ctx = JAXBContext.newInstance(SchemaRegistry.lookup(SchemaRegistry.ARF));
-	} catch (JAXBException e) {
-	    throw new ArfException(e);
-	}
 	logger = JOVALMsg.getLogger();
     }
 
@@ -208,7 +201,7 @@ public class Report implements IReport, ILoggable {
     public void writeXML(File f) throws IOException {
 	OutputStream out = null;
 	try {
-	    Marshaller marshaller = ctx.createMarshaller();
+	    Marshaller marshaller = SchemaRegistry.ARF.getJAXBContext().createMarshaller();
 	    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 	    out = new FileOutputStream(f);
 	    marshaller.marshal(arc, out);
@@ -235,15 +228,15 @@ public class Report implements IReport, ILoggable {
     // Implement ITransformable
 
     public Source getSource() throws JAXBException {
-	return new JAXBSource(ctx, getRootObject());
+	return new JAXBSource(SchemaRegistry.ARF.getJAXBContext(), getRootObject());
     }
 
     public Object getRootObject() {
 	return arc;
     }
 
-    public JAXBContext getJAXBContext() {
-	return ctx;
+    public JAXBContext getJAXBContext() throws JAXBException {
+	return SchemaRegistry.ARF.getJAXBContext();
     }
 
     // Implement ILoggable
