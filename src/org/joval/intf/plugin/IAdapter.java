@@ -22,7 +22,10 @@ public interface IAdapter extends IProvider {
      * The adapter is initialized by being provided with an active (connected) jSAF session object. Implementors should
      * assume that this method will only be called once for any instance of the adapter.
      *
-     * @return The object classes for which this adapter knows how to retrieve item data, for the supplied session.
+     * The notapplicable collection passed into the initializer will be populated with the classes of ObjectType sub-
+     * classes that are supported by the adapter, but not applicable to the supplied session.
+     *
+     * @return the classes that the adapter supports for the specified session.
      */
-    public Collection<Class> init(ISession session);
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable);
 }

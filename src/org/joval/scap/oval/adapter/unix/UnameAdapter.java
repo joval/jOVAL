@@ -4,11 +4,11 @@
 package org.joval.scap.oval.adapter.unix;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
-import java.util.Vector;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
@@ -39,17 +39,19 @@ public class UnameAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
 	    classes.add(UnameObject.class);
+	} else {
+	    notapplicable.add(UnameObject.class);
 	}
 	return classes;
     }
 
     public Collection<UnameItem> getItems(ObjectType obj, IRequestContext rc) {
-	Collection<UnameItem> items = new Vector<UnameItem>();
+	Collection<UnameItem> items = new ArrayList<UnameItem>();
 	try {
 	    if (item == null) {
 		item = Factories.sc.unix.createUnameItem();

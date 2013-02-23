@@ -3,11 +3,11 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.system.IWindowsSession;
@@ -46,11 +46,13 @@ public class Wmi57Adapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(Wmi57Object.class);
+	} else {
+	    notapplicable.add(Wmi57Object.class);
 	}
 	return classes;
     }
@@ -66,7 +68,7 @@ public class Wmi57Adapter implements IAdapter {
 	String ns = (String)wObj.getNamespace().getValue();
 	String wql = (String)wObj.getWql().getValue();
 
-	Collection<Wmi57Item> items = new Vector<Wmi57Item>();
+	Collection<Wmi57Item> items = new ArrayList<Wmi57Item>();
 	Wmi57Item item = Factories.sc.windows.createWmi57Item();
 	try {
 	    EntityItemStringType namespaceType = Factories.sc.core.createEntityItemStringType();

@@ -3,8 +3,8 @@
 
 package org.joval.scap.oval.adapter.independent;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Vector;
 
 import jsaf.intf.system.ISession;
 
@@ -30,15 +30,15 @@ public class FamilyAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	this.session = session;
-	Collection<Class> classes = new Vector<Class>();
+	Collection<Class> classes = new ArrayList<Class>();
 	classes.add(FamilyObject.class);
 	return classes;
     }
 
     public Collection<FamilyItem> getItems(ObjectType obj, IRequestContext rc) {
-	Collection<FamilyItem> items = new Vector<FamilyItem>();
+	Collection<FamilyItem> items = new ArrayList<FamilyItem>();
 	if (fItem == null) {
 	    fItem = Factories.sc.independent.createFamilyItem();
 	    EntityItemFamilyType familyType = Factories.sc.independent.createEntityItemFamilyType();

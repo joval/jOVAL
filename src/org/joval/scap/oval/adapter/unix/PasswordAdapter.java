@@ -8,13 +8,13 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -60,15 +60,17 @@ public class PasswordAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
 	    passwordMap = new Hashtable<String, PasswordItem>();
 	    errors = new Hashtable<String, Exception>();
-	    errorMessages = new Vector<String>();
+	    errorMessages = new ArrayList<String>();
 	    initialized = false;
 	    classes.add(PasswordObject.class);
+	} else {
+	    notapplicable.add(PasswordObject.class);
 	}
 	return classes;
     }
@@ -83,7 +85,7 @@ public class PasswordAdapter implements IAdapter {
 	    }
 	}
 
-	Collection<PasswordItem> items = new Vector<PasswordItem>();
+	Collection<PasswordItem> items = new ArrayList<PasswordItem>();
 	PasswordObject pObj = (PasswordObject)obj;
 	EntityObjectStringType usernameType = pObj.getUsername();
 	try {
@@ -172,7 +174,7 @@ public class PasswordAdapter implements IAdapter {
 	      // On Mac, use dscl to get the user list, and the id command to make a fake /etc/passwd file.
 	      //
 	      case MACOSX: {
-		lines = new Vector<String>();
+		lines = new ArrayList<String>();
 		for (String username : new DsclTool(session).getUsers()) {
 		    String line = SafeCLI.exec("id -P " + username, session, IUnixSession.Timeout.S);
 		    List<String> tokens = StringTools.toList(StringTools.tokenize(line, ":"));
@@ -211,7 +213,7 @@ public class PasswordAdapter implements IAdapter {
 		try {
 		    IFile passwd = session.getFilesystem().getFile("/etc/passwd");
 		    BufferedReader reader = new BufferedReader(new InputStreamReader(passwd.getInputStream()));
-		    lines = new Vector<String>();
+		    lines = new ArrayList<String>();
 		    String line = null;
 		    while ((line = reader.readLine()) != null) {
 			lines.add(line);

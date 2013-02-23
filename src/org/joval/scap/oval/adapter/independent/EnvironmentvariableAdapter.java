@@ -3,9 +3,9 @@
 
 package org.joval.scap.oval.adapter.independent;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -40,14 +40,15 @@ public class EnvironmentvariableAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	try {
 	    this.session = session;
 	    environment = session.getEnvironment();
 	    classes.add(EnvironmentvariableObject.class);
 	} catch (UnsupportedOperationException e) {
 	    // ISession.getEnvironment not supported
+	    notapplicable.add(EnvironmentvariableObject.class);
 	}
 	return classes;
     }
@@ -61,7 +62,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
     Collection<EnvironmentvariableItem> getItems(ObjectType obj, IRequestContext rc, IEnvironment env, String reserved)
 		throws CollectException {
 
-	List<EnvironmentvariableItem> items = new Vector<EnvironmentvariableItem>();
+	List<EnvironmentvariableItem> items = new ArrayList<EnvironmentvariableItem>();
 	EnvironmentvariableObject eObj = (EnvironmentvariableObject)obj;
 	String name = (String)eObj.getName().getValue();
 

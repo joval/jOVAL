@@ -3,9 +3,9 @@
 
 package org.joval.scap.oval.adapter.macos;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
@@ -47,20 +47,20 @@ public class Pwpolicy59Adapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
-	    if (((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {
-		this.session = (IUnixSession)session;
-		this.dscl = new DsclTool(this.session);
-		classes.add(Pwpolicy59Object.class);
-	    }
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {
+	    this.session = (IUnixSession)session;
+	    this.dscl = new DsclTool(this.session);
+	    classes.add(Pwpolicy59Object.class);
+	} else {
+	    notapplicable.add(Pwpolicy59Object.class);
 	}
 	return classes;
     }
 
     public Collection<Pwpolicy59Item> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	Collection<Pwpolicy59Item> items = new Vector<Pwpolicy59Item>();
+	Collection<Pwpolicy59Item> items = new ArrayList<Pwpolicy59Item>();
 	Pwpolicy59Object pObj = (Pwpolicy59Object)obj;
 	String value = (String)pObj.getTargetUser().getValue();
 	OperationEnumeration op = pObj.getTargetUser().getOperation();

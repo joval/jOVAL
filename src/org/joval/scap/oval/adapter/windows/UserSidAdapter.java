@@ -3,9 +3,9 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.system.IWindowsSession;
@@ -27,11 +27,13 @@ import org.joval.scap.oval.Factories;
  */
 public class UserSidAdapter extends UserSid55Adapter {
     @Override
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(UserSidObject.class);
+	} else {
+	    notapplicable.add(UserSidObject.class);
 	}
 	return classes;
     }

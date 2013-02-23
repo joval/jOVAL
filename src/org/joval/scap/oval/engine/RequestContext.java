@@ -3,13 +3,13 @@
 
 package org.joval.scap.oval.engine;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.Stack;
-import java.util.Vector;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -76,7 +76,7 @@ class RequestContext implements IProvider.IRequestContext {
     // Private
 
     private Collection<VariableValueType> getVars(Hashtable<String, HashSet<String>> vars) {
-	Collection<VariableValueType> result = new Vector<VariableValueType>();
+	Collection<VariableValueType> result = new ArrayList<VariableValueType>();
 	for (String id : vars.keySet()) {
 	    for (String value : vars.get(id)) {
 		VariableValueType variableValueType = Factories.sc.core.createVariableValueType();
@@ -96,7 +96,7 @@ class RequestContext implements IProvider.IRequestContext {
 	Level(ObjectType object) {
 	    this.object = object;
             this.vars = new Hashtable<String, HashSet<String>>();
-	    this.messages = new Vector<MessageType>();
+	    this.messages = new ArrayList<MessageType>();
 	}
     }
 }

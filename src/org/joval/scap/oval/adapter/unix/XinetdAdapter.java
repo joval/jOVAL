@@ -61,12 +61,14 @@ public class XinetdAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
 	    applicable = true;
 	    classes.add(XinetdObject.class);
+	} else {
+	    notapplicable.add(XinetdObject.class);
 	}
 	return classes;
     }

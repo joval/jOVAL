@@ -6,11 +6,11 @@ package org.joval.scap.oval.adapter.windows;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.powershell.IRunspace;
@@ -50,11 +50,13 @@ public class WuaupdatesearcherAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(WuaupdatesearcherObject.class);
+	} else {
+	    notapplicable.add(WuaupdatesearcherObject.class);
 	}
 	return classes;
     }
@@ -73,7 +75,7 @@ public class WuaupdatesearcherAdapter implements IAdapter {
 	    includeSuperseded = behaviors.getIncludeSupersededUpdates();
 	}
 
-	Collection<WuaupdatesearcherItem> items = new Vector<WuaupdatesearcherItem>();
+	Collection<WuaupdatesearcherItem> items = new ArrayList<WuaupdatesearcherItem>();
 	OperationEnumeration op = wObj.getSearchCriteria().getOperation();
 	switch(op) {
 	  case EQUALS:

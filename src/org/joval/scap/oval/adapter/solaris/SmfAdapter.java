@@ -11,7 +11,6 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -50,19 +49,21 @@ public class SmfAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.SOLARIS) {
 	    this.session = (IUnixSession)session;
 	    serviceMap = new Hashtable<String, SmfItem>();
 	    classes.add(SmfObject.class);
+	} else {
+	    notapplicable.add(SmfObject.class);
 	}
 	return classes;
     }
 
     public Collection<SmfItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	SmfObject sObj = (SmfObject)obj;
-	Collection<SmfItem> items = new Vector<SmfItem>();
+	Collection<SmfItem> items = new ArrayList<SmfItem>();
 
 	switch(sObj.getFmri().getOperation()) {
 	  case EQUALS:

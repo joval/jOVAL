@@ -4,9 +4,9 @@
 package org.joval.scap.oval.adapter.windows;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 
 import jsaf.Message;
 import jsaf.intf.io.IFile;
@@ -48,11 +48,13 @@ public class AuditeventpolicyAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(AuditeventpolicyObject.class);
+	} else {
+	    notapplicable.add(AuditeventpolicyObject.class);
 	}
 	return classes;
     }
@@ -87,7 +89,7 @@ public class AuditeventpolicyAdapter implements IAdapter {
 		try {
 		    file = session.getFilesystem().getFile(secpol, IFile.Flags.READWRITE);
 		    IniFile config = new IniFile(file.getInputStream(), StringTools.UTF16LE);
-		    items = new Vector<AuditeventpolicyItem>();
+		    items = new ArrayList<AuditeventpolicyItem>();
 		    AuditeventpolicyItem item = Factories.sc.windows.createAuditeventpolicyItem();
 		    IProperty prop = config.getSection("Event Audit");
 		    for (String key : prop) {

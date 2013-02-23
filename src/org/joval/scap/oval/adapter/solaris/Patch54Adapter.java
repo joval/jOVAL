@@ -6,8 +6,8 @@ package org.joval.scap.oval.adapter.solaris;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -40,11 +40,13 @@ import org.joval.util.JOVALMsg;
 public class Patch54Adapter extends PatchAdapter {
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
-	    super.init(session);
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.SOLARIS) {
+	    super.init(session, new ArrayList<Class>());
 	    classes.add(Patch54Object.class);
+	} else {
+	    notapplicable.add(Patch54Object.class);
 	}
 	return classes;
     }
@@ -68,7 +70,7 @@ public class Patch54Adapter extends PatchAdapter {
 	    rc.addMessage(msg);
 	}
 
-	Collection<PatchItem> items = new Vector<PatchItem>();
+	Collection<PatchItem> items = new ArrayList<PatchItem>();
 	try {
 	    switch(pObj.getBase().getOperation()) {
 	      case EQUALS:
@@ -155,7 +157,7 @@ public class Patch54Adapter extends PatchAdapter {
 	}
 	int version = Integer.parseInt((String)pObj.getPatchVersion().getValue());
 
-	Collection<RevisionEntry> matches = new Vector<RevisionEntry>();
+	Collection<RevisionEntry> matches = new ArrayList<RevisionEntry>();
 	Collection<RevisionEntry> entries = revisions.get(base);
 	if (entries != null) {
 	    for (RevisionEntry entry : entries) {
@@ -198,7 +200,7 @@ public class Patch54Adapter extends PatchAdapter {
 	    }
 	}
 
-	Collection<PatchEntry> patches = new Vector<PatchEntry>();
+	Collection<PatchEntry> patches = new ArrayList<PatchEntry>();
 	if (isSupercedence) {
 	    Collection<SupercedenceEntry> candidates = supercedence.get(base);
 	    if (candidates != null) {
@@ -224,7 +226,7 @@ public class Patch54Adapter extends PatchAdapter {
 	    }
 	}
 
-	Vector<PatchItem> items = new Vector<PatchItem>();
+	ArrayList<PatchItem> items = new ArrayList<PatchItem>();
 	for (PatchEntry entry : patches) {
 	    items.add(makeItem(entry));
 	}

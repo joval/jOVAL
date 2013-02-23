@@ -5,9 +5,9 @@ package org.joval.scap.oval.adapter.windows;
 
 import java.io.ByteArrayInputStream;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -54,11 +54,13 @@ public class Process58Adapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(Process58Object.class);
+	} else {
+	    notapplicable.add(Process58Object.class);
 	}
 	return classes;
     }
@@ -124,7 +126,7 @@ public class Process58Adapter implements IAdapter {
 	//
 	int pid = Integer.parseInt((String)pObj.getPid().getValue());
 	op = pObj.getPid().getOperation();
-	Collection<ProcessItem> items = new Vector<ProcessItem>();
+	Collection<ProcessItem> items = new ArrayList<ProcessItem>();
 	for (String key : map.keySet()) {
 	    int processId = Integer.parseInt(key);
 	    IProperty props = map.get(key);

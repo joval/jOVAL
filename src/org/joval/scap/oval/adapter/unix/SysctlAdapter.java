@@ -58,7 +58,7 @@ public class SysctlAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
@@ -69,6 +69,9 @@ public class SysctlAdapter implements IAdapter {
 		classes.add(SysctlObject.class);
 		break;
 	    }
+	}
+	if (classes.size() == 0) {
+	    notapplicable.add(SysctlObject.class);
 	}
 	return classes;
     }

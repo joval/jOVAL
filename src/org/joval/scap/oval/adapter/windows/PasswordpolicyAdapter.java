@@ -4,9 +4,9 @@
 package org.joval.scap.oval.adapter.windows;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 
 import jsaf.Message;
 import jsaf.intf.io.IFile;
@@ -49,11 +49,13 @@ public class PasswordpolicyAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(PasswordpolicyObject.class);
+	} else {
+	    notapplicable.add(PasswordpolicyObject.class);
 	}
 	return classes;
     }
@@ -88,7 +90,7 @@ public class PasswordpolicyAdapter implements IAdapter {
 		try {
 		    file = session.getFilesystem().getFile(secpol, IFile.Flags.READWRITE);
 		    IniFile config = new IniFile(file.getInputStream(), StringTools.UTF16LE);
-		    items = new Vector<PasswordpolicyItem>();
+		    items = new ArrayList<PasswordpolicyItem>();
 		    PasswordpolicyItem item = Factories.sc.windows.createPasswordpolicyItem();
 		    IProperty prop = config.getSection("System Access");
 		    for (String key : prop) {

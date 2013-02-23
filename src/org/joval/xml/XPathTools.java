@@ -7,9 +7,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.util.Vector;
 import javax.xml.namespace.QName;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -83,7 +83,7 @@ public class XPathTools {
 	    } catch (XPathExpressionException e) {
 	    }
 	}
-	return new Vector<String>();
+	return new ArrayList<String>();
     }
 
     /**
@@ -98,7 +98,7 @@ public class XPathTools {
     private static List<String> eval(XPathExpression xpe, Document doc, QName qn)
 		throws TransformerException, XPathExpressionException {
 
-	List<String> list = new Vector<String>();
+	List<String> list = new ArrayList<String>();
 	Object o = xpe.evaluate(doc, qn);
 	if (o instanceof NodeList) {
 	    NodeList nodes = (NodeList)o;

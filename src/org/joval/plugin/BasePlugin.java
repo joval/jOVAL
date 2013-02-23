@@ -12,7 +12,7 @@ import java.net.ConnectException;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -95,7 +95,8 @@ public abstract class BasePlugin implements IPlugin, IProvider {
     }
 
     private PropertyResourceBundle resources;
-    private Hashtable<Class, IAdapter> adapters;
+    private Map<Class, IAdapter> adapters;
+    private Collection<Class> notapplicable;
 
     protected LocLogger logger;
     protected ISession session;
@@ -166,6 +167,10 @@ public abstract class BasePlugin implements IPlugin, IProvider {
 	    adapters.clear();
 	    adapters = null;
 	}
+	if (notapplicable != null) {
+	    notapplicable.clear();
+	    notapplicable = null;
+	}
 	if (session != null) {
 	    session.dispose();
 	    session = null;
@@ -189,6 +194,9 @@ public abstract class BasePlugin implements IPlugin, IProvider {
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	if (adapters.containsKey(obj.getClass())) {
 	    return adapters.get(obj.getClass()).getItems(obj, rc);
+	} else if (notapplicable.contains(obj.getClass())) {
+	    String msg = JOVALMsg.getMessage(JOVALMsg.STATUS_NOT_APPLICABLE, obj.getClass().getName());
+	    throw new CollectException(msg, FlagEnumeration.NOT_APPLICABLE);
 	} else {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_ADAPTER_MISSING, obj.getClass().getName());
 	    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
@@ -201,13 +209,16 @@ public abstract class BasePlugin implements IPlugin, IProvider {
      * Idempotent
      */
     private void loadAdapters() {
+	if (notapplicable == null) {
+	    notapplicable = new HashSet<Class>();
+	}
 	if (adapters == null) {
-	    adapters = new Hashtable<Class, IAdapter>();
+	    adapters = new HashMap<Class, IAdapter>();
 	    Collection<IAdapter> coll = getAdapters();
 	    if (coll != null) {
-		adapters = new Hashtable<Class, IAdapter>();
+		adapters = new HashMap<Class, IAdapter>();
 		for (IAdapter adapter : coll) {
-		    for (Class clazz : adapter.init(session)) {
+		    for (Class clazz : adapter.init(session, notapplicable)) {
 			adapters.put(clazz, adapter);
 		    }
 		}

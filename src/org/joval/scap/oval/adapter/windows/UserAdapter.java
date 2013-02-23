@@ -4,11 +4,11 @@
 package org.joval.scap.oval.adapter.windows;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -57,11 +57,13 @@ public class UserAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(UserObject.class);
+	} else {
+	    notapplicable.add(UserObject.class);
 	}
 	return classes;
     }
@@ -71,10 +73,10 @@ public class UserAdapter implements IAdapter {
 	if (logons == null) {
 	    initLogons();
 	}
-	Collection<UserItem> items = new Vector<UserItem>();
+	Collection<UserItem> items = new ArrayList<UserItem>();
 	UserObject uObj = (UserObject)obj;
 	OperationEnumeration op = uObj.getUser().getOperation();
-	Collection<String> users = new Vector<String>();
+	Collection<String> users = new ArrayList<String>();
 	try {
 	    String user = (String)uObj.getUser().getValue();
 	    switch(op) {

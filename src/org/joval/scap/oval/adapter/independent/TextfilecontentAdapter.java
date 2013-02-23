@@ -49,13 +49,14 @@ import org.joval.util.JOVALMsg;
 public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem> {
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	try {
 	    baseInit(session);
 	    classes.add(TextfilecontentObject.class);
 	} catch (UnsupportedOperationException e) {
 	    // doesn't support ISession.getFilesystem
+	    notapplicable.add(TextfilecontentObject.class);
 	}
 	return classes;
     }

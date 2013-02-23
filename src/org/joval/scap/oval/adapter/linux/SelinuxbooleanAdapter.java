@@ -3,11 +3,11 @@
 
 package org.joval.scap.oval.adapter.linux;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -43,23 +43,21 @@ public class SelinuxbooleanAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.LINUX) {
 	    this.session = (IUnixSession)session;
-	    switch(this.session.getFlavor()) {
-	      case LINUX:
-		booleanMap = new Hashtable<String, SelinuxbooleanItem>();
-		classes.add(SelinuxbooleanObject.class);
-		break;
-	    }
+	    booleanMap = new Hashtable<String, SelinuxbooleanItem>();
+	    classes.add(SelinuxbooleanObject.class);
+	} else {
+	    notapplicable.add(SelinuxbooleanObject.class);
 	}
 	return classes;
     }
 
     public Collection<SelinuxbooleanItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	SelinuxbooleanObject bObj = (SelinuxbooleanObject)obj;
-	Collection<SelinuxbooleanItem> items = new Vector<SelinuxbooleanItem>();
+	Collection<SelinuxbooleanItem> items = new ArrayList<SelinuxbooleanItem>();
 	switch(bObj.getName().getOperation()) {
 	  case EQUALS:
 	    try {

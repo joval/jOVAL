@@ -5,9 +5,9 @@ package org.joval.scap.oval.adapter.solaris;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Collection;
-import java.util.Vector;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -48,13 +48,15 @@ public class PatchAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.SOLARIS) {
 	    this.session = (IUnixSession)session;
 	    revisions = new Hashtable<String, Collection<RevisionEntry>>();
 	    supercedence = new Hashtable<String, Collection<SupercedenceEntry>>();
 	    classes.add(PatchObject.class);
+	} else {
+	    notapplicable.add(PatchObject.class);
 	}
 	return classes;
     }
@@ -66,7 +68,7 @@ public class PatchAdapter implements IAdapter {
 	}
 
 	PatchObject pObj = (PatchObject)obj;
-	Collection<PatchItem> items = new Vector<PatchItem>();
+	Collection<PatchItem> items = new ArrayList<PatchItem>();
 	if (error != null) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -155,7 +157,7 @@ public class PatchAdapter implements IAdapter {
     // Internal
 
     private Collection<PatchItem> getItems(String base) {
-	Collection<PatchItem> items = new Vector<PatchItem>();
+	Collection<PatchItem> items = new ArrayList<PatchItem>();
 	Collection<RevisionEntry> entries = revisions.get(base);
 	if (entries != null) {
 	    for (RevisionEntry entry : entries) {
@@ -201,7 +203,7 @@ public class PatchAdapter implements IAdapter {
 		begin = line.indexOf(OBSOLETES) + OBSOLETES.length();
 		end = line.indexOf(REQUIRES);
 		buff = line.substring(begin, end).trim();
-		Vector<PatchEntry> obsoletes = new Vector<PatchEntry>();
+		ArrayList<PatchEntry> obsoletes = new ArrayList<PatchEntry>();
 		tok = new StringTokenizer(buff, ",");
 		while(tok.hasMoreTokens()) {
 		    PatchEntry superceded = new PatchEntry(tok.nextToken().trim());
@@ -209,7 +211,7 @@ public class PatchAdapter implements IAdapter {
 		    String obsoleteBase = superceded.getBaseString();
 		    Collection<SupercedenceEntry> list = supercedence.get(obsoleteBase);
 		    if (list == null) {
-			list = new Vector<SupercedenceEntry>();
+			list = new ArrayList<SupercedenceEntry>();
 			supercedence.put(obsoleteBase, list);
 		    }
 		    SupercedenceEntry entry = new SupercedenceEntry(superceded, patch);
@@ -221,7 +223,7 @@ public class PatchAdapter implements IAdapter {
 		begin = line.indexOf(REQUIRES) + REQUIRES.length();
 		end = line.indexOf(INCOMPATIBLES);
 		buff = line.substring(begin, end).trim();
-		Vector<PatchEntry> requires = new Vector<PatchEntry>();
+		ArrayList<PatchEntry> requires = new ArrayList<PatchEntry>();
 		tok = new StringTokenizer(buff, ",");
 		while(tok.hasMoreTokens()) {
 		    requires.add(new PatchEntry(tok.nextToken().trim()));
@@ -230,7 +232,7 @@ public class PatchAdapter implements IAdapter {
 		begin = line.indexOf(INCOMPATIBLES) + INCOMPATIBLES.length();
 		end = line.indexOf(PACKAGES);
 		buff = line.substring(begin, end).trim();
-		Vector<PatchEntry> incompatibles = new Vector<PatchEntry>();
+		ArrayList<PatchEntry> incompatibles = new ArrayList<PatchEntry>();
 		tok = new StringTokenizer(buff, ",");
 		while(tok.hasMoreTokens()) {
 		    incompatibles.add(new PatchEntry(tok.nextToken().trim()));
@@ -238,7 +240,7 @@ public class PatchAdapter implements IAdapter {
 
 		begin = line.indexOf(PACKAGES) + PACKAGES.length();
 		buff = line.substring(begin).trim();
-		Vector<String> packages = new Vector<String>();
+		ArrayList<String> packages = new ArrayList<String>();
 		tok = new StringTokenizer(buff, ",");
 		while(tok.hasMoreTokens()) {
 		    packages.add(tok.nextToken().trim());
@@ -248,7 +250,7 @@ public class PatchAdapter implements IAdapter {
 		if (revisions.containsKey(patch.getBaseString())) {
 		    revisions.get(patch.getBaseString()).add(entry);
 		} else {
-		    Collection<RevisionEntry> list = new Vector<RevisionEntry>();
+		    Collection<RevisionEntry> list = new ArrayList<RevisionEntry>();
 		    list.add(entry);
 		    revisions.put(patch.getBaseString(), list);
 		}

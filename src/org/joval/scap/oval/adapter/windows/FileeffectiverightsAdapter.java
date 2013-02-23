@@ -59,13 +59,16 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    baseInit(session);
 	    directory = ((IWindowsSession)session).getDirectory();
 	    classes.add(Fileeffectiverights53Object.class);
 	    classes.add(FileeffectiverightsObject.class);
+	} else {
+	    notapplicable.add(Fileeffectiverights53Object.class);
+	    notapplicable.add(FileeffectiverightsObject.class);
 	}
 	return classes;
     }

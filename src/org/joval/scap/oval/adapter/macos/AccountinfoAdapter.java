@@ -3,11 +3,11 @@
 
 package org.joval.scap.oval.adapter.macos;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import javax.xml.bind.JAXBElement;
 
@@ -46,19 +46,19 @@ public class AccountinfoAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
-	    if (((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {
-		this.session = (IUnixSession)session;
-		classes.add(AccountinfoObject.class);
-	    }
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {
+	    this.session = (IUnixSession)session;
+	    classes.add(AccountinfoObject.class);
+	} else {
+	    notapplicable.add(AccountinfoObject.class);
 	}
 	return classes;
     }
 
     public Collection<AccountinfoItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	Collection<AccountinfoItem> items = new Vector<AccountinfoItem>();
+	Collection<AccountinfoItem> items = new ArrayList<AccountinfoItem>();
 	try {
 	    init();
 	    AccountinfoObject aObj = (AccountinfoObject)obj;

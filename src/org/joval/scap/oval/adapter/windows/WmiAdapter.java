@@ -3,13 +3,13 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.system.IWindowsSession;
@@ -46,18 +46,20 @@ public class WmiAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(WmiObject.class);
+	} else {
+	    notapplicable.add(WmiObject.class);
 	}
 	return classes;
     }
 
     public Collection<WmiItem> getItems(ObjectType obj, IRequestContext rc) {
 	wmi = session.getWmiProvider();
-	Collection<WmiItem> items = new Vector<WmiItem>();
+	Collection<WmiItem> items = new ArrayList<WmiItem>();
 	try {
 	    items.add(getItem((WmiObject)obj));
 	} catch (NoSuchElementException e) {

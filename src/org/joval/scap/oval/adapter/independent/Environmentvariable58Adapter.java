@@ -61,10 +61,14 @@ public class Environmentvariable58Adapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	this.session = session;
-	classes.add(Environmentvariable58Object.class);
+	try {
+	    this.session = session;
+	    classes.add(Environmentvariable58Object.class);
+	} catch (UnsupportedOperationException e) {
+	    notapplicable.add(Environmentvariable58Object.class);
+	}
 	return classes;
     }
 

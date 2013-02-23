@@ -5,9 +5,9 @@ package org.joval.scap.oval.adapter.independent;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Vector;
 import javax.xml.transform.TransformerException;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
@@ -44,13 +44,14 @@ import org.joval.xml.XPathTools;
 public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	try {
 	    baseInit(session);
 	    classes.add(XmlfilecontentObject.class);
 	} catch (UnsupportedOperationException e) {
 	    // doesn't support ISession.getFilesystem()
+	    notapplicable.add(XmlfilecontentObject.class);
 	}
 	return classes;
     }
@@ -67,7 +68,7 @@ public class XmlfilecontentAdapter extends BaseFileAdapter<XmlfilecontentItem> {
     protected Collection<XmlfilecontentItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws IOException {
 
-	Collection<XmlfilecontentItem> items = new Vector<XmlfilecontentItem>();
+	Collection<XmlfilecontentItem> items = new ArrayList<XmlfilecontentItem>();
 	XmlfilecontentObject xObj = (XmlfilecontentObject)obj;
 	XmlfilecontentItem baseItem = (XmlfilecontentItem)base;
 	if (baseItem != null && xObj != null && f.isFile()) {

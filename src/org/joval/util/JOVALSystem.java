@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Timer;
-import java.util.Vector;
 
 import org.slf4j.cal10n.LocLogger;
 

@@ -3,8 +3,8 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Vector;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.system.IWindowsSession;
@@ -39,11 +39,13 @@ public class AuditeventpolicysubcategoriesAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(AuditeventpolicysubcategoriesObject.class);
+	} else {
+	    notapplicable.add(AuditeventpolicysubcategoriesObject.class);
 	}
 	return classes;
     }
@@ -102,7 +104,7 @@ public class AuditeventpolicysubcategoriesAdapter implements IAdapter {
 	    int code = data.getExitCode();
 	    switch(code) {
 	      case 0: // success
-		items = new Vector<AuditeventpolicysubcategoriesItem>();
+		items = new ArrayList<AuditeventpolicysubcategoriesItem>();
 		AuditeventpolicysubcategoriesItem item = Factories.sc.windows.createAuditeventpolicysubcategoriesItem();
 		for (String line : data.getLines()) {
 		    if (line.startsWith("  ")) { // skip category lines

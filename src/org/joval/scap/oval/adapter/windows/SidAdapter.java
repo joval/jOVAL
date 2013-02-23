@@ -3,11 +3,11 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -43,11 +43,13 @@ public class SidAdapter extends UserAdapter {
     // Implement IAdapter
 
     @Override
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(SidObject.class);
+	} else {
+	    notapplicable.add(SidObject.class);
 	}
 	return classes;
     }
@@ -55,7 +57,7 @@ public class SidAdapter extends UserAdapter {
     @Override
     public Collection<SidItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	directory = session.getDirectory();
-	Collection<SidItem> items = new Vector<SidItem>();
+	Collection<SidItem> items = new ArrayList<SidItem>();
 	SidObject sObj = (SidObject)obj;
 	OperationEnumeration op = sObj.getTrusteeName().getOperation();
 

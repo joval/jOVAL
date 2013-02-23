@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -45,18 +44,20 @@ public class FixAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.AIX) {
 	    this.session = (IUnixSession)session;
 	    classes.add(FixObject.class);
+	} else {
+	    notapplicable.add(FixObject.class);
 	}
 	return classes;
     }
 
     public Collection<FixItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	FixObject fObj = (FixObject)obj;
-	Collection<FixItem> items = new Vector<FixItem>();
+	Collection<FixItem> items = new ArrayList<FixItem>();
 	switch(fObj.getAparNumber().getOperation()) {
 	  case EQUALS:
 	    try {

@@ -5,6 +5,7 @@ package org.joval.scap.oval.adapter.linux;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -12,7 +13,6 @@ import java.util.Hashtable;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import javax.xml.bind.JAXBElement;
 
 import jsaf.intf.io.IFile;
@@ -55,17 +55,15 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
-	    switch(((IUnixSession)session).getFlavor()) {
-	      case LINUX:
-		baseInit(session);
-		us = (IUnixSession)session;
-		processMap = new Hashtable<Integer, SelinuxsecuritycontextItem>();
-		classes.add(SelinuxsecuritycontextObject.class);
-		break;
-	    }
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.LINUX) {
+	    baseInit(session);
+	    us = (IUnixSession)session;
+	    processMap = new Hashtable<Integer, SelinuxsecuritycontextItem>();
+	    classes.add(SelinuxsecuritycontextObject.class);
+	} else {
+	    notapplicable.add(SelinuxsecuritycontextObject.class);
 	}
 	return classes;
     }
@@ -121,7 +119,7 @@ public class SelinuxsecuritycontextAdapter extends BaseFileAdapter<Selinuxsecuri
     private Collection<SelinuxsecuritycontextItem> getItems(JAXBElement<EntityObjectIntType> elt, IRequestContext rc)
 		throws CollectException {
 
-	Collection<SelinuxsecuritycontextItem> items = new Vector<SelinuxsecuritycontextItem>();
+	Collection<SelinuxsecuritycontextItem> items = new ArrayList<SelinuxsecuritycontextItem>();
 	EntityObjectIntType pidType = elt.getValue();
 	if (pidType == null || pidType.getOperation() == OperationEnumeration.EQUALS) {
 	    try {

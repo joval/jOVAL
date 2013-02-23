@@ -4,9 +4,9 @@
 package org.joval.scap.oval.sysinfo;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import jsaf.intf.unix.system.IUnixSession;
 import jsaf.util.SafeCLI;
@@ -19,8 +19,8 @@ import jsaf.util.SafeCLI;
  */
 class UnixNetworkInterface {
     static List<UnixNetworkInterface> getInterfaces(IUnixSession session) throws Exception {
-	Vector<UnixNetworkInterface> interfaces = new Vector<UnixNetworkInterface>();
-	Vector<String> lines = new Vector<String>();
+	ArrayList<UnixNetworkInterface> interfaces = new ArrayList<UnixNetworkInterface>();
+	ArrayList<String> lines = new ArrayList<String>();
 	List<String> rawOutput = null;
 	switch(session.getFlavor()) {
 	  case AIX:
@@ -42,7 +42,7 @@ class UnixNetworkInterface {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
 		    interfaces.add(createDarwinInterface(lines));
-		    lines = new Vector<String>();
+		    lines = new ArrayList<String>();
 		    if (line.trim().length() > 0) {
 			lines.add(line);
 		    }
@@ -66,7 +66,7 @@ class UnixNetworkInterface {
 		    lines.add(line);
 		} else if (lines.size() > 0) {
 		    interfaces.add(createUnixInterface(lines));
-		    lines = new Vector<String>();
+		    lines = new ArrayList<String>();
 		    if (line.trim().length() > 0) {
 			lines.add(line);
 		    }
@@ -87,7 +87,7 @@ class UnixNetworkInterface {
 		if (line.trim().length() == 0) {
 		    if (lines.size() > 0) {
 			interfaces.add(createLinuxInterface(lines));
-			lines = new Vector<String>();
+			lines = new ArrayList<String>();
 		    }
 		} else {
 		    lines.add(line);
@@ -126,7 +126,7 @@ class UnixNetworkInterface {
 	this.description = description;
     }
 
-    private static UnixNetworkInterface createDarwinInterface(Vector<String> lines) {
+    private static UnixNetworkInterface createDarwinInterface(ArrayList<String> lines) {
 	String mac="", ip4=null, ip6=null, description="";
 	String firstLine = lines.get(0);
 	description = firstLine.substring(0, firstLine.indexOf(":"));
@@ -152,7 +152,7 @@ class UnixNetworkInterface {
 	return new UnixNetworkInterface(mac, ip4, ip6, description);
     }
 
-    private static UnixNetworkInterface createUnixInterface(Vector<String> lines) {
+    private static UnixNetworkInterface createUnixInterface(ArrayList<String> lines) {
 	String mac="", ip4=null, ip6=null, description="";
 	String firstLine = lines.get(0);
 	description = firstLine.substring(0, firstLine.indexOf(":"));
@@ -172,7 +172,7 @@ class UnixNetworkInterface {
 	return new UnixNetworkInterface(mac, ip4, ip6, description);
     }
 
-    private static UnixNetworkInterface createLinuxInterface(Vector<String> lines) {
+    private static UnixNetworkInterface createLinuxInterface(ArrayList<String> lines) {
 	String mac="", ip4=null, ip6=null, description="";
 	StringTokenizer tok = new StringTokenizer(lines.get(0));
 	description = tok.nextToken();

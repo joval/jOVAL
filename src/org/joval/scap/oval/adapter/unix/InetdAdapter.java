@@ -6,11 +6,11 @@ package org.joval.scap.oval.adapter.unix;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -56,20 +56,22 @@ public class InetdAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
 	    applicable = true;
 	    classes.add(InetdObject.class);
+	} else {
+	    notapplicable.add(InetdObject.class);
 	}
 	return classes;
     }
 
     public Collection<InetdItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	init();
-	Collection<InetdItem> items = new Vector<InetdItem>();
-	List<Service> list = new Vector<Service>();
+	Collection<InetdItem> items = new ArrayList<InetdItem>();
+	List<Service> list = new ArrayList<Service>();
 	InetdObject iObj = (InetdObject)obj;
 	try {
 	    String protocol = (String)iObj.getProtocol().getValue();

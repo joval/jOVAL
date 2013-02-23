@@ -3,11 +3,11 @@
 
 package org.joval.scap.oval.adapter.linux;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -44,8 +44,8 @@ public class RpminfoAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
 	    switch(this.session.getFlavor()) {
@@ -56,12 +56,15 @@ public class RpminfoAdapter implements IAdapter {
 		break;
 	    }
 	}
+	if (classes.size() == 0) {
+	    notapplicable.add(RpminfoObject.class);
+	}
 	return classes;
     }
 
     public Collection<RpminfoItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	RpminfoObject rObj = (RpminfoObject)obj;
-	Collection<RpminfoItem> items = new Vector<RpminfoItem>();
+	Collection<RpminfoItem> items = new ArrayList<RpminfoItem>();
 	switch(rObj.getName().getOperation()) {
 	  case EQUALS:
 	    try {

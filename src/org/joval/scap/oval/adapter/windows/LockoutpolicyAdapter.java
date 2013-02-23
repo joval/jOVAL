@@ -4,8 +4,8 @@
 package org.joval.scap.oval.adapter.windows;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Vector;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.powershell.IRunspace;
@@ -40,11 +40,13 @@ public class LockoutpolicyAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(LockoutpolicyObject.class);
+	} else {
+	    notapplicable.add(LockoutpolicyObject.class);
 	}
 	return classes;
     }
@@ -117,7 +119,7 @@ public class LockoutpolicyAdapter implements IAdapter {
 		    session.getLogger().warn(JOVALMsg.ERROR_WIN_LOCKOUTPOLICY_VALUE, e.getMessage(), key);
 		}
 	    }
-	    items = new Vector<LockoutpolicyItem>();
+	    items = new ArrayList<LockoutpolicyItem>();
 	    items.add(item);
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

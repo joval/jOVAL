@@ -6,11 +6,11 @@ package org.joval.scap.oval.di;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.logging.Level;
 
 import org.joval.intf.plugin.IPlugin;
@@ -239,7 +239,7 @@ public class ExecutionState {
 		} else if (argv[i].equals("-v")) {
 		    variablesFile = new File(argv[++i]);
 		} else if (argv[i].equals("-e")) {
-		    definitionIDs = new Vector<String>();
+		    definitionIDs = new ArrayList<String>();
 		    StringTokenizer tok = new StringTokenizer(argv[++i], ",");
 		    while(tok.hasMoreTokens()) {
 			definitionIDs.add(tok.nextToken());

@@ -45,11 +45,13 @@ public class SystemmetricAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(SystemmetricObject.class);
+	} else {
+	    notapplicable.add(SystemmetricObject.class);
 	}
 	return classes;
     }

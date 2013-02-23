@@ -4,13 +4,13 @@
 package org.joval.scap.oval.adapter.solaris;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -46,19 +46,21 @@ public class PackageAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.SOLARIS) {
 	    this.session = (IUnixSession)session;
 	    packageMap = new Hashtable<String, PackageItem>();
 	    classes.add(PackageObject.class);
+	} else {
+	    notapplicable.add(PackageObject.class);
 	}
 	return classes;
     }
 
     public Collection<PackageItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	PackageObject pObj = (PackageObject)obj;
-	Collection<PackageItem> items = new Vector<PackageItem>();
+	Collection<PackageItem> items = new ArrayList<PackageItem>();
 	switch(pObj.getPkginst().getOperation()) {
 	  case EQUALS:
 	    try {
@@ -119,7 +121,7 @@ public class PackageAdapter implements IAdapter {
 	if (loaded) return;
 
 	try {
-	    List<String> packages = new Vector<String>();
+	    List<String> packages = new ArrayList<String>();
 	    session.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
 	    for (String line : SafeCLI.multiLine("pkginfo -x", session, IUnixSession.Timeout.L)) {
 		if (line.length() == 0) {

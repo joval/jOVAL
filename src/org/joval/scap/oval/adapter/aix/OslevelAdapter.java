@@ -3,10 +3,10 @@
 
 package org.joval.scap.oval.adapter.aix;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Pattern;
 
 import jsaf.intf.system.ISession;
@@ -39,17 +39,19 @@ public class OslevelAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.AIX) {
 	    this.session = (IUnixSession)session;
 	    classes.add(OslevelObject.class);
+	} else {
+	    notapplicable.add(OslevelObject.class);
 	}
 	return classes;
     }
 
     public Collection<OslevelItem> getItems(ObjectType obj, IRequestContext rc) {
-	Collection<OslevelItem> items = new Vector<OslevelItem>();
+	Collection<OslevelItem> items = new ArrayList<OslevelItem>();
 	try {
 	    OslevelItem item = Factories.sc.aix.createOslevelItem();
 	    EntityItemVersionType maintenanceLevel = Factories.sc.core.createEntityItemVersionType();

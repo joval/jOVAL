@@ -77,11 +77,13 @@ public class CmdletAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(CmdletObject.class);
+	} else {
+	    notapplicable.add(CmdletObject.class);
 	}
 	return classes;
     }

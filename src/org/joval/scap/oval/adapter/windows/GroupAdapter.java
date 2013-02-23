@@ -3,10 +3,10 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -45,11 +45,13 @@ public class GroupAdapter extends UserAdapter {
     // Implement IAdapter
 
     @Override
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(GroupObject.class);
+	} else {
+	    notapplicable.add(GroupObject.class);
 	}
 	return classes;
     }
@@ -57,7 +59,7 @@ public class GroupAdapter extends UserAdapter {
     @Override
     public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	directory = session.getDirectory();
-	Collection<GroupItem> items = new Vector<GroupItem>();
+	Collection<GroupItem> items = new ArrayList<GroupItem>();
 	OperationEnumeration op = ((GroupObject)obj).getGroup().getOperation();
 	String group = (String)((GroupObject)obj).getGroup().getValue();
 	try {

@@ -8,11 +8,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.Hashtable;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -67,8 +67,8 @@ public class Variables implements IVariables {
     }
 
     private LocLogger logger;
-    private Hashtable <String, List<IType>>variables;
-    private Hashtable <String, String>comments;
+    private Map <String, List<IType>>variables;
+    private Map <String, String>comments;
 
     /**
      * Create Variables from a file.
@@ -95,8 +95,8 @@ public class Variables implements IVariables {
      */
     Variables() {
 	logger = JOVALMsg.getLogger();
-	variables = new Hashtable<String, List<IType>>();
-	comments = new Hashtable<String, String>();
+	variables = new HashMap<String, List<IType>>();
+	comments = new HashMap<String, String>();
     }
 
     // Implement IVariables
@@ -108,7 +108,7 @@ public class Variables implements IVariables {
     public void addValue(String id, SimpleDatatypeEnumeration type, String value) {
 	List<IType> values = variables.get(id);
 	if (values == null) {
-	    values = new Vector<IType>();
+	    values = new ArrayList<IType>();
 	    variables.put(id, values);
 	}
 	IType t = TypeFactory.createType(type, value);
@@ -126,7 +126,7 @@ public class Variables implements IVariables {
     }
 
     public void setValue(String id, SimpleDatatypeEnumeration type, List<String> value) {
-	List<IType> list = new Vector<IType>();
+	List<IType> list = new ArrayList<IType>();
 	for (String s : value) {
 	    list.add(TypeFactory.createType(type, s));
 	}
@@ -221,7 +221,7 @@ public class Variables implements IVariables {
      * Reads String (i.e., Text) data from the VariableType as a Node.
      */
     private List<IType> extractValue(VariableType var) throws OvalException {
-	List<IType> list = new Vector<IType>();
+	List<IType> list = new ArrayList<IType>();
 	for (Object obj : var.getValue()) {
 	    String value = null;
 	    if (obj instanceof Node) {

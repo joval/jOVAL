@@ -6,6 +6,7 @@ package org.joval.scap.oval.adapter.independent;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,7 +14,6 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -83,13 +83,14 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	try {
 	    baseInit(session);
 	    classes.add(Filehash58Object.class);
 	} catch (UnsupportedOperationException e) {
 	    // doesn't support ISession.getFilesystem
+	    notapplicable.add(Filehash58Object.class);
 	}
 	return classes;
     }
@@ -156,7 +157,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	Filehash58Item baseItem = (Filehash58Item)base;
 	Filehash58Object fObj = (Filehash58Object)obj;
 	IWindowsSession.View view = getView(fObj.getBehaviors());
-	Collection<Filehash58Item> items = new Vector<Filehash58Item>();
+	Collection<Filehash58Item> items = new ArrayList<Filehash58Item>();
 	for (Algorithm alg : algorithms) {
 	    try {
 		items.add(getItem(baseItem, alg, computeChecksum(f, alg, view)));

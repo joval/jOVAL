@@ -4,8 +4,8 @@
 package org.joval.scap.oval.adapter.solaris;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Vector;
 
 import jsaf.intf.system.ISession;
 import jsaf.intf.unix.system.IUnixSession;
@@ -37,17 +37,19 @@ public class IsainfoAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.SOLARIS) {
 	    this.session = (IUnixSession)session;
 	    classes.add(IsainfoObject.class);
+	} else {
+	    notapplicable.add(IsainfoObject.class);
 	}
 	return classes;
     }
 
     public Collection<IsainfoItem> getItems(ObjectType obj, IRequestContext rc) {
-	Collection<IsainfoItem> items = new Vector<IsainfoItem>();
+	Collection<IsainfoItem> items = new ArrayList<IsainfoItem>();
 	try {
 	    if (item == null) {
 		item = Factories.sc.solaris.createIsainfoItem();

@@ -66,13 +66,16 @@ public class FileauditedpermissionsAdapter extends BaseFileAdapter<Fileauditedpe
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    baseInit(session);
 	    this.ws = (IWindowsSession)session;
 	    classes.add(Fileauditedpermissions53Object.class);
 	    classes.add(FileauditedpermissionsObject.class);
+	} else {
+	    notapplicable.add(Fileauditedpermissions53Object.class);
+	    notapplicable.add(FileauditedpermissionsObject.class);
 	}
 	return classes;
     }

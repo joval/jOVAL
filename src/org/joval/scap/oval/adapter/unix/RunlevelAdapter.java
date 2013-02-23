@@ -4,10 +4,10 @@
 package org.joval.scap.oval.adapter.unix;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -49,12 +49,14 @@ public class RunlevelAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
 	    runlevels = new Hashtable<String, Hashtable<String, StartStop>>();
 	    classes.add(RunlevelObject.class);
+	} else {
+	    notapplicable.add(RunlevelObject.class);
 	}
 	return classes;
     }
@@ -63,7 +65,7 @@ public class RunlevelAdapter implements IAdapter {
 	if (!initialized) {
 	    init();
 	}
-	Collection<RunlevelItem> items = new Vector<RunlevelItem>();
+	Collection<RunlevelItem> items = new ArrayList<RunlevelItem>();
 	RunlevelObject rObj = (RunlevelObject)obj;
 	String runlevel = (String)rObj.getRunlevel().getValue();
 	OperationEnumeration op = rObj.getRunlevel().getOperation();
@@ -116,7 +118,7 @@ public class RunlevelAdapter implements IAdapter {
      * Get all the items matching the serviceName/operation, given the specified runlevel.
      */
     private Collection<RunlevelItem> getItems(RunlevelObject rObj, IRequestContext rc, String rl) throws CollectException {
-	Collection<RunlevelItem> items = new Vector<RunlevelItem>();
+	Collection<RunlevelItem> items = new ArrayList<RunlevelItem>();
 	String serviceName = (String)rObj.getServiceName().getValue();
 	if (runlevels.containsKey(rl)) {
 	    Hashtable<String, StartStop> runlevel = runlevels.get(rl);

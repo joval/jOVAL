@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
@@ -63,13 +64,16 @@ public class ProcessAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
-	    processes = new Vector<ProcessData>();
+	    processes = new ArrayList<ProcessData>();
 	    classes.add(ProcessObject.class);
 	    classes.add(Process58Object.class);
+	} else {
+	    notapplicable.add(ProcessObject.class);
+	    notapplicable.add(Process58Object.class);
 	}
 	return classes;
     }
@@ -87,7 +91,7 @@ public class ProcessAdapter implements IAdapter {
 	}
 
 	if (obj instanceof ProcessObject) {
-	    Collection<ProcessItem> items = new Vector<ProcessItem>();
+	    Collection<ProcessItem> items = new ArrayList<ProcessItem>();
 	    try {
 		ProcessObject pObj = (ProcessObject)obj;
 		String command = (String)pObj.getCommand().getValue();
@@ -102,14 +106,14 @@ public class ProcessAdapter implements IAdapter {
 	    }
 	    return items;
 	} else {
-	    Collection<Process58Item> items = new Vector<Process58Item>();
+	    Collection<Process58Item> items = new ArrayList<Process58Item>();
 	    try {
 		Process58Object pObj = (Process58Object)obj;
 		ItemSet<Process58Item> set1 = null, set2 = null;
 
 		if (pObj.isSetCommandLine()) {
 		    String commandLine = (String)pObj.getCommandLine().getValue();
-		    List<Process58Item> list = new Vector<Process58Item>();
+		    List<Process58Item> list = new ArrayList<Process58Item>();
 		    for (ProcessData process : getProcesses(pObj.getCommandLine().getOperation(), commandLine)) {
 			list.add(process.getProcess58Item());
 		    }
@@ -118,7 +122,7 @@ public class ProcessAdapter implements IAdapter {
 
 		if (pObj.isSetPid()) {
 		    Integer pid = new Integer((String)pObj.getPid().getValue());
-		    List<Process58Item> list = new Vector<Process58Item>();
+		    List<Process58Item> list = new ArrayList<Process58Item>();
 		    for (ProcessData process : getProcesses(pObj.getPid().getOperation(), pid)) {
 			list.add(process.getProcess58Item());
 		    }
@@ -157,7 +161,7 @@ public class ProcessAdapter implements IAdapter {
     private Collection<ProcessData> getProcesses(OperationEnumeration op, String command)
 		throws PatternSyntaxException, CollectException {
 
-	Collection<ProcessData> result = new Vector<ProcessData>();
+	Collection<ProcessData> result = new ArrayList<ProcessData>();
 	switch (op) {
 	  case EQUALS:
 	    for (ProcessData process : processes) {
@@ -204,7 +208,7 @@ public class ProcessAdapter implements IAdapter {
     private Collection<ProcessData> getProcesses(OperationEnumeration op, Integer pid)
 		throws PatternSyntaxException, CollectException {
 
-	Collection<ProcessData> result = new Vector<ProcessData>();
+	Collection<ProcessData> result = new ArrayList<ProcessData>();
 	switch (op) {
 	  case EQUALS:
 	    for (ProcessData process : processes) {
@@ -496,8 +500,8 @@ public class ProcessAdapter implements IAdapter {
 	    loginuid = Factories.sc.core.createEntityItemIntType();
 	    execShield = Factories.sc.core.createEntityItemBoolType();
 	    execShield.setStatus(StatusEnumeration.NOT_COLLECTED);
-	    posixCapability = new Vector<EntityItemCapabilityType>();
-	    selinuxDomainLabel = new Vector<EntityItemStringType>();
+	    posixCapability = new ArrayList<EntityItemCapabilityType>();
+	    selinuxDomainLabel = new ArrayList<EntityItemStringType>();
 	}
 
 	ProcessItem getProcessItem() {

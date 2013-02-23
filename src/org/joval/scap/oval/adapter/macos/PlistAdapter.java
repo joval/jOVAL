@@ -5,11 +5,11 @@ package org.joval.scap.oval.adapter.macos;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Stack;
-import java.util.Vector;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
@@ -58,16 +58,15 @@ import org.joval.util.JOVALMsg;
 public class PlistAdapter extends BaseFileAdapter<PlistItem> {
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
-	    switch(((IUnixSession)session).getFlavor()) {
-	      case MACOSX:
-		baseInit(session);
-		classes.add(PlistObject.class);
-		classes.add(Plist510Object.class);
-		break;
-	    }
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {
+	    baseInit(session);
+	    classes.add(PlistObject.class);
+	    classes.add(Plist510Object.class);
+	} else {
+	    notapplicable.add(PlistObject.class);
+	    notapplicable.add(Plist510Object.class);
 	}
 	return classes;
     }
@@ -228,7 +227,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 	    }
 	}
 
-	Collection<PlistItem> items = new Vector<PlistItem>();
+	Collection<PlistItem> items = new ArrayList<PlistItem>();
 
 	int inst = 0;
 	for (NSObject value : findValues(obj, key)) {
@@ -331,7 +330,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
      * Recursively search an object for values with the given key.
      */
     private Collection<NSObject> findValues(NSObject obj, String key) {
-	Collection<NSObject> values = new Vector<NSObject>();
+	Collection<NSObject> values = new ArrayList<NSObject>();
 
 	if (key == null) {
 	    values.add(obj);

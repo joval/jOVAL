@@ -60,13 +60,16 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((IWindowsSession)session);
 	    directory = this.session.getDirectory();
 	    classes.add(Regkeyeffectiverights53Object.class);
 	    classes.add(RegkeyeffectiverightsObject.class);
+	} else {
+	    notapplicable.add(Regkeyeffectiverights53Object.class);
+	    notapplicable.add(RegkeyeffectiverightsObject.class);
 	}
 	return classes;
     }

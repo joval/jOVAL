@@ -63,12 +63,14 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    baseInit(session);
 	    ws = (IWindowsSession)session;
 	    classes.add(FileObject.class);
+	} else {
+	    notapplicable.add(FileObject.class);
 	}
 	return classes;
     }

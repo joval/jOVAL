@@ -4,12 +4,12 @@
 package org.joval.scap.oval.adapter.unix;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -52,14 +52,16 @@ public class ShadowAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
 	    shadowMap = new Hashtable<String, ShadowItem>();
 	    error = null;
 	    initialized = false;
 	    classes.add(ShadowObject.class);
+	} else {
+	    notapplicable.add(ShadowObject.class);
 	}
 	return classes;
     }
@@ -81,7 +83,7 @@ public class ShadowAdapter implements IAdapter {
 	    rc.addMessage(msg);
 	}
 
-	Collection<ShadowItem> items = new Vector<ShadowItem>();
+	Collection<ShadowItem> items = new ArrayList<ShadowItem>();
 	ShadowObject sObj = (ShadowObject)obj;
 	EntityObjectStringType usernameType = sObj.getUsername();
 	try {
@@ -211,7 +213,7 @@ public class ShadowAdapter implements IAdapter {
 			}
 		    }
 		}
-		lines = new Vector<String>();
+		lines = new ArrayList<String>();
 		for (String[] data : shadow.values()) {
 		    StringBuffer sb = new StringBuffer(data[USERNAME]);
 		    for (int i=1; i < data.length; i++) {

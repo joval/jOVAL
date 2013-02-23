@@ -6,10 +6,10 @@ package org.joval.scap.oval.adapter.windows;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -58,11 +58,13 @@ public class AccesstokenAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    this.session = (IWindowsSession)session;
 	    classes.add(AccesstokenObject.class);
+	} else {
+	    notapplicable.add(AccesstokenObject.class);
 	}
 	return classes;
     }
@@ -88,7 +90,7 @@ public class AccesstokenAdapter implements IAdapter {
 	String principalStr = (String)aObj.getSecurityPrincipal().getValue();
 	OperationEnumeration op = aObj.getSecurityPrincipal().getOperation();
 	try {
-	    Collection<IPrincipal> principals = new Vector<IPrincipal>();
+	    Collection<IPrincipal> principals = new ArrayList<IPrincipal>();
 	    switch(op) {
 	      case EQUALS:
 		principals.add(directory.queryPrincipal(principalStr));
@@ -96,7 +98,7 @@ public class AccesstokenAdapter implements IAdapter {
 
 	      case NOT_EQUAL:
 	      case PATTERN_MATCH:
-		Collection<IPrincipal> allPrincipals = new Vector<IPrincipal>();
+		Collection<IPrincipal> allPrincipals = new ArrayList<IPrincipal>();
 		allPrincipals.addAll(directory.queryAllPrincipals());
 		if (op == OperationEnumeration.NOT_EQUAL) {
 		    for (IPrincipal p : allPrincipals) {

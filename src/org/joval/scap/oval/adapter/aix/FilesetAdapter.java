@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Vector;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -45,18 +44,20 @@ public class FilesetAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
-	Collection<Class> classes = new Vector<Class>();
-	if (session instanceof IUnixSession) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
+	Collection<Class> classes = new ArrayList<Class>();
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.AIX) {
 	    this.session = (IUnixSession)session;
 	    classes.add(FilesetObject.class);
+	} else {
+	    notapplicable.add(FilesetObject.class);
 	}
 	return classes;
     }
 
     public Collection<FilesetItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
 	FilesetObject fObj = (FilesetObject)obj;
-	Collection<FilesetItem> items = new Vector<FilesetItem>();
+	Collection<FilesetItem> items = new ArrayList<FilesetItem>();
 	switch(fObj.getFlstinst().getOperation()) {
 	  case EQUALS:
 	    try {

@@ -3,8 +3,8 @@
 
 package org.joval.xml.schematron;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 
 /**
  * An exception class for OVAL schematron validation.
@@ -17,7 +17,7 @@ public class ValidationException extends Exception {
 
     public ValidationException(String message) {
 	super(message);
-	this.errors = new Vector<String>();
+	this.errors = new ArrayList<String>();
     }
 
     public ValidationException(String message, List<String> errors) {
@@ -27,7 +27,7 @@ public class ValidationException extends Exception {
 
     public ValidationException(Exception e) {
 	super(e);
-	this.errors = new Vector<String>();
+	this.errors = new ArrayList<String>();
     }
 
     public List<String> getErrors() {

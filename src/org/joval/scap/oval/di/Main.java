@@ -25,7 +25,6 @@ import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.PropertyResourceBundle;
 import java.util.StringTokenizer;
-import java.util.Vector;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;

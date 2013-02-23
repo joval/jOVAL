@@ -64,12 +64,14 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((IWindowsSession)session);
 	    writeTimes = new HashMap<String, BigInteger>();
 	    classes.add(RegistryObject.class);
+	} else {
+	    notapplicable.add(RegistryObject.class);
 	}
 	return classes;
     }

@@ -11,11 +11,11 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
 import java.util.HashSet;
 import java.util.NoSuchElementException;
-import java.util.Vector;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
@@ -243,7 +243,7 @@ public class Results implements IResults, ILoggable {
 	//
 	Hashtable<String, TestType> reportableTests = new Hashtable<String, TestType>();
 	DefinitionsType definitionsType = Factories.results.createDefinitionsType();
-	Collection<DefinitionType> defs = new Vector<DefinitionType>();
+	Collection<DefinitionType> defs = new ArrayList<DefinitionType>();
 	for (DefinitionType definition : definitionTable.values()) {
 	    DirectiveType directive = directives.getDirective(definition);
 	    if (directive.isReported()) {

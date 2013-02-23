@@ -47,11 +47,13 @@ public class PartitionAdapter implements IAdapter {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	if (session instanceof IUnixSession) {
+	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.LINUX) {
 	    this.session = (IUnixSession)session;
 	    classes.add(PartitionObject.class);
+	} else {
+	    notapplicable.add(PartitionObject.class);
 	}
 	return classes;
     }

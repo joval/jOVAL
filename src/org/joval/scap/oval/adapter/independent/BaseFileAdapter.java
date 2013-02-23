@@ -78,7 +78,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
      *
      * @throws UnsupportedOperationException if the ISession doesn't support getFilesystem().
      */
-    protected void baseInit(ISession session) {
+    protected void baseInit(ISession session) throws UnsupportedOperationException {
 	this.session = session;
 	session.getFilesystem(); // test to see this operation is supported
 	try {

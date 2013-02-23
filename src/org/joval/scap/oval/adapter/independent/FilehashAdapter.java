@@ -62,7 +62,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 
     // Implement IAdapter
 
-    public Collection<Class> init(ISession session) {
+    public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
 	try {
 	    baseInit(session);
@@ -70,6 +70,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    classes.add(FilehashObject.class);
 	} catch (UnsupportedOperationException e) {
 	    // doesn't support ISession.getFilesystem()
+	    notapplicable.add(FilehashObject.class);
 	}
 	return classes;
     }
