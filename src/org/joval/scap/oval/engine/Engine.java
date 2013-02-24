@@ -1147,24 +1147,28 @@ public class Engine implements IEngine, IProvider {
 	if (filters.size() == 0) {
 	    return items;
 	}
-	Collection<ItemType> filteredItems = new HashSet<ItemType>();
+	Collection<ItemType> filtered = new HashSet<ItemType>();
+	filtered.addAll(items);
 	for (Filter filter : filters) {
 	    StateType state = definitions.getState(filter.getValue());
-	    for (ItemType item : items) {
+	    Iterator<ItemType> iter = filtered.iterator();
+	    while (iter.hasNext()) {
+		ItemType item = iter.next();
 		try {
 		    ResultEnumeration result = compare(state, item, rc);
 		    switch(filter.getAction()) {
 		      case INCLUDE:
 			if (result == ResultEnumeration.TRUE) {
-			    filteredItems.add(item);
 			    logger.debug(JOVALMsg.STATUS_FILTER, filter.getAction().value(),
 					 item.getId() == null ? "(unassigned)" : item.getId(), rc.getObject().getId());
+			} else {
+			    iter.remove();
 			}
 			break;
 
 		      case EXCLUDE:
-			if (result != ResultEnumeration.TRUE) {
-			    filteredItems.add(item);
+			if (result == ResultEnumeration.TRUE) {
+			    iter.remove();
 			    logger.debug(JOVALMsg.STATUS_FILTER, filter.getAction().value(),
 					 item.getId() == null ? "(unassigned)" : item.getId(), rc.getObject().getId());
 			}
@@ -1176,7 +1180,7 @@ public class Engine implements IEngine, IProvider {
 		}
 	    }
 	}
-	return filteredItems;
+	return filtered;
     }
 
     /**
