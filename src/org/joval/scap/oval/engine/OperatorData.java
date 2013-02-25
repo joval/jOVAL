@@ -90,7 +90,11 @@ public class OperatorData {
 		    return ResultEnumeration.FALSE;
 		}
 	    } else if (t == 0	&& f > 0	&& e == 0	&& u == 0	&& ne == 0	&& na >= 0) {
-		return ResultEnumeration.FALSE;
+		if (negate) {
+		    return ResultEnumeration.TRUE;
+		} else {
+		    return ResultEnumeration.FALSE;
+		}
 	    } else if (t < 2	&& f >= 0	&& e > 0	&& u >= 0	&& ne >= 0	&& na >= 0) {
 		return ResultEnumeration.ERROR;
 	    } else if (t < 2	&& f >= 0	&& e == 0	&& u > 0	&& ne >= 0	&& na >= 0) {

@@ -38,11 +38,6 @@ public class ItemSet<T extends ItemType> implements Iterable<T> {
      */
     public ItemSet() {
 	table = new HashMap<String, Collection<T>>();
-	try {
-	    marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
-	} catch (JAXBException e) {
-	    throw new RuntimeException(e);
-	}
     }
 
     /**
@@ -158,6 +153,17 @@ public class ItemSet<T extends ItemType> implements Iterable<T> {
 
     private static final QName QNAME = new QName("SetItem");
 
+    private Marshaller getMarshaller() {
+	if (marshaller == null) {
+	    try {
+		marshaller = SchemaRegistry.OVAL_SYSTEMCHARACTERISTICS.getJAXBContext().createMarshaller();
+	    } catch (JAXBException e) {
+		throw new RuntimeException(e);
+	    }
+	}
+	return marshaller;
+    }
+
     /**
      * For items with no ID - converts to bytes.
      */
@@ -165,9 +171,8 @@ public class ItemSet<T extends ItemType> implements Iterable<T> {
 	try {
 	    @SuppressWarnings("unchecked")
 	    JAXBElement<ItemType> elt = new JAXBElement(QNAME, item.getClass(), item);
-
 	    ByteArrayOutputStream out = new ByteArrayOutputStream();
-	    marshaller.marshal(elt, out);
+	    getMarshaller().marshal(elt, out);
 	    return out.toByteArray();
 	} catch (Exception e) {
 	    throw new RuntimeException(e);
