@@ -90,7 +90,7 @@ public class WmiAdapter implements IAdapter {
 		String field = getField(wql);
 		for (ISWbemObject swbObj : objSet) {
 		    for (ISWbemProperty prop : swbObj.getProperties()) {
-			if (prop.getName().equalsIgnoreCase(field)) {
+			if (prop.getName().equalsIgnoreCase(field) && prop.getValue() != null) {
 			    EntityItemAnySimpleType resultType = Factories.sc.core.createEntityItemAnySimpleType();
 			    resultType.setValue(prop.getValueAsString());
 			    item.getResult().add(resultType);

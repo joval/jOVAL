@@ -85,10 +85,12 @@ public class Wmi57Adapter implements IAdapter {
 		EntityItemRecordType record = Factories.sc.core.createEntityItemRecordType();
 		record.setDatatype(ComplexDatatypeEnumeration.RECORD.value());
 		for (ISWbemProperty prop : swbObj.getProperties()) {
-		    EntityItemFieldType field = Factories.sc.core.createEntityItemFieldType();
-		    field.setName(prop.getName().toLowerCase()); // upper-case chars are not allowed per the OVAL spec.
-		    field.setValue(prop.getValueAsString());
-		    record.getField().add(field);
+		    if (prop.getValue() != null) {
+			EntityItemFieldType field = Factories.sc.core.createEntityItemFieldType();
+			field.setName(prop.getName().toLowerCase()); // upper-case chars are not allowed per the OVAL spec.
+			field.setValue(prop.getValueAsString());
+			record.getField().add(field);
+		    }
 		}
 		item.getResult().add(record);
 	    }
