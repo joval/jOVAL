@@ -27,6 +27,7 @@ import jsaf.intf.system.ISession;
 import jsaf.intf.util.ISearchable;
 import jsaf.intf.util.ISearchable.ICondition;
 import jsaf.intf.unix.io.IUnixFilesystem;
+import jsaf.intf.windows.io.IWindowsFilesystem;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.util.SafeCLI;
@@ -65,10 +66,10 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     protected static final int FIELD_DIRNAME		= IFilesystem.FIELD_DIRNAME;
     protected static final int FIELD_BASENAME		= IFilesystem.FIELD_BASENAME;
     protected static final int FIELD_FILETYPE		= IFilesystem.FIELD_FILETYPE;
+    protected static final int FIELD_FSTYPE		= IFilesystem.FIELD_FSTYPE;
     protected static final int FIELD_FROM		= ISearchable.FIELD_FROM;
     protected static final int FIELD_DEPTH		= ISearchable.FIELD_DEPTH;
 
-    private Pattern localFilter;
     private IRunspace rs, rs32;
 
     protected ISession session;
@@ -81,16 +82,6 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
     protected void baseInit(ISession session) throws UnsupportedOperationException {
 	this.session = session;
 	session.getFilesystem(); // test to see this operation is supported
-	try {
-	    String pattern = session.getProperties().getProperty(IFilesystem.PROP_MOUNT_FSTYPE_FILTER);
-	    if (pattern == null) {
-		localFilter = null;
-	    } else {
-		localFilter = Pattern.compile(pattern);
-	    }
-	} catch (PatternSyntaxException e) {
-	    session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
-	}
     }
 
     // Implement IAdapter
@@ -563,9 +554,18 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		if (followLinks) {
 		    conditions.add(IUnixFilesystem.FOLLOW_LINKS);
 		}
+		if (local) {
+		    conditions.add(searcher.condition(FIELD_FSTYPE, TYPE_EQUALITY, getLocalFsType()));
+		}
 		conditions.addAll(getConditions(fObj.getObject()));
 		if (from == null) {
-		    Collection<IFilesystem.IMount> mounts = fs.getMounts(local ? localFilter : null);
+		    Collection<IFilesystem.IMount> mounts = null;
+		    if (local) {
+			Pattern p = Pattern.compile(new StringBuffer("^").append(getLocalFsType()).append("$").toString());
+			mounts = fs.getMounts(p, true);
+		    } else {
+			mounts = fs.getMounts();
+		    }
 		    from = new String[mounts.size()];
 		    int i=0;
 		    for (IFilesystem.IMount mount : mounts) {
@@ -588,6 +588,24 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	return files;
+    }
+
+    /**
+     * Get the fstype for the local disk(s). This is "fixed" on Windows, and the fstype of / on Unix.
+     */
+    private String getLocalFsType() throws IOException {
+	switch(session.getType()) {
+	  case WINDOWS:
+	    return IWindowsFilesystem.FsType.FIXED.value();
+
+	  case UNIX:
+	    for (IFilesystem.IMount mount : session.getFilesystem().getMounts()) {
+		if ("/".equals(mount.getPath())) {
+		    return mount.getType();
+		}
+	    }
+	}
+	throw new IOException("DAS: No local filesystem type is defined");
     }
 
     /**
