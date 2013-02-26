@@ -206,7 +206,7 @@ public class RunlevelAdapter implements IAdapter {
 	try {
 	    switch(session.getFlavor()) {
 	      case AIX:
-		initUnixRunlevels("/etc/rc\\.d");
+		initUnixRunlevels("/etc/rc.d");
 		break;
 
 	      case SOLARIS:

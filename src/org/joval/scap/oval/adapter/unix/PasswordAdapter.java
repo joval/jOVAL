@@ -175,8 +175,8 @@ public class PasswordAdapter implements IAdapter {
 	      //
 	      case MACOSX: {
 		lines = new ArrayList<String>();
-		for (String username : new DsclTool(session).getUsers()) {
-		    String line = SafeCLI.exec("id -P " + username, session, IUnixSession.Timeout.S);
+		String cmd = "dscl localhost -list Search/Users | xargs -I{} id -P {}";
+		for (String line : SafeCLI.multiLine(cmd, session, IUnixSession.Timeout.S)) {
 		    List<String> tokens = StringTools.toList(StringTools.tokenize(line, ":"));
 		    //
 		    // Strip tokens 4-6, whose meanings are unknown...
