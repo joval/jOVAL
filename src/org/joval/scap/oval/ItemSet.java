@@ -139,6 +139,17 @@ public class ItemSet<T extends ItemType> implements Iterable<T> {
 	return list;
     }
 
+    /**
+     * Return the number if items in the set.
+     */
+    public int size() {
+	int size = 0;
+	for (Collection<T> coll : table.values()) {
+	    size += coll.size();
+	}
+	return size;
+    }
+
     // Implement Iterable
 
     public Iterator<T> iterator() {

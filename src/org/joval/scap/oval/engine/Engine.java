@@ -1219,16 +1219,24 @@ public class Engine implements IEngine, IProvider {
 		    intersection = intersection.intersection(new ItemSet<ItemType>(items));
 		}
 	    }
-	    return intersection.toList();
+	    return intersection == null ? new ArrayList<ItemType>() : intersection.toList();
 	  }
 
 	  case COMPLEMENT: {
-	    if (lists.size() == 2) {
+	    switch(lists.size()) {
+	      case 0:
+		return new ArrayList<ItemType>();
+
+	      case 1:
+		return lists.iterator().next();
+
+	      case 2:
 		Iterator<Collection<ItemType>> iter = lists.iterator();
 		Collection<ItemType> set1 = iter.next();
 		Collection<ItemType> set2 = iter.next();
 		return new ItemSet<ItemType>(set1).complement(new ItemSet<ItemType>(set2)).toList();
-	    } else {
+
+	      default:
 		throw new OvalException(JOVALMsg.getMessage(JOVALMsg.ERROR_SET_COMPLEMENT, new Integer(lists.size())));
 	    }
 	  }
