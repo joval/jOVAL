@@ -498,6 +498,9 @@ public class XPERT {
 		    base = base.substring(0, base.length() - 4);
 		}
 		try {
+		    if (!ocilDir.exists()) {
+			ocilDir.mkdirs();
+		    }
 		    File checklist = new File(ocilDir, base + ".xml");
 		    logger.warning("Exporting OCIL checklist to file: " + checklist.toString());
 		    oma.getChecklist().writeXML(checklist);
