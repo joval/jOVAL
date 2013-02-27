@@ -36,26 +36,35 @@ public interface IBundle {
     IDictionary getDictionary();
 
     /**
-     * Get the benchmark.
+     * Get the IDs of all the benchmarks included in the bundle.
      */
-    IBenchmark getBenchmark();
+    Collection<String> getBenchmarkIds();
 
     /**
-     * Get the IDs of the profiles defined in the benchmark.
+     * Get the benchmark with the specified ID.
+     *
+     * @throws NoSuchElementException if there is no benchmark with the specified ID
      */
-    Collection<String> getProfileIds();
+    IBenchmark getBenchmark(String benchmarkId) throws NoSuchElementException;
 
     /**
-     * Get a context using the specified profile.
+     * Get the IDs of the profiles defined in the specified benchmark.
+     *
+     * @throws NoSuchElementException if there is no benchmark with the specified ID
+     */
+    Collection<String> getProfileIds(String benchmarkId) throws NoSuchElementException;
+
+    /**
+     * Get a context using the specified benchmark and profile.
      *
      * @throws NoSuchElementException if there is no benchmark or profile with the specified ID
      */
-    IScapContext getContext(String profileId) throws NoSuchElementException, ScapException;
+    IScapContext getContext(String benchmarkId, String profileId) throws NoSuchElementException, ScapException;
 
     /**
      * Get a context using the specified tailoring/profile.
      *
-     * @throws NoSuchElementException if there is no benchmark in the stream that matches the specified tailoring, or if
+     * @throws NoSuchElementException if there is no benchmark in the bundle that matches the specified tailoring, or if
      *                                there is no profile in the tailoring that matches the specified profileId.
      */
     IScapContext getContext(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException;

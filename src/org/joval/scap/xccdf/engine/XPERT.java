@@ -280,7 +280,7 @@ public class XPERT {
 			    for (String bId : ds.getBenchmarkIds()) {
 				logger.info("  Benchmark ID=\"" + bId + "\"");
 				for (String pId : ds.getProfileIds(bId)) {
-				    logger.info("    Profile Name=\"" + pId + "\"");
+				    logger.info("    Profile ID=\"" + pId + "\"");
 				}
 			    }
 			}
@@ -311,7 +311,7 @@ public class XPERT {
 				benchmarkId = ds.getBenchmarkIds().iterator().next();
 				logger.info(getMessage("message.benchmark.autoselect", benchmarkId));
 			    } else {
-				throw new XPERTException(getMessage("error.benchmark", streamId));
+				throw new XPERTException(getMessage("error.benchmark.stream", streamId));
 			    }
 			}
 			ctx = ds.getContext(benchmarkId, profileId);
@@ -337,16 +337,27 @@ public class XPERT {
 		    Bundle bundle = new Bundle(source);
 		    if (query) {
 			logger.info(getMessage("message.bundle.query", source.toString()));
-			for (String pId : bundle.getProfileIds()) {
-			    logger.info("    Profile Name=\"" + pId + "\"");
+			for (String bId : bundle.getBenchmarkIds()) {
+			    logger.info("  Bundle ID=\"" + bId + "\"");
+			    for (String pId : bundle.getProfileIds(bId)) {
+			        logger.info("    Profile ID=\"" + pId + "\"");
+			    }
 			}
 		    } else {
-			ctx = bundle.getContext(profileId);
+			if (benchmarkId == null) {
+			    if (bundle.getBenchmarkIds().size() == 1) {
+				benchmarkId = bundle.getBenchmarkIds().iterator().next();
+				logger.info(getMessage("message.benchmark.autoselect", benchmarkId));
+			    } else {
+				throw new XPERTException(getMessage("error.benchmark.bundle", source.toString()));
+			    }
+			}
+			ctx = bundle.getContext(benchmarkId, profileId);
 			if (profileId == null && ctx.getSelectedRules().size() == 0) {
-			    Collection<String> profiles = bundle.getProfileIds();
+			    Collection<String> profiles = bundle.getProfileIds(benchmarkId);
 			    if (profiles.size() == 1) {
 				profileId = profiles.iterator().next();
-				ctx = bundle.getContext(profileId);
+				ctx = bundle.getContext(benchmarkId, profileId);
 				logger.info("Selected profile " + profileId);
 			    } else if (profiles.size() > 1) {
 			        StringBuffer sb = new StringBuffer();

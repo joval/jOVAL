@@ -9,6 +9,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -45,16 +47,18 @@ import org.joval.scap.xccdf.XccdfException;
 public class Bundle implements IBundle {
     private File base;
     private ZipFile zip;
-    private IBenchmark benchmark;
+    private Map<String, IBenchmark> benchmarks;
     private IDictionary dictionary;
 
     public Bundle(File file) throws ScapException {
+	benchmarks = new HashMap<String, IBenchmark>();
 	if (file.isDirectory()) {
 	    base = file;
 	    for (File f : base.listFiles()) {
 		if (f.isFile() && f.getName().endsWith(".xml")) {
 		    if (f.getName().toLowerCase().indexOf("xccdf") != -1) {
-			benchmark = new Benchmark(Benchmark.getBenchmarkType(f));
+			IBenchmark benchmark = new Benchmark(Benchmark.getBenchmarkType(f));
+			benchmarks.put(benchmark.getId(), benchmark);
 		    } else if (f.getName().toLowerCase().indexOf("cpe-dictionary") != -1) {
 			dictionary = new Dictionary(Dictionary.getCpeList(f));
 		    }
@@ -71,7 +75,8 @@ public class Bundle implements IBundle {
 			try {
 			    if (entry.getName().toLowerCase().indexOf("xccdf") != -1) {
 				in = zip.getInputStream(entry);
-				benchmark = new Benchmark(Benchmark.getBenchmarkType(in));
+				IBenchmark benchmark = new Benchmark(Benchmark.getBenchmarkType(in));
+				benchmarks.put(benchmark.getId(), benchmark);
 			    } else if (entry.getName().toLowerCase().indexOf("cpe-dictionary") != -1) {
 				in = zip.getInputStream(entry);
 				dictionary = new Dictionary(Dictionary.getCpeList(in));
@@ -101,24 +106,46 @@ public class Bundle implements IBundle {
 	return dictionary;
     }
 
-    public IBenchmark getBenchmark() {
-	return benchmark;
+    public Collection<String> getBenchmarkIds() {
+	return benchmarks.keySet();
     }
 
-    public Collection<String> getProfileIds() {
-	Collection<String> result = new ArrayList<String>();
-	for (ProfileType profile : benchmark.getBenchmark().getProfile()) {
-	    result.add(profile.getProfileId());
+    public IBenchmark getBenchmark(String benchmarkId) throws NoSuchElementException {
+	if (benchmarks.containsKey(benchmarkId)) {
+	    return benchmarks.get(benchmarkId);
+	} else {
+	    throw new NoSuchElementException(benchmarkId);
 	}
-	return result;
     }
 
-    public IScapContext getContext(String profileId) throws NoSuchElementException, ScapException {
-	return new Context(profileId == null ? null : benchmark.getProfile(profileId));
+    public Collection<String> getProfileIds(String benchmarkId) throws NoSuchElementException {
+	if (benchmarks.containsKey(benchmarkId)) {
+	    Collection<String> result = new ArrayList<String>();
+	    for (ProfileType profile : benchmarks.get(benchmarkId).getBenchmark().getProfile()) {
+		result.add(profile.getProfileId());
+	    }
+	    return result;
+	} else {
+	    throw new NoSuchElementException(benchmarkId);
+	}
+    }
+
+    public IScapContext getContext(String benchmarkId, String profileId) throws NoSuchElementException, ScapException {
+	if (benchmarks.containsKey(benchmarkId)) {
+	    IBenchmark benchmark = benchmarks.get(benchmarkId);
+	    return new Context(benchmark, profileId == null ? null : benchmark.getProfile(profileId));
+	} else {
+	    throw new NoSuchElementException(benchmarkId);
+	}
     }
 
     public IScapContext getContext(ITailoring tailoring, String profileId) throws NoSuchElementException, ScapException {
-	return new Context(tailoring.getProfile(profileId));
+	String benchmarkId = tailoring.getBenchmarkId();
+	if (benchmarks.containsKey(benchmarkId)) {
+	    return new Context(benchmarks.get(benchmarkId), tailoring.getProfile(profileId));
+	} else {
+	    throw new NoSuchElementException(benchmarkId);
+	}
     }
 
     public IChecklist getOcil(String href) throws NoSuchElementException, OcilException {
@@ -202,7 +229,7 @@ public class Bundle implements IBundle {
     }
 
     class Context extends ScapContext {
-	Context(ProfileType profile) throws XccdfException {
+	Context(IBenchmark benchmark, ProfileType profile) throws XccdfException {
 	    super(benchmark, dictionary, profile);
 	}
 
