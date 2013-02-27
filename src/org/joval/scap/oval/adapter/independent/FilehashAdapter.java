@@ -183,11 +183,13 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    switch(us.getFlavor()) {
 	      case LINUX:
 	      case MACOSX: {
+		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "md5", f.getPath());
 		String temp = SafeCLI.exec("openssl dgst -hex -md5 " + f.getPath(), session, IUnixSession.Timeout.M);
 		int ptr = temp.indexOf("= ");
 		if (ptr > 0) {
 		    checksums[MD5] = temp.substring(ptr+2).trim();
 		}
+		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "sha1", f.getPath());
 		temp = SafeCLI.exec("openssl dgst -hex -sha1 " + f.getPath(), session, IUnixSession.Timeout.M);
 		ptr = temp.indexOf("= ");
 		if (ptr > 0) {
@@ -197,17 +199,21 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	      }
 
 	      case SOLARIS: {
+		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "md5", f.getPath());
 		checksums[MD5] = SafeCLI.exec("digest -a md5 " + f.getPath(), session, IUnixSession.Timeout.M);
+		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "sha1", f.getPath());
 		checksums[SHA1] = SafeCLI.exec("digest -a sha1 " + f.getPath(), session, IUnixSession.Timeout.M);
 		break;
 	      }
 
 	      case AIX: {
+		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "md5", f.getPath());
 		String temp = SafeCLI.exec("csum -h MD5 " + f.getPath(), session, IUnixSession.Timeout.M);
 		StringTokenizer tok = new StringTokenizer(temp);
 		if (tok.countTokens() == 2) {
 		    checksums[MD5] = tok.nextToken();
 		}
+		session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "sha1", f.getPath());
 		temp = SafeCLI.exec("csum -h SHA1 " + f.getPath(), session, IUnixSession.Timeout.M);
 		tok = new StringTokenizer(temp);
 		if (tok.countTokens() == 2) {
@@ -220,8 +226,10 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	  }
 
 	  case WINDOWS: {
+	    session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "md5", f.getPath());
 	    String encoded = getRunspace(view).invoke("Get-FileHash -Algorithm MD5 -Path \"" + f.getPath() + "\"");
 	    checksums[MD5] = LittleEndian.toHexString(Base64.decode(encoded));
+	    session.getLogger().info(JOVALMsg.STATUS_FILEHASH, "sha1", f.getPath());
 	    encoded = getRunspace(view).invoke("Get-FileHash -Algorithm SHA1 -Path \"" + f.getPath() + "\"");
 	    checksums[SHA1] = LittleEndian.toHexString(Base64.decode(encoded));
 	    break;

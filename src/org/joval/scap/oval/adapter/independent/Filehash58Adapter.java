@@ -232,6 +232,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 		throw new IllegalArgumentException(type);
 	    }
 	}
+	session.getLogger().info(JOVALMsg.STATUS_FILEHASH, alg.osId, f.getPath());
 	String checksum = null;
 	switch(session.getType()) {
 	  case UNIX:

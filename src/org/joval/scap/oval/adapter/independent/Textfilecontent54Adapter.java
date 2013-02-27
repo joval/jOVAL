@@ -100,36 +100,42 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	      //
 	      case UNIX: {
 		IUnixSession us = (IUnixSession)session;
-		StringBuffer sb = new StringBuffer();
-		StringBuffer cmd = new StringBuffer("cat ").append(f.getPath().replace(" ", "\\ ")).append(" | gzip -c");
-		List<String> lines = null;
-		switch(us.getFlavor()) {
-		  //
-		  // Use entire output of base64
-		  //
-		  case LINUX:
-		    cmd.append(" | base64 -");
-		    for (String line : SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M)) {
-			sb.append(line);
-		    }
-		    break;
+		for (int attempt=1; attempt < 3; attempt++) {
+		    try {
+			StringBuffer sb = new StringBuffer();
+			StringBuffer cmd = new StringBuffer("cat '").append(f.getPath()).append("' | gzip -c");
+			switch(us.getFlavor()) {
+			  //
+			  // Use entire output of base64
+			  //
+			  case LINUX:
+			    cmd.append(" | base64 -");
+			    for (String line : SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M)) {
+				sb.append(line);
+			    }
+			    break;
 
-		  //
-		  // Skip first and last line of uuencode output
-		  //
-		  case AIX:
-		  case MACOSX:
-		  case SOLARIS:
-		    cmd.append(" | uuencode -m -");
-		    List<String> output = SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M);
-		    int end = output.size() - 1;
-		    for (int i=1; i < end; i++) {
-			sb.append(output.get(i));
+			  //
+			  // Skip first and last line of uuencode output
+			  //
+			  case AIX:
+			  case MACOSX:
+			  case SOLARIS:
+			    cmd.append(" | uuencode -m -");
+			    List<String> output = SafeCLI.multiLine(cmd.toString(), session, IUnixSession.Timeout.M);
+			    int end = output.size() - 1;
+			    for (int i=1; i < end; i++) {
+				sb.append(output.get(i));
+			    }
+			    break;
+			}
+			s = readASCIIString(new GZIPInputStream(new ByteArrayInputStream(Base64.decode(sb.toString()))));
+			break;
+		    } catch (IOException e) {
+			session.getLogger().warn(e.getMessage());
 		    }
-		    break;
 		}
-		if (sb.length() > 0) {
-		    s = readASCIIString(new GZIPInputStream(new ByteArrayInputStream(Base64.decode(sb.toString()))));
+		if (s != null) {
 		    break;
 		}
 		// else fall-thru
@@ -301,6 +307,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	    int len = 0;
 	    StringBuffer sb = new StringBuffer();
 	    while ((len = in.read(buff)) > 0) {
+		String s = new String(sb.append(StringTools.toASCIICharArray(buff), 0, len));
 		sb.append(StringTools.toASCIICharArray(buff), 0, len);
 	    }
 	    return sb.toString();
