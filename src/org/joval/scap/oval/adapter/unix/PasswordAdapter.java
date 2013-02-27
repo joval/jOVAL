@@ -54,7 +54,7 @@ import org.joval.util.JOVALMsg;
 public class PasswordAdapter implements IAdapter {
     private IUnixSession session;
     private Hashtable<String, PasswordItem> passwordMap;
-    private Hashtable<String, Exception> errors;
+    private Hashtable<String, String> errors;
     private List<String> errorMessages;
     private boolean initialized;
 
@@ -65,7 +65,7 @@ public class PasswordAdapter implements IAdapter {
 	if (session instanceof IUnixSession) {
 	    this.session = (IUnixSession)session;
 	    passwordMap = new Hashtable<String, PasswordItem>();
-	    errors = new Hashtable<String, Exception>();
+	    errors = new Hashtable<String, String>();
 	    errorMessages = new ArrayList<String>();
 	    initialized = false;
 	    classes.add(PasswordObject.class);
@@ -146,26 +146,35 @@ public class PasswordAdapter implements IAdapter {
 	return passwordMap.keySet();
     }
 
+    /**
+     * Retrieve a specific PasswordItem for a request. This decorates the request context with any error messages that
+     * accumulated during the creation of the item.
+     */
     private PasswordItem getPasswordItem(String username, IRequestContext rc) throws Exception {
 	if (!initialized) {
 	    loadPasswords();
 	}
 	if (passwordMap.containsKey(username)) {
+	    PasswordItem item = passwordMap.get(username);
+	    if (!item.isSetLastLogin()) {
+		setLastLogin(item);
+	    }
 	    // Log any non-fatal errors for this username
 	    if (errors.containsKey(username)) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
-		msg.setValue(errors.get(username).getMessage());
+		msg.setValue(errors.get(username));
 		rc.addMessage(msg);
 	    }
 	    return passwordMap.get(username);
-	} else if (errors.containsKey(username)) {
-	    throw errors.get(username);
 	} else {
 	    throw new NoSuchElementException(username);
 	}
     }
 
+    /**
+     * Create the map of PasswordItems for all user accounts on the machine.
+     */
     private void loadPasswords() {
 	try {
 	    List<String> lines = null;
@@ -273,20 +282,6 @@ public class PasswordAdapter implements IAdapter {
 		    session.getLogger().warn(JOVALMsg.ERROR_PASSWD_LINE, line);
 		}
 	    }
-
-	    //
-	    // For each user, collect the last login time.
-	    //
-	    long systime = System.currentTimeMillis();
-	    try {
-		systime = session.getTime();
-	    } catch (Exception e) {
-		errorMessages.add(e.getMessage());
-		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-	    }
-	    for (String username : passwordMap.keySet()) {
-		setLastLogin(username, systime);
-	    }
 	} catch (Exception e) {
 	    errorMessages.add(e.getMessage());
 	    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -295,9 +290,10 @@ public class PasswordAdapter implements IAdapter {
     }
 
     /**
-     * Set the last_login entity for the item associated with this user, using the supplied system time as a reference.
+     * Set the last_login entity for the item. This can be time-consuming, so it is done separately from initialization.
      */
-    private void setLastLogin(String username, long systime) {
+    private void setLastLogin(PasswordItem item) {
+	String username = (String)item.getUsername().getValue();
 	EntityItemIntType lastLogin = Factories.sc.core.createEntityItemIntType();
 	lastLogin.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	lastLogin.setStatus(StatusEnumeration.DOES_NOT_EXIST); // default, in case it's not found/handled below
@@ -305,7 +301,12 @@ public class PasswordAdapter implements IAdapter {
 	    switch(session.getFlavor()) {
 	      case MACOSX:
 	      case SOLARIS:
-		Date now = new Date(systime);
+		Date now = new Date();
+		try {
+		    now = new Date(session.getTime());
+		} catch (Exception e) {
+		    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+		}
 		for (String line : SafeCLI.multiLine("last -1 " + username, session, IUnixSession.Timeout.M)) {
 		    if (line.startsWith(username)) {
 			StringTokenizer tok = new StringTokenizer(line);
@@ -408,7 +409,8 @@ public class PasswordAdapter implements IAdapter {
 	    }
 	} catch (Exception e) {
 	    lastLogin.setStatus(StatusEnumeration.ERROR);
-	    errors.put(username, e);
+	    errors.put(username, e.getMessage());
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 	passwordMap.get(username).setLastLogin(lastLogin);
     }
