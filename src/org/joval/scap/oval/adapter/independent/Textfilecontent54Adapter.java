@@ -230,6 +230,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	    session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
 	    throw new IOException(e);
 	} catch (IOException e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    throw e;
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();

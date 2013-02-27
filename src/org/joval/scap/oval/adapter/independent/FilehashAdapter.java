@@ -93,7 +93,10 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    String[] checksums = computeChecksums(f, getView(fObj.getBehaviors()));
 	    return Arrays.asList(getItem(baseItem, checksums[MD5], checksums[SHA1]));
 	} catch (IllegalArgumentException e) {
-	    session.getLogger().warn(JOVALMsg.STATUS_NOT_FILE, f.getPath(), e.getMessage()); 
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.INFO);
+	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_NOT_FILE, f.getPath(), e.getMessage())); 
+	    rc.addMessage(msg);
 	} catch (Exception e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -143,6 +146,9 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
     private static final int MD5	= 0;
     private static final int SHA1	= 1;
 
+    /**
+     * @throws IllegalArgumentException if the file f is not a "regular" file; exception message is the file type.
+     */
     private String[] computeChecksums(IFile f, IWindowsSession.View view) throws Exception {
 	IFileEx ext = f.getExtended();
 	if (ext instanceof IWindowsFileInfo) {

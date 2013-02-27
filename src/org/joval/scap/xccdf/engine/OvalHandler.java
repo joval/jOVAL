@@ -194,6 +194,12 @@ public class OvalHandler implements ISystem {
 	  case TRUE:
 	    return ResultEnumType.PASS;
  
+	  case NOT_APPLICABLE:
+	    return ResultEnumType.NOTAPPLICABLE;
+ 
+	  case NOT_EVALUATED:
+	    return ResultEnumType.NOTCHECKED;
+ 
 	  case UNKNOWN:
 	  default:
 	    return ResultEnumType.UNKNOWN;

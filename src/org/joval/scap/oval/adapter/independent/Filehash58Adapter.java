@@ -161,6 +161,12 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	for (Algorithm alg : algorithms) {
 	    try {
 		items.add(getItem(baseItem, alg, computeChecksum(f, alg, view)));
+	    } catch (IllegalArgumentException e) {
+		MessageType msg = Factories.common.createMessageType();
+		msg.setLevel(MessageLevelEnumeration.INFO);
+		msg.setValue(JOVALMsg.getMessage(JOVALMsg.STATUS_NOT_FILE, f.getPath(), e.getMessage()));
+		rc.addMessage(msg);
+		break;
 	    } catch (NoSuchAlgorithmException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.WARNING);
@@ -204,14 +210,27 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 
     private String computeChecksum(IFile f, Algorithm alg, IWindowsSession.View view) throws Exception {
 	IFileEx ext = f.getExtended();
-	boolean typecheck = false;
 	if (ext instanceof IWindowsFileInfo) {
-	    typecheck = ((IWindowsFileInfo)ext).getWindowsFileType() == IWindowsFileInfo.FILE_TYPE_DISK;
+	    //
+	    // Only IWindiwsFileInfo.FILE_TYPE_DISK gets through
+	    //
+	    switch(((IWindowsFileInfo)ext).getWindowsFileType()) {
+	      case IWindowsFileInfo.FILE_TYPE_UNKNOWN:
+		throw new IllegalArgumentException("unknown");
+	      case IWindowsFileInfo.FILE_TYPE_CHAR:
+		throw new IllegalArgumentException("char");
+	      case IWindowsFileInfo.FILE_TYPE_PIPE:
+		throw new IllegalArgumentException("pipe");
+	      case IWindowsFileInfo.FILE_TYPE_REMOTE:
+		throw new IllegalArgumentException("remote");
+	      case IWindowsFileInfo.FILE_ATTRIBUTE_DIRECTORY:
+		throw new IllegalArgumentException("directory");
+	    }
 	} else if (ext instanceof IUnixFileInfo) {
-	    typecheck = ((IUnixFileInfo)ext).getUnixFileType().equals(IUnixFileInfo.FILE_TYPE_REGULAR);
-	}
-	if (!typecheck) {
-	    throw new IllegalArgumentException(f.getPath());
+	    String type = ((IUnixFileInfo)ext).getUnixFileType();
+	    if (!type.equals(IUnixFileInfo.FILE_TYPE_REGULAR)) {
+		throw new IllegalArgumentException(type);
+	    }
 	}
 	String checksum = null;
 	switch(session.getType()) {
