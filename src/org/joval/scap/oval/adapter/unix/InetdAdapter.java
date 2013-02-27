@@ -168,7 +168,11 @@ public class InetdAdapter implements IAdapter {
 	item.setProtocol(protocol);
 
 	EntityItemStringType serverArguments = Factories.sc.core.createEntityItemStringType();
-	serverArguments.setValue(service.arguments);
+	if (service.arguments == null) {
+	    serverArguments.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	} else {
+	    serverArguments.setValue(service.arguments);
+	}
 	item.setServerArguments(serverArguments);
 
 	EntityItemStringType serverProgram = Factories.sc.core.createEntityItemStringType();
