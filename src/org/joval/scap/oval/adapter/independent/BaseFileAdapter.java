@@ -142,57 +142,23 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		}
 		ReflectedFileItem fItem = new ReflectedFileItem();
 		fItem.setWindowsView(view);
-		if (fObj.isSetFilepath()) {
-		    if (isDirectory) {
-			//
-			// Object is looking for files, so skip over this directory
-			//
-			continue;
-		    } else {
-			EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
-			filepathType.setValue(path);
-			fItem.setFilepath(filepathType);
+		if (isDirectory) {
+		    if (fObj.isFilenameNil()) {
 			EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
-			pathType.setValue(f.getParent());
+			pathType.setValue(dirPath);
 			fItem.setPath(pathType);
-			EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
-			filenameType.setValue(f.getName());
-			fItem.setFilename(filenameType);
-		    }
-		} else if (fObj.isSetFilename() && fObj.getFilename().getValue() != null) {
-		    if (isDirectory) {
-			//
-			// Object is looking for files, so skip over this directory
-			//
-			continue;
-		    } else {
-			EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
-			filepathType.setValue(path);
-			fItem.setFilepath(filepathType);
-			EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
-			pathType.setValue(f.getParent());
-			fItem.setPath(pathType);
-			EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
-			filenameType.setValue(f.getName());
-			fItem.setFilename(filenameType);
-		    }
-		} else if (fObj.isSetPath()) {
-		    EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
-		    pathType.setValue(dirPath);
-		    fItem.setPath(pathType);
-		    if (!isDirectory) {
-			EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
-			filenameType.setValue(f.getName());
-			fItem.setFilename(filenameType);
-			EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
-			filepathType.setValue(f.getPath());
-			fItem.setFilepath(filepathType);
 		    }
 		} else {
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_FILE_SPEC, obj.getClass().getName(), id);
-		    throw new CollectException(msg, FlagEnumeration.ERROR);
+		    EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
+		    filepathType.setValue(path);
+		    fItem.setFilepath(filepathType);
+		    EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
+		    pathType.setValue(f.getParent());
+		    fItem.setPath(pathType);
+		    EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
+		    filenameType.setValue(f.getName());
+		    fItem.setFilename(filenameType);
 		}
-
 		items.addAll(getItems(obj, fItem.it, f, rc));
 	    } catch (FileNotFoundException e) {
 		// skip it
@@ -454,9 +420,11 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 					files.add(file);
 				    }
 				}
-			    } else {
+			    } else if ("down".equals(fb.getRecurseDirection())) {
 				from = new String[] {path};
 				search = true;
+			    } else {
+				files.add(file);
 			    }
 			}
 		    }

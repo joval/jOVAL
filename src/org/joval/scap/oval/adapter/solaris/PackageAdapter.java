@@ -6,10 +6,10 @@ package org.joval.scap.oval.adapter.solaris;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -42,7 +42,7 @@ import org.joval.util.JOVALMsg;
  */
 public class PackageAdapter implements IAdapter {
     private IUnixSession session;
-    private Hashtable<String, PackageItem> packageMap;
+    private Map<String, PackageItem> packageMap;
 
     // Implement IAdapter
 
@@ -50,7 +50,7 @@ public class PackageAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.SOLARIS) {
 	    this.session = (IUnixSession)session;
-	    packageMap = new Hashtable<String, PackageItem>();
+	    packageMap = new HashMap<String, PackageItem>();
 	    classes.add(PackageObject.class);
 	} else {
 	    notapplicable.add(PackageObject.class);
@@ -64,9 +64,22 @@ public class PackageAdapter implements IAdapter {
 	switch(pObj.getPkginst().getOperation()) {
 	  case EQUALS:
 	    try {
-		items.add(getItem(SafeCLI.checkArgument((String)pObj.getPkginst().getValue(), session)));
-	    } catch (NoSuchElementException e) {
-		// package is not installed
+		String pkginst = SafeCLI.checkArgument((String)pObj.getPkginst().getValue(), session);
+		if (packageMap.containsKey(pkginst)) {
+		    items.add(packageMap.get(pkginst));
+		} else {
+		    String cmd = "pkginfo -l '" + pkginst + "'";
+		    PackageItem item = nextPackageItem(SafeCLI.multiLine(cmd, session, IUnixSession.Timeout.M).iterator());
+		    if (item == null) {
+			item = Factories.sc.solaris.createPackageItem();
+			EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
+			type.setValue(pkginst);
+			item.setPkginst(type);
+			item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+		    }
+		    packageMap.put(pkginst, item);
+		    items.add(item);
+		}
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -120,34 +133,12 @@ public class PackageAdapter implements IAdapter {
     private void loadFullPackageMap() {
 	if (loaded) return;
 
+	String cmd = "pkginfo | awk '{print $2}' | xargs -I{} pkginfo -l '{}'";
 	try {
-	    List<String> packages = new ArrayList<String>();
-	    session.getLogger().trace(JOVALMsg.STATUS_SOLPKG_LIST);
-	    for (String line : SafeCLI.multiLine("pkginfo -x", session, IUnixSession.Timeout.L)) {
-		if (line.length() == 0) {
-		    break;
-		}
-		switch(line.charAt(0)) {
-		  case ' ':
-		  case '\t':
-		    break;
-
-		  default:
-		    StringTokenizer tok = new StringTokenizer(line);
-		    if (tok.countTokens() > 0) {
-			packages.add(tok.nextToken());
-		    }
-		    break;
-		}
-	    }
-	    for (String pkg : packages) {
-		try {
-		    PackageItem item = getItem(pkg);
-		    packageMap.put((String)item.getPkginst().getValue(), item);
-		} catch (Exception e) {
-		    session.getLogger().warn(JOVALMsg.ERROR_SOLPKG, pkg);
-		    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-		}
+	    Iterator<String> lines = SafeCLI.manyLines(cmd, null, session);
+	    PackageItem item = null;
+	    while((item = nextPackageItem(lines)) != null) {
+		packageMap.put((String)item.getPkginst().getValue(), item);
 	    }
 	    loaded = true;
 	} catch (Exception e) {
@@ -170,23 +161,18 @@ public class PackageAdapter implements IAdapter {
     private static final String FILES		= "FILES:";
     private static final String ERROR		= "ERROR:";
 
-    private PackageItem getItem(String pkginst) throws Exception {
-	PackageItem item = packageMap.get(pkginst);
-	if (item != null) {
-	    return item;
-	}
-
-	session.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
-	item = Factories.sc.solaris.createPackageItem();
-	boolean isInstalled = false;
-	for (String line : SafeCLI.multiLine("/usr/bin/pkginfo -l '" + pkginst + "'", session, IUnixSession.Timeout.S)) {
-	    line = line.trim();
+    private PackageItem nextPackageItem(Iterator<String> lines) {
+	PackageItem item = null;
+	while(lines.hasNext()) {
+	    String line = lines.next().trim();
 	    if (line.length() == 0) {
 		break;
 	    } else if (line.startsWith(PKGINST)) {
-		isInstalled = true;
+		item = Factories.sc.solaris.createPackageItem();
 		EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
-		type.setValue(line.substring(PKGINST.length()).trim());
+		String pkginst = line.substring(PKGINST.length()).trim();
+		type.setValue(pkginst);
+		session.getLogger().debug(JOVALMsg.STATUS_SOLPKG_PKGINFO, pkginst);
 		item.setPkginst(type);
 	    } else if (line.startsWith(NAME)) {
 		EntityItemStringType type = Factories.sc.core.createEntityItemStringType();
@@ -210,12 +196,6 @@ public class PackageAdapter implements IAdapter {
 		item.setPackageVersion(type);
 	    }
 	}
-
-	if (isInstalled) {
-	    packageMap.put(pkginst, item);
-	    return item;
-	} else {
-	    throw new NoSuchElementException(pkginst);
-	}
+	return item;
     }
 }

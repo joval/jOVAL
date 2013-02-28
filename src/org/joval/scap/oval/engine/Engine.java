@@ -1144,11 +1144,11 @@ public class Engine implements IEngine, IProvider {
     private Collection<ItemType> filterItems(List<Filter> filters, Collection<ItemType> items, RequestContext rc)
 		throws NoSuchElementException, OvalException {
 
-	if (filters.size() == 0) {
-	    return items;
-	}
 	Collection<ItemType> filtered = new HashSet<ItemType>();
 	filtered.addAll(items);
+	if (filters.size() == 0) {
+	    return filtered;
+	}
 	for (Filter filter : filters) {
 	    StateType state = definitions.getState(filter.getValue());
 	    Iterator<ItemType> iter = filtered.iterator();

@@ -7,9 +7,9 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -45,7 +45,7 @@ import org.joval.util.JOVALMsg;
  */
 public class SmfAdapter implements IAdapter {
     private IUnixSession session;
-    private Hashtable<String, SmfItem> serviceMap = null;
+    private Map<String, SmfItem> serviceMap = null;
 
     // Implement IAdapter
 
@@ -53,7 +53,7 @@ public class SmfAdapter implements IAdapter {
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.SOLARIS) {
 	    this.session = (IUnixSession)session;
-	    serviceMap = new Hashtable<String, SmfItem>();
+	    serviceMap = new HashMap<String, SmfItem>();
 	    classes.add(SmfObject.class);
 	} else {
 	    notapplicable.add(SmfObject.class);
@@ -68,12 +68,8 @@ public class SmfAdapter implements IAdapter {
 	switch(sObj.getFmri().getOperation()) {
 	  case EQUALS:
 	    try {
-		SmfItem item = getItem(SafeCLI.checkArgument((String)sObj.getFmri().getValue(), session));
-		if (item != null) {
-		    items.add(item);
-		}
-	    } catch (NoSuchElementException e) {
-		// FMRI was not found
+		String fmri = SafeCLI.checkArgument((String)sObj.getFmri().getValue(), session);
+		items.add(fmri.startsWith(LEGACY) ? getLegacyItem(fmri) : getItem(fmri));
 	    } catch (Exception e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -85,21 +81,22 @@ public class SmfAdapter implements IAdapter {
 
 	  case NOT_EQUAL: {
 	    loadFullServiceMap();
-	    for (String fmri : serviceMap.keySet()) {
-		if (!fmri.equals((String)sObj.getFmri().getValue())) {
-		    items.add(serviceMap.get(fmri));
+	    String fmri = getFullFmri((String)sObj.getFmri().getValue());
+	    for (Map.Entry<String, SmfItem> entry : serviceMap.entrySet()) {
+		if (!entry.getKey().equals(fmri)) {
+		    items.add(entry.getValue());
 		}
 	    }
 	    break;
 	  }
 
-	  case PATTERN_MATCH: {
+	  case PATTERN_MATCH:
 	    loadFullServiceMap();
 	    try {
 		Pattern p = Pattern.compile((String)sObj.getFmri().getValue());
-		for (String fmri : serviceMap.keySet()) {
-		    if (p.matcher(fmri).find()) {
-			items.add(serviceMap.get(fmri));
+		for (Map.Entry<String, SmfItem> entry : serviceMap.entrySet()) {
+		    if (p.matcher(entry.getKey()).find()) {
+			items.add(entry.getValue());
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
@@ -110,7 +107,6 @@ public class SmfAdapter implements IAdapter {
 		session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
-	  }
 
 	  default: {
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, sObj.getFmri().getOperation());
@@ -130,17 +126,10 @@ public class SmfAdapter implements IAdapter {
 	    session.getLogger().trace(JOVALMsg.STATUS_SMF);
 	    for (String service : SafeCLI.multiLine("/usr/bin/svcs -H -o fmri", session, IUnixSession.Timeout.M)) {
 		try {
-		    SmfItem item = null;
-		    if (service.startsWith(LEGACY)) {
-			item = getLegacyItem(service);
-		    } else {
-			item = getItem(service);
-		    }
+		    SmfItem item = service.startsWith(LEGACY) ? getLegacyItem(service) : getItem(service);
 		    serviceMap.put((String)item.getFmri().getValue(), item);
 		} catch (IllegalArgumentException e) {
 		    session.getLogger().warn(e.getMessage());
-		} catch (NoSuchElementException e) {
-		    session.getLogger().warn(JOVALMsg.ERROR_SMF, service);
 		} catch (Exception e) {
 		    session.getLogger().warn(JOVALMsg.ERROR_SMF, service);
 		    session.getLogger().error(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -166,25 +155,37 @@ public class SmfAdapter implements IAdapter {
     private static final String INETD_USER_PROP	= "inetd_start/user";
     private static final String INETD_EXEC_PROP	= "inetd_start/exec";
 
-    private SmfItem getLegacyItem(String fmri) throws Exception {
-	SmfItem item = Factories.sc.solaris.createSmfItem();
+    private SmfItem getLegacyItem(String s) throws Exception {
+	String fmri = getFullFmri(s);
+	if (fmri == null) {
+	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_FMRI, s));
+	}
+	if (serviceMap.containsKey(fmri)) {
+	    return serviceMap.get(fmri);
+	}
+	session.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
 
+	SmfItem item = Factories.sc.solaris.createSmfItem();
 	EntityItemStringType fmriType = Factories.sc.core.createEntityItemStringType();
-	fmriType.setValue(getFullFmri(fmri));
+	fmriType.setValue(fmri);
 	item.setFmri(fmriType);
 
-	String line = SafeCLI.exec("/usr/bin/svcs -H " + fmri, session, IUnixSession.Timeout.S);
-	StringTokenizer tok = new StringTokenizer(line);
-	if (tok.countTokens() > 0) {
-	    EntityItemSmfServiceStateType serviceState = Factories.sc.solaris.createEntityItemSmfServiceStateType();
-	    try {
-		serviceState.setValue(toServiceState(tok.nextToken()));
-	    } catch (IllegalArgumentException e) {
-		serviceState.setStatus(StatusEnumeration.ERROR);
+	String line = SafeCLI.exec("/usr/bin/svcs -H '" + fmri + "'", session, IUnixSession.Timeout.S);
+	if (line.trim().length() == 0) {
+	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
+	} else {
+	    StringTokenizer tok = new StringTokenizer(line);
+	    if (tok.countTokens() > 0) {
+		EntityItemSmfServiceStateType serviceState = Factories.sc.solaris.createEntityItemSmfServiceStateType();
+		try {
+		    serviceState.setValue(toServiceState(tok.nextToken()));
+		} catch (IllegalArgumentException e) {
+		    serviceState.setStatus(StatusEnumeration.ERROR);
+		}
+		item.setServiceState(serviceState);
 	    }
-	    item.setServiceState(serviceState);
 	}
-
+	serviceMap.put(fmri, item);
 	return item;
     }
 
@@ -193,34 +194,27 @@ public class SmfAdapter implements IAdapter {
 	if (fmri == null) {
 	    throw new IllegalArgumentException(JOVALMsg.getMessage(JOVALMsg.ERROR_FMRI, s));
 	}
-
-	SmfItem item = serviceMap.get(fmri);
-	if (item != null) {
-	    return item;
+	if (serviceMap.containsKey(fmri)) {
+	    return serviceMap.get(fmri);
 	}
-
 	session.getLogger().debug(JOVALMsg.STATUS_SMF_SERVICE, fmri);
-	item = Factories.sc.solaris.createSmfItem();
-	boolean found = false;
 
+	SmfItem item = Factories.sc.solaris.createSmfItem();
+	boolean found = false;
 	for (String line : SafeCLI.multiLine("/usr/bin/svcs -l '" + fmri + "'", session, IUnixSession.Timeout.S)) {
 	    line = line.trim();
 	    if (line.length() == 0) {
 		break;
 	    } else if (line.startsWith(FMRI)) {
 		found = true;
-
-		EntityItemStringType fmriType = Factories.sc.core.createEntityItemStringType();
-		String fullFmri = getFullFmri(line.substring(FMRI.length()).trim());
-		fmriType.setValue(fullFmri);
-		item.setFmri(fmriType);
+		fmri = getFullFmri(line.substring(FMRI.length()).trim());
 
 		//
 		// Name is based on the FMRI.  See:
 		// http://making-security-measurable.1364806.n2.nabble.com/Solaris-10-SMF-test-request-UNCLASSIFIED-tt23753.html#a23757
 		//
 		EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
-		nameType.setValue(getName(fullFmri));
+		nameType.setValue(getName(fmri));
 		item.setServiceName(nameType);
 	    } else if (line.startsWith(STATE_TIME)) { // NB: this condition MUST appear before STATE
 	    } else if (line.startsWith(STATE)) {
@@ -233,12 +227,14 @@ public class SmfAdapter implements IAdapter {
 		item.setServiceState(serviceState);
 	    }
 	}
+	EntityItemStringType fmriType = Factories.sc.core.createEntityItemStringType();
+	fmriType.setValue(fmri);
+	item.setFmri(fmriType);
 
 	if (found) {
 	    //
 	    // If the service was found, then we can retrieve some information using svcprop
 	    //
-	    item.setStatus(StatusEnumeration.EXISTS);
 	    boolean inetd = false;
 	    for (String line : SafeCLI.multiLine("/usr/bin/svcprop '" + fmri + "'", session, IUnixSession.Timeout.S)) {
 		if (line.startsWith(START_EXEC_PROP)) {
@@ -275,11 +271,11 @@ public class SmfAdapter implements IAdapter {
 		    }
 		}
 	    }
-
-	    return item;
 	} else {
-	    throw new NoSuchElementException(fmri);
+	    item.setStatus(StatusEnumeration.DOES_NOT_EXIST);
 	}
+	serviceMap.put(fmri, item);
+	return item;
     }
 
     private String toServiceState(String s) throws IllegalArgumentException {
@@ -334,7 +330,9 @@ public class SmfAdapter implements IAdapter {
      * Generally, prepend "localhost".
      */
     private String getFullFmri(String fmri) {
-	if (fmri.indexOf("//") == -1) {
+	if (fmri.startsWith(LEGACY)) {
+	    return fmri;
+	} else if (fmri.indexOf("//") == -1) {
 	    int ptr = fmri.indexOf("/");
 	    if (ptr == -1) {
 		return null;
