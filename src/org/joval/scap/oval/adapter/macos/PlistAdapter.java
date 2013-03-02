@@ -10,6 +10,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 import java.util.regex.Pattern;
@@ -159,10 +162,9 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
      * Given a PlistObject, return an equivalent Plist510Object. Given a Plist510Object, cast and return it.
      */
     protected Plist510Object getPlist510Object(ObjectType obj) throws CollectException {
-	Plist510Object pObj = null;
 	if (obj instanceof PlistObject) {
-	    pObj = Factories.definitions.macos.createPlist510Object();
 	    PlistObject pObjIn = (PlistObject)obj;
+	    Plist510Object pObj = Factories.definitions.macos.createPlist510Object();
 	    if (pObjIn.isSetAppId()) {
 		pObj.setAppId(pObjIn.getAppId());
 	    }
@@ -172,24 +174,12 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 	    if (pObjIn.isSetFilepath()) {
 		pObj.setFilepath(pObjIn.getFilepath());
 	    }
+	    return pObj;
 	} else if (obj instanceof Plist510Object) {
-	    pObj = (Plist510Object)obj;
+	    return (Plist510Object)obj;
 	} else {
 	    String message = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OBJECT, obj.getClass().getName());
 	    throw new CollectException(message, FlagEnumeration.ERROR);
-	}
-	return pObj;
-    }
-
-    /**
-     * Get the CFBundleIdentifier value from a parsed Plist object.
-     */
-    protected String findAppId(NSObject obj) throws CollectException {
-	Collection<NSObject> values = findValues(obj, "CFBundleIdentifier");
-	if (values.size() > 0) {
-	    return getValue(values.iterator().next());
-	} else {
-	    return null;
 	}
     }
 
@@ -275,122 +265,155 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
      * Return corresponding items from a parsed Plist object.
      */
     protected Collection<PlistItem> getItems(Plist510Object pObj, PlistItem base, NSObject obj) throws Exception {
-	String key = null;
-	if (!pObj.getKey().isNil()) {
-	    key = (String)pObj.getKey().getValue().getValue();
-	}
-
 	//
-	// Get all the value instances with the specified key
+	// Create a map of NSObjects corresponding to the object key spec.
 	//
-	Map<Integer, PlistItem> instances = new HashMap<Integer, PlistItem>();
-	int inst = 0;
-	for (NSObject value : findValues(obj, key)) {
-	    PlistItem item = Factories.sc.macos.createPlistItem();
-	    item.setKey(base.getKey());
-	    item.setAppId(base.getAppId());
-	    item.setFilepath(base.getFilepath());
-	    inst++; // start instance counting at 1
+	Map<JAXBElement<EntityItemStringType>, List<NSObject>> values =
+		new HashMap<JAXBElement<EntityItemStringType>, List<NSObject>>();
+	if (pObj.getKey().isNil()) {
+	    values.put(Factories.sc.macos.createPlistItemKey(null), findValues(obj, null));
+	} else {
+	    Collection<String> keys = new ArrayList<String>();
+	    String key = (String)pObj.getKey().getValue().getValue();
+	    OperationEnumeration op = pObj.getKey().getValue().getOperation();
+	    switch(op) {
+	      case EQUALS:
+		keys.add(key);
+		break;
 
-	    EntityItemIntType instanceType = Factories.sc.core.createEntityItemIntType();
-	    instanceType.setValue(Integer.toString(inst));
-	    instanceType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	    item.setInstance(instanceType);
-
-	    EntityItemPlistTypeType typeType = Factories.sc.macos.createEntityItemPlistTypeType();
-	    if (value instanceof NSArray) {
-		typeType.setValue("CFArray");
-		NSObject[] array = ((NSArray)value).getArray();
-		for (int i=0; i < array.length; i++) {
-		    EntityItemAnySimpleType val = Factories.sc.core.createEntityItemAnySimpleType();
-		    val.setValue(getValue(array[i]));
-		    item.getValue().add(val);
-		}
-	    } else {
-		if (value instanceof NSData) {
-		    typeType.setValue("CFData");
-		} else if (value instanceof NSDate) {
-		    typeType.setValue("CFDate");
-		} else if (value instanceof NSNumber) {
-		    NSNumber num = (NSNumber)value;
-		    switch(num.type()) {
-		      case NSNumber.BOOLEAN:
-			typeType.setValue("CFBoolean");
-			break;
-		      case NSNumber.INTEGER:
-			typeType.setValue("CFNumber");
-			break;
-		      case NSNumber.REAL:
-			typeType.setValue("CFNumber");
-			break;
+	      case NOT_EQUAL:
+		for (String value : listKeys(obj)) {
+		    if (!key.equals(value)) {
+			keys.add(value);
 		    }
-		} else if (value instanceof NSString) {
-		    typeType.setValue("CFString");
-		} else {
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_UNSUPPORTED_TYPE, value.getClass().getName());
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
-    
-		EntityItemAnySimpleType val = Factories.sc.core.createEntityItemAnySimpleType();
-		val.setValue(getValue(value));
-		item.getValue().add(val);
+		break;
+
+	      case PATTERN_MATCH:
+		Pattern p = Pattern.compile(key);
+		for (String value : listKeys(obj)) {
+		    if (p.matcher(value).find()) {
+			keys.add(value);
+		    }
+		}
+		break;
+
+	      default:
+		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
-	    item.setType(typeType);
-	    instances.put(new Integer(inst), item);
+	    for (String s : keys) {
+		EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
+		keyType.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+		keyType.setValue(s);
+		values.put(Factories.sc.macos.createPlistItemKey(keyType), findValues(obj, s));
+	    }
 	}
 
 	//
-	// Filter results according to the the instance operation.
+	// Create items for each key matching the object key spec
 	//
 	Collection<PlistItem> items = new ArrayList<PlistItem>();
-	if (pObj.isSetInstance()) {
-	    Integer instance = new Integer((String)pObj.getInstance().getValue());
-	    OperationEnumeration op = pObj.getInstance().getOperation();
-	    for (Map.Entry<Integer, PlistItem> entry : instances.entrySet()) {
-		switch(op) {
-		  case EQUALS:
-		    if (entry.getKey().compareTo(instance) == 0) {
-			items.add(entry.getValue());
-		    }
-		    break;
+	for (Map.Entry<JAXBElement<EntityItemStringType>, List<NSObject>> entry : values.entrySet()) {
+	    int instance = 0;
+	    OperationEnumeration op = null;
+	    if (pObj.isSetInstance()) {
+		instance = Integer.parseInt((String)pObj.getInstance().getValue());
+		op = pObj.getInstance().getOperation();
+	    }
 
-		  case NOT_EQUAL:
-		    if (entry.getKey().compareTo(instance) != 0) {
-			items.add(entry.getValue());
+	    Iterator<NSObject> iter = entry.getValue().iterator();
+	    for (int i=1; iter.hasNext(); i++) {
+		//
+		// Determine whether, based on the instance number, the item should be returned as a result
+		//
+		boolean add = false;
+		if (pObj.isSetInstance()) {
+		    switch(op) {
+		      case EQUALS:
+			if (i == instance) {
+			    add = true;
+			}
+			break;
+		      case NOT_EQUAL:
+			if (i != instance) {
+			    add = true;
+			}
+			break;
+		      case GREATER_THAN:
+			if (i > instance) {
+			    add = true;
+			}
+			break;
+		      case GREATER_THAN_OR_EQUAL:
+			if (i >= instance) {
+			    add = true;
+			}
+			break;
+		      case LESS_THAN:
+			if (i < instance) {
+			    add = true;
+			}
+			break;
+		      case LESS_THAN_OR_EQUAL:
+			if (i <= instance) {
+			    add = true;
+			}
+			break;
+		      default:
+			String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
 		    }
-		    break;
+		} else {
+		    add = true;
+		}
 
-		  case GREATER_THAN:
-		    if (entry.getKey().compareTo(instance) > 0) {
-			items.add(entry.getValue());
+		NSObject nso = iter.next();
+		if (add) {
+		    PlistItem item = Factories.sc.macos.createPlistItem();
+		    item.setKey(entry.getKey());
+		    item.setAppId(base.getAppId());
+		    item.setFilepath(base.getFilepath());
+
+		    EntityItemIntType instanceType = Factories.sc.core.createEntityItemIntType();
+		    instanceType.setValue(Integer.toString(i));
+		    instanceType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		    item.setInstance(instanceType);
+
+		    EntityItemPlistTypeType typeType = Factories.sc.macos.createEntityItemPlistTypeType();
+		    typeType.setValue(getType(nso));
+		    item.setType(typeType);
+
+		    if (nso instanceof NSArray) {
+			for (NSObject value : ((NSArray)nso).getArray()) {
+			    try {
+				item.getValue().add(toSimpleType(value));
+			    } catch (IllegalArgumentException e) {
+				item.setStatus(StatusEnumeration.ERROR);
+				MessageType msg = Factories.common.createMessageType();
+				msg.setLevel(MessageLevelEnumeration.ERROR);
+				msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_UNSUPPORTED_TYPE, e.getMessage()));
+				item.getMessage().add(msg);
+				EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+				valueType.setStatus(StatusEnumeration.ERROR);
+				item.getValue().add(valueType);
+				break;
+			    }
+			}
+		    } else if (nso instanceof NSDictionary) {
+			item.setStatus(StatusEnumeration.ERROR);
+			MessageType msg = Factories.common.createMessageType();
+			msg.setLevel(MessageLevelEnumeration.ERROR);
+			msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_UNSUPPORTED_TYPE, "CFDictionary"));
+			item.getMessage().add(msg);
+			EntityItemAnySimpleType valueType = Factories.sc.core.createEntityItemAnySimpleType();
+			valueType.setStatus(StatusEnumeration.ERROR);
+			item.getValue().add(valueType);
+		    } else {
+			item.getValue().add(toSimpleType(nso));
 		    }
-		    break;
-
-		  case GREATER_THAN_OR_EQUAL:
-		    if (entry.getKey().compareTo(instance) >= 0) {
-			items.add(entry.getValue());
-		    }
-		    break;
-
-		  case LESS_THAN:
-		    if (entry.getKey().compareTo(instance) < 0) {
-			items.add(entry.getValue());
-		    }
-		    break;
-
-		  case LESS_THAN_OR_EQUAL:
-		    if (entry.getKey().compareTo(instance) <= 0) {
-			items.add(entry.getValue());
-		    }
-		    break;
-
-		  default:
-		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+		    items.add(item);
 		}
 	    }
-	} else {
-	    items.addAll(instances.values());
 	}
 	return items;
     }
@@ -398,11 +421,34 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
     // Private
 
     /**
-     * Recursively search an object for values with the given key.
+     * Find all the [unique] keys in the Plist.
      */
-    private Collection<NSObject> findValues(NSObject obj, String key) {
-	Collection<NSObject> values = new ArrayList<NSObject>();
+    private Collection<String> listKeys(NSObject obj) {
+	if (obj instanceof NSDictionary) {
+	    Collection<String> keys = new HashSet<String>();
+	    NSDictionary dict = (NSDictionary)obj;
+	    for (String key : dict.allKeys()) {
+		keys.add(key);
+		NSObject child = dict.objectForKey(key);
+		keys.addAll(listKeys(child));
+	    }
+	    return keys;
+	} else {
+	    @SuppressWarnings("unchecked")
+	    Collection<String> empty = (Collection<String>)Collections.EMPTY_LIST;
+	    return empty;
+	}
+    }
 
+    /**
+     * Recursively search an object for values with the given key, and return them in order.
+     *
+     * Note, this implementation here will drill down into dictionaries when they are keyed using something other than
+     * the specified key, and search for the specified key recursively.  The OVAL specification does not document this
+     * behavior, but it is the only interpretation that could produce multiple instances, etc.
+     */
+    private List<NSObject> findValues(NSObject obj, String key) {
+	List<NSObject> values = new ArrayList<NSObject>();
 	if (key == null) {
 	    values.add(obj);
 	} else if (obj instanceof NSDictionary) {
@@ -421,29 +467,67 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 		values.addAll(findValues(array[i], key));
 	    }
 	}
-
 	return values;
     }
 
-    private String getValue(NSObject obj) throws CollectException {
+    /**
+     * Return the EntityItemPlistTypeType value corresponding to the NSObject.
+     */
+    private String getType(NSObject obj) {
 	if (obj instanceof NSData) {
-	    return ((NSData)obj).getBase64EncodedData();
+	    return "CFData";
 	} else if (obj instanceof NSDate) {
-	    return ((NSDate)obj).toString();
+	    return "CFDate";
+	} else if (obj instanceof NSNumber) {
+	    switch(((NSNumber)obj).type()) {
+	      case NSNumber.BOOLEAN:
+		return "CFBoolean";
+	      default:
+		return "CFNumber";
+	    }
+	} else if (obj instanceof NSArray) {
+	    return "CFArray";
+	} else if (obj instanceof NSDictionary) {
+	    return "CFDictionary";
+	}
+	return "CFString";
+    }
+
+    /**
+     * Return the simple type corresponding to the NSObject. Also, set the plist type in the type arg to the corresponding
+     * type value.
+     */
+    private EntityItemAnySimpleType toSimpleType(NSObject obj) throws IllegalArgumentException {
+	EntityItemAnySimpleType value = Factories.sc.core.createEntityItemAnySimpleType();
+	if (obj instanceof NSData) {
+	    value.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+	    value.setValue(((NSData)obj).getBase64EncodedData());
+	} else if (obj instanceof NSDate) {
+	    value.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+	    value.setValue(((NSDate)obj).toString());
+	} else if (obj instanceof NSString) {
+	    value.setDatatype(SimpleDatatypeEnumeration.STRING.value());
+	    value.setValue(((NSString)obj).toString());
 	} else if (obj instanceof NSNumber) {
 	    NSNumber num = (NSNumber)obj;
 	    switch(num.type()) {
 	      case NSNumber.BOOLEAN:
-		return Boolean.valueOf(((NSNumber)obj).boolValue()).toString();
-	      case NSNumber.INTEGER:
-		return Integer.valueOf(((NSNumber)obj).intValue()).toString();
+		value.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
+		value.setValue(Boolean.toString(num.boolValue()));
+		break;
 	      case NSNumber.REAL:
-		return Float.valueOf(((NSNumber)obj).floatValue()).toString();
+		value.setDatatype(SimpleDatatypeEnumeration.FLOAT.value());
+		value.setValue(Float.toString(num.floatValue()));
+		break;
+	      case NSNumber.INTEGER:
+	      default:
+		value.setDatatype(SimpleDatatypeEnumeration.INT.value());
+		value.setValue(Double.toString(num.doubleValue()));
+		break;
 	    }
-	} else if (obj instanceof NSString) {
-	    return ((NSString)obj).toString();
+	} else {
+	    throw new IllegalArgumentException(obj.getClass().toString());
 	}
-	String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_UNSUPPORTED_TYPE, obj.getClass().getName());
-	throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
+	return value;
     }
 }
