@@ -169,6 +169,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 			EntityItemStringType pathType = Factories.sc.core.createEntityItemStringType();
 			pathType.setValue(dirPath);
 			fItem.setPath(pathType);
+			items.addAll(getItems(obj, fItem.it, f, rc));
 		    }
 		} else {
 		    EntityItemStringType filepathType = Factories.sc.core.createEntityItemStringType();
@@ -180,8 +181,8 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    EntityItemStringType filenameType = Factories.sc.core.createEntityItemStringType();
 		    filenameType.setValue(f.getName());
 		    fItem.setFilename(filenameType);
+		    items.addAll(getItems(obj, fItem.it, f, rc));
 		}
-		items.addAll(getItems(obj, fItem.it, f, rc));
 	    } catch (FileNotFoundException e) {
 		// skip it
 	    } catch (ClassNotFoundException e) {
