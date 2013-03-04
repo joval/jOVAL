@@ -90,7 +90,7 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	FilehashObject fObj = (FilehashObject)obj;
 	FilehashItem baseItem = (FilehashItem)base;
 	try {
-	    String[] checksums = computeChecksums(f, getView(fObj.getBehaviors()));
+	    String[] checksums = getChecksums(f, getView(fObj.getBehaviors()));
 	    return Arrays.asList(getItem(baseItem, checksums[MD5], checksums[SHA1]));
 	} catch (IllegalArgumentException e) {
 	    MessageType msg = Factories.common.createMessageType();
@@ -147,6 +147,29 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
     private static final int SHA1	= 1;
 
     /**
+     * Compute file checksums or return from cache.
+     *
+     * @throws IllegalArgumentException if the file f is not a "regular" file; exception message is the file type.
+     */
+    private String[] getChecksums(IFile f, IWindowsSession.View view) throws Exception {
+	String key = null;
+	if (view == null) {
+	    key = f.getCanonicalPath();
+	} else {
+	    key = view.toString() + ":" + f.getCanonicalPath();
+	}
+	if (checksumMap.containsKey(key)) {
+	    return checksumMap.get(key);
+	} else {
+	    String[] cs = computeChecksums(f, view);
+	    checksumMap.put(key, cs);
+	    return cs;
+	}
+    }
+
+    /**
+     * Compute file checksums.
+     *
      * @throws IllegalArgumentException if the file f is not a "regular" file; exception message is the file type.
      */
     private String[] computeChecksums(IFile f, IWindowsSession.View view) throws Exception {
@@ -172,9 +195,6 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    if (!type.equals(IUnixFileInfo.FILE_TYPE_REGULAR)) {
 		throw new IllegalArgumentException(type);
 	    }
-	}
-	if (checksumMap.containsKey(f.getPath())) {
-	    return checksumMap.get(f.getPath());
 	}
 	String[] checksums = new String[2];
 	switch(session.getType()) {
@@ -235,7 +255,6 @@ public class FilehashAdapter extends BaseFileAdapter<FilehashItem> {
 	    break;
 	  }
 	}
-	checksumMap.put(f.getPath(), checksums);
 	return checksums;
     }
 }

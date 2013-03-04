@@ -130,7 +130,9 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     private SystemInfoType sysinfo;
     private Map<String, IChecklist> checklists;
     private Map<String, Boolean> platforms;
-    private List<ITransformable> reports;
+    private IReport report;
+    private String requestId;
+    private List<ITransformable> subreports;
     private Exception error;
     private State state = State.CONFIGURE;
     private boolean abort = false;
@@ -165,7 +167,12 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    reset();
 	    // fall-thru
 	  default:
-	    this.ctx = ctx;
+	    this.ctx = ctx;	
+	    try {
+		requestId = report.addRequest(DOMTools.toElement(ctx.getBenchmark()));
+	    } catch (Exception e) {
+		throw new XccdfException(e);
+	    }
 	    break;
 	}
     }
@@ -208,10 +215,8 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	switch(state) {
 	  case COMPLETE_OK:
 	    try {
-		Report report = new Report();
-		String requestId = report.addRequest(DOMTools.toElement(ctx.getBenchmark()));
 		String assetId = report.addAsset(sysinfo);
-		for (ITransformable subreport : reports) {
+		for (ITransformable subreport : subreports) {
 		    String ns = DOMTools.getNamespace(subreport);
 		    if (SystemEnumeration.XCCDF.namespace().equals(ns)) {
 			//
@@ -350,7 +355,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 			testResult.getRuleResult().add(rrt);
 		    }
 		}
-		reports.add(new TestResult(testResult));
+		subreports.add(new TestResult(testResult));
 
 		//
 		// XPERT requires the result to be added to the benchmark to create the HTML transform
@@ -372,7 +377,8 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 
     private void reset() {
 	checklists = new HashMap<String, IChecklist>();
-	reports = new ArrayList<ITransformable>();
+	report = new Report();
+	subreports = new ArrayList<ITransformable>();
 	state = State.CONFIGURE;
 	error = null;
     }
@@ -435,7 +441,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    if (abort) {
 		throw new AbortException(JOVALMsg.getMessage(JOVALMsg.ERROR_ENGINE_ABORT));
 	    }
-	    reports.addAll(handler.exec(plugin));
+	    subreports.addAll(handler.exec(plugin));
 	}
 
 	//
@@ -702,7 +708,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		switch(engine.getResult()) {
 		  case OK:
 		    IResults ir = engine.getResults();
-		    reports.add(ir);
+		    subreports.add(ir);
 		    results.put(entry.getKey(), ir);
 		    break;
 

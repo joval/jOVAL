@@ -10,9 +10,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -56,6 +57,8 @@ import org.joval.util.JOVALMsg;
  * @version %I% %G%
  */
 public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
+    private Map<String, String> checksumMap;
+
     enum Algorithm {
 	MD5("MD5", "md5"),
 	SHA1("SHA-1", "sha1"),
@@ -87,6 +90,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	Collection<Class> classes = new ArrayList<Class>();
 	try {
 	    baseInit(session);
+	    checksumMap = new HashMap<String, String>();
 	    classes.add(Filehash58Object.class);
 	} catch (UnsupportedOperationException e) {
 	    // doesn't support ISession.getFilesystem
@@ -160,7 +164,7 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	Collection<Filehash58Item> items = new ArrayList<Filehash58Item>();
 	for (Algorithm alg : algorithms) {
 	    try {
-		items.add(getItem(baseItem, alg, computeChecksum(f, alg, view)));
+		items.add(getItem(baseItem, alg, getChecksum(f, alg, view)));
 	    } catch (IllegalArgumentException e) {
 		MessageType msg = Factories.common.createMessageType();
 		msg.setLevel(MessageLevelEnumeration.INFO);
@@ -208,6 +212,32 @@ public class Filehash58Adapter extends BaseFileAdapter<Filehash58Item> {
 	return item;
     }
 
+    /**
+     * Compute a file checksum or return it from cache.
+     *
+     * @throws IllegalArgumentException if the file f is not a "regular" file; exception message is the file type.
+     */
+    private String getChecksum(IFile f, Algorithm alg, IWindowsSession.View view) throws Exception {
+	String key = null;
+	if (view == null) {
+	    key = alg.toString() + ":" + f.getCanonicalPath();
+	} else {
+	    key = alg.toString() + ":" + view.toString() + ":" + f.getCanonicalPath();
+	}
+	if (checksumMap.containsKey(key)) {
+	    return checksumMap.get(key);
+	} else {
+	    String cs = computeChecksum(f, alg, view);
+	    checksumMap.put(key, cs);
+	    return cs;
+	}
+    }
+
+    /**
+     * Compute file checksums.
+     *
+     * @throws IllegalArgumentException if the file f is not a "regular" file; exception message is the file type.
+     */
     private String computeChecksum(IFile f, Algorithm alg, IWindowsSession.View view) throws Exception {
 	IFileEx ext = f.getExtended();
 	if (ext instanceof IWindowsFileInfo) {

@@ -58,7 +58,7 @@ public class Report implements IReport, ILoggable {
     /**
      * Create an empty report.
      */
-    public Report() throws ArfException {
+    public Report() {
 	arc = Factories.core.createAssetReportCollection();
 	requests = new HashMap<String, Element>();
 	assets = new HashMap<String, AssetType>();
