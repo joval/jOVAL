@@ -69,11 +69,11 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {
+	try {
 	    baseInit(session);
 	    classes.add(PlistObject.class);
 	    classes.add(Plist510Object.class);
-	} else {
+	} catch (UnsupportedOperationException e) {
 	    notapplicable.add(PlistObject.class);
 	    notapplicable.add(Plist510Object.class);
 	}
@@ -90,7 +90,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 	    // Delegate file discovery to the BaseFileAdapter
 	    //
 	    return super.getItems(obj, rc);
-	} else {
+	} else if (session instanceof IUnixSession && ((IUnixSession)session).getFlavor() == IUnixSession.Flavor.MACOSX) {
 	    //
 	    // Create an item based on the appid and logged-in user account
 	    //
@@ -153,6 +153,8 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    return items;
+	} else {
+	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_PLIST_APPID), FlagEnumeration.NOT_APPLICABLE);
 	}
     }
 
