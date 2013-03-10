@@ -167,70 +167,40 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	    //
 	    // Filter the matches by instance number
 	    //
-	    String instanceNum = (String)tfcObj.getInstance().getValue();
+	    int instanceNum = Integer.parseInt((String)tfcObj.getInstance().getValue());
 	    op = tfcObj.getInstance().getOperation();
-	    switch(op) {
-	      case EQUALS:
-		for (TextfilecontentItem item : allItems) {
-		    if (((String)item.getInstance().getValue()).equals(instanceNum)) {
+	    for (TextfilecontentItem item : allItems) {
+		int inum = Integer.parseInt((String)item.getInstance().getValue());
+		switch(op) {
+		  case EQUALS:
+		    if (inum == instanceNum) {
 			items.add(item);
 		    }
-		}
-		break;
-
-	      case LESS_THAN:
-		for (TextfilecontentItem item : allItems) {
-		    int inum = Integer.parseInt((String)item.getInstance().getValue());
-		    int comp = Integer.parseInt(instanceNum);
-		    if (inum < comp) {
+		    break;
+		  case LESS_THAN:
+		    if (inum < instanceNum) {
 			items.add(item);
 		    }
-		}
-		break;
-
-	      case LESS_THAN_OR_EQUAL:
-		for (TextfilecontentItem item : allItems) {
-		    int inum = Integer.parseInt((String)item.getInstance().getValue());
-		    int comp = Integer.parseInt(instanceNum);
-		    if (inum <= comp) {
+		    break;
+		  case LESS_THAN_OR_EQUAL:
+		    if (inum <= instanceNum) {
 			items.add(item);
 		    }
-		}
-		break;
-
-	      case GREATER_THAN:
-		for (TextfilecontentItem item : allItems) {
-		    int inum = Integer.parseInt((String)item.getInstance().getValue());
-		    int comp = Integer.parseInt(instanceNum);
-		    if (inum > comp) {
+		    break;
+		  case GREATER_THAN:
+		    if (inum > instanceNum) {
 			items.add(item);
 		    }
-		}
-		break;
-
-	      case GREATER_THAN_OR_EQUAL:
-		for (TextfilecontentItem item : allItems) {
-		    int inum = Integer.parseInt((String)item.getInstance().getValue());
-		    int comp = Integer.parseInt(instanceNum);
-		    if (inum >= comp) {
+		    break;
+		  case GREATER_THAN_OR_EQUAL:
+		    if (inum >= instanceNum) {
 			items.add(item);
 		    }
+		    break;
+		  default:
+		    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
+		    throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 		}
-		break;
-
-	      case PATTERN_MATCH: {
-		Pattern p = Pattern.compile(instanceNum);
-		for (TextfilecontentItem item : allItems) {
-		    if (p.matcher((String)item.getInstance().getValue()).find()) {
-			items.add(item);
-		    }
-		}
-		break;
-	      }
-
-	      default:
-		String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_OPERATION, op);
-		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	} catch (PatternSyntaxException e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_PATTERN, e.getMessage());
@@ -307,7 +277,6 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 	    int len = 0;
 	    StringBuffer sb = new StringBuffer();
 	    while ((len = in.read(buff)) > 0) {
-		String s = new String(sb.append(StringTools.toASCIICharArray(buff), 0, len));
 		sb.append(StringTools.toASCIICharArray(buff), 0, len);
 	    }
 	    return sb.toString();

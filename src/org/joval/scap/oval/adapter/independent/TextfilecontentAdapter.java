@@ -91,7 +91,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 		boolean handled = false;
 		switch(us.getFlavor()) {
 		  case SOLARIS:
-		    sb.append("/usr/xpg4/bin/grep -E" );
+		    sb.append("/usr/xpg4/bin/grep -E ");
 		    handled = true;
 		    break;
 
@@ -104,7 +104,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 		}
 		if (handled) {
 		    Pattern p = Pattern.compile((String)tfcObj.getLine().getValue());
-		    sb.append(" \"").append(p.pattern().replace("\"","\\\"")).append("\"");
+		    sb.append("\"").append(p.pattern().replace("\"","\\\"")).append("\"");
 		    try {
 			lines = SafeCLI.multiLine(sb.toString(), session, IUnixSession.Timeout.M);
 		    } catch (Exception e) {
@@ -123,8 +123,11 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 		try {
 		    reader = new BufferedReader(new InputStreamReader(f.getInputStream(), StringTools.ASCII));
 		    String line = null;
+		    Pattern p = Pattern.compile(StringTools.regexPosix2Java((String)tfcObj.getLine().getValue()));
 		    while ((line = reader.readLine()) != null) {
-			lines.add(line);
+			if (p.matcher(line).find()) {
+			    lines.add(line);
+			}
 		    }
 		} finally {
 		    if (reader != null) {
@@ -165,7 +168,7 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
     // Private
 
     /**
-     * Build all the item matches (old-style).
+     * Build all the item matches (lines should be pre-filtered to contain matches to the pattern).
      */
     protected Collection<TextfilecontentItem> getItems(Pattern p, TextfilecontentItem baseItem, List<String> lines) {
 	Collection<TextfilecontentItem> items = new ArrayList<TextfilecontentItem>();
@@ -180,7 +183,6 @@ public class TextfilecontentAdapter extends BaseFileAdapter<TextfilecontentItem>
 		item.setFilename(baseItem.getFilename());
 		item.setWindowsView(baseItem.getWindowsView());
 		item.setLine(lineType);
-
 		int sCount = m.groupCount();
 		for (int sNum=0; sNum <= sCount; sNum++) {
 		    String group = m.group(sNum);

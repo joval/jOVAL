@@ -209,7 +209,12 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	item.setSticky(sticky);
 
 	EntityItemBoolType aclType = Factories.sc.core.createEntityItemBoolType();
-	aclType.setValue(Boolean.toString(ufi.hasExtendedAcl()));
+	Boolean hasAcl = ufi.hasPosixAcl();
+	if (hasAcl == null) {
+	    aclType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	} else {
+	    aclType.setValue(Boolean.toString(hasAcl));
+	}
 	aclType.setDatatype(SimpleDatatypeEnumeration.BOOLEAN.value());
 	item.setHasExtendedAcl(aclType);
 
