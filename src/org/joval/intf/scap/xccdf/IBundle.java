@@ -6,7 +6,6 @@ package org.joval.intf.scap.xccdf;
 import java.util.Collection;
 import java.util.NoSuchElementException;
 
-import org.openscap.sce.xccdf.ScriptDataType;
 import scap.datastream.Component;
 import scap.datastream.ExtendedComponent;
 
@@ -14,6 +13,7 @@ import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.intf.scap.sce.IScript;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
@@ -82,5 +82,5 @@ public interface IBundle {
     /**
      * Get SCE script data with the specified component href.
      */
-    ScriptDataType getSce(String href) throws NoSuchElementException, SceException;
+    IScript getSce(String href) throws NoSuchElementException, SceException;
 }

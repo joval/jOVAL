@@ -6,6 +6,7 @@ package org.joval.scap.xccdf;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -15,7 +16,6 @@ import java.util.NoSuchElementException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.openscap.sce.xccdf.ScriptDataType;
 import scap.xccdf.ProfileType;
 
 import jsaf.Message;
@@ -25,6 +25,7 @@ import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.intf.scap.sce.IScript;
 import org.joval.intf.scap.xccdf.IBundle;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.ITailoring;
@@ -36,6 +37,7 @@ import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.Definitions;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.sce.SceException;
+import org.joval.scap.sce.Script;
 import org.joval.scap.xccdf.XccdfException;
 
 /**
@@ -212,8 +214,40 @@ public class Bundle implements IBundle {
 	}
     }
 
-    public ScriptDataType getSce(String href) throws NoSuchElementException, SceException {
-	throw new UnsupportedOperationException("SCE implementation TBD");
+    public IScript getSce(String href) throws NoSuchElementException, SceException {
+	if (href.startsWith("http://")) {
+	    throw new NoSuchElementException(href);
+	} else if (base != null) {
+	    File f = new File(base, href);
+	    if (f.exists()) {
+		try {
+		    return new Script(href, new FileInputStream(f));
+		} catch (IOException e) {
+		    throw new SceException(e);
+		}
+	    } else {
+		throw new NoSuchElementException(href);
+	    }
+	} else {
+	    InputStream in = null;
+	    try {
+		ZipEntry entry = zip.getEntry(href);
+		if (entry == null) {
+		    throw new NoSuchElementException(href);
+		} else {
+		    return new Script(href, zip.getInputStream(entry));
+		}
+	    } catch (IOException e) {
+		throw new SceException(e);
+	    } finally {
+		if (in != null) {
+		    try {
+			in.close();
+		    } catch (IOException e) {
+		    }
+		}
+	    }
+	}
     }
 
     // Internal
@@ -243,7 +277,7 @@ public class Bundle implements IBundle {
 	    return Bundle.this.getOval(href);
 	}
 
-	public ScriptDataType getSce(String href) throws NoSuchElementException, SceException {
+	public IScript getSce(String href) throws NoSuchElementException, SceException {
 	    return Bundle.this.getSce(href);
 	}
     }

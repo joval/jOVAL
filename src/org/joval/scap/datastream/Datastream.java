@@ -40,6 +40,7 @@ import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.intf.scap.datastream.IDatastream;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.intf.scap.sce.IScript;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
@@ -51,6 +52,7 @@ import org.joval.scap.ocil.OcilException;
 import org.joval.scap.oval.Definitions;
 import org.joval.scap.oval.OvalException;
 import org.joval.scap.sce.SceException;
+import org.joval.scap.sce.Script;
 import org.joval.scap.xccdf.Benchmark;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
@@ -243,7 +245,7 @@ public class Datastream implements IDatastream, ILoggable {
 	}
     }
 
-    public ScriptDataType getSce(String href) throws NoSuchElementException, SceException {
+    public IScript getSce(String href) throws NoSuchElementException, SceException {
 	Object obj = resolve(href);
 	if (obj instanceof ExtendedComponent) {
 	    ExtendedComponent comp = (ExtendedComponent)obj;
@@ -252,7 +254,7 @@ public class Datastream implements IDatastream, ILoggable {
 		data = ((JAXBElement)data).getValue();
 	    }
 	    if (data instanceof ScriptDataType) {
-		return (ScriptDataType)data;
+		return new Script(href, (ScriptDataType)data);
 	    } else {
 		throw new SceException(JOVALMsg.getMessage(JOVALMsg.ERROR_DATASTREAM_COMP_TYPE, href, "SCE"));
 	    }
@@ -288,7 +290,7 @@ public class Datastream implements IDatastream, ILoggable {
 	    return Datastream.this.getOval(href);
 	}
 
-	public ScriptDataType getSce(String href) throws NoSuchElementException, SceException {
+	public IScript getSce(String href) throws NoSuchElementException, SceException {
 	    return Datastream.this.getSce(href);
 	}
     }

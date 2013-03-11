@@ -338,7 +338,7 @@ public class XPERT {
 		    if (query) {
 			logger.info(getMessage("message.bundle.query", source.toString()));
 			for (String bId : bundle.getBenchmarkIds()) {
-			    logger.info("  Bundle ID=\"" + bId + "\"");
+			    logger.info("  Benchmark ID=\"" + bId + "\"");
 			    for (String pId : bundle.getProfileIds(bId)) {
 			        logger.info("    Profile ID=\"" + pId + "\"");
 			    }

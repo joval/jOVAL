@@ -22,11 +22,11 @@ import scap.xccdf.ResultEnumType;
 
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IScapContext;
+import org.joval.intf.scap.sce.IScript;
 import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.sce.SceException;
-import org.joval.scap.sce.SCEScript;
 import org.joval.scap.xccdf.XccdfException;
 import org.joval.util.JOVALMsg;
 import org.joval.util.Producer;
@@ -42,7 +42,7 @@ public class SceHandler implements ISystem {
 
     private IScapContext ctx;
     private Producer<IEngine.Message> producer;
-    private Map<String, Script> scripts;
+    private Map<String, Wrapper> scripts;
     private Map<String, SceResultsType> results;
 
     /**
@@ -51,7 +51,7 @@ public class SceHandler implements ISystem {
     public SceHandler(IScapContext ctx, Producer<IEngine.Message> producer) {
 	this.ctx = ctx;
 	this.producer = producer;
-	scripts = new HashMap<String, Script>();
+	scripts = new HashMap<String, Wrapper>();
     }
 
     // Implement ISystem
@@ -71,7 +71,7 @@ public class SceHandler implements ISystem {
 		for (CheckExportType export : check.getCheckExport()) {
 		    exports.put(export.getExportName(), getSingleValue(export.getValueId()));
 		}
-		scripts.put(scriptId, new Script(scriptId, exports));
+		scripts.put(scriptId, new Wrapper(scriptId, exports));
 	    }
 	}
     }
@@ -80,12 +80,11 @@ public class SceHandler implements ISystem {
 	Collection<ITransformable> reports = new ArrayList<ITransformable>();
 	results = new HashMap<String, SceResultsType>();
 	ISession session = plugin.getSession();
-	for (Map.Entry<String, Script> entry : scripts.entrySet()) {
-	    Script rs = entry.getValue();
+	for (Map.Entry<String, Wrapper> entry : scripts.entrySet()) {
+	    Wrapper wrapper = entry.getValue();
 	    producer.sendNotify(IEngine.Message.SCE_SCRIPT, entry.getKey());
-//DAS: TBD create an ITransformable to contain the SceResultsType...
-	    SceResultsType srt = new SCEScript(rs.getExports(), rs.getData(), session).exec();
-	    results.put(entry.getKey(), srt);
+	    results.put(entry.getKey(), wrapper.getScript().exec(wrapper.getExports(), session));
+	    reports.add(wrapper.getScript());
 	}
 	return reports;
     }
@@ -142,14 +141,14 @@ public class SceHandler implements ISystem {
 	}
     }
 
-    class Script {
+    class Wrapper {
 	String id;
 	Map<String, String> exports;
-	ScriptDataType data;
+	IScript script;
 
-	Script(String id, Map<String, String> exports) throws NoSuchElementException, SceException {
+	Wrapper(String id, Map<String, String> exports) throws NoSuchElementException, SceException {
 	    this.id = id;
-	    data = ctx.getSce(id);
+	    script = ctx.getSce(id);
 	    this.exports = exports;
 	}
 
@@ -157,8 +156,8 @@ public class SceHandler implements ISystem {
 	    return exports;
 	}
 
-	ScriptDataType getData() {
-	    return data;
+	IScript getScript() {
+	    return script;
 	}
     }
 }

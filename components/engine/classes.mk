@@ -15,6 +15,7 @@ CLASSES=\
 	org.joval.intf.scap.oval.ISystemCharacteristics		\
 	org.joval.intf.scap.oval.IType				\
 	org.joval.intf.scap.oval.IVariables			\
+	org.joval.intf.scap.sce.IScript				\
 	org.joval.intf.scap.xccdf.SystemEnumeration		\
 	org.joval.intf.scap.xccdf.IBenchmark			\
 	org.joval.intf.scap.xccdf.IBundle			\
@@ -76,7 +77,7 @@ CLASSES=\
 	org.joval.scap.oval.types.VersionType			\
 	org.joval.scap.oval.xml.OvalNamespacePrefixMapper	\
 	org.joval.scap.sce.SceException				\
-	org.joval.scap.sce.SCEScript				\
+	org.joval.scap.sce.Script				\
 	org.joval.scap.xccdf.Benchmark				\
 	org.joval.scap.xccdf.Bundle				\
 	org.joval.scap.xccdf.Tailoring				\

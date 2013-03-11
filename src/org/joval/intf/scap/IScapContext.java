@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import org.openscap.sce.xccdf.ScriptDataType;
 import scap.cpe.language.LogicalTestType;
 import scap.datastream.Component;
 import scap.datastream.ExtendedComponent;
@@ -17,6 +16,7 @@ import scap.xccdf.RuleType;
 import org.joval.intf.scap.cpe.IDictionary;
 import org.joval.intf.scap.ocil.IChecklist;
 import org.joval.intf.scap.oval.IDefinitions;
+import org.joval.intf.scap.sce.IScript;
 import org.joval.intf.scap.xccdf.IBenchmark;
 import org.joval.intf.scap.xccdf.ITailoring;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
@@ -77,5 +77,5 @@ public interface IScapContext {
     /**
      * Get SCE script data with the specified component href.
      */
-    ScriptDataType getSce(String href) throws NoSuchElementException, SceException;
+    IScript getSce(String href) throws NoSuchElementException, SceException;
 }

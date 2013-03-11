@@ -82,6 +82,11 @@ public enum SchemaRegistry {
     ARF("arf.packages"),
 
     /**
+     * Property indicating the package names for classes in the SCE (Script Check Engine) schema.
+     */
+    SCE("sce.packages"),
+
+    /**
      * Property indicating the package names for classes in the SVRL (Schematron Validation Report Language) schema.
      */
     SVRL("svrl.packages");
@@ -107,7 +112,7 @@ public enum SchemaRegistry {
 
     private static final String[] RESOURCES = {	"arf.properties", "ds.properties", "oval.properties",
 						"cpe.properties", "xccdf.properties", "ocil.properties",
-						"svrl.properties" };
+						"sce.properties", "svrl.properties" };
 
     private static Properties schemaProps;
     static {
