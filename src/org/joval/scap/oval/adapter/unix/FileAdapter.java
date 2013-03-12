@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Collection;
@@ -100,32 +101,32 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	}
 	session.getLogger().trace(JOVALMsg.STATUS_UNIX_FILE, f.getPath());
 	EntityItemIntType aTime = Factories.sc.core.createEntityItemIntType();
-	aTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	long at = f.accessTime();
-	if (at == IFile.UNKNOWN_TIME) {
+	Date at = f.getAccessTime();
+	if (at == null) {
 	    aTime.setStatus(StatusEnumeration.NOT_COLLECTED);
 	} else {
-	    aTime.setValue(Long.toString(at/1000L));
+	    aTime.setValue(Long.toString(at.getTime()/1000L));
+	    aTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	}
 	item.setATime(aTime);
 
 	EntityItemIntType cTime = Factories.sc.core.createEntityItemIntType();
-	cTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	long ct = f.createTime();
-	if (ct == IFile.UNKNOWN_TIME) {
+	Date ct = f.getCreateTime();
+	if (ct == null) {
 	    cTime.setStatus(StatusEnumeration.NOT_COLLECTED);
 	} else {
-	    cTime.setValue(Long.toString(ct/1000L));
+	    cTime.setValue(Long.toString(ct.getTime()/1000L));
+	    cTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	}
 	item.setCTime(cTime);
 
 	EntityItemIntType mTime = Factories.sc.core.createEntityItemIntType();
-	mTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	long lm = f.lastModified();
-	if (lm == IFile.UNKNOWN_TIME) {
+	Date lm = f.getLastModified();
+	if (lm == null) {
 	    mTime.setStatus(StatusEnumeration.NOT_COLLECTED);
 	} else {
-	    mTime.setValue(Long.toString(lm/1000L));
+	    mTime.setValue(Long.toString(lm.getTime()/1000L));
+	    mTime.setDatatype(SimpleDatatypeEnumeration.INT.value());
 	}
 	item.setMTime(mTime);
 

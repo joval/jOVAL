@@ -64,5 +64,4 @@ CLASSES=\
 	org.joval.scap.oval.sysinfo.SysinfoFactory					\
 	org.joval.scap.oval.sysinfo.UnixNetworkInterface				\
 	org.joval.scap.oval.sysinfo.UnixSystemInfo					\
-	org.joval.scap.oval.sysinfo.WindowsSystemInfo					\
-	org.joval.scap.sce.SCEScript
+	org.joval.scap.oval.sysinfo.WindowsSystemInfo

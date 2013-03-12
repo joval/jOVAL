@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,18 +121,33 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	item.setType(typeType);
 
 	EntityItemIntType aTimeType = Factories.sc.core.createEntityItemIntType();
-	aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	aTimeType.setValue(Timestamp.toWindowsTimestamp(f.accessTime()));
+	Date temp = f.getAccessTime();
+	if (temp == null) {
+	    aTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	} else {
+	    aTimeType.setValue(Timestamp.toWindowsTimestamp(temp.getTime()));
+	    aTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	}
 	item.setATime(aTimeType);
 
 	EntityItemIntType cTimeType = Factories.sc.core.createEntityItemIntType();
-	cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	cTimeType.setValue(Timestamp.toWindowsTimestamp(f.createTime()));
+	temp = f.getCreateTime();
+	if (temp == null) {
+	    cTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	} else {
+	    cTimeType.setValue(Timestamp.toWindowsTimestamp(temp.getTime()));
+	    cTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	}
 	item.setCTime(cTimeType);
 
 	EntityItemIntType mTimeType = Factories.sc.core.createEntityItemIntType();
-	mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
-	mTimeType.setValue(Timestamp.toWindowsTimestamp(f.lastModified()));
+	temp = f.getLastModified();
+	if (temp == null) {
+	    mTimeType.setStatus(StatusEnumeration.NOT_COLLECTED);
+	} else {
+	    mTimeType.setValue(Timestamp.toWindowsTimestamp(temp.getTime()));
+	    mTimeType.setDatatype(SimpleDatatypeEnumeration.INT.value());
+	}
 	item.setMTime(mTimeType);
 
 	//

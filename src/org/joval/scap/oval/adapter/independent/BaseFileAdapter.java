@@ -409,7 +409,9 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    // that is the equivalent of maxdepth=2.  So, for non-zero depths, we add 1 to the FIELD_DEPTH passed
 		    // to the IFilesystem.search method.
 		    //
-		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth > 0 ? depth+1 : depth)));
+		//    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth > 0 ? depth+1 : depth)));
+
+		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth)));
 		    if (fb.getRecurse().indexOf("symlinks") == -1) {
 			followLinks = false;
 		    }
