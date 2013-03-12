@@ -5,6 +5,7 @@ package org.joval.intf.scap.arf;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import org.w3c.dom.Element;
@@ -38,7 +39,7 @@ public interface IReport extends ITransformable {
      *
      * @return the ID generated for the asset
      */
-    String addAsset(SystemInfoType info);
+    String addAsset(SystemInfoType info, Collection<String> cpes);
 
     /**
      * Add an XCCDF result related to the specified request and asset.

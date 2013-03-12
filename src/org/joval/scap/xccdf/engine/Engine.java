@@ -128,6 +128,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
     private IScapContext ctx;
     private IPlugin plugin;
     private SystemInfoType sysinfo;
+    private Collection<String> applicableCpes;
     private Map<String, IChecklist> checklists;
     private Map<String, Boolean> platforms;
     private IReport report;
@@ -215,7 +216,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	switch(state) {
 	  case COMPLETE_OK:
 	    try {
-		String assetId = report.addAsset(sysinfo);
+		String assetId = report.addAsset(sysinfo, applicableCpes);
 		for (ITransformable subreport : subreports) {
 		    String ns = DOMTools.getNamespace(subreport);
 		    if (SystemEnumeration.XCCDF.namespace().equals(ns)) {
@@ -308,6 +309,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 		boolean applicable = cpes.size() == 0;
 		for (CPE2IdrefType cpe : cpes) {
 		    if (platforms.get(cpe.getIdref()).booleanValue()) {
+			applicableCpes.add(cpe.getIdref());
 			applicable = true;
 			break;
 		    }
@@ -641,6 +643,7 @@ public class Engine implements org.joval.intf.scap.xccdf.IEngine {
 	    testResult.setIdentity(identity);
 	}
 	sysinfo = plugin.getSystemInfo();
+	applicableCpes = new ArrayList<String>();
 	if (!testResult.getTarget().contains(sysinfo.getPrimaryHostName())) {
 	    testResult.getTarget().add(sysinfo.getPrimaryHostName());
 	}

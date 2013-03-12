@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import javax.xml.bind.JAXBContext;
@@ -25,6 +26,7 @@ import org.slf4j.cal10n.LocLogger;
 
 import scap.ai.AssetType;
 import scap.ai.ComputingDeviceType;
+import scap.ai.Cpe;
 import scap.ai.IpAddressType;
 import scap.ai.NetworkInterfaceType;
 import scap.arf.core.AssetReportCollection;
@@ -88,8 +90,15 @@ public class Report implements IReport, ILoggable {
 	return requestId;
     }
 
-    public synchronized String addAsset(SystemInfoType info) {
+    public synchronized String addAsset(SystemInfoType info, Collection<String> cpes) {
 	ComputingDeviceType cdt = Factories.asset.createComputingDeviceType();
+	if (cpes != null) {
+	    for (String cpe : cpes) {
+		Cpe cpeType = Factories.asset.createCpe();
+		cpeType.setValue(cpe);
+		cdt.getCpe().add(cpeType);
+	    }
+	}
 	ComputingDeviceType.Hostname hostname = Factories.asset.createComputingDeviceTypeHostname();
 	hostname.setValue(info.getPrimaryHostName());
 	cdt.setHostname(hostname);
