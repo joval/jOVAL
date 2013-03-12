@@ -39,6 +39,11 @@ public class JOVALSystem {
      */
     public static final String SYSTEM_PROP_BUILD_DATE = "build.date";
 
+    /**
+     * Property indicating that the JRE is a pre-1.7 version.
+     */
+    public static final boolean PRE_JAVA_17 = new Version("1.7").compareTo(new Version(System.getProperty("java.specification.version"))) > 0;
+
     private static final String SYSPROPS_RESOURCE = "joval.system.properties";
 
     private static Timer timer;

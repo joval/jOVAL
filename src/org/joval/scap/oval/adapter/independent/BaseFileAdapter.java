@@ -40,7 +40,6 @@ import scap.oval.definitions.core.ObjectType;
 import scap.oval.systemcharacteristics.core.EntityItemAnySimpleType;
 import scap.oval.systemcharacteristics.core.EntityItemIntType;
 import scap.oval.systemcharacteristics.core.EntityItemStringType;
-import scap.oval.systemcharacteristics.core.EntityItemVersionType;
 import scap.oval.systemcharacteristics.core.FlagEnumeration;
 import scap.oval.systemcharacteristics.core.ItemType;
 import scap.oval.systemcharacteristics.core.StatusEnumeration;
@@ -49,7 +48,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.Version;
+import org.joval.util.JOVALSystem;
 
 /**
  * Base class for IFile-based IAdapters. Subclasses need only implement getItemClass and getItems
@@ -630,8 +629,13 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		if (o != null) {
 		    if (o instanceof JAXBElement) {
 			JAXBElement j = (JAXBElement)o;
-			filenameNil = j.isNil();
 			o = j.getValue();
+			if (JOVALSystem.PRE_JAVA_17) {
+			    // Before Java 1.7, JAXBElement.isNil() always returned true
+			    filenameNil = o == null;
+			} else {
+			    filenameNil = j.isNil();
+			}
 		    }
 		    filename = (EntityObjectStringType)o;
 		}
