@@ -14,10 +14,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.util.JAXBSource;
-import javax.xml.transform.Source;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.io.IFilesystem;
@@ -35,6 +31,7 @@ import org.openscap.sce.xccdf.LangEnumeration;
 import org.openscap.sce.xccdf.ScriptDataType;
 
 import org.joval.intf.scap.sce.IScript;
+import org.joval.intf.scap.sce.IScriptResult;
 import org.joval.intf.xml.ITransformable;
 import org.joval.scap.ScapException;
 import org.joval.util.JOVALMsg;
@@ -47,12 +44,12 @@ import org.joval.xml.SchemaRegistry;
  * @version %I% %G%
  */
 public class Script implements IScript {
-    private static final ObjectFactory FACTORY = new ObjectFactory();
+    static final ObjectFactory FACTORY = new ObjectFactory();
 
     private String href;
-    private byte[] data;
+    private URL url = null;
+    private byte[] data = null;
     private LangEnumeration lang;
-    private SceResultsType result;
 
     /**
      * Create a new SCE script from the contents of an SCAP datastream extended component.
@@ -64,25 +61,22 @@ public class Script implements IScript {
     }
 
     /**
-     * Create a new SCE script from a stream.
+     * Create a new SCE script from a URL.
      */
-    public Script(String href, InputStream in) throws SceException, IOException {
+    public Script(String href, URL url) throws SceException, IOException {
 	this.href = href;
 	lang = getLang(href);
-
-	ByteArrayOutputStream out = new ByteArrayOutputStream();
-	byte[] buff = new byte[512];
-	int len = 0;
-	while ((len = in.read(buff)) > 0) {
-	    out.write(buff, 0, len);
-	}
-	data = out.toByteArray();
+	this.url = url;
     }
 
     // Implement IScript
 
-    public byte[] getData() {
-	return data;
+    public InputStream getContent() throws IOException {
+	if (url == null) {
+	    return new ByteArrayInputStream(data);
+	} else {
+	    return url.openStream();
+	}
     }
 
     public String getHref() {
@@ -93,7 +87,7 @@ public class Script implements IScript {
 	return lang;
     }
 
-    public synchronized SceResultsType exec(Map<String, String> exports, ISession session) throws Exception {
+    public synchronized IScriptResult exec(Map<String, String> exports, ISession session) throws Exception {
 	String commandPrefix = getCommandPrefix(session, lang);
 	String extension = getExtension(lang);
 	Properties environment = getEnvironment(exports);
@@ -101,7 +95,7 @@ public class Script implements IScript {
 	OutputStream out = null;
 	IFile script = null;
 	try {
-	    result = FACTORY.createSceResultsType();
+	    SceResultsType result = FACTORY.createSceResultsType();
 
 	    //
 	    // Find an appropriate temp filename and copy the script to the target machine
@@ -114,7 +108,7 @@ public class Script implements IScript {
 		    script = fs.getFile(session.getTempDir() + fs.getDelimiter() + fname, IFile.Flags.READWRITE);
 		    byte[] buff = new byte[1024];
 		    int len = 0;
-		    InputStream in = new ByteArrayInputStream(data);
+		    InputStream in = getContent();
 		    out = script.getOutputStream(false);
 		    while((len = in.read(buff)) > 0) {
 			out.write(buff, 0, len);
@@ -177,7 +171,7 @@ public class Script implements IScript {
 	    }
 	    result.setExitCode(exitCode);
 	    result.setStdout(new String(data.getData(), StringTools.UTF8));
-	    return result;
+	    return new Result(result);
 	} finally {
 	    if (out != null) {
 		try {
@@ -192,20 +186,6 @@ public class Script implements IScript {
 		}
 	    }
 	}
-    }
-
-    // Implement ITransformable
-
-    public Source getSource() throws JAXBException, ScapException {
-	return new JAXBSource(getJAXBContext(), getRootObject());
-    }
-
-    public Object getRootObject() {
-	return FACTORY.createSceResults(result);
-    }
-
-    public JAXBContext getJAXBContext() throws JAXBException {
-	return SchemaRegistry.SCE.getJAXBContext();
     }
 
     // Private

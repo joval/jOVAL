@@ -23,6 +23,7 @@ import scap.xccdf.ResultEnumType;
 import org.joval.intf.plugin.IPlugin;
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.sce.IScript;
+import org.joval.intf.scap.sce.IScriptResult;
 import org.joval.intf.scap.xccdf.IEngine;
 import org.joval.intf.scap.xccdf.SystemEnumeration;
 import org.joval.intf.xml.ITransformable;
@@ -83,8 +84,9 @@ public class SceHandler implements ISystem {
 	for (Map.Entry<String, Wrapper> entry : scripts.entrySet()) {
 	    Wrapper wrapper = entry.getValue();
 	    producer.sendNotify(IEngine.Message.SCE_SCRIPT, entry.getKey());
-	    results.put(entry.getKey(), wrapper.getScript().exec(wrapper.getExports(), session));
-	    reports.add(wrapper.getScript());
+	    IScriptResult result = wrapper.getScript().exec(wrapper.getExports(), session);
+	    reports.add(result);
+	    results.put(entry.getKey(), result.getResult());
 	}
 	return reports;
     }

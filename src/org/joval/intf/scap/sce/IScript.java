@@ -3,24 +3,21 @@
 
 package org.joval.intf.scap.sce;
 
+import java.io.InputStream;
+import java.io.IOException;
 import java.util.Map;
 
 import jsaf.intf.system.ISession;
 
-import org.openscap.sce.results.SceResultsType;
 import org.openscap.sce.xccdf.LangEnumeration;
-import org.openscap.sce.xccdf.ScriptDataType;
-import scap.datastream.ExtendedComponent;
-
-import org.joval.intf.xml.ITransformable;
 
 /**
- * A representation of a single SCE script.
+ * A representation of an SCE script.
  *
  * @author David A. Solin
  * @version %I% %G%
  */
-public interface IScript extends ITransformable {
+public interface IScript {
     int XCCDF_RESULT_PASS		= 101;
     int XCCDF_RESULT_FAIL		= 102;
     int XCCDF_RESULT_ERROR		= 103;
@@ -36,9 +33,9 @@ public interface IScript extends ITransformable {
     String ENV_OPERATOR_PREFIX	= "XCCDF_OPERATOR_";
 
     /**
-     * Get the underlying script data.
+     * Get a stream to the underlying script data.
      */
-    byte[] getData();
+    InputStream getContent() throws IOException;
 
     /**
      * Get the href of the script component source (if any).
@@ -51,11 +48,10 @@ public interface IScript extends ITransformable {
     LangEnumeration getLanguage();
 
     /**
-     * Execute the script and return the result. The (last) result will also be furnished as the JAXB root element for the
-     * ITransformable.
+     * Execute the script and return the result.
      *
      * @param exports a map of variable-value pairs for the script runtime environment.
      * @param session the jSAF session on which to execute the script.
      */
-    SceResultsType exec(Map<String, String> exports, ISession session) throws Exception;
+    IScriptResult exec(Map<String, String> exports, ISession session) throws Exception;
 }

@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
@@ -19,6 +20,7 @@ import java.util.zip.ZipFile;
 import scap.xccdf.ProfileType;
 
 import jsaf.Message;
+import jsaf.protocol.zip.ZipURLStreamHandler;
 
 import org.joval.intf.scap.IScapContext;
 import org.joval.intf.scap.cpe.IDictionary;
@@ -221,7 +223,7 @@ public class Bundle implements IBundle {
 	    File f = new File(base, href);
 	    if (f.exists()) {
 		try {
-		    return new Script(href, new FileInputStream(f));
+		    return new Script(href, f.toURI().toURL());
 		} catch (IOException e) {
 		    throw new SceException(e);
 		}
@@ -229,23 +231,18 @@ public class Bundle implements IBundle {
 		throw new NoSuchElementException(href);
 	    }
 	} else {
-	    InputStream in = null;
 	    try {
-		ZipEntry entry = zip.getEntry(href);
-		if (entry == null) {
-		    throw new NoSuchElementException(href);
-		} else {
-		    return new Script(href, zip.getInputStream(entry));
+		StringBuffer sb = new StringBuffer("zip:");
+		sb.append(new File(zip.getName()).toURI().toURL().toString());
+		sb.append("!");
+		if (!href.startsWith("/")) {
+		    sb.append("/");
 		}
+		sb.append(href);
+		URL url = new URL(null, sb.toString(), new ZipURLStreamHandler());
+		return new Script(href, url);
 	    } catch (IOException e) {
 		throw new SceException(e);
-	    } finally {
-		if (in != null) {
-		    try {
-			in.close();
-		    } catch (IOException e) {
-		    }
-		}
 	    }
 	}
     }
