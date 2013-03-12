@@ -40,9 +40,6 @@ public class JOVALSystem {
      */
     public static final String SYSTEM_PROP_BUILD_DATE = "build.date";
 
-    private static final boolean PRE_JAVA_17 =
-	new Version("1.7").compareTo(new Version(System.getProperty("java.specification.version"))) > 0;
-
     private static final String SYSPROPS_RESOURCE = "joval.system.properties";
 
     private static Timer timer;
@@ -109,13 +106,5 @@ public class JOVALSystem {
 
     public static void setSystemProperty(String key, String value) {
 	sysProps.setProperty(key, value);
-    }
-
-    /**
-     * Determine whether xsi:nil=true. Pre-Java 1.7, this is accomplished by checking for a null value. For Java 1.7+,
-     * this is accomplished via JAXBElement.isNil().
-     */
-    public static boolean isNil(JAXBElement elt) {
-	return PRE_JAVA_17 ? elt.getValue() == null : elt.isNil();
     }
 }

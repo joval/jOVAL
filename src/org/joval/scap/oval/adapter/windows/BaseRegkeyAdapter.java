@@ -42,7 +42,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.XSITools;
 
 /**
  * Base class for IRegistry/IKey-based IAdapters. Subclasses need only implement getItemClass and getItems
@@ -414,7 +414,7 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 		if (o != null) {
 		    if (o instanceof JAXBElement) {
 			JAXBElement j = (JAXBElement)o;
-			keyNil = JOVALSystem.isNil(j);
+			keyNil = XSITools.isNil(j);
 			o = j.getValue();
 		    }
 		    key = (EntityObjectStringType)o;

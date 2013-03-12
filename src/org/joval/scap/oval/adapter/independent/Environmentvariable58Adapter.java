@@ -48,7 +48,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.XSITools;
 
 /**
  * Evaluates Environmentvariable OVAL tests.
@@ -90,7 +90,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	//
 	Environmentvariable58Object eObj = (Environmentvariable58Object)obj;
 	HashMap<String, IEnvironment> environments = new HashMap<String, IEnvironment>();
-	if (eObj.isSetPid() && !JOVALSystem.isNil(eObj.getPid())) {
+	if (eObj.isSetPid() && !XSITools.isNil(eObj.getPid())) {
 	    OperationEnumeration op = eObj.getPid().getValue().getOperation();
 	    String pid = (String)eObj.getPid().getValue().getValue();
 	    try {

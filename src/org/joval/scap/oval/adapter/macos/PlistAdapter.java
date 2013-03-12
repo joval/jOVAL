@@ -56,7 +56,7 @@ import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.adapter.independent.BaseFileAdapter;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.XSITools;
 
 /**
  * Retrieves items for Plist objects. See the following URL for more information (as the specification is quite vague):
@@ -228,7 +228,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 
 	if (pObj.getKey().getValue().getOperation() == OperationEnumeration.EQUALS) {
 	    JAXBElement<EntityObjectStringType> key = pObj.getKey();
-	    if (JOVALSystem.isNil(key)) {
+	    if (XSITools.isNil(key)) {
 		baseItem.setKey(Factories.sc.macos.createPlistItemKey(null));
 	    } else {
 		EntityItemStringType keyType = Factories.sc.core.createEntityItemStringType();
@@ -273,7 +273,7 @@ public class PlistAdapter extends BaseFileAdapter<PlistItem> {
 	//
 	Map<JAXBElement<EntityItemStringType>, List<NSObject>> values =
 		new HashMap<JAXBElement<EntityItemStringType>, List<NSObject>>();
-	if (JOVALSystem.isNil(pObj.getKey())) {
+	if (XSITools.isNil(pObj.getKey())) {
 	    values.put(Factories.sc.macos.createPlistItemKey(null), findValues(obj, null));
 	} else {
 	    Collection<String> keys = new ArrayList<String>();

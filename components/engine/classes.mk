@@ -98,4 +98,5 @@ CLASSES=\
 	org.joval.xml.SchemaRegistry				\
 	org.joval.xml.SchemaValidator				\
 	org.joval.xml.SignatureValidator			\
-	org.joval.xml.XPathTools
+	org.joval.xml.XPathTools				\
+	org.joval.xml.XSITools

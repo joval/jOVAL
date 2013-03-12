@@ -48,7 +48,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
-import org.joval.util.JOVALSystem;
+import org.joval.xml.XSITools;
 
 /**
  * Base class for IFile-based IAdapters. Subclasses need only implement getItemClass and getItems
@@ -408,9 +408,9 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		    // that is the equivalent of maxdepth=2.  So, for non-zero depths, we add 1 to the FIELD_DEPTH passed
 		    // to the IFilesystem.search method.
 		    //
-		//    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth > 0 ? depth+1 : depth)));
-
-		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth)));
+		    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth > 0 ? depth+1 : depth)));
+//DAS
+		//    conditions.add(searcher.condition(FIELD_DEPTH, TYPE_EQUALITY, new Integer(depth)));
 		    if (fb.getRecurse().indexOf("symlinks") == -1) {
 			followLinks = false;
 		    }
@@ -629,7 +629,7 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		if (o != null) {
 		    if (o instanceof JAXBElement) {
 			JAXBElement j = (JAXBElement)o;
-			filenameNil = JOVALSystem.isNil(j);
+			filenameNil = XSITools.isNil(j);
 			o = j.getValue();
 		    }
 		    filename = (EntityObjectStringType)o;
