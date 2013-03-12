@@ -52,6 +52,7 @@ import org.joval.intf.plugin.IAdapter;
 import org.joval.scap.oval.CollectException;
 import org.joval.scap.oval.Factories;
 import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * Evaluates RegistryTest OVAL tests.
@@ -86,7 +87,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
     protected List<ISearchable.ICondition> getConditions(ObjectType obj) throws CollectException, PatternSyntaxException {
 	List<ISearchable.ICondition> conditions = new ArrayList<ISearchable.ICondition>();
 	RegistryObject rObj = (RegistryObject)obj;
-	if (!rObj.getName().isNil()) {
+	if (!JOVALSystem.isNil(rObj.getName())) {
 	    String name = (String)rObj.getName().getValue().getValue();
 	    OperationEnumeration op = rObj.getName().getValue().getOperation();
 	    switch(op) {
@@ -120,7 +121,7 @@ public class RegistryAdapter extends BaseRegkeyAdapter<RegistryItem> {
 	    RegistryObject rObj = (RegistryObject)obj;
 	    Collection<RegistryItem> items = new ArrayList<RegistryItem>();
 
-	    if (rObj.getName().isNil()) {
+	    if (JOVALSystem.isNil(rObj.getName())) {
 		items.add(getItem(base, key));
 	    } else {
 		OperationEnumeration op = rObj.getName().getValue().getOperation();

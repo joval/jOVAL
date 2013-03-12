@@ -151,12 +151,12 @@ public class Checklist implements IChecklist {
 	    questionnaires.put(q.getId(), q);
 	}
 	for (JAXBElement<? extends QuestionType> elt : ocil.getQuestions().getQuestion()) {
-	    if (!elt.isNil()) {
+	    if (!isNil(elt)) {
 		QuestionType q = elt.getValue();
 		questions.put(q.getId(), q);
 		if (q instanceof ChoiceQuestionType) {
 		    for (JAXBElement elt2 : ((ChoiceQuestionType)q).getChoiceOrChoiceGroupRef()) {
-			if (!elt2.isNil()) {
+			if (!isNil(elt2)) {
 			    Object obj = elt2.getValue();
 			    if (obj instanceof ChoiceType) {
 				choices.put(((ChoiceType)obj).getId(), ((ChoiceType)obj));
@@ -167,7 +167,7 @@ public class Checklist implements IChecklist {
 	    }
 	}
 	for (JAXBElement<? extends ItemBaseType> elt : ocil.getTestActions().getTestAction()) {
-	    if (!elt.isNil()) {
+	    if (!isNil(elt)) {
 		ItemBaseType item = elt.getValue();
 		//
 		// DAS: Technically any ItemBaseType is valid, but only QuestionTestActions make any sense here.
@@ -180,7 +180,7 @@ public class Checklist implements IChecklist {
 	}
 	if (ocil.isSetVariables() && ocil.getVariables().isSetVariable()) {
 	    for (JAXBElement<? extends VariableType> elt : ocil.getVariables().getVariable()) {
-		if (!elt.isNil()) {
+		if (!isNil(elt)) {
 		    VariableType variable = elt.getValue();
 		    variables.put(variable.getId(), variable);
 		}
@@ -384,7 +384,7 @@ public class Checklist implements IChecklist {
 	} else if (action instanceof NumericQuestionTestActionType) {
 	    NumericQuestionTestActionType qt = (NumericQuestionTestActionType)action;
 	    for (JAXBElement<? extends TestActionConditionType> elt : qt.getRest()) {
-		if (!elt.isNil()) {
+		if (!isNil(elt)) {
 		    conditions.add(elt.getValue());
 		}
 	    }
@@ -509,7 +509,7 @@ public class Checklist implements IChecklist {
 	    }
 	    if (results.isSetTargets() && results.getTargets().isSetTarget()) {
 		for (JAXBElement<? extends NamedItemBaseType> elt : results.getTargets().getTarget()) {
-		    if (elt.isNil()) {
+		    if (isNil(elt)) {
 			continue;
 		    }
 		    NamedItemBaseType item = elt.getValue();
@@ -679,5 +679,12 @@ public class Checklist implements IChecklist {
 	    stack.pop();
 	    return false;
 	}
+    }
+
+    private static final boolean PRE_JAVA_17 =
+	new Float("1.7").compareTo(new Float(System.getProperty("java.specification.version"))) > 0;
+
+    private boolean isNil(JAXBElement elt) {
+	return PRE_JAVA_17 ? elt.getValue() == null : elt.isNil();
     }
 }

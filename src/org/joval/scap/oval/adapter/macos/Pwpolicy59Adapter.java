@@ -34,6 +34,7 @@ import org.joval.macos.DsclTool;
 import org.joval.scap.oval.Factories;
 import org.joval.scap.oval.CollectException;
 import org.joval.util.JOVALMsg;
+import org.joval.util.JOVALSystem;
 
 /**
  * Retrieves Pwpolicy59Items.
@@ -100,7 +101,7 @@ public class Pwpolicy59Adapter implements IAdapter {
 	item.setTargetUser(targetUserType);
 
 	StringBuffer sb = new StringBuffer("pwpolicy -getpolicy -u ").append(targetUser);
-	if (!pObj.getUsername().isNil()) {
+	if (!JOVALSystem.isNil(pObj.getUsername())) {
 	    OperationEnumeration op = pObj.getUsername().getValue().getOperation();
 	    if (op == OperationEnumeration.EQUALS) {
 		String value = SafeCLI.checkArgument((String)pObj.getUsername().getValue().getValue(), session);
@@ -114,7 +115,7 @@ public class Pwpolicy59Adapter implements IAdapter {
 		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	}
-	if (!pObj.getUserpass().isNil()) {
+	if (!JOVALSystem.isNil(pObj.getUserpass())) {
 	    OperationEnumeration op = pObj.getUserpass().getValue().getOperation();
 	    if (op == OperationEnumeration.EQUALS) {
 		String value = SafeCLI.checkArgument((String)pObj.getUserpass().getValue().getValue(), session);
@@ -128,7 +129,7 @@ public class Pwpolicy59Adapter implements IAdapter {
 		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 	}
-	if (!pObj.getDirectoryNode().isNil()) {
+	if (!JOVALSystem.isNil(pObj.getDirectoryNode())) {
 	    OperationEnumeration op = pObj.getDirectoryNode().getValue().getOperation();
 	    if (op == OperationEnumeration.EQUALS) {
 		String value = SafeCLI.checkArgument((String)pObj.getDirectoryNode().getValue().getValue(), session);

@@ -629,13 +629,8 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		if (o != null) {
 		    if (o instanceof JAXBElement) {
 			JAXBElement j = (JAXBElement)o;
+			filenameNil = JOVALSystem.isNil(j);
 			o = j.getValue();
-			if (JOVALSystem.PRE_JAVA_17) {
-			    // Before Java 1.7, JAXBElement.isNil() always returned true
-			    filenameNil = o == null;
-			} else {
-			    filenameNil = j.isNil();
-			}
 		    }
 		    filename = (EntityObjectStringType)o;
 		}

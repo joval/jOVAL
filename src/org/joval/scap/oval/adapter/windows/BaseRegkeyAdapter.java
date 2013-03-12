@@ -414,13 +414,8 @@ public abstract class BaseRegkeyAdapter<T extends ItemType> implements IAdapter 
 		if (o != null) {
 		    if (o instanceof JAXBElement) {
 			JAXBElement j = (JAXBElement)o;
+			keyNil = JOVALSystem.isNil(j);
 			o = j.getValue();
-			if (JOVALSystem.PRE_JAVA_17) {
-			    // Before Java 1.7, JAXBElement.isNil() always returns true
-			    keyNil = o == null;
-			} else {
-			    keyNil = j.isNil();
-			}
 		    }
 		    key = (EntityObjectStringType)o;
 		}
