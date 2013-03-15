@@ -215,7 +215,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	    for (IPrincipal principal : principalMap.values()) {
 		switch(principal.getType()) {
 		  case USER: {
-		    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType RegKey -Path ");
+		    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType RegKey -Name ");
 		    cmd.append("\"").append(hive).append("\\").append(key.getPath()).append("\"");
 		    cmd.append(" -SID ").append(principal.getSid());
 		    int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
@@ -224,7 +224,7 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 		  }
 		  case GROUP:
 		    for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
-			StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType RegKey -Path ");
+			StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType RegKey -Name ");
 			cmd.append("\"").append(hive).append("\\").append(key.getPath()).append("\"");
 			cmd.append(" -SID ").append(principal.getSid());
 			int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));

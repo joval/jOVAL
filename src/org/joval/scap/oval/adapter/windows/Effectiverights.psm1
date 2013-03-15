@@ -4,7 +4,7 @@
 function Get-EffectiveRights {
   param(
     [string]$ObjectType = $(throw "Mandatory parameter -ObjectType"),
-    [string]$Path = $(throw "Mandatory parameter -Path"),
+    [string]$Name = $(throw "Mandatory parameter -Name"),
     [string]$SID = $(throw "Mandatory parameter -SID")
   )
 
@@ -57,15 +57,19 @@ namespace jOVAL.Security {
 	[DllImport("advapi32.dll")]
 	public static extern uint GetEffectiveRightsFromAcl(IntPtr pacl, ref TRUSTEE pTrustee, ref uint pAccessRights);
 
-	public static uint GetRegKeyEffectiveRights(String path, String sidString) {
-	    return GetEffectiveRights(SE_OBJECT_TYPE.SE_REGISTRY_KEY, path, sidString);
+	public static uint GetRegKeyEffectiveRights(String name, String sidString) {
+	    return GetEffectiveRights(SE_OBJECT_TYPE.SE_REGISTRY_KEY, name, sidString);
 	}
 
-	public static uint GetFileEffectiveRights(String path, String sidString) { 
-	    return GetEffectiveRights(SE_OBJECT_TYPE.SE_FILE_OBJECT, path, sidString);
+	public static uint GetFileEffectiveRights(String name, String sidString) { 
+	    return GetEffectiveRights(SE_OBJECT_TYPE.SE_FILE_OBJECT, name, sidString);
 	}
 
-	static uint GetEffectiveRights(SE_OBJECT_TYPE type, String path, String sidString) {
+	public static uint GetServiceEffectiveRights(String name, String sidString) { 
+	    return GetEffectiveRights(SE_OBJECT_TYPE.SE_SERVICE, name, sidString);
+	}
+
+	static uint GetEffectiveRights(SE_OBJECT_TYPE type, String name, String sidString) {
 	    SecurityIdentifier sid = new SecurityIdentifier(sidString);
 
 	    IntPtr pOwner = IntPtr.Zero; // pSID
@@ -73,7 +77,7 @@ namespace jOVAL.Security {
 	    IntPtr pSacl = IntPtr.Zero;
 	    IntPtr pDacl = IntPtr.Zero;
 	    IntPtr pSD = IntPtr.Zero; // pSECURITY_DESCRIPTOR
-	    uint result = GetNamedSecurityInfo(path, type, SECURITY_INFORMATION.DACL_SECURITY_INFORMATION, out pOwner, out pGroup, out pDacl, out pSacl, out pSD);
+	    uint result = GetNamedSecurityInfo(name, type, SECURITY_INFORMATION.DACL_SECURITY_INFORMATION, out pOwner, out pGroup, out pDacl, out pSacl, out pSD);
 	    if (result != 0) {
 		throw new System.ComponentModel.Win32Exception((int)result);
 	    }
@@ -105,12 +109,17 @@ namespace jOVAL.Security {
   $ErrorActionPreference = "Continue"
 
   if ($ObjectType -eq "File") {
-    $mask = [jOVAL.Security.EffectiveRights]::GetFileEffectiveRights($Path, $SID);
+    $mask = [jOVAL.Security.EffectiveRights]::GetFileEffectiveRights($Name, $SID);
     Write-Output $mask
   } else {
     if ($ObjectType -eq "RegKey") {
-      $mask = [jOVAL.Security.EffectiveRights]::GetRegKeyEffectiveRights($Path, $SID);
+      $mask = [jOVAL.Security.EffectiveRights]::GetRegKeyEffectiveRights($Name, $SID);
       Write-Output $mask
+    } else {
+      if ($ObjectType -eq "Service") {
+        $mask = [jOVAL.Security.EffectiveRights]::GetServiceEffectiveRights($Name, $SID);
+        Write-Output $mask
+      }
     }
   }
 }

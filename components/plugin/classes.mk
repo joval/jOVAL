@@ -40,6 +40,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.windows.AuditeventpolicyAdapter			\
 	org.joval.scap.oval.adapter.windows.AuditeventpolicysubcategoriesAdapter	\
 	org.joval.scap.oval.adapter.windows.BaseRegkeyAdapter				\
+	org.joval.scap.oval.adapter.windows.BaseServiceAdapter				\
 	org.joval.scap.oval.adapter.windows.CmdletAdapter				\
 	org.joval.scap.oval.adapter.windows.FileauditedpermissionsAdapter		\
 	org.joval.scap.oval.adapter.windows.FileAdapter					\
@@ -52,6 +53,7 @@ CLASSES=\
 	org.joval.scap.oval.adapter.windows.Process58Adapter				\
 	org.joval.scap.oval.adapter.windows.RegistryAdapter				\
 	org.joval.scap.oval.adapter.windows.RegkeyeffectiverightsAdapter		\
+	org.joval.scap.oval.adapter.windows.ServiceeffectiverightsAdapter		\
 	org.joval.scap.oval.adapter.windows.SidAdapter					\
 	org.joval.scap.oval.adapter.windows.SidSidAdapter				\
 	org.joval.scap.oval.adapter.windows.SystemmetricAdapter				\

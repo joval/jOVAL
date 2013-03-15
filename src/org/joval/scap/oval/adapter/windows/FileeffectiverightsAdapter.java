@@ -188,7 +188,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	    for (IPrincipal principal : principalMap.values()) {
 		switch(principal.getType()) {
 		  case USER: {
-		    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Path ");
+		    StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Name ");
 		    cmd.append("\"").append(f.getPath()).append("\"");
 		    cmd.append(" -SID ").append(principal.getSid());
 		    int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
@@ -197,7 +197,7 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 		  }
 		  case GROUP:
 		    for (IPrincipal p : directory.getAllPrincipals(principal, includeGroups, resolveGroups)) {
-			StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Path ");
+			StringBuffer cmd = new StringBuffer("Get-EffectiveRights -ObjectType File -Name ");
 			cmd.append("\"").append(f.getPath()).append("\"");
 			cmd.append(" -SID ").append(principal.getSid());
 			int mask = Integer.parseInt(getRunspace(view).invoke(cmd.toString()));
