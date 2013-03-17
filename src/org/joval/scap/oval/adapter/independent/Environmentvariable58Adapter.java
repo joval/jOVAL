@@ -433,8 +433,12 @@ public class Environmentvariable58Adapter implements IAdapter {
 	}
     }
 
+    static final Integer I32 = new Integer(32);
+    static final Integer I64 = new Integer(64);
+
     class WindowsEnvironmentBuilder implements IEnvironmentBuilder {
-	private IRunspace runspace;
+	private Map<Integer, Integer> processes;
+	private IRunspace rs32, rs64;
 
 	WindowsEnvironmentBuilder(IWindowsSession session) {
 	    //
@@ -443,17 +447,32 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    //
 	    IWindowsSession.View view = session.getNativeView();
 	    for (IRunspace rs : session.getRunspacePool().enumerate()) {
-		if (rs.getView() == view) {
-		    runspace = rs;
+		switch(rs.getView()) {
+		  case _32BIT:
+		    rs32 = rs;
+		    break;
+		  case _64BIT:
+		    rs64 = rs;
+		    break;
+		}
+		if (view == IWindowsSession.View._32BIT && rs32 != null) {
+		    break;
+		} else if (view == IWindowsSession.View._64BIT && rs32 != null && rs64 != null) {
 		    break;
 		}
 	    }
 	    try {
-		if (runspace == null) {
-		    runspace = session.getRunspacePool().spawn(view);
+		if (rs32 == null) {
+		    rs32 = session.getRunspacePool().spawn(IWindowsSession.View._32BIT);
 		}
-		if (runspace != null) {
-		    runspace.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+		if (rs32 != null) {
+		    rs32.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+		}
+		if (view == IWindowsSession.View._64BIT && rs64 == null) {
+		    rs64 = session.getRunspacePool().spawn(IWindowsSession.View._64BIT);
+		}
+		if (rs64 != null) {
+		    rs64.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
 		}
 	    } catch (Exception e) {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
@@ -461,25 +480,45 @@ public class Environmentvariable58Adapter implements IAdapter {
 	}
 
 	public int[] listProcesses() throws Exception {
-	    String data = runspace.invoke("foreach($process in Get-Process){$process.Id}");
-	    ArrayList<Integer> ids = new ArrayList<Integer>();
-	    if (data != null) {
-		for (String id : data.split("\r\n")) {
-		    try {
-			ids.add(new Integer(id.trim()));
-		    } catch (NumberFormatException e) {
+	    if (processes == null) {
+		processes = new HashMap<Integer, Integer>();
+		if (rs64 == null) {
+		    for (String id : rs32.invoke("Get-Process | %{$_.Id}").split("\r\n")) {
+			processes.put(new Integer(id.trim()), I32);
+		    }
+		} else {
+		    for (String id : rs64.invoke("Get-Process | Filter-Processes -Bitness 32 | %{$_.Id}").split("\r\n")) {
+			processes.put(new Integer(id.trim()), I32);
+		    }
+		    for (String id : rs64.invoke("Get-Process | Filter-Processes -Bitness 64 | %{$_.Id}").split("\r\n")) {
+			processes.put(new Integer(id.trim()), I64);
 		    }
 		}
 	    }
-	    int[] result = new int[ids.size()];
-	    for (int i=0; i < result.length; i++) {
-		result[i] = ids.get(i).intValue();
+	    int[] result = new int[processes.size()];
+	    int i=0;
+	    for (Integer id : processes.keySet()) {
+		result[i++] = id.intValue();
 	    }
 	    return result;
 	}
 
 	public IEnvironment getProcessEnvironment(int pid) throws Exception {
-	    String data = runspace.invoke("Get-ProcessEnvironment " + pid);
+	    Integer id = new Integer(pid);
+	    if (processes.containsKey(id)) {
+		if (processes.get(id).equals(I32)) {
+		    return toEnvironment(rs32.invoke("Get-ProcessEnvironment " + pid));
+		} else {
+		    return toEnvironment(rs64.invoke("Get-ProcessEnvironment " + pid));
+		}
+	    } else {
+		throw new NoSuchElementException(id.toString());
+	    }
+	}
+
+	// Private
+
+	private Environment toEnvironment(String data) {
 	    Properties processEnv = new Properties();
 	    if (data != null) {
 		String var = null;
