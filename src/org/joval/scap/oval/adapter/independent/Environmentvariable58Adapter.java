@@ -440,7 +440,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	private Map<Integer, Integer> processes;
 	private IRunspace rs32, rs64;
 
-	WindowsEnvironmentBuilder(IWindowsSession session) {
+	WindowsEnvironmentBuilder(IWindowsSession session) throws Exception {
 	    //
 	    // Get a runspace if there are any in the pool, or create a new one, and load the Get-Environmentvariable58
 	    // Powershell module code.
@@ -461,40 +461,34 @@ public class Environmentvariable58Adapter implements IAdapter {
 		    break;
 		}
 	    }
-	    try {
-		if (rs32 == null) {
-		    rs32 = session.getRunspacePool().spawn(IWindowsSession.View._32BIT);
+	    if (rs32 == null) {
+		rs32 = session.getRunspacePool().spawn(IWindowsSession.View._32BIT);
+	    }
+	    if (rs32 != null) {
+		rs32.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+	    }
+	    if (view == IWindowsSession.View._64BIT && rs64 == null) {
+		rs64 = session.getRunspacePool().spawn(IWindowsSession.View._64BIT);
+	    }
+	    if (rs64 != null) {
+		rs64.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+	    }
+	    processes = new HashMap<Integer, Integer>();
+	    if (rs64 == null) {
+		for (String id : rs32.invoke("Get-Process | %{$_.Id}").split("\r\n")) {
+		    processes.put(new Integer(id.trim()), I32);
 		}
-		if (rs32 != null) {
-		    rs32.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+	    } else {
+		for (String id : rs64.invoke("Get-Process | Filter-Processes -Bitness 32 | %{$_.Id}").split("\r\n")) {
+		    processes.put(new Integer(id.trim()), I32);
 		}
-		if (view == IWindowsSession.View._64BIT && rs64 == null) {
-		    rs64 = session.getRunspacePool().spawn(IWindowsSession.View._64BIT);
+		for (String id : rs64.invoke("Get-Process | Filter-Processes -Bitness 64 | %{$_.Id}").split("\r\n")) {
+		    processes.put(new Integer(id.trim()), I64);
 		}
-		if (rs64 != null) {
-		    rs64.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
-		}
-	    } catch (Exception e) {
-		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	}
 
 	public int[] listProcesses() throws Exception {
-	    if (processes == null) {
-		processes = new HashMap<Integer, Integer>();
-		if (rs64 == null) {
-		    for (String id : rs32.invoke("Get-Process | %{$_.Id}").split("\r\n")) {
-			processes.put(new Integer(id.trim()), I32);
-		    }
-		} else {
-		    for (String id : rs64.invoke("Get-Process | Filter-Processes -Bitness 32 | %{$_.Id}").split("\r\n")) {
-			processes.put(new Integer(id.trim()), I32);
-		    }
-		    for (String id : rs64.invoke("Get-Process | Filter-Processes -Bitness 64 | %{$_.Id}").split("\r\n")) {
-			processes.put(new Integer(id.trim()), I64);
-		    }
-		}
-	    }
 	    int[] result = new int[processes.size()];
 	    int i=0;
 	    for (Integer id : processes.keySet()) {

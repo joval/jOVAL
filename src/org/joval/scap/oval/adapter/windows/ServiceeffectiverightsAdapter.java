@@ -59,7 +59,6 @@ public class ServiceeffectiverightsAdapter extends BaseServiceAdapter<Serviceeff
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((IWindowsSession)session);
-	    directory = this.session.getDirectory();
 	    classes.add(ServiceeffectiverightsObject.class);
 	} else {
 	    notapplicable.add(ServiceeffectiverightsObject.class);
@@ -76,6 +75,9 @@ public class ServiceeffectiverightsAdapter extends BaseServiceAdapter<Serviceeff
     protected Collection<ServiceeffectiverightsItem> getItems(ObjectType obj, ItemType base, IRequestContext rc)
 		throws Exception {
 
+	if (directory == null) {
+	    directory = session.getDirectory();
+	}
 	Collection<ServiceeffectiverightsItem> items = new ArrayList<ServiceeffectiverightsItem>();
 	ServiceeffectiverightsItem baseItem = (ServiceeffectiverightsItem)base;
 	try {

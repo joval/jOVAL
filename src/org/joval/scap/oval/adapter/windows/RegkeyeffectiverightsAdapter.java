@@ -64,7 +64,6 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    super.init((IWindowsSession)session);
-	    directory = this.session.getDirectory();
 	    classes.add(Regkeyeffectiverights53Object.class);
 	    classes.add(RegkeyeffectiverightsObject.class);
 	} else {
@@ -82,6 +81,11 @@ public class RegkeyeffectiverightsAdapter extends BaseRegkeyAdapter<Regkeyeffect
 
     protected Collection<RegkeyeffectiverightsItem> getItems(ObjectType obj, ItemType base, IKey key, IRequestContext rc)
 		throws Exception {
+
+	if (directory == null) {
+	    directory = session.getDirectory();
+	}
+
 	//
 	// Map the Key's hive to one of the names supported by the GetNamedSecurityInfo method.
 	//

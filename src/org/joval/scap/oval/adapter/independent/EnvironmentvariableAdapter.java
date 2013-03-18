@@ -42,13 +42,16 @@ public class EnvironmentvariableAdapter implements IAdapter {
 
     public Collection<Class> init(ISession session, Collection<Class> notapplicable) {
 	Collection<Class> classes = new ArrayList<Class>();
-	try {
+	switch(session.getType()) {
+	  case UNIX:
+	  case WINDOWS:
 	    this.session = session;
-	    environment = session.getEnvironment();
 	    classes.add(EnvironmentvariableObject.class);
-	} catch (UnsupportedOperationException e) {
+	    break;
+	  default:
 	    // ISession.getEnvironment not supported
 	    notapplicable.add(EnvironmentvariableObject.class);
+	    break;
 	}
 	return classes;
     }
@@ -62,6 +65,9 @@ public class EnvironmentvariableAdapter implements IAdapter {
     Collection<EnvironmentvariableItem> getItems(ObjectType obj, IRequestContext rc, IEnvironment env, String reserved)
 		throws CollectException {
 
+	if (environment == null) {
+	    environment = session.getEnvironment();
+	}
 	List<EnvironmentvariableItem> items = new ArrayList<EnvironmentvariableItem>();
 	EnvironmentvariableObject eObj = (EnvironmentvariableObject)obj;
 	String name = (String)eObj.getName().getValue();

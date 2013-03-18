@@ -98,8 +98,8 @@ public abstract class BaseFileAdapter<T extends ItemType> implements IAdapter {
 		session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	    }
 	    break;
-	}
-	if (localFsType == null) {
+
+	  default:
 	    String msg = JOVALMsg.getMessage(JOVALMsg.ERROR_UNSUPPORTED_SESSION_TYPE, session.getType());
 	    throw new UnsupportedOperationException(msg);
 	}

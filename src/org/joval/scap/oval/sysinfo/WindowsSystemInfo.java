@@ -39,6 +39,8 @@ import org.joval.util.JOVALMsg;
 class WindowsSystemInfo {
     public static final String ARCHITECTURE	= "PROCESSOR_ARCHITECTURE";
 
+    static final String ENVIRONMENT_KEY		= "SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment";
+    static final String ARCHITECTURE_VAL	= "PROCESSOR_ARCHITECTURE";
     static final String CURRENTVERSION_KEY	= "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
     static final String CURRENTVERSION_VAL	= "CurrentVersion";
     static final String PRODUCTNAME_VAL		= "ProductName";
@@ -55,30 +57,21 @@ class WindowsSystemInfo {
 	info.setPrimaryHostName(session.getMachineName());
 
 	try {
-	    IEnvironment environment = session.getEnvironment();
-	    info.setArchitecture(environment.getenv(ARCHITECTURE));
+	    info.setArchitecture(registry.getStringValue(IRegistry.Hive.HKLM, ENVIRONMENT_KEY, ARCHITECTURE_VAL));
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_ARCH);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	try {
-	    IKey key = registry.getKey(IRegistry.Hive.HKLM, CURRENTVERSION_KEY);
-	    IValue val = key.getValue(CURRENTVERSION_VAL);
-	    if (val.getType() == IValue.Type.REG_SZ) {
-		info.setOsVersion(((IStringValue)val).getData());
-	    }
+	    info.setOsVersion(registry.getStringValue(IRegistry.Hive.HKLM, CURRENTVERSION_KEY, CURRENTVERSION_VAL));
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_OSVERSION);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
 	}
 
 	try {
-	    IKey key = registry.getKey(IRegistry.Hive.HKLM, CURRENTVERSION_KEY);
-	    IValue val = key.getValue(PRODUCTNAME_VAL);
-	    if (val.getType() == IValue.Type.REG_SZ) {
-		info.setOsName(((IStringValue)val).getData());
-	    }
+	    info.setOsName(registry.getStringValue(IRegistry.Hive.HKLM, CURRENTVERSION_KEY, PRODUCTNAME_VAL));
 	} catch (Exception e) {
 	    session.getLogger().warn(JOVALMsg.ERROR_SYSINFO_OSNAME);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);

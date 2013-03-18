@@ -63,7 +63,6 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
 	Collection<Class> classes = new ArrayList<Class>();
 	if (session instanceof IWindowsSession) {
 	    baseInit(session);
-	    directory = ((IWindowsSession)session).getDirectory();
 	    classes.add(Fileeffectiverights53Object.class);
 	    classes.add(FileeffectiverightsObject.class);
 	} else {
@@ -82,6 +81,9 @@ public class FileeffectiverightsAdapter extends BaseFileAdapter<Fileeffectiverig
     protected Collection<FileeffectiverightsItem> getItems(ObjectType obj, ItemType base, IFile f, IRequestContext rc)
 		throws IOException, CollectException {
 
+	if (directory == null) {
+	    directory = ((IWindowsSession)session).getDirectory();
+	}
 	Collection<FileeffectiverightsItem> items = new ArrayList<FileeffectiverightsItem>();
 	FileeffectiverightsItem baseItem = (FileeffectiverightsItem)base;
 	try {
