@@ -51,7 +51,7 @@ class WindowsSystemInfo {
     static final String ADAPTER_WQL		= "select * from Win32_NetworkAdapterConfiguration";
 
     public static SystemInfoType getSystemInfo(IWindowsSession session) {
-	IRegistry registry = session.getRegistry(IWindowsSession.View._64BIT);
+	IRegistry registry = session.getRegistry(session.getNativeView());
 	IWmiProvider wmi = session.getWmiProvider();
 	SystemInfoType info = Factories.sc.core.createSystemInfoType();
 	info.setPrimaryHostName(session.getMachineName());

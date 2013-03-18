@@ -36,7 +36,6 @@ import org.joval.util.JOVALMsg;
  */
 public class EnvironmentvariableAdapter implements IAdapter {
     private ISession session;
-    private IEnvironment environment;
 
     // Implement IAdapter
 
@@ -56,34 +55,23 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	return classes;
     }
 
-    public Collection<? extends ItemType> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
-	return getItems(obj, rc, environment, null);
-    }
-
-    // Internal
-
-    Collection<EnvironmentvariableItem> getItems(ObjectType obj, IRequestContext rc, IEnvironment env, String reserved)
-		throws CollectException {
-
-	if (environment == null) {
-	    environment = session.getEnvironment();
-	}
+    public Collection<EnvironmentvariableItem> getItems(ObjectType obj, IRequestContext rc) throws CollectException {
+	IEnvironment env = session.getEnvironment();
 	List<EnvironmentvariableItem> items = new ArrayList<EnvironmentvariableItem>();
 	EnvironmentvariableObject eObj = (EnvironmentvariableObject)obj;
 	String name = (String)eObj.getName().getValue();
-
 	OperationEnumeration op = eObj.getName().getOperation();
 	switch(op) {
 	  case EQUALS:
 	    if (env.getenv(name) != null) {
-		items.add((EnvironmentvariableItem)makeItem(name, env.getenv(name), reserved));
+		items.add((EnvironmentvariableItem)makeItem(name, env.getenv(name)));
 	    }
 	    break;
 
 	  case CASE_INSENSITIVE_EQUALS:
 	    for (String varName : env) {
 		if (varName.equalsIgnoreCase(name)) {
-		    items.add((EnvironmentvariableItem)makeItem(varName, env.getenv(varName), reserved));
+		    items.add((EnvironmentvariableItem)makeItem(varName, env.getenv(varName)));
 		    break;
 		}
 	    }
@@ -92,7 +80,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	  case NOT_EQUAL:
 	    for (String varName : env) {
 		if (!name.equals(varName)) {
-		    items.add((EnvironmentvariableItem)makeItem(name, env.getenv(varName), reserved));
+		    items.add((EnvironmentvariableItem)makeItem(name, env.getenv(varName)));
 		}
 	    }
 	    break;
@@ -102,7 +90,7 @@ public class EnvironmentvariableAdapter implements IAdapter {
 		Pattern p = Pattern.compile(name);
 		for (String varName : env) {
 		    if (p.matcher(varName).find()) {
-			items.add((EnvironmentvariableItem)makeItem(varName, env.getenv(varName), reserved));
+			items.add((EnvironmentvariableItem)makeItem(varName, env.getenv(varName)));
 		    }
 		}
 	    } catch (PatternSyntaxException e) {
@@ -121,7 +109,9 @@ public class EnvironmentvariableAdapter implements IAdapter {
 	return items;
     }
 
-    ItemType makeItem(String name, String value, String reserved) {
+    // Private
+
+    private ItemType makeItem(String name, String value) {
 	EnvironmentvariableItem item = Factories.sc.independent.createEnvironmentvariableItem();
 	EntityItemStringType nameType = Factories.sc.core.createEntityItemStringType();
 	nameType.setValue(name);
