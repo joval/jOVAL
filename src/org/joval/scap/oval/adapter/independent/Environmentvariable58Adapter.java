@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -433,12 +434,9 @@ public class Environmentvariable58Adapter implements IAdapter {
 	}
     }
 
-    static final Integer I32 = new Integer(32);
-    static final Integer I64 = new Integer(64);
-
     class WindowsEnvironmentBuilder implements IEnvironmentBuilder {
-	private Map<Integer, Integer> processes;
-	private IRunspace rs32, rs64;
+	private HashSet<Integer> processes;
+	private IRunspace rs;
 
 	WindowsEnvironmentBuilder(IWindowsSession session) throws Exception {
 	    //
@@ -446,52 +444,28 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    // Powershell module code.
 	    //
 	    IWindowsSession.View view = session.getNativeView();
-	    for (IRunspace rs : session.getRunspacePool().enumerate()) {
-		switch(rs.getView()) {
-		  case _32BIT:
-		    rs32 = rs;
-		    break;
-		  case _64BIT:
-		    rs64 = rs;
-		    break;
-		}
-		if (view == IWindowsSession.View._32BIT && rs32 != null) {
-		    break;
-		} else if (view == IWindowsSession.View._64BIT && rs32 != null && rs64 != null) {
+	    for (IRunspace runspace : session.getRunspacePool().enumerate()) {
+		if (runspace.getView() == view) {
+		    rs = runspace;
 		    break;
 		}
 	    }
-	    if (rs32 == null) {
-		rs32 = session.getRunspacePool().spawn(IWindowsSession.View._32BIT);
+	    if (rs == null) {
+		rs = session.getRunspacePool().spawn(view);
 	    }
-	    if (rs32 != null) {
-		rs32.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
+	    if (rs != null) {
+		rs.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
 	    }
-	    if (view == IWindowsSession.View._64BIT && rs64 == null) {
-		rs64 = session.getRunspacePool().spawn(IWindowsSession.View._64BIT);
-	    }
-	    if (rs64 != null) {
-		rs64.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
-	    }
-	    processes = new HashMap<Integer, Integer>();
-	    if (rs64 == null) {
-		for (String id : rs32.invoke("Get-Process | %{$_.Id}").split("\r\n")) {
-		    processes.put(new Integer(id.trim()), I32);
-		}
-	    } else {
-		for (String id : rs64.invoke("Get-Process | Filter-Processes -Bitness 32 | %{$_.Id}").split("\r\n")) {
-		    processes.put(new Integer(id.trim()), I32);
-		}
-		for (String id : rs64.invoke("Get-Process | Filter-Processes -Bitness 64 | %{$_.Id}").split("\r\n")) {
-		    processes.put(new Integer(id.trim()), I64);
-		}
+	    processes = new HashSet<Integer>();
+	    for (String id : rs.invoke("Get-Process | %{$_.Id}").split("\r\n")) {
+		processes.add(new Integer(id.trim()));
 	    }
 	}
 
 	public int[] listProcesses() throws Exception {
 	    int[] result = new int[processes.size()];
 	    int i=0;
-	    for (Integer id : processes.keySet()) {
+	    for (Integer id : processes) {
 		result[i++] = id.intValue();
 	    }
 	    return result;
@@ -499,12 +473,8 @@ public class Environmentvariable58Adapter implements IAdapter {
 
 	public IEnvironment getProcessEnvironment(int pid) throws Exception {
 	    Integer id = new Integer(pid);
-	    if (processes.containsKey(id)) {
-		if (processes.get(id).equals(I32)) {
-		    return toEnvironment(rs32.invoke("Get-ProcessEnvironment " + pid));
-		} else {
-		    return toEnvironment(rs64.invoke("Get-ProcessEnvironment " + pid));
-		}
+	    if (processes.contains(id)) {
+		return toEnvironment(rs.invoke("Get-ProcessEnvironment " + pid));
 	    } else {
 		throw new NoSuchElementException(id.toString());
 	    }
