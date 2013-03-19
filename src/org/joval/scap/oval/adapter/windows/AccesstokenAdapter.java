@@ -3,18 +3,21 @@
 
 package org.joval.scap.oval.adapter.windows;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Hashtable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import jsaf.intf.system.ISession;
+import jsaf.intf.util.IProperty;
 import jsaf.intf.windows.identity.IDirectory;
 import jsaf.intf.windows.identity.IGroup;
 import jsaf.intf.windows.identity.IPrincipal;
@@ -23,6 +26,8 @@ import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.powershell.PowershellException;
 import jsaf.provider.windows.wmi.WmiException;
+import jsaf.util.Base64;
+import jsaf.util.IniFile;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -53,8 +58,7 @@ public class AccesstokenAdapter implements IAdapter {
     private IWindowsSession session;
     private IRunspace runspace;
     private IDirectory directory;
-    private Hashtable<String, AccesstokenItem> itemCache;
-    private Hashtable<String, MessageType> errors;
+    private Map<String, AccesstokenItem> itemCache;
 
     // Implement IAdapter
 
@@ -77,7 +81,7 @@ public class AccesstokenAdapter implements IAdapter {
 	if (runspace == null) {
 	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL), FlagEnumeration.NOT_COLLECTED);
 	}
-	Hashtable<String, AccesstokenItem> items = new Hashtable<String, AccesstokenItem>();
+	Map<String, AccesstokenItem> items = new HashMap<String, AccesstokenItem>();
 
 	AccesstokenObject aObj = (AccesstokenObject)obj;
 	boolean include = true;
@@ -122,29 +126,50 @@ public class AccesstokenAdapter implements IAdapter {
 		throw new CollectException(msg, FlagEnumeration.NOT_COLLECTED);
 	    }
 
-	    for (IPrincipal principal : principals) {
-		for (IPrincipal p : directory.getAllPrincipals(principal, include, resolve)) {
-		    String sid = p.getSid();
-		    if (errors.containsKey(sid)) {
-			rc.addMessage(errors.get(sid));
-		    } else if (itemCache.containsKey(sid)) {
+	    //
+	    // Determine principals for which items are cached, and which must be queried
+	    //
+	    Map<String, IPrincipal> queryPrincipals = new HashMap<String, IPrincipal>();
+	    for (IPrincipal p : principals) {
+		for (IPrincipal principal : directory.getAllPrincipals(p, include, resolve)) {
+		    String sid = principal.getSid();
+		    if (itemCache.containsKey(sid)) {
 			items.put(sid, itemCache.get(sid));
 		    } else {
-			try {
-			    AccesstokenItem item = makeItem(p);
-			    items.put(sid, item);
-			    itemCache.put(sid, item);
-			} catch (Exception e) {
-			    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-			    MessageType msg = Factories.common.createMessageType();
-			    msg.setLevel(MessageLevelEnumeration.ERROR);
-			    msg.setValue(e.getMessage());
-			    rc.addMessage(msg);
-			    errors.put(sid, msg);
-			}
+			queryPrincipals.put(sid, principal);
 		    }
 		}
 	    }
+
+	    //
+	    // Query tokens for non-cached principals (if there are any)
+	    //
+	    if (queryPrincipals.size() > 0) {
+		StringBuffer cmd = new StringBuffer();
+		for (IPrincipal p : queryPrincipals.values()) {
+		    if (cmd.length() > 0) {
+			cmd.append(",");
+		    }
+		    cmd.append("\"").append(p.getSid()).append("\"");
+		}
+		cmd.append(" | Get-AccessTokens | Transfer-Encode");
+		IniFile data = new IniFile(new ByteArrayInputStream(Base64.decode(runspace.invoke(cmd.toString()))));
+		for (IPrincipal p : queryPrincipals.values()) {
+		    String sid = p.getSid();
+		    if (data.containsSection(sid)) {
+			AccesstokenItem item = makeItem(p, data.getSection(sid));
+			itemCache.put(sid, item);
+			items.put(sid, item);
+		    }
+		}
+	    }
+	} catch (PowershellException e) {
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_ACCESSTOKEN_PRINCIPAL, principalStr, e.getMessage());
+	    msg.setValue(s);
+	    rc.addMessage(msg);
+	    session.getLogger().warn(s);
 	} catch (PatternSyntaxException e) {
 	    MessageType msg = Factories.common.createMessageType();
 	    msg.setLevel(MessageLevelEnumeration.ERROR);
@@ -161,6 +186,12 @@ public class AccesstokenAdapter implements IAdapter {
 	    msg.setValue(JOVALMsg.getMessage(JOVALMsg.ERROR_WINWMI_GENERAL, obj.getId(), e.getMessage()));
 	    rc.addMessage(msg);
 	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	} catch (Exception e) {
+	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
+	    MessageType msg = Factories.common.createMessageType();
+	    msg.setLevel(MessageLevelEnumeration.ERROR);
+	    msg.setValue(e.getMessage());
+	    rc.addMessage(msg);
 	}
 	return items.values();
     }
@@ -181,25 +212,13 @@ public class AccesstokenAdapter implements IAdapter {
 	FALSE = tempF;
     }
 
-    private AccesstokenItem makeItem(IPrincipal principal) throws Exception {
+    private AccesstokenItem makeItem(IPrincipal principal, IProperty tokens) throws Exception {
 	AccesstokenItem item = Factories.sc.windows.createAccesstokenItem();
 	EntityItemStringType principalType = Factories.sc.core.createEntityItemStringType();
 	String principalName = getCanonicalizedPrincipalName(principal);
+	session.getLogger().debug(JOVALMsg.STATUS_WIN_ACCESSTOKEN, principalName);
 	principalType.setValue(principalName);
 	item.setSecurityPrincipal(principalType);
-	session.getLogger().debug(JOVALMsg.STATUS_WIN_ACCESSTOKEN, principalName);
-	String data = null;
-	try {
-	    data = runspace.invoke("Get-AccessTokens \"" + principal.getSid() + "\"");
-	} catch (PowershellException e) {
-	    String s = JOVALMsg.getMessage(JOVALMsg.ERROR_WIN_ACCESSTOKEN_PRINCIPAL, principalName, e.getMessage());
-	    session.getLogger().warn(s);
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.ERROR);
-	    msg.setValue(s);
-	    item.getMessage().add(msg);
-	    item.setStatus(StatusEnumeration.ERROR);
-	}
 
 	//
 	// Set defaults
@@ -253,102 +272,99 @@ public class AccesstokenAdapter implements IAdapter {
 	//
 	// Set discoverd tokens to TRUE
 	//
-	if (data != null) {
-	    for (String line : data.split("\n")) {
-		String privilege = line.trim();
-		if ("seassignprimarytokenprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeassignprimarytokenprivilege(TRUE);
-		} else if ("seauditprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeauditprivilege(TRUE);
-		} else if ("sebackupprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSebackupprivilege(TRUE);
-		} else if ("sechangenotifyprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSechangenotifyprivilege(TRUE);
-		} else if ("secreateglobalprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSecreateglobalprivilege(TRUE);
-		} else if ("secreatepagefileprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSecreatepagefileprivilege(TRUE);
-		} else if ("secreatepermanentprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSecreatepermanentprivilege(TRUE);
-		} else if ("secreatesymboliclinkprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSecreatesymboliclinkprivilege(TRUE);
-		} else if ("secreatetokenprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSecreatetokenprivilege(TRUE);
-		} else if ("sedebugprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSedebugprivilege(TRUE);
-		} else if ("seenabledelegationprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeenabledelegationprivilege(TRUE);
-		} else if ("seimpersonateprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeimpersonateprivilege(TRUE);
-		} else if ("seincreasebasepriorityprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeincreasebasepriorityprivilege(TRUE);
-		} else if ("seincreasequotaprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeincreasequotaprivilege(TRUE);
-		} else if ("seincreaseworkingsetprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeincreaseworkingsetprivilege(TRUE);
-		} else if ("seloaddriverprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeloaddriverprivilege(TRUE);
-		} else if ("selockmemoryprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSelockmemoryprivilege(TRUE);
-		} else if ("semachineaccountprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSemachineaccountprivilege(TRUE);
-		} else if ("semanagevolumeprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSemanagevolumeprivilege(TRUE);
-		} else if ("seprofilesingleprocessprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeprofilesingleprocessprivilege(TRUE);
-		} else if ("serelabelprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSerelabelprivilege(TRUE);
-		} else if ("seremoteshutdownprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeremoteshutdownprivilege(TRUE);
-		} else if ("serestoreprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSerestoreprivilege(TRUE);
-		} else if ("sesecurityprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSesecurityprivilege(TRUE);
-		} else if ("seshutdownprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeshutdownprivilege(TRUE);
-		} else if ("sesyncagentprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSesyncagentprivilege(TRUE);
-		} else if ("sesystemenvironmentprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSesystemenvironmentprivilege(TRUE);
-		} else if ("sesystemprofileprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSesystemprofileprivilege(TRUE);
-		} else if ("sesystemtimeprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSesystemtimeprivilege(TRUE);
-		} else if ("setakeownershipprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSetakeownershipprivilege(TRUE);
-		} else if ("setcbprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSetcbprivilege(TRUE);
-		} else if ("setimezoneprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSetimezoneprivilege(TRUE);
-		} else if ("seundockprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeundockprivilege(TRUE);
-		} else if ("seunsolicitedinputprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSeunsolicitedinputprivilege(TRUE);
-		} else if ("sebatchlogonright".equalsIgnoreCase(privilege)) {
-		    item.setSebatchlogonright(TRUE);
-		} else if ("seinteractivelogonright".equalsIgnoreCase(privilege)) {
-		    item.setSeinteractivelogonright(TRUE);
-		} else if ("senetworklogonright".equalsIgnoreCase(privilege)) {
-		    item.setSenetworklogonright(TRUE);
-		} else if ("seremoteinteractivelogonright".equalsIgnoreCase(privilege)) {
-		    item.setSeremoteinteractivelogonright(TRUE);
-		} else if ("seservicelogonright".equalsIgnoreCase(privilege)) {
-		    item.setSeservicelogonright(TRUE);
-		} else if ("sedenybatchLogonright".equalsIgnoreCase(privilege)) {
-		    item.setSedenybatchLogonright(TRUE);
-		} else if ("sedenyinteractivelogonright".equalsIgnoreCase(privilege)) {
-		    item.setSedenyinteractivelogonright(TRUE);
-		} else if ("sedenynetworklogonright".equalsIgnoreCase(privilege)) {
-		    item.setSedenynetworklogonright(TRUE);
-		} else if ("sedenyremoteinteractivelogonright".equalsIgnoreCase(privilege)) {
-		    item.setSedenyremoteInteractivelogonright(TRUE);
-		} else if ("sedenyservicelogonright".equalsIgnoreCase(privilege)) {
-		    item.setSedenyservicelogonright(TRUE);
-		} else if ("setrustedcredmanaccessprivilege".equalsIgnoreCase(privilege)) {
-		    item.setSetrustedcredmanaccessnameright(TRUE);
-		} else {
-		    session.getLogger().warn(JOVALMsg.ERROR_WIN_ACCESSTOKEN_TOKEN, privilege);
-		}
+	for (String privilege : tokens) {
+	    if ("seassignprimarytokenprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeassignprimarytokenprivilege(TRUE);
+	    } else if ("seauditprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeauditprivilege(TRUE);
+	    } else if ("sebackupprivilege".equalsIgnoreCase(privilege)) {
+		item.setSebackupprivilege(TRUE);
+	    } else if ("sechangenotifyprivilege".equalsIgnoreCase(privilege)) {
+		item.setSechangenotifyprivilege(TRUE);
+	    } else if ("secreateglobalprivilege".equalsIgnoreCase(privilege)) {
+		item.setSecreateglobalprivilege(TRUE);
+	    } else if ("secreatepagefileprivilege".equalsIgnoreCase(privilege)) {
+		item.setSecreatepagefileprivilege(TRUE);
+	    } else if ("secreatepermanentprivilege".equalsIgnoreCase(privilege)) {
+		item.setSecreatepermanentprivilege(TRUE);
+	    } else if ("secreatesymboliclinkprivilege".equalsIgnoreCase(privilege)) {
+		item.setSecreatesymboliclinkprivilege(TRUE);
+	    } else if ("secreatetokenprivilege".equalsIgnoreCase(privilege)) {
+		item.setSecreatetokenprivilege(TRUE);
+	    } else if ("sedebugprivilege".equalsIgnoreCase(privilege)) {
+		item.setSedebugprivilege(TRUE);
+	    } else if ("seenabledelegationprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeenabledelegationprivilege(TRUE);
+	    } else if ("seimpersonateprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeimpersonateprivilege(TRUE);
+	    } else if ("seincreasebasepriorityprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeincreasebasepriorityprivilege(TRUE);
+	    } else if ("seincreasequotaprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeincreasequotaprivilege(TRUE);
+	    } else if ("seincreaseworkingsetprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeincreaseworkingsetprivilege(TRUE);
+	    } else if ("seloaddriverprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeloaddriverprivilege(TRUE);
+	    } else if ("selockmemoryprivilege".equalsIgnoreCase(privilege)) {
+		item.setSelockmemoryprivilege(TRUE);
+	    } else if ("semachineaccountprivilege".equalsIgnoreCase(privilege)) {
+		item.setSemachineaccountprivilege(TRUE);
+	    } else if ("semanagevolumeprivilege".equalsIgnoreCase(privilege)) {
+		item.setSemanagevolumeprivilege(TRUE);
+	    } else if ("seprofilesingleprocessprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeprofilesingleprocessprivilege(TRUE);
+	    } else if ("serelabelprivilege".equalsIgnoreCase(privilege)) {
+		item.setSerelabelprivilege(TRUE);
+	    } else if ("seremoteshutdownprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeremoteshutdownprivilege(TRUE);
+	    } else if ("serestoreprivilege".equalsIgnoreCase(privilege)) {
+		item.setSerestoreprivilege(TRUE);
+	    } else if ("sesecurityprivilege".equalsIgnoreCase(privilege)) {
+		item.setSesecurityprivilege(TRUE);
+	    } else if ("seshutdownprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeshutdownprivilege(TRUE);
+	    } else if ("sesyncagentprivilege".equalsIgnoreCase(privilege)) {
+		item.setSesyncagentprivilege(TRUE);
+	    } else if ("sesystemenvironmentprivilege".equalsIgnoreCase(privilege)) {
+		item.setSesystemenvironmentprivilege(TRUE);
+	    } else if ("sesystemprofileprivilege".equalsIgnoreCase(privilege)) {
+		item.setSesystemprofileprivilege(TRUE);
+	    } else if ("sesystemtimeprivilege".equalsIgnoreCase(privilege)) {
+		item.setSesystemtimeprivilege(TRUE);
+	    } else if ("setakeownershipprivilege".equalsIgnoreCase(privilege)) {
+		item.setSetakeownershipprivilege(TRUE);
+	    } else if ("setcbprivilege".equalsIgnoreCase(privilege)) {
+		item.setSetcbprivilege(TRUE);
+	    } else if ("setimezoneprivilege".equalsIgnoreCase(privilege)) {
+		item.setSetimezoneprivilege(TRUE);
+	    } else if ("seundockprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeundockprivilege(TRUE);
+	    } else if ("seunsolicitedinputprivilege".equalsIgnoreCase(privilege)) {
+		item.setSeunsolicitedinputprivilege(TRUE);
+	    } else if ("sebatchlogonright".equalsIgnoreCase(privilege)) {
+		item.setSebatchlogonright(TRUE);
+	    } else if ("seinteractivelogonright".equalsIgnoreCase(privilege)) {
+		item.setSeinteractivelogonright(TRUE);
+	    } else if ("senetworklogonright".equalsIgnoreCase(privilege)) {
+		item.setSenetworklogonright(TRUE);
+	    } else if ("seremoteinteractivelogonright".equalsIgnoreCase(privilege)) {
+		item.setSeremoteinteractivelogonright(TRUE);
+	    } else if ("seservicelogonright".equalsIgnoreCase(privilege)) {
+		item.setSeservicelogonright(TRUE);
+	    } else if ("sedenybatchLogonright".equalsIgnoreCase(privilege)) {
+		item.setSedenybatchLogonright(TRUE);
+	    } else if ("sedenyinteractivelogonright".equalsIgnoreCase(privilege)) {
+		item.setSedenyinteractivelogonright(TRUE);
+	    } else if ("sedenynetworklogonright".equalsIgnoreCase(privilege)) {
+		item.setSedenynetworklogonright(TRUE);
+	    } else if ("sedenyremoteinteractivelogonright".equalsIgnoreCase(privilege)) {
+		item.setSedenyremoteInteractivelogonright(TRUE);
+	    } else if ("sedenyservicelogonright".equalsIgnoreCase(privilege)) {
+		item.setSedenyservicelogonright(TRUE);
+	    } else if ("setrustedcredmanaccessprivilege".equalsIgnoreCase(privilege)) {
+		item.setSetrustedcredmanaccessnameright(TRUE);
+	    } else {
+		session.getLogger().warn(JOVALMsg.ERROR_WIN_ACCESSTOKEN_TOKEN, privilege);
 	    }
 	}
 	return item;
@@ -358,8 +374,7 @@ public class AccesstokenAdapter implements IAdapter {
      * Initialize the adapter and install the probe on the target host.
      */
     private void init() {
-	itemCache = new Hashtable<String, AccesstokenItem>();
-	errors = new Hashtable<String, MessageType>();
+	itemCache = new HashMap<String, AccesstokenItem>();
 
 	//
 	// Get a runspace if there are any in the pool, or create a new one, and load the Get-AccessTokens
