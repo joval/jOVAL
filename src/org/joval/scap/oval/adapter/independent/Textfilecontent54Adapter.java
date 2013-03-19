@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.zip.GZIPInputStream;
 
 import jsaf.intf.io.IFile;
 import jsaf.intf.system.ISession;
@@ -129,7 +128,7 @@ public class Textfilecontent54Adapter extends BaseFileAdapter<TextfilecontentIte
 			    }
 			    break;
 			}
-			s = readASCIIString(new GZIPInputStream(new ByteArrayInputStream(Base64.decode(sb.toString()))));
+			s = readASCIIString(new ByteArrayInputStream(Base64.decode(sb.toString())));
 			break;
 		    } catch (IOException e) {
 			session.getLogger().warn(e.getMessage());

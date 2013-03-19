@@ -29,6 +29,7 @@ import jsaf.intf.unix.system.IUnixSession;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.powershell.PowershellException;
+import jsaf.util.Base64;
 import jsaf.util.Environment;
 import jsaf.util.SafeCLI;
 import jsaf.util.StringTools;
@@ -457,7 +458,8 @@ public class Environmentvariable58Adapter implements IAdapter {
 		rs.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
 	    }
 	    processes = new HashSet<Integer>();
-	    for (String id : rs.invoke("Get-Process | %{$_.Id}").split("\r\n")) {
+	    String data = new String(Base64.decode(rs.invoke("Get-Process | %{$_.Id} | Transfer-Encode")), StringTools.ASCII);
+	    for (String id : data.split("\r\n")) {
 		processes.add(new Integer(id.trim()));
 	    }
 	}
@@ -474,7 +476,8 @@ public class Environmentvariable58Adapter implements IAdapter {
 	public IEnvironment getProcessEnvironment(int pid) throws Exception {
 	    Integer id = new Integer(pid);
 	    if (processes.contains(id)) {
-		return toEnvironment(rs.invoke("Get-ProcessEnvironment " + pid));
+		byte[] buff = Base64.decode(rs.invoke("Get-ProcessEnvironment -ProcessId " + pid + " | Transfer-Encode"));
+		return toEnvironment(new String(buff, StringTools.ASCII));
 	    } else {
 		throw new NoSuchElementException(id.toString());
 	    }

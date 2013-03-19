@@ -18,6 +18,7 @@ import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.Timestamp;
 import jsaf.provider.windows.powershell.PowershellException;
+import jsaf.util.Base64;
 import jsaf.util.IniFile;
 import jsaf.util.StringTools;
 
@@ -263,9 +264,9 @@ public class Process58Adapter implements IAdapter {
 	    throw new CollectException(JOVALMsg.getMessage(JOVALMsg.ERROR_POWERSHELL), FlagEnumeration.NOT_COLLECTED);
 	}
 	try {
-	    String data = runspace.invoke("Get-ProcessInfo");
+	    String data = runspace.invoke("Get-ProcessInfo | Transfer-Encode");
 	    if (data != null) {
-		ByteArrayInputStream in = new ByteArrayInputStream(data.getBytes());
+		ByteArrayInputStream in = new ByteArrayInputStream(Base64.decode(data, Base64.NO_OPTIONS));
 		processes.load(in, StringTools.ASCII);
 	    }
 	} catch (Exception e) {
