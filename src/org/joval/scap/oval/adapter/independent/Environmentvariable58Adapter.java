@@ -458,7 +458,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 		rs.loadModule(getClass().getResourceAsStream("Environmentvariable58.psm1"));
 	    }
 	    processes = new HashSet<Integer>();
-	    String data = new String(Base64.decode(rs.invoke("Get-Process | %{$_.Id} | Transfer-Encode")), StringTools.ASCII);
+	    String data = new String(Base64.decode(rs.invoke("Get-Process | %{$_.Id} | Transfer-Encode")), StringTools.UTF8);
 	    for (String id : data.split("\r\n")) {
 		processes.add(new Integer(id.trim()));
 	    }
@@ -477,7 +477,7 @@ public class Environmentvariable58Adapter implements IAdapter {
 	    Integer id = new Integer(pid);
 	    if (processes.contains(id)) {
 		byte[] buff = Base64.decode(rs.invoke("Get-ProcessEnvironment -ProcessId " + pid + " | Transfer-Encode"));
-		return toEnvironment(new String(buff, StringTools.ASCII));
+		return toEnvironment(new String(buff, StringTools.UTF8));
 	    } else {
 		throw new NoSuchElementException(id.toString());
 	    }

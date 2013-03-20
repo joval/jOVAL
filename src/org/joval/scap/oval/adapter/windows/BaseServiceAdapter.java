@@ -18,7 +18,8 @@ import javax.xml.bind.JAXBElement;
 
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
-import jsaf.util.SafeCLI;
+import jsaf.util.Base64;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageLevelEnumeration;
 import scap.oval.common.MessageType;
@@ -63,8 +64,10 @@ public abstract class BaseServiceAdapter<T extends ItemType> implements IAdapter
 	if (serviceNames == null) {
 	    serviceNames = new HashSet<String>();
 	    try {
-		for (String serviceName : getRunspace().invoke("Get-Service | %{$_.Name}").split("\n")) {
-		    serviceNames.add(serviceName.trim());
+		String cmd = "Get-Service | %{$_.Name} | Transfer-Encode";
+		String data = new String(Base64.decode(getRunspace().invoke(cmd)), StringTools.UTF8);
+		for (String serviceName : data.split("\r\n")) {
+		    serviceNames.add(serviceName);
 		}
 	    } catch (Exception e) {
 		throw new CollectException(e, FlagEnumeration.ERROR);

@@ -267,7 +267,7 @@ public class Process58Adapter implements IAdapter {
 	    String data = runspace.invoke("Get-ProcessInfo | Transfer-Encode");
 	    if (data != null) {
 		ByteArrayInputStream in = new ByteArrayInputStream(Base64.decode(data, Base64.NO_OPTIONS));
-		processes.load(in, StringTools.ASCII);
+		processes.load(in, StringTools.UTF8);
 	    }
 	} catch (Exception e) {
 	    error = Factories.common.createMessageType();

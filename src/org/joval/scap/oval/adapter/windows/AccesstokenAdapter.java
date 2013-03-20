@@ -28,6 +28,7 @@ import jsaf.provider.windows.powershell.PowershellException;
 import jsaf.provider.windows.wmi.WmiException;
 import jsaf.util.Base64;
 import jsaf.util.IniFile;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -153,7 +154,8 @@ public class AccesstokenAdapter implements IAdapter {
 		    cmd.append("\"").append(p.getSid()).append("\"");
 		}
 		cmd.append(" | Get-AccessTokens | Transfer-Encode");
-		IniFile data = new IniFile(new ByteArrayInputStream(Base64.decode(runspace.invoke(cmd.toString()))));
+		InputStream in = new ByteArrayInputStream(Base64.decode(runspace.invoke(cmd.toString())));
+		IniFile data = new IniFile(in, StringTools.UTF8);
 		for (IPrincipal p : queryPrincipals.values()) {
 		    String sid = p.getSid();
 		    if (data.containsSection(sid)) {

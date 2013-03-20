@@ -16,7 +16,9 @@ import jsaf.intf.system.ISession;
 import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.provider.windows.powershell.PowershellException;
+import jsaf.util.Base64;
 import jsaf.util.SafeCLI;
+import jsaf.util.StringTools;
 
 import scap.oval.common.MessageType;
 import scap.oval.common.MessageLevelEnumeration;
@@ -175,8 +177,8 @@ public class CmdletAdapter implements IAdapter {
 		command.append(" | Select-Object");
 		command.append(toSelectString(cObj.getSelect().getValue()));
 	    }
-	    command.append(" | ConvertTo-OVAL");
-	    String data = runspace.invoke(command.toString());
+	    command.append(" | ConvertTo-OVAL | Transfer-Encode");
+	    String data = new String(Base64.decode(runspace.invoke(command.toString())), StringTools.UTF8);
 	    if (data != null) {
 		//
 		// ConvertTo-OVAL outputs one huge line, so it's necessary to join together any line-splitting that
