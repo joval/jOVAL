@@ -19,7 +19,6 @@ import jsaf.intf.io.IFileEx;
 import jsaf.intf.io.IRandomAccess;
 import jsaf.intf.system.ISession;
 import jsaf.intf.windows.io.IWindowsFileInfo;
-import jsaf.intf.windows.powershell.IRunspace;
 import jsaf.intf.windows.system.IWindowsSession;
 import jsaf.intf.windows.wmi.ISWbemObject;
 import jsaf.intf.windows.wmi.ISWbemObjectSet;
@@ -211,11 +210,6 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 	return Arrays.asList(item);
     }
 
-    @Override
-    protected List<InputStream> getPowershellModules() {
-	return Arrays.asList(getClass().getResourceAsStream("File.psm1"));
-    }
-
     // Private
 
     /**
@@ -223,46 +217,31 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
      */
     private void addHeaderInfo(FileObject fObj, IFile file, FileItem item) throws IOException {
 	session.getLogger().trace(JOVALMsg.STATUS_PE_READ, file.toString());
-	String error = null;
-	try {
-	    Map<String, String> props = new HashMap<String, String>();
-	    IRunspace runspace = getRunspace(getView(fObj.getBehaviors()));
-	    String data = runspace.invoke("Print-FileInfoEx -Path \"" + file.getPath() + "\"");
-	    for (String line : data.split("\n")) {
-		line = line.trim();
-		int ptr = line.indexOf(":");
-		if (ptr > 1) {
-		    String key = line.substring(0,ptr);
-		    String val = line.substring(ptr+1).trim();
-		    if (val.length() > 0) {
-			props.put(key, val);
-		    }
-		}
-	    }
-
-	    if (props.containsKey("MSChecksum")) {
+	Map<String, String> peHeaders = ((IWindowsFileInfo)file.getExtended()).getPEHeaders();
+	if (peHeaders != null) {
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_MS_CHECKSUM)) {
 		EntityItemStringType msChecksumType = Factories.sc.core.createEntityItemStringType();
-		msChecksumType.setValue(props.get("MSChecksum"));
+		msChecksumType.setValue(peHeaders.get(IWindowsFileInfo.PE_MS_CHECKSUM));
 		item.setMsChecksum(msChecksumType);
 	    }
 
-	    if (props.containsKey("Language")) {
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_LANGUAGE)) {
 		EntityItemStringType languageType = Factories.sc.core.createEntityItemStringType();
-		languageType.setValue(props.get("Language"));
+		languageType.setValue(peHeaders.get(IWindowsFileInfo.PE_LANGUAGE));
 		item.setLanguage(languageType);
 	    }
 
-	    if (props.containsKey("FileMajorPart")) {
-		int major = Integer.parseInt(props.get("FileMajorPart"));
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_MAJOR_PART)) {
+		int major = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_MAJOR_PART));
 		int minor = 0, build = 0, priv = 0;
-		if (props.containsKey("FileMinorPart")) {
-		    minor = Integer.parseInt(props.get("FileMinorPart"));
+		if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_MINOR_PART)) {
+		    minor = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_MINOR_PART));
 		}
-		if (props.containsKey("FileBuildPart")) {
-		    build = Integer.parseInt(props.get("FileBuildPart"));
+		if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_BUILD_PART)) {
+		    build = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_BUILD_PART));
 		}
-		if (props.containsKey("FilePrivatePart")) {
-		    priv = Integer.parseInt(props.get("FilePrivatePart"));
+		if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION_PRIVATE_PART)) {
+		    priv = Integer.parseInt(peHeaders.get(IWindowsFileInfo.PE_VERSION_PRIVATE_PART));
 		}
 		if (major != 0 || minor != 0 || build != 0 || priv != 0) {
 		    EntityItemVersionType versionType = Factories.sc.core.createEntityItemVersionType();
@@ -272,54 +251,45 @@ public class FileAdapter extends BaseFileAdapter<FileItem> {
 		}
 	    }
 
-	    if (props.containsKey("Company Name")) {
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_COMPANY_NAME)) {
 		EntityItemStringType companyType = Factories.sc.core.createEntityItemStringType();
-		companyType.setValue(props.get("Company Name"));
+		companyType.setValue(peHeaders.get(IWindowsFileInfo.PE_COMPANY_NAME));
 		item.setCompany(companyType);
 	    }
 
-	    if (props.containsKey("Internal Name")) {
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_INTERNAL_NAME)) {
 		EntityItemStringType internalNameType = Factories.sc.core.createEntityItemStringType();
-		internalNameType.setValue(props.get("Internal Name"));
+		internalNameType.setValue(peHeaders.get(IWindowsFileInfo.PE_INTERNAL_NAME));
 		item.setInternalName(internalNameType);
 	    }
 
-	    if (props.containsKey("Product Name")) {
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_PRODUCT_NAME)) {
 	 	EntityItemStringType productNameType = Factories.sc.core.createEntityItemStringType();
-		productNameType.setValue(props.get("Product Name"));
+		productNameType.setValue(peHeaders.get(IWindowsFileInfo.PE_PRODUCT_NAME));
 		item.setProductName(productNameType);
 	    }
 
-	    if (props.containsKey("Original Filename")) {
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_ORIGINAL_NAME)) {
 		EntityItemStringType originalFilenameType = Factories.sc.core.createEntityItemStringType();
-		originalFilenameType.setValue(props.get("Original Filename"));
+		originalFilenameType.setValue(peHeaders.get(IWindowsFileInfo.PE_ORIGINAL_NAME));
 		item.setOriginalFilename(originalFilenameType);
 	    }
 
-	    if (props.containsKey("Product Version")) {
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_PRODUCT_VERSION)) {
 		EntityItemVersionType productVersionType = Factories.sc.core.createEntityItemVersionType();
-		productVersionType.setValue(props.get("Product Version"));
+		productVersionType.setValue(peHeaders.get(IWindowsFileInfo.PE_PRODUCT_VERSION));
 		productVersionType.setDatatype(SimpleDatatypeEnumeration.VERSION.value());
 		item.setProductVersion(productVersionType);
 	    }
 
-	    if (props.containsKey("File Version")) {
+	    if (peHeaders.containsKey(IWindowsFileInfo.PE_VERSION)) {
 		try {
 		    EntityItemStringType developmentClassType = Factories.sc.core.createEntityItemStringType();
-		    developmentClassType.setValue(getDevelopmentClass(props.get("File Version")));
+		    developmentClassType.setValue(getDevelopmentClass(peHeaders.get(IWindowsFileInfo.PE_VERSION)));
 		    item.setDevelopmentClass(developmentClassType);
 		} catch (IllegalArgumentException e) {
 		}
 	    }
-	} catch (Exception e) {
-	    error = e.getMessage();
-	    session.getLogger().info(JOVALMsg.ERROR_PE, file.getPath(), error);
-	    session.getLogger().warn(JOVALMsg.getMessage(JOVALMsg.ERROR_EXCEPTION), e);
-
-	    MessageType msg = Factories.common.createMessageType();
-	    msg.setLevel(MessageLevelEnumeration.WARNING);
-	    msg.setValue(e.getMessage());
-	    item.getMessage().add(msg);
 	}
     }
 
